@@ -13,5 +13,31 @@
   "createdAt": "2020-06-22T09:07:31",
   "updatedAt": "2020-06-24T11:01:47",
   "commentCount": 2,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:29:15.5598178Z",
+    "reactions": [
+      {
+        "user": "Zekiah-A",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:29:15.5598257Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 647680207,
+        "author": "mattleibow",
+        "body": "The canvas is always totally redrawn - technically. In the case of the \u0060SKCanvasView\u0060 you are technically redrawing the whole canvas, you just can\u0027t see it - almost. Typically, if you use antialiasing or transparency, you will notice things get darker and darker. and then if something happens to change the surface size - such as a screen rotate or app pause/resume, then the canvas is recreated and you have to redraw everything. It is just a side effect to have it exist - in fact, you may even get a case where the surface starts with some artifacts from a previous surface - because the memory is just reused.\r\n\r\nSo, what you are seeing is that the GL view is always cleared, and the canvas view is not (technically a bug).\r\n\r\nThe correct way is to always clear the canvas before drawing.\r\n\r\nIf you do want \u0022caching\u0022 of drawings, then the best way is to use bitmaps/images/other surfaces and draw a whole bitmap. For example, it you are drawing some background, then some animation, then some foreground, you would have 2 cache bitmaps: background and foreground. When you draw, you first \u0060DrawImage(background)\u0060, then draw the animation, then \u0060DrawImage(foreground)\u0060. This way, you draw in a single (mostly) cheap operation.\r\n\r\nIf you _really_ want true partial updates, the easiest will be to use a back buffer and always draw to that. Then, when the update happens, you can just do a single cheap operation to draw the bitmap to the screen.\r\n\r\nSo as a summary... the correct way is to always clear the surface and redraw everything. \r\n\r\n\u003E the fact that you don\u0027t need to always clear on some vies is a bug and probably will be fixed in the new version (v2) of SkiaSharp.",
+        "createdAt": "2020-06-22T17:50:00",
+        "reactions": []
+      },
+      {
+        "id": 647721684,
+        "author": "pilotshamn",
+        "body": "Hi Matthew\r\nThank you for your elaborate answer, so you can say I was lucky to get it working the way it did with CanvasView, my question then is how can i achieve best performance and use gpu with a bitmap in which you update one spokes at a time the whole lap all the time (new data for each spokes comes all the time). is there is some good example of painting on gpu in backround then updating foreground canvas .\r\nThank you very much Peder",
+        "createdAt": "2020-06-22T19:15:08",
+        "reactions": []
+      }
+    ]
+  }
 }

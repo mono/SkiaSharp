@@ -48,5 +48,39 @@
       "state": "APPROVED",
       "submittedAt": "2020-04-17T21:02:13"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:30:20.5927884Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 615458324,
+        "author": "mattleibow",
+        "body": "I am looking into the cause of the crash, I think they changed something between this and the next version. Your test case crashes every time on the m80, but not at all on the m68. Having a look at the native API now, but I do see a difference:\r\n\r\nm68 (https://github.com/google/skia/blob/chrome/m68/include/codec/SkCodec.h#L174):\r\n\r\n\u0060\u0060\u0060cpp\r\nconst SkImageInfo\u0026 getInfo() const;\r\n\u0060\u0060\u0060\r\nm80 (https://github.com/google/skia/blob/chrome/m80/include/codec/SkCodec.h#L194):\r\n\r\n\u0060\u0060\u0060cpp\r\nSkImageInfo getInfo() const;\r\n\u0060\u0060\u0060\r\n\r\nAnd, under the hood, there is a copy I think.",
+        "createdAt": "2020-04-17T20:52:39",
+        "reactions": []
+      },
+      {
+        "id": 615459737,
+        "author": "mattleibow",
+        "body": "Owns handle is just whether the object is responsible for deconstructing the reference/object. In the case of the statics, the initial reference is incremented, therefore we have to also decrement when it is collected.\r\n\r\nBut, you were almost on the exact right track. The object is reference counted, but in the case of the particular call of \u0060getInfo\u0060, I think it is not incremented. In that case, we need to let the managed side know that is should not decrement (using the \u0060unrefExisting\u0060 param):\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/dev/update-skia/binding/Binding/SKImageInfo.cs#L27\r\n\r\nBut, I am just going to do some tests quick and confirm.",
+        "createdAt": "2020-04-17T20:56:24",
+        "reactions": []
+      },
+      {
+        "id": 615461714,
+        "author": "ziriax",
+        "body": "\u003E Owns handle is just whether the object is responsible for deconstructing the reference/object. In the case of the statics, the initial reference is incremented, therefore we have to also decrement when it is collected.\r\n\u003E \r\n\u003E But, you were almost on the exact right track. The object is reference counted, but in the case of the particular call of \u0060getInfo\u0060, I think it is not incremented. In that case, we need to let the managed side know that is should not decrement (using the \u0060unrefExisting\u0060 param):\r\n\u003E \r\n\u003E https://github.com/mono/SkiaSharp/blob/dev/update-skia/binding/Binding/SKImageInfo.cs#L27\r\n\u003E \r\n\u003E But, I am just going to do some tests quick and confirm.\r\n\r\nOh nice catch. So this is way more complex than I thought.\r\n\r\nA look at the [implementation](https://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/skia/include/private/SkEncodedInfo.h;drc=74778f2d1a27e6349c10117ef6ba53adda8c6db1;l=159?originalUrl=https:%2F%2Fcs.chromium.org%2F) shows that a new copy is always returned by \u0060SkCodec::getInfo()\u0060:\r\n\r\n\u0060\u0060\u0060cpp\r\n  */\r\n    SkImageInfo makeImageInfo() const {\r\n        auto ct =  kGray_Color == fColor ? kGray_8_SkColorType   :\r\n                 kXAlpha_Color == fColor ? kAlpha_8_SkColorType  :\r\n                    k565_Color == fColor ? kRGB_565_SkColorType  :\r\n                                           kN32_SkColorType      ;\r\n        auto alpha = kOpaque_Alpha == fAlpha ? kOpaque_SkAlphaType\r\n                                             : kUnpremul_SkAlphaType;\r\n        sk_sp\u003CSkColorSpace\u003E cs = fProfile ? SkColorSpace::Make(*fProfile-\u003Eprofile())\r\n                                          : nullptr;\r\n        if (!cs) {\r\n            cs = SkColorSpace::MakeSRGB();\r\n        }\r\n        return SkImageInfo::Make(fWidth, fHeight, ct, alpha, std::move(cs));\r\n    }\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-04-17T21:01:26",
+        "reactions": []
+      },
+      {
+        "id": 615466656,
+        "author": "mattleibow",
+        "body": "Moving the conversation to your original issue #1227",
+        "createdAt": "2020-04-17T21:14:48",
+        "reactions": []
+      }
+    ]
+  }
 }

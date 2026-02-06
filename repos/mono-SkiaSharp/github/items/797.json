@@ -13,5 +13,57 @@
   "createdAt": "2019-02-25T12:00:51",
   "updatedAt": "2020-06-11T00:14:15",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:29:17.4898647Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 476876664,
+        "author": "solabc16",
+        "body": "FYI... attached is the patch file I\u0027m currently using against the 1.68 source; which appears to work satisfactorily.\r\n\r\n\u0060\u0060\u0060patch\r\n--- ./skiasharp/externals/skia/src/opts/SkRasterPipeline_opts.h-orig\t2019-03-26 21:10:09.615000000 \u002B0000\r\n\u002B\u002B\u002B ./skiasharp/externals/skia/src/opts/SkRasterPipeline_opts.h\t2019-03-26 21:13:28.961000000 \u002B0000\r\n@@ -653,10 \u002B653,7 @@\r\n }\r\n \r\n SI F from_half(U16 h) {\r\n-#if defined(__aarch64__) \u0026\u0026 !defined(SK_BUILD_FOR_GOOGLE3)  // Temporary workaround for some Google3 builds.\r\n-    return vcvt_f32_f16(h);\r\n-\r\n-#elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)\r\n\u002B#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)\r\n     return _mm256_cvtph_ps(h);\r\n \r\n #else\r\n@@ -673,10 \u002B670,7 @@\r\n }\r\n \r\n SI U16 to_half(F f) {\r\n-#if defined(__aarch64__) \u0026\u0026 !defined(SK_BUILD_FOR_GOOGLE3)  // Temporary workaround for some Google3 builds.\r\n-    return vcvt_f16_f32(f);\r\n-\r\n-#elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)\r\n\u002B#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)\r\n     return _mm256_cvtps_ph(f, _MM_FROUND_CUR_DIRECTION);\r\n \r\n #else\r\n\u0060\u0060\u0060\r\nBest\r\n\\-James\r\n[SkiaSharp168-aarch64-20190326.zip](https://github.com/mono/SkiaSharp/files/3010645/SkiaSharp168-aarch64-20190326.zip)\r\n",
+        "createdAt": "2019-03-26T22:24:37",
+        "reactions": [
+          {
+            "user": "jclapis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:29:16.5757Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:29:16.5757003Z"
+          }
+        ]
+      },
+      {
+        "id": 583233515,
+        "author": "jclapis",
+        "body": "\u003E FYI... attached is the patch file I\u0027m currently using against the 1.68 source; which appears to work satisfactorily.\r\n\u003E ...\r\n\u003E Best\r\n\u003E -James\r\n\r\nThanks James! I just ran into this while trying to build SkiaSharp on a Raspberry Pi 4B (which is ARM64) and your patch worked great.",
+        "createdAt": "2020-02-07T04:54:32",
+        "reactions": []
+      },
+      {
+        "id": 583764935,
+        "author": "mattleibow",
+        "body": "Ah, thanks! I believe this may be fixed with the new work in the #986 PR. A lot of the opts bits have been improved. Thanks for the patch for now. I hope to have a new m81 master soon.",
+        "createdAt": "2020-02-08T18:41:48",
+        "reactions": []
+      },
+      {
+        "id": 585080978,
+        "author": "solabc16",
+        "body": "Thanks for the feedback Joe. Matthew, let me know when you have the new master, happy to test.\r\n\r\nFor anybody else reading, this patch is still good for releases up to and including 1.68.1.1.\r\n\r\n",
+        "createdAt": "2020-02-12T08:04:36",
+        "reactions": []
+      },
+      {
+        "id": 642331070,
+        "author": "mattleibow",
+        "body": "@solabc16 the master branch is now the new m80.\r\n\r\nLet me know if you still need the patch. They did change a whole bunch of code around this. Also, we have switched to clang some time back, so maybe things are better if you use that?\r\n\r\nYou can also have a look at sending in a PR that builds skia with docker as part of the CI process. For the current x64 ubuntu build, I use this: https://github.com/mono/SkiaSharp/blob/master/scripts/Docker/ubuntu16/amd64/Dockerfile\r\n\r\nThe process does need a little bit more work, but I hope to get to that soon.",
+        "createdAt": "2020-06-11T00:13:39",
+        "reactions": []
+      }
+    ]
+  }
 }

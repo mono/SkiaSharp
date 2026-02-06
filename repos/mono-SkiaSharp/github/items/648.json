@@ -26,5 +26,67 @@
   "createdAt": "2018-10-04T14:04:35",
   "updatedAt": "2020-05-12T08:30:23",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:29:27.9947832Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 427031919,
+        "author": "mattleibow",
+        "body": "I belive this issue is actually a skia one: https://groups.google.com/forum/#!topic/skia-discuss/886WuVcQUGo\r\n\r\nUnfortunately, there is nothing SkiaSharp can do until the actual library supports this.",
+        "createdAt": "2018-10-04T14:05:44",
+        "reactions": []
+      },
+      {
+        "id": 427032409,
+        "author": "mattleibow",
+        "body": "~Now that I think about it, I remember this question from somewhere else... Do you have a link so we can connect the dots?~\r\n\r\nFound it: https://stackoverflow.com/questions/52206463/large-image-resizing-shows-blank",
+        "createdAt": "2018-10-04T14:07:03",
+        "reactions": []
+      },
+      {
+        "id": 534606356,
+        "author": "nor0x",
+        "body": "Hi @mattleibow \uD83D\uDC4B\r\n\r\nare there any updates or workarounds for this issue, what\u0027s the best approach to render large images with Skia(Sharp) without downsampling?\r\n\r\n\u0060SKImage.FromEncodedData(image.Bytes)\u0060 works for me but rendering is slow. I tried creating a \u0060SKBitmap.FromImage\u0060 with the image data, which throws the \u0060Unable to allocate pixels for the bitmap\u0060 error",
+        "createdAt": "2019-09-24T15:14:53",
+        "reactions": []
+      },
+      {
+        "id": 619493730,
+        "author": "mattleibow",
+        "body": "Most probably the same issue: https://github.com/mono/SkiaSharp/issues/1249",
+        "createdAt": "2020-04-26T06:39:38",
+        "reactions": []
+      },
+      {
+        "id": 626439147,
+        "author": "perumaal",
+        "body": "Hi,\r\nThe referenced issue seems different: Skia(Sharp?) drops images that are larger than 32K - hard-coded in the library.\r\nHowever, this issue (which I am hitting as well) seems to surface on much smaller sized images.\r\nCase in point:\r\n * Windows 10 Pro (1909 18363.778)\r\n * WPF \u002B SkiaSharp (1.68.2.1\\lib\\net45\\SkiaSharp.dll)\r\n * JPG with DSLR size 5286x3555 (roughly 11MB)\r\n * Decode results in:\r\n    // Error reading file: \u003Credacted\u003E.JPG ; System.Exception: Unable to allocate pixels for the bitmap.\r\n    // at SkiaSharp.SKBitmap..ctor(SKImageInfo info, Int32 rowBytes)\r\n    // at SkiaSharp.SKBitmap.Decode(SKCodec codec, SKImageInfo bitmapInfo)\r\n    // at SkiaSharp.SKBitmap.Decode(SKCodec codec)\r\n    // at SkiaSharp.SKBitmap.Decode(SKStream stream)\r\n\r\nNote that opening the same image in a Chromium-browser on the same machine works well (i.e. not a Skia issue?).\r\n\r\nI am not sure if there is some contiguous memory allocation issue of sorts in the C# layer.",
+        "createdAt": "2020-05-11T02:35:11",
+        "reactions": []
+      },
+      {
+        "id": 626636182,
+        "author": "mattleibow",
+        "body": "@perumaal do you have an example image?",
+        "createdAt": "2020-05-11T11:08:21",
+        "reactions": []
+      },
+      {
+        "id": 627110456,
+        "author": "perumaal",
+        "body": "I realize I am stressing the system quite a bit here:\r\n * Manage 10 SKBitmap instances in memory.\r\n * Each SKBitmap is 4Kx4K (~64MB).\r\n * The Nth one (depending on the system) fails.\r\n\r\nI don\u0027t expect Skia(Sharp) or any platform to withstand this pressure without some level of disk-based caching strategy.\r\n\r\nPerhaps the only remaining issue is that the error is non-intuitive. (i.e. the error that arises results in folks coming to this page perhaps).\r\n\r\n ",
+        "createdAt": "2020-05-12T05:07:24",
+        "reactions": []
+      },
+      {
+        "id": 627195251,
+        "author": "ziriax",
+        "body": "Yes that really should throw an OutOfMemory exception.\r\n\r\nAlso, I am not sure if SkiaSharp adds native memory pressure, so the GC knows about it.\r\n\r\nhttps://docs.microsoft.com/en-us/dotnet/api/system.gc.addmemorypressure?redirectedfrom=MSDN\u0026view=netcore-3.1#System_GC_AddMemoryPressure_System_Int64_\r\n",
+        "createdAt": "2020-05-12T08:30:23",
+        "reactions": []
+      }
+    ]
+  }
 }

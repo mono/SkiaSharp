@@ -41,5 +41,45 @@
   "deletions": 8,
   "changedFiles": 3,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:30:05.7044899Z",
+    "reactions": [
+      {
+        "user": "Gillibald",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:30:05.7044931Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 589615088,
+        "author": "ziriax",
+        "body": "Nice! I was making a similar PR, but noticed the repeating pattern:\r\n\r\n\u0060\u0060\u0060cs\r\nvar originalEncoding = font.TextEncoding;\r\n\t\t\ttry {\r\n\t\t\t\tfont.TextEncoding = SKTextEncoding.GlyphId;\r\n\r\n\t\t\t\tusing var lang = new SKString ();\r\n                       ...           \r\n\u0060\u0060\u0060\r\n\r\nand made an internal disposable struct that combined all this into reuseable code:\r\n\r\n\u0060\u0060\u0060cs\r\nusing (var scope = new TextBlobGlyphScope(...)) {\r\n     ...scope.lang...\r\n}\r\n\u0060\u0060\u0060\r\nMaybe that was too much magic \uD83D\uDE09 \r\n",
+        "createdAt": "2020-02-21T11:28:21",
+        "reactions": []
+      },
+      {
+        "id": 589617521,
+        "author": "mattleibow",
+        "body": "Oh, nice! Thanks for starting.\r\n\r\nMaybe just open the PR with what you have, then we can see if I missed anything. Or even just so there is a record. I was also thinking of a scope thing, but then in v2 the language goes away and all that.\r\n\r\nBut, I wouldn\u0027t spend too much time on this, as the #986 PR basically is almost done and all this is changing with fonts and other things. I am hoping to get a preview of v2 out in March, so the v1 version is more in \u0022bugfixing\u0022 mode. I will add things, but I want to focus on v2. Massive improvements there.",
+        "createdAt": "2020-02-21T11:36:19",
+        "reactions": []
+      },
+      {
+        "id": 589754517,
+        "author": "ziriax",
+        "body": "No, you actually covered more than I did :-)\r\n\r\nGood to know V2 is almost out.\r\n\r\nIs this already usable when building from source?\r\n\r\nI am evaluating SkiaSharp for a customer (smartphoto.com), to replace my previous rendering backend written in SharpDX, so I better use the latest version, or I can start my evaluation again  :-)\r\n\r\n",
+        "createdAt": "2020-02-21T17:31:56",
+        "reactions": []
+      },
+      {
+        "id": 589775727,
+        "author": "mattleibow",
+        "body": "I am busy trying to get the build working. It builds locally, but some of the tests are crashing for some reason. Seems to be a leak or a memory thing. If I run it in serial, most tests pass. If I run in in parallel... \uD83D\uDCA5",
+        "createdAt": "2020-02-21T18:25:37",
+        "reactions": []
+      }
+    ]
+  }
 }

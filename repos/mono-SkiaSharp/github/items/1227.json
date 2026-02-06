@@ -13,5 +13,135 @@
   "createdAt": "2020-04-11T00:28:31",
   "updatedAt": "2020-04-18T01:11:57",
   "commentCount": 16,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:30:55.9249325Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 612378121,
+        "author": "ziriax",
+        "body": "If I re-run only the failed tests, they eventually all pass.\r\n\r\nSo clearly some shared state is getting corrupted here.\r\n",
+        "createdAt": "2020-04-11T09:32:07",
+        "reactions": []
+      },
+      {
+        "id": 612383565,
+        "author": "mattleibow",
+        "body": "Yeah, I notice that as well. I have been working in master to fix tests so they all run locally. I will merge into update soon.\r\n\r\nBut that won\u0027t fix them all. In some cases, the rules have changed. For example, in one case the base types have changed in the native code (\u0060SkColorSpace\u0060 went from virtual to non-virtual). In another case, the method return values change from a copy to a reference and vice versa. Only the native comments show this.\r\n\r\nSo I just have to run various combos until I find a repro crash and then try and figure it out.\r\n\r\nWhat was crashing? What was the native pinvoke?\r\n\r\nAnother thing I have noticed that the \u0060this\u0060 object sometimes gets collected while a method is running. The one I saw last night was:\r\n\r\n\u0060\u0060\u0060csharp\r\nclass SKTextBlobBuilder {\r\n\tpublic SKTextBlob Build () =\u003E\r\n\t\tGetObject\u003CSKTextBlob\u003E (SkiaApi.sk_textblob_builder_make (Handle));\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060SkiaApi.sk_textblob_builder_make\u0060 crashes because the object is collected and disposed while the native member is running.\r\n\r\nThere are 2 fixes for this type:\r\n - use \u0060GC.KeepAlive(this)\u0060 at the end of the method\r\n    - this is verbose \r\n    - most methods will have to be done\r\n - use a \u0060SafeHandle\u0060\r\n    - this may have performance implications",
+        "createdAt": "2020-04-11T10:03:49",
+        "reactions": []
+      },
+      {
+        "id": 612396416,
+        "author": "ziriax",
+        "body": "Just to be sure, the \u0060dev/update-skia\u0060 branch is the current beta that will become the next release right?\r\n\r\nI can reproduce one problem at least by putting a for loop around part of the test.\r\n\r\nFor example:\r\n\u0060\u0060\u0060cs\r\n\t\t[SkippableFact]\r\n\t\tpublic void StreamLosesOwnershipToCodecButIsNotForgotten()\r\n\t\t{\r\n\t\t\tvar bytes = File.ReadAllBytes(Path.Combine(PathToImages, \u0022color-wheel.png\u0022));\r\n\t\t\tvar stream = new SKMemoryStream(bytes);\r\n\t\t\tvar handle = stream.Handle;\r\n\r\n\t\t\tAssert.True(stream.OwnsHandle);\r\n\t\t\tAssert.True(SKObject.GetInstance\u003CSKMemoryStream\u003E(handle, out _));\r\n\r\n\t\t\tvar codec = SKCodec.Create(stream);\r\n\t\t\tAssert.False(stream.OwnsHandle);\r\n\r\n\t\t\tstream.Dispose();\r\n\t\t\tAssert.True(SKObject.GetInstance\u003CSKMemoryStream\u003E(handle, out _));\r\n\r\n\t\t\tfor (int i = 0; i \u003C 1000; \u002B\u002Bi)\r\n\t\t\t{\r\n\t\t\t\tAssert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));\r\n\t\t\t\tAssert.NotEmpty(pixels);\r\n\t\t\t}\r\n\t\t}\r\n\u0060\u0060\u0060\r\n\r\nIf I run this test with\r\n\r\n\u0060\u0060\u0060\r\ndotnet test -p:ParallelizeTestCollections=false --logger \u0022console;verbosity=detailed\u0022 --filter DisplayName~StreamLosesOwnershipToCodecButIsNotForgotten\r\n\u0060\u0060\u0060\r\n\r\nit eventually fails with\r\n\r\n\u0060\u0060\u0060\r\n[xUnit.net 00:00:00.50]       System.InvalidOperationException : About to unreference an object that has no references. H: 1bf6db1a700 Type: SkiaSharp.SKColorSpace\u002BSKColorSpaceStatic\r\n[xUnit.net 00:00:00.50]       Stack Trace:\r\n[xUnit.net 00:00:00.51]         C:\\dev\\SkiaSharp\\binding\\Binding\\HandleDictionary.cs(66,0): at SkiaSharp.HandleDictionary.GetObject[TSkiaObject,TSkiaImplementation](IntPtr handle, Boolean owns, Boolean unrefExisting, Boolean refNew)\r\n[xUnit.net 00:00:00.51]         C:\\dev\\SkiaSharp\\binding\\Binding\\SKObject.cs(90,0): at SkiaSharp.SKObject.GetObject[TSkiaObject](IntPtr handle, Boolean owns, Boolean unrefExisting, Boolean refNew)\r\n[xUnit.net 00:00:00.51]         C:\\dev\\SkiaSharp\\binding\\Binding\\SKImageInfo.cs(26,0): at SkiaSharp.SKImageInfoNative.ToManaged(SKImageInfoNative\u0026 native)\r\n[xUnit.net 00:00:00.51]         C:\\dev\\SkiaSharp\\binding\\Binding\\SKCodec.cs(31,0): at SkiaSharp.SKCodec.get_Info()\r\n[xUnit.net 00:00:00.51]         C:\\dev\\SkiaSharp\\binding\\Binding\\SKCodec.cs(99,0): at SkiaSharp.SKCodec.GetPixels(Byte[]\u0026 pixels)\r\n[xUnit.net 00:00:00.51]         c:\\dev\\SkiaSharp\\tests\\Tests\\SKCodecTest.cs(61,0): at SkiaSharp.Tests.SKCodecTest.StreamLosesOwnershipToCodecButIsNotForgotten()\r\n[xUnit.net 00:00:00.51]   Finished:    SkiaSharp.Tests\r\n  V SkiaSharp.Tests.SKManagedStreamTest.StreamLosesOwnershipToCodecButIsNotForgotten [19ms]\r\n  X SkiaSharp.Tests.SKCodecTest.StreamLosesOwnershipToCodecButIsNotForgotten [20ms]\r\n  Error Message:\r\n   System.InvalidOperationException : About to unreference an object that has no references. H: 1bf6db1a700 Type: SkiaSharp.SKColorSpace\u002BSKColorSpaceStatic\r\n  Stack Trace:\r\n     at SkiaSharp.HandleDictionary.GetObject[TSkiaObject,TSkiaImplementation](IntPtr handle, Boolean owns, Boolean unrefExisting, Boolean refNew) in C:\\dev\\SkiaSharp\\binding\\Binding\\HandleDictionary.cs:line 66\r\n   at SkiaSharp.SKObject.GetObject[TSkiaObject](IntPtr handle, Boolean owns, Boolean unrefExisting, Boolean refNew) in C:\\dev\\SkiaSharp\\binding\\Binding\\SKObject.cs:line 90\r\n   at SkiaSharp.SKImageInfoNative.ToManaged(SKImageInfoNative\u0026 native) in C:\\dev\\SkiaSharp\\binding\\Binding\\SKImageInfo.cs:line 26\r\n   at SkiaSharp.SKCodec.get_Info() in C:\\dev\\SkiaSharp\\binding\\Binding\\SKCodec.cs:line 31\r\n   at SkiaSharp.SKCodec.GetPixels(Byte[]\u0026 pixels) in C:\\dev\\SkiaSharp\\binding\\Binding\\SKCodec.cs:line 99\r\n   at SkiaSharp.Tests.SKCodecTest.StreamLosesOwnershipToCodecButIsNotForgotten() in c:\\dev\\SkiaSharp\\tests\\Tests\\SKCodecTest.cs:line 61\r\n\u0060\u0060\u0060\r\n\r\nMany tests fail for the same reason I guess\r\n",
+        "createdAt": "2020-04-11T11:16:33",
+        "reactions": []
+      },
+      {
+        "id": 612400552,
+        "author": "ziriax",
+        "body": "This one seems related to \u0060SKColorSpaceStatic\u0060 loosing reference counts while it is a global static object. Digging deeper, good way for me to learn the internals.\r\n",
+        "createdAt": "2020-04-11T11:38:57",
+        "reactions": []
+      },
+      {
+        "id": 612403102,
+        "author": "ziriax",
+        "body": "Okay, that one was easily fixed by not changing the reference count in the \u0060SKColorSpaceStatic\u0060 class.\r\n\r\nAfter this fix I don\u0027t get crashes anymore, although now the tests hang (and some are failing, but consistent)\r\n\r\n",
+        "createdAt": "2020-04-11T11:53:08",
+        "reactions": []
+      },
+      {
+        "id": 612405181,
+        "author": "ziriax",
+        "body": "~~Visual Studio is now able to run all tests, although some are failing, but not crashing at first sight.~~ It seems to depend from run to run, so surely not complete fixed, but an improvement nevertheless.\r\n\r\nMy patch was really simple, I\u0027ll make a PR so we can discuss code.\r\n\r\n\u0060\u0060\u0060patch\r\ndiff --git a/binding/Binding/HandleDictionary.cs b/binding/Binding/HandleDictionary.cs\r\nindex 274e4100ad74..ec66a649d795 100644\r\n--- a/binding/Binding/HandleDictionary.cs\r\n\u002B\u002B\u002B b/binding/Binding/HandleDictionary.cs\r\n@@ -58,7 \u002B58,8 @@ namespace SkiaSharp\r\n \t\t\t\t\t// but managed code just has the same reference\r\n \t\t\t\t\tif (unrefExisting \u0026\u0026 instance is ISKReferenceCounted refcnt) {\r\n #if THROW_OBJECT_EXCEPTIONS\r\n-\t\t\t\t\t\tif (refcnt.GetReferenceCount () == 1)\r\n\u002B\t\t\t\t\t\tvar count = refcnt.GetReferenceCount ();\r\n\u002B\t\t\t\t\t\tif (count \u003C= 1)\r\n \t\t\t\t\t\t\tthrow new InvalidOperationException (\r\n \t\t\t\t\t\t\t\t$\u0022About to unreference an object that has no references. \u0022 \u002B\r\n \t\t\t\t\t\t\t\t$\u0022H: {handle.ToString (\u0022x\u0022)} Type: {instance.GetType ()}\u0022);\r\ndiff --git a/binding/Binding/SKColorSpace.cs b/binding/Binding/SKColorSpace.cs\r\nindex 7aff28283e2b..08c1ba562b31 100644\r\n--- a/binding/Binding/SKColorSpace.cs\r\n\u002B\u002B\u002B b/binding/Binding/SKColorSpace.cs\r\n@@ -26,11 \u002B26,11 @@ namespace SkiaSharp\r\n \t\t{\r\n \t\t}\r\n \r\n-\t\tvoid ISKNonVirtualReferenceCounted.ReferenceNative () =\u003E\r\n-\t\t\tSkiaApi.sk_colorspace_ref (Handle);\r\n\u002B\t\tvoid ISKNonVirtualReferenceCounted.ReferenceNative () =\u003E OnReferenceNative();\r\n\u002B\t\tvoid ISKNonVirtualReferenceCounted.UnreferenceNative () =\u003E OnUnreferencenative ();\r\n \r\n-\t\tvoid ISKNonVirtualReferenceCounted.UnreferenceNative () =\u003E\r\n-\t\t\tSkiaApi.sk_colorspace_unref (Handle);\r\n\u002B\t\tprotected virtual void OnReferenceNative () =\u003E SkiaApi.sk_colorspace_ref (Handle);\r\n\u002B\t\tprotected virtual void OnUnreferencenative() =\u003E SkiaApi.sk_colorspace_unref (Handle);\r\n \r\n \t\tprotected override void Dispose (bool disposing) =\u003E\r\n \t\t\tbase.Dispose (disposing);\r\n@@ -267,6 \u002B267,16 @@ namespace SkiaSharp\r\n \t\t\t\tIgnorePublicDispose = true;\r\n \t\t\t}\r\n \r\n\u002B\t\t\tprotected override void OnReferenceNative ()\r\n\u002B\t\t\t{\r\n\u002B\t\t\t\t// do not increment global reference\r\n\u002B\t\t\t}\r\n\u002B\r\n\u002B\t\t\tprotected override void OnUnreferencenative ()\r\n\u002B\t\t\t{\r\n\u002B\t\t\t\t// do not release global reference\r\n\u002B\t\t\t}\r\n\u002B\r\n \t\t\tprotected override void Dispose (bool disposing)\r\n \t\t\t{\r\n \t\t\t\t// do not dispose\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2020-04-11T12:03:45",
+        "reactions": []
+      },
+      {
+        "id": 612409763,
+        "author": "ziriax",
+        "body": "Although my above patch seems to work, I have some questions about the following signature in \u0060HandleDictionary\u0060:\r\n\r\n\u0060\u0060\u0060internal static TSkiaObject GetObject\u003CTSkiaObject, TSkiaImplementation\u003E (IntPtr handle, bool owns = true, bool unrefExisting = true, bool refNew = false)\u0060\u0060\u0060\r\n\r\nShouldn\u0027t \u0060unrefExisting\u0060 be ignored if the existing instance didn\u0027t own its handle?\r\n\r\nAnd shouldn\u0027t \u0060refNew\u0060 be ignored when the new instance being  created isn\u0027t the owner of the handle?\r\n\r\nThat would also fix the problem, since \u0060SKColorSpaceStatic\u0060 doesn\u0027t own its handle.\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-04-11T12:28:13",
+        "reactions": []
+      },
+      {
+        "id": 612414097,
+        "author": "ziriax",
+        "body": "I\u0027ve traced the random deadlock to a call to the \u0060WglContext\u0060 constructor.\r\n\r\nIt appears that when multiple threads are calling \u0060wglChoosePixelFormatARB\u0060 at the same time, my PC deadlocks. A bit like this [very old issue](https://www.reddit.com/r/opengl/comments/1i1lat/win32_choosepixelformat_hangsstuck_in_deadlock/)\r\n\r\nThis might be a driver bug, but putting a global lock around this call fixes my deadlocks\r\n\r\n\r\n",
+        "createdAt": "2020-04-11T12:50:02",
+        "reactions": []
+      },
+      {
+        "id": 612889193,
+        "author": "Gillibald",
+        "body": "\u003E Another thing I have noticed that the this object sometimes gets collected while a method is running. The one I saw last night was:\r\n\r\nHow is it possible that it crashes when the builder is collected? When builder-\u003Emake returns the ownership is transferred to the caller so there should be no relationship between builder and blob.\r\n\r\nNot holding a reference to an owning object is just an error on the developer\u0027s side. SkiaSharp keeps adding bookkeeping mechanisms that degrade performance.\r\n\r\nIf SKSurface produces a canvas it should be clear to me that I have to keep a reference to the surface until I am finished drawing stuff. Do we have any numbers on reusing existing instances?\r\n\r\nSKFontManger, for example, could hold all references to created instances of SKTypeface until it gets collected. There is no need to cache objects globally. If you consume Skia you are always responsible to keep track of object ownership.\r\n\r\nIn general, most objects will have a refcount == 1 and they are most likely never requested again from the global instance\u0027s dictionary. So instead of just creating a new instance of an object that is only used once we have that extra overhead of looking up the dictionary for an existing instance. This might involve locking. Destruction of objects has the same overhead.\r\n\r\nSo I suggest to not cache objects globally by default and only cache them when it is explicitly requested. SKFontManager will need this cache. SKString doesn\u0027t etc.",
+        "createdAt": "2020-04-13T13:04:20",
+        "reactions": []
+      },
+      {
+        "id": 615465978,
+        "author": "mattleibow",
+        "body": "@Ziriax (https://github.com/mono/SkiaSharp/pull/1237#pullrequestreview-395763222)\r\n\u003E The code \u0060\u0026\u0026 instance.OwnsHandle\u0060 specifically was needed to avoid the singleton objects like \u0060SKColorSpaceStatic\u0060 from being deleted, but I noticed that you changed the constructor of these in 2191818177af4bfb4461859feda2ae6542767d54, so that these singletons now do own their native handle? \r\n\u003E\r\n\u003E If that fixes the issue, great, but maybe you could add a \u0060Debug.Assert\u0060 so that \u0060unrefExisting\u0060 is not called on instances for which \u0060OwnsHandle\u0060 is false? Maybe I misinterpreted the meaning of \u0060OwnsHandle\u0060.",
+        "createdAt": "2020-04-17T21:13:03",
+        "reactions": []
+      },
+      {
+        "id": 615466322,
+        "author": "mattleibow",
+        "body": "@mattleibow \r\n\r\n\u003E I am looking into the cause of the crash, I think they changed something between this and the next version. Your test case crashes every time on the m80, but not at all on the m68. Having a look at the native API now, but I do see a difference:\r\n\u003E \r\n\u003E m68 (https://github.com/google/skia/blob/chrome/m68/include/codec/SkCodec.h#L174):\r\n\u003E \r\n\u003E \u0060\u0060\u0060cpp\r\n\u003E const SkImageInfo\u0026 getInfo() const;\r\n\u003E \u0060\u0060\u0060\r\n\u003E m80 (https://github.com/google/skia/blob/chrome/m80/include/codec/SkCodec.h#L194):\r\n\u003E \r\n\u003E \u0060\u0060\u0060cpp\r\n\u003E SkImageInfo getInfo() const;\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E And, under the hood, there is a copy I think.\r\n\u003E \r\n\u003E Owns handle is just whether the object is responsible for deconstructing the reference/object. In the case of the statics, the initial reference is incremented, therefore we have to also decrement when it is collected.\r\n\u003E \r\n\u003E But, you were almost on the exact right track. The object is reference counted, but in the case of the particular call of \u0060getInfo\u0060, I think it is not incremented. In that case, we need to let the managed side know that is should not decrement (using the \u0060unrefExisting\u0060 param):\r\n\u003E \r\n\u003E https://github.com/mono/SkiaSharp/blob/dev/update-skia/binding/Binding/SKImageInfo.cs#L27\r\n\u003E \r\n\u003E But, I am just going to do some tests quick and confirm.",
+        "createdAt": "2020-04-17T21:13:54",
+        "reactions": []
+      },
+      {
+        "id": 615466816,
+        "author": "mattleibow",
+        "body": "@Ziriax \r\n\u003E \u003E Owns handle is just whether the object is responsible for deconstructing the reference/object. In the case of the statics, the initial reference is incremented, therefore we have to also decrement when it is collected.\r\n\u003E \u003E \r\n\u003E \u003E But, you were almost on the exact right track. The object is reference counted, but in the case of the particular call of \u0060getInfo\u0060, I think it is not incremented. In that case, we need to let the managed side know that is should not decrement (using the \u0060unrefExisting\u0060 param):\r\n\u003E \u003E \r\n\u003E \u003E https://github.com/mono/SkiaSharp/blob/dev/update-skia/binding/Binding/SKImageInfo.cs#L27\r\n\u003E \u003E \r\n\u003E \u003E But, I am just going to do some tests quick and confirm.\r\n\u003E \r\n\u003E Oh nice catch. So this is way more complex than I thought.\r\n\u003E \r\n\u003E A look at the [implementation](https://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/skia/include/private/SkEncodedInfo.h;drc=74778f2d1a27e6349c10117ef6ba53adda8c6db1;l=159?originalUrl=https:%2F%2Fcs.chromium.org%2F) shows that a new copy is always returned by \u0060SkCodec::getInfo()\u0060:\r\n\u003E \r\n\u003E \u0060\u0060\u0060cpp\r\n\u003E   */\r\n\u003E     SkImageInfo makeImageInfo() const {\r\n\u003E         auto ct =  kGray_Color == fColor ? kGray_8_SkColorType   :\r\n\u003E                  kXAlpha_Color == fColor ? kAlpha_8_SkColorType  :\r\n\u003E                     k565_Color == fColor ? kRGB_565_SkColorType  :\r\n\u003E                                            kN32_SkColorType      ;\r\n\u003E         auto alpha = kOpaque_Alpha == fAlpha ? kOpaque_SkAlphaType\r\n\u003E                                              : kUnpremul_SkAlphaType;\r\n\u003E         sk_sp\u003CSkColorSpace\u003E cs = fProfile ? SkColorSpace::Make(*fProfile-\u003Eprofile())\r\n\u003E                                           : nullptr;\r\n\u003E         if (!cs) {\r\n\u003E             cs = SkColorSpace::MakeSRGB();\r\n\u003E         }\r\n\u003E         return SkImageInfo::Make(fWidth, fHeight, ct, alpha, std::move(cs));\r\n\u003E     }\r\n\u003E \u0060\u0060\u0060",
+        "createdAt": "2020-04-17T21:15:19",
+        "reactions": []
+      },
+      {
+        "id": 615467176,
+        "author": "mattleibow",
+        "body": "Looking at the \u0060SKCodec\u0060, there is an issue somewhere there. The actual call to \u0060getInfo\u0060 increments, and then we decrement. ~But, somehow, after the codec is collected, the colorspace is again decremented...~ Looking into that.\r\n\r\nThe \u0060GetPixels\u0060 call seems to decrement it... Investigating...",
+        "createdAt": "2020-04-17T21:16:24",
+        "reactions": []
+      },
+      {
+        "id": 615491077,
+        "author": "ziriax",
+        "body": "\u0060SkCodec::getInfo()\u0060 returns a struct, and also in C# this is a struct, so that can\u0027t cause any refcount problems IMO\r\n\r\nYou say \u0060GetPixels\u0060 is misbehaving, on what class?\r\n",
+        "createdAt": "2020-04-17T22:26:28",
+        "reactions": []
+      },
+      {
+        "id": 615521318,
+        "author": "mattleibow",
+        "body": "I think I found it... \r\n\r\nm68: (https://github.com/mono/skia/blob/xamarin-mobile-bindings/src/c/sk_types_priv.h#L193) ref on the way in\r\n\u0060\u0060\u0060cpp\r\nsk_ref_sp(AsColorSpace(info-\u003Ecolorspace)));\r\n\u0060\u0060\u0060\r\n\r\nm80: (https://github.com/mono/skia/blob/dev/update-m80/src/c/sk_types_priv.h#L210) NO REF on the way in\r\n\r\n\u0060\u0060\u0060cpp\r\nsk_sp\u003CSkColorSpace\u003E(AsColorSpace(info-\u003Ecolorspace))); \r\n\u0060\u0060\u0060\r\n\r\nLet me fix that. What is happening is that when I get the struct from native code, the cs is incremented. When it reaches managed code, it is decremented. So no problem. However, when it goes back into the native code, it is not incremented, so when the native code cleans up, it gets decremented.\r\n",
+        "createdAt": "2020-04-18T00:30:18",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:30:55.6790722Z"
+          }
+        ]
+      },
+      {
+        "id": 615521889,
+        "author": "mattleibow",
+        "body": "Fixed in 1590d7e1e81581e1c4ab1252b7d3dcb563d1a8e1 and https://github.com/mono/skia/commit/47de7965be076311e824589b0464a4e1e08d54eb",
+        "createdAt": "2020-04-18T00:33:58",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:30:55.8747191Z"
+          }
+        ]
+      }
+    ]
+  }
 }

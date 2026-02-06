@@ -53,5 +53,79 @@
       "state": "APPROVED",
       "submittedAt": "2019-12-21T03:07:13"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:29:40.6669468Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 567641888,
+        "author": "mattleibow",
+        "body": "We can also update the nuspecs with the new netcoreapp3.0:\r\nhttps://github.com/mono/SkiaSharp/blob/master/nuget/SkiaSharp.Views.Desktop.Common.nuspec#L39\r\n\r\nAnd:\r\nhttps://github.com/mono/SkiaSharp/blob/master/nuget/SkiaSharp.Views.WPF.nuspec#L38\r\n\r\n\u003E Just note, the nuspecs are pseudo-nuspec and are manipulated in the build. That is why they are a bit different.",
+        "createdAt": "2019-12-19T20:03:32",
+        "reactions": []
+      },
+      {
+        "id": 567653688,
+        "author": "TysonMN",
+        "body": "What should the platform be for\r\nhttps://github.com/mono/SkiaSharp/blob/master/nuget/SkiaSharp.Views.WPF.nuspec#L38\r\n?",
+        "createdAt": "2019-12-19T20:37:39",
+        "reactions": []
+      },
+      {
+        "id": 567654517,
+        "author": "mattleibow",
+        "body": "The platform that builds it. It looks to build on all the platforms, so leave it out.",
+        "createdAt": "2019-12-19T20:39:52",
+        "reactions": []
+      },
+      {
+        "id": 567665273,
+        "author": "TysonMN",
+        "body": "\u003E We can also update the nuspecs with the new netcoreapp3.0:\r\nhttps://github.com/mono/SkiaSharp/blob/master/nuget/SkiaSharp.Views.Desktop.Common.nuspec#L39\r\n\u003E\r\n\u003E And:\r\n\u003E https://github.com/mono/SkiaSharp/blob/master/nuget/SkiaSharp.Views.WPF.nuspec#L38\r\n\r\nDone :)",
+        "createdAt": "2019-12-19T20:46:36",
+        "reactions": []
+      },
+      {
+        "id": 568146962,
+        "author": "mattleibow",
+        "body": "Thanks for the PR! Merged!",
+        "createdAt": "2019-12-21T03:07:39",
+        "reactions": []
+      },
+      {
+        "id": 568152377,
+        "author": "TysonMN",
+        "body": "My pleasure :)\n\nIs there a NuGet package (possibly a pre-release) with these changes?\n\nI would test it by adding it to a project we are developing at work.",
+        "createdAt": "2019-12-21T04:51:19",
+        "reactions": []
+      },
+      {
+        "id": 568155034,
+        "author": "mattleibow",
+        "body": "We can! Just noticed that this branch failed to build because DevOps got disconnected from all its agents... Rebuilding and then I\u0027ll let you know when you can get your hands on the build.\r\n\r\nI did start a build on our public CI:\r\nhttps://dev.azure.com/xamarin/public/_build/results?buildId=11744\u0026view=results\r\n\r\nThat should work for testing, but I am also going to push out the PR build to the preview feed:\r\n\r\n\u003E https://aka.ms/skiasharp-eap/index.json\r\n\r\nThe reason for this is that CI builds both the preview and the stable packages to make sure everything is working. Then when I release I first push the preview packages for a few weeks, and then go stable - no need to rebuild. But, sometimes you may be tempted to select the stable packages from the CI server - and then it gets cached... I can control what gets to the preview feed.",
+        "createdAt": "2019-12-21T05:49:07",
+        "reactions": [
+          {
+            "user": "TysonMN",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:29:40.3312303Z"
+          }
+        ]
+      },
+      {
+        "id": 568157031,
+        "author": "mattleibow",
+        "body": "Hehe, seems my certificates to build the samples expired today... I\u0027m going to have to upload them to CI, but I need to get a sleep action going here. When I wake up in a few hours, I\u0027ll rebuild with the v1.68.2 and push that after merging the VS2019 build to master.",
+        "createdAt": "2019-12-21T06:28:22",
+        "reactions": [
+          {
+            "user": "TysonMN",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:29:40.6167001Z"
+          }
+        ]
+      }
+    ]
+  }
 }

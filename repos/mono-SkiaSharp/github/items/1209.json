@@ -78,5 +78,239 @@
       "state": "COMMENTED",
       "submittedAt": "2020-04-10T14:41:43"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:30:36.7655967Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 608610423,
+        "author": "mattleibow",
+        "body": "This looks beautiful! If all reflection is gone, then we can remove the \u0060[Preserve]\u0060 attributes as well! We might just be able to make this library more linker friendly! Excellent work.\r\n",
+        "createdAt": "2020-04-03T19:08:39",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:30:28.9020726Z"
+          }
+        ]
+      },
+      {
+        "id": 608624075,
+        "author": "mattleibow",
+        "body": "Just a unit test failure due... because we no longer have to have a test for a field:\r\n\r\n         D:\\a\\1\\s\\tests\\Tests\\GarbageCleanupFixture.cs(23,34): error CS0117: \u0027HandleDictionary\u0027 does not contain a definition for \u0027constructors\u0027 [D:\\a\\1\\s\\tests\\SkiaSharp.Desktop.Tests\\SkiaSharp.Desktop.Tests.csproj]\r\n",
+        "createdAt": "2020-04-03T19:41:45",
+        "reactions": []
+      },
+      {
+        "id": 608635696,
+        "author": "Gillibald",
+        "body": "Woops. Will fix that shortly.",
+        "createdAt": "2020-04-03T20:09:56",
+        "reactions": []
+      },
+      {
+        "id": 608636494,
+        "author": "mattleibow",
+        "body": "Pity there is no generic constraint for complex constructors \u0060new(IntPtr, bool)\u0060 \uD83D\uDE22 ",
+        "createdAt": "2020-04-03T20:12:01",
+        "reactions": []
+      },
+      {
+        "id": 608637625,
+        "author": "Gillibald",
+        "body": "Yep but we could just introduce parameterless ctor and move the current logic to a internal virtual method I guess. ",
+        "createdAt": "2020-04-03T20:14:55",
+        "reactions": []
+      },
+      {
+        "id": 608639212,
+        "author": "mattleibow",
+        "body": "Hmmmm. We could do that.\r\n\r\nAlready the code is set up to support setting the handle later in the construction. So technically, we can do:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar obj = new SKSomething();\r\nobj.SetHandle(handle: handle, owns: true);\r\n\u0060\u0060\u0060\r\n\r\nThe issue is with already-default constructors, like \u0060new SKPaint()\u0060. That already constructs a new native object. From user code.\r\n\r\nNot sure how to deal with that... ",
+        "createdAt": "2020-04-03T20:18:38",
+        "reactions": []
+      },
+      {
+        "id": 608642682,
+        "author": "Gillibald",
+        "body": "Might a special paint help here? \u0060ReferencedSKPaint : SKPaint\u0060 that is used by code that wants to expose a already existing instance?",
+        "createdAt": "2020-04-03T20:26:55",
+        "reactions": []
+      },
+      {
+        "id": 609403701,
+        "author": "Gillibald",
+        "body": "Okay. A parameterless ctor will not work because it has to be public. So the delegate approach is the best we can get for now without duplicating code.",
+        "createdAt": "2020-04-05T11:49:31",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:30:30.8850521Z"
+          }
+        ]
+      },
+      {
+        "id": 609459462,
+        "author": "Gillibald",
+        "body": "Haven\u0027t fixed \u0060GarbageCleanupFixture\u0060 yet",
+        "createdAt": "2020-04-05T18:17:46",
+        "reactions": []
+      },
+      {
+        "id": 609467971,
+        "author": "mattleibow",
+        "body": "No prob. I was just updating from master with some more unit tests for other things. I hope I didn\u0027t break any local changes. Should be none...",
+        "createdAt": "2020-04-05T19:19:18",
+        "reactions": []
+      },
+      {
+        "id": 609468387,
+        "author": "mattleibow",
+        "body": "What project were you using to make these changes? Was it the source project? I managed to fix the unit tests in VS2019 (I think) so it might also be cool to just open the .NET Core tests and then use them as you work on things. And you can use it to test chunks of code. Not sure what is happening with the full framework test not running in VS, but it work on the command line so no biggie. ",
+        "createdAt": "2020-04-05T19:21:53",
+        "reactions": []
+      },
+      {
+        "id": 609470428,
+        "author": "Gillibald",
+        "body": "I am working with \u0060SkiaSharp.NetCore.Tests.sln\u0060. That isn\u0027t including all tests or they magicly passed.",
+        "createdAt": "2020-04-05T19:36:04",
+        "reactions": []
+      },
+      {
+        "id": 609471289,
+        "author": "Gillibald",
+        "body": "Do we get a public ci build again that let\u0027s us see the failing tests? ",
+        "createdAt": "2020-04-05T19:42:24",
+        "reactions": []
+      },
+      {
+        "id": 610655097,
+        "author": "mattleibow",
+        "body": "We were working on that, but we also keeping our usage of DevOps down so we can let the COVID-19 responders get priority. \r\n\r\n_I say we smack this virus a big one and scare nature into a state where it doesn\u0027t want to pop another for a very long time \uD83D\uDE06 (my expert medical opinion)_",
+        "createdAt": "2020-04-07T22:39:56",
+        "reactions": []
+      },
+      {
+        "id": 611194414,
+        "author": "Gillibald",
+        "body": "What did fail this time? ",
+        "createdAt": "2020-04-08T21:05:54",
+        "reactions": []
+      },
+      {
+        "id": 611286996,
+        "author": "mattleibow",
+        "body": "DevOps. Sometimes it just fails to download the Windows SDK or some random thing. Restarting it. Sometimes the asset copy between stages also just forgets to copy a file.",
+        "createdAt": "2020-04-09T02:07:13",
+        "reactions": []
+      },
+      {
+        "id": 611293356,
+        "author": "mattleibow",
+        "body": "I have been thinking about this PR... The delegates inline make is easier to maintain, but still a bit... well... not awesome.\r\n\r\nI did like the way you did the static methods of \u0060GetObject\u0060 in each type in https://github.com/mono/SkiaSharp/pull/1193. Maybe we could make the new, local \u0060GetObject\u0060 just call the \u0060SKObject\u0060 version:\r\n\r\n\u0060\u0060\u0060csharp\r\ninternal static GRContext GetObject (IntPtr ptr, bool owns = true, bool unrefExisting = true) =\u003E\r\n    SKObject.GetObject\u003CGRContext\u003E(handle, (h, o) =\u003E new GRContext(h, o), owns, unrefExisting);\r\n\u0060\u0060\u0060\r\n\r\nThis will also reduce the amount of IL generated for the thousands of delegates. I suppose that is less duplication and we just have to worry about the method signature, which is easy.\r\n\r\nI know you have been working on this for several days and it is a pain to keep going back. So, thanks for sticking with it. Did you managed to run any perfs? It will be interesting to see how much the improvements are.",
+        "createdAt": "2020-04-09T02:30:48",
+        "reactions": []
+      },
+      {
+        "id": 611384146,
+        "author": "Gillibald",
+        "body": "I am fine with redoing this. Your suggestion reduces the code noise so I am fine with it.\r\n\r\nI wonder if we should get rid of the delegate as well if we introduce a helper method on each type. \r\n\r\nCreating object before this change took 3% after this change it was 1%. Destruction of objects still takes about 4% of all processing.\r\n\r\nIn general SkiaSharp had less impact on the overall processing time. \r\n\r\nI can run some benchmarks if you want. ",
+        "createdAt": "2020-04-09T07:47:09",
+        "reactions": []
+      },
+      {
+        "id": 611452635,
+        "author": "mattleibow",
+        "body": "Interesting that destruction takes more time... Do you have any idea where this overhead is? I will run some more profiling and see... Has there been any variance with types of objects/operations? ",
+        "createdAt": "2020-04-09T10:23:43",
+        "reactions": []
+      },
+      {
+        "id": 611473129,
+        "author": "Gillibald",
+        "body": "I am calling SKFontManager.MatchCharacter quite often. That produces \u0060SKFontStyle\u0060 on every call. It is really bad to cache these one time used instances. ",
+        "createdAt": "2020-04-09T11:15:37",
+        "reactions": []
+      },
+      {
+        "id": 611527111,
+        "author": "mattleibow",
+        "body": "\u003E That produces SKFontStyle on every call.\r\n\r\nI saw that and now I cache that now: https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKFontStyle.cs#L55\r\n\r\nBut, did you try the overloads that take a parameter?\r\nhttps://github.com/mono/SkiaSharp/blob/fc9f030a08eb158fb934774cdf54f8df939088c7/binding/Binding/SKFontManager.cs#L170",
+        "createdAt": "2020-04-09T13:26:41",
+        "reactions": []
+      },
+      {
+        "id": 611565625,
+        "author": "Gillibald",
+        "body": "Y I will cache them on my own in the future still I don\u0027t see why SKFontStyle isn\u0027t a struct.",
+        "createdAt": "2020-04-09T14:41:38",
+        "reactions": []
+      },
+      {
+        "id": 611748011,
+        "author": "Gillibald",
+        "body": "I will fix the unit tests tomorrow. When we agree on this solution I will fix coding style issues.",
+        "createdAt": "2020-04-09T20:55:31",
+        "reactions": []
+      },
+      {
+        "id": 611769237,
+        "author": "mattleibow",
+        "body": "OK, I\u0027ll review. Thanks for all the effort. It is much appreciated.",
+        "createdAt": "2020-04-09T21:48:46",
+        "reactions": []
+      },
+      {
+        "id": 612065429,
+        "author": "Gillibald",
+        "body": "Okay. Next try \uD83D\uDC4D",
+        "createdAt": "2020-04-10T14:57:26",
+        "reactions": []
+      },
+      {
+        "id": 612198351,
+        "author": "mattleibow",
+        "body": "I did some benchmarks and things are looking like they are about 1.3x faster!\r\n\r\n\u0060\u0060\u0060\r\nBenchmarkDotNet=v0.12.0, OS=Windows 10.0.18363\r\nIntel Core i9-9980HK CPU 2.40GHz, 1 CPU, 16 logical and 8 physical cores\r\n  [Host]     : .NET Framework 4.8 (4.8.4150.0), X64 RyuJIT\r\n  Job-VTGAFA : .NET Framework 4.8 (4.8.4150.0), X64 RyuJIT\r\n  Job-MNUBEA : .NET Core 3.1.2 (CoreCLR 4.700.20.6602, CoreFX 4.700.20.6702), X64 RyuJIT\r\n  Job-XIDDXQ : Mono 6.8.0 (Visual Studio), X64\r\n\u0060\u0060\u0060\r\n\r\n**BEFORE**\r\n\r\n\u0060\u0060\u0060\r\n|  Method |       Runtime |     Mean |     Error |    StdDev |\r\n|-------- |-------------- |---------:|----------:|----------:|\r\n| TheTest |    .NET 4.7.2 | 1.369 us | 0.0211 us | 0.0197 us |\r\n| TheTest | .NET Core 3.1 | 1.178 us | 0.0233 us | 0.0229 us |\r\n| TheTest |          Mono | 2.811 us | 0.0536 us | 0.0550 us |\r\n\u0060\u0060\u0060\r\n**AFTER**\r\n\r\n\u0060\u0060\u0060\r\n|  Method |       Runtime |     Mean |     Error |    StdDev |\r\n|-------- |-------------- |---------:|----------:|----------:|\r\n| TheTest |    .NET 4.7.2 | 1.051 us | 0.0172 us | 0.0143 us |\r\n| TheTest | .NET Core 3.1 | 0.940 us | 0.0181 us | 0.0169 us |\r\n| TheTest |          Mono | 1.912 us | 0.0186 us | 0.0156 us |\r\n\u0060\u0060\u0060\r\n\r\n**CODE**\r\n\r\n\u0060\u0060\u0060csharp\r\n[SimpleJob(RuntimeMoniker.Mono)]\r\n[SimpleJob(RuntimeMoniker.Net472)]\r\n[SimpleJob(RuntimeMoniker.NetCoreApp31)]\r\npublic class Benchmark {\r\n    [Benchmark]\r\n    public object TheTest() {\r\n        // the actual test\r\n        var data = SKData.Create(1);\r\n\r\n        data.Dispose();\r\n        return data;\r\n    }\r\n}\r\n\r\npublic class Program {\r\n    public static void Main(string[] args) {\r\n        var summary = BenchmarkRunner.Run\u003CBenchmark\u003E();\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-04-10T20:15:17",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:30:35.6596852Z"
+          }
+        ]
+      },
+      {
+        "id": 612200478,
+        "author": "Gillibald",
+        "body": "Hmm that isn\u0027t much but at least this will free us from reflection.",
+        "createdAt": "2020-04-10T20:21:10",
+        "reactions": []
+      },
+      {
+        "id": 612202586,
+        "author": "mattleibow",
+        "body": "Not much, but it might add up on larger drawings. This is a 1.3x speed up on almost every static construction and many members. \r\nAnd this is just .NET desktop. Who knows what actually happens on iOS or other AOT systems.",
+        "createdAt": "2020-04-10T20:26:58",
+        "reactions": []
+      },
+      {
+        "id": 612417579,
+        "author": "mattleibow",
+        "body": "Thanks for this PR, took a few runs but we got it all done and we now have a slightly faster SkiaSharp.",
+        "createdAt": "2020-04-11T13:08:19",
+        "reactions": []
+      },
+      {
+        "id": 612418017,
+        "author": "Gillibald",
+        "body": "I am fine with redoing things to get the best results. Will start experimenting with the V2 bits soon so we get that stable soon. ",
+        "createdAt": "2020-04-11T13:10:30",
+        "reactions": []
+      }
+    ]
+  }
 }

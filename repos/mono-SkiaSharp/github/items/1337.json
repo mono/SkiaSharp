@@ -13,5 +13,74 @@
   "createdAt": "2020-06-16T07:12:16",
   "updatedAt": "2020-07-06T14:18:52",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:29:12.2233177Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 644594804,
+        "author": "Gillibald",
+        "body": "Just add \u0060-Wl,-z,relro,-z,now\u0060 to https://github.com/mono/SkiaSharp/blob/master/native/android/build.cake#L40 and use your own build",
+        "createdAt": "2020-06-16T07:46:14",
+        "reactions": []
+      },
+      {
+        "id": 644600295,
+        "author": "LamijaV",
+        "body": "Hi Gillibald, thank you for answer but what I am looking is official answer from lib owners. Building my own library from repo is \u0027cheat\u0027 that is out of the question. This is solution that needs to be maintained for years to come and must use official versions of libraries. Thank you.",
+        "createdAt": "2020-06-16T07:57:04",
+        "reactions": []
+      },
+      {
+        "id": 644631104,
+        "author": "Gillibald",
+        "body": "Those security features always come with some performance degradation otherwise they would be enabled by default. Good Luck\r\n\r\nFor reference: https://blog.quarkslab.com/clang-hardening-cheat-sheet.html",
+        "createdAt": "2020-06-16T08:55:03",
+        "reactions": []
+      },
+      {
+        "id": 644635606,
+        "author": "LamijaV",
+        "body": "That is exactly what I am suspecting, since it is reported only for some libraries maintained by mono. I believe answer from lib developers would ease the mind of our clients. :) Thank you!",
+        "createdAt": "2020-06-16T09:03:04",
+        "reactions": []
+      },
+      {
+        "id": 644659533,
+        "author": "mattleibow",
+        "body": "@Gillibald Thanks for getting in here so quick! \r\n\r\n@LamijaV This is an interesting question and I will investigate. Just a note, @Gillibald has been a major contributor to this project, so his input is worth quite a bit. He is also right, enabling RELRO does come with a startup performance cost. I have not run any benchmarks on this at all, so can\u0027t say anything to that fact.\r\n\r\nHowever, it is also important to note that the mono team actually does _not_ maintain the native library. We just build it an provide a way to use it with .NET/Xamarin. It is in fact owned and maintained by Google: https://skia.org/\r\n\r\nI would go so far as to say that if you need a response from the authors, I would ask on the Skia forums: https://groups.google.com/forum/#!forum/skia-discuss They are very responsive and will have far more information for you. If they want to know how we are building the code, you can let them know we are building a shared library from the source. We pretty much use the defaults so any input they provide is relevant for SkiaSharp. In addition, if they give any indication that RELRO is essential, then we can have a look at what needs to be done for SkiaSharp.\r\n\r\nI hope this is helpful.",
+        "createdAt": "2020-06-16T09:48:38",
+        "reactions": []
+      },
+      {
+        "id": 644676968,
+        "author": "LamijaV",
+        "body": "Hi Matthew, thank you (and once more Gillibald) for the quick input. So, you are building with default flags that do not include relro. I will raise a question with SkiaSharp team and also get back to you with their response. Thank you.  ",
+        "createdAt": "2020-06-16T10:24:17",
+        "reactions": []
+      },
+      {
+        "id": 644682628,
+        "author": "LamijaV",
+        "body": "Also, I reported the similar issue for mono lib. https://github.com/mono/mono/issues/19976 :)",
+        "createdAt": "2020-06-16T10:37:09",
+        "reactions": []
+      },
+      {
+        "id": 645304826,
+        "author": "mattleibow",
+        "body": "Thanks. Ley me know when you ask the skia team, then I can follow up with any changes we need.",
+        "createdAt": "2020-06-17T10:58:20",
+        "reactions": []
+      },
+      {
+        "id": 654267876,
+        "author": "LamijaV",
+        "body": "Hi @mattleibow, can you access the ticket I opened https://bugs.chromium.org/p/skia/issues/detail?id=10388#c_ts1593759556 ?\r\nSo the answer from Skia team was that this is not something they considered and they see it as quote: _This is the sort of thing that\u0027s up to SkiaSharp to decide for itself._ and solution would be not to build with default flags. They closed the issue.\r\n",
+        "createdAt": "2020-07-06T14:18:52",
+        "reactions": []
+      }
+    ]
+  }
 }

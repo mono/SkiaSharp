@@ -27,5 +27,52 @@
   "deletions": 47,
   "changedFiles": 9,
   "commits": 2,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:29:37.6850422Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 567539629,
+        "author": "TysonMN",
+        "body": "Build still fails :(\r\n\r\nQuoting https://github.com/mono/SkiaSharp/pull/1066#issuecomment-567354337\r\n\u003E Still failing for some reason. I\u0027m AFK right now, I\u0027ll have a look as soon as I get back. Thanks for the\r\nPR. Not sure how I missed this one.\r\n\u003E\r\n\u003E You might also want to have a look at the nuspec file and add the new platform.\r\n\r\nThere are no more references to \u0060SkiaSharp.Views.Desktop.Common.NetStandard\u0060 (because I searched within all files in the repo and either removed the reference or changed it to \u0060SkiaSharp.Views.Desktop.Common\u0060).  None of those references were in a nuspec file, so I didn\u0027t make any changes to those.\r\n\r\nAnd you are welcome for the PR :)  Feel free to delegate any work to me to get this to build.",
+        "createdAt": "2019-12-19T15:35:35",
+        "reactions": []
+      },
+      {
+        "id": 567546435,
+        "author": "TysonMN",
+        "body": "I created PR #1068 to see if the first commit in the branch for this PR passes the automated build, which might help us figure out how to get both commits in the branch for this PR to pass the automated build.",
+        "createdAt": "2019-12-19T15:51:10",
+        "reactions": []
+      },
+      {
+        "id": 567554218,
+        "author": "mattleibow",
+        "body": "@bender2k14 The build is actually passing.\r\n\r\nThe reason for the red is that one of the samples is failing because a public PR does not have access to the signing keys required for iOS. I used to have a public CI but we don\u0027t seem to have a big enough Azure to use that - or something - so I have to just use the private builds for now. Trying to get more parallel builds in public so we get better status. Sorry about that.\r\n\r\nYou don\u0027t need to do https://github.com/mono/SkiaSharp/pull/1068",
+        "createdAt": "2019-12-19T16:09:50",
+        "reactions": []
+      },
+      {
+        "id": 567556071,
+        "author": "TysonMN",
+        "body": "\u003E The build is actually passing.\r\n\r\nOh, great :)\r\n\r\n\u003E ...Trying to get more parallel builds in public so we get better status. Sorry about that.\r\n\r\nThat\u0027s ok.\r\n\r\nIs there work left to do for this PR then?",
+        "createdAt": "2019-12-19T16:14:27",
+        "reactions": []
+      },
+      {
+        "id": 567557264,
+        "author": "mattleibow",
+        "body": "Nothing :)",
+        "createdAt": "2019-12-19T16:17:14",
+        "reactions": [
+          {
+            "user": "TysonMN",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:29:37.6347726Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -48,5 +48,88 @@
       "state": "COMMENTED",
       "submittedAt": "2020-04-01T16:18:53"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:30:46.3309259Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 605721790,
+        "author": "mattleibow",
+        "body": "Thanks for the review!\r\n\r\nTechnically, the objects should only be referenced from a single thread at any given time. However, I will add some locking to prevent any future issues.",
+        "createdAt": "2020-03-29T23:56:31",
+        "reactions": []
+      },
+      {
+        "id": 607348717,
+        "author": "mattleibow",
+        "body": "I think this is it. Fixed some other bugs. Concurrency due to construction and destruction, but also when the GC starts to collect things too soon.",
+        "createdAt": "2020-04-01T16:19:38",
+        "reactions": []
+      },
+      {
+        "id": 607714616,
+        "author": "mattleibow",
+        "body": "I have pushed what I think is now a good version to the preview feed: https://aka.ms/skiasharp-eap/index.json\r\nCheck out the PR version: **1.68.2-pr.1200.20**",
+        "createdAt": "2020-04-02T08:56:34",
+        "reactions": []
+      },
+      {
+        "id": 607786956,
+        "author": "Gillibald",
+        "body": "Will have a look shortly \uD83D\uDC4D",
+        "createdAt": "2020-04-02T11:25:25",
+        "reactions": []
+      },
+      {
+        "id": 608077407,
+        "author": "mattleibow",
+        "body": "@Gillibald have you been able to have a look and see if things are better? I am thinking of just merging and pushing to nuget.org so that the mapsui folks can check. But, I just want to make sure that I get your opinion/hands on the pie here.",
+        "createdAt": "2020-04-02T20:10:26",
+        "reactions": []
+      },
+      {
+        "id": 608079196,
+        "author": "Gillibald",
+        "body": "Did not have time today. Could do tomorrow morning. In a few hours \uD83D\uDE00. My current test creates and disposes millions of SKObjects. So minimal improvements should come out clearly. Mostly text related objects.",
+        "createdAt": "2020-04-02T20:15:40",
+        "reactions": []
+      },
+      {
+        "id": 608102929,
+        "author": "mattleibow",
+        "body": "Ah, millions? Have you noticed any random crashes or weird behavior at all \uD83D\uDE04 \r\n\r\nThe issues that mostly come up is with concurrent execution because objects were being created with the same handle as an object being destroyed. As a result, the managed side got all mixed up as it was busy nuking things and then it is added back, or worse the reverse. Most of the cases coming now are when people use the GL views because that is usually for high frequency updates and often on separate threads. \r\n\r\nSo this would be interesting to see if you were seeing weird things, or even having to do some weird things to prevent weird things \uD83D\uDE04 ",
+        "createdAt": "2020-04-02T21:35:40",
+        "reactions": []
+      },
+      {
+        "id": 608108167,
+        "author": "Gillibald",
+        "body": "Luckily I only have to deal with single threaded processing. I might want to put text processing on a dedicated thread in the near future. ",
+        "createdAt": "2020-04-02T21:48:08",
+        "reactions": []
+      },
+      {
+        "id": 608358833,
+        "author": "Gillibald",
+        "body": "The preview runs just fine. After this is merged I will work on the changes to SKObject.GetObject\r\nUsing cached delegates instead of reflection should improve things a bit.\r\n\r\nDo we really need to keep track of all SKObject instances? Ideally, we could just turn off caching. ",
+        "createdAt": "2020-04-03T10:28:18",
+        "reactions": []
+      },
+      {
+        "id": 608380181,
+        "author": "mattleibow",
+        "body": "We have to track them because if I call \u0060SKSurface.Canvas\u0060 twice, I need to find it again. I can\u0027t really cache it directly, because some operations might destroy the canvas and then the object is destroyed in native code, but we still got a valid object in managed world. Sometimes we don\u0027t even know when it will happen, as it may be a result of another operation. It is easy from a developer\u0027s perspective because certain operations may do things, but to get it right it is going to be more difficult.\r\n\r\nI know @kekekeks was asking for a pointer-only API: #1205 \r\n\r\nBut, this is not to say we can\u0027t actually have a look at certain APIs and see if we can just store things in a field. For example, a surface will always have the same canvas, so no need to even go through the interop. But this is not true for \u0060SKBitmap.PeekPixels\u0060 because a copy is made of the pixmap, and you can always change the underlying pixel pointer at time - and this will not reflect in the copied pixmap.\r\n\r\nOverall, the slowest point of this library is the lookup. And this is made harder because some objects are reference counted, others are not. And then, some are reference counted, but not used like one. The API is not quite perfect.",
+        "createdAt": "2020-04-03T11:23:05",
+        "reactions": []
+      },
+      {
+        "id": 608381360,
+        "author": "mattleibow",
+        "body": "Thanks for having a look. Merging this now so I can get a preview out.",
+        "createdAt": "2020-04-03T11:26:09",
+        "reactions": []
+      }
+    ]
+  }
 }
