@@ -1,0 +1,22 @@
+{
+  "number": 2607,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG]  The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception (even after applying the solution of issue #2124).",
+  "body": "### Description\r\n\r\nI\u0027m trying to resize images (actually making thumbnail of 200x150) using SkiaSharp. The code works fine in my local setup which has \u0060Visual Studio Code 1.77.3\u0060,  \u0060.NET 7.0.400\u0060 and \u0060Windows 10 OS\u0060.  But when I deply the build of the code to \u0060Google Cloud Plateform (GCP)\u0060 with docker, the above mentioned exception occurs. \r\n\r\nI tried the GCP deployment with following packages:\r\nNote:  The deployed code was written in \u0060Microsoft Visual Studio Community 2022 (64 bit)\u0060, \u0060 .NET 6\u0060, \u0060Windows 10\u0060.\r\n\r\n\u003E SkiaSharp (2.88.5)\r\n\u003E SkiaSharp.Views.Blazor (2.88.5) (Solution for issue #2124)\r\n\u003E SkiaSharp.NativeAssets.Linux (2.88.5)\r\n\u003E SkiaSharp.NativeAssets.Linux.NoDependencies (2.88.5)\r\n\u003E SkiaSharp.NativeAssets.WebAsssembly (2.88.5)\r\n\r\nOn my local, the \u0060SkiaSharp (2.88.5)\u0060 alone worked.\r\n\r\n### Code\r\n\r\n\r\n\u0060\u0060\u0060cs\r\npublic IFormFile getThumbnailFromBase64(string base64String)\r\n{\r\n    byte[] imageBytes = Convert.FromBase64String(base64String);\r\n\r\n    SKImage image = SKImage.FromEncodedData(imageBytes);\r\n    SKBitmap imageBitmap = SKBitmap.FromImage(image);\r\n\r\n    SKImageInfo info = new SKImageInfo(200, 150);\r\n    SKFilterQuality quality = SKFilterQuality.High;\r\n\r\n    SKBitmap thumbnail = imageBitmap.Resize(imageInfo, quality);\r\n    SKData thumbData = thumbnail.Encode(SKEncodedImageFormat.Jpeg, 100);\r\n\r\n    byte[] thumbByte = thumbData.ToArray();\r\n    var stream = new MemoryStream(thumbByte);\r\n    IformFile thumbFile = new FormFile(stream, 0, thumbByte.Length, \u0022ImageFile\u0022, \u0022ImageFile\u0022);\r\n\r\n    return thumbFile;\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nThe code should take \u0060base64\u0060 image string and return an object of \u0060IFormFile\u0060 after deploying to GCP.\r\n\r\nAlso the exception should give more description or reason of the error and possible suggestions.\r\n\r\nWhat this \u0022type initializer\u0022 means in the exception?\r\n\r\n### Actual Behavior\r\n\r\nI put logger after each line of the above code. The only logger output I got is after \u0060byte[] imageBytes = Convert.FromBase64String(base64String);\u0060 line. I my thinking the exception \u0060The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception\u0060 occured at the line where I used \u0060SKImage\u0060 class.\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nLinux, Windows, Other (Please indicate in the description)\r\n\r\n### Platform / Operating System Version\r\n\r\n- Google Cloud Plateform (Linux OS)\r\n\r\n### Devices\r\n\r\n- Cloud Server (GCP)\r\n\r\n### Relevant Screenshots\r\n\r\n..\r\n\r\n### Relevant Log Output\r\n\r\n\u0060\u0060\u0060shell\r\nThe type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception.\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Code of Conduct\r\n\r\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ak4shp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-09-13T20:50:43",
+  "updatedAt": "2024-01-21T19:15:57",
+  "commentCount": 8,
+  "reactionCount": 0
+}

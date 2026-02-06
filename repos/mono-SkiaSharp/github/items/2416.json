@@ -1,0 +1,17 @@
+{
+  "number": 2416,
+  "type": "issue",
+  "state": "open",
+  "title": "SKCanvasView.Draw(canvas) distorted image [BUG] ",
+  "body": "**Description**\r\n\r\nI am taking a screenshot of my Android app in order to include it in a .pdf report.\r\n\r\nOn devices with API Level \u003E= 26 I am using [PixelCopy](https://developer.android.com/reference/android/view/PixelCopy) successfully, and I get a proper image.\r\n\r\nFor devices with API Level \u003C 26 I am forced to use Canvas like explained [here](https://stackoverflow.com/a/52905682). This works OK for most of the views I use it with, but there are a couple of them that do not render correctly. For example, the following screen should be captured:\r\n\r\n![image](https://user-images.githubusercontent.com/19507731/224710911-7182d44c-2a87-4467-a64d-0e87e3664e54.png)\r\n\r\nand I get:\r\n\r\n![image](https://user-images.githubusercontent.com/19507731/224710975-9b425ee3-b7aa-4746-ab8a-f092894a36b2.png)\r\n\r\nIn particular, the stuff that gets badly drawn are Views created with [Skia](https://skia.org/).\r\n\r\nIs there a way to modify my existing code in order to avoid this kind of inconsistencies?\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nfun getBitmapFromView(view: View): Bitmap {\r\n    val bitmap = Bitmap.createBitmap(\r\n        view.width, view.height, Bitmap.Config.ARGB_8888\r\n    )\r\n    val canvas = Canvas(bitmap)\r\n    view.draw(canvas)\r\n    return bitmap\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nNon distorted screenshot of SKCanvasView\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\n\r\nDistorted screenshot of SKCanvasView\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\u003C!-- the version of SkiaSharp that has the issue --\u003E\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio\u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: Android\u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n - Android: 31\u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n",
+  "author": {
+    "login": "rubiomiguel06",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-03-13T13:40:27",
+  "updatedAt": "2024-04-18T16:29:53",
+  "commentCount": 3,
+  "reactionCount": 0
+}

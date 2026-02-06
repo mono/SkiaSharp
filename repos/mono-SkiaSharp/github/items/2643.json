@@ -1,0 +1,23 @@
+{
+  "number": 2643,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Xamarin : Broken Bitmap.Encode on real devices",
+  "body": "### Description\r\n\r\nThe image is darkened when encoded by SkiaSharp.\r\nThis behavior occurs on physicals devices, but not on :\r\n- Android emulator\r\n- iOS emulator\r\n\r\nSo I want to be able to Decode an image and Encode it with SkiaSharp without changing the color. \r\n\r\n**Version of Skiasharp:** 2.88.6\r\n**Last Known Good Version of SkiaSharp:** 2.88.5\r\n\r\n### Code\r\n\r\nLink to a reproduction project repository: https://github.com/NovaKs68/bug-skiasharp\r\n\r\nThe following two code blocks modify the image color:\r\n\u0060\u0060\u0060cs\r\nusing (var stream = File.OpenRead(imagePath))\r\n{\r\n    SKImage img = SKImage.FromEncodedData(stream);\r\n    SKBitmap bitmap = SKBitmap.FromImage(img);\r\n\r\n    using (MemoryStream memStream = new MemoryStream())\r\n    using (SKManagedWStream wstream = new SKManagedWStream(memStream))\r\n    {\r\n        bitmap.Encode(wstream, SKEncodedImageFormat.Jpeg, 100);\r\n        imageCompressedView.Source = ImageSource.FromStream(() =\u003E new MemoryStream(memStream.ToArray()));\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\nvar codec = SKCodec.Create(imagePath);\r\nvar skImage = SKBitmap.Decode(codec);\r\n\r\nusing (MemoryStream memStream = new MemoryStream())\r\nusing (SKManagedWStream wstream = new SKManagedWStream(memStream))\r\n{\r\n    skImage.Encode(wstream, SKEncodedImageFormat.Jpeg, 100);\r\n    imageCompressedView.Source = ImageSource.FromStream(() =\u003E new MemoryStream(memStream.ToArray()));\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nThe result image should be similar to the input image.\r\n\r\n### Actual Behavior\r\n\r\nThe result image is darker than the input image (see screenshots).\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nAndroid, iOS\r\n\r\n### Platform / Operating System Version\r\n\r\n- Android 11\r\n- iOS 17.0.3\r\n\r\n### Devices\r\n\r\n- Xiaomi Redmi 11 Pro\r\n- IPhone 12 Pro Max\r\n\r\n### Relevant Screenshots\r\n\r\nOn iOS:\r\n![MicrosoftTeams-image (18)](https://github.com/mono/SkiaSharp/assets/55892105/7791d69d-0077-41f7-8f03-4fd918aa0d59)\r\n\r\nOn Android:\r\n![2023-10-10_11-49-33](https://github.com/mono/SkiaSharp/assets/55892105/6bb33e39-5dda-44e7-8e4d-2e43cad19e5f)\r\n\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "NovaKs68",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-10T11:59:49",
+  "updatedAt": "2024-02-09T12:00:26",
+  "closedAt": "2024-01-10T09:28:51",
+  "commentCount": 32,
+  "reactionCount": 6
+}

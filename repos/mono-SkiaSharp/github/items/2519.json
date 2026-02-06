@@ -1,0 +1,18 @@
+{
+  "number": 2519,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] How to convert a SKRuntimeEffect to SKColorFilter?",
+  "body": "Hi,\r\nI am using SkiaSharp 2.88.3.\r\nThere is a function called ToColorFilter(uniforms, children) however I cannot understand how it is supposed to work.\r\n\r\nThe only example I found in SKRuntimeEffectTest.cs is not working and cf1 is null.\r\n\r\n\u0060\u0060\u0060\r\nvar src = @\u0022\r\nuniform shader input;\r\nhalf4 main() {\r\n    return sample(input);\r\n}\u0022;\r\n\r\n\t\t\tusing var img = SKImage.FromEncodedData(Path.Combine(PathToImages, \u0022baboon.jpg\u0022));\r\n\t\t\tcanvas.DrawImage(img, 0, 0);\r\n\r\n\t\t\tusing var effect = SKRuntimeEffect.Create(src, out var errorText);\r\n\t\t\tAssert.Null(errorText);\r\n\t\t\tAssert.NotNull(effect);\r\n\r\n\t\t\tvar cf1 = effect.ToColorFilter();\r\n\u0060\u0060\u0060\r\n\r\nI can only get a non-null ColorFilter using this Shader... but it is very useful.\r\n\u0060\u0060\u0060\r\nhalf4 main(float2 p) {\r\n    return half4(0);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nI suppose there are limitations but what are they?\r\nI need to access to the main image (input?), and possibly to other images to combine them, or textures to use as Look-up tables.\r\nCan I do that using a custom color filter?\r\n\r\nThanks for helping.",
+  "author": {
+    "login": "dbriard",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-07-07T13:10:15",
+  "updatedAt": "2023-08-31T09:00:26",
+  "closedAt": "2023-07-31T16:35:49",
+  "commentCount": 3,
+  "reactionCount": 0
+}

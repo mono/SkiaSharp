@@ -1,0 +1,22 @@
+{
+  "number": 2580,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] \u0060SKElement.InvalidateVisual()\u0060 does not update screen on WPF",
+  "body": "### Description\r\n\r\nGraphics is not updated after calling \u0060SKElement.InvalidateVisual()\u0060. But if I change Width property instead of this call, then graphics is updated\r\n\r\n### Code\r\n\r\nCode example. \u0060x\u0060 changes, OnPaintSurface is called, but a circle doesn\u0027t move\r\n\u0060\u0060\u0060cs\r\nusing System;\r\nusing System.Timers;\r\nusing System.Windows;\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Desktop;\r\npublic partial class MainWindow\r\n{\r\n    private int x;\r\n    public MainWindow()\r\n    {\r\n        InitializeComponent();\r\n        var timer = new Timer(50);\r\n        timer.Elapsed \u002B= (_, _) =\u003E Dispatcher.Invoke(() =\u003E\r\n        {\r\n            x \u002B= 10;\r\n            MainCanvas.InvalidateVisual();\r\n        });\r\n        timer.Start();\r\n    }\r\n    private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\r\n    {\r\n        var canvas = e.Surface.Canvas;\r\n        canvas.Clear(SKColors.Gainsboro);\r\n        using var fillBrush = new SKPaint();\r\n        fillBrush.IsAntialias = true;\r\n        fillBrush.Style = SKPaintStyle.Fill;\r\n        canvas.DrawCircle(x, 50, 20, fillBrush);\r\n        Console.WriteLine(x);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\nAnd xaml\r\n\u0060\u0060\u0060xaml\r\n\u003CWindow x:Class=\u0022MainWindow\u0022\r\n        xmlns=\u0022http://schemas.microsoft.com/winfx/2006/xaml/presentation\u0022\r\n        xmlns:x=\u0022http://schemas.microsoft.com/winfx/2006/xaml\u0022\r\n        xmlns:mc=\u0022http://schemas.openxmlformats.org/markup-compatibility/2006\u0022\r\n        xmlns:d=\u0022http://schemas.microsoft.com/expression/blend/2008\u0022\r\n        xmlns:wpf=\u0022clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF\u0022\r\n        mc:Ignorable=\u0022d\u0022\r\n        Title=\u0022MainWindow\u0022 Height=\u0022300\u0022 Width=\u0022300\u0022\u003E\r\n    \u003CGrid\u003E\r\n        \u003Cwpf:SKElement Name=\u0022MainCanvas\u0022 PaintSurface=\u0022OnPaintSurface\u0022 IgnorePixelScaling=\u0022True\u0022 /\u003E\r\n    \u003C/Grid\u003E\r\n\u003C/Window\u003E\r\n\u0060\u0060\u0060\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### IDE / Editor\r\n\r\nRider\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 10",
+  "author": {
+    "login": "Simplifier",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-08-23T18:57:56",
+  "updatedAt": "2024-03-22T01:52:12",
+  "commentCount": 1,
+  "reactionCount": 0
+}

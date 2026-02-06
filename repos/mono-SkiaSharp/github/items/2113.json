@@ -1,0 +1,19 @@
+{
+  "number": 2113,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp crash as it uses system provided Harfbuzz on Linux",
+  "body": "**Description**\r\n\r\nWhen HarfbuzzSharp is used in a GtkSharp app, using fonts crashes the process.\r\n\r\n**Code**\r\n\r\n[SkiaSharpHarBuzzCrash.zip](https://github.com/mono/SkiaSharp/files/8911121/SkiaSharpHarBuzzCrash.zip)\r\n\r\n**Expected Behavior**\r\n\r\nThe app does not crash\r\n\r\n**Actual Behavior**\r\n\r\n\u0060\u0060\u0060\r\n$ gdb --args dotnet SkiaSharpHarfBuzzCrash.dll\r\n(gdb) r\r\nStarting program: /usr/bin/dotnet SkiaSharpHarBuzzCrash.dll\r\n[Thread debugging using libthread_db enabled]\r\nUsing host libthread_db library \u0022/lib/x86_64-linux-gnu/libthread_db.so.1\u0022.\r\n[New Thread 0x7fff46ffb640 (LWP 60845)]\r\n\r\nThread 1 \u0022dotnet\u0022 received signal SIGSEGV, Segmentation fault.\r\n0x0000555555b82800 in ?? ()\r\n(gdb) bt\r\n#0  0x0000555555b82800 in  ()\r\n#1  0x00007ffff2170210 in hb_font_set_funcs () at /lib/x86_64-linux-gnu/libharfbuzz.so.0\r\n#2  0x00007fff4542a491 in hb_font_create ()\r\n    at /home/jay/SkiaSharpHarBuzzCrash/bin/Debug/net6.0/runtimes/linux-x64/native/libHarfBuzzSharp.so\r\n#3  0x00007fff7e65331d in  ()\r\n#4  0x0000000000000000 in  ()\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CPackageReference Include=\u0022GtkSharp\u0022 Version=\u00223.24.24.*\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022HarfBuzzSharp.NativeAssets.Linux\u0022 Version=\u00222.6.1.9\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.88.1-preview.63\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022HarfBuzzSharp.NativeAssets.Linux\u0022 Version=\u00222.8.2.1-preview.63\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.Harfbuzz\u0022 Version=\u00222.88.1-preview.63\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.1-preview.63\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\n",
+  "author": {
+    "login": "jeromelaban",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.3",
+  "createdAt": "2022-06-15T16:00:21",
+  "updatedAt": "2022-10-11T21:01:14",
+  "closedAt": "2022-09-11T18:33:21",
+  "commentCount": 0,
+  "reactionCount": 0
+}

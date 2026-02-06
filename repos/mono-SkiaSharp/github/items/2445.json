@@ -1,0 +1,34 @@
+{
+  "number": 2445,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKGLView don\u0027t redraw after return from other page on Android In Maui",
+  "body": "**Description**\r\nI use SKGLView in Maui, when it run Android, it will don\u0027t redraw after return from other page, see video:\r\n\r\nhttps://user-images.githubusercontent.com/17793881/233036461-e3b2c793-b6db-4b7f-ac0f-ddd4ba90af71.mp4\r\n\r\nI copy your GLTextureView and SKGLTextureView to my project, and create handler for it, Maui view name SKGpuView, when run, the log will show this line:\r\nhttps://github.com/mono/SkiaSharp/blob/b8efe44ae79614d7c0c0739e7144427912fd166a/source/SkiaSharp.Views/SkiaSharp.Views.Android/GLTextureView.cs#L959\r\nI find log show width and height is 0 after return from other page.\r\n\r\nI read source code of GLTextureView , search where set width and height:\r\n 1.  when go to other page, surface will destory, when return from other page, will load GLTextureView.OnAttachedToWindow, then create new GLThread, and set width and height equal to 0.\r\n 2.   when GLTextureView.OnLayoutChange, then load GLTextureView.OnSurfaceTextureSizeChanged to set GLThread.OnWindowResize, and then set width and height .\r\n \r\nwhen return from other page, GLTextureView.OnLayoutChange don\u0027t be invoked. so width and height is 0\r\n\r\nI try use width and height as params of OnSurfaceCreated and set width and height of GLThread, my SKGpuView work. \r\nhttps://github.com/mono/SkiaSharp/blob/b8efe44ae79614d7c0c0739e7144427912fd166a/source/SkiaSharp.Views/SkiaSharp.Views.Android/GLTextureView.cs#L165\r\n\u003C!-- a general description goes here --\u003E\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.2\u003C!-- the version of SkiaSharp that has the issue --\u003E\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio\u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: 12 Api31 \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Linux:  \u003C!-- The version and distro of linux that you are building for, e.g. Ubuntu 16.04 --\u003E\r\n  - macOS:  \u003C!-- The version of macOS you are building for, e.g. 10.10 --\u003E\r\n  - Tizen:  \u003C!-- the version of the Tizen SDK you are compiling against, e.g. 4.0 --\u003E \r\n  - tvOS:  \u003C!-- the version of the tvOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E \r\n  - watchOS:  \u003C!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Windows Classic:  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:  \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - Android Emulator \u003C!-- Google Pixel 4 XL --\u003E\r\n  - \u003C!-- iPhone 11 --\u003E\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "xtuzy",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Maui",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-04-19T10:25:48",
+  "updatedAt": "2025-11-05T20:19:52",
+  "commentCount": 5,
+  "reactionCount": 0
+}

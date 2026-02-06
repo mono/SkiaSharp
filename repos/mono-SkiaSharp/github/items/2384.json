@@ -1,0 +1,17 @@
+{
+  "number": 2384,
+  "type": "issue",
+  "state": "open",
+  "title": "Can image in AV_PIX_FMT_BGR24 format (format in FFmpeg context) be ported to SKBitmap",
+  "body": "To port AV_PIX_FMT_BGR24 format (format in FFmpeg context), we need to consider\r\n\r\nSo 8 bits for B, 8 bits for G, 8 bits for R (=\u003E 24 bits for one pixel), it\u0027s size (width and height) and it\u0027s stride\r\n\r\nAs an example, This AV_PIX_FMT_BGR24 format is the same as this one [PixelFormat.Format24bppRgb](https://docs.microsoft.com/en-us/dotnet/api/system.drawing.imaging.pixelformat?msclkid=7e0af028cf6311ecafd2a420650bef5f\u0026view=dotnet-plat-ext-6.0) in System.Drawing.Imaging context.\r\n\r\nAccording the library, we must use an equivalent:\r\n\r\nuse 8 bits for each colors\r\nno alpha\r\nnecessary to specify width, height and stride",
+  "author": {
+    "login": "mail2mhossain",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-13T10:33:58",
+  "updatedAt": "2023-07-04T16:55:54",
+  "commentCount": 2,
+  "reactionCount": 0
+}

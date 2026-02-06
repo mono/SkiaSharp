@@ -1,0 +1,17 @@
+{
+  "number": 2221,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Blazor WASM EntryPointNotFoundException",
+  "body": "**Description**\r\n\r\nBlazor WASM app using \u0060SkiaSharp.View.Blazor\u0060 to draw on an \u0060SKGLView\u0060 works locally in Debug and Release mode but intermittently when deployed to Azure App Service gives the following exception:\r\n\r\n\u0060Uncaught Error: System.EntryPointNotFoundException: sk_paint_set_stroke_width at SkiaSharp.SKPaint.set_StrokeWidth(Single)\u0060\r\n\r\n**Code**\r\n\r\nDuring render loop:\r\n\r\n\u0060\u0060\u0060\r\nvar paint = new SKPaint()\r\n{\r\n    Color = SKColor.Parse(\u0022#ffffff\u0022),\r\n    IsStroke = true,\r\n    StrokeWidth = 2.0f,\r\n    StrokeCap = SKStrokeCap.Round,\r\n};\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe exception should not occur\r\n\r\n**Actual Behavior**\r\n\r\nIntermittently the exception occurs, most commonly if the window is snapped to half the screen and refreshed.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.1\r\n- Platform Target Frameworks: Blazor WASM .NET 6.0\r\n\r\n**Work around**\r\n\r\nAdd file \u0022ILLink.Descriptors.xml\u0022 to project root with following content:\r\n\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\r\n\u003Clinker\u003E\r\n\t\u003Cassembly fullname=\u0022SkiaSharp\u0022/\u003E\r\n\t\u003Cassembly fullname=\u0022SkiaSharp.Views.Blazor\u0022/\u003E\r\n\u003C/linker\u003E\r\n\u0060\u0060\u0060\r\n\r\nand to the .csproj file:\r\n\r\n\u0060\u0060\u0060\r\n\u003CItemGroup\u003E\r\n\t\u003CEmbeddedResource Include=\u0022ILLink.Descriptors.xml\u0022\u003E\r\n\t\t\u003CLogicalName\u003EILLink.Descriptors.xml\u003C/LogicalName\u003E\r\n\t\u003C/EmbeddedResource\u003E\r\n\u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nThis will stop the SkiaSharp library from being trimmed\r\n\r\n**Potential fix**\r\n\r\nAdd a linker description file to the library as per https://docs.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/configure-linker?view=aspnetcore-3.1\u0026viewFallbackFrom=aspnetcore-6.0 to prevent trimming of relevant classes.\r\n",
+  "author": {
+    "login": "geometrikal",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-08-23T12:34:17",
+  "updatedAt": "2022-08-23T22:09:19",
+  "commentCount": 0,
+  "reactionCount": 0
+}

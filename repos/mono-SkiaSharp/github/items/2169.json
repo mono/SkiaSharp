@@ -1,0 +1,18 @@
+{
+  "number": 2169,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp unable to load library libSkiaSharp or one of its dependencies after update alpine",
+  "body": "**Description**\r\n\r\nThe version of SkiaSharp is 2.80.3. It\u0027s work fine at mcr.microsoft.com/dotnet/aspnet:3.1-alpine3.13 but after I update to alpine3.15, I got this error message.\r\n\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\\n ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: Error loading shared library liblibSkiaSharp: No such file or directory\\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\\n   at SkiaSharp.SKImageInfo..cctor()\\n   --- End of inner exception stack trace ---\\n   at SkiaSharp.SKImageInfo..ctor(Int32 width, Int32 height, SKColorType colorType, SKAlphaType alphaType)\\n   at SkiaSharp.SKSurface.Create(Int32 width, Int32 height, SKColorType colorType, SKAlphaType alphaType)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \r\n     - SkiaSharp: 2.80.3\r\n     - SkiaSharp.AssetNative.Linux.NoDependencies: 2.80.3\r\n- Last known good version:  2.80.3",
+  "author": {
+    "login": "pkrittikorn",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-14T08:47:13",
+  "updatedAt": "2022-09-28T21:24:07",
+  "closedAt": "2022-08-12T22:31:16",
+  "commentCount": 5,
+  "reactionCount": 0
+}

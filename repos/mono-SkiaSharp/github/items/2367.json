@@ -1,0 +1,17 @@
+{
+  "number": 2367,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKCanvasView on MAUI(MacCatalyst) captures the mouse and does not release it",
+  "body": "**Description**\r\nMaui: On MacCatalyst the SKCanvasView captures the mouse and does not release it if EnableTouchEvents=true and the Touch is handled.\r\nThis is a blocker if one wishes to implement drawing in a SKCanvasView based on touch events inside the view.\r\n\r\n**Code**\r\nAdd a Button and a SKCanvasView in a ContentPage in a Maui app.\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\r\n\u003CContentPage xmlns=\u0022http://schemas.microsoft.com/dotnet/2021/maui\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             xmlns:local=\u0022clr-namespace:TestSKCanvasViewTouch\u0022\r\n             xmlns:controls=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\r\n             x:Class=\u0022TestSKCanvasViewTouch.MainPage\u0022\u003E\r\n    \u003CVerticalStackLayout\u003E\r\n        \u003CButton x:Name=\u0022CounterBtn\u0022 Clicked=\u0022OnCounterClicked\u0022 Text=\u0022Clicked 0 times.\u0022/\u003E\r\n        \u003Ccontrols:SKCanvasView HeightRequest=\u0022400\u0022 BackgroundColor=\u0022AliceBlue\u0022 EnableTouchEvents=\u0022True\u0022 Touch=\u0022SKCanvasView_Touch\u0022/\u003E\r\n    \u003C/VerticalStackLayout\u003E\r\n\u003C/ContentPage\u003E\r\n\u0060\u0060\u0060\r\n\r\nHandle the Touch event of the SKCanvasView\r\n\u0060\u0060\u0060\r\npublic partial class MainPage : ContentPage\r\n{\r\n    int count = 0;\r\n\r\n    public MainPage()\r\n    {\r\n\t    InitializeComponent();\r\n    }\r\n\r\n    private void OnCounterClicked(object sender, EventArgs e)\r\n    {\r\n\t    count\u002B\u002B;\r\n    \r\n\t    if (count == 1)\r\n\t\t    CounterBtn.Text = $\u0022Clicked {count} time\u0022;\r\n\t    else\r\n\t\t    CounterBtn.Text = $\u0022Clicked {count} times\u0022;\r\n    \r\n\t    SemanticScreenReader.Announce(CounterBtn.Text);\r\n     }\r\n\r\n     private void SKCanvasView_Touch(System.Object sender, SkiaSharp.Views.Maui.SKTouchEventArgs e)\r\n     {\r\n            e.Handled = true;\r\n     }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\nMouse down, then move, then up in the SKCanvasView. \r\nThen click the button - the button is clicked (Clicked event handler is called; Command is executed).\r\n\r\n**Actual Behavior**\r\nMouse down, then move, then up in the SKCanvasView. \r\nThen click the Button - the Button is not clicked (Clicked is not called; the Button command is not executed).\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version\r\n- IDE:  Visual Studio for Mac/ Visual Studio Code\r\n- Platform Target Frameworks: \r\n  - MacCatalyst\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nmacOS:  12.6\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\nhttps://user-images.githubusercontent.com/61967449/214117627-a77342c7-ebde-433d-8d00-4ead0c74ad28.mov\r\n\r\n**Reproduction Link**\r\nhttps://github.com/telerik/ms-samples/tree/main/Maui/SKCanvasViewTouchCaptured_MacCatalyst\r\n\r\n\r\n",
+  "author": {
+    "login": "polqnaP",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-01-24T12:02:58",
+  "updatedAt": "2024-01-28T03:29:19",
+  "commentCount": 5,
+  "reactionCount": 1
+}

@@ -1,0 +1,17 @@
+{
+  "number": 2493,
+  "type": "issue",
+  "state": "open",
+  "title": "In the OnTouch an event is missing when the FlyOut is opened",
+  "body": "**Description**\r\n\r\nWhen a FlyOut is opened on iOS there is no event to indicate a loss of touch. On Android an SKTouchAction.Cancelled is called, but on iOS no event at all. \r\n\r\n**Why is this a problem?**\r\nThe OnTouch event only gives information about single finger presses. We need to track those to know how many fingers are pressed. If an event is missing there is no way to correct for that. We have to assume it is still touching.\r\n\r\n**Expected Behavior**\r\n\r\nThe same behavior as on Android, a SKTouchAction.Cancelled ActionType OnTouch event\r\n\r\n**Actual Behavior**\r\n\r\nNo event\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version: Not known\r\n- Platform Target Frameworks: \r\n  - iOS: maui-ios  7.0.86/7.0.100  \r\n- Target Devices:   Tested on Device - iPhone Pro Max 14 (physical device) and some others\r\n  ",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-06-16T05:15:45",
+  "updatedAt": "2024-01-07T08:18:18",
+  "commentCount": 2,
+  "reactionCount": 0
+}

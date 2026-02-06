@@ -1,0 +1,17 @@
+{
+  "number": 2356,
+  "type": "issue",
+  "state": "open",
+  "title": "What can I do in order to Y position was on top",
+  "body": "I have such sample:\r\n\u0060\u0060\u0060\r\nSKImageInfo info = new SKImageInfo(256, 256);\r\nusing (SKSurface surface = SKSurface.Create(info))\r\n{\r\n    // the the canvas and properties\r\n    SKCanvas canvas = surface.Canvas;\r\n\r\n    // make sure the canvas is blank\r\n    canvas.Clear(SKColors.White);\r\n\r\n    SKFont font = new SKFont(SKTypeface.FromFile(\r\n        \u0022/media/destructor/Data/Projects/MonoGameCross-PlatformDesktopApplication1/MonoGameCross-PlatformDesktopApplication1/bin/Debug/netcoreapp3.1/ttf/Arial.ttf\u0022));\r\n    // draw some text\r\n    SKPaint paint = new SKPaint(font)\r\n    {\r\n        Color = SKColors.Black,\r\n        Style = SKPaintStyle.Fill,\r\n        TextAlign = SKTextAlign.Left,\r\n        TextSize = 50\r\n    };\r\n    SKRect textBounds = new SKRect();\r\n    float width = paint.MeasureText(\u0022SkiaSharp\u0022, ref textBounds);\r\n    SKPoint coord = new SKPoint(0, 0);\r\n    canvas.DrawText(\u0022SkiaSharp\u0022, coord, paint);\r\n\r\n    // save the file\r\n    using (SKImage image = surface.Snapshot())\r\n    using (SKData data = image.Encode(SKEncodedImageFormat.Png, 100))\r\n    using (FileStream stream = File.OpenWrite(\u0022output.png\u0022))\r\n    {\r\n        data.SaveTo(stream);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\nI want that my text has a position 0,0.\r\nBut in the picture, I see that only the X position is 0, but the Y position is wrong. Is it a bug or did I do something wrong?\r\n\r\n![output](https://user-images.githubusercontent.com/19586466/211168873-fafebd0e-151b-4147-a6e0-443ab972cca5.png)\r\n",
+  "author": {
+    "login": "Rombersoft",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-01-07T20:20:27",
+  "updatedAt": "2023-01-12T11:10:46",
+  "commentCount": 1,
+  "reactionCount": 0
+}

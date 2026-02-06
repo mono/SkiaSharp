@@ -1,0 +1,18 @@
+{
+  "number": 2523,
+  "type": "issue",
+  "state": "closed",
+  "title": "How does one trigger a repaint for the SKGLView in Blazor WASM?",
+  "body": "I have an async image load and want to render/paint it when the load completes, but it\u0027s unclear as to how to manually trigger a repaint to happen. Is there an example of how to do this? \r\n\r\nI can turn on \u0060EnableRenderLoop=true\u0060 but that then means I\u0027m burning CPU with constant repainting, which seems a waste. For now I have something like this: \r\n\r\n\u0060\u0060\u0060\r\nprivate void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\r\n    {\r\n        if (changeNeeded == false)\r\n            return;\r\n\r\n        changeNeeded = false;\r\n \r\n        // Do the actual painting onto the canvas here\r\n\u0060\u0060\u0060\r\nwhich means that my paint method does nothing if I haven\u0027t made any changes. When I\u0027m ready to paint a change I set it up and then set \u0060changeNeeded = true\u0060. It works, but feels like a hack. \r\n\r\nI thought \u0060StateHasChanged\u0060 in the control might trigger a repaint, but it doesn\u0027t appear to do so.",
+  "author": {
+    "login": "Webreaper",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-07-14T11:31:22",
+  "updatedAt": "2023-08-13T18:00:28",
+  "closedAt": "2023-07-14T15:25:25",
+  "commentCount": 2,
+  "reactionCount": 0
+}

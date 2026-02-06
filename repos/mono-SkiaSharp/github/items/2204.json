@@ -1,0 +1,18 @@
+{
+  "number": 2204,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKAbstractManagedWStream.WriteInternal throw NullReferenceException",
+  "body": "**Description**\r\n\r\n\r\n\u0060\u0060\u0060\r\n\u003E\tSkiaSharp.dll!SkiaSharp.SKAbstractManagedWStream.WriteInternal(System.IntPtr s, void* context, void* buffer, System.IntPtr size)\tUnknown\r\n \t[Native to Managed Transition]\t\r\n \t[Managed to Native Transition]\t\r\n \tSkiaSharp.dll!SkiaSharp.SKCanvas.DisposeNative()\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKNativeObject.Dispose(bool disposing)\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKObject.Dispose(bool disposing)\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKCanvas.Dispose(bool disposing)\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKNativeObject.~SKNativeObject()\tUnknown\r\n\u0060\u0060\u0060\r\n\r\n\r\n![](https://user-images.githubusercontent.com/16054566/183359997-4063cdd4-ff77-46af-aa4c-25b830d251c7.png)\r\n\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\n        private void MainWindow_Loaded(object sender, RoutedEventArgs e)\r\n        {\r\n            var svgFile = \u0022Test.svg\u0022;\r\n            svgFile = Path.GetFullPath(svgFile);\r\n\r\n            var fileStream = new FileStream(svgFile,FileMode.Open,FileAccess.ReadWrite);\r\n            //var skBitmap = SKBitmap.Decode(svgFile);\r\n\r\n            var skCanvas = SKSvgCanvas.Create(new SKRect(0,0,100,100), fileStream);\r\n\r\n            var writeableBitmap = new WriteableBitmap(100, 100, 96, 96, PixelFormats.Bgra32,\r\n                BitmapPalettes.Halftone256Transparent);\r\n\r\n            var skImageInfo = new SKImageInfo()\r\n            {\r\n                Width = 100,\r\n                Height = 100,\r\n                ColorType = SKColorType.Bgra8888,\r\n                AlphaType = SKAlphaType.Premul,\r\n                ColorSpace = SKColorSpace.CreateSrgb()\r\n            };\r\n\r\n            SKSurface surface = SKSurface.Create(skImageInfo, writeableBitmap.BackBuffer);\r\n\r\n            writeableBitmap.Lock();\r\n            var skPaint = new SKPaint();\r\n            surface.Draw(skCanvas, 0, 0, skPaint);\r\n\r\n            writeableBitmap.AddDirtyRect(new Int32Rect(0,0,100,100));\r\n            writeableBitmap.Unlock();\r\n\r\n            var image = new Image()\r\n            {\r\n                Width = 100,\r\n                Height = 100,\r\n                Source = writeableBitmap,\r\n            };\r\n\r\n            Root.Children.Add(image);\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nWork well.\r\n\r\n**Actual Behavior**\r\n\r\nThrow exception.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.1.0\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  Windows 10\r\n\r\n \r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "lindexi",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-08-08T07:14:18",
+  "updatedAt": "2022-09-07T09:01:21",
+  "closedAt": "2022-08-08T07:16:50",
+  "commentCount": 1,
+  "reactionCount": 0
+}

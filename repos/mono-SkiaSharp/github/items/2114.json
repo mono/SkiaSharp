@@ -1,0 +1,17 @@
+{
+  "number": 2114,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Can\u0027t assign my desired clipping region to SKCanvas.",
+  "body": "I found no way to enlarge the clipping area of the \u0022SKCanvas\u0022 object. Even if I use the \u0022SKRegion\u0022 class to get the desired region, I can\u0027t pass it to the SKCanvas object. The SKClipOperation enumeration parameter used by the existing method of setting the clipping region can only shrink the clipping region.\r\nIs it that I didn\u0027t find the right way?\r\n\r\nIf the truth is what I say.\r\nI personally recommend replacing the parameter \u0027SKClipOperation\u0027 in the method of the SKCanvas class with \u0027SKRegionOperation\u0027 to set the clipping region.\r\n\r\n**We are evaluating whether we can use the skiasharp library in our product, so hope to hear back soon. \r\nThank you very much!**\r\n\r\nMy code:\r\n\u0060\u0060\u0060\r\nint sw = 800, sh = 800;\r\nSKBitmap sKBitmap = new SKBitmap(sw, sh);\r\nusing (SKCanvas canvas = new SKCanvas(sKBitmap))\r\n{\r\n    canvas.Clear(SKColor.Empty);\r\n    SKPaint redPaint = new SKPaint() {\r\n        Color = SKColors.Red,\r\n        IsStroke = true,\r\n        StrokeWidth = 1\r\n    };\r\n    SKPaint greenPaint = new SKPaint() {\r\n        Color = SKColors.Green,\r\n        IsStroke = true,\r\n        StrokeWidth = 1\r\n    };\r\n    SKPaint bluePaint = new SKPaint() {\r\n        Color = SKColors.Blue,\r\n        IsStroke = true,\r\n        StrokeWidth = 1\r\n    };\r\n\r\n    canvas.DrawLine(new SKPoint(0, 0), new SKPoint(600, 600), greenPaint);\r\n    canvas.DrawLine(new SKPoint(600, 0), new SKPoint(0, 600), bluePaint);\r\n\r\n    SKRectI clipRect = new SKRectI(0, 0, 200, 200);\r\n    SKRectI intersectRectF = new SKRectI(100, 100, 300, 300);\r\n    canvas.DrawRect(clipRect, bluePaint);\r\n    canvas.DrawRect(intersectRectF, greenPaint);\r\n\r\n\r\n    canvas.ClipRect(clipRect);//set 1\r\n    \r\n    //do something\r\n    canvas.DrawColor(SKColors.Green);\r\n    \r\n    canvas.ClipRect(intersectRectF);//set 2\r\n\r\n    //do something\r\n    canvas.DrawColor(SKColors.Red);\r\n\r\n    sKBitmap.Encode(new SKFileWStream(\u0022testClip.png\u0022), SKEncodedImageFormat.Png, 100);\r\n}\r\n\u0060\u0060\u0060\r\nafter set2:\r\nHow to get an area larger than the current clipping area\uFF1F\r\nHow to get the area that sets the current clipping area to the entire canvas\uFF1F",
+  "author": {
+    "login": "duojieyangaspose",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-06-16T03:07:47",
+  "updatedAt": "2022-06-20T10:11:42",
+  "commentCount": 0,
+  "reactionCount": 0
+}

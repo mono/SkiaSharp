@@ -1,0 +1,17 @@
+{
+  "number": 2456,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Access Violation Error on SKBitmap.Copy()",
+  "body": "**Description**\r\n\r\nAfter creating an SKBitmap in a multithread process, I am receiving an Access Violation error.\r\n\r\n**Code**\r\n\r\nOpen the solution location in https://github.com/gktval/SkiaSharpError/tree/main/SkiaSharpAccessViolation\r\n\r\nThere are 3 projects in the solution:\r\n\r\n    SkiaSharpAccessViolation.csproj (This is a .Net Maui Project). It should be configured to run Windows platform\r\n    ProjNET (This is an open source project that is included as a dependency)\r\n    ProjNet.Sqlite (This is an open source project that uses sqlite)\r\n\r\nSkiaSharpAccessViolation.csproj relies on two dependencies - CommunityToolkit.Maui and SkiaSharp.Views.Maui.Controls\r\n\r\n**Steps to reproduce**\r\n\r\n    Start SkiaSharpAccessViolation project with Windows. Click the \u0022Click me\u0022 button.\r\n    A dialog will display. Click 4326 WGS-84 projection, then click OK.\r\n    An image should display on the screen.\r\n\r\nRepeat steps 1-3 one more time. When you click OK on the Coordinate System popup, an AccessViolation error will be thrown.\r\n\r\n**Notes**\r\n\r\nIn my original project (not this one), the error is thrown the first time the code is ran through. I am not quite sure why this one must be called twice. I have had the problem occur with both Windows and Android.\r\n\r\nI have tried using a simple DisplayAlert instead of the Popup, but I could not reproduce the error. Maybe do to further multithread calls in sqlite...?\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version:  unknown\r\n- IDE:   Visual Studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: 32 \r\n  - iOS:  Not sure, but I have not run into it on iOS yet\r\n  - Windows: Windows 11 \r\n- Target Devices:   Samsung and Windows\r\n \r\n**Reproduction Link**\r\n\r\nhttps://github.com/gktval/SkiaSharpError\r\n\r\n",
+  "author": {
+    "login": "gktval",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-05-09T20:27:26",
+  "updatedAt": "2023-05-10T13:18:27",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 2351,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] ",
+  "body": "**Description**\r\n\r\nWe run our Maui release builds currently without Trimming and without AOT. We\u0027ve had this issue for the past few Visual Studio updates. It did work once some time ago.\r\n\r\nThe latest VS update hasn\u0027t helped.\r\n\r\nOut app is production so we are looking to try resolve this ASAP.\r\n\r\n**Code**\r\n\r\n\u003CPropertyGroup Condition=\u0022\u0027$(Configuration)|$(TargetFramework)|$(Platform)\u0027==\u0027Release|net7.0-android|AnyCPU\u0027\u0022\u003E\r\n\t\t\u003CPublishTrimmed\u003ETrue\u003C/PublishTrimmed\u003E\r\n\t\t\u003CSuppressTrimAnalysisWarnings\u003Efalse\u003C/SuppressTrimAnalysisWarnings\u003E\r\n\t\t\u003CEnableTrimAnalyzer\u003ETrue\u003C/EnableTrimAnalyzer\u003E\r\n\t\t\u003CRunAOTCompilation\u003ETrue\u003C/RunAOTCompilation\u003E\r\n\t\t\u003CAndroidLinkResources\u003Efalse\u003C/AndroidLinkResources\u003E\r\n\t\t\u003CJavaMaximumHeapSize\u003E2G\u003C/JavaMaximumHeapSize\u003E\r\n\r\n**Expected Behavior**\r\n\r\nShould build and run in release mode on a device\r\n\r\n**Actual Behavior**\r\n\r\nEndless wait until killing processes manually.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- the version of SkiaSharp that has the issue --\u003E\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio 2022\r\n- Platform Target Frameworks:\r\n  - Android: android:minSdkVersion=\u002221\u0022\r\n\r\n\r\n**Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/25628792/210040492-c7bc4365-2d45-49e7-9ae2-bbe499a7e44d.png)\r\n\r\n![image](https://user-images.githubusercontent.com/25628792/210040659-ca85df06-c66a-4fec-bd31-9d6416bce9b5.png)\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "OliverPrivate",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-12-30T06:19:57",
+  "updatedAt": "2023-01-01T09:14:26",
+  "commentCount": 1,
+  "reactionCount": 0
+}

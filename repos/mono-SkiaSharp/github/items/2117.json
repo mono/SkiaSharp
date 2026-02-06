@@ -1,0 +1,17 @@
+{
+  "number": 2117,
+  "type": "issue",
+  "state": "open",
+  "title": "libHarfBuzzSharp.so symbols",
+  "body": "Trying to build a libHarfBuzzSharp using the ninja build system.  I\u0027ve had good success building libSkiaSharp (I still need to report a few bugs with the build script).  The platform is a raspberry pi 3b\u002B running the latest 64 bit raspberry pi os.\r\n\r\nThe exact commands I ran from the mono/skia directory were:\r\n\r\n# run the gn build script generator:\r\n./bin/gn gen \u0027out/linux/arm64\u0027 --args=\u0027is_official_build=true\r\nskia_enable_tools=false\r\ntarget_os=\u0022linux\u0022\r\ntarget_cpu=\u0022arm64\u0022\r\nskia_use_icu=true\r\nskia_use_system_icu=true\r\nskia_use_harfbuzz=true\r\nskia_use_system_harfbuzz=true\r\nskia_pdf_subset_harfbuzz=false\r\nskia_use_sfntly=false\r\nskia_use_piex=true\r\nskia_use_system_expat=false\r\nskia_use_system_freetype2=true\r\nskia_use_system_libjpeg_turbo=true\r\nskia_use_system_libpng=true\r\nskia_use_system_libwebp=true\r\nskia_use_system_zlib=true\r\nskia_enable_gpu=true\r\nextra_cflags=[ \u0022-DSKIA_C_DLL\u0022, \u0022-DHAVE_PTHREAD\u0022, \u0022-DHB_EXTERN=extern\u0022, \u0022-I/usr/local/lib/aarch64-linux-gnu/harfbuzz/include/\u0022, \u0022-I/usr/include/freetype2/\u0022 ]\u0027\r\n--cflags=\u0027[ \u0022-DSKIA_C_DLL\u0022, \u0022-DHAVE_PTHREAD\u0022, \u0022-DHB_EXTERN=extern\u0022, \u0022-I/usr/local/lib/aarch64-linux-gnu/harfbuzz/include/\u0022, \u0022-I/usr/include/freetype2/\u0022 ]\u0027\r\n\r\n# build libSkiaSharp (no issues here, the build and generated library are a success)\r\nninja \u0027SkiaSharp\u0027 -C \u0027/out/linux/arm64\u0027\r\n\r\n# build libHarfBuzzSharp (builds fine, issues occur later...)\r\nninja \u0027HarfBuzzSharp\u0027 -C \u0027/out/linux/arm64\u0027\r\n\r\n# copy the built libSkiaSharp.so and libHarfBuzzSharp.so files to the project that needs them (UVTools), then run\r\nLD_DEBUG=libs dotnet UVTools.dll\r\n\r\n# get a bunch of output text, then the issue occurs as:\r\n..... libHarfBuzzSharp.so: error: symbol lookup error: undefined symbol: hb_face_create_for_tables (fatal)\r\n\r\n# running \u0027readelf -Ws --dyn-syms libHarfBuzzSharp.so\u0027 gives a *very* short list of symbols, none of which seem to have anything to do with harfbuzz\r\n  _ITM_deregisterTMCloneTable\r\n __cxa_finalize@GLIBC_2.17 (2)\r\n __gmon_start__\r\n __getauxval@GLIBC_2.17 (2)\r\n  _ITM_registerTMCloneTable\r\n\r\n# I\u0027ve also built SkiaSharp and HarfBuzzSharp using almost all of the third_party options (non skia_use_system_... build), and get the same result.  (I\u0027ve probably built the pair 10 times in the last couple of weeks, each time trying something slightly different).\r\n\r\nAt this point one thing is obvious: I\u0027m doing something wrong.  Any chance anyone can help me out?\r\n",
+  "author": {
+    "login": "TruckDynasty",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-06-17T00:04:24",
+  "updatedAt": "2022-06-27T10:47:02",
+  "commentCount": 2,
+  "reactionCount": 0
+}

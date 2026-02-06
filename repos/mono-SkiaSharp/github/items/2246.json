@@ -1,0 +1,18 @@
+{
+  "number": 2246,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] libSkiaSharp throwing exception in Windows Server 2019 Data Center",
+  "body": "I have an console application which creates PDF Files from ZPL(Printer) data. I am using an open source for that to create pdf files.\r\nI have to use SkiaSharp as a dependency package, which is working in my local machine-Windows 10.\r\n\r\nAfter deploying the console application to **Windows Server 2019 (It is in Azure Cloud)**, It\u0027s throwing initialization error, I have used both x86 and x64 files\u0027\r\n\r\n**When I use x86 file, I am getting DLL Not found Exception:**\r\nUnhandled Exception: System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.SKBitmap..ctor(Int32 width, Int32 height, Boolean isOpaque)\r\n   at #=z891Mmvub7w2Dv_HuwbsDtcRtIASLwSdx8kKeh9A=.#=z_WhVP_E=()\r\n   at Neodynamic.SDK.ZPLPrinter.ZPLPrinter.ProcessCommands(String zplCommands, Encoding textEncoding, Boolean traceRenderedElements)\r\n   at Neodynamic.SDK.ZPLPrinter.ZPLPrinter.ProcessCommands(String zplCommands, Boolean traceRenderedElements)\r\n\r\n\r\n**When I use x64 file, I am getting BadImageFormatException:**\r\nUnhandled Exception: System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.BadImageFormatException: An attempt was made to load a program with an incorrect format. (Exception from HRESULT: 0x8007000B)\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.SKBitmap..ctor(Int32 width, Int32 height, Boolean isOpaque)\r\n   at #=z891Mmvub7w2Dv_HuwbsDtcRtIASLwSdx8kKeh9A=.#=z_WhVP_E=()\r\n   at Neodynamic.SDK.ZPLPrinter.ZPLPrinter.ProcessCommands(String zplCommands, Encoding textEncoding, Boolean traceRenderedElements)\r\n   at Neodynamic.SDK.ZPLPrinter.ZPLPrinter.ProcessCommands(String zplCommands, Boolean traceRenderedElements)\r\n\r\nI am using SkiaSharp.dll version 1.60.0 version.\r\nAny help is appreciated\r\n",
+  "author": {
+    "login": "gurunathgopireddy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-09-08T22:57:46",
+  "updatedAt": "2023-04-21T21:00:50",
+  "closedAt": "2023-03-22T20:45:36",
+  "commentCount": 1,
+  "reactionCount": 0
+}

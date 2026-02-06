@@ -1,0 +1,17 @@
+{
+  "number": 2450,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] VS build error when referencing SkiaSharp from an SDK style csproj targetting .NET framework 4.8",
+  "body": "**Description**\r\n\r\nVisual Studio build error when referencing SkiaSharp from an SDK style csproj targetting .NET framework 4.8\r\n\r\n**Code**\r\n\r\nMy .csproj file is as follows.\r\n\r\n\u0060\u0060\u0060\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk.Web\u0022\u003E\r\n  \u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enet48\u003C/TargetFramework\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\t\u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.3\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060\r\n\r\nI then try and compile it using VS 2022 and receive a build error.\r\n\r\n**Expected Behavior**\r\n\r\nThe project builds with no errors.\r\n\r\n**Actual Behavior**\r\n\r\nI receive the following build error:\r\n\r\n\u0060\u0060\u0060\r\nError\tNETSDK1022\tDuplicate \u0027Content\u0027 items were included. The .NET SDK includes \u0027Content\u0027 items from your project directory by default. You can either remove these items from your project file, or set the \u0027EnableDefaultContentItems\u0027 property to \u0027false\u0027 if you want to explicitly include them in your project file. For more information, see https://aka.ms/sdkimplicititems. The duplicate items were: \u0027C:\\Users\\XXX\\.nuget\\packages\\skiasharp.nativeassets.win32\\2.88.3\\buildTransitive\\net462\\..\\..\\runtimes\\win-x86\\native\\libSkiaSharp.dll\u0027; \u0027C:\\Users\\XXX\\.nuget\\packages\\skiasharp.nativeassets.win32\\2.88.3\\buildTransitive\\net462\\..\\..\\runtimes\\win-x64\\native\\libSkiaSharp.dll\u0027; \u0027C:\\Users\\XXX\\.nuget\\packages\\skiasharp.nativeassets.win32\\2.88.3\\buildTransitive\\net462\\..\\..\\runtimes\\win-arm64\\native\\libSkiaSharp.dll\u0027\tConsoleApp3\tC:\\Program Files\\dotnet\\sdk\\7.0.203\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.Shared.targets\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version:  N/A\r\n- IDE:  Visual Studio 2022\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  Windows Enterprise 10\r\n  \r\n**Other information**\r\nIf I target \u0060net7.0\u0060 the project build ok. Also using a traditional non-SDK style project targeting .NET framework 4.8 this also compiles.",
+  "author": {
+    "login": "heathdavies-eaton",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-04-27T12:24:01",
+  "updatedAt": "2025-08-28T21:09:57",
+  "commentCount": 6,
+  "reactionCount": 9
+}

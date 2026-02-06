@@ -1,0 +1,24 @@
+{
+  "number": 2473,
+  "type": "issue",
+  "state": "closed",
+  "title": "DllNotFoundException for libHarfBuzzSharp in Blazor WebAssembly",
+  "body": "**Description**\r\n\r\nDllNotFoundException for libHarfBuzzSharp in Blazor WebAssembly when rendering a text using Topten.RichTextKit in a project referencing SkiaSharp, HarfBuzzSharp, Topten.RichTextKit and HarfBuzzSharp.NativeAssets.WebAssembly.\r\n\r\n**Code**\r\n\r\nIt crashes on the first call that depends on libharfBuzzSharp. In our case this is\r\n\u0060 Topten.RichTextKit.TextBlock.Update()\u0060\r\n\r\n**Expected Behavior**\r\n\r\nI expect libHarfBuzzSharp to be deployed. I guess the responsible nuget package should be HarfBuzzSharp.NativeAssets.WebAssembly. \r\n\r\n**Actual Behavior**\r\n\r\nCrashing with DllNotFoundException and \u0022libHarfBuzzSharp\u0022 as message.\r\n\r\n**Basic Information**\r\n\r\n- We are working with Blazor WebAssembly\r\n- This problem always existed as far as we know\r\n- We work with the latest versions on the date of this posting:\r\n  - SkiaSharp 2.88.3\r\n  - HarfBuzzSharp 2.8.2.3\r\n  - Topten.RichTextKit 0.4.165,\r\n  - HarfBuzzSharp.NativeAssets.WebAssembly 2.8.2.3\r\n\r\n**Reproduce**\r\nClone the [Mapsui project](https://github.com/Mapsui/Mapsui) and run Mapsui.Sample.Blazor with the line referencing libHarfBuzzSharp.a removed from the csproj. The select category \u0027tests\u0027 and then \u0027callouts\u0027. It will not show callouts. \r\n\r\n**Screenshots**\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/963462/ca3e5f3f-baa9-4bce-a267-e03dce9f3faa)\r\n\r\n**Workaround**\r\n\r\nWe got this to work for our sample project using this solution by @Gillibald https://github.com/mono/SkiaSharp/issues/1725#issuecomment-978843629. We applied this in this PR:  https://github.com/Mapsui/Mapsui/pull/2015\r\n\r\nThe solution proposed in the [last comment](https://github.com/mono/SkiaSharp/issues/1725#issuecomment-988044531) in that thread did not work for Blazor but it did work for Uno WebAssembly (where we had the same problem).\r\n\r\n**Why is this important**\r\n\r\nAlthough we got this working for our sample project our users will run into this same problem as soon as they want to show a popup. If they manage to fix this it will be because of a remark on a closed thread that is about a different topic.\r\n",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp.Views.Blazor",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.4",
+  "createdAt": "2023-06-04T09:52:32",
+  "updatedAt": "2023-08-07T15:00:45",
+  "closedAt": "2023-06-19T17:49:53",
+  "commentCount": 2,
+  "reactionCount": 1
+}

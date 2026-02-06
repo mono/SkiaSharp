@@ -1,0 +1,19 @@
+{
+  "number": 2267,
+  "type": "issue",
+  "state": "closed",
+  "title": "Blazor GL is missing in .NET 7",
+  "body": "        @mattleibow just a heads up... that Blazor skiasharp views are broken under dotnet 7.\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts#L114\r\n\r\nThis GL symbol is not in scope.\r\n\r\nDont quote me on this, but my conclusion from spending a day investigating is:\r\n\r\nnet 6, ES6 modules are not used: GL is a global variable.\r\n\r\nnet7 dotnet.js is using ES6 modules, and GL is now private and isnt exported.\r\n\r\nsomething generates the js code for the GL stuff and stuffs it in (dotnet.js). I am unable to determine the thing that generates this source thus far.\r\n\r\nfor now ill continue to find a workaround, but maybe you know something ?\r\n\r\nhttps://github.com/dotnet/runtime/issues/76077\r\n\r\n_Originally posted by @danwalmsley in https://github.com/mono/SkiaSharp/issues/2254#issuecomment-1256289355_\r\n      ",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.3",
+  "createdAt": "2022-09-30T06:44:08",
+  "updatedAt": "2022-11-03T06:00:52",
+  "closedAt": "2022-10-03T01:53:57",
+  "commentCount": 1,
+  "reactionCount": 0
+}

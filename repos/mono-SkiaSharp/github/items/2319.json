@@ -1,0 +1,18 @@
+{
+  "number": 2319,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Differences between SKImage.FromPixels on windows and mac os",
+  "body": "       SKImage sk_image = SKImage.FromPixels(new SKImageInfo(width, height, SKColorType.Bgra8888), ptr, pitch);\r\n        var data = sk_image.Encode();        \r\n        Stream stream = data.AsStream();\r\n\r\n       #if WINDOWS\r\n        if (_stream != null)\r\n        {\r\n            W2DImageLoadingService w2d = new W2DImageLoadingService();\r\n            IImage image = w2d.FromStream(_stream);\r\n            if (image != null)\r\n            {\r\n                canvas.DrawImage(image, (float)_bounds.X, (float)_bounds.Y, (float)_bounds.Width, (float)_bounds.Height);\r\n            }            \r\n        }        \r\n     #endif\r\n     #if MACCATALYST\r\n        if (_stream != null) {\r\n            IImage image = null;\r\n            // PlatformImage isn\u0027t currently supported on Windows.\r\n            image = PlatformImage.FromStream(files);            \r\n            if (image != null)\r\n            {\r\n                canvas.StrokeColor = Colors.Red;\r\n                canvas.StrokeSize = 4;\r\n                canvas.DrawEllipse(10, 10, 100, 100);\r\n                canvas.DrawImage(image, 0, 0, image.Width, image.Height);\r\n            }\r\n        }\r\n      #endif\r\nIt runs normally on Windows, but runs incorrectly on Macos.",
+  "author": {
+    "login": "nengxingxu",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-11-21T03:30:06",
+  "updatedAt": "2022-12-21T06:00:55",
+  "closedAt": "2022-11-21T05:00:53",
+  "commentCount": 0,
+  "reactionCount": 0
+}

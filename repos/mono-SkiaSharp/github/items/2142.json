@@ -1,0 +1,18 @@
+{
+  "number": 2142,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKPaint.MeasureText always returns 0 when run on Linux Docker",
+  "body": "**Description**\r\n\r\nI\u0027m trying to use SkiaSharp with a ASP.NET Core 6.0 web application I\u0027m developing to run on a Linux-based (Synology) server. I am trying to create a function which converts a string to an image, however the code provided below is condensed to only the issue.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\npublic void HelloWorld() {\r\n\tString text = \u0022Hello, World!!!\u0022;\r\n\tusing (SKFont font = new(SKTypeface.Default, 16)) {\r\n\t\tSingle textSize;\r\n\t\tSKRect textBounds = new();\r\n\t\tusing (SKPaint tempPaint = new(font)) {\r\n\t\t\ttextSize = tempPaint.MeasureText(text, ref textBounds);\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nWhen run from IIS Express, it results in a SKRect object with dimensions 98x14.\r\n\r\n**Actual Behavior**\r\n\r\nWhen run on a Linux docker, the SKPaint.MeasureText call always returns a value 0; and when called with the overload which takes a SKRect reference parameter, the resulting SKRect describes a zero-area region (zero length, zero height).\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp v2.88.0, SkiaSharp.NativeAssets.Linux.NoDependencies v2.88.00\r\n- Last known good version:  Haven\u0027t tried with previous versions.\r\n- IDE:  Visual Studio 2022 Version 17.2.5 (64-bit)\r\n- Platform Target Frameworks:\r\n  - Linux:  alpine (off of Docker)\r\n- Target Devices:\r\n  - Linux-based docker image\r\n  - Synology server\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nUsing Microsoft Windows 10 home version,\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n",
+  "author": {
+    "login": "jafeucht",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-02T21:22:25",
+  "updatedAt": "2022-08-19T00:01:16",
+  "closedAt": "2022-07-02T22:00:50",
+  "commentCount": 1,
+  "reactionCount": 0
+}

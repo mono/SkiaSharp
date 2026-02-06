@@ -1,0 +1,17 @@
+{
+  "number": 2298,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] can\u0027t get FontManager.MatchCharacter to work",
+  "body": "Hi develop a Xamarin app and using SkiaSharp. Try to DrawText but not able to get Glyphs (emoji to work)\r\nIn Xamarin I have text filed where user add title where the text can be combination of text and emoji like this.\r\n \r\n![Screenshot 2022-10-28 at 08 31 35](https://user-images.githubusercontent.com/9278908/198522038-437954f2-34e8-4986-aa47-d86bcd7a2c35.png)\r\n\r\n\u0022P\u0022 and \u0022Smilley with Heart eays\u0022 I have a customers private font in Xamarin and the text is showed correct in Xamarin    \r\n \r\n![image](https://user-images.githubusercontent.com/9278908/198522795-8415f425-cc8d-4fa5-964e-5771222cf7e4.png)\r\n\r\nby font fallback I think. The emoji is Apple emoji font.\r\n\r\nI try to parse the string to find out if it contains emoji but FontManager.MatchCharcter crash.\r\nI\u0027t works for the first char \u0022P\u0022 but when I get to the if (result == null) part it crash.  \r\n\r\nvar charArray = value.ToCharArray();\r\n      while (\u002B\u002Bindex \u003C charArray.Length)\r\n      {\r\n          //Get the glyphs.\r\n          var result = fontManager.MatchCharacter(paint.Typeface.FamilyName, charArray[index]);\r\n          if (result == null)\r\n          {\r\n              var emojiTypeface = fontManager.MatchCharacter(charArray[index]);\r\n        }\r\n   } \r\n\r\nI see that the Array gets 3 chars but I think it\u0027s should be 2.  I thinks I can\u0027t be the first with this issue but can\u0027t find any solution.\r\n\r\n//Regards Joacim\r\n \r\n\r\n ",
+  "author": {
+    "login": "JoacimWall",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-10-28T07:03:38",
+  "updatedAt": "2022-10-31T09:55:14",
+  "commentCount": 3,
+  "reactionCount": 0
+}

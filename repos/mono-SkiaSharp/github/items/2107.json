@@ -1,0 +1,23 @@
+{
+  "number": 2107,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKXamlCanvas reports only half for ActualWidth and ActualHeight on iOs",
+  "body": "**Description**\r\nIf I draw something using the ActualWidth and ActualHeight of the SKXamlCanvas on iOs, it reports half of the size the canvas actually is. If e.g. I draw a rectangle like this:\r\n\r\n\u0060\u0060\r\ne.Surface.Canvas.DrawRect(new SKRect(0, 0, (float)ActualWidth, (float)ActualHeight), new SKPaint(SKColors.Red) });\r\n\u0060\u0060\r\n\r\nit only occupies one quarter of the whole canvas. I\u0027m not sure if there is any Scaling factor in place or some DPI-issue. It might be related to [this](https://github.com/unoplatform/uno/issues/7255) issue, where the underlying Bitmap is also rendered smaller on iOs and Android then it should be.\r\n\r\nIs there any scaling/DPI-setup happening in SkiaSharp?\r\n\r\nI may provide a sample if necessary - just running out of time for the moment.\r\n\r\n**Expected Behavior**\r\nThe ActualSize is correct\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\nThe ActualSize is reported wrong.\r\n\r\n",
+  "author": {
+    "login": "TopperDEL",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "partner/unoplatform",
+      "color": "A2C0F9"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-06-09T13:30:42",
+  "updatedAt": "2022-08-19T00:01:18",
+  "closedAt": "2022-06-20T08:30:50",
+  "commentCount": 4,
+  "reactionCount": 0
+}

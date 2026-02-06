@@ -1,0 +1,18 @@
+{
+  "number": 2205,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Draw rounded rectangle with transparent color that blurres the background ",
+  "body": "I like to draw a rounded rectangle that\u0027s white with Alpha set to 20%. Trough the translucent color it should blur the background.\r\n\r\n![image](https://user-images.githubusercontent.com/24532065/183426913-e32c0df6-1d99-4360-957e-13a1444964a1.png)\r\n\r\nMy first thought was  just setting a \u0060MaskFilter\u0060 while drawing the rectangle. This just blurred the rectangle and not the background I drawing on.\r\n\u0060\u0060\u0060c#\r\nusing var blurredBoxPaint = new SKPaint();\r\nblurredBoxPaint.IsAntialias = true;\r\nblurredBoxPaint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Inner, 2);\r\nblurredBoxPaint.Color = SKColors.White.WithAlpha((int) (.2 * 255));\r\n\u0060\u0060\u0060\r\n\r\nMy second thought was cropping a rounded rectangle out of the background, blurring it, applying the transparent color on it and pasting it back in. Unfortunately I couldn\u0027t figure out how to just crop a rounded rectangle. Maybe by using some rounded rectangle mask while pasting?\r\n\r\nAny ideas how realize my seconds thought (if possible) or are there better ways to do that?",
+  "author": {
+    "login": "Luc1412",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-08-08T13:27:11",
+  "updatedAt": "2022-11-19T15:00:59",
+  "closedAt": "2022-10-20T13:35:23",
+  "commentCount": 1,
+  "reactionCount": 0
+}

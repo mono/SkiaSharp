@@ -1,0 +1,18 @@
+{
+  "number": 2320,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Polygon fill does not clip to path",
+  "body": "**Description**\r\n\r\nFilling a polygon from a SKPath fills the entire canvas, not just the interior of the path. This only happens when you fill the line using MoveTo/LineTo. \r\n\r\nMaybe it is because of the InverseWinding and IsConcave...\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n\r\npublic void FillPath(SKCanvas g, SKPath gp)\r\n        {\r\n\r\n            SKPoint[] points =  new SKPoint[]{\r\n            new SKPoint(728.4489f,48.174187f),\r\n            new SKPoint(618.8237f,168.18684f),\r\n            new SKPoint(573.079f,375.3296f),\r\n            new SKPoint(662.4753f,478.39078f),\r\n            new SKPoint(842.29297f,508.02264f),\r\n            new SKPoint(940.2133f,237.2352f),\r\n            new SKPoint(728.4489f,48.174187f)\r\n            };\r\n            gp = new SKPath();\r\n\r\n            for (int i = 0; i \u003C points.Length - 1; i\u002B\u002B)\r\n            {\r\n                gp.MoveTo(points[i]);\r\n                gp.LineTo(points[i \u002B 1]);\r\n            }\r\n\r\n            gp.FillType = SKPathFillType.InverseWinding;\r\n\r\n            using (var p = new SKPaint() { Color = SKColors.Green, Style = SKPaintStyle.Fill })\r\n            {\r\n                g.DrawPath(gp, p); \r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nExpect only the interior of the SKPath to be filled.\r\n\r\n**Actual Behavior**\r\nDrawing with Fill\r\n![image](https://user-images.githubusercontent.com/7605046/203147746-4a4fa040-af52-453a-bc51-36513b453d76.png)\r\n\r\nDrawing only the stroke (ie, commenting out \u0060\u0060\u0060g.DrawPath(gp, p);\u0060\u0060\u0060\r\n![image](https://user-images.githubusercontent.com/7605046/203147833-fbf690df-e25f-4b48-8651-6e3803367fd3.png)\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp 2.88.3\r\n- Last known good version:  Unknown\r\n- IDE:  VS 17.4.1\r\n- Platform Target Frameworks: So far I am only able to test on Windows using Maui/Net7\r\n \r\n",
+  "author": {
+    "login": "gktval",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-11-21T20:05:51",
+  "updatedAt": "2022-12-23T18:00:50",
+  "closedAt": "2022-11-23T15:55:28",
+  "commentCount": 2,
+  "reactionCount": 0
+}
