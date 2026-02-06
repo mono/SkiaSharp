@@ -50,5 +50,100 @@
       "state": "COMMENTED",
       "submittedAt": "2024-03-07T01:41:26"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:55:58.1784704Z",
+    "reactions": [
+      {
+        "user": "Mikolaytis",
+        "content": "heart",
+        "createdAt": "2026-02-06T12:55:58.1784761Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1945620634,
+        "author": "maxkatz6",
+        "body": "@mattleibow I went through breaking changes page, and these changes were the low hanging fruits of what can be backported from 3.0 to 2.x. Which is also enough for Avalonia to run both versions. \r\n\r\nInitially I also planned to backport some new SKRuntimeEffect methods (which we don\u0027t need), but it feels a bit intrusive, as I am not sure what to pass as isOpaque parameter. \r\n\r\nI also didn\u0027t want to mark obsolete any old APIs that are going to be removed in 3.0.\r\n\r\nAnd I am not sure what to do about SKFilterQuality. Looks like 3.0 still handles SKFilterQuality well everywhere, except SKPaint and DrawImage\r\nI guess I could do:\r\n- Backport SKSamplingOptions to 2.88 (only managed part) \r\n- Add SKCanvas.DrawImage method that accepts SKSamplingOptions and maps it back to SKPaint.SKFilterQuality (ABI compatible with 3.0)\r\n- Add SKBitmap.Scale/Resize methods that also accept SKSamplingOptions (Optional, as 3.0 still has working SKFilterQuality methods).\r\n\r\nAnd that would be enough? Without changing 3.0.",
+        "createdAt": "2024-02-15T08:45:25",
+        "reactions": []
+      },
+      {
+        "id": 1945695912,
+        "author": "workgroupengineering",
+        "body": "What do you think if instead of adding members to existing classes you added them as extension methods in a class called \u0060CompatibilyExtensions\u0060?",
+        "createdAt": "2024-02-15T09:33:33",
+        "reactions": []
+      },
+      {
+        "id": 1945698110,
+        "author": "maxkatz6",
+        "body": "@workgroupengineering this extension method would have to be added to 3.0 as well. So, it can be binary compatible. Imo, it would add more unwanted API surface to maintain.",
+        "createdAt": "2024-02-15T09:34:57",
+        "reactions": []
+      },
+      {
+        "id": 1982187287,
+        "author": "maxkatz6",
+        "body": "@mattleibow update the PR, removed \u0022in\u0022 overloads that will break VB. Current PR changes will already help with some migration, though not ideal.\r\n",
+        "createdAt": "2024-03-07T01:43:06",
+        "reactions": []
+      },
+      {
+        "id": 1982420603,
+        "author": "mattleibow",
+        "body": "Ok. Afk right now but will look tonight or tomorrow. I also think I may have some idea of how to do something quite nice for compat. It is an idea still, but it is coming together nicely. ",
+        "createdAt": "2024-03-07T05:41:14",
+        "reactions": [
+          {
+            "user": "maxkatz6",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:55:56.6461955Z"
+          }
+        ]
+      },
+      {
+        "id": 1985397780,
+        "author": "mattleibow",
+        "body": "This was idea and my testing of prototypes seemed to work nicely.\n\nhttps://github.com/mono/SkiaSharp/pull/2789\n\n",
+        "createdAt": "2024-03-08T10:00:31",
+        "reactions": []
+      },
+      {
+        "id": 1986261292,
+        "author": "maxkatz6",
+        "body": "@mattleibow I like your idea. Closing this PR then.  ",
+        "createdAt": "2024-03-08T19:14:26",
+        "reactions": []
+      },
+      {
+        "id": 1986266667,
+        "author": "maxkatz6",
+        "body": "Although, wait, that kind of API changes of this PR cannot be added to 3.0, as it already has these methods :D \r\n\r\nUnless we add back overloads with SKImageFilter and SKImageFilter.CropRect: \r\nhttps://github.com/mono/SkiaSharp/blob/v2.88.7/binding/Binding/SKImageFilter.cs#L101\r\n\r\nImo, for these methods specifically, it would be simpler to get this PR to 2.88 with overloads without optional parameters, keeping common API.",
+        "createdAt": "2024-03-08T19:19:07",
+        "reactions": []
+      },
+      {
+        "id": 1986290077,
+        "author": "mattleibow",
+        "body": "Ah yeah. Both. We can backport anything too ugly to do - such as croprect. I\u0027m working on making 2.x shippable again. ",
+        "createdAt": "2024-03-08T19:33:44",
+        "reactions": []
+      },
+      {
+        "id": 2023738502,
+        "author": "mattleibow",
+        "body": "I did some looking around and I had to also remove the default args from the existing ones. https://github.com/mono/SkiaSharp/pull/2810\r\n\r\nFor example, if there is this:\r\n\r\n\u0060\u0060\u0060cs\r\npublic static SKImageFilter CreatePaint(SKPaint paint, SKImageFilter.CropRect cropRect = null)\r\n\u0060\u0060\u0060\r\n\r\nAnd we just add:\r\n\r\n\u0060\u0060\u0060cs\r\npublic static SKImageFilter CreatePaint (SKPaint paint)\r\n\u0060\u0060\u0060\r\n\r\nPeople that are using it like this:\r\n\r\n\u0060\u0060\u0060cs\r\nSKImageFilter.CreatePaint(mypaint);\r\n\u0060\u0060\u0060\r\n\r\nWill now get an ambiguous overload as both match. So I removed the \u0060 = null\u0060 value so if you are not specifying a crop rect, then you are going to use the new overload. If you are, well you have specified a value.",
+        "createdAt": "2024-03-27T19:01:49",
+        "reactions": []
+      },
+      {
+        "id": 2023882983,
+        "author": "mattleibow",
+        "body": "Thanks for this PR. I am going to close this one as I think I got all the APIs from 3.x in my PR and a few more things: https://github.com/mono/SkiaSharp/pull/2810\r\n\r\n",
+        "createdAt": "2024-03-27T20:14:01",
+        "reactions": []
+      }
+    ]
+  }
 }

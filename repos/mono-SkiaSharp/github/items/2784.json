@@ -19,5 +19,39 @@
   "updatedAt": "2024-03-19T14:37:07",
   "closedAt": "2024-03-19T14:37:07",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:56:09.8545705Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1984591135,
+        "author": "TommiGustafsson-HMP",
+        "body": "I think the problem is that your original picture has a color profile, which is lost at some point. If you open your original picture in Photoshop (Elements) and Convert Color Profile -\u003E Remove Profile, the same thing as reported here will happen.",
+        "createdAt": "2024-03-07T22:09:34",
+        "reactions": []
+      },
+      {
+        "id": 1985100650,
+        "author": "MichaelLogutov",
+        "body": "Yeah, I think you right. But I can\u0027t see why scaling do this. ",
+        "createdAt": "2024-03-08T06:15:24",
+        "reactions": []
+      },
+      {
+        "id": 1986524413,
+        "author": "TommiGustafsson-HMP",
+        "body": "There seems to be a question on this on StackOverflow:\r\nhttps://stackoverflow.com/questions/50399279/skiasharp-save-image-with-icc-profile",
+        "createdAt": "2024-03-08T22:40:48",
+        "reactions": []
+      },
+      {
+        "id": 2007355876,
+        "author": "MichaelLogutov",
+        "body": "That was it. Thanks! Basically, the fix was using image info from original image, thus using it\u0027s color space:\r\n\u0060\u0060\u0060\r\nusing var bitmap = SKBitmap.Decode(@\u0022c:\\Temp\\test.webp\u0022);\r\n\r\nusing var bitmap2 = new SKBitmap(bitmap.Info.WithSize(bitmap.Info.Width / 2, bitmap.Info.Height / 2));\r\nbitmap.ScalePixels(bitmap2, new SKSamplingOptions(SKFilterMode.Nearest, SKMipmapMode.Nearest));\r\n\r\nusing (var file = new SKFileWStream(@\u0022c:\\Temp\\test-output-not-scaled.jpg\u0022))\r\n    bitmap.Encode(file, SKEncodedImageFormat.Jpeg, 100);\r\n\r\nusing (var file = new SKFileWStream(@\u0022c:\\Temp\\test-output-scaled.jpg\u0022))\r\n    bitmap2.Encode(file, SKEncodedImageFormat.Jpeg, 100);\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-03-19T14:37:07",
+        "reactions": []
+      }
+    ]
+  }
 }

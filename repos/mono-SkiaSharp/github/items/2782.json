@@ -13,5 +13,38 @@
   "createdAt": "2024-03-03T18:06:57",
   "updatedAt": "2024-03-04T15:16:31",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:56:32.9841183Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1975249739,
+        "author": "mattleibow",
+        "body": "In the older versions, the matrix shader was always a new instance, however, that API was removed. I had naively assumed the instance method with the same feature was exactly the same. They made an optimization in the method to just return \u0060this\u0060 if the matrix was an identity.\r\n\r\nThe solution here is to actually always make a new instance. It is not the fastest path, but it is the better one for the managed world. If you make a shader, you will be in control of the lifetime. Disposing of one will always clean up things. We _can_ make instances smart and dereference, but in .NET \u0060Dispose()\u0060 really is a cleanup and it would be unexpected to still have it around and you having to call dispose multiple times.\r\n\r\nI think I am just going to remove the fast path and skip the identity check. The color filter variation also suffers from this issue where a null color filter will return the same instance, but I block that with an exception. However, I can\u0027t do that as an identity matrix is mostly still valid. ",
+        "createdAt": "2024-03-03T18:13:37",
+        "reactions": [
+          {
+            "user": "andersforsgren",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:56:32.5401999Z"
+          }
+        ]
+      },
+      {
+        "id": 1976538452,
+        "author": "andersforsgren",
+        "body": "Sounds good. Cheers.\r\nSounds like I don\u0027t need to create a bug then? Let me know if you insist on one. \r\n",
+        "createdAt": "2024-03-04T13:04:01",
+        "reactions": []
+      },
+      {
+        "id": 1976818670,
+        "author": "mattleibow",
+        "body": "Ah sorry, this is the bug. Decided to press a button and convert your findings into an issue. Technology makes it so easy :)",
+        "createdAt": "2024-03-04T15:16:29",
+        "reactions": []
+      }
+    ]
+  }
 }

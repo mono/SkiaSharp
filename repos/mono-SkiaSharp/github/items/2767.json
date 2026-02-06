@@ -19,5 +19,38 @@
   "updatedAt": "2024-02-28T20:59:28",
   "closedAt": "2024-02-28T20:59:28",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:56:53.354899Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1969413904,
+        "author": "harveytriana",
+        "body": "It is inferred that this is a real **BUG**. It is strange that the following line in the log in the Image creation process, this is where the problem is generated:\r\n\u0060\u0060\u0060\r\n =\u003E ERROR [publish 1/1] RUN dotnet publish BlazorSS.csproj -c Release -o /app/publish\r\n...\r\n/usr/share/dotnet/packs/Microsoft.NET.Runtime.WebAssembly.Sdk/8.0.2/Sdk/WasmApp.Native.targets(366,5): error : unable to find python in $PATH [took 0.01s] [/src/BlazorWAApp.csproj]\r\n\u0060\u0060\u0060\r\nOf course, the application has nothing related to Python.\r\n",
+        "createdAt": "2024-02-28T16:50:48",
+        "reactions": []
+      },
+      {
+        "id": 1969513906,
+        "author": "harveytriana",
+        "body": "The problem has nothing to do with SkiaSharp or another native dependency, it has to do with this installation.\r\n\u0060\u0060\u0060\r\nRUN dotnet workload install wasm-tools\r\n\u0060\u0060\u0060\r\nIt is relative only to the error \u201Cunable to find python in $PATH\u201D\r\n",
+        "createdAt": "2024-02-28T17:42:35",
+        "reactions": []
+      },
+      {
+        "id": 1969907601,
+        "author": "harveytriana",
+        "body": "Finally, the issue was resolved. Installing wasm-tools in the container requires a Python dependency. Ridiculous. The solution is to add to Dockerfile:\r\n\u0060\u0060\u0060\r\nRUN apt-get update -y \u0026\u0026 apt-get install python3 libatomic1 -y \u0026\u0026 dotnet workload\r\n\u0060\u0060\u0060\r\n\r\nP.S. Dear engineers, please don\u0027t do this to us C# programmers.\r\n\r\nThe repository is updated.\r\n",
+        "createdAt": "2024-02-28T20:59:28",
+        "reactions": [
+          {
+            "user": "Trapulo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:56:53.3046099Z"
+          }
+        ]
+      }
+    ]
+  }
 }

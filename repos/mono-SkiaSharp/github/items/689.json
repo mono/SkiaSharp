@@ -35,5 +35,39 @@
   "createdAt": "2018-11-16T20:07:01",
   "updatedAt": "2024-03-02T13:32:32",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:56:41.1870954Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 439622084,
+        "author": "ojb500",
+        "body": "I\u0027ve been looking at passing \u0060Span\u0060s to Skia in my project, where I use a lot of pooled SKPoint buffers.\r\n\r\nI\u0027ve got a class that looks like this\r\n\r\n\u0060\u0060\u0060cs\r\n\tinternal static class SkiaApiEx\r\n\t{\r\n// ...snip...\r\n\r\n\t\t[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]\r\n\t\tpublic extern static void sk_path_add_poly(sk_path_t cpath, IntPtr pPoints, int count, [MarshalAs(UnmanagedType.I1)] bool close);\r\n\r\n\t\tpublic static void AddPoly(this SKPath path, ReadOnlySpan\u003CSKPoint\u003E points, bool close)\r\n\t\t{\r\n\t\t\tunsafe\r\n\t\t\t{\r\n\t\t\t\tfixed (SKPoint* p = points)\r\n\t\t\t\t{\r\n\t\t\t\t\tsk_path_add_poly(path.Handle, (IntPtr)p, points.Length, close);\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n\u0060\u0060\u0060\r\n\r\nNot sure if it is the right pattern idiomatically, but works wonderfully for me in my project.\r\n\r\n",
+        "createdAt": "2018-11-17T14:41:15",
+        "reactions": []
+      },
+      {
+        "id": 444175736,
+        "author": "mattleibow",
+        "body": "This is something that we will be looking at in the future.",
+        "createdAt": "2018-12-04T17:01:31",
+        "reactions": []
+      },
+      {
+        "id": 477094824,
+        "author": "softlion",
+        "body": "I suppose someone should look at that faster, as it\u0027s easy enough. I\u0027ve just profiled my app and SKPoint allocations are 20% of all allocations. This would reduce allocations by 50%. Also instead of using ReadOnlySpan\u003CSKPoint\u003E points, use \u0022in ReadOnlySpan\u003CSKPoint\u003E points\u0022 (prefix with in). This prevents the runtime from reallocating structs. It\u0027s also in the new C# optimizations list.",
+        "createdAt": "2019-03-27T10:53:49",
+        "reactions": []
+      },
+      {
+        "id": 496163934,
+        "author": "MichaelRumpler",
+        "body": "I need to access the pixels of a SKBitmap. To do this I wrote these extension methods:\r\n\r\n\t\tpublic static unsafe Span\u003Cbyte\u003E GetPixelSpan(this SKBitmap bitmap)\r\n\t\t{\r\n\t\t\tvar ptr = SkiaApi.sk_bitmap_get_pixels(bitmap.Handle, out var length);\r\n\t\t\treturn new Span\u003Cbyte\u003E(ptr.ToPointer(), length.ToInt32());\r\n\t\t}\r\n\r\n\t\tpublic static unsafe Span\u003Cuint\u003E GetPixelSpanUInt(this SKBitmap bitmap)\r\n\t\t{\r\n\t\t\tvar ptr = SkiaApi.sk_bitmap_get_pixels(bitmap.Handle, out var length);\r\n\t\t\treturn new Span\u003Cuint\u003E(ptr.ToPointer(), length.ToInt32());\r\n\t\t}\r\n\r\n\t\t// this allows something like GetPixelSpan\u003CFoobar\u003E()\r\n\t\tpublic static unsafe Span\u003CT\u003E GetPixelSpan\u003CT\u003E(this SKBitmap bitmap)\r\n\t\t{\r\n\t\t\tvar ptr = SkiaApi.sk_bitmap_get_pixels(bitmap.Handle, out var length);\r\n\t\t\treturn new Span\u003CT\u003E(ptr.ToPointer(), length.ToInt32());\r\n\t\t}\r\n\r\nWith these methods I get a \u0060Span\u0060 of the pixels and can work with it in a safe way.\r\n\u0060SKBitmap.Bytes\u0060 copies the whole bitmap to a  new \u0060byte[]\u0060, so this is very slow and needs more memory.\r\n\u0060SKBitmap.GetPixels\u0060 returns an \u0060IntPtr\u0060 and needs \u0060unsafe\u0060 code to work with it.\r\n\u0060GetPixelSpan\u0060 has none of those drawbacks.\r\n\r\nOf course you don\u0027t need all three of those methods. The last is enough, but it enables somebody to write \u0060GetPixelSpan\u003CFoobar\u003E()\u0060 which does not make sense. Your choice which methods you\u0027ll use.",
+        "createdAt": "2019-05-27T10:23:02",
+        "reactions": []
+      }
+    ]
+  }
 }

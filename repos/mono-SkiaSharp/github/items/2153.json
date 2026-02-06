@@ -36,5 +36,25 @@
       "state": "COMMENTED",
       "submittedAt": "2024-01-09T03:16:54"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:56:27.6587165Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1974897233,
+        "author": "mattleibow",
+        "body": "Thanks for this PR! However, I am not sure the current \u0060SKMatrix\u0060 approach is the way we want to go for 3.0.\r\n\r\nI have been investigating this from a perf perspective and right now \u0060SKMatrix\u0060 has terrible performance compared to \u0060SKMatrix44\u0060. It is about 200% slower because it has to hop the interop, and it also is deceiving because using a struct is supposed to be light, however it does expensive things. \r\n\r\n - See https://github.com/mono/SkiaSharp/issues/2779\r\n\r\nIt may even be cheaper to use \u0060Matrix4x4\u0060 under the hood. In addition to the current interop, the managed struct does not have the matrix type mask which skia uses to take shortcuts. As a result, even just passing the struct between C\u002B\u002B and C# causes skia to have to recalculate it. It may be better to just re-implement the whole thing in C#.",
+        "createdAt": "2024-03-02T20:14:57",
+        "reactions": []
+      },
+      {
+        "id": 1979043446,
+        "author": "mgood7123",
+        "body": "alright\r\n\r\nOn Sun, 3 Mar 2024 at 06:15, Matthew Leibowitz ***@***.***\u003E\r\nwrote:\r\n\r\n\u003E Thanks for this PR! However, I am not sure the current SKMatrix approach\r\n\u003E is the way we want to go for 3.0.\r\n\u003E\r\n\u003E I have been investigating this from a perf perspective and right now\r\n\u003E SKMatrix has terrible performance compared to SKMatrix44. It is about\r\n\u003E 200% slower because it has to hop the interop, and it also is deceiving\r\n\u003E because using a struct is supposed to be light, however it does expensive\r\n\u003E things.\r\n\u003E\r\n\u003E    - See #2779 \u003Chttps://github.com/mono/SkiaSharp/issues/2779\u003E\r\n\u003E\r\n\u003E It may even be cheaper to use Matrix4x4 under the hood. In addition to\r\n\u003E the current interop, the managed struct does not have the matrix type mask\r\n\u003E which skia uses to take shortcuts. As a result, even just passing the\r\n\u003E struct between C\u002B\u002B and C# causes skia to have to recalculate it. It may be\r\n\u003E better to just re-implement the whole thing in C#.\r\n\u003E\r\n\u003E \u2014\r\n\u003E Reply to this email directly, view it on GitHub\r\n\u003E \u003Chttps://github.com/mono/SkiaSharp/pull/2153#issuecomment-1974897233\u003E, or\r\n\u003E unsubscribe\r\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/AGLITH7XCBP7JBLEKMB3ZZTYWIXM5AVCNFSM525MXEBKU5DIOJSWCZC7NNSXTN2JONZXKZKDN5WW2ZLOOQ5TCOJXGQ4DSNZSGMZQ\u003E\r\n\u003E .\r\n\u003E You are receiving this because you authored the thread.Message ID:\r\n\u003E ***@***.***\u003E\r\n\u003E\r\n",
+        "createdAt": "2024-03-05T15:32:33",
+        "reactions": []
+      }
+    ]
+  }
 }
