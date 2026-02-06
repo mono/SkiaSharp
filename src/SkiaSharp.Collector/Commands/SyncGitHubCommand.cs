@@ -62,6 +62,10 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                 Failures = []
             };
             
+            // Save immediately so state is consistent even if we crash or hit rate limit
+            await cache.SaveGitHubIndexAsync(index);
+            await cache.SaveGitHubSyncMetaAsync(syncMeta);
+            
             if (!settings.Quiet)
                 AnsiConsole.MarkupLine("[green]Cache cleared. Starting fresh sync...[/]");
         }
@@ -111,7 +115,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                 var engagementDone = !index.Items.Any(i => i.EngagementSyncedAt == null);
                 if (engagementDone || settings.EngagementOnly)
                 {
-                    syncMeta = syncMeta with { InitialSyncComplete = true };
+                    syncMeta = syncMeta with { InitialSyncComplete = true, LastPage = 0 };
                     if (!settings.Quiet)
                         AnsiConsole.MarkupLine("[green]Initial sync complete! Switching to incremental mode.[/]");
                 }
@@ -119,7 +123,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             else if (isInitialSync && itemsComplete && settings.ItemsOnly)
             {
                 // Items-only mode and items are done
-                syncMeta = syncMeta with { InitialSyncComplete = true };
+                syncMeta = syncMeta with { InitialSyncComplete = true, LastPage = 0 };
                 if (!settings.Quiet)
                     AnsiConsole.MarkupLine("[green]Initial items sync complete![/]");
             }
@@ -475,16 +479,17 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
 
         var elapsed = DateTime.UtcNow - startTime;
         
-        // Check if more items need processing
-        var remainingCount = index.Items.Count(i => 
-            !meta.Failures.ContainsKey(i.Number.ToString()) &&
-            (i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt));
-        var allDone = remainingCount == 0 || (processed == 0 && !rateLimitHit);
-        
+        // Update index FIRST, then check remaining count
         index = index with 
         { 
             Items = [.. itemsDict.Values.OrderBy(i => i.Number)]
         };
+
+        // Check if more items need processing (using updated index)
+        var remainingCount = index.Items.Count(i => 
+            !meta.Failures.ContainsKey(i.Number.ToString()) &&
+            (i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt));
+        var allDone = remainingCount == 0 || (processed == 0 && !rateLimitHit);
 
         meta = meta with 
         {
