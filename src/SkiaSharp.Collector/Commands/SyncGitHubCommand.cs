@@ -157,43 +157,12 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (settings.Verbose)
             AnsiConsole.MarkupLine($"  [dim]Saved repo stats: {repoStats.Stars:N0} stars, {repoStats.Forks:N0} forks[/]");
         
-        // Determine if we're resuming a previous sync
-        var now = DateTime.UtcNow;
-        var resuming = false;
-        var startPage = 1;
-        
-        // Check if there's a recent incomplete sync to resume
-        if (meta.Layers.Items.SyncStartedAt != null && 
-            meta.Layers.Items.SyncComplete != true &&
-            meta.Layers.Items.LastPageSynced != null &&
-            (now - meta.Layers.Items.SyncStartedAt.Value).TotalHours < 2) // Resume if within 2 hours
-        {
-            startPage = meta.Layers.Items.LastPageSynced.Value + 1;
-            resuming = true;
-            if (!settings.Quiet)
-                AnsiConsole.MarkupLine($"[blue]  Resuming from page {startPage} (checkpoint from {meta.Layers.Items.SyncStartedAt:HH:mm})[/]");
-        }
-        else if (settings.FullRefresh || meta.Layers.Items.LastSync == null)
-        {
-            // Starting fresh - reset checkpoint tracking
-            meta = meta with
-            {
-                Layers = meta.Layers with
-                {
-                    Items = meta.Layers.Items with
-                    {
-                        SyncStartedAt = now,
-                        LastPageSynced = null,
-                        SyncComplete = false
-                    }
-                }
-            };
-        }
-        
-        var since = (settings.FullRefresh || resuming) ? null : meta.Layers.Items.LastSync;
+        // For full refresh, ignore since timestamp
+        // For incremental, only fetch items updated since last sync
+        var since = settings.FullRefresh ? null : meta.Layers.Items.LastSync;
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
-        var page = startPage;
+        var page = 1;
         var pagesProcessed = 0;
         var maxPages = settings.PageCount > 0 ? settings.PageCount : int.MaxValue;
         var startTime = DateTime.UtcNow;
@@ -260,6 +229,14 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                             AnsiConsole.MarkupLine($"  [dim]#{issue.Number}: {Markup.Escape(issue.Title.Truncate(50))}[/]");
                     }
 
+                    // Save index after each page to prevent data loss on crash
+                    index = index with 
+                    { 
+                        UpdatedAt = DateTime.UtcNow,
+                        Items = [.. itemsDict.Values.OrderBy(i => i.Number)]
+                    };
+                    await cache.SaveGitHubIndexAsync(index);
+
                     // Track page time for ETA
                     var pageTime = (DateTime.UtcNow - pageStart).TotalSeconds;
                     pageTimes.Enqueue(pageTime);
@@ -273,24 +250,24 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
 
         var elapsed = DateTime.UtcNow - startTime;
         
+        // Index was already saved after each page, but ensure final state is saved
         index = index with 
         { 
             UpdatedAt = DateTime.UtcNow,
             Items = [.. itemsDict.Values.OrderBy(i => i.Number)]
         };
 
+        // Only update LastSync timestamp when we've completed all pages (allDone)
+        // This ensures incremental sync uses correct baseline
         meta = meta with 
         {
             Layers = meta.Layers with 
             {
                 Items = new LayerStatus(
-                    allDone ? "success" : (rateLimitHit ? "rate_limited" : "in_progress"),
-                    allDone ? DateTime.UtcNow : meta.Layers.Items.LastSync,
+                    allDone ? "success" : (rateLimitHit ? "rate_limited" : "partial"),
+                    allDone ? DateTime.UtcNow : meta.Layers.Items.LastSync, // Only update on complete
                     processed,
-                    index.Items.Count,
-                    page - 1, // Last page we completed
-                    meta.Layers.Items.SyncStartedAt ?? now,
-                    allDone
+                    index.Items.Count
                 )
             }
         };
@@ -299,8 +276,10 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         {
             if (allDone)
                 AnsiConsole.MarkupLine($"[green]  ✓ {processed:N0} items synced in {FormatTime(elapsed)} (complete)[/]");
+            else if (rateLimitHit)
+                AnsiConsole.MarkupLine($"[yellow]  → {processed:N0} items synced in {FormatTime(elapsed)} (rate limited)[/]");
             else
-                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (checkpoint at page {page - 1})[/]");
+                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (batch complete, more pages available)[/]");
         }
 
         return (index, meta, processed, allDone);
