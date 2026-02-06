@@ -20,5 +20,111 @@
   "updatedAt": "2022-08-19T09:01:43",
   "closedAt": "2020-06-09T13:02:24",
   "commentCount": 10,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:17.0774068Z",
+    "reactions": [
+      {
+        "user": "TWhidden",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:10:17.0775918Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 567802838,
+        "author": "mattleibow",
+        "body": "Yes and no.\r\n\r\nNo for right now because the current set of packages are based on fairly old builds.\r\n\r\nYes for in a bit. Right now we have an old build system. We need to update to VS2019 (#1030). That just does the managed part, but I\u0027m working on the PR for the native bits. Shouldn\u0027t be too hard, just haven\u0027t gotten to it yet.\r\n",
+        "createdAt": "2019-12-20T06:10:41",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:15.1161372Z"
+          }
+        ]
+      },
+      {
+        "id": 568232404,
+        "author": "mattleibow",
+        "body": "I think we can do this for v1.68.2",
+        "createdAt": "2019-12-22T04:46:41",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:15.3326836Z"
+          }
+        ]
+      },
+      {
+        "id": 577766848,
+        "author": "cghersi",
+        "body": "Do you have a tentative date for when the ARM64 support will be available?",
+        "createdAt": "2020-01-23T16:45:27",
+        "reactions": [
+          {
+            "user": "TWhidden",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:15.5250058Z"
+          }
+        ]
+      },
+      {
+        "id": 577812707,
+        "author": "mattleibow",
+        "body": "I tried having a look at ARM64 for the current versions of skia, but there are several things that will need to change - the MSVC version, drop some older platforms, build ANGLE, etc. But, the version that is currently being targeted/merged does already have ARM64 support: https://github.com/mono/SkiaSharp/pull/986\r\n\r\nI can\u0027t say exactly when this will get pushed out. I am hoping to get this out in a month or so, but as a result of the number of breaking changes, may take a bit longer.\r\n\r\nAt the end of the day, the time to make v1.68.x use ARM64 will not really be useful since that is going to be replaced by a fairly different v2.80.x.",
+        "createdAt": "2020-01-23T18:30:56",
+        "reactions": []
+      },
+      {
+        "id": 587278554,
+        "author": "vijayasurya20",
+        "body": "Hi @mattleibow ,\r\n\r\nThank you for your update.\r\n\r\nCan you please share me the expected release timeline for this SkiaSharp support in ARM64 architecture? \r\n\r\nRegards,\r\nVijayasurya A",
+        "createdAt": "2020-02-18T04:57:23",
+        "reactions": []
+      },
+      {
+        "id": 587988924,
+        "author": "mattleibow",
+        "body": "Things are a bit flexible, but we are aiming for the first previews in March/April. At this time, there are bits that are working, but unfortunately in our work, we removed a whole bunch of types and members to get it to compile. I am right now working to make sure that the API is backwards compatible. This is taking a bit of time as certain things will have to be reworked internally.\r\n\r\nA rough estimate is that we will have previews sometime in March.",
+        "createdAt": "2020-02-19T01:29:29",
+        "reactions": []
+      },
+      {
+        "id": 597133058,
+        "author": "ManikandanRavichandranSync",
+        "body": "Hi @mattleibow,\r\n\r\nCan you please share with me the expected release timeline for this SkiaSharp support in ARM64 architecture?\r\n\r\nRegards,\r\nManikandan R",
+        "createdAt": "2020-03-10T14:59:04",
+        "reactions": []
+      },
+      {
+        "id": 629157540,
+        "author": "mattleibow",
+        "body": "I forgot to update this issue with the numbers \uD83D\uDE22 \r\n\r\nThe alphas are out on the preview feed: https://aka.ms/skiasharp-eap/index.json\r\nCheck out the v2.80.x versions, but the most recent is **v2.80.0-alpha.8**.\r\n\r\nThis should have ARM64 for UWP.",
+        "createdAt": "2020-05-15T10:22:54",
+        "reactions": [
+          {
+            "user": "MartinZikmund",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:10:16.5778809Z"
+          }
+        ]
+      },
+      {
+        "id": 635920883,
+        "author": "johnsonmanickam",
+        "body": "Thanks for the updates. Is there any update like when the package will be available in NuGet.org? Is there a timeline?",
+        "createdAt": "2020-05-29T11:25:03",
+        "reactions": []
+      },
+      {
+        "id": 641276031,
+        "author": "mattleibow",
+        "body": "Merged and on nuget.org.",
+        "createdAt": "2020-06-09T13:02:24",
+        "reactions": []
+      }
+    ]
+  }
 }

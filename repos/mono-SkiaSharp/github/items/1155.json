@@ -15,5 +15,115 @@
   "updatedAt": "2022-08-19T06:02:37",
   "closedAt": "2020-04-16T12:50:52",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:41.9413502Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 590746239,
+        "author": "pauldendulk",
+        "body": "Here is the original Mapsui issue:\r\nhttps://github.com/Mapsui/Mapsui/issues/838",
+        "createdAt": "2020-02-25T08:31:56",
+        "reactions": []
+      },
+      {
+        "id": 591266264,
+        "author": "pauldendulk",
+        "body": "Did some further tests. \r\n- GRContext is not null (an issue we saw somewhere else).\r\n- IsDisposed is false on Surface and Canvas in all cases.\r\n- Other parameters of Surface and Canvas (like OwnHandle, DeviceClipBounds) seem correct.\r\n- PaintSurface is called after going back. That is not the problem\r\n- If InvalidateSurface() is called seconds later, which triggers a PaintSurface, it is still blank. So it is not a timing issue.",
+        "createdAt": "2020-02-26T06:41:51",
+        "reactions": []
+      },
+      {
+        "id": 608979839,
+        "author": "pauldendulk",
+        "body": "@mattleibow We will release a new version of Mapsui using preview 50 later today. Thanks for the fixes! This issue however is not fixed yet. I just updated the minimal repro to preview 50 and it has the same behavior.\r\n\r\n@spaddlewit Could you explain a bit more about your use case?\r\n\r\n",
+        "createdAt": "2020-04-04T05:56:43",
+        "reactions": []
+      },
+      {
+        "id": 609048109,
+        "author": "spaddlewit",
+        "body": "The use case is that you tap on something on the map, or press a Button, or perform some other action on the screen that PushAsync()s a new ContentPage in Xamarin.Forms. Then at some point you will go Back to the ContentPage with the Mapsui map on it. This is a very basic operation and likely is used in nearly all apps. Not sure how to explain it further.",
+        "createdAt": "2020-04-04T15:48:52",
+        "reactions": []
+      },
+      {
+        "id": 609069866,
+        "author": "mattleibow",
+        "body": "I\u0027ll have a look. Maybe the GL context is getting killed under the hood. Thanks for the testing and feedback.",
+        "createdAt": "2020-04-04T18:25:38",
+        "reactions": []
+      },
+      {
+        "id": 609988075,
+        "author": "mattleibow",
+        "body": "Awesome news folks. I managed to locate what was happening. It seems with v1.68.1\u002B the GL context was freed, but not the skia links to them. I\u0027m not quite sure exactly what was happening as I could still access the properties of the old context...\r\n\r\nBut anyways, I now clean up properly and all seems to be good in https://github.com/mono/SkiaSharp/pull/1213\r\n\r\nThanks to the folks keeping this thread updated and a special thanks to @spaddlewit for getting that nice repro that really helped me get to the bottom of this quickly. @pauldendulk, I\u0027ll get a preview out ASAP and update to the mapsui issue as well when it is done.",
+        "createdAt": "2020-04-06T19:21:37",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:11:40.3138877Z"
+          }
+        ]
+      },
+      {
+        "id": 609994190,
+        "author": "charlenni",
+        "body": "@mattleibow I assume, that this also solves the problem with the Android device, that screen wents off and than when go on again, the canvas doesn\u0027t get updated anymore. Seems for me the same reason.\r\n\r\nProblem was described [here](https://github.com/Mapsui/Mapsui/issues/746).",
+        "createdAt": "2020-04-06T19:34:12",
+        "reactions": []
+      },
+      {
+        "id": 610011472,
+        "author": "mattleibow",
+        "body": "@charlenni I am not sure... I am correctly disposing the contexts and then they are being recreated. I am using a Pixel 2 and tried switching pages as well as switching to another app. It seems to draw correctly - at least with sample attached.\r\n\r\nThis might be a bit different because the \u0060GRContext\u0060 will always be null until a the first frame is drawn. This is because the skia logic waits until the GL contexts/buffers are all set up and starting to draw. Basically a lazy-init for the objects. Not sure if that maybe helps in some way?",
+        "createdAt": "2020-04-06T20:11:30",
+        "reactions": []
+      },
+      {
+        "id": 610238401,
+        "author": "charlenni",
+        "body": "@mattleibow We have this problem in different flavours. One is on iOS, that the canvas doesn\u0027t work correct, if you create it with IsVisible and than later set it IsVisible to true. Or when you leave the app and come back (could see this by myself with lower versions of Android but not with newer ones). Or as in this issue. So perhaps all this is solved with your efforts.",
+        "createdAt": "2020-04-07T08:00:13",
+        "reactions": []
+      },
+      {
+        "id": 610332178,
+        "author": "mattleibow",
+        "body": "Might not be... The PR was just for UWP.\r\nI\u0027ll reopen this issue for now and do some testing on other platforms.\r\n\r\nIf you have a platform sample or a specific set of instructions to repro then just throw them in here.\r\n\r\nHowever, this issue is very likely on multiple platforms. Not all actually dispose the skia GPU context. Often the os doesn\u0027t kill it, but it might be doing that at some point due to memory pressure or something. ",
+        "createdAt": "2020-04-07T11:27:08",
+        "reactions": []
+      },
+      {
+        "id": 610334969,
+        "author": "pauldendulk",
+        "body": "As far as I know it was only seen on UWP. Maybe my original report was not clear enough, it is when using Forms on UWP. We have way more Android and iOS users than UWP. If the problem was there too we would have heard that.",
+        "createdAt": "2020-04-07T11:34:10",
+        "reactions": []
+      },
+      {
+        "id": 610473790,
+        "author": "mattleibow",
+        "body": "Ok, thanks for the confirmation. @charlenni might have been experiencing another issue?",
+        "createdAt": "2020-04-07T16:01:53",
+        "reactions": []
+      },
+      {
+        "id": 610482180,
+        "author": "charlenni",
+        "body": "@mattleibow I encountered, that if you leave the app by using the power off switch and come back, then the canvas isn\u0027t drawn again until you call a InvalidateSurface by your own. And this looks for me very similar to the above problem. I use a Huawei P8 lite 2017 with Android 8 for tests.",
+        "createdAt": "2020-04-07T16:16:29",
+        "reactions": []
+      },
+      {
+        "id": 614632622,
+        "author": "mattleibow",
+        "body": "The Android issue is in #1232 ",
+        "createdAt": "2020-04-16T12:50:52",
+        "reactions": []
+      }
+    ]
+  }
 }

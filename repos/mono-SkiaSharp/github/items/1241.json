@@ -14,5 +14,70 @@
   "updatedAt": "2022-08-19T06:01:57",
   "closedAt": "2020-06-27T22:25:04",
   "commentCount": 5,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:50.946461Z",
+    "reactions": [
+      {
+        "user": "startnow65",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:50.9464686Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 615903285,
+        "author": "Gillibald",
+        "body": "Even better. Make native assets an extra package like the Linux version. Problem solved.",
+        "createdAt": "2020-04-18T16:56:42",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:50.0599563Z"
+          }
+        ]
+      },
+      {
+        "id": 615914432,
+        "author": "mattleibow",
+        "body": "\u003E Make native assets an extra package like the Linux version. Problem solved.\r\n\r\nThat is the plan.",
+        "createdAt": "2020-04-18T18:01:57",
+        "reactions": [
+          {
+            "user": "ryanelian",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:50.2782039Z"
+          }
+        ]
+      },
+      {
+        "id": 615915181,
+        "author": "mattleibow",
+        "body": "The future with net5 will only have a single assembly and we will do something about the multiple native assets.\r\n\r\nFor now, yeah, we could split the packages. Can you not just publish for a specific runtime? You already know where you are going to be running, so no need to have it all. Or are you not creating the docker image?",
+        "createdAt": "2020-04-18T18:04:31",
+        "reactions": []
+      },
+      {
+        "id": 615921213,
+        "author": "ryanelian",
+        "body": "\u003E Can you not just publish for a specific runtime?\r\n\r\nThat is what is happening today.\r\n\r\nBut this thread is about \u0022tomorrow\u0022. I would like to be able to \u0060dotnet publish -c Release\u0060 when SkiaSharp is installed into the project AND not worry about the whole app publish size. (e.g. Hand over that folder to customer and say \u0022run this using \u0060dotnet\u0060 in Linux or Windows or Mac OS up to you\u0022)\r\n\r\nLet\u0027s just say that we want to optimize publish size for newbies who are not familiar / care with runtime identifiers.",
+        "createdAt": "2020-04-18T18:26:49",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:50.7053574Z"
+          }
+        ]
+      },
+      {
+        "id": 650640463,
+        "author": "mattleibow",
+        "body": "Closing this as a duplicate of #1301\r\n\r\nEven though this issue was first, it was around the idea of ASP.NET. Some changes were made to no longer embed the native files inside the assemblies (#1296) but this actually made this issue worse unfortunately. However, the actual work was done so we can either move files around or into separate packages.\r\n\r\nI am not sure exactly why the process will be, but I hope to do some cleanup in v2.80.1.\r\n\r\nThe other reason this is not so easy with the case of \u0022remove non-ASP.NET\u0022 is that .NET 6 is also going to be a \u0060dotnet publish\u0060 and then use the runtimes folder. We can\u0027t go to crazy and split everything up, but we also must do something.",
+        "createdAt": "2020-06-27T22:25:01",
+        "reactions": []
+      }
+    ]
+  }
 }

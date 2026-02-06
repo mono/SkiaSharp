@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T06:02:39",
   "closedAt": "2020-02-21T18:30:14",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:37.2463581Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 589046277,
+        "author": "Gillibald",
+        "body": "Y checking the TextEncoding on the paint doesn\u0027t make sense. Is the paint even used when a buffer is allocated? Probably just an oversight during the transition to SKFont. We might want to remove that check. Also the font parameter itself shouldn\u0027t be needed. What am I missing here?",
+        "createdAt": "2020-02-20T13:58:18",
+        "reactions": []
+      },
+      {
+        "id": 589598903,
+        "author": "mattleibow",
+        "body": "We can always copy the paint object, and then set the encoding to glyph when allocating. This way we don\u0027t even need to throw. \r\n\r\nLet me do that and get a preview out.",
+        "createdAt": "2020-02-21T10:40:20",
+        "reactions": []
+      },
+      {
+        "id": 589610000,
+        "author": "mattleibow",
+        "body": "@Ziriax thanks for taking the time to open the issue and collect the info. I have this PR which will make things way easier: https://github.com/mono/SkiaSharp/pull/1152",
+        "createdAt": "2020-02-21T11:12:42",
+        "reactions": []
+      }
+    ]
+  }
 }

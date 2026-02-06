@@ -14,5 +14,88 @@
   "updatedAt": "2022-08-19T09:01:36",
   "closedAt": "2019-12-29T22:37:07",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:27.8461047Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 569547803,
+        "author": "JaggerJo",
+        "body": "https://github.com/mono/SkiaSharp/blob/247569e0954bb8dfb078ed180cf7b8d7cfe702bf/binding/Binding/SKCanvas.cs#L512",
+        "createdAt": "2019-12-29T22:31:33",
+        "reactions": []
+      },
+      {
+        "id": 569547849,
+        "author": "JaggerJo",
+        "body": "https://github.com/mono/SkiaSharp/pull/865",
+        "createdAt": "2019-12-29T22:32:08",
+        "reactions": []
+      },
+      {
+        "id": 569547871,
+        "author": "Gillibald",
+        "body": "You should use SKTextBlob to draw your text and that already has what you want.\r\n\r\n https://github.com/AvaloniaUI/Avalonia/blob/master/src/Skia/Avalonia.Skia/PlatformRenderInterface.cs#L161",
+        "createdAt": "2019-12-29T22:32:26",
+        "reactions": []
+      },
+      {
+        "id": 569548086,
+        "author": "JaggerJo",
+        "body": "Wow, that was quick \uD83D\uDE04. Thanks for the link!\r\n\r\n",
+        "createdAt": "2019-12-29T22:35:33",
+        "reactions": []
+      },
+      {
+        "id": 569548333,
+        "author": "Gillibald",
+        "body": "Here I am drawing the filled blob \r\n https://github.com/AvaloniaUI/Avalonia/blob/master/src/Skia/Avalonia.Skia/DrawingContextImpl.cs#L236",
+        "createdAt": "2019-12-29T22:38:58",
+        "reactions": []
+      },
+      {
+        "id": 569548436,
+        "author": "Gillibald",
+        "body": "Just let me know if you need more assistance \uD83D\uDC4D",
+        "createdAt": "2019-12-29T22:40:22",
+        "reactions": []
+      },
+      {
+        "id": 569548756,
+        "author": "JaggerJo",
+        "body": "Thanks! It\u0027s a lot more complicated than I thought.",
+        "createdAt": "2019-12-29T22:44:38",
+        "reactions": []
+      },
+      {
+        "id": 569549361,
+        "author": "Gillibald",
+        "body": "The thing is for Latin text editing and rendering is trivial. Anything else requires a lot of work.",
+        "createdAt": "2019-12-29T22:51:36",
+        "reactions": []
+      },
+      {
+        "id": 569916869,
+        "author": "mattleibow",
+        "body": "I just started using https://github.com/toptensoftware/RichTextKit\r\n\r\n_I think Avalonia uses bits of this under the hood?_\r\n\r\n![](https://raw.githubusercontent.com/toptensoftware/RichTextKit/master/docsrc/sandbox%402x.png)",
+        "createdAt": "2019-12-31T11:51:44",
+        "reactions": []
+      },
+      {
+        "id": 569926156,
+        "author": "JaggerJo",
+        "body": "@mattleibow Have you used it on Mac/Linux ?\r\n\r\nCloned it a few days ago and noticed it uses WinForms to host Skia, but it should be super simple to use Avalonia instead I think.\r\n\r\nAvalonia uses the RichTextKit Line Break detection I think.\r\n\r\nhttps://github.com/Gillibald/Avalonia/blob/6b50a41e6af2605a73ad57e72d71a370008b16d3/src/Avalonia.Visuals/Media/Text/Unicode/LineBreaker.cs\r\n",
+        "createdAt": "2019-12-31T13:08:20",
+        "reactions": []
+      },
+      {
+        "id": 569928870,
+        "author": "Gillibald",
+        "body": "I think my approach will be more pluggable and is xplat as well. My next refactoring will introduce some line services that can be used to build your own text layout. So in the end it will be possible to produce lines on demand. This is an requirement for large documents.",
+        "createdAt": "2019-12-31T13:29:35",
+        "reactions": []
+      }
+    ]
+  }
 }

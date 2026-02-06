@@ -19,5 +19,49 @@
   "updatedAt": "2022-08-19T06:02:01",
   "closedAt": "2020-04-15T22:15:43",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:43.1851944Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 614185060,
+        "author": "mattleibow",
+        "body": "This is pretty easy to do, once you have the image and the path that you wish to crop, create a new surface, clip and draw.\r\n\r\nI have an example app here:\r\nhttps://github.com/mattleibow/SkiaSharpImageCropper/blob/master/ImageCropper/ImageCropper/MainPage.xaml.cs#L104",
+        "createdAt": "2020-04-15T17:49:12",
+        "reactions": [
+          {
+            "user": "dsadlowski",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:42.7260357Z"
+          }
+        ]
+      },
+      {
+        "id": 614234839,
+        "author": "ziriax",
+        "body": "Do you also want to apply a perspective transformation to the cropped polygon, so that the polygon is transformed into a square?\r\n\r\nIf so, it seems SkiaSharp 1.68 is currently missing some Skia/C\u002B\u002B methods to create a perspective matrix that maps a quadrilateral to another quadrilateral, e.g. [the \u0060setPolyToPoly\u0060 method](https://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/skia/src/core/SkMatrix.cpp;l=1417?q=setPolyToPoly)\r\n\r\nIf need that, you could convert [this C\u002B\u002B code](https://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/skia/src/core/SkMatrix.cpp;drc=da6ef73266f6110abc5e788457f0e8f9257dd5b6;l=1341?q=setPolyToPoly) to C# for now\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-04-15T19:26:33",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:42.9461822Z"
+          },
+          {
+            "user": "dsadlowski",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:42.9461829Z"
+          }
+        ]
+      },
+      {
+        "id": 614444993,
+        "author": "dsadlowski",
+        "body": "Thank you for replies.\r\nThis is exactly what i was looking for. Works great!",
+        "createdAt": "2020-04-16T06:37:42",
+        "reactions": []
+      }
+    ]
+  }
 }

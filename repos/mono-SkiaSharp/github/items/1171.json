@@ -14,5 +14,67 @@
   "updatedAt": "2022-08-19T06:02:27",
   "closedAt": "2020-06-10T02:32:28",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:59.2536814Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 597517208,
+        "author": "mattleibow",
+        "body": "Hmm. This has been sort of in my mind. There is that https://www.nuget.org/packages/System.Drawing.Common package that might help. You could also create a stub library that just has the members you need and wrap SkiaSharp.\r\n\r\nMaybe you can open an issue as well on accord.net to see if they are interested in using SkiaSharp officially. Then we can get better cross-platform support. ",
+        "createdAt": "2020-03-11T08:59:55",
+        "reactions": []
+      },
+      {
+        "id": 597540245,
+        "author": "TheBricktop",
+        "body": "while i was trying to use system.drawing.commons in unity but failed miserably mostly because there were some problems with Bitmap class, also it seems that it doesn\u0027t containt xamarin.android build\r\n![obraz](https://user-images.githubusercontent.com/3866030/76408923-ff1f4780-638d-11ea-95ec-a1b47bfe2bfa.png)\r\n",
+        "createdAt": "2020-03-11T09:54:17",
+        "reactions": []
+      },
+      {
+        "id": 597563997,
+        "author": "TheBricktop",
+        "body": "im also asking if creating a dummy System.Drawing namespace where all classes are inheriting from skias is a good approach?",
+        "createdAt": "2020-03-11T10:48:38",
+        "reactions": []
+      },
+      {
+        "id": 599258707,
+        "author": "mattleibow",
+        "body": "I am not sure the inheritance is  good thing due to the objects having different purposes as well as conflicting members. I would create wrapper classes instead. In the case of System Bitmap/Image, this is not really a 1:1 mapping of SKBitmap/SKImage. The SKImage is a snapshot, the SKBitmap is editable.\r\n\r\nI would set up your version of stubbed System.Drawing, and then implement the members you need using SkiaSharp under the hood. \r\n\r\nAll the source is here, so you can copy ABI and tests: https://github.com/dotnet/runtime/tree/master/src/libraries/System.Drawing.Common\r\nAlso, you can make use of the GenAPI tool here (from MS) to generate the APIs and then you don\u0027t even have to write it yourself: https://dev.azure.com/dnceng/public/_packaging?_a=package\u0026feed=dotnet-eng\u0026package=Microsoft.DotNet.GenAPI\u0026protocolType=NuGet\u0026version=5.0.0-beta.20164.1\r\n\r\nIf you create a project for this (or get started on it) then this will be a HUGE help to the community. I\u0027ll also ask on Twitter to see if someone has done this already...",
+        "createdAt": "2020-03-15T20:14:37",
+        "reactions": []
+      },
+      {
+        "id": 599484867,
+        "author": "TheBricktop",
+        "body": "Never made any wrapper class before is there any good guide for this ? \r\n",
+        "createdAt": "2020-03-16T11:27:08",
+        "reactions": []
+      },
+      {
+        "id": 600509630,
+        "author": "mattleibow",
+        "body": "This is sort of a per-project design. But, this is just more a way of doing things:\r\n\r\n\u0060\u0060\u0060csharp\r\nclass Graphics {\r\n    SKSurface surface;\r\n    void DrawImage(Image image, Point point) {\r\n        surface.DrawImage(image.skiaPitmap, point.ToSKPoint())\r\n    }\r\n    static Graphics FromImage(Image image) {\r\n        return new Graphics(SKSurface.Create(image.skiaBitmap));\r\n    }\r\n}\r\n\r\nclass Image {\r\n    SKBitmap skiaBitmap;\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-03-18T09:18:20",
+        "reactions": []
+      },
+      {
+        "id": 602096167,
+        "author": "TheBricktop",
+        "body": "welll im just starting a project to combine accordNet skia and unity in one project \r\nhttps://github.com/InstytutXR/AccordNET4Unity",
+        "createdAt": "2020-03-21T20:01:51",
+        "reactions": []
+      },
+      {
+        "id": 641683031,
+        "author": "mattleibow",
+        "body": "Closing this issue as it does not directly pertain to the SkiaSharp library development.",
+        "createdAt": "2020-06-10T02:32:28",
+        "reactions": []
+      }
+    ]
+  }
 }

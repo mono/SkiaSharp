@@ -20,5 +20,52 @@
   "updatedAt": "2022-08-19T09:01:40",
   "closedAt": "2020-02-11T15:56:36",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:21.5706808Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 568147156,
+        "author": "mattleibow",
+        "body": "Looks like there may be a bug in the fact that you are calling InvalidateSurface in the PaintSurface event. Is there a way you could potentially use another way to refresh the view until this is fixed?\r\n\r\nThere is the render loop that may work if you are doing updates game-style. Or, you can use the Forms\u0027 RunOnMainThread logic to post the call without causing a SO?",
+        "createdAt": "2019-12-21T03:11:38",
+        "reactions": []
+      },
+      {
+        "id": 569635544,
+        "author": "nor0x",
+        "body": "i was able to fix this by changing the way i refresh the view - thanks @mattleibow \r\n\r\nstill, it would be great if one could toggle GPU rendering without changing much of the painting coded. Should i keep this open?",
+        "createdAt": "2019-12-30T10:19:41",
+        "reactions": []
+      },
+      {
+        "id": 569916979,
+        "author": "mattleibow",
+        "body": "Yes, leave it open and I will have a look.",
+        "createdAt": "2019-12-31T11:52:50",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:21.1048299Z"
+          }
+        ]
+      },
+      {
+        "id": 583888124,
+        "author": "mattleibow",
+        "body": "@nor0x, I am having a look at this now, and was the canvas views updating when you called \u0060InvalidateSurface\u0060 from inside the \u0060Paint\u0060 event?\r\n\r\nI am looking at the event code, and it appears that any \u0060InvalidateSurface\u0060 from inside the \u0060Paint\u0060 is ignored. The call to invalidate checks to see if there is a draw in progress and just bails out.",
+        "createdAt": "2020-02-09T20:15:45",
+        "reactions": []
+      },
+      {
+        "id": 584510616,
+        "author": "nor0x",
+        "body": "@mattleibow thanks for investigating this issue. In my case the canvas was not updating - it seemed frozen until the overflow occured",
+        "createdAt": "2020-02-11T07:39:44",
+        "reactions": []
+      }
+    ]
+  }
 }

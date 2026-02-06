@@ -15,5 +15,65 @@
   "updatedAt": "2022-08-19T06:01:58",
   "closedAt": "2020-04-23T00:02:28",
   "commentCount": 6,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:49.1605633Z",
+    "reactions": [
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:49.1605693Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 615914131,
+        "author": "mattleibow",
+        "body": "Technically yes... It uses the \u0022readonly\u0022 version. But that pointer is also returned for the writeable. So there is actually no real difference.\r\n\r\nI think it is good to add both the writeable version and the generic.",
+        "createdAt": "2020-04-18T18:00:40",
+        "reactions": []
+      },
+      {
+        "id": 615918922,
+        "author": "mattleibow",
+        "body": "A \u0022workaround\u0022 right now is to just create your own span:\r\n\r\n\u0060\u0060\u0060cs\r\nvar span = new Span\u003CT\u003E ((void*)pixmap.GetPixels (), pixmap.BytesSize);\r\n\u0060\u0060\u0060\r\n\r\nThat is almost exactly what I do under the hood. In fact, that is what this feature will be.",
+        "createdAt": "2020-04-18T18:18:23",
+        "reactions": []
+      },
+      {
+        "id": 616079290,
+        "author": "ziriax",
+        "body": "Thanks, did that, and also added the unmanaged constraint.\r\n\r\nI just discovered that .net core 3 now has native SIMD intristics...\r\n\r\nC# is now exciting even for low level hackers ;-)",
+        "createdAt": "2020-04-19T08:52:41",
+        "reactions": []
+      },
+      {
+        "id": 616080248,
+        "author": "mattleibow",
+        "body": "Thanks for the tip on the unmanaged constraint! ",
+        "createdAt": "2020-04-19T08:58:38",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:48.7331562Z"
+          }
+        ]
+      },
+      {
+        "id": 616120751,
+        "author": "mattleibow",
+        "body": "Just be aware that skia flips the bits depending on the CPU endian-ness.",
+        "createdAt": "2020-04-19T12:22:23",
+        "reactions": []
+      },
+      {
+        "id": 616122670,
+        "author": "mattleibow",
+        "body": "Let me know what you think of #1242",
+        "createdAt": "2020-04-19T12:31:37",
+        "reactions": []
+      }
+    ]
+  }
 }

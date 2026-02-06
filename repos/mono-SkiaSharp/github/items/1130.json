@@ -14,5 +14,59 @@
   "updatedAt": "2022-08-19T06:02:51",
   "closedAt": "2020-02-06T23:27:58",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:09.955536Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 583161267,
+        "author": "mattleibow",
+        "body": "Ah, yeah. Unfortunately SkiaSharp only supports 3 formats (https://github.com/mono/SkiaSharp/issues/320#issuecomment-310805723):\r\n - jpeg\r\n - png\r\n - webp\r\n\r\nThis is a bit unfortunate, but you could always use a separate library to do this if you really need a gif. For example (I have not actually used) there is [NGif](https://github.com/avianbc/NGif) or [BumpKit](https://github.com/DataDink/Bumpkit) or [AnimatedGif](https://www.nuget.org/packages/AnimatedGif).\r\n\r\nA lot of them require GDI, so they might only work on Windows.\r\n\r\nThere was this discussion as well: https://groups.google.com/forum/#!searchin/skia-discuss/gif%7Csort:date/skia-discuss/R99fiu-tYNU/1G7KaxiyEAAJ\r\nBasically, they suggest making a set of png and using ImageMagick to make a gif. ",
+        "createdAt": "2020-02-06T23:27:47",
+        "reactions": []
+      },
+      {
+        "id": 583607861,
+        "author": "lrolleman",
+        "body": "Sadly, all of those libraries rely on the Windows (System.Drawing/GDI) which just throws PlatformNotSupportedException on Xamarin. \r\n\r\nHowever, drawing inspiration from NGif (and the original Java version) and replacing all the System.Drawing components with their equivalent SkiaSharp components (Image-\u003ESKImage, Color-\u003ESKColor etc.) it just... works. Almost anti-climactic after bashing my head for a couple days on it\r\n\r\nPerformance leaves something to be desired but it\u0027s tolerable",
+        "createdAt": "2020-02-07T20:56:51",
+        "reactions": []
+      },
+      {
+        "id": 583643290,
+        "author": "mattleibow",
+        "body": "Ooh, yeah. Do you have the code somewhere? Maybe I can take a look and see if you are maybe copying things too many times. I was actually going to have a look at this, but since you got code already, maybe we can make this an actual thing? A SkiaSharp.NGif or a NGif.SkiaSharp. People will love it. And they can now play it in Xamarin.Forms \uD83D\uDE09 ",
+        "createdAt": "2020-02-07T22:26:15",
+        "reactions": []
+      },
+      {
+        "id": 584370903,
+        "author": "lrolleman",
+        "body": "I don\u0027t have public code, though it would be very simple to do. The only part of the System.Drawing to SkiaSharp port that wasn\u0027t basic 1 to 1 was in GetImagePixels\r\n\r\nhttps://github.com/avianbc/NGif/blob/master/Components/AnimatedGifEncoder.cs\r\nWhere I replaced\r\n\u0060\u0060\u0060\r\nImage temp = new Bitmap(width, height);\r\nGraphics g = Graphics.FromImage(temp);\r\ng.DrawImage(image, 0, 0);\r\nimage = temp;\r\ng.Dispose();\r\n\u0060\u0060\u0060\r\nwith \r\n\u0060\u0060\u0060\r\nvar temp = new SKBitmap(width, height);\r\nvar canvas = new SKCanvas(temp);\r\ncanvas.DrawImage(image, 0, 0);\r\nimage = SKImage.FromBitmap(temp);\r\ncanvas.Dispose();\r\n\u0060\u0060\u0060\r\n\r\nFairly naive/simplistic, but works as proof of concept",
+        "createdAt": "2020-02-10T21:41:05",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:09.4795477Z"
+          }
+        ]
+      },
+      {
+        "id": 584377449,
+        "author": "mattleibow",
+        "body": "Hmm. Looks good. The \u0060new SKBitmap\u0060 is creating some memory, and then \u0060SKImage.FromBitmap\u0060 is copying it. The \u0060canvas.DrawImage\u0060 is also doing a copy. Is there a reason why you can\u0027t just use the image directly? There is that \u0060PeekPixels\u0060 method that you can use to read the pixels off the image/bitmap/surface.\r\n\r\nOr, Instead of using a \u0060SKBitmap\u0060 and then \u0060SKImage\u0060, just use a \u0060SKSurface\u0060 or \u0060SKBitmap\u0060. In the case of GDI, the \u0060Image\u0060 is a base type for \u0060Bitmap\u0060, so there is no copying going on. And, the \u0060Graphics.FromImage\u0060 is just wrapping the image - just like the cheap \u0060new SKCanvas\u0060.\r\n\r\nHope that helps/makes sense?",
+        "createdAt": "2020-02-10T21:57:11",
+        "reactions": []
+      },
+      {
+        "id": 584379178,
+        "author": "lrolleman",
+        "body": "That does make sense, I\u0027ll certainly do some experiments along those lines (I haven\u0027t spent much more time on it once I was convinced it was in fact possible to do)\r\n\r\nCheers",
+        "createdAt": "2020-02-10T22:01:33",
+        "reactions": []
+      }
+    ]
+  }
 }

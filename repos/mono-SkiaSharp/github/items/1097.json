@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T09:01:28",
   "closedAt": "2020-02-05T20:32:00",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:38.189824Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 582598578,
+        "author": "mattleibow",
+        "body": "So, I had a look at this and this is sort of working as expected, kinda.\r\n\r\n\u0060SKImage.FromEncodedData\u0060 technically creates a raster image, but a \u0022lazy\u0022 raster. You can check this using the \u0060IsLazyGenerated\u0060 property. So, when you do \u0060ToRasterImage\u0060, you are actually just getting the same image - which has no pixmap because it probably hasn\u0027t read the actual pixels yet.\r\n\r\nNow, how do we do what you want to do? Basically, copy the image to a new image:\r\n\r\n\u0060\u0060\u0060csharp\r\n// original\r\nvar image = SKImage.FromEncodedData(path);\r\n\r\n// create a new image\r\nusing var copy = SKImage.Create(new SKImageInfo(image.Width, image.Height));\r\nusing var pix = copy.PeekPixels();\r\n\r\n// copy the image\r\nimage.ReadPixels(pix, 0, 0);\r\n\u0060\u0060\u0060\r\n\r\nThis _will work_. But it is code - and we are developers. Developers are known to hate code (it contains bugs). So I just exposed a new overload that does all this for you in #1126:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var image = SKImage.FromEncodedData(path);\r\nusing var rasterImage = image.ToRasterImage(preserveLazy: false);\r\n\u0060\u0060\u0060\r\n\r\nAfter all this, remember we are _copying_ the image. If for some reason you want to modify the pixels, then this is how you do it. But, if you are trying to just _use_ the image, then maybe have a look at the \u0060Subset\u0060 members or draw using shaders, color filters or other blend modes. This way, you do not have to allocate or move memory around.",
+        "createdAt": "2020-02-05T20:32:00",
+        "reactions": []
+      }
+    ]
+  }
 }

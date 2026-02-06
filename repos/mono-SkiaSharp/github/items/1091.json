@@ -19,5 +19,45 @@
   "updatedAt": "2022-08-19T09:01:32",
   "closedAt": "2020-02-05T09:54:52",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:32.0754375Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 571839915,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this, I will investigate.",
+        "createdAt": "2020-01-08T00:46:37",
+        "reactions": []
+      },
+      {
+        "id": 582105910,
+        "author": "mattleibow",
+        "body": "I am having a look at this now, and I can\u0027t find any leaks. I tried a massive amount of instances (50M) and there was basically a 5mb increment. But that was the same for all number 1M, 10M, 50M. I also got that for \u0060SKMemoryStream\u0060 and \u0060SKData\u0060.\r\n\r\nI tested with SkiaSharp v1.68.1.1 (but this is basically the same native library for all 1.68.x packages)\r\n\r\n.NET Core 3.1\r\n\u0060\u0060\u0060\r\nN: 50,000,000\r\nMemory delta (managed): 608.51 kb\r\nMemory total (managed): 681.22 kb\r\nMemory total: 12,576.00 kb\r\nMemory delta: 0.10 b/iter\r\nMemory delta: 5,052.00 kb\r\n\u0060\u0060\u0060\r\n\r\n.NET Framework 4.7.1:\r\n\u0060\u0060\u0060\r\nN: 50,000,000\r\nMemory delta (managed): 654.24 kb\r\nMemory total (managed): 675.89 kb\r\nMemory total: 14,012.00 kb\r\nMemory delta: 0.09 b/iter\r\nMemory delta: 4,548.00 kb\r\n\u0060\u0060\u0060\u0060\r\n\r\nDo you have more info that might help?",
+        "createdAt": "2020-02-04T20:43:17",
+        "reactions": []
+      },
+      {
+        "id": 582164489,
+        "author": "bazilshep",
+        "body": "I am able to reproduce your results with 1.68.1.1 (no leak) and have re-checked 1.68.0.0 and confirmed it does have the leak.\r\n\r\nUsing this repro code (updated to include version info):\r\n\r\n\u0060\u0060\u0060\r\nstatic void Main(string[] args)\r\n{\r\n\r\nconst int n = 10000000;\r\n\r\nSystem.GC.GetTotalMemory(true);\r\nlong mem_start = System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64;\r\n\r\nfor (var idx = 0; idx \u003C n; idx\u002B\u002B)\r\n{\r\n    using (var r = new SkiaSharp.SKRegion())\r\n    {\r\n        //using r or not doesn\u0027t seem to matter\r\n    }\r\n}\r\n\r\nlong mem_end_manged = System.GC.GetTotalMemory(true); //does not show leak, leaked memory is unmanaged\r\nlong mem_end = System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64;\r\n\r\nConsole.WriteLine(typeof(SkiaSharp.SKRegion).Assembly.GetName().ToString());\r\nConsole.WriteLine(typeof(SkiaSharp.SKRegion).Assembly.Location);\r\nConsole.Write(System.Diagnostics.FileVersionInfo.GetVersionInfo(typeof(SkiaSharp.SKRegion).Assembly.Location));\r\nConsole.WriteLine(string.Format(\u0022N: {0}\u0022, n));\r\nConsole.WriteLine(string.Format(\u0022Memory total (managed): {0} kb\u0022, mem_end_manged / 1024d));\r\nConsole.WriteLine(string.Format(\u0022Memory total: {0} kb\u0022, mem_end / 1024d));\r\nConsole.WriteLine(string.Format(\u0022Memory delta: {0} b/iter\u0022, ((double)mem_end - mem_start) / n));\r\nConsole.WriteLine(string.Format(\u0022Memory delta: {0} kb\u0022, ((double)mem_end - mem_start) / 1024));\r\nConsole.ReadKey();\r\n}\r\n\u0060\u0060\u0060\r\n\r\nInstalled older broken version via the nuget package console:\r\n\u0060\u0060Install-Package SkiaSharp -Version 1.68.0.0\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\nSkiaSharp, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756\r\nC:\\vbproj\\sksharp_leak_repro\\ConsoleApplication1\\bin\\Debug\\SkiaSharp.dll\r\nFile:             C:\\vbproj\\sksharp_leak_repro\\ConsoleApplication1\\bin\\Debug\\SkiaSharp.dll\r\nInternalName:     SkiaSharp.dll\r\nOriginalFilename: SkiaSharp.dll\r\nFileVersion:      1.68.0.0\r\nFileDescription:  SkiaSharp\r\nProduct:          SkiaSharp\r\nProductVersion:   1.68.0.0-92a3ad87cc24727048d6f80810d109fbca0b3a51\r\nDebug:            False\r\nPatched:          False\r\nPreRelease:       False\r\nPrivateBuild:     False\r\nSpecialBuild:     False\r\nLanguage:         Language Neutral\r\nN: 10000000\r\nMemory total (managed): 582.5625 kb\r\nMemory total: 344248 kb\r\nMemory delta: 33.5179776 b/iter\r\nMemory delta: 327324 kb\r\n\u0060\u0060\u0060\r\n\r\nInstalled new working version via the nuget package console:\r\n\u0060\u0060Install-Package SkiaSharp -Version 1.68.1.1\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\nSkiaSharp, Version=1.68.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756\r\nC:\\vbproj\\sksharp_leak_repro\\ConsoleApplication1\\bin\\Debug\\SkiaSharp.dll\r\nFile:             C:\\vbproj\\sksharp_leak_repro\\ConsoleApplication1\\bin\\Debug\\SkiaSharp.dll\r\nInternalName:     SkiaSharp.dll\r\nOriginalFilename: SkiaSharp.dll\r\nFileVersion:      1.68.1.1\r\nFileDescription:  SkiaSharp\r\nProduct:          SkiaSharp\r\nProductVersion:   1.68.1.1-7fe55eb3ee6e2dfad48a03851314de8420109dce\r\nDebug:            False\r\nPatched:          False\r\nPreRelease:       False\r\nPrivateBuild:     False\r\nSpecialBuild:     False\r\nLanguage:         Language Neutral\r\nN: 10000000\r\nMemory total (managed): 580.87109375 kb\r\nMemory total: 19008 kb\r\nMemory delta: 0.2174976 b/iter\r\nMemory delta: 2124 kb\r\n\u0060\u0060\u0060\r\n\r\nThe assembly version reported by \u0060\u0060Assembly.GetName().ToString()\u0060\u0060 is confusing, but it appears that it is actually running a different skiasharp assembly.\r\n\r\nI can switch between the broken and fixed cases at will using the nuget commands.\r\n\r\nI suppose its fixed in the new version, although it would be nice to know what was broken.\r\n",
+        "createdAt": "2020-02-04T23:22:57",
+        "reactions": []
+      },
+      {
+        "id": 582245724,
+        "author": "Gillibald",
+        "body": "The old version had a leak with \u0060SKObject\u0060 due to a dictionary holding up to objects forever. This is no longer the case and therefore you don\u0027t have a leak anymore.",
+        "createdAt": "2020-02-05T05:24:01",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:32.0261412Z"
+          }
+        ]
+      }
+    ]
+  }
 }

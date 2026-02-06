@@ -14,5 +14,63 @@
   "updatedAt": "2022-08-19T06:02:04",
   "closedAt": "2020-10-22T00:31:30",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:38.6240712Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 612132919,
+        "author": "mattleibow",
+        "body": "Do you have the full stack trace? It might be because the \u0060SkiaSharp.Views.Forms\u0060 project does not actually have a netstandard implementation that can run in tests. It only consists of views that require the platform implementation.\r\n\r\nYou might get things to work by installing one or more of the concrete packages: \r\n - SkiaSharp.Views.Forms.WPF\r\n - SkiaSharp.Views.Forms.WinForms\r\n - SkiaSharp.Views.Forms.GTK\r\n\r\nHowever, if this does not work, them I\u0027ll have a look at how is the best way to support unit testing.\r\n\r\n---\r\n\r\nAlso, I would very strongly recommends a much better SVG processing library: \r\n - source: https://github.com/wieslawsoltes/Svg.Skia\r\n - nuget: https://www.nuget.org/packages/svg.skia\r\n\r\nThis library has so many more features that SkiaSahrp.Svg. This is based on the almost feature complete https://github.com/vvvv/SVG library.\r\n\r\nI would consider the SkiaSharp.Svg package deprecated and probably will not receive many, if any, updates in the near future.",
+        "createdAt": "2020-04-10T17:27:09",
+        "reactions": [
+          {
+            "user": "LuckyDucko",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:37.7270368Z"
+          },
+          {
+            "user": "rjwojcicki",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:37.7270374Z"
+          }
+        ]
+      },
+      {
+        "id": 708051964,
+        "author": "LuckyDucko",
+        "body": "@mattleibow I just ran into this issue myself, adding the GTK package resolved it. ",
+        "createdAt": "2020-10-13T22:52:21",
+        "reactions": []
+      },
+      {
+        "id": 708095952,
+        "author": "mattleibow",
+        "body": "Thanks for the feedback @LuckyDucko.",
+        "createdAt": "2020-10-14T01:19:10",
+        "reactions": [
+          {
+            "user": "LuckyDucko",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:38.0970954Z"
+          }
+        ]
+      },
+      {
+        "id": 714059516,
+        "author": "mattleibow",
+        "body": "Based on the feedback, closing this.",
+        "createdAt": "2020-10-22T00:31:30",
+        "reactions": []
+      },
+      {
+        "id": 901549272,
+        "author": "ibocon",
+        "body": "I am having same issue.\r\nI added GTK package, but it does not work.\r\n![image](https://user-images.githubusercontent.com/9730869/129995429-b7b2ce3f-177c-41c8-a27a-87d440fafda1.png)\r\n\r\nWhy SkiaSharp.Views.Forms.GTK is not restored using .NET Core? \r\nIs there something I am missing?",
+        "createdAt": "2021-08-19T01:59:47",
+        "reactions": []
+      }
+    ]
+  }
 }

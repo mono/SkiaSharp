@@ -15,5 +15,53 @@
   "updatedAt": "2022-08-19T06:01:56",
   "closedAt": "2020-04-29T10:04:19",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:52.9001864Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 617495004,
+        "author": "mattleibow",
+        "body": "Is it possible to attach a repro case or point to a repo for this issue. ",
+        "createdAt": "2020-04-22T01:34:15",
+        "reactions": []
+      },
+      {
+        "id": 617498095,
+        "author": "axel578",
+        "body": "Actually my code is a big big mess ; but the probl\u00E8me is really at this GrContext which used by any Open GL context Creator start to swing lik\u00E9 the image above. You Can try the code above and draw 1000 rectangles it crashed and if you read the memory cache of theGrContext,  you will see thats strange swing",
+        "createdAt": "2020-04-22T01:46:37",
+        "reactions": []
+      },
+      {
+        "id": 617508428,
+        "author": "axel578",
+        "body": "@mattleibow here is a file which demonstrates the bug: https://drive.google.com/file/d/1NPnwOzxm6ASJy_qXWYioliVM4E7OaErI/view?usp=sharing",
+        "createdAt": "2020-04-22T02:21:45",
+        "reactions": []
+      },
+      {
+        "id": 620662308,
+        "author": "axel578",
+        "body": "@mattleibow any issue for this ?",
+        "createdAt": "2020-04-28T15:01:26",
+        "reactions": []
+      },
+      {
+        "id": 620766207,
+        "author": "mattleibow",
+        "body": "@axel578 I had a look at the sample, and I think that I got a solution for the issue now building. \r\n\r\nThe issue is that the GC is getting a bit desperate to collect things, so it goes ahead and collects the result of \u0060Snapshot\u0060, even though it is being \u0022used\u0022 by \u0060ToWriteableBitmap\u0060. The reason this happens is because we don\u0027t actually use the image anymore - we use the pixel pointer. The fix just tells the GC that we actually are still using object.\r\n\r\nThere is an easy fix, and an improvement to the sample code:\r\n\r\n\u0060\u0060\u0060csharp\r\nSuperImageWithGpu.Source = Surface.Snapshot().ToWriteableBitmap();\r\n\u0060\u0060\u0060\r\n\r\nTo:\r\n\u0060\u0060\u0060cs\r\nusing (var snapshot = Surface.Snapshot())\r\n\tSuperImageWithGpu.Source = snapshot.ToWriteableBitmap();\r\n\u0060\u0060\u0060\r\n\r\n\r\nNot only will this keep the snapshot alive for as long as it needs to, it will also make sure to dispose the snapshot as soon as possible.",
+        "createdAt": "2020-04-28T18:03:32",
+        "reactions": []
+      },
+      {
+        "id": 621105724,
+        "author": "mattleibow",
+        "body": "Fixed by #1258",
+        "createdAt": "2020-04-29T10:04:19",
+        "reactions": []
+      }
+    ]
+  }
 }

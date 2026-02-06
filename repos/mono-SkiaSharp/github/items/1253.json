@@ -14,5 +14,184 @@
   "updatedAt": "2022-08-19T06:01:53",
   "closedAt": "2021-02-22T20:12:01",
   "commentCount": 23,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:05.5917147Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 620632461,
+        "author": "Gillibald",
+        "body": "SkiaSharp also supports using HarfBuzz to properly shape the text. The current version uses DirectWrite on Windows, as far as I know, Chrome uses Freetype. Some shared code might help to investigate this further.",
+        "createdAt": "2020-04-28T14:11:20",
+        "reactions": []
+      },
+      {
+        "id": 620676798,
+        "author": "mattleibow",
+        "body": "It might also be that Chrome is making use of some of the text hinting and subpixel things...",
+        "createdAt": "2020-04-28T15:26:09",
+        "reactions": []
+      },
+      {
+        "id": 620678393,
+        "author": "Gillibald",
+        "body": "Let\u0027s compare SkiaSharp v2 with current Chrome. That should yield similar results.",
+        "createdAt": "2020-04-28T15:28:43",
+        "reactions": []
+      },
+      {
+        "id": 620699568,
+        "author": "mattleibow",
+        "body": "You can check out the preview bits in the preview feed: https://aka.ms/skiasharp-eap/index.json\r\n\r\nI am busy sorting out the branches and getting CI to a more official preview place. But that is a fairly recent build already.",
+        "createdAt": "2020-04-28T16:03:21",
+        "reactions": []
+      },
+      {
+        "id": 620761948,
+        "author": "Danielku15",
+        "body": "\u003E Some shared code might help to investigate this further.\r\n@Gillibald \r\n\r\nI prepared a small example:\r\nC# code here: https://gist.github.com/Danielku15/63a6a58cbe8cf0ac61d5b16e53715fd9\r\nWeb variant: https://jsfiddle.net/danielku15/x91g7pte/5/\r\nOn my machine I have this output: \r\nWeb version: \r\n![reference](https://user-images.githubusercontent.com/674916/80520151-4d61c780-8989-11ea-81e9-b9bafce22a77.png)\r\nC# version: \r\n![output](https://user-images.githubusercontent.com/674916/80520177-53f03f00-8989-11ea-876b-d3f022285145.png)\r\n\r\nAfter I opened this issue yesterday I found that SubpixelText already made quite a difference on some texts. But with the given example I can still see a significant difference. \r\n\r\n\u003E I am busy sorting out the branches and getting CI to a more official preview place. But that is a fairly recent build already.\r\n\r\nNo problem, such a feed works out fine for me in this case \uD83D\uDE09 \r\nI had a peek at the latest preview but without any changes to the code the output is still the same.\r\n\r\n\r\n",
+        "createdAt": "2020-04-28T17:55:11",
+        "reactions": []
+      },
+      {
+        "id": 620766568,
+        "author": "Gillibald",
+        "body": "Try to use https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/CanvasExtensions.cs#L10",
+        "createdAt": "2020-04-28T18:04:15",
+        "reactions": []
+      },
+      {
+        "id": 620804182,
+        "author": "Danielku15",
+        "body": "I gave HarfBuzz a try. For some characters it gets better, for some worse resulting in a similar difference percentage on my tests. \r\n\r\nUnfortunately HarfBuzz breaks the \u0060SkTextAlign.Center\u0060 but I could work around this in worst case. \r\n\r\nComparing the results of my sample project I get this output: \r\n![image](https://user-images.githubusercontent.com/674916/80527855-535da580-8995-11ea-9260-5b5945c4e01a.png)\r\n\r\nDefault: has slightly more space before the dot and the text seems more opaque with  a stronger black and less anti-aliasing. \r\nHarfBuzz: Similar opaque than the default rendering. The overall spacing is more compact. \r\n",
+        "createdAt": "2020-04-28T19:18:27",
+        "reactions": []
+      },
+      {
+        "id": 620806540,
+        "author": "Gillibald",
+        "body": "What happens if you clear the canvas with a non transparent color and enable LcdRenderText on the paint? This should enable ClearType.",
+        "createdAt": "2020-04-28T19:23:39",
+        "reactions": []
+      },
+      {
+        "id": 620865987,
+        "author": "Danielku15",
+        "body": "Output with \u0060LcdRenderText=true\u0060 and a white background before rendering text: \r\n\r\n![image](https://user-images.githubusercontent.com/674916/80539304-8872f380-89a7-11ea-9ea7-595ea614c8ba.png)\r\n\r\nHarfBuzz and the default DrawText got a lot similar with this. Just the dot character on the default rendering occupies slightly more space. Unfortunately still not very similar to Chrome. \r\n",
+        "createdAt": "2020-04-28T21:30:06",
+        "reactions": []
+      },
+      {
+        "id": 638366748,
+        "author": "Danielku15",
+        "body": "I digged now very deep into Skia and Chromium and finally managed to setup the rendering correctly using SkiaSharp 2. I compiled Chromium on my machine and extended Skia with additional logs that tell me what\u0027s happening insight. It seems that the default SkiaSharp.HarfBuzz logic does not shape and align the glyphs like Chrome. When I had a look at the \u0060SkTextBlobRun\u0060s and the glyph positions I saw that there were quite some differences.  \r\n\r\nI updated my gist with the variant I adopted from the Chromium source and achieved exactly the same glyph positions for my test:\r\nhttps://gist.github.com/Danielku15/63a6a58cbe8cf0ac61d5b16e53715fd9\r\n\r\n![image](https://user-images.githubusercontent.com/674916/83670913-2d4ea500-a5d4-11ea-8682-b041e1b26a19.png)\r\n\r\nAs a next step I will try using the EAP in my Library to really see if really all text renderings are now done correctly. There is still a slight difference on the grayscale of the glyphs where I\u0027m not sure where it comes from. \r\n\r\nI was wondering if there is an estimated release date for SkiaSharp 2 already? Achieving the correct rendering heavily relies on SkiaSharp 2 uses the \u003E=m80 branch of Skia. They reworked the text rendering and API somewhere between m73 and m75.   ",
+        "createdAt": "2020-06-03T18:03:45",
+        "reactions": []
+      },
+      {
+        "id": 708085686,
+        "author": "mattleibow",
+        "body": "@Danielku15 are things working better for you now?\r\n\r\nIt sort of looks like this set of properties does the main work?\r\n\r\n\u0060\u0060\u0060csharp\r\n            using var skFont = new SKFont\r\n            {\r\n                Edging = SKFontEdging.Antialias,\r\n                Subpixel = true,\r\n                Hinting = SKFontHinting.Normal,\r\n                Typeface = typeface,\r\n                Size = size\r\n            };\r\n\u0060\u0060\u0060\r\n\r\nWith the color difference, are they actually using black or an off-black/dark grey?",
+        "createdAt": "2020-10-14T00:41:53",
+        "reactions": []
+      },
+      {
+        "id": 708192079,
+        "author": "Danielku15",
+        "body": "I haven\u0027t checked since a while the new NuGet packages. I just saw that 2.80.2 is now officially available since a while. I will try to check again my tests soon to check the differences again in detail. I hope I can have an early look this weekend. ",
+        "createdAt": "2020-10-14T06:35:47",
+        "reactions": []
+      },
+      {
+        "id": 712276380,
+        "author": "Danielku15",
+        "body": "\u003E are things working better for you now?\r\n\r\nI just made some tests with the 2.80.2 packages and the result is roughly the same as it used to be: \r\n![image](https://user-images.githubusercontent.com/674916/96476071-1633eb00-1235-11eb-8deb-ecc08726eaf0.png)\r\n\r\n1. Chrome m86\r\n2. Custom HarfBuzz: Glyphs align perfectly, Chrome is lighter / has less-alpha\r\n3. Normal DrawText: Glyphs do not align, too wide\r\n4. Normal DrawShapedText: Glyphs do not align, too narrow\r\n\r\nDrawing on a transparent surface or on a white one results in the same differences. \r\n\r\n\u003E With the color difference, are they actually using black or an off-black/dark grey?\r\n\r\nThe resulting image from Chrome is having pure black (r: 0, g:0, b: 0) with different opacities. The gray is just the result of drawing it on a white surface for comparison or visual perception on screen. \r\n\r\ne.g. the character \u0027m\u0027 of the word \u0027domain\u0027 on the first column of pixels the opacity is 60% in Chrome (left). In my output it is 71% (right). The one darker pixel of the second column is 81% in Chrome, 100% on my output. The very dark column at the end is for both outputs at 100% opacity. \r\n![image](https://user-images.githubusercontent.com/674916/96477682-17661780-1237-11eb-9808-9aa489508177.png)\r\n\r\n\r\n",
+        "createdAt": "2020-10-19T16:17:06",
+        "reactions": []
+      },
+      {
+        "id": 713236505,
+        "author": "mattleibow",
+        "body": "Thanks for the feedback. Can we close this?",
+        "createdAt": "2020-10-21T01:37:56",
+        "reactions": []
+      },
+      {
+        "id": 713313767,
+        "author": "Danielku15",
+        "body": "Not really, my question is still open and unanswered: how can I get the exact same output like Chrome using SkiaSharp. While I was able to figure out the text shapingg part on my own, the aspect of colors/opacity is still unclear. ",
+        "createdAt": "2020-10-21T05:31:31",
+        "reactions": []
+      },
+      {
+        "id": 713807575,
+        "author": "mattleibow",
+        "body": "Using HarfBuzz _is_ the correct way. Chrome is using a text shaping engine to do what you did. And the colors, are you sure they are _not_ drawing the text with an opacity? Or maybe layers with some sort of blending?\r\n\r\n",
+        "createdAt": "2020-10-21T19:02:15",
+        "reactions": []
+      },
+      {
+        "id": 713811899,
+        "author": "Gillibald",
+        "body": "The moment ClearType comes into play you will not get the same results. Are you running this on Windows or on Linux, OSX as well?\r\n\r\nAre you using a Canvas to draw the text?",
+        "createdAt": "2020-10-21T19:06:04",
+        "reactions": []
+      },
+      {
+        "id": 713818568,
+        "author": "Gillibald",
+        "body": "@mattleibow  https://github.com/google/skia/blob/52a4379f03f7cd4e1c67eb69a756abc5838a658f/src/ports/SkTypeface_win_dw.cpp#L395 is this enabled for the Windows builds? ",
+        "createdAt": "2020-10-21T19:16:30",
+        "reactions": []
+      },
+      {
+        "id": 713889346,
+        "author": "Danielku15",
+        "body": "\u003E And the colors, are you sure they are not drawing the text with an opacity?\r\n\r\nI am not 100% sure by code. But the fact that some pixels manage to reach the 100% opacity indicates that they are drawing it just normally and the rest happens during drawing. \r\n\r\n\u003E The moment ClearType comes into play you will not get the same results. Are you running this on Windows or on Linux, OSX as well?\r\n\r\nFor now I am testing only on Windows 10. For the analysis I also ensure not to compare images generated across different systems. \r\n\r\n\u003E Are you using a Canvas to draw the text?\r\n\r\nI am still using the same code snippets like before: \r\nC#: https://gist.github.com/Danielku15/63a6a58cbe8cf0ac61d5b16e53715fd9\r\nJS: https://jsfiddle.net/danielku15/c3hjmnk2/\r\n\r\n",
+        "createdAt": "2020-10-21T21:31:36",
+        "reactions": []
+      },
+      {
+        "id": 713931016,
+        "author": "mattleibow",
+        "body": "@Gillibald I\u0027ll create a PR with that so we can test, but I did a search in the entire chromium source and that is the only reference to that define.\r\n\r\nI am going to ask on skia-discuss to try and understand it a bit better: https://groups.google.com/g/skia-discuss/c/gRU6aa0xhvU",
+        "createdAt": "2020-10-21T22:59:40",
+        "reactions": []
+      },
+      {
+        "id": 783643558,
+        "author": "Danielku15",
+        "body": "With the latest SkiaSharp I was able to get a rendering that close, that my visual tests succeed. From my perspective we can close this issue. Just some additional bits for you: \r\n\r\n1. Chrome scales the HarfBuzz font differently than the \u0060DrawShapedText\u0060 does today. It scales it as described within my Gist (1 \u003C\u003C 16) and then maps it back. \r\n2. Rendering via \u0060DrawShapedText\u0060 does not respect the text-align anymore. The x-coordinate of the text needs to be be substracted by width/2 or width depending on the alignment. The width is calculated via the \u0060XAdvance\u0060 of the of the positions. (again see last gist version). \r\n3. The vertical align is the part which gave me the biggest pain. To align on the right baseline (hanging, middle, bottom) like the HTML5 canvas settings you need to do a lot of magic. You need to decode the OS/2 tag from the TypeFace to get the ascender/descender lines. Also they have some special roundings of the ascender and descender in some cases. \r\n\r\nQuite a nightmare that they have so many hacks to align the text \uD83D\uDE28 Makes it hard to get a consistent rendering using Skia directly. \r\n\r\nSome reference links on the last point: \r\nhttps://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/blink/renderer/core/html/canvas/text_metrics.cc;l=14?q=GetFontBaseLine\u0026ss=chromium\r\nhttps://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/blink/renderer/platform/fonts/simple_font_data.cc;drc=0cf3ae8180a6ed761609f2907b59124e366e41b9;l=269\r\nhttps://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/blink/renderer/platform/fonts/font_metrics.cc;drc=0cf3ae8180a6ed761609f2907b59124e366e41b9;l=47\r\n\r\nNow I only single failing test left is some edgy rendering of quadratic curves on small scales. But I guess this is another special Chrome thing I will have to find out. The numbers passed into the HTML5 rendering context are the same as I pass into Skia. I might open a different issue for that one if I find something significant in SkiaSharp \uD83D\uDE09 \r\n\r\nChrome: \r\n![image](https://user-images.githubusercontent.com/674916/108762426-5ba05600-7550-11eb-9541-a0a1627f873b.png)\r\nSkiaSharp: \r\n![image](https://user-images.githubusercontent.com/674916/108762537-81c5f600-7550-11eb-8e3d-e1128addb482.png)\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2021-02-22T20:12:01",
+        "reactions": [
+          {
+            "user": "pablocom",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:05.0593083Z"
+          }
+        ]
+      },
+      {
+        "id": 784047393,
+        "author": "Gillibald",
+        "body": "To sum it up Chrome isn\u0027t using the font author\u0027s default scaling and instead just uses a different scaling which results in a slightly different rendering.",
+        "createdAt": "2021-02-23T09:54:05",
+        "reactions": []
+      },
+      {
+        "id": 784409031,
+        "author": "Danielku15",
+        "body": "@Gillibald To be precise: SkiaSharp uses [\u0060512\u0060](https://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/SKShaper.cs#L10) as harfbuzz\u003C-\u003Eskia scaling factor while Chrome uses [\u00601 \u003C\u003C 16\u0060](https://source.chromium.org/chromium/chromium/src/\u002B/master:ui/gfx/harfbuzz_font_skia.cc;l=268;drc=1142cb479c5a47473a999451e04d1b6acfe82f40) (65k) (and [here](https://source.chromium.org/chromium/chromium/src/\u002B/master:ui/gfx/skia_util.cc;drc=1142cb479c5a47473a999451e04d1b6acfe82f40;l=152\r\n)). This seem to have a significant impact on this sub-pixel differences of small text sizes. From what I\u0027ve seen the rest of the logic is quite the same. Chrome just seem to cover more corner cases and setting variations (language, script, subpixel on/off). The biggest impact had the upgrade of the underlying Skia version in SkiaSharp. \r\n\r\nI plan to open a PR with an extension to allow configuring this scale factor and also fixing missing handling of the text alignment. (I want to get rid of this custom code on my side \uD83D\uDE01 )",
+        "createdAt": "2021-02-23T18:17:40",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:05.5412803Z"
+          }
+        ]
+      }
+    ]
+  }
 }

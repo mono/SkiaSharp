@@ -15,5 +15,108 @@
   "updatedAt": "2022-08-19T06:02:45",
   "closedAt": "2020-03-24T16:09:40",
   "commentCount": 7,
-  "reactionCount": 7
+  "reactionCount": 7,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:27.6464838Z",
+    "reactions": [
+      {
+        "user": "lubiepomaranczki",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:27.64649Z"
+      },
+      {
+        "user": "lubiepomaranczki",
+        "content": "eyes",
+        "createdAt": "2026-02-06T14:11:27.6464907Z"
+      },
+      {
+        "user": "Zalkovalsky",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:27.6464908Z"
+      },
+      {
+        "user": "MKnoski",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:27.6464909Z"
+      },
+      {
+        "user": "LasseOL",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:27.646491Z"
+      },
+      {
+        "user": "Cheesebaron",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:27.646491Z"
+      },
+      {
+        "user": "squ4llu",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:27.6464911Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 585705660,
+        "author": "mattleibow",
+        "body": "There\u0027s that \u0060gr_backendrendertarget_get_gl_framebufferinfo\u0060 again... This might be related to either some iOS 13.3.1 issues or #1121\r\n\r\nBut I see you are not using 13,and not using GL views... Why is that there? Something is wrong ",
+        "createdAt": "2020-02-13T11:39:50",
+        "reactions": [
+          {
+            "user": "miszu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:26.3960878Z"
+          }
+        ]
+      },
+      {
+        "id": 585794100,
+        "author": "miszu",
+        "body": "After whole day of testing, we haven\u0027t seen these freezes/crashes on 1.68, so we\u0027ll use that for the time being. Is there anything I could provide to help with this issue? Some way to produce more logs?",
+        "createdAt": "2020-02-13T14:52:26",
+        "reactions": []
+      },
+      {
+        "id": 585799934,
+        "author": "mattleibow",
+        "body": "Not sure at this moment. \r\n\r\nI\u0027m looking at the stack trace and it is going from the \u0060wrapper_managed_to_native_SkiaSharp_SkiaApi_sk_canvas_draw_circle_intptr_single_single_single_intptr\u0060 to the \u0060gr_backendrendertarget_get_gl_framebufferinfo\u0060\r\n\r\nThat is impossible. I am thinking that for some reason something is off because the P/Invoke is calling the wrong native method? Makes no sense. This has been coming up recently for macOS as well.",
+        "createdAt": "2020-02-13T15:00:25",
+        "reactions": []
+      },
+      {
+        "id": 601603383,
+        "author": "mattleibow",
+        "body": "I have just published the PR (https://github.com/mono/SkiaSharp/pull/1180) NuGet (**1.68.2-pr.1180.4**) to the preview feed: https://aka.ms/skiasharp-eap/index.json\r\nThis contains the fixes for macOS, iOS and Android. More platforms coming soon.\r\n\r\nGive that a go and let me know if it fixes the crashes.",
+        "createdAt": "2020-03-20T09:21:25",
+        "reactions": []
+      },
+      {
+        "id": 601645266,
+        "author": "miszu",
+        "body": "@mattleibow thank you for releasing it, we\u0027ll validate it as soon as we can and will let you know \uD83D\uDC4D ",
+        "createdAt": "2020-03-20T11:08:47",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:27.1887552Z"
+          }
+        ]
+      },
+      {
+        "id": 603503920,
+        "author": "mattleibow",
+        "body": "Just pushed all the packages (preview 45) to NuGet.org.",
+        "createdAt": "2020-03-24T21:04:18",
+        "reactions": []
+      },
+      {
+        "id": 608448583,
+        "author": "mattleibow",
+        "body": "Hey folks, it has been a long time coming and thanks to all the folks with your repros, samples and stack traces I think we have finally managed to fix those pesky crashes - at least the ones we know about. I have just pushed **1.68.2-preview.50** to NuGet so let me know if this fixes all the crashes you have ever had \uD83D\uDE04 ",
+        "createdAt": "2020-04-03T13:58:13",
+        "reactions": []
+      }
+    ]
+  }
 }

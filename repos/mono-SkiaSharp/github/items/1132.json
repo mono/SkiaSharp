@@ -19,5 +19,117 @@
   "updatedAt": "2022-08-19T06:02:49",
   "closedAt": "2020-04-08T16:34:09",
   "commentCount": 6,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:15.8642894Z",
+    "reactions": [
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:15.8642956Z"
+      },
+      {
+        "user": "hawkerm",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:15.8642964Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 583780941,
+        "author": "mattleibow",
+        "body": "We are looking at this right now.\r\n\r\nThe main issue is that we need to update to the latest skia - which we are doing: #986 \r\n\r\nWe hope to have a build out in the near future which will support WASM.",
+        "createdAt": "2020-02-08T21:58:58",
+        "reactions": [
+          {
+            "user": "dr-vij",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:14.6445783Z"
+          },
+          {
+            "user": "RChrisCoble",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:14.6445787Z"
+          },
+          {
+            "user": "rogihee",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:11:14.6445788Z"
+          },
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:14.6445789Z"
+          },
+          {
+            "user": "gritsenko",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:11:14.644579Z"
+          },
+          {
+            "user": "gritsenko",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:14.6445791Z"
+          }
+        ]
+      },
+      {
+        "id": 587167157,
+        "author": "RChrisCoble",
+        "body": "\u003E We hope to have a build out in the near future which will support WASM.\r\n\r\n**Extremely** interested in this effort, to use SkiaSharp from Blazor directly.  So a few questions:\r\n\r\n- Would a supported SkiaSharp platform be Blazor?  (I assume yes as there\u0027s not much other choice)\r\n- Would this WASM based solution somehow bypass the WASM/JS later to keep performance high? \r\n- How many \u0022weeks\u0022 is \u0027near future\u0027 in a best guess?\r\n\r\nThanks much.\r\n",
+        "createdAt": "2020-02-17T21:38:59",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:14.8982681Z"
+          }
+        ]
+      },
+      {
+        "id": 587989942,
+        "author": "mattleibow",
+        "body": "We are hard at work on this right now. So far, we are aiming for the first previews of v2 in March/April. Once that is out, we will go directly to adding WSM support, so that by the time we go stable a month or so later, we will have WASM as part of the main package.\r\n\r\nWe would probably work along the same lines that the Uno folks are doing it. And, regardless, we would try our best to ensure that there is minimal JS interop for best performance.\r\n\r\nWe are aiming for April/May for WASM, but that is a very rough estimate. For the time being, try out the Uno builds and give them feedback so that when we start the WASM step, we can have as many of the improvements that they have been working on.",
+        "createdAt": "2020-02-19T01:33:42",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:15.1624874Z"
+          },
+          {
+            "user": "rogihee",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:11:15.162488Z"
+          },
+          {
+            "user": "RChrisCoble",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:11:15.1624881Z"
+          }
+        ]
+      },
+      {
+        "id": 594720472,
+        "author": "RChrisCoble",
+        "body": "Was tempted to start a new thread for this question, but it probably fits in here to reduce noise.\r\n\r\nDoes the architecture of supporting SkiaSharp on WASM lend itself to, in the future, potentially supporting the SkiaSharp API as a \u0022[Blazor Extension](https://github.com/BlazorExtensions)\u0022?\r\n\r\nFor example, there\u0027s an existing Blazor Extension called [\u0022Canvas\u0022 on GitHub](https://github.com/BlazorExtensions/Canvas) which demonstrates what I\u0027m asking.  If, as a Blazor App, you use this API it behaves differently depending on whether you\u0027re running client or server.  For client it simply passes through to the HTML5 Canvas API to perform the final render.  For Server, it packages up the draw calls and marshals them over SignalR to the client to execute (built in Blazor behavior).  This allows you to use one API and support both types of Blazor deployments.  \r\n\r\nI\u0027m not well versed enough on the internal architecture of Skia and SkiaSharp to make a determination if this would be possible, as this server hosting model would presumably require the Skia engine to run on the server but ultimately \u0027draw\u0027 to an abstracted surface backed by an HTML5 canvas on the client end.  \r\n\r\nI suppose even if you ran the Skia.wasm on the client but were able to run the business logic using SkiaSharp on the server this would at least lighten the download payload of thin clients.\r\n\r\nAt the end of the day, (one of) the reason someone might want to support Blazor Server is for situations where it\u0027s not reasonable to download multiple megabytes of stuff to support a thin client or low bandwidth situations.\r\n\r\nThanks.\r\n\r\n",
+        "createdAt": "2020-03-04T18:14:32",
+        "reactions": []
+      },
+      {
+        "id": 600353853,
+        "author": "mPisano",
+        "body": "Also Interested in Skia on Blazor, also played around with the canvas extension but not sure how to achieve what I need..\r\n\r\nI have a windows graphing control based on zedgraph that uses system.drawing graphics.\r\nlooking for a way to port to wasm on razor and have the windows 2D drawing calls write to the html canvas.    ",
+        "createdAt": "2020-03-17T23:44:57",
+        "reactions": []
+      },
+      {
+        "id": 611057136,
+        "author": "mattleibow",
+        "body": "Moving this discussion to a single location: https://github.com/mono/SkiaSharp/issues/1219 \r\n\r\nBut the Blazor part is here: https://github.com/mono/SkiaSharp/issues/1194",
+        "createdAt": "2020-04-08T16:25:04",
+        "reactions": []
+      }
+    ]
+  }
 }

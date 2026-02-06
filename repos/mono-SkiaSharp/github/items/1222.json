@@ -15,5 +15,51 @@
   "updatedAt": "2022-08-19T06:02:05",
   "closedAt": "2020-05-14T01:04:29",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:36.9064703Z",
+    "reactions": [
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:36.9064759Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 611456860,
+        "author": "mattleibow",
+        "body": "Ah, thanks for pointing this out! The naming is not yet set in stone.\r\n\r\nIt is a bit weird that they suddenly added unorm to the new colors. Maybe they wanted to be more explicit in the naming... \r\n\r\nI actually like your idea of maybe dropping unorm. For the floats, we can use the existing convention of F16 of F32. \r\n\r\nPS: I hate this enum. Things keep changing. I have to have a mapping now because they keep adding values in the middle. I hate my casing. I hate everything about it! Haha. ",
+        "createdAt": "2020-04-09T10:33:44",
+        "reactions": []
+      },
+      {
+        "id": 611465456,
+        "author": "ziriax",
+        "body": "IMO it\u0027s not that bad :)\r\n\r\nYeah, the new Skia color types seem to follow the DirectX conventions a bit more, e.g. \u0060DXGI_FORMAT_R8G8B8A8_UNORM\u0060, \u0060DXGI_FORMAT_R32G32B32A32_FLOAT\u0060, ...\r\n\r\nI missed the bit-size part, indeed, Skia also changed that one...\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-04-09T10:55:36",
+        "reactions": []
+      },
+      {
+        "id": 627926948,
+        "author": "mattleibow",
+        "body": "I\u0027m having a look at this now and interesting what you said:\r\n\r\n\u003E  So maybe SkColorType.RgbaF16Clamped would be a better way to describe this?\r\n\r\n\u0060\u0060\u0060cpp\r\n\r\nstatic constexpr SkColorType GrColorTypeToSkColorType(GrColorType ct) {\r\n    switch (ct) {\r\n        case GrColorType::kUnknown:          return kUnknown_SkColorType;\r\n        case GrColorType::kAlpha_8:          return kAlpha_8_SkColorType;\r\n        case GrColorType::kBGR_565:          return kRGB_565_SkColorType;\r\n        case GrColorType::kABGR_4444:        return kARGB_4444_SkColorType;\r\n        case GrColorType::kRGBA_8888:        return kRGBA_8888_SkColorType;\r\n        // Once we add kRGBA_8888_SRGB_SkColorType we should return that here.\r\n        case GrColorType::kRGBA_8888_SRGB:   return kRGBA_8888_SkColorType;\r\n        case GrColorType::kRGB_888x:         return kRGB_888x_SkColorType;\r\n        case GrColorType::kRG_88:            return kR8G8_unorm_SkColorType;\r\n        case GrColorType::kBGRA_8888:        return kBGRA_8888_SkColorType;\r\n        case GrColorType::kRGBA_1010102:     return kRGBA_1010102_SkColorType;\r\n        case GrColorType::kGray_8:           return kGray_8_SkColorType;\r\n        case GrColorType::kAlpha_F16:        return kA16_float_SkColorType;\r\n        case GrColorType::kRGBA_F16:         return kRGBA_F16_SkColorType;\r\n        case GrColorType::kRGBA_F16_Clamped: return kRGBA_F16Norm_SkColorType;  // \u003C- CLAMPED!\r\n        case GrColorType::kRGBA_F32:         return kRGBA_F32_SkColorType;\r\n        case GrColorType::kAlpha_8xxx:       return kUnknown_SkColorType;\r\n        case GrColorType::kAlpha_F32xxx:     return kUnknown_SkColorType;\r\n        case GrColorType::kGray_8xxx:        return kUnknown_SkColorType;\r\n        case GrColorType::kAlpha_16:         return kA16_unorm_SkColorType;\r\n        case GrColorType::kRG_1616:          return kR16G16_unorm_SkColorType;\r\n        case GrColorType::kRGBA_16161616:    return kR16G16B16A16_unorm_SkColorType;\r\n        case GrColorType::kRG_F16:           return kR16G16_float_SkColorType;\r\n        case GrColorType::kRGB_888:          return kUnknown_SkColorType;\r\n        case GrColorType::kR_8:              return kUnknown_SkColorType;\r\n        case GrColorType::kR_16:             return kUnknown_SkColorType;\r\n        case GrColorType::kR_F16:            return kUnknown_SkColorType;\r\n        case GrColorType::kGray_F16:         return kUnknown_SkColorType;\r\n    }\r\n    SkUNREACHABLE;\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\nI think I am going with your suggestions. A big thanks for picking this up!",
+        "createdAt": "2020-05-13T11:41:32",
+        "reactions": []
+      },
+      {
+        "id": 628325278,
+        "author": "mattleibow",
+        "body": "Closing this as it is now merged into \u0060develop\u0060: https://github.com/mono/SkiaSharp/commit/6baf53f3ab59813e208c211b13fe078a4f0f4729",
+        "createdAt": "2020-05-14T01:04:28",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:12:36.8560353Z"
+          }
+        ]
+      }
+    ]
+  }
 }

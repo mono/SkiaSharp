@@ -19,5 +19,32 @@
   "updatedAt": "2022-08-19T09:01:46",
   "closedAt": "2019-12-26T13:09:18",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:10.6728448Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 565262561,
+        "author": "jvhgamer",
+        "body": "EDIT: Believe this simpler code can replace the latter. Still the cropped result image is all black, however.\r\n\u0060\u0060\u0060\r\nbyte[] bytes = SKBitmap.FromImage(image).Bytes;\r\nimage.Dispose();\r\nreturn bytes;\r\n\u0060\u0060\u0060\r\n\r\nCan replace\r\n\u0060\u0060\u0060\r\n//  bounds of cropped image\r\n//SKImageInfo info2 = new SKImageInfo(rec.Width, rec.Height);\r\n\r\n//  size\r\n//int size = info2.RowBytes * info2.Height;\r\nint size = info.RowBytes * info.Height;\r\n\r\nusing SKPixmap pmap = image.PeekPixels();\r\nIntPtr ptr = Marshal.AllocHGlobal(size);\r\npmap.ReadPixels(pmap.Info, ptr, pmap.RowBytes);\r\n\r\nbyte[] managedArray = new byte[size];\r\nMarshal.Copy(ptr, managedArray, 0, size);\r\n\r\nreturn managedArray;\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2019-12-13T01:34:02",
+        "reactions": []
+      },
+      {
+        "id": 566303038,
+        "author": "jvhgamer",
+        "body": "Am I allowed to bump? ... If not I apologize and will delete this comment. Thanks for reading.",
+        "createdAt": "2019-12-16T23:50:43",
+        "reactions": []
+      },
+      {
+        "id": 566575701,
+        "author": "mattleibow",
+        "body": "Sorry about the delay. I thought I responded. Looks like I just opened the tab :)\r\n\r\nLooking at your code, you may be doing \u0060gch.Free();\u0060 too soon as \u0060new SKPixmap(info, addr);\u0060 does not actually copy the pixels, it just references them. I also see a few more native operations as well that are maybe not needed. Also, there are a few good members on \u0060SKPixmap\u0060 that you can use directly.\r\n\r\nHere, I have created a short method that you should be able to use - just using \u0060SKPixmap.ExtractSubset\u0060. The subset actually references the source image as well, so make sure to not dispose/free the data until the subset is encoded. Encoding makes a copy of the data, so afterwards it is fine to dispose the source.\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static byte[] CreateSubset(byte[] screenshotData, SKRectI viewBounds)\r\n{\r\n    var info = new SKImageInfo(1600, 1200);\r\n\r\n    // pin the bytes\r\n    var gch = GCHandle.Alloc(screenshotData, GCHandleType.Pinned);\r\n    try\r\n    {\r\n        // create a pixmap from the bytes\r\n        var addr = gch.AddrOfPinnedObject();\r\n        using var pixmap = new SKPixmap(info, addr);\r\n\r\n        // get the subset\r\n        var subset = pixmap.ExtractSubset(viewBounds);\r\n\r\n        // encode to a data object\r\n        using var data = subset.Encode(SKPngEncoderOptions.Default);\r\n\r\n        // convert data to bytes\r\n        return data.ToArray();\r\n    }\r\n    finally\r\n    {\r\n        // release bytes\r\n        gch.Free();\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-12-17T14:54:23",
+        "reactions": []
+      }
+    ]
+  }
 }

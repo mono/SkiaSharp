@@ -20,5 +20,115 @@
   "updatedAt": "2022-08-19T06:01:52",
   "closedAt": "2020-05-02T08:05:46",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:09.1323296Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 622405072,
+        "author": "mattleibow",
+        "body": "Whoah. Thanks for reporting this!\r\n\r\nI\u0027m having a look right now and for some reason MSBuild is no longer strong naming... Nothing has changed on my side. Will release a fix ASAP.",
+        "createdAt": "2020-05-01T14:14:50",
+        "reactions": []
+      },
+      {
+        "id": 622431435,
+        "author": "mattleibow",
+        "body": "@AndersMad thanks for reporting this so quickly. \r\n\r\nI am busy waiting on a build to finish and then I\u0027ll push to the preview feed. Once it is out, you can confirm that it works and then I\u0027ll push to NuGet.\r\n\r\nI have added build tests so this should not happen again.",
+        "createdAt": "2020-05-01T15:22:12",
+        "reactions": []
+      },
+      {
+        "id": 622473405,
+        "author": "AndersMad",
+        "body": "thanks! I look forward to that (not there yet).. I\u0027ll just pop a side question here: I got several issue that i think is linked to the raather \u0022old\u0022 Skia version.. ETA on \u003E v68? (maybe I should create a new topic for this)",
+        "createdAt": "2020-05-01T17:05:54",
+        "reactions": []
+      },
+      {
+        "id": 622528581,
+        "author": "mattleibow",
+        "body": "We got previews already! Check out the preview feed: https://aka.ms/skiasharp-eap/index.json\r\n\r\nWe are just waiting on more feedback for this before we push to NuGet. There are 2 APIs that need another look, but not many people use them. So, go ahead and start testing!",
+        "createdAt": "2020-05-01T19:27:26",
+        "reactions": []
+      },
+      {
+        "id": 622538606,
+        "author": "AndersMad",
+        "body": "thanks! I just tried that - but I\u0027m afraid that I got the same strong name issue on the \u00602.80.0-alpha.3\u0060 build :)",
+        "createdAt": "2020-05-01T19:53:27",
+        "reactions": []
+      },
+      {
+        "id": 622562830,
+        "author": "mattleibow",
+        "body": "Ah, yeah. That will happen. Almost done here. All good on my machine and CI is just not going to let it go. sn.exe is hard to find haha",
+        "createdAt": "2020-05-01T20:50:16",
+        "reactions": []
+      },
+      {
+        "id": 622947916,
+        "author": "mattleibow",
+        "body": "The packages are pushed to the preview feed as **1.68.2.1-preview.2**\r\n\r\n https://aka.ms/skiasharp-eap/index.json",
+        "createdAt": "2020-05-02T12:43:07",
+        "reactions": []
+      },
+      {
+        "id": 622958923,
+        "author": "AndersMad",
+        "body": "confirmed working! thanks.. also tested bad images and they are still bad - so I look forward to test the 2.80 alpha build \\o/",
+        "createdAt": "2020-05-02T14:05:44",
+        "reactions": []
+      },
+      {
+        "id": 622978863,
+        "author": "mattleibow",
+        "body": "Awesome, I\u0027ll push to NuGet.\r\n\r\n**EDIT**\r\nhttps://github.com/mono/SkiaSharp/releases/tag/v1.68.2.1\r\nhttps://www.nuget.org/packages/SkiaSharp/1.68.2.1",
+        "createdAt": "2020-05-02T16:24:38",
+        "reactions": []
+      },
+      {
+        "id": 622981962,
+        "author": "mattleibow",
+        "body": "And the new v2.80 is also up! Check out alpha 4 on the preview feed.",
+        "createdAt": "2020-05-02T16:47:36",
+        "reactions": []
+      },
+      {
+        "id": 622988787,
+        "author": "AndersMad",
+        "body": "the v2.80 sign ok!\r\nand seems to fix this: https://github.com/mono/SkiaSharp/issues/932\r\nand this is a bit better but color is still a bit off: https://github.com/mono/SkiaSharp/issues/931\r\nbut not this: https://github.com/mono/SkiaSharp/issues/719",
+        "createdAt": "2020-05-02T17:38:07",
+        "reactions": []
+      },
+      {
+        "id": 623022045,
+        "author": "mattleibow",
+        "body": "Awesome! I added those issues to the list of things to figure out for v2.80.",
+        "createdAt": "2020-05-02T22:10:14",
+        "reactions": []
+      },
+      {
+        "id": 623090888,
+        "author": "AndersMad",
+        "body": "all above (https://github.com/mono/SkiaSharp/issues/1267#issuecomment-622988787) is now closed with v2.80 in my opinion.. \r\n\r\nand as this topic/issue is a bit twisted anyways now - can I ask how you would consider v2.80 (alpha - I know) safe to use? stomach feeling? :) cause in my world its way better already..",
+        "createdAt": "2020-05-03T10:52:24",
+        "reactions": []
+      },
+      {
+        "id": 623128179,
+        "author": "mattleibow",
+        "body": "Well, the tests pass and things are looking good. So yeah, if it works now then it should be OK. I did lots of tests before it went out, so I am 50% confident. Your feedback moves it to a nice 75%. I have a few APIs to add in, such as DrawTextOnPath. I may tweak some APIs, but the native skia part is now done. ",
+        "createdAt": "2020-05-03T15:34:19",
+        "reactions": [
+          {
+            "user": "AndersMad",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:09.0821024Z"
+          }
+        ]
+      }
+    ]
+  }
 }

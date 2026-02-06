@@ -28,5 +28,46 @@
   "updatedAt": "2022-08-19T09:01:15",
   "closedAt": "2020-02-09T18:07:56",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:55.9835339Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 583397660,
+        "author": "gyorgygulyas",
+        "body": "Any Update?",
+        "createdAt": "2020-02-07T13:52:15",
+        "reactions": []
+      },
+      {
+        "id": 583595011,
+        "author": "mattleibow",
+        "body": "Ah, sorry for the delay. I am actually looking at this now.",
+        "createdAt": "2020-02-07T20:22:44",
+        "reactions": []
+      },
+      {
+        "id": 583774468,
+        "author": "mattleibow",
+        "body": "So, just found out WHAT was happening. For some reason, it is calculating the size of the canvas for the headers, but not drawing... If you use Hot Reload and change the size, then it magically starts drawing...\r\n\r\nThanks for bringing this up. I\u0027ll get it fixed.",
+        "createdAt": "2020-02-08T20:36:23",
+        "reactions": []
+      },
+      {
+        "id": 583779621,
+        "author": "mattleibow",
+        "body": "So, I think I figured out what is causing this issue. It appears that the same canvas is being loaded twice, and then unloaded once. The unload causes the canvas to clear itself and unset properties to free memory. But, since it is never re-loaded (because it was already loaded), the canvas never actually realizes that it needs to hook things up again.\r\n\r\nLooking to see if it is my fault with the double load, or a UWP bug. But, because it works for the main content, and not the header template. It may mean things...",
+        "createdAt": "2020-02-08T21:41:13",
+        "reactions": []
+      },
+      {
+        "id": 583779889,
+        "author": "mattleibow",
+        "body": "Just found this: https://github.com/microsoft/microsoft-ui-xaml/issues/1367\r\n\r\nBasically, the exact same issue, but with Win2D. I think I can get a fix for this really soon.",
+        "createdAt": "2020-02-08T21:44:15",
+        "reactions": []
+      }
+    ]
+  }
 }

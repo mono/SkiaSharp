@@ -20,5 +20,91 @@
   "updatedAt": "2022-08-19T09:01:19",
   "closedAt": "2020-03-15T13:24:46",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:50.0905164Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 579495209,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. It appears that Tizen has changed some things in Forms. I got a fix.",
+        "createdAt": "2020-01-28T22:32:27",
+        "reactions": []
+      },
+      {
+        "id": 579922496,
+        "author": "mattleibow",
+        "body": "So I just pushed a potential fix (#1117) to the preview feed: https://aka.ms/skiasharp-eap/index.json\r\nThe version is: 1.68.2-pr.1117.1\r\n\r\nLet me know it that works - I can\u0027t test right now as I am having issues with the Tizen emulators, and my device got bust somehow. If it works, then we can merge. And, when 4.4 is more than a month old and people can update, then we can move permanently.",
+        "createdAt": "2020-01-29T19:33:20",
+        "reactions": []
+      },
+      {
+        "id": 580600514,
+        "author": "VladislavAntonyuk",
+        "body": "@mattleibow I still see the issue:\r\n![image](https://user-images.githubusercontent.com/33021114/73517096-30a60a00-4403-11ea-98b5-c22c6d299a45.png)\r\n\r\n",
+        "createdAt": "2020-01-31T06:24:14",
+        "reactions": []
+      },
+      {
+        "id": 581018390,
+        "author": "mattleibow",
+        "body": "Pity. I guess we are going to have to just use the latest forms. Not too bad I suppose.",
+        "createdAt": "2020-02-01T10:59:33",
+        "reactions": []
+      },
+      {
+        "id": 581026358,
+        "author": "VladislavAntonyuk",
+        "body": "I would appreciate if you publish a potential fix before merging to the master, so I could give a fast feedback ",
+        "createdAt": "2020-02-01T12:37:39",
+        "reactions": []
+      },
+      {
+        "id": 581057131,
+        "author": "mattleibow",
+        "body": "Oh, will do. It is building as we speak! ",
+        "createdAt": "2020-02-01T18:34:52",
+        "reactions": []
+      },
+      {
+        "id": 583173470,
+        "author": "mattleibow",
+        "body": "Still having a look at this. The fix is easy, but UWP and CI aren\u0027t happy. Seems to be some issue with PDB files or something....",
+        "createdAt": "2020-02-07T00:11:52",
+        "reactions": []
+      },
+      {
+        "id": 592581932,
+        "author": "VladislavAntonyuk",
+        "body": "with preview.39 I receive the same error, but on app.Run(args)\r\n\u0060\u0060\u0060\r\nSystem.TypeLoadException: Method \u0027LoadImageAsync\u0027 in type \u0027SkiaSharp.Views.Forms.SKImageSourceHandler\u0027 from assembly \u0027SkiaSharp.Views.Forms, Version=1.68.0.0, Culture=neutral, PublicKeyToken=null\u0027 does not have an implementation.\r\n   at System.Reflection.CustomAttribute._CreateCaObject(RuntimeModule pModule, RuntimeType type, IRuntimeMethodInfo pCtor, Byte** ppBlob, Byte pcNamedArgs)\r\n   at System.Reflection.CustomAttribute.CreateCaObject(RuntimeModule module, RuntimeType type, IRuntimeMethodInfo ctor, IntPtr\u0026 blob, IntPtr blobEnd, Int32\u0026 namedArgs)\r\n   at System.Reflection.CustomAttribute.AddCustomAttributes(ListBuilder1\u0026 attributes, RuntimeModule decoratedModule, Int32 decoratedMetadataToken, RuntimeType attributeFilterType, Boolean mustBeInheritable, ListBuilder1 derivedAttributes)\r\n   at System.Reflection.CustomAttribute.GetCustomAttributes(RuntimeModule decoratedModule, Int32 decoratedMetadataToken, Int32 pcaCount, RuntimeType attributeFilterType)\r\n   at System.Reflection.CustomAttribute.GetCustomAttributes(RuntimeAssembly assembly, RuntimeType caType)\r\n   at System.Reflection.RuntimeAssembly.GetCustomAttributes(Type attributeType, Boolean inherit)\r\n   at Xamarin.Forms.Internals.ReflectionExtensions.GetCustomAttributesSafe(Assembly assembly, Type attrType)\r\n   at Xamarin.Forms.Internals.Registrar.RegisterAll(Type[] attrTypes, InitializationFlags flags)\r\n   at Xamarin.Forms.Forms.SetupInit(CoreApplication application, InitializationOptions options)\r\n   at Xamarin.Forms.Forms.Init(CoreApplication application, Boolean useDeviceIndependentPixel)\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-02-28T16:10:01",
+        "reactions": [
+          {
+            "user": "tomasslavicek",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:49.8365656Z"
+          },
+          {
+            "user": "SlavchoGeorgiev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:49.8365663Z"
+          }
+        ]
+      },
+      {
+        "id": 598516726,
+        "author": "rookiejava",
+        "body": "Thank you for reporting the issue. As @mattleibow  mentioned above, there are small changes ([#8905](https://github.com/xamarin/Xamarin.Forms/pull/8905)) on XF.Tizen backend. I think updating Xamarin.Forms version to 4.5.0 or higher will solve this. Sorry for inconvenience. \uD83D\uDE4F \r\n\r\n_update_\r\nIt seems #1117 can fix this issue. And, #1167 is also same issue.",
+        "createdAt": "2020-03-13T02:23:00",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:50.0403131Z"
+          }
+        ]
+      }
+    ]
+  }
 }

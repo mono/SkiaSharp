@@ -14,5 +14,58 @@
   "updatedAt": "2022-08-19T06:02:11",
   "closedAt": "2021-09-17T19:18:48",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:25.6423623Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 605853670,
+        "author": "Gillibald",
+        "body": "I am against this because the current package is already gigantic. ",
+        "createdAt": "2020-03-30T08:20:27",
+        "reactions": []
+      },
+      {
+        "id": 605901047,
+        "author": "mattleibow",
+        "body": "There are 2 types of pdb files, the debug which is several hundred MB each and the release which is also pretty size-y (somehow a 80-90MB comes to mind...). We could use a symbols package that you opt into - like with snupkg or symbols.nupkg (whatever the new trend is) - but I am not sure if that applies to native code (I\u0027ll have to check).\r\n\r\nBut this has been on my mind for some time though. What/how does the other projects in the community deal with this? Does anyone know of an example of this that I could look at or crack open and see the secrets?",
+        "createdAt": "2020-03-30T09:52:53",
+        "reactions": []
+      },
+      {
+        "id": 605913341,
+        "author": "Gillibald",
+        "body": "For the native bits, we would need a special build that includes debugging symbols. Currently, these are excluded.",
+        "createdAt": "2020-03-30T10:17:29",
+        "reactions": []
+      },
+      {
+        "id": 617440607,
+        "author": "Mikolaytis",
+        "body": "Maybe you can configure your pipeline to somehow upload these pdb files to the microsoft symbol server. It would be perfect. ",
+        "createdAt": "2020-04-21T22:12:03",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:25.3630705Z"
+          }
+        ]
+      },
+      {
+        "id": 913847407,
+        "author": "mattleibow",
+        "body": "I think this is what will work: https://github.com/mono/SkiaSharp/pull/1797\r\n\r\nThe symbols are actually available via the preview feed in a custom package, but this makes it a bit better.",
+        "createdAt": "2021-09-06T20:45:32",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:25.5921633Z"
+          }
+        ]
+      }
+    ]
+  }
 }

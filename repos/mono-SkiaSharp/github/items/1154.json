@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T06:02:38",
   "closedAt": "2020-02-27T09:36:01",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:38.4852198Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 591621082,
+        "author": "mattleibow",
+        "body": "The font manager looks at the fonts that are installed on the device. You can manually load fonts using \u0060SKTypeface\u0060, but there will be no way to tell the parser to use them.\r\n\r\nAt this point, if you really want to use SKSvg, I would suggest converting the text to paths. \r\n\r\nAnother option would be to check out a far better SVG implementation that has many more features: https://github.com/wieslawsoltes/Svg.Skia. @wieslawsoltes has been hard at work on this and probably has support for custom typefaces by now.",
+        "createdAt": "2020-02-26T20:14:13",
+        "reactions": []
+      },
+      {
+        "id": 591624925,
+        "author": "wieslawsoltes",
+        "body": "Svg.Skia supports custom fonts via registering custom typeface provider (which can use any font related SkiaSharp option e.g. SKFontManager with custom fonts registered on manually loading fonts from know directories etc.).\r\n\r\nhttps://github.com/wieslawsoltes/Svg.Skia/blob/5c6a32c73837b54b228cbaf048f936af19fa160d/src/Svg.Skia/SvgTextExtensions.cs#L10\r\n\r\nhttps://github.com/wieslawsoltes/Svg.Skia/blob/5c6a32c73837b54b228cbaf048f936af19fa160d/src/Svg.Skia/Text/FontManagerTypefacerovider.cs#L13\r\n",
+        "createdAt": "2020-02-26T20:23:54",
+        "reactions": []
+      },
+      {
+        "id": 591873539,
+        "author": "jameslavery-zz",
+        "body": "Thanks - I\u0027ll look at Svg.Skia.",
+        "createdAt": "2020-02-27T09:36:01",
+        "reactions": []
+      }
+    ]
+  }
 }

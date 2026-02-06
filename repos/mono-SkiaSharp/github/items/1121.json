@@ -20,5 +20,196 @@
   "updatedAt": "2022-08-19T06:02:55",
   "closedAt": "2020-03-24T16:09:39",
   "commentCount": 23,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:01.3829638Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 580075383,
+        "author": "mattleibow",
+        "body": "It seems to be crashing with a bad access. Do you have any info as to what was happening before the crash?\r\n\r\nThis looks like it might be that the canvas for some reason got cleaned up. Maybe you did a refresh. Maybe you have done some navigation or hidden/shown some views. Something might be living too long, and then it tries to run code on an old canvas. ",
+        "createdAt": "2020-01-30T04:15:52",
+        "reactions": []
+      },
+      {
+        "id": 580380046,
+        "author": "praeclarum",
+        "body": "@mattleibow Unfortunately, it happens with 0 user interaction (maybe the GC is collecting something?). I can start the app, walk away, come back and it\u0027s crashed.\r\n\r\nIt\u0027s 100% repro though - it just takes 5 seconds to a few minutes depending on the phase of the moon. I just ran again to verify (rebooted machine, unplugged eGPU) and it crashed in 2 minutes with no user interaction.\r\n\r\nI should note that I have 2 canvases on screen at a time.",
+        "createdAt": "2020-01-30T18:04:07",
+        "reactions": []
+      },
+      {
+        "id": 580523246,
+        "author": "praeclarum",
+        "body": "@mattleibow I am getting a similar crash but with a different stack. This time it\u0027s \u0060SkiaSharp.SkiaApi:sk_canvas_set_matrix\u0060 calling \u0060gr_backendrendertarget_get_gl_framebufferinfo\u0060.\r\n\r\n\u0060\u0060\u0060\r\n=================================================================\r\n\tNative Crash Reporting\r\n=================================================================\r\nGot a SIGSEGV while executing native code. This usually indicates\r\na fatal error in the mono runtime or one of the native libraries \r\nused by your application.\r\n=================================================================\r\n\r\n=================================================================\r\n\tNative stacktrace:\r\n=================================================================\r\n\t0x106548f98 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_dump_native_crash_info\r\n\t0x10653c7b5 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_handle_native_crash\r\n\t0x1067a9513 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : altstack_handle_and_restore.cold.1\r\n\t0x1064ba90c - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : altstack_handle_and_restore\r\n\t0x106a59830 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MonoBundle/libSkiaSharp.dylib : gr_backendrendertarget_get_gl_framebufferinfo\r\n\t0x106a282ed - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MonoBundle/libSkiaSharp.dylib : sk_canvas_set_matrix\r\n\t0x10cfc789e - Unknown\r\n\t0x10cfc5c73 - Unknown\r\n\t0x10cfc2890 - Unknown\r\n\t0x10cfc2b9e - Unknown\r\n\t0x106553807 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_jit_runtime_invoke\r\n\t0x10668f2e7 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_runtime_invoke_checked\r\n\t0x106693c2e - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_runtime_invoke\r\n\t0x10679db2b - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : _ZL31native_to_managed_trampoline_52P11objc_objectP13objc_selectorPP11_MonoMethod6CGRectj\r\n\t0x1067a00ed - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : -[MySKGLView drawRect:]\r\n\t0x7fff2aed705d - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[_NSOpenGLViewBackingLayer display]\r\n\t0x7fff38e3a9f1 - /System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore : _ZN2CA5Layer17display_if_neededEPNS_11TransactionE\r\n\t0x7fff38e193da - /System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore : _ZN2CA7Context18commit_transactionEPNS_11TransactionEd\r\n\t0x7fff38e18002 - /System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore : _ZN2CA11Transaction6commitEv\r\n\t0x7fff2a979e87 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : __62\u002B[CATransaction(NSCATransaction) NS_setFlushesWithDisplayLink]_block_invoke\r\n\t0x7fff2b09577d - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : ___NSRunLoopObserverCreateWithHandler_block_invoke\r\n\t0x7fff2d6120ee - /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation : __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__\r\n\t0x7fff2d612014 - /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation : __CFRunLoopDoObservers\r\n\t0x7fff2d61170b - /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation : __CFRunLoopRun\r\n\t0x7fff2d610bd3 - /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation : CFRunLoopRunSpecific\r\n\t0x7fff2c16765d - /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox : RunCurrentEventLoopInMode\r\n\t0x7fff2c16739d - /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox : ReceiveNextEventCommon\r\n\t0x7fff2c167127 - /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/HIToolbox.framework/Versions/A/HIToolbox : _BlockUntilNextEventMatchingListInModeWithFilter\r\n\t0x7fff2a7d8eb4 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : _DPSNextEvent\r\n\t0x7fff2a7d7690 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[NSApplication(NSEvent) _nextEventMatchingEventMask:untilDate:inMode:dequeue:]\r\n\t0x7fff2a7c93ae - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[NSApplication run]\r\n\t0x7fff2a79b775 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : NSApplicationMain\r\n\t0x10a67a0f5 - Unknown\r\n\t0x10a679f13 - Unknown\r\n\t0x106553807 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_jit_runtime_invoke\r\n\t0x10668f2e7 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_runtime_invoke_checked\r\n\t0x1066966ec - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_runtime_exec_main_checked\r\n\t0x1064b0b32 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_jit_exec\r\n\t0x1064b3c24 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : mono_main\r\n\t0x1064691b8 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : xamarin_main\r\n\t0x10646a014 - /Users/fak/Dropbox/Projects/Circuit/CircuitMac/bin/Release/iCircuit.app/Contents/MacOS/iCircuit : main\r\n\t0x7fff64c6d7fd - /usr/lib/system/libdyld.dylib : start\r\n\r\n=================================================================\r\n\tBasic Fault Address Reporting\r\n=================================================================\r\nMemory around native instruction pointer (0x106a59830):0x106a59820  55 48 89 e5 41 57 41 56 53 50 49 89 f6 49 89 ff  UH..AWAVSPI..I..\r\n0x106a59830  48 8b 47 40 83 78 58 00 0f 8e ad 00 00 00 49 8b  H.G@.xX.......I.\r\n0x106a59840  07 4c 89 ff ff 50 68 49 8b 47 40 ff 48 58 49 8d  .L...PhI.G@.HXI.\r\n0x106a59850  7f 08 e8 39 09 02 00 49 8b 4f 40 48 8b 51 28 48  ...9...I.O@H.Q(H\r\n\r\n=================================================================\r\n\tManaged Stacktrace:\r\n=================================================================\r\n\t  at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n\t  at SkiaSharp.SkiaApi:sk_canvas_set_matrix \u003C0x000ad\u003E\r\n\t  at SkiaSharp.SKCanvas:SetMatrix \u003C0x00052\u003E\r\n\t  at Circuit.Mac.CircuitView:OnPaintSurface \u003C0x00422\u003E\r\n\t  at SkiaSharp.Views.Mac.MySKGLView:DrawRect \u003C0x0053f\u003E\r\n\t  at \u003CModule\u003E:runtime_invoke_void__this___CGRect \u003C0x000fd\u003E\r\n\t  at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n\t  at AppKit.NSApplication:NSApplicationMain \u003C0x001a4\u003E\r\n\t  at AppKit.NSApplication:Main \u003C0x00112\u003E\r\n\t  at Circuit.Mac.MainClass:Main \u003C0x00052\u003E\r\n\t  at \u003CModule\u003E:runtime_invoke_void_object \u003C0x000b0\u003E\r\n=================================================================\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-01-31T00:18:26",
+        "reactions": []
+      },
+      {
+        "id": 585141591,
+        "author": "mattleibow",
+        "body": "That is very weird... the \u0060sk_canvas_set_matrix\u0060 is the C API, which will call into C\u002B\u002B and not ever need to call back out to the C layer. In fact the C\u002B\u002B API knows nothing of the C API. The \u0060gr_backendrendertarget_get_gl_framebufferinfo\u0060. Are you calling \u0060GetGlFramebufferInfo\u0060 at all in your code? For those two to be together is weird enough for me to think that maybe there is something wrong with the symbols.\r\n\r\nDo you have some render loop going? Or is this a pure, \u0022just put it on the screen and it breaks\u0022 issue?\r\n\r\nCould you attach a sample that you can confirm crashes, maybe the source and the even the fully compiled app. Then I\u0027ll run it and try find out exactly what is going on.\r\n\r\nI looked at the other crashes in that gist, and there is a surprising number of \u0060gr_backendrendertarget_get_gl_framebufferinfo\u0060 items on the stack. Which only comes up if YOU call \u0060GetGlFramebufferInfo\u0060, which is often not the case.",
+        "createdAt": "2020-02-12T10:36:15",
+        "reactions": []
+      },
+      {
+        "id": 585373326,
+        "author": "praeclarum",
+        "body": "No I\u0027m just using your view. I often have 2 to 3 of them on screen at a time though. You may notice it called \u0022MyGLView\u0022 but that\u0027s just because I copied and pasted your code in to get a better stack trace. It crashes whether I use the nuget version or my copy pasted version.\r\n\r\nSince the other Skia bugs, I\u0027ve been careful to delete bin/obj before reporting to you.\r\n\r\nI\u0027m sorry, I don\u0027t have a small repro. But this is in a released app that\u0027s crashing. Are you testing on Catalina? Is the GLView stable for you?",
+        "createdAt": "2020-02-12T19:21:23",
+        "reactions": []
+      },
+      {
+        "id": 585402956,
+        "author": "praeclarum",
+        "body": "@mattleibow I did it! I made a minimal repro! :-D \r\n\r\nSteps:\r\n1. Run the attached project under the debugger.\r\n2. Create a few more windows with Cmd\u002BN\r\n3. Drink some coffee, read Twitter\r\n4. Observe crash\r\n\r\nIn the following screenshot, it crashed after 1500 frames, or about 25 seconds. I put a GC.Collect thread in it just to speed things up. I\u0027m guessing a finalizer is doing something naughty.\r\n\r\nI should also note that I updated macOS to the latest 10.15.3 and have the same problem so I don\u0027t think it\u0027s Catalina\u0027s fault.\r\n\r\n[SkiaSharpIssue1121.zip](https://github.com/mono/SkiaSharp/files/4194873/SkiaSharpIssue1121.zip)\r\n\r\n\u003Cimg width=\u00222394\u0022 alt=\u0022Screenshot 2020-02-12 12 23 18\u0022 src=\u0022https://user-images.githubusercontent.com/323548/74374317-06553480-4d93-11ea-9470-e36a4e517195.png\u0022\u003E\r\n",
+        "createdAt": "2020-02-12T20:29:38",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:10:57.8920466Z"
+          }
+        ]
+      },
+      {
+        "id": 585431307,
+        "author": "mattleibow",
+        "body": "Yes! Thanks for this! I\u0027ll have a look and see what is breaking.",
+        "createdAt": "2020-02-12T21:40:18",
+        "reactions": []
+      },
+      {
+        "id": 585812263,
+        "author": "mattleibow",
+        "body": "Just haven\u0027t got to this yet. Trying to figure another iOS issue. But, people have been saying that the previous 1.68.0 version is working fine. Have you tried any with that version? Is this a new issue since upgrading to the .1 or .2 versions?",
+        "createdAt": "2020-02-13T15:23:12",
+        "reactions": []
+      },
+      {
+        "id": 585831304,
+        "author": "praeclarum",
+        "body": "@mattleibow I have tried a bunch of versions. Would you give me an exact version to test? I can\u2019t go too far back because there are other crashing bugs in those older versions. ",
+        "createdAt": "2020-02-13T15:59:17",
+        "reactions": []
+      },
+      {
+        "id": 585833895,
+        "author": "mattleibow",
+        "body": "Ah, ok. Try 1.68.0. I know some GC fixes were made in 1.68.1 so maybe I broke something. But I also updated the build tools, so maybe that broke something.\r\n\r\n\u003E But, I\u0027m going to have a look now since I figured out that iOS 13.3.1 is broken when it comes to free accounts... https://github.com/mono/SkiaSharp/issues/1129",
+        "createdAt": "2020-02-13T16:04:36",
+        "reactions": []
+      },
+      {
+        "id": 585844787,
+        "author": "mattleibow",
+        "body": "I managed to repro this in seconds! I just created like a billion windows :) Let me have a closer look now...",
+        "createdAt": "2020-02-13T16:26:50",
+        "reactions": [
+          {
+            "user": "praeclarum",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:10:58.9414829Z"
+          }
+        ]
+      },
+      {
+        "id": 590362470,
+        "author": "praeclarum",
+        "body": "Hi @mattleibow, every day I\u0027m getting crash reports from paying customers and my reviews are starting to show it. I wonder if you\u0027ve made any progress?",
+        "createdAt": "2020-02-24T14:57:58",
+        "reactions": []
+      },
+      {
+        "id": 594754204,
+        "author": "gregsn",
+        "body": "I am getting the same issue. \u0060canvas.RestoreToCount (saveCount);\u0060 called in \u0060SKAutoCanvasRestore.Dispose()\u0060 is making my \u0060SKLGLControl.OnPaint()\u0060 crash on ... **Windows**.",
+        "createdAt": "2020-03-04T19:00:14",
+        "reactions": [
+          {
+            "user": "praeclarum",
+            "content": "laugh",
+            "createdAt": "2026-02-06T14:10:59.3273536Z"
+          }
+        ]
+      },
+      {
+        "id": 599292129,
+        "author": "mattleibow",
+        "body": "Hi folks, sorry about the delay. I am looking into this still, and I am trying to locate exactly what is causing this. I have been collecting issues and thanks to several of you in the community, I have a few samples and more information that will help as I look into this.\r\n\r\nUnfortunately, I did get \u0022distracted\u0022 by some other issues in this project as well as some other projects that needed my attention. However, I am back on this! And, I will be focusing on finding a solution ASAP this whole week.\r\n\r\n@gregsn this Windows thing is interesting and might be a better way to debug as I can work more easily there. Do you have a sample code that you can share? Also, what version of VS, Windows and NuGet are you using?",
+        "createdAt": "2020-03-16T00:54:06",
+        "reactions": []
+      },
+      {
+        "id": 600785738,
+        "author": "mattleibow",
+        "body": "After a day of moving things around, I may have found something... Things are looking good. I have something that works, but I am suspicious that it may just be avoiding some issue. I\u0027ll try and get a preview out ASAP with this and look into the core issue.",
+        "createdAt": "2020-03-18T18:15:12",
+        "reactions": []
+      },
+      {
+        "id": 601365916,
+        "author": "mattleibow",
+        "body": "Hey folks, I think I may have found the issue. I have a fix in #1180 (more details as to what, why, and how on that PR soon), and I have published the PR NuGet to the preview feed: https://aka.ms/skiasharp-eap/index.json\r\n\r\nGive that a go and let me know if it fixes it for the real world app. So far, the repro by @praeclarum seems to be stable. I created 30\u002B views and it ran all night. Typically with about 30\u002B views it would crash at 500\r\n\r\nCheck out the package version: 1.68.2-pr.1180.1",
+        "createdAt": "2020-03-19T19:13:11",
+        "reactions": []
+      },
+      {
+        "id": 601366410,
+        "author": "praeclarum",
+        "body": "Thanks! Will do.",
+        "createdAt": "2020-03-19T19:14:17",
+        "reactions": []
+      },
+      {
+        "id": 601863724,
+        "author": "ugnivs",
+        "body": "Can this bug be possible on ios?",
+        "createdAt": "2020-03-20T19:01:01",
+        "reactions": []
+      },
+      {
+        "id": 601936957,
+        "author": "mattleibow",
+        "body": "Yes, I think it is and I also fixed it there. Check out https://github.com/mono/SkiaSharp/issues/1144 and https://github.com/mono/SkiaSharp/issues/910",
+        "createdAt": "2020-03-20T22:27:33",
+        "reactions": []
+      },
+      {
+        "id": 602006801,
+        "author": "ugnivs",
+        "body": "Thanks. I\u0027ll try to check it in our project",
+        "createdAt": "2020-03-21T07:16:53",
+        "reactions": []
+      },
+      {
+        "id": 603327653,
+        "author": "gregsn",
+        "body": "ok trying these packages for now:\r\n\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00221.68.2-pr.1180.6\u0022 ExcludeAssets=\u0022build\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.Svg\u0022 Version=\u00221.68.0-preview36\u0022 ExcludeAssets=\u0022build\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00221.68.2-pr.1180.6\u0022 ExcludeAssets=\u0022build\u0022 /\u003E\r\ni\u0027ll report back",
+        "createdAt": "2020-03-24T15:58:34",
+        "reactions": []
+      },
+      {
+        "id": 603503693,
+        "author": "mattleibow",
+        "body": "@gregsn you can try the new packages (preview 45) on NuGet.org.",
+        "createdAt": "2020-03-24T21:03:47",
+        "reactions": [
+          {
+            "user": "gregsn",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:01.1084354Z"
+          }
+        ]
+      },
+      {
+        "id": 608434171,
+        "author": "mattleibow",
+        "body": "Hey folks, it has been a long time coming and thanks to all the folks with your repros, samples and stack traces I think we have finally managed to fix those pesky crashes - at least the ones we know about. I have just pushed **1.68.2-preview.50** to NuGet so let me know if this fixes all the crashes you have ever had \uD83D\uDE04 ",
+        "createdAt": "2020-04-03T13:29:43",
+        "reactions": []
+      }
+    ]
+  }
 }

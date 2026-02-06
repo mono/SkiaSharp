@@ -19,5 +19,64 @@
   "updatedAt": "2022-08-19T06:02:43",
   "closedAt": "2020-02-15T07:53:13",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:31.3982848Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 586327120,
+        "author": "mattleibow",
+        "body": "The best way would be to make use of the \u0060SKCodec\u0060 class: https://docs.microsoft.com/dotnet/api/skiasharp.skcodec\r\n\r\nYou could try try creating it with this: https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skcodec.create?view=skiasharp-1.68.1#SkiaSharp_SKCodec_Create_System_IO_Stream_SkiaSharp_SKCodecResult__\r\n\r\nThat would mean that the image appears correct.\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var codec = SKCodec.Create(\u003Cstream\u003E, out var result);\r\nif (codec == null || result != SKCodecResult.Success)\r\n    throw new Exception(\u0022bad image.\u0022);\r\n\u0060\u0060\u0060\r\n\r\nAnother way would be to just use the \u0060SKImage.FromEncodedData\u0060 and see if there is an image: https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skimage.fromencodeddata?view=skiasharp-1.68.1\r\n\r\nBasically this:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var image = SKImage.FromEncodedData(\u003Cstream\u003E);\r\nif (image == null)\r\n    throw new Exception(\u0022bad image.\u0022);\r\n\u0060\u0060\u0060\r\n\r\nThis is a bit heavier as it actually loads the image.",
+        "createdAt": "2020-02-14T15:06:23",
+        "reactions": []
+      },
+      {
+        "id": 586565337,
+        "author": "kikaragyozov",
+        "body": "Thank you @mattleibow!",
+        "createdAt": "2020-02-15T07:53:07",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:30.7556455Z"
+          }
+        ]
+      },
+      {
+        "id": 586884711,
+        "author": "kikaragyozov",
+        "body": "@mattleibow just one quick question if I may, if our image comes in a \u0060byte[]\u0060 format, I can\u0027t actually use the \u0060SKCodec.Create\u0060 method. Should I copy the array to a stream, or would that make the operation as slow as its alternatives? (\u0060SKImage.FromEncodedData\u0060/\u0060SKBitmap.Decode\u0060)\r\n\r\n\r\n**EDIT:**  I basically want to check if the image is valid, so that then I can proceed to manipulate it. In that case, it shouldn\u0027t be a problem to rely on \u0060SKImage.FromEncodedData\u0060/\u0060SKBitmap.Decode\u0060 returning a null object, right?",
+        "createdAt": "2020-02-17T08:59:29",
+        "reactions": []
+      },
+      {
+        "id": 586914906,
+        "author": "mattleibow",
+        "body": "Oh, yeah. I see there is no overload for \u0060byte[]\u0060. I\u0027ll add that.\r\n\r\nBut, for now, you could even use \u0060SKBitmap.DecodeBounds\u0060. That also just does the reading of the header so as not to fully decode the entire image. If you want to make sure that it truly is a valid image (not corrupted), then using \u0060SKImage.FromEncodedData\u0060/\u0060SKBitmap.Decode\u0060 to fully decode is probably the best.",
+        "createdAt": "2020-02-17T10:09:22",
+        "reactions": [
+          {
+            "user": "kikaragyozov",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:31.1749548Z"
+          }
+        ]
+      },
+      {
+        "id": 586916349,
+        "author": "mattleibow",
+        "body": "But, as a separate thing, you can also create a \u0060SKData\u0060 from any array:\r\n\r\n\u0060\u0060\u0060csharp\r\nbyte[] bytes = ...;\r\n\r\nfixed (void* ptr = bytes) {\r\n    using var data = SKData.Create((IntPtr)ptr, bytes.length);\r\n}\r\n\u0060\u0060\u0060\u0060\r\n\r\nJust remember, the data cannot outlive the \u0060fixed\u0060 block as it requires that the GC does not move/collect the array.",
+        "createdAt": "2020-02-17T10:12:16",
+        "reactions": [
+          {
+            "user": "kikaragyozov",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:31.3480492Z"
+          }
+        ]
+      }
+    ]
+  }
 }

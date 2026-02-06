@@ -14,5 +14,56 @@
   "updatedAt": "2022-08-19T06:02:29",
   "closedAt": "2020-06-10T23:15:35",
   "commentCount": 3,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:55.7286624Z",
+    "reactions": [
+      {
+        "user": "UweKeim",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:55.7286694Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 596996178,
+        "author": "mattleibow",
+        "body": "Yeah, this was a bit of a mistake in the original design. Changing it now it breaking.\r\n\r\nBut, we are open to ideas. Maybe we can help a few members better.\r\n\r\nDid you have any ideas? ",
+        "createdAt": "2020-03-10T09:49:07",
+        "reactions": [
+          {
+            "user": "UweKeim",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:55.304545Z"
+          }
+        ]
+      },
+      {
+        "id": 597044758,
+        "author": "ziriax",
+        "body": "A possibility would be to provide a new namespace \u0060Xamarin.Rendering.Skia\u0060, with classes without the \u0060Sk\u0060 prefix, e.g. \u0060Paint\u0060, \u0060Canvas\u0060, and these would throw exceptions? That would also make the naming conventions more [like idiomatic .NET](https://docs.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-classes-structs-and-interfaces).\r\n\r\nBut of course, then you have two API interfaces, not ideal... However, these could be generated?\r\n",
+        "createdAt": "2020-03-10T11:49:04",
+        "reactions": [
+          {
+            "user": "UweKeim",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:55.5064583Z"
+          }
+        ]
+      },
+      {
+        "id": 642315082,
+        "author": "mattleibow",
+        "body": "Closing this as a duplicate of #743\r\n\r\nThe real issue is that this is a breaking change and creating a new API is not really viable. Setting a runtime property is also not particularly useful because how do you handle conflicting requests? You may want exceptions but your library may expect null.\r\n\r\nI live in regret.",
+        "createdAt": "2020-06-10T23:15:35",
+        "reactions": [
+          {
+            "user": "UweKeim",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:55.6789876Z"
+          }
+        ]
+      }
+    ]
+  }
 }

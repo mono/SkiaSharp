@@ -15,5 +15,164 @@
   "updatedAt": "2022-08-19T06:01:54",
   "closedAt": "2020-06-25T00:58:03",
   "commentCount": 17,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:00.1048131Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 621940925,
+        "author": "mattleibow",
+        "body": "I\u0027ll see what we can do.\r\n\r\nThis is a real problem, but we might break a lot of people if we just change the names. The pinvoke doesn\u0027t really matter, so that is easy. But, this is more the user scripts and things to copy files might stop working.\r\n\r\nBut, we do need to do this to support cases where side-by-side loading is required. \r\n\r\nWe might have to wait for the v2 where we can be a little more break-y with file names. I\u0027ll move it into that project now so we can make sure we address this.",
+        "createdAt": "2020-04-30T15:52:31",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:56.8599225Z"
+          },
+          {
+            "user": "kekekeks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:56.8599232Z"
+          }
+        ]
+      },
+      {
+        "id": 646166721,
+        "author": "mattleibow",
+        "body": "Doing a few tests, seems that this \u0060[DllImport]\u0060 attribute is a tad dumb. If I use the \u0060Native.1.0.0\u0060 pattern, then it does not add the \u0060.dll\u0060 to it and can\u0027t load. So it looks like I will have to do something like \u0060Native_68_3\u0060 and \u0060Native_80_0\u0060.\r\n\r\nLooks really ugly, but I suppose good looks are not what we are going for here.",
+        "createdAt": "2020-06-18T16:51:58",
+        "reactions": []
+      },
+      {
+        "id": 646273322,
+        "author": "mattleibow",
+        "body": "I think I may have found a nice way to actually solve 2 big issues... First, this issue. Supporting the loading of two versions of libSkiaSharp.* Second, #713. Supporting the actually, intelligent loading of 32/64 bit native binaries.\r\n\r\nThis is the hacked code for a library... I would _just_ use this on \u0060net45\u0060 and maybe \u0060netstandard2.0\u0060. This is unnecessary for packaged apps (Android, iOS, UWP) and actually unsupported on AOT platforms (iOS, WASM). The nice thing is, the generator can do all the work and we can toggle with \u0060#if USE_DELEGATE_STYLE\u0060 or something.\r\n\r\n\u0060\u0060\u0060csharp\r\nusing System;\r\nusing System.IO;\r\nusing System.Reflection;\r\nusing System.Runtime.InteropServices;\r\n\r\nnamespace Library\r\n{\r\n\tpublic class Class1\r\n\t{\r\n\t\tpublic static int Act() =\u003E (test_func ??= (Load\u003Ctest_delegate\u003E())).Invoke();\r\n\r\n\t\tstatic IntPtr libraryHandle;\r\n\r\n\t\tprivate static T Load\u003CT\u003E()\r\n\t\t{\r\n\t\t\t// TODO: proper loading logic here\r\n\t\t\tstring assemblyPath = Assembly.GetAssembly(typeof(Class1)).Location;\r\n\t\t\tif (!string.IsNullOrEmpty(assemblyPath))\r\n\t\t\t\tassemblyPath = Path.GetDirectoryName(assemblyPath);\r\n\t\t\telse\r\n\t\t\t\tassemblyPath = Directory.GetCurrentDirectory();\r\n\r\n\t\t\t// TODO: A default fallback of loading \u0022Native\u0022 as in the [DllImport] reverts back to the default logic\r\n\t\t\tlibraryHandle = UnsafeNativeMethods.LoadLibrary(Path.Combine(assemblyPath, \u0022Native.dll\u0022));\r\n\t\t\tvar ptr = UnsafeNativeMethods.Win32GetProcAddress(libraryHandle, \u0022test\u0022);\r\n\t\t\treturn Marshal.GetDelegateForFunctionPointer\u003CT\u003E(ptr);\r\n\t\t}\r\n\r\n\t\tprivate static test_delegate test_func;\r\n\r\n\t\t[DllImport(\u0022Native\u0022, CallingConvention = CallingConvention.Cdecl)]\r\n\t\tprivate static extern int test();\r\n\t}\r\n\r\n\tstatic class UnsafeNativeMethods\r\n\t{\r\n\t\t[DllImport(\u0022Kernel32.dll\u0022, SetLastError = true)]\r\n\t\tpublic static extern IntPtr LoadLibrary(string lpFileName);\r\n\r\n\t\t[DllImport(\u0022Kernel32.dll\u0022, EntryPoint = \u0022GetProcAddress\u0022, CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]\r\n\t\tpublic static extern IntPtr Win32GetProcAddress(IntPtr hModule, string lpProcName);\r\n\t}\r\n\r\n\t[UnmanagedFunctionPointer(CallingConvention.Cdecl)]\r\n\tdelegate int test_delegate();\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-06-18T19:53:05",
+        "reactions": []
+      },
+      {
+        "id": 646276853,
+        "author": "kekekeks",
+        "body": "Don\u0027t attempt loading nuget-shipped libraries with LoadLibrary/dlsym. That will break loading those from \u0060$HOME/.nuget\u0060 directory since coreclr uses some complex logic to resolve paths.",
+        "createdAt": "2020-06-18T20:00:49",
+        "reactions": []
+      },
+      {
+        "id": 646359882,
+        "author": "mattleibow",
+        "body": "Ah, yeah, thanks. I am just doing this for .NET Framework now, so we should be OK. At least this will fix the issues with the 32/64 bit issues on desktop. Things like VS will need to be build as a netfx/net45\u002B library.\r\n\r\nWith this CoreCLR work, not sure if this change is actually helpful... But, at least we fixed one issue :|",
+        "createdAt": "2020-06-18T23:47:12",
+        "reactions": []
+      },
+      {
+        "id": 646491781,
+        "author": "ziriax",
+        "body": "Is this useful?\r\n\r\nhttps://github.com/olegtarasov/NativeLibraryManager/blob/master/Readme.md\r\n",
+        "createdAt": "2020-06-19T07:45:05",
+        "reactions": []
+      },
+      {
+        "id": 646728726,
+        "author": "mattleibow",
+        "body": "I think we are OK with .NET Core App as that uses the runtimes folder and we never have to worry about anything. I think this issue only really exists with netfx. Unless I am mistaken. \r\n\r\nIf you are using a .NET Standard library in netfx, you will have the same issue because this is all the runtime... But, since we have a separate netfx library that you should be using anyway, this should never come up. Unless you copy the netstandard dll and use it in a netfx app. But if you shouldn\u0027t do that...",
+        "createdAt": "2020-06-19T16:23:14",
+        "reactions": []
+      },
+      {
+        "id": 646728854,
+        "author": "mattleibow",
+        "body": "I think we are OK with .NET Core App as that uses the runtimes folder and we never have to worry about anything. I think this issue only really exists with netfx. Unless I am mistaken. \r\n\r\nIf you are using a .NET Standard library in netfx, you will have the same issue because this is all the runtime... But, since we have a separate netfx library that you should be using anyway, this should never come up. Unless you copy the netstandard dll and use it in a netfx app. But if you shouldn\u0027t do that...",
+        "createdAt": "2020-06-19T16:23:32",
+        "reactions": []
+      },
+      {
+        "id": 646814211,
+        "author": "mattleibow",
+        "body": "Confirmed this works in a VS extensions. So that is nice, and if nothing else we now have fixed 2 issues - the bitness and the VS extension.",
+        "createdAt": "2020-06-19T18:48:57",
+        "reactions": []
+      },
+      {
+        "id": 647819779,
+        "author": "mattleibow",
+        "body": "So I have been playing around and trying a few things. There are a few issues relating to loading of native libraries, so as I was testing things out I think I got to a decent idea. As I type this out, I will think and see what sense I make...\r\n\r\nFirst things first, the issues currently:\r\n 1. There is not a good way to pick the correct architecture (x86/x64) when \u0060[DllImport]\u0060 directly on .NET Fx\r\n 2. There is not a good way to load multiple versions of native libraries with \u0060[DllImport]\u0060\r\n\r\nNow, the world in which we live:\r\n 1. .NET Fx exists and is not that smart, but is powerful  \r\n     a) When using \u0060[DllImport]\u0060, Fx will follow a simple lookup path\r\n     b) There is no way to \u0022intercept\u0022 a load\r\n     c) Only one library is loaded with a matching name (no multiple versions)\r\n 2. .NET Core is smarter, but a little too smart sometimes\r\n     a) When using \u0060[DllImport]\u0060, Core will only look up in the \u0022known\u0022/\u0022special\u0022 locations\r\n     b) There is a way to intercept a load\r\n     c) Only one library is loaded with a matching name (no multiple versions)\r\n 3. App Packages are not extendable \r\n     a) Apps can only ever look inside the package and can only ever have a single version of a managed dll\r\n\r\nAnd, now the features we need:\r\n 1. .NET Fx\r\n     a) Needs to support loading based on arch (x86/x64)\r\n     b) Needs to support loading of different versions\r\n 2. .NET Core/.NET Standard\r\n     a) Needs to support loading based on arch AND/OR version (think extensions)\r\n     b) Needs to support loading via magic when used in a .NET Core app - this is like an app package/bundle \r\n 3. App Packages\r\n     a) Needs to support AOT and other things that affect loading\r\n     b) Cannot support extensions, so no need for dynamic loading\r\n\r\nFinally, we have a few techniques:\r\n 1. Loading via LoadLibrary/dlopen and using delegates\r\n     a) This supports any native library arch/version\r\n     b) This breaks the magical lookup of .NET Core\r\n 2. Loading via \u0060[DllImport]\u0060 with basic names (libSkiaSharp)\r\n     a) This supports all kinds of magic and is easy\r\n     b) Does not support different versions and no way to control per arch\r\n 2. Loading via \u0060[DllImport]\u0060 with versioned names (libSkiaSharp_80_0)\r\n     a) This supports the magic\r\n     b) This supports the multiple version\r\n     c) This does not support different arch\r\n\r\n... todo ...",
+        "createdAt": "2020-06-22T23:30:05",
+        "reactions": []
+      },
+      {
+        "id": 647828026,
+        "author": "mattleibow",
+        "body": "So far, a decent looking solution seems to be a combination.\r\n\r\n 1. .NET Fx library/app\r\n     a) This is dumb and just use delegates to load versioned libraries via LoadLibrary/dlopen\r\n     b) Using delegates allows for arbitrary loading of libraries based on arch/version/path\r\n     c) LoadLibrary/dlopen allows for multiple versions to be used concurrently\r\n 2. .NET Standard library in .NET Fx app\r\n     a) This is basically just the same old .NET Fx\r\n     b) Needs to do all the work via delegates\r\n 3. .NET Standard library in .NET Core app\r\n     a) This is treated like an app package because the package file will only support a single version of the managed dll\r\n     b) \u0022Extensions\u0022 need to manage their own libraries and can use [NativeLibrary](https://docs.microsoft.com/dotnet/api/system.runtime.interopservices.nativelibrary) to override the \u0060[DllImport]\u0060\r\n 4. App Packages\r\n    a) This is the simplest in that it just works as they were\r\n    b) Use the simple \u0060[DllImport(\u0022libSkiaSharp\u0022)]\u0060\r\n    c) The build process and runtime will make sure things are correct\r\n\r\nEven though is may be nice to just have a .NET Standard library for both .NET Core and .NET Fx, this is not really possible as it doesn\u0027t support the delegates AND the magic. This means that we should combine 2. with 1. and 3. with 4. This leaves us with 3 modes:\r\n\r\n 1. .NET Fx using the net45\u002B TFM and that uses delegates to load the simple \u0060\u0022libSkiaSharp\u0022\u0060 because we have all the control in the world\r\n 2. .NET Standard that works with .NET Core and uses simple \u0060[DllImport(\u0022libSkiaSharp\u0022)]\u0060 so we can use the magic, extensions override the loading with \u0060NativeLibrary.SetDllImportResolver()\u0060\r\n 3. App packages use simple \u0060[DllImport(\u0022libSkiaSharp\u0022)]\u0060 to allow the OS/build to do the work\r\n\r\nTesting:\r\n 1. .NET Fx: I have tested that this [works fine](https://github.com/mono/SkiaSharp/issues/1252#issuecomment-646814211) and can support multiple versions of SkiaSharp in the VS IDE (.NET Fx) \r\n 2. .NET Core: I will make a test app to confirm\r\n 3. App Packages: has always been working and no changes needed",
+        "createdAt": "2020-06-23T00:00:35",
+        "reactions": []
+      },
+      {
+        "id": 647867543,
+        "author": "mattleibow",
+        "body": "I can confirm that things seem to be working with, net45\u002B, netcoreapp3.1\u002B and normal apps.\r\n\r\nI create a sample repo: https://github.com/mattleibow/SkiaSharpExtensionsPlayground",
+        "createdAt": "2020-06-23T02:25:26",
+        "reactions": []
+      },
+      {
+        "id": 647939489,
+        "author": "kekekeks",
+        "body": "\u003E a) Apps can only ever look inside the package and can only ever have a single version of a managed dll\r\n\r\nNote that there are things like ILRepack with \u0060internal\u0060 flag and other IL rewriting options that might be used by packaging scripts",
+        "createdAt": "2020-06-23T06:34:42",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:59.2786107Z"
+          }
+        ]
+      },
+      {
+        "id": 647941285,
+        "author": "kekekeks",
+        "body": "Also note that leaving plain \u0060libSkiaSharp\u0060 in \u0060DllImport\u0060 doesn\u0027t really help with ABI versioning. We\u0027ve had \u0022bug\u0022 reports from people who were using a wrong package / prebuilt binary for \u0060libSkiaSharp.so\u0060",
+        "createdAt": "2020-06-23T06:39:10",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:59.4863303Z"
+          }
+        ]
+      },
+      {
+        "id": 648405850,
+        "author": "mattleibow",
+        "body": "@kekekeks Thanks for the continued feedback.\r\n\r\n\u003E Note that there are things like ILRepack with \u0060internal\u0060 flag and other IL rewriting options that might be used by packaging scripts\r\n\r\nI was only referring to app store packages/bundles, which has less need for things.\r\n\r\nWith regards to the IL merging, I don\u0027t think this will really be a supported way to distribute _libraries_. I am investigating a statically linking option for mobile apps that support it (iOS/macOS) and this will result in duplicate symbols. So far my testing has not shown any dramatic size changes, so that is why we are still using dynamic. (or it may be my compiler options for iOS...) The best option would be to have a hybrid solution with dynamic for Debug/Hot Reload and a static for Release/AOT.\r\n\r\nIn this case, for the App Package format, I don\u0027t think we want to support multiple versions of SkiaSharp. If you really need to IL merge two versions of SkiaSharp into an iOS app, then maybe that is a separate case that we can look at when it comes up. If the worst comes to the worst, then you can always Mono.Cecil the attributes and change it to different versions. A bit of work, but can fit into a pretty small MSBuild task.\r\n\r\n\u003E Also note that leaving plain libSkiaSharp in DllImport doesn\u0027t really help with ABI versioning.\r\n\r\nI have been looking at versioning the native libraries for the \u0022desktop\u0022 platforms (Windows, macOS, Linux) to do this. I have been avoiding this because it makes life a tiny bit harder to maintain from SkiaSharp\u0027s perspective, and any additional third party scripting. But it looks to be the best way since the version number is in the name.\r\n\r\n\u003E We\u0027ve had \u0022bug\u0022 reports from people who were using a wrong package / prebuilt binary for libSkiaSharp.so\r\n\r\nI assume you re talking about people pulling down a JoesCodes.SkiaSharp.Linux v60 and using it with SkiaSharp v80?\r\n\r\nI suppose adding a version number to the bits will make it more obvious (libSkiaSharp_80 not found vs a crash)\r\n\r\nBut, another alternative for the last 2 is to add a new API to the native library that provides the version information of the native library.  ",
+        "createdAt": "2020-06-23T20:40:46",
+        "reactions": []
+      },
+      {
+        "id": 648412626,
+        "author": "Gillibald",
+        "body": "I prefer having an API to query the current version of the native library. Many libraries already have that out of the box. In theory the newer binding could still use an older version of the library if ABI is unchanged.\r\n\r\nHarfBuzz for example has such a promise. Most Linux distributions already come with HarfBuzz or offer a way to install the library.",
+        "createdAt": "2020-06-23T20:54:44",
+        "reactions": []
+      },
+      {
+        "id": 648450299,
+        "author": "mattleibow",
+        "body": "@Gillibald I was talking to the folks on the team here, and that is what they also said. Not only does it allow for direct library queries, but also for shared versions across managed libraries - just as you said.\r\n\r\nIn fact, looking at the releases of SkiaSharp, many of them use the exact same git sha between releases (ie: 1.68.2, 1.68.2.1, 1.68.3) so we could potentially support this far better than just a filename version. And, we can also make use of the fact that the API is being versioned, not the library. So, for example, if the C\u002B\u002B library has a bug and we fix that but do not touch the C API, then we do not have to bump the second version number.\r\n\r\nThere are probably going to be two numbers used to make up a version: the skia milestone and the C API iteration (restarting with each milestone). For example, the new v2.80.0 will be \u002280.0\u0022. If we do a managed-only update, then the native version is unchanged. If we do a new binding and add a new C API, then the native version becomes \u002280.1\u0022. If we then do another bugfix somewhere in the native code, but do not touch the C API, then we leave the version number as the same.\r\n\r\nWith regards to backwards compat, I\u0027ll make sure that the C API never breaks for a major milestone and is always backwards compatible in that milestone. So, if the native library is \u002280.2\u0022, then this will work with the managed libraries that are compatible with \u002280.0\u0022 to \u002280.2\u0022. But not with a managed library built against \u002280.3\u0022 or later.\r\n\r\n| Changes | NuGet/Managed | Native |\r\n| :--------- | :------------------ | :------ |\r\n| Initial release | v2.80.0 | **80.0** |\r\n| C# change | v2.80.1 | 80.0 |\r\n| C API added | v2.80.2 | **80.2** |\r\n| C\u002B\u002B bug fixed | v2.80.3 | 80.2 |\r\n| Packaging fix | v2.80.3.1 | 80.2 |\r\n| C# API added | v2.80.4 | 80.2 |\r\n| C API added | v2.80.5 | **80.5** |\r\n| Update skia | v2.84.0 | **84.0** |\r\n\r\nWe do skip iteration values, but that is not so important.",
+        "createdAt": "2020-06-23T21:59:55",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:00.0545722Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:00.0545727Z"
+          }
+        ]
+      }
+    ]
+  }
 }

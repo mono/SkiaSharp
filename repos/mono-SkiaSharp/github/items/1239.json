@@ -15,5 +15,86 @@
   "updatedAt": "2022-08-19T06:01:59",
   "closedAt": "2020-06-10T02:07:45",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:47.2311576Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 615888344,
+        "author": "wieslawsoltes",
+        "body": "You can use shaders: \r\n\u0060\u0060\u0060C#\r\npublic static SKShader CreateColor (SKColorF color, SKColorSpace colorspace)\r\n\u0060\u0060\u0060\r\n\r\n\u003E SkColor (stored on SkPaint) is assumed to be in the sRGB color space - meaning that it is in the sRGB gamut and encoded with the sRGB transfer function.\r\n\u003E \r\n\u003E SkShaders (also stored on SkPaint) can be used to create more complex colors. Color and gradient shaders typically accept SkColor4f (float colors). These high precision colors can be in any gamut, but must have a linear transfer function.\r\n\r\n\u0060https://github.com/mono/SkiaSharp/blob/cef01f15e6018bee663e20961a0622bde122f15d/binding/Binding/SKShader.cs#L40",
+        "createdAt": "2020-04-18T15:18:51",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:12:45.6123647Z"
+          }
+        ]
+      },
+      {
+        "id": 615891092,
+        "author": "ziriax",
+        "body": "Perfect! Closing this then",
+        "createdAt": "2020-04-18T15:36:32",
+        "reactions": []
+      },
+      {
+        "id": 615912602,
+        "author": "mattleibow",
+        "body": "Actually, opening this again. This did not exist in m68, but does in m80. I think it will be good to add to properly support \u0060SKColorF\u0060 all over the show.\r\n\r\nI am planning on adding the new features for colors in m80. The initial releases of m80 might not have everything, but we can add the most important ones now. For example, this issue is easy to add.",
+        "createdAt": "2020-04-18T17:53:27",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:12:46.0038393Z"
+          }
+        ]
+      },
+      {
+        "id": 616080448,
+        "author": "ziriax",
+        "body": "Yes, it would be easy to copy the Skia SDK exactly, so adding \u0060SetColor(SkColorF, SkColorSpace)\u0060 and \u0060GetColor(out, out)\u0060 but that feels shaky, non-CLR like.\r\n\r\nThat\u0027s why I proposed the \u0060PhysicalColor\u0060 struct so that the user can specify unambiguous source colors, just like a target surface also has a color space. \r\n\r\nAn extension method could be added to \u0060SkColorSpace\u0060 to make physical colors in that space.\r\n\r\nBut I understand this would deviate too much from the original API...\r\n",
+        "createdAt": "2020-04-19T08:59:46",
+        "reactions": []
+      },
+      {
+        "id": 616104505,
+        "author": "Gillibald",
+        "body": "setColor: https://github.com/google/skia/blob/master/include/core/SkPaint.h#L272\r\ngetColor: https://github.com/google/skia/blob/master/include/core/SkPaint.h#L244\r\n\r\nSo they store the color as \u0060SKColor4f\u0060 this should be matched in the binding casting from SKColor to SKColor4f will be possible but should give a warning because conversion is involved.",
+        "createdAt": "2020-04-19T11:02:42",
+        "reactions": []
+      },
+      {
+        "id": 616112067,
+        "author": "ziriax",
+        "body": "\u003E setColor: https://github.com/google/skia/blob/master/include/core/S\r\n\u003E So they store the color as \u0060SKColor4f\u0060 this should be matched in the binding casting from SKColor to SKColor4f will be possible but should give a warning because conversion is involved.\r\n\r\nSkColor holds 8-bit channels, so could be converted to SkColorF without any loss?\r\n\r\n\r\n",
+        "createdAt": "2020-04-19T11:40:44",
+        "reactions": []
+      },
+      {
+        "id": 616116496,
+        "author": "Gillibald",
+        "body": "SKColor to SKColor4f has no loss but SKColor4f to SKColor has a los. Internally it is stored as SKColor4f",
+        "createdAt": "2020-04-19T12:01:35",
+        "reactions": []
+      },
+      {
+        "id": 616192188,
+        "author": "mattleibow",
+        "body": "@Ziriax I see they don\u0027t actually have a \u0060getColor\u0060 that returns a colorspace. It is just used when setting. The colorspaces is just used for setting the color. You basically provide a \u0022base\u0022 color and a colorspace.\r\n\r\nhttps://github.com/google/skia/blob/chrome/m83/src/core/SkPaint.cpp#L116-L123",
+        "createdAt": "2020-04-19T17:39:10",
+        "reactions": []
+      },
+      {
+        "id": 616200766,
+        "author": "ziriax",
+        "body": "Ouch, indeed! My bad",
+        "createdAt": "2020-04-19T18:22:04",
+        "reactions": []
+      }
+    ]
+  }
 }

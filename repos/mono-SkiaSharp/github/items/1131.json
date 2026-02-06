@@ -14,5 +14,135 @@
   "updatedAt": "2022-08-19T06:02:50",
   "closedAt": "2020-02-08T18:38:09",
   "commentCount": 16,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:13.7405914Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 583397314,
+        "author": "Gillibald",
+        "body": "\u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 isn\u0027t supporting a font manager and therefore only fonts loaded by file or stream are working.",
+        "createdAt": "2020-02-07T13:51:22",
+        "reactions": []
+      },
+      {
+        "id": 583405363,
+        "author": "ziriax",
+        "body": "Okay, got it. But it would be very useful if at least something is logged, or an exception is thrown?",
+        "createdAt": "2020-02-07T14:12:57",
+        "reactions": []
+      },
+      {
+        "id": 583441772,
+        "author": "Gillibald",
+        "body": "It should probably called \u0060SkiaSharp.NativeAssets.Linux.NoFontManager\u0060 or \u0060SkiaSharp.NativeAssets.Linux.NoFontConfig\u0060",
+        "createdAt": "2020-02-07T15:07:37",
+        "reactions": []
+      },
+      {
+        "id": 583454545,
+        "author": "ziriax",
+        "body": "I\u0027m trying to get a better understanding. I\u0027m a veteran Windows developer, so I might make newbie mistakes on Linux ;-)\r\n\r\n- \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060: this comes with just a \u0060libskia\u0060 native library, with all libraries (libpng etc) linked in statically, without \u0060FontConfig\u0060? It can run on a system that hasn\u0027t any of the dependencies installed. Will it pickup \u0060FontConfig\u0060 when it is installed optionally?\r\n\r\n- \u0060SkiaSharp.NativeAssets.Linux\u0060: this also just comes with a \u0060libskia\u0060 native library, but expects all dependencies to be installed on the system? It requires \u0060FontConfig\u0060 to run?\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-02-07T15:31:57",
+        "reactions": []
+      },
+      {
+        "id": 583458725,
+        "author": "Gillibald",
+        "body": "\u0060SkiaSharp.NativeAssets.Linux\u0060 dynamically links fontconfig and \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 is built without any dependency on fontconfig and therefore has no font manager. It is just left out. ",
+        "createdAt": "2020-02-07T15:40:10",
+        "reactions": []
+      },
+      {
+        "id": 583458839,
+        "author": "mattleibow",
+        "body": "Text _should_ work, because it has the \u0022custom\u0022 font manager which loads fonts from the default directory:\r\n\r\n\u0060/usr/share/fonts/\u0060\r\n\r\n\u003E https://github.com/mono/skia/blob/xamarin-mobile-bindings/src/ports/SkFontMgr_custom_directory_factory.cpp",
+        "createdAt": "2020-02-07T15:40:23",
+        "reactions": []
+      },
+      {
+        "id": 583459791,
+        "author": "mattleibow",
+        "body": "This _should_ be included: https://github.com/google/skia/blob/chrome/m68/BUILD.gn#L395-L409\r\n\r\nBut, do you have any fonts installed? Are there any available in WSL?",
+        "createdAt": "2020-02-07T15:42:11",
+        "reactions": []
+      },
+      {
+        "id": 583459815,
+        "author": "Gillibald",
+        "body": "Okay so it has a font manager but has no default set. So we should try to set one. Probably just look for a common one. ",
+        "createdAt": "2020-02-07T15:42:13",
+        "reactions": []
+      },
+      {
+        "id": 583459937,
+        "author": "mattleibow",
+        "body": "Ah, yeah. Or the first one.",
+        "createdAt": "2020-02-07T15:42:27",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:12.376076Z"
+          }
+        ]
+      },
+      {
+        "id": 583530209,
+        "author": "Gillibald",
+        "body": "https://github.com/google/skia/blob/master/src/ports/SkFontMgr_custom.cpp#L153\r\n\r\nThe default should work if one of these fonts can be found. ",
+        "createdAt": "2020-02-07T18:00:50",
+        "reactions": []
+      },
+      {
+        "id": 583595374,
+        "author": "mattleibow",
+        "body": "Although there is this line that _should_ pick one: https://github.com/google/skia/blob/master/src/ports/SkFontMgr_custom.cpp#L173\r\n\r\n_Just trying to get me Docker and/or WSL working again..._\r\n\r\nCan we confirm that there is at least one font on the actual image? They may have removed if to save space and things.",
+        "createdAt": "2020-02-07T20:23:49",
+        "reactions": []
+      },
+      {
+        "id": 583640278,
+        "author": "mattleibow",
+        "body": "So I just tested on the \u0060mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim\u0060 Docker image, there are no fonts at all. \r\n\r\nSo how do we do this? You probably just want to copy your font files to the \u0060/usr/share/fonts/\u0060 directory.\r\n\r\nThis should fix it for you:\r\n\r\n\u0060\u0060\u0060dockerfile\r\n...\r\nCOPY --from=publish /app/publish/*.ttf /usr/share/fonts/\r\nCOPY --from=publish /app/publish .\r\n...\r\n\u0060\u0060\u0060\r\nIf you copy the files there, you can just do this:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar paint = new SKPaint {\r\n    Typeface = SKTypeface.FromFamilyName(\u0022Karla\u0022)\r\n};\r\n\u0060\u0060\u0060\r\n\r\nNo need for files and all that. Just use the name.\r\n\r\nYou will get one heartthrob of an image: \r\n\r\n![test_Unix](https://user-images.githubusercontent.com/1096616/74070162-fb07af00-4a08-11ea-87df-d9c58956366d.png)\r\n\r\n\u003E After battling a bit I looked at the source and realized something. Linux is case-sensitive. Yay. In my tests, I was using the TIMES.TTF file that I copied from Windows.\r\n\u003E\r\n\u003E Yay.\r\n\r\n",
+        "createdAt": "2020-02-07T22:16:21",
+        "reactions": [
+          {
+            "user": "HelenDevelopment",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:12.968957Z"
+          }
+        ]
+      },
+      {
+        "id": 583648696,
+        "author": "ziriax",
+        "body": "Amazing how quickly you guys got on top of this, thanks for all the info!\r\n\r\nInterestingly, all the default fonts are copyrighted and require licensing, unless these expired, not sure... \r\n\r\nWould be nice to include Roboto or some other free Google font as the default...\r\n\r\nBecause picking the first font would result in a different default one if others are added, that would be strange from a user\u0027s point of view IMHO.\r\n\r\nAnyway in our case we will never use the default font, I just wanted to report this behaviour, I was expecting an exception, error, or null default typeface.\r\n",
+        "createdAt": "2020-02-07T22:45:36",
+        "reactions": []
+      },
+      {
+        "id": 583655074,
+        "author": "Gillibald",
+        "body": "Returning nullptr for not found typefaces is by design. Not having any font is totally unexpected. But I think for the default we could throw an exception because that means something is wrong with the font manager.\r\n\r\nToo bad the font manager is defined at compile time. If we could somehow have a proxy font manager we could make this pluggable. So if one font manager implementation breaks we could have a fallback or even a managed one that is fully customizable. Crippled platforms wouldn\u0027t be an issue anymore.",
+        "createdAt": "2020-02-07T23:10:05",
+        "reactions": []
+      },
+      {
+        "id": 583764425,
+        "author": "mattleibow",
+        "body": "Yeah. Did you open an issue for that at all? I think you asked for this in the past. The font manager is a bit of work as there are a few overrides, but then there are all the supporting classes - such as the custom style set and custom typeface types. And then there is the big font host. This is either the FreeType (linux), DirectWrite (windows), CoreText (mac) and the deprecated GDI. Right now, the custom one only works on Linux as it uses the FreeType and some linux-y things.",
+        "createdAt": "2020-02-08T18:35:33",
+        "reactions": []
+      },
+      {
+        "id": 583764635,
+        "author": "mattleibow",
+        "body": "I am closing this issue as I believe the original issue is solved, it just needed some fonts, any fonts.",
+        "createdAt": "2020-02-08T18:38:07",
+        "reactions": []
+      }
+    ]
+  }
 }

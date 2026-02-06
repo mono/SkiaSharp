@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T06:02:20",
   "closedAt": "2020-06-10T02:29:14",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:08.8011053Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 602108223,
+        "author": "mattleibow",
+        "body": "You might not have the GTK# v2 installed. You can download it from https://www.mono-project.com/download/stable (the blue \u0022Download Gtk#\u0022 button). Or use this [direct link](https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi)\r\n\r\nAlso, you can just use the Gtk3 sample and everything is on NuGet and it works nicely with .NET Core.",
+        "createdAt": "2020-03-21T21:38:22",
+        "reactions": []
+      },
+      {
+        "id": 602144435,
+        "author": "sergeyDoroshenko",
+        "body": "I have it installed. Other samples I have work well. Gtk3 sample crashes the same way for me. Would any logs be helpful?",
+        "createdAt": "2020-03-22T03:58:38",
+        "reactions": []
+      },
+      {
+        "id": 602153225,
+        "author": "sergeyDoroshenko",
+        "body": "I guess I found why it didn\u0027t run. \r\n\u0060    \u003CPrefer32Bit\u003Efalse\u003C/Prefer32Bit\u003E\u0060 picks x64 platform, but according to the link you shared (https://www.mono-project.com/download/stable/) GTK# for x64 might be not available for Windows. \r\n\r\nAccording to the Gtk3 sample: Increasing GtkSharp to 3.22.25.56 in the project settings fixed the problem. Now it runs. ",
+        "createdAt": "2020-03-22T06:13:10",
+        "reactions": []
+      },
+      {
+        "id": 641682115,
+        "author": "mattleibow",
+        "body": "Closing this as the problems appear to be addressed. Please open a new issue if there are any further issues.",
+        "createdAt": "2020-06-10T02:29:14",
+        "reactions": []
+      }
+    ]
+  }
 }

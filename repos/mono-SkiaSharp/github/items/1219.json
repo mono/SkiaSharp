@@ -28,5 +28,212 @@
   "updatedAt": "2022-08-19T06:02:07",
   "closedAt": "2021-10-11T09:09:34",
   "commentCount": 11,
-  "reactionCount": 11
+  "reactionCount": 11,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:34.0880062Z",
+    "reactions": [
+      {
+        "user": "rogihee",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880129Z"
+      },
+      {
+        "user": "hawkerm",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880137Z"
+      },
+      {
+        "user": "GalaxiaGuy",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880141Z"
+      },
+      {
+        "user": "kestlerio",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880144Z"
+      },
+      {
+        "user": "FrankenApps",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880147Z"
+      },
+      {
+        "user": "eyupalemdar",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.088015Z"
+      },
+      {
+        "user": "tzengshinfu",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880153Z"
+      },
+      {
+        "user": "radderz",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880155Z"
+      },
+      {
+        "user": "RyoukoKonpaku",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880157Z"
+      },
+      {
+        "user": "beto-rodriguez",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.088016Z"
+      },
+      {
+        "user": "artemiusgreat",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:34.0880168Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 611157056,
+        "author": "RChrisCoble",
+        "body": "**Regarding:**\r\n\r\n_[FEATURE] Support SkiaSharp as a Blazor Extension (#1194)\r\nThis is what we are going to be doing here._\r\n\r\nWhen it\u0027s a **Blazor Extension** you can utilize the SkiaSharp API on the Client or Server Blazor deployment model.   I believe what you are doing here is akin to the forked Uno repo, allowing Skia/SkiaSharp to work properly when running under WASM in a client browser.  My specific feature request around making it a Blazor Extension was to also allow the API to run on the server with the rendering happening on the client.\r\n\r\nThis would most likely mean Skia (and maybe SkiaSharp) would need to be running in the Client Browser, with the SkiaSharp API calls being packaged up and marshaled over the Blazor SignalR connection when the Blazor Extension was running on the server.\r\n\r\nAn example of this was done with the HTML5 Canvas here:  [https://github.com/BlazorExtensions/Canvas](https://github.com/BlazorExtensions/Canvas)\r\n\r\nIf you look at that GitHub example, they wrote a wrapper around the HTML5 canvas API\u0027s which ended up doing one of the following:  (1) If the Blazor Extension was running in a client browser, issued the draw call directly or (2) If the Blazor Extension was running on the server, marshaled the call over the SignalR connection to the client to be executed.  \r\n\r\nThe Blazor server deployment model is valuable in situations where you can\u0027t deploy multiple MB\u0027s of DLL\u0027s down to the client just to draw anything.  (with that multiple MB\u0027s NOT being Skia/SkiaSharp, but the business logic using the SkiSharp API.)\r\n",
+        "createdAt": "2020-04-08T19:47:02",
+        "reactions": []
+      },
+      {
+        "id": 636628051,
+        "author": "hawkerm",
+        "body": "Any updates on this issue? I found this feed https://aka.ms/skiasharp-eap/index.json from another issue, assume that has the same bits called out above?\r\n\r\nIs there any sample project in the \u0060develop\u0060 branch that shows how to use the WASM bits yet?\r\n\r\nI\u0027m interested in testing out SkiaSharp for a Blazor WebAssembly Client App.\r\n\r\nThanks!",
+        "createdAt": "2020-06-01T05:54:17",
+        "reactions": [
+          {
+            "user": "EydenJones",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:32.1760972Z"
+          },
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:32.1760978Z"
+          },
+          {
+            "user": "eyupalemdar",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:32.1760979Z"
+          },
+          {
+            "user": "artemiusgreat",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:32.1760981Z"
+          }
+        ]
+      },
+      {
+        "id": 687715939,
+        "author": "michaldobrodenka",
+        "body": "Maybe stupid question, I haven\u0027t tried it yet - is also HarfBuzz supported on wasm?",
+        "createdAt": "2020-09-06T07:28:25",
+        "reactions": []
+      },
+      {
+        "id": 687737323,
+        "author": "mattleibow",
+        "body": "I think so... I don\u0027t think I have a build for that today, but was @Gillibald having a look... Need to check discord again on that one. But I recall that someone managed to get a build of it. ",
+        "createdAt": "2020-09-06T09:26:05",
+        "reactions": []
+      },
+      {
+        "id": 687739178,
+        "author": "Gillibald",
+        "body": "Y I could successfully build it for wasm. We had some linker issues that got resolved I guess. We still need the auto generated API bits to run it successfully. We are not far away. ",
+        "createdAt": "2020-09-06T09:34:38",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:32.8437262Z"
+          },
+          {
+            "user": "Detrav",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:32.8437267Z"
+          },
+          {
+            "user": "GeorgeS2019",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:32.8437268Z"
+          },
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:32.8437269Z"
+          }
+        ]
+      },
+      {
+        "id": 729908606,
+        "author": "mattleibow",
+        "body": "Another related issue for getting better WASM support: https://github.com/dotnet/runtime/issues/44636",
+        "createdAt": "2020-11-18T19:37:54",
+        "reactions": []
+      },
+      {
+        "id": 824570380,
+        "author": "nor0x",
+        "body": "Hi @Gillibald \uD83D\uDC4B\r\nis there an update about \u0060HarfBuzz\u0060 on \u0060WebAssembly\u0060? I\u0027m working on an UNO application and currently get \u0060System.DllNotFoundException: libHarfBuzzSharp\u0060",
+        "createdAt": "2021-04-22T06:17:02",
+        "reactions": []
+      },
+      {
+        "id": 824773377,
+        "author": "Gillibald",
+        "body": "The next release of SkiaSharp should contain all the native bits you need. There should be a preview out if I am not mistaken.",
+        "createdAt": "2021-04-22T11:53:03",
+        "reactions": []
+      },
+      {
+        "id": 824792073,
+        "author": "Gillibald",
+        "body": "https://www.nuget.org/packages/HarfBuzzSharp.NativeAssets.WebAssembly/2.6.1.7-preview.40",
+        "createdAt": "2021-04-22T12:22:51",
+        "reactions": []
+      },
+      {
+        "id": 824865224,
+        "author": "nor0x",
+        "body": "nice! thanks for info. I will try the \u0060HarfBuzzSharp.NativeAssets.WebAssembly\u0060 package",
+        "createdAt": "2021-04-22T13:57:25",
+        "reactions": []
+      },
+      {
+        "id": 939837587,
+        "author": "mattleibow",
+        "body": "This has just been merged in #1811 ",
+        "createdAt": "2021-10-11T09:09:28",
+        "reactions": [
+          {
+            "user": "davidwengier",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:34.037619Z"
+          },
+          {
+            "user": "nor0x",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:34.0376195Z"
+          },
+          {
+            "user": "beto-rodriguez",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:34.0376196Z"
+          },
+          {
+            "user": "hawkerm",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:34.0376198Z"
+          },
+          {
+            "user": "martinaxure",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:34.0376198Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -27,5 +27,174 @@
   "updatedAt": "2022-08-19T06:02:52",
   "closedAt": "2020-03-13T10:55:54",
   "commentCount": 16,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:07.9111048Z",
+    "reactions": [
+      {
+        "user": "martinjevans",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:07.9111113Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 583725044,
+        "author": "martinjevans",
+        "body": "I am getting the same kind of \u0060DllNotFoundException\u0060 when using \u0060FFImageLoading\u0060 and a \u0060SvgCachedImage\u0060 view:\r\n\u0060\u0060\u0060\r\n2020-02-08 10:21:32.917 MyApp.iOS[232:9057] Image loading failed: resource://MyApp.Resources.icon_calender.svg?assembly=MyApp,%20Version=1.0.0.0,%20Culture=neutral,%20PublicKeyToken=null;(size=56x0,type=SvgDataResolver)\r\nSystem.DllNotFoundException: @rpath/libSkiaSharp.framework/libSkiaSharp\r\n  at SkiaSharp.SKPictureRecorder..ctor () [0x00000] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at FFImageLoading.Svg.Platform.SKSvg.Load (System.Xml.Linq.XDocument xdoc, System.Threading.CancellationToken token) [0x0024c] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:172 \r\n  at FFImageLoading.Svg.Platform.SKSvg.Load (System.Xml.XmlReader reader, System.Threading.CancellationToken token) [0x00000] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:100 \r\n  at FFImageLoading.Svg.Platform.SKSvg.Load (System.IO.Stream stream, System.Threading.CancellationToken token) [0x00012] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:94 \r\n  at FFImageLoading.Svg.Pl\r\natform.SvgDataResolver.Resolve (System.String identifier, FFImageLoading.Work.TaskParameter parameters, System.Threading.CancellationToken token) [0x0019d] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SvgDataResolver.cs:232 \r\n  at FFImageLoading.DataResolvers.WrappedDataResolver.Resolve (System.String identifier, FFImageLoading.Work.TaskParameter parameters, System.Threading.CancellationToken token) [0x0004e] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Common\\DataResolvers\\WrappedDataResolver.cs:21 \r\n  at FFImageLoading.Work.ImageLoaderTask\u00603[TDecoderContainer,TImageContainer,TImageView].RunAsync () [0x0032d] in \u003Ca159011f32534c8eb0455a9cf0bad5a7\u003E:0 \r\n\u0060\u0060\u0060\r\n\r\n- Version: 1.68.1.1\r\n- IDE: Visual Studio Community 2019\r\n- Target device: iPhone 5",
+        "createdAt": "2020-02-08T10:43:40",
+        "reactions": []
+      },
+      {
+        "id": 583730465,
+        "author": "VitezslavImrysek",
+        "body": "This issue is caused by a bug (or intention) in iOS 13.3.1 and seems to only manifest with free developer accounts. There are more projects having the same issue, like Flutter: https://github.com/flutter/flutter/issues/49504",
+        "createdAt": "2020-02-08T12:03:16",
+        "reactions": [
+          {
+            "user": "timdumm",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:05.1044777Z"
+          }
+        ]
+      },
+      {
+        "id": 583765120,
+        "author": "mattleibow",
+        "body": "Ah, let me send this over to the iOS team. Maybe there is something they know.",
+        "createdAt": "2020-02-08T18:44:17",
+        "reactions": []
+      },
+      {
+        "id": 584341393,
+        "author": "mattleibow",
+        "body": "Hi @vtkachen111, is it possible to attach some sort of repro project? Also, let us know if you are using a free/paid Apple developer account (@VitezslavImrysek mentions that it may be related)\r\n\r\nHere are some guides for submitting an issue, which just guides you on how best to attach a repro/zip: https://github.com/mono/SkiaSharp/wiki/Submitting-Issues\r\n\r\nAlso, let us know what versions of Visual Studio and Xamarin.iOS you are using.",
+        "createdAt": "2020-02-10T20:36:14",
+        "reactions": []
+      },
+      {
+        "id": 584368416,
+        "author": "vtkachen111",
+        "body": "Hi @mattleibow. I am using a free Apple developer account, so that is probably why I am running into this issue. \r\nI am using VS 2019\r\nXamarin 4.4.0.991640\r\n\r\nI don\u0027t think attaching the project is necessary, All you need is to call any of the skiasharp constructors/methods from anywhere. Quite simple to reproduce.",
+        "createdAt": "2020-02-10T21:35:28",
+        "reactions": []
+      },
+      {
+        "id": 584382700,
+        "author": "VitezslavImrysek",
+        "body": "I didn\u0027t write this in my original comment, but I am also experiencing this issue with free developer account. And just like @vtkachen111 wrote, it is very simple to reproduce.",
+        "createdAt": "2020-02-10T22:10:52",
+        "reactions": []
+      },
+      {
+        "id": 584446042,
+        "author": "mattleibow",
+        "body": "There may be something with the target version of iOS... What is the version of Xamarin you are using? And, what is the target device iOS version?\r\n\r\nJust trying to see if there is some correlation as this does appear very weird. There should be nothing limiting things with a free account...",
+        "createdAt": "2020-02-11T01:50:39",
+        "reactions": []
+      },
+      {
+        "id": 584738942,
+        "author": "vtkachen111",
+        "body": "@mattleibow I tried different target versions all yield the same result. Xamarin version is Xamarin 4.4.0.991640.\r\n\r\nSo I got my hands on an older iphone for testing purposes, it\u0027s an iphone 6 with ios 12.4.5 (can\u0027t be updated further) and it works flawlessly. So it does seem like an ios 13.3 issue.\r\nMy app worked fine before I updated the ipad to 13.3",
+        "createdAt": "2020-02-11T17:01:46",
+        "reactions": []
+      },
+      {
+        "id": 584760752,
+        "author": "VitezslavImrysek",
+        "body": "Today I restored my iPad Pro from 13.3.1 to 13.3.0 and everything works just fine while my iPhone XS on 13.3.1 continues to show this issue.\r\nAll testing is done on the latest release versions of Visual Studio (16.4.4) and Visual Studio for Mac (8.4.4 \u002B Mono 6.6.0.155, Xamarin.iOS 13.10.0.17).\r\nChanging application iOS target version to 12.2, 13.2 has no effect. ",
+        "createdAt": "2020-02-11T17:41:04",
+        "reactions": []
+      },
+      {
+        "id": 585734784,
+        "author": "mattleibow",
+        "body": "Thanks to twitter, I found this: https://github.com/flutter/flutter/issues/49504#issuecomment-581554697\r\n\r\n\r\n\u003E This is an issue with iOS 13.3.1 on a real device, not the simulator.\r\n\u003E This should not impact apps that are already distributed to the App Store (meaning: your customers are not hitting this crash).\r\n\u003E\r\n\u003E This is not a SkiaSharp specific issue that can be worked around. **ALL** dynamic frameworks (not in the iOS SDK) are having this problem. See:\r\n\u003E  - https://github.com/flutter/flutter/issues/49504#issuecomment-580966141\r\n\u003E  - https://forums.developer.apple.com/message/404653\r\n\u003E - https://stackoverflow.com/questions/60015309/running-ios-apps-causes-runtime-error-for-frameworks-code-signature-invalid\r\n\u003E - https://github.com/Alamofire/Alamofire/issues/3051\r\n\u003E - https://github.com/mapbox/mapbox-gl-native-ios/issues/157\r\n\u003E\r\n\u003E You can:\r\n\u003E  - Use a non-Personal Team provisioning profile.\r\n\u003E  - Run on the 13.3.1 simulator.\r\n\u003E  - Test on a real iOS device running 13.3 or lower.\r\n\u003E\r\n\u003E We\u0027ve escalated to Apple (FB7562472) and will let you know if we hear anything.\r\n",
+        "createdAt": "2020-02-13T12:36:11",
+        "reactions": []
+      },
+      {
+        "id": 585834685,
+        "author": "mattleibow",
+        "body": "I managed to confirm this is the case. I also opened a bug with Apple (FB7577994) so we will just have to wait. Although, the iOS 13.4 beta also appears to have this issue. Either Apple is going for a pay-to-build mode, or it is a bug that I really hope gets fixed soon.",
+        "createdAt": "2020-02-13T16:06:16",
+        "reactions": [
+          {
+            "user": "VitezslavImrysek",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:06.8799665Z"
+          },
+          {
+            "user": "zapan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:06.8799673Z"
+          }
+        ]
+      },
+      {
+        "id": 589845610,
+        "author": "BartmanEH",
+        "body": "\u003E [...] iOS 13.4 beta also appears to have this issue. [...]\r\n[iOS 13.4 beta 2 (17E5233g)](https://developer.apple.com/news/releases/?id=02192020d) is out now--maybe someone could test it?\r\n\r\n\r\n",
+        "createdAt": "2020-02-21T21:37:00",
+        "reactions": []
+      },
+      {
+        "id": 589955765,
+        "author": "VitezslavImrysek",
+        "body": "\u003E \u003E [...] iOS 13.4 beta also appears to have this issue. [...]\r\n\u003E \u003E [iOS 13.4 beta 2 (17E5233g)](https://developer.apple.com/news/releases/?id=02192020d) is out now--maybe someone could test it?\r\n\r\nStill reproduces on iPadOS 13.4 Beta 2",
+        "createdAt": "2020-02-22T13:21:29",
+        "reactions": [
+          {
+            "user": "BartmanEH",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:07.2941558Z"
+          }
+        ]
+      },
+      {
+        "id": 592117859,
+        "author": "BartmanEH",
+        "body": "Appears to have been fixed in iOS 13.4 Beta 4\u03363. [Phew](https://github.com/Alamofire/Alamofire/issues/3051#issuecomment-591719052)!\r\n[edited typo thanks to @Vitezslavlmrysek]",
+        "createdAt": "2020-02-27T18:50:11",
+        "reactions": [
+          {
+            "user": "VitezslavImrysek",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:07.4835739Z"
+          }
+        ]
+      },
+      {
+        "id": 592194085,
+        "author": "VitezslavImrysek",
+        "body": "\u003E Appears to have been fixed in iOS 13.4 Beta 4. [Phew](https://github.com/Alamofire/Alamofire/issues/3051#issuecomment-591719052)!\r\n\r\nI can confirm this issue is indeed fixed with iPadOS 13.4 Beta 3 \uD83D\uDC4C (typo in previous post - beta 4 is not out yet).",
+        "createdAt": "2020-02-27T21:49:23",
+        "reactions": [
+          {
+            "user": "BartmanEH",
+            "content": "eyes",
+            "createdAt": "2026-02-06T14:11:07.6618066Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:11:07.6618072Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:07.6618073Z"
+          }
+        ]
+      },
+      {
+        "id": 598665418,
+        "author": "mattleibow",
+        "body": "Closing this as it appears that iOS 13.4 beta 3 fixes this issue.\r\n\r\nThanks for all the comments and testing folks!",
+        "createdAt": "2020-03-13T10:55:54",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -32,5 +32,127 @@
   "updatedAt": "2022-08-19T06:02:19",
   "closedAt": "2020-06-05T13:43:33",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:12.4741027Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 601758444,
+        "author": "mattleibow",
+        "body": "I noticed this too and I will make sure that something of equivalent support is available. I think I was working on something, but please send in a PR anyway so we can get the better version in, or even merge things.\r\n\r\nI was looking around, but have not yet started writing actual code on this exact feature yet. I have a few other ones which are more common that I am starting on. \r\n\r\nSo, a PR will be especially helpful, and I can make sure that we get features that are useful instead of just matching current support. In fact, if you have a nice implementation, then we can swap out the current one which is pretty rudimentary now and get better support for text today. ",
+        "createdAt": "2020-03-20T15:26:52",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:09.716757Z"
+          }
+        ]
+      },
+      {
+        "id": 603480789,
+        "author": "ziriax",
+        "body": "I have a first draft of a prototype, the friendly Google Skia folks already did all the hard work.\r\n\r\nSimple demo looks like:\r\n\r\n\u0060\u0060\u0060cs\r\n// Based on https://cs.chromium.org/chromium/src/third_party/skia/gm/drawatlas.cpp?q=draw_text_on_path\u0026sq=package:chromium\u0026g=0\u0026l=130\r\nvar canvas = context.Canvas;\r\n\r\nvar txtFace = GetTypeface(RobotoRegularFontUrl);\r\n\r\nusing var font = new SKFont(txtFace, 20)\r\n{\r\n\tHinting = SKFontHinting.Full,\r\n\tEmbeddedBitmaps = false,\r\n\tSubpixel = true,\r\n};\r\n\r\n// https://slipsum.com/\r\nvar text = @\u0022Now that we know who you are, I know who I am. I\u0027m not a mistake! \r\nIt all makes sense! In a comic, you know how you can tell who the arch-villain\u0027s going to be? \r\nHe\u0027s the exact opposite of the hero. And most times they\u0027re friends, like you and me! \r\nI should\u0027ve known way back when... You know why, David? Because of the kids. \r\nThey called me Mr Glass. Your bones don\u0027t break, mine do. That\u0027s clear. \r\nYour cells react to bacteria and viruses differently than mine. \r\nYou don\u0027t get sick, I do. That\u0027s also clear.But for some reason, you and I react the exact same way to water.\r\nWe swallow it too fast, we choke.We get some in our lungs,\r\nwe drown.However unreal it may seem, we are connected, you and I.\r\nWe\u0027re on the same curve, just on opposite ends.\u0022;\r\n\r\nvar glyphOffsets = font.GetGlyphOffsets(text);\r\n\r\nusing var path = SKPath.ParseSvgPathData(\r\n\tstring.Concat(\r\n\t\t\u0022M 64 128 c 128 -128 256 128 384 0\u0022,\r\n\t\t\u0022M 64 256 c 128 -128 256 128 384 0\u0022,\r\n\t\t\u0022M 64 384 c 128 -128 256 128 384 0\u0022)\r\n);\r\n\r\nusing var pathMeasure = new SKPathMeasure(path);\r\n\r\nvar glyphTransforms = new List\u003CSKRotationScaleMatrix\u003E();\r\n\r\n// HACK: This returns the length of the *current contour* of the path!\r\nfloat thisContourOffset = 0;\r\nfloat nextContourOffset = pathMeasure.Length;\r\n\r\nforeach (var glyphOffset in glyphOffsets)\r\n{\r\n\tvar distance = glyphOffset - thisContourOffset;\r\n\r\n\tif (distance \u003E= nextContourOffset)\r\n\t{\r\n\t\tif (!pathMeasure.NextContour())\r\n\t\t\tbreak;\r\n\r\n\t\tthisContourOffset = glyphOffset;\r\n\t\tnextContourOffset = pathMeasure.Length;\r\n\t\tdistance = glyphOffset - thisContourOffset;\r\n\t}\r\n\r\n\tif (pathMeasure.GetPositionAndTangent(distance, out var position, out var tangent))\r\n\t{\r\n\t\tvar matrix = new SKRotationScaleMatrix(tangent.X, tangent.Y, position.X, position.Y);\r\n\t\tglyphTransforms.Add(matrix);\r\n\t}\r\n}\r\n\r\n// TODO: Crashes when text is larger than glyphTransforms?\r\nusing var blob = SKTextBlob.CreateRotationScale(\r\n\ttext.Substring(0, glyphTransforms.Count),\r\n\tfont,\r\n\tglyphTransforms.ToArray());\r\n\r\nusing var paint = new SKPaint\r\n{\r\n\tIsAntialias = true,\r\n\tTextAlign = SKTextAlign.Center,\r\n};\r\n\r\nusing (context.Scope(SKColors.SkyBlue))\r\n{\r\n\tpaint.Color = SKColors.Black;\r\n\tpaint.Style = SKPaintStyle.Stroke;\r\n\tpaint.StrokeWidth = 2;\r\n\tcanvas.DrawPath(path, paint);\r\n\r\n\tpaint.Color = SKColors.White;\r\n\tpaint.Style = SKPaintStyle.Fill;\r\n\tcanvas.DrawText(blob, 0, 0, paint);\r\n}\r\n\u0060\u0060\u0060\r\n![Text_OnPath](https://user-images.githubusercontent.com/2389359/77472432-3244ea80-6e14-11ea-814c-3896ff0fd231.png)\r\n",
+        "createdAt": "2020-03-24T20:13:33",
+        "reactions": []
+      },
+      {
+        "id": 603679669,
+        "author": "mattleibow",
+        "body": "That is awesome! The code looks good too.\r\n\r\nWith the case of the string length causing a crash... It probably should be throwing an exception there. But, maybe instead of substring, convert the string to a span and the use  a slice to avoid allocations. In fact, the only issue I can see is that there may be too many arrays being used and allocated and copied. But, this can be done a bit later.\r\n\r\nLooking forward to this PR!",
+        "createdAt": "2020-03-25T07:15:07",
+        "reactions": []
+      },
+      {
+        "id": 603728360,
+        "author": "ziriax",
+        "body": "Thanks!\r\n\r\nYes, this is just a proof of concept, not for production. Indeed, the final version should be optimised! \r\n\r\nOne would also need a bit more control, I will look at the SVG specs, and see what can be borrowed from that.\r\n",
+        "createdAt": "2020-03-25T09:11:41",
+        "reactions": []
+      },
+      {
+        "id": 603788382,
+        "author": "ziriax",
+        "body": "After review, I still have a bit work to do. Some of Google\u0027s code already does this, but \r\n\r\n- by default, the glyphs should be positioned at their bottom-center anchor\r\n\r\n![image](https://user-images.githubusercontent.com/2389359/77530469-aec9de80-6e91-11ea-8967-671d2fb45adb.png)\r\n\r\nOne might also want to deal with [vertical text cultures](https://svgwg.org/svg2-draft/text.html#TextpathLayoutRules)\r\n\r\n![image](https://svgwg.org/svg2-draft/images/text/glyph-textpath.svg)\r\n\r\n- allow secondary-axis (vertical for left-to-right text) offsets\r\n\r\n![image](https://www.w3.org/TR/SVG11/images/text/toap02.png)\r\n\r\n- control on what side of the path the text should be placed:\r\n\r\n![image](https://svgwg.org/svg2-draft/images/text/text-path-side.svg)\r\n\r\n- relative placement on the path:\r\n\r\n![image](https://svgwg.org/svg2-draft/images/text/text-path-startoffset3.svg)\r\n\r\n- visual vs exact spacing (this is vague in the SVG spec)\r\n\r\nI don\u0027t think I will be able to support all of this, we\u0027ll see\r\n\r\n",
+        "createdAt": "2020-03-25T11:28:16",
+        "reactions": []
+      },
+      {
+        "id": 603997910,
+        "author": "mattleibow",
+        "body": "Some things might not be great since skia does not do any shaping. However, there might be a way to just expose the things needed so that user can first shape text with harfbuzz and pass the details to SkiaSharp. I think for the first versions, we just need to get the most basic implementation that ensures backwards compatibility. And, the current support now is very, very limited. So I think for a v1, we just need to get the basics in.\r\n\r\nHowever, I am not against a much better implementation at all. If you are working on things, continue as we do actually want a great drawing system. But, don\u0027t feel you need to get an implementation that is perfect before submitting a PR. Unlike skia, we do have the ability to release patches and previews more frequently.\r\n\r\nSo, my suggestion would be to get a good implementation in. We can merge and get feedback. At the same time, we can improve or re-work the implementation as we see. Eventually we will have that awesome implementation, but we will also have a useful implementation sooner.\r\n\r\nDoes that sort of make some sense?",
+        "createdAt": "2020-03-25T18:06:31",
+        "reactions": []
+      },
+      {
+        "id": 604014249,
+        "author": "ziriax",
+        "body": "Perfect sense, that agile approach generally works fine.",
+        "createdAt": "2020-03-25T18:36:47",
+        "reactions": []
+      },
+      {
+        "id": 604061442,
+        "author": "mattleibow",
+        "body": "Marking this as a bug-feature as it will be a bug without it, but it is a new feature for SkiaSharp. Sort of.",
+        "createdAt": "2020-03-25T20:13:18",
+        "reactions": []
+      },
+      {
+        "id": 604704593,
+        "author": "ziriax",
+        "body": "It seems that Google\u0027s original code even warped and clipped the glyph geometry...\r\n\r\nhttps://github.com/google/skia/blob/a62d03658621dc05db89d7aff99ac7702c821bdd/src/utils/SkTextOnPath.cpp\r\n\r\nI ported the code to C#, one with warping, the other without (like SVG). My first tests give identical results with the original code when using the warped variant, but since I don\u0027t have access to Skia internals that were using the original code (\u0060SKGlyphCache\u0060, ...), surely differences will exist.\r\n\r\nWork in progress. Now my customer doesn\u0027t need warped text, so I can\u0027t spend too much time on this (unless after hours of course ;-))\r\n\r\n\u0060\u0060\u0060CS\r\nusing System;\r\nusing System.Collections.Generic;\r\nusing System.Diagnostics;\r\nusing SkiaSharp;\r\n\r\nnamespace SkiaRenderTests\r\n{\r\n\tpublic static class SkiaTextExt\r\n\t{\r\n\t\tprivate static void MorphPoints(\r\n\t\t\tSpan\u003CSKPoint\u003E dst,\r\n\t\t\tSpan\u003CSKPoint\u003E src,\r\n\t\t\tint count,\r\n\t\t\tSKPathMeasure meas,\r\n\t\t\tin SKMatrix matrix)\r\n\t\t{\r\n\t\t\tfor (int i = 0; i \u003C count; i\u002B\u002B)\r\n\t\t\t{\r\n\t\t\t\tSKPoint s = matrix.MapPoint(src[i].X, src[i].Y);\r\n\r\n\t\t\t\tif (!meas.GetPositionAndTangent(s.X, out var p, out var t))\r\n\t\t\t\t{\r\n\t\t\t\t\t// set to 0 if the measure failed, so that we just set dst == pos\r\n\t\t\t\t\tt = SKPoint.Empty;\r\n\t\t\t\t}\r\n\r\n\t\t\t\t// y-offset the point in the direction of the normal vector on the path.\r\n\t\t\t\tdst[i] = new SKPoint(p.X - t.Y * s.Y, p.Y \u002B t.X * s.Y);\r\n\t\t\t}\r\n\t\t}\r\n\r\n\t\t/*  TODO\r\n\t\t Need differentially more subdivisions when the follow-path is curvy. Not sure how to\r\n\t\t determine that, but we need it. I guess a cheap answer is let the caller tell us,\r\n\t\t but that seems like a cop-out. Another answer is to get Rob Johnson to figure it out.\r\n\t\t */\r\n\t\tprivate static void MorphPath(SKPath dst, SKPath src, SKPathMeasure meas, in SKMatrix matrix)\r\n\t\t{\r\n\t\t\tusing var it = src.CreateIterator(false);\r\n\r\n\t\t\tSKPathVerb verb;\r\n\r\n\t\t\tvar srcP = new SKPoint[4];\r\n\t\t\tvar dstP = new SKPoint[4];\r\n\r\n\t\t\twhile ((verb = it.Next(srcP)) != SKPathVerb.Done)\r\n\t\t\t{\r\n\t\t\t\tswitch (verb)\r\n\t\t\t\t{\r\n\t\t\t\t\tcase SKPathVerb.Move:\r\n\t\t\t\t\t\tMorphPoints(dstP, srcP, 1, meas, matrix);\r\n\t\t\t\t\t\tdst.MoveTo(dstP[0]);\r\n\t\t\t\t\t\tbreak;\r\n\t\t\t\t\tcase SKPathVerb.Line:\r\n\t\t\t\t\t\t// turn lines into quads to look bendy\r\n\t\t\t\t\t\tsrcP[0].X = (srcP[0].X \u002B srcP[1].X) * 0.5f;\r\n\t\t\t\t\t\tsrcP[0].Y = (srcP[0].Y \u002B srcP[1].Y) * 0.5f;\r\n\t\t\t\t\t\tMorphPoints(dstP, srcP, 2, meas, matrix);\r\n\t\t\t\t\t\tdst.QuadTo(dstP[0], dstP[1]);\r\n\t\t\t\t\t\tbreak;\r\n\t\t\t\t\tcase SKPathVerb.Quad:\r\n\t\t\t\t\t\tMorphPoints(dstP, srcP.AsSpan().Slice(1, 2), 2, meas, matrix);\r\n\t\t\t\t\t\tdst.QuadTo(dstP[0], dstP[1]);\r\n\t\t\t\t\t\tbreak;\r\n\t\t\t\t\tcase SKPathVerb.Conic:\r\n\t\t\t\t\t\tMorphPoints(dstP, srcP.AsSpan().Slice(1, 2), 2, meas, matrix);\r\n\t\t\t\t\t\tdst.ConicTo(dstP[0], dstP[1], it.ConicWeight());\r\n\t\t\t\t\t\tbreak;\r\n\t\t\t\t\tcase SKPathVerb.Cubic:\r\n\t\t\t\t\t\tMorphPoints(dstP, srcP.AsSpan().Slice(1, 3), 3, meas, matrix);\r\n\t\t\t\t\t\tdst.CubicTo(dstP[0], dstP[1], dstP[2]);\r\n\t\t\t\t\t\tbreak;\r\n\t\t\t\t\tcase SKPathVerb.Close:\r\n\t\t\t\t\t\tdst.Close();\r\n\t\t\t\t\t\tbreak;\r\n\t\t\t\t\tdefault:\r\n\t\t\t\t\t\tDebug.Fail(\u0022unknown verb\u0022);\r\n\t\t\t\t\t\tbreak;\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t}\r\n\t\tpublic static SKPath CreateWarpedTextOnPath(\r\n\t\t\tthis SKPath path,\r\n\t\t\tSKFont font,\r\n\t\t\tstring text,\r\n\t\t\tSKTextAlign align = default,\r\n\t\t\tSKPoint offset = default)\r\n\t\t{\r\n\t\t\tvar warpedPath = new SKPath();\r\n\r\n\t\t\tvar glyphIds = font.GetGlyphs(text);\r\n\r\n\t\t\tif (glyphIds.Length == 0)\r\n\t\t\t\treturn warpedPath;\r\n\r\n\t\t\tvar glyphOffsets = font.GetGlyphOffsets(glyphIds);\r\n\t\t\tvar glyphWidths = font.GetGlyphWidths(glyphIds);\r\n\r\n\t\t\tvar textLength = glyphOffsets[glyphIds.Length - 1] \u002B glyphWidths[glyphIds.Length - 1];\r\n\r\n\t\t\tusing var pathMeasure = new SKPathMeasure(path);\r\n\r\n\t\t\tvar contourLength = pathMeasure.Length;\r\n\r\n\t\t\tvar startOffset = offset.X \u002B (contourLength - textLength) * (int)align / 2f;\r\n\r\n\t\t\tvar glyphPathCache = new Dictionary\u003Cushort, SKPath\u003E();\r\n\r\n\t\t\t// TODO: Deal with multiple contours?\r\n\t\t\tfor (var index = 0; index \u003C glyphOffsets.Length; index\u002B\u002B)\r\n\t\t\t{\r\n\t\t\t\tvar gw = glyphWidths[index];\r\n\t\t\t\tvar x0 = startOffset \u002B glyphOffsets[index];\r\n\t\t\t\tvar x1 = x0 \u002B gw;\r\n\r\n\t\t\t\tif (x1 \u003E= 0 \u0026\u0026 x0 \u003C= contourLength)\r\n\t\t\t\t{\r\n\t\t\t\t\tvar glyphId = glyphIds[index];\r\n\t\t\t\t\tif (!glyphPathCache.TryGetValue(glyphId, out var glyphPath))\r\n\t\t\t\t\t{\r\n\t\t\t\t\t\tglyphPath = font.GetPath(glyphId);\r\n\t\t\t\t\t\tglyphPathCache[glyphId] = glyphPath;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tvar transformation = SKMatrix.CreateTranslation(x0, offset.Y);\r\n\t\t\t\t\tMorphPath(warpedPath, glyphPath, pathMeasure, transformation);\r\n\t\t\t\t}\r\n\t\t\t}\r\n\r\n\t\t\treturn warpedPath;\r\n\t\t}\r\n\r\n\t\tpublic static SKTextBlob CreateTextBlobOnPath(\r\n\t            this SKPath path,\r\n                    SKFont font,\r\n                    string text,\r\n\t            SKTextAlign align = default,\r\n\t            SKPoint offset = default)\r\n\t\t{\r\n\t\t\tvar glyphIds = font.GetGlyphs(text);\r\n\r\n\t\t\tif (glyphIds.Length == 0)\r\n\t\t\t\treturn SKTextBlob.Create(text, font);\r\n\r\n\t\t\tvar glyphTransforms = new SKRotationScaleMatrix[glyphIds.Length];\r\n\t\t\tvar glyphOffsets = font.GetGlyphOffsets(glyphIds);\r\n\t\t\tvar glyphWidths = font.GetGlyphWidths(glyphIds);\r\n\r\n\t\t\tvar textLength = glyphOffsets[glyphIds.Length - 1] \u002B glyphWidths[glyphIds.Length - 1];\r\n\r\n\t\t\tusing var pathMeasure = new SKPathMeasure(path);\r\n\r\n\t\t\tvar contourLength = pathMeasure.Length;\r\n\r\n\t\t\tvar startOffset = offset.X \u002B (contourLength - textLength) * (int)align / 2f;\r\n\r\n\t\t\tvar firstGlyphIndex = 0;\r\n\t\t\tvar pathGlyphCount = 0;\r\n\r\n\t\t\t// TODO: Deal with multiple contours?\r\n\t\t\tfor (var index = 0; index \u003C glyphOffsets.Length; index\u002B\u002B)\r\n\t\t\t{\r\n\t\t\t\tvar halfWidth = glyphWidths[index] * 0.5f;\r\n\t\t\t\tvar pathOffset = startOffset \u002B glyphOffsets[index] \u002B halfWidth;\r\n\r\n\t\t\t\tif (pathOffset \u003E= 0 \u0026\u0026\r\n\t\t\t\t\t pathOffset \u003C contourLength \u0026\u0026\r\n\t\t\t\t\t pathMeasure.GetPositionAndTangent(pathOffset, out var position, out var tangent))\r\n\t\t\t\t{\r\n\t\t\t\t\tif (pathGlyphCount == 0)\r\n\t\t\t\t\t\tfirstGlyphIndex = index;\r\n\r\n\t\t\t\t\tvar tx = tangent.X;\r\n\t\t\t\t\tvar ty = tangent.Y;\r\n\r\n\t\t\t\t\tvar px = position.X;\r\n\t\t\t\t\tvar py = position.Y;\r\n\r\n\t\t\t\t\t// Horizontally offset the position using the tangent vector\r\n\t\t\t\t\tpx -= tx * halfWidth;\r\n\t\t\t\t\tpy -= ty * halfWidth;\r\n\r\n\t\t\t\t\t// Vertically offset the position using the normal vector  (-ty, tx)\r\n\t\t\t\t\tpx -= offset.Y * ty;\r\n\t\t\t\t\tpy \u002B= offset.Y * tx;\r\n\r\n\t\t\t\t\tvar matrix = new SKRotationScaleMatrix(tx, ty, px, py);\r\n\r\n\t\t\t\t\tglyphTransforms[pathGlyphCount\u002B\u002B] = matrix;\r\n\t\t\t\t}\r\n\t\t\t}\r\n\r\n\t\t\tif (pathGlyphCount == 0)\r\n\t\t\t\treturn SKTextBlob.Create(\u0022\u0022, font);\r\n\r\n\t\t\t// TODO: Can\u0027t pass glyph-identifiers here? \r\n\t\t\treturn SKTextBlob.CreateRotationScale(\r\n\t\t\t\ttext.AsSpan().Slice(firstGlyphIndex, pathGlyphCount),\r\n\t\t\t\tfont,\r\n\t\t\t\tglyphTransforms.AsSpan().Slice(0, pathGlyphCount)\r\n\t\t\t);\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\nOh and I just noticed now when reading, I forgot to cleanup the font-cache-dictionary...\r\n\r\nStrangely enough, my warped code also seems to perform clipping, but I don\u0027t understand why, since I don\u0027t clip anything...\r\n\r\nImage rendered with code above\r\n![Text_WarpedOnPath](https://user-images.githubusercontent.com/2389359/77699964-9eaa2000-6fb3-11ea-9c40-3564b02bb901.png)\r\n\r\nSkiaSharp 1.68 using original Google native code:\r\n![Text_OnPath_1_68](https://user-images.githubusercontent.com/2389359/77699948-9520b800-6fb3-11ea-8664-d275212e14d9.png)\r\n\r\n",
+        "createdAt": "2020-03-26T21:49:11",
+        "reactions": []
+      },
+      {
+        "id": 604745496,
+        "author": "Gillibald",
+        "body": "Consider accepting Spans of GlyphId, GlyphOffset and GlyphAdvance instead of working with strings. That way one could shape the text etc. You can still introduce overloads that accept a string. Your current approach assumes text has always a 1:1 mapping for Codepoints to GlyphId. Just my two cents. \uD83D\uDC4D",
+        "createdAt": "2020-03-26T23:56:11",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:11.6229051Z"
+          }
+        ]
+      },
+      {
+        "id": 604748488,
+        "author": "ziriax",
+        "body": "Certainly! These test method were just to see if it was possible to make a backwards compatible \u0060DrawTextOnPath\u0060 method in C# on top of the rest of the API.\r\n\r\nThat being said, I noticed that  SkiaSharp sometimes misses overloads that accept glyph IDs; I added comments in the code above where I encountered this. \r\n",
+        "createdAt": "2020-03-27T00:07:03",
+        "reactions": []
+      },
+      {
+        "id": 608449912,
+        "author": "mattleibow",
+        "body": "I have been trying to add the overloads that accept glyphs with the text operations. In the next version (v2) that is the default way, and then the string will just be convenience overloads.",
+        "createdAt": "2020-04-03T14:00:45",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:12.0290211Z"
+          }
+        ]
+      },
+      {
+        "id": 608504428,
+        "author": "ziriax",
+        "body": "@mattleibow Do you have any idea when v2 will be released, roughly, and what version of Skia it will be based on?",
+        "createdAt": "2020-04-03T15:24:53",
+        "reactions": []
+      },
+      {
+        "id": 608602537,
+        "author": "mattleibow",
+        "body": "I am hoping for a preview of v2 very soon. It was for this month, but a delay to fix some crashes took longer than expected. I might go stable in a month or so, still a bit more work. It is based on skia m80 - basically the latest at this time. Or rather, the latest used by stable Chrome.\r\n\r\nBut, take your time on this PR. Don\u0027t feel you have to get it done ASAP. I am planning on a preview soon, but that is also missing a few other things still. When this code is ready, then we merge and move closer to stable.",
+        "createdAt": "2020-04-03T18:49:19",
+        "reactions": []
+      }
+    ]
+  }
 }

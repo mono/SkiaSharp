@@ -15,5 +15,76 @@
   "updatedAt": "2022-08-19T09:01:41",
   "closedAt": "2021-08-06T00:09:17",
   "commentCount": 4,
-  "reactionCount": 6
+  "reactionCount": 6,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:19.8774998Z",
+    "reactions": [
+      {
+        "user": "Gillibald",
+        "content": "rocket",
+        "createdAt": "2026-02-06T14:10:19.8775035Z"
+      },
+      {
+        "user": "warappa",
+        "content": "rocket",
+        "createdAt": "2026-02-06T14:10:19.8775041Z"
+      },
+      {
+        "user": "he55",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:10:19.8775044Z"
+      },
+      {
+        "user": "he55",
+        "content": "rocket",
+        "createdAt": "2026-02-06T14:10:19.8775048Z"
+      },
+      {
+        "user": "FoggyFinder",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:10:19.8775125Z"
+      },
+      {
+        "user": "EmilAlipiev",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:10:19.8775129Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 629692839,
+        "author": "mattleibow",
+        "body": "I have been thinking about this and was all ready to go with some work, but then it occurred to me... Is this really worth it?\r\n\r\n**Pros:**\r\n - smaller NuGet package\r\n - faster download\r\n\r\n**Cons:**\r\n - extra work / maintenance (I have to create a .targets file for each package as only netcoreapp is automatic)\r\n - more packages\r\n - potential for mismatched package versions\r\n - potential for duplicated assets (macOS is both used on netcoreapp and xamarinmac)\r\n\r\nSize is just a download number and has no relevance to the final app, or any relevance at all.\r\n\r\nAny opinions?",
+        "createdAt": "2020-05-16T19:08:49",
+        "reactions": []
+      },
+      {
+        "id": 669779000,
+        "author": "acuntex",
+        "body": "The big Nuget Package might be a problem.\r\n\r\nBut normally this nuget package gets loaded on a developer machine with internet access and is cached.\r\n\r\nI would rather put energy in somehow reducing the size of the native libraries (e.g. libSkiaSharp.so). libSkiaSharp.so on Android is 6.6MB which is very much on a mobile device.\r\n\r\nIf only a small feature is used, you still have to include the whole library.",
+        "createdAt": "2020-08-06T08:06:07",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:19.406074Z"
+          }
+        ]
+      },
+      {
+        "id": 893907680,
+        "author": "mattleibow",
+        "body": "Finally reached a point where the package got too big to be viable. Now we got smaller packages with SkiaSharp at \u003C5MB (mostly xml docs) and \u003C15MB for each asset package. UWP is a bit bigger at 18MB because it has ANGLE adn watchOS has bitcode which is pretty huge at 25MB",
+        "createdAt": "2021-08-06T00:12:08",
+        "reactions": []
+      },
+      {
+        "id": 1039977662,
+        "author": "nesc58",
+        "body": "@mattleibow Thank you for this lib and splitting the native assets. But I have a few questions: \r\nWhat is the reason to reference specific native assets for netstandard? Anyone should have the choice which native assets are required.\r\nI think this is a kind of avoiding breaking changes. For people using SkiaSharp on linux there are breaking change because the extra references are required. So why not cleanup and remove not necessary references and let the user choose which assets are required?\r\n\r\nThe \u0060SkiaSharp\u0060 package for \u0060net462\u0060 can reference \u0060SkiaSharp.NativeAssets.Win32\u0060\r\nThe \u0060SkiaSharp\u0060 packages for \u0060netstandard1.3\u0060 and \u0060netstandard2.0\u0060 should not reference \u0060SkiaSharp.NativeAssets.Win32\u0060 and not \u0060SkiaSharp.NativeAssets.macOS\u0060.\r\n\r\n",
+        "createdAt": "2022-02-15T08:09:32",
+        "reactions": []
+      }
+    ]
+  }
 }

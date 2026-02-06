@@ -19,5 +19,67 @@
   "updatedAt": "2022-08-19T06:01:51",
   "closedAt": "2020-05-07T07:13:18",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:11.4776464Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 623024059,
+        "author": "mattleibow",
+        "body": "So, for Q1, the reason the codec needs to be copied is because that is more of a decode operation. I think I might need to deprecate the \u0060Pixels\u0060 property as that is sort of a lie... It is actually decoding the image right then and there. For each call. A total waste.\r\n\r\nThe better way would be to either call \u0060Pixels\u0060 once and pin the array, or actually not use it. The issue is that you have no control over how the pixels are decoded. It may come in a format that is not particularly useful. Or, it may be in a state that on every draw of the image, it has to be converted.\r\n\r\nFinally, \u0060SKImage.FromPixelCopy\u0060 makes a fresh copy of that data.\r\n\r\nA good way would be to just use GetPixels to a new image:\r\n\r\n\u0060\u0060\u0060cs\r\n// load\r\nusing var codec = SKCodec.Create(path);\r\nvar sourceInfo = codec.Info;\r\n\r\n// prepare new image\r\nvar destInfo = sourceInfo.WithColorType(SKImageInfo.PlatformColorType);\r\nusing var image = SKImage.Create(destInfo);\r\nusing var pixmap = image.PeekPixels();\r\nvar pixelAddress= pixmap.GetPixels();\r\n\r\n// read\r\nvar result = codec.GetPixels(destInfo, pixelAddress);\r\n\u0060\u0060\u0060\r\n\r\nFull code:\r\n\r\n\u0060\u0060\u0060cs\r\nusing var codec = SKCodec.Create(pathToImage);\r\n\r\n// get things\r\nvar origin = codec.EncodedOrigin;\r\nConsole.WriteLine(\u0022Origin: \u0022 \u002B origin);\r\nvar sourceInfo = codec.Info;\r\nConsole.WriteLine(\r\n\t$\u0022W: {sourceInfo.Width}, \u0022 \u002B\r\n\t$\u0022H: {sourceInfo.Height}, \u0022 \u002B\r\n\t$\u0022CT: {sourceInfo.ColorType}, \u0022 \u002B\r\n\t$\u0022AT: {sourceInfo.AlphaType}, \u0022 \u002B\r\n\t$\u0022CS.G{sourceInfo.ColorSpace.NamedGamma}, \u0022 \u002B\r\n\t$\u0022CS.T{sourceInfo.ColorSpace.Type}\u0022);\r\n\r\n// make sure the color type is the best for drawing\r\nvar destInfo = sourceInfo.WithColorType(SKImageInfo.PlatformColorType);\r\nConsole.WriteLine(\r\n\t$\u0022W: {destInfo.Width}, \u0022 \u002B\r\n\t$\u0022H: {destInfo.Height}, \u0022 \u002B\r\n\t$\u0022CT: {destInfo.ColorType}, \u0022 \u002B\r\n\t$\u0022AT: {destInfo.AlphaType}, \u0022 \u002B\r\n\t$\u0022CS.G{destInfo.ColorSpace.NamedGamma}, \u0022 \u002B\r\n\t$\u0022CS.T{destInfo.ColorSpace.Type}\u0022);\r\n\r\n// create the container image\r\nusing var image = SKImage.Create(destInfo);\r\n\r\n// get the pixmap so e can get the pointer to the memory location\r\nusing var pixmap = image.PeekPixels();\r\nvar pixelAddress= pixmap.GetPixels();\r\n\r\n// get pixels\r\nvar result = codec.GetPixels(destInfo, pixelAddress);\r\nConsole.WriteLine($\u0022Decode result: {result}\u0022);\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-05-02T22:31:17",
+        "reactions": []
+      },
+      {
+        "id": 623024438,
+        "author": "mattleibow",
+        "body": "For Q2, yes, \u0060SKImage\u0060 or \u0060SKSurface\u0060 is the new way to do things.\r\n\r\n\u0060SKImage\u0060 is used for the representation of an image that can be moved from CPU to/from GPU as a unit. Or loaded from a file.\r\n\r\n\u0060SKSurface\u0060 is used for drawing to.\r\n\r\nBut, all this doesn\u0027t _really_ matter. A surface can wrap an image. Both can wrap a chunk of random memory. But the typical use is images provide pixels _to_ draw, surfaces provide a place to draw _on_. For raster, this is all the same, but for GPU, this matters because you can\u0027t really draw on a GPU image.",
+        "createdAt": "2020-05-02T22:35:07",
+        "reactions": []
+      },
+      {
+        "id": 623086656,
+        "author": "AndersMad",
+        "body": "thanks for the detailed answer!..  \r\n\r\nQ1: in the \u0060var destInfo = sourceInfo.WithColorType(SKImageInfo.PlatformColorType);\u0060 should it have this too?\r\n\u0060\u0060\u0060\r\nif (destInfo.AlphaType == SKAlphaType.Unpremul)\r\n\tdestInfo.AlphaType = SKAlphaType.Premul;\r\ndestInfo.ColorSpace = (SKColorSpace)null;\r\n\u0060\u0060\u0060\r\n\r\nQ2: when I get the time will try measure the diff between:\r\n\u0060\u0060\u0060\r\nusing var outputRaster = new SKBitmap(info);\r\nusing var canvas = new SKCanvas(outputRaster));\r\n...\r\noutputRaster.Encode(...);\r\n\u0060\u0060\u0060\r\nvs:\r\n\u0060\u0060\u0060\r\nusing var surface = SKSurface.Create(info);\r\nusing var canvas = surface.Canvas);\r\n...\r\nusing var outputRaster = surface.Snapshot();\r\noutputRaster.Encode(...);\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-05-03T10:16:03",
+        "reactions": []
+      },
+      {
+        "id": 623088490,
+        "author": "AndersMad",
+        "body": "maybe this 3. way is the fastest/best way (mem wise)?\r\n\u0060\u0060\u0060\r\nusing var outputRaster = SKImage.Create(info);\r\nusing var pixmap = outputRaster.PeekPixels();\r\nusing var surface = SKSurface.Create(info, pixmap.GetPixels());\r\nusing var canvas = surface.Canvas;\r\n...\r\noutputRaster.Encode(...);\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-05-03T10:30:28",
+        "reactions": []
+      },
+      {
+        "id": 623131068,
+        "author": "mattleibow",
+        "body": "\u003E Q1: in the var destInfo = sourceInfo.WithColorType(SKImageInfo.PlatformColorType); should it have this too?\r\n\r\nProbably the alpha type, yes.\r\nThe colorspace, you might want to keep it. Might be related to color things like this: https://github.com/mono/SkiaSharp/issues/931#issuecomment-623129051\r\n\r\n\u003E maybe this 3. way is the fastest/best way (mem wise)?\r\n\r\nHmmm. That will work for raster, yes. Then you can draw directly on the surface. But, you need to make sure you use the correct color/alpha types for best results. The surface is more picky about the combos. But, the defaults usually work.\r\n\r\nBut, I believe all the implementations of \u0060Encode\u0060 go through the same \u0060SKPixmap.Encode\u0060 path. So, I would say the actual perf would be the object used. I think a \u0060SKSurface\u0060 is a bit more expensive that drawing directly to a bitmap with a canvas. \r\n\r\nBut, the bitmap can be used in place of an image if it is marked \u0060SKBitmap.SetImmutable()\u0060. This tells the drawing code to make an image when drawing, but don\u0027t copy.\r\n\r\nBut... again. This is 100% a perf test requirement. could/should/might means nothing. Test some options, and then let us all know.\r\n",
+        "createdAt": "2020-05-03T15:55:52",
+        "reactions": []
+      },
+      {
+        "id": 625074530,
+        "author": "AndersMad",
+        "body": "I tried two ways now - the diff seems to be negligible - however I\u0027m baffled about the reduced memory consumption using the image (sharpening) filter:\r\n\u0060\u0060\u0060\r\nv1.68.2 canvas via bitmap:\r\n\tdraw scaled bitmap:\r\n\t\tCPU: 17,555s / avg: 0,176s\r\n\t\tMEM: avg: 383 / min: 254 / max: 525\r\n\t.. with sharpening filter:\r\n\t\tCPU: 22,993s / avg: 0,230s\r\n\t\tMEM: avg: 256 / min: 178 / max: 415\r\n\r\nv1.68.2 canvas via image peek pixels and surface:\r\n\tdraw scaled bitmap:\r\n\t\tCPU: 16,932s / avg: 0,169s\r\n\t\tMEM: avg: 390 / min: 254 / max: 485\r\n\t.. with sharpening filter:\r\n\t\tCPU: 22,564s / avg: 0,226s\r\n\t\tMEM: avg: 254 / min: 194 / max: 449\r\n\t\t\r\nv1.68.2 canvas from surface with snapshot:\r\n\tdraw scaled bitmap:\r\n\t\tCPU: 17,070s / avg: 0,171s\r\n\t\tMEM: avg: 386 / min: 254 / max: 476\r\n\t.. with sharpening filter:\r\n\t\tCPU: 22,205s / avg: 0,222s\r\n\t\tMEM: avg: 259 / min: 186 / max: 440\r\n\u0060\u0060\u0060\r\nI did not test the alpha as I could not get it to work with LinqPad5",
+        "createdAt": "2020-05-07T07:13:18",
+        "reactions": []
+      },
+      {
+        "id": 625570887,
+        "author": "mattleibow",
+        "body": "Good to know the difference is negligible. It is a bit weird when drawing with the filter. What does the test source look like?",
+        "createdAt": "2020-05-08T00:56:03",
+        "reactions": []
+      },
+      {
+        "id": 625749203,
+        "author": "AndersMad",
+        "body": "ran this fragment in LINQPad 5:\r\n\u0060\u0060\u0060\r\nif (sharpen) {\r\n\tusing (var paint = new SKPaint { FilterQuality = SKFilterQuality.High, IsAntialias = false, }) {\r\n\t\tvar kernel = new[] { 0, -.1f, 0, -.1f, 1.4f, -.1f, 0, -.1f, 0, };\r\n\r\n\t\tusing (var cropRect = new SKImageFilter.CropRect(codec.Info.Rect, SKCropRectFlags.HasAll)) {\r\n\t\t\tpaint.ImageFilter = SKImageFilter.CreateMatrixConvolution(\r\n\t\t\t\t\tnew SKSizeI(3, 3), kernel, 1f, 0f, new SKPointI(1, 1),\r\n\t\t\t\t\tSKMatrixConvolutionTileMode.Clamp, false, cropRect: cropRect);\r\n\t\t\tcanvas.DrawImage(bmp, SKRect.Create(0, 0, w, h), SKRect.Create(0, 0, newWidth, newHeight), paint);\r\n\t\t}\r\n\t}\r\n}\r\nelse {\r\n\tcanvas.DrawImage(bmp, SKRect.Create(0, 0, w, h), SKRect.Create(0, 0, newWidth, newHeight));\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-05-08T10:24:37",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,79 @@
   "updatedAt": "2022-08-19T09:01:31",
   "closedAt": "2020-02-28T08:54:09",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:34.3784455Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 572109366,
+        "author": "mattleibow",
+        "body": "Just having a look at the snippet here, it might be because the alpha type is unpremultiplied. SKColor is premultiplied. It most likely some bug that is not converting and all that, but switching to Premul should fix this.\r\n\r\nI\u0027ll investigate this, and see exactly what is and should be happening.",
+        "createdAt": "2020-01-08T15:03:17",
+        "reactions": []
+      },
+      {
+        "id": 572167490,
+        "author": "N-Olbert",
+        "body": "@mattleibow Changing to Premul does not change the behaviour for me.\r\n\r\nThis is actually a bit weired. It\u0027s not that way for all colors. In fact it works as expected for most of the colors, and only a few - like the one i picked for this bug report - are changed when assigned.",
+        "createdAt": "2020-01-08T17:13:44",
+        "reactions": []
+      },
+      {
+        "id": 572562507,
+        "author": "mattleibow",
+        "body": "That is interesting. Thanks for this. I\u0027ll try a few things and see what\u0027s up.",
+        "createdAt": "2020-01-09T13:32:25",
+        "reactions": []
+      },
+      {
+        "id": 572574184,
+        "author": "Gillibald",
+        "body": "https://skia.org/user/api/SkBitmap_Reference#SkBitmap_getColor\r\n\r\nThis always returns an unpremultiplied color and potentially loses some information in the conversion. So I guess slightly different results are expected. ",
+        "createdAt": "2020-01-09T14:01:19",
+        "reactions": [
+          {
+            "user": "N-Olbert",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:33.5652091Z"
+          }
+        ]
+      },
+      {
+        "id": 572916660,
+        "author": "N-Olbert",
+        "body": "Thanks @Gillibald, this seems to be the explanation. I only looked up Microsoft\u0027s documentation, where this behaviour isn\u0027t mentioned (at least not for the \u0022Pixels\u0022-Property, for GetPixel it is in fact mentioned vaguely).\r\n\r\nI just came across this when trying to verify the image creation process with unit tests.\r\nIf anyone else dicovers this: If the pixels where actually installed to the bitmap, you can use the Bytes-Property, which, in this case, contains unmodified values.\r\nSample:\r\n\r\n\u0060\u0060\u0060\r\n            using (var bitmap = new SKBitmap(1, 1, SKColorType.Bgra8888, SKAlphaType.Premul))\r\n            {\r\n                var newPixels = new[] {(uint)new SKColor(208, 208, 129, 13)};\r\n                var h = GCHandle.Alloc(newPixels, GCHandleType.Pinned);\r\n                bitmap.InstallPixels(bitmap.Info, h.AddrOfPinnedObject(), bitmap.RowBytes, delegate { h.Free(); }, null);\r\n\r\n                Assert.AreNotEqual(bitmap.Pixels[0], newPixels[0]); //Still a missmatch\r\n                CollectionAssert.AreEqual(new byte[] {129, 208, 208, 13}, bitmap.Bytes); //This works\r\n            }\r\n\u0060\u0060\u0060\r\n\r\n@mattleibow Should I close this or do you still want to investigate something on this?\r\n\r\n",
+        "createdAt": "2020-01-10T07:55:40",
+        "reactions": []
+      },
+      {
+        "id": 573095981,
+        "author": "mattleibow",
+        "body": "Let\u0027s just leave it open for now. This will be the starting point for any docs hat need updating or anything along those lines. ",
+        "createdAt": "2020-01-10T16:03:24",
+        "reactions": [
+          {
+            "user": "N-Olbert",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:33.9567095Z"
+          }
+        ]
+      },
+      {
+        "id": 592248880,
+        "author": "mattleibow",
+        "body": "Just an FYI, this can also be demonstrated by converting from/to \u0060SKColor\u0060 and \u0060SKPMColor\u0060:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar a = new SKColor(208, 208, 129, 13);\r\nvar b = (SKPMColor)a;\r\nvar c = (SKColor)b;\r\n\r\n// expected: a == c\r\n// actual: a != c\r\n\u0060\u0060\u0060\r\n\r\nI believe this is purely do to loss of information, but I will have a closer look.",
+        "createdAt": "2020-02-28T00:30:58",
+        "reactions": []
+      },
+      {
+        "id": 592414056,
+        "author": "mattleibow",
+        "body": "Closing this as there is nothing we can do. This is just due to the way premultiplication works, and, well, division.\r\n\r\nUnpremultipled: A: 127, R: 255, G: 0, B: 0\r\nPremultiplied: A: 127, R: 127, G: 0, B: 0\r\n\r\nCalculations:\r\n\u0060\u0060\u0060\r\nPM = (byte)(UPM * Alpha / 255)\r\nUPM = (byte)(PM * 255 / Alpha)\r\n\u0060\u0060\u0060\r\n\r\nEG:\r\n\u0060\u0060\u0060\r\nRED: 208 \uD83D\uDE0A\r\n\r\nPM = (byte)(208 * 13 / 255)\r\n   = (byte)(10.60392156862745)\r\n   = 10\r\nUPM = (byte)(10 * 255 / 13)\r\n    = (byte)(196.1538461538462)\r\n    = 196\r\n\r\nRED: 196 \uD83D\uDE22\r\n\u0060\u0060\u0060\r\n\r\nOne thing that skia has is a color table so this results in slightly more accurate calculations. But, still, data loss.\r\n\r\nSee also: https://stackoverflow.com/questions/38966053/accurately-convert-from-straight-alpha-to-premultiplied-alpha-and-back",
+        "createdAt": "2020-02-28T08:52:21",
+        "reactions": []
+      }
+    ]
+  }
 }

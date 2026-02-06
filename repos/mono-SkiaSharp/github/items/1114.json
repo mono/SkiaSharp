@@ -15,5 +15,39 @@
   "updatedAt": "2022-08-19T09:01:17",
   "closedAt": "2020-01-30T17:21:33",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:51.5656444Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 579481145,
+        "author": "mattleibow",
+        "body": "I am not sure I understand this issue. I see that you say:\r\n\u003E The SkiaSharp.Views.Forms.WPF package needs to be installed in addition to the SkiaSharp.Views.Forms package in order to support Xamarin.Forms with WPF\r\n\r\nYes. To use WPF, you need the WPF packages?\r\n\r\nNow, if this is a WPF project that has GTK, then you _do_ need to install the GTK packages because the check is possible too dumb and just checks to see if \u0060gdk-sharp\u0060 is referenced.\r\n\r\nWhat you can also do is just tell the compiler to not check anything and set this in the .csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CShouldCheckPlatformPackages\u003EFalse\u003C/ShouldCheckPlatformPackages\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-01-28T22:07:07",
+        "reactions": []
+      },
+      {
+        "id": 579572474,
+        "author": "VladislavAntonyuk",
+        "body": "I created a WinForms app, not WPF. I use new capris format, but set target platform to net471.\r\n I added all gtksharp reference (unfortunately I have to use full path to dll).\r\nI have NetStandard library, which uses SkiaSharp Views Forms. \r\nThen I added package references to XF and SkiaSharp Vies Forms GTK to the main app \r\n\r\nAs a result the app is not built \r\n\r\nI will try ShouldCheckPlatformPackages",
+        "createdAt": "2020-01-29T03:10:36",
+        "reactions": []
+      },
+      {
+        "id": 579643956,
+        "author": "mattleibow",
+        "body": "If that does not work, you can always attach a zip or repo and then I\u0027ll see what I can do. Maybe some logic needs to change. ",
+        "createdAt": "2020-01-29T08:16:09",
+        "reactions": []
+      },
+      {
+        "id": 580361918,
+        "author": "VladislavAntonyuk",
+        "body": "\u0060\u0060\u0060\r\n\u003CShouldCheckPlatformPackages\u003EFalse\u003C/ShouldCheckPlatformPackages\u003E\r\n\u0060\u0060\u0060\r\nfixed the issue",
+        "createdAt": "2020-01-30T17:21:33",
+        "reactions": []
+      }
+    ]
+  }
 }

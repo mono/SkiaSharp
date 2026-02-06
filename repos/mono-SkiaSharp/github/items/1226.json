@@ -19,5 +19,51 @@
   "updatedAt": "2022-08-19T06:02:03",
   "closedAt": "2020-04-11T17:44:23",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:40.1395695Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 612233727,
+        "author": "mattleibow",
+        "body": "Thanks for the detailed bug and the simple repro! Made it easy get testing.\r\n\r\nThis is technically \u0022by design\u0022 because there is no way of the items knowing that they need to redraw. The case with Android is that it just works because the Android OS always redraws when a view moves or changes parent - when it is moved from the top of the list to the bottom. iOS is far less verbose and if nothing changes, then there is no need to redraw.\r\n\r\nThe simple way to do this is to just trigger a redraw on the binding change:\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003Cskia:SKCanvasView BindingContextChanged=\u0022SKCanvasViewIconListItem_BindingContextChanged\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060csharp\r\nprivate void SKCanvasViewIconListItem_BindingContextChanged(object sender, EventArgs e)\r\n{\r\n\t(sender as SKCanvasView)?.InvalidateSurface();\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-04-10T21:51:21",
+        "reactions": [
+          {
+            "user": "felipecastagnarodecarvalho",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:39.4582171Z"
+          }
+        ]
+      },
+      {
+        "id": 612421769,
+        "author": "zoli13",
+        "body": "Thanks the quick response, I had similar suspicion as well.\r\nI tried the workaround, and it solves the problem - it works fine. Maybe should be called only on iOS, to prevent multiple redraw on Android? Although, Android implementation can also change by time, so maybe better to remain on the safe side...\r\nAs this is by \u0022design\u0022, and there is a way to force the canvas to redraw, we should close?\r\n",
+        "createdAt": "2020-04-11T13:30:28",
+        "reactions": []
+      },
+      {
+        "id": 612474181,
+        "author": "mattleibow",
+        "body": "To make things easier for you, you can just create a custom control and use that:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic class AutoCanvasView : SKCanvasView\r\n{\r\n    protected override void OnBindingContextChanged()\r\n    {\r\n        base.OnBindingContextChanged();\r\n\r\n        InvalidateSurface();\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nOr you can look into creating a behaviour so that you can convert an event into a \u0060Command\u0060 that you can use in the view model: https://dotnetdevaddict.co.za/2017/07/13/turning-events-into-commands/\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003Cviews:SKCanvasView\u003E\r\n\u00A0\u00A0\u00A0\u00A0\u003Cviews:SKCanvasView.Behaviors\u003E\r\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u003Clocal:PaintSurfaceCommandBehavior Command=\u0022{Binding PaintCommand}\u0022 /\u003E\r\n\u00A0\u00A0\u00A0\u00A0\u003C/views:SKCanvasView.Behaviors\u003E\r\n\u003C/views:SKCanvasView\u003E\r\n\u0060\u0060\u0060\r\n\r\nYou can also combine the two to have a command and auto update:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic class AutoCanvasView : SKCanvasView\r\n{\r\n    protected override void OnBindingContextChanged()\r\n    {\r\n        base.OnBindingContextChanged();\r\n\r\n        InvalidateSurface();\r\n    }\r\n\r\n    public static readonly BindableProperty PaintCommandProperty =\r\n        BindableProperty.Create(\r\n            nameof(PaintCommand),\r\n            typeof(ICommand),\r\n            typeof(AutoCanvasView),\r\n            null,\r\n            propertyChanged: (b, o, n) =\u003E ((AutoCanvasView)b).InvalidateSurface());\r\n\r\n    public ICommand PaintCommand\r\n    {\r\n        get =\u003E (ICommand)GetValue(PaintCommandProperty);\r\n        set =\u003E SetValue(PaintCommandProperty, value);\r\n    }\r\n\r\n    protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n    {\r\n        base.OnPaintSurface(e);\r\n\r\n        if (PaintCommand?.CanExecute(e) == true)\r\n            PaintCommand.Execute(e);\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-04-11T17:40:23",
+        "reactions": [
+          {
+            "user": "eli191",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:39.8867419Z"
+          }
+        ]
+      },
+      {
+        "id": 612474879,
+        "author": "mattleibow",
+        "body": "Closing this as it is by design to not trigger a redraw when the binding context changes.",
+        "createdAt": "2020-04-11T17:43:58",
+        "reactions": []
+      }
+    ]
+  }
 }

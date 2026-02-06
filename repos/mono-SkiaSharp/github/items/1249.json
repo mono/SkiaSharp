@@ -19,5 +19,95 @@
   "updatedAt": "2022-08-19T06:01:55",
   "closedAt": "2020-05-08T17:52:05",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:55.9923524Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 619433474,
+        "author": "Spiralis",
+        "body": "@kekekeks (from the AvaloniaUI core team I believe) suggested that this could be an issue in SkiaSharp and that I should file an issue for it. \r\n\r\nHe didn\u0027t think that they could fix this by changing anything within Avalonia.\r\n ",
+        "createdAt": "2020-04-25T20:04:45",
+        "reactions": []
+      },
+      {
+        "id": 619433852,
+        "author": "kekekeks",
+        "body": "Relevant image loading code:\r\n\r\n\u0060\u0060\u0060cs\r\n        public ImmutableBitmap(Stream stream)\r\n        {\r\n            using (var skiaStream = new SKManagedStream(stream))\r\n            {\r\n                using (var data = SKData.Create(skiaStream))\r\n                    _image = SKImage.FromEncodedData(data);\r\n\r\n                if (_image == null)\r\n                {\r\n                    throw new ArgumentException(\u0022Unable to load bitmap from provided data\u0022);\r\n                }\r\n\r\n                PixelSize = new PixelSize(_image.Width, _image.Height);\r\n\r\n                // TODO: Skia doesn\u0027t have an API for DPI.\r\n                Dpi = new Vector(96, 96);\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\nhttps://github.com/AvaloniaUI/Avalonia/blob/9b73c1027b8bc03b8f2501d0fe4df8d311be7dac/src/Skia/Avalonia.Skia/ImmutableBitmap.cs#L20-L37",
+        "createdAt": "2020-04-25T20:08:05",
+        "reactions": []
+      },
+      {
+        "id": 619437903,
+        "author": "Gillibald",
+        "body": "Skia has a limit for bitmap sizes. Can\u0027t remember the actual value.",
+        "createdAt": "2020-04-25T20:40:47",
+        "reactions": []
+      },
+      {
+        "id": 619438105,
+        "author": "Gillibald",
+        "body": "https://groups.google.com/forum/m/#!topic/skia-discuss/886WuVcQUGo",
+        "createdAt": "2020-04-25T20:42:49",
+        "reactions": []
+      },
+      {
+        "id": 619448817,
+        "author": "Spiralis",
+        "body": "Why does it have this limitation, by the way? \r\n\r\nI can make them multiple images and create new Image controls to handle each, but I would have to handle scaling myself. Which is a pity when the single image control handles this nicely. I am not even sure how to stack them and scale them, so that will mean a lot of additional work.\r\n\r\nDoes this btw mean that any Avalonia \u003CImage\u003E control will not be able to handle images larger than 32Kx32K?\r\n\r\nFinally, why the 32Kx32K limitations? Would it not make sense if the limitation was by the multiplied total, allowing for rectangles to go beyond 32K in one direction? Or is this related to some hardware specific graphics card limitations?",
+        "createdAt": "2020-04-25T22:27:01",
+        "reactions": []
+      },
+      {
+        "id": 619478288,
+        "author": "mattleibow",
+        "body": "@Spiralis check out the link from @Gillibald for more info. It also has some info on drawing tiles, which may be something that a control suite can handle for you.\r\n\r\nThe issue might be loading this image to process... I\u0027ll see if I can whip up some demo code that makes it possible to load infinity without breaking... \u0060SKCodec\u0060 hopefully supports reading chunks of pixels even if the full image can\u0027t be decoded in one go. ",
+        "createdAt": "2020-04-26T04:09:33",
+        "reactions": []
+      },
+      {
+        "id": 619493567,
+        "author": "mattleibow",
+        "body": "Duplicate of #648",
+        "createdAt": "2020-04-26T06:38:26",
+        "reactions": []
+      },
+      {
+        "id": 619535116,
+        "author": "mattleibow",
+        "body": "Just so that we know, even macOS can\u0027t open it. The other one is fine, just the super huge one is broken. Windows is good.\r\n\r\n\u003Cimg width=\u0022431\u0022 alt=\u0022Screenshot 2020-04-26 at 13 36 23\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/80306325-ee525600-87c2-11ea-8044-b5aa91674bd6.png\u0022\u003E\r\n",
+        "createdAt": "2020-04-26T11:37:13",
+        "reactions": []
+      },
+      {
+        "id": 619540339,
+        "author": "Gillibald",
+        "body": "It is just wrong having a bitmap that is that big. Think about some tiling mechanism and load your pixel data on-demand in chunks.",
+        "createdAt": "2020-04-26T12:15:42",
+        "reactions": []
+      },
+      {
+        "id": 619547119,
+        "author": "mattleibow",
+        "body": "Yeah. This is going to explode your computer 2M x 2M pixels is like 4 trillion pixels - each with 32 bits of data. A HUGE amount of data to load into memory. 128 trillion bits, 16 trillion bytes, 2 TB or something. That is not going to load.",
+        "createdAt": "2020-04-26T13:09:21",
+        "reactions": []
+      },
+      {
+        "id": 619554255,
+        "author": "mattleibow",
+        "body": "Just saw this about .bmp files: https://github.com/google/skia/blob/master/src/codec/SkBmpCodec.cpp#L286-L290\r\n\r\n\u003E \u0060\u0060\u0060cpp\r\n\u003E // Arbitrary maximum. Matches Chromium.\r\n\u003E constexpr int kMaxDim = 1 \u003C\u003C 16;\r\n\u003E if (width \u003C= 0 || height \u003C= 0 || width \u003E= kMaxDim || height \u003E= kMaxDim) {\r\n\u003E     SkCodecPrintf(\u0022Error: invalid bitmap dimensions.\\n\u0022);\r\n\u003E     return kInvalidInput;\r\n\u003E }\r\n\u003E\u0060\u0060\u0060\r\n\r\nThis means I can\u0027t even instantiate the codec to load tiles of the bitmap... Let me try png... \uD83E\uDD1E \r\n\r\n**EDIT**\r\n\r\nI can\u0027t even save that file with Paint or Paint.NET... I can\u0027t even load it with GIMP or other software. \r\n\r\n**EDIT 2**\r\n\r\nI just tried WPF and it just breaks with random yellow stripes.",
+        "createdAt": "2020-04-26T13:59:02",
+        "reactions": []
+      },
+      {
+        "id": 625938191,
+        "author": "Spiralis",
+        "body": "Yeah. I have changed it to do chunks at a time. I used it to create a \u0022heatmap\u0022 that I then scaled down. Problem was that each line needed to be represented. So, now I read a given number of lines, create the image, scale it down, and then processes the next chunk, and scales that etc. Then, at then end each of these images are tiled, but each of them are also scaled down. Because, the number of them is dynamic and have to handle any number of files/lines that I analyze. Which means that, if the number gets really large, I\u0027d even need to do another pass on the generated images, combining a number of them and scaling again...\r\n\r\nBut, this surely can be closed,I think. I have solved it for my case at least.",
+        "createdAt": "2020-05-08T17:52:05",
+        "reactions": []
+      }
+    ]
+  }
 }

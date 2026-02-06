@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T09:01:29",
   "closedAt": "2020-01-10T16:08:20",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:37.2118499Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 572736907,
+        "author": "Gillibald",
+        "body": "https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKPaint.cs#L486 is your friend. SKTextBlob is the low level component to store a run of glyphs and only works with SKTextEncoding.GlyphId",
+        "createdAt": "2020-01-09T20:17:52",
+        "reactions": []
+      },
+      {
+        "id": 572738194,
+        "author": "Gillibald",
+        "body": "I think https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKTextBlob.cs#L53 throws underneath when something goes wrong. ",
+        "createdAt": "2020-01-09T20:21:39",
+        "reactions": []
+      },
+      {
+        "id": 573097941,
+        "author": "mattleibow",
+        "body": "As @Gillibald says, the text blobs are lower level that works with individual glyphs rather than characters as we know it.",
+        "createdAt": "2020-01-10T16:08:20",
+        "reactions": []
+      },
+      {
+        "id": 588345553,
+        "author": "ziriax",
+        "body": "I\u0027m also having a \u0060NullReferenceException\u0060, but I\u0027m using glyph-ids as returned from \u0060SKPaint\u0060.\r\n\r\nI\u0027m using preview 27.\r\n\r\nThe stack trace is:\r\n\u0060\u0060\u0060\r\n  at System.Buffer.Memmove(Byte\u0026 dest, Byte\u0026 src, UInt64 len)\r\n   at System.Buffer.Memmove[T](T\u0026 destination, T\u0026 source, UInt64 elementCount)\r\n   at System.ReadOnlySpan\u00601.CopyTo(Span\u00601 destination)\r\n   at SkiaSharp.SKRunBuffer.SetGlyphs(ReadOnlySpan\u00601 glyphs)\r\n   at SkiaSharp.SKTextBlobBuilder.AddHorizontalRun(SKPaint font, Single y, ReadOnlySpan\u00601 glyphs, ReadOnlySpan\u00601 positions, ReadOnlySpan\u00601 text, ReadOnlySpan\u00601 clusters, Nullable\u00601 bounds)\r\n   at SkiaSharp.SKTextBlobBuilder.AddHorizontalRun(SKPaint font, Single y, UInt16[] glyphs, Single[] positions)\r\n   at SkiaRenderTests.Program.PositionedGlyphRun(RenderTestContext context) in C:\\repos\\ExpressDev\\Source\\Research\\SkiaRenderTests\\SkiaRenderTests\\TestText.cs:line 191\r\n\u0060\u0060\u0060\r\n\r\nMy code is just:\r\n\r\n\u0060\u0060\u0060\r\nvar glyphIds = textPaint.GetGlyphs(\u0022X\u0022);\r\nvar glyphXs = new float[]{0};\r\nusing var builder = new SKTextBlobBuilder();\r\nbuilder.AddHorizontalRun(textPaint, 0, glyphIds, glyphXs);\r\n\u0060\u0060\u0060\r\n\r\nShould I make a new issue for this? I need to manually position glyphs, I don\u0027t find another API for this.\r\n",
+        "createdAt": "2020-02-19T17:34:31",
+        "reactions": []
+      },
+      {
+        "id": 589613371,
+        "author": "mattleibow",
+        "body": "Thanks for opening the issue, I got a fix building that make life much esier.",
+        "createdAt": "2020-02-21T11:23:01",
+        "reactions": []
+      }
+    ]
+  }
 }

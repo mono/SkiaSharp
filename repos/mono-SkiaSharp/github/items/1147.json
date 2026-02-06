@@ -19,5 +19,93 @@
   "updatedAt": "2022-08-19T06:02:42",
   "closedAt": "2020-06-11T00:17:32",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:33.7738955Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 586442882,
+        "author": "mattleibow",
+        "body": "You could use the ratio... formula:\r\n\r\n\u0060\u0060\u0060\r\npoints = pixels * 72 / 96\r\n\u0060\u0060\u0060\r\n\r\nwhere 96 is the pixels per inch on a 100% DPI\r\n",
+        "createdAt": "2020-02-14T19:38:06",
+        "reactions": []
+      },
+      {
+        "id": 587421201,
+        "author": "ziriax",
+        "body": "I actually think the API documentation is wrong, at least that\u0027s the information I got from the [Skia mailing list](https://groups.google.com/d/msg/skia-discuss/Rk9nkPFBmk0/nBZFHIdlBgAJ)\r\n\r\nThe \u0060SkPaint.textSize\u0060 is actually the height, **in pixels**, that a glyph with height \u00601 em\u0060 would get when rendered on the canvas (length #13 in this image) ![90e9dea4](https://user-images.githubusercontent.com/2389359/74731580-87f00b00-5248-11ea-93c7-0e949a7c8467.gif)\r\n\r\n**_The documentation incorrectly states \u0060SkPaint.TextSize\u0060 is the height in points._**\r\n\r\nTo verify this, I made a [test program](https://github.com/smartphoto-group/skia-text-size/blob/master/SkiaTextSize/Program.cs) that uses this [font from the Google Skia repo](https://github.com/google/skia/raw/master/resources/fonts/Em.ttf) that has glyphs designed to have a height of 1 em units.\r\n\r\nHere\u0027s the output of the program, the \u0060SkPaint.TextSize\u0060 is 64 pixels, as is the height of the rectangle.\r\n\r\n![output](https://user-images.githubusercontent.com/2389359/74731336-13b56780-5248-11ea-9ca1-902b78456ae2.png)\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-02-18T11:43:45",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:32.5305543Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:32.5305548Z"
+          },
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:32.530555Z"
+          },
+          {
+            "user": "last-partizan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:32.5305551Z"
+          },
+          {
+            "user": "91378246",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:11:32.5305552Z"
+          }
+        ]
+      },
+      {
+        "id": 587988291,
+        "author": "mattleibow",
+        "body": "Good to know. Is this our docs that are wrong? I was not able to find any references to points with regards to text.",
+        "createdAt": "2020-02-19T01:26:45",
+        "reactions": []
+      },
+      {
+        "id": 588066703,
+        "author": "ziriax",
+        "body": "The pleasure is all mine, SkiaSharp rocks!\r\n\r\nOnly the Skia docs are wrong it seems, but the SkiaSharp doc is so brief that it is hard to understand the meaning :-)\r\n\r\n\u0060Gets or sets the text size\u0060 is not that useful for most users I guess? IMHO \u0060size\u0060 could refer to width, height, line height, em height, etc... ",
+        "createdAt": "2020-02-19T07:01:50",
+        "reactions": []
+      },
+      {
+        "id": 589618191,
+        "author": "mattleibow",
+        "body": "Ah, yes. Heh, we need to improve that...\r\n\r\nWould you like to open a PR ;)\r\n\r\nhttps://github.com/mono/SkiaSharp-API-docs/blob/57ae4a903e9cba1627d0a7362d359a3d6ede80a9/SkiaSharpAPI/SkiaSharp/SKPaint.xml#L2987",
+        "createdAt": "2020-02-21T11:38:37",
+        "reactions": []
+      },
+      {
+        "id": 589753189,
+        "author": "ziriax",
+        "body": "Sure! ",
+        "createdAt": "2020-02-21T17:28:45",
+        "reactions": []
+      },
+      {
+        "id": 642332174,
+        "author": "mattleibow",
+        "body": "Fixed the docs.",
+        "createdAt": "2020-06-11T00:17:32",
+        "reactions": []
+      },
+      {
+        "id": 757537583,
+        "author": "robloo",
+        "body": "I discovered this issue today and went to the docs wondering if text size used points or pixels. I don\u0027t think the docs were updated:\r\n\r\nhttps://docs.microsoft.com/en-us/dotnet/api/skiasharp.skpaint.textsize?view=skiasharp-1.68.2\r\n\r\nAdditionally, SKFont (where I\u0027m setting this) isn\u0027t documented at all.",
+        "createdAt": "2021-01-10T20:20:47",
+        "reactions": []
+      }
+    ]
+  }
 }

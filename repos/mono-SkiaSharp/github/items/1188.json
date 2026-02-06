@@ -15,5 +15,140 @@
   "updatedAt": "2022-08-19T06:02:15",
   "closedAt": "2020-04-20T06:52:07",
   "commentCount": 15,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:19.9350679Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 603892620,
+        "author": "mattleibow",
+        "body": "With this crash, are you using the \u0060ToTextureImage\u0060? If so, does it still crash without it?\r\n\r\nAlso, are you running the updates to the SkiaSharp.Views package? That is where the bug was.\r\n\r\nFinally, did you clean and rebuild? Sometimes the old assemblies are used. But I am assuming that you did and this is more for the native binaries. But, maybe straws need to be clutched earlier on? :)",
+        "createdAt": "2020-03-25T15:05:00",
+        "reactions": []
+      },
+      {
+        "id": 603924041,
+        "author": "nor0x",
+        "body": "i\u0027m not using \u0060ToTextureImage\u0060 in my current tests. i\u0027m drawing some shapes (rectangles, polygons, circles,...) which can be dragged and scaled. i cannot share the project source with the public though.\r\n\u0060SkiaSharp\u0060 and \u0060SkiaSharp.Views\u0060 are both on version \u00601.68.2-preview.45\u0060",
+        "createdAt": "2020-03-25T15:58:35",
+        "reactions": []
+      },
+      {
+        "id": 604063932,
+        "author": "mattleibow",
+        "body": "I bet it is related to #1137 which is still the root cause of #1121. Something is being disposed incorrectly. And this happens with the GL bits which is usually with more threads. So, I am looking at that still. I worked around the main crash in #1180, but the underlying issue is still there. I believe I have a repro case as well.",
+        "createdAt": "2020-03-25T20:18:08",
+        "reactions": []
+      },
+      {
+        "id": 604319465,
+        "author": "nor0x",
+        "body": "thanks for your hard work. i\u0027m happy to share more details and code in a private session because it\u0027s a big and closed source project i\u0027m working on right now.",
+        "createdAt": "2020-03-26T09:22:46",
+        "reactions": []
+      },
+      {
+        "id": 604369054,
+        "author": "mattleibow",
+        "body": "Awesome, thanks. Let me see what I can do with what I have right now and then if that doesn\u0027t work we can talk about your code.",
+        "createdAt": "2020-03-26T11:10:17",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:12:17.8354835Z"
+          }
+        ]
+      },
+      {
+        "id": 605720449,
+        "author": "mattleibow",
+        "body": "I think I found the cause and fix of the issue. It was due to concurrency with the construction and destruction of objects with the same native handle. As soon as PR #1200 is complete, then I\u0027ll push to the preview feed for testing.",
+        "createdAt": "2020-03-29T23:45:18",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:18.0452385Z"
+          }
+        ]
+      },
+      {
+        "id": 605929277,
+        "author": "nor0x",
+        "body": "sounds great! thanks for the fix :-) ",
+        "createdAt": "2020-03-30T10:53:12",
+        "reactions": []
+      },
+      {
+        "id": 607452535,
+        "author": "mattleibow",
+        "body": "@nor0x I have pushed what I think is now a good version to the preview feed: **https://aka.ms/skiasharp-eap/index.json**\r\nCheck out the PR version: **1.68.2-pr.1200.20**\r\n\r\nLet me know how it goes.",
+        "createdAt": "2020-04-01T19:42:13",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:18.4789788Z"
+          }
+        ]
+      },
+      {
+        "id": 608433516,
+        "author": "mattleibow",
+        "body": "Hey folks, it has been a long time coming and thanks to all the folks with your repros, samples and stack traces I think we have finally managed to fix those pesky crashes - at least the ones we know about. I have just pushed **1.68.2-preview.50** to NuGet so let me know if this fixes all the crashes you have ever had \uD83D\uDE04 ",
+        "createdAt": "2020-04-03T13:28:28",
+        "reactions": []
+      },
+      {
+        "id": 608584251,
+        "author": "nor0x",
+        "body": "thanks for the preview build! works great for me \uD83C\uDF89",
+        "createdAt": "2020-04-03T18:06:41",
+        "reactions": []
+      },
+      {
+        "id": 608607657,
+        "author": "mattleibow",
+        "body": "All good? Awesome!",
+        "createdAt": "2020-04-03T19:01:57",
+        "reactions": []
+      },
+      {
+        "id": 609010672,
+        "author": "nor0x",
+        "body": "Oh no, too early. In my first quick tests everything was fine, but now after more intense testing i\u0027m experiencing random native crashes / freezes again. I really don\u0027t wanted to reopen this \uD83D\uDE48 @mattleibow \r\n\r\nnot sure if it helps, but if if i go back to preview .43 these crashes seems to happen less often \uD83E\uDD37\u200D\u2642\uFE0F\r\n\r\n\u0060\u0060\u0060\r\n=================================================================\r\n\tNative Crash Reporting\r\n=================================================================\r\nGot a SIGSEGV while executing native code. This usually indicates\r\na fatal error in the mono runtime or one of the native libraries \r\nused by your application.\r\n=================================================================\r\n\r\n=================================================================\r\n\tNative stacktrace:\r\n=================================================================\r\n\t0x10f31fbd8 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_dump_native_crash_info\r\n\t0x10f313595 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_handle_native_crash\r\n\t0x10f629023 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : altstack_handle_and_restore.cold.1\r\n\t0x10f290c5c - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : altstack_handle_and_restore\r\n\t0x1102f7465 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MonoBundle/libSkiaSharp.dylib : gr_backendrendertarget_get_gl_framebufferinfo\r\n\t0x14e818c63 - Unknown\r\n\t0x14e818a5b - Unknown\r\n\t0x14e817563 - Unknown\r\n\t0x14e80bc53 - Unknown\r\n\t0x14e7f7c63 - Unknown\r\n\t0x14e80aa44 - Unknown\r\n\t0x14e80a918 - Unknown\r\n\t0x14e80967d - Unknown\r\n\t0x14e8087fb - Unknown\r\n\t0x14e808a0e - Unknown\r\n\t0x10f32a09e - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_jit_runtime_invoke\r\n\t0x10f45c1c8 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_runtime_invoke_checked\r\n\t0x10f460b4e - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_runtime_invoke\r\n\t0x10f1e2397 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : xamarin_invoke_trampoline\r\n\t0x10f1e38e9 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : xamarin_arch_trampoline\r\n\t0x10f1e4aee - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : xamarin_x86_64_common_trampoline\r\n\t0x7fff2e483574 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[NSWindow(NSGestureRecognizer_Routing) _sendEventToGestureRecognizers:requireAcceptsFirstMouse:]\r\n\t0x7fff2e48b235 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[NSWindow(NSEventRouting) _handleMouseDownEvent:isDelayedEvent:]\r\n\t0x7fff2e3f5a81 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[NSWindow(NSEventRouting) _reallySendEvent:isDelayedEvent:]\r\n\t0x7fff2e3f4e29 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[NSWindow(NSEventRouting) sendEvent:]\r\n\t0x7fff2e3f31b4 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[NSApplication(NSEvent) sendEvent:]\r\n\t0x7fff2e24021f - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : -[NSApplication run]\r\n\t0x7fff2e211ff6 - /System/Library/Frameworks/AppKit.framework/Versions/C/AppKit : NSApplicationMain\r\n\t0x119387cac - Unknown\r\n\t0x1191d82a3 - Unknown\r\n\t0x1100408fb - Unknown\r\n\t0x110040a91 - Unknown\r\n\t0x10f32a09e - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_jit_runtime_invoke\r\n\t0x10f45c1c8 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_runtime_invoke_checked\r\n\t0x10f463675 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_runtime_exec_main_checked\r\n\t0x10f286d4c - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_jit_exec\r\n\t0x10f289e84 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : mono_main\r\n\t0x10f1e547c - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : xamarin_main\r\n\t0x10f1e62b4 - /MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MacOS/MyProject : main\r\n\t0x7fff6af1acc9 - /usr/lib/system/libdyld.dylib : start\r\n\t0x2 - Unknown\r\n\r\n=================================================================\r\n\tTelemetry Dumper:\r\n=================================================================\r\nPkilling 0x700009e0f000 from 0x1101dedc0\r\nPkilling 0x70000e996000 from 0x1101dedc0\r\nPkilling 0x70000b742000 from 0x1101dedc0\r\nPkilling 0x70000bd4b000 from 0x1101dedc0\r\nPkilling 0x70000d375000 from 0x1101dedc0\r\nPkilling 0x70000c354000 from 0x1101dedc0\r\nPkilling 0x70000d97e000 from 0x1101dedc0\r\nPkilling 0x70000aa2a000 from 0x1101dedc0\r\nPkilling 0x70000c95d000 from 0x1101dedc0\r\nPkilling 0x70000df87000 from 0x1101dedc0\r\nPkilling 0x70000b033000 from 0x1101dedc0\r\nPkilling 0x70000e590000 from 0x1101dedc0\r\nPkilling 0x70000a012000 from 0x1101dedc0\r\nPkilling 0x70000eb99000 from 0x1101dedc0\r\nPkilling 0x70000b945000 from 0x1101dedc0\r\nPkilling 0x70000bf4e000 from 0x1101dedc0\r\nPkilling 0x70000d578000 from 0x1101dedc0\r\nPkilling 0x70000a624000 from 0x1101dedc0\r\nPkilling 0x70000c557000 from 0x1101dedc0\r\nPkilling 0x70000db81000 from 0x1101dedc0\r\nPkilling 0x70000a298000 from 0x1101dedc0\r\nPkilling 0x70000ac2d000 from 0x1101dedc0\r\nPkilling 0x70000cb60000 from 0x1101dedc0\r\nPkilling 0x70000e18a000 from 0x1101dedc0\r\nPkilling 0x70000b236000 from 0x1101dedc0\r\nPkilling 0x70000e793000 from 0x1101dedc0\r\nPkilling 0x70000b53f000 from 0x1101dedc0\r\nPkilling 0x70000bb48000 from 0x1101dedc0\r\nPkilling 0x70000d172000 from 0x1101dedc0\r\nPkilling 0x70000c151000 from 0x1101dedc0\r\nPkilling 0x70000d77b000 from 0x1101dedc0\r\nPkilling 0x70000a827000 from 0x1101dedc0\r\nPkilling 0x70000c75a000 from 0x1101dedc0\r\nPkilling 0x70000dd84000 from 0x1101dedc0\r\nPkilling 0x70000cd63000 from 0x1101dedc0\r\nPkilling 0x70000ae30000 from 0x1101dedc0\r\nPkilling 0x70000e38d000 from 0x1101dedc0\r\nCould not exec mono-hang-watchdog, expected on path \u0027/MyPath/MyProject/MyProject.MacOS/bin/Debug/MyProject.app/Contents/MonoBundle/../bin/mono-hang-watchdog\u0027 (errno 2)\r\nEntering thread summarizer pause from 0x1101dedc0\r\nFinished thread summarizer pause from 0x1101dedc0.\r\n\r\nWaiting for dumping threads to resume\r\nsocket_transport_send Cannot transition thread 0x1101dedc0 from STATE_BLOCKING with DO_BLOCKING\r\n=================================================================\r\n\tExternal Debugger Dump:\r\n=================================================================\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-04-04T10:50:17",
+        "reactions": []
+      },
+      {
+        "id": 609069396,
+        "author": "mattleibow",
+        "body": "At this point I don\u0027t think this is the concurrency anymore. It may be that the GC is collection things that are no longer used on the managed side.\r\n\r\nThis is gonna be crazy, but try using a \u0060GC.KeepAlive(\u003Cobject\u003E)\u0060 for all skia objects. Or add them to a \u0022method global\u0022 list:\r\n\r\n\u0060\u0060\u0060csharp\r\nvoid OnPaint() {\r\n    var paint = new SKPaint();\r\n    ...\r\n    GC.KeepAlive(paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060csharp\r\nvoid OnPaint() {\r\n    var objects = new List\u003CSKObject\u003E();\r\n\r\n    var paint = new SKPaint();\r\n    objects.Add(paint);\r\n\r\n    ...\r\n}\r\n\u0060\u0060\u0060\r\n\r\nBasically, you want to keep these objects alive as long as possible.\r\n\r\nBut, if this is gonna be to crazy to do on your codebase, then we can talk over a private connection and maybe I can have a look at the drawing code. Maybe something will pop out.\r\nMy email is maleib@microsoft.com, just drop me an email and we can talk.",
+        "createdAt": "2020-04-04T18:21:44",
+        "reactions": []
+      },
+      {
+        "id": 609654530,
+        "author": "nor0x",
+        "body": "alright i have added try the \u0060KeepAlive\u0060 suggestion and i have dropped you an email since my drawing code is somewhat complex. Thanks @mattleibow ",
+        "createdAt": "2020-04-06T08:35:27",
+        "reactions": []
+      },
+      {
+        "id": 616347609,
+        "author": "nor0x",
+        "body": "seems to be fixed by #1224. after a lot of testing i don\u0027t get any crashes so i\u0027m closing this now, hopefully for good",
+        "createdAt": "2020-04-20T06:52:07",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:12:19.884672Z"
+          }
+        ]
+      }
+    ]
+  }
 }

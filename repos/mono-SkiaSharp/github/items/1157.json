@@ -19,5 +19,46 @@
   "updatedAt": "2022-08-19T06:02:36",
   "closedAt": "2020-06-25T01:08:35",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:43.6597731Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 592221322,
+        "author": "Drise13",
+        "body": "I\u0027ve also tried \r\n\u0060\u0060\u0060\r\n \u003CPropertyGroup\u003E\r\n    \u003CPreferredNativeSkiaSharp\u003Ex64\u003C/PreferredNativeSkiaSharp\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-02-27T23:00:18",
+        "reactions": []
+      },
+      {
+        "id": 593443244,
+        "author": "mattleibow",
+        "body": "What is the server you are deploying on? It looks to be Azure Functions?\r\n\r\nI think you got the code from here? https://github.com/mono/SkiaSharp/issues/1001\r\n\r\nFrom that, I see you are using \u0060x64\u0060. I believe Azure Functions is \u0060x86\u0060 - which is resulting in the \u0060BadImageFormatException\u0060.",
+        "createdAt": "2020-03-02T14:58:18",
+        "reactions": []
+      },
+      {
+        "id": 593464950,
+        "author": "Drise13",
+        "body": "The server is a typical IIS server run on Windows. Build should be in \u0060x64\u0060.",
+        "createdAt": "2020-03-02T15:40:40",
+        "reactions": []
+      },
+      {
+        "id": 614327013,
+        "author": "mattleibow",
+        "body": "It may be that the server is running as x86. The \u0060BadImageFormatException\u0060 means that the dll was found, but not correct. Try \u0060x86\u0060.",
+        "createdAt": "2020-04-15T23:19:28",
+        "reactions": []
+      },
+      {
+        "id": 646361063,
+        "author": "mattleibow",
+        "body": "Did you manage to resolve this issue?",
+        "createdAt": "2020-06-18T23:52:00",
+        "reactions": []
+      }
+    ]
+  }
 }

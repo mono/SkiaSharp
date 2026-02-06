@@ -14,5 +14,52 @@
   "updatedAt": "2022-08-19T06:02:21",
   "closedAt": "2020-04-15T22:18:14",
   "commentCount": 5,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:12:07.3031641Z",
+    "reactions": [
+      {
+        "user": "VijayRM",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:12:07.3031716Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 607621999,
+        "author": "VijayRM",
+        "body": "@Redth - Any update on this? ",
+        "createdAt": "2020-04-02T05:01:03",
+        "reactions": []
+      },
+      {
+        "id": 607718751,
+        "author": "mattleibow",
+        "body": "I have pushed what I think is now a good version to the preview feed: https://aka.ms/skiasharp-eap/index.json\r\nCheck out the PR version: **1.68.2-pr.1200.20**",
+        "createdAt": "2020-04-02T09:04:38",
+        "reactions": []
+      },
+      {
+        "id": 607788485,
+        "author": "mattleibow",
+        "body": "I had a look at the code and I think I found the issue. You have a dictionary that you are caching your fonts in - this is all good. But, when you clear the dictionary, you are disposing the objects - when they are still in the dictionary. Then, in another thread - before you remove it from the dictionary - the typeface is being used. As a result, it is setting a disposed object to the paint - which is basically null at this point.\r\n\r\nThere probably is an improvement to SkiaSharp that can be done here. Maybe we can throw if you assign a disposed object to a property. But, for a fix on your side, you can either first remove the object in the dictionary or do some locking so a read and clear don\u0027t happen together.\r\n\r\nThere are a few things to note as well. \u0060SKTypeface.FromFamilyName(fontName)\u0060 will actually **return the same object for the same typeface**. This means that if you dispose it but still have a reference you actually have a reference to a disposed object. You do want to dispose typefaces that you read from a file because we need to close file handles and things, but from the matching from installed fonts can be left.\r\n\r\nTo work in your case, I would actually not use a \u0060[ThreadStatic]\u0060 as some dictionaries might have references to the same object. Instead I would just use a plain static \u0060ConcurrentDictionary\u003CK, V\u003E\u0060 and let .NET do the work. Also, I would change the clear to basically iterate over the dictionary and remove then dispose:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic class FontExtension : SKPaint\r\n{\r\n    private static readonly ConcurrentDictionary\u003Cstring, SKTypeface\u003E typeFaceCache =\r\n        new ConcurrentDictionary\u003Cstring, SKTypeface\u003E();\r\n\r\n    public static IReadOnlyDictionary\u003Cstring, SKTypeface\u003E TypeFaceCache =\u003E typeFaceCache;\r\n\r\n    internal FontExtension(string fontName, float fontSize)\r\n    {\r\n        TextEncoding = SKTextEncoding.Utf8;\r\n        IsAntialias = true;\r\n        SubpixelText = true;\r\n        TextSize = fontSize;\r\n\r\n        Typeface = typeFaceCache.GetOrAdd(\r\n            fontName \u002B \u0022;\u0022,\r\n            key =\u003E SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright));\r\n    }\r\n\r\n    public static void ClearFontCache()\r\n    {\r\n        foreach (string key in typeFaceCache.Keys)\r\n        {\r\n            typeFaceCache.TryRemove(key, out var typeface);\r\n            typeface?.Dispose();\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-04-02T11:28:50",
+        "reactions": []
+      },
+      {
+        "id": 613981784,
+        "author": "mattleibow",
+        "body": "The particular fix for the disposing of system typefaces is fixed in #1224",
+        "createdAt": "2020-04-15T11:27:46",
+        "reactions": []
+      },
+      {
+        "id": 613982358,
+        "author": "mattleibow",
+        "body": "Released to NuGet as version **1.68.2-preview.60**",
+        "createdAt": "2020-04-15T11:29:03",
+        "reactions": []
+      }
+    ]
+  }
 }

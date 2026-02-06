@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T06:02:35",
   "closedAt": "2020-06-16T20:26:54",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:45.4654349Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 594209667,
+        "author": "mattleibow",
+        "body": "There are 2 basic things. Either use the GL views, and this looks like a case for that, or use a cache. \r\n\r\nFor example, draw the bits to separate images and then just draw the images. For example, draw the actual image to a cached image, and then just blit it to the screen. Then, all the mouse does is update text, and draw a single image.\r\n\r\nOr, if there are smaller complex images, try drawing those once and caching it. There is also SKPicture you can try to \u0022save\u0022 a set of drawing commands",
+        "createdAt": "2020-03-03T22:43:27",
+        "reactions": []
+      },
+      {
+        "id": 594458745,
+        "author": "SeRgI1982",
+        "body": "Currently, I use a few levels of caching. \r\nWhen the image is taken from server it is cached in local storage (I wasn\u0027t cached before).\r\n\r\nThen, I decode original image and create 3 different copies (quality: High - original size, Medium - half of the original size, Low - quarter of the original size). \r\n\r\nBits of those image copies are stored in memory cache, so I don\u0027t need to decode the image each time when InvalidateSurface is raised. Of course those quality copies are applied according to zoom level. \r\n\r\nWithout those operations there was a problem to even open the project. Application hangs for long minutes or goes down.\r\n\r\nI will try with SKGLView.",
+        "createdAt": "2020-03-04T11:06:01",
+        "reactions": []
+      },
+      {
+        "id": 642344046,
+        "author": "mattleibow",
+        "body": "Did you manage to resolve this?",
+        "createdAt": "2020-06-11T01:02:22",
+        "reactions": []
+      },
+      {
+        "id": 644032902,
+        "author": "SeRgI1982",
+        "body": "With SKGLView is far more better but still needs to be investigated by my in a near future. \r\nThere is an option to do a screenshot of a whole canvas and show only this screen but complexity of such solution increase, so I postponed this task",
+        "createdAt": "2020-06-15T10:03:04",
+        "reactions": []
+      },
+      {
+        "id": 644993937,
+        "author": "mattleibow",
+        "body": "I am going to close this as the feature of a \u0022dirty rect\u0022 is not native to SkiaSharp. However, this is possible to be done in your code - Mapsui uses this to basically render entire maps. ",
+        "createdAt": "2020-06-16T20:26:54",
+        "reactions": []
+      }
+    ]
+  }
 }

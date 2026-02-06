@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T06:01:49",
   "closedAt": "2020-05-06T07:37:39",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:15.221213Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 624112735,
+        "author": "mattleibow",
+        "body": "The \u0060SKTypeface.FromFamilyName()\u0060 requires that the font be installed to the system (C:\\Windows\\Fonts)\r\n\r\nIf you don\u0027t have permissions or can\u0027t install, then reading from a stream is just fine. There are other options to load without copying:\r\n - \u0060SKTypeface.FromFile\u0060\r\n - \u0060SKTypeface.FromStream\u0060",
+        "createdAt": "2020-05-05T15:08:45",
+        "reactions": []
+      },
+      {
+        "id": 624116222,
+        "author": "VijayRM",
+        "body": "Yes this font was already installed. ",
+        "createdAt": "2020-05-05T15:14:36",
+        "reactions": []
+      },
+      {
+        "id": 624138014,
+        "author": "mattleibow",
+        "body": "It might be because you are querying the font weight as \u0060SKFontStyleWeight.Thin\u0060 or using \u0060SKFontStyleWidth.Normal\u0060.\r\n\r\nI think this is a duplicate of #682\r\n",
+        "createdAt": "2020-05-05T15:51:27",
+        "reactions": []
+      },
+      {
+        "id": 624450963,
+        "author": "VijayRM",
+        "body": "SKFontStyleWeight.Light is working for the same font. So, this issue occurs only for SKFontStyleWeight.Thin. Whether it is a known bug of SkiaSharp?",
+        "createdAt": "2020-05-06T05:35:34",
+        "reactions": []
+      },
+      {
+        "id": 624491068,
+        "author": "mattleibow",
+        "body": "I\u0027m closing this now because it is a duplicate of #682. Not a bug per se, but definitely a known limitation. This is something we can address in the upcoming v2 of the library.\r\n\r\nI\u0027ll update the other issue with progress, so it might be good to subscribe to that one. ",
+        "createdAt": "2020-05-06T07:37:39",
+        "reactions": []
+      }
+    ]
+  }
 }

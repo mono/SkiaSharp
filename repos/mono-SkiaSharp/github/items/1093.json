@@ -14,5 +14,31 @@
   "updatedAt": "2022-08-19T09:01:30",
   "closedAt": "2020-06-01T10:08:25",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:35.5535651Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 572107792,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. I\u0027ll investigate.",
+        "createdAt": "2020-01-08T14:59:48",
+        "reactions": []
+      },
+      {
+        "id": 584693409,
+        "author": "mattleibow",
+        "body": "So, I had a look at this and I believe I have figured out what is happening.\r\n\r\nYou might be confusing C# characters with Unicode glyphs. For example, this is a single glyph \u0060\uDBFF\uDC00\u0060, but in actual fact, it is made up of **2** C# characters: \u00600xdbff\u0060 and \u00600xdc00\u0060. Both of these characters are actually not real characters, but parts of a [surrogate pair](https://unicodebook.readthedocs.io/unicode_encodings.html#utf-16-surrogate-pairs). As a result, they are actually rendered as a **single** glyph.\r\n\r\nSo, if you take this string \u0060\uFFFD\uDBFF\uDC00\uFFFD\uFFFD\u0060, it is 5 C# characters, but 4 glyphs. This is why you are \u0022missing\u0022 some widths, as two are actually a single one.\r\n\r\n\u003E If you are trying to render text, this library is pretty good: [RichTextKit](https://github.com/toptensoftware/RichTextKit). It is still under development, but is working and has many, many more features. Some folks from AvaloniaUI are [working with parts of this library](https://github.com/AvaloniaUI/Avalonia/pull/3438) and are busy making performance improvements.",
+        "createdAt": "2020-02-11T15:32:20",
+        "reactions": [
+          {
+            "user": "N-Olbert",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:35.5038691Z"
+          }
+        ]
+      }
+    ]
+  }
 }

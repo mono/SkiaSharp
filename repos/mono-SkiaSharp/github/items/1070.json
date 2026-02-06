@@ -14,5 +14,74 @@
   "updatedAt": "2022-08-19T09:01:44",
   "closedAt": "2019-12-24T15:38:43",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:14.1749651Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 567721848,
+        "author": "Gillibald",
+        "body": "Freetype is only available on Linux so this wouldn\u0027t be xplat. You can still use Freetype in combination with HarfBuzzSharp. You can load a face with https://github.com/mono/SkiaSharp/blob/master/binding/HarfBuzzSharp.Shared/Face.cs#L35 and construct a font. Just implement the needed interop code to get the required tables from freetype.\r\n\r\nYou can also use HarfBuzzSharp directly to shape the text and use the result to construct a SKTextBlob. \r\n\r\nAdding those overloads makes sense \uD83D\uDC4D",
+        "createdAt": "2019-12-19T23:24:57",
+        "reactions": []
+      },
+      {
+        "id": 567723164,
+        "author": "warappa",
+        "body": "@Gillibald Thanks for the fast response!\r\nI struggled using this constructor - is there any sample/further documentation about this?\r\n\r\nOverload: \uD83D\uDC4D ",
+        "createdAt": "2019-12-19T23:30:09",
+        "reactions": []
+      },
+      {
+        "id": 567723695,
+        "author": "Gillibald",
+        "body": "This is the Skia version: https://github.com/AvaloniaUI/Avalonia/blob/master/src/Skia/Avalonia.Skia/GlyphTypefaceImpl.cs#L21\r\n\r\nAnd DirectWrite:\r\nhttps://github.com/AvaloniaUI/Avalonia/blob/master/src/Windows/Avalonia.Direct2D1/Media/GlyphTypefaceImpl.cs#L22\r\n\r\nFreetype should work in a similar way",
+        "createdAt": "2019-12-19T23:32:13",
+        "reactions": []
+      },
+      {
+        "id": 567724346,
+        "author": "warappa",
+        "body": "This looks promising, thank you!",
+        "createdAt": "2019-12-19T23:35:07",
+        "reactions": []
+      },
+      {
+        "id": 568312963,
+        "author": "warappa",
+        "body": "@Gillibald I fiddled around with it and ... failed, because the font I\u0027m using **doesn\u0027t provide _any_ sfnt data** for sfnt tags.\r\nAs far as I understand my code would have to \u0022calculate\u0022 the various sfnt tables and provide it via the GetTableDelegate, but that ... overwhelmed me.\r\n\r\nFor testing purpose I replaced \u0060libHarfBuzzSharp.dll\u0060 with the version from [SharpFont.Dependencies](https://www.nuget.org/packages/SharpFont.Dependencies/) (FreeType support enabled) and defining **my own** \u0060DllImport\u0060 statement - and **it worked**!\r\n\r\n### For your Reconsideration\r\nEven if FreeType is not xplat, as in my case there is a benefit of providing the **HarfBuzz\u0027s actually _built-in_ functions** for users like me relying on FreeType to read fonts _not supported_ by SkiaSharp\u0027s SKTypeFace.\r\nThere doesn\u0027t have to be any C# bindings for \u0060hb_ft_*\u0060, and therefore it would still mean **no \u0027official\u0027 support** for FreeType integration, just the chance for users with advanced use cases.",
+        "createdAt": "2019-12-22T23:39:09",
+        "reactions": []
+      },
+      {
+        "id": 568385816,
+        "author": "Gillibald",
+        "body": "Just implement this in C# https://github.com/harfbuzz/harfbuzz/blob/master/src/hb-ft.cc\r\n\r\nLet me know if you need help with implementing the required bits. All you have to do is writing some interop code for freetype.\r\n\r\nWe can add such implementation to HarfBuzzSharp in the next release but currently I am too busy to implement it myself.",
+        "createdAt": "2019-12-23T07:30:43",
+        "reactions": []
+      },
+      {
+        "id": 568470560,
+        "author": "Gillibald",
+        "body": "It is totally normal that a font is missing some tables ",
+        "createdAt": "2019-12-23T13:08:30",
+        "reactions": []
+      },
+      {
+        "id": 568768304,
+        "author": "warappa",
+        "body": "I\u0027m sorry but after a few hours I\u0027m stuck - at an very early stage. I don\u0027t think I\u0027m able to convert this C code to C# as C\u0027s and C#\u0027s memory- and data-management and -access paradigms are too far apart for my skills to translate.\r\n\r\nI will try to solve my problem in another way.\r\n\r\nBut thanks for your support Gillibald!",
+        "createdAt": "2019-12-24T15:38:43",
+        "reactions": []
+      },
+      {
+        "id": 568771835,
+        "author": "Gillibald",
+        "body": "I will have a look at this in the near future",
+        "createdAt": "2019-12-24T16:04:21",
+        "reactions": []
+      }
+    ]
+  }
 }

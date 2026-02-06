@@ -14,5 +14,81 @@
   "updatedAt": "2022-08-19T06:01:50",
   "closedAt": "2020-05-04T19:32:35",
   "commentCount": 6,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:13.4606924Z",
+    "reactions": [
+      {
+        "user": "McFlemchSoda",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:13:13.4606993Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 623528125,
+        "author": "Gillibald",
+        "body": "What makes you think SkiaSharp uses a UIWebView? This is more a Xamarin.iOS issues and there is probably something wrong with your configuration. I quick search for UIWebView in the repo yields no result.",
+        "createdAt": "2020-05-04T15:20:23",
+        "reactions": []
+      },
+      {
+        "id": 623530393,
+        "author": "Gillibald",
+        "body": "https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/webview?tabs=macos#uiwebview-deprecation-and-app-store-rejection-itms-90809 Good Luck",
+        "createdAt": "2020-05-04T15:24:13",
+        "reactions": []
+      },
+      {
+        "id": 623660854,
+        "author": "mattleibow",
+        "body": "Closing this issue as there is no use of \u0060UIWebView\u0060 in skia. \r\n\r\nIf you are using Xamarin.Forms, then check out the link by @Gillibald. Otherwise check the list of NuGets you have installed and maybe ask on https://gitter.im/xamarin/XamarinComponents for more assistance with specific packages.",
+        "createdAt": "2020-05-04T19:32:35",
+        "reactions": []
+      },
+      {
+        "id": 624120414,
+        "author": "LeonardoPatti",
+        "body": "@Gillibald I think that SkiaSharp have dependency with the UIWebView because in my mobile app I checked all the packages with dependency with UIWebView and I get also libSkiaSharp",
+        "createdAt": "2020-05-05T15:21:47",
+        "reactions": [
+          {
+            "user": "McFlemchSoda",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:12.9788347Z"
+          },
+          {
+            "user": "rzee7",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:12.9788354Z"
+          },
+          {
+            "user": "IliaGrona",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:12.9788356Z"
+          }
+        ]
+      },
+      {
+        "id": 635247198,
+        "author": "McFlemchSoda",
+        "body": "It might have to do with the fact that SkiaSharp.Views.Forms has a dependency to Xamarin.Forms (\u003E= 4.4.0.991757) and thus means they have a dependency to the UIWebView through an older Xamarin.Forms version. Only by using Xamarin.Forms 4.5 or up can you remove this dependency and warning from Apple. Even if your own codebase does not use UIWebView, it does use an older Xamarin.Forms version which does use/reference it.\r\n\r\nQuote from Xamarin: \u0022UIWebView can be present in some third party libraries, either managed or native that is used by your application. Start by updating your external dependencies to their latest versions since this situation might already be solved in a newer release. If not, contact the maintainer(s) of the libraries and ask about their update plans.\u0022\r\n\r\nI\u0027m having the same issue and SkiaSharp.Views.Forms is my only package that doesn\u0027t depend on Xamarin.Forms 4.5. I think SkiaSharp needs to update to Xamarin.Forms 4.5 and use the additional mtouch arguments like everyone who has the warning from Apple. Read the Xamarin blog here: https://devblogs.microsoft.com/xamarin/uiwebview-deprecation-xamarin-forms/",
+        "createdAt": "2020-05-28T10:07:11",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:13.1907916Z"
+          }
+        ]
+      },
+      {
+        "id": 641502526,
+        "author": "mattleibow",
+        "body": "The later versions of SkiaSharp re using the newer Xamarin.Forms. However, I can\u0027t add any flags at this level as it will change behaviour. Either the Forms team needs to do this, or the end app.",
+        "createdAt": "2020-06-09T18:47:04",
+        "reactions": []
+      }
+    ]
+  }
 }

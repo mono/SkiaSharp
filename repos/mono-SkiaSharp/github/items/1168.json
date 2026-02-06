@@ -15,5 +15,100 @@
   "updatedAt": "2022-08-19T06:02:30",
   "closedAt": "2020-03-06T12:31:03",
   "commentCount": 11,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:11:54.3896998Z",
+    "reactions": [
+      {
+        "user": "pauldendulk",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:11:54.3897071Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 595747770,
+        "author": "hajmajeboss",
+        "body": "I used addr2line and it found the address is only in libxamarin-debug-app-helper.so. So it\u0027s probably not related to SkiaSharp. ",
+        "createdAt": "2020-03-06T12:30:58",
+        "reactions": []
+      },
+      {
+        "id": 595756239,
+        "author": "hajmajeboss",
+        "body": "Confirmed, it\u0027s stable in release config, where the problematic library is not present.",
+        "createdAt": "2020-03-06T12:57:28",
+        "reactions": []
+      },
+      {
+        "id": 599263109,
+        "author": "mattleibow",
+        "body": "That is good news (for SkiaSharp at least). Thanks for the update.",
+        "createdAt": "2020-03-15T20:52:00",
+        "reactions": []
+      },
+      {
+        "id": 599263590,
+        "author": "hajmajeboss",
+        "body": "Well, this segfault might be related to Skia though - can\u0027t find the method with 0x1130 address by addr2line, but I can\u0027t find it for any other Skia related error (as there is skia .so library path in the stack trace), I reported it in another thread with another two errors. ",
+        "createdAt": "2020-03-15T20:56:53",
+        "reactions": []
+      },
+      {
+        "id": 599264720,
+        "author": "mattleibow",
+        "body": "Let me know what you find. I do have another issue that looks suspicious with GL: https://github.com/mono/SkiaSharp/issues/1121\r\n\r\nThere are a few other \u0022random crashes\u0022 that have been occurring as well. I am not sure if this is a bug in the SkiaSharp native memory management, the skia code or just somewhere else. I have been working to get the #986 PR ready for actual use so I can test many of these things with the latest skia. I was hoping for a few releases of things this month, but I keep getting distracted. But, we still have a few weeks left. Maybe a preview this month, I will try to get something going ASAP so we can get rid of the \u0022random\u0022 bugs. They are the worst!",
+        "createdAt": "2020-03-15T21:06:42",
+        "reactions": []
+      },
+      {
+        "id": 599265623,
+        "author": "hajmajeboss",
+        "body": "What makes it the worst is, that there are times when nothing crashes for half an hour and you start to believe it\u0027s stable, only to get 5 crashes in 5 minutes then. That makes it so hard to test. 1.68.0 is probably most stable version, preview39 the least. ",
+        "createdAt": "2020-03-15T21:14:47",
+        "reactions": []
+      },
+      {
+        "id": 599266337,
+        "author": "mattleibow",
+        "body": "Yeah. The 1.68.0 was the old memory management model, which was actually pretty bad and leaked everything. The v1.68.1\u002B are the new memory model, which should have been better. I have been looking at a couple of issues, but yeah, the times when you are 30 mins into a test and no issues? That thing you tried must be the fix, then boom, nope. I\u0027m still looking at these and I was hoping to get it resolved this month. But, still a few weeks left for some serious multi-threaded, OpenGL, native debugging! Wee!",
+        "createdAt": "2020-03-15T21:20:39",
+        "reactions": []
+      },
+      {
+        "id": 599292648,
+        "author": "mattleibow",
+        "body": "This might be a duplicate of #1121",
+        "createdAt": "2020-03-16T00:58:03",
+        "reactions": []
+      },
+      {
+        "id": 601603297,
+        "author": "mattleibow",
+        "body": "I have just published the PR (https://github.com/mono/SkiaSharp/pull/1180) NuGet (**1.68.2-pr.1180.4**) to the preview feed: https://aka.ms/skiasharp-eap/index.json\r\nThis contains the fixes for macOS, iOS and Android. More platforms coming soon.\r\n\r\nGive that a go and let me know if it fixes the crashes.",
+        "createdAt": "2020-03-20T09:21:11",
+        "reactions": []
+      },
+      {
+        "id": 603503989,
+        "author": "mattleibow",
+        "body": "Just pushed all the packages (preview 45) to NuGet.org.",
+        "createdAt": "2020-03-24T21:04:28",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:11:54.1411743Z"
+          }
+        ]
+      },
+      {
+        "id": 608434692,
+        "author": "mattleibow",
+        "body": "Hey folks, it has been a long time coming and thanks to all the folks with your repros, samples and stack traces I think we have finally managed to fix those pesky crashes - at least the ones we know about. I have just pushed **1.68.2-preview.50** to NuGet so let me know if this fixes all the crashes you have ever had \uD83D\uDE04 ",
+        "createdAt": "2020-04-03T13:30:43",
+        "reactions": []
+      }
+    ]
+  }
 }
