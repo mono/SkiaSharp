@@ -14,5 +14,50 @@
   "updatedAt": "2021-08-19T06:06:30",
   "closedAt": "2021-08-19T06:06:30",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:24:25.7680515Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 871983607,
+        "author": "daltonks",
+        "body": "I haven\u0027t used it myself, but there is \u0060SKPaint.GetTextPath()\u0060. This returns an \u0060SKPath\u0060, which you can iterate over using \u0060SKPath.CreateIterator()\u0060 or \u0060CreateRawIterator()\u0060. Tbh, I don\u0027t know the exact differences between the two, but \u0060CreateRawIterator()\u0060 has worked fine for me.\r\n\r\nHere is an example of iterating over a path and doing something with the information (duplicating the path in this case):\r\n\u0060\u0060\u0060cs\r\nusing var iterator = path.CreateRawIterator();\r\nvar points = new Span\u003CSKPoint\u003E(new SKPoint[4]);\r\nvar duplicatePath = new SKPath();\r\nwhile (true)\r\n{\r\n    var verb = iterator.Next(points);\r\n    var p0 = points[0];\r\n    var p1 = points[1];\r\n    var p2 = points[2];\r\n    var p3 = points[3];\r\n    switch (verb)\r\n    {\r\n        case SKPathVerb.Move:\r\n            duplicatePath.MoveTo(p0.X, p0.Y);\r\n            break;\r\n        case SKPathVerb.Line:\r\n            duplicatePath.LineTo(p1.X, p1.Y);\r\n            break;\r\n        case SKPathVerb.Quad:\r\n            duplicatePath.QuadTo(p1.X, p1.Y, p2.X, p2.Y);\r\n            break;\r\n        case SKPathVerb.Conic:\r\n            duplicatePath.ConicTo(p1.X, p1.Y, p2.X, p2.Y, iterator.ConicWeight());\r\n            break;\r\n        case SKPathVerb.Cubic:\r\n            duplicatePath.CubicTo(p1.X, p1.Y, p2.X, p2.Y, p3.X, p3.Y);\r\n            break;\r\n        case SKPathVerb.Close:\r\n            duplicatePath.Close();\r\n            break;\r\n        case SKPathVerb.Done:\r\n            break;\r\n        default:\r\n            throw new ArgumentOutOfRangeException();\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-07-01T07:06:41",
+        "reactions": [
+          {
+            "user": "InsomniumBR",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:24:25.3076094Z"
+          }
+        ]
+      },
+      {
+        "id": 872597360,
+        "author": "InsomniumBR",
+        "body": "Great @daltonks I think that if you can duplicate it, it is enough for me to convert that for physical engraving.\r\nThanks for your comment!",
+        "createdAt": "2021-07-01T22:55:53",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:25.5020285Z"
+          }
+        ]
+      },
+      {
+        "id": 872629101,
+        "author": "daltonks",
+        "body": "Right on, good luck.\r\nAnd oh yeah, you\u0027ll have to exit out of the \u0060while\u0060 loop when you get the \u0060Done\u0060 verb, but the rest of it should be good.",
+        "createdAt": "2021-07-02T00:26:07",
+        "reactions": [
+          {
+            "user": "InsomniumBR",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:25.7178163Z"
+          }
+        ]
+      }
+    ]
+  }
 }

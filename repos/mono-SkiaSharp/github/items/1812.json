@@ -31,5 +31,53 @@
       "state": "APPROVED",
       "submittedAt": "2021-09-20T18:08:08"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:23:53.898436Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 923152511,
+        "author": "jonathanpeppers",
+        "body": "/cc @mattleibow I guess I don\u0027t have permission to ask for a review?",
+        "createdAt": "2021-09-20T18:01:15",
+        "reactions": []
+      },
+      {
+        "id": 923158874,
+        "author": "mattleibow",
+        "body": "Thanks for the PR. Looks good and once CI is green I\u0027ll merge.",
+        "createdAt": "2021-09-20T18:09:01",
+        "reactions": []
+      },
+      {
+        "id": 923176382,
+        "author": "jonathanpeppers",
+        "body": "@mattleibow \u0060$(AndroidGenerateResourceDesigner)\u0060 was introduced with .NET 6 RC1. So as long as you\u0027re building SkiaSharp with RC1, this will work.",
+        "createdAt": "2021-09-20T18:31:55",
+        "reactions": []
+      },
+      {
+        "id": 923176881,
+        "author": "jonathanpeppers",
+        "body": "Oh looks like you\u0027re already all set:\r\nhttps://github.com/mono/SkiaSharp/blob/68e80fa1762a292de1f7829d2c361f2a1be93d9c/scripts/azure-pipelines.yml#L29-L30\r\n",
+        "createdAt": "2021-09-20T18:32:37",
+        "reactions": []
+      },
+      {
+        "id": 924073727,
+        "author": "jonathanpeppers",
+        "body": "@mattleibow are my test failures here OK?\r\n\r\n\u0060\u0060\u0060\r\nImageScalingMultipleThreadsTest\r\n\r\nSystem.AggregateException : One or more errors occurred. (Object reference not set to an instance of an object.)\r\n---- System.NullReferenceException : Object reference not set to an instance of an object.\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-09-21T15:00:09",
+        "reactions": []
+      },
+      {
+        "id": 925926409,
+        "author": "mattleibow",
+        "body": "I think that is just a flakey test. I spin up like 100 threads and sometimes it fails. It used to always fail so I fixed a bug and now it is at 1% failure. So a win?",
+        "createdAt": "2021-09-23T15:34:43",
+        "reactions": []
+      }
+    ]
+  }
 }

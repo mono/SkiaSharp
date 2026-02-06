@@ -13,5 +13,74 @@
   "createdAt": "2020-05-08T14:44:33",
   "updatedAt": "2021-12-17T07:03:25",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:23:25.6990902Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 625859542,
+        "author": "Gillibald",
+        "body": "Docker is no platform it is a container so please let us know your platform",
+        "createdAt": "2020-05-08T15:04:18",
+        "reactions": []
+      },
+      {
+        "id": 628641691,
+        "author": "Jack-Paul",
+        "body": "Windows 10",
+        "createdAt": "2020-05-14T13:39:00",
+        "reactions": []
+      },
+      {
+        "id": 629003176,
+        "author": "mattleibow",
+        "body": "What is the base image for your dockerfile? Are you able to share that at all, the dockerfile? ",
+        "createdAt": "2020-05-15T03:19:11",
+        "reactions": []
+      },
+      {
+        "id": 633824001,
+        "author": "Jack-Paul",
+        "body": "Hi @mattleibow ,\r\n\r\nPlease find the docker code below which i used.\r\n\r\n\u0060\u0060\u0060\r\nFROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build\r\n\r\n# Install production dependencies.\r\n# Copy csproj and restore as distinct layers.\r\nWORKDIR /app\r\nCOPY ./ ./\r\n\r\nRUN dotnet restore ./ConsoleApp1/ConsoleApp1.csproj\r\n\r\nWORKDIR /app/ConsoleApp1\r\nRUN dotnet build -c Release --no-restore\r\n\r\nFROM build AS publish\r\nWORKDIR /app/ConsoleApp1\r\nRUN dotnet publish -c Release -o /app/out --no-build\r\n\r\nFROM mcr.microsoft.com/dotnet/core/runtime:3.1 AS runtime\r\nWORKDIR /app\r\nCOPY --from=publish /app/out ./\r\n\r\nRUN apt-get update -y \u0026\u0026 apt-get install -y libfontconfig fontconfig \u0026\u0026 rm -rf /var/lib/apt/lists/*\r\n\r\nCOPY ./fonts/Euclid/ /usr/share/fonts/\r\nCOPY ./fonts/Gotham/ /usr/share/fonts/\r\n\r\nRUN fc-cache -f -v\r\n\r\nENTRYPOINT [\u0022dotnet\u0022, \u0022ConsoleApp1.dll\u0022]\r\n\r\n\u0060\u0060\u0060\r\n\r\nPlease let me know if you need any additional details to reproduce this issue.\r\n\r\nRegards,\r\nJackson Paul T",
+        "createdAt": "2020-05-26T06:02:31",
+        "reactions": []
+      },
+      {
+        "id": 652207593,
+        "author": "ManikandanRavichandranSync",
+        "body": "Hi @mattleibow ,\r\n\r\nAny update on this?\r\n\r\n\r\nRegards,\r\nManish R",
+        "createdAt": "2020-07-01T05:53:36",
+        "reactions": []
+      },
+      {
+        "id": 708062982,
+        "author": "mattleibow",
+        "body": "@ManishSync or Jack-Paul  I just want to clarify this statement:\r\n\r\n\u003E The create font name is \u0022Euclid Flex Semibolditalic\u0022\r\n\r\nAre you saying that it _does_ find a font, but it is the wrong font? Or is that the font that it ends up trying to find, but can\u0027t?\r\n\r\nAre you able to create a small repro case so I can have a look? I see you are copying fonts from somewhere, so maybe the font is missing?",
+        "createdAt": "2020-10-13T23:25:51",
+        "reactions": []
+      },
+      {
+        "id": 720645537,
+        "author": "ManikandanRavichandranSync",
+        "body": "Hi @mattleibow,\r\n\r\nThanks for your update.\r\n\r\nYes, it found the font but it is not exactly what we need. The expected font is \u0022Euclid Flex SemiBold\u0022 but the returned font name from skia is \u0022Euclid Flex Semibolditalic\u0022. We will prepare the sample to reproduce the mentioned issue and share to you ASAP.\r\n\r\nRegards,\r\nManish R",
+        "createdAt": "2020-11-02T18:24:46",
+        "reactions": []
+      },
+      {
+        "id": 759404915,
+        "author": "ManikandanRavichandranSync",
+        "body": "Hi @mattleibow,\r\n\r\nPlease find the sample from the below link\r\nhttps://www.syncfusion.com/downloads/support/directtrac/general/ze/DockerSample_Skia765811286\r\n\r\nKindly check this sample and share the details for this issue\r\n\r\nRegards,\r\nManish R",
+        "createdAt": "2021-01-13T12:03:41",
+        "reactions": []
+      },
+      {
+        "id": 996485051,
+        "author": "ManikandanRavichandranSync",
+        "body": "Any update on this?",
+        "createdAt": "2021-12-17T07:03:25",
+        "reactions": []
+      }
+    ]
+  }
 }

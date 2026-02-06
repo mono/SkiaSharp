@@ -14,5 +14,39 @@
   "updatedAt": "2022-01-30T23:41:08",
   "closedAt": "2022-01-30T23:41:08",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:23:04.7761273Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1021560624,
+        "author": "Jan1503",
+        "body": "Hmm, it looks like I can draw a bitmap to a bitmap with an offset using a canvas like this:\r\n\r\n\u0060static void CopyWithOffset(SKBitmap targetBitmap, SKBitmap sourceBitmap, SKPoint targetLocation)\r\n{\r\n    using var canvas = new SKCanvas(targetBitmap);\r\n    canvas.DrawBitmap(sourceBitmap, targetLocation);\r\n    canvas.Flush();\r\n}\u0060\r\n\r\nWill test tomorrow but looks good :)",
+        "createdAt": "2022-01-25T20:03:50",
+        "reactions": []
+      },
+      {
+        "id": 1025181143,
+        "author": "Jan1503",
+        "body": "It works as expected but I don\u0027t know if this is the right way to go...\r\nIf I have many threads, each one will copy it\u0027s smaller bitmap into the larger one on a different location.\r\nAs SKBitmap is surely not thread-safe this might end up in a pixel-mess, especially if some bitmaps overlap others.\r\n\r\nWhat would be the best way to draw multiple bitmaps into a big one without messing up the main bitmap?\r\nI could maybe lock the big bitmap, write the small ones one by one and release the big one. But this smells to be a slow process which might led to flicker on my led-screen.\r\n\r\nAny suggestions?",
+        "createdAt": "2022-01-30T16:38:27",
+        "reactions": []
+      },
+      {
+        "id": 1025211151,
+        "author": "ziriax",
+        "body": "\u003E If I have many threads, each one will copy it\u0027s smaller bitmap into the larger one on a different location.\r\n\r\nAlthough Skia is not thread safe, if the destination rectangles don\u0027t overlap, you could try to make different destination \u0060SKBitmap\u0060 and \u0060SKCanvas\u0060 instances per thread, but all using the same destination memory. You can use [\u0060SKBitmap.InstallPixels\u0060](https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skbitmap.installpixels?view=skiasharp-2.80.2) for that. Note that in that case the \u0060SKBitmap\u0060 does not take ownership of the pixel buffer.\r\n\r\nIf the rectangles do overlap, using multiple threads won\u0027t work of course...\r\n\r\nOut of curiosity, why are you using multiple threads for a single drawing?\r\n",
+        "createdAt": "2022-01-30T19:18:45",
+        "reactions": []
+      },
+      {
+        "id": 1025254585,
+        "author": "Jan1503",
+        "body": "\u003E Out of curiosity, why are you using multiple threads for a single drawing?\r\n\r\nI have a big LED-Screen (384x192) which is fed using [https://github.com/hzeller/rpi-rgb-led-matrix](url).\r\nIts using a canvas where I can set each pixel using a simple \u0027canvas.SetPixel\u0027 method. After \u0022drawing\u0022 to that canvas one must call \u0027matrix.SwapOnVsync\u0027 to display the canvas on the screen.\r\n\r\nThats all easy as long as only one Task writes to the canvas. But I want to have multiple \u0022layers\u0022 to be able to draw different things to different parts of the canvas, for example a scrolltext at 64,32 (x,y), an image to 128,96 and so on.\r\nSo I created different canvi with different dimensions and locations on the big canvas. Each canvas represents an SKBitmap and so does the big canvas.\r\n\r\nIn the main thread, before pushing out the main bitmap to the canvas, I call a method on each \u0022child-canvas\u0027 that stops the writing to the corresponding child-canvas, copies the bitmap to the main-bitmap and then releases the lock so the child-canvi could be updated again.\r\n\r\nThis all works but results in heavy flicker and \u0027jumping\u0027 text, as the RPi4 semms to be not fast enough to lock all Tasks that write to the child-bitmap, coyping the child-bitmap to the big bitmap and pushing it out to the LED-Display.\r\n\r\nI\u0027ve experimented with some Thread.Sleeps and so on, but thats all crap...Even going one ladder down and using Threads with ManualResetEvents doesn\u0027t work well.\r\n\r\nSo I need an ultrafast solution that allows me to write to my child-bitmaps while the \u0027main\u0027 bitmap is constantly pushed out the LED-Matrix.\r\nI tried using the old System.Drawing.Bitmap and lock/unlock the bits in unsafe blocks, but thats even slower than using \u0027SKBitmap.GetPixels()\u0027 so I discarded that approach.\r\n\r\nI think you got the point but for completeness here\u0027s a small snipped from my main-thread:\r\n\r\n\u0060\u0060\u0060cs\r\n        private void ThreadImplementation()\r\n        {\r\n            while (true)\r\n            {\r\n                _mre.Reset();\r\n                foreach (var canvas in _canvi)\r\n                    canvas.PrepareNextFrame();\r\n                _mre.Set(); \r\n\r\n                DrawBitmapPixelsToCanvas(_ledMatrix, _mainCanvas, _mainCanvasBitmap);\r\n                //DrawBitmapPixelsToCanvasOnlyChangedPixels(_ledMatrix, _mainCanvas, _mainCanvasBitmap);\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nAnd the DrawPixels-Method:\r\n\r\n\u0060\u0060\u0060cs\r\n        private static void DrawBitmapPixelsToCanvas(RGBLedMatrix ledMatrix, RGBLedCanvas canvas, SKBitmap bitmap)\r\n        {\r\n            var pixelAddr = bitmap.GetPixels();\r\n            unsafe\r\n            {\r\n                var ptr = (byte*)pixelAddr.ToPointer();\r\n\r\n                for (var col = 0; col \u003C bitmap.Height; col\u002B\u002B)\r\n                for (var row = 0; row \u003C bitmap.Width; row\u002B\u002B)\r\n                {\r\n                    var b = *ptr\u002B\u002B;\r\n                    var g = *ptr\u002B\u002B;\r\n                    var r = *ptr\u002B\u002B;\r\n                    ptr\u002B\u002B; //Skip alpha\r\n\r\n                    canvas.SetPixel(row, col, new RGBLedMatrixWrapper.Color(r, g, b));\r\n                }\r\n            }\r\n            \r\n            ledMatrix.SwapOnVsync(canvas);\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nAnd here\u0027s the method in the child-canvas class that is called from the \u0027...PrepareNextFrame()\u0027-method:\r\n\r\n\u0060\u0060\u0060cs\r\n    private static void CopyWithOffset(SKBitmap targetBitmap, SKBitmap sourceBitmap, SKPoint targetLocation)\r\n    {\r\n        using var canvas = new SKCanvas(targetBitmap);\r\n        canvas.DrawBitmap(sourceBitmap, targetLocation);\r\n    }\r\n\u0060\u0060\u0060\r\n\r\ntargetBitmap represents the main \u0027big\u0027 bitmap and sourceBitmap is the smaller child-bitmap that should be written \u0027into\u0027 the targetBitmap at a specific location.\r\n\r\n\u003E Although Skia is not thread safe, if the destination rectangles don\u0027t overlap, you could try to make different destination SKBitmap and SKCanvas instances per thread, but all using the same destination memory. You can use SKBitmap.InstallPixels for that. Note that in that case the SKBitmap does not take ownership of the pixel buffer.\r\n\r\nCould you give me an example on how to implement that?\r\n\r\nThanks!",
+        "createdAt": "2022-01-30T23:09:25",
+        "reactions": []
+      }
+    ]
+  }
 }

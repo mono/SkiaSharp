@@ -50,5 +50,196 @@
       "state": "COMMENTED",
       "submittedAt": "2020-08-12T12:35:25"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:24:39.3696332Z",
+    "reactions": [
+      {
+        "user": "awulkan",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:24:39.36964Z"
+      },
+      {
+        "user": "nbulp",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:24:39.3696414Z"
+      },
+      {
+        "user": "yoshiask",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:24:39.3696416Z"
+      },
+      {
+        "user": "3D-aero-sbahr",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:24:39.3696419Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 714274786,
+        "author": "DierkDroth",
+        "body": "@mattleibow I was educated by my team that this issue prevents switching our Platform UNO solution to WinUI 3 (we\u0027re using SkiaSharp rendering massively).\r\n\r\nIs there any ETA yet?\r\n\r\n@jeromelaban FYI",
+        "createdAt": "2020-10-22T06:55:10",
+        "reactions": []
+      },
+      {
+        "id": 714434034,
+        "author": "jeromelaban",
+        "body": "@DierkDroth thanks. As mentioned in the Uno issue, WinUI 3.0 is not required yet. WinUI 2.x can be used at this point.",
+        "createdAt": "2020-10-22T11:38:47",
+        "reactions": []
+      },
+      {
+        "id": 714539024,
+        "author": "DierkDroth",
+        "body": "@jeromelaban sorry, I\u0027m still lost.\r\n\r\nLet me ask you this: how would a WinUI 3 TabView host a SkiaSharp chart?",
+        "createdAt": "2020-10-22T14:36:17",
+        "reactions": []
+      },
+      {
+        "id": 715290128,
+        "author": "jeromelaban",
+        "body": "\u003E @jeromelaban sorry, I\u0027m still lost.\r\n\u003E \r\n\u003E Let me ask you this: how would a WinUI 3 TabView host a SkiaSharp chart?\r\n\r\nThe TabView control is available in WinUI 2.x and is available starting in Uno 3.1, there is no need for WinUI 3.0 at this point.  ",
+        "createdAt": "2020-10-23T11:41:01",
+        "reactions": []
+      },
+      {
+        "id": 715901476,
+        "author": "DierkDroth",
+        "body": "Thanks @jeromelaban. This seems to be a viable work around",
+        "createdAt": "2020-10-24T11:27:36",
+        "reactions": []
+      },
+      {
+        "id": 722791089,
+        "author": "gmurray81",
+        "body": "@mattleibow might some preview of this ship soon? Have been extracting stuff from this PR to try but that seems like it would be a bit more painful for the GL surfaces.",
+        "createdAt": "2020-11-06T03:36:35",
+        "reactions": []
+      },
+      {
+        "id": 729717267,
+        "author": "gmurray81",
+        "body": "@mattleibow btw, the IBufferByteAccess binding doesn\u0027t work in WinUI preview 3, I was able to make it work again by comparing against the wincsrt codebase for IBufferByteAccess, maybe they could add an easier way to grab that interface? Or maybe they did already, didn\u0027t search too long.",
+        "createdAt": "2020-11-18T14:31:43",
+        "reactions": []
+      },
+      {
+        "id": 756849509,
+        "author": "rick-palmsens",
+        "body": "@gmurray81 I seem to be running into the same error:\r\n\r\n\u003E Invalid cast from \u0027WinRT.IInspectable\u0027 to \u0027SkiaSharp.Views.Interop.IBufferByteAccess\u0027.\r\n\r\nCould you tell me what you changed to make it work again?",
+        "createdAt": "2021-01-08T16:21:47",
+        "reactions": []
+      },
+      {
+        "id": 778549240,
+        "author": "mattleibow",
+        "body": "I have updated a few things. The WinUI sample is running again. The implementation for Win32 is a tad bit different due to some UWP APIs not existing/implemented.\r\n\r\nThe GPU views might take longer because ANGLE does not support WinUI and there appears to be know immediate plans to add it: https://github.com/microsoft/microsoft-ui-xaml/issues/2558\r\n\r\nOnce things are building, I can release a preview package on the preview feed for people to try out.",
+        "createdAt": "2021-02-13T02:36:35",
+        "reactions": [
+          {
+            "user": "gmurray81",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:37.0149143Z"
+          },
+          {
+            "user": "michael-hawker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:37.0149149Z"
+          },
+          {
+            "user": "nbulp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:37.014915Z"
+          }
+        ]
+      },
+      {
+        "id": 778573399,
+        "author": "michael-hawker",
+        "body": "\uD83E\uDD99 Seems like the [Angle work has moved to Google](https://github.com/microsoft/angle/issues/170) and their [discussion was placed here](https://groups.google.com/g/angleproject/c/oq7JU0StLCs/m/j7sxxTnvAQAJ?pli=1). (Though still that it\u0027s not in plans, but that was 8 months ago.) FYI @stmoy",
+        "createdAt": "2021-02-13T06:51:33",
+        "reactions": []
+      },
+      {
+        "id": 780453574,
+        "author": "rick-palmsens",
+        "body": "Is ANGLE necessary for the Win32 version of WinUI? In theory you should be able to call OpenGL directly when not confined to the UWP sandbox.",
+        "createdAt": "2021-02-17T10:18:49",
+        "reactions": []
+      },
+      {
+        "id": 780713733,
+        "author": "mnikonov",
+        "body": "@mattleibow thanks for your work!!!! Is there is any guess when pre release package with WinUI support would be possible to download? Also question would be package with name SkiaSharp.Views.Uno.WinUI ? :)",
+        "createdAt": "2021-02-17T17:19:05",
+        "reactions": [
+          {
+            "user": "robloo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:37.8204489Z"
+          }
+        ]
+      },
+      {
+        "id": 844573371,
+        "author": "mattleibow",
+        "body": "I pushed out a preview package (**SkiaSharp.Views.WinUI**) to \u0060https://aka.ms/skiasharp-eap/index.json\u0060\r\n\r\nThis is just the \u0060SKXamlCanvas\u0060 for now as I try and get the ANGLE builds working with the new views. ",
+        "createdAt": "2021-05-19T23:50:28",
+        "reactions": [
+          {
+            "user": "jeromelaban",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:38.0801784Z"
+          },
+          {
+            "user": "gmurray81",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:38.0801789Z"
+          },
+          {
+            "user": "MaksimNikonovOrioninc",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:38.080179Z"
+          }
+        ]
+      },
+      {
+        "id": 844631510,
+        "author": "gmurray81",
+        "body": "Awesome! Thanks :)",
+        "createdAt": "2021-05-20T02:19:40",
+        "reactions": []
+      },
+      {
+        "id": 846272735,
+        "author": "MaksimNikonovOrioninc",
+        "body": "@mattleibow is there is any plans to have compatible version of SkiaSharp.Views.WinUI with UWP and UNO?",
+        "createdAt": "2021-05-21T21:29:12",
+        "reactions": []
+      },
+      {
+        "id": 846413676,
+        "author": "jeromelaban",
+        "body": "@MaksimNikonovOrioninc yes there are plans to make this support work for the Uno.WinUI packages. I will be in a separate PR, though.",
+        "createdAt": "2021-05-22T14:09:33",
+        "reactions": []
+      },
+      {
+        "id": 877909674,
+        "author": "mattleibow",
+        "body": "Closing this as we got WinUI support for Desktop/Win32 a few releases back, but now stable.\r\n\r\nAdditional things\r\n - Uno will be in a separate PR\r\n - UWP will be in a separate PR",
+        "createdAt": "2021-07-12T01:44:23",
+        "reactions": []
+      },
+      {
+        "id": 878369159,
+        "author": "gmurray81",
+        "body": "@mattleibow what about the GPU support for WinUI3? Separate task? Giving up on it due to the lack of Angle support?\r\n\r\nIs he implying here that it should be supportable with the current stuff in Angle? https://groups.google.com/g/angleproject/c/oq7JU0StLCs/m/IoaPPVapBAAJ",
+        "createdAt": "2021-07-12T15:19:46",
+        "reactions": []
+      }
+    ]
+  }
 }

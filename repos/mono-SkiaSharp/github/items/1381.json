@@ -13,5 +13,230 @@
   "createdAt": "2020-07-03T16:48:40",
   "updatedAt": "2021-09-04T11:53:36",
   "commentCount": 28,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:24:07.5187528Z",
+    "reactions": [
+      {
+        "user": "Mikolaytis",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:24:07.5187563Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 653640016,
+        "author": "ziriax",
+        "body": "I\u0027m not an offical Skia developer, but here\u0027s my take on it.\r\n\r\n- you are drawing using a GPU backend. That allows for very fasting rendering.\r\n\r\n- however, when you read the pixels back to the CPU, all pixels must be transferred over the PCI bus from GPU memory to host CPU memory. This is called \u0022readback\u0022, and is always slow. Furthermore, it stops both the GPU and CPU.\r\n\r\n- for high performance readback, async DMA must be used, so that neither GPU nor CPU are blocked while the pixels are being transferred. This is still slow, but at least none of the machinery will stall, so you can overlap rendering and readback. But I don\u0027t think SkiaSharp supports such an interface (that being said, Skia does have a \u0060protected asyncReadPixels\u0060 and a \u0060public  GrSurfaceContext::asyncRescaleAndReadPixels\u0060; the latter could be exposed by the SkiaSharp 2.0 with some work)\r\n\r\n\r\n",
+        "createdAt": "2020-07-03T18:10:02",
+        "reactions": []
+      },
+      {
+        "id": 653766651,
+        "author": "joa77",
+        "body": "I understand that the transfer is the problem, but I don\u0027t understand why.\r\nWhen I calculate the amount auf data that should be transferred between GPU to RAM it\u0027s about 500 MB/s which for my knowledge is much less the actual speed capabilities of modern RAM or PCI busses.",
+        "createdAt": "2020-07-04T13:30:06",
+        "reactions": []
+      },
+      {
+        "id": 653770017,
+        "author": "ziriax",
+        "body": "Do you have a project that you can share? I am interested in profiling this on my system.\r\n\r\n",
+        "createdAt": "2020-07-04T14:02:15",
+        "reactions": []
+      },
+      {
+        "id": 653784496,
+        "author": "joa77",
+        "body": "I created a minimal console application example. To make it work include the files from https://github.com/mono/SkiaSharp/tree/master/tests/Tests/GlContexts to the project.\r\n\r\n\u0060\u0060\u0060csharp\r\nvar watch = new Stopwatch();\r\nwatch.Restart();\r\n\r\n// See https://github.com/mono/SkiaSharp/tree/master/tests/Tests/GlContexts for context creation\r\nvar glContext = GlContext.Create();\r\nglContext.MakeCurrent();\r\n\r\nConsole.WriteLine($\u0022{watch.Elapsed.TotalMilliseconds:0.000}ms for OpenGl context creation\u0022);\r\nwatch.Restart();\r\n\r\nvar glInterface = GRGlInterface.Create();\r\nvar context = GRContext.CreateGl(glInterface);\r\n\r\nConsole.WriteLine($\u0022{watch.Elapsed.TotalMilliseconds:0.000}ms for Skia context creation\u0022);\r\nwatch.Restart();\r\n\r\nvar info = new SKImageInfo(1920, 1080, SKColorType.Bgra8888);\r\nvar surface = SKSurface.Create(context, true, info);\r\n\r\nConsole.WriteLine($\u0022{watch.Elapsed.TotalMilliseconds:0.000}ms for Skia surface creation\u0022);\r\nwatch.Restart();\r\n\r\nvar buffer = Marshal.AllocHGlobal(info.BytesSize);\r\n\r\nConsole.WriteLine($\u0022{watch.Elapsed.TotalMilliseconds:0.000}ms for buffer allocation\u0022);\r\n\r\nvar totalDrawingTime = 0.0;\r\nvar totalCopyTime = 0.0;\r\nvar cycles = 10;\r\n\r\nusing (var paint = new SKPaint())\r\n{\r\n    paint.IsAntialias = true;\r\n    paint.Color = SKColors.Red;\r\n    paint.Style = SKPaintStyle.Stroke;\r\n    paint.StrokeWidth = 4;\r\n    \r\n    for (var i = 0; i \u003C cycles; i\u002B\u002B)\r\n    {\r\n        Console.WriteLine($\u0022## Cycle {i} ##\u0022);\r\n        var rand = new Random(cycles);\r\n        \r\n        watch.Restart();\r\n        \r\n        // Drawing start\r\n        surface.Canvas.Clear(SKColors.SkyBlue);\r\n\r\n        for (var j = 0; j \u003C 1000; j\u002B\u002B)\r\n        {\r\n            surface.Canvas.DrawLine(rand.Next(0,info.Width), rand.Next(0,info.Height), rand.Next(0,info.Width), rand.Next(0,info.Height), paint);\r\n        }\r\n        // Drawing end\r\n\r\n        totalDrawingTime \u002B= watch.Elapsed.TotalMilliseconds;\r\n        Console.WriteLine($\u0022  {watch.Elapsed.TotalMilliseconds:0.000}ms for drawing\u0022);\r\n        watch.Restart();\r\n\r\n        if (!surface.ReadPixels(info, buffer, info.RowBytes, 0, 0))\r\n        {\r\n            Console.WriteLine($\u0022Failed to copy pixels from GPU\u0022);\r\n        }\r\n        \r\n        totalCopyTime \u002B= watch.Elapsed.TotalMilliseconds;\r\n        Console.WriteLine($\u0022  {watch.Elapsed.TotalMilliseconds:0.000}ms for copying from GPU\u0022);\r\n        \r\n    }\r\n\r\n}\r\n\r\nwatch.Restart();\r\n\r\nsurface.Dispose();\r\nMarshal.FreeHGlobal(buffer);\r\ncontext.Dispose();\r\nglContext.Destroy();\r\n\r\nConsole.WriteLine($\u0022{watch.Elapsed.TotalMilliseconds:0.000}ms for freeing up\u0022);\r\nwatch.Restart();\r\n\r\nConsole.WriteLine($\u0022Average of {totalDrawingTime / cycles:0.000}ms for drawing\u0022);\r\nConsole.WriteLine($\u0022Average of  {totalCopyTime/ cycles:0.000}ms for copying from GPU\u0022);\r\n\u0060\u0060\u0060\r\n\r\nOn my mac I get the following output (no Debugger attached, Release configuration, build for x64):\r\n\r\n\u0060\u0060\u0060\r\n46.406ms for OpenGl context creation\r\n588.590ms for Skia context creation\r\n1.772ms for Skia surface creation\r\n0.192ms for buffer allocation\r\n## Cycle 0 ##\r\n  9.028ms for drawing\r\n  71.424ms for copying from GPU\r\n## Cycle 1 ##\r\n  2.682ms for drawing\r\n  55.342ms for copying from GPU\r\n## Cycle 2 ##\r\n  1.817ms for drawing\r\n  33.128ms for copying from GPU\r\n## Cycle 3 ##\r\n  2.244ms for drawing\r\n  65.454ms for copying from GPU\r\n## Cycle 4 ##\r\n  1.941ms for drawing\r\n  34.987ms for copying from GPU\r\n## Cycle 5 ##\r\n  1.690ms for drawing\r\n  35.023ms for copying from GPU\r\n## Cycle 6 ##\r\n  1.894ms for drawing\r\n  47.286ms for copying from GPU\r\n## Cycle 7 ##\r\n  1.738ms for drawing\r\n  34.455ms for copying from GPU\r\n## Cycle 8 ##\r\n  1.915ms for drawing\r\n  32.325ms for copying from GPU\r\n## Cycle 9 ##\r\n  1.853ms for drawing\r\n  44.672ms for copying from GPU\r\n23.287ms for freeing up\r\nAverage of 2.676ms for drawing\r\nAverage of  45.408ms for copying from GPU\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-07-04T16:14:18",
+        "reactions": []
+      },
+      {
+        "id": 653785524,
+        "author": "ziriax",
+        "body": "Could you add \u0060surface.Canvas.Flush()\u0060 and/or \u0060context.Flush()\u0060 just after \u0060// Drawing end\u0060, and measure again?\r\n\r\nI think Skia might batch many commands before sending them to the GPU. So the 44ms you are measuring might also include a subset of the 1000 lines you are drawing?\r\n\r\n",
+        "createdAt": "2020-07-04T16:24:04",
+        "reactions": []
+      },
+      {
+        "id": 653786259,
+        "author": "joa77",
+        "body": "With \u0060surface.Canvas.Flush()\u0060\r\n\u0060\u0060\u0060\r\nAverage of 4.445ms for drawing\r\nAverage of  62.336ms for copying from GPU\r\n\u0060\u0060\u0060\r\n\r\nWith \u0060context.Flush()\u0060\r\n\u0060\u0060\u0060\r\nAverage of 3.796ms for drawing\r\nAverage of  57.863ms for copying from GPU\r\n\r\n\u0060\u0060\u0060\r\n\r\nWith \u0060surface.Canvas.Flush()\u0060 and \u0060context.Flush()\u0060\r\n\u0060\u0060\u0060\r\nAverage of 3.619ms for drawing\r\nAverage of  58.371ms for copying from GPU\r\n\u0060\u0060\u0060\r\n\r\nAnd without any change (it\u0027s a little bit slower now, so added for reference)\r\n\u0060\u0060\u0060\r\nAverage of 3.174ms for drawing\r\nAverage of  52.344ms for copying from GPU\r\n\u0060\u0060\u0060\r\n\r\nSo it looks like without any flush function, the performance is better (I ran the tests multiple times and the values seem to be stable)",
+        "createdAt": "2020-07-04T16:31:17",
+        "reactions": []
+      },
+      {
+        "id": 653797236,
+        "author": "ziriax",
+        "body": "Okay, I\u0027ll try to reproduce your test case on Monday; I\u0027m curious what is causing this, and what can be done about it. \r\n",
+        "createdAt": "2020-07-04T18:25:23",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:03.0826022Z"
+          }
+        ]
+      },
+      {
+        "id": 657607673,
+        "author": "joa77",
+        "body": "@Ziriax did you had time to look into this?",
+        "createdAt": "2020-07-13T14:53:02",
+        "reactions": []
+      },
+      {
+        "id": 657627325,
+        "author": "ziriax",
+        "body": "Sorry, I completely forgot about this. I\u0027ll try to find some time.\r\n",
+        "createdAt": "2020-07-13T15:27:06",
+        "reactions": []
+      },
+      {
+        "id": 658139684,
+        "author": "ziriax",
+        "body": "I got this running on my machine (Windows 10 x64, RTX 2070, AMD Ryzen 3950x), I get the following numbers with your code:\r\n\r\n\u0060\u0060\u0060\r\n305,354ms for OpenGl context creation\r\n35,677ms for Skia context creation\r\n0,990ms for Skia surface creation\r\n0,174ms for buffer allocation\r\n## Cycle 0 ##\r\n  5,529ms for drawing\r\n  14,434ms for copying from GPU\r\n## Cycle 1 ##\r\n  1,463ms for drawing\r\n  11,229ms for copying from GPU\r\n## Cycle 2 ##\r\n  1,475ms for drawing\r\n  7,258ms for copying from GPU\r\n## Cycle 3 ##\r\n  1,442ms for drawing\r\n  7,039ms for copying from GPU\r\n## Cycle 4 ##\r\n  1,464ms for drawing\r\n  7,973ms for copying from GPU\r\n## Cycle 5 ##\r\n  1,422ms for drawing\r\n  7,358ms for copying from GPU\r\n## Cycle 6 ##\r\n  1,410ms for drawing\r\n  7,347ms for copying from GPU\r\n## Cycle 7 ##\r\n  1,443ms for drawing\r\n  6,955ms for copying from GPU\r\n## Cycle 8 ##\r\n  1,441ms for drawing\r\n  6,988ms for copying from GPU\r\n## Cycle 9 ##\r\n  1,452ms for drawing\r\n  6,958ms for copying from GPU\r\n6,365ms for freeing up\r\nAverage of 1,854ms for drawing\r\nAverage of  8,354ms for copying from GPU\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2020-07-14T12:00:33",
+        "reactions": []
+      },
+      {
+        "id": 658156504,
+        "author": "ziriax",
+        "body": "I\u0027ll try again with a debug build of Skia, to see what is taking time. ",
+        "createdAt": "2020-07-14T12:41:25",
+        "reactions": []
+      },
+      {
+        "id": 658157958,
+        "author": "mattleibow",
+        "body": "Is that 8ms or 8000ms? ",
+        "createdAt": "2020-07-14T12:44:49",
+        "reactions": []
+      },
+      {
+        "id": 658164136,
+        "author": "ziriax",
+        "body": "My locale settings seem to use Dutch, so the 8,354ms is actually 8.354ms :)\r\n\r\nSo 8ms\r\n\r\n\r\n",
+        "createdAt": "2020-07-14T12:58:24",
+        "reactions": []
+      },
+      {
+        "id": 658180780,
+        "author": "ziriax",
+        "body": "As expected, \u0060glReadPixels\u0060 is called, and that is a synchronous call, and stalls the pipeline.\r\n\r\nHowever, just after that, the pixels are converted... It seems the orientation if different, and the pixels need to be flipped. I\u0027m trying to figure out what happens.\r\n\r\n\r\n",
+        "createdAt": "2020-07-14T13:31:27",
+        "reactions": []
+      },
+      {
+        "id": 658182024,
+        "author": "ziriax",
+        "body": "@mattleibow I found a silly bug in SkiaSharp, in \r\n\r\n\u0060SkiaSharp\\binding\\Binding\\SKSurface.cs\u0060\r\n\r\n\u0060\u0060\u0060\r\n\t\tpublic static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin) =\u003E\r\n\t\t\tCreate (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, null, false);\r\n\u0060\u0060\u0060\r\n\r\nAs you can see the origin is not passed to the \u0060Create\u0060 function, \u0060GRSurfaceOrigin.BottomLeft\u0060 is passed.\r\n\r\nThis causes the pixel flip.\r\n\r\nI will patch this, and see what happens :)\r\n",
+        "createdAt": "2020-07-14T13:33:48",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "confused",
+            "createdAt": "2026-02-06T14:24:04.7421257Z"
+          },
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:04.7421262Z"
+          }
+        ]
+      },
+      {
+        "id": 658183214,
+        "author": "ziriax",
+        "body": "@joa77 Could you change you code in\r\n\r\n\u0060\u0060\u0060\r\nvar surface = SKSurface.Create(context, true, info, 0, GRSurfaceOrigin.TopLeft, new SKSurfaceProperties(SKPixelGeometry.Unknown), false);\r\n\u0060\u0060\u0060\r\n\r\nAnd profile again?\r\n",
+        "createdAt": "2020-07-14T13:36:03",
+        "reactions": []
+      },
+      {
+        "id": 658183842,
+        "author": "ziriax",
+        "body": "In my debug build, this reduces the readpixels from 8ms to 4ms...\r\n\r\nGoing to try a release build now... I\u0027m be back in 2 hours, LOL\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-07-14T13:37:12",
+        "reactions": []
+      },
+      {
+        "id": 658185539,
+        "author": "ziriax",
+        "body": "@mattleibow  I see \u0060GRSurfaceOrigin.BottomLeft\u0060 is always passed as the default for the origin. Is this for a reason? Because the native read-pixels code is:\r\n\r\n\u0060\u0060\u0060\r\n    bool flip = srcProxy-\u003Eorigin() == kBottomLeft_GrSurfaceOrigin;\r\n\r\n    auto supportedRead = caps-\u003EsupportedReadPixelsColorType(\r\n            this-\u003EcolorInfo().colorType(), srcProxy-\u003EbackendFormat(), dstInfo.colorType());\r\n\r\n    bool makeTight = !caps-\u003EreadPixelsRowBytesSupport() \u0026\u0026 tightRowBytes != rowBytes;\r\n\r\n    bool convert = unpremul || premul || needColorConversion || flip || makeTight ||\r\n                   (dstInfo.colorType() != supportedRead.fColorType);\r\n\u0060\u0060\u0060\r\n\r\nSo it seems to prefer a \u0060TopLeft\u0060 origin, otherwise it will convert the pixels.\r\n\r\n\r\n",
+        "createdAt": "2020-07-14T13:40:11",
+        "reactions": []
+      },
+      {
+        "id": 658193497,
+        "author": "mattleibow",
+        "body": "The origin was BL for historical reasons I think. Here is the origin in m60: \r\nhttps://github.com/google/skia/blob/chrome/m60/include/core/SkSurface.h#L167-L168\r\n\r\nI don\u0027t know about changing the default, but how does this affect different platforms? do iOS/macOS and Linux and Windows do different things? It may have to do with the fact that it was originally meant to match the GL origin of bottom left: https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glReadPixels.xhtml",
+        "createdAt": "2020-07-14T13:53:52",
+        "reactions": []
+      },
+      {
+        "id": 658194951,
+        "author": "ziriax",
+        "body": "In a release build, when passing \u0060TopLeft\u0060 as the surface origin, I get a similar speedup as in debug \uD83C\uDF66 \r\n\r\nSo almost twice as fast on my machine!  \uD83D\uDE80 \r\n\r\nSkia also has an \u0060asyncReadPixels\u0060, but this isn\u0027t exposed yet in SkiaSharp (I even don\u0027t think it is part of the public Skia API).\r\n\r\n\u0060\u0060\u0060\r\n306,579ms for OpenGl context creation\r\n8,506ms for Skia context creation\r\n0,856ms for Skia surface creation\r\n0,151ms for buffer allocation\r\n## Cycle 0 ##\r\n  10,819ms for drawing\r\n  5,958ms for copying from GPU\r\n## Cycle 1 ##\r\n  1,597ms for drawing\r\n  7,008ms for copying from GPU\r\n## Cycle 2 ##\r\n  1,549ms for drawing\r\n  4,031ms for copying from GPU\r\n## Cycle 3 ##\r\n  1,546ms for drawing\r\n  3,984ms for copying from GPU\r\n## Cycle 4 ##\r\n  1,555ms for drawing\r\n  4,236ms for copying from GPU\r\n## Cycle 5 ##\r\n  1,565ms for drawing\r\n  3,853ms for copying from GPU\r\n## Cycle 6 ##\r\n  1,539ms for drawing\r\n  4,028ms for copying from GPU\r\n## Cycle 7 ##\r\n  1,574ms for drawing\r\n  3,772ms for copying from GPU\r\n## Cycle 8 ##\r\n  1,504ms for drawing\r\n  3,893ms for copying from GPU\r\n## Cycle 9 ##\r\n  1,590ms for drawing\r\n  3,849ms for copying from GPU\r\n6,173ms for freeing up\r\nAverage of 2,484ms for drawing\r\nAverage of  4,461ms for copying from GPU\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-07-14T13:56:19",
+        "reactions": []
+      },
+      {
+        "id": 658233787,
+        "author": "joa77",
+        "body": "\u003E @joa77 Could you change you code in\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E var surface = SKSurface.Create(context, true, info, 0, GRSurfaceOrigin.TopLeft, new SKSurfaceProperties(SKPixelGeometry.Unknown), false);\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E And profile again?\r\n\r\nDo i need to get a new build of SkiaSharp to do this?\r\n",
+        "createdAt": "2020-07-14T15:04:56",
+        "reactions": []
+      },
+      {
+        "id": 658239770,
+        "author": "ziriax",
+        "body": "\u003E Do i need to get a new build of SkiaSharp to do this?\r\n\r\nNo this particular overload works fine.\r\n\r\n\r\n",
+        "createdAt": "2020-07-14T15:15:46",
+        "reactions": []
+      },
+      {
+        "id": 658273440,
+        "author": "joa77",
+        "body": "It\u0027s around 4ms faster now (running on macOS, maybe this makes a difference depending on the OS)\r\nAny chance that the \u0060asyncReadPixels\u0060 method will get implemented in SkiaSharp?",
+        "createdAt": "2020-07-14T16:16:18",
+        "reactions": []
+      },
+      {
+        "id": 658822797,
+        "author": "ziriax",
+        "body": "Okay, since the conversion is done on the CPU, this explains why we both get 4ms when the conversion isn\u0027t done.\r\n\r\nIn my case, the \u0060glReadPixels\u0060 call takes 4ms. On your machine, it takes about 40ms. This is really odd. Are you sure the videocard is in a high bandwidth PCI slot? Because 40ms is way too high.\r\n\r\nYou might want to profile your OpenGL calls, just to make sure. I haven\u0027t done that for a while, but maybe tools like https://apitrace.github.io/ and https://renderdoc.org/ can help\r\n\r\n",
+        "createdAt": "2020-07-15T15:04:08",
+        "reactions": []
+      },
+      {
+        "id": 659200500,
+        "author": "ziriax",
+        "body": "In the old days, we used two PBO surfaces, then \u0060glReadPixels\u0060 becomes async \u0022for free\u0022, e.g. without callbacks:\r\n\r\nhttp://www.songho.ca/opengl/gl_pbo.html\r\n\r\nYou might be able to use that directly, without calling Skia\u0027s read pixels, not sure\r\n\r\n",
+        "createdAt": "2020-07-16T06:59:42",
+        "reactions": []
+      },
+      {
+        "id": 763599309,
+        "author": "luksal",
+        "body": "I\u0027m facing the same problem. Also running on macOS.\r\nI tried the benchmark code found [here](https://github.com/mono/SkiaSharp/issues/1381#issuecomment-653784496) and get results of around 25ms for copying from GPU to CPU.\r\nAre there any chances of improvement? ",
+        "createdAt": "2021-01-20T13:16:38",
+        "reactions": []
+      },
+      {
+        "id": 772979366,
+        "author": "mattleibow",
+        "body": "\u003E @joa77 Could you change you code in\n\u003E \n\u003E \n\u003E \n\u003E \u0060\u0060\u0060\n\u003E \n\u003E var surface = SKSurface.Create(context, true, info, 0, GRSurfaceOrigin.TopLeft, new SKSurfaceProperties(SKPixelGeometry.Unknown), false);\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E \n\u003E \n\u003E \n\u003E And profile again?\n\u003E \n\u003E \n\nCan you try this code and see?",
+        "createdAt": "2021-02-04T02:34:23",
+        "reactions": []
+      },
+      {
+        "id": 912961271,
+        "author": "luksal",
+        "body": "\u003E \u003E @joa77 Could you change you code in\r\n\u003E \u003E \u0060\u0060\u0060\r\n\u003E \u003E \r\n\u003E \u003E var surface = SKSurface.Create(context, true, info, 0, GRSurfaceOrigin.TopLeft, new SKSurfaceProperties(SKPixelGeometry.Unknown), false);\r\n\u003E \u003E \u0060\u0060\u0060\r\n\u003E \u003E \r\n\u003E \u003E \r\n\u003E \u003E     \r\n\u003E \u003E       \r\n\u003E \u003E     \r\n\u003E \u003E \r\n\u003E \u003E       \r\n\u003E \u003E     \r\n\u003E \u003E \r\n\u003E \u003E     \r\n\u003E \u003E   \r\n\u003E \u003E And profile again?\r\n\u003E \r\n\u003E Can you try this code and see?\r\n\r\nSorry for the late response, when trying this code I\u0027m getting an improvement of ~4ms",
+        "createdAt": "2021-09-04T11:53:36",
+        "reactions": []
+      }
+    ]
+  }
 }

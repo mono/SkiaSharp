@@ -13,5 +13,25 @@
   "createdAt": "2021-05-12T02:45:16",
   "updatedAt": "2021-11-19T00:32:24",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:23:32.2872426Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 973433370,
+        "author": "cabal95",
+        "body": "@Jiang-Junjie Not sure if you are still struggling with this, but we ran into the same issue and found a solution. Though I\u0027m not sure if this is a bug or by design.\r\n\r\nTo be honest, I barely understand all this matrix stuff so I\u0027m vague on the actual meaning of everything in the matrix, but we used to multiple the RGB components so that they were values between 0-255. On SkiaSharp 1.x this worked as expected.  Now in 2.x it seems to want values between 0-1.\r\n\r\nOld Code (Works in 1.x)\r\n\r\n\u0060\u0060\u0060cs\r\nvar matrix = new float[]\r\n{\r\n    0, 0, 0, 0, ( float ) ( Color.R * 255 ),\r\n    0, 0, 0, 0, ( float ) ( Color.G * 255 ),\r\n    0, 0, 0, 0, ( float ) ( Color.B * 255 ),\r\n    0, 0, 0, 1, 0\r\n};\r\n\r\nargs.Paint.ColorFilter = SKColorFilter.CreateColorMatrix( matrix );\r\n\u0060\u0060\u0060\r\n\r\nNew Code (Works in 2.x):\r\n\u0060\u0060\u0060cs\r\nvar matrix = new float[]\r\n{\r\n    0, 0, 0, 0, ( float ) Color.R,\r\n    0, 0, 0, 0, ( float ) Color.G,\r\n    0, 0, 0, 0, ( float ) Color.B,\r\n    0, 0, 0, 1, 0\r\n};\r\n\r\nargs.Paint.ColorFilter = SKColorFilter.CreateColorMatrix( matrix );\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2021-11-18T23:29:17",
+        "reactions": []
+      },
+      {
+        "id": 973573062,
+        "author": "Jiang-Junjie",
+        "body": "@cabal95 Oh, that\u0027s cool! Now, I\u0027m using the Old Code in my project. And last week, I had a try with the newest version of SkiaSharp to check. However it not works, so I am using the Old Code now. Your New Code makes me can use the newest version. Thx, bro! \uD83D\uDE0A",
+        "createdAt": "2021-11-19T00:31:59",
+        "reactions": []
+      }
+    ]
+  }
 }

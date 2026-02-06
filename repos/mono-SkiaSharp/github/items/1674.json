@@ -13,5 +13,32 @@
   "createdAt": "2021-03-27T02:03:18",
   "updatedAt": "2021-05-18T22:18:31",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:24:58.9618833Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 809881636,
+        "author": "Vercidium",
+        "body": "Here\u0027s a stack trace from a crash that happened today on my PC.\r\n\r\nThe crash dump has the same details as above, except that I am running \u0060OS Version: 10.0.19041\u0060.\r\n\r\n\u0060\u0060\u0060\r\n[Managed to Native Transition]\t\r\nSkiaSharp.dll!SkiaSharp.HandleDictionary.RegisterHandle(System.IntPtr handle, SkiaSharp.SKObject instance)\r\nSkiaSharp.dll!SkiaSharp.SKObject.RegisterHandle(System.IntPtr handle, SkiaSharp.SKObject instance)\r\nSkiaSharp.dll!SkiaSharp.SKObject.Handle.set(System.IntPtr value)\r\nSkiaSharp.dll!SkiaSharp.SKCanvas.GetObject.AnonymousMethod__135_0(System.IntPtr h, bool o)\r\nSkiaSharp.dll!SkiaSharp.HandleDictionary.GetOrAddObject\u003CSystem.__Canon\u003E(System.IntPtr handle, bool owns, bool unrefExisting, System.Func\u003CSystem.IntPtr, bool, System.__Canon\u003E objectFactory)\r\nSkiaSharp.dll!SkiaSharp.SKObject.GetOrAddObject\u003CSystem.__Canon\u003E(System.IntPtr handle, bool owns, bool unrefExisting, System.Func\u003CSystem.IntPtr, bool, System.__Canon\u003E objectFactory)\r\nSkiaSharp.dll!SkiaSharp.SKCanvas.GetObject(System.IntPtr handle, bool owns, bool unrefExisting)\r\nSkiaSharp.dll!SkiaSharp.SKSurface.Canvas.get()\r\nsectorsedge.exe!Topten.GuiKit.OpenGL.OpenGLDrawingContext.DrawText(Topten.RichTextKit.RichString text, Topten.GuiKit.Rectangle rect, Topten.GuiKit.Font font, Topten.GuiKit.Color color, Topten.GuiKit.Gravity align, int maxLines)\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-03-30T03:39:22",
+        "reactions": []
+      },
+      {
+        "id": 809949691,
+        "author": "toptensoftware",
+        "body": "I don\u0027t really have much to add to this except to say:\r\n\r\n* don\u0027t think this is related to bad typeface/size/scale values as I\u0027ve seen a crash log that captured those details and it all looked fine - just a standard Segoe UI font with normal size.\r\n* don\u0027t think this is threading related as all rendering in my case is done on a single UI thread.\r\n* I\u0027ve seen this in cases where OpenGL is not involved - just plain rendering to a Canvas.\r\n* Subtle clue maybe from first crash log above... exception code 0x80000004 is \u0022No such interface supported\u0022.  Not sure if that helps.",
+        "createdAt": "2021-03-30T06:29:23",
+        "reactions": []
+      },
+      {
+        "id": 843602564,
+        "author": "Vercidium",
+        "body": "I have received a new crash dump from a user with \u0060Exception 0x80000004\u0060 in \u0060SkiaSharp.dll\u0060.\r\n\r\nThe crash dump is available here: https://www.dropbox.com/s/wlozoysbm06th9p/sectorsedge.exe.2544.zip?dl=0\r\nA build of the game is available here: https://www.dropbox.com/s/aalyxs0285wnaw0/sectorsedgev136.zip?dl=0\r\n\r\nThe call stack is:\r\n\u0060\u0060\u0060\r\n[Managed to Native Transition]\r\nSkiaSharp.dll!SkiaSharp.HandleDictionary.RegisterHandle(System.IntPtr handle, SkiaSharp.SKObject instance)\r\nSkiaSharp.dll!SkiaSharp.SKObject.RegisterHandle(System.IntPtr handle, SkiaSharp.SKObject instance)\r\nSkiaSharp.dll!SkiaSharp.SKObject.Handle.set(System.IntPtr value)\r\nSkiaSharp.dll!SkiaSharp.SKFont.SKFont(SkiaSharp.SKTypeface typeface, float size, float scaleX, float skewX)\r\n\u0060\u0060\u0060\r\n\r\nSome details have changed slightly:\r\n\u0060\u0060\u0060\r\nOS Version: 10.0.19042\r\nCLR Version(s): 4.8.4341.0\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-05-18T22:18:31",
+        "reactions": []
+      }
+    ]
+  }
 }

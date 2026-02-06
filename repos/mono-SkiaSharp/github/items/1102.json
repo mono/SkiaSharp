@@ -13,5 +13,322 @@
   "createdAt": "2020-01-14T12:13:23",
   "updatedAt": "2021-09-02T12:44:43",
   "commentCount": 35,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:24:16.3551982Z",
+    "reactions": [
+      {
+        "user": "sebasijan",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:24:16.3552036Z"
+      },
+      {
+        "user": "VijayRM",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:24:16.3552046Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 574150598,
+        "author": "Gillibald",
+        "body": "Simple answer it is not possible to solve without HarfBuzz",
+        "createdAt": "2020-01-14T12:26:02",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:09.3608754Z"
+          }
+        ]
+      },
+      {
+        "id": 575554864,
+        "author": "Jack-Paul",
+        "body": "@Gillibald ,\r\n\r\nI tried to use HarfBuzz to measure the string, but i still get some variation in calculating the width of the arabic text comparing to GDI.\r\n\r\n SKImageInfo info = new SKImageInfo(120, 120);\r\n            float skiaMeasurement = 0;\r\n            using (SKSurface surface = SKSurface.Create(info))\r\n            {\r\n                SKCanvas canvas = surface.Canvas;\r\n                canvas.Clear(SKColors.White);\r\n                using (SKPaint paint = new SKPaint())\r\n                {\r\n                    paint.Typeface = SKTypeface.FromFile(@\u0022D:\\font\\traditional_arabic.ttf\u0022);\r\n                    paint.Color = SKColors.Black;\r\n                    paint.IsAntialias = true;\r\n                    paint.TextSize = fontsize;\r\n                    paint.SubpixelText = true;\r\n                    paint.TextAlign = SKTextAlign.Left;\r\n                    paint.TextEncoding = SKTextEncoding.Utf16;\r\n                    SKRect rect = new SKRect();\r\n                    //SKshaper is used to shape the arabic text\r\n                    var shaper = new SKShaper(paint.Typeface);\r\n                    var shapedText = shaper.Shape(text, paint);\r\n                    skiaMeasurement = shapedText.Points[shapedText.Points.Length-1].X;\r\n                }\r\n            }\r\n\r\nplease confirm me is this the right way to calculate the width of the text or is there some other way to calculate it correctly.",
+        "createdAt": "2020-01-17T09:51:49",
+        "reactions": []
+      },
+      {
+        "id": 575560488,
+        "author": "Gillibald",
+        "body": "Add your text to a buffer then use the overload that takes a buffer. Sum the glyphPosition.XAdvance from the buffer after shaping.",
+        "createdAt": "2020-01-17T10:07:23",
+        "reactions": []
+      },
+      {
+        "id": 575570065,
+        "author": "Jack-Paul",
+        "body": "@Gillibald ,\r\n\r\nAs you said i have passed my text as buffer but the glyphPosition.XAdvance values are so high, if i have to sum them, that would be huge value, i am not sure is that a valid solution.\r\n\r\nSKCanvas canvas = surface.Canvas;\r\n                canvas.Clear(SKColors.White);\r\n                using (SKPaint paint = new SKPaint())\r\n                {\r\n                    paint.Typeface = SKTypeface.FromFile(@\u0022D:\\font\\traditional_arabic.ttf\u0022);\r\n                    paint.Color = SKColors.Black;\r\n                    paint.IsAntialias = true;\r\n                    paint.TextSize = fontsize;\r\n                    paint.SubpixelText = true;\r\n                    paint.TextAlign = SKTextAlign.Left;\r\n                    paint.TextEncoding = SKTextEncoding.Utf16;\r\n                    SKRect rect = new SKRect();\r\n                    //SKshaper is used to shape the arabic text\r\n                    var shaper = new SKShaper(paint.Typeface);\r\n                    HarfBuzzSharp.Buffer buffer = new HarfBuzzSharp.Buffer();\r\n                    buffer.AddUtf32(text);\r\n                    buffer.Direction = HarfBuzzSharp.Direction.RightToLeft;\r\n                    var shapedText = shaper.Shape(buffer, paint);   \r\n                    //shaped text provides points for each char contains x and y position, so to calculate the shaped text we need to \r\n                    skiaMeasurement = shapedText.Points[shapedText.Points.Length-1].X;\r\n                }\r\n\r\nthis is how i have passed it as buffer, i am not sure why do you suggest to sum the glyphPosition.XAdvance, because each value is \u003E100 where my original size itself is 69 points only.",
+        "createdAt": "2020-01-17T10:32:38",
+        "reactions": []
+      },
+      {
+        "id": 575572021,
+        "author": "Gillibald",
+        "body": "\u0060var scale = FontSize / 512\u0060 multiply all advances by that",
+        "createdAt": "2020-01-17T10:37:59",
+        "reactions": []
+      },
+      {
+        "id": 575572965,
+        "author": "Gillibald",
+        "body": "You can also use \u0060paint.MeasureText\u0060 and pass \u0060shapedText.Codepoints\u0060 to it. Make sure to set TextEncoding to GlyphId. You can use the fixed statement to get an IntPtr for the Codepoints array. ",
+        "createdAt": "2020-01-17T10:40:47",
+        "reactions": []
+      },
+      {
+        "id": 575595151,
+        "author": "Jack-Paul",
+        "body": "@Gillibald ,\r\nScaling the value still gives me wrong values, i also tried by passing shapedText.codepoints to measureText, but i did not find MeasureText() has any overload for intptr array, but the codePoints are uint array, how can array be converted to intptr not as intptr[]. or do i missing something else?",
+        "createdAt": "2020-01-17T11:47:39",
+        "reactions": []
+      },
+      {
+        "id": 575597375,
+        "author": "Gillibald",
+        "body": "\u0060\u0060\u0060\r\nfixed(uint* ptr = shapedText.Codepoints)\r\n{\r\n    var width = paint.MeasureText((IntPtr)ptr,....);\r\n\u0060\u0060\u0060\r\n\r\nlength is in bytes",
+        "createdAt": "2020-01-17T11:55:17",
+        "reactions": []
+      },
+      {
+        "id": 575607428,
+        "author": "Jack-Paul",
+        "body": "@Gillibald ,\r\n i am not sure i\u0027m getting it properly, do you saying to pass the length as byte size of the string?\r\ncorrect me if i am wrong.",
+        "createdAt": "2020-01-17T12:30:11",
+        "reactions": []
+      },
+      {
+        "id": 575610896,
+        "author": "Gillibald",
+        "body": "Okay my bad \u0060GlyphId\u0060 is two bytes.\r\n\r\n\u0060var glyphs = new ushort[shapedText.Codepoints.Length];\u0060\r\nthen copy all values of shapedText.Codepoints into that array. \r\n\r\nAfter that you can call paint.MeasureText with \u0060var byteLength = glyphs.Length * 2\u0060",
+        "createdAt": "2020-01-17T12:42:31",
+        "reactions": []
+      },
+      {
+        "id": 576161554,
+        "author": "Jack-Paul",
+        "body": "Hi @Gillibald ,\r\n\r\nI tried as you said, but still my results are wrong, this are my code changes, please let me know why it doesn\u0027t work?\r\n\r\nSKCanvas canvas = surface.Canvas;\r\n                canvas.Clear(SKColors.White);\r\n                using (SKPaint paint = new SKPaint())\r\n                {\r\n                    paint.Typeface = SKTypeface.FromFile(@\u0022D:\\font\\traditional_arabic.ttf\u0022);\r\n                    paint.Color = SKColors.Black;\r\n                    paint.IsAntialias = true;\r\n                    paint.TextSize = fontsize;\r\n                    paint.SubpixelText = true;\r\n                    paint.TextAlign = SKTextAlign.Left;\r\n                    paint.TextEncoding = SKTextEncoding.GlyphId;\r\n                    //SKshaper is used to shape the arabic text\r\n                    var shaper = new SKShaper(paint.Typeface);\r\n                    HarfBuzzSharp.Buffer buffer = new HarfBuzzSharp.Buffer();\r\n                    buffer.AddUtf16(text);\r\n                    buffer.Direction = HarfBuzzSharp.Direction.RightToLeft;\r\n                    var shapedText = shaper.Shape(buffer, paint);\r\n                    var glyphs = new ushort[shapedText.Codepoints.Length];\r\n                    for(int i =0; i\u003CshapedText.Codepoints.Length; i\u002B\u002B)\r\n                    {\r\n                        glyphs[i] =(ushort) shapedText.Codepoints[i];\r\n                    }\r\n                    var byteLength = glyphs.Length * 2;\r\n                    unsafe\r\n                    {\r\n                        fixed (ushort* ptr = glyphs)\r\n                        {\r\n                            skiaMeasurement = paint.MeasureText((IntPtr)ptr, byteLength);\r\n                        }\r\n                    }\r\n                }",
+        "createdAt": "2020-01-20T08:25:58",
+        "reactions": []
+      },
+      {
+        "id": 579141957,
+        "author": "Jack-Paul",
+        "body": "Hi, \r\nAny updates to resolve my issue, it would be so much appreciable.\r\n ",
+        "createdAt": "2020-01-28T08:52:04",
+        "reactions": [
+          {
+            "user": "sebasijan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:11.5338248Z"
+          },
+          {
+            "user": "francoisthebrave",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:11.5338254Z"
+          },
+          {
+            "user": "uxohotteixo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:11.5338255Z"
+          },
+          {
+            "user": "MadhanKumarasamy",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:11.5338256Z"
+          }
+        ]
+      },
+      {
+        "id": 579157762,
+        "author": "Gillibald",
+        "body": "What is the exact difference between those two measurements? ",
+        "createdAt": "2020-01-28T09:34:08",
+        "reactions": []
+      },
+      {
+        "id": 579158012,
+        "author": "Gillibald",
+        "body": "Pls compare the rendering of both and if you can attach a screenshot to this thread. ",
+        "createdAt": "2020-01-28T09:34:54",
+        "reactions": [
+          {
+            "user": "sebasijan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:11.9255278Z"
+          }
+        ]
+      },
+      {
+        "id": 579606974,
+        "author": "Jack-Paul",
+        "body": "Hi @Gillibald ,\r\n\r\nThe text given as input is \u0022\u0022\u06C1\u0645 \u0622\u06C1\u0646\u06AF\u06CC \u0633\u0627\u0641\u0679 \u0648\u06CC\u0626\u0631 \u0645\u06CC\u06BA \u062E\u0648\u0634 \u0622\u0645\u062F\u06CC\u062F\u0022\u0022\r\n\u0060font size = 12f;\u0060\r\nif i give the Text encoding as UTF16 and pass the text as string and calculate the width using \u0060shapedText.Points[shapedText.Points.Length - 1].X\u0060 means i am getting results little similar to GDI\r\n\u003Cimg width=\u0022309\u0022 alt=\u0022Text result\u0022 src=\u0022https://user-images.githubusercontent.com/34718301/73331410-b00fce00-4289-11ea-8a42-de07ebb32a54.PNG\u0022\u003E\r\n\r\nBut if i give the Text encoding as SKTextEncoding.GlyphId and pass the text as Buffer and calculate the width as per your previous suggestion means i am getting huge difference in value\r\n\u003Cimg width=\u0022277\u0022 alt=\u0022buffer result\u0022 src=\u0022https://user-images.githubusercontent.com/34718301/73331494-f2390f80-4289-11ea-938a-46b0f90c8b5f.PNG\u0022\u003E\r\n\r\n**Note** - All the measurements are in points.\r\nI wonder why the values differ so much, i just need a way to correctly calculate the width using Harfbuzz.\r\n\r\nThe font i used here is Traditional Arabic.\r\nKindly let me know if you want any more details, to give better suggestion to implement it correctly.\r\n\r\nThanks,\r\nJackson Paul T",
+        "createdAt": "2020-01-29T05:57:51",
+        "reactions": [
+          {
+            "user": "sebasijan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:12.1287279Z"
+          },
+          {
+            "user": "francoisthebrave",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:12.1287284Z"
+          },
+          {
+            "user": "VijayRM",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:12.1287285Z"
+          }
+        ]
+      },
+      {
+        "id": 581359131,
+        "author": "VijayRM",
+        "body": "@Gillibald - Could you please provide update on this ? Whether it is possible to consider this issue as a defect of SkiaSharp?\r\n\r\n ",
+        "createdAt": "2020-02-03T11:06:07",
+        "reactions": []
+      },
+      {
+        "id": 581451429,
+        "author": "Gillibald",
+        "body": "This is what I get:\r\n![2020-02-03 154303](https://user-images.githubusercontent.com/5928797/73663055-2737ce80-469d-11ea-860b-07e681b3511a.png)\r\n![2020-02-03 154538](https://user-images.githubusercontent.com/5928797/73663067-2a32bf00-469d-11ea-841f-687c55bb9c04.png)",
+        "createdAt": "2020-02-03T14:52:38",
+        "reactions": []
+      },
+      {
+        "id": 581453550,
+        "author": "Gillibald",
+        "body": "Please have a look at the docs: https://docs.microsoft.com/en-us/dotnet/api/system.drawing.graphics.measurestring?view=netframework-4.8\r\n\r\n\u003E The MeasureString method is designed for use with individual strings and includes a small amount of extra space before and after the string to allow for overhanging glyphs. Also, the DrawString method adjusts glyph points to optimize display quality and might display a string narrower than reported by MeasureString. To obtain metrics suitable for adjacent strings in layout (for example, when implementing formatted text), use the MeasureCharacterRanges method or one of the MeasureString methods that takes a StringFormat, and pass GenericTypographic. Also, ensure the TextRenderingHint for the Graphics is AntiAlias.",
+        "createdAt": "2020-02-03T14:56:43",
+        "reactions": []
+      },
+      {
+        "id": 581745904,
+        "author": "Jack-Paul",
+        "body": "Hi @Gillibald ,\r\n\r\nThe image you have attached is it the measurement of GDI or Skia sharp?\r\n\r\n",
+        "createdAt": "2020-02-04T05:10:34",
+        "reactions": []
+      },
+      {
+        "id": 581746045,
+        "author": "Gillibald",
+        "body": "Thats Skia \u002B HarfBuzz",
+        "createdAt": "2020-02-04T05:11:17",
+        "reactions": []
+      },
+      {
+        "id": 581749634,
+        "author": "Jack-Paul",
+        "body": "Hi @Gillibald ,\r\n\r\nEven i to got around 180 points, but the GDI measurement is still arround 150 points, so i just need to know why even after using Harfbuzz with Skia sharp i am getting wrong results.",
+        "createdAt": "2020-02-04T05:29:41",
+        "reactions": []
+      },
+      {
+        "id": 581752688,
+        "author": "Gillibald",
+        "body": "Compare the rendering ",
+        "createdAt": "2020-02-04T05:44:30",
+        "reactions": []
+      },
+      {
+        "id": 581781358,
+        "author": "Jack-Paul",
+        "body": "Hi @Gillibald ,\r\n\r\ni am not using skia sharp to render, i just need to measure the text, that\u0027s my requirement, i need to achieve exact measurement when compare to GDI using skia sharp, so my question is only this, even if i am ready to measure with Harfbuzz how can i achieve the desired result?",
+        "createdAt": "2020-02-04T07:41:13",
+        "reactions": []
+      },
+      {
+        "id": 581806556,
+        "author": "Gillibald",
+        "body": "You can\u0027t expect two different technologies to produce the exact same results.",
+        "createdAt": "2020-02-04T08:58:44",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:14.0666544Z"
+          }
+        ]
+      },
+      {
+        "id": 581807098,
+        "author": "Gillibald",
+        "body": "Use MeasureCharacterRanges and compare the results for each glyph. Maybe you find a magic number to fix the difference. ",
+        "createdAt": "2020-02-04T09:00:12",
+        "reactions": []
+      },
+      {
+        "id": 582738463,
+        "author": "Jack-Paul",
+        "body": "I am not asking for same results here, but just approximate, but you can see there is huge difference in using it. Even if the technologies are different, the text measurement value is constant for the given length.\r\nlittle bit of difference for measuring the same text is okay, but if skia sharp measure with so much difference, how could it be okay?\r\nThe use case of the Measure Text is to measure the approximate length of the given string, but you are suggesting me to compare the difference between its rendering.\r\nIf skia sharp has this huge difference even after shaping the text and measuring, is it not a bug from skia sharp?\r\n\r\nthe final suggestion made from you is to use MeasureCharacterRanges which is GDI API, so that is out of scope to compare some other GDI other API.\r\n\r\nPlease suggest me if any possible solution out there to fix this issue, or please confirm me it\u0027s skia sharp issue.\r\n\r\nThanks,\r\nJack ",
+        "createdAt": "2020-02-06T05:03:09",
+        "reactions": []
+      },
+      {
+        "id": 582739806,
+        "author": "Gillibald",
+        "body": "\u003E The MeasureString method is designed for use with individual strings and includes a small amount of extra space before and after the string to allow for overhanging glyphs\r\n\r\nBecause of that, you get different results. \u0060MeasureCharacterRanges\u0060 isn\u0027t adding extra space and therefore should produce better results. That\u0027s why I suggested the different API.",
+        "createdAt": "2020-02-06T05:09:58",
+        "reactions": []
+      },
+      {
+        "id": 582762569,
+        "author": "Gillibald",
+        "body": "![Measure](https://user-images.githubusercontent.com/5928797/73912541-077af300-48b5-11ea-86e5-1769277d984e.PNG)\r\n\r\nGDI includes extra whitespace so you get a slightly different result. I will not spend more time on this issue. \r\n\r\nGood luck ",
+        "createdAt": "2020-02-06T06:49:10",
+        "reactions": []
+      },
+      {
+        "id": 582762903,
+        "author": "Gillibald",
+        "body": "![harfbuzz](https://user-images.githubusercontent.com/5928797/73912644-54f76000-48b5-11ea-8a7c-6a4cae850407.PNG)\r\n",
+        "createdAt": "2020-02-06T06:50:26",
+        "reactions": []
+      },
+      {
+        "id": 588997418,
+        "author": "Jack-Paul",
+        "body": "Hi @Gillibald ,\r\n\r\nThank you so much, for the last update, i actually got correct measurement by implementing code from the above picture, i have checked for few font, it really worked for some fonts, so i started a benchmark test to compare the result of GDI, Skia sharp, Skia sharp \u002Bharfbuzz implementation, at last i got moderate result, on my further analysis, i have found it works great for some font\u0027s only,\r\nThe reason why i am comparing for many different font variation because, i need to completely replace normal Skia sharp measurement implementation to Skia sharp \u002B harfbuzz implementation on our project, which is really a big step to take, but this current result, even though i worked for some font, the result were not that great.\r\n\r\nPlease find these comparison results\r\n[comparision.docx](https://github.com/mono/SkiaSharp/files/4230377/comparision.docx)\r\n\r\n\r\n[RTL Result.pdf](https://github.com/mono/SkiaSharp/files/4230660/RTL.Result.pdf)\r\n \r\n\r\n Is there any way to improve this results, it would to so much appreciable if i could find better results.\r\n\r\n",
+        "createdAt": "2020-02-20T12:29:21",
+        "reactions": []
+      },
+      {
+        "id": 589015476,
+        "author": "Gillibald",
+        "body": "Not all fonts support all scripts, etc. So for unsupported glyphs a replacement glyph is used. That glyph is also different for most fonts. So to properly compair results you have make sure all codepoints can be mapped to glyphs. Before you shape the codepoints should be 0 in the buffer.",
+        "createdAt": "2020-02-20T13:12:34",
+        "reactions": []
+      },
+      {
+        "id": 589016324,
+        "author": "Gillibald",
+        "body": "GDI might perform a font fallback and HarfBuzz doesn\u0027t do that for you. So all codepoints that can\u0027t be mapped need to be shaped with a different typeface that supports the codepoints. ",
+        "createdAt": "2020-02-20T13:14:15",
+        "reactions": []
+      },
+      {
+        "id": 589017204,
+        "author": "Gillibald",
+        "body": "Fill the buffer. Split the buffer when a sequence of 0 values occurs. Try to find a fallback via SKFontManager.Default.MatchCharacter and shape that portion of the original buffer again. ",
+        "createdAt": "2020-02-20T13:16:08",
+        "reactions": []
+      },
+      {
+        "id": 911254617,
+        "author": "MohanaselvamJ",
+        "body": "Hi @Gillibald ,\r\n\r\nThanks for your suggestion. \r\n\r\nMy requirement also same as like above.\r\n\r\nCould you please share some more information (code snippet or reference API documentation), how to achieve splitting the buffer and again combine the buffer to use in Shape() API.\r\n\r\n",
+        "createdAt": "2021-09-02T06:28:13",
+        "reactions": []
+      },
+      {
+        "id": 911638887,
+        "author": "Gillibald",
+        "body": "I suggest using https://github.com/toptensoftware/RichTextKit which does everything for you.",
+        "createdAt": "2021-09-02T12:44:35",
+        "reactions": []
+      }
+    ]
+  }
 }

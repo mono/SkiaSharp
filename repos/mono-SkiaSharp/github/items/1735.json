@@ -14,5 +14,25 @@
   "updatedAt": "2021-08-19T06:19:37",
   "closedAt": "2021-08-19T06:19:37",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:24:23.4385567Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 875801962,
+        "author": "romen-h",
+        "body": "Upon reviewing my question I finally noticed the \u002232-bit color\u0022 in the description for \u0060SKColorType.Rgb888x\u0060.\r\nClearly that\u0027s not the color type I need, but my question still stands; Is it possible to make an \u0060SKImageInfo\u0060 that describes this 24-bit RGB pixel data?",
+        "createdAt": "2021-07-07T17:44:44",
+        "reactions": []
+      },
+      {
+        "id": 901642321,
+        "author": "mattleibow",
+        "body": "I do not believe skia supports a 24-bit color type. It supports reading 8-bit, 16-bit and 32-bit colors and a few floating point colors.\r\n\r\nI believe pixel sizes are for optimizing memory operations with either 1, 2 or 4 bytes. 3 bytes are a bit harder to copy and things like that. You might find that you get better performance with a single load and then faster operations vs a quick load and then all operations need additional math.\r\n\r\nI would suggest asking on the skia engine discussion site for details on this: https://groups.google.com/g/skia-discuss\r\n",
+        "createdAt": "2021-08-19T06:19:26",
+        "reactions": []
+      }
+    ]
+  }
 }

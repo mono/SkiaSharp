@@ -18,5 +18,45 @@
   "createdAt": "2019-05-28T19:28:53",
   "updatedAt": "2021-09-07T07:55:52",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:24:00.8598798Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 498669558,
+        "author": "billyjacobs2014",
+        "body": "Is it normal that questions don\u0027t get responded to for a week?",
+        "createdAt": "2019-06-04T13:23:06",
+        "reactions": []
+      },
+      {
+        "id": 498697557,
+        "author": "Gillibald",
+        "body": "Is it normal that this is community driven? ",
+        "createdAt": "2019-06-04T14:32:03",
+        "reactions": []
+      },
+      {
+        "id": 795115723,
+        "author": "anpin",
+        "body": "I\u0027m having exactly the same issue here. Made tap, double tap and pan handlers inside OnTouch override and they work fine in the simulator, but on the actual device (Android and iOS) SKTouchAction. Moved is always called right after SKTouchAction.Pressed even if I\u0027m trying not to move my finger.",
+        "createdAt": "2021-03-10T09:02:07",
+        "reactions": []
+      },
+      {
+        "id": 914078055,
+        "author": "EmmanuelJego",
+        "body": "I had the same issue. My workaround was to call a function to check, within the \u0060SKTouchAction.Moved\u0060 switch case, if a move is actually a tap:\r\n\u0060\u0060\u0060\r\nprivate bool CheckIsTap(SKPoint pt)\r\n{\r\n    return _startMovePoint != null \r\n       \u0026\u0026 _startMoveTime != null \r\n       \u0026\u0026 SKPoint.Distance(pt, _startMovePoint) \u003C 20 \r\n       \u0026\u0026 (DateTime.Now - _startMoveTime).TotalMilliseconds \u003C 100;\r\n}\r\n\u0060\u0060\u0060\r\n\u0060_startMovePoint \u0060 and \u0060_startMoveTime\u0060 being the location and time of the tap event triggered just before the move event.",
+        "createdAt": "2021-09-07T07:55:52",
+        "reactions": [
+          {
+            "user": "anpin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:24:00.8107607Z"
+          }
+        ]
+      }
+    ]
+  }
 }

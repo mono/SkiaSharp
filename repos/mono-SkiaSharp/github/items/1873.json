@@ -31,5 +31,81 @@
       "state": "DISMISSED",
       "submittedAt": "2021-12-14T19:48:03"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:23:22.9761736Z",
+    "reactions": [
+      {
+        "user": "robloo",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:23:22.9761805Z"
+      },
+      {
+        "user": "nor0x",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:23:22.9761813Z"
+      },
+      {
+        "user": "nor0x",
+        "content": "eyes",
+        "createdAt": "2026-02-06T14:23:22.9761818Z"
+      },
+      {
+        "user": "vincentcastagna",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:23:22.9761822Z"
+      },
+      {
+        "user": "jeanplevesque",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:23:22.9761829Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 977925736,
+        "author": "jeromelaban",
+        "body": "@mattleibow I assume the build errors are caused by the inclusion of nuget.org in the nuget.config file, though I\u0027m not able to build locally as nuget.org packages are missing. What\u0027s the correct route to fix this ? Thanks!",
+        "createdAt": "2021-11-24T14:22:54",
+        "reactions": []
+      },
+      {
+        "id": 985832737,
+        "author": "robloo",
+        "body": "@jeromelaban @mattleibow This is an important issue as without it fixed Skia cannot be used with Uno Platform 4.x (UWP projects).\r\n\r\nOn my end attempting to construct an \u0060SKXamlCanvas\u0060 with Skia preview version 2.88.0-preview.155 (SkiaSharp \u0026 SkiaSharp.Views.Uno) and Uno.UI version 4.0.8 throws the exception:\r\n\r\n{System.TypeLoadException: Could not resolve type with token 0100007b from typeref (expected class \u0027Windows.UI.Core.UIAsyncOperation\u0027 in assembly \u0027Uno, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027)\r\n  at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start[TStateMachine] (TStateMachine\u0026 stateMachine) [0x0002c] in /Users/builder/jenkins/workspace/archive-mono/2020-02/android/release/mcs/class/referencesource/mscorlib/system/runtime/compilerservices/AsyncMethodBuilder.cs:84 \r\n  at SkiaSharp.Views.UWP.SKXamlCanvas.Invalidate () [0x00007] in \u003Cb29578e77edf45458b8e1c6cb6b3ad98\u003E:0 \r\n  at SkiaSharp.Views.UWP.SKXamlCanvas.OnDpiChanged (Windows.Graphics.Display.DisplayInformation sender, System.Object args) [0x00013] in D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno\\SKXamlCanvas.cs:83 \r\n  at SkiaSharp.Views.UWP.SKXamlCanvas.Initialize () [0x0000e] in D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno\\SKXamlCanvas.cs:36 \r\n  at SkiaSharp.Views.UWP.SKXamlCanvas..ctor () [0x00027] in D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.Android\\SKXamlCanvas.Android.cs:14 \r\n  at ...Controls.LineChart..ctor () [0x00177] in ...\\Source\\Controls\\Charts\\LineChart\\LineChart.cs:108 }",
+        "createdAt": "2021-12-03T21:15:11",
+        "reactions": []
+      },
+      {
+        "id": 987586962,
+        "author": "mikebmcl",
+        "body": "Is there any timeframe for this patch being applied and pushed to nuget? Possibly applied against 2.80.3 and published as a minor update of that if 2.88 isn\u0027t likely to be ready for release soon?\r\n\r\nI\u0027ve been tinkering with a replacement for my use of SkiaSharp and I\u0027m almost at the point where I need to decide if I\u0027m going to commit to that. Knowing the expected timeframe for this would help me greatly. Thanks!",
+        "createdAt": "2021-12-07T05:41:28",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:23:22.6595052Z"
+          },
+          {
+            "user": "robloo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:23:22.6595054Z"
+          },
+          {
+            "user": "peternary",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:23:22.6595055Z"
+          }
+        ]
+      },
+      {
+        "id": 998958409,
+        "author": "robloo",
+        "body": "This corresponds with the SkiaSharp 2.88.0-preview.179 nuget (including SkiaSharp.Views and SkiaSharp.Views.Uno)\r\n\r\nAny Uno version \u003C 4.0 must use SkiaSharp \u003C 2.88.0-preview.179 and\r\nAny Uno version \u003E= 4.0 must use SkiaSharp \u003E= 2.88.0-preview.179",
+        "createdAt": "2021-12-21T17:20:10",
+        "reactions": []
+      }
+    ]
+  }
 }
