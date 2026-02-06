@@ -24,5 +24,56 @@
   "deletions": 0,
   "changedFiles": 21,
   "commits": 4,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:11:50.7084093Z",
+    "reactions": [
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:11:50.7084166Z"
+      },
+      {
+        "user": "yurkinh",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:11:50.7084173Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 507176801,
+        "author": "charlesroddie",
+        "body": "This is interesting @mattleibow . Does \u0022infinite gesture view\u0022 mean that gesture positioning outside of a view is recorded? That would be needed for certain types of controls including sliders and scrolling and dragging views, where drags outside of the view need to be captured.",
+        "createdAt": "2019-07-01T08:52:36",
+        "reactions": []
+      },
+      {
+        "id": 520269258,
+        "author": "mattleibow",
+        "body": "@charlesroddie it should. You should be able to test out the sample and see that it basically \u0022captures\u0022 the input to allow this effect.",
+        "createdAt": "2019-08-11T23:15:19",
+        "reactions": []
+      },
+      {
+        "id": 529292719,
+        "author": "radderz",
+        "body": "@mattleibow I recommend you look at my [Mapsui PR](https://github.com/Mapsui/Mapsui/pull/663#issuecomment-528963199) as without this PR the mapsui fling doesn\u0027t work well in Mapsui.Forms. I wrote the fling implementation and a lot of the touch interactions like rotation/zoom in mapsui. I wouldn\u0027t use the master branch as a basis as it only looks at the last two events, which are sometimes in the same location, instead you want to look for the last couple hundred millis and look for an average over that time. This isn\u0027t in master as Paul hasn\u0027t been very active recently.",
+        "createdAt": "2019-09-09T04:13:47",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:50.4268988Z"
+          }
+        ]
+      },
+      {
+        "id": 688585957,
+        "author": "mattleibow",
+        "body": "This needs to be reworked a bit to use a templated view with interchangeable HW/SW views instead of a new base.",
+        "createdAt": "2020-09-08T02:41:55",
+        "reactions": []
+      }
+    ]
+  }
 }

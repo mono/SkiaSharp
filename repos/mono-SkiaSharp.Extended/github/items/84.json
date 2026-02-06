@@ -14,5 +14,56 @@
   "updatedAt": "2020-08-15T00:16:24",
   "closedAt": "2020-08-15T00:16:24",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:12:27.485016Z",
+    "reactions": [
+      {
+        "user": "adverst",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:12:27.4850229Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 528033414,
+        "author": "adverst",
+        "body": "@Happypig375 you can do:\r\n\r\n\u0060\u0060\u0060c#\r\nXmlReader reader = XmlReader.Create(new StringReader(someSvgString));\r\n\r\nvar svg = new SKSvg();\r\nsvg.Load(reader);\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-09-04T18:45:28",
+        "reactions": [
+          {
+            "user": "gajo357",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:12:26.8386276Z"
+          },
+          {
+            "user": "lindexi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:12:26.8386281Z"
+          }
+        ]
+      },
+      {
+        "id": 528188482,
+        "author": "Happypig375",
+        "body": "SkSvg uses an XmlReader that has custom settings by default. We should be able to use it by default.",
+        "createdAt": "2019-09-05T04:10:39",
+        "reactions": []
+      },
+      {
+        "id": 542090256,
+        "author": "maartenmensink",
+        "body": "@Happypig375 You can use the default. You can pass in a stream of your xml content. That will load with the settings from SkSvg\r\n\r\n\u0060\u0060\u0060 csharp\r\nstring svgText = @\u0022\u003Csvg xmlns=\u0027http://www.w3.org/2000/svg\u0027 width=\u002724\u0027 height=\u002724\u0027 viewBox=\u00270 0 24 24\u0027\u003E\u003Cpath d=\u0027M0 0h24v24H0z\u0027 fill=\u0027none\u0027/\u003E\u003Cpath d=\u0027M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z\u0027 fill=\u0027#ffffff\u0027/\u003E\u003C/svg\u003E\u0022;\r\nbyte[] bytes = Encoding.UTF8.GetBytes(svgText);\r\nMemoryStream stream = new MemoryStream(bytes);\r\nSKSvg svg = new SKSvg();\r\nsvg.Load(stream);\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060 csharp\r\npublic SKPicture Load(Stream stream)\r\n{\r\n      using (XmlReader reader = XmlReader.Create(stream, this.xmlReaderSettings, SKSvg.CreateSvgXmlContext()))\r\n        return this.Load(reader);\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-10-15T08:01:53",
+        "reactions": []
+      },
+      {
+        "id": 674318866,
+        "author": "mattleibow",
+        "body": "Thanks for this issue, but due the the fact that this library is now deprecated, no further work will be done on this library.\r\n\r\nI would recommend using the far superior https://github.com/wieslawsoltes/Svg.Skia",
+        "createdAt": "2020-08-15T00:16:24",
+        "reactions": []
+      }
+    ]
+  }
 }
