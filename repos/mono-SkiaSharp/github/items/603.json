@@ -1,0 +1,18 @@
+{
+  "number": 603,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to decode using SKBitmap.Decode when I create the stream or byte[] using RGBA32/Gray8 format image buffer",
+  "body": "### Description\r\nI am trying to resize image buffers (RGBA 32bit/ Gary 8 bit) using SKBitmap.Resize method.\r\nFor creating SKBitmap I used SKBitmap.Decode which gives null when passed RGBA 32/8 bit byte[].\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060csharp\r\n    using (Stream stream = new MemoryStream(imageBuffer)) // imageBuffer is byte[] in RGBA 32bit or Gray 8bit\r\n    {\r\n        using (var original = SKBitmap.Decode(stream)) // original is null for me.\r\n        {\r\n            using (var resized = original.Resize(new SKImageInfo(width, height), SKBitmapResizeMethod.Lanczos3))\r\n            {\r\n                bufferOutput = resized.Bytes;\r\n            }\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nSKBitmap.Decode should give me SKBitmap object which I can use for further manipulaions.\r\n\r\n### Actual Behavior\r\nSKBitmap.Decode gives null when I pass RGBA 32bit or 8bit image buffer.\r\n\r\n### Basic Information\r\n- Version with issue:  1.60\r\n- Last known good version:  This is the first version I used.\r\n- IDE:  Visual Studio 2017\r\n- Platform Target Frameworks: .Net Core 2.0\r\n  - Windows Classic: Windows 7\r\n- Target Devices:\r\n  -   Windows Desktop machines but should run in .Net Core environment.\r\n\r\nWhether SKBitmap.Decode is the right approach for creating a SKBitmap from a RGBA byte[].\r\nPlease suggest how I can resize a byte[] with SkiaSharp.\r\n\r\nThanks\r\nBasanth",
+  "author": {
+    "login": "msbasanth",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-08-03T11:43:13",
+  "updatedAt": "2022-08-19T15:01:52",
+  "closedAt": "2018-08-15T19:31:37",
+  "commentCount": 1,
+  "reactionCount": 0
+}
