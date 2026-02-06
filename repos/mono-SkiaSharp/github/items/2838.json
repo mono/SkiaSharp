@@ -23,5 +23,67 @@
   "updatedAt": "2024-06-04T13:16:15",
   "closedAt": "2024-06-04T13:15:47",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:36:42.2776141Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2063466370,
+        "author": "softlion",
+        "body": "it looks like it\u0027s back in the version 3.0.0-preview3.1 \r\n\r\nDid I dream that it was there before ? I don\u0027t think so.  \r\nMy add did work on iOS before I upgraded.\r\n\r\nIt used to be there with the \u0060UseSkiSharp(true)\u0060 overload.\r\n\r\nbtw 3.0.0-preview3.1 is crashing with that message:\r\n\r\n\u0060\u0060\u0060\r\nThe version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [115.0, 116.0).\r\n\r\nat SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\r\n   at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\r\n   at SkiaSharp.SKObject..cctor()\r\n\r\nInnerException was TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\r\n\t   at SkiaSharp.SKData..ctor(IntPtr x, Boolean owns)\r\n   at SkiaSharp.SKData.SKDataStatic..ctor(IntPtr x)\r\n   at SkiaSharp.SKData..cctor()\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2024-04-18T09:46:23",
+        "reactions": []
+      },
+      {
+        "id": 2064910011,
+        "author": "janne-hmp",
+        "body": ".NET runtime in .NET 9.0 Preview 3 is broken since they removed some globalization code. For the time being, adding  \u0060\u003CInvariantGlobalization\u003Etrue\u003C/InvariantGlobalization\u003E\u0060 to your project file should help.",
+        "createdAt": "2024-04-18T18:44:42",
+        "reactions": []
+      },
+      {
+        "id": 2064990810,
+        "author": "softlion",
+        "body": "\u003E .NET runtime in .NET 9.0 Preview 3 is broken since they removed some globalization code. For the time being, adding \u0060\u003CInvariantGlobalization\u003Etrue\u003C/InvariantGlobalization\u003E\u0060 to your project file should help.\r\n\r\nI\u0027m using the .NET 8 stable release, not .NET 9 previews. Does that still apply ?",
+        "createdAt": "2024-04-18T19:08:34",
+        "reactions": []
+      },
+      {
+        "id": 2065071320,
+        "author": "janne-hmp",
+        "body": "Then it may be something different. On that note, not sure if SkiaSharp 3.0 Preview 3.1 is fully compatible with .NET 8. It seems like it is being developed for .NET 9.",
+        "createdAt": "2024-04-18T19:31:40",
+        "reactions": []
+      },
+      {
+        "id": 2065797202,
+        "author": "softlion",
+        "body": "\u003E Then it may be something different. On that note, not sure if SkiaSharp 3.0 Preview 3.1 is fully compatible with .NET 8. It seems like it is being developed for .NET 9.\r\n\r\nWell when you develop something specifically for .net9, your tfm won\u0027t be .net7. Not sure you are right on that one.",
+        "createdAt": "2024-04-19T05:37:56",
+        "reactions": []
+      },
+      {
+        "id": 2070581993,
+        "author": "mattleibow",
+        "body": "I think the issue about the missing API is that you need to use the compatibility nuget for 2.x: https://github.com/mono/SkiaSharp/blob/release/2.x/source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls.Compatibility/AppHostBuilderExtensions.cs#L22\r\n\r\nFor 3.x, this API is no longer needed since the GL view is now part of the handlers: https://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/AppHostBuilderExtensions.cs#L16",
+        "createdAt": "2024-04-22T18:35:42",
+        "reactions": []
+      },
+      {
+        "id": 2147442290,
+        "author": "dotnet-policy-service[bot]",
+        "body": "Hi @softlion. We have added the \u0060status/needs-info\u0060 label to this issue, which indicates that we have an open question for you before we can take further action. This issue will be closed automatically in 7 days if we do not hear back from you by then - please feel free to re-open it if you come back to this issue after that time.\n\u003C!-- Policy app identification https://img.shields.io/static/v1?label=PullRequestIssueManagement. --\u003E",
+        "createdAt": "2024-06-04T12:43:09",
+        "reactions": []
+      },
+      {
+        "id": 2147511218,
+        "author": "softlion",
+        "body": "Still using 3.0.0-preview.3.1, with net8 updates the last crash is finally fixed.",
+        "createdAt": "2024-06-04T13:15:47",
+        "reactions": []
+      }
+    ]
+  }
 }

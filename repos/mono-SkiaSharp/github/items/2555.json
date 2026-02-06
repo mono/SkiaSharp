@@ -14,5 +14,31 @@
   "updatedAt": "2024-04-14T11:56:20",
   "closedAt": "2024-04-14T09:54:44",
   "commentCount": 2,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:37:55.478498Z",
+    "reactions": [
+      {
+        "user": "angelofb",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:37:55.4785213Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1681288919,
+        "author": "janne-hmp",
+        "body": "@mattleibow Based on some comments in #2112 and #2188 and I tested this further with GnollHack by changing most SKBitmaps to SKImages, and the FPS dropped to 0.2 even in normal zoom in 2.80.3. So drawing SKImages seems to be terribly much slower than that of SKBitmaps, which is probably the reason (along with possibly allocating more memory to SKImages on every draw in the  wrapper) for the performance drop if somebody wrapped SKBitmaps with SKImages before drawing. If this is in fact the problem, would it be possible to get the direct non-wrapped SKBitmap drawing routines back to SkiaSharp?",
+        "createdAt": "2023-08-16T21:22:52",
+        "reactions": []
+      },
+      {
+        "id": 2053990026,
+        "author": "TommiGustafsson-HMP",
+        "body": "@mattleibow  We were able to resolve the performance degradation by:\r\n- Increasing GPU Resource Cache to 1 GB on Android devices.\r\n- Using SKImages instead of SKBitmaps.\r\n\r\nWe are not sure why Android requires a huge GPU Resource Cache. On iOS, things work well with a smaller cache.",
+        "createdAt": "2024-04-14T09:54:44",
+        "reactions": []
+      }
+    ]
+  }
 }

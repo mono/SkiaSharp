@@ -19,5 +19,66 @@
   "updatedAt": "2024-06-21T14:16:48",
   "closedAt": "2024-06-21T14:03:31",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:36:23.0444425Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2173072601,
+        "author": "janne-hmp",
+        "body": "Update: Release mode seems to be working better. The app crashes in debug mode, so perhaps something to do with (native) debugger.",
+        "createdAt": "2024-06-17T10:53:37",
+        "reactions": []
+      },
+      {
+        "id": 2173117218,
+        "author": "janne-hmp",
+        "body": "Update 2: Seems to be also crashing in release mode, but a bit less frequently.",
+        "createdAt": "2024-06-17T11:17:57",
+        "reactions": []
+      },
+      {
+        "id": 2180165312,
+        "author": "TommiGustafsson-HMP",
+        "body": "There\u0027s also a stowed exception (0xC000027B) to be found:\r\n\r\n\u003E Exception thrown at 0x00007FFB236EF39C (KernelBase.dll) in GnollHackM.exe: WinRT originate error - 0x80004005 : \u0027Reentrancy was detected in this XAML application. Use a debugger to locate the reentrant code and, if necessary, move that code to an asynchronous event handler. Press OK to exit the application.\u0027.\r\n\r\nSee the full error report on Stack Overflow here:\r\n\r\nhttps://stackoverflow.com/questions/78641494/net-maui-windows-9-0-preview-5-on-windows-winui-3-crashes-when-using-swapchainp\r\n\r\nSo, the exception reports re-entrancy. \r\n\r\n@mattleibow Is it possible that SKGLView on Windows/WinUI3 has re-entrant code?",
+        "createdAt": "2024-06-20T08:54:58",
+        "reactions": []
+      },
+      {
+        "id": 2181174258,
+        "author": "TommiGustafsson-HMP",
+        "body": "@mattleibow Here\u0027s a better call stack with SkiaSharp functions revealed:\r\n\u0060\u0060\u0060\r\n        GnollHackM.dll!GnollHackM.GamePage.PaintMainGamePage(object sender, SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs e) Line 7520\tC#\r\n \tGnollHackM.dll!GnollHackM.GamePage.canvasView_PaintSurface(object sender, SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs e) Line 3860\tC#\r\n \tGnollHackM.dll!GnollHackM.SwitchableCanvasView.internalGLView_PaintSurface(object sender, SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs e) Line 213\tC#\r\n \tSkiaSharp.Views.Maui.Core.dll!SkiaSharp.Views.Maui.Handlers.SKGLViewHandler.MauiSKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.Windows.SKPaintGLSurfaceEventArgs e)\tUnknown\r\n \tSkiaSharp.Views.Windows.dll!SkiaSharp.Views.Windows.SKSwapChainPanel.OnRenderFrame(Windows.Foundation.Rect rect)\tUnknown\r\n \tSkiaSharp.Views.Windows.dll!SkiaSharp.Views.Windows.AngleSwapChainPanel.RenderFrame()\tUnknown\r\n \tSkiaSharp.Views.Windows.dll!SkiaSharp.Views.Windows.AngleSwapChainPanel.Invalidate()\tUnknown\r\n \tMicrosoft.Maui.dll!Microsoft.Maui.CommandMapper.InvokeCore(string key, Microsoft.Maui.IElementHandler viewHandler, Microsoft.Maui.IElement virtualView, object args)\tUnknown\r\n \tSkiaSharp.Views.Maui.Controls.dll!SkiaSharp.Views.Maui.Controls.SKGLView.InvalidateSurface()\tUnknown\r\n \tGnollHackM.dll!GnollHackM.SwitchableCanvasView.InvalidateSurface() Line 75\tC#\r\n \tGnollHackM.dll!GnollHackM.GamePage.UpdateMainCanvas() Line 1325\tC#\r\n \tGnollHackM.dll!GnollHackM.SwitchableCanvasView.OnPropertyChanged(string propertyName) Line 353\tC#\r\n \tMicrosoft.Maui.Controls.dll!Microsoft.Maui.Controls.BindableObject.SetValueActual(Microsoft.Maui.Controls.BindableProperty property, Microsoft.Maui.Controls.BindableObject.BindablePropertyContext context, object value, bool currentlyApplying, Microsoft.Maui.Controls.Internals.SetValueFlags attributes, Microsoft.Maui.Controls.SetterSpecificity specificity, bool silent)\tUnknown\r\n \tMicrosoft.Maui.Controls.dll!Microsoft.Maui.Controls.BindableObject.SetValue(Microsoft.Maui.Controls.BindableProperty property, object value)\tUnknown\r\n \tGnollHackM.dll!GnollHackM.SwitchableCanvasView.GeneralAnimationCounter.set(long value) Line 332\tC#\r\n \tGnollHackM.dll!GnollHackM.GamePage.StartMainCanvasAnimation.AnonymousMethod__415_0(double v) Line 1611\tC#\r\n \tMicrosoft.Maui.Controls.dll!Microsoft.Maui.Controls.Animation.GetCallback.AnonymousMethod__5_0(double f)\tUnknown\r\n \tMicrosoft.Maui.Controls.dll!Microsoft.Maui.Controls.AnimationExtensions.HandleTweenerUpdated(object o, System.EventArgs args)\tUnknown\r\n \tMicrosoft.Maui.Controls.dll!Microsoft.Maui.Controls.Tweener.Step(long step)\tUnknown\r\n \tMicrosoft.Maui.dll!Microsoft.Maui.Animations.Animation.Tick(double milliseconds)\tUnknown\r\n \tMicrosoft.Maui.dll!Microsoft.Maui.Animations.AnimationManager.OnFire()\tUnknown\r\n \tWinRT.Runtime.dll!ABI.System.EventHandler\u003Cobject\u003E.Do_Abi_Invoke\u003Cnint\u003E(void* thisPtr, nint sender, nint args)\tUnknown\r\n \t[Native to Managed Transition]\t\r\n \tMicrosoft.ui.xaml.dll!00007ffbc889aa9e()\tUnknown\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-06-20T17:16:11",
+        "reactions": []
+      },
+      {
+        "id": 2181828795,
+        "author": "mattleibow",
+        "body": "Maybe the ticker is triggering a draw while a draw is happening. There seems to be some sort of animation taking place....\n\nAre you able to try repro with the view animating?\n\nOr are you using animation apis to update frames? Can you try a render loop and not invalidating manually? ",
+        "createdAt": "2024-06-21T01:42:27",
+        "reactions": []
+      },
+      {
+        "id": 2182665235,
+        "author": "janne-hmp",
+        "body": "Yes, in order to get a consistent frame rate performance of 60 fps on Android and iOS (and consequently on Windows, too), the game is using Animation functionality to set the animation counter forward every 1/60th (or 1/40th) of a second. It works great on mobile, while using Device.StartTimer in Xamarin or Microsoft.Maui.Controls.Application.Current.Dispatcher.CreateTimer() in MAUI results potentially in a very variable, non-smooth rate of animation progress.\r\n\r\nOn Windows, setting SKGLView\u0027s HasRenderLoop to true, results in a screen refresh rate of 144 Hz, but all the other threads seem to be then working very slowly (like the UI thread trying to advance the animation counter every 1/60th (or 1/40th) of a second regardless of the screen refresh rate; animations progress at this rate regardless of the screen refresh rate) or the game logic thread (responsible for updating the game state and thus also what is being seen on the screen). It does, though, seem to fix the crashing problem.",
+        "createdAt": "2024-06-21T12:32:14",
+        "reactions": []
+      },
+      {
+        "id": 2182818997,
+        "author": "janne-hmp",
+        "body": "I now changed our SwitchableCanvasView\u0027s InvalidateSurface to be the following (GHApp.WindowsXamlWindow holds the pointer to the app\u0027s XamlWindow on Windows):\r\n\r\n\u0060\u0060\u0060\r\n        public void InvalidateSurface()\r\n        {\r\n#if WINDOWS\r\n            if(GHApp.WindowsXamlWindow != null)\r\n            {\r\n                GHApp.WindowsXamlWindow.DispatcherQueue?.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =\u003E \r\n                {\r\n#endif\r\n                    if(UseGL)\r\n                        internalGLView.InvalidateSurface();\r\n                    else\r\n                        internalCanvasView.InvalidateSurface();\r\n#if WINDOWS\r\n                });\r\n            }\r\n#endif\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nThis seemed to do the trick on Windows without sacrificing any performance, both with SKGLView (crashed with reentrancy) and SKCanvasView (hanged up). On the contrary, the performance seemed to get a bit better for some reason.\r\n\r\nOne remaining thing I would note is that there is sometimes a red line artefact in the middle of the screen with SKGLView in cases where SkiaSharp has not had enough time to draw the whole screen before rendering happens. SKCanvasView works always just fine. ",
+        "createdAt": "2024-06-21T14:03:31",
+        "reactions": [
+          {
+            "user": "TommiGustafsson-HMP",
+            "content": "laugh",
+            "createdAt": "2026-02-06T13:36:22.9943341Z"
+          }
+        ]
+      }
+    ]
+  }
 }
