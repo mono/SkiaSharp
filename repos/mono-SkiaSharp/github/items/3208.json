@@ -19,5 +19,39 @@
   "updatedAt": "2025-03-17T17:18:49",
   "closedAt": "2025-03-17T17:18:17",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:45:50.6285485Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2730091862,
+        "author": "autinerd",
+        "body": "I tested now a ~4000 pixel BMP, and there the starting index of the rendered pixels is 2520.",
+        "createdAt": "2025-03-17T16:10:59",
+        "reactions": []
+      },
+      {
+        "id": 2730110312,
+        "author": "autinerd",
+        "body": "I tested now with 3.116.1, and it is the same bug there.",
+        "createdAt": "2025-03-17T16:17:23",
+        "reactions": []
+      },
+      {
+        "id": 2730165179,
+        "author": "autinerd",
+        "body": "Okay, I found the cause:\nThe BMP images from me have the \u0060biSizeImage\u0060 field of the \u0060BITMAPINFOHEADER\u0060 set to zero, which is allowed according to https://learn.microsoft.com/en-us/previous-versions/dd183376(v=vs.85)\n\n\u003E **biSizeImage**\n\u003E The size, in bytes, of the image. This may be set to zero for BI_RGB bitmaps.\n\nThe test BMP you use here https://github.com/mono/SkiaSharp/blob/main/tests/Content/images/tomato.bmp has this field set to a value, so it works flawlessly.\n\nWhen I edit the BMP file and fill out the field, then the decoding works without issues.\n\n",
+        "createdAt": "2025-03-17T16:35:14",
+        "reactions": []
+      },
+      {
+        "id": 2730305820,
+        "author": "autinerd",
+        "body": "Oh, sorry for the noise, I have made a mistake \uD83D\uDE48 ",
+        "createdAt": "2025-03-17T17:18:48",
+        "reactions": []
+      }
+    ]
+  }
 }

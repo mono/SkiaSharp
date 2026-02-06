@@ -18,5 +18,46 @@
   "createdAt": "2024-12-18T20:40:25",
   "updatedAt": "2025-02-14T13:28:39",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:47:07.7182724Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2553025021,
+        "author": "mattleibow",
+        "body": "Are you using CPU or GPU rendering? Can you attach a repro sample with the code and the font? This issue does not enough information to start testing. ",
+        "createdAt": "2024-12-19T08:08:43",
+        "reactions": []
+      },
+      {
+        "id": 2571262853,
+        "author": "maiad",
+        "body": "Failed with GL and without GL\r\nI encountered an issue where the font disappears in both GL and non-GL modes. Below, I provide a sample project and a video demonstrating the problem.\r\n\r\nhttps://github.com/user-attachments/assets/170c68a2-5112-4815-9b1c-8b2a049e4412\r\n\r\n[appSkiaSharpTest.zip](https://github.com/user-attachments/files/18306621/appSkiaSharpTest.zip)\r\n\r\nSteps to reproduce:\r\n\r\nUse the x86 profile.\r\nThen switch to Any CPU or x64 \u2013 the issue occurs only with the x86 profile.\r\n\r\nDescription:\r\nWhen moving the cursor, I refresh the Skia control and paint using the following code:\r\n\r\n        private void SK_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)\r\n        {\r\n            var c = e.Surface.Canvas;\r\n            using (SKPaint p = new SKPaint())\r\n            {\r\n                p.Color = SKColors.Red;\r\n                e.Surface.Canvas.DrawRect(10, 10, 400, 400, p);\r\n                p.Color = SKColors.Black;\r\n                e.Surface.Canvas.DrawText(\u0022Hallo from skia !\u0022, 100, 100, font, p);\r\n                p.Color = SKColors.Yellow.WithAlpha(128);\r\n                e.Surface.Canvas.DrawRect(x - 10, y - 10, 200, 20, p);\r\n            }\r\n        }\r\n\r\nIssue:\r\nAfter a few invalidations, the text is no longer drawn correctly.",
+        "createdAt": "2025-01-04T11:39:11",
+        "reactions": []
+      },
+      {
+        "id": 2648948401,
+        "author": "TAlecksen",
+        "body": "I am encountering this same issue when using Mapsui targeting SkiaSharp 3.116.0 or greater. When targeting the x86 platform, all text within the map moves to the top of the control.",
+        "createdAt": "2025-02-10T18:52:59",
+        "reactions": []
+      },
+      {
+        "id": 2648952361,
+        "author": "pauldendulk",
+        "body": "We have the same problem building an app with Mapsui.Wpf 5.0.0-beta.7. The bug only shows using x86 and only on two of three machines. So, not a very visible problem. But since we release to many users that are on x86 this is a blocking issue for us.\n\nThis is how the app starts:\n\n![Image](https://github.com/user-attachments/assets/341a3b70-5bff-47b9-8690-3ad71cf7809a)\n\nThis is what happens after panning for five seconds:\n\n![Image](https://github.com/user-attachments/assets/4572decd-e66b-4730-923e-9973c38773a7)\n\n@mattleibow If you have any pointers on where to look in the source code I could try to investigate it.",
+        "createdAt": "2025-02-10T18:54:45",
+        "reactions": []
+      },
+      {
+        "id": 2659341774,
+        "author": "pauldendulk",
+        "body": "I did some more research. \n\n- I used the WinForms sample provided above by @maiad (thanks!) and could reproduce the problem in debug mode on my machine. This was not possible with other samples I received before (that did fail on other peoples machines).\n- I cloned SkiaSharp and added the WinForms sample, but as soon as I replaced the nuget package with project references it behaved correctly.\n- So, perhaps it was already fixed in main. I tried all kinds of stuff using the nightly build and copying libSkiaSharp around but the conclusion was that the bug was still in main.\n- I ran the WinForms sample in release mode and then it did reproduce! So, I was on the right track.\n- Stepping through the code showed that the DrawText method is using the obsolete \u0060SKPaint.TextAlign\u0060, when I replaced this with SKTextAlign left this solved the problem in release mode.\n\nSo, it seems this DrawText (and another one using SKPaint.TextAlign) should be made obsolete just like two other DrawText methods. There is a suppression of the warning, which suggests it was not made obsolete for a reason. Whichever is the case, for the SkiaSharp users perspective the solution is to use another overload.\n\nThis what I changed in the WinForms sample code:\n\u0060\u0060\u0060csharp\n// Don\u0027t use this:\t\t\t\t\t\t\t\t\n// e.Surface.Canvas.DrawText(\u0022Hallo from skia !\u0022, 100, 100, font, p);\n// Use this instead:\ne.Surface.Canvas.DrawText(\u0022Hallo from skia !\u0022, 100, 120, SKTextAlign.Left, font, p);\n\u0060\u0060\u0060\n",
+        "createdAt": "2025-02-14T13:28:37",
+        "reactions": []
+      }
+    ]
+  }
 }

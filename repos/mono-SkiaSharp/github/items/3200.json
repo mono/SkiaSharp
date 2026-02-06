@@ -41,5 +41,143 @@
       "state": "DISMISSED",
       "submittedAt": "2025-03-18T16:53:13"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:45:39.4482907Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2723201256,
+        "author": "mattleibow",
+        "body": "/azp run ",
+        "createdAt": "2025-03-14T02:38:10",
+        "reactions": []
+      },
+      {
+        "id": 2723201378,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-03-14T02:38:18",
+        "reactions": []
+      },
+      {
+        "id": 2724358392,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-03-14T11:11:04",
+        "reactions": []
+      },
+      {
+        "id": 2724358622,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-03-14T11:11:12",
+        "reactions": []
+      },
+      {
+        "id": 2732862948,
+        "author": "4Darmygeometry",
+        "body": "@mattleibow",
+        "createdAt": "2025-03-18T11:29:52",
+        "reactions": []
+      },
+      {
+        "id": 2733934944,
+        "author": "mattleibow",
+        "body": "For a separate reason (#3201) I have been working on this PR: https://github.com/mono/SkiaSharp/pull/3209\r\n\r\nI noticed that I can build everything on Debian 10 still - and would prefer to do so to get more version coverage. I know you/this PR is refactoring things, but after my PR there will be only one Docker file. Hopefully. We may still need this refactoring if we merge the #3198 PR to add LoongArch64. That looks like it may need Debian 13 so may be worth a totally separate Dockerfile if things go a bit different.\r\n\r\nNot sure if you have any thoughts on my PR?",
+        "createdAt": "2025-03-18T16:32:43",
+        "reactions": []
+      },
+      {
+        "id": 2733982813,
+        "author": "mattleibow",
+        "body": "Ah, I am a bit dumb - you are also adding an alpine cross. So yeah, this PR is still needed.\r\n\r\nBut, it would still be good to get @kasperk81 and @4Darmygeometry eyes on that to make sure I am not breaking something for later PRs\r\n",
+        "createdAt": "2025-03-18T16:45:28",
+        "reactions": []
+      },
+      {
+        "id": 2734012021,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-03-18T16:53:25",
+        "reactions": []
+      },
+      {
+        "id": 2734012362,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-03-18T16:53:32",
+        "reactions": []
+      },
+      {
+        "id": 2736933319,
+        "author": "4Darmygeometry",
+        "body": "apk.static for loongarch64 can be download in http://dl-cdn.alpinelinux.org/alpine/v3.21/main/loongarch64/apk-tools-static-2.14.6-r3.apk.\r\nThe apk.static needs to be updated to version 2.14.6 to ensure compatibility with both RISC-V64 and LoongArch64",
+        "createdAt": "2025-03-19T14:52:12",
+        "reactions": []
+      },
+      {
+        "id": 2738125139,
+        "author": "kasperk81",
+        "body": "it\u0027s for host not the target. secondly it\u0027s unrelated to this pr.",
+        "createdAt": "2025-03-19T21:11:38",
+        "reactions": []
+      },
+      {
+        "id": 2742522168,
+        "author": "mattleibow",
+        "body": "I am probably going to have to mere #3200 which will also merge your code. Thanks to your first PR, we can now build alpine and debian for all architectures. ",
+        "createdAt": "2025-03-21T07:01:33",
+        "reactions": []
+      },
+      {
+        "id": 2742615848,
+        "author": "kasperk81",
+        "body": "@mattleibow i don\u0027t understand why this pr cannot be merged on its own?",
+        "createdAt": "2025-03-21T08:01:25",
+        "reactions": []
+      },
+      {
+        "id": 2745345887,
+        "author": "mattleibow",
+        "body": "I suppose no reason if you think about it. My PR is yours \u002B some more changes. So, I guess since this is green and my PR uses yours... it is good to go.\r\n\r\nNot sure what was going on in my mind. For some reason I thought well \u0022we got 2 PRs touching the same files that will be a problem\u0022... I guess I forgot what \u0022git\u0022 in GitHub was. It must have been a late night lol.",
+        "createdAt": "2025-03-22T16:32:48",
+        "reactions": []
+      },
+      {
+        "id": 2745375605,
+        "author": "4Darmygeometry",
+        "body": "That are some errors in this patches build\r\nhttps://dev.azure.com/xamarin/public/_build/results?buildId=138523\u0026view=results\r\nhttps://dev.azure.com/xamarin/public/_build/results?buildId=138524\u0026view=results\r\n![\u5C4F\u5E55\u622A\u56FE_20250323_012257](https://github.com/user-attachments/assets/873330ec-58bf-4c5e-b45b-e02fea1ef850)\r\n",
+        "createdAt": "2025-03-22T17:22:27",
+        "reactions": []
+      },
+      {
+        "id": 2745378582,
+        "author": "kasperk81",
+        "body": "it\u0027s networking error, don\u0027t worry about it.\r\n\r\n\u0060ERROR: failed to solve: process \u0022/bin/sh -c curl https://dot.net/v1/dotnet-install.sh \u0060\r\n\r\nCI -\u003E blob network is broken. they will rerun it. last run on pr was all green",
+        "createdAt": "2025-03-22T17:31:41",
+        "reactions": [
+          {
+            "user": "4Darmygeometry",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:45:38.9127836Z"
+          }
+        ]
+      },
+      {
+        "id": 2749299800,
+        "author": "mattleibow",
+        "body": "Thanks @kasperk81 for getting this ready to go! I am always excited for more skia coverage.",
+        "createdAt": "2025-03-24T20:19:49",
+        "reactions": []
+      },
+      {
+        "id": 2750229525,
+        "author": "mattleibow",
+        "body": "Hi folks,\r\n\r\nThe builds are now available on the preview feed: https://aka.ms/skiasharp-eap/index.json\r\nLet me know if version **3.119.0-preview.0.38** is now working again for you.\r\n\r\nAs soon as you let me know, I can release this to NuGet and then hopefully a stable version shortly afterwards.",
+        "createdAt": "2025-03-25T06:35:59",
+        "reactions": []
+      }
+    ]
+  }
 }

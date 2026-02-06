@@ -14,5 +14,70 @@
   "updatedAt": "2025-03-09T16:33:23",
   "closedAt": "2025-03-07T16:11:38",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:46:21.6641497Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2706454158,
+        "author": "najak3d",
+        "body": "YES!  This is happening to us now, causing Application instability/crashing.   Our usage is less aggressive than yours, only rapid firing during user map panning where we replot the vector map lines rapidly -- using Reset() method.    Dispose() method might be better, but, still, the Reset() shouldn\u0027t be causing rampant memory leaks, and is our preference (seems more responsible than doing a rapid disposal of SKPaths).\n\nAdditionally, would love to have a means of \u0022maintaining the previous path buffers\u0022 - more like a \u0022SoftReset()\u0022 which maintains the buffer, and just refills it with the new data, rather than ditching/disposing of the buffer and making a new one each time.\n\nIt\u0027s a common use case for us to rapid-update the Paths... and in essence, we would like to just be \u0022changing the content of the buffers\u0022 - not ditching/disposing the old buffer and making new ones each time.\n",
+        "createdAt": "2025-03-07T13:26:53",
+        "reactions": []
+      },
+      {
+        "id": 2706855398,
+        "author": "AquilaAbriel",
+        "body": "After my bug report was essentially ignored and the problem was not even acknowledged, I gave up on SkiaSharp.\nI have since rewritten my entire engine in Java and switched to Skija as an alternative to SkiaSharp.\n(This wasn\u0027t a perfect solution either, but at least the project maintainers are very responsive and genuinely helpful)\n\n**But as far as I can tell, the memory leak I reported was actually fixed at some point:**\nI just updated my debug project to SkiaSharp 3.116.1 and the bug seems to be fixed... So good job, I guess.\nToo bad I already spent literally a year porting my work to Java...\n\nSo for whatever it\u0027s worth, this issue has been resolved.",
+        "createdAt": "2025-03-07T16:11:38",
+        "reactions": []
+      },
+      {
+        "id": 2707999906,
+        "author": "mattleibow",
+        "body": "@AquilaAbriel thanks for coming back to update the issue after over a year.\n\nI know it is frustrating to have your issue ignored. I apologize for that. I am pretty much working alone on this in between working on other products. You are not alone in your frustrations, both other folks and myself wish I could/would do more. I am working to get more time to focus on SkiaSharp. I would be spending more weekends and evenings on this, but we just got my first baby born a few months ago so I do need to spread the love.\n\nBut, thanks again for trying/using SkiaSharp. I hope for your next C# project you will try us again.",
+        "createdAt": "2025-03-08T04:25:17",
+        "reactions": [
+          {
+            "user": "AquilaAbriel",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:46:20.9383458Z"
+          },
+          {
+            "user": "najak3d",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:46:20.9383464Z"
+          }
+        ]
+      },
+      {
+        "id": 2708000187,
+        "author": "mattleibow",
+        "body": "@najak3d could you please open a new issue with your details and a repro for the issue that you are seeing. ",
+        "createdAt": "2025-03-08T04:26:05",
+        "reactions": [
+          {
+            "user": "najak3d",
+            "content": "rocket",
+            "createdAt": "2026-02-06T12:46:21.1984037Z"
+          }
+        ]
+      },
+      {
+        "id": 2708909167,
+        "author": "najak3d",
+        "body": "\u003E [@najak3d](https://github.com/najak3d) could you please open a new issue with your details and a repro for the issue that you are seeing.\n\nI was able to fully switch over to SKIA 3.116.1, and this FULLY RESOLVES the memory leak!\n\nBUT - 3.116.1 is WORSE for us, currently, because there is a new crashing bug (even crashes it faster), associated with SKImage Disposal triggered by finalizer (might be other types of Disposal issues).  The error is:\n\n\u0022System.AccessViolationException: \u0027Attempted to read or write protected memory.  This is often an indication that other memory is corrupt.\u0027\n\nSo we\u0027re stuck with 2.8x - until this crash is fixed (which happens consistently within a few minutes of operation).\n\nHere are images - this one shows the Memory Leak Fixed (top=broken, vs bottom=fixed)\n![Screenshot](https://drive.google.com/uc?export=view\u0026id=1kClV_2w2wfnjEJJYazQIBsSN7JVY2QPh)\n\nHere are the images of the new 3.116.1 crash on finalizing SKImage:\n![Crash-Shot#1](https://drive.google.com/uc?export=view\u0026id=1Dna_ITYcoQwIdtYc_aH_RnuQ2Bwjoab7)\n\n![Crash-Shot#2](https://drive.google.com/uc?export=view\u0026id=1QH76_egvSNMcBqfOLwYB52EQlnh91_2m)\n\n\nI\u0027m available new 24/7 to iterate with you to getting this fixed. \n",
+        "createdAt": "2025-03-09T15:15:48",
+        "reactions": []
+      },
+      {
+        "id": 2708949429,
+        "author": "najak3d",
+        "body": "The new bug that is preventing us from switching to Skia 3.x, is here:\n\n[Issue 2794](https://github.com/mono/SkiaSharp/issues/2794)",
+        "createdAt": "2025-03-09T16:33:22",
+        "reactions": []
+      }
+    ]
+  }
 }

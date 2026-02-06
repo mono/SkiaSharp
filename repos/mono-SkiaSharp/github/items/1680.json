@@ -13,5 +13,73 @@
   "createdAt": "2021-04-01T09:36:41",
   "updatedAt": "2025-03-08T14:57:43",
   "commentCount": 5,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:46:23.6312032Z",
+    "reactions": [
+      {
+        "user": "nbulp",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:23.6312086Z"
+      },
+      {
+        "user": "avsorokin",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:23.6312092Z"
+      },
+      {
+        "user": "nor0x",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:23.6312095Z"
+      },
+      {
+        "user": "daljit97",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:23.6312098Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2706465628,
+        "author": "najak3d",
+        "body": "CONFIRMED.  This one is a huge issue for us.   We\u0027re in production now with crashes that occur, attributed to this memory leak, which goes rampant for certain app modes.",
+        "createdAt": "2025-03-07T13:32:49",
+        "reactions": []
+      },
+      {
+        "id": 2708001637,
+        "author": "mattleibow",
+        "body": "@najak3d I see you already commeneted here :) ",
+        "createdAt": "2025-03-08T04:30:34",
+        "reactions": [
+          {
+            "user": "najak3d",
+            "content": "laugh",
+            "createdAt": "2026-02-06T12:46:22.934675Z"
+          }
+        ]
+      },
+      {
+        "id": 2708001972,
+        "author": "mattleibow",
+        "body": "Issue #2368 has more information.",
+        "createdAt": "2025-03-08T04:31:27",
+        "reactions": []
+      },
+      {
+        "id": 2708003875,
+        "author": "mattleibow",
+        "body": "@najak3d @radev8 are you able to try the latest stable 3.x version? OP of #2368 said that it was resolved for them.",
+        "createdAt": "2025-03-08T04:32:12",
+        "reactions": []
+      },
+      {
+        "id": 2708338679,
+        "author": "AquilaAbriel",
+        "body": "Out of curiosity, I did some tests to see if this might be a related issue:\n![Image](https://github.com/user-attachments/assets/38195364-c02f-4653-a335-fa7f9628b28e)\n![Image](https://github.com/user-attachments/assets/dd57609c-8bab-46ba-ad2d-b1640be60cc0)\n\n**Observations:**\n- 2.80.2 and 2.88.9 behave completely differently in terms of memory usage and short-term memory allocation...\n(2.88.9 uses about 2x the RAM, VRAM usage is similar, but system GPU memory shows a clear upward trend)\n- 2.88.9 is much more \u0022spiky\u0022 in terms of memory usage when the canvas size changes rapidly.\n- Personally, I wouldn\u0027t call the initial \u0022doubling\u0022 of memory usage a leak, but that\u0027s up for debate... \n- (It\u0027s more like \u002B20 MB on 2.80.2. On 288.9 RAM usage actually doubles from 120mb to about 240mb)\n- The actual memory \u0022leakage\u0022 after resizing the canvas is relatively small. (A couple of megabytes) But there is an upwards trend.\n(This behavior is about the same for both versions.)\n\n**Sadly I was not able to update the provided debug project to SkiaSharp 3.x because UAP support was dropped (?)**\nSo I can\u0027t tell how things have changed since, but I would say that the problem described by @najak3d is different than the one I had.",
+        "createdAt": "2025-03-08T14:54:02",
+        "reactions": []
+      }
+    ]
+  }
 }

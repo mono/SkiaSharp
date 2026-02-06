@@ -18,5 +18,237 @@
   "createdAt": "2025-03-15T22:40:33",
   "updatedAt": "2025-04-16T18:38:18",
   "commentCount": 22,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:44:54.476532Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2727038251,
+        "author": "similar-issues-ai[bot]",
+        "body": "We\u0027ve found some similar issues:\n\n\n- #3191 , similarity score: 92%\n- #3197 , similarity score: 82%\n  \n\nIf any of the above are duplicates, please consider closing this issue out and adding additional context in the original issue.\n\n\u003E Note: You can give me feedback by \uD83D\uDC4D or \uD83D\uDC4E this comment.",
+        "createdAt": "2025-03-15T22:40:41",
+        "reactions": []
+      },
+      {
+        "id": 2727039546,
+        "author": "aicynide",
+        "body": "linux-bionic isn\u0027t riscv64, it is implementation of C library for Android, primarily needed in Termux",
+        "createdAt": "2025-03-15T22:44:43",
+        "reactions": []
+      },
+      {
+        "id": 2727166717,
+        "author": "mattleibow",
+        "body": "Thanks for the issue. Do you have any idea how to build this? We got some cross Compiling going for musl and resc, is there a bionic compiler for debian? ",
+        "createdAt": "2025-03-16T03:39:01",
+        "reactions": []
+      },
+      {
+        "id": 2727189734,
+        "author": "aicynide",
+        "body": "\u003E Do you have any idea how to build this? \n\nSorry I don\u0027t, I have no knowledge about C#\n\n\n\n\u003Cdetails\u003E\u003Csummary\u003Eoff-topic\u003C/summary\u003E\n\u003Cp\u003E\n\n*there is a first class build script to build dotnet for bionic. https://github.com/termux/termux-packages/tree/8f1eba3b48/packages/dotnet9.0/build.sh for dotnet v9\nhttps://github.com/termux/termux-packages/tree/d11fb6d078/packages/dotnet8.0/build.sh for dotnet v8\n(Other build script for aspnetcore, runtime, tageting-pack etc. - https://github.com/termux/termux-packages/tree/d11fb6d078/packages/dotnet8.0 )*\n*If you are curious how is dotnet packaged for linux-bionic , look at the scripts \u0026 Dockerfile in this repo https://github.com/termux/termux-packages/*\n\n\u003C/p\u003E\n\u003C/details\u003E \n\nIf cross compiled binary/library won\u0027t run in bionic, I think I\u0027ve the idea how get it fixed, we can use \u0060termux/termux-docker:latest\u0060 docker\n\nWhile there maybe assumption that \u0060android-{arch}\u0060 is same as \u0060linux-bionic-{arch}\u0060 , there is huge difference b/w them, \u0060android-{arch}\u0060 is only Mobile .Net stack but \u0060linux-bionic-{arch} is Full .Net Stack, consider it equivalent to \u0060linux-{arch}\n\nThank you\n",
+        "createdAt": "2025-03-16T04:50:56",
+        "reactions": []
+      },
+      {
+        "id": 2727191138,
+        "author": "aicynide",
+        "body": "https://github.com/OmniSharp/omnisharp-roslyn/pull/2653",
+        "createdAt": "2025-03-16T04:55:35",
+        "reactions": []
+      },
+      {
+        "id": 2731497392,
+        "author": "aicynide",
+        "body": "Any progress?",
+        "createdAt": "2025-03-18T03:14:32",
+        "reactions": []
+      },
+      {
+        "id": 2731499203,
+        "author": "aicynide",
+        "body": "I would like to request the maintainer to research https://github.com/termux/termux-packages/ for \u0060linux-bionic-{arch}\u0060 build",
+        "createdAt": "2025-03-18T03:16:10",
+        "reactions": []
+      },
+      {
+        "id": 2731503170,
+        "author": "aicynide",
+        "body": "@kasperk81",
+        "createdAt": "2025-03-18T03:20:02",
+        "reactions": []
+      },
+      {
+        "id": 2731546026,
+        "author": "kasperk81",
+        "body": "i\u0027m not interested in linux-bionic, sorry.\n\n\u003E We\u0027ve found some similar issues:\n\nyour issue description is a copy of https://github.com/mono/SkiaSharp/issues/3191 where i was making a point to show how it\u0027s implemented elsewhere and you copied it to make a point how it is _not_ implemented? weird\n\nhttps://github.com/mono/SkiaSharp/issues/3197 is no different. both these requirements just happened to show up soon as i started the work. i\u0027m not sure if this is some sort of a bot account campaign, but it\u0027s not rubbing me right",
+        "createdAt": "2025-03-18T03:55:21",
+        "reactions": []
+      },
+      {
+        "id": 2731556979,
+        "author": "aicynide",
+        "body": "Hello Mr. @kasperk81 , I\u0027m legit human, I\u0027m not bot, I\u0027ve genuine reasons for the request I\u0027m requesting for \u0060linux-bionic-arm64\u0060 because I\u0027m a package maintainer in termux and I\u0027m trying to package jellyfin which has SkiaSharp dependency.\n\nThe reason for my copying the issue it that I\u0027ve zero knowledge of .Net/C# I apologize for that.\nThat\u0027s why I\u0027m begging for \u0060linux-bionic-arm64\u0060 build\n\n\u003E [#3197](https://github.com/mono/SkiaSharp/issues/3197) is no different. both these requirements just happened to show up soon as i started the work. i\u0027m not sure if this is some sort of a bot account campaign, but it\u0027s not rubbing me right\n\nThis issue for Chinese processor is bot, I can cofirm, he\u0027s a 50 cent army of Chinese Communist Party. They are From CCP to IT Cell to spread technology propaganda of Chinese products \nloongarch is made by CCP to attack Taiwan chip industry. Please ignore that issue, loongarch is a meme cpu",
+        "createdAt": "2025-03-18T04:03:30",
+        "reactions": [
+          {
+            "user": "GenKyoko",
+            "content": "-1",
+            "createdAt": "2026-02-06T12:44:52.2444685Z"
+          },
+          {
+            "user": "shenmo7192",
+            "content": "-1",
+            "createdAt": "2026-02-06T12:44:52.2444688Z"
+          },
+          {
+            "user": "minilulubai",
+            "content": "-1",
+            "createdAt": "2026-02-06T12:44:52.2444688Z"
+          },
+          {
+            "user": "prcups",
+            "content": "-1",
+            "createdAt": "2026-02-06T12:44:52.2444689Z"
+          },
+          {
+            "user": "HmnSn",
+            "content": "-1",
+            "createdAt": "2026-02-06T12:44:52.244469Z"
+          }
+        ]
+      },
+      {
+        "id": 2731557818,
+        "author": "aicynide",
+        "body": "I hope you understand and can differentiate between a tech enthusiast and Chinese bot",
+        "createdAt": "2025-03-18T04:04:19",
+        "reactions": []
+      },
+      {
+        "id": 2733150177,
+        "author": "shenmo7192",
+        "body": "\u003E Hello Mr. [@kasperk81](https://github.com/kasperk81) , I\u0027m legit human, I\u0027m not bot, I\u0027ve genuine reasons for the request I\u0027m requesting for \u0060linux-bionic-arm64\u0060 because I\u0027m a package maintainer in termux and I\u0027m trying to package jellyfin which has SkiaSharp dependency.\n\u003E \n\u003E The reason for my copying the issue it that I\u0027ve zero knowledge of .Net/C# I apologize for that. That\u0027s why I\u0027m begging for \u0060linux-bionic-arm64\u0060 build\n\u003E \n\u003E \u003E [#3197](https://github.com/mono/SkiaSharp/issues/3197) is no different. both these requirements just happened to show up soon as i started the work. i\u0027m not sure if this is some sort of a bot account campaign, but it\u0027s not rubbing me right\n\u003E \n\u003E This issue for Chinese processor is bot, I can cofirm, he\u0027s a 50 cent army of Chinese Communist Party. They are From CCP to IT Cell to spread technology propaganda of Chinese products loongarch is made by CCP to attack Taiwan chip industry. Please ignore that issue, loongarch is a meme cpu\n\nReally funny political joke \n\nThis comment comes from Loongson 3A6000. LoongArch is absolutely exist and being supported by Debian. \n\n\u0060\u0060\u0060\n        _,met$$$$$gg.          shenmo-thunder@Amber-CE-SID\n     ,g$$$$$$$$$$$$$$$P.       ---------------------------\n   ,g$$P\u0022\u0022       \u0022\u0022\u0022Y$$.\u0022.     OS: Debian GNU/Linux trixie/sid loongarch64\n  ,$$P\u0027              \u0060$$$.     Host: Loongson-3A6000-HV-7A2000-XA61200\n\u0027,$$P       ,ggs.     \u0060$$b:    Kernel: Linux 6.6.80-loong64-4k-pagesize-gxde\n\u0060d$$\u0027     ,$P\u0022\u0027   .    $$$     Uptime: 5 hours, 17 mins\n $$P      d$\u0027     ,    $$P     Packages: 462 (dpkg)\n $$:      $$.   -    ,d$$\u0027     Shell: bash 5.2.37\n \u0060$$b      \u0022-.__               Icons: deepin [GTK2/3]\n  \u0060Y$$b                        Cursor: Adwaita\n   \u0060Y$$.                       Terminal: bwrap\n     \u0060$$b.                     CPU: Loongson-3A6000-HV (8) @ 2.50 GHz\n       \u0060Y$$b.                  GPU: AMD Radeon R7 200 Series [Discrete]\n         \u0060\u0022Y$b._               Memory: 579.85 MiB / 15.58 GiB (4%)\n             \u0060\u0022\u0022\u0022\u0022             Swap: Disabled\n                               Disk (/): 64.97 GiB / 109.19 GiB (60%) - ext4\n                               Disk (/host/boot/efi): 692.00 KiB / 299.39 MiB (0%) - vfat\n                               Local IP (wlx000cb2106b8c): 192.168.123.31/24\n                               Locale: zh_CN.utf8\n\n\n\u0060\u0060\u0060\nBlaming others will not help your situation.\n\nKeep away from political discussions, refuse fictional facts, and keep talking only about technology pls",
+        "createdAt": "2025-03-18T13:05:09",
+        "reactions": [
+          {
+            "user": "4Darmygeometry",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:44:52.6528813Z"
+          },
+          {
+            "user": "4Darmygeometry",
+            "content": "laugh",
+            "createdAt": "2026-02-06T12:44:52.6528816Z"
+          },
+          {
+            "user": "4Darmygeometry",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:44:52.6528817Z"
+          },
+          {
+            "user": "malajisi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:52.6528817Z"
+          },
+          {
+            "user": "malajisi",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:44:52.6528818Z"
+          },
+          {
+            "user": "malajisi",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:44:52.6528819Z"
+          },
+          {
+            "user": "driver1998",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:52.6528819Z"
+          },
+          {
+            "user": "4Darmygeometry",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:52.652882Z"
+          }
+        ]
+      },
+      {
+        "id": 2739048222,
+        "author": "mattleibow",
+        "body": "Folks. I am disappointed.\n\nI understand we all have our own options and beliefs and political affiliations. But, this is not the forum for the discussion or debate of them in any form.\n\nSkiaSharp is a project to allow everyone to do great things on any hardware they chose from any manufacturer. Unless adding a CPU architecture is objectively evil and will cause harm to a human life, we should not attack individuals wanting to use it.\n\nI would like to remind everyone here that you are potentially violating the code of conduct of SkiaSharp and .NET https://dotnetfoundation.org/about/policies/code-of-conduct\n\nPlease refrain from all non-technical and non-SkiaSharp discussions in this repository.\n\nAnd now back to SkiaSharp and bionic. ",
+        "createdAt": "2025-03-20T03:42:07",
+        "reactions": []
+      },
+      {
+        "id": 2739052963,
+        "author": "mattleibow",
+        "body": "We could potentially add bionic and since it is a distro more than an arch, we probably can just use some docker image?\n\nIf anyone has more info on bionic because my searches keep pushing the Ubuntu os version. ",
+        "createdAt": "2025-03-20T03:48:06",
+        "reactions": []
+      },
+      {
+        "id": 2739091390,
+        "author": "aicynide",
+        "body": "@mattleibow [this](https://github.com/termux/termux-packages/) is where 2,500 packages for linux-bionic-{arch} are built. They use this [script](https://github.com/termux/termux-packages/blob/master/build-package.sh) in docker [container](https://github.com/orgs/termux/packages/container/package/package-builder) to build packaged. More info can be found here \nDetailed instructions can be found here https://github.com/termux/termux-packages/wiki/Build-environment and https://github.com/termux/termux-packages/wiki/Building-packages\nProject repo - https://github.com/termux/termux-packages\n\n\n\u003Cdetails\u003E\u003Csummary\u003Eanother docker image\u003C/summary\u003E\n\u003Cp\u003E\n\nhttp://hub.docker.com/r/termux/termux-docker\n\nRepo- https://github.com/termux/termux-docker\n\nSomeone had tried to run it in github actions - https://github.com/guijan/termux-on-gha\n\n\u003C/p\u003E\n\u003C/details\u003E ",
+        "createdAt": "2025-03-20T04:12:49",
+        "reactions": []
+      },
+      {
+        "id": 2745889713,
+        "author": "aicynide",
+        "body": "@rene-descartes2021 wonderful thank you very much.\nI was a package maintainer in termux-packages repo I was trying to package jellyfin(server) for android/termux which has libskiasharp.so \u0026 SQlitePCL.raw (libe_sqlite3.so) dependency. I\u0027ll try to build libe_sqlite3.so using vcpkg",
+        "createdAt": "2025-03-22T22:05:41",
+        "reactions": []
+      },
+      {
+        "id": 2745904950,
+        "author": "rene-descartes2021",
+        "body": "@aicynide Ok that works. Sorry deleted my comment wasn\u0027t really sure it was appropriate solution on this forum. But yes, vcpkg works for me in Terumx without depending on natives distributed through NuGet as none I\u0027ve seen have linux-bionic-{arch}.",
+        "createdAt": "2025-03-22T22:57:31",
+        "reactions": []
+      },
+      {
+        "id": 2745932870,
+        "author": "aicynide",
+        "body": "@rene-descartes2021 SkiaSharp is interested  to provide native libraries for linux-bionic-arm64 in NuGet.",
+        "createdAt": "2025-03-23T00:26:34",
+        "reactions": []
+      },
+      {
+        "id": 2746023491,
+        "author": "aicynide",
+        "body": "[@aicynide](https://github.com/aicynide) I\u0027m using C# in Termux and I think the status-quo is that there are zero NuGet packages with native libraries for linux-bionic-{arch}. Personally I in general don\u0027t really like the idea and implications of packaging or consuming NuGet packages for native code (in the runtimes/subdirs). Though for managed code I think NuGet is great. Everyone has their own opinions though.\n\nRather than try to ask the maintainers of the many NuGet packages to package a linux-bionic-{arch} native library (bloating them up for everyone...), I\u0027ve had great luck with vcpkg. I see there is a vcpkg port for skia, the .so outputs can be copied over the top of the SkiaSharp. This is what I\u0027ve done for other NuGet packages lacking a linux-bionic-{arch} binary (typically shared library).\n\nvcpkg in manifest mode won\u0027t work for C# (or any dotnet projects), I use it in classic mode. Sometimes I have to patch the port, and I had to make a patch to vcpkg to get it to work in Termux. See my patchfile gist link below for info on this.\n\ngit clone https://github.com/microsoft/vcpkg.git\ncd vcpkg\nwget https://gist.github.com/rene-descartes2021/31f0e05885538d7bf97d1631064b183f\npatch vcpkg.patch\n./bootstrap-vcpkg.sh\n./vcpkg install skiia --triplet=arm64-android-dynamic --clean-after-build\nvcpkg says to define the environmental variable VCPKG_ROOT to where it was cloned to.\n\nThen in a YOURPROJECT.csproj.user file add a Content element for each native shared library, something like (this is what I did for libsodium which is just a native library, no managed code):\n\n\u003CProject\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Remove=\u0022libsodium\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CContent Include=\u0022$(VCPKG_ROOT))\\installed\\arm64-android-dynamic\\lib\\libsodium.so\u0022\u003E\n      \u003CCopyToOutputDirectory\u003EPreserveNewest\u003C/Co\\      pyToOutputDirectory\u003E\n    \u003C/Content\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E\nThe .csproj.user file allows for the .csproj file to not be edited. The .csproj file is under source control, while the .user file should not be. Apologies if I might have a error somewhere above.\n\nFor me the skia port fails to compile a dependency, icu, and stops there. Needs some sort of patch to work in Termux. You can look at my patch in the above gist link to see what sort of changes to a port are typically necessary, typically just an edit to CMakeLists.txt, which could also be submitted upstream to either the vcpkg port or the upstream project (e.g. skia) to allow for compiling the library on Termux without error. When I encounter build problems I\u0027ve looked in termux-packages before to see what adjustments to the port may need to be made to get it to compile on Termux.\n\nvcpkg in classic mode has some limitations though, like inability to adjust features (i.e. configure flags), which requires a patch/fork of the port or manifest mode (but manifest mode not supported for C# or .NET really, I could write more on that but out-of-scope to this comment).\n\nDunno if you\u0027d be interested in writing this approach somewhere for Termux users using dotnet.",
+        "createdAt": "2025-03-23T05:03:25",
+        "reactions": []
+      },
+      {
+        "id": 2749079819,
+        "author": "mattleibow",
+        "body": "The vcpkg skia is different to the skia used by SkiaSharp. There are custom apis and different changes to make the interop better.\n\nWith regards to bloat, I found a way that is even going to improve the current status https://github.com/mono/SkiaSharp/discussions/3210\n\nAnd finally, bundling native binaries in nugets is the way we do things. Dotnet devs are lazy and anything other install is too much to do. \uD83D\uDE02",
+        "createdAt": "2025-03-24T18:39:03",
+        "reactions": [
+          {
+            "user": "aicynide",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:54.2074168Z"
+          }
+        ]
+      },
+      {
+        "id": 2755193235,
+        "author": "4Darmygeometry",
+        "body": "\u003E The vcpkg skia is different to the skia used by SkiaSharp. There are custom apis and different changes to make the interop better.\n\u003E \n\u003E With regards to bloat, I found a way that is even going to improve the current status [#3210](https://github.com/mono/SkiaSharp/discussions/3210)\n\u003E \n\u003E And finally, bundling native binaries in nugets is the way we do things. Dotnet devs are lazy and anything other install is too much to do. \uD83D\uDE02\n\nhttps://github.com/mono/SkiaSharp/pull/3217",
+        "createdAt": "2025-03-26T17:31:51",
+        "reactions": [
+          {
+            "user": "aicynide",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:54.4263076Z"
+          }
+        ]
+      }
+    ]
+  }
 }

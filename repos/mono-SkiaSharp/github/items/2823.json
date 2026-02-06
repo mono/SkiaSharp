@@ -56,5 +56,419 @@
       "state": "COMMENTED",
       "submittedAt": "2024-04-15T10:52:16"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:46:06.9455007Z",
+    "reactions": [
+      {
+        "user": "taublast",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:06.9455053Z"
+      },
+      {
+        "user": "azeno",
+        "content": "heart",
+        "createdAt": "2026-02-06T12:46:06.9455056Z"
+      },
+      {
+        "user": "molesmoke",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:06.9455057Z"
+      },
+      {
+        "user": "jeremy-visionaid",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:06.9455058Z"
+      },
+      {
+        "user": "ardentra",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:06.9455059Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2041855733,
+        "author": "Kation",
+        "body": "Usage\r\nhttps://github.com/Wodsoft/upf/blob/master/src/UniversalPresentationFramework.Platforms.Win32/Win32RendererD3D12Context.cs",
+        "createdAt": "2024-04-08T04:48:31",
+        "reactions": []
+      },
+      {
+        "id": 2042083473,
+        "author": "Gillibald",
+        "body": "These should be exposed by SkiaSharp: https://github.com/Wodsoft/upf/blob/master/src/UniversalPresentationFramework.Platforms.Win32/Win32RendererD3D12Context.cs#L291\r\n\r\n",
+        "createdAt": "2024-04-08T07:49:05",
+        "reactions": []
+      },
+      {
+        "id": 2042111605,
+        "author": "Kation",
+        "body": "@Gillibald How to update \u0060SkiaApi.generated.cs\u0060 or it should be update manually?",
+        "createdAt": "2024-04-08T08:03:56",
+        "reactions": []
+      },
+      {
+        "id": 2043736801,
+        "author": "mattleibow",
+        "body": "I think I may have broken the merge with my merge of the Metal PR. Sorry. But, this PR is shaping up very well!",
+        "createdAt": "2024-04-08T22:20:27",
+        "reactions": []
+      },
+      {
+        "id": 2044586304,
+        "author": "mattleibow",
+        "body": "\u003E @Gillibald How to update \u0060SkiaApi.generated.cs\u0060 or it should be update manually?\r\n\r\nI think you found the generator in the utils directory. You should be able to just run this one on a Windows machine with VS installed: https://github.com/mono/SkiaSharp/blob/main/utils/generate.ps1\r\n",
+        "createdAt": "2024-04-09T09:42:13",
+        "reactions": []
+      },
+      {
+        "id": 2044624036,
+        "author": "Kation",
+        "body": "@mattleibow Yeah, I found it.\r\n\r\nMany documents are out of date or missing. I spent a lot of date to look up how to modify codes.\r\n\r\nPipelines failed with \u0060Unable to find package Vortice.Direct3D12\u0060 and old feature tests. How to fix it?",
+        "createdAt": "2024-04-09T10:02:38",
+        "reactions": []
+      },
+      {
+        "id": 2045298968,
+        "author": "mattleibow",
+        "body": "ah, we have a mirror of all packages for reasons to prevent supply chain attacks. Let me mirror those packs.",
+        "createdAt": "2024-04-09T14:19:42",
+        "reactions": []
+      },
+      {
+        "id": 2046459694,
+        "author": "Kation",
+        "body": "increase 1,773,537 bytes compare to 3.0.0-preview2.1",
+        "createdAt": "2024-04-10T02:58:41",
+        "reactions": []
+      },
+      {
+        "id": 2050873670,
+        "author": "Kation",
+        "body": "@mattleibow Why android and macos test run failed?",
+        "createdAt": "2024-04-12T02:54:18",
+        "reactions": []
+      },
+      {
+        "id": 2056542080,
+        "author": "mattleibow",
+        "body": "\u003E @mattleibow Why android and macos test run failed?\r\n\r\nI think there is a problem with the magic step that is supposed to use the correct build of skia. Just commit the submodule in this PR. Then the checkout of SkiaSharp will also pull the correct skia.",
+        "createdAt": "2024-04-15T10:53:48",
+        "reactions": []
+      },
+      {
+        "id": 2057995523,
+        "author": "mattleibow",
+        "body": "For the tests, I think this will work - still installing tooling as I have a new laptop: https://github.com/mono/SkiaSharp/commit/6cf79eac14f5028619a9e855e33b483651c08f3c\r\n\r\nHopefully it just works, I copied the context setup from the skia test files... seems simple enough, no idea.",
+        "createdAt": "2024-04-15T23:47:17",
+        "reactions": []
+      },
+      {
+        "id": 2058096794,
+        "author": "Kation",
+        "body": "\u003E For the tests, I think this will work - still installing tooling as I have a new laptop: [6cf79ea](https://github.com/mono/SkiaSharp/commit/6cf79eac14f5028619a9e855e33b483651c08f3c)\r\n\u003E \r\n\u003E Hopefully it just works, I copied the context setup from the skia test files... seems simple enough, no idea.\r\n\r\nIt\u0027s fail randomly I think. Sometime android failed and sometime macos failed or android and macos both failed.",
+        "createdAt": "2024-04-16T01:56:25",
+        "reactions": []
+      },
+      {
+        "id": 2059234389,
+        "author": "mattleibow",
+        "body": "ah, yeah sorry. Those are a bit flakey right now. Sometimes the Android emulator does not boot, or the macOS test runner crashes.\r\n\r\n",
+        "createdAt": "2024-04-16T14:28:51",
+        "reactions": []
+      },
+      {
+        "id": 2059484737,
+        "author": "Kation",
+        "body": "Maybe you can click \u0060Rerun failed jobs\u0060 button to try for more times.",
+        "createdAt": "2024-04-16T16:26:10",
+        "reactions": []
+      },
+      {
+        "id": 2081417065,
+        "author": "mattleibow",
+        "body": "@Kation are you able to write some tests?",
+        "createdAt": "2024-04-28T09:56:37",
+        "reactions": []
+      },
+      {
+        "id": 2102766601,
+        "author": "Kation",
+        "body": "@mattleibow Busy these days. I\u0027m copying Vulkan test to Direct3D.",
+        "createdAt": "2024-05-09T14:24:09",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:45:59.7132485Z"
+          }
+        ]
+      },
+      {
+        "id": 2368677053,
+        "author": "maw136",
+        "body": "Hate to be that guy but have any other Direct3D C# binding libraries been considered. This \u0060Vortice.Direct3D12\u0060 seems to be a niche one. One example is \u0060Silk.NET\u0060 which is under .NET Foundation umbrella (No affiliation on my side). ",
+        "createdAt": "2024-09-23T15:41:09",
+        "reactions": []
+      },
+      {
+        "id": 2381685112,
+        "author": "jeremy-visionaid",
+        "body": "I\u0027d love to see this one finished off. I\u0027d take it on myself but I\u0027m swamped with other stuff. I don\u0027t mind too much about what bindings are used, it\u0027s relatively simple to chop and change them. That said, I find that CsWin32 doesn\u0027t do too bad a job of DirectX bindings these days.",
+        "createdAt": "2024-09-30T00:15:33",
+        "reactions": []
+      },
+      {
+        "id": 2401418309,
+        "author": "Kation",
+        "body": "@mattleibow When we could merge or something need to add?",
+        "createdAt": "2024-10-09T06:25:24",
+        "reactions": []
+      },
+      {
+        "id": 2441585367,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2024-10-28T13:25:25",
+        "reactions": []
+      },
+      {
+        "id": 2441585657,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2024-10-28T13:25:32",
+        "reactions": []
+      },
+      {
+        "id": 2441586907,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2024-10-28T13:25:59",
+        "reactions": []
+      },
+      {
+        "id": 2441587285,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2024-10-28T13:26:08",
+        "reactions": []
+      },
+      {
+        "id": 2658447489,
+        "author": "Kation",
+        "body": "@mattleibow The job \u0060test-workflow\u0060 make error every time.\r\n\u0060\u0060\u0060\r\nInvoke-RestMethod: /home/runner/work/_temp/40be0657-9da2-420b-8b60-a765ff873c26.ps1:21\r\n  Line |\r\n    21 |  $response = Invoke-RestMethod \u0060\r\n       |              ~~~~~~~~~~~~~~~~~~~\r\n       |\r\n       | {\u0022type\u0022:\u0022https://tools.ietf.org/html/rfc9110#section-15.5.2\u0022,\u0022title\u0022:\u0022Unauthorized\u0022,\u0022status\u0022:401,\u0022detail\u0022:\u0022No GitHub token was provided in the request headers.\u0022,\u0022instance\u0022:\u0022Microsoft.AspNetCore.Http.DefaultHttpRequest\u0022,\u0022traceId\u0022:\u00220HNA5F4GHS26D:00000001\u0022,\u0022activityId\u0022:\u002200-c6000903e97ade9bd4bb9703f2f83a40-78ea86b69a416faa-01\u0022}\r\n\u0060\u0060\u0060",
+        "createdAt": "2025-02-14T07:07:59",
+        "reactions": []
+      },
+      {
+        "id": 2659807376,
+        "author": "peternoyes",
+        "body": "Is there a sense of when this PR might be able to be merged? \r\n\r\nI am currently facing a problem in that I can\u0027t get hardware acceleration to work on Windows on ARM64 with SkiaSharp. I have been going down the route of trying to get OpenGL re-enabled in Skia itself which would help fix this. But this Direct3D backend support could be another way to go about gaining support. Re-enabling OpenGL would allow the OpenGL compatibility pack to do its magic of converting OpenGL -\u003E Direct3D behind the scenes, but going straight to Direct3D is probably better! I eagerly await to see where this goes!\r\n\r\nIssue I recently logged:\r\nhttps://github.com/mono/SkiaSharp/issues/3155",
+        "createdAt": "2025-02-14T16:45:57",
+        "reactions": [
+          {
+            "user": "jeremy-visionaid",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:46:01.8856843Z"
+          },
+          {
+            "user": "larks-x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:46:01.885685Z"
+          }
+        ]
+      },
+      {
+        "id": 2697939129,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-03-04T14:59:54",
+        "reactions": []
+      },
+      {
+        "id": 2697939459,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines will not run the associated pipelines, because the pull request was updated after the run command was issued. Review the pull request again and issue a new run command.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-03-04T15:00:00",
+        "reactions": []
+      },
+      {
+        "id": 2697940342,
+        "author": "mattleibow",
+        "body": "I rebased/merged and started a build to see where we are.",
+        "createdAt": "2025-03-04T15:00:20",
+        "reactions": []
+      },
+      {
+        "id": 2700122370,
+        "author": "Kation",
+        "body": "@mattleibow Workflow still report unauthorized.",
+        "createdAt": "2025-03-05T07:48:20",
+        "reactions": []
+      },
+      {
+        "id": 2700467154,
+        "author": "mattleibow",
+        "body": "Yeah, the public pool is a bit full, so I am using an internal one.\r\n\r\nThe build failed with the Nano Server checks saying there is no Direct3D available on Nano Server. I need to verify that, but for now I disabled D3D on Nano. So far, all the native builds looked green. Running again and the tests will tell us things hopefully.",
+        "createdAt": "2025-03-05T10:14:20",
+        "reactions": [
+          {
+            "user": "angelofb",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:46:03.158473Z"
+          }
+        ]
+      },
+      {
+        "id": 2705016441,
+        "author": "mattleibow",
+        "body": "The internal pipeline finished and was all green. So, I think we should be able to merge this soon.\r\n\r\nI will give it another review and also try get the public builds working so folks can try out the artifacts.",
+        "createdAt": "2025-03-06T21:47:47",
+        "reactions": [
+          {
+            "user": "jeremy-visionaid",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:46:03.4266431Z"
+          },
+          {
+            "user": "angelofb",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:46:03.4266438Z"
+          },
+          {
+            "user": "larks-x",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:46:03.4266438Z"
+          },
+          {
+            "user": "Kation",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:46:03.4266439Z"
+          }
+        ]
+      },
+      {
+        "id": 2705034148,
+        "author": "jeremy-visionaid",
+        "body": "I will happily be guinea pig!",
+        "createdAt": "2025-03-06T21:58:09",
+        "reactions": [
+          {
+            "user": "angelofb",
+            "content": "laugh",
+            "createdAt": "2026-02-06T12:46:03.6396926Z"
+          },
+          {
+            "user": "larks-x",
+            "content": "laugh",
+            "createdAt": "2026-02-06T12:46:03.6396932Z"
+          }
+        ]
+      },
+      {
+        "id": 2707182191,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-03-07T18:52:32",
+        "reactions": []
+      },
+      {
+        "id": 2707182386,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-03-07T18:52:39",
+        "reactions": []
+      },
+      {
+        "id": 2708050054,
+        "author": "mattleibow",
+        "body": "\u003E I will happily be guinea pig!\r\n\r\nYou should be able to download the \u0060nuget\u0060 artifact from https://dev.azure.com/xamarin/public/_build/results?buildId=137303\u0026view=results",
+        "createdAt": "2025-03-08T05:55:31",
+        "reactions": [
+          {
+            "user": "jeremy-visionaid",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:46:04.4239625Z"
+          }
+        ]
+      },
+      {
+        "id": 2709342906,
+        "author": "jeremy-visionaid",
+        "body": "Thanks for making those artifacts available! I\u0027m afraid I hadn\u0027t looked too closely at the state of Skia\u0027s backend support and hadn\u0027t realized that the Ganesh set of backends included DX12 and not DX11. So, I was hoping that I could just rip out ANGLE and set up Skia contexts with DX11 instead. I don\u0027t think it should be a big deal to create a DX12 device and share the required textures/resources between the two, and probably still preferable to ANGLE for my usage. However, it\u0027ll take me a bit longer to spin something up with this than what I first thought...",
+        "createdAt": "2025-03-10T03:32:04",
+        "reactions": []
+      },
+      {
+        "id": 2709795863,
+        "author": "jeremy-visionaid",
+        "body": "OK, I\u0027ve got a working proof of concept using the D3D backend. Took me a little while to check the performance. Looks about 5-10% faster than the ANGLE build for our app, and I\u0027ll get to drop a couple of dependencies once this gets merged/released. Nice work @Kation!",
+        "createdAt": "2025-03-10T08:35:02",
+        "reactions": []
+      },
+      {
+        "id": 2710145701,
+        "author": "mattleibow",
+        "body": "Very nice to hear! Are you able to share samples? I am no Direct-anything expert, so any samples will be great.\r\n\r\nI am wanting to add more things to the views as well as make better samples showing different backends.",
+        "createdAt": "2025-03-10T10:43:23",
+        "reactions": []
+      },
+      {
+        "id": 2710948926,
+        "author": "mattleibow",
+        "body": "\u003E Hate to be that guy but have any other Direct3D C# binding libraries been considered. This \u0060Vortice.Direct3D12\u0060 seems to be a niche one. One example is \u0060Silk.NET\u0060 which is under .NET Foundation umbrella (No affiliation on my side).\r\n\r\nThis is a good point. Thanks for making it here.\r\n\r\nHowever, the main aim of this PR (for me) is to merge the base APIs that people can use. If you (or anyone) are familiar with Silk.NET, then feel free to open a PR or issue with some code I can add to the repo. \r\n\r\nThe way we are doing the nugets here is specifically to avoid a dependency lock-in, so the library specific code is in a separate nuget that can be deprecated/updated/changed at any time without breaking the core skia libraries. For example, to use Vortice, there will be a separate \u0060SkiaSharp.Direct3D.Vortice\u0060 nuget that you would reference. There may be \u0060SkiaSharp.Direct3D.Silk.NET\u0060 nuget in the future (if you open a PR \uD83D\uDE09).",
+        "createdAt": "2025-03-10T15:16:48",
+        "reactions": []
+      },
+      {
+        "id": 2712230057,
+        "author": "jeremy-visionaid",
+        "body": "@mattleibow I\u0027m not sure what value samples from my usage would add over the the unit tests that Kation added. I use different bindings, and most of the work I had to do was for D3D11/D3D12 interop, which I think is probably out of scope. D3D12 is a pretty complex beast - setting up Skia/SkiaSharp is the easy bit \uD83D\uDE04 Suffice to say that I can create a GRContext and render to an SKSurface via GRBackendRenderTarget or GRBackendTexture just fine with this PR.\r\n\r\n@maw136 FWIW regarding bindings, I didn\u0027t use the SkiaSharp.Direct3D.Vortice package, just the base GRD3DBackendContext/GRBackendRenderTarget/GRD3DTextureResourceInfo. Using Silk.NET, CsWin32 or any other bindings directly with them should be essentially trivial.",
+        "createdAt": "2025-03-11T01:17:19",
+        "reactions": []
+      },
+      {
+        "id": 2712854392,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-03-11T06:46:49",
+        "reactions": []
+      },
+      {
+        "id": 2712854594,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-03-11T06:46:56",
+        "reactions": []
+      },
+      {
+        "id": 2721469299,
+        "author": "mattleibow",
+        "body": "OK, I think this PR is fianlly ready! Thanks for sticking with it for so long and everyone in the discussions.\r\n\r\nGoing to merge and will let everyone know when it is available on the preview feed - typically in 3 hours.",
+        "createdAt": "2025-03-13T14:29:33",
+        "reactions": []
+      },
+      {
+        "id": 2723121966,
+        "author": "Kation",
+        "body": "@mattleibow Pipeline still queue for running and report error, can we stop it?",
+        "createdAt": "2025-03-14T01:50:37",
+        "reactions": []
+      },
+      {
+        "id": 2723302451,
+        "author": "mattleibow",
+        "body": "The pipeline is finished and the version is \u00603.119.0-preview.0.20\u0060 on the preview feed.",
+        "createdAt": "2025-03-14T03:18:57",
+        "reactions": [
+          {
+            "user": "molesmoke",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:46:06.8952835Z"
+          }
+        ]
+      }
+    ]
+  }
 }

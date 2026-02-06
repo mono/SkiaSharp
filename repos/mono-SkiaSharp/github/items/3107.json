@@ -19,5 +19,47 @@
   "updatedAt": "2025-02-26T15:23:36",
   "closedAt": "2025-02-26T15:23:36",
   "commentCount": 2,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:46:53.7222901Z",
+    "reactions": [
+      {
+        "user": "sungaila",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:53.7222947Z"
+      },
+      {
+        "user": "beto-rodriguez",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:46:53.7222953Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2524233311,
+        "author": "niza93",
+        "body": "Modified \u0060SkiaHelper\u0060 from https://github.com/mono/SkiaSharp/issues/572#issuecomment-637522844 solves this issue, but only for SKElement, SKGLElement still doesn\u0027t load\r\n\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static class SkiaHelper\r\n{\r\n  [DllImport(\u0022kernel32.dll\u0022, CharSet = CharSet.Auto, SetLastError = true)]\r\n  private static extern IntPtr LoadLibrary(string libname);\r\n\r\n  public static void LoadNativeLibrary()\r\n  {\r\n    var libSkiaSharpPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);\r\n    libSkiaSharpPath = Path.Combine(libSkiaSharpPath, \u0022libSkiaSharp.dll\u0022);\r\n\r\n    LoadLibrary(libSkiaSharpPath);\r\n  }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-12-06T21:46:13",
+        "reactions": []
+      },
+      {
+        "id": 2542596245,
+        "author": "jjzhang12",
+        "body": "We got same error in Skiasharp 3.116.1 in .net 8 blazor when we compiled with .net sdk 8.0.11. It\u0027s fine though when compiled with .net sdk 8.0.10.\r\n\r\nFor comparison, the Skiasharp 2.88.8 is working fine for both .net sdk 8.0.10 and 8.0.11.",
+        "createdAt": "2024-12-14T00:45:50",
+        "reactions": [
+          {
+            "user": "niza93",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:46:53.6720483Z"
+          },
+          {
+            "user": "wan0v",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:46:53.6720489Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -19,5 +19,130 @@
   "updatedAt": "2025-01-30T20:24:25",
   "closedAt": "2025-01-30T20:24:24",
   "commentCount": 17,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:47:26.6773643Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2067618186,
+        "author": "janne-hmp",
+        "body": "This may be because there\u0027s (still) something wrong with .NET MAUI 9.0 Preview 3 iOS workload download, and perhaps it downloads (a non-functioning) Preview 4 prematurely instead of the correct workload version. @rolfbjarne Any update there?",
+        "createdAt": "2024-04-20T09:34:33",
+        "reactions": []
+      },
+      {
+        "id": 2067622073,
+        "author": "janne-hmp",
+        "body": "I tested this again today with a clean install, and I can confirm just changing to .NET 9.0 Preview 3 is sufficient to make SkiaSharp to stop working after a while on iOS, while working with SkiaSharp 3.0 Preview 2.1 (and other libraries exactly like in .NET 9.0 Preview 2).",
+        "createdAt": "2024-04-20T09:51:03",
+        "reactions": []
+      },
+      {
+        "id": 2067637904,
+        "author": "janne-hmp",
+        "body": "This seems to be an issue also in .NET 9.0 Preview 2, and not sure at all where this is coming from on iOS.",
+        "createdAt": "2024-04-20T10:57:15",
+        "reactions": []
+      },
+      {
+        "id": 2067661128,
+        "author": "janne-hmp",
+        "body": "I tested whether this is caused by special iOS features like animations etc., but none of them are the culprit. Happens in all combinations of .NET 9.0 Preview 2 / 3 and SkiaSharp 3.0 Preview 2.1 and 3.1. Always only on iOS. @mattleibow Any idea how to work out what is causing the problem?\r\n\r\nIt is always the SKGLView in the menu screen that stops working first (though it is on the same page--as an (in)visible grid--as the main game) and then SKCanvasView that draws the background for another page. And then finally the other SKGLViews and some SKCanvasViews. But this may be dependent on that these are the screens that I test and use the most.",
+        "createdAt": "2024-04-20T12:38:27",
+        "reactions": []
+      },
+      {
+        "id": 2067664050,
+        "author": "janne-hmp",
+        "body": "Touch events seem to still work, but all canvases are drawing just black in the end, apart from a a few small ones inside custom controls that still seem to work. Happens consistently after playing for a while. Memory consumption seems to be reasonable at 30MB, so that is not a problem. And happens also with default gpu cache size, so changing that is mostly likely not a problem. And also confirmed that Android does work fine.",
+        "createdAt": "2024-04-20T12:50:42",
+        "reactions": []
+      },
+      {
+        "id": 2067670442,
+        "author": "janne-hmp",
+        "body": "I changed now SKGLViews to SKCanvasViews and the problems seems to have been fixed. @mattleibow Can you investigate why SKGLView on iOS is corrupting the memory?",
+        "createdAt": "2024-04-20T13:15:01",
+        "reactions": []
+      },
+      {
+        "id": 2067675842,
+        "author": "janne-hmp",
+        "body": "I added one more observation here, which some luck could be interrelated this memory corruption problem: https://github.com/mono/SkiaSharp/issues/2842 ; SKGLView seems to hinder the speed of .NET layout, making the page with SKGLView look wobbly for the couple of first 100s of milliseconds. This has been a problem on iOS at least since 2.80.3, but I realized now for the first time that this is related to SKGLView being present on the page.",
+        "createdAt": "2024-04-20T13:33:40",
+        "reactions": []
+      },
+      {
+        "id": 2126838400,
+        "author": "janne-hmp",
+        "body": "@mattleibow With .NET MAUI 9.0 Preview 4, things seem to be now a bit more stable on iOS in SkiaSharp 3.0 Preview 3.1. I still managed to get the menu canvas to stop redrawing itself by doing a lot of random stuff in the UI first, but it does not seem to draw garbage anymore, just not redrawing itself. Also, the menu canvas was missing \u0060canvas.Flush()\u0060 from the end of its PaintSurface, which I now added. This may have further contributed to stability, as I couldn\u0027t make the menu canvas stop working anymore with a short test, but this is subject to further testing naturally. Not sure if a missing \u0060Flush()\u0060 could have caused things to malfunction with SKGLCanvas earlier?",
+        "createdAt": "2024-05-23T11:08:24",
+        "reactions": []
+      },
+      {
+        "id": 2168267016,
+        "author": "janne-hmp",
+        "body": "Maybe fixed with Preview 5 and Flush.",
+        "createdAt": "2024-06-14T15:24:33",
+        "reactions": []
+      },
+      {
+        "id": 2221222856,
+        "author": "janne-hmp",
+        "body": "This seems to be still problem in 9.0 Preview 6 in MAUI. Xamarin iOS with SKGLView works fine. Maui with SKCanvasView work fine, too.\r\n\r\nWe are getting in Output \u003E Debug window the following error messages many tens of times:\r\n\r\n\u0060\u0060\u0060\r\nINFO: 2024-07-10 21:36:53.790 GnollHackM[23250:6973420] Failed to bind EAGLDrawable: \u003CCAEAGLLayer: 0x30125b9c0\u003E to GL_RENDERBUFFER 1\r\n2024-07-10 21:36:53.790 GnollHackM[23250:6973420] Failed to make complete multisample framebuffer object 8cd6\r\n2024-07-10 21:36:53.790 GnollHackM[23250:6973420] Failed to make complete framebuffer object 8cd6\r\n\r\n\u0060\u0060\u0060\r\n\r\nPractically what happens is that that if I start the game about 4 times by pressing Play Game button on MainPage (opens GamePage that has the only SKGLView in the app) and then selecting Cancel to return to MainPage on the next screen (and repeat this 4 times), most of the SkiaSharp canvases start consistently drawing black.\r\n\r\nI tested for memory leaks using MemoryToolkit.Maui, but there seems to be none.\r\n\r\n@mattleibow Any thoughts what could be a problem here?",
+        "createdAt": "2024-07-10T18:58:53",
+        "reactions": []
+      },
+      {
+        "id": 2221232120,
+        "author": "janne-hmp",
+        "body": "If it helps anything, there are also the following error messages:\r\n\r\n\u0060\u0060\u0060\r\nINFO: 2024-07-10 21:36:17.108 GnollHackM[23250:6973420] You\u0027ve implemented -[\u003CUIApplicationDelegate\u003E application:performFetchWithCompletionHandler:], but you still need to add \u0022fetch\u0022 to the list of your supported UIBackgroundModes in your Info.plist.\r\n\r\nINFO: 2024-07-10 21:36:40.373 GnollHackM[23250:6973420] invalid mode \u0027kCFRunLoopCommonModes\u0027 provided to CFRunLoopRunSpecific - break on _CFRunLoopError_RunCalledWithInvalidMode to debug. This message will only appear once per execution.\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-07-10T19:04:21",
+        "reactions": []
+      },
+      {
+        "id": 2233079991,
+        "author": "janne-hmp",
+        "body": "@mattleibow If the SKGLView implementation is the same as in Xamarin, it feels like this might be a .NET MAUI composition engine problem (possibly a threading problem / missing BeginInvokeOnMainThread), since the SKGLView is not really drawing anything meaningful when pressing Play Game, and another grid with a few SKCanvasViews appears on the top of it. It is sufficient just to make that grid appear 1-4 times (press cancel and Play Game again), and the corruption materializes.",
+        "createdAt": "2024-07-17T11:28:17",
+        "reactions": []
+      },
+      {
+        "id": 2233554086,
+        "author": "janne-hmp",
+        "body": "@mattleibow I actually now got the corruption effect without using SKGLView\u0027s, i.e., just by having SKCanvasView\u0027s in the game. However, the corruption seems to happen more often with both SKGLView and SKCanvasView present. But it looks like the culprit is SKCanvasView rather than SKGLView. Perhaps this problem is related to #2923.",
+        "createdAt": "2024-07-17T15:07:34",
+        "reactions": []
+      },
+      {
+        "id": 2241707628,
+        "author": "janne-hmp",
+        "body": "I can also confirm that the memory leak happens only when opening and closing pages, and not by showing and hiding grids via IsVisible, which makes sense, since a new page is generally created along with new controls before PushModalAsync.",
+        "createdAt": "2024-07-21T16:39:15",
+        "reactions": []
+      },
+      {
+        "id": 2409052489,
+        "author": "janne-hmp",
+        "body": "This is the iOS memory leak problem that hopefully is already fixed, pending new SkiaSharp release. I just tested this in .NET MAUI 9.0 RC2, and the problem still persists there with SkiaSharp 3.0 Preview 4.1, so a new SkiaSharp version is indeed needed. @mattleibow Do we have any indications currently what might be the timeframe for releasing the fixed version?",
+        "createdAt": "2024-10-13T17:04:58",
+        "reactions": []
+      },
+      {
+        "id": 2439729643,
+        "author": "janne-hmp",
+        "body": "@mattleibow I tried the game now on iOS with SkiaSharp 3.0 Preview 5.4, and the memory leak problem seems to persist, just as before.",
+        "createdAt": "2024-10-26T20:37:51",
+        "reactions": []
+      },
+      {
+        "id": 2625502637,
+        "author": "janne-hmp",
+        "body": "This has now been fixed with a combination of #2923 having been fixed and using DisconnectHanders on iOS mentioned in #3106",
+        "createdAt": "2025-01-30T20:24:24",
+        "reactions": []
+      }
+    ]
+  }
 }

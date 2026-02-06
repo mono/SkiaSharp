@@ -18,5 +18,18 @@
   "createdAt": "2025-02-19T13:21:19",
   "updatedAt": "2025-02-26T14:02:45",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:46:56.8507464Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2685119997,
+        "author": "Braysoft",
+        "body": "Steps to Reproduce:\n1. create new Maui app in visual studio\n2. make following changes (see below) as well as adding .UseSkiaSharp in builder.\n3. runs fine in visual studio\n4. create msix package\n5. run on a clean win11 or 10 machine\n6. Error as above\n\n\u0060namespace MauiApp6\n{\n    using SkiaSharp;\n    using SkiaSharp.Views;\n    using SkiaSharp.Views.Maui.Controls;\n \n    public partial class MainPage : ContentPage\n    {\n        int count = 0;\n        public static SKCanvasView canvasView;\n        public MainPage()\n        {\n            InitializeComponent();\n            Grid stocker = new Grid\n            {\n                ColumnSpacing = 15,\n                RowDefinitions =\n                {\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition(),\n                    new RowDefinition()\n\n\n                },\n                ColumnDefinitions =\n                {\n                    new ColumnDefinition(),\n                    new ColumnDefinition(),\n                    new ColumnDefinition(),\n                    new ColumnDefinition(),\n                    new ColumnDefinition(),\n                    new ColumnDefinition(),\n                    new ColumnDefinition(),\n                    new ColumnDefinition()\n\n                }\n            };\n\n          \n\n            canvasView = new SKCanvasView();\n            canvasView.PaintSurface \u002B= OnCanvasViewPaintSurface;\n\n           \n\n\n            Content = new Grid\n            {\n\n                HorizontalOptions = LayoutOptions.Fill,\n                VerticalOptions = LayoutOptions.Fill,\n                Children =\n                {\n\n                   canvasView,\n                    stocker,\n\n\n                }\n            };\n\n            Content.AddLogicalChild(canvasView);\n\n        }\n\n        void OnCanvasViewPaintSurface(object sender, SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs args)\n        { }\n        \n\n        private void OnCounterClicked(object sender, EventArgs e)\n        {\n            count\u002B\u002B;\n\n            if (count == 1)\n                CounterBtn.Text = $\u0022Clicked {count} time\u0022;\n            else\n                CounterBtn.Text = $\u0022Clicked {count} times\u0022;\n\n            SemanticScreenReader.Announce(CounterBtn.Text);\n        }\n    }\n\n}\n\u0060",
+        "createdAt": "2025-02-26T14:02:44",
+        "reactions": []
+      }
+    ]
+  }
 }
