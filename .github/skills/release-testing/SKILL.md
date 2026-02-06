@@ -80,12 +80,17 @@ The API returns ALL statuses chronologically. A pipeline may have multiple entri
 
 ### Extracting NuGet Version
 
-The build description contains the version in format: `#{version}-{label}.{build}+{branch}`
+The build description contains the internal version in format: `#{base}-{label}.{build}+{branch}`
 
-Example: `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
-- Version: `3.119.2-preview.2.3`
-- Label: `preview.2`
-- Build: `3`
+**Preview example:** `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
+- Internal version: `3.119.2-preview.2.3`
+- NuGet version: `3.119.2-preview.2.3` (same — build number is part of the prerelease tag)
+
+**Stable example:** `#3.119.2-stable.3+3.119.2 succeeded`
+- Internal version: `3.119.2-stable.3`
+- NuGet version: `3.119.2` (base only — build number is NEVER appended to stable versions)
+
+⚠️ **Stable versions never include a build number.** Each CI build of a stable release produces a different internal package (`3.119.2-stable.1`, `3.119.2-stable.2`, etc.) but the published NuGet version is always just `3.119.2`.
 
 ---
 
@@ -108,6 +113,8 @@ Example: `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
 
 2. **Search and filter for the SPECIFIC version:**
 
+   **For preview releases** (`PREVIEW_LABEL` is NOT `stable`):
+
    ```bash
    # Get ALL versions, then filter to match {base}-{label}.*
    dotnet package search SkiaSharp \
@@ -117,25 +124,51 @@ Example: `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
      | grep "^{base}-{label}\."
    
    # Example: Find 3.119.2-preview.3.* versions
+   ... | grep "^3.119.2-preview.3\."
+   ```
+
+   Pick the highest build number (e.g., `3.119.2-preview.3.1`). This IS the NuGet version.
+
+   **For stable releases** (`PREVIEW_LABEL` is `stable`):
+
+   ```bash
+   # Verify a stable build exists on the internal feed
    dotnet package search SkiaSharp \
      --source "https://aka.ms/skiasharp-eap/index.json" \
      --exact-match --prerelease --format json \
      | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-     | grep "^3.119.2-preview.3\."
+     | grep "^{base}-stable\."
+   
+   # Example: Find 3.119.2-stable.* internal packages
+   ... | grep "^3.119.2-stable\."
    ```
+
+   The internal feed has `{base}-stable.{build}` packages (e.g., `3.119.2-stable.3`), but the **NuGet version is just `{base}`** (e.g., `3.119.2`). The build number is never appended to stable versions.
 
    ⚠️ **CRITICAL:** Use `.version` to get ALL versions, NOT `.latestVersion` which only returns the newest.
    The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so you MUST filter
    by the base version and preview label from the release branch.
 
-3. Pick the highest build number from matching versions (e.g., `3.119.2-preview.3.1`)
+3. Pick the NuGet version:
+   - **Preview:** Highest build number from matching versions (e.g., `3.119.2-preview.3.1`)
+   - **Stable:** Just the base version (e.g., `3.119.2`) — no build number appended
 
 4. Report to user:
+
+   **Preview:**
    ```
    Resolved versions:
      SkiaSharp:     3.119.2-preview.3.1
      HarfBuzzSharp: 8.3.1.3-preview.3.1
      Build number:  1
+   ```
+
+   **Stable:**
+   ```
+   Resolved versions:
+     SkiaSharp:     3.119.2
+     HarfBuzzSharp: 8.3.1.3
+     Internal build: 3.119.2-stable.3 (on feed)
    ```
 
 **No packages found?** CI build hasn't completed. See [troubleshooting.md](references/troubleshooting.md#package-resolution-errors).

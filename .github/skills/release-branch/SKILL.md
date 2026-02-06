@@ -58,6 +58,10 @@ Do NOT use alphabetical sorting — it gives wrong results for semver.
 
 For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-preview" | sort -V | tail -1`
 
+**NuGet version format by release type:**
+- **Preview:** `{base}-{PREVIEW_LABEL}.{build}` (e.g., `3.119.2-preview.2.3`) — build number is part of the prerelease tag
+- **Stable:** `{base}` only (e.g., `3.119.2`) — the build number is NEVER appended to stable versions. On the internal feed, stable builds appear as `{base}-stable.{build}` but the published version is just `{base}`.
+
 ---
 
 ## Step 3: Create Branch and Update PREVIEW_LABEL
