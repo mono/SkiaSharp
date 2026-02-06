@@ -29,5 +29,77 @@
   "updatedAt": "2022-08-19T18:02:09",
   "closedAt": "2020-02-04T17:00:42",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:26.3156395Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 347063106,
+        "author": "mattleibow",
+        "body": "This appears to be the issue:\r\nhttps://docs.microsoft.com/en-us/dotnet/visual-basic/misc/bc30345\r\n\r\n    \u0027\u003Cmethod1\u003E\u0027 and \u0027\u003Cmethod2\u003E\u0027 cannot overload each other because they differ only\r\n    by parameters declared \u0027ByRef\u0027 or \u0027ByVal\u0027\r\n\r\nIt appears VB does not support (differentiate) a feature supported by C#.\r\n\r\nI am not sure if there is a workaround, but I will investigate what we can do.\r\n",
+        "createdAt": "2017-11-27T02:29:24",
+        "reactions": []
+      },
+      {
+        "id": 347610338,
+        "author": "DanWBR",
+        "body": "I\u0027ve already found another way of doing what I want without playing with SKMatrix. What\u0027s critical about this \u0027issue\u0027 is that none of the methods are visible in VB, \u0027PostConcat\u0027 is completely gone. Maybe you could implement a helper function or extension...",
+        "createdAt": "2017-11-28T18:02:23",
+        "reactions": []
+      },
+      {
+        "id": 444175209,
+        "author": "mattleibow",
+        "body": "This is something that we will be looking at in the future.",
+        "createdAt": "2018-12-04T17:00:14",
+        "reactions": []
+      },
+      {
+        "id": 568146631,
+        "author": "mattleibow",
+        "body": "There is a comment here (https://github.com/mono/SkiaSharp/issues/1076#issue-541156546) that could potentially fix this by adding a differently-named overload for VB. This might be all that is needed.",
+        "createdAt": "2019-12-21T03:04:29",
+        "reactions": []
+      },
+      {
+        "id": 568146781,
+        "author": "mattleibow",
+        "body": "Moving it to v1.68.2 so we can make sure this gets done.",
+        "createdAt": "2019-12-21T03:05:19",
+        "reactions": []
+      },
+      {
+        "id": 581953589,
+        "author": "mattleibow",
+        "body": "I have been working on making the \u0060SKMatrix\u0060 members actually useful in https://github.com/mono/SkiaSharp/pull/1123\r\n\r\nInstead of having random static members that aren\u0027t particularly intuitive, I have added 3 instance members that are better:\r\n\r\n\u0060\u0060\u0060csharp\r\n// matrices\r\nSKMatrix a = SKMatrix.CreateTranslation(10, 10);\r\nSKMatrix b = SKMatrix.CreateRotation(45);\r\n\r\nSKMatrix pre = a.PreConcat(b);\r\nSKMatrix post = a.PostConcat(b);\r\nSKMatrix concat = SKMatrix.Concat(a, b);\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-02-04T15:07:14",
+        "reactions": [
+          {
+            "user": "DanWBR",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:00:26.0374825Z"
+          },
+          {
+            "user": "mgnslndh",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:26.0374829Z"
+          }
+        ]
+      },
+      {
+        "id": 583171677,
+        "author": "mattleibow",
+        "body": "Work has been done, features been added, previews published. Check out the brand new preview (1.68.2-preview.29) that just left the gates! https://github.com/mono/SkiaSharp/releases/tag/v1.68.2-preview.29",
+        "createdAt": "2020-02-07T00:05:08",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:26.2662041Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -14,5 +14,31 @@
   "updatedAt": "2022-08-19T18:02:01",
   "closedAt": "2017-12-19T00:52:43",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:40.4821239Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 352603365,
+        "author": "mattleibow",
+        "body": "You can just draw the bitmap onto a new bitmap.\r\nThis will also handle the cases of partial transparency, and also not need thousands of p/invokes with the Get/SetPixel (this is very, very slow).\r\n\r\n\u0060\u0060\u0060csharp\r\nvar original = SKBitmap.Decode(inputStream);\r\n\r\n// create a new bitmap with the same dimensions\r\n// also avoids the first copy if the color type is index8\r\nvar copy = new SKBitmap(original.Width, original.Height);\r\n\r\n// we need a canvas to draw\r\nvar canvas = new SKCanvas(copy);\r\n\r\n// clear the bitmap with the desired color for transparency\r\ncanvas.Clear(SKColors.White);\r\n\r\n// draw the bitmap on top\r\ncanvas.DrawBitmap(original, 0, 0);\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-12-19T00:41:33",
+        "reactions": [
+          {
+            "user": "91378246",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:40.2070182Z"
+          }
+        ]
+      },
+      {
+        "id": 352606132,
+        "author": "VladimirLuzhin",
+        "body": "@mattleibow Thank you a lot!",
+        "createdAt": "2017-12-19T00:57:48",
+        "reactions": []
+      }
+    ]
+  }
 }

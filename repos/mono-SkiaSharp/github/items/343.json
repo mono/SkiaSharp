@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T21:01:19",
   "closedAt": "2017-09-05T15:47:38",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:03.5758307Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 327218161,
+        "author": "mattleibow",
+        "body": "I am closing this as this is an old issue and there are some causes:\r\n - is the image marked as **Embedded Resource**?\r\n - is the image embedded in the **same** assembly as the type returned by \u0060GetType()\u0060?\r\n\r\nAssuming the above is true (and the image is valid), then this should work:\r\n\r\n\u0060\u0060\u0060csharp\r\nstring resourceID = \u0022Helloworld.Media.icon.png\u0022;\r\nAssembly assembly = GetType().GetTypeInfo().Assembly;\r\nusing (Stream stream = assembly.GetManifestResourceStream(resourceID))\r\n{\r\n    resourceBitmap = SKBitmap.Decode(stream);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nNOTE: no need for \u0060SKManagedStream\u0060 anymore - it is done internally.",
+        "createdAt": "2017-09-05T15:47:38",
+        "reactions": []
+      }
+    ]
+  }
 }

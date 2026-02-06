@@ -14,5 +14,67 @@
   "updatedAt": "2022-08-19T18:02:29",
   "closedAt": "2017-09-29T20:49:05",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:54.4867996Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 332877611,
+        "author": "mattleibow",
+        "body": "Yes... the versions are out of sync. The 1.59.x SkiaSharp needs the m59 native files. (the structures have changed, and most probably the native can\u0027t understand the new size)\r\n\r\nI have just fixed the cake issues, so you should be able to rebuild.\r\n\r\nBut, you might not have to. We have a linux build (not official yet), but you can still use it:\r\nhttps://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp-Linux/79/Azure/\r\n\r\nMore specifically: https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp-Linux/79/Azure/processDownloadRequest/ArtifactsFor-79/3c31bd5c5701a6eb3651110b4708bb1d0492c7fc/output/native/linux/x64/libSkiaSharp.so\r\n\r\nYou should be able to just include that file, and make sure it is copied to output. You can still use the NuGet form nuget.org, since that will only copy the managed bits. Let me know if this works.",
+        "createdAt": "2017-09-28T15:42:45",
+        "reactions": []
+      },
+      {
+        "id": 332962653,
+        "author": "callmemorgan",
+        "body": "That worked! In trying to get Skia to build locally, I pulled the artifacts from the Jenkins server and got everything working locally. I still cannot build Skia from source, because the git hash referenced from SkiaSharp does not build locally (there are unused functions, and Werror is flagged), but I think this should do me for now.\r\n\r\nThank you for your help!",
+        "createdAt": "2017-09-28T21:00:38",
+        "reactions": []
+      },
+      {
+        "id": 332964940,
+        "author": "callmemorgan",
+        "body": "Q: How does your Jenkins server build Skia successfully? I looked through everything I can see publicly and didn\u0027t see anything too magical. I\u0027ve wound up commenting out the Werror flags in my local clone",
+        "createdAt": "2017-09-28T21:10:03",
+        "reactions": []
+      },
+      {
+        "id": 332986754,
+        "author": "mattleibow",
+        "body": "How are you building SkiaSharp? I just run the \u0060./bootstrapper.sh -t externals\u0060 and all builds. I am using Ubuntu 14.04 with \u0060mono-complete\u0060 and \u0060msbuild\u0060 installed. I am not too sure if there is anything else.\r\n\r\nIn fact, there are all the packages: \u0060xvfb xauth libfontconfig1-dev libglu1-mesa-dev g\u002B\u002B mono-devel msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-dev-1.0.4 ttf-ancient-fonts\u0060 and then we run \u0060xvfb-run -a -- ./bootstrapper.sh -t Linux-CI\u0060 on a clean ubuntu14.04 VM that is spun up for each build\r\n\r\nFor my local builds, I think I had a clean ubuntu with \u0060libfontconfig1-dev libglu1-mesa-dev g\u002B\u002B mono-devel msbuild referenceassemblies-pcl dotnet-dev-1.0.4 ttf-ancient-fonts\u0060 and then \u0060./bootstrapper.sh -t everything\u0060",
+        "createdAt": "2017-09-28T23:01:08",
+        "reactions": []
+      },
+      {
+        "id": 332987803,
+        "author": "mattleibow",
+        "body": "Just thinking about your errors, this is why I use an Ubuntu 14, because it comes with an old gcc. I think skia is compatible with gcc 4.8. For the newer versions, you will have to install this: \u0060g\u002B\u002B-4.8-multilib\u0060 and then run the build: \r\n\r\n    CC=gcc-4.8 CXX=g\u002B\u002B-4.8 AR=gcc-ar-4.8 NM=gcc-nm-4.8 ./bootstrapper.sh -t everything\r\n\r\nI put together a slightly old wiki: https://github.com/mono/SkiaSharp/wiki/Building-on-Linux\r\n\r\nThe newer gcc have more/different warnings - thus the build fails with \u0060-Wall\u0060",
+        "createdAt": "2017-09-28T23:08:02",
+        "reactions": []
+      },
+      {
+        "id": 333235517,
+        "author": "mattleibow",
+        "body": "I am closing this issue as I think the issue here was the difference in the managed/native APIs. The solution is to either build skia yourself, or use the semi-official link attached to each release.",
+        "createdAt": "2017-09-29T20:49:05",
+        "reactions": []
+      },
+      {
+        "id": 507898361,
+        "author": "nelhit",
+        "body": "hi i have the same problem, i dowload the from libSkiaSharp.so https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp-Linux/79/Azure/processDownloadRequest/ArtifactsFor-79/3c31bd5c5701a6eb3651110b4708bb1d0492c7fc/output/native/linux/x64/libSkiaSharp.so. \r\n\r\nMy project is a net core 2.1 project, I include the library into my project with property \u0022copy always\u0022 and alse in my startup.cs, i put **context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), \u0022libSkiaSharp.so\u0022))** and i got error:\r\n\r\n\u0060\u0060\u0060\r\nUnable to allocate pixels for the bitmap.\r\n  at SkiaSharp.SKBitmap..ctor(SKImageInfo info, Int32 rowBytes)\r\n  at SkiaSharp.SKBitmap..ctor(SKImageInfo info) \r\n  at SkiaSharp.SKBitmap.Decode(SKCodec codec, SKImageInfo bitmapInfo) \r\n  at SkiaSharp.SKBitmap.Decode(SKCodec codec) \r\n  at SkiaSharp.SKBitmap.Decode(Stream stream)\r\n\u0060\u0060\u0060\r\n\r\nMy deploy machine is an amazon with OS CentOS Linux 7 (Core). I installed libgdiplus and also i install mono-complete.\r\n\r\nI appreciate your help if i need install someting else. I dont know what else i need to install.",
+        "createdAt": "2019-07-03T01:05:51",
+        "reactions": []
+      },
+      {
+        "id": 508967271,
+        "author": "mattleibow",
+        "body": "That looks like a different error: \u0022Unable to allocate pixels for the bitmap.\u0022\r\n\r\nIt appears that for some reason, SkiaSharp was not able to allocate pixels. This could be that either the dimensions were too large for the memory (which is probably not the case), too small (ie: 0). Are you able to create a new issue with the image attached so I can follow up there?",
+        "createdAt": "2019-07-07T02:47:23",
+        "reactions": []
+      }
+    ]
+  }
 }

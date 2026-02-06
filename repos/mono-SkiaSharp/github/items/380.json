@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T18:02:26",
   "closedAt": "2017-10-24T15:10:15",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:00.3217308Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 337022123,
+        "author": "mattleibow",
+        "body": "What you are doing is not correct - \u0060ImageSource.FromStream\u0060 will return a \u0060StreamImageSource\u0060.\r\n\r\nI would suggest making use of the conversion types provided by the NuGet packages:\r\n\r\n - SkiaSharp.Views\r\n - SkiaSharp.Views.Forms\r\n\r\nFor Xamarin.Forms, you should just be able to cast it and it will automatically convert the bitmap into an image source (https://developer.xamarin.com/api/type/SkiaSharp.Views.Forms.SKBitmapImageSource):\r\n\r\n    buttonA.Image = (SKBitmapImageSource)pieceBitmap;\r\n\r\nIn addition to this, you can easily convert from a bitmap into an image:\r\n\r\n    SKImage image = SKImage.FromBitmap(pieceBitmap);\r\n\r\nAlso, you can just encode a bitmap:\r\n\r\n    SKPixmap pixmap = pieceBitmap.PeekPixels();\r\n    SKData data = pixmap.Encode(SKEncodedImageFormat.Png, 100);\r\n\r\nThere are several image source types that may interest you:\r\n - \u0060SKBitmapImageSource\u0060\r\n - \u0060SKImageImageSource\u0060\r\n - \u0060SKPictureImageSource\u0060\r\n - \u0060SKPixmapImageSource\u0060\r\n",
+        "createdAt": "2017-10-16T20:07:27",
+        "reactions": []
+      },
+      {
+        "id": 338770339,
+        "author": "Urien2017",
+        "body": "THANKS!!",
+        "createdAt": "2017-10-23T19:28:44",
+        "reactions": []
+      },
+      {
+        "id": 374909778,
+        "author": "skima",
+        "body": "I have issue with convert SKBitmapImageSource to FileImageSource\r\n\r\n\u0060\u0060\u0060\r\npublic SKBitmapImageSource TestFileImageSource { get; set; }\r\n\r\n// read file\r\n            Stream stream = ImageService.Instance\r\n                .LoadEmbeddedResource($\u0022resource://DemoXamarin.UI.Resources.UserIcon.svg?assembly=DemoXamarin.UI\u0022)\r\n                .WithCustomDataResolver(new SvgDataResolver(200, 200))\r\n                .CacheKey($\u0022DemoXamarin.UI.Resources.UserIcon.svg\u0022)\r\n                .AsPNGStreamAsync().Result;\r\n\r\n            SKManagedStream skStream = new SKManagedStream(stream);\r\n            SKBitmap skBitmap = SKBitmap.Decode(skStream);\r\n\r\nthis.TestFileImageSource = (SKBitmapImageSource)skBitmap;\r\n\r\n// using in xml\r\n\u0060\u0060\u0060\r\n\u0060\u003CButton Image=\u0022{Binding TestFileImageSource}\u0022 BackgroundColor=\u0022Transparent\u0022//\u003E\u0060\r\nDebug log:\r\n[0:] Binding: SkiaSharp.Views.Forms.SKBitmap// delete can not be converted to type \u0027Xamarin.Forms.FileImageSource\u0027\r\n\r\nConverting to ImageSource work is correct",
+        "createdAt": "2018-03-21T11:41:42",
+        "reactions": []
+      },
+      {
+        "id": 375446089,
+        "author": "mattleibow",
+        "body": "It appears that the \u0060\u003CButton\u003E\u0060 element does not support the base \u0060ImageSource\u0060 type for some reason:\r\nhttps://developer.xamarin.com/api/property/Xamarin.Forms.Button.Image/\r\n\r\nThe \u0060\u003CImage\u003E\u0060 element is fine at least.\r\n\r\nThis is a known issue with buttons and tabs and we will just have to wait. What can be done in the meantime is to just save the image to a temporary location and then pass the path to the button. This is not the most optimal, but it is what we have at this time.",
+        "createdAt": "2018-03-22T20:26:52",
+        "reactions": []
+      },
+      {
+        "id": 375572534,
+        "author": "skima",
+        "body": "Thanks a lot for quickly answer. We will wait and make a crutch.",
+        "createdAt": "2018-03-23T07:58:41",
+        "reactions": []
+      }
+    ]
+  }
 }

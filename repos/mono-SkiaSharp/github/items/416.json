@@ -14,5 +14,70 @@
   "updatedAt": "2022-08-19T18:01:56",
   "closedAt": "2018-01-11T14:33:41",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:47.70714Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 355935055,
+        "author": "xPaw",
+        "body": "I was just trying to solve the same problem, it worked for me by using \u0060bitmap.GetPixesl()\u0060 instead of \u0060bitmap.Handle\u0060. However I would like to know some approach that could be used without marshalling.",
+        "createdAt": "2018-01-08T10:52:02",
+        "reactions": []
+      },
+      {
+        "id": 355950315,
+        "author": "parthipanr",
+        "body": "@xPaw does retrieving the bitmap pointer by using bitmap.GetPixels() is working properly to copy the byte array to bitmap ? \r\n  ",
+        "createdAt": "2018-01-08T12:09:57",
+        "reactions": []
+      },
+      {
+        "id": 355950419,
+        "author": "xPaw",
+        "body": "It worked for me.",
+        "createdAt": "2018-01-08T12:10:33",
+        "reactions": []
+      },
+      {
+        "id": 356950196,
+        "author": "mattleibow",
+        "body": "You will always have to do some marshaling as the bitmap lives in unmanaged/native memory and the byte array is in managed code. But, you may be able to do something like this:\r\n\r\n\u0060\u0060\u0060csharp\r\n// the pixel array of uint 32-bit colors\r\nvar pixelArray = new uint[] {\r\n\t0xFFFF0000, 0xFF00FF00,\r\n\t0xFF0000FF, 0xFFFFFF00\r\n};\r\n\r\n// create an empty bitmap\r\nbitmap = new SKBitmap();\r\n\r\n// pin the managed array so that the GC doesn\u0027t move it\r\nvar gcHandle = GCHandle.Alloc(pixelArray, GCHandleType.Pinned);\r\n\r\n// install the pixels with the color type of the pixel data\r\nvar info = new SKImageInfo(2, 2, SKImageInfo.PlatformColorType, SKAlphaType.Unpremul);\r\nbitmap.InstallPixels(info, gcHandle.AddrOfPinnedObject(), info.RowBytes, null, delegate { gcHandle.Free(); }, null);\r\n\u0060\u0060\u0060\r\n\r\nThis pins the managed memory and passes the pointer to the bitmap. This way, both are accessing the same memory data and there is no need to actually do any conversions (or copying). (It is essential that the pinned memory be unpinned after usage so that the memory can be freed by the GC.)\r\n",
+        "createdAt": "2018-01-11T14:30:19",
+        "reactions": [
+          {
+            "user": "xPaw",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:47.6567375Z"
+          },
+          {
+            "user": "thomasouvre",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:47.6567379Z"
+          },
+          {
+            "user": "AndersMad",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:47.656738Z"
+          },
+          {
+            "user": "ryancheung",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:47.6567381Z"
+          },
+          {
+            "user": "smekonen",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:47.6567382Z"
+          },
+          {
+            "user": "swharden",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:47.6567383Z"
+          }
+        ]
+      }
+    ]
+  }
 }

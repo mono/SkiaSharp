@@ -15,5 +15,32 @@
   "updatedAt": "2022-08-19T18:02:02",
   "closedAt": "2017-12-18T00:01:17",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:39.2463717Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 350817698,
+        "author": "mattleibow",
+        "body": "I had a look at this and the problem is because of a combination of factors. The specific combination is the webp codec and the http stream. For some reason, the webp codec tries to read the length of the stream (the jpeg does not need to) and the http stream does not have a length.\r\n\r\nI will investigate a solution, but in the meantime you could create a buffer stream:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var httpClient = new HttpClient())\r\nusing (var stream = await httpClient.GetStreamAsync(new Uri(\u0022http://www.gstatic.com/webp/gallery/2.webp\u0022)))\r\nusing (var buffer = new MemoryStream())\r\n{\r\n\tawait stream.CopyToAsync(buffer);\r\n\tusing (var skBitmap = SKBitmap.Decode(buffer))\r\n\tusing (var destinationFile = new FileStream(\u0022D:/desktop/teste_webp_format.jpg\u0022, FileMode.OpenOrCreate))\r\n\tusing (var resized = skBitmap.Resize(new SKImageInfo(100, 100), SKBitmapResizeMethod.Lanczos3))\r\n\tusing (var image = SKImage.FromBitmap(resized)) image.Encode(SKEncodedImageFormat.Jpeg, 100).SaveTo(destinationFile);\r\n}\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2017-12-11T18:42:44",
+        "reactions": []
+      },
+      {
+        "id": 351111477,
+        "author": "smartbracker",
+        "body": "Thanks for reply!  \r\nI\u0027ll use this for now.",
+        "createdAt": "2017-12-12T16:47:54",
+        "reactions": []
+      },
+      {
+        "id": 352296802,
+        "author": "mattleibow",
+        "body": "This has been fixed in aab51650ac8311682f92226c4021bfafdcd9c394 and a58f62bfc99c8a1b74c43123508cd150f663e682",
+        "createdAt": "2017-12-18T00:01:17",
+        "reactions": []
+      }
+    ]
+  }
 }

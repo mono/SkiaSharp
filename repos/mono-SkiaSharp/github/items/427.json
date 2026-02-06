@@ -14,5 +14,52 @@
   "updatedAt": "2022-08-19T18:01:47",
   "closedAt": "2018-03-07T23:23:41",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:58.5906138Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 358439059,
+        "author": "mattleibow",
+        "body": "What platform is this? I don\u0027t think this is the case, but it may be: could the device have a low memory space for the app?\r\n\r\nAlso, is there a particular reason you are using \u0060RgbaF16\u0060? What happens if you use \u0060Rgba8888\u0060 or \u0060Bgra8888\u0060 (rather use \u0060SKImageInfo.PlatformColorType\u0060 as this will automatically pick the correct color)?\r\n",
+        "createdAt": "2018-01-17T20:44:45",
+        "reactions": []
+      },
+      {
+        "id": 358688380,
+        "author": "lambdakris",
+        "body": "The platform I\u0027m working on is Windows 10 with VS 2017 and .NET Core 2.0.\r\n\r\nNow, I think I might be doing something completely incorrectly because trying to create a minimal reproduction, I can\u0027t get it to work at all (plus for some reason GH won\u0027t let me upload the zip so below are instructions to repro manually)\r\n\r\nTo create the project, execute the following from a command line...\r\n\u0060\u0060\u0060\r\ndotnet new console -o repro -lang f#\r\ncd repro\r\ndotnet add package SkiaSharp\r\n\u0060\u0060\u0060\r\n\r\nNow, replace the content in the Program.fs file with the following...\r\n\r\n\u0060\u0060\u0060\r\nopen System\r\nopen SkiaSharp\r\n\r\n[\u003CEntryPoint\u003E]\r\nlet main argv =\r\n    \r\n    let surface = SKSurface.Create(50,50, SKColorType.Unknown, SKAlphaType.Unknown)\r\n    \r\n    if surface = null then Console.WriteLine(\u0022Surface is null\u0022) else Console.WriteLine(\u0022Surface is not null\u0022)\r\n\r\n    Console.WriteLine(\u0022Press any key to exit...\u0022)\r\n    Console.ReadKey() |\u003E ignore\r\n\r\n    0 // exit code\r\n\u0060\u0060\u0060\r\n\r\nWhat I see is that \u0060surface\u0060 is null everytime. Just in case I tried reproducing in a C# project and got the same. I also tried targeting \u0060net471\u0060 instead of \u0060netcoreapp2.0\u0060 but that didn\u0027t make a difference. Also tried targeting x86 and x64 instead of AnyCPU, but that also did not make a difference. \r\n\r\nI am certain there must be something that I\u0027m doing wrong but for the life of me I can\u0027t see it...\r\n",
+        "createdAt": "2018-01-18T15:49:56",
+        "reactions": []
+      },
+      {
+        "id": 364187004,
+        "author": "mattleibow",
+        "body": "@lambdakris The reason is the color type and alpha type. To use the platform defaults I would recommend the overload that takes the \u0060SKImageInfo\u0060:\r\n\r\n    var surface = SKSurface.Create(new SKImageInfo(50, 50));\r\n\r\nIf you don\u0027t want to use that, then the color type can\u0027t be unknown, so you MUST use a specific type or the platform type: \u0060SKImageInfo.PlatformColorType\u0060. The same goes for the alpha type, use \u0060SKAlphaType.Premul\u0060.\r\n\r\nAll four parameters are used to determine how much memory to allocate.",
+        "createdAt": "2018-02-08T17:29:20",
+        "reactions": []
+      },
+      {
+        "id": 364586677,
+        "author": "lambdakris",
+        "body": "Yeah, it may be that this has nothing to do with image size and I just lost track of what technique was giving what results. Give me a chance to try using SKImageInfo to create the canvas and I\u0027ll close the issue if it works.",
+        "createdAt": "2018-02-09T22:23:28",
+        "reactions": []
+      },
+      {
+        "id": 371321721,
+        "author": "lambdakris",
+        "body": "Using SKImageInfo to create an SKSurface did resolve the issue. Thank you for your patience.",
+        "createdAt": "2018-03-07T23:23:41",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:58.5403769Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T18:02:40",
   "closedAt": "2017-12-19T12:57:26",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:37.4940163Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 330331227,
+        "author": "mattleibow",
+        "body": "Some limitations:\r\n - \u0060SKImage.Encode\u0060 does not support encoding \u0060Alpha8\u0060 as this appears not to be supported by .png. To get around this, you may want to use a \u0060Grey8\u0060 - it is not the same thing, but can be saved.\r\n - \u0060SKSurface\u0060 cannot be constructed with \u0060Index8\u0060 as this is not a color type supported by \u0060SKSurface\u0060. However, you can create a \u0060SKBitmap\u0060 - but you will have to provide a color table.\r\n\r\nAs you noted, the index-8 bitmap can be loaded and draw fine. When I load an index-8 image, my color type is \u0060Index8\u0060 - with a color table. (https://user-images.githubusercontent.com/1096616/30549940-5eb294ca-9c96-11e7-9fac-b252fb9275ec.png)\r\n\r\nTo work with index-8 bitmaps, you can do something like this:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar bitmap = new SKBitmap(info, colorTable);\r\n\r\n// process the bitmap\r\n\r\nvar image = SKImage.FromBitmap(b);\r\nvar data = image.Encode();\r\n\r\nusing (var stream = File.OpenWrite(@\u0022C:\\Users\\mattl\\Pictures\\new.png\u0022))\r\n    data.SaveTo(stream);\r\n\u0060\u0060\u0060\r\n\r\nThe only thing with this is that a surface and canvas can\u0027t be used as they don\u0027t support index-8 color types.",
+        "createdAt": "2017-09-18T19:30:54",
+        "reactions": []
+      },
+      {
+        "id": 333852239,
+        "author": "migueldeicaza",
+        "body": "Matthew, let us make sure the documentation reflects this information.",
+        "createdAt": "2017-10-03T14:04:40",
+        "reactions": []
+      }
+    ]
+  }
 }

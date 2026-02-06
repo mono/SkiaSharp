@@ -14,5 +14,31 @@
   "updatedAt": "2022-08-19T21:01:27",
   "closedAt": "2017-07-08T08:54:24",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:48.4625129Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 313737740,
+        "author": "mattleibow",
+        "body": "This sounds like you didn\u0027t let the OS know that you wanted to continue receiving touch events:\r\n\r\n\u0060\u0060\u0060csharp\r\nprivate void OnTouch(object sender, SKTouchEventArgs e)\r\n{\r\n\t// handle the touch event\r\n\r\n\t// let the OS know we are interested\r\n\te.Handled = true;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nUWP/macOS don\u0027t really require it, as the OS is capable of sending events to multiple destinations, but iOS/Android need you to indicate that you want to receive them. Android will not even send any events further if you don\u0027t handle the pressed event - the parent will probably get them all.",
+        "createdAt": "2017-07-07T17:01:13",
+        "reactions": [
+          {
+            "user": "ibocon",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:58:48.2071616Z"
+          }
+        ]
+      },
+      {
+        "id": 313843884,
+        "author": "kevinandrewsde",
+        "body": "that did the trick, works perfectly now, thanks!",
+        "createdAt": "2017-07-08T08:54:24",
+        "reactions": []
+      }
+    ]
+  }
 }

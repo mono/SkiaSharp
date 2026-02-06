@@ -14,5 +14,113 @@
   "updatedAt": "2022-08-19T21:01:39",
   "closedAt": "2017-06-27T16:15:39",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:28.8308171Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 310588582,
+        "author": "mattleibow",
+        "body": "Is it possible to share the image? Also, if you save it as a .png or .jpg, what happens?",
+        "createdAt": "2017-06-23T07:01:44",
+        "reactions": []
+      },
+      {
+        "id": 310589704,
+        "author": "ThmX",
+        "body": "I tried with several images as input (bmp, png and jpg) the result is always the same.\r\nAfter looking a bit more, I\u0027m wondering whether the problem is not directly located inside the native skia library, as SkiaSharp is only binding with \u0060SkiaApi.sk_image_encode_specific(...)\u0060\r\nAny idea?",
+        "createdAt": "2017-06-23T07:08:30",
+        "reactions": []
+      },
+      {
+        "id": 310589942,
+        "author": "mattleibow",
+        "body": "What platform was this on? Did you try saving as a .png?",
+        "createdAt": "2017-06-23T07:09:55",
+        "reactions": []
+      },
+      {
+        "id": 310591388,
+        "author": "ThmX",
+        "body": "I\u0027m working on OSX and Windows, same behaviour for both.\r\nHere\u0027s a summary using different input/ouput:\r\n\r\ngood: * -\u003E jpg, png\r\nbad: * -\u003E bmp\r\n\r\nSo any input is working well, however the problem is when trying to encode in bmp. Otherwise it\u0027s working.",
+        "createdAt": "2017-06-23T07:17:38",
+        "reactions": []
+      },
+      {
+        "id": 310625092,
+        "author": "mattleibow",
+        "body": "OK, I will check it out. bmp should work, as it is the most basic, but maybe the encoder is missing for some reason.",
+        "createdAt": "2017-06-23T09:57:05",
+        "reactions": [
+          {
+            "user": "ThmX",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:27.9585389Z"
+          }
+        ]
+      },
+      {
+        "id": 310626379,
+        "author": "ThmX",
+        "body": "Would you like me to create a .net solution that reproduces the problem?\r\n(Forgot to mention earlier that I\u0027m working with .Net Core, but it shouldn\u0027t matter as it\u0027s using the native binding anyway)",
+        "createdAt": "2017-06-23T10:02:59",
+        "reactions": []
+      },
+      {
+        "id": 310805723,
+        "author": "mattleibow",
+        "body": "OK... Here is the issue, by default, skia compiles with it\u0027s own codecs:\r\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/src/images/SkImageEncoder.cpp\r\n\r\nBasically JPG, PNG, WEBP.\r\n\r\nThere is an option to use the Windows/CoreGraphics encoders, but take a look at this:\r\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/src/ports/SkImageEncoder_WIC.cpp#L54-L63\r\n\r\nNow they only do PNG and JPG. Really weird since Windows can do way more:\r\nhttps://msdn.microsoft.com/en-us/library/windows/desktop/ee690311(v=vs.85).aspx I have no idea why they only have a few, so I asked: https://groups.google.com/forum/#!topic/skia-discuss/a_HNOFtuyWg\r\n\r\nMaybe they will have an answer...",
+        "createdAt": "2017-06-24T01:44:42",
+        "reactions": [
+          {
+            "user": "ThmX",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:28.3886559Z"
+          }
+        ]
+      },
+      {
+        "id": 311408590,
+        "author": "ThmX",
+        "body": "I just saw the answer from Hal Canary. So I\u0027m gonna use PNG instead.\r\nEven though the problem is not solved for BMP, I have a pretty good solution instead.\r\n\r\nThanks a lot for your inquiry.",
+        "createdAt": "2017-06-27T16:15:39",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:28.5938388Z"
+          }
+        ]
+      },
+      {
+        "id": 582132563,
+        "author": "dsoronda",
+        "body": "I just had issue where I needed to decode Webp image using SkiaSharp and convert it to Bmp format.\r\nSince SkiaSharp Encode is not supported I used [BmpSharp ](https://github.com/dsoronda/bmp-sharp) as workaround. Maybe someone will find this useful (I almost created new issue for this.)\r\n\r\n~~~csharp\r\nif (!(outputImage.BytesPerPixel == 3 || outputImage.BytesPerPixel == 4))\r\n\tthrow new Exception( $\u0022Unsupported Bits per image ({outputImage.BytesPerPixel}) for BmpSharp\u0022 );\r\n\r\nvar bitsPerPixel = outputImage.BytesPerPixel == 4 ? BmpSharp.BitsPerPixelEnum.RGBA32 : BmpSharp.BitsPerPixelEnum.RGB24;\r\nvar bmp = new BmpSharp.Bitmap( outputImage.Width, outputImage.Height, outputImage.Bytes, bitsPerPixel );\r\nreturn bmp.GetBmpBytes(flipped:true);\r\n~~~\r\n\r\nDisclaimer : I\u0027m author of BmpSharp ",
+        "createdAt": "2020-02-04T21:50:52",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:28.7806Z"
+          },
+          {
+            "user": "dsoronda",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:28.7806003Z"
+          },
+          {
+            "user": "keesschollaart81",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:28.7806004Z"
+          },
+          {
+            "user": "navhaxs",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:58:28.7806005Z"
+          }
+        ]
+      }
+    ]
+  }
 }

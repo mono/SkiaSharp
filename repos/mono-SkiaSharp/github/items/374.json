@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T18:02:32",
   "closedAt": "2017-09-25T20:29:17",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:49.3783545Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 332002490,
+        "author": "mattleibow",
+        "body": "Thanks for logging this issue, but unfortunately this is something that we are going to have to deal with as the consumers of SkiaSharp. Google, for whatever reason, just decided that they don\u0027t want that feature and removed it. It no longer exists on the native API and thus disappears from the managed API as well.\r\n\r\nAccording to the docs: https://developer.xamarin.com/api/property/SkiaSharp.SKPaint.StrikeThruText/\r\n\r\n\u003E Assembly Versions: 1.54.0.0, 1.54.0.0, 1.55.0.0, 1.56.0.0, 1.57.0.0\r\n\r\nThis indicates that it only exists up to v1.57.x.x.\r\n\r\nAnd just to point fingers, here is Google\u0027s commit to remove a feature: https://github.com/google/skia/commit/a01bf9ab748836fc4bf271bd5024151bf1ce2e88\r\n\r\nHere are some more comments right from Google:\r\n\u003E In Skia the text decorations (underline and strike-through) only affect drawText calls, and this is done mostly just for backward compatibility and will probably be removed soon. Text decoration can get quite complex with layout, and since different users will disagree about what the behavior should be it\u0027s best that the user do the drawing.\r\n\r\n\r\nThat\u0027s it! Gone! Sorry about that, I am in as much pain as you are.",
+        "createdAt": "2017-09-25T20:29:17",
+        "reactions": []
+      },
+      {
+        "id": 332046267,
+        "author": "Craig-TSS",
+        "body": "Thanks for clearing that up Matthew.",
+        "createdAt": "2017-09-25T23:54:25",
+        "reactions": []
+      }
+    ]
+  }
 }

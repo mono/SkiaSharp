@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T21:01:29",
   "closedAt": "2017-09-01T19:02:38",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:43.6519116Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 315524475,
+        "author": "mattleibow",
+        "body": "I am not too sure exactly, but the exception is probably related to the fact that it either can\u0027t find the native libSkiaSharp.dll, or is unable to load it (ie: it may be an x86 dll and you are on an x64 OS).\r\n\r\nI will need to see more of the exception, but this is just SkiaSharp saying that it can\u0027t find or load the native bits.",
+        "createdAt": "2017-07-15T10:10:32",
+        "reactions": []
+      },
+      {
+        "id": 325255293,
+        "author": "Seanba",
+        "body": "It looks like SkiaSharp has a dependency on the Visual C\u002B\u002B Redistributable from Visual Studio 2015. I haven\u0027t confirmed it yet but I\u0027m guessing some of my users don\u0027t have that installed.",
+        "createdAt": "2017-08-28T04:06:54",
+        "reactions": []
+      },
+      {
+        "id": 325355184,
+        "author": "mattleibow",
+        "body": "That is correct. There is a dependency on the redist. More info: #136 ",
+        "createdAt": "2017-08-28T13:36:34",
+        "reactions": []
+      },
+      {
+        "id": 326660099,
+        "author": "mattleibow",
+        "body": "Closing this as this is not a bug, but a requirement.",
+        "createdAt": "2017-09-01T19:02:33",
+        "reactions": []
+      }
+    ]
+  }
 }

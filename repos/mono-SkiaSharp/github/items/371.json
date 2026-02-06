@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T18:02:35",
   "closedAt": "2017-09-16T18:41:49",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:45.925747Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 329983227,
+        "author": "mattleibow",
+        "body": "@hot33331 The chances are you are not clearing the canvas/bitmap first.\r\n\r\nYou can either do \u0060bitmap.Erase(SKColors.Transparent)\u0060 or \u0060canvas.Clear(SKColors.Transparent)\u0060 (you can use any color).\r\n\r\nThe reason for this is performance. When creating a new bitmap, the computer has no way of knowing what background color you want. So, if it was to go transparent and you wanted white, then there would be two draw operations to clear the pixels (and this may be very expensive for large images).\r\n\r\nDuring the allocation of the bitmap, the memory is provided, but the actual data is untouched. If there was anything there previously (which there will be), this data appears as colored pixels.",
+        "createdAt": "2017-09-16T17:28:57",
+        "reactions": []
+      },
+      {
+        "id": 329987216,
+        "author": "hot33331",
+        "body": "Thanks a bunch Matt! That fixed it for me!!",
+        "createdAt": "2017-09-16T18:41:49",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,63 @@
   "updatedAt": "2022-08-19T21:01:24",
   "closedAt": "2018-09-26T04:22:48",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:53.1992096Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 313725323,
+        "author": "mattleibow",
+        "body": "You should be able to run the \u0060externals-uwp\u0060 task to get the native bits:\r\n\r\n    \u003E .\\bootstrapper.ps1 -Target externals-uwp\r\n\r\nTo do all the bits (the managed bits as well as the native bits), you can run the \u0060libs\u0060 task:\r\n\r\n    \u003E .\\bootstrapper.ps1 -Target libs\r\n\r\nThis is what we run on CI. Let me know if this is what you are looking for, or if you are looking for something more specific.",
+        "createdAt": "2017-07-07T16:10:32",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:52.0954328Z"
+          }
+        ]
+      },
+      {
+        "id": 313744896,
+        "author": "picrolandew",
+        "body": "First, thank you so much for your responce.\r\n\r\nI\u0027m trying to get SKIA source (Latest source) and build it to UWP.\r\nI found you guys already support this..... but need to build the latest from source, so I thought there might be a steps to do it here.",
+        "createdAt": "2017-07-07T17:31:00",
+        "reactions": []
+      },
+      {
+        "id": 313909420,
+        "author": "mattleibow",
+        "body": "you can check out SkiaSharp (make sure the submodules come too) and then run the commands above. \r\nThe actual C/C\u002B\u002B source lives here: https://github.com/mono/skia/tree/xamarin-mobile-bindings\r\nAnd the actual commands that are run in the \u0060externals-uwp\u0060 target are here: https://github.com/mono/SkiaSharp/blob/master/cake/BuildExternals.cake#L165-L189\r\n\r\nAs for some real docs, I do need to get around to that.",
+        "createdAt": "2017-07-09T09:36:25",
+        "reactions": []
+      },
+      {
+        "id": 313909706,
+        "author": "mattleibow",
+        "body": "To get the latest source, I have to merge from upstream into our skia fork. I want to do that very soon. It is mostly a painless operation, but Google often changes a few types :) changes values of enums :) and deprecates/removes members :) It typically takes a day or so.\r\n\r\nThe version number that I release as \u0022stable\u0022 is the version that Chrome has as \u0022stable\u0022. Right now it is 59. It typically works as \u0022master\u0022 =\u003E alpha; \u0022master-1 (m60)\u0022 =\u003E beta; \u0022master-2 (m59)\u0022 =\u003E stable (after a few days)",
+        "createdAt": "2017-07-09T09:42:00",
+        "reactions": [
+          {
+            "user": "yinyue200",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:52.8778049Z"
+          },
+          {
+            "user": "yinyue200",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:58:52.8778054Z"
+          }
+        ]
+      },
+      {
+        "id": 424580140,
+        "author": "mattleibow",
+        "body": "Closing this issue as the steps are really just \u0060 .\\bootstrapper.ps1 -t externals-uwp\u0060. For the merging bits, it is a bit of work and not really a step-by-step process. Each change and conflict has to be addressed like any codebase.",
+        "createdAt": "2018-09-26T04:22:48",
+        "reactions": []
+      }
+    ]
+  }
 }

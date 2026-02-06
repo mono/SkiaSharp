@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T21:01:33",
   "closedAt": "2017-09-15T01:42:06",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:36.5714656Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 312046009,
+        "author": "mattleibow",
+        "body": "The reason for this is that you are attaching the paint event AFTER the paint cycle is complete. The paint is going to happen during the initialization, and most probably will have happened already by the time \u0060Loaded\u0060 is called:\r\n\r\n\u003E Occurs when a FrameworkElement has been constructed and added to the object tree, and is ready for interaction.\r\n\r\nAlthough you can attach the event in the window constructor:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic MainWindow()\r\n{\r\n\tInitializeComponent();\r\n\r\n\tthis.skia.PaintSurface \u002B= this.Skia_PaintSurface;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nYou can also just invalidate the surface after attaching the event\r\n\r\n\u0060\u0060\u0060\r\nprivate void MainWindow_Loaded(object sender, RoutedEventArgs e)\r\n{\r\n    this.skia.PaintSurface \u002B= this.Skia_PaintSurface;\r\n    skia.InvalidateVisual();\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-06-29T17:55:47",
+        "reactions": []
+      }
+    ]
+  }
 }

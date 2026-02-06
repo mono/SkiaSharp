@@ -23,5 +23,52 @@
   "updatedAt": "2022-08-19T18:01:58",
   "closedAt": "2018-11-30T16:24:28",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:44.879237Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 354877419,
+        "author": "tzachshabtay",
+        "body": "@mattleibow I would really appreciate your help with this.\r\nThanks. ",
+        "createdAt": "2018-01-02T21:17:10",
+        "reactions": []
+      },
+      {
+        "id": 357120354,
+        "author": "mattleibow",
+        "body": "Hi there... sorry about the delay - I had to edit the issue to show the code. It appears that angle brackets \u0060\u003C\u0060 causes major issues in the issues :)\r\n\r\nI had a look at this and I think I found out a few things. It appears that unlike the usual backend render target, the texture render target requires 2 pieces of information: \r\n\r\n\u0060\u0060\u0060cpp\r\nstruct GrGLTextureInfo {\r\n    GrGLenum fTarget;\r\n    GrGLuint fID;\r\n};\r\n\u0060\u0060\u0060\r\n\r\nAs the description type only accepts an \u0060IntPtr\u0060, this was not very clear. In the code, they just magically cast the type and that is why you got the exception. I will investigate this to see if there is some way to strongly type the handle (the Vulkan handle has a good few members). In the mean time, you can do something like this:\r\n\r\n\u0060\u0060\u0060csharp\r\n// declare the handle type\r\n[StructLayout(LayoutKind.Sequential)]\r\npublic struct GRGlTextureInfo {\r\n    public uint Target;\r\n    public uint Id;\r\n}\r\n\r\n// create the handle\r\nvar textureInfo = new GRGlTextureInfo {\r\n    Id = (uint)textureId,\r\n    Target = (uint)TextureTarget.Texture2D\r\n};\r\n\r\n// pin the handle and pass it to the description\r\nvar textureHandle = GCHandle.Alloc(textureInfo, GCHandleType.Pinned);\r\nvar textureDesc = new GRBackendTextureDesc {\r\n    Width = textureSize.Width,\r\n    Height = textureSize.Height,\r\n    Config = GRPixelConfig.Rgba8888,\r\n    Flags = GRBackendTextureDescFlags.RenderTarget,\r\n    Origin = GRSurfaceOrigin.TopLeft,\r\n    SampleCount = 0,\r\n    TextureHandle = textureHandle.AddrOfPinnedObject(),\r\n};\r\n\r\n// create the SkiaSharp texture surface\r\ntextureSurface = SKSurface.CreateAsRenderTarget(context, textureDesc);\r\n\r\n// free the pinned GC handle when we are done\r\ntextureHandle.Free();\r\n\u0060\u0060\u0060\r\n\r\nAnother thing I noticed was that I had to specify a texture image:\r\n\r\n\u0060\u0060\u0060csharp\r\ntextureId = GL.GenTexture();\r\nGL.BindTexture(TextureTarget.Texture2D, textureId);\r\nGL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, textureSize.Width, textureSize.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);\r\n\u0060\u0060\u0060\r\n\r\nHere is my working sample: https://github.com/mattleibow/SkiaSharpTextures",
+        "createdAt": "2018-01-12T01:54:59",
+        "reactions": []
+      },
+      {
+        "id": 357443897,
+        "author": "mattleibow",
+        "body": "The work done in the commit will make textures much easier using the new \u0060GRGlBackendTextureDesc\u0060 type:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar desc = new GRGlBackendTextureDesc {\r\n    ...\r\n    TextureHandle = new GRGlTextureInfo {\r\n        Id = textureId,\r\n        Target = GL.Texture2D\r\n    }\r\n};\r\n\r\nvar context = GRContext.Create(GRBackend.OpenGL);\r\nvar surface = SKSurface.CreateAsRenderTarget(context, desc);\r\n\u0060\u0060\u0060\r\n\r\nThe pinning of the struct is now done automatically.\r\n",
+        "createdAt": "2018-01-13T15:33:53",
+        "reactions": []
+      },
+      {
+        "id": 357538301,
+        "author": "tzachshabtay",
+        "body": "Hi @mattleibow thank you very much for all your help. I still can\u0027t get it to work, though. Your sample shows nicely how to use skiasharp in a gamewindow (note that I had to upgrade OpenTK to 2.0 in your example otherwise it crashes, at least on mac), but it doesn\u0027t show how to actually combine normal rendering to OpenGL with skiasharp, and when I try that everything blows up.\r\n\r\nWorking from your example (I\u0027m working against your example, haven\u0027t tried the commit) I created an example trying to combine both drawing methods, here: https://github.com/tzachshabtay/SkiaSharpTextures\r\n\r\nI\u0027ve taken the code you had in OnLoad and OnRenderFrame and refactored it to \u0022PrepareSkia\u0022 and \u0022DrawSkia\u0022 and then also added a \u0022PrepareDirect\u0022 and \u0022DrawDirect\u0022 to prepare a texture, buffer and shader and use it to draw a simple rectangle (I just use skia there to draw to a bitmap, but then draw it with glDrawElements). I\u0027ve also added a \u0022GL.Clear\u0022 call to the beginning of the render loop.\r\n\r\nNow, if I comment out \u0022PrepareSkia\u0022 and DrawSkia\u0022, my OpenGL rectangle appear as expected. If I instead comment out \u0022GL.Clear\u0022, \u0022PrepareDirect\u0022 and \u0022DrawDirect\u0022, your skia rendering appear as expected.\r\n\r\nIf I uncomment stuff, noticed 3 problems:\r\n\r\n1. If I just uncomment GL.Clear (but leave PrepareDirect and DrawDirect commented), your skia rendering appears except for the text on the texture (very odd considering the green background of the texture still appears).\r\n\r\n2. If I uncomment everything (i.e that\u0027s how the example is currently setup), the code crashes at \u0060at (wrapper managed-to-native) SkiaSharp.SkiaApi.gr_context_flush (intptr) [0x00009] in \u003Ccf546bad13294f0f88da02ef9d3e7062\u003E:0\u0060\r\n\r\n3. If I then switch the order of DrawDirect and DrawSkia, the code crashes on \u0022Invalid Operation\u0022 from OpenGL at the first check I do on the first line on DrawDirect (and it happens on the second \u0022tick\u0022, so it appears as something in the skia drawing is causing an OpenGL error). \r\n\r\n",
+        "createdAt": "2018-01-14T20:07:48",
+        "reactions": []
+      },
+      {
+        "id": 443257578,
+        "author": "mattleibow",
+        "body": "I am closing this as I am not sure if skia can be mixed in with normal OpenGL drawing. I feel that this is possible, but might be better discussed on the skia forums: https://groups.google.com/forum/#!forum/skia-discuss\r\n\r\nIn addition, it will also be better to open a issue that is specifically dedicated to any issues when mixing the drawings.",
+        "createdAt": "2018-11-30T16:24:28",
+        "reactions": [
+          {
+            "user": "tzachshabtay",
+            "content": "confused",
+            "createdAt": "2026-02-06T14:00:44.8287928Z"
+          }
+        ]
+      }
+    ]
+  }
 }

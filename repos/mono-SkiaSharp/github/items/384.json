@@ -14,5 +14,56 @@
   "updatedAt": "2022-08-19T18:02:22",
   "closedAt": "2018-04-12T14:13:00",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:07.9088089Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 339541281,
+        "author": "mattleibow",
+        "body": "To be honest, I am not particularly sure - and I know this is not exactly encouraging. This is because there are many factors at play here:\r\n\r\n - System settings:\r\n    - the screen dpi\r\n    - whether scaling is enabled\r\n    - OS version\r\n - WinForms settings:\r\n    - autosize mode\r\n    - autosize enabled\r\n    - target framework version\r\n    - app.config settings\r\n    - app.manifest settings\r\n - Other factors:\r\n    - WinForms (GDI) fonts are points (pt)\r\n    - SkiaSharp is pixels (px)\r\n\r\nImportant thing about SkiaSharp is that it will ALWAYS draw text with pixels and will do so regardless of DPI/scaling. On machines that have scaling, you will probably have to scale up. The reason this is not so well supported for SkiaSharp is that you are one of the first people that I know that have tried WinForms.\r\n\r\nI will try and get to the bottom of this, but in the meantime - here are some docs:\r\n\r\n - https://docs.microsoft.com/en-us/dotnet/framework/winforms/adjusting-the-size-and-scale-of-windows-forms\r\n - https://docs.microsoft.com/en-us/dotnet/framework/winforms/high-dpi-support-in-windows-forms\r\n - https://msdn.microsoft.com/en-us/library/windows/desktop/ff684173\r\n - https://msdn.microsoft.com/en-us/library/ms838191.aspx\r\n\r\nNot the greatest of results, but I hope this helps a bit. This is fundamentally an issue with WinForms (I believe) as it is a very old framework and much support has been added on later.",
+        "createdAt": "2017-10-26T03:33:55",
+        "reactions": [
+          {
+            "user": "Ghasan",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:00:07.1009661Z"
+          }
+        ]
+      },
+      {
+        "id": 340726953,
+        "author": "joreg",
+        "body": "thanks for the elaborate answer. i\u0027ll dig into these..",
+        "createdAt": "2017-10-31T10:52:48",
+        "reactions": []
+      },
+      {
+        "id": 380819739,
+        "author": "joreg",
+        "body": "finally got back to this and what helped me was: \r\n\r\n\u003E     WinForms (GDI) fonts are points (pt)\r\n\u003E     SkiaSharp is pixels (px)\r\n\r\nso i now convert my pts to px and all is good. \r\nthanks again!",
+        "createdAt": "2018-04-12T14:13:00",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:07.6094462Z"
+          },
+          {
+            "user": "Ghasan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:07.6094465Z"
+          }
+        ]
+      },
+      {
+        "id": 380828258,
+        "author": "mattleibow",
+        "body": "NICE! Glad to have helped.",
+        "createdAt": "2018-04-12T14:37:10",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,157 @@
   "updatedAt": "2022-08-19T18:02:54",
   "closedAt": "2018-02-08T17:31:46",
   "commentCount": 20,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:17.0751338Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 321521090,
+        "author": "entdark",
+        "body": "Just tested on Genymotion emulator Android 4.4.4 x86 and it was fine.\r\nAlso tested on SDK emulator Android 4.4.2 x86 and it was fine.\r\n\r\nSo I guess the issue is related to exactly that model of smartphone.",
+        "createdAt": "2017-08-10T11:04:48",
+        "reactions": []
+      },
+      {
+        "id": 326742966,
+        "author": "entdark",
+        "body": "Tried a release build and got this:\r\n\u0060\u0060\u0060\r\nTime\tDevice Name\tType\tPID\tTag\tMessage\r\n09-02 17:41:34.540\tAsus _T00I\tInfo\t29817\tMonoDroid\tUNHANDLED EXCEPTION:\r\n09-02 17:41:34.790\tAsus _T00I\tInfo\t29817\tMonoDroid\tSystem.DllNotFoundException: libSkiaSharp.so\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi:gr_glinterface_create_native_interface ()\r\n  at SkiaSharp.GRGlInterface.CreateNativeGlInterface () [0x00000] in \u003C4037cd6aae714b3695104f4ec98e1b3b\u003E:0 \r\n  at SkiaSharp.Views.Android.SKGLSurfaceViewRenderer.OnSurfaceCreated (Javax.Microedition.Khronos.Opengles.IGL10 gl, Javax.Microedition.Khronos.Egl.EGLConfig config) [0x0005a] in \u003C780a5d92ee6848a4ae3dc605986cb602\u003E:0 \r\n  at Android.Opengl.GLSurfaceView\u002BIRendererInvoker.n_OnSurfaceCreated_Ljavax_microedition_khronos_opengles_GL10_Ljavax_microedition_khronos_egl_EGLConfig_ (System.IntPtr jnienv, System.IntPtr native__this, System.IntPtr native_gl, System.IntPtr native_config) [0x00017] in \u003Ce4b8e16d0f8049b2a663baf20e68cb8d\u003E:0 \r\n  at (wrapper dynamic-method) System.Object:de5aed66-d7d1-4ec1-993c-dff7c925ebbf (intptr,intptr,intptr,intptr)\r\n\u0060\u0060\u0060\r\nSeems like it fails to load the skiasharp shared object for some reason.",
+        "createdAt": "2017-09-02T13:05:33",
+        "reactions": []
+      },
+      {
+        "id": 326744304,
+        "author": "entdark",
+        "body": "It fails to load the shared object because it\u0027s missing on my device:\r\n![Missing libSkiaSharp.so](https://i.imgur.com/nyrcoBv.png)\r\nBut it is always presented on other devices:\r\n![Presented libSkiaSharp.so](https://i.imgur.com/EXUOsJq.png)",
+        "createdAt": "2017-09-02T13:33:51",
+        "reactions": []
+      },
+      {
+        "id": 326774564,
+        "author": "entdark",
+        "body": "Alright, this is so weird.\r\nI kind of found the root of the problem.\r\n\r\nI tried to manually copy \u0060libSkiaSharp.so\u0060 into \u0060[bundle]/lib/\u0060 from the apk from \u0060/lib/x86/\u0060 since I have \r\nan x86 CPU.\r\nIt failed to load it again.\r\n\r\nThen I decided to try an alternative ABI but before that I decided to just display my main and alt ABIs by using \u0060Android.OS.Build.CpuAbi \u002B \u0022, \u0022 \u002B Android.OS.Build.CpuAbi2\u0060.\r\nAnd I got the following displayed:\r\n\u0060armeabi-v7a, armeabi\u0060\r\nWhat? No x86 at all?\r\n\r\nThen I decided to copy \u0060libSkiaSharp.so\u0060 again but from the apk from \u0060/lib/armeabi-v7a/\u0060 this time.\r\nAnd it started finally working.\r\n\r\nThe solution for personal use is ofc fine but I need one for public distribution.\r\n\r\nNow I think during installation it tries to copy an x86 lib since the CPU is x86 then it fails some internal check for \u0060Android.OS.Build\u0060 ABI because it\u0027s either \u0060armeabi-v7a\u0060 or \u0060armeabi\u0060 so it doesn\u0027t copy anything at all.\r\nBy the way, \u0060libSkiaSharp.so\u0060 is also missing in the apk in \u0060/lib/armeabi/\u0060.\r\n\r\nAny thought on how to handle that?\r\n\r\nP.S.: sorry for the wall of replies on this issue.\r\nP.S.S.: on the emulator it displays \u0060x86, \u0060 and it works fine.",
+        "createdAt": "2017-09-02T23:21:19",
+        "reactions": [
+          {
+            "user": "lucidBrot",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:59:13.5486854Z"
+          }
+        ]
+      },
+      {
+        "id": 326806043,
+        "author": "entdark",
+        "body": "Finally made it working out of the box.\r\nIn project settings I had set supported architectures to: armeabi, armeabi-v7a, x86, x86_64, arm64-v8a.\r\nThen I changed them to: armeabi, armeabi-v7a, arm64-v8a.\r\nAnd it started working.\r\n\r\nI hope my investigation was useful.",
+        "createdAt": "2017-09-03T13:47:11",
+        "reactions": []
+      },
+      {
+        "id": 326961778,
+        "author": "mattleibow",
+        "body": "Interesting.\r\nI see your new list does not have x86, but your CPU is x86? What happens if you remove armeabi, armeabi-v7a and just leave arm64-v8a?\r\n\r\nWhat is interesting is that your x86 CPU is saying it is arm. Maybe the box is a lie :)",
+        "createdAt": "2017-09-04T13:19:39",
+        "reactions": []
+      },
+      {
+        "id": 327003356,
+        "author": "entdark",
+        "body": "It does not let me to install the APK at all.\r\nIntel Atom x86 can emulate ARM with libhoudini: https://stackoverflow.com/a/31047743",
+        "createdAt": "2017-09-04T17:07:13",
+        "reactions": []
+      },
+      {
+        "id": 327022468,
+        "author": "entdark",
+        "body": "It gets even more weird because I tried a blank Android project and got this:\r\n![x86, armeabi-v7a](https://i.imgur.com/uR5LgaL.png)\r\nI also tried a new Forms app and got the same result: \u0060x86, armeabi-v7a\u0060.\r\nMy project is on Forms.",
+        "createdAt": "2017-09-04T20:08:28",
+        "reactions": []
+      },
+      {
+        "id": 327028374,
+        "author": "entdark",
+        "body": "When I don\u0027t reference SkiaSharp.Views.dll and SkiaSharp.dll:\r\n![x86, armeabi-v7a](https://i.imgur.com/pKTVJ6z.png)\r\nWhen I do reference them:\r\n![armeabi-v7a, armeabi](https://i.imgur.com/5KhNw8V.png)\r\n\r\nAnd I think It\u0027s because SkiaSharp does not specify supported ABIs in \u0060Release\u0060 (I was on \u0060Release\u0060, it crashes on \u0060Debug\u0060 w/o a single message.): https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.Android/SkiaSharp.Views.Android.csproj#L20-L40\r\nOnly \u0060Debug\u0060 specifies the ABIs. By default only \u0060armeabi-v7a\u0060 is only supported on \u0060Release\u0060.\r\n\r\nIt\u0027s also weird x86 emulator works fine.",
+        "createdAt": "2017-09-04T21:09:13",
+        "reactions": []
+      },
+      {
+        "id": 335432526,
+        "author": "entdark",
+        "body": "Anything about my issue?\r\nI\u0027d like to use x86 libSkiaSharp.so on x86 CPU.\r\nBut for some reason referencing SkiaSharp.dll and its children makes the app think it needs arm SOs.\r\nCurrent solution is to exclude x86 out of the supported ABIs on the app level, so it forces to load arm SOs which the CPU can emulate to work with. But the startup time gets increased.\r\nMaybe I could try something myself?",
+        "createdAt": "2017-10-10T10:39:04",
+        "reactions": []
+      },
+      {
+        "id": 342136787,
+        "author": "deveee",
+        "body": "Did you find a way to fix it? I see very similar crashes in Supertuxkart that happen for x86 architecture on android 4.4 for exactly this phone model (and some others). And it seems to be related only to android 4.4.\r\n\r\nIt\u0027s possible that .so has some missing dependencies and that\u0027s why it fails to load. Maybe compile with older app_platform could help? No idea...\r\n",
+        "createdAt": "2017-11-06T12:39:48",
+        "reactions": []
+      },
+      {
+        "id": 342168776,
+        "author": "entdark",
+        "body": "@deveee\r\nTarget to armeabi-v7a and exclude x86 from targets. It works because Intel Arom x86 can emulate armeabi-v7a.\r\nBut it slows down the app startup and is not a proper solution, just a workaround. You also won\u0027t be able to debug it.\r\nDebugging only possible on x86 emulator (need to include x86 support back) or on a device with actual ARM CPU.",
+        "createdAt": "2017-11-06T14:42:22",
+        "reactions": []
+      },
+      {
+        "id": 342276108,
+        "author": "deveee",
+        "body": "What is the message that you get when it fails to load x86 library?\r\n\r\nI don\u0027t belive that the x86 support is totally broken, there must be a way to make it working. Maybe it just doesn\u0027t like this particular ndk platform, ndk version, sdk version, c\u002B\u002B library... You can try to create .so library that just prints hello world to console and then add more features, increase ndk version etc. to see what causes it.",
+        "createdAt": "2017-11-06T20:28:19",
+        "reactions": []
+      },
+      {
+        "id": 342315376,
+        "author": "entdark",
+        "body": "\u003EWhat is the message that you get when it fails to load x86 library?\r\n\r\nThe message is in my first post.\r\nThe problem is that the lib was not extracted when \u0060APK\u0060 was installed. So it did not find the lib at all when tried to use it.\r\n\r\nI\u0027ve worked with NDK and I know how it works and yes \u0060x86 .so\u0060 libs **work** on \u0060Intel Atom x86\u0060 - tested in my own projects. I\u0027ve always built my own \u0060.so\u0060 libs with the latest NDK (since 2015 until now).\r\nThe problem is in \u0060x86 libSkiaSharp.so\u0060 that is not detected properly on that CPU.\r\nI\u0027ve also tried to put manually \u0060x86 libSkiaSharp.so\u0060 to \u0060/data/data/package/libs/\u0060 (or something) and it failed, but putting there \u0060armeabi-v7a libSkiaSharp.so\u0060 worked fine.",
+        "createdAt": "2017-11-06T22:52:48",
+        "reactions": []
+      },
+      {
+        "id": 342318471,
+        "author": "deveee",
+        "body": "I meant the message when the x86 library exists and it just failed to use it. Maybe that\u0027s the reason that it didn\u0027t copy it automatically during installation.",
+        "createdAt": "2017-11-06T23:06:12",
+        "reactions": []
+      },
+      {
+        "id": 342320677,
+        "author": "entdark",
+        "body": "Okay, some magic happened.\r\nUpdated to SkiaSharp 1.59.2.\r\nIt started working with the x86 lib.\r\nhttps://images-cdn.9gag.com/photo/anYZ9Eo_700b.jpg",
+        "createdAt": "2017-11-06T23:16:44",
+        "reactions": []
+      },
+      {
+        "id": 342323725,
+        "author": "entdark",
+        "body": "Hah, but now when I target both \u0060x86\u0060 and \u0060armeabi-v7a\u0060, it installs \u0060armeabi-v7a\u0060 and crashes after startup.",
+        "createdAt": "2017-11-06T23:31:38",
+        "reactions": []
+      },
+      {
+        "id": 342328332,
+        "author": "deveee",
+        "body": "So emulated armeabi is default for this device? :P It can be at least fixed by making separate apks and using higher version code for x86...\r\n\r\nActually I wonder if you can try how STK works on this device and give me some feedback. On google play it\u0027s probably broken, because it will install the version for arm. But x86 apk is available on our website. Anyway sorry for offtopic.",
+        "createdAt": "2017-11-06T23:55:46",
+        "reactions": []
+      },
+      {
+        "id": 342328798,
+        "author": "entdark",
+        "body": "No, \u0060x86\u0060 is default, it\u0027s the Skia libs that mess everything up.\r\n\r\nWhat I also found out:\r\nIf you make \u0060a single APK\u0060 with multiple targets then it fails: it displays it\u0027s detected as \u0060armeabi-v7a\u0060 then crashes (on the moment when Skia starts loading).\r\nIf you make \u0060multiple APKs\u0060 for every target then installing either \u0060armeabi-v7a\u0060 or \u0060x86\u0060 will display the respective \u0060ABIs\u0060 and won\u0027t crash for each.\r\n\r\nIn my separate project where I build my own \u0060.so libs\u0060 and target different \u0060ABIs\u0060 and build \u0060a single APK\u0060 everything gets installed fine and works fine.\r\n\r\nWhat is STK and how would I test it?",
+        "createdAt": "2017-11-06T23:58:15",
+        "reactions": []
+      },
+      {
+        "id": 364187758,
+        "author": "mattleibow",
+        "body": "Closing this issue as it appears to be device-specific or maybe an older version of Xamarin.Android.\r\n\r\nPlease re-open if still an issue.",
+        "createdAt": "2018-02-08T17:31:46",
+        "reactions": []
+      }
+    ]
+  }
 }

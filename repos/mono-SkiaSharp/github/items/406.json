@@ -14,5 +14,81 @@
   "updatedAt": "2022-08-19T18:02:03",
   "closedAt": "2017-12-02T20:36:39",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:37.7201282Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 348579656,
+        "author": "DanWBR",
+        "body": "@mterwoord and @toburger, did you manage to instantiate a SKBitmap on the RPi?",
+        "createdAt": "2017-12-01T19:00:00",
+        "reactions": []
+      },
+      {
+        "id": 348682987,
+        "author": "mterwoord",
+        "body": "No clue, I use avalonia, which worked great!\r\n",
+        "createdAt": "2017-12-02T10:29:44",
+        "reactions": []
+      },
+      {
+        "id": 348684319,
+        "author": "toburger",
+        "body": "Sorry, I use SkiaSharp exclusively to read image information and resize images (both via SKBitmap.Decode).\r\nDo you have a minimal working example of your problem so I can test it out on my raspi?",
+        "createdAt": "2017-12-02T10:55:32",
+        "reactions": []
+      },
+      {
+        "id": 348686363,
+        "author": "DanWBR",
+        "body": "@toburger just try to create a new SKBitmap using the constructor which takes only width and height as arguments. It didn\u0027t work for me. ",
+        "createdAt": "2017-12-02T11:38:47",
+        "reactions": []
+      },
+      {
+        "id": 348695246,
+        "author": "toburger",
+        "body": "I get the same error:\r\n\r\n\u0060\u0060Unhandled Exception: System.Exception: Unable to allocate pixels for the bitmap.\u0060\u0060",
+        "createdAt": "2017-12-02T14:22:56",
+        "reactions": []
+      },
+      {
+        "id": 348696781,
+        "author": "DanWBR",
+        "body": "One thing I\u0027ve noticed is that @mterwoord\u0027s script compiles the 1.57.1 version of SkiaSharp, while in my app I have the 1.59.1 managed library. I\u0027ve tried to update the script to compile 1.59.1 but got a lot of errors. I\u0027ll then try to use the managed 1.57.1 library and let you know if it works. ",
+        "createdAt": "2017-12-02T14:47:56",
+        "reactions": []
+      },
+      {
+        "id": 348696813,
+        "author": "mterwoord",
+        "body": "My script was targetted for building a avalonia-compatible dll.\r\n",
+        "createdAt": "2017-12-02T14:48:34",
+        "reactions": []
+      },
+      {
+        "id": 348697253,
+        "author": "toburger",
+        "body": "I\u0027ve completely forgot that I was using 1.57.1 on my project and mistakenly restored the latest SkiaSharp for this test. After using 1.57.1 the code works.",
+        "createdAt": "2017-12-02T14:56:10",
+        "reactions": []
+      },
+      {
+        "id": 348706673,
+        "author": "DanWBR",
+        "body": "I can confirm it works fine if we use the correct managed library (1.57.1 in this case):\n\n![](https://cdn.pbrd.co/images/GWnhdQo.jpg)",
+        "createdAt": "2017-12-02T17:29:13",
+        "reactions": []
+      },
+      {
+        "id": 348718368,
+        "author": "DanWBR",
+        "body": "I\u0027m closing this issue as it turned out to be the same as #377. ",
+        "createdAt": "2017-12-02T20:36:39",
+        "reactions": []
+      }
+    ]
+  }
 }

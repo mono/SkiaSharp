@@ -14,5 +14,88 @@
   "updatedAt": "2022-08-19T21:01:40",
   "closedAt": "2017-09-05T15:49:19",
   "commentCount": 7,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:26.1134467Z",
+    "reactions": [
+      {
+        "user": "dsyno",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:26.113772Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 310589111,
+        "author": "mattleibow",
+        "body": "@AndersMad I have not tried this, but I think this is the way to control it: \r\n\r\n\u0060\u0060\u0060\r\nSKPaint paint = ...;\r\npaint.FilterQuality = SKFilterQuality.High;\r\n\u0060\u0060\u0060\r\n\r\n\u003E Gets or sets the filter quality of the current paint.\r\n\u003E This affects the quality (and performance) of drawing scaled images.\r\n\u003E https://developer.xamarin.com/api/property/SkiaSharp.SKPaint.FilterQuality/\r\n\r\nLet me know what happens - and you can try the other values and see if that is faster/better.",
+        "createdAt": "2017-06-23T07:05:06",
+        "reactions": [
+          {
+            "user": "yinyue200",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:24.7866687Z"
+          },
+          {
+            "user": "petar-k-marchev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:24.7867197Z"
+          }
+        ]
+      },
+      {
+        "id": 311043539,
+        "author": "AndersMad",
+        "body": "Sorry, forgot that in my comment! Yes I had and no - it does not help: If set to low quality it is just terrible and high is blurred..\r\n\r\nIt\u0027s probably in the root Skia so i will post other place - but now people are aware: If doing scaling don\u0027t use \u0060SKImage\u0060 - \u0022keep on\u0022 using \u0060SKBitmap\u0060.\r\n\r\nFor others coming from System.Drawing: Using \u0060SKBitmapResizeMethod.Lanczos3\u0060 seems to be almost the same as \u0060InterpolationMode.HighQualityBicubic\u0060 etc. - except the end result (Skia that is) gives a much smaller file size with twice the speed - even though tiny details actually looks better (tested with jpeg q@75).. So thanks for this excellent .NET wrapper! :)",
+        "createdAt": "2017-06-26T12:21:37",
+        "reactions": [
+          {
+            "user": "lindydonna",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:24.9995576Z"
+          },
+          {
+            "user": "dsyno",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:24.9995579Z"
+          }
+        ]
+      },
+      {
+        "id": 327218711,
+        "author": "mattleibow",
+        "body": "Closing this as it is not an issue. Thanks for posting your findings, it is always appreciated.",
+        "createdAt": "2017-09-05T15:49:19",
+        "reactions": []
+      },
+      {
+        "id": 389301259,
+        "author": "dsyno",
+        "body": "There is definitely something wrong with \u0060SKImage\u0060. As @AndersMad discovered, \u0060SKImage\u0060 resizes very blurry. Whereas \u0060SKBitmap\u0060 resizes fine.\r\n\r\nThere are several posts online stating that \u0060SKBitmap\u0060 is being done away with/becoming obsolete, and to use \u0060SKImage\u0060 instead. However, this issue is a showstopper. @mattleibow ",
+        "createdAt": "2018-05-15T20:24:33",
+        "reactions": []
+      },
+      {
+        "id": 389323122,
+        "author": "mattleibow",
+        "body": "@dsyno Could you open a new issue with images showing the difference? And maybe the code you used to get there?\r\n\r\nI will investigate and see what Google has to say if there is a problem.",
+        "createdAt": "2018-05-15T21:43:03",
+        "reactions": []
+      },
+      {
+        "id": 389342684,
+        "author": "dsyno",
+        "body": "Thanks @mattleibow. New issue created #520 ",
+        "createdAt": "2018-05-15T23:08:24",
+        "reactions": []
+      },
+      {
+        "id": 527351995,
+        "author": "jdelrue",
+        "body": "This still seems to be a problem, with images far worse than pictures.\r\n\r\n![image](https://user-images.githubusercontent.com/1687505/64155098-72219180-ce32-11e9-9c92-04547aa28e46.png)\r\n",
+        "createdAt": "2019-09-03T08:06:12",
+        "reactions": []
+      }
+    ]
+  }
 }

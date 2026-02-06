@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T18:01:59",
   "closedAt": "2017-12-19T12:54:54",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:43.0300449Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 352740981,
+        "author": "mattleibow",
+        "body": "That is correct. You are passing the stream to the response and then disposing the data that the stream contains.\r\n\r\nThe correct way is to not dispose the data, and let the stream do that (by passing \u0060true\u0060):\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (SKImage snapshot = surface.Snapshot())\r\n{\r\n    SKData data = snapshot.Encode();\r\n\r\n    HttpContext.Response.ContentLength = data.Size;\r\n    return File(data.AsStream(true), \u0022image/png\u0022);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThis lets the stream control the life of the data.",
+        "createdAt": "2017-12-19T12:54:54",
+        "reactions": []
+      },
+      {
+        "id": 352758101,
+        "author": "shravan2x",
+        "body": "~I tried using \u0060.AsStream(true)\u0060 like you recommended, but the issue still persists.~\r\n\r\nNevermind. Thanks for the help!",
+        "createdAt": "2017-12-19T13:54:55",
+        "reactions": []
+      },
+      {
+        "id": 352922607,
+        "author": "mattleibow",
+        "body": "@shravan2x did you manage to resolve it?",
+        "createdAt": "2017-12-19T23:54:54",
+        "reactions": []
+      },
+      {
+        "id": 352969282,
+        "author": "shravan2x",
+        "body": "@mattleibow I did indeed. It works perfect now.",
+        "createdAt": "2017-12-20T05:33:55",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,157 @@
   "updatedAt": "2022-08-19T21:01:21",
   "closedAt": "2017-09-01T16:26:07",
   "commentCount": 20,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:01.3139629Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 315641323,
+        "author": "mattleibow",
+        "body": "This is interesting. I just want to check what causes this. Can you check this sample to see if it runs on an iOS device:\r\nhttps://github.com/mattleibow/SkiaSharpDemo\r\n\r\nAlso, is there any difference in the code for device/simulator? Can you try a clean/rebuild just to make sure.\r\n\r\nIs this Windows or Mac?\r\n\r\nAre you able to provide a sample app that doesn\u0027t work at all?",
+        "createdAt": "2017-07-16T22:16:48",
+        "reactions": []
+      },
+      {
+        "id": 315737082,
+        "author": "rayita",
+        "body": "Hello  Mathew, thanks for interest.\r\n\r\nI\u0027d tested your SkiaSharpDemo and I got same behavior, works fine in Android and iOS simulator, but not in iOS device, PaintSurface event is never triggered.\r\n\r\nThere is no diferences between the code for device or simulator, and yes I tried to clean and rebuil many times.\r\n\r\nI use to develop in a windows machine with VS 2017, there is, of course, a Mac that compile and deploy to device.\r\n\r\nAs far as your own sample is doesn\u0027t working I think that can be used as example of application that doesn\u0027t work.\r\n\r\nPS: One more detail, just to clarify, it doesn\u0027t work in any case, nor debugging nor deplying app to device as AdHoc or any other methow (is not a debugging envirotment issue).\r\n\r\n\r\n",
+        "createdAt": "2017-07-17T12:05:14",
+        "reactions": []
+      },
+      {
+        "id": 315766336,
+        "author": "mattleibow",
+        "body": "So, is the sample app a blank screen on the device?\r\nThat is really weird. What version of iOS and what device are you using?\r\n\r\nIt works fine on my iPhone 6s with iOS 10.3.2",
+        "createdAt": "2017-07-17T14:07:47",
+        "reactions": []
+      },
+      {
+        "id": 315775034,
+        "author": "rayita",
+        "body": "Well not a blank screen, its a correct app with navbar but non of skiasharp object was drawn cause (and i checked it) the PaintSurface was not invoked (screenshot attached).\r\n\r\nIt\u0027s an iPhone 6 with iOS 10.3.2, also tested with 10.3.1 and with a iPhone 7 plus iOS 10.3.2, same result.\r\n\r\n![screenshoot](https://user-images.githubusercontent.com/5463765/28273022-74d7d86a-6b0d-11e7-9ca2-91644ea9b595.png)\r\n\r\n",
+        "createdAt": "2017-07-17T14:38:37",
+        "reactions": []
+      },
+      {
+        "id": 315776819,
+        "author": "mattleibow",
+        "body": "Incredible! Try this ultra simple app. It should display a red screen with black text. This is not a forms app, so I hope this works.\r\n\r\n[TestSkiaSharpApp.zip](https://github.com/mono/SkiaSharp/files/1152966/TestSkiaSharpApp.zip)\r\n",
+        "createdAt": "2017-07-17T14:45:02",
+        "reactions": []
+      },
+      {
+        "id": 315781116,
+        "author": "mattleibow",
+        "body": "Here is a super minimal forms sample that works for me...\r\n\r\n[TestSkiaSharpFormsApp.zip](https://github.com/mono/SkiaSharp/files/1153027/TestSkiaSharpFormsApp.zip)\r\n",
+        "createdAt": "2017-07-17T14:59:16",
+        "reactions": []
+      },
+      {
+        "id": 315844409,
+        "author": "rayita",
+        "body": "TestSkiaSharpFormsApp:\r\nSame result, blank screen in device (red screen with SkiaSharp text in simulator).\r\nOnPaint method is never called in device.\r\n\r\nPS: Just in case I reinstalled Xcode and tried in another device, same result.\r\n\r\nTestSkiaSharpApp;\r\nThats is even more weird, works fine in simulator (first splash then red screen with text) but not in device.\r\nIn device I got  a black screen in portrait and a half black half white in landscape (screenshoots attached).\r\n\r\nPortrait:\r\n![screenshoot1](https://user-images.githubusercontent.com/5463765/28284895-f24857b4-6b32-11e7-8feb-25eab510b666.png)\r\n\r\nLandscape:\r\n![screenshoot2](https://user-images.githubusercontent.com/5463765/28284899-f497f18c-6b32-11e7-8986-516b0bfea3b1.png)\r\n",
+        "createdAt": "2017-07-17T18:41:54",
+        "reactions": []
+      },
+      {
+        "id": 315850797,
+        "author": "mattleibow",
+        "body": "Ok, the second shows something... the reason for the black is where the canvas is, and is doesn\u0027t resize.\r\n\r\nSo, for some reason, the ios device is not calling the paint method properly... What version of iOS?",
+        "createdAt": "2017-07-17T19:04:46",
+        "reactions": []
+      },
+      {
+        "id": 315851194,
+        "author": "mattleibow",
+        "body": "also, what version of xcode? Maybe you can attach the VS help info: \u0022Help\u0022 \u003E \u0022About\u0022 \u003E \u0022Copy Info\u0022 button\r\n\r\nAlso, maybe the detailed build log will help. Something must be off - and it is really weird that it only works in the simulator.\r\n\r\nAre you using the linker at all?",
+        "createdAt": "2017-07-17T19:06:12",
+        "reactions": []
+      },
+      {
+        "id": 315998694,
+        "author": "rayita",
+        "body": "Hello Mathew.\r\n\r\nLast test was in  iOS 10.3.2\r\n\r\nXcode version is 8.3.3\r\n\r\nThat is the info form VS;\r\n\r\n\u003E Microsoft Visual Studio Community 2017 \r\n\u003E Version 15.2 (26430.16) Release\r\n\u003E VisualStudio.15.Release/15.2.0\u002B26430.16\r\n\u003E Microsoft .NET Framework\r\n\u003E Version 4.7.02046\r\n\u003E \r\n\u003E Installed Version: Community\r\n\u003E \r\n\u003E Visual Basic 2017   00369-60000-00001-AA431\r\n\u003E Microsoft Visual Basic 2017\r\n\u003E \r\n\u003E Visual C# 2017   00369-60000-00001-AA431\r\n\u003E Microsoft Visual C# 2017\r\n\u003E \r\n\u003E Common Azure Tools   1.9\r\n\u003E Provides common services for use by Azure Mobile Services and Microsoft Azure Tools.\r\n\u003E \r\n\u003E JetBrains ReSharper Ultimate 2017.1.3    Build 108.0.20170613.154143\r\n\u003E JetBrains ReSharper Ultimate package for Microsoft Visual Studio. For more information about ReSharper Ultimate, visit http://www.jetbrains.com/resharper. Copyright \u00A9 2017 JetBrains, Inc.\r\n\u003E \r\n\u003E Merq   1.1.17-rc (cba4571)\r\n\u003E Command Bus, Event Stream and Async Manager for Visual Studio extensions.\r\n\u003E \r\n\u003E Mono Debugging for Visual Studio   Mono.Debugging.VisualStudio\r\n\u003E Support for debugging Mono processes with Visual Studio.\r\n\u003E \r\n\u003E NuGet Package Manager   4.2.0\r\n\u003E NuGet Package Manager in Visual Studio. For more information about NuGet, visit http://docs.nuget.org/.\r\n\u003E \r\n\u003E Xamarin   4.5.0.486 (fec6f88)\r\n\u003E Visual Studio extension to enable development for Xamarin.iOS and Xamarin.Android.\r\n\u003E \r\n\u003E Xamarin.Android SDK   7.3.1.2 (9dbc4c5)\r\n\u003E Xamarin.Android Reference Assemblies and MSBuild support.\r\n\u003E \r\n\u003E Xamarin.iOS and Xamarin.Mac SDK   10.10.0.37 (ad35de4)\r\n\u003E Xamarin.iOS and Xamarin.Mac Reference Assemblies and MSBuild support.\r\n\r\nAbout the linker, I tested your samples without any modification in debug mode so have been tested with out linking. \r\nMy aplications presents no diferences in debug with out linking or in release with sks only linking.\r\n\r\n\r\nThanks.\r\n",
+        "createdAt": "2017-07-18T08:44:24",
+        "reactions": []
+      },
+      {
+        "id": 316016222,
+        "author": "rayita",
+        "body": "Hello again Mathew.\r\n\r\nAttached the TestSkiaSharpApp detailed build log.\r\n\r\n[TestSkiaSharpApp.log.txt](https://github.com/mono/SkiaSharp/files/1155432/TestSkiaSharpApp.log.txt)\r\n",
+        "createdAt": "2017-07-18T09:56:33",
+        "reactions": []
+      },
+      {
+        "id": 317805741,
+        "author": "rayita",
+        "body": "Hello Mathew.\r\n\r\nHave been the log helpful?\r\n\r\nAll my tries have been unsusscesfull, i\u0027m unable to make it work in a iPhone :(\r\n\r\n\r\n",
+        "createdAt": "2017-07-25T17:12:09",
+        "reactions": []
+      },
+      {
+        "id": 323327649,
+        "author": "rayita",
+        "body": "Finally I found the source of the problem (but not the solution).\r\n\r\nIn a physical device SkiaSharp.Views.iOS.Extensions.IsValidEnvironment is always false, and this is caused by this error \u0022System.DllNotFoundException: @ rpath/libSkiaSharp.framework/libSkiaSharp\u0022 when property it\u0027s initialized.\r\n\r\nI did some search in forums and found some other people with similar problems but in other contexts.\r\n\r\nI tried some of the solutions propoused but none works,  until now I got no solution for this problem.\r\n\r\n",
+        "createdAt": "2017-08-18T11:17:13",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:59.7574191Z"
+          }
+        ]
+      },
+      {
+        "id": 325798821,
+        "author": "mattleibow",
+        "body": "@rayita I looked at your log and tried a few more things, but still can\u0027t reproduce this at all. It always works for me. Every time.\r\n\r\nThe log also indicates that the native library IS being copied just fine:\r\n\r\n\u0060\u0060\u0060\r\n1\u003EAdded Item(s): \r\n1\u003E    _CodesignAppBundleInputs=\r\n1\u003E        bin\\iPhone\\Debug\\TestSkiaSharpApp.app\\Entitlements.plist\r\n1\u003E        bin\\iPhone\\Debug\\TestSkiaSharpApp.app\\Frameworks\\libSkiaSharp.framework\\libSkiaSharp\r\n1\u003E        bin\\iPhone\\Debug\\TestSkiaSharpApp.app\\Info.plist\r\n1\u003E        bin\\iPhone\\Debug\\TestSkiaSharpApp.app\\LaunchScreen.nib\r\n1\u003E        bin\\iPhone\\Debug\\TestSkiaSharpApp.app\\Main.storyboardc\\BYZ-38-t0r-view-8bC-Xf-vdC.nib\r\n1\u003E        bin\\iPhone\\Debug\\TestSkiaSharpApp.app\\Main.storyboardc\\Info.plist\r\n1\u003E        bin\\iPhone\\Debug\\TestSkiaSharpApp.app\\Main.storyboardc\\UIViewController-BYZ-38-t0r.nib\r\n1\u003E        bin\\iPhone\\Debug\\TestSkiaSharpApp.app\\TestSkiaSharpApp\r\n\u0060\u0060\u0060\r\n\r\nHave you tried running this on the mac directly (and not via the build agent). I tried VS on Windows and it works fine, but there may be an issue with something during the copy.\r\n",
+        "createdAt": "2017-08-29T20:46:23",
+        "reactions": []
+      },
+      {
+        "id": 326547261,
+        "author": "rayita",
+        "body": "Hello Mathew.\r\n\r\nFinally I found out the problem and the solution.\r\n\r\nYes I also tried directly on the mac and also failed (I tried with VS and Xamarin Studio).\r\nI also checked the build log and the ipa file and the framework was fine in both of them.\r\nSo I made one more test and built the app in a different Mac, and in this new Mac all was fine, so my Mac was the problem (and I can\u0027t imagine what was the real problem because I even reinstalled all the development tools).\r\n\r\nSo finally I formatted and reinstalled the whole Mac OS X, XCode and VS, and now all works fine.\r\n\r\nDefinitely that was a nice poltergeist.\r\n\r\nThanks for your help.\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2017-09-01T10:28:02",
+        "reactions": []
+      },
+      {
+        "id": 326624650,
+        "author": "mattleibow",
+        "body": "Whaaat... That is super weird!\r\nIf it ever happens again let me know. If anyone else has suggestions...\r\n\r\nI will close this as it appears to be \u0022fixed\u0022 now :)",
+        "createdAt": "2017-09-01T16:26:07",
+        "reactions": []
+      },
+      {
+        "id": 556214519,
+        "author": "twinharbor",
+        "body": "I\u0027m running into this exact issue now, just rolled out a new version of my app only to find that it doesn\u0027t work on physical devices. If anyone has any more insight onto a solution for this, please let me know! Thanks! ",
+        "createdAt": "2019-11-20T18:30:02",
+        "reactions": []
+      },
+      {
+        "id": 556361084,
+        "author": "mattleibow",
+        "body": "@twinharbor could you open a new issue and fill in the template with all the specs. You can also link to this issue for context if you are seeing the same thing.",
+        "createdAt": "2019-11-20T20:35:56",
+        "reactions": []
+      },
+      {
+        "id": 595800804,
+        "author": "Christoph293",
+        "body": "I had the same issue as @rayita . The emulator works and \u0060OnPaintSurface()\u0060 is called on initialization and after every call of \u0060InvalidateSurface()\u0060 . As soon as i deploy the application to my iPhone \u0060OnPaintSurface()\u0060 is never called. It seems that there is no event fired.\r\nI think there is a bug somewhere so this issue should not be closed even if this appears just sometimes.\r\n\r\nI uninstall XCode and VS now as @rayita  said. Hopefully it works.",
+        "createdAt": "2020-03-06T14:48:32",
+        "reactions": []
+      },
+      {
+        "id": 599263323,
+        "author": "mattleibow",
+        "body": "@Christoph293 could it be this issue: #1129 ?",
+        "createdAt": "2020-03-15T20:54:09",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,73 @@
   "updatedAt": "2022-08-19T18:02:23",
   "closedAt": "2017-10-24T20:08:27",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:06.0839291Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 339088796,
+        "author": "mattleibow",
+        "body": "This should not happen. I tested on VS2017 and VS4Mac 7.2 and this does not happen:\r\n\r\n\u003Cimg width=\u0022639\u0022 alt=\u0022screen shot 2017-10-24 at 8 22 05 pm\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/31961018-d7ce4e7e-b8f9-11e7-9cde-71ca9de795fc.png\u0022\u003E\r\n\r\nI also downloaded your project, and this is not the case:\r\n\r\n\u003Cimg width=\u0022324\u0022 alt=\u0022screen shot 2017-10-24 at 8 28 51 pm\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/31961355-c74c2ff2-b8fa-11e7-90e3-39e991ff04d7.png\u0022\u003E\r\n\r\n",
+        "createdAt": "2017-10-24T18:35:10",
+        "reactions": []
+      },
+      {
+        "id": 339093355,
+        "author": "praeclarum",
+        "body": "I updated my VSM and it now shows that structure @mattleibow \r\n\r\nYes this is much better.\r\n\r\nBut I\u0027m still getting duplicate dlls. I have 3 copies of \u0060libSkiaSharp.dll\u0060",
+        "createdAt": "2017-10-24T18:50:37",
+        "reactions": []
+      },
+      {
+        "id": 339094969,
+        "author": "mattleibow",
+        "body": "Maybe remove the nuget and re-add. delete the obj/bin. When I build, I don\u0027t get any native bits:\r\n\r\n\u003Cimg width=\u0022503\u0022 alt=\u0022screen shot 2017-10-24 at 8 55 21 pm\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/31962383-b0edcce0-b8fd-11e7-986a-e4cf63d48853.png\u0022\u003E\r\n",
+        "createdAt": "2017-10-24T18:55:58",
+        "reactions": []
+      },
+      {
+        "id": 339096563,
+        "author": "praeclarum",
+        "body": "I\u0027m sorry, I left off an important detail: I\u0027m consuming the library from an additional classic project (so that unit tests work in VS). That project is getting the 3 copies.\r\n\r\nYou\u0027re right, the standard project is free of native libs. You can close this since I won\u0027t waste your time supporting classic .NET projects.",
+        "createdAt": "2017-10-24T19:01:21",
+        "reactions": []
+      },
+      {
+        "id": 339099691,
+        "author": "mattleibow",
+        "body": "classic .net project will copy all the dlls because there is no way to determine what platforms the app will run on. you should be able to take the output of a classic library/app and run in on ANY windows and ANY mac (with mono) without changes. The output folder is the final product that works everywhere - write once, run anywhere",
+        "createdAt": "2017-10-24T19:12:14",
+        "reactions": []
+      },
+      {
+        "id": 339099840,
+        "author": "mattleibow",
+        "body": "also, the new vs2017 update adds support for unit tests in .net core apps/test libraries (yay)",
+        "createdAt": "2017-10-24T19:12:47",
+        "reactions": []
+      },
+      {
+        "id": 339102138,
+        "author": "praeclarum",
+        "body": "I\u0027m on VS for Mac and it only seems to work with Classic NUnit 2.x. :-(",
+        "createdAt": "2017-10-24T19:21:00",
+        "reactions": []
+      },
+      {
+        "id": 339103229,
+        "author": "mattleibow",
+        "body": "ah. that bug\r\nThere is a fix in master so the test runner can understand \u003CProjectReference\u003E",
+        "createdAt": "2017-10-24T19:24:52",
+        "reactions": [
+          {
+            "user": "praeclarum",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:06.0336896Z"
+          }
+        ]
+      }
+    ]
+  }
 }

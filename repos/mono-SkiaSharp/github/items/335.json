@@ -15,5 +15,45 @@
   "updatedAt": "2022-08-19T21:01:26",
   "closedAt": "2017-09-18T14:54:22",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:50.1013332Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 319775869,
+        "author": "kodeo",
+        "body": "I\u0027m having the same issue using HttpClient, e.g.\r\n\r\n\u0060\u0060\u0060\r\nusing (var client = new HttpClient())\r\n{\r\n\tvar url = \u0022https://image.ibb.co/bO1RLF/broken2.jpg\u0022;\r\n\tvar response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);\r\n\t// var worksWithThis = await response.Content.ReadAsByteArrayAsync();\r\n\tusing (var stream = await response.Content.ReadAsStreamAsync())\r\n\t{\r\n\t\tvar skbmp = SKBitmap.Decode(stream);\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\nIt does seem to be something to do with buffering, because it works if I change to \u0060HttpCompletionOption.ResponseContentRead\u0060 or uncomment the \u0060worksWithThis\u0060 line, but I\u0027m at a complete loss to explain why it affects some files but not others.\r\n\r\n\r\n",
+        "createdAt": "2017-08-02T19:37:24",
+        "reactions": []
+      },
+      {
+        "id": 330249805,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this.",
+        "createdAt": "2017-09-18T14:55:58",
+        "reactions": [
+          {
+            "user": "funkyOne",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:49.6461683Z"
+          }
+        ]
+      },
+      {
+        "id": 330410137,
+        "author": "CmdrNexus",
+        "body": "Hi there\r\n\r\nthe \u0022bm\u0022 in this method\r\n\r\n        public byte[] Image2Byte(SKBitmap bitmap)\r\n        {\r\n            var temp = bitmap.Bytes;\r\n\r\n            var bm = SKBitmap.Decode(temp);\r\n\r\n            return temp;\r\n        }\r\n\r\nis always null.\r\n\r\nIs it me, or is should this not be happening?\r\n\r\nCheers\r\n\r\n",
+        "createdAt": "2017-09-19T02:29:06",
+        "reactions": []
+      },
+      {
+        "id": 331507398,
+        "author": "mattleibow",
+        "body": "@CmdrNexus this is a bug that was fixed https://github.com/mono/SkiaSharp/commit/dbd09b0ffeca981c878c5ce5ec333019c85406a4\r\n\r\nThe basic issue is that the .NET and SkiaSharp streams work differently, and I was not properly handling this.",
+        "createdAt": "2017-09-22T17:17:40",
+        "reactions": []
+      }
+    ]
+  }
 }

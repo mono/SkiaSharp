@@ -20,5 +20,85 @@
   "updatedAt": "2022-08-19T18:01:45",
   "closedAt": "2018-05-30T23:15:09",
   "commentCount": 9,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:02.5325328Z",
+    "reactions": [
+      {
+        "user": "nicolaveritas",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:02.5325379Z"
+      },
+      {
+        "user": "michaldobrodenka",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:02.5325387Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 358902548,
+        "author": "niccolocapitelli",
+        "body": "This is the Exception that I get after a multiple IconWidget creation/elimination:\r\n\r\n[Exception.txt](https://github.com/mono/SkiaSharp/files/1645784/Exception.txt)\r\n",
+        "createdAt": "2018-01-19T08:46:59",
+        "reactions": []
+      },
+      {
+        "id": 377536137,
+        "author": "niccolocapitelli",
+        "body": "I profiled my app and I noticed that the heap is full of byte related to bitmap creation. It seems that garbage collector can\u0027t free up memory and this cause a memory leaks because of multiple use of SKCanvasView.\r\n\r\n![memoryleak](https://user-images.githubusercontent.com/30794047/38141252-837f3a18-3437-11e8-9e2d-1682bd30c9be.JPG)\r\n\r\n\r\n\r\n",
+        "createdAt": "2018-03-30T14:29:46",
+        "reactions": []
+      },
+      {
+        "id": 377598647,
+        "author": "mattleibow",
+        "body": "I tried to repro what you are seeing, but for some reason I can\u0027t. Are you able to attach a repro case? Here is mine, maybe you can tweak a few things to get the same thing to happen: [MemoryLeakTest.zip](https://github.com/mono/SkiaSharp/files/1864511/MemoryLeakTest.zip)\r\n\r\nLooking at the snippet you attached, I would suggest that you not keep a reference to \u0060SKSurface\u0060 or \u0060SKCanvas\u0060 outside the paint method as this is a temporary object that will be disposed as soon as the paint is complete.\r\n\r\nAlso, what you can check is to make sure that you aren\u0027t referencing the canvas view anywhere outside the view. Maybe you have some cyclic references as well?\r\n\r\nI think I maybe need some more info. I tried on both UWP and Android, but as soon as I clear the UI, the memory is freed. Maybe you have a Xamarin.Forms with a memory leak, or really it could be a whole host of things.",
+        "createdAt": "2018-03-30T19:06:41",
+        "reactions": []
+      },
+      {
+        "id": 377598842,
+        "author": "mattleibow",
+        "body": "Also, sorry about the long delay in getting back to you. I was working on many things, both here and in some new projects that are going to be seen at //Build \uD83D\uDE04 ",
+        "createdAt": "2018-03-30T19:07:37",
+        "reactions": []
+      },
+      {
+        "id": 392287484,
+        "author": "rhussell",
+        "body": "I found in MemoryLeakTest.UWP although the IconWidget instances were disposed after \u0022Trigger GC\u0022, but some other related \u0022SK\u0022 objects always increased. When IconWidget is a SKCanvasView, it is SkiaSharp.Views.UWP.SKXamlCanvas. When IconWidget is SKGLView, they are SkiaSharp.Views.UWP.SKSwapChainPanel, List\u003CSkiaSharp.SKObject\u003E, SkiaSharp.GRContext and SkiaSharp.View.UWP.GlesContext.\r\n\r\nI haven\u0027t tested it in Android. But I guess there may be similar problems there.\r\n\r\n1. In Visual Studio 2017 start MemoryLeakTest.UWP with debugging\r\n2. Click \u0022Add 10\u0022 button (twice) then \u0022Clear\u0022 and \u0022Trigger GC\u0022\r\n3. Open Diagnostic Tools and Take Snapshot\r\n4. Click \u0022View Heap\u0022 and search with \u0022sk\u0022\r\n\r\n\u003Cimg width=\u0022560\u0022 alt=\u0022skcanvasview\u0022 src=\u0022https://user-images.githubusercontent.com/7099055/40580049-a73260d2-60f3-11e8-8f5e-80ce56ed3b04.png\u0022\u003E\r\n\u003Cimg width=\u0022560\u0022 alt=\u0022skglview\u0022 src=\u0022https://user-images.githubusercontent.com/7099055/40580050-ab332536-60f3-11e8-9357-f62910b607d0.PNG\u0022\u003E\r\n",
+        "createdAt": "2018-05-26T20:53:04",
+        "reactions": []
+      },
+      {
+        "id": 392339585,
+        "author": "mattleibow",
+        "body": "OK, I\u0027ll have a look again and see what happens. Thanks for the images.\r\nI am not sure why I didn\u0027t see anything, maybe I was working with something different somewhere.",
+        "createdAt": "2018-05-27T15:28:48",
+        "reactions": []
+      },
+      {
+        "id": 393342620,
+        "author": "mattleibow",
+        "body": "I have a fix for the UWP leak: https://github.com/mono/SkiaSharp/commit/3244b370a9eb8a74322a193fb6f224cfa9aaa37f\r\n\r\nIt was the event that was attached to the static \u0060DisplayInformation\u0060 to listen for DPI changes. Thanks @rhussell for pointing it out.",
+        "createdAt": "2018-05-30T22:40:40",
+        "reactions": []
+      },
+      {
+        "id": 393349346,
+        "author": "mattleibow",
+        "body": "This is a complicated one, as I can\u0027t repro the Android leak. But, the UWP leak cannot be related as it resides in the platform code. I am going to close this as I fixed the UWP leak. Any additional leaks will be better with a new issue so we can focus on a particular platform.",
+        "createdAt": "2018-05-30T23:15:09",
+        "reactions": []
+      },
+      {
+        "id": 401159154,
+        "author": "mattleibow",
+        "body": "@niccolocapitelli @rhussell I have just pushed out the release and should be available on NuGet. Here are the release notes and all the links: https://github.com/mono/SkiaSharp/releases/tag/v1.60.2",
+        "createdAt": "2018-06-28T20:14:27",
+        "reactions": []
+      }
+    ]
+  }
 }

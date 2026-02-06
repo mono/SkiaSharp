@@ -14,5 +14,60 @@
   "updatedAt": "2022-08-19T21:01:14",
   "closedAt": "2017-09-12T21:01:04",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:09.5251947Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 319170075,
+        "author": "maxwell313",
+        "body": "Just tried it in a new project and it worked fine with 1.59.1, so likely not a Skia issue",
+        "createdAt": "2017-07-31T19:23:39",
+        "reactions": []
+      },
+      {
+        "id": 319378262,
+        "author": "entdark",
+        "body": "Happened to me as well:\r\n\u0060\u0060\u0060csharp\r\nvar newInfo = new SKImageInfo(\r\n\twidth,\r\n\theight,\r\n\tSKColorType.Rgba8888,\r\n\tSKAlphaType.Premul);\r\nusing (var surface = SKSurface.Create(newInfo)) {\r\n\tthis.DrawBlocks(surface.Canvas, newInfo); //\u003C- happens here, surface is null\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-08-01T14:00:08",
+        "reactions": []
+      },
+      {
+        "id": 319392842,
+        "author": "mattleibow",
+        "body": "Hi there guys - I need a bit more info. What platform is this? UWP? WPF?",
+        "createdAt": "2017-08-01T14:47:27",
+        "reactions": []
+      },
+      {
+        "id": 319460333,
+        "author": "entdark",
+        "body": "Tested on iOS and Android, did not get to UWP yet.\r\nI have a guess that one of sizes was invalid like width or height is \u003C= 0 or something?\r\nI will be able to check the sizes tomorrow.",
+        "createdAt": "2017-08-01T18:42:29",
+        "reactions": []
+      },
+      {
+        "id": 319582532,
+        "author": "entdark",
+        "body": "My guess was correct: the width was negative.\r\nIt works now.",
+        "createdAt": "2017-08-02T06:42:08",
+        "reactions": []
+      },
+      {
+        "id": 319875878,
+        "author": "entdark",
+        "body": "Alright, it crashed again with surface being null on iOS and UWP (unable to test on Android right now) with positive values of width and height this time.\r\nThe newInfo from the sample above has the following:\r\n\u0060\u0060\u0060\r\n- newInfo\t{SkiaSharp.SKImageInfo}\tSkiaSharp.SKImageInfo\r\n\tAlphaType\tPremul\tSkiaSharp.SKAlphaType\r\n\tBitsPerPixel\t32\tint\r\n\tBytesPerPixel\t4\tint\r\n\tBytesSize\t338032\tint\r\n\tBytesSize64\t338032\tlong\r\n\u002B\tColorSpace\tnull\tSkiaSharp.SKColorSpace\r\n\tColorType\tRgba8888\tSkiaSharp.SKColorType\r\n\tHeight\t148\tint\r\n\tIsEmpty\tfalse\tbool\r\n\tIsOpaque\tfalse\tbool\r\n\u002B\tRect\t{{Left=0,Top=0,Width=571,Height=148}}\tSkiaSharp.SKRectI\r\n\tRowBytes\t2284\tint\r\n\tRowBytes64\t2284\tlong\r\n\u002B\tSize\t{{Width=571, Height=148}}\tSkiaSharp.SKSizeI\r\n\tWidth\t571\tint\r\n\r\n\u0060\u0060\u0060\r\nI also cleaned the project fully (Clean All and removed all bin and obj folders in each project) and the issue still was presented afterward.",
+        "createdAt": "2017-08-03T06:00:42",
+        "reactions": []
+      },
+      {
+        "id": 328983162,
+        "author": "mattleibow",
+        "body": "@entdark The cause might be the incorrect color types per platform. Android and iOS should be fine with \u0060Rgba8888\u0060, but UWP must be \u0060Bgra8888\u0060. To avoid having to guess or try and determine the correct color, [\u0060SKImageInfo.PlatformColorType\u0060](https://developer.xamarin.com/api/field/SkiaSharp.SKImageInfo.PlatformColorType). The key word here is \u0022typically\u0022, The actual color type depends on the underlying architecture and platform.\r\n\r\nI am closing this as I think this solves the issue, but feel free to re-open if this is still \u0060null\u0060. **NOTE:** Make sure you have also installed the NuGets into the platform projects as well as any library projects.",
+        "createdAt": "2017-09-12T21:01:04",
+        "reactions": []
+      }
+    ]
+  }
 }

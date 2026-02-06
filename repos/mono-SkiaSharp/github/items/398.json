@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T18:02:10",
   "closedAt": "2017-12-03T03:45:45",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:23.9579685Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 346684312,
+        "author": "entdark",
+        "body": "If you are talking about a raw image then its size in bytes is width\\*height\\*bits/8.\r\nFor example, if we have a 10x10 coloured image with 24 bits colour depth per pixel (or 8 bits per each of 3 RGB channel) then the image size is 10\\*10\\*24/8=300 bytes. (We devide by 8 to convert bits to bytes.)\r\nIf the given image is grayscale then it\u0027s most likely has 8 bits colour depth per pixel so its size is 10\\*10\\*8/8=100 bytes.\r\n\r\nIf you are working with \u0060SKImageInfo\u0060 struct then just do something like that:\r\n\u0060SKImageInfo info = yourImage.Info;\u0060\r\n\u0060int sizeInBytes = info.BytesSize;//or info.Width * info.Height * info.BytesPerPixel;\u0060\r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKImageInfo.cs#L170",
+        "createdAt": "2017-11-23T19:07:34",
+        "reactions": []
+      },
+      {
+        "id": 347668650,
+        "author": "mattleibow",
+        "body": "It gets a bit more complex with encodings, such as bmp, jpg or png. Encoders apply compression, thus making the raw pixel size not very accurate. Also, the compression is very dependent on the actual pixel data rather than the amount of pixels - for example a solid white png 2K x 2K will save to about 9KB, but a 500x500 image with a few simple lines may exceed 100K\r\n\r\nIf CPU/time is not a limiting factor, then you can simply scale a bitmap and encode it. If it is too big, then you can just discard it and try again on the original. Rather than scaling the resulting image, just rescale the original - this should preserve quality.",
+        "createdAt": "2017-11-28T21:25:32",
+        "reactions": []
+      },
+      {
+        "id": 348738168,
+        "author": "migueldeicaza",
+        "body": "This is best suited for discussion in the forums:\r\n\r\nhttps://forums.xamarin.com/categories/skiasharp",
+        "createdAt": "2017-12-03T03:45:45",
+        "reactions": []
+      }
+    ]
+  }
 }

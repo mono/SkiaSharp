@@ -24,5 +24,90 @@
   "updatedAt": "2022-08-19T18:02:18",
   "closedAt": "2018-02-01T23:12:33",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:00:14.8441552Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 340989930,
+        "author": "LukePulverenti",
+        "body": "A couple more observations. This also applies to diacritics, e.g. accent characters.\r\n\r\nAdditionally, trying to open a file that doesn\u0027t exist will also cause a native crash that will bring down the managed process. So I guess the root cause is that if the native layer is unable to open a file, there is currently no way to recover gracefully from that.",
+        "createdAt": "2017-11-01T05:44:19",
+        "reactions": [
+          {
+            "user": "leroydev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:12.8457068Z"
+          },
+          {
+            "user": "yinyue200",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:12.8457073Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:00:12.8457074Z"
+          }
+        ]
+      },
+      {
+        "id": 352595879,
+        "author": "mattleibow",
+        "body": "I am not able to reproduce the crash... Could you attach a stack trace?\r\n\r\nHowever, I can confirm that there is an issue with special characters. The stream is not null (nor crashes), but it has no length. Somewhere the stream is failing to load. I will investigate - it may just be that the skia file stream is not that bright.\r\n\r\nIn any case, you can use a managed stream:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar stream = new SKManagedStream(File.OpenRead(\u0022images/\u4E0A\u7530\u96C5\u7F8E/CMYK.jpg\u0022), true);\r\n\u0060\u0060\u0060\r\n\r\n[SkiaSharpDemo.zip](https://github.com/mono/SkiaSharp/files/1569818/SkiaSharpDemo.zip)\r\n",
+        "createdAt": "2017-12-18T23:56:37",
+        "reactions": []
+      },
+      {
+        "id": 352599450,
+        "author": "mattleibow",
+        "body": "At this point, I am going to close this issue as it cannot be solved from SkiaSharp. This is a limitation in native skia and they even have a TODO:\r\n\r\nhttps://github.com/google/skia/blob/chrome/m59/src/ports/SkOSFile_stdio.cpp#L68-L69\r\n\r\nI would recommend wrapping the managed stream as this will further avoid any platform differences. The native streams aren\u0027t really meant to be used - they are rather for use by skia.",
+        "createdAt": "2017-12-19T00:17:10",
+        "reactions": []
+      },
+      {
+        "id": 358178304,
+        "author": "mattleibow",
+        "body": "What the heck was I doing... I am reopening because I am going to fix this.\r\n@LukePulverenti thanks for bringing this up - I have no idea what came over me to close this.\r\n\r\nIn the meantime, use a managed stream as I mentioned, I will ensure that it is fixed in the next release.",
+        "createdAt": "2018-01-17T02:48:42",
+        "reactions": []
+      },
+      {
+        "id": 358198430,
+        "author": "LukePulverenti",
+        "body": "Thanks for the info, and that is what I\u0027m doing, although correct me if I\u0027m wrong but that will incur some overhead. Therefore I have some decision making to try and limit it to only when necessary. ",
+        "createdAt": "2018-01-17T05:06:00",
+        "reactions": []
+      },
+      {
+        "id": 358237594,
+        "author": "solabc16",
+        "body": "Luke, for reference, attached is the information we collated from our development work on Synology.\r\n\r\nAll reported failures generated the same stack trace, so it seems to be a reasonably specific scenario.\r\n\r\nWe\u0027re still defaulting to Skia support for x86/x64 based h/w, as the combination of the latest native library with release 1.58 of the managed code has proved stable; in the context of Emby Server at least.\r\n\r\n[skia_stacktrace.txt](https://github.com/mono/SkiaSharp/files/1638264/skia_stacktrace.txt)\r\n",
+        "createdAt": "2018-01-17T08:52:25",
+        "reactions": []
+      },
+      {
+        "id": 362433987,
+        "author": "mattleibow",
+        "body": "@LukePulverenti I did the work for you. In the next release, the path system will be clever and try to use the fastest method. Because this is only a bug on Windows, iOS, Android, macOS, etc are not affected in the least. On Windows, this is a specific case where the path contains non-ASCII characters, and thus I first check the path. If the path contains non-ASCII character, then open in .NET and wrap it, otherwise continue with the native file stream.",
+        "createdAt": "2018-02-01T23:15:33",
+        "reactions": []
+      },
+      {
+        "id": 362434185,
+        "author": "mattleibow",
+        "body": "The current logic is pretty simple:\r\n\r\n\u0060\u0060\u0060csharp\r\n\r\npublic static bool IsPathSupported (string path)\r\n{\r\n\tif (PlatformConfiguration.IsWindows) {\r\n\t\tfor (int i = 0; i \u003C path.Length; i\u002B\u002B) {\r\n\t\t\tif (path [i] \u003E= byte.MaxValue)\r\n\t\t\t\treturn false;\r\n\t\t}\r\n\t}\r\n\r\n\treturn true;\r\n}\r\n\r\npublic static SKStreamAsset OpenStream (string path)\r\n{\r\n\tif (!IsPathSupported (path)) {\r\n\t\treturn new SKManagedStream (File.OpenRead (path), true);\r\n\t} else {\r\n\t\treturn new SKFileStream (path);\r\n\t}\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-02-01T23:16:29",
+        "reactions": []
+      },
+      {
+        "id": 362637716,
+        "author": "LukePulverenti",
+        "body": "Excellent, thanks. Just for reference, this is the check I have been using\r\n\u0060        private static bool HasDiacritics(string text)\r\n        {\r\n            return !String.Equals(text, text.RemoveDiacritics(), StringComparison.Ordinal);\r\n        }\r\n\r\n        public bool HasUnicodeCategory(string value, UnicodeCategory category)\r\n        {\r\n            foreach (var chr in value)\r\n            {\r\n                if (char.GetUnicodeCategory(chr) == category)\r\n                {\r\n                    return true;\r\n                }\r\n            }\r\n\r\n            return false;\r\n        }\r\n\r\n        private static bool RequiresSpecialCharacterHack(string path)\r\n        {\r\n            if (HasUnicodeCategory(path, UnicodeCategory.OtherLetter))\r\n            {\r\n                return true;\r\n            }\r\n\r\n            if (HasDiacritics(path))\r\n            {\r\n                return true;\r\n            }\r\n\r\n            return false;\r\n        }\r\n\u0060",
+        "createdAt": "2018-02-02T16:40:41",
+        "reactions": []
+      }
+    ]
+  }
 }

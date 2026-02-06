@@ -14,5 +14,45 @@
   "updatedAt": "2022-08-19T21:01:37",
   "closedAt": "2017-06-24T03:11:14",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:32.2334506Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 310721159,
+        "author": "LukePulverenti",
+        "body": "Just to clarify, that exception occurs when the native libSkiaSharp is not available, so I\u0027d like to have a way to detect that without crashing the process. Thanks !",
+        "createdAt": "2017-06-23T17:07:32",
+        "reactions": []
+      },
+      {
+        "id": 310805971,
+        "author": "mattleibow",
+        "body": "You could try something like this: https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.Shared/Extensions.cs#L20-L33\r\n\r\nThat is what I use to test if the native bit is accessible. Not perfect, but works.\r\n",
+        "createdAt": "2017-06-24T01:49:28",
+        "reactions": []
+      },
+      {
+        "id": 310806163,
+        "author": "mattleibow",
+        "body": "What might be happening in your case is that the constructor is throwing, and because you are in a using, it tries to dispose, which will also throw.\r\n\r\nThere are 2 basic exceptions you can catch:\r\n - DllNotFoundException (no native library at all, or wrong architecture, or bad dependencies)\r\n - EntryPointNotFoundException (library was loaded, but native member was missing)",
+        "createdAt": "2017-06-24T01:53:31",
+        "reactions": []
+      },
+      {
+        "id": 310809954,
+        "author": "LukePulverenti",
+        "body": "Success, thank you !",
+        "createdAt": "2017-06-24T03:11:14",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:32.1831377Z"
+          }
+        ]
+      }
+    ]
+  }
 }

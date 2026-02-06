@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T18:02:51",
   "closedAt": "2017-08-30T01:56:48",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:21.3868778Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 324022983,
+        "author": "mattleibow",
+        "body": "@JimSEOW Thanks for looking into this. With .NET Standard 1.3\u002B, there is no need for the PCLStorage as the File APIs (System.IO) are all available.\r\n\r\nIf we are going .NET Standard, rather switch to that API.",
+        "createdAt": "2017-08-22T13:17:36",
+        "reactions": []
+      },
+      {
+        "id": 324024411,
+        "author": "JimSEOW",
+        "body": "@mattleibow  UWP6.0 is expected to [be released end of this month](https://github.com/dotnet/corefx/milestones). By then, we could bring Xamarin Foms to .NET standard 2.0 for iOS, Android and UWP and then we could re-visit this topics.",
+        "createdAt": "2017-08-22T13:23:00",
+        "reactions": []
+      },
+      {
+        "id": 325855385,
+        "author": "mattleibow",
+        "body": "I had a look, and managed to get the sample to .NET Standard: 37fae29dfc165100366b97877edad7fc0f5e5e65\r\n\r\nThanks for the issue and the research. It is still a bit rough, (stable) Xamarin.Forms does not yet nicely support .NET Standard, so I had to add: \u0060\u003CPackageTargetFallback\u003Eportable-net45\u002Bwin8\u002Bwpa81\u002Bwp8\u003C/PackageTargetFallback\u003E\u0060 to the .csproj. Not too bad, but hopefully as soon as 2.4 goes stable, we can remove it.\r\n\r\nAlso, UWP is still a bit annoying, it doesn\u0027t support a pure .csproj format. I moved the package references into the project file, but I still have to keep that project.json around. All the other projects use the new packages format.",
+        "createdAt": "2017-08-30T01:56:48",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T18:01:44",
   "closedAt": "2018-02-21T15:06:06",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:03.8985028Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 358865158,
+        "author": "OpenSpacesAndPlaces",
+        "body": "With a run-time specifier of \u0022win7-x64\u0022, \u0022libSkiaSharp.dll\u0022 copies correctly but that causes other problems.\r\n\r\nThis previous post seems to suggest the AnyCPU default should work?\r\nhttps://github.com/mono/SkiaSharp/issues/44\r\n\r\nRight now I\u0027m manually including the \u0022win7-x64\u0022 copy of the \u0022libSkiaSharp.dll\u0022, but given that the publish process has the needed files sitting in \u0022\\runtimes\\win7-x64\\native\u0022 and \\runtimes\\win7-x86\\native\u0022 - shouldn\u0027t it be able to just pick one automatically or is there some way to can tell it just force copying the x64 version?\r\n\r\n\r\n\r\n",
+        "createdAt": "2018-01-19T04:42:25",
+        "reactions": []
+      },
+      {
+        "id": 359183897,
+        "author": "mattleibow",
+        "body": "You have to use the VS2015 VCRT Redist: \r\nhttps://www.microsoft.com/en-us/download/details.aspx?id=48145",
+        "createdAt": "2018-01-20T16:34:33",
+        "reactions": []
+      },
+      {
+        "id": 359547195,
+        "author": "OpenSpacesAndPlaces",
+        "body": "@mattleibow \r\n\u003E You have to use the VS2015 VCRT Redist:\r\n\r\nVS2015 must have already been installed then. \r\n\r\nIf it wasn\u0027t clear from my second post, the issue was that I have to set the build environment to \u0022win7-x64\u0022 for the file to be copied, but if I leave as \u0022AnyCPU\u0022 or even just generic win64 \u0022win-x64\u0022, then \u0022libSkiaSharp.dll\u0022 doesn\u0027t copy to the publish root from the runtimes folder.\r\n\r\nMy current fix was to just leave a static copy of \u0022libSkiaSharp.dll\u0022 in the folder root.",
+        "createdAt": "2018-01-22T20:02:11",
+        "reactions": []
+      }
+    ]
+  }
 }

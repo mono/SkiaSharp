@@ -28,5 +28,118 @@
   "updatedAt": "2022-08-19T21:01:28",
   "closedAt": "2017-07-17T00:02:57",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:46.9652553Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 315102599,
+        "author": "drobdymo",
+        "body": "I\u0027m having the same issue. Seems to be images whose height is greater than their width.",
+        "createdAt": "2017-07-13T14:54:41",
+        "reactions": []
+      },
+      {
+        "id": 315118379,
+        "author": "drobdymo",
+        "body": "I have identified the problem. I will submit a pull request to fix the issue",
+        "createdAt": "2017-07-13T15:45:27",
+        "reactions": []
+      },
+      {
+        "id": 315122196,
+        "author": "drobdymo",
+        "body": "Pull request submitted.\r\nhttps://github.com/mono/SkiaSharp/pull/340",
+        "createdAt": "2017-07-13T15:57:53",
+        "reactions": []
+      },
+      {
+        "id": 315151766,
+        "author": "mattleibow",
+        "body": "Thanks for the PR. I have merged it in and should be building soon: \r\n\r\nhttps://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp-Windows/\r\nhttps://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/\r\nhttps://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp-Linux/",
+        "createdAt": "2017-07-13T17:47:01",
+        "reactions": [
+          {
+            "user": "michaelstonis",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:58:45.2179717Z"
+          }
+        ]
+      },
+      {
+        "id": 315632298,
+        "author": "michaelstonis",
+        "body": "I don\u0027t believe that this issue was resolved with the fix in 1.59.0. If you take a look at the \u0060dstSize\u0060 parameter of \u0060SKBitmap.CopyPixelsTo\u0060 it is not actually referencing or using it at all. With 1.59.0, my Android application now crashes with the following exception.\r\n\r\n\u0060\u0060\u0060[mono-rt]   at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_pixmap_read_pixels (intptr,SkiaSharp.SKImageInfo\u0026,intptr,intptr,int,int) \u003C0x00007\u003E\r\n[mono-rt]   at SkiaSharp.SKPixmap.ReadPixels (SkiaSharp.SKImageInfo,intptr,int,int,int) [0x00013] in \u003C7398af18bbfa455c8a1e84f1a7eb063a\u003E:0\r\n[mono-rt]   at SkiaSharp.SKPixmap.ReadPixels (SkiaSharp.SKImageInfo,intptr,int) [0x00006] in \u003C7398af18bbfa455c8a1e84f1a7eb063a\u003E:0\r\n\u0060\u0060\u0060\r\n\r\nI am going to see if I can cook up a different solution in the meantime. I will follow-up if I come up with anything useful.",
+        "createdAt": "2017-07-16T19:46:43",
+        "reactions": []
+      },
+      {
+        "id": 315645182,
+        "author": "mattleibow",
+        "body": "@michaelstonis Thanks for reporting this. This is actually a new issue.\r\n\r\nWith v1.58, I was able to make use of the native copy function. But, in v1.59, Google removed that function. As a result, I wrote the equivalent function using managed code. Is this process, I added a new method, \u0060SKPixmap.ReadPixels\u0060. However, this did not get enough testing and I missed the fact that the marshalling was not correct.\r\n\r\nThe current function is this:\r\n\r\n\u0060\u0060\u0060csharp\r\n[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]\r\n[return: MarshalAs(UnmanagedType.I1)]\r\npublic extern static bool sk_pixmap_read_pixels(sk_pixmap_t cpixmap, ref SKImageInfo dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY);\r\n\u0060\u0060\u0060\r\n\r\nThis is mostly correct, except for the \u0060SKImageInfo\u0060 type. This should have been the \u0060SKImageInfoNative\u0060 type. I will fix this and get a new version out ASAP.",
+        "createdAt": "2017-07-16T23:15:35",
+        "reactions": [
+          {
+            "user": "michaelstonis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:45.6063068Z"
+          },
+          {
+            "user": "yinyue200",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:45.6063073Z"
+          }
+        ]
+      },
+      {
+        "id": 315797392,
+        "author": "michaelstonis",
+        "body": "@mattleibow I really appreciate the quick turnaround. Did this version replace the current release of 1.59 in nuget or will this be a new release?",
+        "createdAt": "2017-07-17T15:58:08",
+        "reactions": []
+      },
+      {
+        "id": 315823084,
+        "author": "mattleibow",
+        "body": "It will be in a new version. I am just doing a few things and should be out soon.",
+        "createdAt": "2017-07-17T17:27:32",
+        "reactions": []
+      },
+      {
+        "id": 315823976,
+        "author": "mattleibow",
+        "body": "@michaelstonis I think this is done, but you can test this with this nugget package: https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/250/Azure/processDownloadRequest/ArtifactsFor-250/7bfebaa59df9a4b842ceb3dcb9b392d9452eeb62/output/SkiaSharp.1.59.0.1.nupkg",
+        "createdAt": "2017-07-17T17:30:27",
+        "reactions": []
+      },
+      {
+        "id": 315824307,
+        "author": "mattleibow",
+        "body": "I have made a few other changes as well, so I _may_ bump the version a bit higher to v1.59.1",
+        "createdAt": "2017-07-17T17:31:36",
+        "reactions": []
+      },
+      {
+        "id": 316176924,
+        "author": "mattleibow",
+        "body": "@michaelstonis I pushed out a release that should have fixed the issue: https://github.com/mono/SkiaSharp/releases/tag/v1.59.1\r\n",
+        "createdAt": "2017-07-18T19:47:43",
+        "reactions": []
+      },
+      {
+        "id": 316211769,
+        "author": "michaelstonis",
+        "body": "Thank you @mattleibow. I just gave it a shot and it looks to be working perfectly. Thanks for your help!",
+        "createdAt": "2017-07-18T22:03:52",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:58:46.9149796Z"
+          }
+        ]
+      }
+    ]
+  }
 }

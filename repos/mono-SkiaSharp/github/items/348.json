@@ -14,5 +14,66 @@
   "updatedAt": "2022-08-19T21:01:13",
   "closedAt": "2017-12-19T12:58:20",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:11.8761012Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 319501252,
+        "author": "mattleibow",
+        "body": "The new build requirement is MSBuild 15.\r\n\r\nIf you are running a relatively new version of Linux, our native library may work for you:\r\n\r\n - (Release Notes) https://github.com/mono/SkiaSharp/releases/tag/v1.59.1\r\n - (CI Build) https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp-Linux/51\r\n\r\nIn addition, you can also try out @kekekeks \u0027s builds on NuGet:\r\n - https://preview.nuget.org/packages/Avalonia.Skia.Linux.Natives/",
+        "createdAt": "2017-08-01T21:23:53",
+        "reactions": []
+      },
+      {
+        "id": 319543927,
+        "author": "zhangevanone",
+        "body": "My running environment: Ubuntu 16.04.1 For X64, Mono\u0027s version 5.0.1.1 and SkiaSharp is v1.59.1, how can I using MSBuild 15 going todo. Thanks!",
+        "createdAt": "2017-08-02T01:40:36",
+        "reactions": []
+      },
+      {
+        "id": 319587871,
+        "author": "kekekeks",
+        "body": "@mattleibow Could you please switch your build agent to use Ubuntu 14.04? Also, please link libstdc\u002B\u002B statically. That should cover most of the distros.",
+        "createdAt": "2017-08-02T07:10:47",
+        "reactions": []
+      },
+      {
+        "id": 332882651,
+        "author": "mattleibow",
+        "body": "@kekekeks The build agent should be 14.04 already. And will linking libstdc\u002B\u002B statically cause any issue with dynamic bits? I may be confused, but some people (on the internet) say that if I link statically then we can\u0027t use dlopen (which is used for the GL bits). Or, is this just for libgcc?",
+        "createdAt": "2017-09-28T15:59:02",
+        "reactions": []
+      },
+      {
+        "id": 332977430,
+        "author": "kekekeks",
+        "body": "You need to build \u0060libstdc\u002B\u002B\u0060 with \u0060-fvisibility=hidden\u0060, so it won\u0027t cause conflicts.",
+        "createdAt": "2017-09-28T22:07:26",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:59:11.3595059Z"
+          }
+        ]
+      },
+      {
+        "id": 332977498,
+        "author": "kekekeks",
+        "body": "See more information about the issues there: https://github.com/phusion/holy-build-box/blob/master/LINKING-CXX.md",
+        "createdAt": "2017-09-28T22:07:47",
+        "reactions": []
+      },
+      {
+        "id": 332978807,
+        "author": "kekekeks",
+        "body": "See libstdc\u002B\u002B compilation flags here: https://github.com/phusion/holy-build-box/blob/master/image/build.sh#L357",
+        "createdAt": "2017-09-28T22:14:45",
+        "reactions": []
+      }
+    ]
+  }
 }

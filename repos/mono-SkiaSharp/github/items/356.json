@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T18:02:47",
   "closedAt": "2020-04-24T21:14:00",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:59:27.0825732Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 323516546,
+        "author": "entdark",
+        "body": "Seems like it\u0027s related to #213.\r\n\r\nArgumentNullException: Argument cannot be null.\r\nParameter name: backendContext\r\n\u003E   in SkiaSharp.GRContext.Create(GRBackend backend, GRGlInterface backendContext)\r\n\u003E   in SkiaSharp.Views.Desktop.SKGLControl.OnPaint(PaintEventArgs e)\r\n\r\nAlso I checked and \u0022libSkiaSharp.dll\u0022 that suppose to create the context is not loaded according to Debug -\u003E Windows -\u003E Modules.",
+        "createdAt": "2017-08-19T11:04:32",
+        "reactions": []
+      },
+      {
+        "id": 434096143,
+        "author": "v-vasilev-synergy",
+        "body": "This happens for me on Windows10 when a GPU is not available.\r\nE.g. samples work correctly for me with intergrated graphics enabled\r\nIf I disable the intergrated processor graphics on my machine then the sample fails with the above exceptions.\r\n\r\nMy guess is that the Windows7 machine used an older processor without integrated/dedicated graphics, and OpenGL failed to load",
+        "createdAt": "2018-10-29T21:57:26",
+        "reactions": []
+      },
+      {
+        "id": 619241312,
+        "author": "mattleibow",
+        "body": "I believe that is correct. I am making use of OpenTK\u0027s GLControl and that requires the use of OpenGL.",
+        "createdAt": "2020-04-24T21:14:00",
+        "reactions": []
+      }
+    ]
+  }
 }
