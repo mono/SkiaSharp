@@ -19,5 +19,86 @@
   "updatedAt": "2020-08-15T00:23:15",
   "closedAt": "2020-08-15T00:21:03",
   "commentCount": 4,
-  "reactionCount": 7
+  "reactionCount": 7,
+  "engagement": {
+    "syncedAt": "2026-02-06T11:50:37.9913614Z",
+    "reactions": [
+      {
+        "user": "albertosilva",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:50:37.9913687Z"
+      },
+      {
+        "user": "michaldobrodenka",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:50:37.9913696Z"
+      },
+      {
+        "user": "nor0x",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:50:37.9913702Z"
+      },
+      {
+        "user": "DaniilSokolyuk",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:50:37.9913706Z"
+      },
+      {
+        "user": "ryancheung",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:50:37.991371Z"
+      },
+      {
+        "user": "chrisadol",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:50:37.9913713Z"
+      },
+      {
+        "user": "akamud",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:50:37.9913716Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 319968478,
+        "author": "aloisdeniel",
+        "body": "I would love to participate, but I didn\u0027t find a proper way to write text in areas with line breaks with SkiaSharp.\r\n\r\nIt should be doable with \u0060MeasureText\u0060 and a dichotomy algorithm but a better way maybe exists.\r\n\r\nA naive implementation for breaking by spaces (tabs etc should be added) : \r\n\r\n\u0060\u0060\u0060csharp\r\nprivate void DrawTextArea(SKCanvas canvas, SKPaint paint, float x, float y,  float maxWidth, float lineHeight, string text)\r\n{\r\n\tvar spaceWidth = paint.MeasureText(\u0022 \u0022);\r\n\tvar lines = text.Split(new [] { Environment.NewLine }, StringSplitOptions.None);\r\n\tlines = lines.SelectMany(l =\u003E SplitLine(paint,maxWidth,l,spaceWidth)).ToArray();\r\n\r\n\tfor (int i = 0; i \u003C lines.Length; i\u002B\u002B)\r\n\t{\r\n\t\tvar line = lines[i];\r\n\t\tcanvas.DrawText(line, x, y, paint);\r\n\t\ty \u002B= lineHeight;\r\n\t}\r\n}\r\n\r\nprivate string[] SplitLine(SKPaint paint, float maxWidth, string text, float spaceWidth)\r\n{\r\n\tvar result = new List\u003Cstring\u003E();\r\n\r\n\tvar words = text.Split(new[] { \u0022 \u0022 }, StringSplitOptions.None);\r\n\r\n\tvar line = new StringBuilder();\r\n\tfloat width = 0;\r\n\tforeach (var word in words)\r\n\t{\r\n\t\tvar wordWidth = paint.MeasureText(word);\r\n\t\tvar wordWithSpaceWidth = wordWidth \u002B spaceWidth;\r\n\t\tvar wordWithSpace = word \u002B \u0022 \u0022;\r\n\r\n\t\tif(width \u002B wordWidth \u003E maxWidth)\r\n\t\t{\r\n\t\t\tresult.Add(line.ToString());\r\n\t\t\tline = new StringBuilder(wordWithSpace);\r\n\t\t\twidth = wordWithSpaceWidth;\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tline.Append(wordWithSpace);\r\n\t\t\twidth \u002B= wordWithSpaceWidth;\r\n\t\t}\r\n\t}\r\n\r\n\tresult.Add(line.ToString());\r\n\r\n\treturn result.ToArray();\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-08-03T13:27:19",
+        "reactions": []
+      },
+      {
+        "id": 364610602,
+        "author": "charlesroddie",
+        "body": "Interested in this topic as I would like in future to render text and maths together.",
+        "createdAt": "2018-02-10T00:51:41",
+        "reactions": []
+      },
+      {
+        "id": 543242808,
+        "author": "JunkyXL86",
+        "body": "Any progress? Stumbled upon this problem 1h ago and couldn\u0027t believe drawing/measuring multiline text is not part of Skia.\r\nWould love it to be implemented natively to make this painting API more perfect.",
+        "createdAt": "2019-10-17T15:57:40",
+        "reactions": [
+          {
+            "user": "GioviQ",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:50:37.7255869Z"
+          },
+          {
+            "user": "HSoshiant",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:50:37.7255872Z"
+          }
+        ]
+      },
+      {
+        "id": 674319657,
+        "author": "mattleibow",
+        "body": "Thanks for this issue, but due the the fact that this library is now deprecated, no further work will be done on SkiaSharp.SVG.\r\n\r\nThank you for all of you folks that have been using this library this long, it is always great to know that some of my work has made things a bit better. However, I am unable to maintain this library, but I would recommend using the far superior https://github.com/wieslawsoltes/Svg.Skia \r\nIt has an API that is compatible and will just require a namespace change.\r\n\r\nFor better text support, I again would recommend the equally awesome https://github.com/toptensoftware/RichTextKit that can pretty much do everything.\r\n\r\nWith both of these, I have updated the sample app to demonstrate how to use these libraries, producing a far better result.",
+        "createdAt": "2020-08-15T00:21:03",
+        "reactions": []
+      }
+    ]
+  }
 }

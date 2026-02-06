@@ -14,5 +14,32 @@
   "updatedAt": "2022-02-05T09:53:18",
   "closedAt": "2020-08-15T00:23:40",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T11:49:59.8604179Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 592016323,
+        "author": "maruhe",
+        "body": "hi there I may have a similar problem on loading svg files\r\nexpected result visualised by SVG-Viewer app:\r\n![SVG Viewer_Screenshot_2020 02 27_16 12 58](https://user-images.githubusercontent.com/49123648/75457142-63004400-597c-11ea-8a3e-4f037f868661.jpg)\r\n\r\nresult in my app and also XamaRed.Forms.Svg.Samples which I used to test cause it uses SkiaSharp:\r\n![XamaRed Forms Svg Samples_Screenshot_2020 02 27_16 13 19](https://user-images.githubusercontent.com/49123648/75457453-c5594480-597c-11ea-9f4d-87ecaef87fe4.jpg)\r\n\r\n\r\nother svg-files work correct, if helpful I can upload a sample file\r\n\r\n",
+        "createdAt": "2020-02-27T15:18:47",
+        "reactions": []
+      },
+      {
+        "id": 674320162,
+        "author": "mattleibow",
+        "body": "Thanks for this issue, but due the the fact that this library is now deprecated, no further work will be done on SkiaSharp.SVG.\r\n\r\nThank you for all of you folks that have been using this library this long, it is always great to know that some of my work has made things a bit better. However, I am unable to maintain this library, but I would recommend using the far superior https://github.com/wieslawsoltes/Svg.Skia \r\nIt has an API that is compatible and will just require a namespace change.\r\n\r\nFor better text support, I again would recommend the equally awesome https://github.com/toptensoftware/RichTextKit that can pretty much do everything.\r\n\r\nWith both of these, I have updated the sample app to demonstrate how to use these libraries, producing a far better result.",
+        "createdAt": "2020-08-15T00:23:40",
+        "reactions": []
+      },
+      {
+        "id": 1030591525,
+        "author": "KrystofS",
+        "body": "Even though this library is deprecated and might not provide as complete implementation of the SVG standard as Svg.Skia does. I\u00B4d like to point out that it is still significantly faster.\r\n![image](https://user-images.githubusercontent.com/53654296/152636784-fe5e17e5-f720-4cae-bd26-7343339c4f2a.png)\r\n\u0060\u0060\u0060\r\nusing BenchmarkDotNet.Attributes;\r\nusing BenchmarkDotNet.Jobs;\r\nusing SkiaSharp;\r\nusing Svg;\r\nusing System.Text;\r\n\r\nnamespace Benchmark01\r\n{\r\n    [Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]\r\n    [SimpleJob(RuntimeMoniker.Net48)]\r\n    [SimpleJob(RuntimeMoniker.Net60)]\r\n    public class SkiaSvgBenchmark\r\n    {\r\n        private SKPicture pict;\r\n        private Stream xmlStream;\r\n        private readonly SkiaSharp.Extended.Svg.SKSvg skiaSharp = new SkiaSharp.Extended.Svg.SKSvg();\r\n        private readonly Svg.Skia.SKSvg svgSkia = new Svg.Skia.SKSvg();\r\n\r\n        [Params(10)]\r\n        public int Size { get; set; }\r\n\r\n        [IterationSetup]\r\n        public void Setup()\r\n        {\r\n            SvgDocument svgDoc = SvgDocument.Open(@\u0022path to my test file\u0022);\r\n            var xml = svgDoc.GetXML();\r\n            xmlStream = new MemoryStream(Encoding.UTF8.GetBytes(xml));\r\n        }\r\n\r\n        [IterationCleanup]\r\n        public void Cleanup()\r\n        {\r\n            xmlStream.Dispose();\r\n            pict.Dispose();\r\n        }\r\n\r\n        [Benchmark]\r\n        public void Skiasharp()\r\n        {\r\n            pict = skiaSharp.Load(xmlStream);\r\n        }\r\n\r\n        [Benchmark]\r\n        public void SvgSkia()\r\n        {\r\n            pict = svgSkia.Load(xmlStream);\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-02-05T09:53:18",
+        "reactions": []
+      }
+    ]
+  }
 }

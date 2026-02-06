@@ -27,5 +27,32 @@
   "updatedAt": "2020-08-15T00:28:19",
   "closedAt": "2020-08-15T00:28:19",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T11:50:20.9954541Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 409502226,
+        "author": "pfaucon",
+        "body": "I have it improved (not fixed), but in a way that I am thoroughly convinced is wrong.  The changes I made were:\r\n\r\n1) the y direction with respect to painting is inverted with respect to text (e.g. - moves down for drawRect, but up for drawText)\r\n\r\n2) the \u0022height\u0022 returned is the height to be drawn, the \u0022width\u0022 returned is 1/2 of the true width of the view on Android, but is close to the true width on iOS (not exact, but inconsistently close).  \r\n\r\nIs this an expected behavior noted somewhere that I have missed? Or is it just a fluke that it happened to work out with these numbers and isn\u0027t the true behavior?\r\n\r\nScreenshots with code :\r\n\u0060\u0060\u0060\r\n             foreach (var rn in runs)\r\n              {\r\n                var bounds = new SKRect();\r\n                var sz = iconPaint.MeasureText(rn.Text, ref bounds);\r\n\r\n                textWidth \u002B= bounds.Width;\r\n                textHeight \u002B= bounds.Height;\r\n\r\n                if (bounds.Height \u003E 0)\r\n                {\r\n                    canvas.DrawRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight, outlinePaint);\r\n                    canvas.DrawIconifiedText(Icon, midX - textWidth / 2 , midY \u002B textHeight / 2, iconPaint);\r\n                    hasBounds = true;\r\n                }\r\n            }\r\n\u0060\u0060\u0060\r\n\r\nAndroid:\r\n![image](https://user-images.githubusercontent.com/3473919/43511528-e792020e-9578-11e8-9b38-8cd06b4c50a8.png)\r\n\r\n\r\niOS:\r\n![image](https://user-images.githubusercontent.com/3473919/43511549-f6cc5012-9578-11e8-9ee3-7b51ef2e9a26.png)\r\n",
+        "createdAt": "2018-08-01T08:53:53",
+        "reactions": []
+      },
+      {
+        "id": 410172822,
+        "author": "pfaucon",
+        "body": "I found the TextAlign option, which I was temporarily very excited about, it seems to correct the x centering, but fails with the y.  \r\n\r\n            SKPaint iconPaint = new SKPaint\r\n            {\r\n                TextSize = ScaledTextSize,\r\n                IsAntialias = true,\r\n                TextAlign = SKTextAlign.Center, // added\r\n            };\r\n\r\n            ...\r\n\r\n            canvas.DrawIconifiedText(Icon, midX, midY, iconPaint);\r\n\r\n![image](https://user-images.githubusercontent.com/3473919/43630421-951374fc-9700-11e8-9be0-731485784863.png)\r\n\r\nIf I hybridize the solution, using text centering and adding half the height of the bounding box, it seems to work reasonably well.  It\u0027s not right, and it is . a terrible way of arriving at the solution, but visually close enough.  If you have some feedback on what I might be doing wrong I would really appreciate it.  I suspect there is some weirdness in the scaling (retina vs non), but I am not particularly good with graphics so I\u0027m not sure if I can get much deeper.\r\n\r\n            var runs = SKTextRun.Create(Icon, SKTextRunLookup.Instance);\r\n\r\n            float yHeight = 0;\r\n            foreach (var rn in runs)\r\n            {\r\n                var bounds = new SKRect();\r\n                var sz = iconPaint.MeasureText(rn.Text, ref bounds);\r\n                if (bounds.Height \u003E 0)\r\n                {\r\n                    yHeight \u002B= bounds.Height;\r\n                    bounds.Left \u002B= midX;\r\n                    bounds.Right \u002B= midX;\r\n                    bounds.Top \u002B= midY;\r\n                    bounds.Bottom \u002B= midY;\r\n                    canvas.DrawRect(bounds, outlinePaint);\r\n                }\r\n            }\r\n            // shift y by yHeight/2 in addition to centering\r\n            canvas.DrawIconifiedText(Icon, midX, midY\u002ByHeight/2, iconPaint); \r\n\r\n![image](https://user-images.githubusercontent.com/3473919/43630619-192d2e68-9701-11e8-9bff-76522ad12929.png)\r\n",
+        "createdAt": "2018-08-03T07:42:13",
+        "reactions": []
+      },
+      {
+        "id": 674320910,
+        "author": "mattleibow",
+        "body": "Thanks for this issue, but due the the fact that this library is now deprecated, no further work will be done on SkiaSharp.SVG.\r\n\r\nThank you for all of you folks that have been using this library this long, it is always great to know that some of my work has made things a bit better. However, I am unable to maintain this library, but I would recommend using the far superior https://github.com/wieslawsoltes/Svg.Skia \r\nIt has an API that is compatible and will just require a namespace change.\r\n\r\nFor better text support, I again would recommend the equally awesome https://github.com/toptensoftware/RichTextKit that can pretty much do everything.\r\n\r\nWith both of these, I have updated the sample app to demonstrate how to use these libraries, producing a far better result.",
+        "createdAt": "2020-08-15T00:28:19",
+        "reactions": []
+      }
+    ]
+  }
 }
