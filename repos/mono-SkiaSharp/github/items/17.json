@@ -14,5 +14,67 @@
   "updatedAt": "2022-08-20T06:02:03",
   "closedAt": "2016-02-23T21:41:33",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:05.0258668Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 187575285,
+        "author": "migueldeicaza",
+        "body": "I agree, i was writing this documentation today, and I found this to be confusing.\n",
+        "createdAt": "2016-02-23T06:57:35",
+        "reactions": []
+      },
+      {
+        "id": 187843977,
+        "author": "mattleibow",
+        "body": "@migueldeicaza @joreg That is the \u0060Create\u0060 method. There is a constructor that is LTRB: https://developer.xamarin.com/api/constructor/SkiaSharp.SKRect.SKRect/p/System.Single/System.Single/System.Single/System.Single/\n\nI can\u0027t overload the constructor, but I wanted to do that as a helper method in case you are coming from some other rect object. I didn\u0027t want to force the user to calculate the LTRB when he had the XYWH coordinates.\n",
+        "createdAt": "2016-02-23T19:05:54",
+        "reactions": []
+      },
+      {
+        "id": 187844823,
+        "author": "mattleibow",
+        "body": "This is the SKRect definition:\n\n\u0060\u0060\u0060\npublic struct SKRect { \n    public float Left, Top, Right, Bottom; \n    public SKRect (float left, float top, float right, float bottom) { \n        Left = left; \n        Right = right; \n        Top = top; \n        Bottom = bottom; \n    } \n    public static SKRect Create (float width, float height) { \n        return new SKRect (0, 0, width, height); \n    } \n    public static SKRect Create (float x, float y, float width, float height) { \n        return new SKRect (x, y, x \u002B width, y \u002B height); \n    } \n} \n\u0060\u0060\u0060\n\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/Definitions.cs#L402-L421\n",
+        "createdAt": "2016-02-23T19:08:33",
+        "reactions": []
+      },
+      {
+        "id": 187899663,
+        "author": "mattleibow",
+        "body": "I had a look some more at the Skia API and see this:\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/include/core/SkRect.h\n\n\u0060\u0060\u0060\nstatic SkRect SK_WARN_UNUSED_RESULT MakeWH(SkScalar w, SkScalar h);\nstatic SkRect SK_WARN_UNUSED_RESULT MakeIWH(int w, int h);\nstatic SkRect SK_WARN_UNUSED_RESULT MakeSize(const SkSize\u0026 size);\nstatic SkRect SK_WARN_UNUSED_RESULT MakeLTRB(SkScalar l, SkScalar t, SkScalar r, SkScalar b);\nstatic SkRect SK_WARN_UNUSED_RESULT MakeXYWH(SkScalar x, SkScalar y, SkScalar w, SkScalar h);\n\u0060\u0060\u0060\n\nThe \u0060SKRect\u0060 type does not have a constructor, but rather several overloads of the Make (or Create) methods\n\nI think we need to decide what we want for the constructor. Or even no constructor. I am in favour of XYWH as the constructor and LTRB as the Create as this is what .NET usually does.\n",
+        "createdAt": "2016-02-23T20:54:26",
+        "reactions": []
+      },
+      {
+        "id": 187900964,
+        "author": "mattleibow",
+        "body": "So we have several options:\n1. No constructor (just the default)\n2. XYWH constructor (with CreateLTRB)\n3. LTRB constructor (with CreateXYWH)\n\nI vote 2.\n",
+        "createdAt": "2016-02-23T20:56:14",
+        "reactions": []
+      },
+      {
+        "id": 187915494,
+        "author": "joreg",
+        "body": "i\u0027d vote for no constructor and all helpers called: From...\n- no constructor because then there are not 2 different ways to create a rect\n- From.... because FromXYWH, FromLTRB,... reads more suitable than Make.. or Create..\n",
+        "createdAt": "2016-02-23T21:21:52",
+        "reactions": []
+      },
+      {
+        "id": 187919211,
+        "author": "tebjan",
+        "body": "I also vote for no constructor to have everything in one place.\nThe same might be true for other basic shapes as well, for consistency.\n",
+        "createdAt": "2016-02-23T21:27:49",
+        "reactions": []
+      },
+      {
+        "id": 187926458,
+        "author": "migueldeicaza",
+        "body": "I do not see an advantage on making the change, so let us keep the code as is for now.\n",
+        "createdAt": "2016-02-23T21:41:33",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -15,5 +15,79 @@
   "updatedAt": "2022-09-16T00:01:14",
   "closedAt": "2022-08-16T08:06:06",
   "commentCount": 8,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:30.4439578Z",
+    "reactions": [
+      {
+        "user": "miszu",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:49:30.4439642Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1195876120,
+        "author": "MichalJan008",
+        "body": "Performance drop seems to be dependant of the bitmap size. For me, instead of getting c.a. 50 fps, Now I get c.a. 10, or even less - when working with 42 Megapixel SkBitmap - what is a blocker for the app. \r\nI\u0027ve recorded a screen capturing - for 2.80.4  and for 2.88.0 on iPhone 11. I\u0027l try to upload somewhere and share the links.   ",
+        "createdAt": "2022-07-26T19:10:06",
+        "reactions": []
+      },
+      {
+        "id": 1195890293,
+        "author": "MichalJan008",
+        "body": "2.80.4 (fast)\r\nhttps://youtu.be/ZN3ki_IpPUg\r\n\r\n2.88.0 (slow)\r\nhttps://youtu.be/jNvGh4R19cA",
+        "createdAt": "2022-07-26T19:25:59",
+        "reactions": []
+      },
+      {
+        "id": 1212947732,
+        "author": "mattleibow",
+        "body": "Could you attach a small repro that I can use to debug the process? Mainly I think I need some large images and some drawing code.\r\n\r\nThis appears to be the same as #2188, but this says GPU/GL and that is using raster. Not sure if this is a sign of bitmap drawing slow, or some GPU things.\r\n\r\nAlso some machine hardware numbers - like GPU model/spec.",
+        "createdAt": "2022-08-12T10:09:01",
+        "reactions": []
+      },
+      {
+        "id": 1213054566,
+        "author": "ghost",
+        "body": "@mattleibow \r\n[skiasharp-bug-example-master.zip](https://github.com/mono/SkiaSharp/files/9316201/skiasharp-bug-example-master.zip)\r\nHere is a small repro, contains a good sized Bitmap\r\n\r\nI turned off VSync to better demonstrate the frames per second differences when uncapped. Most apparent when the Window is maximized.\r\n\r\n**2.80.4**  ~300 FPS\r\n![oldVersion](https://user-images.githubusercontent.com/42287509/184352824-ef9c5eff-2fc0-4ae5-8ecf-e7f096576460.png)\r\n\r\n**2.88.0** ~ 100 FPS\r\n![newVersion](https://user-images.githubusercontent.com/42287509/184352866-72c110c8-b5a8-4fef-b330-f6287e0fa431.png)\r\n\r\nI am using a Dell Optiplex 7050\r\nI7-7700 CPU\r\nIntel HD Graphics 630\r\n\r\nin a Remote Desktop Session\r\n\r\nHope this helps\r\n",
+        "createdAt": "2022-08-12T12:21:31",
+        "reactions": []
+      },
+      {
+        "id": 1214726409,
+        "author": "mattleibow",
+        "body": "I am wondering if it is actually this change in 82:\n\n\u003E\u00A0Removed\u00A0drawBitmap\u00A0and\u00A0related\u00A0functions\u00A0from\u00A0SkDevice;\u00A0all\u00A0public\u00A0drawBitmap\u00A0functions\u00A0on SkCanvas\u00A0automatically\u00A0wrap\u00A0the\u00A0bitmap\u00A0in\u00A0an\u00A0SkImage\u00A0and\u00A0call\u00A0the\u00A0equivalent\u00A0drawImage\u00A0function. Drawing\u00A0mutable\u00A0SkBitmaps\u00A0will\u00A0now\u00A0incur\u00A0a\u00A0mandatory\u00A0copy.\u00A0Switch\u00A0to\u00A0using\u00A0SkImage\u00A0directly\u00A0or mark\u00A0the\u00A0bitmap\u00A0as\u00A0immutable\u00A0before\u00A0drawing.\n\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/RELEASE_NOTES.txt#L369-L372",
+        "createdAt": "2022-08-15T07:58:38",
+        "reactions": []
+      },
+      {
+        "id": 1214939668,
+        "author": "ghost",
+        "body": "\u003E I am wondering if it is actually this change in 82:\r\n\u003E \r\n\u003E \u003E Removed\u00A0drawBitmap\u00A0and\u00A0related\u00A0functions\u00A0from\u00A0SkDevice;\u00A0all\u00A0public\u00A0drawBitmap\u00A0functions\u00A0on SkCanvas\u00A0automatically\u00A0wrap\u00A0the\u00A0bitmap\u00A0in\u00A0an\u00A0SkImage\u00A0and\u00A0call\u00A0the\u00A0equivalent\u00A0drawImage\u00A0function. Drawing\u00A0mutable\u00A0SkBitmaps\u00A0will\u00A0now\u00A0incur\u00A0a\u00A0mandatory\u00A0copy.\u00A0Switch\u00A0to\u00A0using\u00A0SkImage\u00A0directly\u00A0or mark\u00A0the\u00A0bitmap\u00A0as\u00A0immutable\u00A0before\u00A0drawing.\r\n\u003E \r\n\u003E https://github.com/mono/skia/blob/xamarin-mobile-bindings/RELEASE_NOTES.txt#L369-L372\r\n\r\nBingo! That was it.",
+        "createdAt": "2022-08-15T12:08:07",
+        "reactions": []
+      },
+      {
+        "id": 1216284016,
+        "author": "mattleibow",
+        "body": "What changes did you make to get that sweet sweet speed back? Just using SkImage? ",
+        "createdAt": "2022-08-16T08:02:22",
+        "reactions": []
+      },
+      {
+        "id": 1217197871,
+        "author": "ghost",
+        "body": "\u003E What changes did you make to get that sweet sweet speed back? Just using SkImage? \n\nI ended up just making my SKBitmaps immutable :) worked perfectly per the referenced solution you posted ",
+        "createdAt": "2022-08-16T21:42:44",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:30.3937014Z"
+          }
+        ]
+      }
+    ]
+  }
 }

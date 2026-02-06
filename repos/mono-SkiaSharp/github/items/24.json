@@ -19,5 +19,43 @@
   "updatedAt": "2022-08-20T06:01:57",
   "closedAt": "2016-08-20T15:45:55",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:18.7798465Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 188877213,
+        "author": "kekekeks",
+        "body": "Since opengl-related calls are too platform-specific and complex for the end-user it\u0027s better to keep Garesh backend initialization and surface-flipping in the native lib. I also can see that currently your bindings don\u0027t have built-in on-screen rendering support and you leave the task of blitting image to screen to the user.\n\nIn [Perspex](https://github.com/Perspex/Perspex) we have a concept of a render target that allows to create a [rendering session](https://github.com/Perspex/Perspex/blob/master/src/Perspex.SceneGraph/Media/IDrawingContext.cs) which, when disposed, is flipped back to screen. It may be worth to do the same.\n\n\u0060\u0060\u0060 csharp\ninterface IRenderTarget\n{\n     IRenderingContext CreateContext();\n}\n\n\ninterface IRenderingContext : IDisposable\n{\n      SkCanvas Canvas { get; }\n}\n\n\u0060\u0060\u0060\n\nTo end user it will look like this:\n\n\u0060\u0060\u0060 csharp\nvar target = new OSWindowRenderTarget(hWnd/xid/nswindow);\n...\n\nusing(var ctx = target.CreateContext())\n{\n     ctx.Canvas.DrawRectangle(...);\n}\n\n\u0060\u0060\u0060\n\nThat render target will manage everything required to initialize ganesh-backend using ANGLE/EGL/GLX/AGLX/whatever or fall back to sw rendering.\n\nCurrently we have in Perspex:\n\n[iOS render target](https://github.com/Perspex/libperspesk/blob/master/src/pview.mm) using GLKView\n\n[OS window abstraction](https://github.com/Perspex/libperspesk/blob/master/src/window.cpp) with sw/hw rendering switch with backends for\n- [Win32 window](https://github.com/Perspex/libperspesk/blob/master/src/win32.cpp) using \u0060SetDIBitsToDevice\u0060\n- [X11](https://github.com/Perspex/libperspesk/blob/master/src/linux.cpp) using \u0060XPutImage\u0060\n- [Android](https://github.com/Perspex/libperspesk/blob/master/src/droid.cpp) using \u0060ANativeWindow\u0060\n\n[EGL/ANGLE hw-accel backend](https://github.com/Perspex/libperspesk/blob/master/src/gl.cpp) for Win/Linux/Android\n\nThat code provides a simple C\u002B\u002B API:\n\n\u0060\u0060\u0060 c\u002B\u002B\nclass RenderingContext\n{\npublic:\n    SkCanvas* Canvas;\n    virtual ~RenderingContext() {}\n};\n\nclass RenderTarget\n{\npublic:\n    virtual RenderingContext* CreateRenderingContext() = 0;\n    virtual ~RenderTarget() {}\n};\n\u0060\u0060\u0060\n\nCode is MIT-licensed and could be easily ported if you agree with the design.\n",
+        "createdAt": "2016-02-25T16:56:42",
+        "reactions": []
+      },
+      {
+        "id": 225034186,
+        "author": "mattleibow",
+        "body": "@kekekeks I will be looking into this soon. I have got most of the GPU bits building for all platforms right now. The next step is to get ANGLE for Windows added, then wrap all the necessary types. \n\nAs the GPU bits are building already, initial wrapper can be created for OpenGL right now, except the UWP will have to wait for ANGLE. Win32 can have initial GL support until ANGLE arrives - giving it more options for devs.\n",
+        "createdAt": "2016-06-09T21:36:00",
+        "reactions": [
+          {
+            "user": "ewinnington",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:18.5282653Z"
+          },
+          {
+            "user": "jarlestabell",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:18.5282657Z"
+          }
+        ]
+      },
+      {
+        "id": 241207191,
+        "author": "mattleibow",
+        "body": "@kekekeks Hardware support is here (-ish)\nI have started with getting all the bits together and I think it is working quite well. Right now All the platforms should have OpenGL support (DirectX is coming in a few). This means all the platforms, except UWP, can draw with hardware acceleration.\n\nThe global issue for hardware / GPU is here: https://github.com/mono/SkiaSharp/issues/138\nPlease leave comments and suggestions so we can get the best product out.\n\nThere is also a preview NuGet: https://www.nuget.org/packages/SkiaSharp/1.53.2-gpu1\nPlease try that out and be sure to comment on how it went - if there are any features needed, just let us know!\n",
+        "createdAt": "2016-08-20T15:45:55",
+        "reactions": []
+      }
+    ]
+  }
 }

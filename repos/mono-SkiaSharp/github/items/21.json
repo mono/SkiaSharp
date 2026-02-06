@@ -14,5 +14,64 @@
   "updatedAt": "2022-08-20T06:01:59",
   "closedAt": "2016-02-29T13:06:05",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:16.4778881Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 188303415,
+        "author": "bholmes",
+        "body": "To my knowledge Skia does not support SVG loading.  If and when that is added to the native library we will surface that API to C#.\n",
+        "createdAt": "2016-02-24T15:20:56",
+        "reactions": []
+      },
+      {
+        "id": 188328144,
+        "author": "EnCey",
+        "body": "I only read the [wikipedia article](https://en.wikipedia.org/wiki/Skia_Graphics_Engine) where it says \n\n\u003E Skia also has **front-ends** that allow it to convert popular vector graphics formats **such as SVG**, PostScript, PDF, SWF, and Adobe Illustrator files into its own API calls\n\nBut on skia.org I also only found the experimental [SkSVG canvas](https://skia.org/user/api/canvas#sksvg), which appears to be a back-end (?) component.\n\nPersonally I\u0027d only be interested in the front-end anyway, as that appears to be the component that reads SVG.\n\nBut I take it that the SVG front-end won\u0027t be a part of SkiaSharp? \nOr would this be something that is implemented in a separate project?\n",
+        "createdAt": "2016-02-24T16:15:15",
+        "reactions": []
+      },
+      {
+        "id": 188332212,
+        "author": "Naburimannu",
+        "body": "In listing front-ends, that wikipedia article is citing an inaccurate third-party post from 2011.\n\nSkia has both a SVG parser (in include/svg/parser) and backend (in include/svg); SkSVGCanvas is part of the backend. As far as I know only the backend is currently maintained.\n",
+        "createdAt": "2016-02-24T16:21:34",
+        "reactions": []
+      },
+      {
+        "id": 188452617,
+        "author": "EnCey",
+        "body": "In that case, I assume it is safe to say that SkiaSharp probably won\u0027t have built-in SVG support for the foreseeable future.\nChrome and Firefox supposedly have their own SVG parsers if skia itself does not maintain its own, and so there\u0027s little incentive for the skia devs to work on their SVG front- or backend.\n\nBe that as it may, thank you both for taking the time to answer my questions!\n",
+        "createdAt": "2016-02-24T21:05:17",
+        "reactions": []
+      },
+      {
+        "id": 190202367,
+        "author": "migueldeicaza",
+        "body": "Loading SVGs is a separate task from SkiaSharp, for far too many reasons.\n\nThe best course of action to having a cross-platform SVG loader is probably to look at the Chrome source code and write an importer based on that, leaving behind the DOM loading, hooks and dependencies on the larger parts of the browser like CSS and animations.\n\nThen we can use the test suite built by the librsvg team (librsvg would be ideal: it is a general purpose SVG loader where you can \u0022hook\u0022 renderes to, except the license is not iOS friendly).\n\nI will be closing this issue, since this is not something we will treat as a bug in SkiaSharp, it is something to be prototyped elsewhere and then, if successful, we can bring here.\n",
+        "createdAt": "2016-02-29T13:06:05",
+        "reactions": []
+      },
+      {
+        "id": 197062568,
+        "author": "Emasoft",
+        "body": "If SkyaSharp doesn\u0027t support SVG is useless at the moment. Not supporting SVG for a vector library is like not supporting PNG for a bitmap library. I use SVG assets in my Xamarin apps thanks to the NGraphics library, and I have many advantages:\n- SMALLER APP FOOTPRINTS : SVG files are so small you can have your entire app graphics in less than 10k!\n- FAST DEVELOPMENT - No need to code for creating the views. All the UI controls that once needed DAYS or even WEEKS to code, now are made in a couple of minutes in Inkscape. Productivity boost never seen before!\n- EASY TO MODIFY FOR ARTISTS : my graphic artist works with Inkscape and it can edit the SVG files directly, no need to ask me to modify the code to make them work. He can update on the git the svg assets every day and test the changes by himself. And this even at the last moment! It\u0027s an amazing workflow!\n- PORTABLE AND INDEPENDENT : No more graphic assets to use just once and then thrashed. The SVG assets you make for iOS you can reuse on Android, Windows, Linux versions of your app and on the web app too, with no changes. Also you do not depend on a single graphician or artist anymore. I can hire any pro to make my assets, and they can deliver them in SVG or change the existing one if they replaced another artist in the same project. Inkscape is also multiplatform, you can edit SVG assets on every computer you have!\n\nThis is why I really hope that Xamarin goes the way of NGraphics and add support for SVG assets to SkyaSharp. PLEASE.\n\nSome of my SVG assets (I made them in Inkscape):\n\n![ios_app_buttons](https://cloud.githubusercontent.com/assets/713559/5924670/d56b48a0-a65d-11e4-95b4-7377a6b7eda9.png)\n\nYou can download the original svg file from my google drive (click on the download button):\nhttp://goo.gl/m7TbmM\n\nFeel free to use them! \n\nFor an easier debug, here it is a splitted version of the two main buttons svg files, you can download the zip from here: \nhttps://drive.google.com/file/d/0BxexooDWEb8ublZlcm5yRWpXTzQ/view?usp=sharing\n",
+        "createdAt": "2016-03-15T23:07:25",
+        "reactions": [
+          {
+            "user": "StenPetrov",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:16.4276335Z"
+          },
+          {
+            "user": "t9mike",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:16.427634Z"
+          }
+        ]
+      }
+    ]
+  }
 }

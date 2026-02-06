@@ -19,5 +19,130 @@
   "updatedAt": "2022-08-20T06:02:02",
   "closedAt": "2018-05-08T04:46:52",
   "commentCount": 17,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:09.3939068Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 187846078,
+        "author": "mattleibow",
+        "body": "@galvesribeiro I am working on that... You can try the WindowsDesktop sample on Mac. It should run and everything. Linux is next after Windows RT.\n",
+        "createdAt": "2016-02-23T19:12:04",
+        "reactions": []
+      },
+      {
+        "id": 187849366,
+        "author": "mattleibow",
+        "body": "@galvesribeiro I have updated the build script in SkiaShap and you should be able to build the \u0060externals-ios\u0060 or \u0060externals-android\u0060 targets. This will produce a native iOS or Android library that can be included in any native app. The SkiaSharp repo does all the wo as I don\u0027t actually build on skia side.\n\nhttps://github.com/mono/SkiaSharp/blob/master/build.cake#L295-L338\n\n\u0060\u0060\u0060\n// helper function just to run xcode builds\nvar buildArch = new Action\u003Cstring, string\u003E ((sdk, arch) =\u003E {\n    XCodeBuild (new XCodeBuildSettings {\n        Project = \u0022native-builds/libskia_ios/libskia_ios.xcodeproj\u0022,\n        Target = \u0022libskia_ios\u0022,\n        Sdk = sdk,\n        Arch = arch,\n        Configuration = \u0022Release\u0022,\n    });\n    if (!DirectoryExists (\u0022native-builds/lib/ios/\u0022 \u002B arch)) {\n        CreateDirectory (\u0022native-builds/lib/ios/\u0022 \u002B arch);\n    }\n    CopyDirectory (\u0022native-builds/libskia_ios/build/Release-\u0022 \u002B sdk, \u0022native-builds/lib/ios/\u0022 \u002B arch);\n});\n\n// helper function to \u0022build\u0022 skia whatnots\nvar RunGyp = new Action (() =\u003E\n{\n    Information (\u0022Running \u0027sync-and-gyp\u0027...\u0022);\n    Information (\u0022\\tGYP_GENERATORS = \u0022 \u002B EnvironmentVariable (\u0022GYP_GENERATORS\u0022));\n    Information (\u0022\\tGYP_DEFINES = \u0022 \u002B EnvironmentVariable (\u0022GYP_DEFINES\u0022));\n\n    StartProcess (\u0022python\u0022, new ProcessSettings {\n        Arguments = SKIA_PATH.CombineWithFilePath(\u0022bin/sync-and-gyp\u0022).FullPath,\n        WorkingDirectory = SKIA_PATH.FullPath,\n    });\n});\n\n// set up the gyp environment variables\nAppendEnvironmentVariable (\u0022PATH\u0022, DEPOT_PATH.FullPath);\nSetEnvironmentVariable (\u0022GYP_DEFINES\u0022, \u0022skia_os=\u0027ios\u0027 skia_arch_type=\u0027arm\u0027 armv7=1 arm_neon=0\u0022);\nSetEnvironmentVariable (\u0022GYP_GENERATORS\u0022, \u0022ninja,xcode\u0022);\n\n// build skia whatnots\nRunGyp ();\n\n// actually un the build for each iOS arch\nbuildArch (\u0022iphonesimulator\u0022, \u0022i386\u0022);\nbuildArch (\u0022iphonesimulator\u0022, \u0022x86_64\u0022);\nbuildArch (\u0022iphoneos\u0022, \u0022armv7\u0022);\nbuildArch (\u0022iphoneos\u0022, \u0022armv7s\u0022);\nbuildArch (\u0022iphoneos\u0022, \u0022arm64\u0022);\n\n// create the fat framework\nCopyDirectory (\u0022native-builds/lib/ios/armv7/libskia_ios.framework/\u0022, \u0022native-builds/lib/ios/libskia_ios.framework/\u0022);\nDeleteFile (\u0022native-builds/lib/ios/libskia_ios.framework/libskia_ios\u0022);\nRunLipo (\u0022native-builds/lib/ios/\u0022, \u0022libskia_ios.framework/libskia_ios\u0022, new [] {\n    (FilePath) \u0022i386/libskia_ios.framework/libskia_ios\u0022, \n    (FilePath) \u0022x86_64/libskia_ios.framework/libskia_ios\u0022, \n    (FilePath) \u0022armv7/libskia_ios.framework/libskia_ios\u0022, \n    (FilePath) \u0022armv7s/libskia_ios.framework/libskia_ios\u0022, \n    (FilePath) \u0022arm64/libskia_ios.framework/libskia_ios\u0022\n});\n\n// BOOM: done! you should have a fat dynamic framework in \u0022native-builds/lib/ios/\u0022\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-02-23T19:17:43",
+        "reactions": []
+      },
+      {
+        "id": 187851242,
+        "author": "mattleibow",
+        "body": "To build for \u0022general\u0022 mono, it is the same process. If you build \u0060externals-osx\u0060 this produces a dylib that is usable everywhere on a mac, whether in vanilla Mono or in Xamarin.Mac (and probably in MonoMac as well).\n\nThe next bit for Linux will be the same, except that there is only a vanilla mono... Unless there is a Xamarin.Linux out there :smile: \n",
+        "createdAt": "2016-02-23T19:21:17",
+        "reactions": []
+      },
+      {
+        "id": 187851247,
+        "author": "galvesribeiro",
+        "body": "I don\u0027t understood @mattleibow... How am I suppose to use that to build for armv6? Our device is an embedded ARMv6 device running Linux...\n",
+        "createdAt": "2016-02-23T19:21:17",
+        "reactions": []
+      },
+      {
+        "id": 187888283,
+        "author": "galvesribeiro",
+        "body": "@mattleibow sorry for the dumb questions but I\u0027m not familiar with those build scripts... I wonder how can we use our ARMv6 toolchain to build that for it...\n",
+        "createdAt": "2016-02-23T20:26:35",
+        "reactions": []
+      },
+      {
+        "id": 187902729,
+        "author": "mattleibow",
+        "body": "@galvesribeiro I understand. As you are running Linux, the current build script is not going to help, but you can check this out until I manage to get it all going: https://skia.org/user/quick/linux That is what I will look at first, but you probably did already.\n\nI haven\u0027t looked at this, but you could set the \u0060skia_arch_type=\u0027arm\u0027\u0060. This might just wok as I see this comment:\n\n\u0060\u0060\u0060\n# The code in SkUtilsArm.cpp can be used on an ARM-based Linux system, not only Android.\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-02-23T21:01:03",
+        "reactions": []
+      },
+      {
+        "id": 216344286,
+        "author": "galvesribeiro",
+        "body": "@mattleibow any update on that?\n",
+        "createdAt": "2016-05-02T19:57:20",
+        "reactions": []
+      },
+      {
+        "id": 315347017,
+        "author": "JimSEOW",
+        "body": "Now the latest Windows IoT Core supports ARMv7 212 Snapdragon?  What need to be done to have UWP SkiaSharp support for this CPU? ",
+        "createdAt": "2017-07-14T12:25:20",
+        "reactions": []
+      },
+      {
+        "id": 315393832,
+        "author": "mattleibow",
+        "body": "I may be wrong, but the UWP already supports ARM? Have you been able to run it at all?",
+        "createdAt": "2017-07-14T15:46:13",
+        "reactions": []
+      },
+      {
+        "id": 315409448,
+        "author": "JimSEOW",
+        "body": "@mattleibow I will give it a try. thx",
+        "createdAt": "2017-07-14T16:51:53",
+        "reactions": []
+      },
+      {
+        "id": 364805863,
+        "author": "galvesribeiro",
+        "body": "Hello folks.\r\n\r\nAre we able now to build on linux using our own toolchains and those build scripts? I tried to follow https://github.com/mono/SkiaSharp/wiki/Building-on-Linux without success. It looks like all the variables passed are being ignored (even thought I see the build script printing the variables there). I\u0027ve set the following:\r\n\r\n\u0060\u0060\u0060\r\nGYP_DEFINES=\u0027skia_gpu=0 skia_pdf= skia_os=linux skia_arch_type=arm\u0027 SK_SUPPORT_PDF=0 ./bootstrapper.sh -t everything --host=$CROSS\r\n\u0060\u0060\u0060\r\n\r\nAs I\u0027m following the build output, it is building **with** GPU support :(\r\n\r\nIt looks like it is ignoring the \u0060GYP_DEFINES\u0060 and also, doesn\u0027t take in consideration the \u0060--host\u0060 which should set the prefix for the compiler (in this case my cross-compiler). \r\n\r\nI think I\u0027ll have to do all that hackerish we did before, again, @mattleibow :(",
+        "createdAt": "2018-02-12T00:32:23",
+        "reactions": []
+      },
+      {
+        "id": 365037046,
+        "author": "mattleibow",
+        "body": "the same comment from the other issue:\r\n\r\n@galvesribeiro The new version no longer uses gyp, but gn instead. You can check out what I am doing here: https://github.com/mono/SkiaSharp/blob/master/cake/BuildExternals.cake#L715\r\n\r\nWhat I really now do is just build Linux as Google specifies as a static archive, and then I create a dynamic library that links out everything except what SkiaSharp uses - ie: just the public C API is preserved.",
+        "createdAt": "2018-02-12T19:36:18",
+        "reactions": []
+      },
+      {
+        "id": 365037534,
+        "author": "mattleibow",
+        "body": "As Google has dropped support for gyp, and switched over to gn, there is nothing I can really do to get the old build process working. In fact, the later version are removing all traces of the old gyp system.",
+        "createdAt": "2018-02-12T19:38:02",
+        "reactions": []
+      },
+      {
+        "id": 365037792,
+        "author": "galvesribeiro",
+        "body": "I know, check my PM on gitter when you find some time. ",
+        "createdAt": "2018-02-12T19:39:01",
+        "reactions": []
+      },
+      {
+        "id": 367368708,
+        "author": "mattleibow",
+        "body": "Just asking this question in multiple places:\r\n\r\nRight now I have a x64 build for Linux that was compiled on Ubuntu 14.04. I am thinking of adding a few more to help the average dev use SkiaSharp without having to build their own. What other distros or CPUs would be helpful?\r\n\r\nLeave a comment on this issue and track progress: #453",
+        "createdAt": "2018-02-21T15:43:55",
+        "reactions": []
+      },
+      {
+        "id": 375963223,
+        "author": "mattleibow",
+        "body": "To make life easier for everyone, I moved code around and added a new target to the GN files. Now, the native \u0060libSkiaSharp\u0060 build is done with GN and ninja directly: https://github.com/mono/SkiaSharp/wiki/Building-on-Linux",
+        "createdAt": "2018-03-25T11:27:36",
+        "reactions": []
+      },
+      {
+        "id": 387283024,
+        "author": "mattleibow",
+        "body": "Closing this issue as the Linux topic is getting a bit duplicated.\r\n\r\n - for building your own native file, see https://github.com/mono/SkiaSharp/wiki/Building-on-Linux\r\n - for the discussion on NuGet distribution, see https://github.com/mono/SkiaSharp/issues/312\r\n - for requesting pre-built Linux libraries, see https://github.com/mono/SkiaSharp/issues/453",
+        "createdAt": "2018-05-08T04:46:52",
+        "reactions": []
+      }
+    ]
+  }
 }

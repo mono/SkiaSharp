@@ -27,5 +27,64 @@
   "createdAt": "2020-08-01T19:06:36",
   "updatedAt": "2022-09-11T18:31:08",
   "commentCount": 1,
-  "reactionCount": 9
+  "reactionCount": 9,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:53.5917583Z",
+    "reactions": [
+      {
+        "user": "KevinEady",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.5917618Z"
+      },
+      {
+        "user": "Mikolaytis",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.5917627Z"
+      },
+      {
+        "user": "Attanon",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.5917628Z"
+      },
+      {
+        "user": "jrfl",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.5917629Z"
+      },
+      {
+        "user": "sigmantium",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.591763Z"
+      },
+      {
+        "user": "frozenblit",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.5917631Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.5917633Z"
+      },
+      {
+        "user": "Sorien",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.5917634Z"
+      },
+      {
+        "user": "way1001",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:53.5917634Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1235157224,
+        "author": "ltetak",
+        "body": "We have a lot of crashes in Avalonia on mac when closing tooltips. This is the native stack trace (shortened). Can this be the same reason described above?\r\nI did one PR in Avalonia where it fixes SKFont instance (Disposed on app exit so the workaround was to disable the finalizer. This can\u0027t be used everywhere.)\r\nhttps://github.com/AvaloniaUI/Avalonia/pull/7887\r\n@kekekeks \r\n\r\n\u0060\u0060\u0060\r\nException Type:        EXC_BAD_ACCESS (SIGSEGV)\r\nException Codes:       KERN_INVALID_ADDRESS at 0x0000000000000028\r\nException Note:        EXC_CORPSE_NOTIFY\r\n\r\nTermination Signal:    Segmentation fault: 11\r\nTermination Reason:    Namespace SIGNAL, Code 0xb\r\nTerminating Process:   exc handler [8893]\r\n\r\nVM Regions Near 0x28:\r\n--\u003E \r\n    __TEXT                      103869000-103879000    [   64K] r-x/r-x SM=COW  /Applications/Synergy Editor 10.4.0.210 Staging Beta Green.app/Contents/MacOS/Synergy.Editor.Avalonia.Mac\r\n\r\nThread 0 Crashed:: Dispatch queue: com.apple.main-thread\r\n0   libSkiaSharp.dylib            \t0x000000010948d566 0x1091dd000 \u002B 2819430\r\n1   libSkiaSharp.dylib            \t0x00000001094a99e5 0x1091dd000 \u002B 2935269\r\n2   libSkiaSharp.dylib            \t0x00000001094bea4d 0x1091dd000 \u002B 3021389\r\n3   libSkiaSharp.dylib            \t0x00000001094c01bb 0x1091dd000 \u002B 3027387\r\n4   libSkiaSharp.dylib            \t0x000000010949c09e 0x1091dd000 \u002B 2879646\r\n5   libSkiaSharp.dylib            \t0x000000010956eed7 0x1091dd000 \u002B 3743447\r\n6   libSkiaSharp.dylib            \t0x000000010920f944 0x1091dd000 \u002B 207172\r\n7   libSkiaSharp.dylib            \t0x000000010920f5b9 0x1091dd000 \u002B 206265\r\n8   libSkiaSharp.dylib            \t0x000000010920f96e 0x1091dd000 \u002B 207214\r\n9   libSkiaSharp.dylib            \t0x000000010957c0a1 0x1091dd000 \u002B 3797153\r\n10  ???                           \t0x0000000110b831a3 0 \u002B 4575474083\r\n11  ???                           \t0x0000000110b6f0ec 0 \u002B 4575391980\r\n12  ???                           \t0x00000001116b4eee 0 \u002B 4587212526\r\n13  ???                           \t0x000000010fd764e2 0 \u002B 4560741602\r\n14  ???                           \t0x0000000110b96b69 0 \u002B 4575554409\r\n15  ???                           \t0x0000000111797048 0 \u002B 4588138568\r\n16  ???                           \t0x0000000111796ed7 0 \u002B 4588138199\r\n17  ???                           \t0x0000000111796b3a 0 \u002B 4588137274\r\n18  ???                           \t0x00000001117967cf 0 \u002B 4588136399\r\n19  ???                           \t0x00000001117964f5 0 \u002B 4588135669\r\n20  ???                           \t0x0000000111796389 0 \u002B 4588135305\r\n21  ???                           \t0x00000001117962ae 0 \u002B 4588135086\r\n22  ???                           \t0x000000010e9773d4 0 \u002B 4539773908\r\n23  libAvaloniaNative.dylib       \t0x000000010591a79b -[AvnWindow windowWillClose:] \u002B 143\r\n24  com.apple.CoreFoundation      \t0x00007fff20788483 __CFNOTIFICATIONCENTER_IS_CALLING_OUT_TO_AN_OBSERVER__ \u002B 12\r\n25  com.apple.CoreFoundation      \t0x00007fff20823ef9 ___CFXRegistrationPost_block_invoke \u002B 49\r\n26  com.apple.CoreFoundation      \t0x00007fff20823e74 _CFXRegistrationPost \u002B 496\r\n27  com.apple.CoreFoundation      \t0x00007fff2075970e _CFXNotificationPost \u002B 736\r\n28  com.apple.Foundation          \t0x00007fff214cbbc8 -[NSNotificationCenter postNotificationName:object:userInfo:] \u002B 59\r\n29  com.apple.AppKit              \t0x00007fff2384e71b -[NSWindow _finishClosingWindow] \u002B 124\r\n30  com.apple.AppKit              \t0x00007fff232ddc80 -[NSWindow _close] \u002B 347\r\n31  libAvaloniaNative.dylib       \t0x00000001059123d4 WindowBaseImpl::Close() \u002B 102\r\n32  libAvaloniaNative.dylib       \t0x000000010591245c virtual thunk to WindowBaseImpl::Close() \u002B 16\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-09-02T07:19:52",
+        "reactions": []
+      }
+    ]
+  }
 }

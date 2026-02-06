@@ -14,5 +14,32 @@
   "updatedAt": "2022-09-11T21:01:17",
   "closedAt": "2022-08-12T19:36:22",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:41.1300838Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 913869809,
+        "author": "mattleibow",
+        "body": "Are you able to attach a sample?\r\n\r\nAlso, you can try setting the property \u0060\u003CPreferredNativeSkiaSharp\u003E\u0060 to either \u0060x64\u0060 or \u0060x86\u0060. It might be the case that the build system is selecting the wrong native library. The reason .NET Core works is because it makes sure the right one is laoded.\r\n\r\nThis is quite an old version of skia, and quite a few bugs with selecting the correct dll have been fixed. You could also try updating SkiaSharp to a v2.x.",
+        "createdAt": "2021-09-06T22:10:47",
+        "reactions": []
+      },
+      {
+        "id": 997212733,
+        "author": "nngw-ep",
+        "body": "Had the same problem, but only when using Package Reference instead of packages.config.\r\nWhen using the VS migration option to Package References, it marks HarfBuzzSharp and SkiaSharp as \u0027top level\u0027 packages and, of course, has some more transitive dependencies. It adds those two together with OxyPlot.SkiaSharp.Wpf as Package Reference and I got all the native libs.",
+        "createdAt": "2021-12-18T14:48:31",
+        "reactions": []
+      },
+      {
+        "id": 1213452215,
+        "author": "mattleibow",
+        "body": "This seems to be resolved?",
+        "createdAt": "2022-08-12T19:36:21",
+        "reactions": []
+      }
+    ]
+  }
 }

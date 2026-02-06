@@ -110,5 +110,129 @@
       "state": "COMMENTED",
       "submittedAt": "2022-08-17T09:12:43"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:46.3597559Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1215914841,
+        "author": "mattleibow",
+        "body": "PNG chunk images are from https://www.nayuki.io/page/png-file-chunk-inspector",
+        "createdAt": "2022-08-15T22:09:56",
+        "reactions": [
+          {
+            "user": "nayuki",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:42.4559535Z"
+          }
+        ]
+      },
+      {
+        "id": 1222824733,
+        "author": "mattleibow",
+        "body": "Based on the google discussion:\r\n\r\n\u003E I think this only supports unknown chunks - iTXt and pHYs are standard chunks, which are handled directly by libpng. \r\n And\r\n\r\n\u003E The Skia API doesn\u0027t give you a way to get those chunks (or their data), though, and I\u0027m not sure it should.\r\n\r\nI am not sure this adds value since there is no way to read those values in the PNG.",
+        "createdAt": "2022-08-22T19:33:54",
+        "reactions": []
+      },
+      {
+        "id": 1223558260,
+        "author": "mgood7123",
+        "body": "\u003E Based on the google discussion:\r\n\u003E \r\n\u003E \u003E I think this only supports unknown chunks - iTXt and pHYs are standard chunks, which are handled directly by libpng.\r\n\u003E \u003E And\r\n\u003E \r\n\u003E \u003E The Skia API doesn\u0027t give you a way to get those chunks (or their data), though, and I\u0027m not sure it should.\r\n\u003E \r\n\u003E I am not sure this adds value since there is no way to read those values in the PNG.\r\n\r\ni think they meant skia does not give you a way to get the standard chunks (nor does libpng unless you manually decode by yourself)\r\n\r\nas unknown chunks SHOULD be supported since android used them to store NinePatch data",
+        "createdAt": "2022-08-23T05:19:24",
+        "reactions": []
+      },
+      {
+        "id": 1224016271,
+        "author": "mattleibow",
+        "body": "I added a test, so before we merge I think we should add a test proving this works. Are you able to find an image that causes the chunks to be read?\r\n\r\nI can\u0027t merge unless we know for sure this is working.",
+        "createdAt": "2022-08-23T12:41:20",
+        "reactions": []
+      },
+      {
+        "id": 1225385198,
+        "author": "mgood7123",
+        "body": "\u003E I added a test, so before we merge I think we should add a test proving this works. Are you able to find an image that causes the chunks to be read?\r\n\u003E \r\n\u003E I can\u0027t merge unless we know for sure this is working.\r\n\r\nill see what i can find",
+        "createdAt": "2022-08-24T08:42:59",
+        "reactions": []
+      },
+      {
+        "id": 1225511762,
+        "author": "mgood7123",
+        "body": "i tried it with\r\n\u0060\u0060\u0060cs\r\nvar bm = BitmapFactory.decodeFile(Context, image_path_NPatch);\r\nvar chunks = bm.getNinePatchChunk();\r\nif (NinePatch.isNinePatchChunk(chunks))\r\n{\r\n    Log.d(\u0022NINEPATCH\u0022, \u0022IS CHUNK YES\u0022);\r\n    //image.setImageDrawable(new NinePatchDrawable(bm, chunks, new Rect(), null));\r\n} else\r\n{\r\n    Log.d(\u0022NINEPATCH\u0022, \u0022IS CHUNK NO\u0022);\r\n}\r\n\u0060\u0060\u0060\r\nbut i get \u0060IS CHUNK NO\u0060\r\n\r\nadditionally i added\r\n\r\n\u0060\u0060\u0060cs\r\n        protected override bool ReadChunk(string tag, IntPtr data, IntPtr length)\r\n        {\r\n            // NPatch\r\n            System.Console.WriteLine(\u0022READ NINEPATCH CHUNK\u0022);\r\n\u0060\u0060\u0060\r\n\r\nbut i dont see it anywhere",
+        "createdAt": "2022-08-24T10:10:44",
+        "reactions": []
+      },
+      {
+        "id": 1225511986,
+        "author": "mgood7123",
+        "body": "![circle 9](https://user-images.githubusercontent.com/26642847/186392529-edb5516a-58c2-4b63-9701-1bdcf9577d4f.png)\r\n\r\nvalid 9 patch image \u0060circle.9.png\u0060",
+        "createdAt": "2022-08-24T10:10:57",
+        "reactions": []
+      },
+      {
+        "id": 1225513177,
+        "author": "mgood7123",
+        "body": "in android this works\r\n\u0060\u0060\u0060java\r\nBitmap bm = decodeResource(getResources(), R.drawable.circle); // same as DecodeFile\r\nbyte[] ninePatchChunk = bm.getNinePatchChunk();\r\nif (NinePatch.isNinePatchChunk(ninePatchChunk)) {\r\n    image.setImageDrawable(new NinePatchDrawable(bm, ninePatchChunk, new Rect(), null));\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-08-24T10:12:04",
+        "reactions": []
+      },
+      {
+        "id": 1226691891,
+        "author": "mgood7123",
+        "body": "hmmm it seems that Android\u0027s AAPT creates the 9-patch chunks itself, and the image does not actually contain these chunks (just the pixel info for these chunks)\r\n\r\nluckily we can extract this easily :)\r\n\r\n![image](https://user-images.githubusercontent.com/26642847/186560107-a06617f4-0a96-4423-8409-38831d3b9d3b.png)\r\n",
+        "createdAt": "2022-08-25T02:19:14",
+        "reactions": []
+      },
+      {
+        "id": 1226700542,
+        "author": "mgood7123",
+        "body": "and it can read it :)\r\n\r\n![image](https://user-images.githubusercontent.com/26642847/186560976-c9d9a8a6-ce6d-4fde-92f3-06044814f41d.png)\r\n\r\n\r\n\u0060\u0060\u0060cs\r\ninternal class _10_test_png_chunk_reader : Test\r\n{\r\n    internal class Reader : SKPngChunkReader\r\n    {\r\n        public bool r = false;\r\n\r\n        protected override bool ReadChunk(string tag, IntPtr data, IntPtr length)\r\n        {\r\n            r = true;\r\n            Console.WriteLine(\u0022READ CHUNK\u0022);\r\n            return true;\r\n        }\r\n    }\r\n    public override void Run(TestGroup nullableInstance)\r\n    {\r\n        using Reader r = new();\r\n        using FileStream stream = new(\u0022C:\\\\Users\\\\AndroidUI\\\\Desktop\\\\AndroidUI\\\\AndroidUITest\\\\png_chunks\\\\good_itxt.png\u0022, FileMode.Open);\r\n        SKCodecResult result_;\r\n        using SKCodec c = SKCodec.Create(stream, out result_, r);\r\n        Tools.ExpectFalse(r.r, \u0022known chunks are not meant to invoke chunk reader\u0022);\r\n\r\n        using Reader r2 = new();\r\n        using FileStream np = new(\u0022K:/Images/9PNG/circle.9.png\u0022, FileMode.Open);\r\n        SKCodecResult result2_;\r\n        using SKCodec c2 = SKCodec.Create(np, out result2_, r2);\r\n        Tools.ExpectTrue(r2.r, \u0022unknown chunks are meant to invoke chunk reader\u0022);\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-08-25T02:34:32",
+        "reactions": []
+      },
+      {
+        "id": 1226701559,
+        "author": "mgood7123",
+        "body": "![image](https://user-images.githubusercontent.com/26642847/186561322-797959ea-b58b-4df9-9199-80f7aa508452.png)\r\n",
+        "createdAt": "2022-08-25T02:36:27",
+        "reactions": []
+      },
+      {
+        "id": 1226702015,
+        "author": "mgood7123",
+        "body": "so now we can read a 9patch image\r\n\r\n![circle 9](https://user-images.githubusercontent.com/26642847/186561438-d7939065-1155-4e37-87c5-79b70e350313.png)\r\n\r\n",
+        "createdAt": "2022-08-25T02:37:19",
+        "reactions": []
+      },
+      {
+        "id": 1226702659,
+        "author": "mgood7123",
+        "body": "also plugging this file into the png chunk inspector gives\r\n\r\n![image](https://user-images.githubusercontent.com/26642847/186561596-dacc90e2-0627-46b6-80ca-015607dae474.png)\r\n\r\nwhich is correct",
+        "createdAt": "2022-08-25T02:38:37",
+        "reactions": []
+      },
+      {
+        "id": 1227879873,
+        "author": "mattleibow",
+        "body": "Can you add this as a test? ",
+        "createdAt": "2022-08-26T00:21:43",
+        "reactions": []
+      },
+      {
+        "id": 1228066492,
+        "author": "mgood7123",
+        "body": "this should work now :)",
+        "createdAt": "2022-08-26T05:23:41",
+        "reactions": []
+      },
+      {
+        "id": 1228195156,
+        "author": "mgood7123",
+        "body": "\u003E Based on the google discussion:\r\n\u003E \r\n\u003E \u003E I think this only supports unknown chunks - iTXt and pHYs are standard chunks, which are handled directly by libpng.\r\n\u003E \u003E And\r\n\u003E \r\n\u003E \u003E The Skia API doesn\u0027t give you a way to get those chunks (or their data), though, and I\u0027m not sure it should.\r\n\u003E \r\n\u003E I am not sure this adds value since there is no way to read those values in the PNG.\r\n\r\nit seems so\r\n\r\nbasically...\r\n\u0060\u0060\u0060c\r\n   chunk_name = png_ptr-\u003Echunk_name;\r\n\r\n   if (chunk_name == png_IDAT)\r\n   {\r\n        // ...\r\n   }\r\n\r\n   if (chunk_name == png_IHDR)\r\n   {\r\n        // ...\r\n   }\r\n\r\n   else if (chunk_name == png_IEND)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED\r\n   else if ((keep = png_chunk_unknown_handling(png_ptr, chunk_name)) != 0)\r\n   {\r\n      PNG_PUSH_SAVE_BUFFER_IF_FULL\r\n      png_handle_unknown(png_ptr, info_ptr, png_ptr-\u003Epush_length, keep);\r\n\r\n      if (chunk_name == png_PLTE)\r\n         png_ptr-\u003Emode |= PNG_HAVE_PLTE;\r\n   }\r\n#endif\r\n\r\n   else if (chunk_name == png_PLTE)\r\n   {\r\n        // ...\r\n   }\r\n\r\n   else if (chunk_name == png_IDAT)\r\n   {\r\n        // ...\r\n      return;\r\n   }\r\n\r\n#ifdef PNG_READ_gAMA_SUPPORTED\r\n   else if (png_ptr-\u003Echunk_name == png_gAMA)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_sBIT_SUPPORTED\r\n   else if (png_ptr-\u003Echunk_name == png_sBIT)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_cHRM_SUPPORTED\r\n   else if (png_ptr-\u003Echunk_name == png_cHRM)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_sRGB_SUPPORTED\r\n   else if (chunk_name == png_sRGB)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_iCCP_SUPPORTED\r\n   else if (png_ptr-\u003Echunk_name == png_iCCP)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_sPLT_SUPPORTED\r\n   else if (chunk_name == png_sPLT)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_tRNS_SUPPORTED\r\n   else if (chunk_name == png_tRNS)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_bKGD_SUPPORTED\r\n   else if (chunk_name == png_bKGD)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_hIST_SUPPORTED\r\n   else if (chunk_name == png_hIST)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_pHYs_SUPPORTED\r\n   else if (chunk_name == png_pHYs)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_oFFs_SUPPORTED\r\n   else if (chunk_name == png_oFFs)\r\n   {\r\n        // ...\r\n   }\r\n#endif\r\n\r\n#ifdef PNG_READ_pCAL_SUPPORTED\r\n   else if (chunk_name == png_pCAL)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_sCAL_SUPPORTED\r\n   else if (chunk_name == png_sCAL)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_tIME_SUPPORTED\r\n   else if (chunk_name == png_tIME)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_tEXt_SUPPORTED\r\n   else if (chunk_name == png_tEXt)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_zTXt_SUPPORTED\r\n   else if (chunk_name == png_zTXt)\r\n   {\r\n        // ...\r\n   }\r\n\r\n#endif\r\n#ifdef PNG_READ_iTXt_SUPPORTED\r\n   else if (chunk_name == png_iTXt)\r\n   {\r\n        // ...\r\n   }\r\n#endif\r\n\r\n   else\r\n   {\r\n      PNG_PUSH_SAVE_BUFFER_IF_FULL\r\n      png_handle_unknown(png_ptr, info_ptr, png_ptr-\u003Epush_length,\r\n          PNG_HANDLE_CHUNK_AS_DEFAULT);\r\n   }\r\n\r\n   png_ptr-\u003Emode \u0026= ~PNG_HAVE_CHUNK_HEADER;\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-08-26T08:14:01",
+        "reactions": []
+      }
+    ]
+  }
 }

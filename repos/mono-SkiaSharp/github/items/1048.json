@@ -14,5 +14,160 @@
   "createdAt": "2019-12-03T10:57:51",
   "updatedAt": "2022-09-11T18:31:03",
   "commentCount": 17,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:12.6172455Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 562130716,
+        "author": "ghost",
+        "body": "Well, after further investigations this behavior seems to be related to iOS and not to SkiaSharp itself.\r\nIn this particular scenario, the underlying scrollview, as soon as the scroll begins, invokes the method \u0027touchesCancelled\u0027 of the view and not the GestureRecognizer\u0027s.\r\nThis is why the SKCanvasView does not receive it. But the native view does. I guess something can be made at that level.",
+        "createdAt": "2019-12-05T13:35:04",
+        "reactions": []
+      },
+      {
+        "id": 650816296,
+        "author": "daltonks",
+        "body": "Hey @MaurizioPanzica,\r\nI am currently running into this problem. I need a ListView that contains SKCanvasViews with touch handling.\r\nHave you been able to find a workaround?",
+        "createdAt": "2020-06-28T20:18:21",
+        "reactions": []
+      },
+      {
+        "id": 650832704,
+        "author": "mpanzica",
+        "body": "@daltonks Unfortunately not.\r\nSince then the project has been put on hold because of Covid and I\u0027ve been working on another one. I guess it will be resumed in the near future. Rest assured that I will post the workaround, should I find one.\r\n\r\nCheers,\r\nM.",
+        "createdAt": "2020-06-28T22:46:55",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:09.6613631Z"
+          }
+        ]
+      },
+      {
+        "id": 650833197,
+        "author": "daltonks",
+        "body": "@mpanzica Thanks for the reply :)\r\nI\u0027m kind of led to believe that Xamarin is mucking up the touches somehow, because as far as I can tell, TouchesCancelled should be propagated to gesture recognizers when a scroll view sends the event.",
+        "createdAt": "2020-06-28T22:52:00",
+        "reactions": []
+      },
+      {
+        "id": 650833722,
+        "author": "mpanzica",
+        "body": "Nope, if I recall well Xamarin was not guilty at all. The \u0022cancelled\u0022 event never reaches the gesture recognizer handler... hence it is not propagated any further. I will be able to resume the project as soon as I\u0027ll be allowed to go back to office. I can\u0027t access the client\u0027s repository from home. :-)",
+        "createdAt": "2020-06-28T22:58:16",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:10.0609685Z"
+          }
+        ]
+      },
+      {
+        "id": 650846454,
+        "author": "daltonks",
+        "body": "Thanks for the info @mpanzica ! I am currently thinking that this might be because \u0060SKTouchHandler\u0060 doesn\u0027t change its \u0060UIGestureRecognizer.State\u0060.\r\n\r\n\u003E In your custom subclass, implement whatever methods you need to process events. For example, if your gesture consists of touch events, implement the touchesBegan(_:with:), touchesMoved(_:with:), touchesEnded(_:with:), and touchesCancelled(_:with:) methods. Use incoming events to update the state property of your gesture recognizer. UIKit uses the gesture recognizer states to coordinate interactions with other objects in your interface.\r\n\r\nhttps://developer.apple.com/documentation/uikit/touches_presses_and_gestures/implementing_a_custom_gesture_recognizer\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/SKTouchHandler.cs",
+        "createdAt": "2020-06-29T00:39:01",
+        "reactions": []
+      },
+      {
+        "id": 650854107,
+        "author": "daltonks",
+        "body": "Nope, that idea led nowhere \uD83D\uDE43. Setting the \u0060State\u0060 stops the scroll view from receiving the touches.",
+        "createdAt": "2020-06-29T01:20:58",
+        "reactions": []
+      },
+      {
+        "id": 651341248,
+        "author": "daltonks",
+        "body": "@mpanzica I found a way that seems to work! If you keep track of the touches with \u0060HashSet\u003CUITouch\u003E _touches\u0060, you can manually cancel the ones in the gesture recognizer\u0027s \u0060Reset\u0060 method.\r\n\r\nhttps://gist.github.com/daltonks/f01cf125b580ca8b7b9213413f9299a5",
+        "createdAt": "2020-06-29T20:24:22",
+        "reactions": []
+      },
+      {
+        "id": 651354014,
+        "author": "mpanzica",
+        "body": "Thanks for sharing, Dalton! It\u0027s night over here... I will give your\nsolution a try tomorrow morning before anything else! :-)\n\nIl lun 29 giu 2020, 22:24 Dalton Spillman \u003Cnotifications@github.com\u003E ha\nscritto:\n\n\u003E @mpanzica \u003Chttps://github.com/mpanzica\u003E I found a way that seems to work!\n\u003E If you keep track of the touches with HashSet\u003CUITouch\u003E _touches, you can\n\u003E manually cancel the ones in the gesture recognizer\u0027s Reset method.\n\u003E\n\u003E https://gist.github.com/daltonks/f01cf125b580ca8b7b9213413f9299a5\n\u003E\n\u003E \u2014\n\u003E You are receiving this because you were mentioned.\n\u003E Reply to this email directly, view it on GitHub\n\u003E \u003Chttps://github.com/mono/SkiaSharp/issues/1048#issuecomment-651341248\u003E,\n\u003E or unsubscribe\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/AGHODQOL6O3VQS5LGW3VGQ3RZD2AHANCNFSM4JUWBKWQ\u003E\n\u003E .\n\u003E\n",
+        "createdAt": "2020-06-29T20:45:17",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:10.826874Z"
+          }
+        ]
+      },
+      {
+        "id": 651364842,
+        "author": "daltonks",
+        "body": "Cool! I made a repo based off of your reproduction .zip: https://github.com/daltonks/FixedSKTouchHandler\r\n\r\nTabs/spaces got all screwy, and I did strange things to use my own \u0060SKTouchHandler\u0060, but you can see the majority of the changes here: https://github.com/daltonks/FixedSKTouchHandler/blob/master/TestSkiaSharp.iOS/Renderers/TestSKCanvasViewRenderer.cs\r\n\r\nThe key part is keeping track of the touches and overriding \u0060UIGestureRecognizer.Reset\u0060.",
+        "createdAt": "2020-06-29T21:03:50",
+        "reactions": []
+      },
+      {
+        "id": 708053281,
+        "author": "mattleibow",
+        "body": "Thanks for all the back and forth on this. I\u0027ll try to get this into the next release.\r\n\r\nHas anyone been using this? Do all the touches that are started get the opposite finish/cancel event? Is there a potential for a memory leak or persistent touch objects?",
+        "createdAt": "2020-10-13T22:56:27",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:11.2263028Z"
+          }
+        ]
+      },
+      {
+        "id": 708056829,
+        "author": "daltonks",
+        "body": "I\u0027ve been using this successfully in production for a bit over 3 months now. I haven\u0027t seen any touch issues, but it would be good to look at how it behaves in a ScrollView as well as when iOS gestures take over (like minimizing the app, and maybe some other ones).",
+        "createdAt": "2020-10-13T23:06:37",
+        "reactions": []
+      },
+      {
+        "id": 708063430,
+        "author": "mattleibow",
+        "body": "OK, thanks for the comment. I\u0027ll try a few things.",
+        "createdAt": "2020-10-13T23:27:25",
+        "reactions": []
+      },
+      {
+        "id": 745157562,
+        "author": "DuncWatts",
+        "body": "I fixed this issue a while ago on a UIGestureRecognizer by returning false to the ShouldRecognizeSimultaneously delegate, and also triggering the Cancelled at the same time.  \r\n\r\nI\u0027m trying to switch over to use the SkiaSharp OnTouch and now hitting this issue. This may be a simpler fix than tracking the touches.",
+        "createdAt": "2020-12-15T09:13:33",
+        "reactions": []
+      },
+      {
+        "id": 745369070,
+        "author": "daltonks",
+        "body": "@DuncWatts Would returning false for \u0060ShouldRecognizeSimultaneously\u0060 completely stop scrolling if the canvas was in a scroll view and you pressed on the SkiaSharp view? That is not what I typically need, but I could see a use case for that.",
+        "createdAt": "2020-12-15T15:33:02",
+        "reactions": []
+      },
+      {
+        "id": 745394528,
+        "author": "DuncWatts",
+        "body": "No, it allows the scroll gesture on the scroll view to take priority and cancels the touch event on the canvas, which is the functionality I was after.",
+        "createdAt": "2020-12-15T16:12:38",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:12.3750742Z"
+          }
+        ]
+      },
+      {
+        "id": 745685638,
+        "author": "daltonks",
+        "body": "@DuncWatts I tried \u0060ShouldRecognizeSimultaneously = (recognizer, gestureRecognizer) =\u003E false;\u0060 in my example project https://github.com/daltonks/FixedSKTouchHandler, but it didn\u0027t call Cancelled on scrolling. I could be doing it wrong though.\r\n\r\nhttps://github.com/daltonks/FixedSKTouchHandler/blob/526c035459193d1d4d600e500653446ac510f646/TestSkiaSharp.iOS/Renderers/TestSKCanvasViewRenderer.cs#L47",
+        "createdAt": "2020-12-16T00:33:34",
+        "reactions": []
+      }
+    ]
+  }
 }

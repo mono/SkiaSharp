@@ -14,5 +14,619 @@
   "createdAt": "2020-03-27T12:46:12",
   "updatedAt": "2022-09-11T18:31:05",
   "commentCount": 48,
-  "reactionCount": 19
+  "reactionCount": 19,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:07.3742013Z",
+    "reactions": [
+      {
+        "user": "hawkerm",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742036Z"
+      },
+      {
+        "user": "redradist",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742041Z"
+      },
+      {
+        "user": "redradist",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:50:07.3742045Z"
+      },
+      {
+        "user": "tzengshinfu",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742048Z"
+      },
+      {
+        "user": "eyupalemdar",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:50:07.3742049Z"
+      },
+      {
+        "user": "Ralf1108",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:50:07.374205Z"
+      },
+      {
+        "user": "b12-144",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742051Z"
+      },
+      {
+        "user": "radderz",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742052Z"
+      },
+      {
+        "user": "RyoukoKonpaku",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742054Z"
+      },
+      {
+        "user": "deviousasti",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742055Z"
+      },
+      {
+        "user": "Dmitry31",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:50:07.3742056Z"
+      },
+      {
+        "user": "VijayRM",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742057Z"
+      },
+      {
+        "user": "marckruzik",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742058Z"
+      },
+      {
+        "user": "beto-rodriguez",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742061Z"
+      },
+      {
+        "user": "Nyrest",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742062Z"
+      },
+      {
+        "user": "artemiusgreat",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742063Z"
+      },
+      {
+        "user": "artemiusgreat",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:50:07.3742064Z"
+      },
+      {
+        "user": "guillaume-rce",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742065Z"
+      },
+      {
+        "user": "gmkado",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:07.3742066Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 617223769,
+        "author": "mattleibow",
+        "body": "https://github.com/mono/SkiaSharp/issues/1219#issuecomment-611157056\r\n\r\nFrom @RChrisCoble:\r\n\r\n\u003E **Regarding:**\r\n\u003E \r\n\u003E _[FEATURE] Support SkiaSharp as a Blazor Extension (#1194)\r\n\u003E This is what we are going to be doing here._\r\n\u003E \r\n\u003E When it\u0027s a **Blazor Extension** you can utilize the SkiaSharp API on the Client or Server Blazor deployment model.   I believe what you are doing here is akin to the forked Uno repo, allowing Skia/SkiaSharp to work properly when running under WASM in a client browser.  My specific feature request around making it a Blazor Extension was to also allow the API to run on the server with the rendering happening on the client.\r\n\u003E \r\n\u003E This would most likely mean Skia (and maybe SkiaSharp) would need to be running in the Client Browser, with the SkiaSharp API calls being packaged up and marshaled over the Blazor SignalR connection when the Blazor Extension was running on the server.\r\n\u003E \r\n\u003E An example of this was done with the HTML5 Canvas here:  [https://github.com/BlazorExtensions/Canvas](https://github.com/BlazorExtensions/Canvas)\r\n\u003E \r\n\u003E If you look at that GitHub example, they wrote a wrapper around the HTML5 canvas API\u0027s which ended up doing one of the following:  (1) If the Blazor Extension was running in a client browser, issued the draw call directly or (2) If the Blazor Extension was running on the server, marshaled the call over the SignalR connection to the client to be executed.  \r\n\u003E \r\n\u003E The Blazor server deployment model is valuable in situations where you can\u0027t deploy multiple MB\u0027s of DLL\u0027s down to the client just to draw anything.  (with that multiple MB\u0027s NOT being Skia/SkiaSharp, but the business logic using the SkiSharp API.)\r\n",
+        "createdAt": "2020-04-21T14:42:12",
+        "reactions": []
+      },
+      {
+        "id": 644432556,
+        "author": "mattleibow",
+        "body": "Seems that we might need to wait for https://github.com/dotnet/aspnetcore/issues/5466 to be completed so we can link SkiaSharp with the WAM part. Not sure about dynamic linking...",
+        "createdAt": "2020-06-15T22:59:21",
+        "reactions": []
+      },
+      {
+        "id": 644799174,
+        "author": "RChrisCoble",
+        "body": "[EDIT]  \r\nI see this was posted under the Blazor Extension feature and not under the WASM feature.  So I changed my comment here.\r\n\r\n@mattleibow Does this mean moving forward with running SkiaSharp in a client browser under WASM is moving forward Ok, but running it as a Blazor Extension (meaning I could run it on the server as well) needs to wait on #5466\r\n\r\nI\u0027m hoping it\u0027s the latter.  If we could run SkiaSharp directly in the client browser still that would be fine.",
+        "createdAt": "2020-06-16T14:24:38",
+        "reactions": []
+      },
+      {
+        "id": 644901213,
+        "author": "mattleibow",
+        "body": "@RChrisCoble, no prob!\r\n\r\nThis is a mix of issues/features. Let me break it down and then maybe you can see where exactly you are needing a feature or if we need to focus on some things.\r\n\r\nFirst, the real basics, SkiaSharp obviously works just fine on the server as a function/API that you can use as an endpoint for the basic \u0060\u003Cimg src=\u0022/path/to/generated/image\u0022 /\u003E\u0060. This is pure server code that uses basic HTML to get the image. I assume this is _not_ what anyone is talking about, but just for general clarity.\r\n\r\nFor the WASM/client code, this is actually 2 separate cases: Uno or Blazor. \r\n\r\nUno is working just fine and this is currently what the #1333 PR is for. It adds a Uno view and runs SkiaSharp right in the browser today. When ready, this will just be a matter of adding the view to the XAML/code behind and then the browser will draw it for you. Currently, Uno takes advantage of WSL to effectively build your app on Linux under the hood and produce the working website.\r\n\r\nBlazor is a bit different as it does not yet support the feature to statically link the app with SkiaSharp libraries. This is what https://github.com/dotnet/aspnetcore/issues/5466 is all about - basically add the features to compile the WASM bits with static libraries. It appears (at the time of writing) that we have to wait for .NET 6 next year or so before we get this feature.\r\n\r\nThe difference between Uno and Blazor is the app model. Uno is basically UWP apps, but in the browser. Blazor is an ASP.NET Core Razor website, but in the browser.",
+        "createdAt": "2020-06-16T17:21:39",
+        "reactions": [
+          {
+            "user": "eyupalemdar",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:58.3405418Z"
+          },
+          {
+            "user": "tzengshinfu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:58.3405423Z"
+          },
+          {
+            "user": "Ralf1108",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:58.3405424Z"
+          },
+          {
+            "user": "RyoukoKonpaku",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:58.3405425Z"
+          }
+        ]
+      },
+      {
+        "id": 644904158,
+        "author": "mattleibow",
+        "body": "As I write the comment above, there is the fact that Blazor also has the server components. Now, _that_ might just be possible today because the code actually runs on the server and new png/jpg files are sent to the client. I have not investigated this case at this time, but might be useful to look into if it actually helps in the case what you are looking for. I am assuming you are more wanting the code to actually run on the client browser.",
+        "createdAt": "2020-06-16T17:27:42",
+        "reactions": []
+      },
+      {
+        "id": 644916013,
+        "author": "RChrisCoble",
+        "body": "@mattleibow Thanks for that detailed description, that helped me considerably. Now I understand how Uno is able to statically link to make this work, compared to Blazor which needs AOT support which was dropped from .Net 5.\r\n\r\nWe have a C#/.Net engine we wanted to run in the client browser directly, using SkiaSharp to render.  That would have been the ideal solution for speed/performance.  It sounds like the only avenue to that end right now is leveraging Uno/SkiaSharp which we\u0027ll have to evaluate once #[1333 ](https://github.com/mono/SkiaSharp/pull/1333)PR comes in.\r\n\r\nThat being said, this engine participates in a framework of other components that often have to run on the server right now because of how they were built.  If we could use a SkiaSharp \u0022Blazor Extension\u0022 that only supports server side execution (for now), with the forward looking statement that the extension would someday be supported using Client WASM enabled via .Net 6 AOT compilation, that would be valuable.  \r\n\r\n",
+        "createdAt": "2020-06-16T17:52:11",
+        "reactions": []
+      },
+      {
+        "id": 650089692,
+        "author": "EydenJones",
+        "body": "So does mean that being able to draw using skiasharp in a client side blazor app isn\u0027t going to happen until late 2021? (release date .net 6 which will include AOT compilation) :-(\r\n",
+        "createdAt": "2020-06-26T09:41:28",
+        "reactions": []
+      },
+      {
+        "id": 650167190,
+        "author": "mattleibow",
+        "body": "Unfortunately, that looks to be the case, but I can assure you the team is working on this as fast as they can. I\u0027m in the chats and I see all the good words being thrown around.\r\n\r\nNot sure when exactly things will go out, but hopefully sooner than later - even if a preview. I think previews usually start early in the year, so it is quite soon.",
+        "createdAt": "2020-06-26T13:03:24",
+        "reactions": [
+          {
+            "user": "ericvanderwal",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:59.1234077Z"
+          },
+          {
+            "user": "tzengshinfu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:59.123408Z"
+          }
+        ]
+      },
+      {
+        "id": 664383012,
+        "author": "Flippsor",
+        "body": "@mattleibow great work so far!\r\nSad to hear that we have to wait for AOT compilation from mono. I already tried the Canvas/WebGl Blazor extension, but it is not very performant due to JS Interop calls.\r\nI also tried the .NET binding for WEBL through Webassembly (https://github.com/WaveEngine/WebGL.NET) in Blazor and got it working (see screenshot). Not quite sure how they do the binding to Webassembly in detail, but maybe it is possible with Skiasharp, too?\r\n![image](https://user-images.githubusercontent.com/62450526/88544564-e2706d00-d019-11ea-99ca-43de692e7c8f.png)\r\n\r\nEdit: Maybe Webassembly.Bindings can help?\r\n",
+        "createdAt": "2020-07-27T13:03:48",
+        "reactions": []
+      },
+      {
+        "id": 665361462,
+        "author": "mattleibow",
+        "body": "I had a look and things still have a sad thing. As you saw, going from .NET to JS to C\u002B\u002B is not the best. Especially with the number of calls being made. The WebGL part is not too bad as it is just talking directly to JS. Unfortunately, the libSkiaSharp lives in C\u002B\u002B, so we have to hop the bridge twice.\r\n\r\nThinking wildly here, it might be possible to create a Blazor app, and then use Uno as a simple container to hose SkiaSharp things. Like an iframe or maybe set up some communication between the two. The main app can be Blazor, and the drawing part can be an iframe. This obviously depends on the use case... Sort of treat the Uno part as a separate \u0022canvas\u0022...",
+        "createdAt": "2020-07-29T00:25:43",
+        "reactions": []
+      },
+      {
+        "id": 665443563,
+        "author": "mattleibow",
+        "body": "I made some interesting thing: an Uno iframe inside a Blazor app. The communication is a bit dodgy right now, but might not ne too bad depending on the use case.\r\n\r\nhttps://github.com/mattleibow/SkiaSharpUnoBlazorApp\r\n\r\n![all](https://user-images.githubusercontent.com/1096616/88761117-c0d4ca00-d16e-11ea-9ccf-84aadaf011f4.gif)\r\n",
+        "createdAt": "2020-07-29T05:40:25",
+        "reactions": [
+          {
+            "user": "artemiusgreat",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:49:59.7213719Z"
+          }
+        ]
+      },
+      {
+        "id": 665521846,
+        "author": "Flippsor",
+        "body": "This looks really great!\r\nAlready checked it out and got it working. Investigating the code, i recognized that the communication is done through the iFrame via JS Interop. \r\nThis will be a little bit tricky because we are planning to create an editor where the same objects are used in blazor lists and also drawn onto canvas.\r\nSo as i understand, using the same object reference in blazor \u0026 SkiaSharp will only be possible when AOT compilation arrives?",
+        "createdAt": "2020-07-29T08:35:09",
+        "reactions": []
+      },
+      {
+        "id": 665640257,
+        "author": "mattleibow",
+        "body": "Sadly yes. Right now, it is 2 entirely different runtimes and websites, so there is no way to reuse anything.\r\n\r\nBut, I want to try out a different communication model. Using the messaging. This should allow me to use json objects. But, this will still go out via js.\r\n",
+        "createdAt": "2020-07-29T12:41:25",
+        "reactions": []
+      },
+      {
+        "id": 665641720,
+        "author": "mattleibow",
+        "body": "Wait a sec... I wonder if there is a way to pin memory in js and use that in both sides... I do this, sort of, for skia... I create the pixels and then pass the pointer to js, might be able to read it in uno/blazor\r\n\r\n**edit**\r\n\r\nThat will only ever work for blittable structs. Not useful for general classes. ",
+        "createdAt": "2020-07-29T12:44:35",
+        "reactions": []
+      },
+      {
+        "id": 665744928,
+        "author": "mattleibow",
+        "body": "I did an improvement with the communication. No longer using slow fragments, but direct JS.",
+        "createdAt": "2020-07-29T15:48:34",
+        "reactions": []
+      },
+      {
+        "id": 665963796,
+        "author": "mattleibow",
+        "body": "I have been hacking away on this, and I think I may be able to do something for Blazor server-side: https://github.com/mattleibow/SkiaSharpBlazorComponents\r\n\r\n\u0060\u0060\u0060razor\r\n\u003Cdiv\u003E\r\n    \u003CSkiaSharpImage OnPaintImage=\u0022@PaintImage\u0022 /\u003E\r\n\u003C/div\u003E\r\n\r\n@{\r\n    void PaintImage(PaintImageEventArgs e)\r\n    {\r\n        var canvas = e.Surface.Canvas;\r\n\r\n        canvas.Clear(SKColors.Blue);\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-07-29T22:30:10",
+        "reactions": [
+          {
+            "user": "GeorgeS2019",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.698472Z"
+          },
+          {
+            "user": "Ralf1108",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.6984724Z"
+          },
+          {
+            "user": "RyoukoKonpaku",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.6984725Z"
+          },
+          {
+            "user": "artemiusgreat",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.6984726Z"
+          },
+          {
+            "user": "LiamT98",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.6984727Z"
+          }
+        ]
+      },
+      {
+        "id": 666267751,
+        "author": "Flippsor",
+        "body": "Great work! \r\n\r\nAfaik the API for Blazor Server and Blazor Webassembly for Razor components is identical. So people could start with Blazor Server \u002B Skia and then switch to Blazor Webassembly \u002B Skia when the AOT is ready. \r\n ",
+        "createdAt": "2020-07-30T09:50:33",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.9211637Z"
+          },
+          {
+            "user": "tzengshinfu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.921164Z"
+          },
+          {
+            "user": "eyupalemdar",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.9211641Z"
+          },
+          {
+            "user": "Ralf1108",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.9211642Z"
+          },
+          {
+            "user": "RyoukoKonpaku",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:00.9211643Z"
+          }
+        ]
+      },
+      {
+        "id": 666296628,
+        "author": "mattleibow",
+        "body": "That is the plan!\r\n\r\nBut the client wasm one also is a bit different with the fact that I can have a canvas view...\r\n\r\nI need to investigate if we should \r\n - use an image for the server and a canvas with a real time render\r\n - use an image everywhere, and have an additional option for the client...\r\n\r\nI am very far from the web space, I will need some help \uD83D\uDE05",
+        "createdAt": "2020-07-30T10:56:11",
+        "reactions": []
+      },
+      {
+        "id": 670549250,
+        "author": "RChrisCoble",
+        "body": "I would think the best you can get here is drawing an image on the server and having that sync across using the Blazor SignalR connection.\r\n\r\nFor the client, as long as the draw calls are not going over the JS/Interop boundary to slow it down, whatever solution should work.",
+        "createdAt": "2020-08-07T14:37:46",
+        "reactions": []
+      },
+      {
+        "id": 706659085,
+        "author": "matdennoigi",
+        "body": "@mattleibow Your code only works on Blazor Server model, not work on WASM, because your SkiaSharp version that you used for code can\u0027t work on WASM. Actually, your Skia rendering was excuted on server then passed to client through HTTP.",
+        "createdAt": "2020-10-11T06:46:30",
+        "reactions": []
+      },
+      {
+        "id": 707153773,
+        "author": "GeorgeS2019",
+        "body": "@mattleibow based on the [SkiaSharpBlazorComponents ](https://github.com/mattleibow/SkiaSharpBlazorComponents) example, how would you improve the code to make SkiaSharp animation possible. ",
+        "createdAt": "2020-10-12T14:26:02",
+        "reactions": []
+      },
+      {
+        "id": 707369428,
+        "author": "mattleibow",
+        "body": "Animation? That is hard. Because only the server can render, the animation might have to be pre-rendered. Not sure if that is going to be nice with latency.\r\n\r\nWe _really_ need the ability to link native libraries with Blazor. Like _reeeeeeaaaaly_ need it. The only thing that is possible to do now is render a few png and then fake it. But that is not good at all.",
+        "createdAt": "2020-10-12T22:06:48",
+        "reactions": []
+      },
+      {
+        "id": 707369601,
+        "author": "mattleibow",
+        "body": "The only thing that can work for client rendering is an embedded Uno app. ",
+        "createdAt": "2020-10-12T22:07:23",
+        "reactions": []
+      },
+      {
+        "id": 707981001,
+        "author": "GeorgeS2019",
+        "body": "@mattleibow  have you tried checking the animation performance with embedded Uno app? Perhaps the combination of client side embedded Uno and server side image rendering may be a good use case, during the transition to[ AOT](https://github.com/dotnet/aspnetcore/issues/5466#issuecomment-705637766) in the coming .NET6",
+        "createdAt": "2020-10-13T20:11:55",
+        "reactions": []
+      },
+      {
+        "id": 708095742,
+        "author": "mattleibow",
+        "body": "The embedded Uno app should run at native performance of AOT WASM in an iframe.\r\n\r\nI have not done any actual tests, but I was able to get 60fps with a flappy bird game, and that should not be affected by an iframe. And, that game was also just the interpreter.",
+        "createdAt": "2020-10-14T01:18:27",
+        "reactions": []
+      },
+      {
+        "id": 708470189,
+        "author": "GeorgeS2019",
+        "body": "@mattleibow it takes around 1 min or more to compile the SkiaSharpUnoApp alone through WSL2. \r\n- Do you have suggestions what I have done wrong or what I could improve that. \r\n\r\nThe project works. I still try to understand what \u0022Hack\u0022 you used to make embedding UnoApp works within Blazor. I compare that with the https://github.com/unoplatform/Uno.SkiaSharp/tree/uno/samples. It seems there is lot of copying the compile output files from the SkiaSharpUnoApp to that of the SkiaSharpUnoBlazorApp. \r\n\r\nI do not have sufficient experience with Uno.SkiaSharp. It is unclear how much I could bring the Unit Tests in Uno.SkiaSharp into the SkiaSharpUnoApp  and SkiaSharpUnoBlazorApp project setup you have implemented.\r\n\r\nI hope you will continue your investigation and perhaps we will see your work in coming community asp.net standout or coming Microsoft events.\r\n\r\nI also hope the discussion here will speed up the implementation of AOT that you see as key to bringing SkiaSharp to Blazor.\r\n",
+        "createdAt": "2020-10-14T15:14:22",
+        "reactions": []
+      },
+      {
+        "id": 729908779,
+        "author": "mattleibow",
+        "body": "Another related issue for getting better WASM support: https://github.com/dotnet/runtime/issues/44636",
+        "createdAt": "2020-11-18T19:38:15",
+        "reactions": [
+          {
+            "user": "GeorgeS2019",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:03.0115254Z"
+          }
+        ]
+      },
+      {
+        "id": 730070762,
+        "author": "GeorgeS2019",
+        "body": "@mattleibow   thanks for the tip. I will follow up",
+        "createdAt": "2020-11-19T01:44:59",
+        "reactions": []
+      },
+      {
+        "id": 757047909,
+        "author": "RChrisCoble",
+        "body": "Hello @mattleibow, have you thought any further on how SkiaSharp might run as a Blazor Server module?\r\n\r\nOption 1: Load Skia and SkiaSharp in the browser.  Abstraction layer sits on top of SkiaSharp API\u2019s on server and marshals draw calls to client.\r\nOption 2: Load Skia only in the browser.  SkiaSharp maintains same surface API and runs on the server, but marshals calls to the remote Skia running in the client browser.\r\n",
+        "createdAt": "2021-01-08T23:32:22",
+        "reactions": []
+      },
+      {
+        "id": 765718052,
+        "author": "RChrisCoble",
+        "body": "Hello @mattleibow.  \r\n\r\nMy suggestion is a stepwise approach while we wait for Blazor AOT to come into place:\r\n\r\n- Start a POC for a SkiaSharp Blazor Server extension leveraging Uno\u2019s SkiaSharp client rendering support.\r\n        - This might be as simple as just drawing a rectangle from the server to the client.\r\n- Assuming this works, expand out the support with additional SkiaSharp API calls.\r\n- As .Net 6 Beta AOT support starts to roll out, update the POC to support SkiaSharp rendering in the client and remove the Uno implementation.\r\n- Harden the implementation for a PR back into the SkiaSharp repo.\r\n",
+        "createdAt": "2021-01-22T22:24:23",
+        "reactions": []
+      },
+      {
+        "id": 769856335,
+        "author": "mattleibow",
+        "body": "Just adding my emails here as a way to keep the world informed:\r\n\r\n---\r\n\r\nThat is pretty much what I think we might be able to do. Think of SKPicture as a binary serialization of the final drawing commands that are going to be sent to the client. Just like the canvas extensions do now with commands, skia does with pictures.\r\n \r\nFor example, if I want to send a very simple 1024x1024 \u201Cimage\u201D to the client, it is just 165 bytes (uncompressed) \u2013 which I am thinking might be less that the equivalent with canvas extensions.\r\n \r\nI have been putting together a little demo of what I mean. I am not to clued up on what to do to make something native like Daniel suggested, but I decided to make a managed \u201Clibrary\u201D that runs in the client browser and just draws.\r\n \r\nhttps://github.com/mattleibow/BlazorSkiaSharp\r\n \r\nUnfortunately, I think there might be a bug in the deserialization process in WASM in skia. Everything works on the server and the picture is inflated from the commands. The client can also serialize just fine. There seems to be some issue with deserialization on the client. \r\n \r\nI\u2019ll look into this tomorrow, but this might be worth looking at. Instead of sending over drawing commands as a batch, skia will send them over pre-optimized for drawing. This will include any pre-processing for clipping and calculations. This also allows you to leverage the server for any additional logic.\r\n \r\nThat link attached is what I have in the meantime consists of 2 apps: the Blazor app and the .NET 5 console app (which is the client library). When the server completes drawing some frame, it sends the commands over the wire by calling a JS function. The client then does the rest by basically calling into the console app running on the client. This client then draws the actual frame as pixels and blits it onto a canvas.\r\n \r\n1.\tDraw the frame as a batch: https://github.com/mattleibow/BlazorSkiaSharp/blob/63bc2350dcf9d3cfb4b336ae553b1c9d63715c72/WebApplication1/Pages/Index.razor#L26\r\n2.\tSend the commands to the client by calling a JS function: https://github.com/mattleibow/BlazorSkiaSharp/blob/63bc2350dcf9d3cfb4b336ae553b1c9d63715c72/WebApplication1/Pages/Index.razor#L47\r\n3.\tTrigger the batch processing on the client: https://github.com/mattleibow/BlazorSkiaSharp/blob/63bc2350dcf9d3cfb4b336ae553b1c9d63715c72/WebApplication1/wwwroot/js/example.js#L15\r\n4.\tDraw the frame for real on the client: https://github.com/mattleibow/BlazorSkiaSharp/blob/63bc2350dcf9d3cfb4b336ae553b1c9d63715c72/ConsoleApp1/Program.cs#L38\r\n5.\tUpdate the actual canvas by calling another JS function: https://github.com/mattleibow/BlazorSkiaSharp/blob/63bc2350dcf9d3cfb4b336ae553b1c9d63715c72/ConsoleApp1/Program.cs#L48\r\n6.\tBlit the frame to the screen: https://github.com/mattleibow/BlazorSkiaSharp/blob/63bc2350dcf9d3cfb4b336ae553b1c9d63715c72/WebApplication1/wwwroot/js/example.js#L18\r\n \r\nI\u2019ll have a look and see why this is not working at the moment, but maybe this is something you can try? I am using .NET for the client, Google has CanvasKit that is a JS lib and you can totally make your own as there is no real work being done.\r\n",
+        "createdAt": "2021-01-29T15:00:44",
+        "reactions": []
+      },
+      {
+        "id": 769856930,
+        "author": "mattleibow",
+        "body": "I finally managed to get everything working, you can check out my repo again: https://github.com/mattleibow/BlazorSkiaSharp\r\n\r\nSeems I had explicitly disabled deserialization in the compiler flags \uD83D\uDE10\r\n \r\nWith regards to your questions:\r\n-\tI am using base64 now because I wanted to have a \u201Chuman readable\u201D message in characters that can appear on the screen, but you can totally send it any way \u2013 even as the byte array form.\r\n-\tYou can apply those drawing to any canvas, in fact in my example, the page just has one canvas and I keep rendering to that \u2013 no DOM changes.\r\n-\tWe still need AOT, but we now no longer need to wait for Blazor to get it. In my example, I am using the Uno bootstrapper to take the console app and compile it to WASM. I believe the .NET team has something as well that they use to build their own bits. I was not to familiar with it, so went for the Uno bootstrapper as I wanted to get this to you as soon as I could. You can chat to them and see if they have a nice process that you can use.\r\n-\tWith CanvasKit, Google does the AOT and then they have a wrapper in JS. What I am doing is basically making a similar thing, but using .NET so I don\u2019t have to write the JS-native interop code. It is a little weird. However, the benefit of that is there is no dotnet.wasm to download. But you now have to write some C\u002B\u002B interop code: https://github.com/google/skia/blob/master/modules/canvaskit/canvaskit_bindings.cpp This has been done here, but it may not be something that you would be comfortable with.\r\n \r\nIn my example, the client bit that runs SkiaSharp is not a Blazor app, but just a normal console app. Think of it as a parallel to CanvasKit. Instead of writing binding code in C\u002B\u002B and then wrapping it in JS, I got the binding in C# and the wrapper in C#. Ittotally can be used as a standalone library and can be placed on a npm repository. My example effectively has a blazor app that depends on a drawing library, that just so happens to be a .NET WASM library.\r\n",
+        "createdAt": "2021-01-29T15:01:46",
+        "reactions": []
+      },
+      {
+        "id": 769858433,
+        "author": "mattleibow",
+        "body": "This is my repo: https://github.com/mattleibow/BlazorSkiaSharp\r\n\r\nSo basically folks, I have effectively created a separate JS library to do all this work, and it coincidentally just uses .NET as the main driver. You could replace the .NET with JS bindings.",
+        "createdAt": "2021-01-29T15:04:24",
+        "reactions": [
+          {
+            "user": "GeorgeS2019",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:04.2630286Z"
+          },
+          {
+            "user": "GeorgeS2019",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:50:04.2630291Z"
+          },
+          {
+            "user": "GerFern",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:50:04.2630292Z"
+          },
+          {
+            "user": "artemiusgreat",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:04.2630293Z"
+          },
+          {
+            "user": "artemiusgreat",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:50:04.2630294Z"
+          },
+          {
+            "user": "artemiusgreat",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:50:04.2630295Z"
+          }
+        ]
+      },
+      {
+        "id": 769928730,
+        "author": "RChrisCoble",
+        "body": "Thanks @mattleibow for all your help and expertise in getting this prototype together.  \r\n\r\nIn your opinion, where do you think this final supported solution should \u0027live\u0027?  I\u0027m pretty sure I won\u0027t be the only person that wants to draw with SkiaSharp in Blazor.  Once we get AOT and can finally compile the client bindings without Uno or CanvasKit, would this be a solution that ends up in the SkiaSharp repo?  A new repo?  Or nowhere and we just figure it out individually?\r\n\r\nI realize you feel it doesn\u0027t makes sense in the SkiaSharp repo as the core tenant of the repo is a definitive wrapper around Skia, but I would argue this SKPitcure solution will only work with matching SkiaSharp builds on client and server (when rendering on the server), meaning the Skia and SkiaSharp versions need to be aligned.  That would be much easier if the Blazor Client or Server implementation was built directly in the SkiaSharp repo.  Of course one could argue the oppose by looking at the Blazor Canvas repo which obviously don\u0027t contain the rendering logic for the browser canvas itself.\r\n\r\nAt any rate, from a consumer perspective (which is selfishly mine) pulling this entire end to end support from a single repo is the most attractive option. I\u0027ll note that link you shared with me regarding System.Graphics had specific implementations for Blazor client and server baked into the framework, and that\u0027s a \u0027wrapper\u0027 around the concrete implementation being injected.  Not all that dissimilar to SkiaSharp wrapping Skia.",
+        "createdAt": "2021-01-29T17:04:53",
+        "reactions": []
+      },
+      {
+        "id": 770413010,
+        "author": "mattleibow",
+        "body": "It all depends on what the solution finally ends up as. It may fit in with the more official https://github.com/BlazorExtensions, or we could add it to the https://github.com/mono/SkiaSharp.Extended repo (sort of a community toolkit for SkiaSharp). \r\n\r\nBecause this is mostly independent to skia, we don\u0027t really want to tie up a release of this library with the slower SkiaSharp. I agree that this might be better shared, so I would definitely be on board to adding it to one or the other repos.",
+        "createdAt": "2021-01-31T16:57:30",
+        "reactions": []
+      },
+      {
+        "id": 824694442,
+        "author": "EydenJones",
+        "body": "Any updates with the recent .net6 previews? Can we be hopeful running skiasharp wasm in the browser (client side) this year? Sorry for the impatience :-)",
+        "createdAt": "2021-04-22T09:40:07",
+        "reactions": []
+      },
+      {
+        "id": 840134683,
+        "author": "RChrisCoble",
+        "body": "@EydenJones I believe we\u0027re waiting on preview support of the following before this feature can continue:\r\n\r\nhttps://github.com/dotnet/runtime/issues/44636\r\n",
+        "createdAt": "2021-05-12T22:27:17",
+        "reactions": []
+      },
+      {
+        "id": 845293257,
+        "author": "GeorgeS2019",
+        "body": "@RChrisCoble  Thanks, now we know [where ](https://github.com/dotnet/runtime/issues/44636)to make loud impatient noise!",
+        "createdAt": "2021-05-20T17:03:10",
+        "reactions": [
+          {
+            "user": "RChrisCoble",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:05.2725735Z"
+          },
+          {
+            "user": "artemiusgreat",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:05.2725738Z"
+          }
+        ]
+      },
+      {
+        "id": 922815118,
+        "author": "GeorgeS2019",
+        "body": "Are we moving closer to SkiaSharp as a Blazor Extension =\u003E [Update](https://github.com/mattleibow/SkiaSharpBlazorWebAssembly/issues/1#issue-1000819199)",
+        "createdAt": "2021-09-20T10:44:30",
+        "reactions": []
+      },
+      {
+        "id": 923964799,
+        "author": "mattleibow",
+        "body": "\u003E Are we moving closer to SkiaSharp as a Blazor Extension\r\n\r\nYes.\r\n\r\nThe PR is almost ready: https://github.com/mono/SkiaSharp/pull/1811\r\n\r\nA sample repo that you can see the code and try it out right now: https://github.com/mattleibow/SkiaSharpBlazorWebAssembly\r\n\r\n\r\n![](https://user-images.githubusercontent.com/1096616/134051383-2c629cac-ce50-4309-8e33-53db8e94f1df.gif)",
+        "createdAt": "2021-09-21T13:00:56",
+        "reactions": [
+          {
+            "user": "artemiusgreat",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:50:05.6518924Z"
+          },
+          {
+            "user": "EydenJones",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:05.6518928Z"
+          },
+          {
+            "user": "RyoukoKonpaku",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:50:05.6518929Z"
+          },
+          {
+            "user": "gritsenko",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:05.651893Z"
+          },
+          {
+            "user": "gritsenko",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:50:05.6518931Z"
+          }
+        ]
+      },
+      {
+        "id": 933117567,
+        "author": "SalimiHabib",
+        "body": "Cannot find \u0060SkiaSharp.Views.Blazor\u0060 namespace \r\n\u0060\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00222.88.0-preview.145\u0022\u0060 is installed \r\nDo I need any other nuggets ?\r\n",
+        "createdAt": "2021-10-04T03:47:14",
+        "reactions": []
+      },
+      {
+        "id": 933351320,
+        "author": "GeorgeS2019",
+        "body": "@SalimiHabib  [please read this first ](https://github.com/dotnet/runtime/issues/59619#issuecomment-929493569)if your OS is Windows",
+        "createdAt": "2021-10-04T10:28:24",
+        "reactions": []
+      },
+      {
+        "id": 933480009,
+        "author": "SalimiHabib",
+        "body": "my vs version is Enterprise 2022 Preview (64-bit) Version 17.0.0 Preview 4.1\r\nis there any release for VS 2022 Preview 5 ?",
+        "createdAt": "2021-10-04T13:21:20",
+        "reactions": []
+      },
+      {
+        "id": 933482186,
+        "author": "GeorgeS2019",
+        "body": "@SalimiHabib  the change has been committed. I will wait for VS 2022 Preview 5",
+        "createdAt": "2021-10-04T13:23:27",
+        "reactions": [
+          {
+            "user": "SalimiHabib",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:06.5358536Z"
+          }
+        ]
+      },
+      {
+        "id": 933891093,
+        "author": "mattleibow",
+        "body": "You need the preview feed: https://aka.ms/skiasharp-eap/index.json\n\nCheck the PR for more info https://github.com/mono/SkiaSharp/pull/1811 ",
+        "createdAt": "2021-10-04T22:05:00",
+        "reactions": []
+      },
+      {
+        "id": 939839362,
+        "author": "mattleibow",
+        "body": "I have merged #1811 and will release a public preview of the new client-side, wasm \u0060SkiaSharp.Views.Blazor\u0060 package on NuGet as soon as the build is green.",
+        "createdAt": "2021-10-11T09:11:23",
+        "reactions": [
+          {
+            "user": "artemiusgreat",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:50:06.9076573Z"
+          }
+        ]
+      },
+      {
+        "id": 976206052,
+        "author": "Stamo-Gochev",
+        "body": "@mattleibow Is there a timeline when https://www.nuget.org/packages/SkiaSharp.Views.Blazor is going out of pre-release state?",
+        "createdAt": "2021-11-23T06:50:34",
+        "reactions": []
+      },
+      {
+        "id": 1139461764,
+        "author": "Stamo-Gochev",
+        "body": "@mattleibow I see that the \u0060SkiaSharp.Views.Blazor\u0060 package still works in Blazor WebAssembly apps only:\r\nhttps://github.com/mono/SkiaSharp/blob/ce7778c0c48b5ea668d91420023b295d5551006f/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs#L12-L15\r\n\r\nIs there a timeframe for when the functionality will be supported on Server-side Blazor (if it all)? This will allow the full functionality to be available regardless of the Blazor model as otherwise this forces users to stick to wasm apps only, which is not always possible.\r\n\r\nIf porting this to work on Server-side Blazor is not possible, can you provide more details what are the limitations for it to happen?",
+        "createdAt": "2022-05-27T09:49:37",
+        "reactions": []
+      }
+    ]
+  }
 }

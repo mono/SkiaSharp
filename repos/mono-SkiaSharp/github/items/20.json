@@ -19,5 +19,137 @@
   "updatedAt": "2022-08-20T06:02:00",
   "closedAt": "2017-02-01T22:58:45",
   "commentCount": 11,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:14.3838277Z",
+    "reactions": [
+      {
+        "user": "EisenbergEffect",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:14.383834Z"
+      },
+      {
+        "user": "TsengSR",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:14.3838348Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 256949250,
+        "author": "EisenbergEffect",
+        "body": "Purely out of my own personal interests I was poking around and found Skia and then immediately started looking for C# bindings. So, here I am and my first thought was \u0022I wonder if it has .NET Core support\u0022 \uD83D\uDE04 \n\nGreat work on this library so far. Very cool stuff. I\u0027m watching how this progresses and when .NET Core support lands I think it will be time for me to have a little fun.\n\nKeep up the awesome work!\n",
+        "createdAt": "2016-10-28T15:19:46",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:12.3745906Z"
+          },
+          {
+            "user": "artstalker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:12.3745911Z"
+          },
+          {
+            "user": "wildsylvan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:12.3745912Z"
+          }
+        ]
+      },
+      {
+        "id": 267041725,
+        "author": "mattleibow",
+        "body": "Just a reference to #111 ",
+        "createdAt": "2016-12-14T14:06:05",
+        "reactions": []
+      },
+      {
+        "id": 276810813,
+        "author": "mattleibow",
+        "body": "This is now available with .NET Standard 1.3 support and .NET Core support on \u0060osx\u0060, \u0060win7\u0060 and \u0060win10\u0060\r\n\r\nI will not be investigating Win 8 bits as this is an \u0022old\u0022 system that is going out, and there are technical difficulties. One of the biggest is the compiler/language. Skia uses C\u002B\u002B11 features, which are only available in the VC2015 compiler. However, Win8 apps appear to be only supported but the VC2013 compiler.\r\n\r\nClassic Desktop / WPF apps can still be built, as this uses the Windows 7 native library under the \u0060net45\u0060 moniker.\r\n\r\nIf there is a need for Win 8 Store apps, and it is possible to get a build out, then we can re-open this. I don\u0027t thing that modification to the native skia to not use C\u002B\u002B11 features is an option as there will have to be many changes, as well as maintenance.",
+        "createdAt": "2017-02-01T22:58:45",
+        "reactions": [
+          {
+            "user": "twaelti",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:12.7738995Z"
+          }
+        ]
+      },
+      {
+        "id": 276843228,
+        "author": "EisenbergEffect",
+        "body": "@mattleibow You rock!",
+        "createdAt": "2017-02-02T01:51:19",
+        "reactions": []
+      },
+      {
+        "id": 276903569,
+        "author": "Tom-Cuthill",
+        "body": "Hi @mattleibow,\r\n\r\nThanks for all your work on Skia, it looks like great technology.  Unfortunately for the next year or so, my company is maintaining a WinRT (Windows 8) app, that we are upgrading with mapping functionality.  We are tied to WinRT because our clients use riggidized tablets which only run Windows 8.  All toll our clients have tens of thousands of the devices so the switch over to Windows 10 will take some time.\r\n\r\nIf there was a port to WinRT it would be a huge help.  We are hoping to build some sophisticated geospatial mapping features, so a highly performant renderer like one provided by Skia would be ideal.\r\n\r\nIf a port to WinRT is still a possibility, please let me know.\r\n\r\nBest regards,\r\nTom Cuthill\r\ntomc@yambay.com",
+        "createdAt": "2017-02-02T09:07:40",
+        "reactions": [
+          {
+            "user": "Azmarel",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:13.1981132Z"
+          },
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:13.1981136Z"
+          },
+          {
+            "user": "flostr",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:13.1981137Z"
+          }
+        ]
+      },
+      {
+        "id": 280584313,
+        "author": "Azmarel",
+        "body": "I am also very interested in using skia libraries in windows 8.1 phone devices. Our company released an app for a large company that said needed it for windows 10 and android devices. Now they have windows 8 phones and refuse to switch to windows 10.\r\n\r\nIs there any hope or a preview version?? ;)\r\n\r\nBest Regards\r\nJacob",
+        "createdAt": "2017-02-17T08:17:08",
+        "reactions": []
+      },
+      {
+        "id": 280671722,
+        "author": "mattleibow",
+        "body": "I am not very hopeful - not at all actually. This is a sad case of physical/technical limitation. Skia is C\u002B\u002B11, and requires the VC\u002B\u002B15 compiler. This cannot produce libraries for Win8.\r\n\r\nhttp://stackoverflow.com/questions/31452290/c11-14-features-for-windows-phone-8-1\r\n\r\nReal sad, but unless somebody wants to undertake porting skia back to an older C\u002B\u002B, this is probably not going to happen.",
+        "createdAt": "2017-02-17T14:56:56",
+        "reactions": []
+      },
+      {
+        "id": 280820419,
+        "author": "ChangePlaces",
+        "body": "what about linux support?",
+        "createdAt": "2017-02-18T04:15:26",
+        "reactions": []
+      },
+      {
+        "id": 280840084,
+        "author": "mattleibow",
+        "body": "@ChangePlaces Check out #90! It is supported, we just haven\u0027t done any public/CI builds yet. I am working with our release engineering to get some linux build bots up.\r\n\r\nTry this on your linux:\r\n\r\n\u0060\u0060\u0060sh\r\n./bootstrapper.sh -t everything\r\n\u0060\u0060\u0060\r\n\r\nIt will pop out the native bits, managed bits and a .NET core NuGet.\r\n",
+        "createdAt": "2017-02-18T11:38:22",
+        "reactions": []
+      },
+      {
+        "id": 280888995,
+        "author": "ChangePlaces",
+        "body": "wow - you guys are awesome! thanks!",
+        "createdAt": "2017-02-19T01:42:32",
+        "reactions": []
+      },
+      {
+        "id": 281007625,
+        "author": "Azmarel",
+        "body": "Ok, Thank you for your reply @mattleibow . Will have to convince them to go windows 10.",
+        "createdAt": "2017-02-20T07:37:45",
+        "reactions": []
+      }
+    ]
+  }
 }

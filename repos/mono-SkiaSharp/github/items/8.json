@@ -19,5 +19,32 @@
   "updatedAt": "2022-08-20T06:02:10",
   "closedAt": "2017-03-24T04:13:30",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:56.7615131Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 187370848,
+        "author": "mattleibow",
+        "body": "To do this, I had a look and put together \u0060SKManagedStream\u0060:\n\nManaged bit: https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKManagedStream.cs\nC Header: https://github.com/mono/SkiaSharp/blob/master/native-builds/src/sk_managedstream.h\nC Source: https://github.com/mono/SkiaSharp/blob/master/native-builds/src/sk_managedstream.cpp\nC\u002B\u002B Header: https://github.com/mono/SkiaSharp/blob/master/native-builds/src/SkManagedStream.h\nC\u002B\u002B Source: https://github.com/mono/SkiaSharp/blob/master/native-builds/src/SkManagedStream.cpp\n",
+        "createdAt": "2016-02-22T20:31:51",
+        "reactions": []
+      },
+      {
+        "id": 190522704,
+        "author": "migueldeicaza",
+        "body": "I see we were thinking about this from two different viewpoints.\n\nYour viewpoint wraps a C# stream into something that can be surfaced to the Skia world, this is very useful.\n\nMy request is to make SKStream subclass Stream so that existing APIs in C# that consume streams can be used with SKStreams.    This means that we could use SKStreams everywhere where we expect an instance of Stream.   But perhaps there is no much use for it, and perhaps we could just live with a \u0022proxy\u0022, like SKStream.AsStream() that returns a Stream that can be used to access the underlying stream if needed.\n\nFlagging this as low-priority, until we have better use case.\n",
+        "createdAt": "2016-03-01T03:32:51",
+        "reactions": []
+      },
+      {
+        "id": 288929070,
+        "author": "mattleibow",
+        "body": "I am closing this as this will involve changing a few base types. Also, I don\u0027t think it will be possible as we need to preserve the skia type hierarchy. All is not lost, as there are extension methods and wrappers that can be used with the native streams, without a performance hit.",
+        "createdAt": "2017-03-24T04:13:30",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -15,5 +15,80 @@
   "updatedAt": "2022-09-16T21:01:20",
   "closedAt": "2022-08-16T08:05:40",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:27.109792Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1197407009,
+        "author": "molesmoke",
+        "body": "I noticed the same behaviour on Windows, but SKBitmap I think is more useful for rendering to anyway. If immutability is OK then maybe you could change it to render an SKImage instead?",
+        "createdAt": "2022-07-27T21:50:39",
+        "reactions": []
+      },
+      {
+        "id": 1197435865,
+        "author": "molesmoke",
+        "body": "Duplicate of #2112",
+        "createdAt": "2022-07-27T22:25:22",
+        "reactions": []
+      },
+      {
+        "id": 1200323914,
+        "author": "ghost",
+        "body": "Yeah, I\u0027m not sure what broke this in the last release, but it broke hard.",
+        "createdAt": "2022-07-31T01:07:44",
+        "reactions": []
+      },
+      {
+        "id": 1212948192,
+        "author": "mattleibow",
+        "body": "Could you attach a small repro that I can use to debug the process? Mainly I think I need some large images and some drawing code.\r\n\r\nThis appears to be the same as #2112, but that says GPU/GL and this is using raster. Not sure if this is a sign of bitmap drawing slow...\r\n\r\nAlso some machine hardware numbers - like GPU model/spec.",
+        "createdAt": "2022-08-12T10:09:33",
+        "reactions": []
+      },
+      {
+        "id": 1213470304,
+        "author": "MichalJan008",
+        "body": "@mattleibow \r\nHi, please find attached a small piece of code reproducing the issue. \r\n[PerfTestSkiaSharp.cs.zip](https://github.com/mono/SkiaSharp/files/9329416/PerfTestSkiaSharp.cs.zip)\r\n\r\nTo use the code simply call the public method like in the following code snippet: \r\n\r\n\u0060\u0060\u0060\r\nvar test = new PerfTestSkiaSharp();\r\ntest.RunTests(\r\n  1000,  //iterations \r\n  12.0f,  //source SkBitmap size (in Megapixels) \r\n  2.0f,   //target bitmap to draw on  \r\n  out float averageLoopPassTimeMilis);\r\n\r\ntest.RunTests(\r\n  1000,\r\n  42.0f, //this time for 42 Megapixel source image \r\n  2.0f, \r\n  out averageLoopPassTimeMilis);\r\n\r\n\u0060\u0060\u0060\r\n\r\nOn my setup I get the following results  \r\n\r\n- iPhone 11, version 2.80.4 \r\n- - 12 Mpx source bitmap:  3.2[ms] average single loop pass exec time \r\n- - **42** Mpx source bitmap:  3.2[ms] **(also)**, what is expected for this type of operation. \r\n\r\n- iPhone 11, version 2.88.0 \r\n- - 12 Mpx source bitmap:  6.6[ms]  (2 times slower)  \r\n- - **42** Mpx source bitmap:  14.1[ms] **(almost 5 times slower)**  \r\n\r\nThe code was executed inside Xamarin Forms Application (ver. 5.0.0.2515). \r\n\r\nSo, the code is both slower, and it appears that slowdown is dependant on the source bitmap size.   \r\nWhen running the code on iOS Simulator (M1 cpu), the slowdown is also apparent (but interestingly, for 42Mpx source image the execution time (8[ms]) appears to be shorter than for the 12Mpx - 10[ms]). In both cases however the slowdown is severe.  \r\n",
+        "createdAt": "2022-08-12T20:02:19",
+        "reactions": []
+      },
+      {
+        "id": 1214725476,
+        "author": "mattleibow",
+        "body": "I am wondering if it is actually this change in 82:\n\n\u003E\u00A0Removed\u00A0drawBitmap\u00A0and\u00A0related\u00A0functions\u00A0from\u00A0SkDevice;\u00A0all\u00A0public\u00A0drawBitmap\u00A0functions\u00A0on SkCanvas\u00A0automatically\u00A0wrap\u00A0the\u00A0bitmap\u00A0in\u00A0an\u00A0SkImage\u00A0and\u00A0call\u00A0the\u00A0equivalent\u00A0drawImage\u00A0function. Drawing\u00A0mutable\u00A0SkBitmaps\u00A0will\u00A0now\u00A0incur\u00A0a\u00A0mandatory\u00A0copy.\u00A0Switch\u00A0to\u00A0using\u00A0SkImage\u00A0directly\u00A0or mark\u00A0the\u00A0bitmap\u00A0as\u00A0immutable\u00A0before\u00A0drawing.\n\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/RELEASE_NOTES.txt#L369-L372",
+        "createdAt": "2022-08-15T07:57:11",
+        "reactions": []
+      },
+      {
+        "id": 1214828002,
+        "author": "ziriax",
+        "body": "\u003E I am wondering if it is actually this change in 82:\r\n\r\nGood catch! Yep, sounds like it.\r\n\r\nThis issue might be related:\r\n\r\nhttps://bugs.chromium.org/p/chromium/issues/detail?id=449197\r\n\r\n",
+        "createdAt": "2022-08-15T09:43:15",
+        "reactions": []
+      },
+      {
+        "id": 1216287291,
+        "author": "mattleibow",
+        "body": "Great-ish. We got the problem/feature and have a way around it. Not so great that we have to do it.\n\nAnyways, closing this issue as it is some core optimization in skia and they did warn us years ago that bitmap is not the future. ",
+        "createdAt": "2022-08-16T08:05:32",
+        "reactions": []
+      },
+      {
+        "id": 1218368256,
+        "author": "MichalJan008",
+        "body": "I\u0027ve applied the hint (to let the bitmap know that it is immutable). \r\nNow, the performance is stunningly great. (c.a. 3x faster compared to previously considered fast, version 2.80.4)\r\nThe same test now on 2.88.0 needs only **1ms** (on iPhone) to execute (0.7ms on iOS simulator)  \r\n\r\niPhone 11, version 2.88.0\r\n12 Mpx source bitmap: 1.0 [ms] (6.6[ms] without the hint) \r\n42 Mpx source bitmap: 1.0 [ms] (14.1[ms] without the hint)\r\n\r\nThanks!! ",
+        "createdAt": "2022-08-17T18:41:34",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:27.0595686Z"
+          }
+        ]
+      }
+    ]
+  }
 }

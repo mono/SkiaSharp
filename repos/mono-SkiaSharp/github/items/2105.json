@@ -15,5 +15,66 @@
   "updatedAt": "2022-09-03T12:01:25",
   "closedAt": "2022-08-04T11:21:35",
   "commentCount": 7,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:34.9038064Z",
+    "reactions": [
+      {
+        "user": "roberleitner",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:34.9038098Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1149916815,
+        "author": "TopperDEL",
+        "body": "I\u0027ve added the \u0022FrameworkFilename\u0022 metadata to the uplink.NET.iOs-package and the next error arises. It also wants to have the NugetPackageId attached.\r\n\r\nI\u0027m trying this next and if that works it would be ok for me for the moment. But that check should still only be necessary for Skiasharp-Nativereferences.",
+        "createdAt": "2022-06-08T13:28:22",
+        "reactions": []
+      },
+      {
+        "id": 1150241952,
+        "author": "TopperDEL",
+        "body": "Next one is \u0022NuGetPackageVersion\u0022.",
+        "createdAt": "2022-06-08T18:18:05",
+        "reactions": []
+      },
+      {
+        "id": 1150288164,
+        "author": "TopperDEL",
+        "body": "And \u0022AssetType\u0022.",
+        "createdAt": "2022-06-08T19:04:03",
+        "reactions": []
+      },
+      {
+        "id": 1150720162,
+        "author": "mattleibow",
+        "body": "Thanks for reporting and the comments! Can you attach a binlog so I can check why other frameworks are being included? I believe the filename should be explicitly libSkiaSharp, so maybe my conditions are incorrect. ",
+        "createdAt": "2022-06-09T06:23:53",
+        "reactions": []
+      },
+      {
+        "id": 1150727536,
+        "author": "TopperDEL",
+        "body": "Is a binlog in this case the output from the build window in visual studio? I\u0027ve set it to detailled, but now it is 60MB in size... :)",
+        "createdAt": "2022-06-09T06:34:23",
+        "reactions": []
+      },
+      {
+        "id": 1190778094,
+        "author": "roberleitner",
+        "body": "@mattleibow i hit this in my ios project which has its own native references. after added a reference to skiasharp 2.88.0, the checks in [SkiaSharp.NativeAssets.iOS.targets](https://github.com/mono/SkiaSharp/blob/main/binding/SkiaSharp/nuget/build/ios/SkiaSharp.targets) cause my build to fail because my native reference didn\u0027t define the properties you are referencing. \r\n\r\n\u0060\u0060\u0060\r\nTarget \u0022_SkiaSharpExpandNativeReferencesFixes\u0022 in file \u0022/Users/REDACTED/.nuget/packages/skiasharp.nativeassets.ios/2.88.0/buildTransitive/net6.0-ios13.6/SkiaSharp.NativeAssets.iOS.targets\u0022:\r\n  /Users/REDACTED/.nuget/packages/skiasharp.nativeassets.ios/2.88.0/buildTransitive/net6.0-ios13.6/SkiaSharp.NativeAssets.iOS.targets(6,9): error MSB4096: The item \u0022Native References/REDACTED.framework\u0022 in item list \u0022NativeReference\u0022 does not define a value for metadata \u0022FrameworkFilename\u0022.  In order to use this metadata, either qualify it by specifying %(NativeReference.FrameworkFilename), or ensure that all items in this list define a value for this metadata.\r\nDone building target \u0022_SkiaSharpExpandNativeReferencesFixes\u0022 in project \u0022REDACTED.Mobile.iOS.csproj\u0022 -- FAILED.\r\n\u0060\u0060\u0060\r\n\r\nis this check even needed anymore? the issue [11667](https://github.com/xamarin/xamarin-macios/issues/11667) linked in the comment has since been resolved.\r\n\r\nobviously i\u0027m able to work around by adding those properties but would rather not.\r\n\r\nhappy to supply any logs that can help but the lines above are the only useful mention i see of _SkiaSharpExpandNativeReferencesFixes in the build output.",
+        "createdAt": "2022-07-20T21:31:44",
+        "reactions": []
+      },
+      {
+        "id": 1205122282,
+        "author": "mattleibow",
+        "body": "Thanks for all this info, closing this as a duplicate of #1879\r\n\r\nI will use that issue to track the fix. Hopefully this is just a removal of the hack since the bug in iOS/macOS has been fixed!",
+        "createdAt": "2022-08-04T11:21:35",
+        "reactions": []
+      }
+    ]
+  }
 }

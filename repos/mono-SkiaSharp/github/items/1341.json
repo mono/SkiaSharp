@@ -14,5 +14,467 @@
   "updatedAt": "2022-10-01T09:01:18",
   "closedAt": "2020-07-19T10:18:31",
   "commentCount": 45,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:13.5690157Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 646099713,
+        "author": "mattleibow",
+        "body": "Most likely you don\u0027t have the FontConfig dependency for Linux. This needs to be installed via the platform tooling (apk or apt-get).\r\n\r\nThere is also the \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 that you can use instead of \u0060SkiaSharp.NativeAssets.Linux\u0060 to avoid this, but you lose out on some advanced font features.\r\n\r\nThis usually does it for me:\r\n\r\n\u0060\u0060\u0060\r\nsudo apt-get install -y libfontconfig1\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-06-18T15:32:05",
+        "reactions": []
+      },
+      {
+        "id": 646107699,
+        "author": "tbasallo",
+        "body": "Since this is Azure Linux App Service users cannot install anything.\r\n\r\nI\u0027ll try the NoDependencies since this purely image based, no fonts, which I\u0027m assuming is text functions. I\u0027ll report back.\r\n\r\n",
+        "createdAt": "2020-06-18T15:40:13",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:04.7189463Z"
+          },
+          {
+            "user": "jaliyaudagedara",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:04.7189466Z"
+          }
+        ]
+      },
+      {
+        "id": 646180626,
+        "author": "mattleibow",
+        "body": "The other option is just to use Docker services.",
+        "createdAt": "2020-06-18T17:07:02",
+        "reactions": []
+      },
+      {
+        "id": 650894553,
+        "author": "mattleibow",
+        "body": "Did you manage to resolve this?",
+        "createdAt": "2020-06-29T04:12:58",
+        "reactions": []
+      },
+      {
+        "id": 659818285,
+        "author": "JMan7777",
+        "body": "Hi,\r\n\r\nI\u0027m running a Linux Web App in Azure (docker container based on the Alpine 3.11 image from MS)\r\n\r\nEven I use the \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 package (version 2.80.1) I still get the exception:\r\n\r\n\u0060\u0060\u0060\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception.\r\n2020-07-17T03:14:17.499823180Z: [INFO]   ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: Error loading shared library liblibSkiaSharp: No such file or directory\r\n2020-07-17T03:14:17.499830080Z: [INFO]     at SkiaSharp.SkiaApi.sk_data_new_empty()\r\n2020-07-17T03:14:17.499834080Z: [INFO]     at SkiaSharp.SKData..cctor()\r\n2020-07-17T03:14:17.499837980Z: [INFO]     --- End of inner exception stack trace ---\r\n2020-07-17T03:14:17.499841880Z: [INFO]     at SkiaSharp.SKData.Create(Stream stream)\r\n2020-07-17T03:14:17.499846880Z: [INFO]     at SkiaSharp.SKImage.FromEncodedData(Stream data)\r\n\u0060\u0060\u0060\r\n\r\nI use the following base image:\r\n\u0060FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine3.11 AS base\u0060\r\nand add the icu-libs package:\r\n\u0060RUN apk add --no-cache icu-libs\u0060\r\n\r\nAre there any other packages required?\r\n",
+        "createdAt": "2020-07-17T03:26:05",
+        "reactions": []
+      },
+      {
+        "id": 660584994,
+        "author": "mattleibow",
+        "body": "@JMan7777 I had a look at this and I found the issue. Thanks for reporting.\r\n\r\nThe bug:\r\nFor some reason the Alpine build of no dependencies is still building with fontconfig. I have checks in CI for this, but it missed this? Not sure at this time. I will investigate and get a fix out ASAP.\r\n\r\nThe workaround:\r\nInstall \u0060fontconfig\u0060 (not icu): \u0060RUN apk add --no-cache fontconfig\u0060\r\n\r\nHowever, if you _can_ install fontconfig on your systems, then it might be better to just use the plain \u0060SkiaSharp.NativeAssets.Linux\u0060 package as that has better font features.\r\n\r\nApologies for this. I\u0027ll have a look at the build tests to determine why this got through and ensure it does not happen again.",
+        "createdAt": "2020-07-19T04:27:14",
+        "reactions": []
+      },
+      {
+        "id": 660586600,
+        "author": "mattleibow",
+        "body": "FYI, the way you can debug missing dependencies is to either do:\r\n\r\n\u0060ldd libSkiaSharp.so\u0060\r\n\r\nor \r\n\r\n\u0060readelf -d libSkiaSharp.so\u0060",
+        "createdAt": "2020-07-19T04:46:01",
+        "reactions": []
+      },
+      {
+        "id": 660641382,
+        "author": "mattleibow",
+        "body": "I got a fix going out with 2.80.2. Thanks for reporting.",
+        "createdAt": "2020-07-19T13:08:29",
+        "reactions": []
+      },
+      {
+        "id": 660663617,
+        "author": "JMan7777",
+        "body": "Thx a lot.\n\nDo we still need the icu-libs package for the NoDependencies version?",
+        "createdAt": "2020-07-19T15:29:53",
+        "reactions": []
+      },
+      {
+        "id": 660687464,
+        "author": "mattleibow",
+        "body": "No. We don\u0027t need the icu at all. We are using harfbuzz, but that is in a separate NuGet as an option. Not required.",
+        "createdAt": "2020-07-19T18:27:42",
+        "reactions": []
+      },
+      {
+        "id": 660910950,
+        "author": "IsoraTatsu",
+        "body": "**Exception**\r\n\u0060System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\\n ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\\n   at SkiaSharp.SKImageInfo..cctor()\\n   --- End of inner exception stack trace ---\\n   at SkiaSharp.SKImageInfo..ctor(Int32 width, Int32 height)\\n   at SkiaSharp.QrCode.Image.QrCode..ctor(String content, Vector2Slim qrSize)\\n   at SkiaSharp.QrCode.Image.QrCode..ctor(String content, Vector2Slim qrSize, SKEncodedImageFormat outputFormat)\\n   at ...\u0060\r\n\r\n\u0060 \u003CPackageReference Include=\u0022SkiaSharp.QrCode\u0022 Version=\u00220.3.2\u0022 /\u003E\r\n        \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.80.1\u0022 /\u003E\u0060\r\n\r\n.net core 2.1, aws linux\r\nVersion with issue: 2.80.1\r\n\r\nI had try to fix by\r\n[https://github.com/mono/SkiaSharp/issues/964](url) but didn\u0027t work",
+        "createdAt": "2020-07-20T09:21:29",
+        "reactions": []
+      },
+      {
+        "id": 660998742,
+        "author": "mattleibow",
+        "body": "@IsoraTatsu  This was unfortunately a regression in 2.80.x that will be fix in the next version coming soon\r\n\r\nYou can try out \u00602.80.2-preview.2\u0060 right now on the preview feed: https://aka.ms/skiasharp-eap/index.json \r\n\r\nI will be pushing this version to nuget.org very soon.",
+        "createdAt": "2020-07-20T12:30:54",
+        "reactions": []
+      },
+      {
+        "id": 661606307,
+        "author": "IsoraTatsu",
+        "body": "tks",
+        "createdAt": "2020-07-21T03:22:01",
+        "reactions": []
+      },
+      {
+        "id": 685110887,
+        "author": "srinathck",
+        "body": "I still have this issue. Using 2.80.2-preview-33.",
+        "createdAt": "2020-09-01T20:23:28",
+        "reactions": []
+      },
+      {
+        "id": 686833011,
+        "author": "mattleibow",
+        "body": "Could you have a look at preview 36 that was just pushed out. I think we fix an issue that was coming up for web apps.",
+        "createdAt": "2020-09-04T00:35:11",
+        "reactions": [
+          {
+            "user": "Blackbaud-ChristopherRodgers",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:07.3350431Z"
+          }
+        ]
+      },
+      {
+        "id": 691612255,
+        "author": "hewisaurus",
+        "body": "I\u0027m still having this issue using \u0060SkiaSharp.NativeAssets.Linux.NoDependencies 2.80.2\u0060.\r\nWas there anything specific that others did to get this working?",
+        "createdAt": "2020-09-13T04:49:28",
+        "reactions": []
+      },
+      {
+        "id": 692053098,
+        "author": "mattleibow",
+        "body": "There should not be anything.\r\n\r\nI just checked, the only dependencies are:\r\n\r\n\u0060\u0060\u0060\r\nShared library: [libpthread.so.0]\r\nShared library: [libdl.so.2]\r\nShared library: [libm.so.6]\r\nShared library: [libc.so.6]\r\nShared library: [ld-linux-x86-64.so.2]\r\n\u0060\u0060\u0060\r\n\r\nObviously that doesn\u0027t help you...\r\n\r\nWhat distro are you using? Is it x64?",
+        "createdAt": "2020-09-14T13:29:38",
+        "reactions": []
+      },
+      {
+        "id": 692056745,
+        "author": "mattleibow",
+        "body": "Did the latest release fix this issue for anyone else?",
+        "createdAt": "2020-09-14T13:35:24",
+        "reactions": []
+      },
+      {
+        "id": 693796044,
+        "author": "jaliyaudagedara",
+        "body": "I am facing this issue:\r\n\r\nEnvironment: Azure Durable Function on Linux\r\n\r\nTrying to convert a Docx to PDF using Syncfusion.\r\n\r\n\u0060\u0060\u0060\r\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022Syncfusion.DocIO.Net.Core\u0022 Version=\u002218.2.0.58\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022Syncfusion.DocIORenderer.Net.Core\u0022 Version=\u002218.2.0.58\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nError:\r\n\u0060\u0060\u0060\r\nSystem.DllNotFoundException at SkiaSharp.SkiaApi.sk_colortype_get_default_8888\r\n\r\nUnable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory.\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\n2020-09-17T04:51:19Z   [Error]   2d48902f2c514ec182d08839081dc318:4: Function \u0027ConvertToPdf (Activity)\u0027 failed with an error. Reason: System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at Syncfusion.DocIORenderer.Drawing.RenderHelper.GetBitmap(Int32 width, Int32 height)\r\n   at Syncfusion.DocToPdfConverter.Rendering.PDFDrawingContext..ctor()\r\n   at Syncfusion.DocIORenderer.DocIORenderer.ConvertToPDF(WordDocument wordDocument)\r\n   at ConvertToPdfActivity.cs:line 62\r\n   at Microsoft.Azure.WebJobs.Host.Executors.FunctionInvoker\u00602.InvokeAsync(Object instance, Object[] arguments) in C:\\projects\\azure-webjobs-sdk-rqm4t\\src\\Microsoft.Azure.WebJobs.Host\\Executors\\FunctionInvoker.cs:line 52\r\n   at Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor.InvokeAsync(IFunctionInvoker invoker, ParameterHelper parameterHelper, CancellationTokenSource timeoutTokenSource, CancellationTokenSource functionCancellationTokenSource, Boolean throwOnTimeout, TimeSpan timerInterval, IFunctionInstance instance) in C:\\projects\\azure-webjobs-sdk-rqm4t\\src\\Microsoft.Azure.WebJobs.Host\\Executors\\FunctionExecutor.cs:line 591\r\n   at Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor.ExecuteWithWatchersAsync(IFunctionInstanceEx instance, ParameterHelper parameterHelper, ILogger logger, CancellationTokenSource functionCancellationTokenSource) in C:\\projects\\azure-webjobs-sdk-rqm4t\\src\\Microsoft.Azure.WebJobs.Host\\Executors\\FunctionExecutor.cs:line 537\r\n   at Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor.ExecuteWithLoggingAsync(IFunctionInstanceEx instance, ParameterHelper parameterHelper, IFunctionOutputDefinition outputDefinition, ILogger logger, CancellationTokenSource functionCancellationTokenSource) in C:\\projects\\azure-webjobs-sdk-rqm4t\\src\\Microsoft.Azure.WebJobs.Host\\Executors\\FunctionExecutor.cs:line 483\r\n   at Microsoft.Azure.WebJobs.Host.Executors.FunctionExecutor.ExecuteWithLoggingAsync(IFunctionInstanceEx instance, FunctionStartedMessage message, FunctionInstanceLogEntry instanceLogEntry, ParameterHelper parameterHelper, ILogger logger, CancellationToken cancellationToken) in C:\\projects\\azure-webjobs-sdk-rqm4t\\src\\Microsoft.Azure.WebJobs.Host\\Executors\\FunctionExecutor.cs:line 290. IsReplay: False. State: Failed. HubName: funcdocgenworkfloworchestratordev. AppName: func-docgen-workflow-orchestrator-dev. SlotName: Production. ExtensionVersion: 2.2.2. SequenceNumber: 16.\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-09-17T04:07:34",
+        "reactions": []
+      },
+      {
+        "id": 694100947,
+        "author": "mattleibow",
+        "body": "What happens when you remove SkiaSharp.NativeAssets.Linux but still keep SkiaSharp.NativeAssets.Linux.NoDependencies?\n\nBoth packages bring in the native binaries, so maybe it is getting confused...\n\nI\u0027ll see if I can reproduce this if that still fails. Not sure why I haven\u0027t seen it. ",
+        "createdAt": "2020-09-17T09:04:39",
+        "reactions": []
+      },
+      {
+        "id": 694101829,
+        "author": "jaliyaudagedara",
+        "body": "Tried different combinations. Same issue :(",
+        "createdAt": "2020-09-17T09:06:16",
+        "reactions": []
+      },
+      {
+        "id": 694168658,
+        "author": "jaliyaudagedara",
+        "body": "After spending hours, issue turned out to be this:\r\n\r\nThe artifact folder looks like this.\r\n\r\n- **{artifact}\\runtimes**\r\n\r\n![image](https://user-images.githubusercontent.com/5653381/93462138-f2ca0780-f939-11ea-82f5-30585b1698ad.png)\r\n\r\nIt has different **libSkiaSharp.so** inside each linux-* folder. But for some reason, those aren\u0027t getting picked up.\r\n\r\nThen I did this, basically copied  **libSkiaSharp.so** to the root {artifact} folder. (linux-x64 in my case).\r\n\u0060\u0060\u0060\r\n  \u003CTarget Name=\u0022CopyFilesAfterPublish\u0022 AfterTargets=\u0022_FunctionsPostPublish\u0022\u003E\r\n    \u003CCopy SourceFiles=\u0022$(TargetDir)runtimes\\linux-x64\\native\\libSkiaSharp.so\u0022 DestinationFolder=\u0022$(PublishDir)\\bin\\\u0022 /\u003E\r\n  \u003C/Target\u003E\r\n\u0060\u0060\u0060\r\n![image](https://user-images.githubusercontent.com/5653381/93462403-64a25100-f93a-11ea-9ee9-5574d40129bc.png)\r\n\r\nAnd everything seems to be working just fine.\r\n\r\n**P.S:**\r\n\r\nIf getting the artifact from Build (rather than Publish),\r\n\u0060\u0060\u0060\r\n  \u003CTarget Name=\u0022CopyFilesAfterPublish\u0022 AfterTargets=\u0022PostBuildEvent\u0022\u003E\r\n    \u003CCopy SourceFiles=\u0022$(TargetDir)runtimes\\linux-x64\\native\\libSkiaSharp.so\u0022 DestinationFolder=\u0022$(TargetDir)\\bin\\\u0022 /\u003E\r\n  \u003C/Target\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-09-17T11:25:39",
+        "reactions": [
+          {
+            "user": "emanuel-virca",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:08.8112841Z"
+          },
+          {
+            "user": "rherlt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:08.8112845Z"
+          },
+          {
+            "user": "badpaybad",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:08.8112846Z"
+          }
+        ]
+      },
+      {
+        "id": 694233903,
+        "author": "mattleibow",
+        "body": "But that is not what is supposed to be needed. The whole .NET Core things is to use the runtimes folder. That is the whole point of them.\r\n\r\nI\u0027ll try repro this and see if it is maybe a bug in the publish step or the actual Azure Functions system. Might be that... They do have a slightly different system in the functions.",
+        "createdAt": "2020-09-17T13:29:02",
+        "reactions": []
+      },
+      {
+        "id": 694426098,
+        "author": "jaliyaudagedara",
+        "body": "Exactly! It\u0027s supposed to be picking up necessary files based on the runtime. Thanks!",
+        "createdAt": "2020-09-17T18:42:35",
+        "reactions": []
+      },
+      {
+        "id": 739252613,
+        "author": "emanuel-virca",
+        "body": "I am facing the same situation here. Any news on this?\r\n\r\nPS: I manage to fix this by having SkiaSharp.NativeAssets.Linux.NoDependencies installed and copying the .so file just as @jaliyaudagedara mentioned\r\nPS: Also works having just SkiaSharp.NativeAssets.Linux installed",
+        "createdAt": "2020-12-05T13:41:16",
+        "reactions": []
+      },
+      {
+        "id": 749525752,
+        "author": "EngRajabi",
+        "body": "I still have this problem. I have installed the following packages\r\n\u0060\u0060\u0060 c#\r\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-12-22T12:53:23",
+        "reactions": []
+      },
+      {
+        "id": 749526931,
+        "author": "Gillibald",
+        "body": "You can either import the normal Linux package or the NoDependencies not both. ",
+        "createdAt": "2020-12-22T12:56:30",
+        "reactions": []
+      },
+      {
+        "id": 749530967,
+        "author": "EngRajabi",
+        "body": "I tested both modes. Single single and both.\r\n\u0060\u0060\u0060 c#\r\nUnable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-12-22T13:06:35",
+        "reactions": [
+          {
+            "user": "MongkonEiadon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:10.069045Z"
+          },
+          {
+            "user": "thomasgalliker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:10.0690453Z"
+          },
+          {
+            "user": "StudioLE",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:10.0690455Z"
+          }
+        ]
+      },
+      {
+        "id": 749532349,
+        "author": "Gillibald",
+        "body": "https://github.com/AvaloniaUI/Avalonia/issues/5190#issuecomment-748332256",
+        "createdAt": "2020-12-22T13:09:44",
+        "reactions": []
+      },
+      {
+        "id": 749538137,
+        "author": "EngRajabi",
+        "body": "How can I fix such a problem in Docker?",
+        "createdAt": "2020-12-22T13:24:01",
+        "reactions": []
+      },
+      {
+        "id": 892722508,
+        "author": "YipingRuan",
+        "body": "\u003E I still have this problem. I have installed the following packages\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u003E \u0060\u0060\u0060\r\n\r\nThis solved my issue  (2.80.3) on openSUSE",
+        "createdAt": "2021-08-04T14:49:02",
+        "reactions": [
+          {
+            "user": "ingfdoaguirre",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:10.6585483Z"
+          },
+          {
+            "user": "omercanxx",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:10.6585486Z"
+          },
+          {
+            "user": "inversionhourglass",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:10.6585488Z"
+          }
+        ]
+      },
+      {
+        "id": 945041751,
+        "author": "swharden",
+        "body": "This also solved my issue, allowing Maui.Graphics tests to run on Linux in GitHub Actions \uD83D\uDC4D \uD83D\uDE80 \r\n\r\n\u0060\u0060\u0060xml\r\n\u003CPackageReference Include=\u0022Microsoft.Maui.Graphics\u0022 Version=\u00226.0.101-preview.9.512\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022Microsoft.Maui.Graphics.Skia\u0022 Version=\u00226.0.101-preview.9.512\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nPreviously my error was:\r\n\r\n\u0060\u0060\u0060\r\n\r\nSystem.TypeInitializationException : The type initializer for \u0027SkiaSharp.SKFontManager\u0027 threw an exception.\r\n----\u003E System.DllNotFoundException : Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\r\nStack Trace:\r\n at Microsoft.Maui.Graphics.Skia.SkiaFontService.InitializeFontFamilies()\r\n     ...\r\n--DllNotFoundException\r\n   at SkiaSharp.SkiaApi.sk_fontmgr_ref_default()\r\n   at SkiaSharp.SKFontManager..cctor()\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-10-17T03:16:21",
+        "reactions": [
+          {
+            "user": "rabotond",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:10.8539321Z"
+          },
+          {
+            "user": "MongkonEiadon",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:49:10.8539324Z"
+          },
+          {
+            "user": "MongkonEiadon",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:49:10.8539326Z"
+          },
+          {
+            "user": "thanhtunng",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:49:10.8539327Z"
+          },
+          {
+            "user": "yshchohaleu",
+            "content": "eyes",
+            "createdAt": "2026-02-06T13:49:10.8539329Z"
+          }
+        ]
+      },
+      {
+        "id": 977707754,
+        "author": "venyowong",
+        "body": "\u003E This also solved my issue, allowing Maui.Graphics tests to run on Linux in GitHub Actions \uD83D\uDC4D \uD83D\uDE80\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E \u003CPackageReference Include=\u0022Microsoft.Maui.Graphics\u0022 Version=\u00226.0.101-preview.9.512\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022Microsoft.Maui.Graphics.Skia\u0022 Version=\u00226.0.101-preview.9.512\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E Previously my error was:\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E System.TypeInitializationException : The type initializer for \u0027SkiaSharp.SKFontManager\u0027 threw an exception.\r\n\u003E ----\u003E System.DllNotFoundException : Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n\u003E Stack Trace:\r\n\u003E  at Microsoft.Maui.Graphics.Skia.SkiaFontService.InitializeFontFamilies()\r\n\u003E      ...\r\n\u003E --DllNotFoundException\r\n\u003E    at SkiaSharp.SkiaApi.sk_fontmgr_ref_default()\r\n\u003E    at SkiaSharp.SKFontManager..cctor()\r\n\u003E \u0060\u0060\u0060\r\n\r\nThanks a lot! This is work for me.",
+        "createdAt": "2021-11-24T09:45:52",
+        "reactions": [
+          {
+            "user": "rabotond",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:11.0581031Z"
+          },
+          {
+            "user": "MongkonEiadon",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:49:11.0581034Z"
+          }
+        ]
+      },
+      {
+        "id": 1128350962,
+        "author": "thanhtunng",
+        "body": "\u003E This also solved my issue, allowing Maui.Graphics tests to run on Linux in GitHub Actions \uD83D\uDC4D \uD83D\uDE80\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E \u003CPackageReference Include=\u0022Microsoft.Maui.Graphics\u0022 Version=\u00226.0.101-preview.9.512\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022Microsoft.Maui.Graphics.Skia\u0022 Version=\u00226.0.101-preview.9.512\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.0-preview.145\u0022 /\u003E\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E Previously my error was:\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E System.TypeInitializationException : The type initializer for \u0027SkiaSharp.SKFontManager\u0027 threw an exception.\r\n\u003E ----\u003E System.DllNotFoundException : Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n\u003E Stack Trace:\r\n\u003E  at Microsoft.Maui.Graphics.Skia.SkiaFontService.InitializeFontFamilies()\r\n\u003E      ...\r\n\u003E --DllNotFoundException\r\n\u003E    at SkiaSharp.SkiaApi.sk_fontmgr_ref_default()\r\n\u003E    at SkiaSharp.SKFontManager..cctor()\r\n\u003E \u0060\u0060\u0060\r\n\r\nSave my life! Worked on centos 7",
+        "createdAt": "2022-05-17T02:52:56",
+        "reactions": []
+      },
+      {
+        "id": 1155352193,
+        "author": "BenjaminMichaelis",
+        "body": "The Maui.Graphics didn\u0027t work for me (I am deploying on an linux azure function) but copying over the .so file did.\r\n  \u0060\u0060\u0060\r\n\u003CTarget Name=\u0022CopyFilesAfterPublish\u0022 AfterTargets=\u0022PostBuildEvent\u0022\u003E\r\n    \u003CCopy SourceFiles=\u0022$(TargetDir)runtimes\\linux-x64\\native\\libSkiaSharp.so\u0022 DestinationFolder=\u0022$(PublishDir)\\bin\\\u0022 /\u003E\r\n  \u003C/Target\u003E\r\n\u0060\u0060\u0060\r\nI commented my fix here on [#622](https://github.com/Azure/Azure-Functions/issues/622) with this comment https://github.com/Azure/Azure-Functions/issues/622#issuecomment-1155320104",
+        "createdAt": "2022-06-14T15:26:36",
+        "reactions": []
+      },
+      {
+        "id": 1162791875,
+        "author": "sonuame",
+        "body": "removing SkiaSharp and adding SkiaSharp.NativeAssets.Linux.NoDependencies\r\nsolved for me for .Net Core app working in debian docker container",
+        "createdAt": "2022-06-22T08:13:19",
+        "reactions": [
+          {
+            "user": "Tokinx",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:11.6505928Z"
+          }
+        ]
+      },
+      {
+        "id": 1165190483,
+        "author": "petermisovic",
+        "body": "Hello, I have installed SkiaSharp version 2.88.0 \u002B SkiaSharp.NativeAssets.Linux 2.88.0 \u002B SkiaSharp.NativeAssets.Linux.NoDependencies 2.88.0 but I\u0027m still having issue:\r\n\r\n_System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception.\r\nSystem.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory_\r\n\r\nIt does work on Windows machine, having issue in AWS on Linux. Please, what is the solution here?\r\nThank you!",
+        "createdAt": "2022-06-24T04:44:46",
+        "reactions": []
+      },
+      {
+        "id": 1165595170,
+        "author": "BenjaminMichaelis",
+        "body": "\u003E Hello, I have installed SkiaSharp version 2.88.0 \u002B SkiaSharp.NativeAssets.Linux 2.88.0 \u002B SkiaSharp.NativeAssets.Linux.NoDependencies 2.88.0 but I\u0027m still having issue:\n\u003E \n\u003E \n\u003E \n\u003E _System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception.\n\u003E \n\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory_\n\u003E \n\u003E \n\u003E \n\u003E It does work on Windows machine, having issue in AWS on Linux. Please, what is the solution here?\n\u003E \n\u003E Thank you!\n\nHave you tried what I did for azure on Linux as it may be a similar issue and fix? \n\nhttps://github.com/Azure/Azure-Functions/issues/622#issuecomment-1155320104",
+        "createdAt": "2022-06-24T13:49:01",
+        "reactions": []
+      },
+      {
+        "id": 1172250647,
+        "author": "marciosarabando",
+        "body": "Hi all,\r\n\r\nThanks, this forum helps to solve my problem.\r\n\r\nI was having trouble using the lib QuestPDF running in a web api .net hosted in linux with the exception below:\r\n\r\n \u0022System.DllNotFoundException: Unable to load shared library \u0027libHarfBuzzSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibHarfBuzzSharp: cannot open shared object file: No such file or directory\u0022\r\n\r\nIn windows environments it\u0027s Ok, but to run on Linux I need to reference this package e insert the library **libSkiaSharp.so** manually in the project.\r\n\r\nI managed to get the dll using this package \u0022HarfBuzzSharp.NativeAssets.Linux\u0022 Version=\u00222.8.2.1-preview.79\u0022\r\n\r\n![image](https://user-images.githubusercontent.com/17583192/176886845-31ff7747-b048-4993-9021-d3600c37f48f.png)\r\n\r\nThank you\r\n\r\n",
+        "createdAt": "2022-07-01T11:34:36",
+        "reactions": [
+          {
+            "user": "DavidErben",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:12.2755861Z"
+          }
+        ]
+      },
+      {
+        "id": 1172472310,
+        "author": "BenjaminMichaelis",
+        "body": "Update on https://github.com/mono/SkiaSharp/issues/1341#issuecomment-1165595170.\r\n\u003E The Maui.Graphics didn\u0027t work for me (I am deploying on an linux azure function) but copying over the .so file did.\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E \u003CTarget Name=\u0022CopyFilesAfterPublish\u0022 AfterTargets=\u0022PostBuildEvent\u0022\u003E\r\n\u003E   \u003CCopy SourceFiles=\u0022$(TargetDir)runtimes\\linux-x64\\native\\libSkiaSharp.so\u0022 DestinationFolder=\u0022$(PublishDir)\\bin\\\u0022 /\u003E\r\n\u003E \u003C/Target\u003E\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E I commented my fix here on [#622](https://github.com/Azure/Azure-Functions/issues/622) with this comment [Azure/Azure-Functions#622 (comment)](https://github.com/Azure/Azure-Functions/issues/622#issuecomment-1155320104)\r\n\r\nA better fix because my previous solution in the comment linked above fails on an azure pipeline when running a publish command with the --no-build argument since that step doesn\u0027t grab onto the file that I was moving after build. So a better fix is this: (note the change of the AfterTargets trigger).\r\n\r\n\u0060\u0060\u0060csproj\r\n\u003CTarget Name=\u0022CopyFilesAfterPublish\u0022 AfterTargets=\u0022AfterPublish\u0022\u003E\r\n  \u003CCopy SourceFiles=\u0022$(TargetDir)runtimes/linux-x64/native/libSkiaSharp.so\u0022 DestinationFolder=\u0022$([System.IO.Path]::GetFullPath(\u0027$(PublishDir)\u0027))/bin/\u0022 /\u003E\r\n\u003C/Target\u003E\r\n\u0060\u0060\u0060\r\n\r\nI also use \u0060$([System.IO.Path]::GetFullPath(\u0027$(PublishDir)\u0027))\u0060 because if you look at how msbuild looks for this trigger, it uses the same syntax to get the full path instead of the relative path consistently. This has seemed to be the best fix even if using SkiaSharp.NativeAssets.Linux.NoDependencies and works for both deploy directly to an azure function and via an azure pipeline.\r\n\r\nI posted this same update here: https://github.com/Azure/Azure-Functions/issues/622#issuecomment-1172470499",
+        "createdAt": "2022-07-01T15:38:05",
+        "reactions": []
+      },
+      {
+        "id": 1176373543,
+        "author": "KirylKiryanchykau",
+        "body": "I had an issue with libHarfBuzzSharp.so when running on linux machine. I extracted this file from HarfBuzzSharp.NativeAssets.Linux package and copied it to the ..runtime\\linux64\\native folder. This approach worked for me.",
+        "createdAt": "2022-07-06T15:37:07",
+        "reactions": []
+      },
+      {
+        "id": 1189152749,
+        "author": "DavidErben",
+        "body": "\u003E I managed to get the dll using this package \u0022HarfBuzzSharp.NativeAssets.Linux\u0022 Version=\u00222.8.2.1-preview.79\u0022\r\n\r\nThanks for the hint @marciosarabando, installing the package  \u0022HarfBuzzSharp.NativeAssets.Linux\u0022 solved it for me as well (.NET 6 running on Raspberry Pi Linux).",
+        "createdAt": "2022-07-19T14:50:57",
+        "reactions": [
+          {
+            "user": "marciosarabando",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:49:12.9018128Z"
+          },
+          {
+            "user": "oliverholliday",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:49:12.9018131Z"
+          },
+          {
+            "user": "danielbernhedwcs",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:49:12.9018132Z"
+          }
+        ]
+      },
+      {
+        "id": 1214207611,
+        "author": "mattleibow",
+        "body": "I think I need to find a way to detect this missing library on linux and give a slightly better exception to ask you to install the package.",
+        "createdAt": "2022-08-13T19:03:21",
+        "reactions": [
+          {
+            "user": "BenjaminMichaelis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:13.0879678Z"
+          },
+          {
+            "user": "RicardoVR",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:13.0879682Z"
+          }
+        ]
+      },
+      {
+        "id": 1233819996,
+        "author": "chin-udara",
+        "body": "I faced the aforementioned issue when deploying to a centos system.\r\n\r\nFor me it worked when I specified the runtime during the \u0060dotnet publish\u0060 command and deployed the content of the \u0060publish\u0060 folder inside the \u0060\u003Cruntime\u003E\u0060 folder. This folder included all the necessary \u0060so\u0060 files.\r\n\r\nFollowing was the publish command I used\r\n\u0060dotnet publish --configuration Release -r linux-x64\u0060\r\n\r\nThe following folder included all the deps and nothing else needed to be done after deploying to the centos server.\r\n\u0060bin/Release/net6.0/linux-x64/publish\u0060",
+        "createdAt": "2022-09-01T06:46:51",
+        "reactions": []
+      },
+      {
+        "id": 1233820052,
+        "author": "ghost",
+        "body": "Hello lovely human, thank you for your comment on this issue. Because this issue has been closed for a period of time, please strongly consider opening a new issue linking to this issue instead to ensure better visibility of your comment. Thank you!",
+        "createdAt": "2022-09-01T06:46:56",
+        "reactions": []
+      }
+    ]
+  }
 }

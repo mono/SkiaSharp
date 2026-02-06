@@ -19,5 +19,86 @@
   "updatedAt": "2022-08-20T06:01:53",
   "closedAt": "2016-06-09T04:58:35",
   "commentCount": 9,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:24.4349908Z",
+    "reactions": [
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:24.4349946Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 206946673,
+        "author": "migueldeicaza",
+        "body": "This looks very useful, we need to basically bind the SkDocument type.\n",
+        "createdAt": "2016-04-07T15:11:41",
+        "reactions": [
+          {
+            "user": "wieslawsoltes",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:22.5823474Z"
+          }
+        ]
+      },
+      {
+        "id": 213842074,
+        "author": "tdenniston",
+        "body": "Is anyone working on this? Otherwise I can take a crack at it, as this is something I need.\n",
+        "createdAt": "2016-04-23T22:14:55",
+        "reactions": []
+      },
+      {
+        "id": 214022274,
+        "author": "tdenniston",
+        "body": "Update: I\u0027ve written the C api but I don\u0027t know how to get the build to link \u0060libskia_windows\u0060 with the \u0060pdf\u0060 Skia project (generated from \u0060pdf.gyp\u0060).\n",
+        "createdAt": "2016-04-24T18:49:17",
+        "reactions": []
+      },
+      {
+        "id": 219898075,
+        "author": "mattleibow",
+        "body": "Hey @tdenniston, have you managed to get the build going? The VS projects just need you to add a reference to the pdf vcxproj (and any dependencies). Basically, add the project to the solution, and then reference it in the libSkiaSharp project...\n",
+        "createdAt": "2016-05-18T01:03:09",
+        "reactions": []
+      },
+      {
+        "id": 220065188,
+        "author": "tdenniston",
+        "body": "@mattleibow Hmm, I\u0027m not sure I understand completely. (I\u0027m still learning Windows development practices and Visual Studio). Which solution do I add pdf.vcxproj to? On a related note, I\u0027m now seeing quite a few build problems since the UWP platform was added. I\u0027m developing on Windows 7 but it seems to think I am on a UWP platform.\n",
+        "createdAt": "2016-05-18T15:33:27",
+        "reactions": []
+      },
+      {
+        "id": 220894571,
+        "author": "alanricker",
+        "body": "@mattleibow @migueldeicaza this sounds very useful as I need print also.\nWould it be as simple as launching PDF in default browser via xamarin forms, or is there an easier cross-platform way?\nWould we also need XPS for Windows WPF or UWP?\nThanks again for all your work on this.\n",
+        "createdAt": "2016-05-23T06:08:16",
+        "reactions": []
+      },
+      {
+        "id": 221040986,
+        "author": "mattleibow",
+        "body": "@alanricker Not too sure exactly, but I do know that Windows UWP has a default PDF reader - Edge. They are discontinuing the PDF reader app, so PDF support is available right from the start\n",
+        "createdAt": "2016-05-23T17:37:56",
+        "reactions": []
+      },
+      {
+        "id": 224800135,
+        "author": "mattleibow",
+        "body": "All right... I have done this in the native bit and wrapped the \u0060SkDocument\u0060 and \u0060SkWStream\u0060s. I have a really basic PDF sample (just a single line of text). Just waiting for our CI to pick it up and then I will release a new version.\n",
+        "createdAt": "2016-06-09T04:58:35",
+        "reactions": []
+      },
+      {
+        "id": 226398401,
+        "author": "mattleibow",
+        "body": "tvOS and PDF support was added in the release https://github.com/mono/SkiaSharp/releases/tag/v1.49.4-beta\n",
+        "createdAt": "2016-06-16T06:23:55",
+        "reactions": []
+      }
+    ]
+  }
 }

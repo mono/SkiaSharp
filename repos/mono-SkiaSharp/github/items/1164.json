@@ -19,5 +19,18 @@
   "createdAt": "2020-03-04T20:59:00",
   "updatedAt": "2022-09-11T18:31:04",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:08.2587067Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 642686538,
+        "author": "mattleibow",
+        "body": "This is a very late reply, but I looked into this and the _crash_ is because macOS doesn\u0027t do the correct checks that it should.\r\n\r\nHowever, the reason for any error is that what is happening is that the \u0060ToTextureImage\u0060 is trying to copy the image to the GPU via the current OpenGL context. But, on a button click, the context is not set/valid. This might be because the OS is using the GL context, or some other control is has changed to its own context. Before calling this, you have to make sure that you have set the view to be in control.\r\n\r\nRight now, there is no way to indicate that the view must set its GL context to be current, so I would suggest adjusting the logic to rather queue the copy and then wait until the next draw operation to actually copy.\r\n\r\nIn fact, the way you have your code, you can do this with minimal code changes. Just 2 places:\r\n\r\n\u0060\u0060\u0060csharp\r\nvoid AddImage_Clicked() {\r\n//    var im = SKImage.FromEncodedData(_buffer.ElementAt(index)).ToTextureImage(SkiaView.GRContext);\r\n    var im = SKImage.FromEncodedData(_buffer.ElementAt(index));\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060csharp\r\nvoid Handle_PaintSurface() {\r\n\r\n    // convert all images to textures\r\n    if (!img.Image.IsTextureBacked)\r\n        img.Image = img.Image.ToTextureImage(SkiaView.GRContext);\r\n\r\n    e.Surface.Canvas.DrawImage(img.Image, img.Destination, p);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nObviously, we should look into the crash part and see if we can either throw a native exception or return null.",
+        "createdAt": "2020-06-11T14:17:18",
+        "reactions": []
+      }
+    ]
+  }
 }

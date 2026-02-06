@@ -23,5 +23,45 @@
   "updatedAt": "2022-09-21T03:01:13",
   "closedAt": "2022-08-22T01:01:16",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:21.504804Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 621356786,
+        "author": "mattleibow",
+        "body": "What version of SkiaSharp is this?\r\n\r\nAlso, maybe for some reason the path is invalid so it tries to write and crashes. Maybe the bounds of the page are bad.\r\nThe fact that it crashes is weird because it probably should return null - unless something went wrong while writing to the stream...",
+        "createdAt": "2020-04-29T17:33:43",
+        "reactions": []
+      },
+      {
+        "id": 621379577,
+        "author": "eyeveye",
+        "body": "Yes, I think I figured out where is the problem.\r\nAndroid.OS.Environment.ExternalStorageDirectory.Path   \u003C-- The path to the file no longer valid on API 29.",
+        "createdAt": "2020-04-29T18:17:46",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:21.0578056Z"
+          }
+        ]
+      },
+      {
+        "id": 641535582,
+        "author": "mattleibow",
+        "body": "This is a bit concerning that it just crashes. What was the stream type you were using? \u0060SKFileWStream\u0060? A bit annoying that it opens the file that cannot exist, but when writing it crashes. Makes no real sense.",
+        "createdAt": "2020-06-09T19:54:12",
+        "reactions": []
+      },
+      {
+        "id": 1220093198,
+        "author": "ghost",
+        "body": "This issue has been automatically marked as stale because it has been marked as requiring author feedback but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 3 days of this comment**. If it *is* closed, feel free to comment when you are able to provide the additional information and we will re-investigate.",
+        "createdAt": "2022-08-19T00:02:59",
+        "reactions": []
+      }
+    ]
+  }
 }

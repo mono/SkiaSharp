@@ -14,5 +14,31 @@
   "createdAt": "2020-05-14T12:40:42",
   "updatedAt": "2022-09-11T18:31:06",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:54.8428824Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 629004594,
+        "author": "mattleibow",
+        "body": "We probably should do this soon. We have image, bitmap, surface, data and memory streams. ",
+        "createdAt": "2020-05-15T03:25:04",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:54.5826671Z"
+          }
+        ]
+      },
+      {
+        "id": 643260349,
+        "author": "ziriax",
+        "body": "This might be more tricky than it sounds. One really needs to track the memory usage of the [underlying shared pixel buffer](https://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/skia/include/core/SkPixelRef.h)\r\n\r\nE.g. extracting a subset bitmap, or any call to [\u0060SKBitmap::setPixelRef\u0060](https://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/skia/include/core/SkBitmap.h;drc=6931add57da6fb7bde407366874fa26051c62263;bpv=1;bpt=1;l=754?originalUrl=https:%2F%2Fcs.chromium.org%2F) shares the same memory\r\n\r\nSo ideally, the \u0060SKPixelRef\u0060 should be tracked, that would cover a lot of cases; it would be handy if that native class had some global alloc\u0027d/free\u0027d events \r\n\r\n",
+        "createdAt": "2020-06-12T13:06:49",
+        "reactions": []
+      }
+    ]
+  }
 }

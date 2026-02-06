@@ -14,5 +14,99 @@
   "updatedAt": "2022-09-12T21:01:13",
   "closedAt": "2022-08-13T19:06:00",
   "commentCount": 7,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:34.0350787Z",
+    "reactions": [
+      {
+        "user": "jxlarrea",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:49:34.0350849Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1172427105,
+        "author": "xiejiang2014",
+        "body": "same issue\r\n\r\nVersion with issue: 2.88.0\r\nLast known good version: 2.80.4\r\n\r\nScreenshots\r\n![Snipaste_2022-07-01_22-39-44](https://user-images.githubusercontent.com/44390984/176917589-216cfceb-2c5d-4dd2-97b5-f59b7309d2c7.png)\r\n\r\n",
+        "createdAt": "2022-07-01T14:48:55",
+        "reactions": [
+          {
+            "user": "lindexi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:32.752993Z"
+          },
+          {
+            "user": "jxlarrea",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:32.7529936Z"
+          }
+        ]
+      },
+      {
+        "id": 1179656242,
+        "author": "jxlarrea",
+        "body": "Experiencing the same issue with the latest NuGet version. PNGs are messed up.\r\n\r\nPlatform: Linux (Docker image mcr.microsoft.com/dotnet/aspnet:6.0)\r\nUsing SkiaSharp.NativeAssets.Linux.NoDependencies package.\r\n\r\nBugged version: 2.88.0\r\nLast known good version: 2.80.3",
+        "createdAt": "2022-07-10T04:53:48",
+        "reactions": [
+          {
+            "user": "lindexi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:32.9909345Z"
+          },
+          {
+            "user": "jxlarrea",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:32.990935Z"
+          }
+        ]
+      },
+      {
+        "id": 1188417673,
+        "author": "mlptownsend",
+        "body": "I can also reproduce it with the below console app (w/ 2.88.0 SkiaSharp package reference), and I had someone else try it as well with the same result. Worked fine w/ 2.80.3.\r\n\r\nExamine the paths after it runs.\r\n\u0060\u0060\u0060\r\nusing SkiaSharp;\r\nusing System;\r\n\r\nnamespace ConsoleApp1 {\r\n\tinternal class Program {\r\n\t\tstatic void Main(string[] args) {\r\n\t\t\tvar base64 = \u0022iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAABHNCSVQICAgIfAhkiAAAIABJREFUeJzt3X\u002BUV/V95/Hn\u002B3N/fQdBRGSAaIOxRic0rbrQX0PaWKFhj6QY19PdSs62nJAmtmf3NDkWiunqeszpSoi2aZOewyRYzWZpm91jEhP3dKtDzyZhWG2cajQubLUpirTMoMDA/Preez/3vX/c\u002B/3OgBgGKsOP\u002B35wnO8w9/v9zoyH9\u002Bvz432/9yufHrtZMcbUkjvbP4Ax5uyxADCmxiwAjKkxCwBjaswCwJgaswAwpsYsAIypsfBs/wDm/Kats0i09XcFrb6uE6eYiBPECQBFXqDFxGFx4MLyuMj0/ezGAsCcBlXQQikypfATRe4CQbUs8FYgDO4eJowdMy6LmXFpRJEro2\u002BkNI/69uOSWQEzLouJZgRIYAkwnSwAzClpFX824t9UyPHMAPXK\u002BFBOUZQJ8MX372TWwgbv\u002B8S7WPyhBWSjnp2f38Mzf/Yq69at45prruGH6XPIr\u002B4niF17lmAzgekhdiqwORVaQDbmGdo79qZC/ofmc3z3e3/Dy0\u002B\u002BTjbuWbduHfPmzeOBP9yMOGHtX/0MQ3vH\u002BdpvPk/e9Bw\u002BfJjZs2fzpf/\u002BBV549/9gzqIOwo4AsACYLrYJaKasNb1vDuXsf\u002BEoz23bB8CDDz7Ihg0bWHpNN7u\u002BNcCvf3gtAwMDbN26lfvvv5/XBw9y5yfW8\u002BrOQzz7ldcA2LZtG7Nnzy6ft1C0sHHobLAAMFOmhZKPFwwfaL5lIQOsX7\u002Bezs5Oenp66OnpYfbs2axdu5a//v3dXHXjXPKmZ9WqVTSbTQAOvzrGX63fxcF/HCUb9Sf\u002B5uaMsAAwU6Ja7uQHiWPG3JjFH1rw5kLeO8ZVN17GY489xl133cUdd9zBHXfcweDgII1GA4AXv76fbdu20Wg0ePTRR4/5HkVuM4HpZgFgpqba/MvHCob3N\u002Bl/eO9bFvJX/vZzPPSNL/DYY4/R19dHZ2cnfX19ALz2zGFWrVrFjh07eO21chaxZMkS8mZB82hOkWm7g2DOPAsAMyWqinolHcl56ckDb1nIPi1Y\u002BpF3ArB69Wq6u7vbMwSYWDL09/fT1dUFwNy5c1nxnlv52y2vkI358lwCMy0sAMyUaQE\u002BU3Y/PvAjC/npnlcAEBFmzkvYv38/a9asYeXKlSxbtgyADRs2sHr1agCuv/56br/99rPzS9WcnQdgTsvkQm5pFfJNAzcxf/58VqxYwcjrKfv27WPRokXccMMNbNmyhTlz5gDQ1dXF6tWr2b59OytWrOAnb1tYPpFNAKaNBYCZEhFhcmX\u002BqELu7e1l\u002BfLl7N69mzfeeIMlS5YwODjIg5/7LL/wu1eRDRaMHUy57u8/wHXXXcfAwAALfvJirv3gfILYgZ0DMG0sAMzUSHm\u002BfjIr5Jc\u002B9W6\u002B9/zXSAf9mwv5vRe3Q\u002BDqq6/m8ssvZ9euXdy3\u002BR7ed\u002BdVvPe2hYgTjuwb56GbH\u002BKhhx4CYPGHFnD5DbPL04HtLKBpY2cCmilp7csVWUE64slGPemI58i\u002BcR6\u002B\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\u002BtYAd35iPQMDA2zdupX777\u002Bf1wcPcucn1jM82Gw/1ze/\u002BU02b97MXXfdxZVXXnkWfytjAWCmRAslHy8YPtDk2a\u002B8BsD69etJkqR9HGDt2rV0dnbS09NDT08Ps2fPZu3atcc81\u002B7duwF4/gff5yf\u002BzUKKXMvZxajHTC/bAzAnpQriyt36GXNjFn9oAS89eYClS5fSbDZJkoTDe8e46sbLeOSRRwDYtGkTUAZCo9E45vlay4ANGzbw53/\u002B53x4yYe5bet1vPuX5xHNsH2A6WQzAHNy1eZfPlYwvL9J/8N72bZtG41Ggx07dhxz18df\u002BjIPfeML9Pb20tfXR5Ik9PX1tY/v3LmTnp4ePvrRjzI0NMRtt93GypUr2fv0YfJmcUxL0Zx5FgDmpFQV9Uo6kvPSkwd47ZnDrFq1ih07dtDf3w/AFVdcgU8Lln7knQAsX76c7u5ums2Jtf\u002Bffn0Tt9/5Qf7LI3fxl9/8bzzzzDMkScJNN910Vn4vYwFgpkgL8Jmy\u002B/GB9ujf399PV1cXAIsXL2bFe27l6Z5XABARZs5L2L9/P2vWrGHlypV8au39fOcvn2XNjR8HoKOjAyhbgRPfaHp/r7qzNqA5qcKXJ/4c3d/kqx/\u002BO/q\u002B9n0WLVr0pvtt376dgYEBrrzySpYtWwZAX18f3d3d3HXXXRw4cICtW7cyNDTEiy\u002B\u002ByJIlSxgaGmL\u002B/Pks\u002B52r\u002BPn/cCWzFiR2VuA0sk1Ac1IiwuShecuWLcyZMweArq4uVq9ezfbt21mxYgW9vb10d3ezZ88e9u3bx5IlSxgcHOTBz32WbNxzzTXXcMstt3D55Zeza9cu/tM9nyJqBCy8/mLCxNkG4DSzGYA5KVXaZ/ntfeoQ//z8EdIRz9jBlOvcB7j77rvp6\u002Bvjzvt/i/0/OEJvby9XX301UE7v79t8D4ev2k024un/8l7GDmXt5\u002B64JOJf/caP8dPrfoxZ72gQdQSILUynjQWAOanWxnyRFaQjnmzUk454juwb5\u002BGbn27fb/EtC1CFl584QDbu\u002Bdi3uwEIY0fHpRFawNihDJ8V7ccEodBxacyMuRHRjABxYmcCTiMLADNlrZlA4ZUiV9Jhz\u002BjBtH08TBxFrjSPlK8H6OyaCZTnELhIQCmLf9K/uNYxF4oV/1lgewBmykRAQkECIYggiF35Kr7WsWrqrq0BvipmcdI\u002B5qKgur/Yef/nAAsAc3oEgkgIIqvg85kFgDllNmpfOGy/1ZgaswAwpsYsAIypMQsAY2rMAsCYGrMAMKbGLACMqTELAGNqzALAmBqzADCmxiwAjKkxCwBjaswCwJgaswAwpsYsAIypMQsAY2rMAsCYGrMAMKbGLACMqTG7JqAxF6iYmIaLiekgkZhEYiKJiClvAyILAGPOJTExiUvK4pVGWbASExERSUREREhYBBIUIU5RJ04cDidORAQnDhHBUaAoheaa41sfyTSj/Dim484CwJh/oZCQxDXoIKkKtkEiEVE10kaEBERFKEEREKggOAIRRJyIOJyIijhxZcmiZbmSa6655uSaV0V7lKPOq3c5uSu/mpNrRo6vPs/JycjVo\u002BU7sLSu4XzCazlbAJhacoR0uISEBo3WKCsNYkIiiQiJiAlVJPABgQY4BBEhEAficAJOAnGAkmtBgVdPrhle82qczdUzzKjzmrmsKlpflii\u002BXcC\u002BXcjFFIr27WQBYM4bDkfDNUhISCQhlpiYiFiScmosIRGROnE\u002BJFRXFa2bmBaXt\u002BIAoVBPQVGNsF6zdtFmjDLmhjRznjycGFknj7A51RhNQfu9DoXz7P2NLQDMGeZoSEKHlJtRsYtJqvVsuRkVEhBpSOADCVQICMWhKq4caQNxZcGKQ/CTRtocr6lmFOSaaipjOiZH9ajz5GF2XNF6fLX6zfHq8fjWD3jeFe3byQLAnFCDBolLSIhJJm1GxUSEEhGWf3JHoCEOkQAnIk5x4MRJgKuKNteCQrwW6jWtpseeTFPNZKxoSs6Iy0840h67prWifftZAFxAGiTErkGjvRlVtX4oPw8ICAnzoJoeOxGcVJtR1VQZytL16imkKEfaohw3U83ISUk1lWEddgU\u002BLDenqi0onVjbZlSrYSvac5oFwFl28l5tSESQOwJ1hITl2\u002ByKSCBBta4VFQnE4VEKvObqKcg01bL5k5PS1EwyHX2LNW1rJ3liQ6piRXuBswA4DW/Vq21PjzUikjB3OA3FqRCKgARVrxYCcVXbZ3KvNifXXMvxM9OMVFPJdczl5OHxI\u002BxEsWbVaJvDNO8gm/NfbQLgZL3a1po2JNBAAgWRgEnTYwmO69UWE73aage5/C\u002BXcT3qvPrwzSPs6fVqjTlTzukAOFmvNiibPz4gLAJxWrZ5ECGUAMrpMeVkudWr9XgtJvVqM01JNZemjhyze3wu9WqNOVPe9gCYSq82JPKBOB9qUHZmy0J1QXsT6kS92qwaaXMyTck0k6aOuBwfePLg\u002BM2oC6lXa8yZUgVAq1fbICZ5U682lJBAYh/hvMPhCAhwoogLxOHUubKQRaTq1fqqV\u002Bs1o9X6yUhltBh1vira43u1k2\u002BtV2vMmSfP6Oe13attTXhb5x9rRkoumabOt9avP7JXm\u002BMnRlpjzDkufGL8ieNH2sm3xpgLmJtU/MaYmrErAhlTYxYAxtSYBYAxNWYBYEyNWQAYU2MWAMbUmAWAMTVmAWBMjVkAGFNjFgDG1JgFgDE1ZgFgTI1ZABhTYxYAxtSYBYAxNWYBYEyNndNXBTYXPtWJz8WuQzXtLADMaVOlei8S0EmVrAVo0TpQ3rhQQKDIFfV6zGODWHChswvRnQUWAOaUqZYFXmRK4ScK3wWCKhR50S7uwd3DhLFjxmUxyayQ8cMZ40fabz2GOLhobkzjkoggdogtSqeVBYA5Ja3iz0Y8o2\u002BkNI9OXFMynhmgXhkfyimqGcAX37\u002BTWQsbvO8T7\u002BJdvziX5/5iHz949J85sm\u002BcdevWMW/ePF5c\u002BDg/\u002BasLcaEgzqYB08ny1pwahXy84Mg/jfOdB37In/7sd5n19WW8839/kJFHF/LXv7\u002Bbh375Kb74/p34//oeNm7cyNgbKb3/\u002Be95essr7PyTf\u002BTn3/t\u002B9uzZw9atW7njjjvO9m9Ua/LpsZv15Hczphz9i6xg9PWMPX0H\u002BdpvPs/yG1fw2GOPkSQJX/rqF/jYr/1HNm7cyCc/\u002BUk6OzsBGBoaYtOmTTzwR58lb3oGBgaYPXs2jz76KC\u002B88AIvLnycn7h1AY1LonKvANsQnC42AzBTpoWSjxcMH2jy7FdeA2D9\u002BvUkSdI\u002BDrB27Vo6Ozvp6emhp6eH2bNns3btWvKmZ9u2bXR2dvLoo4/y4v/9AQcPvcGe77zB0f1N8nFPOpy/5fc3bz/bAzBTogrihCBxzJgbs/hDC3jpyQMsXbqUZrNJkiQc3jvGVTdexiOPPALApk2bgDIQGo0GAPPnzwdgxYoVrFmzBoDt27ez4mdWcPPmxbz3toVEMwIksCnAdLAZgJmaavMvHysY3t\u002Bk/\u002BG9bNu2jUajwY4dO4656\u002BMvfZmHvvEFent76evrI0kS\u002Bvr6ALjiiisAePnll3ngwc8yODjI8uXLWbduHT/8zhtk4/ZGNdPJAsBMiWrZv09Hcl568gCvPXOYVatWsWPHDvr7\u002B4GyuH1asPQj7wRg\u002BfLldHd302w228/z2mvl0uG\u002B\u002B\u002B7jnj/4fZ566ikArrnmmknfbJp\u002BKWMBYKZOC/CZsvvxgfbo39/fT1dXFwCLFy9mxXtu5emeVwAQEWbOS9i/fz9r1qxh5cqVjIyMAHDrrbfiAuGiiy46a7\u002BPsS6AmaLClyf\u002BHN3f5Ksf/jv6vvZ9Fi1a9Kb7bd\u002B\u002BnYGBAa688kqWLVsGQF9fH93d3dx11108\u002B\u002ByzPPbYYwD09/ezZMkShoaGmD9/Pj/1b9/Binuv4eIrOggi2wOYDrYJaKZERJg8N9\u002ByZQtz5swBoKuri9WrV5ebeStW0NvbS3d3N3v27GHfvn0sWbKEwcFBHvzcZwkbjj/Y9Gk\u002B/Gv/nssvv5xdu3axceNGAK5ecRnRjNDOBpxGNgMwU6JK\u002Byy/vU8d4p\u002BfP0I64hk7mHKd\u002BwB33303fX193Hn/b7H/B0fo7e3l6quvBuDQoUPct/keDl\u002B1m47ZETs\u002B90OO/NN4\u002B7k7Lom44dev4Kc/8k4uvqJB1BFYCEwTCwAzJa3X\u002BhRZQTriyUY96YjnyL5xHr756fb9Ft\u002ByAFV4\u002BYkDZOOej327G4AwdnRcGiFOGDuYkU/a7Xeh0HFpzIy5UdkCdGInAk0TCwBzSlozgcIrRa6kw57Rg2n7eJg4ilxpHilfD9DZNRMozyFwUVnYPtWJVwsCCASRK49b8U8r2wMwp0QEJBQkEIIIgtiRXBxOHKum7lq0HlDdOEFcuZcggVb3L18ibAV/9lgAmNMnEERyyjv2Yi/8P2dYAJjTYqP2hcH2Wo2pMQsAY2rMAsCYGrMAMKbGLACMqTELAGNqzALAmBqzADCmxiwAjKkxCwBjaswCwJgaswAwpsYsAIypMQsAY2rMAsCYGrMAMKbGLACMqTELAGNqzALAmBqzADCmxuyioMZcoGJiGi4mpoNEYhKJiSQiprwNiCwAjDmXxMQkLimLVxplwUpMREQkERERIWERSFCEOEWdOHE4nDgREZw4RARHgaIUmmuOb30k04zy45iOOwsAY/6FQkIS16CDpCrYBolERNVIGxESEBWhBEVAoILgCEQQcSLicCIq4sSVJYuW5Uquueaak2teFe1Rjjqv3uXkrvxqTq4ZOb76PCcnI1ePlm/m2rqA\u002Bwkv5G4BYGrJEdLhEhIaNFqjrDSICYkkIiQiJlSRwAcEGuAQRIRAHIjDCTgJxAFKrgUFXj25ZnjNq3E2V88wo85r5rKqaH1Zovh2Aft2IRdTKNq3kwWAOW84HA3XICEhkYRYYmIiYknKqbGERETqxPmQUF1VtG5iWlzeigOEQj0FRTXCes3aRZsxypgb0sx58nBiZJ08wuZUYzQFrfdBQ5iGon07WQCYM8zRkIQOKTejYheTVOvZcjMqJCDSkMAHEqgQEIpDVVw50gbiyoIVh\u002BAnjbQ5XlPNKMg11VTGdEyO6lHnycPsuKL1\u002BGr1m\u002BPV42m/O/F5V7RvJwsAc0INGiQuISEmmbQZFRMRSkRY/skdgYY4RAKciDjFgRMnAa4q2lwLCvFaqNe0mh57Mk01k7GiKTkjLj/hSHvsmtaK9u1nAXABaZAQuwaN9mZU1fqh/DwgICTMg2p67ERwUm1GVVNlKEvXq6eQohxpi3LcTDUjJyXVVIZ12BX4sNycqragdGJtm1Gthq1oz2kWAGfZyXu1IRFB7gjUERKW778tIoEE1bpWVCQQh0cp8JqrpyDTVMvmT05KUzPJdPQt1rStneSJDamKFe0FzgLgNLxVr7Y9PdaISMLc4TQUp0IoAhJUvVoIxFVtn8m92pxccy3Hz0wzUk0l1zGXk4fHj7ATxZpVo20O07yDbM5/tQmAk/VqW2vakEADCRREAiZNjyU4rldbTPRqqx3k8r9cxvWo8\u002BrDN4\u002Bwp9erNeZMOacD4GS92qBs/viAsAjEadnmQYRQAiinx5ST5Vav1uO1mNSrzTQl1VyaOnLM7vG51Ks15kx52wNgKr3akMgH4nyoQdmZLQvVBe1NqBP1arNqpM3JNCXTTJo64nJ84MmD4zejLqRerTFnShUArV5tg5jkTb3aUEICiX2E8w6HIyDAiSIuEIdT58pCFpGqV\u002BurXq3XjFbrJyOV0WLU\u002Bapoj\u002B/VTr61Xq0xZ548o5/Xdq\u002B2NeFtnX\u002BsGSm5ZJo631q//shebY6fGGmNMee48InxJ44faSffGmMuYG5S8RtjasauCGRMjVkAGFNjFgDG1JgFgDE1ZgFgTI1ZABhTYxYAxtSYBYAxNWYBYEyNWQAYU2MWAMbUmAWAMTVmAWBMjVkAGFNjFgDG1JgFgDE1dk5fFdhc\u002BFTf/DWx61FNGwsAc9pUqd6LBHRSJWsBWrQOVF8UKHJFvbYfp6rlZWQdBLHDRYI4QdVCYLpYAJhTploWeJEphZ8ofBeUxVvkRbvwB3cPE0SOeEbA\u002BJEcnxblYyYFRtgRMLMz4aJ5MWHDIc6qf7pYAJhT0ir\u002BbMQz\u002BkZK8\u002BjENSXjmQHqlfGhnKKaAXzx/TuZtbBBxyURg7uOtu/7mc985pjn3db/x/zr\u002B99DEEUWANPIAsCcGoV8vODIP42z8/N7eObPXmXjxo3MmTOHf2g\u002Bx3e/9ze8/OTrZOOedevWsXHjL/LAH25m/FBWPvwEi/5ms8m2X//j6f5NDBYA5hS0pvfNoZz9LxzluW37WLlyJffeey9JkvClr36BL97zF2zcuJFPfvKTdHZ2ArBx40Y2bdrEpk2b2Lx58zHPuWHDBnbt2nXcN8IuTD9NLADMlGmh5OMFwweaPPuV1wBYv349SZK0jwOsXbuWzs5Oenp6APj4xz/O2rVr\u002BcYLD/OlJx8gHc559alDbNmyBYCnn36aH7/pMsTB2MGMizqTs/Db1ZMFgJkSVRAnBIljxtyYxR9awEtPHmDp0qU0m02SJOHw3jGuuvEyHnnkEQA2bdoElIHQaDTY/T8H\u002BOX7rmVR96U8\u002BtHvc\u002BONN9JsNrnjjju45J0dzOuaybxrZ57NX7N2LADM1FRtu3ysYHh/k/6H97Jt2zYajQY7duxg\u002BfLl7bs\u002B/tKXGXjxKL29vXR0dJAkCX19fQBc/I4Grz51iJ\u002B59he49tpree655wC46sbLmDE3JkicTf\u002BnkZ0JaKZEtezhpyM5Lz15gNeeOcyqVavYsWMH/f39AFxxxRX4tGDpR94JwPLly\u002Bnu7qbZbLafZ\u002Bi1cV78\u002Bn5\u002B\u002B7d/G4AnnniCjksifurfvYPG7JAgEjsHYBpZAJgp0wJ8pux\u002BfKA9\u002Bvf399PV1QXA4sWLWfGeW3m65xUARISZ8xL279/PmjVrWLlyJQD7\u002Bg/zcz/3cwwNDfF7v/d7/NjPzmFmZ0zUEVgLcJrZEsCclmXLlpEkCRs2bGh/7frrr\u002Bf222/npoGbuPLKK1m2bBkjr6fs27ePRYsWccMNN/C//t8P2LhxI52dnezcuROArg920jEnIojFpv/TzALATImIMHFeL2zZsoU5c\u002BYA0NXVxerVq9m\u002BfTsrVqygt7eX7u5u9uzZw759\u002B1iyZAmDg4M8\u002BLnP8hO3LuBXfuVXGBoa4lvf\u002BhbzF89i4U9dTHxRiAQ2/Z9uFgBmagRcKCSzQn7pU\u002B/me89/jXTQM3Yw5bq//wDXXXcdAwMDLHjvxe0QuPrqq7n88svZtWsX922\u002Bh/fdeRWHfjjKsmXL2k/7i7/748ycn9gpwGeJfHrs5hO8Hst4div1AAABBUlEQVSYY7VO4CuygnTEk4160hHPkX3jPHzz0\u002B37Lb5lAarw8hMHyMY9H/t2NwBh7Oi4NEJEaB7N2/dPZoV0XBoRNhwusACYbhYA5pSogvryRUBFrqTDntGDaft4mDiKXGkeKV8P0NlV9vXFCS4SUI59AVEouLB8FaBN/6efLQHMKREBCQUJhCAqX8abXBxOHKv6Slq0HlDdOGkfc5FUewrlcSv8s8cCwJw\u002BgSASgsgq\u002BHxlAWBOi43aFwY7EciYGrMAMKbGLACMqTELAGNqzALAmBqzADCmxiwAjKkxCwBjaswCwJgaswAwpsYsAIypMQsAY2rMAsCYGrMAMKbGLACMqbH/D0MOuCk52y/SAAAAAElFTkSuQmCC\u0022;\r\n\t\t\tvar base64Bytes = System.Convert.FromBase64String(base64);\r\n\t\t\tvar base64Path = System.IO.Path.ChangeExtension(System.IO.Path.GetTempFileName(), \u0022png\u0022);\r\n\t\t\tSystem.IO.File.WriteAllBytes(base64Path, base64Bytes);\r\n\r\n\t\t\tusing var ms = new System.IO.MemoryStream(base64Bytes);\r\n\t\t\tusing var tmp = SKBitmap.Decode(ms);\r\n\t\t\tvar outputPath = System.IO.Path.ChangeExtension(System.IO.Path.GetTempFileName(), \u0022png\u0022);\r\n\t\t\tSystem.IO.File.WriteAllBytes(outputPath, SavePngBytes(tmp));\r\n\r\n\t\t\tConsole.WriteLine($\u0022Base64 Path {base64Path}\u0022);\r\n\t\t\tConsole.WriteLine($\u0022Decoded Path {outputPath}\u0022);\r\n\t\t}\r\n\r\n\t\tpublic static byte[] SavePngBytes(SkiaSharp.SKBitmap bitmap) {\r\n\t\t\treturn SaveImageBytes(bitmap, SKEncodedImageFormat.Png, 100);\r\n\t\t}\r\n\r\n\t\tpublic static byte[] SaveImageBytes(SkiaSharp.SKBitmap bitmap, SKEncodedImageFormat imageFormat, int imageQuality) {\r\n\t\t\tif (bitmap == null)\r\n\t\t\t\tthrow new ArgumentNullException(nameof(bitmap));\r\n\r\n\t\t\tusing (var ms = new System.IO.MemoryStream()) {\r\n\t\t\t\tusing (var skStream = new SkiaSharp.SKManagedWStream(ms, false)) {\r\n\t\t\t\t\tusing (var pixmap = bitmap.PeekPixels()) {\r\n\t\t\t\t\t\tpixmap.Encode(skStream, imageFormat, imageQuality);\r\n\t\t\t\t\t}\r\n\t\t\t\t\treturn ms.ToArray();\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n}\r\n\r\n\u0060\u0060\u0060\r\nThe expected output:\r\n![image](https://user-images.githubusercontent.com/38544371/179631105-2e2e79a0-db4c-4bd3-b22c-d037631a39b2.png)\r\n\r\nThe bad output:\r\n![image](https://user-images.githubusercontent.com/38544371/179631121-68668fce-93b1-4482-953b-46bbd0762dbb.png)\r\n",
+        "createdAt": "2022-07-18T23:05:30",
+        "reactions": [
+          {
+            "user": "lindexi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:33.1786057Z"
+          },
+          {
+            "user": "jxlarrea",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:33.1786061Z"
+          }
+        ]
+      },
+      {
+        "id": 1195366339,
+        "author": "miszu",
+        "body": "@mlptownsend @jxlarrea @xiejiang2014 @lindexi I think it might be the same as #2095, which was fixed in 2.88.1-pre1 (at least for me). Might be worth to give it a shot \u263A\uFE0F",
+        "createdAt": "2022-07-26T11:33:59",
+        "reactions": []
+      },
+      {
+        "id": 1197228310,
+        "author": "mlptownsend",
+        "body": "Yeah, it\u0027s working fine in the latest previews. I was kinda hoping for a blessed stable release that contains the fix.",
+        "createdAt": "2022-07-27T18:47:37",
+        "reactions": []
+      },
+      {
+        "id": 1197735236,
+        "author": "geckomx",
+        "body": "For me, every attempt with .NET 6 failed\r\n.NET 5 works, no matter what version i use.\r\n\r\n@mlptownsend  Does it work for you with .NET 6 ?\r\n\r\n\r\n",
+        "createdAt": "2022-07-28T06:49:30",
+        "reactions": []
+      },
+      {
+        "id": 1214208041,
+        "author": "mattleibow",
+        "body": "Duplicate of #2095",
+        "createdAt": "2022-08-13T19:06:00",
+        "reactions": []
+      }
+    ]
+  }
 }

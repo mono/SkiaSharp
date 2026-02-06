@@ -14,5 +14,46 @@
   "updatedAt": "2022-09-28T21:24:07",
   "closedAt": "2022-08-12T22:31:16",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:16.041842Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1213513014,
+        "author": "mattleibow",
+        "body": "Might be related to this issue:\r\n\r\nhttps://github.com/dotnet/core/issues/6985",
+        "createdAt": "2022-08-12T20:54:15",
+        "reactions": []
+      },
+      {
+        "id": 1213521817,
+        "author": "mattleibow",
+        "body": "Seems that they added alpine 3.15 and 3.16 to the hierarchy: https://github.com/dotnet/corefx/blob/v3.1.28/pkg/Microsoft.NETCore.Platforms/runtime.json#L80\r\n\r\nBut in the actual docker image (which is 3.1.28) it is not there...",
+        "createdAt": "2022-08-12T21:09:36",
+        "reactions": []
+      },
+      {
+        "id": 1213528510,
+        "author": "mattleibow",
+        "body": "I added this to my docker image and it works... who knows what will break:\r\n\r\n\u0060\u0060\u0060Dockerfile\r\nRUN sed -i \u0027s/alpine.3.14/alpine.3.15/g\u0027 /usr/share/dotnet/shared/Microsoft.NETCore.App/3.1.28/Microsoft.NETCore.App.deps.json\r\n\u0060\u0060\u0060\r\n\r\nAlso net6 seems to be fixed...",
+        "createdAt": "2022-08-12T21:19:54",
+        "reactions": []
+      },
+      {
+        "id": 1213566163,
+        "author": "mattleibow",
+        "body": "Unfortunately, this is a .NET bug so it would be better to open an issue on the [dotnet/runtime](https://github.com/dotnet/runtime) repo.\r\n\r\nI did mention it to folks on the SDK team, but have yet to get a reply since it is probably bedtime/hometime/lunchtime there depending on where in the world this part of the team works. Hopefully the workaround gets you going again, and the issue that you file gets the real issue fixed.",
+        "createdAt": "2022-08-12T22:31:16",
+        "reactions": []
+      },
+      {
+        "id": 1214353623,
+        "author": "mattleibow",
+        "body": "Filed this issue to hopefully get it fixed: https://github.com/dotnet/runtime/issues/76338",
+        "createdAt": "2022-08-14T11:58:05",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,18 @@
   "updatedAt": "2022-09-07T09:01:21",
   "closedAt": "2022-08-08T07:16:50",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:27.5988777Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1207756389,
+        "author": "lindexi",
+        "body": "Fix by add the \u0060using\u0060 to dispose SKSvgCanvas.\r\n\r\n\u0060\u0060\u0060csharp\r\n        private void MainWindow_Loaded(object sender, RoutedEventArgs e)\r\n        {\r\n            var svgFile = \u0022Test.svg\u0022;\r\n            svgFile = Path.GetFullPath(svgFile);\r\n\r\n            var fileStream = new FileStream(svgFile,FileMode.Open,FileAccess.ReadWrite);\r\n            //var skBitmap = SKBitmap.Decode(svgFile);\r\n\r\n            using var skCanvas = SKSvgCanvas.Create(new SKRect(0,0,100,100), fileStream);\r\n\r\n            var writeableBitmap = new WriteableBitmap(100, 100, 96, 96, PixelFormats.Bgra32,\r\n                BitmapPalettes.Halftone256Transparent);\r\n\r\n            var skImageInfo = new SKImageInfo()\r\n            {\r\n                Width = 100,\r\n                Height = 100,\r\n                ColorType = SKColorType.Bgra8888,\r\n                AlphaType = SKAlphaType.Premul,\r\n                ColorSpace = SKColorSpace.CreateSrgb()\r\n            };\r\n\r\n            using SKSurface surface = SKSurface.Create(skImageInfo, writeableBitmap.BackBuffer);\r\n\r\n            writeableBitmap.Lock();\r\n            var skPaint = new SKPaint();\r\n            surface.Draw(skCanvas, 0, 0, skPaint);\r\n\r\n            writeableBitmap.AddDirtyRect(new Int32Rect(0,0,100,100));\r\n            writeableBitmap.Unlock();\r\n\r\n            var image = new Image()\r\n            {\r\n                Width = 100,\r\n                Height = 100,\r\n                Source = writeableBitmap,\r\n            };\r\n\r\n            Root.Children.Add(image);\r\n        }\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-08-08T07:16:49",
+        "reactions": []
+      }
+    ]
+  }
 }

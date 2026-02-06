@@ -13,5 +13,18 @@
   "createdAt": "2022-09-04T11:07:53",
   "updatedAt": "2022-09-05T01:54:17",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:30.2932984Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1236473957,
+        "author": "mgood7123",
+        "body": "if i test this in pure native i get \u0060SOMETHING ELSE\u0060\r\n\r\ni expect \u0060TWO FIVE FIVE\u0060 like in https://fiddle.skia.org/c/feaaefb4c89602123b712bd2688c723f\r\n\r\n\u0060\u0060\u0060c\r\n    SkImageInfo info = SkImageInfo::MakeA8(1, 1);\r\n    auto gpuSurface(SkSurface::MakeRenderTarget(AsGrRecordingContext(context), SkBudgeted::kNo, info, 0, kBottomLeft_GrSurfaceOrigin, nullptr, false));\r\n    auto surfaceCanvas = gpuSurface-\u003EgetCanvas();\r\n    SkColor color;\r\n    color = SkColorSetA(color, 255);\r\n    surfaceCanvas-\u003EdrawColor(color);\r\n    auto image_(gpuSurface-\u003EmakeImageSnapshot());\r\n    auto raster = image_-\u003EmakeRasterImage();\r\n    SkPixmap pixmap;\r\n    raster-\u003EpeekPixels(\u0026pixmap);\r\n    const uint8_t* pixels = reinterpret_cast\u003Cconst uint8_t*\u003E(pixmap.addr());\r\n    SkDebugf(pixels == nullptr ? \u0022nullptr\\n\u0022 : pixels[0] == 255 ? \u0022TWO FIVE FIVE\\n\u0022 : \u0022SOMETHING ELSE\\n\u0022);\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-09-05T01:53:57",
+        "reactions": []
+      }
+    ]
+  }
 }

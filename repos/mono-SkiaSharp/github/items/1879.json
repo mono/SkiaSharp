@@ -15,5 +15,53 @@
   "updatedAt": "2022-09-07T15:01:12",
   "closedAt": "2022-08-08T14:02:53",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:26.5939762Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 986452956,
+        "author": "MohanaselvamJ",
+        "body": "@mattleibow , could you please have a look on this.\r\n\r\nDoes SkiaSharp.HarfBuzz not compatible for Maui?",
+        "createdAt": "2021-12-06T05:30:36",
+        "reactions": []
+      },
+      {
+        "id": 1017361053,
+        "author": "slarti-zak",
+        "body": "We are also experiencing this with the \u0060preview.179\u0060\r\n\r\nNavigating to the error source, it opens the \u0060HarfBuzzSharp.NativeAssets.iOS.targets\u0060 file, which references issue https://github.com/xamarin/xamarin-macios/issues/11667 for iOS.",
+        "createdAt": "2022-01-20T10:51:19",
+        "reactions": []
+      },
+      {
+        "id": 1050019500,
+        "author": "maxkatz6",
+        "body": "Seems to be fixed with latest SkiaSharp version and .NET 6.0.200 SDK installed (including latest workloads).\r\nAfter https://github.com/mono/SkiaSharp/pull/1958",
+        "createdAt": "2022-02-24T16:13:33",
+        "reactions": []
+      },
+      {
+        "id": 1204564374,
+        "author": "dotMorten",
+        "body": "We also hit this. When using our nuget package \u0060Esri.ArcGISRuntime.Maui\u0060 with yours, this error comes up.\r\n\u003E Error\tMSB4096\tThe item \u0022C:\\Users\\mn\\.nuget\\packages\\esri.arcgisruntime.runtimes.ios\\100.14.1\\buildTransitive\\net6.0-ios13\\..\\..\\framework\\iossimulator-x64\\native\\ArcGIS-simx64.framework\u0022 in item list \u0022NativeReference\u0022 does not define a value for metadata \u0022FrameworkFilename\u0022.  In order to use this metadata, either qualify it by specifying %(NativeReference.FrameworkFilename), or ensure that all items in this list define a value for this metadata.\tMauiSignin\tC:\\Users\\mn\\.nuget\\packages\\skiasharp.nativeassets.ios\\2.88.0\\buildTransitive\\net6.0-ios13.6\\SkiaSharp.NativeAssets.iOS.targets\t6\t\r\n",
+        "createdAt": "2022-08-03T22:59:13",
+        "reactions": []
+      },
+      {
+        "id": 1205072289,
+        "author": "Rbhavsar2022",
+        "body": "Issue with SkiaSharp.Extended.UI.Maui Version=2.0.0-preview.59, When using our nuget package Esri.ArcGISRuntime.Maui Version=100.14.1-preview3\r\n\r\n\u003E /Users/xxxx/.nuget/packages/skiasharp.nativeassets.ios/2.88.1-preview.91/buildTransitive/net6.0-ios13.6/SkiaSharp.NativeAssets.iOS.targets(9,9): Error MSB4096: The item \u0022/Users/xxxx/.nuget/packages/esri.arcgisruntime.runtimes.ios/100.14.1/buildTransitive/net6.0-ios13/../../framework/iossimulator-x64/native/ArcGIS-simx64.framework\u0022 in item list \u0022NativeReference\u0022 does not define a value for metadata \u0022FrameworkFilename\u0022.  In order to use this metadata, either qualify it by specifying %(NativeReference.FrameworkFilename), or ensure that all items in this list define a value for this metadata. (MSB4096) ",
+        "createdAt": "2022-08-04T10:33:23",
+        "reactions": []
+      },
+      {
+        "id": 1206080125,
+        "author": "epsmae",
+        "body": "Same happens with:\r\n\u0060\u0060\u0060\r\nSkiaSharp.Views.Maui.Controls\r\nSkiaSharp.Views.Maui.Controls.Compatibility\r\n\u0060\u0060\u0060\r\nCommenting out the workaround from \u0022skiasharp.nativeassets.ios\\2.88.0\\buildTransitive\\net6.0-ios13.6\\SkiaSharp.NativeAssets.iOS.targets\u0022 allows the build and runs successful in debug and release.\r\n",
+        "createdAt": "2022-08-05T06:10:15",
+        "reactions": []
+      }
+    ]
+  }
 }

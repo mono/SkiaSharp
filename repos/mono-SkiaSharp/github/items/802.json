@@ -14,5 +14,38 @@
   "createdAt": "2019-02-28T15:22:14",
   "updatedAt": "2022-09-11T18:31:02",
   "commentCount": 3,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:13.9494608Z",
+    "reactions": [
+      {
+        "user": "hawkerm",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:50:13.9494646Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 468418018,
+        "author": "mattleibow",
+        "body": "What platforms are broken? Do you get _any_ events when the mouse moves?\r\nI believe it was working, maybe something broke.\r\n\r\nIt may be that you did not set \u0060e.Handled = true\u0060. If you don\u0027t let the OS know that your are interested in the event, then it won\u0027t send the rest.\r\n",
+        "createdAt": "2019-02-28T20:05:11",
+        "reactions": []
+      },
+      {
+        "id": 469778762,
+        "author": "ylatuya",
+        "body": "I do get move events when moving the mouse, but only when a button is pressed. This happens with the SkiaSharp.Views.Forms.SKCanvasView in macOS and in the Android and iOS emulators. I can\u0027t remind right now from other applications I wrote, if Android.View or UIKit.UIView emit those events, but in macOS it should.\r\n\r\nHere is the code:\r\nhttps://github.com/ylatuya/lienzosharp/blob/master/src/LienzoSharp.Skia.Forms/LienzoFormsView.cs#L104\r\n\r\nLooking at the implementation, at least for the macOS/iOS part, it seems it\u0027s only handling mouse drag events:\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/SKTouchHandler.cs",
+        "createdAt": "2019-03-05T17:40:42",
+        "reactions": []
+      },
+      {
+        "id": 619485336,
+        "author": "mattleibow",
+        "body": "I know this is an old issue, but still valid. Currently the macOS views use a gesture recognizer - which only works when the mouse is pressed.\r\n\r\nA better alternative is to override the mouse events on the view itself and/or use a \u0060NSTrackingArea\u0060.",
+        "createdAt": "2020-04-26T05:32:51",
+        "reactions": []
+      }
+    ]
+  }
 }

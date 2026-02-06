@@ -14,5 +14,115 @@
   "updatedAt": "2022-09-11T21:01:16",
   "closedAt": "2022-08-12T19:35:44",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:44.7953583Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1098914536,
+        "author": "14skywalker",
+        "body": "It looks like a change in\u0060FROM mcr.microsoft.com/dotnet/aspnet:5.0-alpine AS final\u0060 is the culprit. It was last updated April 12: [docker hub](https://hub.docker.com/_/microsoft-dotnet-aspnet/) \r\n\r\nIt installed a new version of \u0060icu-libs\u0060 but I don\u0027t know if that causes the SkiaSharp exception.\r\n\r\nFor now I am fixing the runner image to \u0060FROM mcr.microsoft.com/dotnet/aspnet:5.0.15-alpine3.14 AS final\u0060 as this seems to be the version before last (according to the [history](https://mcr.microsoft.com/v2/dotnet/aspnet/tags/list))\r\n\r\n",
+        "createdAt": "2022-04-14T09:20:20",
+        "reactions": []
+      },
+      {
+        "id": 1129017322,
+        "author": "Trapov",
+        "body": "hit the same issue today with aspnet:6 tho",
+        "createdAt": "2022-05-17T15:32:33",
+        "reactions": []
+      },
+      {
+        "id": 1129036930,
+        "author": "mattleibow",
+        "body": "You should not have both \u0060SkiaSharp.NativeAssets.Linux\u0060 and \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 installed as they both have the same dlls, but different builds.\r\n\r\nIf you just use \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 does it not work?\r\n\r\nOften it is because there is a missing fontconfig. Maybe it was installed on older docker images but is now removed?",
+        "createdAt": "2022-05-17T15:50:32",
+        "reactions": []
+      },
+      {
+        "id": 1129041699,
+        "author": "Trapov",
+        "body": "\u003E If you just use SkiaSharp.NativeAssets.Linux.NoDependencies does it not work?\r\n\r\nsadly but it doesn\u0027t work :(",
+        "createdAt": "2022-05-17T15:54:23",
+        "reactions": []
+      },
+      {
+        "id": 1129059439,
+        "author": "Trapov",
+        "body": "I\u0027m using \u0060mcr.microsoft.com/dotnet/aspnet:6.0\u0060 and \u0060Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.80.3\u0022\u0060 and it throws the same error.",
+        "createdAt": "2022-05-17T16:11:15",
+        "reactions": []
+      },
+      {
+        "id": 1129071535,
+        "author": "mattleibow",
+        "body": "And if you do \u0060readelf -d libSkiaSharp.so\u0060 on the libSkiaSharp.so, what dependencies is it missing?",
+        "createdAt": "2022-05-17T16:23:08",
+        "reactions": []
+      },
+      {
+        "id": 1129264017,
+        "author": "Trapov",
+        "body": "Strange but it doesn\u0027t have the linux variant @mattleibow \r\n\r\n\u003Cimg width=\u0022436\u0022 alt=\u0022image\u0022 src=\u0022https://user-images.githubusercontent.com/13402883/168899414-756cb28f-8fd1-4590-83a9-c038e118bf59.png\u0022\u003E\r\n",
+        "createdAt": "2022-05-17T19:59:48",
+        "reactions": []
+      },
+      {
+        "id": 1129311654,
+        "author": "mattleibow",
+        "body": "oh? That is very interesting. It is in the package:\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/168908944-345efadd-5cfb-43ed-80b2-a38517ccae02.png)\r\n\r\nDo you not have some code somewhere that might exclude this?\r\n\r\nCan you get a binlog of the build? That might show some more info as to why it left the building.",
+        "createdAt": "2022-05-17T20:59:06",
+        "reactions": []
+      },
+      {
+        "id": 1129578350,
+        "author": "Trapov",
+        "body": "Nevermind I had a condition when referencing the package and this condition was wrong so I ended up with no package for linux.",
+        "createdAt": "2022-05-18T05:21:07",
+        "reactions": []
+      },
+      {
+        "id": 1129703645,
+        "author": "mattleibow",
+        "body": "So are we all good?",
+        "createdAt": "2022-05-18T08:09:03",
+        "reactions": []
+      },
+      {
+        "id": 1129705617,
+        "author": "Trapov",
+        "body": "We good, it works, thanks for the help anyway :)",
+        "createdAt": "2022-05-18T08:10:59",
+        "reactions": []
+      },
+      {
+        "id": 1181991463,
+        "author": "jasells",
+        "body": "\u003E Nevermind I had a condition when referencing the package and this condition was wrong so I ended up with no package for linux.\r\n\r\nWhat was the issue?  I am trying to build/run an app using SkiaSharp \u002B GTK# on linux as well, and getting the missing libSkiaSharp as well.  The .dll (managed) and the .so are both in my /bin/debug/.  I tried both the nativeAssets packages (with/without dependencies) with same results each time, and also with either package...\r\n\r\nI am building in MonoDevelop on Ubuntu 22.04\r\n\r\n\u0022Unable to load library \u0027libSkiaSharp\u0027.\u0022\r\n\r\n\u0060\u0060\u0060\r\n  at SkiaSharp.LibraryLoader.LoadLocalLibrary[T] (System.String libraryName) [0x0001b] in D:\\a\\1\\s\\binding\\Binding.Shared\\LibraryLoader.cs:32 \r\n  at SkiaSharp.SkiaApi\u002B\u003C\u003Ec.\u003C.cctor\u003Eb__1831_0 () [0x00000] in D:\\a\\1\\s\\binding\\Binding\\SkiaApi.cs:15 \r\n  at System.Lazy\u00601[T].ViaFactory (System.Threading.LazyThreadSafetyMode mode) [0x00043] in \u003Cde882a77e7c14f8ba5d298093dde82b2\u003E:0 \r\n  at System.Lazy\u00601[T].ExecutionAndPublication (System.LazyHelper executionAndPublication, System.Boolean useDefaultConstructor) [0x00022] in \u003Cde882a77e7c14f8ba5d298093dde82b2\u003E:0 \r\n  at System.Lazy\u00601[T].CreateValue () [0x00074] in \u003Cde882a77e7c14f8ba5d298093dde82b2\u003E:0 \r\n  at System.Lazy\u00601[T].get_Value () [0x0000a] in \u003Cde882a77e7c14f8ba5d298093dde82b2\u003E:0 \r\n  at SkiaSharp.SkiaApi.GetSymbol[T] (System.String name) [0x00000] in D:\\a\\1\\s\\binding\\Binding\\SkiaApi.cs:18 \r\n  at SkiaSharp.SkiaApi.sk_picture_recorder_new () [0x00000] in D:\\a\\1\\s\\binding\\Binding\\SkiaApi.generated.cs:8954 \r\n  at SkiaSharp.SKPictureRecorder..ctor () [0x00000] in D:\\a\\1\\s\\binding\\Binding\\SKPictureRecorder.cs:13 \r\n  at Svg.Skia.SkiaModelExtensions.ToSKPicture (ShimSkiaSharp.SKPicture picture) [0x00011] in /_/src/Svg.Skia/SkiaModelExtensions.cs:930 \r\n  at Svg.Skia.SKSvg.Load (System.IO.Stream stream) [0x0002d] in /_/src/Svg.Skia/SKSvg.cs:56 \r\n  at Mapsui.UI.Forms.MapView..ctor () [0x00326] in \u003Ccb19876efc2b46dd9ea868b9137c89fc\u003E:0 \r\n  at Xforms.Linux.Demo.MapView..ctor () [0x00000] in /Xforms.Linux.Demo/Xforms.Linux.Demo/MapView.cs:11 \r\n  at Xforms.Linux.Demo.App..ctor () [0x0000f] in /Xforms.Linux.Demo/App.xaml.cs:14 \r\n  at Xforms.Linux.Demo.Gtk.Program.Main (System.String[] args) [0x0000e] in /Xforms.Linux.Demo.Gtk/Program.cs:16 \r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2022-07-12T16:33:35",
+        "reactions": []
+      },
+      {
+        "id": 1207545338,
+        "author": "zxh126",
+        "body": "Add Package SkiaSharp.NativeAssets.Linux or SkiaSharp.NativeAssets.Linux.NoDependencies.",
+        "createdAt": "2022-08-08T01:20:24",
+        "reactions": [
+          {
+            "user": "jasells",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:44.5307507Z"
+          }
+        ]
+      },
+      {
+        "id": 1213451793,
+        "author": "mattleibow",
+        "body": "I think the key here is the \u0022or\u0022 because installing both packages results in 2 native binaries - and the build selects a random one and you get lucky.\r\n\r\nOtherwise, for most general distros/flavors of linux, the packages should be working fine. Usually the OS installs the fontconfig files, but you can confirm by running:\r\n\r\n\u0060\u0060\u0060\r\nreadelf -d libSkiaSharp.so\r\n\u0060\u0060\u0060\r\n\r\nIf you have fontconfig or don\u0027t mind installing/depending on it, you can use the \u0060SkiaSharp.NativeAssets.Linux\u0060 package.\r\n\r\nIf you don\u0027t have/want to install fontconfig, you need to use the \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 package instead.\r\n\r\nI am closing this issue as I believe the issue is resolved. However, if this is still happening on linux, please open a new issue with specific details of the version of SkiaSharp, the version and distro of the linux used and any other dotnet and sdk versions related.",
+        "createdAt": "2022-08-12T19:35:44",
+        "reactions": []
+      }
+    ]
+  }
 }

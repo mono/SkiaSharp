@@ -14,5 +14,59 @@
   "updatedAt": "2022-09-10T09:01:18",
   "closedAt": "2022-08-11T08:51:55",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:20.4321185Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1172895948,
+        "author": "koszeggy",
+        "body": "Update: I opened a [discussion](https://github.com/dotnet/maui/discussions/8490) in the dotnet/maui repo. Attempts 3 and 4 seem to be at their side but I\u0027m not 100% sure where the boundaries are.",
+        "createdAt": "2022-07-02T13:08:25",
+        "reactions": []
+      },
+      {
+        "id": 1173057766,
+        "author": "cangunaydin",
+        "body": "Hi,\r\nI am also trying to run a simple sample with skiasharp and maui. I am having the same problem that you described in your first attempt on my project. And to make it crash, inserting the skiacanvas object to xaml is enough.\r\n\u003Cskia:SKCanvasView x:Name=\u0022skiaView\u0022 /\u003E\r\n\r\nSo i was wondering, am i doing sth wrong with installation or officially skiasharp doesn\u0027t work with maui?",
+        "createdAt": "2022-07-03T10:48:54",
+        "reactions": []
+      },
+      {
+        "id": 1175528858,
+        "author": "timctrahan",
+        "body": "I am having this same sequence of issues myself.  After weeks of coding a graphics library to generate the images I want displayed on my maui page, I have hit a brick wall trying to get this last part to work.  I generate an SkBitmap and get the same crash when trying to use SkCanvasView and when trying to use the Maui Graphics view, I haven\u0027t been able to figure out how to render my skbitmap. trying with graphicsview says toplatformimage not supported.  This is very frustrating",
+        "createdAt": "2022-07-05T21:44:10",
+        "reactions": []
+      },
+      {
+        "id": 1176088865,
+        "author": "cangunaydin",
+        "body": "Just an update from me, i have managed to fix the problem after long struggle,\r\nTo use SKCanvasView you need to configure this line in mauiprogram.cs in your project. Tell the maui to use skiasharp with this method\r\n**.UseSkiaSharp()**\r\n\u0060\u0060\u0060\r\nvar builder = MauiApp.CreateBuilder();\r\n            builder\r\n                .UseMauiApp\u003CApp\u003E()\r\n                .UseSkiaSharp()\r\n\u0060\u0060\u0060\r\n                \r\nand for drawing bitmap, i believe it depends on what kind of bitmap data you have.\r\nfor ex: i had raw **rgba** data so i will be able to draw the bitmap with this code, here i am drawing it from byte array\r\n\u0060\u0060\u0060\r\nusing (var data = SKData.CreateCopy(_frameBuffer))\r\n            using (var original = new SKBitmap())\r\n            {\r\n                // create a new bitmap using the memory\r\n                original.InstallPixels(new SKImageInfo(_frameWidth, _frameHeight, SKColorType.Rgba8888), data.Data);\r\n                using (var resized = original.Resize(new SKImageInfo(canvasWidth, canvasHeight), SKFilterQuality.Medium))\r\n                {\r\n                    canvas.DrawBitmap(resized, 0, 0);\r\n                }\r\n            }\r\n\u0060\u0060\u0060\r\n\r\nhere in this issue @mattleibow explained it nicely. https://github.com/mono/SkiaSharp/issues/603\r\n\r\nand for the .jpeg file that i have downloaded i can draw the bitmap like this.\r\n\r\n\u0060\u0060\u0060\r\n using (var image = SKBitmap.Decode(_frameBuffer))\r\n            {\r\n                canvas.DrawBitmap(image, 0, 0);\r\n            }\r\n\u0060\u0060\u0060\r\n            \r\nsome notes that i have found out while i am trying.\r\n\r\n- I couldn\u0027t use SKGLView it throws an error on maui, probably as a default, skcanvasview use gpu. But i am not sure about this\r\n- second thing is when i try to installpixels in this code\r\n\u0060original.InstallPixels(new SKImageInfo(_frameWidth, _frameHeight, SKColorType.Rgba8888), data.Data); \u0060\r\nif i do not define the type as Rgba8888, it loads the image with different format. Colors are kind of weird since it is a different format. But if i do not give the type in blazor with SKGLView it loads it succesfully, so i was stucked with that for a long time to find out the problem about weird colors.\r\n\r\nhope this can help someone. \r\n\r\n\r\n",
+        "createdAt": "2022-07-06T11:05:28",
+        "reactions": [
+          {
+            "user": "andressbarajas",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:50:19.8774761Z"
+          }
+        ]
+      },
+      {
+        "id": 1205400385,
+        "author": "andressbarajas",
+        "body": "I have one word for you. SAVIOR ^^^",
+        "createdAt": "2022-08-04T15:19:01",
+        "reactions": []
+      },
+      {
+        "id": 1211713762,
+        "author": "mattleibow",
+        "body": "Duplicate of #2013\r\n\r\nThe issue is there is no way for SkiaSharp to register handlers dynamically: https://github.com/dotnet/maui/issues/7258\r\n\r\nUpvote that issue to get this working magically.",
+        "createdAt": "2022-08-11T08:51:55",
+        "reactions": []
+      }
+    ]
+  }
 }

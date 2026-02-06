@@ -14,5 +14,18 @@
   "updatedAt": "2022-09-08T00:01:16",
   "closedAt": "2022-08-08T22:43:53",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:50:24.6946019Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1002896146,
+        "author": "lindexi",
+        "body": "How to fix it?\r\n\r\n**Solution1**:\r\n\r\nUsing \u0060UnmanagedType.LPUTF8Str\u0060 to replace \u0060UnmanagedType.LPStr\u0060:\r\n\r\n\u0060\u0060\u0060csharp\r\n[DllImport(\u0022libSkiaSharp\u0022, CallingConvention = CallingConvention.Cdecl)]\r\nstatic extern IntPtr sk_fontmgr_match_family_style(\r\n    IntPtr param0,\r\n    [MarshalAs(UnmanagedType.LPUTF8Str)] string familyName,\r\n    IntPtr style);\r\n\u0060\u0060\u0060\r\n\r\nBut we have to update the dotnet core to use it.\r\n\r\n![\u56FE\u7247](https://user-images.githubusercontent.com/16054566/147728437-28afc90c-e474-4e47-a04d-31fc3ad3bc03.png)\r\n\r\nCode: https://github.com/lindexi/lindexi_gd/blob/7a64eb6cca60c5bf0d4255089c24c01297094140/JaynawlifallnerBawhairchikel/JaynawlifallnerBawhairchikel/Program.cs\r\n\r\n\r\n**Solution2**:\r\n\r\nDefining the \u0060familyName\u0060 argument as IntPtr. And we input the utf8 string byte intptr.\r\n\r\n\u0060\u0060\u0060csharp\r\nvar utf8ByteList = Encoding.UTF8.GetBytes(\u0022\u5B8B\u4F53\u0022);\r\n\r\nIntPtr typefaceHandle;\r\nunsafe\r\n{\r\n    fixed (byte* p = utf8ByteList)\r\n    {\r\n        typefaceHandle =\r\n            sk_fontmgr_match_family_style(SKFontManager.Default.Handle, new IntPtr(p),SKFontStyle.Normal.Handle); // OK\r\n    }\r\n}\r\n\r\n[DllImport(\u0022libSkiaSharp\u0022, CallingConvention = CallingConvention.Cdecl)]\r\nstatic extern IntPtr sk_fontmgr_match_family_style(\r\n    IntPtr param0,\r\n    IntPtr familyName,\r\n    IntPtr style);\r\n\u0060\u0060\u0060\r\n\r\n![\u56FE\u7247](https://user-images.githubusercontent.com/16054566/147730292-e7ae2017-bc50-42fd-b08d-e0bd65efbb58.png)\r\n\r\nCode: https://github.com/lindexi/lindexi_gd/blob/4131429fe7cb66aa58c33ddfb96401455d933070/JaynawlifallnerBawhairchikel/JaynawlifallnerBawhairchikel/Program.cs",
+        "createdAt": "2021-12-30T06:51:14",
+        "reactions": []
+      }
+    ]
+  }
 }

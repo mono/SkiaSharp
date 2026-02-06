@@ -19,5 +19,94 @@
   "updatedAt": "2022-09-11T21:01:19",
   "closedAt": "2022-08-12T19:30:13",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:49:38.8462495Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 593354507,
+        "author": "mattleibow",
+        "body": "Whoah. Let me take a look. That is super weird.",
+        "createdAt": "2020-03-02T11:21:26",
+        "reactions": []
+      },
+      {
+        "id": 670118723,
+        "author": "bazilshep",
+        "body": "I have a similar issue, and I think I\u0027ve tracked down the offending code from the build I\u0027m currently using.\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/7fe55eb3ee6e2dfad48a03851314de8420109dce/binding/SkiaSharp.Desktop/nuget/build/net45/SkiaSharp.targets#L48-L54\r\n\r\nThis file gets built into the SkiaSharp nuget package and imported into my project\u0027s csproj file.\r\n\u0060\u003CImport Project=\u0022..\\packages\\SkiaSharp.1.68.1.1\\build\\net45\\SkiaSharp.targets\u0022 Condition=\u0022Exists(\u0027..\\packages\\SkiaSharp.1.68.1.1\\build\\net45\\SkiaSharp.targets\u0027)\u0022 /\u003E\u0060\r\n\r\nDisabling the \u0060ItemGroup\u0060 quoted above in the SkiaSharp.targets file appears to fix the issue for me (disabled via \u0060\u003CItemGroup Condition=\u0022False\u0022\u003E\u0060 ).\r\n\r\nI tried to debug that condition (since it shouldn\u0027t be met for my project) by adding some tracing to the package \u0060SkaiSharp.targets\u0060 file.\r\n\u0060\u0060\u0060\r\n\u003CTarget Name=\u0022TestMessage\u0022 AfterTargets=\u0022Build\u0022 \u003E\r\n  \u003CMessage Text=\u0022XamarinMacFrameworkRoot\u0022 Importance=\u0022high\u0022/\u003E\r\n  \u003CMessage Text=\u0022\u0027$(XamarinMacFrameworkRoot)\u0027 != \u0027\u0027\u0022 Importance=\u0022high\u0022/\u003E\r\n  \u003CMessage Text=\u0022Full Itemgroup condition\u0022 Importance=\u0022high\u0022/\u003E\r\n  \u003CMessage Text=\u0022\u0027$(ShouldIncludeNativeSkiaSharp)\u0027 != \u0027False\u0027 and \u0027$(XamarinMacFrameworkRoot)\u0027 != \u0027\u0027 and \u0027$(TargetFrameworkIdentifier)\u0027 != \u0027Xamarin.Mac\u0027 and \u0027$(UseXamMacFullFramework)\u0027 == \u0027true\u0027 and (\u0027$(OutputType)\u0027 == \u0027Exe\u0027 or \u0027$(IsAppExtension)\u0027 == \u0027true\u0027) \u0022 Importance=\u0022high\u0022/\u003E\r\n\u003C/Target\u003E\r\n\u0060\u0060\u0060\r\nThis outputs the following to the build output:\r\n\u0060\u0060\u0060\r\n2\u003E  XamarinMacFrameworkRoot\r\n2\u003E  \u0027\u0027 != \u0027\u0027\r\n2\u003E  Full Itemgroup condition\r\n2\u003E  \u0027True\u0027 != \u0027False\u0027 and \u0027\u0027 != \u0027\u0027 and \u0027.NETFramework\u0027 != \u0027Xamarin.Mac\u0027 and \u0027\u0027 == \u0027true\u0027 and (\u0027Library\u0027 == \u0027Exe\u0027 or \u0027\u0027 == \u0027true\u0027) \r\n\u0060\u0060\u0060\r\nI\u0027m not sure why its acting like the condition is true, but it is.\r\n",
+        "createdAt": "2020-08-06T18:41:07",
+        "reactions": []
+      },
+      {
+        "id": 670770838,
+        "author": "mattleibow",
+        "body": "This sounds like a bug in VS. I also started observing this in my IDE and it is just for the \u0060\u003CNativeReference /\u003E\u0060 elements. I believe Windows was using that for something else. However, this is still a bug in the IDE because it is not supposed to even see that item due to the conditions.\r\n\r\nI created a bug report for the IDE: https://developercommunity.visualstudio.com/content/problem/1142283/elements-still-appear-in-the-ide-even-though-they.html",
+        "createdAt": "2020-08-07T22:34:53",
+        "reactions": []
+      },
+      {
+        "id": 769733287,
+        "author": "ziriax",
+        "body": "We get tons of these warnings when building on Windows with SkiaSharp 2.80.2.\r\n\r\nI get \u0060access denied\u0060 when trying to look at  https://developercommunity.visualstudio.com/content/problem/1142283/elements-still-appear-in-the-ide-even-though-they.html, so I can\u0027t check the status.\r\n\r\nIs a workaround known? It\u0027s driving my colleagues nuts \uD83D\uDE09 ",
+        "createdAt": "2021-01-29T10:55:06",
+        "reactions": []
+      },
+      {
+        "id": 769896566,
+        "author": "mattleibow",
+        "body": "Luckily I am a MS employee so I made this public. \uD83D\uDE04 Hopefully I don\u0027t get into trouble... It might have been me that made it private accidentally.\r\nAnyway, it has not had any progress \uD83D\uDE22  due to lack of interest... Probably due to it being private.\r\n\r\nHopefully we can all jump on there and make it go viral.",
+        "createdAt": "2021-01-29T16:09:07",
+        "reactions": []
+      },
+      {
+        "id": 769897872,
+        "author": "mattleibow",
+        "body": "Here is a duplicate issue that you can also vote on: https://developercommunity.visualstudio.com/content/problem/1251187/why-nativereference-cannot-recoginze-msbuild-prope.html",
+        "createdAt": "2021-01-29T16:11:17",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:38.3462358Z"
+          },
+          {
+            "user": "lvernaillen",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:38.3462363Z"
+          },
+          {
+            "user": "bsymo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:38.3462364Z"
+          }
+        ]
+      },
+      {
+        "id": 1004097870,
+        "author": "ju-sti",
+        "body": "So according to the link above it is fixed in VS 16.11 but I am still seeing the same error in VS2019 (16.11.8) and VS2022. I traced the problem to the Skiasharp.targets file like @bazilshep above and it seems like that the condition is still wonky.\r\n\r\n- Version with issue: 1.68.3\r\n- IDE: VS 2019\u002B2022\r\n- Platform Target Frameworks: .net 4.7.2\r\n- Target Devices: Windows\r\n\r\nThanks for your help",
+        "createdAt": "2022-01-03T13:36:56",
+        "reactions": [
+          {
+            "user": "DrYacco",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:38.5986672Z"
+          },
+          {
+            "user": "alexachso",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:49:38.5986677Z"
+          }
+        ]
+      },
+      {
+        "id": 1213447837,
+        "author": "mattleibow",
+        "body": "I believe this was fixed in the IDE because I am no longer seeing this. If not, please reopen the issue on the VS feedback portal because the IDE needs to correctly handle the NativeReference - since that is an official build action.",
+        "createdAt": "2022-08-12T19:30:13",
+        "reactions": []
+      }
+    ]
+  }
 }
