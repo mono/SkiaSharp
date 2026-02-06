@@ -29,62 +29,66 @@
   "commentCount": 4,
   "reactionCount": 4,
   "engagement": {
-    "syncedAt": "2026-02-05T15:27:24.4323879Z",
+    "syncedAt": "2026-02-06T11:45:38.9016596Z",
     "reactions": [
       {
         "user": "joshardt",
         "content": "\u002B1",
-        "createdAt": "2026-02-05T15:27:24.4323958Z"
+        "createdAt": "2026-02-06T11:45:38.9016672Z"
       },
       {
         "user": "raginmari",
         "content": "\u002B1",
-        "createdAt": "2026-02-05T15:27:24.4323966Z"
+        "createdAt": "2026-02-06T11:45:38.9016679Z"
       },
       {
         "user": "Zure1",
         "content": "\u002B1",
-        "createdAt": "2026-02-05T15:27:24.4323969Z"
+        "createdAt": "2026-02-06T11:45:38.9016682Z"
       },
       {
         "user": "Copilot",
         "content": "eyes",
-        "createdAt": "2026-02-05T15:27:24.4323974Z"
+        "createdAt": "2026-02-06T11:45:38.9016686Z"
       }
     ],
     "comments": [
       {
         "id": 1923586725,
         "author": "joshardt",
+        "body": "I would like to have this as well for my projects. The previous Xamarin library we used from Airbnb had at least a Play and Stop method. The alternative SkiaSharp.Extended.UI.Maui doesn\u0027t provide these methods. Therefore, it\u0027s very hard to control animations in code.",
         "createdAt": "2024-02-02T11:09:32",
         "reactions": [
           {
             "user": "bogdan-adesso-romania",
             "content": "\u002B1",
-            "createdAt": "2026-02-05T15:27:23.7685387Z"
+            "createdAt": "2026-02-06T11:45:38.2345734Z"
           },
           {
             "user": "mattleibow",
             "content": "\u002B1",
-            "createdAt": "2026-02-05T15:27:23.7685397Z"
+            "createdAt": "2026-02-06T11:45:38.2345743Z"
           }
         ]
       },
       {
         "id": 2071973576,
         "author": "mattleibow",
+        "body": "I think all of these actions can be performed using properties:\r\n\r\n- \u0060IsAnimationEnabled\u0060 - \u0060true\u0060 is start and \u0060false\u0060 is stop\r\n- \u0060Progress\u0060 - \u0060TimeSpan\u0060 of the progress \r\n- \u0060Duration\u0060 - \u0060TimeSpan\u0060 of the total time\r\n\r\nIf you want to get a percent progress then you can convert the \u0060Duration\u0060 into \u0060TotalSeconds\u0060 and then use that to get a percentage and convert back into a \u0060TimeSpan\u0060 for the \u0060Progress\u0060 property.",
         "createdAt": "2024-04-23T10:39:17",
         "reactions": []
       },
       {
         "id": 2073002741,
         "author": "IeuanWalker",
+        "body": "@mattleibow in order to achieve what i described in the issue, you\u0027d need to do a while loop to monitor the progress in order to change \u0060IsAnimationEnabled\u0060 false at the right time.\r\n\r\nYou also can\u0027t reverse the animation either.\r\n\r\n___\r\n\r\nFor example, if you want to create an animated toggle using the following file -\r\nhttps://lottiefiles.com/127464-animated-switch-ae-version\r\n\r\n_(for the sake of the example let\u0027s just assume there are 100 frames in the animation)_\r\n\r\nWhen going from false to true, you\u0027d want to play frames 0 to 80\r\nThen going from true to false, you\u0027d want to play frame 80 - 0 _(reverse animation)_\r\n\r\nThe [playSegments](https://airbnb.io/lottie/#/web?id=usage-1:~:text=anim.playSegments(segments%2C%20forceFlag)) in this API automatically handles all that _(the stopping at the right frame and changing the direction of the animation)_\r\n\r\n\u003E Sorry in the issue I mentioned \u0060goToAndStop\u0060 API when I meant the \u0060playSegments\u0060 API\r\n",
         "createdAt": "2024-04-23T17:35:48",
         "reactions": []
       },
       {
         "id": 2117121013,
         "author": "nk-alex",
+        "body": "As @mattleibow said, you can play with those properties to be able to play just certain frames forward and backwards. You don\u0027t really need any loop to keep on checking the animation progress. \r\n\r\n\u0060\u0060\u0060\r\npublic void PlayLottieAnimation(SKLottieView lottieAnimation, \r\n\t\tTimeSpan startPoint, TimeSpan playDuration, SKLottieRepeatMode repeatMode)\r\n{\r\n\tTask.Run(async() =\u003E\r\n\t{\r\n\t\tlottieAnimation.RepeatMode = repeatMode;\r\n\t\tlottieAnimation.Progress = startPoint;\r\n\t\tlottieAnimation.IsAnimationEnabled = true;\r\n\r\n\t\tawait Task.Delay(playDuration);\r\n\t\tlottieAnimation.IsAnimationEnabled = false;\r\n\t});\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\n//XAML\r\n\r\n\u003Cskia:SKLottieView\r\n\t\tx:Name=\u0022animationView\u0022\r\n\t\tSource=\u0022animation.json\u0022\r\n\t\tHeightRequest=\u002260\u0022\r\n\t\tWidthRequest=\u002260\u0022\r\n\t\tProgress=\u00220\u0022\r\n\t\tIsAnimationEnabled=\u0022False\u0022\r\n\t\tVerticalOptions=\u0022Center\u0022\r\n\t\tHorizontalOptions=\u0022Center\u0022\u003E\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\n//Code behind\r\n\r\nPlayLottieAnimation(this.animationView, new TimeSpan(0), \r\n\t\tnew TimeSpan(0, 0, 0, 0, 700), \r\n\t\tSkiaSharp.Extended.UI.Controls.SKLottieRepeatMode.Restart)\r\n\r\nPlayLottieAnimation(this.animationView, new TimeSpan(0, 0, 0, 0, 700), \r\n\t\tnew TimeSpan(0, 0, 0, 0, 700), \r\n\t\tSkiaSharp.Extended.UI.Controls.SKLottieRepeatMode.Reverse)\r\n\u0060\u0060\u0060\r\n\r\nIn my case I play the animation from 0 to millisecond 700. Then from 700 back to 0. In case you want to work with percentages, you can do it as well with a little math taking into account:  \r\n- Duration: A value indicating the total duration of the animation\r\n- Progress: The current playback progress of the animation.",
         "createdAt": "2024-05-17T09:23:21",
         "reactions": []
       }

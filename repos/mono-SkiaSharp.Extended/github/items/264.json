@@ -20,48 +20,54 @@
   "commentCount": 6,
   "reactionCount": 0,
   "engagement": {
-    "syncedAt": "2026-02-05T15:28:32.0567107Z",
+    "syncedAt": "2026-02-06T11:46:40.8568719Z",
     "reactions": [],
     "comments": [
       {
         "id": 2042234610,
         "author": "mattleibow",
+        "body": "Are you able to attach a repro sample? I tested now and it seemed to work fine. Maybe there is some configuration issues or some issue with the version of skia, maybe and the toolkit versions.",
         "createdAt": "2024-04-08T09:03:56",
         "reactions": []
       },
       {
         "id": 2046628278,
         "author": "georgeemr",
+        "body": "Sure,\r\nI create a project from scratch and the issue. persist.\r\n\r\n![image](https://github.com/mono/SkiaSharp.Extended/assets/3822009/e030ebdc-3311-4cd1-815a-2f31917dd423)\r\n\r\nMaui 8.0.7\r\n![image](https://github.com/mono/SkiaSharp.Extended/assets/3822009/5a4f7bd9-f3e3-48e1-a6bc-56da32c32b95)\r\n\r\nhttps://1drv.ms/u/s!AlTIxW_ExT1enfFcWZ8yhgAkMaYebA?e=OGdotf\r\n",
         "createdAt": "2024-04-10T06:32:41",
         "reactions": []
       },
       {
         "id": 2067078930,
         "author": "matthericks",
+        "body": "I am also running into a similar issue. Loading in a checkmark animation has both a strange checkmark shape and the animation surrounding the circle appears to be wrong.\r\n\r\nrepo: https://github.com/matthericks/lottie-broken-animation\r\nlink to animation in Lottie files: https://app.lottiefiles.com/animation/71e19298-edbb-4d04-a06c-5bd891bea298?panel=download\r\nanimation file: [success.json](https://github.com/mono/SkiaSharp.Extended/files/15044328/success.json)\r\n\r\nscreenshot of checkbox in app: \u003Cimg width=\u00221071\u0022 alt=\u0022Screenshot 2024-04-19 at 1 05 43\u202FPM\u0022 src=\u0022https://github.com/mono/SkiaSharp.Extended/assets/19779550/7e98d14e-de3c-4cac-aa70-e477804147ef\u0022\u003E\r\n\r\nscreenshot of expected checkbox: \r\n\u003Cimg width=\u0022536\u0022 alt=\u0022Screenshot 2024-04-19 at 1 19 53\u202FPM\u0022 src=\u0022https://github.com/mono/SkiaSharp.Extended/assets/19779550/4f586762-c63d-46bf-9288-b98ba564a45e\u0022\u003E\r\n",
         "createdAt": "2024-04-19T18:21:02",
         "reactions": []
       },
       {
         "id": 2070788615,
         "author": "mattleibow",
+        "body": "Thanks @matthericks for this lottie. It appears to be a bug in skia directly: https://skottie.skia.org/21af4dec27795f93f0ab6e5f803ea330?h=512\u0026w=512\r\n\r\nI see this issue may be the related one: https://issues.skia.org/issues/40043184\r\n\r\nThere is a comment about Expressions not being supported yet. Do you know if your lottie file uses Expressions?",
         "createdAt": "2024-04-22T19:37:32",
         "reactions": []
       },
       {
         "id": 2075446966,
         "author": "matthericks",
+        "body": "@mattleibow it does not, but that link also had some discussion on the file where I was seeing the issues, and it looks like the checkmark was created using absolute instead of relative coordinates. I updated my file with those coordinates and everything works perfectly.\r\n\r\nthanks!",
         "createdAt": "2024-04-24T17:12:38",
         "reactions": [
           {
             "user": "mattleibow",
             "content": "heart",
-            "createdAt": "2026-02-05T15:28:31.8113505Z"
+            "createdAt": "2026-02-06T11:46:40.6031294Z"
           }
         ]
       },
       {
         "id": 2315488050,
         "author": "idiidi",
+        "body": "I also have this issue with a some Lottie files I downloaded from LottieFiles. \r\nIs there a solution for converting these files to make them work?\r\n\r\nEdit: Never mind. ChatGPT did the work for me :)",
         "createdAt": "2024-08-28T14:25:22",
         "reactions": []
       }

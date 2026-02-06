@@ -21,100 +21,112 @@
   "commentCount": 12,
   "reactionCount": 0,
   "engagement": {
-    "syncedAt": "2026-02-05T15:28:51.9181218Z",
+    "syncedAt": "2026-02-06T11:46:58.6031759Z",
     "reactions": [],
     "comments": [
       {
         "id": 1186541615,
         "author": "jfversluis",
+        "body": "I\u0027ve seen this too, but on Windows it works fine. Seems specific to building on a Mac.\r\n\r\n\u0060.UseSkiaSharp()\u0060 is in place, building on Windows and deploy to Android: works. Build the same code on Mac and deploy to iOS, macOS, Android: doesn\u0027t work and throws this error.",
         "createdAt": "2022-07-17T14:57:41",
         "reactions": [
           {
             "user": "RajarajanA",
             "content": "\u002B1",
-            "createdAt": "2026-02-05T15:28:49.4310918Z"
+            "createdAt": "2026-02-06T11:46:56.487355Z"
           },
           {
             "user": "mattleibow",
             "content": "\u002B1",
-            "createdAt": "2026-02-05T15:28:49.4310924Z"
+            "createdAt": "2026-02-06T11:46:56.4873555Z"
           },
           {
             "user": "xiz0r",
             "content": "\u002B1",
-            "createdAt": "2026-02-05T15:28:49.4310925Z"
+            "createdAt": "2026-02-06T11:46:56.4873556Z"
           }
         ]
       },
       {
         "id": 1197541756,
         "author": "mattleibow",
+        "body": "Thanks for the additional info about platforms. I\u0027ll have a look.",
         "createdAt": "2022-07-28T01:17:18",
         "reactions": []
       },
       {
         "id": 1200438258,
         "author": "rsbepvb",
+        "body": "Having the same problem (Handler not found) on Mac notwithstanding including .UseSkiaSharp() in Builder.   ",
         "createdAt": "2022-07-31T14:38:50",
         "reactions": []
       },
       {
         "id": 1221598635,
         "author": "jfversluis",
+        "body": "Seems like this might\u0027ve been a bug in... something else. It\u0027s working for me now from a Mac as well!",
         "createdAt": "2022-08-21T18:33:09",
         "reactions": []
       },
       {
         "id": 1221599239,
         "author": "rsbepvb",
+        "body": "Thanks Gerald, but I just checked again on my Mac and it still throws this Handler not found for SKLottieView exception.   Running latest versions of everything (VSM 17.4 preview, all dependencies updated, etc..).",
         "createdAt": "2022-08-21T18:37:54",
         "reactions": []
       },
       {
         "id": 1222062851,
         "author": "mattleibow",
+        "body": "Did you add .UseSkiaSharp() in your builder? ",
         "createdAt": "2022-08-22T09:01:31",
         "reactions": [
           {
             "user": "samirgcofficial",
             "content": "\u002B1",
-            "createdAt": "2026-02-05T15:28:50.6113402Z"
+            "createdAt": "2026-02-06T11:46:57.433638Z"
           }
         ]
       },
       {
         "id": 1235097929,
         "author": "samirgcofficial",
+        "body": "\u002B1  Issue still exist. \r\nLatest Visual studio MAC and Latest .Net MAUI 6.0.486 ",
         "createdAt": "2022-09-02T05:57:22",
         "reactions": []
       },
       {
         "id": 1235937540,
         "author": "rsbepvb",
+        "body": "Confirming that the issue is still persisting for us.  Yes, added .UseSkiaSharp() in builder.  ",
         "createdAt": "2022-09-02T22:22:13",
         "reactions": []
       },
       {
         "id": 1236047622,
         "author": "mattleibow",
+        "body": "Are you able to attach a repro of this and share the output of \u0060dotnet --info\u0060 and \u0060dotnet workload list\u0060? ",
         "createdAt": "2022-09-03T04:42:24",
         "reactions": []
       },
       {
         "id": 1305214534,
         "author": "dennischchch",
+        "body": "Microsoft.Maui.Platform.HandlerNotFoundException: \u0027Handler not found for view SkiaSharp.Extended.UI.Controls.SKLottieView.\u0027\r\n\r\nis that problem fixed?\r\n\r\nI ran it in Visual Studio 2022 preview version(win10) with .net 6.\r\n",
         "createdAt": "2022-11-07T07:58:22",
         "reactions": []
       },
       {
         "id": 1703194089,
         "author": "mattleibow",
+        "body": "Can you try the latest preview versions? I think I fixed it.",
         "createdAt": "2023-09-01T18:53:44",
         "reactions": []
       },
       {
         "id": 2042291991,
         "author": "mattleibow",
+        "body": "Closing this issue as I think I fixed the issue. Please open a new issue with a repro if it is still happening.",
         "createdAt": "2024-04-08T09:33:11",
         "reactions": []
       }
