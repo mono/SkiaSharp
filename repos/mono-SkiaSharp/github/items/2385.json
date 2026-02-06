@@ -13,5 +13,107 @@
   "createdAt": "2023-02-14T14:02:22",
   "updatedAt": "2025-12-01T08:04:15",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:38:10.0388915Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1455033909,
+        "author": "kyurkchyan",
+        "body": "I am having the same issue but when trying to run Uno app on WSL.\r\n\r\n\u0060\u0060\u0060\r\nDllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose \r\n........\r\n/mnt/c/Projects/Samples/Uno.Playground/Uno.Playground.Skia.Gtk/bin/Debug/net7.0/liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-03-05T09:14:23",
+        "reactions": []
+      },
+      {
+        "id": 1516201822,
+        "author": "avojacek",
+        "body": "Same problem here. Looking for /app/runtimes/linux-x64/native/liblibSkiaSharp.so but there is /app/runtimes/linux-x64/native/libSkiaSharp.so\r\nException : \r\n.....\r\n2023-04-20T11:48:31.397985690Z  ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider using a tool like strace. If you\u0027re using glibc, consider setting the LD_DEBUG environment variable: \r\n2023-04-20T11:48:31.397997990Z libfontconfig.so.1: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398006990Z /usr/share/dotnet/shared/Microsoft.NETCore.App/7.0.5/libSkiaSharp.so: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398016090Z /app/libSkiaSharp.so: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398024790Z /app/runtimes/linux-x64/native/liblibSkiaSharp.so: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398033391Z /usr/share/dotnet/shared/Microsoft.NETCore.App/7.0.5/liblibSkiaSharp.so: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398042391Z /app/liblibSkiaSharp.so: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398051691Z /app/runtimes/linux-x64/native/libSkiaSharp: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398060891Z /usr/share/dotnet/shared/Microsoft.NETCore.App/7.0.5/libSkiaSharp: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398071891Z /app/libSkiaSharp: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398081191Z /app/runtimes/linux-x64/native/liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398090091Z /usr/share/dotnet/shared/Microsoft.NETCore.App/7.0.5/liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398099791Z /app/liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n2023-04-20T11:48:31.398108691Z \r\n....\r\n",
+        "createdAt": "2023-04-20T11:57:31",
+        "reactions": []
+      },
+      {
+        "id": 1518986437,
+        "author": "mattleibow",
+        "body": "It is just the lookup paths that the runtime tries. I think the first failure is the main issue:\n\n\u003E libfontconfig.so.1: cannot open shared object file: No such file or directory\n\nYou may need to install fontconfig on the machine/container or use the NoDependencies version of the Linux binaries.\n\nI think the lookup versions are based on the fact that unit uses a lib prefix and windows does not. So when a library would load a MyLibrary dependency, windows had basically 1 version: MyLibrary.dll so it can try that. But to support a no-change-required run on Unix, the runtime checks with libMyLibrary and some other variants with .so or .so.1 extensions. ",
+        "createdAt": "2023-04-23T07:59:49",
+        "reactions": [
+          {
+            "user": "avojacek",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:08.9712124Z"
+          },
+          {
+            "user": "JuanGamez2W",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:08.9712286Z"
+          }
+        ]
+      },
+      {
+        "id": 1519071952,
+        "author": "avojacek",
+        "body": "Hi,\r\nI kind of figured it out, but NoDependencies did not helped, I have to include another package (HarfBuzzSharp.NativeAssets.Linux) In order to make QuestSharp working :-) and also fonts. So for skiasharp may be NoDependencies could work, for QuestPDF it wos not enough. \r\nAnyway thank you a lot for trying to help.\r\nA.",
+        "createdAt": "2023-04-23T13:47:45",
+        "reactions": []
+      },
+      {
+        "id": 1938687943,
+        "author": "MarkWilds",
+        "body": "I also keep getting this. nothing works",
+        "createdAt": "2024-02-12T13:32:38",
+        "reactions": []
+      },
+      {
+        "id": 2283390386,
+        "author": "darestov",
+        "body": "Upvote. Hey developers, its just does not work at all and it\u0027s been 1.5 years! Please fix this stupid bug.",
+        "createdAt": "2024-08-12T08:33:30",
+        "reactions": [
+          {
+            "user": "cbmdk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:09.7590429Z"
+          },
+          {
+            "user": "Isolaryn",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:09.7590433Z"
+          },
+          {
+            "user": "mlippy",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:09.7590435Z"
+          },
+          {
+            "user": "SpaxR",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:09.7590436Z"
+          },
+          {
+            "user": "MatejMarecek",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:09.7590437Z"
+          },
+          {
+            "user": "joshlupo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:09.7590438Z"
+          },
+          {
+            "user": "alper-han",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:09.7590439Z"
+          }
+        ]
+      },
+      {
+        "id": 3595149596,
+        "author": "alper-han",
+        "body": "I hope they remember this issue.\nIt would be great if someone could take the time to resolve it.",
+        "createdAt": "2025-12-01T08:04:15",
+        "reactions": []
+      }
+    ]
+  }
 }

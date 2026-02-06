@@ -13,5 +13,43 @@
   "createdAt": "2020-02-12T21:44:21",
   "updatedAt": "2025-10-28T09:36:42",
   "commentCount": 3,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:39:06.8985838Z",
+    "reactions": [
+      {
+        "user": "SladeThe",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:39:06.8985872Z"
+      },
+      {
+        "user": "JimmyDirect",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:39:06.8985876Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2229616973,
+        "author": "floxay",
+        "body": "Also experiencing this, I\u0027m pretty certain the RGB data is *completely* missing from the bitmap in memory and then the file on disk, it is not some image viewer error or similar.",
+        "createdAt": "2024-07-15T23:31:41",
+        "reactions": []
+      },
+      {
+        "id": 2930136422,
+        "author": "SladeThe",
+        "body": "Thumbs up.\n\nI want to retain all pixel colours upon encoding and saving partially transparent images as WebP.\n\nI use \u0060ImageSharp\u0060, which has \u0060TransparentColorMode\u0060 amongst encoder settings:\n\u0060\u0060\u0060cs\nnew SixLabors.ImageSharp.Formats.Webp.WebpEncoder {\n    FileFormat = SixLabors.ImageSharp.Formats.Webp.WebpFileFormatType.Lossless,\n    Quality = ...,\n    TransparentColorMode = SixLabors.ImageSharp.Formats.Webp.WebpTransparentColorMode.Preserve,\n}\n\u0060\u0060\u0060\n\nI\u0027d like to switch to \u0060SkiaSharp\u0060 for better performance, but currently missing the feature.",
+        "createdAt": "2025-06-02T11:23:39",
+        "reactions": []
+      },
+      {
+        "id": 3455437060,
+        "author": "JimmyDirect",
+        "body": "Thumbs up.\nExperiencing the same issue. The black pixels do cause artifacts when linear interpolation is used at drawing time.\nA simple Test that shows the rgb 0 pixels:\n\n\u0060\u0060\u0060\n[TestMethod]\n    public void TestRgb0WhenAlpha0()\n    {\n        SKBitmap bmp = new SKBitmap(1, 1, SKColorType.Rgba8888, SKAlphaType.Unpremul);\n        bmp.SetPixel(0, 0, new SKColor(red: 255, green: 17, blue: 99, alpha: 0));\n        byte[] bytes = bmp.Bytes;\n\n        Assert.AreEqual(255, bytes[0]);\n        Assert.AreEqual(17, bytes[1]);\n        Assert.AreEqual(99, bytes[2]);\n        Assert.AreEqual(0, bytes[3]);\n    }\n\u0060\u0060\u0060\n\n\nThe best workaround i found so far is to set the lowest possible alpha value of 1 in such case, hoping that a low alpha will not be visible.\n\n\u0060\u0060\u0060\nvar px = bitmap.GetPixel(x, y);\nbool anyColor = px.Red != 0 || px.Green != 0 || px.Blue != 0;\nif (anyColor \u0026\u0026 px.Alpha == 0)\n{\n    bitmap2.SetPixel(x, y, new SKColor(px.Red, px.Green, px.Blue, 1));\n}\nelse\n{\n    bitmap2.SetPixel(x, y, px);\n}\n\u0060\u0060\u0060\n\nBut definitely this behaviour should be controllable in Skia / SkiaSharp with a parameter at least.",
+        "createdAt": "2025-10-28T09:28:18",
+        "reactions": []
+      }
+    ]
+  }
 }

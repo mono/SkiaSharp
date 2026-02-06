@@ -38,5 +38,31 @@
   "createdAt": "2026-01-09T07:49:12",
   "updatedAt": "2026-01-09T09:09:24",
   "commentCount": 2,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:37:36.2557842Z",
+    "reactions": [
+      {
+        "user": "Braedon-Wooding-Displayr",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:37:36.2557879Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 3727597083,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate an issue with rendering \u0060\u003Ctext\u003E\u0060 elements in \u0060SKSvgCanvas\u0060 while running on Windows 11, specifically related to SkiaSharp and SVG handling.\n\nThis issue is not explicitly identified as a regression based on the provided information.\n\nAdditional remarks:\n* The described behavior suggests reliability concerns with using \u0060SKSvgCanvas\u0060 in multithreaded scenarios, particularly affecting text rendering.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue affects rendering \u0060\u003Ctext\u003E\u0060 elements within the \u0060SKSvgCanvas\u0060 of SkiaSharp.\n- It has been reported to occur specifically on Windows 11, using Visual Studio Code in a Win32 context.\n- The central concern arises from the interplay between SVG elements and the reliability of \u0060SKSvgCanvas\u0060 during parallel task executions.\n\nSummary of the actions that will be performed:\n\n| Action       | Item                 | Description                                                                                       |\n| :----------- | :------------------- | :------------------------------------------------------------------------------------------------ |\n| Apply Label  | area/SkiaSharp      | The issue pertains to a bug involving the rendering of \u0060\u003Ctext\u003E\u0060 elements in SkiaSharp.          |\n| Apply Label  | os/Windows-Classic   | The issue is reported to occur while running on Windows 11 in a Visual Studio Code environment. |\n| Apply Label  | backend/SVG         | The issue relates to rendering SVG elements, specifically \u0060\u003Ctext\u003E\u0060 elements using \u0060SKSvgCanvas\u0060. |\n| Apply Label  | backend/SkiaSharp   | The problem is related to the SkiaSharp library and affects text rendering within SVG.          |\n| Apply Label  | tenet/reliability    | The issue suggests potential stability issues with \u0060SKSvgCanvas\u0060 due to missing text values.    |\n\n\u003C/details\u003E\n\n\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2026-01-09T07:49:49",
+        "reactions": []
+      },
+      {
+        "id": 3727934874,
+        "author": "jankurianski",
+        "body": "I tested the bug on Ubuntu 22.04.2 LTS (using WSL) and the bug does not occur there. Version 3.119.1.\n\nI even increased the number of text elements per SVG drawn from 10 to 100, and the number of parallel tasks from 5 to 50. The problem still did not occur.\n\nThe bug is specific to Windows.",
+        "createdAt": "2026-01-09T09:04:42",
+        "reactions": []
+      }
+    ]
+  }
 }

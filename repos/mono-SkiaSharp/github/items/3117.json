@@ -19,5 +19,396 @@
   "updatedAt": "2025-12-09T18:08:11",
   "closedAt": "2025-03-20T03:12:55",
   "commentCount": 32,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:37:58.4266541Z",
+    "reactions": [
+      {
+        "user": "slackerbob",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:37:58.4266569Z"
+      },
+      {
+        "user": "RajeevRameshHNR",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:37:58.4266574Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2544685660,
+        "author": "mattleibow",
+        "body": "Did you update all the SkiaSharp nugets to the same version?\n\nThe error is saying you have an old native assets in your project, but a new SkiaSharp. ",
+        "createdAt": "2024-12-16T06:08:01",
+        "reactions": []
+      },
+      {
+        "id": 2544715654,
+        "author": "bautistavirchar",
+        "body": "@mattleibow \r\n\r\nonly this library SkiaSharp.NativeAssets.Linux.NoDependencies which the working version is 2.88.9",
+        "createdAt": "2024-12-16T06:30:49",
+        "reactions": []
+      },
+      {
+        "id": 2544927930,
+        "author": "elr0berto",
+        "body": "Got same problem. solved by downgrading to 2.88.9 ",
+        "createdAt": "2024-12-16T08:37:31",
+        "reactions": [
+          {
+            "user": "VincentVerweij",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:51.1879917Z"
+          },
+          {
+            "user": "mewfeuille115",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:51.187992Z"
+          },
+          {
+            "user": "dkanaev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:51.1879921Z"
+          },
+          {
+            "user": "vikher",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:51.1880738Z"
+          },
+          {
+            "user": "dariomalfatti-centropaghe",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:51.1880745Z"
+          }
+        ]
+      },
+      {
+        "id": 2546450035,
+        "author": "penihel",
+        "body": "i have the same problem",
+        "createdAt": "2024-12-16T19:23:44",
+        "reactions": []
+      },
+      {
+        "id": 2576013211,
+        "author": "gktval",
+        "body": "Same issue. I have SkiaSharp and SkiaSharp.View.Blazor. The nugets in the solution were all updated to 3.116.1. The fix was to clean the solution and rebuild.",
+        "createdAt": "2025-01-07T18:56:52",
+        "reactions": [
+          {
+            "user": "rieznikov-firstis",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:37:51.7056044Z"
+          }
+        ]
+      },
+      {
+        "id": 2593135404,
+        "author": "danilobreda",
+        "body": "**116**(3.116.1) is bugged. only **88**(2.88.9) and **89**(does not exist) is working.\r\nThe check occurs on SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible\r\n\r\nWorking:\r\n![image](https://github.com/user-attachments/assets/65f0e018-6fa4-4081-8e9d-a4207cd7fa46)\r\n",
+        "createdAt": "2025-01-15T15:12:54",
+        "reactions": [
+          {
+            "user": "dkanaev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:51.95207Z"
+          }
+        ]
+      },
+      {
+        "id": 2602075749,
+        "author": "vadimart92",
+        "body": "Seems like problem is only with SkiaSharp.NativeAssets.Linux.NoDependencies:\n\u0060\u0060\u0060\n/runtimes/linux-x64/native$ readelf -d libSkiaSharp.so\n\nDynamic section at offset 0x8c6a60 contains 33 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libpthread.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libfontconfig.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libdl.so.2]\n 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]\n 0x000000000000000e (SONAME)             Library soname: [libSkiaSharp.so.88.1.0] \u003C----\n\u0060\u0060\u0060\nSkiaSharp.NativeAssets.Linux works\n\u0060\u0060\u0060\n/runtimes/linux-x64/native$ readelf -d libSkiaSharp.so\n\nDynamic section at offset 0x891a30 contains 33 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libpthread.so.0]\n 0x0000000000000001 (NEEDED)             Shared library: [libfontconfig.so.1]\n 0x0000000000000001 (NEEDED)             Shared library: [libdl.so.2]\n 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]\n 0x000000000000000e (SONAME)             Library soname: [libSkiaSharp.so.118.0.0] \u003C----\n\u0060\u0060\u0060\n",
+        "createdAt": "2025-01-20T10:47:24",
+        "reactions": [
+          {
+            "user": "penihel",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.1812578Z"
+          }
+        ]
+      },
+      {
+        "id": 2701344597,
+        "author": "TheFerrango",
+        "body": "The same problem happens under a Windows OS when the application is being served via IIS",
+        "createdAt": "2025-03-05T15:48:13",
+        "reactions": [
+          {
+            "user": "geferon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.4025923Z"
+          },
+          {
+            "user": "RajeevRameshHNR",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.4025926Z"
+          }
+        ]
+      },
+      {
+        "id": 2738177210,
+        "author": "vikher",
+        "body": "\n@mattleibow  I\u2019m working on a .NET MAUI app with \u0060\u003CMauiVersion\u003E9.0.50\u003C/MauiVersion\u003E\u0060. The app targets both Android and iOS. When using the following SkiaSharp packages, everything works fine on both platforms:\n\n\u0060\u0060\u0060\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u0060\u0060\u0060\n\nHowever, when I update these packages to the latest versions:\n\n\u0060\u0060\u0060\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u0060\u0060\u0060\n\nThe app continues to work on Android but fails on iOS with the following exception:\n\n\u0060\u0060\u0060\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\n ---\u003E System.InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [116.0, 117.0).\n   at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\n   at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\n   at SkiaSharp.SKObject..cctor()\n   --- End of inner exception stack trace ---\n   at SkiaSharp.SKSurface..ctor(IntPtr h, Boolean owns)\n   at SkiaSharp.SKSurface.GetObject(IntPtr handle)\n   at SkiaSharp.SKSurface.Create(SKImageInfo info, IntPtr pixels, Int32 rowBytes, SKSurfaceReleaseDelegate releaseProc, Object context, SKSurfaceProperties props)\n   at SkiaSharp.SKSurface.Create(SKImageInfo info, IntPtr pixels, Int32 rowBytes)\n   at SkiaSharp.Views.iOS.SKCGSurfaceFactory.CreateSurface(CGRect contentsBounds, NFloat scale, SKImageInfo\u0026 info)\n   at SkiaSharp.Views.iOS.SKCanvasView.Draw(CGRect rect)\n   at UIKit.UIApplication.UIApplicationMain(Int32 argc, String[] argv, IntPtr principalClassName, IntPtr delegateClassName)\n   at UIKit.UIApplication.Main(String[] args, Type principalClass, Type delegateClass)\n   at Mobile.Program.Main(String[] args) in /Users/victorsanchez/Mobile-Maui/Mobile/Platforms/iOS/Program.cs:line 12\n\u0060\u0060\u0060\n\nIt seems the native \u0060libSkiaSharp\u0060 library on iOS remains at version 88.1, which is incompatible with SkiaSharp 3.116.1 (expecting 116.0\u2013117.0). This issue doesn\u2019t occur on Android. Has anyone encountered this with .NET MAUI 9.0.50 on iOS, or is there a known fix to ensure the correct native library version is used?",
+        "createdAt": "2025-03-19T21:34:32",
+        "reactions": [
+          {
+            "user": "jacobilsoe",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.7104608Z"
+          },
+          {
+            "user": "RajeevRameshHNR",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.7104611Z"
+          },
+          {
+            "user": "FreakyAli",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.7104613Z"
+          },
+          {
+            "user": "beeradmoore",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.7104614Z"
+          },
+          {
+            "user": "alex0208",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.7104615Z"
+          },
+          {
+            "user": "rifaia",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.7104616Z"
+          },
+          {
+            "user": "mrn7ban",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:52.7104617Z"
+          }
+        ]
+      },
+      {
+        "id": 2739009464,
+        "author": "mattleibow",
+        "body": "Could you attach a binlog?\n\nIf you clean and rebuild, does it go away? What about building on the CLI? ",
+        "createdAt": "2025-03-20T03:04:29",
+        "reactions": []
+      },
+      {
+        "id": 2739818137,
+        "author": "ladeak",
+        "body": "@bautistavirchar could you confirm if this is going to be part of an upcoming release, or closed with a different reason? Did you use some sort of a workaround?",
+        "createdAt": "2025-03-20T10:04:50",
+        "reactions": []
+      },
+      {
+        "id": 2743527715,
+        "author": "jacobilsoe",
+        "body": "\u003E [@mattleibow](https://github.com/mattleibow) I\u2019m working on a .NET MAUI app with \u0060\u003CMauiVersion\u003E9.0.50\u003C/MauiVersion\u003E\u0060. The app targets both Android and iOS. When using the following SkiaSharp packages, everything works fine on both platforms:\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E However, when I update these packages to the latest versions:\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E The app continues to work on Android but fails on iOS with the following exception:\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\n\u003E  ---\u003E System.InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [116.0, 117.0).\n\u003E    at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\n\u003E    at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\n\u003E    at SkiaSharp.SKObject..cctor()\n\u003E    --- End of inner exception stack trace ---\n\u003E    at SkiaSharp.SKSurface..ctor(IntPtr h, Boolean owns)\n\u003E    at SkiaSharp.SKSurface.GetObject(IntPtr handle)\n\u003E    at SkiaSharp.SKSurface.Create(SKImageInfo info, IntPtr pixels, Int32 rowBytes, SKSurfaceReleaseDelegate releaseProc, Object context, SKSurfaceProperties props)\n\u003E    at SkiaSharp.SKSurface.Create(SKImageInfo info, IntPtr pixels, Int32 rowBytes)\n\u003E    at SkiaSharp.Views.iOS.SKCGSurfaceFactory.CreateSurface(CGRect contentsBounds, NFloat scale, SKImageInfo\u0026 info)\n\u003E    at SkiaSharp.Views.iOS.SKCanvasView.Draw(CGRect rect)\n\u003E    at UIKit.UIApplication.UIApplicationMain(Int32 argc, String[] argv, IntPtr principalClassName, IntPtr delegateClassName)\n\u003E    at UIKit.UIApplication.Main(String[] args, Type principalClass, Type delegateClass)\n\u003E    at Mobile.Program.Main(String[] args) in /Users/victorsanchez/Mobile-Maui/Mobile/Platforms/iOS/Program.cs:line 12\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E It seems the native \u0060libSkiaSharp\u0060 library on iOS remains at version 88.1, which is incompatible with SkiaSharp 3.116.1 (expecting 116.0\u2013117.0). This issue doesn\u2019t occur on Android. Has anyone encountered this with .NET MAUI 9.0.50 on iOS, or is there a known fix to ensure the correct native library version is used?\n\nI have exactly the same issue. Works on Android but not iOS.\n\nCleaning/rebuilding does not help.",
+        "createdAt": "2025-03-21T14:25:10",
+        "reactions": []
+      },
+      {
+        "id": 2743559632,
+        "author": "gktval",
+        "body": "I mentioned above to clean and rebuild. But I rolled back yesterday after testing 3.118.2 to 2.88.9 and had a similar issue. It kept trying to reference 3.118. I had to delete the bin/obj folders to finally get rid of all references in iOS.",
+        "createdAt": "2025-03-21T14:37:14",
+        "reactions": []
+      },
+      {
+        "id": 2743581912,
+        "author": "jacobilsoe",
+        "body": "Deleting those folders helped. Thanks.",
+        "createdAt": "2025-03-21T14:45:46",
+        "reactions": []
+      },
+      {
+        "id": 2758814032,
+        "author": "lilleyd",
+        "body": "I am also facing this issue on iOS, Is there a new release soon ?",
+        "createdAt": "2025-03-27T17:08:02",
+        "reactions": []
+      },
+      {
+        "id": 2795276196,
+        "author": "mattleibow",
+        "body": "Did you delete the bin and obj? If that is helping, this may be an issue in the iOS build so please open an issue with repro steps for the iOS team:  http://github.com/dotnet/macios",
+        "createdAt": "2025-04-10T22:11:10",
+        "reactions": []
+      },
+      {
+        "id": 2796701330,
+        "author": "penihel",
+        "body": "i still have the same problem yet, i have deleted the bin and obj, the problem continues\n\n",
+        "createdAt": "2025-04-11T11:55:28",
+        "reactions": []
+      },
+      {
+        "id": 2796917068,
+        "author": "lilleyd",
+        "body": "I also have tired that and the Problem Remained",
+        "createdAt": "2025-04-11T13:26:39",
+        "reactions": []
+      },
+      {
+        "id": 2812568156,
+        "author": "slackerbob",
+        "body": "I can confirm this is still happening on ArchLinux with 3.116.1 and should not be closed.\n\nDowngrading to 2.88.9 is the only fix I\u0027ve found, but isn\u0027t sustainable long-term.",
+        "createdAt": "2025-04-17T11:27:35",
+        "reactions": []
+      },
+      {
+        "id": 2812648615,
+        "author": "mattleibow",
+        "body": "Can you try the latest preview as well as attach a sample project repo? ",
+        "createdAt": "2025-04-17T12:02:17",
+        "reactions": []
+      },
+      {
+        "id": 2834579040,
+        "author": "RajeevRameshHNR",
+        "body": "\u003E [@mattleibow](https://github.com/mattleibow) I\u2019m working on a .NET MAUI app with \u0060\u003CMauiVersion\u003E9.0.50\u003C/MauiVersion\u003E\u0060. The app targets both Android and iOS. When using the following SkiaSharp packages, everything works fine on both platforms:\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00222.88.9\u0022 /\u003E\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E However, when I update these packages to the latest versions:\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E The app continues to work on Android but fails on iOS with the following exception:\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\n\u003E  ---\u003E System.InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [116.0, 117.0).\n\u003E    at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\n\u003E    at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\n\u003E    at SkiaSharp.SKObject..cctor()\n\u003E    --- End of inner exception stack trace ---\n\u003E    at SkiaSharp.SKSurface..ctor(IntPtr h, Boolean owns)\n\u003E    at SkiaSharp.SKSurface.GetObject(IntPtr handle)\n\u003E    at SkiaSharp.SKSurface.Create(SKImageInfo info, IntPtr pixels, Int32 rowBytes, SKSurfaceReleaseDelegate releaseProc, Object context, SKSurfaceProperties props)\n\u003E    at SkiaSharp.SKSurface.Create(SKImageInfo info, IntPtr pixels, Int32 rowBytes)\n\u003E    at SkiaSharp.Views.iOS.SKCGSurfaceFactory.CreateSurface(CGRect contentsBounds, NFloat scale, SKImageInfo\u0026 info)\n\u003E    at SkiaSharp.Views.iOS.SKCanvasView.Draw(CGRect rect)\n\u003E    at UIKit.UIApplication.UIApplicationMain(Int32 argc, String[] argv, IntPtr principalClassName, IntPtr delegateClassName)\n\u003E    at UIKit.UIApplication.Main(String[] args, Type principalClass, Type delegateClass)\n\u003E    at Mobile.Program.Main(String[] args) in /Users/victorsanchez/Mobile-Maui/Mobile/Platforms/iOS/Program.cs:line 12\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E It seems the native \u0060libSkiaSharp\u0060 library on iOS remains at version 88.1, which is incompatible with SkiaSharp 3.116.1 (expecting 116.0\u2013117.0). This issue doesn\u2019t occur on Android. Has anyone encountered this with .NET MAUI 9.0.50 on iOS, or is there a known fix to ensure the correct native library version is used?\n\nI have the similar issue with upgrading the version.\nThe version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [118.0, 119.0).\n",
+        "createdAt": "2025-04-28T09:23:02",
+        "reactions": [
+          {
+            "user": "danilobreda",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:55.6964901Z"
+          },
+          {
+            "user": "nadiradjoilus",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:55.6964905Z"
+          }
+        ]
+      },
+      {
+        "id": 2854014607,
+        "author": "mattleibow",
+        "body": "Can you attach a binlog of the build? Did you try removing the app from the device?\n\nAre you building on mac or using pair to Mac or the iPhone plugged into the windows machine? ",
+        "createdAt": "2025-05-06T10:13:01",
+        "reactions": []
+      },
+      {
+        "id": 2854040187,
+        "author": "chrisw-n",
+        "body": "Hi,\n Have been following this for a while as we had the same issue. Turns out that one of our other dependencies, in our case Aspose used the old version of SkiaSharp so even when we updated the native assets we still go this error.\n Aspose recently updated to the new version and now everything is good for us. Just something more to check ;)",
+        "createdAt": "2025-05-06T10:21:00",
+        "reactions": [
+          {
+            "user": "meinsiedler",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:56.1468238Z"
+          }
+        ]
+      },
+      {
+        "id": 2888630519,
+        "author": "FreakyAli",
+        "body": "@vikher  I can still see this with versions you mentioned, did you ever find a fix for it?",
+        "createdAt": "2025-05-17T23:10:25",
+        "reactions": []
+      },
+      {
+        "id": 2896259517,
+        "author": "DiPiVR",
+        "body": "For people ending up here googling: I encountered this issue when I installed \u0060Avalonia.Svg.Skia 11.3.0\u0060 package into desktop app on linux, the workaround is installing \u0060SkiaSharp.NativeAssets.Linux 3.116.1\u0060 to force the compatible version of \u0060libSkiaSharp\u0060.\n\n\u0060\u0060\u0060\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKFontManager\u0027 threw an exception.\n ---\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\n ---\u003E System.InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [116.0, 117.0).\n   at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\n   at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\n   at SkiaSharp.SKObject..cctor()\n   --- End of inner exception stack trace ---\n   at SkiaSharp.SKObject..ctor(IntPtr handle, Boolean owns)\n   at SkiaSharp.SKFontManager..ctor(IntPtr handle, Boolean owns)\n   at SkiaSharp.SKFontManager.SKFontManagerStatic..ctor(IntPtr x)\n   at SkiaSharp.SKFontManager..cctor()\n   --- End of inner exception stack trace ---\n   at SkiaSharp.SKFontManager.get_Default()\n   at Avalonia.Skia.FontManagerImpl..ctor()\n   at Avalonia.Skia.SkiaPlatform.Initialize(SkiaOptions options)\n   at Avalonia.SkiaApplicationExtensions.\u003C\u003Ec.\u003CUseSkia\u003Eb__0_0()\n   at Avalonia.AppBuilder.SetupUnsafe()\n   at Avalonia.AppBuilder.Setup()\n   at Avalonia.AppBuilder.SetupWithLifetime(IApplicationLifetime lifetime)\n   at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action\u00601 lifetimeBuilder)\n   at DiPi.Speaker.Program.Main(String[] args) in /home/dipi/Documents/dotnet/DiPi.StreamApps/DiPi.Speaker/Program.cs:line 14\n\u0060\u0060\u0060",
+        "createdAt": "2025-05-21T02:08:48",
+        "reactions": [
+          {
+            "user": "TaiAurori",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:56.6591727Z"
+          },
+          {
+            "user": "Bli-AIk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:56.6591731Z"
+          },
+          {
+            "user": "d-khalid",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:56.6591733Z"
+          },
+          {
+            "user": "PhasonMatrix",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:56.6591734Z"
+          },
+          {
+            "user": "Meeperty",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:56.6591735Z"
+          },
+          {
+            "user": "rmattson",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:56.6591736Z"
+          }
+        ]
+      },
+      {
+        "id": 3071567771,
+        "author": "spudnut2000",
+        "body": "\u003E For people ending up here googling: I encountered this issue when I installed \u0060Avalonia.Svg.Skia 11.3.0\u0060 package into desktop app on linux, the workaround is installing \u0060SkiaSharp.NativeAssets.Linux 3.116.1\u0060 to force the compatible version of \u0060libSkiaSharp\u0060.\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKFontManager\u0027 threw an exception.\n\u003E  ---\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\n\u003E  ---\u003E System.InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [116.0, 117.0).\n\u003E    at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\n\u003E    at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\n\u003E    at SkiaSharp.SKObject..cctor()\n\u003E    --- End of inner exception stack trace ---\n\u003E    at SkiaSharp.SKObject..ctor(IntPtr handle, Boolean owns)\n\u003E    at SkiaSharp.SKFontManager..ctor(IntPtr handle, Boolean owns)\n\u003E    at SkiaSharp.SKFontManager.SKFontManagerStatic..ctor(IntPtr x)\n\u003E    at SkiaSharp.SKFontManager..cctor()\n\u003E    --- End of inner exception stack trace ---\n\u003E    at SkiaSharp.SKFontManager.get_Default()\n\u003E    at Avalonia.Skia.FontManagerImpl..ctor()\n\u003E    at Avalonia.Skia.SkiaPlatform.Initialize(SkiaOptions options)\n\u003E    at Avalonia.SkiaApplicationExtensions.\u003C\u003Ec.\u003CUseSkia\u003Eb__0_0()\n\u003E    at Avalonia.AppBuilder.SetupUnsafe()\n\u003E    at Avalonia.AppBuilder.Setup()\n\u003E    at Avalonia.AppBuilder.SetupWithLifetime(IApplicationLifetime lifetime)\n\u003E    at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action\u00601 lifetimeBuilder)\n\u003E    at DiPi.Speaker.Program.Main(String[] args) in /home/dipi/Documents/dotnet/DiPi.StreamApps/DiPi.Speaker/Program.cs:line 14\n\u003E \u0060\u0060\u0060\n\nThis was the solution for me as well. Thank you.",
+        "createdAt": "2025-07-15T01:04:29",
+        "reactions": []
+      },
+      {
+        "id": 3121348898,
+        "author": "PhasonMatrix",
+        "body": "\u003E For people ending up here googling: I encountered this issue when I installed \u0060Avalonia.Svg.Skia 11.3.0\u0060 package into desktop app on linux, the workaround is installing \u0060SkiaSharp.NativeAssets.Linux 3.116.1\u0060 to force the compatible version of \u0060libSkiaSharp\u0060.\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKFontManager\u0027 threw an exception.\n\u003E  ---\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\n\u003E  ---\u003E System.InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [116.0, 117.0).\n\u003E    at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\n\u003E    at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\n\u003E    at SkiaSharp.SKObject..cctor()\n\u003E    --- End of inner exception stack trace ---\n\u003E    at SkiaSharp.SKObject..ctor(IntPtr handle, Boolean owns)\n\u003E    at SkiaSharp.SKFontManager..ctor(IntPtr handle, Boolean owns)\n\u003E    at SkiaSharp.SKFontManager.SKFontManagerStatic..ctor(IntPtr x)\n\u003E    at SkiaSharp.SKFontManager..cctor()\n\u003E    --- End of inner exception stack trace ---\n\u003E    at SkiaSharp.SKFontManager.get_Default()\n\u003E    at Avalonia.Skia.FontManagerImpl..ctor()\n\u003E    at Avalonia.Skia.SkiaPlatform.Initialize(SkiaOptions options)\n\u003E    at Avalonia.SkiaApplicationExtensions.\u003C\u003Ec.\u003CUseSkia\u003Eb__0_0()\n\u003E    at Avalonia.AppBuilder.SetupUnsafe()\n\u003E    at Avalonia.AppBuilder.Setup()\n\u003E    at Avalonia.AppBuilder.SetupWithLifetime(IApplicationLifetime lifetime)\n\u003E    at Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime(AppBuilder builder, String[] args, Action\u00601 lifetimeBuilder)\n\u003E    at DiPi.Speaker.Program.Main(String[] args) in /home/dipi/Documents/dotnet/DiPi.StreamApps/DiPi.Speaker/Program.cs:line 14\n\u003E \u0060\u0060\u0060\n\nThis fixed the problem for me too. Thank you.",
+        "createdAt": "2025-07-26T06:09:14",
+        "reactions": []
+      },
+      {
+        "id": 3122841521,
+        "author": "eddieyanez",
+        "body": "In case anyone lands here with an issue **in iOS** after updating to the latest version 3.119.0, try deleting the obj \u002B bin folders and restoring the nugget packages. This worked for me.",
+        "createdAt": "2025-07-26T19:42:57",
+        "reactions": [
+          {
+            "user": "Gabriel-T-G",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:37:57.4172547Z"
+          },
+          {
+            "user": "mrn7ban",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:37:57.4172552Z"
+          }
+        ]
+      },
+      {
+        "id": 3229536798,
+        "author": "juanpgarces",
+        "body": "Is there an actual fix for this yet? Why is it closed?",
+        "createdAt": "2025-08-27T19:46:20",
+        "reactions": []
+      },
+      {
+        "id": 3229863705,
+        "author": "molesmoke",
+        "body": "@juanpgarces There\u0027s no obvious \u0022bug\u0022 in SkiaSharp here, 3.116\u002B works fine for me, it seems to be that\n1. People used incompatible versions in their NuGet package references\n2. There may be an incremental build issue from MSBuild not clearing old NuGets on upgrade and/or folk didn\u0027t clear the build tree",
+        "createdAt": "2025-08-27T21:56:05",
+        "reactions": []
+      },
+      {
+        "id": 3286804216,
+        "author": "Gabriel-T-G",
+        "body": "\u003E In case anyone lands here with an issue **in iOS** after updating to the latest version 3.119.0, try deleting the obj \u002B bin folders and restoring the nugget packages. This worked for me.\n\nThis worked for me too. The app was running on Ios simulator, but crashed on start on my Ipad. After deleing the 2 folder , restore and debug again the app started on my Ipad too. Thanks for the suggestion.",
+        "createdAt": "2025-09-12T20:59:17",
+        "reactions": []
+      },
+      {
+        "id": 3633582754,
+        "author": "ARAVIND1702",
+        "body": "\u003E In case anyone lands here with an issue **in iOS** after updating to the latest version 3.119.0, try deleting the obj \u002B bin folders and restoring the nugget packages. This worked for me.\n\nIt worked thank you so much",
+        "createdAt": "2025-12-09T18:08:11",
+        "reactions": []
+      }
+    ]
+  }
 }

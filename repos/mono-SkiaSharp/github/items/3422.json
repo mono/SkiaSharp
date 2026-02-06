@@ -34,5 +34,84 @@
   "createdAt": "2025-11-24T19:39:36",
   "updatedAt": "2026-01-12T16:54:47",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:37:34.9457087Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3572430379,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate the affected areas involving SkiaSharp in the Blazor application, as well as the platforms involved (WASM and UWP).\n\nThis issue does not appear to be a regression, but it does involve reliability concerns due to unexpected behavior and crashes.\n\nAdditional remarks:\n* The issue is specifically related to a Blazor WebAssembly project using the SkiaSharp library, and there are no appropriate labels for Blazor or SkiaSharp technologies available.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue affects the SkiaSharp.Views.Blazor component when rendering in a Blazor application.\n- The platforms impacted include WASM (via Blazor WebAssembly) and Windows Universal (UWP).\n- There are noted reliability issues due to crashes or unexpected behaviors in the component integration.\n\nSummary of the actions that will be performed:\n\n| Action         | Item                             | Description                                                                                       |\n| :------------- | :------------------------------- | :------------------------------------------------------------------------------------------------ |\n| Apply Label    | area/SkiaSharp.Views.Blazor     | The issue specifically relates to the usage of SkiaSharp within a Blazor application.            |\n| Apply Label    | os/WASM                         | The problem occurs in a Blazor WebAssembly environment, indicating a WASM-related bug.          |\n| Apply Label    | os/Windows-Universal-UWP        | The issue is reported in a Windows UWP context, particularly with Visual Studio for Windows.     |\n| Apply Label    | tenet/reliability               | The issue describes crashes or unexpected behavior, aligning with reliability concerns.           |\n\n\u003C/details\u003E\n\n\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2025-11-24T19:40:23",
+        "reactions": []
+      },
+      {
+        "id": 3572484639,
+        "author": "NetRushJacob",
+        "body": "Note, it wouldn\u0027t let me clear the **Last Known Good Version of SkiaSharp**...there is no last known good version in this regard as it seems more related to .net 10 WASM projects.",
+        "createdAt": "2025-11-24T19:56:00",
+        "reactions": []
+      },
+      {
+        "id": 3620441888,
+        "author": "jahnotto",
+        "body": "Is anyone able to use SkiaSharp with Blazor WASM .NET 10?\n\nI\u0027m getting this exception:\n\nMicrosoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100]\n      Unhandled exception rendering component: libSkiaSharp\nSystem.DllNotFoundException: libSkiaSharp\n   at SkiaSharp.SKPath..ctor(9bee82eb-c257-4236-bf75-dabfa23e06de)\n",
+        "createdAt": "2025-12-06T14:12:48",
+        "reactions": [
+          {
+            "user": "IngweLand",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:33.6537145Z"
+          }
+        ]
+      },
+      {
+        "id": 3717988960,
+        "author": "Webreaper",
+        "body": "Also seeing the same thing (.Net 10.0.0.1). Tried installing wasm-tools for .Net 10 but didn\u0027t help. I\u0027m seeing this on MacOS in Rider, SkiaSharp v3.119.1.\n\nI tried rolling back to 2.88.9 but the same issue occurs, so it\u0027s something specific to .Net 10. :(",
+        "createdAt": "2026-01-07T09:23:48",
+        "reactions": []
+      },
+      {
+        "id": 3718533889,
+        "author": "jahnotto",
+        "body": "I tried rolling back to several older versions (including 2.88.9 and 2.88.0) without luck, too.",
+        "createdAt": "2026-01-07T11:55:29",
+        "reactions": []
+      },
+      {
+        "id": 3731026872,
+        "author": "EngstromJimmy",
+        "body": "Restoring the .NET 10 wasm workload helped me.\ndotnet workload restore\nI did restart my computer after, not sure if I needed to or not.",
+        "createdAt": "2026-01-09T23:50:15",
+        "reactions": []
+      },
+      {
+        "id": 3733332685,
+        "author": "jahnotto",
+        "body": "\u003E Restoring the .NET 10 wasm workload helped me. dotnet workload restore I did restart my computer after, not sure if I needed to or not.\n\nAwesome -- that worked! Thank you @EngstromJimmy. I\u0027m using the latest stable version (3.119.1).",
+        "createdAt": "2026-01-10T18:11:56",
+        "reactions": []
+      },
+      {
+        "id": 3739524528,
+        "author": "Webreaper",
+        "body": "Unfortunately, \u0060dotnet workload restore\u0060 didn\u0027t have any effect from me - I\u0027m still seeing the same issue on MacOS. I\u0027m also seeing the same exceptions in a production build/deployment (i.e., not on my development machine) running on Linux. ",
+        "createdAt": "2026-01-12T16:53:26",
+        "reactions": [
+          {
+            "user": "IngweLand",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:34.8955148Z"
+          },
+          {
+            "user": "m3nax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:34.8955159Z"
+          }
+        ]
+      }
+    ]
+  }
 }

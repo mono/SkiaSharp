@@ -27,5 +27,72 @@
   "updatedAt": "2026-01-03T15:09:41",
   "closedAt": "2026-01-03T15:09:41",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:37:39.6071561Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 414196881,
+        "author": "define-private-public",
+        "body": "Commenting to mention that fixing the issue here: https://github.com/mono/SkiaSharp/issues/552\r\n\r\nCould possibly fixup this problem.",
+        "createdAt": "2018-08-20T04:53:12",
+        "reactions": []
+      },
+      {
+        "id": 414218199,
+        "author": "YoshihiroIto",
+        "body": "Thank you for the information.\r\nI am looking forward to being fixup.\r\n\r\n\r\nPlease let me know if you know the reason.\r\n\r\nThis case is FPS 60 only while touching.\r\nWhat is the reason why the frame rate is low if I do not touch it?\r\n\r\nI feel wondering why the frame rate will be high during  touch.",
+        "createdAt": "2018-08-20T07:08:50",
+        "reactions": []
+      },
+      {
+        "id": 415963981,
+        "author": "mattleibow",
+        "body": "This is very interesting... I had a look and as long as you don\u0027t touch the screen, you get about 45 fps just fine - this is less that 60 fps because maybe of something we are doing that can be improved. But that is not the issue here.\r\n\r\nAs soon as I touch the screen, the frames drop to about 30 fps and hover around there. Then, when I drag my finger across the screen, the fps go up to 45 again.\r\n\r\nThis happens with the plain Android view, so appears to have nothing to do with Xamarin.Forms or the Forms view directly.\r\n\r\nI will investigate this and see what I find.",
+        "createdAt": "2018-08-25T11:51:28",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:39.04121Z"
+          },
+          {
+            "user": "YoshihiroIto",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:39.0412102Z"
+          },
+          {
+            "user": "wangyongf",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:39.0412104Z"
+          },
+          {
+            "user": "tylerseawell4",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:39.0412106Z"
+          },
+          {
+            "user": "EmilAlipiev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:37:39.0412107Z"
+          }
+        ]
+      },
+      {
+        "id": 432318066,
+        "author": "tylerseawell4",
+        "body": "Hey @mattleibow have you been able to find any solutions to this yet? I am running into the same problem with Xamarin.Forms when deployed on a real android device. The issue doesn\u0027t seem to be present when on an emulator. \r\n\r\nI am using:\r\n-Xamarin.Forms version 3.3.0.893527-pre3\r\n-VS Pro 17\r\n-SkiaSharp.Views.Forms 1.60.3\r\n-Samsung Galaxy S4, 5.0 - API 21 (real device)\r\n-Nexus 5X, Oreo 8.1 - API 27 (emulator)\r\n\r\nThanks!",
+        "createdAt": "2018-10-23T16:21:44",
+        "reactions": []
+      },
+      {
+        "id": 432627162,
+        "author": "entdark",
+        "body": "You better use \u0060SKGLView\u0060 if you want real time or independent updates on the view. Because \u0060Timer\u0060 updates inaccurate and therefore \u0060View\u0060 invalidations may happen with noticeable delays, and thus new visual updates hardly depend on how soon the last update happened. And in the end your \u00601000.0 / 60.0\u0060 interval will not give you expected results.\r\nAlso counting frame interval is a bit wrong though works in this case. It is usually done like this\r\n\u0060\u0060\u0060\r\ntime = stopwatch. ElapsedMilliseconds;\r\ninterval = time - lastTime;\r\nlastTime = time;\r\n\u0060\u0060\u0060\r\nAlso animations should never be depended on frame delay. They have to be interpolated between known start time and end time. And here it helps to store current \u0060time\u0060 to count start time and end time and interpolate in between them.\r\nEdit: forgot to mention that not every screen on phones is 60 hrz (most of them are of course), so on some screens animations may look smooth, on the others - pretty jittering. So it\u0027s always better to interpolate and never depend on hardcoded frame update.",
+        "createdAt": "2018-10-24T12:01:22",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -18,5 +18,48 @@
   "createdAt": "2024-02-01T21:18:11",
   "updatedAt": "2025-09-16T23:21:06",
   "commentCount": 3,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:39:48.887191Z",
+    "reactions": [
+      {
+        "user": "tossnet",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:39:48.887194Z"
+      },
+      {
+        "user": "BenMcLean",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:39:48.8871945Z"
+      },
+      {
+        "user": "macgyver76",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:39:48.8871948Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2233986037,
+        "author": "keyhanbati",
+        "body": "hello everyone. \r\non linux debian 11 i copy file \u0027libSkiaSharp.so\u0027 from path \u0027./runtimes/linux-x64/native/\u0027 beside root of project publish folder. \r\nbeside to the executable file of the project such as webapi.exe\r\n",
+        "createdAt": "2024-07-17T18:30:44",
+        "reactions": []
+      },
+      {
+        "id": 2501856316,
+        "author": "mattleibow",
+        "body": "For 2.x series, there are a few issues with WebAssembly and the fact we don\u0027t automatically include a lot of things. It is hard to keep backporting, so I would encourage you to try give the 3.x series a try. \r\n\r\nTo make things build, make sure you have the latest 2.x and manually reference the native files:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CItemGroup\u003E\r\n    \u003CNativeFileReference Include=\u0022$(SkiaSharpStaticLibraryPath)\\3.1.56\\st\\*.a\u0022 /\u003E\r\n\u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nDepending on how you are building your WASM app, you may need to swap the \u0060st\u0060 for the correct variation:\r\n\r\n- \u0060st\u0060: single threaded with \u0060\u003CWasmEnableThreads\u003Efalse\u003C/WasmEnableThreads\u003E\u0060\r\n- \u0060mt\u0060: multi threaded with \u0060\u003CWasmEnableThreads\u003Etrue\u003C/WasmEnableThreads\u003E\u0060\r\n- \u0060simd,st\u0060: single threaded with \u0060\u003CWasmEnableThreads\u003Efalse\u003C/WasmEnableThreads\u003E\u0060 and \u0060\u003CWasmEnableSIMD\u003Etrue\u003C/WasmEnableSIMD\u003E\u0060\r\n- \u0060simd,mt\u0060: multi threaded with \u0060\u003CWasmEnableThreads\u003Etrue\u003C/WasmEnableThreads\u003E\u0060 and \u0060\u003CWasmEnableSIMD\u003Etrue\u003C/WasmEnableSIMD\u003E\u0060\r\n\r\n\r\nAll the fixes should be working out the box with 3.x pending this PR: https://github.com/mono/SkiaSharp/pull/3082",
+        "createdAt": "2024-11-26T20:29:23",
+        "reactions": []
+      },
+      {
+        "id": 3300632287,
+        "author": "tolzy88",
+        "body": "Also running into this issue using the latest version (3.119.0) with .NET8.\n\nUncaught ManagedError: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.",
+        "createdAt": "2025-09-16T23:14:03",
+        "reactions": []
+      }
+    ]
+  }
 }

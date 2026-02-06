@@ -30,5 +30,226 @@
   "createdAt": "2025-04-09T11:43:17",
   "updatedAt": "2025-09-11T07:45:15",
   "commentCount": 19,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:40:02.3667741Z",
+    "reactions": [
+      {
+        "user": "cyraid",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:40:02.3667762Z"
+      },
+      {
+        "user": "maxcherednik",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:40:02.3667767Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2789416556,
+        "author": "4Darmygeometry",
+        "body": "![Image](https://github.com/user-attachments/assets/cfc9c583-be96-494c-90f5-69461a30cadb)",
+        "createdAt": "2025-04-09T11:47:15",
+        "reactions": []
+      },
+      {
+        "id": 2789501066,
+        "author": "4Darmygeometry",
+        "body": "@mattleibow ",
+        "createdAt": "2025-04-09T12:15:02",
+        "reactions": []
+      },
+      {
+        "id": 2789514636,
+        "author": "4Darmygeometry",
+        "body": "@kasperk81 ",
+        "createdAt": "2025-04-09T12:20:03",
+        "reactions": []
+      },
+      {
+        "id": 2789554540,
+        "author": "kasperk81",
+        "body": "https://github.com/conan-io/conan-center-index/issues/17142#issuecomment-1520044126 (and this is for  arch=x86_64)\n\n\u003E Apologies you are experiencing this - the QtWebEngine \u003Cins\u003Eis not built by default by our CI service (it\u0027s unlikely it\u0027s required by most users and it does take considerable time and resources to build)\u003C/ins\u003E, so this configuration is less tested than the defaults.\n\nsame applies here\n\nand it\u0027s not specific to riscv64. you will find the same issue with x86_64 etc. with same (new) version of fontconfig.",
+        "createdAt": "2025-04-09T12:34:25",
+        "reactions": []
+      },
+      {
+        "id": 2796823629,
+        "author": "4Darmygeometry",
+        "body": "https://github.com/mono/SkiaSharp/pull/3221",
+        "createdAt": "2025-04-11T12:48:45",
+        "reactions": []
+      },
+      {
+        "id": 2801989577,
+        "author": "jeromelaban",
+        "body": "This issue also happens on linux-arm64",
+        "createdAt": "2025-04-14T14:53:26",
+        "reactions": []
+      },
+      {
+        "id": 2802025094,
+        "author": "jeromelaban",
+        "body": "It\u0027s working fine on linux-x64 for me though, maybe there\u0027s a variation in my setup that makes it work.",
+        "createdAt": "2025-04-14T15:05:15",
+        "reactions": [
+          {
+            "user": "4Darmygeometry",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:39:59.4693479Z"
+          }
+        ]
+      },
+      {
+        "id": 2807314822,
+        "author": "jeromelaban",
+        "body": "Looking further into this, the dependency is about libfreetype2 which requires 2.15 or later. My system is a RPi Debian bookwork which installs 2.14 at most and explains the error, specifically.\n\nEdit: This is for risc, not the other targets, which require 2.13, which does not explain my error, after all.",
+        "createdAt": "2025-04-15T19:46:46",
+        "reactions": []
+      },
+      {
+        "id": 2807371296,
+        "author": "kasperk81",
+        "body": "https://github.com/search?q=FT_Get_BDF_Property\u002Bundefined\u0026type=issues something tells me it\u0027s not the first time this error is seen, and not for a specific arch (reported against x64 and arm64). see @vejmartin comment https://github.com/microsoft/vcpkg/issues/11985#issuecomment-646473111. so it depends on multiple factors, versions, how lib was built and system configurations of where it is being used.",
+        "createdAt": "2025-04-15T20:09:30",
+        "reactions": []
+      },
+      {
+        "id": 2865128425,
+        "author": "HakanL",
+        "body": "I\u0027m getting the same on a Raspberry Pi 3 using Bookworm (Raspbian) running **arm64**. The latest available libfontconfig1 version (via bookworm apt sources) is 2.14.1-4 (if the issue is actually related to that package/library).\n",
+        "createdAt": "2025-05-09T05:05:43",
+        "reactions": []
+      },
+      {
+        "id": 2910034764,
+        "author": "mcNets",
+        "body": "I\u0027m having the same issue in a Rpi CM4 device, but with a different symbol.\n\nhttps://github.com/unoplatform/uno/issues/20429",
+        "createdAt": "2025-05-26T15:03:22",
+        "reactions": [
+          {
+            "user": "HakanL",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:00.4546588Z"
+          },
+          {
+            "user": "alkoclick",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:00.4546593Z"
+          }
+        ]
+      },
+      {
+        "id": 2917709737,
+        "author": "YuriiYa",
+        "body": "Having the same issue on pi5 Debian Arm64\n/home/pi5-dos/dotnet/dotnet: symbol lookup error: .../bin/Debug/net9.0-desktop/runtimes/linux-arm64/native/libSkiaSharp.so: undefined symbol: FT_Get_BDF_Property :( ",
+        "createdAt": "2025-05-28T21:58:47",
+        "reactions": [
+          {
+            "user": "dowdybrown",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:00.684627Z"
+          },
+          {
+            "user": "zhuligang",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:00.6846273Z"
+          }
+        ]
+      },
+      {
+        "id": 2925403306,
+        "author": "anshulpatel25",
+        "body": "Having the same isse on pi5 Debian Arm64, while running jellyfin.",
+        "createdAt": "2025-05-31T16:24:37",
+        "reactions": []
+      },
+      {
+        "id": 2965542502,
+        "author": "SpiZeak",
+        "body": "Same as you @anshulpatel25 but on pi5 plus and linuxserver/jellyfin image.\nI created this issue: https://github.com/linuxserver/docker-jellyfin/issues/298",
+        "createdAt": "2025-06-12T07:57:52",
+        "reactions": [
+          {
+            "user": "anshulpatel25",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:01.1503914Z"
+          },
+          {
+            "user": "alkoclick",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:01.1503918Z"
+          },
+          {
+            "user": "a-27m",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:01.1503919Z"
+          }
+        ]
+      },
+      {
+        "id": 3166721434,
+        "author": "Riton2013",
+        "body": "Have same problem, work well on Linux-x64, but crash on Linux-arm64\n\u0060Carsh Log: libSkiaSharp.so: undefined symbol: uuid_parse\u0060\n\nhow to deal with this?",
+        "createdAt": "2025-08-08T06:28:24",
+        "reactions": []
+      },
+      {
+        "id": 3167265070,
+        "author": "kasperk81",
+        "body": "\u003E \u0060Carsh Log: libSkiaSharp.so: undefined symbol: uuid_parse\u0060\n\u003E \n\u003E how to deal with this?\n\ninstall \u0060libuuid\u0060",
+        "createdAt": "2025-08-08T09:48:18",
+        "reactions": []
+      },
+      {
+        "id": 3233376124,
+        "author": "marioleed",
+        "body": "I ran into both of these errors:\n\n\u0060\u0060\u0060\n/usr/share/dotnet/dotnet: symbol lookup error: /my-app/runtimes/linux-arm64/native/libSkiaSharp.so: \nundefined symbol: uuid_generate_random\n\n/usr/share/dotnet/dotnet: symbol lookup error: /my-app/runtimes/linux-arm64/native/libSkiaSharp.so: \nundefined symbol: FT_Get_BDF_Property\n\u0060\u0060\u0060\n\nUsing libs:\n\n- SkiaSharp 3.119.0\n- SkiaSharp.HarfBuzz 3.119.0\n- SkiaSharp.NativeAssets.Linux 3.119.0\n\nWhat fixed it for me on a Raspberry Pi CM4 running Debian 11 with .NET 8 (tested separately with both the SDK and the ASP.NET Core Runtime):\n\n\u0060\u0060\u0060\nsudo apt-get update\nsudo apt-get install -y libuuid1 libfreetype6 libharfbuzz0b libfontconfig1\n\u0060\u0060\u0060\n\nThen I edited my systemd service and added:\n\n\u0060\u0060\u0060\n[Service]\nEnvironment=LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libfreetype.so.6:/lib/aarch64-linux-gnu/libuuid.so.1\nEnvironment=LD_LIBRARY_PATH=/my-app/runtimes/linux-arm64/native\n\u0060\u0060\u0060\n\nFinally, restart service:\n\n\u0060\u0060\u0060\nsudo systemctl daemon-reload\nsudo systemctl restart my-app.service\n\u0060\u0060\u0060",
+        "createdAt": "2025-08-28T12:50:12",
+        "reactions": [
+          {
+            "user": "WHYBBE",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:01.8721421Z"
+          },
+          {
+            "user": "YuriiYa",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:01.8721427Z"
+          }
+        ]
+      },
+      {
+        "id": 3267304971,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate the affected platform (Linux), the reliability concerns due to a crash, and the specific area (libSkiaSharp.native) related to the issue.\n\nThis issue does not appear to be a regression; however, it highlights reliability concerns in the native bindings on RISC-V 64 architecture.\n\nAdditional remarks:\n* The issue discusses a symbol lookup error related to the SkiaSharp library but does not mention any specific backend technologies such as Metal, OpenGL, PDF, Raster, or Vulkan.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The problem is expressly linked to the Linux platform as mentioned in the issue description.\n- The reliability concerns arise from a crash caused by an undefined symbol error, which signifies unexpected behavior.\n- The specific area of concern pertains to the native bindings of the SkiaSharp library, particularly on the RISC-V 64 architecture.\n\nSummary of the actions that will be performed:\n\n| Action        | Item                     | Description                                                                                          |\n| :------------ | :---------------------- | :--------------------------------------------------------------------------------------------------- |\n| Apply Label   | os/Linux                | The issue explicitly mentions the platform as Linux in the description, making it relevant.        |\n| Apply Label   | tenet/reliability       | The issue describes a crash due to an undefined symbol error when trying to run an application.     |\n| Apply Label   | area/libSkiaSharp.native| The issue pertains to a symbol lookup error related to the native SkiaSharp library.                |\n\n\u003C/details\u003E\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2025-09-08T17:46:41",
+        "reactions": []
+      },
+      {
+        "id": 3278950668,
+        "author": "YuriiYa",
+        "body": "regarding \u0060undefined symbol: FT_Get_BDF_Property\u0060 error:\n\n-  The error is caused by a mismatch between the version of **libfreetype** installed on your system and the one expected by **libSkiaSharp.so**.  \n\nThe correct version of **libfreetype** needed to be loaded.\n\n---\n\n### **Step 1: Find the Correct libfreetype**\n\n1. **Check which libfreetype you have:**\n   \u0060\u0060\u0060sh\n   ldconfig -p | grep freetype\n   \u0060\u0060\u0060\n   Look for something like libfreetype.so.6. And take path from there\n\n---\n\n### **Step 2: Set LD_PRELOAD**\n\nYou can force your application to use the correct version of **libfreetype** by setting the \u0060LD_PRELOAD\u0060 environment variable.\n\n**Example:**\n\u0060\u0060\u0060sh\nexport LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libfreetype.so.6\ndotnet run --framework=net9.0-desktop\n\u0060\u0060\u0060\n",
+        "createdAt": "2025-09-11T07:45:15",
+        "reactions": [
+          {
+            "user": "ashah7",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:02.317312Z"
+          },
+          {
+            "user": "ElijahBerkley-pioneerhigh",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:40:02.3173126Z"
+          },
+          {
+            "user": "ElijahBerkley-pioneerhigh",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:40:02.3173127Z"
+          }
+        ]
+      }
+    ]
+  }
 }

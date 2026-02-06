@@ -32,5 +32,59 @@
   "updatedAt": "2025-12-05T08:30:14",
   "closedAt": "2024-11-08T11:19:59",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:38:05.0701099Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 425377380,
+        "author": "freever",
+        "body": "I thought perhaps this question belongs on Stackoverflow\r\n\r\nhttps://stackoverflow.com/questions/52552213/skiasharp-skglview-fails-to-render-on-ios-failed-to-bind-eagldrawabl",
+        "createdAt": "2018-09-28T09:24:31",
+        "reactions": []
+      },
+      {
+        "id": 454753310,
+        "author": "charlenni",
+        "body": "We have the same problem on iOS. I assume, that if you call \u0060\u0060\u0060\u0060InvalidateSurface()\u0060\u0060\u0060\u0060 of the SKGLView and don\u0027t check, if a GrContext exists, than you get this error.\r\n\r\nI would suggest to check this before creating the render loop in \u0060\u0060\u0060\u0060OnSurfaceInvalidated()\u0060\u0060\u0060\u0060 of [SKGLViewRenderBase](https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Native.Shared/SKGLViewRendererBase.cs#L201). It should be\r\n\u0060\u0060\u0060\u0060\r\n// the user asked to repaint\r\nprivate void OnSurfaceInvalidated(object sender, EventArgs eventArgs)\r\n{\r\n\t// if we aren\u0027t in a loop, then refresh once\r\n\tif (GrContext != null \u0026\u0026 !Element.HasRenderLoop)\r\n\t{\r\n\t\tSetupRenderLoop(true);\r\n\t}\r\n}\r\n\u0060\u0060\u0060\u0060 ",
+        "createdAt": "2019-01-16T11:56:34",
+        "reactions": []
+      },
+      {
+        "id": 455042009,
+        "author": "mattleibow",
+        "body": "This may be a bigger issue... What happens if the view is created, shown and then hidden? The context will still have been created, but may no longer be valid. I must check to see if there are hooks to see if the context (either the GLES or the GR) is still valid. Also need to test on other platforms.",
+        "createdAt": "2019-01-17T04:53:16",
+        "reactions": []
+      },
+      {
+        "id": 455077996,
+        "author": "charlenni",
+        "body": "I tested it only with a one screen app. There work turning off the device and change to another app. But I have not check, what happens, if I display another page and than go back.",
+        "createdAt": "2019-01-17T08:04:03",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:38:04.4835494Z"
+          }
+        ]
+      },
+      {
+        "id": 2447018167,
+        "author": "mattleibow",
+        "body": "I know this is a very old issue, but does anyone know if this is still happening? Does this happen with .NET MAUI?",
+        "createdAt": "2024-10-30T12:43:33",
+        "reactions": []
+      },
+      {
+        "id": 3615798609,
+        "author": "pauldendulk",
+        "body": "We got a \u0027Failed to bind EAGLDrawable\u0027 reported with Mapsui.MAUI v5 (using the latest SkiaSharp) on .NET 10 https://github.com/Mapsui/Mapsui/issues/3255",
+        "createdAt": "2025-12-05T08:29:18",
+        "reactions": []
+      }
+    ]
+  }
 }
