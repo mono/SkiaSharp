@@ -33,6 +33,29 @@ Verify SkiaSharp packages work correctly before publishing.
 
 ---
 
+## ⚠️ CRITICAL: Semver Version Ordering
+
+When identifying which release branch to test, you **MUST** use semver ordering, NOT alphabetical or `sort -V` ordering.
+
+**In semver, a bare version is ALWAYS newer than its prerelease variants:**
+
+```
+3.119.2-preview.1 < 3.119.2-preview.2 < 3.119.2-preview.3 < 3.119.2 (FINAL)
+```
+
+`release/3.119.2` is the **stable release** and is NEWER than `release/3.119.2-preview.3`.
+
+**To find the latest release branch:**
+
+1. List all release branches: `git branch -r | grep "release/"`
+2. Identify the highest base version (e.g., `3.119.2`)
+3. Check if a **bare version branch** exists (e.g., `release/3.119.2`) — if so, that is the latest
+4. If only preview branches exist, the highest preview number is the latest
+
+**⚠️ Getting this wrong means testing the wrong version — wasting the entire process or shipping untested packages.**
+
+---
+
 ## Step 1: Check CI Status
 
 Before testing, verify CI builds have completed. Check commit statuses on the release branch head:

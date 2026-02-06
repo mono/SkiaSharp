@@ -34,7 +34,8 @@ Create release branches for SkiaSharp versions.
 1. Fetch main and read `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`
 2. List existing branches: `git branch -r | grep "release/{version}-preview"`
 3. Next preview = highest + 1 (or 1 if none)
-4. Confirm with user: "Next release will be `X.Y.Z-preview.N`. Proceed?"
+4. **⚠️ Semver check:** Also verify no bare `release/{version}` branch exists — if it does, the stable release is already cut and you should NOT create another preview. Ask the user to confirm.
+5. Confirm with user: "Next release will be `X.Y.Z-preview.N`. Proceed?"
 
 ### User provides version
 
@@ -43,6 +44,10 @@ Use the provided version directly.
 ---
 
 ## Step 2: Determine Release Type
+
+⚠️ **Semver ordering:** A bare version `X.Y.Z` is ALWAYS newer than `X.Y.Z-preview.N`. When listing
+branches to find the latest, remember that `release/3.119.2` > `release/3.119.2-preview.3`.
+Do NOT use alphabetical sorting — it gives wrong results for semver.
 
 | Version Format | Type | Base | PREVIEW_LABEL |
 |----------------|------|------|---------------|
