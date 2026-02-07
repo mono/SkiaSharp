@@ -68,6 +68,166 @@ namespace HarfBuzzSharp
 		public void SetScale (int xScale, int yScale) =>
 			HarfBuzzApi.hb_font_set_scale (Handle, xScale, yScale);
 
+		/// <summary>
+		/// Gets the horizontal and vertical pixels-per-em (ppem) of the font.
+		/// </summary>
+		/// <param name="xPpem">The horizontal ppem value.</param>
+		/// <param name="yPpem">The vertical ppem value.</param>
+		public void GetPpem (out int xPpem, out int yPpem)
+		{
+			uint x, y;
+			HarfBuzzApi.hb_font_get_ppem (Handle, &x, &y);
+			xPpem = (int)x;
+			yPpem = (int)y;
+		}
+
+		/// <summary>
+		/// Sets the horizontal and vertical pixels-per-em (ppem) of the font.
+		/// </summary>
+		/// <remarks>
+		/// The ppem values are used by HarfBuzz for pixel rounding and hinting.
+		/// </remarks>
+		/// <param name="xPpem">The horizontal ppem value.</param>
+		/// <param name="yPpem">The vertical ppem value.</param>
+		public void SetPpem (int xPpem, int yPpem) =>
+			HarfBuzzApi.hb_font_set_ppem (Handle, (uint)xPpem, (uint)yPpem);
+
+		/// <summary>
+		/// Gets or sets the "point size" of the font in typographic points (1/72 inch).
+		/// </summary>
+		/// <remarks>
+		/// This is used for optical sizing in variable fonts. Fonts with an 'opsz' axis
+		/// will use this value to select the appropriate optical size. A value of 0
+		/// means "not set" and disables automatic optical sizing.
+		/// </remarks>
+		public float Ptem
+		{
+			get => HarfBuzzApi.hb_font_get_ptem (Handle);
+			set => HarfBuzzApi.hb_font_set_ptem (Handle, value);
+		}
+
+		/// <summary>
+		/// Gets or sets the synthetic slant of the font.
+		/// </summary>
+		/// <remarks>
+		/// The synthetic slant is in "run" units to achieve a "rise" of 1.
+		/// The typical slant value for an idealized oblique font is 0.2 (about 12°).
+		/// HarfBuzz needs to know this value to adjust shaping results, such as offsets.
+		/// </remarks>
+		public float SyntheticSlant
+		{
+			get => HarfBuzzApi.hb_font_get_synthetic_slant (Handle);
+			set => HarfBuzzApi.hb_font_set_synthetic_slant (Handle, value);
+		}
+
+		/// <summary>
+		/// Sets synthetic bold parameters for the font.
+		/// </summary>
+		/// <remarks>
+		/// Positive values for emboldening in X and Y directions. Typical value
+		/// is 2% of UPEM for X, and Y embolden of 0. Setting both to 0 removes
+		/// the synthetic bold. If inPlace is true, glyphs are widened in-place
+		/// rather than adding side-bearing.
+		/// </remarks>
+		/// <param name="xEmbolden">Horizontal emboldening amount</param>
+		/// <param name="yEmbolden">Vertical emboldening amount</param>
+		/// <param name="inPlace">Whether to embolden in-place</param>
+		public void SetSyntheticBold (float xEmbolden, float yEmbolden, bool inPlace = false) =>
+			HarfBuzzApi.hb_font_set_synthetic_bold (Handle, xEmbolden, yEmbolden, inPlace);
+
+		/// <summary>
+		/// Gets the synthetic bold parameters of the font.
+		/// </summary>
+		/// <param name="xEmbolden">Horizontal emboldening amount</param>
+		/// <param name="yEmbolden">Vertical emboldening amount</param>
+		/// <param name="inPlace">Whether emboldening is in-place</param>
+		public void GetSyntheticBold (out float xEmbolden, out float yEmbolden, out bool inPlace)
+		{
+			fixed (float* x = &xEmbolden)
+			fixed (float* y = &yEmbolden)
+			fixed (bool* ip = &inPlace) {
+				HarfBuzzApi.hb_font_get_synthetic_bold (Handle, x, y, ip);
+			}
+		}
+
+		/// <summary>
+		/// Sets a single variation axis value.
+		/// </summary>
+		/// <remarks>
+		/// This is useful for setting a single axis on a variable font.
+		/// For multiple axes, use SetVariations instead.
+		/// </remarks>
+		/// <param name="tag">The axis tag (e.g., "wght" for weight)</param>
+		/// <param name="value">The axis value in design space</param>
+		public void SetVariation (uint tag, float value) =>
+			HarfBuzzApi.hb_font_set_variation (Handle, tag, value);
+
+		/// <summary>
+		/// Sets a single variation axis value using a string tag.
+		/// </summary>
+		/// <remarks>
+		/// Common tags are "wght" for weight, "wdth" for width, 
+		/// "slnt" for slant, "ital" for italic.
+		/// </remarks>
+		/// <param name="tag">The axis tag string (e.g., "wght")</param>
+		/// <param name="value">The axis value in design space</param>
+		public void SetVariation (string tag, float value)
+		{
+			if (tag == null)
+				throw new ArgumentNullException (nameof (tag));
+			if (tag.Length != 4)
+				throw new ArgumentException ("Tag must be exactly 4 characters", nameof (tag));
+
+			var tagValue = Tag.Parse (tag);
+			HarfBuzzApi.hb_font_set_variation (Handle, tagValue, value);
+		}
+
+		/// <summary>
+		/// Gets or sets the named instance index for the font.
+		/// </summary>
+		/// <remarks>
+		/// A value of HB_FONT_NO_VAR_NAMED_INSTANCE (0xFFFFFFFF) means 
+		/// no named instance is set.
+		/// </remarks>
+		public uint NamedInstance
+		{
+			get => HarfBuzzApi.hb_font_get_var_named_instance (Handle);
+			set => HarfBuzzApi.hb_font_set_var_named_instance (Handle, value);
+		}
+
+		/// <summary>
+		/// Sets design-space coordinates for variable font axes.
+		/// </summary>
+		/// <remarks>
+		/// Note that this is in design-space coordinates, not normalized.
+		/// This is the primary API for working with variable fonts.
+		/// </remarks>
+		/// <param name="variations">An array of variation settings</param>
+		public void SetVariations (Variation[] variations)
+		{
+			if (variations == null)
+				throw new ArgumentNullException (nameof (variations));
+
+			fixed (Variation* v = variations) {
+				HarfBuzzApi.hb_font_set_variations (Handle, v, (uint)variations.Length);
+			}
+		}
+
+		/// <summary>
+		/// Sets design-space coordinates for variable font axes.
+		/// </summary>
+		/// <remarks>
+		/// Note that this is in design-space coordinates, not normalized.
+		/// This is the primary API for working with variable fonts.
+		/// </remarks>
+		/// <param name="variations">A span of variation settings</param>
+		public void SetVariations (ReadOnlySpan<Variation> variations)
+		{
+			fixed (Variation* v = variations) {
+				HarfBuzzApi.hb_font_set_variations (Handle, v, (uint)variations.Length);
+			}
+		}
+
 		public bool TryGetHorizontalFontExtents (out FontExtents extents)
 		{
 			fixed (FontExtents* e = &extents) {
