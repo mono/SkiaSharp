@@ -268,5 +268,29 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(colors, upm);
 		}
+
+		[SkippableFact]
+		public void PreMultiplySpanMatchesArray()
+		{
+			var colors = new SKColor[] { 0x33008200, 0x33008200, 0x33008200, 0x33008200, 0x33008200 };
+
+			var pm1 = SKPMColor.PreMultiply(colors);
+			var pm2 = new SKPMColor[colors.Length];
+			SKPMColor.PreMultiply(pm2,  colors);
+
+			Assert.Equal(pm1, pm2);
+		}
+
+		[SkippableFact]
+		public void UnPreMultiplySpanMatchesArray()
+		{
+			var pmcolors = new SKPMColor[] { 0x33001A00, 0x33001A00, 0x33001A00, 0x33001A00, 0x33001A00 };
+
+			var upm1 = SKPMColor.UnPreMultiply(pmcolors);
+			var upm2 = new SKColor[pmcolors.Length];
+			SKPMColor.UnPreMultiply(upm2,  pmcolors);
+
+			Assert.Equal(upm1, upm2);
+		}
 	}
 }
