@@ -1,0 +1,435 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/triage-schema.json",
+  "title": "SkiaSharp Issue Triage",
+  "description": "Per-issue AI triage classification. All sections except type and actionability are nullable — use null if not applicable, never empty objects or arrays. Label-backed field values match exact GitHub label suffixes so prefix/ + value reconstructs the full label.",
+  "type": "object",
+  "required": ["schemaVersion", "number", "repo", "analyzedAt", "summary", "type", "actionability"],
+  "additionalProperties": false,
+
+  "$defs": {
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0.0-1.0 confidence score. 0.95+=explicit statement in text, 0.80-0.94=strong inference, 0.60-0.79=reasonable with ambiguity, 0.40-0.59=uncertain, <0.40=guessing."
+    },
+    "classifiedType": {
+      "type": "object",
+      "description": "Issue type classification. Pick ONE best fit — trust issue content over title prefix.",
+      "required": ["value", "confidence", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": ["bug", "feature-request", "enhancement", "question", "documentation"],
+          "description": "bug=broken behavior/crash. feature-request=new capability that doesn't exist. enhancement=improvement to existing functionality. question=how-to/support. documentation=docs/samples gap."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1, "description": "Why this type was chosen." }
+      }
+    },
+    "classifiedArea": {
+      "type": "object",
+      "description": "Component area classification. Pick the MOST SPECIFIC match (e.g., SkiaSharp.Views.Maui over SkiaSharp). Use libSkiaSharp.native for DllNotFoundException/native loading issues.",
+      "required": ["value", "confidence", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": [
+            "SkiaSharp", "SkiaSharp.Views", "SkiaSharp.Views.Maui",
+            "SkiaSharp.Views.Blazor", "SkiaSharp.Views.Forms",
+            "SkiaSharp.Views.Uno", "SkiaSharp.HarfBuzz", "HarfBuzzSharp",
+            "SkiaSharp.Workbooks", "libSkiaSharp.native",
+            "libHarfBuzzSharp.native", "Build", "Docs"
+          ],
+          "description": "Maps to area/ GitHub labels. Use SkiaSharp for core API issues, SkiaSharp.Views for platform view controls, libSkiaSharp.native for native binary/P-Invoke issues."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "classifiedBackend": {
+      "type": "object",
+      "description": "Rendering backend classification. Only include if issue is backend-specific. Note: backend/Android is the rendering pipeline, distinct from os/Android.",
+      "required": ["value", "confidence", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": ["Android", "Metal", "OpenGL", "Raster", "Vulkan", "PDF", "SVG", "Xps", "SkiaSharp"],
+          "description": "Maps to backend/ GitHub labels."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "classifiedPlatform": {
+      "type": "object",
+      "description": "Platform/OS classification. Only include if issue is platform-specific.",
+      "required": ["value", "confidence", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": [
+            "Android", "iOS", "macOS", "Linux", "Windows-Classic",
+            "Windows-WinUI", "Windows-Universal-UWP", "Windows-Nano-Server",
+            "WASM", "Tizen", "tvOS", "watchOS"
+          ],
+          "description": "Maps to os/ GitHub labels. Windows-Classic=WPF/WinForms/.NET Framework, Windows-WinUI=WinUI 3/WinAppSDK."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "classifiedTenet": {
+      "type": "object",
+      "description": "Quality tenet classification.",
+      "required": ["value", "confidence", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": ["compatibility", "performance", "reliability"],
+          "description": "compatibility=cross-version/cross-platform consistency. performance=speed/memory/throughput. reliability=crashes/corruption/unexpected behavior."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "classifiedPartner": {
+      "type": "object",
+      "description": "Partner team flag. Only set when issue clearly falls in a partner's domain.",
+      "required": ["value", "confidence", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": ["maui", "tizen", "unoplatform"],
+          "description": "Maps to partner/ GitHub labels."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "screenshot": {
+      "type": "object",
+      "required": ["url"],
+      "additionalProperties": false,
+      "properties": {
+        "url": { "type": "string", "pattern": "^https?://", "description": "Direct URL to image." },
+        "context": { "type": "string", "description": "What the surrounding text says about this image (not what you think is in it — you cannot see images)." },
+        "source": { "type": "string", "description": "Where in the issue this was found, e.g. 'description', 'comment 5'." }
+      }
+    },
+    "attachment": {
+      "type": "object",
+      "required": ["url", "filename"],
+      "additionalProperties": false,
+      "properties": {
+        "url": { "type": "string", "pattern": "^https?://", "description": "Direct download URL." },
+        "filename": { "type": "string", "description": "Original filename, e.g. 'TestProject.zip'." },
+        "type": {
+          "enum": ["repro-project", "log-file", "config-file", "other"],
+          "description": "repro-project=sample code/solution. log-file=crash/debug logs. config-file=project/build config."
+        },
+        "source": { "type": "string", "description": "Where found, e.g. 'description', 'comment 3'." }
+      }
+    },
+    "repoLink": {
+      "type": "object",
+      "required": ["url"],
+      "additionalProperties": false,
+      "properties": {
+        "url": { "type": "string", "pattern": "^https?://", "description": "GitHub repository URL." },
+        "description": { "type": "string", "description": "What this repo contains." }
+      }
+    },
+    "codeSnippet": {
+      "type": "object",
+      "required": ["code"],
+      "additionalProperties": false,
+      "properties": {
+        "language": { "type": "string", "description": "Programming language, e.g. 'csharp', 'xml'." },
+        "code": { "type": "string", "description": "The code text." },
+        "context": { "type": "string", "description": "What this code demonstrates or where it triggers the issue." }
+      }
+    },
+    "reproEvidenceObject": {
+      "type": "object",
+      "description": "ALL reproduction material. Preserve every URL — future AI can analyze screenshots, download zips, clone repos.",
+      "additionalProperties": false,
+      "properties": {
+        "screenshots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/screenshot" },
+          "description": "Every image URL from issue body and comments."
+        },
+        "attachments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/attachment" },
+          "description": "File downloads (.zip, .rar, .7z, .tar.gz)."
+        },
+        "repoLinks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/repoLink" },
+          "description": "GitHub repos shared as reproduction projects."
+        },
+        "relatedIssues": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 },
+          "description": "Issue numbers referenced in the thread."
+        },
+        "stepsToReproduce": {
+          "type": ["string", "null"],
+          "description": "Synthesized reproduction steps from ALL comments, not just the issue body."
+        },
+        "codeSnippets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/codeSnippet" },
+          "description": "Code blocks extracted from issue body and comments."
+        },
+        "environmentDetails": {
+          "type": ["string", "null"],
+          "description": "Consolidated environment info: OS, IDE, .NET version, device, etc."
+        }
+      }
+    },
+    "bugSignalsObject": {
+      "type": "object",
+      "description": "Bug evidence extraction. REQUIRED when type.value is 'bug', must be null for non-bugs.",
+      "required": ["reproQuality", "severity", "severityReason"],
+      "additionalProperties": false,
+      "properties": {
+        "hasCrash": { "type": "boolean", "description": "Does the issue involve an application crash?" },
+        "hasStackTrace": { "type": "boolean", "description": "Is a stack trace provided?" },
+        "reproQuality": {
+          "enum": ["complete", "partial", "steps-only", "none"],
+          "description": "complete=full repro project or compilable code. partial=code snippets, not runnable as-is. steps-only=scenario description without code. none=no repro info."
+        },
+        "hasScreenshot": { "type": "boolean", "description": "Are screenshots provided?" },
+        "hasWorkaround": { "type": "boolean", "description": "Has a workaround been identified in the thread?" },
+        "workaroundSummary": { "type": ["string", "null"], "maxLength": 500, "description": "Brief description of the workaround, or null." },
+        "targetFrameworks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Target frameworks mentioned, e.g. ['net8.0-android', 'net48']."
+        },
+        "severity": {
+          "enum": ["critical", "high", "medium", "low"],
+          "description": "critical=crash/data-loss/security. high=broken, no workaround. medium=broken, workaround exists. low=cosmetic/minor."
+        },
+        "severityReason": { "type": "string", "minLength": 1, "description": "Why this severity level was chosen." }
+      }
+    }
+  },
+
+  "properties": {
+    "schemaVersion": { "const": "1.0", "description": "Schema version for forward compatibility." },
+    "number": { "type": "integer", "minimum": 1, "description": "GitHub issue number." },
+    "repo": { "type": "string", "pattern": "^[^/]+/[^/]+$", "description": "Repository in owner/name format, e.g. 'mono/SkiaSharp'." },
+    "analyzedAt": { "type": "string", "format": "date-time", "description": "ISO 8601 datetime of analysis. Always include T, time, and Z: '2026-02-08T15:00:00Z'." },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 200, "description": "One-line plain English summary of the issue." },
+
+    "type": { "$ref": "#/$defs/classifiedType", "description": "Issue type (single). Required." },
+
+    "area": {
+      "description": "Component area (single). Null if unclear.",
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/classifiedArea" }]
+    },
+    "backends": {
+      "description": "Rendering backends affected (multiple). Null if not backend-specific.",
+      "oneOf": [
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/classifiedBackend" }, "minItems": 1 }
+      ]
+    },
+    "platforms": {
+      "description": "Platforms/OS affected (multiple). Null if cross-platform.",
+      "oneOf": [
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/classifiedPlatform" }, "minItems": 1 }
+      ]
+    },
+    "tenets": {
+      "description": "Quality tenets that apply (multiple). Null if none apply.",
+      "oneOf": [
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/classifiedTenet" }, "minItems": 1 }
+      ]
+    },
+    "partner": {
+      "description": "Partner team flag (single). Null if no partner involved.",
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/classifiedPartner" }]
+    },
+
+    "regression": {
+      "description": "Regression detection. Null if not a regression or unknown.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["isRegression", "confidence", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "isRegression": { "type": "boolean", "description": "Whether this is a regression from a previous version." },
+            "confidence": { "$ref": "#/$defs/confidence" },
+            "reason": { "type": "string", "minLength": 1 },
+            "workedInVersion": { "type": "string", "description": "Last known good version, e.g. '2.88.6'." },
+            "brokeInVersion": { "type": "string", "description": "First broken version, e.g. '3.0.0-preview2.1'." }
+          }
+        }
+      ]
+    },
+
+    "fixStatus": {
+      "description": "Whether the issue is likely already fixed. Null if unknown.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["likelyFixed", "confidence", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "likelyFixed": { "type": "boolean" },
+            "confidence": { "$ref": "#/$defs/confidence" },
+            "reason": { "type": "string", "minLength": 1 },
+            "relatedPRs": { "type": "array", "items": { "type": "integer" }, "description": "PR numbers that may fix this." },
+            "relatedCommits": { "type": "array", "items": { "type": "string" }, "description": "Commit SHAs that may fix this." },
+            "fixedInVersion": { "type": ["string", "null"], "description": "Version containing the fix, or null." },
+            "verificationStatus": {
+              "enum": ["unverified", "verified-fixed", "verified-still-broken", "inconclusive"],
+              "description": "Whether the fix has been confirmed."
+            }
+          }
+        }
+      ]
+    },
+
+    "bugSignals": {
+      "description": "Bug evidence. REQUIRED (not null) when type.value='bug'. Must be null for non-bugs.",
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/bugSignalsObject" }
+      ]
+    },
+
+    "reproEvidence": {
+      "description": "All reproduction material — screenshots, zips, repos, code, steps. Null if none.",
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/reproEvidenceObject" }
+      ]
+    },
+
+    "versionAnalysis": {
+      "description": "Version and era analysis. Null if no version info available.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["reason"],
+          "additionalProperties": false,
+          "properties": {
+            "mentionedVersions": { "type": "array", "items": { "type": "string" }, "description": "SkiaSharp versions mentioned in the issue." },
+            "era": {
+              "enum": ["pre-dotnet-core", "xamarin-forms", "maui-transition", "modern"],
+              "description": "pre-dotnet-core=SkiaSharp 1.x. xamarin-forms=2.80-2.88. maui-transition=2.88-2.88.8. modern=3.x+."
+            },
+            "currentRelevance": {
+              "enum": ["likely", "unlikely", "unknown"],
+              "description": "likely=still applicable to latest. unlikely=probably resolved by version changes. unknown=can't determine."
+            },
+            "reason": { "type": "string", "minLength": 1 },
+            "migrationPath": { "type": ["string", "null"], "description": "Upgrade path to suggest, or null." }
+          }
+        }
+      ]
+    },
+
+    "actionability": {
+      "type": "object",
+      "description": "Suggested next action for the maintainer. Required.",
+      "required": ["suggestedAction", "confidence", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "suggestedAction": {
+          "enum": [
+            "needs-investigation", "close-as-fixed", "close-with-docs",
+            "close-as-duplicate", "convert-to-discussion", "request-info", "keep-open"
+          ],
+          "description": "needs-investigation=real issue, needs engineering. close-as-fixed=verified fixed. close-with-docs=answer with docs. close-as-duplicate=duplicate (set duplicateOf). convert-to-discussion=question, move to Discussions. request-info=missing info. keep-open=valid, stays in backlog."
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "reason": { "type": "string", "minLength": 1 },
+        "requiresHumanReview": { "type": "boolean", "description": "True if any confidence is below 0.70 or action has high impact." },
+        "closeable": { "type": "boolean", "description": "Whether this issue can be closed." },
+        "closeReason": { "type": ["string", "null"], "description": "Brief message for close comment, or null." },
+        "duplicateOf": { "type": ["integer", "null"], "minimum": 1, "description": "Issue number this duplicates. REQUIRED when suggestedAction is close-as-duplicate." },
+        "missingInfo": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "reproduction-steps", "version-number", "platform", "stack-trace",
+              "expected-behavior", "actual-behavior", "sample-project", "device-info"
+            ]
+          },
+          "description": "What info is missing from the issue."
+        },
+        "abandoned": { "type": "boolean", "description": "Whether the issue appears abandoned by the reporter." },
+        "abandonedReason": { "type": ["string", "null"], "description": "Why the issue appears abandoned, or null." }
+      }
+    },
+
+    "suggestedResponse": {
+      "description": "Draft GitHub comment response. Null if no response appropriate (e.g., bugs needing engineering). NEVER post automatically — always human-reviewed.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["responseType", "confidence", "reason", "draft"],
+          "additionalProperties": false,
+          "properties": {
+            "responseType": {
+              "enum": ["answer", "documentation", "request-info", "close-message", "duplicate-notice"],
+              "description": "answer=direct answer. documentation=docs/sample pointer. request-info=ask for missing details. close-message=close explanation. duplicate-notice=points to canonical issue."
+            },
+            "confidence": { "$ref": "#/$defs/confidence" },
+            "reason": { "type": "string", "minLength": 1 },
+            "draft": { "type": "string", "minLength": 1, "maxLength": 2000, "description": "Inline markdown for a GitHub comment. Keep concise and actionable." }
+          }
+        }
+      ]
+    }
+  },
+
+  "allOf": [
+    {
+      "$comment": "bugSignals REQUIRED when type is bug",
+      "if": {
+        "properties": { "type": { "type": "object", "properties": { "value": { "const": "bug" } }, "required": ["value"] } },
+        "required": ["type"]
+      },
+      "then": {
+        "properties": { "bugSignals": { "$ref": "#/$defs/bugSignalsObject" } },
+        "required": ["bugSignals"]
+      }
+    },
+    {
+      "$comment": "bugSignals must be null for non-bugs",
+      "if": {
+        "properties": { "type": { "type": "object", "properties": { "value": { "not": { "const": "bug" } } }, "required": ["value"] } },
+        "required": ["type"]
+      },
+      "then": {
+        "properties": { "bugSignals": { "type": "null" } }
+      }
+    },
+    {
+      "$comment": "duplicateOf REQUIRED when action is close-as-duplicate",
+      "if": {
+        "properties": { "actionability": { "type": "object", "properties": { "suggestedAction": { "const": "close-as-duplicate" } }, "required": ["suggestedAction"] } },
+        "required": ["actionability"]
+      },
+      "then": {
+        "properties": { "actionability": { "properties": { "duplicateOf": { "type": "integer", "minimum": 1 } }, "required": ["duplicateOf"] } }
+      }
+    }
+  ]
+}

@@ -5,11 +5,25 @@
 
 ## Current Focus
 
-**Phase**: Multi-Repository Dashboard UI Enhancement ✅ COMPLETE
-**Status**: All phases complete - badges, filters, NuGet grouping deployed
-**Version**: v0.12.0
+**Phase**: AI Triage Skill — Pipeline Implementation
+**Status**: Core pipeline complete — preprocessor, schema, validator all working
+**Branch**: docs-dashboard
 
 ## Recent Changes
+
+### 2025-07-22 (Triage Skill — Pipeline Implementation)
+- **Built full triage pipeline**: preprocessor → AI analysis → schema validation → write
+- **`triage-schema.json`** (JSON Schema draft 2020-12): ~300 lines with all enums, types, `$defs`, cross-field rules via `allOf/if/then`
+- **`issue-to-markdown.py`** preprocessor: ~400 lines, handles both GitHub API and cache formats, preserves all URLs, annotates author roles, time-deltas, extracts attachments table
+- **`validate-triage.py`**: thin `jsonschema` library wrapper (~80 lines), catches all cross-field violations
+- **Tested on real issues**: #2794 (39 comments, 6 screenshots), #1048 (zip file), #2958 (screenshots + code + zip)
+- **Cross-field rules verified**: 6/6 error cases caught (bug↔bugSignals, duplicate↔duplicateOf, close-as-stale blocked, unknown fields, empty arrays)
+- **Rewrote SKILL.md** for new pipeline: fetch → preprocess → analyze → validate → fix → write
+- **Updated schema.md** with new `reproEvidence` section documentation
+- **New `reproEvidence` section** in schema: screenshots, attachments, repoLinks, relatedIssues, stepsToReproduce, codeSnippets, environmentDetails
+
+### 2026-02-07 (Triage Skill Review)
+- Reviewed Copilot triage skill (schema, labels, scripts, validator) and documented specific actionable improvements.
 
 ### 2026-02-06 (Sync Design Review)
 

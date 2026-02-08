@@ -4,8 +4,8 @@
 
 ## Current Status
 
-**Overall**: ✅ Phase 5 - Multi-Repository Extension COMPLETE (Full Sync Done)
-**Notes**: Full/resume sync design review completed; reliability review findings captured for follow-up.
+**Overall**: 🔧 AI Triage Skill — Core pipeline complete, ready for testing with real AI
+**Notes**: JSON Schema, preprocessor, validator all built and tested. SKILL.md rewritten for pipeline workflow.
 
 | Area | Status | Notes |
 |------|--------|-------|
@@ -16,6 +16,25 @@
 | Phase 4 | ✅ Complete | Data cache with engagement scoring |
 | Phase 5 | ✅ Complete | Multi-repo extension |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
+| AI Triage | 🔧 In Progress | Pipeline built, needs real AI testing |
+
+---
+
+## AI Triage Skill 🔧 (In Progress)
+
+### Core Pipeline ✅
+- [x] JSON Schema (`triage-schema.json`) — draft 2020-12 with cross-field rules
+- [x] Preprocessor (`issue-to-markdown.py`) — annotated markdown from cached JSON
+- [x] Validator (`validate-triage.py`) — thin jsonschema wrapper
+- [x] SKILL.md — rewritten for fetch → preprocess → analyze → validate → write pipeline
+- [x] schema.md — updated with reproEvidence documentation
+- [x] Tested on real issues: #2794, #1048, #2958
+- [x] Cross-field rules tested: 6/6 error cases caught
+
+### Remaining
+- [ ] Test with real AI (invoke skill on real issue)
+- [ ] Refine skill via skill-creator if needed
+- [ ] enums.json sync with triage-schema.json (currently duplicated)
 
 ---
 
