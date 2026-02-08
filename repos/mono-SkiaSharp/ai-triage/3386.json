@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0",
+  "number": 3386,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-02-08T22:36:55Z",
+  "summary": "DllNotFoundException for libSkiaSharp when deploying to Azure Container App via .NET Aspire with NoDependencies package",
+  "type": {
+    "value": "bug",
+    "confidence": 0.85,
+    "reason": "DllNotFoundException crash with stack trace in container deployment. Root cause appears to be deployment configuration (native binary not copied to container output) rather than a SkiaSharp code defect. User reports it worked with 2.88.9."
+  },
+  "area": {
+    "value": "libSkiaSharp.native",
+    "confidence": 0.95,
+    "reason": "DllNotFoundException for libSkiaSharp — native binary loading/deployment issue. Already labeled area/libSkiaSharp.native."
+  },
+  "backends": null,
+  "platforms": [
+    {
+      "value": "Linux",
+      "confidence": 0.98,
+      "reason": "Explicitly stated: Azure Container App running Linux. Error shows Linux paths (/usr/share/dotnet, /app/)."
+    }
+  ],
+  "tenets": [
+    {
+      "value": "compatibility",
+      "confidence": 0.90,
+      "reason": "Regression from 2.88.9 to 3.116.0 — deployment behavior changed between major versions. Also involves .NET Aspire container deployment compatibility."
+    }
+  ],
+  "partner": null,
+  "regression": {
+    "isRegression": true,
+    "confidence": 0.70,
+    "reason": "User states Last Known Good Version 2.88.9, current 3.116.0 fails. However, the packaging structure changed significantly between 2.x and 3.x, so this may be an expected migration gap rather than a true regression.",
+    "workedInVersion": "2.88.9",
+    "brokeInVersion": "3.116.0"
+  },
+  "fixStatus": null,
+  "bugSignals": {
+    "hasCrash": true,
+    "hasStackTrace": true,
+    "reproQuality": "partial",
+    "hasScreenshot": false,
+    "hasWorkaround": true,
+    "workaroundSummary": "Switch to SkiaSharp.NativeAssets.Linux (not NoDependencies), use custom Docker base image (ghcr.io/avantipoint/aspnet-skia) with native deps pre-installed, set ContainerBaseImage in csproj. Also add System.Memory.Data as direct PackageReference to fix trimming issue.",
+    "targetFrameworks": ["net9.0"],
+    "severity": "medium",
+    "severityReason": "Crash on deployment with no out-of-the-box workaround, but user found a viable custom container workaround. Affects container deployment scenario specifically."
+  },
+  "reproEvidence": {
+    "stepsToReproduce": [
+      "Create a .NET 9 WebAPI project using .NET Aspire",
+      "Add PackageReference for SkiaSharp and SkiaSharp.NativeAssets.Linux.NoDependencies",
+      "Deploy to Azure Container App via Aspire",
+      "Call an endpoint that uses SkiaSharp (e.g., SKBitmap.Decode)"
+    ],
+    "codeSnippets": [
+      {
+        "language": "xml",
+        "code": "<PackageReference Include=\"SkiaSharp\" />\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" />",
+        "context": "Package references used in the project"
+      },
+      {
+        "language": "xml",
+        "code": "<PropertyGroup>\n  <OutputType>Exe</OutputType>\n  <TargetFramework>net9.0</TargetFramework>\n  <ContainerBaseImage>ghcr.io/avantipoint/aspnet-skia:9.0</ContainerBaseImage>\n</PropertyGroup>",
+        "context": "Workaround: custom container base image with native deps"
+      },
+      {
+        "language": "xml",
+        "code": "<ItemGroup>\n  <PackageReference Include=\"System.Memory.Data\" />\n</ItemGroup>",
+        "context": "Workaround for trimming issue: add System.Memory.Data as direct dependency"
+      }
+    ],
+    "repoLinks": [
+      {
+        "url": "https://github.com/AvantiPoint/aspnet-skia",
+        "description": "Custom Docker images based on mcr.microsoft.com/dotnet/aspnet with SkiaSharp native dependencies pre-installed"
+      }
+    ],
+    "environmentDetails": "Azure Container App, Linux, .NET 9.0.10, .NET Aspire deployment, Visual Studio (Windows) IDE"
+  },
+  "versionAnalysis": {
+    "mentionedVersions": ["3.116.0", "2.88.9"],
+    "era": "modern",
+    "currentRelevance": "likely",
+    "reason": "SkiaSharp 3.116.0 is current. The container deployment issue with .NET Aspire is an active deployment scenario. The NoDependencies package should work in containers per documentation."
+  },
+  "actionability": {
+    "suggestedAction": "close-with-docs",
+    "confidence": 0.80,
+    "reason": "The root issue is that the NoDependencies native .so is not being found in the container — a deployment configuration issue. The packages.md documents that NativeAssets must be a direct PackageReference in the application project. With .NET Aspire, the container build may not properly copy runtime assets. The user self-resolved with a custom container image.",
+    "requiresHumanReview": true,
+    "closeable": true,
+    "closeReason": "Deployment configuration issue — native assets not copied to container output. Documented in packages.md container deployment section.",
+    "duplicateOf": null,
+    "abandoned": false,
+    "abandonedReason": null
+  },
+  "suggestedResponse": {
+    "responseType": "answer",
+    "confidence": 0.80,
+    "reason": "User self-resolved but explanation of root cause and correct approach would help future users finding this issue.",
+    "draft": "Thanks for the detailed report and workaround @dansiegel!\n\nThe `DllNotFoundException` in containers typically means the native `.so` from `SkiaSharp.NativeAssets.Linux.NoDependencies` wasn't copied to the container's output directory. A few things to verify:\n\n1. **Direct reference in the executable project** — the NativeAssets package must be a `PackageReference` in the application project itself (the one producing the exe), not just in a transitive library.\n2. **RID resolution** — .NET Aspire's container build needs to properly resolve `runtimes/linux-x64/native/libSkiaSharp.so` from the NuGet package.\n\nThe `libfontconfig.so.1` error in the log is a red herring — `NoDependencies` doesn't require fontconfig. That message appears because the runtime tries multiple load strategies and reports all failures.\n\nYour custom container image approach works well when you need fontconfig for system fonts. For minimal containers, `NoDependencies` should work without extra deps — the issue is getting the `.so` deployed correctly.\n\nThe trimming fix for `System.Memory.Data` is a known pattern — trimming can remove transitive assemblies that are only used via reflection."
+  }
+}
