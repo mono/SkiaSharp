@@ -1,0 +1,42 @@
+{
+  "number": 3506,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add Linux Docker integration tests for release testing",
+  "body": "## Summary\n\nAdds Linux Docker integration tests to the release testing workflow, ensuring SkiaSharp and HarfBuzzSharp packages work correctly in Linux containers.\n\n## Changes\n\n### New test: \u0060LinuxConsoleTests.cs\u0060\n- **\u0060SkiaSharpRunsOnLinux\u0060** \u2014 Creates a console app in a Docker Linux container (\u0060mcr.microsoft.com/dotnet/sdk:8.0\u0060), draws a test image with SkiaSharp, and verifies the output PNG via screenshot comparison\n- **\u0060HarfBuzzSharpRunsOnLinux\u0060** \u2014 Shapes text with HarfBuzz, renders with SkiaSharp, validates glyph output and screenshot\n- Uses \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 (statically linked) to avoid system dependency issues in minimal containers\n- Tests are automatically skipped when Docker is not available\n\n### Updated release-testing skill docs\n- **SKILL.md** \u2014 Added \u0060LinuxConsoleTests\u0060 to test execution order, test commands, confirm matrix, and final report format\n- **setup.md** \u2014 Added Docker prerequisites and pre-flight check\n- **monitoring.md** \u2014 Added Docker test phase timing and feedback guidance\n- **troubleshooting.md** \u2014 Added Docker-specific error table\n\n## Testing\n\nAll tests passed against \u00603.119.2-stable.2\u0060:\n\n| Test | Status |\n|------|--------|\n| LinuxConsoleTests.SkiaSharpRunsOnLinux | \u2705 Passed |\n| LinuxConsoleTests.HarfBuzzSharpRunsOnLinux | \u2705 Passed |",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/HarfBuzzSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-06T20:04:21",
+  "updatedAt": "2026-02-06T20:05:20",
+  "closedAt": "2026-02-06T20:05:18",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-06T20:05:18",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/linux-docker-integration-tests",
+  "additions": 227,
+  "deletions": 0,
+  "changedFiles": 5,
+  "commits": 1,
+  "reviews": []
+}

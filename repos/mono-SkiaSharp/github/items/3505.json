@@ -1,0 +1,34 @@
+{
+  "number": 3505,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix stable version handling in release skills",
+  "body": "Update all 3 release skills to correctly document stable version numbering.\n\n**Problem:** The release skills assumed all NuGet versions include a build number suffix. For stable releases, the NuGet version is just the base (e.g., \u00603.119.2\u0060) \u2014 the build number only appears in the internal feed\u0027s prerelease tag (\u00603.119.2-stable.3\u0060).\n\n**Changes:**\n- **release-testing:** Split version resolution (Step 2) into preview vs stable paths; added stable examples for CI version extraction and user reporting\n- **release-publish:** Added NuGet version row to Preview vs Stable differences table; split version confirmation into preview vs stable formats with separate verification commands\n- **release-branch:** Added NuGet version format note after the release type table",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/Docs",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-06T13:50:37",
+  "updatedAt": "2026-02-06T13:51:38",
+  "closedAt": "2026-02-06T13:51:35",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-06T13:51:35",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-stable-version-docs",
+  "additions": 54,
+  "deletions": 10,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}
