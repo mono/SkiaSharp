@@ -4,8 +4,8 @@
 
 ## Current Status
 
-**Overall**: 🔧 AI Triage Skill — Core pipeline complete, ready for testing with real AI
-**Notes**: JSON Schema, preprocessor, validator all built and tested. SKILL.md rewritten for pipeline workflow.
+**Overall**: 🔧 AI Triage Skill — Pipeline complete, 5-model review applied, ready to commit
+**Notes**: All scripts PowerShell 7.5+, schema tightened, SKILL.md hardened for reliability.
 
 | Area | Status | Notes |
 |------|--------|-------|
@@ -16,25 +16,34 @@
 | Phase 4 | ✅ Complete | Data cache with engagement scoring |
 | Phase 5 | ✅ Complete | Multi-repo extension |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
-| AI Triage | 🔧 In Progress | Pipeline built, needs real AI testing |
+| AI Triage | ✅ Ready | Pipeline built, reviewed by 5 models, fixes applied |
 
 ---
 
-## AI Triage Skill 🔧 (In Progress)
+## AI Triage Skill ✅ (Ready to Commit)
 
 ### Core Pipeline ✅
 - [x] JSON Schema (`triage-schema.json`) — draft 2020-12 with cross-field rules
-- [x] Preprocessor (`issue-to-markdown.py`) — annotated markdown from cached JSON
-- [x] Validator (`validate-triage.py`) — thin jsonschema wrapper
-- [x] SKILL.md — rewritten for fetch → preprocess → analyze → validate → write pipeline
-- [x] schema.md — updated with reproEvidence documentation
-- [x] Tested on real issues: #2794, #1048, #2958
+- [x] Preprocessor (`issue-to-markdown.ps1`) — annotated markdown from cached JSON
+- [x] Validator (`validate-triage.ps1`) — Test-Json with full error collection
+- [x] Label fetcher (`get-labels.ps1`) — `-Json` mode for machine-readable output
+- [x] SKILL.md — hardened for reliability (env checks, error handling, push retry)
+- [x] Tested on real issues: #2794, #3239, #3429, #3484
 - [x] Cross-field rules tested: 6/6 error cases caught
+- [x] 5-model review applied (GPT-5, Opus 4.5, Gemini 3, GPT-5.1, Sonnet 4)
+
+### Review Fixes Applied ✅
+- [x] Backend enum corrected (live label verification)
+- [x] Empty array/object constraints (`minItems:1`, `minProperties:1`)
+- [x] UTC enforcement on `analyzedAt`
+- [x] Pipeline input with `begin/process/end` blocks
+- [x] Culture-safe datetime parsing
+- [x] `-Json` switch for get-labels.ps1
+- [x] SKILL.md environment checks, error handling, exit codes
+- [x] Push failure handling with retry
 
 ### Remaining
-- [ ] Test with real AI (invoke skill on real issue)
-- [ ] Refine skill via skill-creator if needed
-- [ ] enums.json sync with triage-schema.json (currently duplicated)
+- [ ] Test with real AI (invoke skill on real issue via Copilot CLI)
 
 ---
 

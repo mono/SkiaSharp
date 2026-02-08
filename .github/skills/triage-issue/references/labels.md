@@ -5,11 +5,11 @@ SkiaSharp uses prefixed GitHub labels. AI triage values must match the exact lab
 **To get current valid values, always run the script first:**
 
 ```bash
-bash .github/skills/triage-issue/scripts/get-labels.sh          # all groups
-bash .github/skills/triage-issue/scripts/get-labels.sh type/     # type labels
-bash .github/skills/triage-issue/scripts/get-labels.sh area/     # area labels
-bash .github/skills/triage-issue/scripts/get-labels.sh backend/  # backend labels
-bash .github/skills/triage-issue/scripts/get-labels.sh os/       # platform labels
+pwsh .github/skills/triage-issue/scripts/get-labels.ps1          # all groups
+pwsh .github/skills/triage-issue/scripts/get-labels.ps1 type/     # type labels
+pwsh .github/skills/triage-issue/scripts/get-labels.ps1 area/     # area labels
+pwsh .github/skills/triage-issue/scripts/get-labels.ps1 backend/  # backend labels
+pwsh .github/skills/triage-issue/scripts/get-labels.ps1 os/       # platform labels
 ```
 
 The script output is the source of truth. The tables below provide guidance on when to use each label.

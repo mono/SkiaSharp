@@ -55,8 +55,8 @@
       "additionalProperties": false,
       "properties": {
         "value": {
-          "enum": ["Android", "Metal", "OpenGL", "Raster", "Vulkan", "PDF", "SVG", "Xps", "SkiaSharp"],
-          "description": "Maps to backend/ GitHub labels."
+          "enum": ["Direct3D", "Metal", "OpenGL", "Raster", "Vulkan", "PDF", "SVG", "XPS"],
+          "description": "Maps to backend/ GitHub labels. Exact suffixes from repo — prefix 'backend/' + value = full label."
         },
         "confidence": { "$ref": "#/$defs/confidence" },
         "reason": { "type": "string", "minLength": 1 }
@@ -137,7 +137,7 @@
       "required": ["url"],
       "additionalProperties": false,
       "properties": {
-        "url": { "type": "string", "pattern": "^https?://", "description": "GitHub repository URL." },
+        "url": { "type": "string", "pattern": "^https?://github\\.com/", "description": "GitHub repository URL." },
         "description": { "type": "string", "description": "What this repo contains." }
       }
     },
@@ -153,27 +153,32 @@
     },
     "reproEvidenceObject": {
       "type": "object",
-      "description": "ALL reproduction material. Preserve every URL — future AI can analyze screenshots, download zips, clone repos.",
+      "description": "ALL reproduction material. Preserve every URL — future AI can analyze screenshots, download zips, clone repos. Use null instead of this object if no evidence; never empty.",
       "additionalProperties": false,
+      "minProperties": 1,
       "properties": {
         "screenshots": {
           "type": "array",
           "items": { "$ref": "#/$defs/screenshot" },
+          "minItems": 1,
           "description": "Every image URL from issue body and comments."
         },
         "attachments": {
           "type": "array",
           "items": { "$ref": "#/$defs/attachment" },
+          "minItems": 1,
           "description": "File downloads (.zip, .rar, .7z, .tar.gz)."
         },
         "repoLinks": {
           "type": "array",
           "items": { "$ref": "#/$defs/repoLink" },
+          "minItems": 1,
           "description": "GitHub repos shared as reproduction projects."
         },
         "relatedIssues": {
           "type": "array",
           "items": { "type": "integer", "minimum": 1 },
+          "minItems": 1,
           "description": "Issue numbers referenced in the thread."
         },
         "stepsToReproduce": {
@@ -183,6 +188,7 @@
         "codeSnippets": {
           "type": "array",
           "items": { "$ref": "#/$defs/codeSnippet" },
+          "minItems": 1,
           "description": "Code blocks extracted from issue body and comments."
         },
         "environmentDetails": {
@@ -194,7 +200,7 @@
     "bugSignalsObject": {
       "type": "object",
       "description": "Bug evidence extraction. REQUIRED when type.value is 'bug', must be null for non-bugs.",
-      "required": ["reproQuality", "severity", "severityReason"],
+      "required": ["hasCrash", "hasStackTrace", "reproQuality", "severity", "severityReason"],
       "additionalProperties": false,
       "properties": {
         "hasCrash": { "type": "boolean", "description": "Does the issue involve an application crash?" },
@@ -209,6 +215,7 @@
         "targetFrameworks": {
           "type": "array",
           "items": { "type": "string" },
+          "minItems": 1,
           "description": "Target frameworks mentioned, e.g. ['net8.0-android', 'net48']."
         },
         "severity": {
@@ -224,7 +231,7 @@
     "schemaVersion": { "const": "1.0", "description": "Schema version for forward compatibility." },
     "number": { "type": "integer", "minimum": 1, "description": "GitHub issue number." },
     "repo": { "type": "string", "pattern": "^[^/]+/[^/]+$", "description": "Repository in owner/name format, e.g. 'mono/SkiaSharp'." },
-    "analyzedAt": { "type": "string", "format": "date-time", "description": "ISO 8601 datetime of analysis. Always include T, time, and Z: '2026-02-08T15:00:00Z'." },
+    "analyzedAt": { "type": "string", "format": "date-time", "pattern": "Z$", "description": "ISO 8601 UTC datetime. Must end with Z: '2026-02-08T15:00:00Z'." },
     "summary": { "type": "string", "minLength": 1, "maxLength": 200, "description": "One-line plain English summary of the issue." },
 
     "type": { "$ref": "#/$defs/classifiedType", "description": "Issue type (single). Required." },
@@ -290,8 +297,8 @@
             "likelyFixed": { "type": "boolean" },
             "confidence": { "$ref": "#/$defs/confidence" },
             "reason": { "type": "string", "minLength": 1 },
-            "relatedPRs": { "type": "array", "items": { "type": "integer" }, "description": "PR numbers that may fix this." },
-            "relatedCommits": { "type": "array", "items": { "type": "string" }, "description": "Commit SHAs that may fix this." },
+            "relatedPRs": { "type": "array", "items": { "type": "integer" }, "minItems": 1, "description": "PR numbers that may fix this." },
+            "relatedCommits": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "Commit SHAs that may fix this." },
             "fixedInVersion": { "type": ["string", "null"], "description": "Version containing the fix, or null." },
             "verificationStatus": {
               "enum": ["unverified", "verified-fixed", "verified-still-broken", "inconclusive"],
@@ -327,7 +334,7 @@
           "required": ["reason"],
           "additionalProperties": false,
           "properties": {
-            "mentionedVersions": { "type": "array", "items": { "type": "string" }, "description": "SkiaSharp versions mentioned in the issue." },
+            "mentionedVersions": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "SkiaSharp versions mentioned in the issue." },
             "era": {
               "enum": ["pre-dotnet-core", "xamarin-forms", "maui-transition", "modern"],
               "description": "pre-dotnet-core=SkiaSharp 1.x. xamarin-forms=2.80-2.88. maui-transition=2.88-2.88.8. modern=3.x+."
@@ -370,6 +377,7 @@
               "expected-behavior", "actual-behavior", "sample-project", "device-info"
             ]
           },
+          "minItems": 1,
           "description": "What info is missing from the issue."
         },
         "abandoned": { "type": "boolean", "description": "Whether the issue appears abandoned by the reporter." },

@@ -5,22 +5,33 @@
 
 ## Current Focus
 
-**Phase**: AI Triage Skill — Pipeline Implementation
-**Status**: Core pipeline complete — preprocessor, schema, validator all working
+**Phase**: AI Triage Skill — Review fixes applied
+**Status**: All 5-model review fixes applied and tested
 **Branch**: docs-dashboard
 
 ## Recent Changes
 
-### 2025-07-22 (Triage Skill — Pipeline Implementation)
-- **Built full triage pipeline**: preprocessor → AI analysis → schema validation → write
-- **`triage-schema.json`** (JSON Schema draft 2020-12): ~300 lines with all enums, types, `$defs`, cross-field rules via `allOf/if/then`
-- **`issue-to-markdown.py`** preprocessor: ~400 lines, handles both GitHub API and cache formats, preserves all URLs, annotates author roles, time-deltas, extracts attachments table
-- **`validate-triage.py`**: thin `jsonschema` library wrapper (~80 lines), catches all cross-field violations
-- **Tested on real issues**: #2794 (39 comments, 6 screenshots), #1048 (zip file), #2958 (screenshots + code + zip)
-- **Cross-field rules verified**: 6/6 error cases caught (bug↔bugSignals, duplicate↔duplicateOf, close-as-stale blocked, unknown fields, empty arrays)
-- **Rewrote SKILL.md** for new pipeline: fetch → preprocess → analyze → validate → fix → write
-- **Updated schema.md** with new `reproEvidence` section documentation
-- **New `reproEvidence` section** in schema: screenshots, attachments, repoLinks, relatedIssues, stepsToReproduce, codeSnippets, environmentDetails
+### 2026-02-08 (5-Model Review Fixes)
+- **Applied fixes from 5-model review** (GPT-5, Opus 4.5, Gemini 3, GPT-5.1, Sonnet 4):
+  - **triage-schema.json**: Fixed backend enum (`Xps`→`XPS`, removed `Android`/`SkiaSharp`, added `Direct3D`), added `minItems:1` to all arrays, `minProperties:1` to `reproEvidenceObject`, required `hasCrash`/`hasStackTrace` in bugSignals, UTC-only `analyzedAt` pattern, tightened `repoLink` URL to GitHub-only
+  - **issue-to-markdown.ps1**: Added `begin/process/end` blocks for proper pipeline input, `$input` fallback for external piping, `Parse-DateSafe` with `InvariantCulture`, safe `roleCounts` key access, tightened issue regex to exclude `#0`
+  - **get-labels.ps1**: Added `-Json` switch for machine-readable output, fixed `$LASTEXITCODE` check ordering (capture raw output first)
+  - **SKILL.md**: Added Step 0 env checks (pwsh, gh, branch verify, git pull), concrete `$CACHE` variable, OS-agnostic temp paths, exact sync command, `-Json` label mode, exit code table, push failure handling with retry, non-interactive re-triage policy, explicit `requiresHumanReview` field list
+- **All scripts tested**: Direct path, bash pipe, PS pipeline — all produce identical output
+
+### 2026-02-08 (Scripts → PowerShell 7.5)
+- **Converted all 3 scripts** from C# (.NET 10 file-based apps) to PowerShell 7.5+
+  - `validate-triage.ps1` (43 lines) — Uses built-in `Test-Json -Schema` which fully supports draft 2020-12, `$defs`, `if/then`, `oneOf`, `pattern`, cross-field rules. Collects all errors via `-ErrorVariable`.
+  - `get-labels.ps1` (72 lines) — Native `ConvertFrom-Json`, `Group-Object`, `Where-Object`. File-based 10-min cache with `Get-Item .LastWriteTime`.
+  - `issue-to-markdown.ps1` (278 lines) — Idiomatic PowerShell: `?.`/`??` operators, `-replace` chains, `[regex]::Matches()`, `ConvertFrom-Json` dot notation. Output verified **identical** to Python on issues #2794, #3239, #3429, #3484.
+- **Removed**: `validate-triage.cs`, `get-labels.cs`, `issue-to-markdown.cs`
+- **Total**: 393 lines PowerShell (down from 651 C#, 595 Python/Bash)
+- **Only dependency**: `pwsh` and `gh` CLI
+- **Key learnings**:
+  - `Test-Json` in PowerShell 7.5 fully supports JSON Schema draft 2020-12 (no third-party library needed)
+  - `-like '*[bot]'` treats brackets as character classes → use `.EndsWith('[bot]')` instead
+  - `Write-Output` appends a trailing newline → use `[Console]::Write()` for exact output control
+  - Non-static local functions were still needed in C# for closures; PowerShell eliminates this entirely with script-scoped variables
 
 ### 2026-02-07 (Triage Skill Review)
 - Reviewed Copilot triage skill (schema, labels, scripts, validator) and documented specific actionable improvements.

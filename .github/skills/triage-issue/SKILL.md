@@ -1,41 +1,77 @@
 ---
 name: triage-issue
-description: Triage a SkiaSharp GitHub issue by analyzing it and producing a structured JSON classification. Use when the user says "triage #123", "triage issue 123", or asks to classify/analyze a specific issue. Fetches the issue from GitHub, classifies it across multiple dimensions (type, area, platform, severity, etc.), validates against a JSON Schema, and writes a per-issue JSON file to the data cache.
+description: Triage a SkiaSharp GitHub issue by analyzing it and producing a structured JSON classification. Use when the user says "triage #123", "triage issue 123", or asks to classify/analyze a specific issue. Reads issue data from the local data cache (docs-data-cache branch), classifies across multiple dimensions (type, area, platform, severity, etc.), validates against a JSON Schema, and writes a per-issue triage JSON file back to the cache branch.
 ---
 
 # Triage Issue
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON file.
 
-## Pipeline
+## Data Flow
+
+All issue data is **pre-cached** on the `docs-data-cache` branch (synced hourly). Never call the GitHub API for issue data — it's already there.
 
 ```
-Fetch Issue → Preprocess to Markdown → Analyze → Generate JSON → Validate → Fix → Write
+Cache branch (worktree) → Preprocess → Analyze → Validate → Write back to cache branch → Push
 ```
 
-## Step 1: Fetch and Preprocess
+## Step 0: Verify environment
 
-### 1a. Fetch the issue
-
-Use GitHub MCP tools. Default repo is `mono/SkiaSharp`:
-
-```
-github-mcp-server-issue_read(method: "get", owner: "mono", repo: "SkiaSharp", issue_number: N)
-github-mcp-server-issue_read(method: "get_comments", owner: "mono", repo: "SkiaSharp", issue_number: N, perPage: 100)
-github-mcp-server-issue_read(method: "get_labels", owner: "mono", repo: "SkiaSharp", issue_number: N)
-```
-
-For issues with 100+ comments, paginate to get all of them.
-
-If the user specifies a different repo (e.g. "triage mono/SkiaSharp.Extended#45"), adjust owner/repo.
-
-### 1b. Preprocess to annotated markdown
-
-If the issue is available as a cached JSON file, run the preprocessor:
+### 0a. Check prerequisites
 
 ```bash
-python3 .github/skills/triage-issue/scripts/issue-to-markdown.py {CACHE_PATH}/repos/{owner}-{repo}/github/items/{number}.json
+pwsh --version    # Requires 7.5+
+gh --version      # Requires gh CLI, authenticated
 ```
+
+If either is missing, stop and tell the user.
+
+### 0b. Ensure cache worktree exists and is current
+
+The `docs-data-cache` branch must be checked out as a worktree at `.data-cache`:
+
+```bash
+# Verify worktree exists and is on correct branch
+if [ ! -d ".data-cache" ]; then
+    git worktree add .data-cache docs-data-cache
+fi
+# Verify branch
+git -C .data-cache rev-parse --abbrev-ref HEAD  # Must be "docs-data-cache"
+# Pull latest data
+git -C .data-cache pull --rebase origin docs-data-cache
+```
+
+If the branch check fails, abort with a clear message. All paths below use `$CACHE` as shorthand:
+
+```bash
+CACHE=".data-cache/repos/mono-SkiaSharp"
+```
+
+## Step 1: Preprocess
+
+### 1a. Read the cached issue
+
+The cached issue JSON is at: `$CACHE/github/items/{number}.json`
+
+```bash
+cat .data-cache/repos/mono-SkiaSharp/github/items/2794.json
+```
+
+If the file doesn't exist, the issue hasn't been synced yet. Tell the user to wait for the next hourly sync or trigger it manually:
+
+```bash
+dotnet run --project src/SkiaSharp.Collector -- sync github --cache-path .data-cache
+```
+
+**Do not call the GitHub API as a fallback.**
+
+### 1b. Convert to annotated markdown
+
+```bash
+pwsh .github/skills/triage-issue/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json
+```
+
+If the script exits non-zero or emits parse errors, the cache file may be corrupted — tell the user to resync instead of continuing.
 
 The preprocessor produces annotated markdown with:
 - **Author role tags**: `[OP]`, `[MEMBER]`, `[CONTRIBUTOR]`, `[BOT]`
@@ -44,18 +80,15 @@ The preprocessor produces annotated markdown with:
 - **Bot comments collapsed** to single summary lines
 - **All URLs preserved** — image URLs, zip downloads, repo links kept intact
 
-If no cached JSON exists, read the issue data from the MCP response directly.
-
 ### 1c. Fetch live label values
 
 ```bash
-bash .github/skills/triage-issue/scripts/get-labels.sh
-bash .github/skills/triage-issue/scripts/get-labels.sh area/
-bash .github/skills/triage-issue/scripts/get-labels.sh os/
-bash .github/skills/triage-issue/scripts/get-labels.sh backend/
+pwsh .github/skills/triage-issue/scripts/get-labels.ps1 -Json area/
+pwsh .github/skills/triage-issue/scripts/get-labels.ps1 -Json os/
+pwsh .github/skills/triage-issue/scripts/get-labels.ps1 -Json backend/
 ```
 
-Use the **exact values returned** — these are the source of truth for label-backed fields.
+The `-Json` flag returns a JSON array of suffix values — use these as the source of truth for label-backed fields. If `get-labels.ps1` fails (exit code 1), fall back to the enums in `triage-schema.json` and warn the user that live label data could not be fetched.
 
 ## Step 2: Analyze and Generate JSON
 
@@ -96,7 +129,7 @@ Then generate the JSON.
 - **`schemaVersion`** must be `"1.0"`
 - **`analyzedAt`** must be full ISO 8601: `"2026-02-08T15:00:00Z"` (include T, time, and Z)
 - **Every classification** needs `value`, `confidence` (0.0–1.0 as decimal), and `reason`
-- **Label-backed fields** use exact label suffixes: `prefix/ + value` = GitHub label. If a live label exists that isn't in the schema enum, use the closest match and note it in the reason.
+- **Label-backed fields** use exact label suffixes: `prefix/ + value` = GitHub label. If a live label exists that isn't in the schema enum, set the field to `null` and note the unmapped label in the `reason`.
 - **Single-value fields** (`type`, `area`, `partner`): pick ONE best fit
 - **Multi-value fields** (`backends`, `platforms`, `tenets`): include all that apply, `minItems: 1`
 - **Nullable sections**: use JSON `null` — never empty object `{}` or empty array `[]`
@@ -117,7 +150,7 @@ Then generate the JSON.
 | 0.40–0.59 | Uncertain, multiple plausible interpretations | Could be bug or question |
 | < 0.40 | Guessing — flag for human review | No clear evidence for classification |
 
-Set `requiresHumanReview: true` if ANY top-level confidence is below 0.70.
+Set `requiresHumanReview: true` if the minimum confidence across these fields is below 0.70: `type.confidence`, `area.confidence`, `partner.confidence`, `actionability.confidence`, and each item's `confidence` in `backends`, `platforms`, `tenets` arrays.
 
 ### reproEvidence extraction
 
@@ -136,7 +169,9 @@ This section is critical for future AI debugging. Extract from the preprocessed 
 Write JSON to a temp file and validate BEFORE writing to cache:
 
 ```bash
-python3 .github/skills/triage-issue/scripts/validate-triage.py /tmp/triage-{number}.json
+# Use OS-agnostic temp path
+pwsh -c '$tmp = Join-Path ([IO.Path]::GetTempPath()) "triage-{number}.json"; $tmp'
+pwsh .github/skills/triage-issue/scripts/validate-triage.ps1 /tmp/triage-{number}.json
 ```
 
 The validator checks against `references/triage-schema.json` (JSON Schema draft 2020-12). It catches:
@@ -147,33 +182,28 @@ The validator checks against `references/triage-schema.json` (JSON Schema draft 
 - Unknown fields (additionalProperties: false)
 - Invalid date format
 
+### Validator exit codes
+
+| Exit | Meaning | Agent action |
+|------|---------|--------------|
+| 0 | Valid | Proceed to Step 4 |
+| 1 | Schema violations | Read errors, fix JSON, re-validate |
+| 2 | Environment error (missing file, bad schema) | Stop and report to user |
+
 **If validation fails**: read the error messages, fix the JSON, and re-validate. **Maximum 3 attempts** — if still failing after 3 tries, present the errors to the user and stop.
 
-## Step 4: Write
+## Step 4: Write to cache branch
 
-Determine the cache path:
-
-```bash
-if [ -d ".data-cache" ]; then
-  CACHE_PATH=".data-cache"
-else
-  echo "❌ Cache worktree not found. Run: git worktree add .data-cache docs-data-cache"
-  exit 1
-fi
-```
-
-**Stop if cache path is missing** — do not proceed without a valid path.
-
-Derive triage directory: `{CACHE_PATH}/repos/{owner}-{repo}/ai-triage/`
+Write the validated triage file to the cache worktree (this is the `docs-data-cache` branch):
 
 ```bash
-mkdir -p {CACHE_PATH}/repos/{owner}-{repo}/ai-triage/
-mv /tmp/triage-{number}.json {CACHE_PATH}/repos/{owner}-{repo}/ai-triage/{number}.json
+mkdir -p $CACHE/ai-triage/
+cp /tmp/triage-{number}.json $CACHE/ai-triage/{number}.json
 ```
 
 ### Re-triage
 
-If `ai-triage/{number}.json` already exists, the new analysis **replaces** it. Check the existing file's `analyzedAt` — if the issue hasn't changed since, confirm with the user first.
+If `ai-triage/{number}.json` already exists, the new analysis **replaces** it. Check the existing file's `analyzedAt` — if the issue hasn't changed since, confirm with the user first. In non-interactive mode, replace without confirmation when the issue's `updatedAt` is newer than `analyzedAt`; otherwise skip with a note.
 
 ## Step 5: Present Summary
 
@@ -202,17 +232,20 @@ If `suggestedResponse.draft` exists, show it in a copy-paste block:
 
 ## Step 6: Push (Optional)
 
-Only if the user explicitly says "push" or "commit":
+Only if the user explicitly says "push" or "commit". This pushes to the `docs-data-cache` branch:
 
 ```bash
-cd {CACHE_PATH}
+cd .data-cache
 git restore --staged :/
-git add repos/{owner}-{repo}/ai-triage/{number}.json
+git add repos/mono-SkiaSharp/ai-triage/{number}.json
 # Verify only the triage file is staged
-git diff --cached --name-only
+git --no-pager diff --cached --name-only
 git commit -m "ai-triage: classify #{number}"
 git push
+cd ..
 ```
+
+**If `git push` fails** (non-fast-forward, auth error, network): run `git -C .data-cache pull --rebase origin docs-data-cache` and retry once. If it fails again, surface the error to the user and do not claim success.
 
 ## References
 
@@ -221,6 +254,8 @@ git push
 
 ## Scripts
 
-- **`scripts/issue-to-markdown.py <file.json>`** — Preprocess cached issue JSON into annotated markdown. Preserves all URLs. Supports stdin: `cat issue.json | issue-to-markdown.py -`
-- **`scripts/validate-triage.py <triage.json>`** — Validate triage JSON against the schema. Reports errors for AI self-correction.
-- **`scripts/get-labels.sh [prefix/]`** — Fetch live label values from GitHub (cached 10 min). Use `--no-cache` to refresh.
+All scripts are PowerShell 7.5+ — only `pwsh` and `gh` CLI need to be installed.
+
+- **`scripts/issue-to-markdown.ps1 <file.json>`** — Preprocess cached issue JSON into annotated markdown. Preserves all URLs. Supports pipeline: `Get-Content issue.json -Raw | pwsh scripts/issue-to-markdown.ps1`
+- **`scripts/validate-triage.ps1 <triage.json>`** — Validate triage JSON against the schema using `Test-Json` (draft 2020-12). Reports all errors for AI self-correction.
+- **`scripts/get-labels.ps1 [prefix/] [-Json]`** — Fetch live label values from GitHub. Use `-Json` for machine-readable output (array of suffix values). Requires `gh` CLI.
