@@ -182,8 +182,10 @@
           "description": "Issue numbers referenced in the thread."
         },
         "stepsToReproduce": {
-          "type": ["string", "null"],
-          "description": "Synthesized reproduction steps from ALL comments, not just the issue body."
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Synthesized reproduction steps from ALL comments, not just the issue body. Each element is one step (may contain multiple lines)."
         },
         "codeSnippets": {
           "type": "array",

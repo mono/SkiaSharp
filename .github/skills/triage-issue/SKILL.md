@@ -1,6 +1,6 @@
 ---
 name: triage-issue
-description: Triage a SkiaSharp GitHub issue by analyzing it and producing a structured JSON classification. Use when the user says "triage #123", "triage issue 123", or asks to classify/analyze a specific issue. Reads issue data from the local data cache (docs-data-cache branch), classifies across multiple dimensions (type, area, platform, severity, etc.), validates against a JSON Schema, and writes a per-issue triage JSON file back to the cache branch.
+description: Triage a SkiaSharp GitHub issue by analyzing it and producing a structured JSON classification. Use when the user says "triage #123", "triage issue 123", or asks to classify/analyze a specific issue. Reads issue data from the local data cache (docs-data-cache branch), classifies across multiple dimensions (type, area, platform, severity, etc.), validates against a JSON Schema, writes a per-issue triage JSON file back to the cache branch, and automatically pushes.
 ---
 
 # Triage Issue
@@ -145,7 +145,7 @@ This section is critical for future AI debugging. Extract from the preprocessed 
 - **attachments**: Every `.zip`, `.rar`, etc. with filename and download URL
 - **repoLinks**: GitHub repository URLs shared as repro projects
 - **relatedIssues**: Issue numbers referenced in the thread
-- **stepsToReproduce**: Synthesize from across all comments, not just the issue body
+- **stepsToReproduce**: Array of step strings synthesized from across all comments, not just the issue body
 - **codeSnippets**: Extract code blocks with language and context
 - **environmentDetails**: Consolidate OS, IDE, .NET version, device info
 
@@ -215,9 +215,9 @@ If `suggestedResponse.draft` exists, show it in a copy-paste block:
 
 **⚠️ NEVER post draft responses automatically via GitHub API.** Always present to the user for review. Verify any version numbers, issue references, and code samples before posting.
 
-## Step 6: Push (Optional)
+## Step 6: Push to cache branch
 
-Only if the user explicitly says "push" or "commit". This pushes to the `docs-data-cache` branch:
+Always push after writing the triage file. This pushes **only** to the `docs-data-cache` branch:
 
 ```bash
 cd .data-cache
@@ -230,7 +230,39 @@ git push
 cd ..
 ```
 
-**If `git push` fails** (non-fast-forward, auth error, network): run `git -C .data-cache pull --rebase origin docs-data-cache` and retry once. If it fails again, surface the error to the user and do not claim success.
+### Push conflict retry
+
+The cache branch is updated frequently by other processes. If `git push` fails with a non-fast-forward error:
+
+1. **Rebase and retry** (up to 3 attempts):
+
+```bash
+cd .data-cache
+git pull --rebase origin docs-data-cache
+# If rebase succeeds (exit 0), retry push:
+git push
+cd ..
+```
+
+2. **If rebase hits a merge conflict**: stop the rebase (`git rebase --abort`), show the user which files conflict, and ask whether to keep the **local** (our new triage) or **remote** (incoming) version. Then re-apply accordingly:
+
+```bash
+# After user chooses "local" (keep our triage):
+cd .data-cache
+git pull --rebase -X theirs origin docs-data-cache
+git push
+cd ..
+
+# After user chooses "remote" (discard our triage):
+cd .data-cache
+git pull --rebase -X ours origin docs-data-cache
+git push
+cd ..
+```
+
+> **Note:** `-X theirs` during rebase keeps *our* changes (confusing but correct — during rebase, "theirs" is the branch being rebased, i.e., our local commits). `-X ours` keeps the remote version.
+
+3. **If push still fails after 3 attempts**, surface the error to the user and do not claim success.
 
 ## References
 
