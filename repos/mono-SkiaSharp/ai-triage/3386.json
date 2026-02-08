@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "1.0",
+  "number": 3386,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-02-08T18:44:53Z",
+  "summary": "DllNotFoundException loading libSkiaSharp in Azure Container App deployed via .NET Aspire due to missing native dependencies and trimming",
+  "type": {
+    "value": "bug",
+    "confidence": 0.82,
+    "reason": "Reports a DllNotFoundException with stack trace when deploying to Azure Container App. While using NoDependencies package implies user must provide deps, the regression from 2.88.9 and the trimming issue with System.Memory.Data suggest real gaps."
+  },
+  "area": {
+    "value": "libSkiaSharp.native",
+    "confidence": 0.97,
+    "reason": "DllNotFoundException for libSkiaSharp native library — classic native loading issue. Error shows libfontconfig.so.1 missing and libSkiaSharp.so not found."
+  },
+  "backends": null,
+  "platforms": [
+    {
+      "value": "Linux",
+      "confidence": 0.98,
+      "reason": "Azure Container App runs Linux containers. Error logs show Linux shared library loading paths."
+    }
+  ],
+  "tenets": [
+    {
+      "value": "compatibility",
+      "confidence": 0.90,
+      "reason": "Regression from 2.88.9 to 3.116.0 in container deployment scenario, plus trimming compatibility issue with System.Memory.Data."
+    },
+    {
+      "value": "reliability",
+      "confidence": 0.85,
+      "reason": "Application crashes at startup with TypeInitializationException — complete failure to function."
+    }
+  ],
+  "partner": null,
+  "regression": {
+    "isRegression": true,
+    "confidence": 0.70,
+    "reason": "User reports last known good version was 2.88.9. The native dependency requirements or trimming behavior may have changed in 3.x, but it's also possible the user's deployment setup changed between versions.",
+    "workedInVersion": "2.88.9",
+    "brokeInVersion": "3.116.0"
+  },
+  "fixStatus": null,
+  "bugSignals": {
+    "hasCrash": true,
+    "hasStackTrace": true,
+    "reproQuality": "partial",
+    "hasScreenshot": false,
+    "hasWorkaround": true,
+    "workaroundSummary": "Switch to SkiaSharp.NativeAssets.Linux (not NoDependencies), use a custom Docker image with native deps installed (ghcr.io/avantipoint/aspnet-skia), and add System.Memory.Data as a top-level NuGet reference to prevent trimming.",
+    "targetFrameworks": ["net9.0"],
+    "severity": "high",
+    "severityReason": "Complete failure to load SkiaSharp in production container environment. Workaround requires significant Docker customization and dependency investigation."
+  },
+  "reproEvidence": {
+    "stepsToReproduce": [
+      "Create a .NET 9 WebAPI project using SkiaSharp 3.116.0",
+      "Add SkiaSharp and SkiaSharp.NativeAssets.Linux.NoDependencies NuGet packages",
+      "Deploy to Azure Container App using .NET Aspire",
+      "Attempt to generate images using SkiaSharp — observe DllNotFoundException"
+    ],
+    "codeSnippets": [
+      {
+        "language": "xml",
+        "code": "<PackageReference Include=\"SkiaSharp\" />\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" />",
+        "context": "Package references that trigger the issue in the container environment"
+      },
+      {
+        "language": "xml",
+        "code": "<PropertyGroup>\n  <OutputType>Exe</OutputType>\n  <TargetFramework>net9.0</TargetFramework>\n  <ContainerBaseImage>ghcr.io/avantipoint/aspnet-skia:9.0</ContainerBaseImage>\n</PropertyGroup>",
+        "context": "Workaround: use custom Docker base image with native dependencies pre-installed"
+      },
+      {
+        "language": "xml",
+        "code": "<ItemGroup>\n  <PackageReference Include=\"System.Memory.Data\" />\n</ItemGroup>",
+        "context": "Workaround for trimming issue: add System.Memory.Data as top-level dependency to prevent stripping"
+      }
+    ],
+    "repoLinks": [
+      {
+        "url": "https://github.com/AvantiPoint/aspnet-skia",
+        "description": "Custom Docker images for ASP.NET with SkiaSharp native deps pre-installed (net9.0 and net10.0)"
+      }
+    ],
+    "environmentDetails": "Azure Container App deployed via .NET Aspire, .NET 9.0.10, Linux container based on mcr.microsoft.com/dotnet/aspnet:9.0-noble, Visual Studio (Windows) for development"
+  },
+  "versionAnalysis": {
+    "mentionedVersions": ["3.116.0", "2.88.9"],
+    "era": "modern",
+    "currentRelevance": "likely",
+    "reason": "Issue is with current 3.x line in modern containerized deployment. The NoDependencies package behavior and trimming issues likely still apply to latest versions."
+  },
+  "actionability": {
+    "suggestedAction": "close-with-docs",
+    "confidence": 0.72,
+    "reason": "The core issue (NoDependencies package missing fontconfig) is by-design — the package name explicitly states no dependencies are bundled. The user found comprehensive workarounds. However, the trimming issue with System.Memory.Data could warrant a separate investigation. Documentation could be improved for container deployment scenarios.",
+    "requiresHumanReview": true,
+    "closeable": true,
+    "closeReason": "The NoDependencies package requires the host to provide native libraries (fontconfig, etc.). For containers, use SkiaSharp.NativeAssets.Linux with a custom base image, or install deps in Dockerfile. The trimming issue is resolved by adding System.Memory.Data as a direct dependency.",
+    "duplicateOf": null,
+    "abandoned": false,
+    "abandonedReason": null
+  },
+  "suggestedResponse": {
+    "responseType": "answer",
+    "confidence": 0.75,
+    "reason": "The user already found the solution. A response confirming the approach and explaining the NoDependencies behavior would be helpful for others finding this issue.",
+    "draft": "Thanks for reporting this and sharing the workaround, @dansiegel!\n\nThe `SkiaSharp.NativeAssets.Linux.NoDependencies` package bundles `libSkiaSharp.so` but does **not** include system dependencies like `libfontconfig`. In minimal container images (like the default `aspnet` images), these libraries aren't present.\n\n**Recommended approaches for containers:**\n1. Use `SkiaSharp.NativeAssets.Linux` (includes dependencies) with a custom base image that has the required native libraries\n2. Add the needed packages to your Dockerfile: `apt-get install -y libfontconfig1`\n\nRegarding the trimming issue with `System.Memory.Data` — adding it as a direct `PackageReference` is the correct fix when trimming removes transitive dependencies.\n\nYour custom Docker images at [AvantiPoint/aspnet-skia](https://github.com/AvantiPoint/aspnet-skia) are a great community resource! 🎉"
+  }
+}
