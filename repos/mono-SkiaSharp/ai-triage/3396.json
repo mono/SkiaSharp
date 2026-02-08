@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.0",
+  "number": 3396,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-02-08T18:49:24Z",
+  "summary": "User cannot get SkiaSharp working in Unity WebGL — DllNotFoundException due to static vs dynamic linking mismatch",
+  "type": {
+    "value": "question",
+    "confidence": 0.82,
+    "reason": "Despite the [FEATURE] prefix, the user is asking for help getting SkiaSharp to work in Unity WebGL and requesting a sample project. This is a support/how-to question about an unsupported platform (Unity), not a feature request for new SkiaSharp functionality."
+  },
+  "area": {
+    "value": "libSkiaSharp.native",
+    "confidence": 0.85,
+    "reason": "The issue is about native library loading — DllNotFoundException for libSkiaSharp in Unity WebGL. The core problem is native binary compatibility, not a managed API or view component issue."
+  },
+  "backends": null,
+  "platforms": [
+    {
+      "value": "WASM",
+      "confidence": 0.95,
+      "reason": "Unity WebGL compiles to WebAssembly. The user explicitly targets WebGL/browser deployment."
+    }
+  ],
+  "tenets": [
+    {
+      "value": "compatibility",
+      "confidence": 0.88,
+      "reason": "Cross-platform compatibility question — user wants SkiaSharp to work across Windows, Android, and WebGL from Unity."
+    }
+  ],
+  "partner": null,
+  "regression": null,
+  "fixStatus": null,
+  "bugSignals": null,
+  "reproEvidence": {
+    "stepsToReproduce": [
+      "Create a Unity project targeting WebGL",
+      "Add SkiaSharp managed NuGet and SkiaSharp.NativeAssets.WebAssembly",
+      "Place libSkiaSharp.a static library files in Unity project",
+      "Build and run as WebGL — observe DllNotFoundException for libSkiaSharp in browser console"
+    ],
+    "environmentDetails": "Unity 2021.2 and 2022.3 tested. Windows and Android work. WebGL target fails. NuGet packages: SkiaSharp, NativeAssets.Windows, NativeAssets.Android, NativeAssets.WebAssembly."
+  },
+  "versionAnalysis": null,
+  "actionability": {
+    "suggestedAction": "convert-to-discussion",
+    "confidence": 0.82,
+    "reason": "SkiaSharp does not officially support Unity. Unity WebGL uses Emscripten static linking (.a files) while SkiaSharp's P/Invoke expects dynamically loaded shared libraries. This is a community support question, not an actionable bug or feature request for the SkiaSharp team.",
+    "requiresHumanReview": false,
+    "closeable": true,
+    "closeReason": "SkiaSharp does not officially support Unity. Unity WebGL requires static linking via Emscripten, which is incompatible with SkiaSharp's P/Invoke-based dynamic loading approach.",
+    "duplicateOf": null,
+    "missingInfo": ["sample-project"],
+    "abandoned": false,
+    "abandonedReason": null
+  },
+  "suggestedResponse": {
+    "responseType": "answer",
+    "confidence": 0.80,
+    "reason": "The user needs to understand why this doesn't work and what the fundamental technical limitation is. A clear explanation is more helpful than leaving them guessing.",
+    "draft": "Hi @elephantpanda, thanks for the detailed writeup!\n\nSkiaSharp doesn't officially support Unity, so this is unfortunately outside our supported scenarios. The specific issue you're hitting with WebGL is a fundamental architecture mismatch:\n\n- **Unity WebGL** uses Emscripten to compile to WebAssembly, and native plugins must be **statically linked** (`.a` files)\n- **SkiaSharp** uses .NET P/Invoke (`DllImport`) which expects **dynamically loaded** shared libraries (`.dll`, `.so`, `.dylib`)\n\nThe `SkiaSharp.NativeAssets.WebAssembly` package is designed for Blazor WebAssembly (which uses the .NET WebAssembly runtime), not Unity's Emscripten-based runtime. These are fundamentally different WASM environments.\n\nGetting this to work in Unity WebGL would require building Skia as a static Emscripten library and writing custom Unity native plugin bindings — a significant effort beyond what SkiaSharp provides.\n\nI'd recommend moving this to [Discussions](https://github.com/mono/SkiaSharp/discussions) where the community can share any Unity-specific workarounds."
+  }
+}
