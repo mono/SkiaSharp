@@ -1,7 +1,7 @@
 {
   "number": 331,
   "type": "pr",
-  "state": "open",
+  "state": "closed",
   "title": "Add AnimationSpeed property to SKLottieView",
   "body": "## Summary\n\nAdds an \u0060AnimationSpeed\u0060 property to \u0060SKLottieView\u0060 to control Lottie animation playback speed, with comprehensive fixes for edge cases discovered through multi-model code review.\n\n## Features\n\n- **AnimationSpeed property** - Control playback speed (default 1.0)\n  - Values \u003E 1.0 speed up animation\n  - Values 0-1.0 slow down animation  \n  - Value 0 pauses animation\n  - Negative values reverse playback direction\n\n## Bug Fixes\n\n| Fix | Description |\n|-----|-------------|\n| Negative speed on load | Animation now initializes at Duration when speed \u003C 0 |\n| Source race condition | Added CancellationTokenSource to cancel in-flight loads |\n| Memory leak | CancellationTokenSource now properly disposed |\n| Reset order | Added \u0060isResetting\u0060 guard to prevent spurious AnimationCompleted |\n| Reverse \u002B negative speed | Fixed flip logic to consider effective direction |\n| **Reverse \u2192 Restart switch** | Fixed animation getting stuck at 0 when switching modes |\n\n## Code Quality\n\n- Renamed \u0060playForwards\u0060 \u2192 \u0060isInForwardPhase\u0060 for clarity\n- Added XML documentation to AnimationSpeed property\n- Added overflow protection for NaN/Infinity/extreme speed values\n\n## Demo App Enhancements\n\n- AnimationSpeed slider (-2x to 2x)\n- Speed preset buttons (-1x, 0.5x, 1x, 2x)\n- RepeatMode picker (Restart/Reverse)\n- RepeatCount input field\n\n## Tests\n\nAdded 18\u002B new tests covering:\n- Positive/negative/zero speed scenarios\n- Speed changes mid-playback\n- RepeatMode interactions\n- Edge cases (NaN, Infinity, extreme values)\n- Mode switching scenarios\n\n**Total: 140 MAUI tests passing**\n\n## API Naming Research\n\n| Library | Property Name |\n|---------|---------------|\n| lottie-android | \u0060speed\u0060 |\n| lottie-ios | \u0060animationSpeed\u0060 |\n| lottie-web | \u0060setSpeed()\u0060 |\n| **This PR** | \u0060AnimationSpeed\u0060 |\n\nFollows iOS convention for .NET clarity.",
   "author": {
@@ -20,13 +20,14 @@
     }
   ],
   "createdAt": "2026-02-05T03:10:33",
-  "updatedAt": "2026-02-06T01:17:42",
+  "updatedAt": "2026-02-06T15:09:18",
+  "closedAt": "2026-02-06T15:09:12",
   "commentCount": 2,
   "reactionCount": 0,
   "draft": false,
-  "mergeable": true,
-  "merged": false,
-  "mergeableState": "blocked",
+  "merged": true,
+  "mergedAt": "2026-02-06T15:09:12",
+  "mergeableState": "unknown",
   "baseBranch": "main",
   "headBranch": "copilot/add-animation-speed-property",
   "additions": 570,
