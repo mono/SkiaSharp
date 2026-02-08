@@ -149,6 +149,7 @@ var OBSOLETED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Forms.WPF",                     new Version (2, 80, 0) },
     { "SkiaSharp.Views.Forms.GTK",                     new Version (2, 80, 0) },
     { "SkiaSharp.Views.Uno",                           new Version (2, 80, 0) },
+    { "SkiaSharp.Views.NativeAssets.UWP",              new Version (2, 80, 0) },
     { "HarfBuzzSharp.NativeAssets.UWP",                new Version (2, 6, 1) },
     { "HarfBuzzSharp.NativeAssets.watchOS",            new Version (2, 6, 1) },
 };

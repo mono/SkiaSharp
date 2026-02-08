@@ -403,3 +403,4 @@ Work directly for:
 | API Design | `documentation/api-design.md` |
 | Error Handling | `documentation/error-handling.md` |
 | Debugging | `documentation/debugging-methodology.md` |
+| NuGet Packages | `documentation/packages.md` |

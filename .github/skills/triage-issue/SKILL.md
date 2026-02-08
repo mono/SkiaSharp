@@ -44,6 +44,18 @@ If the branch check fails, abort with a clear message. All paths below use `$CAC
 CACHE=".data-cache/repos/mono-SkiaSharp"
 ```
 
+### 0c. Ensure docs worktree exists
+
+The `docs` branch contains conceptual documentation (tutorials, guides). Check it out as a read-only worktree at `.docs`:
+
+```bash
+if git show-ref --verify --quiet refs/heads/docs 2>/dev/null; then
+    [ -d ".docs" ] || git worktree add .docs docs
+fi
+```
+
+This worktree provides access to tutorials on drawing, paths, bitmaps, transforms, effects, and shaders. Useful for answering how-to questions and verifying expected behavior.
+
 ## Step 1: Preprocess
 
 ### 1a. Read the cached issue
@@ -74,6 +86,26 @@ The preprocessor produces annotated markdown with:
 ### 1c. Review allowed values
 
 The schema (`references/triage-schema.json`) is self-documenting — every enum field lists the exact allowed values. Label-backed fields (area, backend, platform, tenet, partner) use values that match GitHub label suffixes: `prefix/ + value` = full label.
+
+### 1d. Research documentation sources
+
+Before generating the triage JSON, consult available documentation to inform your analysis. This prevents misdiagnosis from missing domain knowledge.
+
+**For every issue**, identify the key topics and check these sources in priority order:
+
+1. **Package behavior** — read `documentation/packages.md` when the issue mentions NativeAssets packages, DllNotFoundException, container deployment, or WASM. This file documents what each package contains, how native loading works per platform, and common deployment issues.
+
+2. **API docs** — search `docs/SkiaSharpAPI/*.xml` when specific SkiaSharp types or methods are mentioned. These XML files document expected behavior, parameters, and return values for every public API.
+
+3. **Conceptual docs** — search `.docs/docs/docs/` (from Step 0c worktree) when the issue involves how-to questions about drawing, paths, bitmaps, transforms, effects, or shaders.
+
+4. **MS Learn** — use the `mslearn-microsoft_docs_search` MCP tool when the issue involves non-SkiaSharp technologies: MAUI, Blazor WebAssembly, WPF, Windows Forms, containers/Docker, .NET runtime behavior, trimming, NuGet packaging, or P/Invoke mechanics. MS Learn is the authoritative source for platform-specific .NET behavior that SkiaSharp docs don't cover.
+
+**Key principle:** Project-specific docs first (they override general .NET knowledge), MS Learn for external platform topics.
+
+**For question/documentation issues:** The answer likely already exists in one of these sources. Check before drafting a response, and cite the source.
+
+**For native loading issues** (DllNotFoundException, container, WASM): Always read `documentation/packages.md` — it explains the loading mechanism and dependencies for each NativeAssets package.
 
 ## Step 2: Analyze and Generate JSON
 
@@ -268,6 +300,13 @@ cd ..
 
 - **`references/triage-schema.json`** — Self-documenting JSON Schema (draft 2020-12) with descriptions on every field, all enums, and cross-field rules
 - **`references/labels.md`** — Label taxonomy, cardinality rules, classification tips
+- **`documentation/packages.md`** — Complete NuGet package reference: purpose, contents, loading mechanism, deployment guidance
+
+## Documentation Sources (consult during Step 1d)
+
+- **`docs/SkiaSharpAPI/`** — XML API reference for every public type and method (~300 files)
+- **`.docs/docs/docs/`** — Conceptual docs worktree: tutorials on drawing, paths, bitmaps, transforms, effects, shaders
+- **MS Learn MCP** — Non-SkiaSharp platform knowledge. Use `mslearn-microsoft_docs_search` for MAUI, Blazor, WPF, containers, WASM, .NET runtime topics.
 
 ## Scripts
 
