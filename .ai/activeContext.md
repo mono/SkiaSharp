@@ -5,19 +5,31 @@
 
 ## Current Focus
 
-**Phase**: AI Triage Skill — Review fixes applied
-**Status**: All 5-model review fixes applied and tested
-**Branch**: docs-dashboard
+**Phase**: AI Triage Dashboard Page — Complete
+**Status**: All components built, tested, and working
+**Branch**: docs-dashboard (skills branch)
 
 ## Recent Changes
 
-### 2026-02-08 (5-Model Review Fixes)
-- **Applied fixes from 5-model review** (GPT-5, Opus 4.5, Gemini 3, GPT-5.1, Sonnet 4):
-  - **triage-schema.json**: Fixed backend enum (`Xps`→`XPS`, removed `Android`/`SkiaSharp`, added `Direct3D`), added `minItems:1` to all arrays, `minProperties:1` to `reproEvidenceObject`, required `hasCrash`/`hasStackTrace` in bugSignals, UTC-only `analyzedAt` pattern, tightened `repoLink` URL to GitHub-only
-  - **issue-to-markdown.ps1**: Added `begin/process/end` blocks for proper pipeline input, `$input` fallback for external piping, `Parse-DateSafe` with `InvariantCulture`, safe `roleCounts` key access, tightened issue regex to exclude `#0`
-  - **get-labels.ps1**: Added `-Json` switch for machine-readable output, fixed `$LASTEXITCODE` check ordering (capture raw output first)
-  - **SKILL.md**: Added Step 0 env checks (pwsh, gh, branch verify, git pull), concrete `$CACHE` variable, OS-agnostic temp paths, exact sync command, `-Json` label mode, exit code table, push failure handling with retry, non-interactive re-triage policy, explicit `requiresHumanReview` field list
-- **All scripts tested**: Direct path, bash pipe, PS pipeline — all produce identical output
+### 2026-02-09 (AI Triage Dashboard Page)
+- **Created `Triage.razor`** — Full AI Triage page with:
+  - Summary cards (Needs Investigation, Closeable, Quick Wins, Regressions, Needs Human Review)
+  - Filter bar (Action, Type, Area, Severity, Sort By) with Clear Filters
+  - Expandable issue cards with 5 tabbed sections:
+    - **Overview**: Classification, Suggested Action, Bug Signals, Regression, Fix Status, Version Analysis
+    - **Evidence**: Steps to Reproduce, Code Snippets, Screenshots, Attachments, Repo Links, Related Issues, Environment
+    - **Analysis**: Key Signals with quotes, Field Rationales with expandable alternatives, Uncertainties, Assumptions, Docs Consulted
+    - **Resolution**: Hypothesis, Research Done, 3+ Proposals with recommended highlight, Steps & Tradeoffs
+    - **Response**: Draft response with Copy button, proper inline code rendering
+  - Confidence bars with color coding (green/yellow/red)
+  - Summary card click filters + dropdown filters work together
+- **Created `TriageStats.cs`** — C# records matching triage-schema.json (Classification, BugSignals, ReproEvidence, VersionAnalysis, AnalysisNotes, ResolutionAnalysis, etc.)
+- **Added `GenerateTriageAsync`** to GenerateCommand — reads ai-triage/*.json from cache, computes summary stats, writes triage.json
+- **Added `AiTriagePath`** to CacheService
+- **Added `GetTriageDataAsync()`** to DashboardDataService
+- **Updated NavMenu** — Added "AI Triage" between Issues and Pull Requests
+- **Added ~400 lines CSS** — Full styling for triage cards, badges, tabs, confidence bars, proposals grid, code blocks, etc.
+- **Fixed backtick rendering** — FormatMarkdown now uses regex for proper paired `<code>` tags
 
 ### 2026-02-08 (Scripts → PowerShell 7.5)
 - **Converted all 3 scripts** from C# (.NET 10 file-based apps) to PowerShell 7.5+

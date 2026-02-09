@@ -1,0 +1,877 @@
+@page "/triage"
+@inject DashboardDataService DataService
+@inject NavigationManager Navigation
+
+<PageTitle>AI Triage - SkiaSharp Dashboard</PageTitle>
+
+<h1>AI Triage</h1>
+<p class="subtitle">AI-powered issue classification and resolution proposals</p>
+
+@if (_loading)
+{
+    <p><em>Loading triage data...</em></p>
+}
+else if (_data is null)
+{
+    <p>No triage data available.</p>
+}
+else
+{
+    <!-- Summary Cards -->
+    <div class="triage-summary">
+        <div class="triage-card triage-warning @(SelectedAction == "needs-investigation" ? "selected" : "")" @onclick='() => FilterByAction("needs-investigation")'>
+            <span class="triage-count">@_data.Summary.NeedsInvestigation</span>
+            <span class="triage-label">Needs Investigation</span>
+        </div>
+        <div class="triage-card triage-success @(SelectedAction == "closeable" ? "selected" : "")" @onclick='() => FilterByAction("closeable")'>
+            <span class="triage-count">@_data.Summary.Closeable</span>
+            <span class="triage-label">Closeable</span>
+        </div>
+        <div class="triage-card triage-info @(SelectedAction == "quick-wins" ? "selected" : "")" @onclick='() => FilterByAction("quick-wins")'>
+            <span class="triage-count">@_data.Summary.QuickWins</span>
+            <span class="triage-label">Quick Wins</span>
+        </div>
+        <div class="triage-card triage-danger @(SelectedAction == "regressions" ? "selected" : "")" @onclick='() => FilterByAction("regressions")'>
+            <span class="triage-count">@_data.Summary.Regressions</span>
+            <span class="triage-label">Regressions</span>
+        </div>
+        <div class="triage-card triage-author @(SelectedAction == "human-review" ? "selected" : "")" @onclick='() => FilterByAction("human-review")'>
+            <span class="triage-count">@_data.Summary.NeedsHumanReview</span>
+            <span class="triage-label">Needs Human Review</span>
+        </div>
+    </div>
+
+    <!-- Filter Row -->
+    <div class="filter-row">
+        <div class="filter-group">
+            <label>Action</label>
+            <select @bind="SelectedActionFilter" @bind:after="ApplyFilters">
+                <option value="">All Actions</option>
+                @foreach (var a in _data.ByAction)
+                {
+                    <option value="@a.Label">@FormatLabel(a.Label) (@a.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Type</label>
+            <select @bind="SelectedType" @bind:after="ApplyFilters">
+                <option value="">All Types</option>
+                @foreach (var t in _data.ByType)
+                {
+                    <option value="@t.Label">@FormatLabel(t.Label) (@t.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Area</label>
+            <select @bind="SelectedArea" @bind:after="ApplyFilters">
+                <option value="">All Areas</option>
+                @foreach (var a in _data.ByArea)
+                {
+                    <option value="@a.Label">@a.Label (@a.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Severity</label>
+            <select @bind="SelectedSeverity" @bind:after="ApplyFilters">
+                <option value="">All Severities</option>
+                @foreach (var s in _data.BySeverity)
+                {
+                    <option value="@s.Label">@FormatLabel(s.Label) (@s.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Sort By</label>
+            <select @bind="SelectedSort" @bind:after="ApplyFilters">
+                <option value="newest">Newest First</option>
+                <option value="confidence">Highest Confidence</option>
+                <option value="severity">By Severity</option>
+            </select>
+        </div>
+        @if (HasFilters)
+        {
+            <button class="btn-clear" @onclick="ClearFilters">Clear Filters</button>
+        }
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <span>Showing <strong>@_filtered.Count</strong> of @_data.TotalCount triaged issues</span>
+    </div>
+
+    <!-- Issue List -->
+    <div class="ai-triage-list">
+        @foreach (var issue in _filtered)
+        {
+            var isExpanded = _expanded.Contains(issue.Number);
+            <div class="ai-triage-card @GetActionClass(issue.Actionability.SuggestedAction)">
+                <div class="ai-triage-header" @onclick="() => ToggleExpand(issue.Number)">
+                    <span class="expand-icon">@(isExpanded ? "▼" : "▶")</span>
+                    <a href="@issue.Url" target="_blank" class="issue-link" @onclick:stopPropagation="true">
+                        #@issue.Number
+                    </a>
+                    <span class="ai-triage-title">@issue.Summary</span>
+                    <span class="badge-type badge-@issue.Type.Value">@FormatLabel(issue.Type.Value)</span>
+                    @if (issue.BugSignals?.Severity is not null)
+                    {
+                        <span class="badge-severity badge-sev-@issue.BugSignals.Severity">@FormatLabel(issue.BugSignals.Severity)</span>
+                    }
+                    <span class="badge-action badge-act-@issue.Actionability.SuggestedAction">@FormatLabel(issue.Actionability.SuggestedAction)</span>
+                    <span class="confidence-pill" title="Confidence: @issue.Actionability.Confidence.ToString("P0")">
+                        <span class="confidence-bar @GetConfidenceClass(issue.Actionability.Confidence)" style="width: @((int)(issue.Actionability.Confidence * 100))%"></span>
+                    </span>
+                </div>
+
+                @if (isExpanded)
+                {
+                    <div class="ai-triage-detail">
+                        <!-- Tab Navigation -->
+                        <div class="detail-tabs">
+                            @{ var num = issue.Number; }
+                            <button class="tab-btn @(GetActiveTab(num) == "overview" ? "active" : "")" @onclick="() => SetTab(num, _tabOverview)">Overview</button>
+                            @if (issue.ReproEvidence is not null)
+                            {
+                                <button class="tab-btn @(GetActiveTab(num) == "evidence" ? "active" : "")" @onclick="() => SetTab(num, _tabEvidence)">Evidence</button>
+                            }
+                            @if (issue.AnalysisNotes is not null)
+                            {
+                                <button class="tab-btn @(GetActiveTab(num) == "analysis" ? "active" : "")" @onclick="() => SetTab(num, _tabAnalysis)">Analysis</button>
+                            }
+                            @if (issue.ResolutionAnalysis is not null)
+                            {
+                                <button class="tab-btn @(GetActiveTab(num) == "resolution" ? "active" : "")" @onclick="() => SetTab(num, _tabResolution)">Resolution</button>
+                            }
+                            @if (issue.SuggestedResponse is not null)
+                            {
+                                <button class="tab-btn @(GetActiveTab(num) == "response" ? "active" : "")" @onclick="() => SetTab(num, _tabResponse)">Response</button>
+                            }
+                        </div>
+
+                        <!-- Tab Content -->
+                        @switch (GetActiveTab(issue.Number))
+                        {
+                            case "overview":
+                                @RenderOverview(issue)
+                                break;
+                            case "evidence":
+                                @RenderEvidence(issue)
+                                break;
+                            case "analysis":
+                                @RenderAnalysis(issue)
+                                break;
+                            case "resolution":
+                                @RenderResolution(issue)
+                                break;
+                            case "response":
+                                @RenderResponse(issue)
+                                break;
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <p class="last-updated">Last updated: @_data.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+}
+
+@code {
+    private TriageData? _data;
+    private List<TriagedIssue> _filtered = [];
+    private bool _loading = true;
+    private HashSet<int> _expanded = [];
+    private Dictionary<int, string> _activeTabs = [];
+
+    // Tab name constants
+    private const string _tabOverview = "overview";
+    private const string _tabEvidence = "evidence";
+    private const string _tabAnalysis = "analysis";
+    private const string _tabResolution = "resolution";
+    private const string _tabResponse = "response";
+
+    // Filters
+    private string SelectedAction { get; set; } = "";
+    private string SelectedActionFilter { get; set; } = "";
+    private string SelectedType { get; set; } = "";
+    private string SelectedArea { get; set; } = "";
+    private string SelectedSeverity { get; set; } = "";
+    private string SelectedSort { get; set; } = "newest";
+
+    private bool HasFilters =>
+        !string.IsNullOrEmpty(SelectedAction) ||
+        !string.IsNullOrEmpty(SelectedActionFilter) ||
+        !string.IsNullOrEmpty(SelectedType) ||
+        !string.IsNullOrEmpty(SelectedArea) ||
+        !string.IsNullOrEmpty(SelectedSeverity);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _data = await DataService.GetTriageDataAsync();
+        ApplyFiltersInternal();
+        _loading = false;
+    }
+
+    private void FilterByAction(string action)
+    {
+        if (SelectedAction == action)
+        {
+            SelectedAction = "";
+            SelectedActionFilter = "";
+        }
+        else
+        {
+            SelectedAction = action;
+            SelectedActionFilter = "";
+        }
+        ApplyFiltersInternal();
+    }
+
+    private void ApplyFilters() => ApplyFiltersInternal();
+
+    private void ApplyFiltersInternal()
+    {
+        if (_data is null) return;
+
+        var query = _data.Issues.AsEnumerable();
+
+        // Summary card filter
+        if (!string.IsNullOrEmpty(SelectedAction))
+        {
+            query = SelectedAction switch
+            {
+                "needs-investigation" => query.Where(i => i.Actionability.SuggestedAction == "needs-investigation"),
+                "closeable" => query.Where(i => i.Actionability.Closeable == true),
+                "quick-wins" => query.Where(i => i.Actionability.Closeable == true && i.Actionability.RequiresHumanReview != true),
+                "regressions" => query.Where(i => i.Regression?.IsRegression == true),
+                "human-review" => query.Where(i => i.Actionability.RequiresHumanReview == true),
+                _ => query
+            };
+        }
+
+        // Dropdown filters
+        if (!string.IsNullOrEmpty(SelectedActionFilter))
+            query = query.Where(i => i.Actionability.SuggestedAction == SelectedActionFilter);
+        if (!string.IsNullOrEmpty(SelectedType))
+            query = query.Where(i => i.Type.Value == SelectedType);
+        if (!string.IsNullOrEmpty(SelectedArea))
+            query = query.Where(i => i.Area?.Value == SelectedArea);
+        if (!string.IsNullOrEmpty(SelectedSeverity))
+            query = query.Where(i => i.BugSignals?.Severity == SelectedSeverity);
+
+        // Sort
+        query = SelectedSort switch
+        {
+            "confidence" => query.OrderByDescending(i => i.Actionability.Confidence),
+            "severity" => query.OrderByDescending(i => SeverityOrder(i.BugSignals?.Severity)),
+            _ => query.OrderByDescending(i => i.Number)
+        };
+
+        _filtered = query.ToList();
+    }
+
+    private static int SeverityOrder(string? severity) => severity switch
+    {
+        "critical" => 4,
+        "high" => 3,
+        "medium" => 2,
+        "low" => 1,
+        _ => 0
+    };
+
+    private void ClearFilters()
+    {
+        SelectedAction = "";
+        SelectedActionFilter = "";
+        SelectedType = "";
+        SelectedArea = "";
+        SelectedSeverity = "";
+        SelectedSort = "newest";
+        ApplyFiltersInternal();
+    }
+
+    private void ToggleExpand(int number)
+    {
+        if (!_expanded.Remove(number))
+            _expanded.Add(number);
+    }
+
+    private string GetActiveTab(int number) =>
+        _activeTabs.GetValueOrDefault(number, "overview");
+
+    private void SetTab(int number, string tab) =>
+        _activeTabs[number] = tab;
+
+    // ── Render helpers ───────────────────────────────────────────
+
+    private RenderFragment RenderOverview(TriagedIssue issue) => __builder =>
+    {
+        <div class="tab-content">
+            <div class="overview-grid">
+                <div class="overview-section">
+                    <h4>Classification</h4>
+                    <div class="field-row">
+                        <span class="field-label">Type:</span>
+                        <span class="badge-type badge-@issue.Type.Value">@FormatLabel(issue.Type.Value)</span>
+                        <span class="field-confidence">@issue.Type.Confidence.ToString("P0")</span>
+                    </div>
+                    @if (issue.Area is not null)
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Area:</span>
+                            <span class="label">@issue.Area.Value</span>
+                            <span class="field-confidence">@issue.Area.Confidence.ToString("P0")</span>
+                        </div>
+                    }
+                    @if (issue.Platforms is { Count: > 0 })
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Platforms:</span>
+                            @foreach (var p in issue.Platforms)
+                            {
+                                <span class="label">@p.Value</span>
+                            }
+                        </div>
+                    }
+                    @if (issue.Backends is { Count: > 0 })
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Backends:</span>
+                            @foreach (var b in issue.Backends)
+                            {
+                                <span class="label">@b.Value</span>
+                            }
+                        </div>
+                    }
+                    @if (issue.Tenets is { Count: > 0 })
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Tenets:</span>
+                            @foreach (var t in issue.Tenets)
+                            {
+                                <span class="label">@t.Value</span>
+                            }
+                        </div>
+                    }
+                    @if (issue.Partner is not null)
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Partner:</span>
+                            <span class="label">@issue.Partner.Value</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="overview-section">
+                    <h4>Suggested Action</h4>
+                    <div class="action-detail">
+                        <span class="badge-action badge-act-@issue.Actionability.SuggestedAction">
+                            @FormatLabel(issue.Actionability.SuggestedAction)
+                        </span>
+                        <span class="field-confidence">@issue.Actionability.Confidence.ToString("P0")</span>
+                    </div>
+                    <p class="reason-text">@issue.Actionability.Reason</p>
+                    @if (issue.Actionability.Closeable == true)
+                    {
+                        <span class="badge-closeable">✓ Closeable</span>
+                    }
+                    @if (issue.Actionability.RequiresHumanReview == true)
+                    {
+                        <span class="badge-human-review">⚠ Needs Human Review</span>
+                    }
+                    @if (issue.Actionability.Abandoned == true)
+                    {
+                        <span class="badge-abandoned">🕸 Abandoned</span>
+                        @if (issue.Actionability.AbandonedReason is not null)
+                        {
+                            <p class="reason-text-sm">@issue.Actionability.AbandonedReason</p>
+                        }
+                    }
+                    @if (issue.Actionability.DuplicateOf is not null)
+                    {
+                        <p>Duplicate of <a href="https://github.com/@issue.Repo/issues/@issue.Actionability.DuplicateOf" target="_blank">#@issue.Actionability.DuplicateOf</a></p>
+                    }
+                    @if (issue.Actionability.MissingInfo is { Count: > 0 })
+                    {
+                        <div class="missing-info">
+                            <strong>Missing Info:</strong>
+                            @foreach (var mi in issue.Actionability.MissingInfo)
+                            {
+                                <span class="label label-missing">@FormatLabel(mi)</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (issue.BugSignals is not null)
+            {
+                <div class="overview-section">
+                    <h4>Bug Signals</h4>
+                    <div class="bug-signals-grid">
+                        <span class="signal @(issue.BugSignals.HasCrash ? "signal-yes" : "signal-no")">
+                            @(issue.BugSignals.HasCrash ? "💥 Crash" : "No Crash")
+                        </span>
+                        <span class="signal @(issue.BugSignals.HasStackTrace ? "signal-yes" : "signal-no")">
+                            @(issue.BugSignals.HasStackTrace ? "📋 Stack Trace" : "No Stack Trace")
+                        </span>
+                        <span class="signal @(issue.BugSignals.HasScreenshot == true ? "signal-yes" : "signal-no")">
+                            @(issue.BugSignals.HasScreenshot == true ? "📸 Screenshots" : "No Screenshots")
+                        </span>
+                        <span class="signal @(issue.BugSignals.HasWorkaround == true ? "signal-yes" : "signal-no")">
+                            @(issue.BugSignals.HasWorkaround == true ? "🔧 Workaround" : "No Workaround")
+                        </span>
+                        <span class="badge-severity badge-sev-@issue.BugSignals.Severity">@FormatLabel(issue.BugSignals.Severity)</span>
+                        <span class="label">Repro: @FormatLabel(issue.BugSignals.ReproQuality)</span>
+                    </div>
+                    <p class="reason-text">@issue.BugSignals.SeverityReason</p>
+                    @if (issue.BugSignals.WorkaroundSummary is not null)
+                    {
+                        <div class="workaround-box">
+                            <strong>Workaround:</strong> @issue.BugSignals.WorkaroundSummary
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (issue.Regression is not null)
+            {
+                <div class="overview-section">
+                    <h4>Regression</h4>
+                    <p>
+                        @if (issue.Regression.IsRegression)
+                        {
+                            <span class="badge-regression">⚡ Regression</span>
+                            @if (issue.Regression.WorkedInVersion is not null)
+                            {
+                                <span>Worked in: <strong>@issue.Regression.WorkedInVersion</strong></span>
+                            }
+                            @if (issue.Regression.BrokeInVersion is not null)
+                            {
+                                <span>→ Broke in: <strong>@issue.Regression.BrokeInVersion</strong></span>
+                            }
+                        }
+                        else
+                        {
+                            <span>Not a regression</span>
+                        }
+                    </p>
+                    <p class="reason-text">@issue.Regression.Reason</p>
+                </div>
+            }
+
+            @if (issue.FixStatus is not null)
+            {
+                <div class="overview-section">
+                    <h4>Fix Status</h4>
+                    <span class="@(issue.FixStatus.LikelyFixed ? "badge-fixed" : "badge-unfixed")">
+                        @(issue.FixStatus.LikelyFixed ? "✓ Likely Fixed" : "✗ Not Fixed")
+                    </span>
+                    <span class="field-confidence">@issue.FixStatus.Confidence.ToString("P0")</span>
+                    <p class="reason-text">@issue.FixStatus.Reason</p>
+                    @if (issue.FixStatus.FixedInVersion is not null)
+                    {
+                        <p>Fixed in: <strong>@issue.FixStatus.FixedInVersion</strong></p>
+                    }
+                    @if (issue.FixStatus.VerificationStatus is not null)
+                    {
+                        <span class="label">@FormatLabel(issue.FixStatus.VerificationStatus)</span>
+                    }
+                </div>
+            }
+
+            @if (issue.VersionAnalysis is not null)
+            {
+                <div class="overview-section">
+                    <h4>Version Analysis</h4>
+                    @if (issue.VersionAnalysis.MentionedVersions is { Count: > 0 })
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Versions:</span>
+                            @foreach (var v in issue.VersionAnalysis.MentionedVersions)
+                            {
+                                <span class="label">@v</span>
+                            }
+                        </div>
+                    }
+                    @if (issue.VersionAnalysis.Era is not null)
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Era:</span>
+                            <span class="label">@FormatLabel(issue.VersionAnalysis.Era)</span>
+                        </div>
+                    }
+                    @if (issue.VersionAnalysis.CurrentRelevance is not null)
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Still relevant:</span>
+                            <span class="label label-relevance-@issue.VersionAnalysis.CurrentRelevance">@FormatLabel(issue.VersionAnalysis.CurrentRelevance)</span>
+                        </div>
+                    }
+                    <p class="reason-text">@issue.VersionAnalysis.Reason</p>
+                </div>
+            }
+        </div>
+    };
+
+    private RenderFragment RenderEvidence(TriagedIssue issue) => __builder =>
+    {
+        var evidence = issue.ReproEvidence;
+        if (evidence is null) return;
+
+        <div class="tab-content">
+            @if (evidence.StepsToReproduce is { Count: > 0 })
+            {
+                <div class="evidence-section">
+                    <h4>Steps to Reproduce</h4>
+                    <ol class="repro-steps">
+                        @foreach (var step in evidence.StepsToReproduce)
+                        {
+                            <li>@step</li>
+                        }
+                    </ol>
+                </div>
+            }
+
+            @if (evidence.CodeSnippets is { Count: > 0 })
+            {
+                <div class="evidence-section">
+                    <h4>Code Snippets</h4>
+                    @foreach (var snippet in evidence.CodeSnippets)
+                    {
+                        @if (snippet.Context is not null)
+                        {
+                            <p class="snippet-context">@snippet.Context</p>
+                        }
+                        <pre class="code-block"><code>@snippet.Code</code></pre>
+                    }
+                </div>
+            }
+
+            @if (evidence.Screenshots is { Count: > 0 })
+            {
+                <div class="evidence-section">
+                    <h4>Screenshots (@evidence.Screenshots.Count)</h4>
+                    @foreach (var ss in evidence.Screenshots)
+                    {
+                        <div class="screenshot-item">
+                            <a href="@ss.Url" target="_blank" class="screenshot-link">📸 @(ss.Context ?? ss.Url)</a>
+                            @if (ss.Source is not null)
+                            {
+                                <span class="evidence-source">from @ss.Source</span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (evidence.Attachments is { Count: > 0 })
+            {
+                <div class="evidence-section">
+                    <h4>Attachments</h4>
+                    @foreach (var att in evidence.Attachments)
+                    {
+                        <div class="attachment-item">
+                            <a href="@att.Url" target="_blank">📎 @att.Filename</a>
+                            @if (att.Type is not null)
+                            {
+                                <span class="label">@FormatLabel(att.Type)</span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (evidence.RepoLinks is { Count: > 0 })
+            {
+                <div class="evidence-section">
+                    <h4>Repository Links</h4>
+                    @foreach (var link in evidence.RepoLinks)
+                    {
+                        <div class="repo-link-item">
+                            <a href="@link.Url" target="_blank">🔗 @(link.Description ?? link.Url)</a>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (evidence.RelatedIssues is { Count: > 0 })
+            {
+                <div class="evidence-section">
+                    <h4>Related Issues</h4>
+                    <div class="related-issues">
+                        @foreach (var num in evidence.RelatedIssues)
+                        {
+                            <a href="https://github.com/@issue.Repo/issues/@num" target="_blank" class="related-issue-link">#@num</a>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (evidence.EnvironmentDetails is not null)
+            {
+                <div class="evidence-section">
+                    <h4>Environment</h4>
+                    <p>@evidence.EnvironmentDetails</p>
+                </div>
+            }
+        </div>
+    };
+
+    private RenderFragment RenderAnalysis(TriagedIssue issue) => __builder =>
+    {
+        var notes = issue.AnalysisNotes;
+        if (notes is null) return;
+
+        <div class="tab-content">
+            <div class="analysis-summary">
+                <p>@notes.Summary</p>
+            </div>
+
+            @if (notes.KeySignals is { Count: > 0 })
+            {
+                <div class="analysis-section">
+                    <h4>Key Signals</h4>
+                    @foreach (var signal in notes.KeySignals)
+                    {
+                        <div class="signal-card">
+                            <blockquote class="signal-quote">"@signal.Text"</blockquote>
+                            <span class="evidence-source">— @signal.Source</span>
+                            <p class="signal-interp">@signal.Interpretation</p>
+                            @if (signal.SupportedFields is { Count: > 0 })
+                            {
+                                <div class="supported-fields">
+                                    @foreach (var f in signal.SupportedFields)
+                                    {
+                                        <span class="label label-field">@f</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (notes.FieldRationales is { Count: > 0 })
+            {
+                <div class="analysis-section">
+                    <h4>Field Rationales</h4>
+                    @foreach (var fr in notes.FieldRationales)
+                    {
+                        <div class="rationale-card">
+                            <div class="rationale-header">
+                                <span class="label label-field">@fr.Field</span>
+                                <span class="rationale-chosen">→ @fr.Chosen</span>
+                            </div>
+                            <p class="reason-text">@fr.ExpandedReason</p>
+                            @if (fr.Alternatives is { Count: > 0 })
+                            {
+                                <details class="alternatives">
+                                    <summary>@fr.Alternatives.Count alternative(s) considered</summary>
+                                    @foreach (var alt in fr.Alternatives)
+                                    {
+                                        <div class="alt-item">
+                                            <span class="alt-value">@alt.Value</span>
+                                            <span class="alt-rejected">— @alt.WhyRejected</span>
+                                        </div>
+                                    }
+                                </details>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (notes.Uncertainties is { Count: > 0 })
+            {
+                <div class="analysis-section">
+                    <h4>Uncertainties</h4>
+                    <ul class="uncertainty-list">
+                        @foreach (var u in notes.Uncertainties)
+                        {
+                            <li>@u</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            @if (notes.Assumptions is { Count: > 0 })
+            {
+                <div class="analysis-section">
+                    <h4>Assumptions</h4>
+                    <ul class="assumption-list">
+                        @foreach (var a in notes.Assumptions)
+                        {
+                            <li>@a</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            @if (notes.DocsConsulted is { Count: > 0 })
+            {
+                <div class="analysis-section">
+                    <h4>Docs Consulted</h4>
+                    @foreach (var doc in notes.DocsConsulted)
+                    {
+                        <div class="doc-ref">
+                            <code>@doc.Path</code>
+                            <span class="doc-relevance">— @doc.Relevance</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    };
+
+    private RenderFragment RenderResolution(TriagedIssue issue) => __builder =>
+    {
+        var res = issue.ResolutionAnalysis;
+        if (res is null) return;
+
+        <div class="tab-content">
+            <div class="resolution-hypothesis">
+                <h4>Hypothesis</h4>
+                <p>@res.Hypothesis</p>
+            </div>
+
+            @if (res.ResearchDone is { Count: > 0 })
+            {
+                <details class="research-done">
+                    <summary>Research performed (@res.ResearchDone.Count items)</summary>
+                    <ul>
+                        @foreach (var r in res.ResearchDone)
+                        {
+                            <li>@r</li>
+                        }
+                    </ul>
+                </details>
+            }
+
+            <h4>Proposals</h4>
+            <div class="proposals-grid">
+                @foreach (var proposal in res.Proposals)
+                {
+                    var isRecommended = proposal.Title == res.RecommendedProposal;
+                    <div class="proposal-card @(isRecommended ? "proposal-recommended" : "")">
+                        @if (isRecommended)
+                        {
+                            <span class="badge-recommended">★ Recommended</span>
+                        }
+                        <h5>@proposal.Title</h5>
+                        <p>@proposal.Description</p>
+                        <div class="proposal-meta">
+                            <span class="label">Effort: @FormatLabel(proposal.Effort)</span>
+                            <span class="field-confidence">@proposal.Confidence.ToString("P0")</span>
+                        </div>
+                        <details>
+                            <summary>Steps & Tradeoffs</summary>
+                            <div class="proposal-steps">
+                                <strong>Steps:</strong>
+                                <ol>
+                                    @foreach (var step in proposal.Steps)
+                                    {
+                                        <li>@step</li>
+                                    }
+                                </ol>
+                            </div>
+                            <div class="proposal-pros">
+                                <strong>Pros:</strong>
+                                <ul>
+                                    @foreach (var pro in proposal.Pros)
+                                    {
+                                        <li class="pro-item">@pro</li>
+                                    }
+                                </ul>
+                            </div>
+                            <div class="proposal-cons">
+                                <strong>Cons:</strong>
+                                <ul>
+                                    @foreach (var con in proposal.Cons)
+                                    {
+                                        <li class="con-item">@con</li>
+                                    }
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+                }
+            </div>
+            @if (res.RecommendedReason is not null)
+            {
+                <div class="recommended-reason">
+                    <strong>Why recommended:</strong> @res.RecommendedReason
+                </div>
+            }
+        </div>
+    };
+
+    private RenderFragment RenderResponse(TriagedIssue issue) => __builder =>
+    {
+        var resp = issue.SuggestedResponse;
+        if (resp is null) return;
+
+        <div class="tab-content">
+            <div class="response-header">
+                <span class="label">@FormatLabel(resp.ResponseType)</span>
+                <span class="field-confidence">@resp.Confidence.ToString("P0")</span>
+            </div>
+            <p class="reason-text">@resp.Reason</p>
+            <div class="response-draft">
+                <div class="draft-header">
+                    <strong>Draft Response</strong>
+                    <button class="btn-copy" @onclick="() => CopyToClipboard(resp.Draft)">📋 Copy</button>
+                </div>
+                <div class="draft-content">
+                    @((MarkupString)FormatMarkdown(resp.Draft))
+                </div>
+            </div>
+        </div>
+    };
+
+    // ── Utility methods ──────────────────────────────────────────
+
+    private static string FormatLabel(string value) =>
+        string.Join(' ', value.Split('-').Select(w =>
+            w.Length > 0 ? char.ToUpper(w[0]) + w[1..] : w));
+
+    private static string GetActionClass(string action) => action switch
+    {
+        "needs-investigation" => "action-investigate",
+        "close-as-fixed" or "close-with-docs" or "close-as-duplicate" => "action-close",
+        "convert-to-discussion" => "action-discuss",
+        "request-info" => "action-info",
+        "keep-open" => "action-keep",
+        _ => ""
+    };
+
+    private static string GetConfidenceClass(double c) => c switch
+    {
+        >= 0.85 => "confidence-high",
+        >= 0.70 => "confidence-medium",
+        _ => "confidence-low"
+    };
+
+    private static string FormatMarkdown(string md)
+    {
+        var html = System.Text.RegularExpressions.Regex.Replace(md, "`([^`]+)`", "<code>$1</code>");
+        html = html.Replace("\n\n", "</p><p>").Replace("\n", "<br/>");
+        return $"<p>{html}</p>";
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        }
+        catch
+        {
+            // Clipboard API may not be available
+        }
+    }
+
+    [Inject] private Microsoft.JSInterop.IJSRuntime JSRuntime { get; set; } = default!;
+}

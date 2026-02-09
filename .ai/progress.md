@@ -4,8 +4,8 @@
 
 ## Current Status
 
-**Overall**: 🔧 AI Triage Skill — Pipeline complete, 5-model review applied, ready to commit
-**Notes**: All scripts PowerShell 7.5+, schema tightened, SKILL.md hardened for reliability.
+**Overall**: ✅ AI Triage Dashboard Page — Complete, tested, working
+**Notes**: Full triage UI with expandable cards, 5 tabs, filters, copy-to-clipboard. Schema-driven model.
 
 | Area | Status | Notes |
 |------|--------|-------|
@@ -16,7 +16,8 @@
 | Phase 4 | ✅ Complete | Data cache with engagement scoring |
 | Phase 5 | ✅ Complete | Multi-repo extension |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
-| AI Triage | ✅ Ready | Pipeline built, reviewed by 5 models, fixes applied |
+| AI Triage Skill | ✅ Complete | On main repo `skills/triage-issue` branch |
+| AI Triage Page | ✅ Complete | Dashboard page with full UI |
 
 ---
 

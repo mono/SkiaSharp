@@ -44,6 +44,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         await GenerateNuGetChartsAsync(rootCache, config, repoKeys, settings);
         await GenerateCommunityStatsAsync(rootCache, config, repoKeys, settings);
         await GenerateTrendDataAsync(rootCache, config, repoKeys, settings);
+        await GenerateTriageAsync(rootCache, config, repoKeys, settings);
 
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("[green]✓ All dashboard files generated[/]");
@@ -733,6 +734,118 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             .OrderBy(t => t.Month)
             .Select(t => t.Build())
             .ToList();
+    }
+
+    private async Task GenerateTriageAsync(CacheService rootCache, DashboardConfig config, List<string> repoKeys, GenerateSettings settings)
+    {
+        if (!settings.Quiet)
+            AnsiConsole.MarkupLine("\n[bold]Generating triage.json...[/]");
+
+        var issues = new List<System.Text.Json.Nodes.JsonObject>();
+        var byType = new Dictionary<string, int>();
+        var byArea = new Dictionary<string, int>();
+        var byAction = new Dictionary<string, int>();
+        var bySeverity = new Dictionary<string, int>();
+        var summaryStats = new { NeedsInvestigation = 0, Closeable = 0, QuickWins = 0, NeedsHumanReview = 0, Regressions = 0, Abandoned = 0 };
+        int needsInvestigation = 0, closeable = 0, quickWins = 0, needsHumanReview = 0, regressions = 0, abandoned = 0;
+
+        foreach (var repoKey in repoKeys)
+        {
+            var cache = string.IsNullOrEmpty(repoKey) ? rootCache : rootCache.ForRepo(repoKey);
+            var repoConfig = GetRepoConfig(config, repoKey);
+            var triageDir = cache.AiTriagePath;
+
+            if (!Directory.Exists(triageDir))
+                continue;
+
+            foreach (var file in Directory.GetFiles(triageDir, "*.json"))
+            {
+                try
+                {
+                    var json = await File.ReadAllTextAsync(file);
+                    var node = System.Text.Json.Nodes.JsonNode.Parse(json)?.AsObject();
+                    if (node is null) continue;
+
+                    var number = node["number"]?.GetValue<int>() ?? 0;
+                    var repo = node["repo"]?.GetValue<string>() ?? repoConfig?.FullName ?? repoKey;
+
+                    // Add URL for dashboard linking
+                    node["url"] = $"https://github.com/{repo}/issues/{number}";
+
+                    // Extract classification values for summary stats
+                    var typeValue = node["type"]?["value"]?.GetValue<string>();
+                    var areaValue = node["area"]?["value"]?.GetValue<string>();
+                    var action = node["actionability"]?["suggestedAction"]?.GetValue<string>();
+                    var severity = node["bugSignals"]?["severity"]?.GetValue<string>();
+                    var isCloseable = node["actionability"]?["closeable"]?.GetValue<bool>() ?? false;
+                    var isHumanReview = node["actionability"]?["requiresHumanReview"]?.GetValue<bool>() ?? false;
+                    var isAbandoned = node["actionability"]?["abandoned"]?.GetValue<bool>() ?? false;
+                    var isRegression = node["regression"]?["isRegression"]?.GetValue<bool>() ?? false;
+
+                    if (typeValue is not null) byType[typeValue] = byType.GetValueOrDefault(typeValue) + 1;
+                    if (areaValue is not null) byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
+                    if (action is not null) byAction[action] = byAction.GetValueOrDefault(action) + 1;
+                    if (severity is not null) bySeverity[severity] = bySeverity.GetValueOrDefault(severity) + 1;
+
+                    if (action == "needs-investigation") needsInvestigation++;
+                    if (isCloseable) closeable++;
+                    if (isCloseable && !isHumanReview) quickWins++;
+                    if (isHumanReview) needsHumanReview++;
+                    if (isRegression) regressions++;
+                    if (isAbandoned) abandoned++;
+
+                    issues.Add(node);
+                }
+                catch (Exception ex)
+                {
+                    if (!settings.Quiet)
+                        AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: {ex.Message}[/]");
+                }
+            }
+        }
+
+        // Sort issues by number descending (newest first)
+        issues.Sort((a, b) => (b["number"]?.GetValue<int>() ?? 0).CompareTo(a["number"]?.GetValue<int>() ?? 0));
+
+        static List<System.Text.Json.Nodes.JsonObject> ToLabelCounts(Dictionary<string, int> dict) =>
+            dict.OrderByDescending(kv => kv.Value)
+                .Select(kv =>
+                {
+                    var obj = new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["label"] = kv.Key,
+                        ["count"] = kv.Value
+                    };
+                    return obj;
+                })
+                .ToList();
+
+        var output = new System.Text.Json.Nodes.JsonObject
+        {
+            ["generatedAt"] = DateTime.UtcNow.ToString("o"),
+            ["totalCount"] = issues.Count,
+            ["summary"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["needsInvestigation"] = needsInvestigation,
+                ["closeable"] = closeable,
+                ["quickWins"] = quickWins,
+                ["needsHumanReview"] = needsHumanReview,
+                ["regressions"] = regressions,
+                ["abandoned"] = abandoned
+            },
+            ["byType"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(byType).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
+            ["byArea"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(byArea).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
+            ["byAction"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(byAction).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
+            ["bySeverity"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(bySeverity).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
+            ["issues"] = new System.Text.Json.Nodes.JsonArray(issues.Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray())
+        };
+
+        var outputPath = Path.Combine(settings.OutputDir, "triage.json");
+        var jsonStr = output.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(outputPath, jsonStr);
+
+        if (!settings.Quiet)
+            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath} ({issues.Count} triaged issues)[/]");
     }
 }
 
