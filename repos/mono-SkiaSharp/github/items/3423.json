@@ -32,7 +32,7 @@
   "commentCount": 3,
   "reactionCount": 0,
   "engagement": {
-    "syncedAt": "2026-02-06T13:19:47.6858653Z",
+    "syncedAt": "2026-02-09T23:05:02.6573369Z",
     "reactions": [],
     "comments": [
       {
@@ -47,6 +47,19 @@
         "author": "ERPCG",
         "body": "Hello,\n\nI had the same problem with VS22 and .NET Framework 4.8 and couldn\u0027t find a solution on the net on how to solve it.\nBut after trying several things, I found a way to solve the problem.\n\nI use SkiaSharp 3.119.1, and have the following packages :\n- HarfBuzz\n- NativeAssets.Linux.NoDependencies\n- NativeAssets.macOS\n- NativeAssets.Win32\n- Views.Desktop.Common\n- Views.WindowsForms\n\nFirst, you need to find the libSkiaSharp.dll file in the following path :\n\u0022{$YOUR_PROJECT_PATH}\\packages\\SkiaSharp.NativeAssets.Win32.3.119.1\\runtimes\\\u0022\nIf you try to publish your project in x64, then chose the one in \u0022\\win-x64\\native\u0022, if it\u0027s either x86 or Any CPU (Prefered x32), then it\u0027s the one in \u0022\\win-x86\\native\u0022.\n\nSecond, in Visual Studio, right click on your project, then \u0022Add -\u003E Existing element\u0022, and go find the dll in the folder according to your project.\n\nThird, right click on the added dll file, \u0022Properties\u0022, select \u0022Build Action = Content\u0022 and \u0022Copy to Output Directory = Copy if newer\u0022.\n\nFourth, go check if the dll is correctly included in your project, \u0022Projet -\u003E Properties -\u003E Publish -\u003E Application Files\u0022, libSkiaSharp.dll should be on the list, with the following options \u0022Action = Include\u0022 and \u0022Download Group = Required\u0022.\n\nNow you can try and publish your solution using ClickOnce.\n\nI haven\u0027t found a way to have the dll file elsewhere or include the native path to the project, but for now it\u0027s working for me.",
         "createdAt": "2026-02-06T11:09:38",
+        "reactions": [
+          {
+            "user": "ajohnstone-ks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-09T23:05:02.3539217Z"
+          }
+        ]
+      },
+      {
+        "id": 3871332279,
+        "author": "ajohnstone-ks",
+        "body": "@ERPCG That was how if I fixed it too.  Had a similar issue with the native DLLs that are supposed to be part of Microsoft.Data.SqlClient package as well.",
+        "createdAt": "2026-02-09T12:06:57",
         "reactions": []
       }
     ]
