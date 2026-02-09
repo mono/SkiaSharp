@@ -7,16 +7,17 @@ Reference for all NuGet packages produced by SkiaSharp — purpose, contents, an
 ## Contents
 
 - [Core Managed Packages](#core-managed-packages) — SkiaSharp, HarfBuzzSharp, and extensions
+- [Views Packages](#views-packages) — UI controls for each platform
+- [GPU Backend Packages](#gpu-backend-packages) — Vulkan and Direct3D support
 - [Native Assets](#native-assets) — Platform-specific native binaries for SkiaSharp and HarfBuzzSharp
   - [Platform Packages](#platform-packages) — Per-platform package details
   - [Auto-Included NativeAssets](#auto-included-nativeassets) — What's pulled in automatically by TFM
   - [Linux Package Selection Guide](#linux-package-selection-guide) — Which Linux package to use
-- [Views Packages](#views-packages) — UI controls for each platform
-- [GPU Backend Packages](#gpu-backend-packages) — Vulkan and Direct3D support
 - [Deployment & Containers](#deployment--containers) — Container and publishing guidance
   - [Container Deployment](#container-deployment) — Which Linux package to use in containers
   - [Publishing Modes](#publishing-modes) — Framework-dependent, self-contained, single-file
 - [Obsolete Packages](#obsolete-packages) — Deprecated, do not use
+- [Troubleshooting: Native Loading](#troubleshooting-native-loading) — Diagnosing DllNotFoundException on Linux
 
 ---
 
@@ -32,6 +33,36 @@ These contain the managed C# assemblies. The `SkiaSharp` and `HarfBuzzSharp` cor
 | **SkiaSharp.Skottie** | Lottie/Bodymovin animation playback. Renders After Effects animations. Depends on SkiaSharp, SkiaSharp.SceneGraph, and SkiaSharp.Resources. |
 | **SkiaSharp.SceneGraph** | Scene graph API for complex rendering pipelines. Depends on SkiaSharp. Used by Skottie internally. |
 | **SkiaSharp.Resources** | Resource provider implementations. Depends on SkiaSharp. Used by Skottie for asset loading. |
+
+---
+
+## Views Packages
+
+Platform-specific UI controls for rendering SkiaSharp content. These provide ready-to-use views/controls that handle the platform-specific rendering surface setup.
+
+| Package | Description |
+|---------|-------------|
+| **SkiaSharp.Views** | Platform views for iOS, tvOS, macOS, Mac Catalyst, Android, and Tizen. Provides `SKCanvasView` and `SKGLView`. |
+| **SkiaSharp.Views.Desktop.Common** | Common base classes for desktop views (netstandard2.0+, net462+). |
+| **SkiaSharp.Views.WindowsForms** | Windows Forms controls: `SKControl`, `SKGLControl`. net462+ and net6.0-windows+. Depends on OpenTK. |
+| **SkiaSharp.Views.WPF** | WPF control: `SKElement`. net462+ and net6.0-windows+. Depends on OpenTK. |
+| **SkiaSharp.Views.WinUI** | WinUI 3 controls: `SKXamlCanvas`, `SKSwapChainPanel`. net6.0-windows+. Depends on Microsoft.WindowsAppSDK. Auto-includes SkiaSharp.NativeAssets.WinUI. |
+| **SkiaSharp.Views.Gtk3** | GTK# 3 control: `SKDrawingArea`. netstandard2.0+. For Linux desktop apps. Depends on GtkSharp. |
+| **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+. Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
+| **SkiaSharp.Views.Maui.Core** | .NET MAUI shared view infrastructure. net8.0+. Depends on Microsoft.Maui.Core. |
+| **SkiaSharp.Views.Maui.Controls** | .NET MAUI controls: `SKCanvasView`, `SKGLView`. net8.0+. Depends on SkiaSharp.Views.Maui.Core and Microsoft.Maui.Controls. |
+| **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas`, `SKSwapChainPanel`. net8.0+. Depends on Uno.WinUI. Auto-includes SkiaSharp.NativeAssets.WebAssembly for WASM targets and SkiaSharp.Views.WinUI for Windows targets. |
+
+---
+
+## GPU Backend Packages
+
+Optional packages for hardware-accelerated rendering via specific GPU APIs.
+
+| Package | Description |
+|---------|-------------|
+| **SkiaSharp.Vulkan.SharpVk** | Vulkan GPU backend. netstandard2.0+, net462+, net6.0+. Depends on [SharpVk](https://github.com/FacticiusVir/SharpVk) 0.4.2. |
+| **SkiaSharp.Direct3D.Vortice** | Direct3D 12 GPU backend. net8.0 only. Windows-only due to [Vortice.Direct3D12](https://github.com/amerkoleci/Vortice.Windows) 3.5.0 dependency. |
 
 ---
 
@@ -101,36 +132,6 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 
 ---
 
-## Views Packages
-
-Platform-specific UI controls for rendering SkiaSharp content. These provide ready-to-use views/controls that handle the platform-specific rendering surface setup.
-
-| Package | Description |
-|---------|-------------|
-| **SkiaSharp.Views** | Platform views for iOS, tvOS, macOS, Mac Catalyst, Android, and Tizen. Provides `SKCanvasView` and `SKGLView`. |
-| **SkiaSharp.Views.Desktop.Common** | Common base classes for desktop views (netstandard2.0+, net462+). |
-| **SkiaSharp.Views.WindowsForms** | Windows Forms controls: `SKControl`, `SKGLControl`. net462+ and net6.0-windows+. Depends on OpenTK. |
-| **SkiaSharp.Views.WPF** | WPF control: `SKElement`. net462+ and net6.0-windows+. Depends on OpenTK. |
-| **SkiaSharp.Views.WinUI** | WinUI 3 controls: `SKXamlCanvas`, `SKSwapChainPanel`. net6.0-windows+. Depends on Microsoft.WindowsAppSDK. Auto-includes SkiaSharp.NativeAssets.WinUI. |
-| **SkiaSharp.Views.Gtk3** | GTK# 3 control: `SKDrawingArea`. netstandard2.0+. For Linux desktop apps. Depends on GtkSharp. |
-| **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+. Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
-| **SkiaSharp.Views.Maui.Core** | .NET MAUI shared view infrastructure. net8.0+. Depends on Microsoft.Maui.Core. |
-| **SkiaSharp.Views.Maui.Controls** | .NET MAUI controls: `SKCanvasView`, `SKGLView`. net8.0+. Depends on SkiaSharp.Views.Maui.Core and Microsoft.Maui.Controls. |
-| **SkiaSharp.Views.Uno.WinUI** | Uno Platform controls: `SKXamlCanvas`, `SKSwapChainPanel`. net8.0+. Depends on Uno.WinUI. Auto-includes SkiaSharp.NativeAssets.WebAssembly for WASM targets and SkiaSharp.Views.WinUI for Windows targets. |
-
----
-
-## GPU Backend Packages
-
-Optional packages for hardware-accelerated rendering via specific GPU APIs.
-
-| Package | Description |
-|---------|-------------|
-| **SkiaSharp.Vulkan.SharpVk** | Vulkan GPU backend. netstandard2.0+, net462+, net6.0+. Depends on [SharpVk](https://github.com/FacticiusVir/SharpVk) 0.4.2. |
-| **SkiaSharp.Direct3D.Vortice** | Direct3D 12 GPU backend. net8.0 only. Windows-only due to [Vortice.Direct3D12](https://github.com/amerkoleci/Vortice.Windows) 3.5.0 dependency. |
-
----
-
 ## Deployment & Containers
 
 ### Application vs Library References
@@ -170,6 +171,50 @@ These packages are no longer actively maintained. Use the listed replacement.
 | SkiaSharp.Views.Gtk2 | SkiaSharp.Views.Gtk3 |
 | SkiaSharp.Views.Uno | SkiaSharp.Views.Uno.WinUI |
 | SkiaSharp.Views.Maui.Controls.Compatibility | SkiaSharp.Views.Maui.Controls |
+
+## Troubleshooting: Native Loading
+
+### Understanding DllNotFoundException on Linux
+
+On Linux, `DllNotFoundException` errors from `dlopen()` have two distinct failure modes with different root causes:
+
+| Error pattern | What happened | Fix |
+|---------------|---------------|-----|
+| `libSkiaSharp.so: cannot open shared object file: No such file or directory` | The `.so` file was **not found** at any search path | Add `SkiaSharp.NativeAssets.Linux` (or `.NoDependencies`) as a `PackageReference` in the **executable** project, not a library |
+| `libfontconfig.so.1: cannot open shared object file` (or another dependency OF libSkiaSharp) | A `.so` **was found** and loaded, but it has a dependency that isn't installed | Either install the missing library (e.g. fontconfig) or switch to `NoDependencies` (see below) |
+
+### Wrong Binary Deployed
+
+`SkiaSharp.NativeAssets.Linux.NoDependencies` ships a `.so` with **zero** external dependencies — only libc/libm/libpthread/libdl. If you reference `NoDependencies` but see errors about missing fontconfig, uuid, or other libraries:
+
+1. The binary being loaded is **not** from `NoDependencies` — it's from `NativeAssets.Linux` (or another source)
+2. Check for a transitive `SkiaSharp.NativeAssets.Linux` reference conflicting with `NoDependencies`
+3. Check that `NoDependencies` is in the **executable** project (not a library project)
+4. Check your container build tool (e.g. .NET Aspire, Docker SDK) — it may deploy the wrong RID variant
+
+You can verify which binary is loaded by running `ldd` on the `libSkiaSharp.so` in your publish output. The `NoDependencies` variant will show only libc/libm/libpthread/libdl.
+
+### Reading .NET Native Loading Errors
+
+The .NET runtime tries multiple paths to load a native library and reports ALL failures. Focus on the **first** error — subsequent lines are fallback attempts:
+
+```
+System.DllNotFoundException: Unable to load shared library 'libSkiaSharp'
+  libfontconfig.so.1: cannot open shared object file     ← LOOK HERE (binary found, dependency missing)
+  /usr/share/dotnet/.../libSkiaSharp.so: cannot open      ← fallback path, file not found
+  /app/liblibSkiaSharp.so: cannot open                    ← fallback path, file not found
+```
+
+### Container Deployment Checklist
+
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| `DllNotFoundException: libSkiaSharp` | Native binary not in output | Add `NativeAssets.Linux.NoDependencies` (or `.Linux`) as a direct `PackageReference` in the application project |
+| `libfontconfig.so.1: cannot open` | Using `NativeAssets.Linux` in a minimal container | Switch to `NoDependencies`, or install fontconfig in your Dockerfile |
+| Wrong binary for container arch | RID mismatch (glibc vs musl) | Alpine needs `linux-musl-*` RIDs — `NoDependencies` includes both glibc and musl variants |
+| Trimming removes native deps | .NET trimmer strips unused assemblies | Add the NativeAssets package as a direct `PackageReference` |
+
+---
 
 ## Related Documentation
 
