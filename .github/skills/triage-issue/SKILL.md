@@ -63,8 +63,8 @@ Consult docs **when relevant signals are present** — not every issue needs res
 
 | Signal in issue | Source to consult |
 |----------------|-------------------|
-| NativeAssets, DllNotFoundException, container, WASM | `documentation/packages.md` |
-| Platform-specific quirks, common traps | `references/skia-patterns.md` |
+| NativeAssets, DllNotFoundException, container, WASM | [documentation/packages.md](../../documentation/packages.md) |
+| Platform-specific quirks, common traps | [references/skia-patterns.md](references/skia-patterns.md) |
 | Specific SkiaSharp types or methods | `docs/SkiaSharpAPI/*.xml` |
 | How-to about drawing, paths, bitmaps | `.docs/docs/docs/` |
 | Non-SkiaSharp tech (MAUI, Blazor, WPF) | `mslearn`/`microsoft_docs_search` MCP tool |
@@ -75,11 +75,11 @@ Consult docs **when relevant signals are present** — not every issue needs res
 
 ### 1. First triage in session
 
-Skim `references/triage-schema.json` for field definitions and allowed values, and `references/triage-examples.md` for calibration. After that, rely on the schema validator.
+Skim [references/triage-schema.json](references/triage-schema.json) for field definitions and allowed values, and [references/triage-examples.md](references/triage-examples.md) for calibration. After that, rely on the schema validator.
 
 ### 2. Classify and reason
 
-Write brief internal analysis (3-5 sentences), then classify the issue type. After classification, read `references/research-by-type.md` for type-specific research guidance. Conduct the research indicated before generating JSON.
+Write brief internal analysis (3-5 sentences), then classify the issue type. After classification, read [references/research-by-type.md](references/research-by-type.md) for type-specific research guidance. Conduct the research indicated before generating JSON.
 
 ### 3. Generate JSON
 
@@ -116,7 +116,7 @@ Null only for duplicates or truly abandoned issues.
 
 #### suggestedResponse.draft
 
-When generating a draft, read `references/response-guidelines.md` for tone and structure. Follow acknowledge → analyze → ask. Max 2000 chars, inline markdown.
+When generating a draft, read [references/response-guidelines.md](references/response-guidelines.md) for tone and structure. Follow acknowledge → analyze → ask. Max 2000 chars, inline markdown.
 
 #### Confidence scoring
 
@@ -185,13 +185,13 @@ On push conflict, rebase up to 3 times. On merge conflict, ask user whether to k
 
 | File | When to read |
 |------|--------------|
-| `references/triage-schema.json` | First triage in session — field definitions, enums, cross-field rules |
-| `references/triage-examples.md` | First triage in session — full JSON examples for calibration |
-| `references/research-by-type.md` | After type classification — type-specific research checklists |
-| `references/skia-patterns.md` | During research — platform quirks, common traps, diagnostic heuristics |
-| `references/response-guidelines.md` | When generating `suggestedResponse.draft` — tone, structure, good/bad examples |
-| `references/labels.md` | If unsure about label values — taxonomy and cardinality rules |
-| `documentation/packages.md` | When issue involves NativeAssets, DllNotFoundException, containers, WASM, deployment |
+| [references/triage-schema.json](references/triage-schema.json) | First triage in session — field definitions, enums, cross-field rules |
+| [references/triage-examples.md](references/triage-examples.md) | First triage in session — full JSON examples for calibration |
+| [references/research-by-type.md](references/research-by-type.md) | After type classification — type-specific research checklists |
+| [references/skia-patterns.md](references/skia-patterns.md) | During research — platform quirks, common traps, diagnostic heuristics |
+| [references/response-guidelines.md](references/response-guidelines.md) | When generating `suggestedResponse.draft` — tone, structure, good/bad examples |
+| [references/labels.md](references/labels.md) | If unsure about label values — taxonomy and cardinality rules |
+| [documentation/packages.md](../../documentation/packages.md) | When issue involves NativeAssets, DllNotFoundException, containers, WASM, deployment |
 
 ## Scripts
 

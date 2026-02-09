@@ -2,7 +2,7 @@
 
 AI-specific domain knowledge for triage. Contains heuristics, platform quirks, and common traps that can't be inferred from general .NET knowledge.
 
-For factual troubleshooting content (dlopen modes, container checklist), see `documentation/packages.md#troubleshooting-native-loading`.
+For factual troubleshooting content (dlopen modes, container checklist), see [documentation/packages.md](../../documentation/packages.md#troubleshooting-native-loading).
 
 ## Native Loading Heuristics
 
@@ -52,7 +52,7 @@ When user claims `NoDependencies` but error shows `libfontconfig.so.1`:
 ## Common Traps
 
 ### "It works locally but fails in container/CI"
-Almost always a deployment issue: wrong NativeAssets package, missing native binary in output, or RID mismatch. Check `documentation/packages.md#container-deployment-checklist`.
+Almost always a deployment issue: wrong NativeAssets package, missing native binary in output, or RID mismatch. Check [documentation/packages.md](../../documentation/packages.md#container-deployment-checklist).
 
 ### "DllNotFoundException after publishing"
 Self-contained publish should include native binaries. If not: NativeAssets package is in a library project (not the executable), or trimming removed it. Direct `PackageReference` in the application project fixes this.
