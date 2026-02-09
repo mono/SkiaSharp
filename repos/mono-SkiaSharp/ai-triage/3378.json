@@ -1,0 +1,261 @@
+{
+  "schemaVersion": "1.0",
+  "number": 3378,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-07-22T12:00:00Z",
+  "summary": "Memory leak in ToHarfBuzzBlob() — SKStreamAsset not disposed in the non-memory-mapped code path",
+  "type": {
+    "value": "bug",
+    "confidence": 0.95,
+    "reason": "Reporter identifies a code path in ToHarfBuzzBlob() where SKStreamAsset is never disposed, causing a memory leak. Code inspection confirms the else branch at BlobExtensions.cs:30 frees the copied buffer but never disposes the source SKStreamAsset."
+  },
+  "area": {
+    "value": "SkiaSharp.HarfBuzz",
+    "confidence": 0.95,
+    "reason": "The bug is in BlobExtensions.ToHarfBuzzBlob() in the SkiaSharp.HarfBuzz package, and is triggered through SKShaper's constructor."
+  },
+  "backends": null,
+  "platforms": [
+    {
+      "value": "Android",
+      "confidence": 0.85,
+      "reason": "Reporter says 'First observed bug on Android'. The bug is cross-platform in code, but Android was the first observation point."
+    },
+    {
+      "value": "Windows-Classic",
+      "confidence": 0.75,
+      "reason": "Reporter says 'seems to be a problem also on Windows' and selected Windows as platform. Lower confidence because phrased tentatively."
+    }
+  ],
+  "tenets": [
+    {
+      "value": "reliability",
+      "confidence": 0.90,
+      "reason": "Memory leak that grows with each SKShaper construction/disposal cycle. Over time this degrades application reliability and can lead to OOM."
+    }
+  ],
+  "partner": null,
+  "regression": null,
+  "fixStatus": null,
+  "bugSignals": {
+    "hasCrash": false,
+    "hasStackTrace": false,
+    "reproQuality": "partial",
+    "hasScreenshot": false,
+    "hasWorkaround": false,
+    "workaroundSummary": null,
+    "severity": "medium",
+    "severityReason": "Memory leak — not a crash, but will degrade reliability over time, especially on memory-constrained devices like Android. Severity is medium because the leak occurs per SKShaper construction, so apps creating/disposing shapers frequently (e.g., text rendering engines) will be impacted."
+  },
+  "reproEvidence": {
+    "codeSnippets": [
+      {
+        "language": "csharp",
+        "code": "public TextSegmentShaper(SKTypeface typeface, SKPaint fromPaint)\n{\n    Paint = new SKPaint() { ... };\n    Shaper = new SKShaper(typeface);\n}\n\nprotected virtual void Dispose(bool disposing)\n{\n    if (!disposedValue)\n    {\n        Paint?.Dispose();\n        Shaper?.Dispose();\n        Paint = null;\n        Shaper = null;\n        disposedValue = true;\n    }\n}",
+        "context": "User's wrapper class that creates and disposes SKShaper. Even with proper disposal, SKStreamAsset leaks inside SKShaper constructor via ToHarfBuzzBlob()."
+      }
+    ],
+    "stepsToReproduce": [
+      "Create a new SKShaper(typeface) — internally calls Typeface.OpenStream().ToHarfBuzzBlob()",
+      "If the SKStreamAsset returned by OpenStream() does not have a memory-mapped base (GetMemoryBase() returns IntPtr.Zero), the else branch in ToHarfBuzzBlob copies the data but never disposes the original SKStreamAsset",
+      "Dispose the SKShaper — the internal HarfBuzz Blob and Buffer are disposed, but the leaked SKStreamAsset remains unreleased",
+      "Repeat to observe growing memory usage"
+    ],
+    "environmentDetails": "SkiaSharp 3.116.0, Visual Studio Windows, first observed on Android, also reproduced on Windows"
+  },
+  "versionAnalysis": {
+    "mentionedVersions": ["3.116.0"],
+    "era": "modern",
+    "currentRelevance": "likely",
+    "reason": "The code in BlobExtensions.cs and SKShaper.cs has not changed in recent versions. The else branch leak has been present since the method was introduced. Still applicable to latest."
+  },
+  "actionability": {
+    "suggestedAction": "needs-investigation",
+    "confidence": 0.90,
+    "reason": "Code review confirms the leak exists in the else branch of ToHarfBuzzBlob(). The fix is straightforward — add asset.Dispose() in the else branch after reading. Needs engineering to implement and test.",
+    "requiresHumanReview": false,
+    "closeable": false,
+    "closeReason": null,
+    "duplicateOf": null,
+    "abandoned": false,
+    "abandonedReason": null
+  },
+  "suggestedResponse": {
+    "responseType": "answer",
+    "confidence": 0.85,
+    "reason": "The root cause can be confirmed from code inspection and a helpful response acknowledging the finding is appropriate.",
+    "draft": "Thanks for the detailed report and for pinpointing the likely root cause — that's a really helpful lead.\n\nLooking at `BlobExtensions.ToHarfBuzzBlob()`, I can confirm the issue: when `GetMemoryBase()` returns `IntPtr.Zero` (the `else` branch), the method copies the stream data into a new allocation and sets up a release callback for that allocation, but the original `SKStreamAsset` is never disposed. In contrast, the `if` branch correctly captures the asset in the Blob's release callback via `() => asset.Dispose()`.\n\nThis means every `new SKShaper(typeface)` call leaks one `SKStreamAsset` when the typeface stream isn't memory-mapped — which explains the growing memory usage you're seeing.\n\nWe'll look into getting a fix in for this. The fix would be adding `asset.Dispose()` in the else branch after the data has been read."
+  },
+  "analysisNotes": {
+    "summary": "Confirmed memory leak in BlobExtensions.ToHarfBuzzBlob(). The else branch (non-memory-mapped path) copies data from SKStreamAsset but never disposes it. The if branch correctly defers disposal via the Blob's release callback. Every SKShaper construction leaks one SKStreamAsset when the typeface stream isn't memory-mapped.",
+    "keySignals": [
+      {
+        "text": "I think the bug is in ToHarfBuzzBlob() extension - it doesn't dispose SKStreamAsset in all paths",
+        "source": "body",
+        "interpretation": "Reporter correctly identified the root cause method and the asymmetric disposal pattern between the two branches.",
+        "supportedFields": ["type", "area"]
+      },
+      {
+        "text": "It seems that this code leaks SKStreamAssets even if properly disposed",
+        "source": "body",
+        "interpretation": "Reporter's wrapper class disposes SKShaper correctly, but the leak is internal to the SKShaper/BlobExtensions code path.",
+        "supportedFields": ["type", "bugSignals.reproQuality"]
+      },
+      {
+        "text": "First observed bug on Android, but seems to be a problem also on Windows",
+        "source": "body",
+        "interpretation": "Cross-platform issue, first noticed on memory-constrained Android. The bug is in managed C# code so it affects all platforms.",
+        "supportedFields": ["platforms"]
+      },
+      {
+        "text": "blob = new Blob(ptr, size, MemoryMode.ReadOnly, () => Marshal.FreeCoTaskMem(ptr));",
+        "source": "BlobExtensions.cs:30",
+        "interpretation": "The else branch release callback only frees the copied buffer, never disposes the source SKStreamAsset. Compare with line 24 where the if branch callback calls asset.Dispose().",
+        "supportedFields": ["type", "bugSignals"]
+      },
+      {
+        "text": "using (var blob = Typeface.OpenStream(out index).ToHarfBuzzBlob())",
+        "source": "SKShaper.cs:20",
+        "interpretation": "The SKStreamAsset from OpenStream() is passed directly to ToHarfBuzzBlob() without any independent using/disposal. If ToHarfBuzzBlob doesn't dispose it, nobody does.",
+        "supportedFields": ["area", "bugSignals"]
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "bug",
+        "expandedReason": "Code inspection confirms a resource leak where SKStreamAsset is not disposed in one of two code paths. This is broken behavior — resources should be released on disposal.",
+        "alternatives": [
+          {
+            "value": "enhancement",
+            "whyRejected": "This is not an improvement request — it's a genuine resource management defect where Dispose() fails to release all owned resources."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "SkiaSharp.HarfBuzz",
+        "expandedReason": "The bug is in BlobExtensions.cs and manifests through SKShaper.cs, both in the SkiaSharp.HarfBuzz package. The existing label area/SkiaSharp is less specific — this is squarely in the HarfBuzz integration layer.",
+        "alternatives": [
+          {
+            "value": "SkiaSharp",
+            "whyRejected": "While SKStreamAsset is a core SkiaSharp type, the leak is in SkiaSharp.HarfBuzz's BlobExtensions, not in the core library."
+          }
+        ]
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "medium",
+        "expandedReason": "Memory leak that grows with each SKShaper construction. Not a crash, but on mobile devices (Android) with constrained memory, repeated text shaping operations could eventually cause OOM. Severity is medium because a workaround exists (minimizing SKShaper recreations) and the per-instance leak size is bounded.",
+        "alternatives": [
+          {
+            "value": "high",
+            "whyRejected": "No crash or data loss. The leak is per-SKShaper-construction, not per-frame, so the growth rate is typically manageable."
+          },
+          {
+            "value": "low",
+            "whyRejected": "On mobile platforms with tight memory budgets, resource leaks are more than cosmetic — they can cause OOM kills over time."
+          }
+        ]
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The root cause is identified and the fix appears straightforward (dispose asset in the else branch), but it needs engineering to implement, test, and verify there are no ownership/lifetime complications with the Blob callback."
+      }
+    ],
+    "docsConsulted": [
+      {
+        "path": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/BlobExtensions.cs",
+        "relevance": "Contains the bug — confirmed the else branch does not dispose SKStreamAsset while the if branch does.",
+        "usedFor": ["type", "bugSignals", "resolutionAnalysis"]
+      },
+      {
+        "path": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs",
+        "relevance": "Shows how ToHarfBuzzBlob is called — the SKStreamAsset from OpenStream() has no independent disposal path outside of ToHarfBuzzBlob.",
+        "usedFor": ["area", "bugSignals"]
+      }
+    ],
+    "docsNotConsulted": "No need to consult packages.md (not a deployment/loading issue), skia-patterns.md (not a platform quirk), or rendering docs (not a backend-specific issue).",
+    "uncertainties": [
+      "Whether the title 'SKShader' is a typo for 'SKShaper' — the body exclusively discusses SKShaper/ToHarfBuzzBlob, not SKShader",
+      "How often the else branch (non-memory-mapped) is actually taken vs the if branch — this affects real-world impact",
+      "Whether there are other callers of ToHarfBuzzBlob() beyond SKShaper that also leak"
+    ],
+    "assumptions": [
+      "Assumed the title 'SKShader' is a typo for 'SKShaper' based on the body content exclusively discussing SKShaper and ToHarfBuzzBlob"
+    ]
+  },
+  "resolutionAnalysis": {
+    "hypothesis": "BlobExtensions.ToHarfBuzzBlob() has asymmetric disposal: the memory-mapped path (if branch) correctly disposes the SKStreamAsset via the Blob's release callback, but the copy path (else branch) only frees the copied memory allocation and never disposes the source SKStreamAsset. This causes a native memory leak for every SKShaper construction when the typeface stream isn't memory-mapped.",
+    "researchDone": [
+      "Inspected BlobExtensions.ToHarfBuzzBlob() — confirmed else branch lacks asset.Dispose()",
+      "Inspected SKShaper constructor — confirmed OpenStream() result has no independent disposal",
+      "Searched GitHub issues for duplicates of SKStreamAsset memory leak — none found",
+      "Checked if branch disposal pattern to confirm correct behavior as reference"
+    ],
+    "proposals": [
+      {
+        "title": "Dispose SKStreamAsset in else branch after reading",
+        "description": "Add asset.Dispose() in the else branch of ToHarfBuzzBlob() after reading the data, since the data has been fully copied and the asset is no longer needed.",
+        "steps": [
+          "In BlobExtensions.cs, add asset.Dispose() after the asset.Read() call in the else branch (after line 29)",
+          "Run existing SKShaper tests to verify no regression",
+          "Add a test that creates/disposes multiple SKShapers and verifies no leaked handles"
+        ],
+        "pros": [
+          "Minimal one-line fix",
+          "Mirrors the if-branch pattern where asset lifetime is managed",
+          "No API or behavioral changes"
+        ],
+        "cons": [
+          "Need to verify no other code holds a reference to the asset after ToHarfBuzzBlob returns"
+        ],
+        "confidence": 0.90,
+        "effort": "low"
+      },
+      {
+        "title": "Use using statement for asset in SKShaper constructor",
+        "description": "Wrap the OpenStream() call in SKShaper.cs with a using statement so the SKStreamAsset is always disposed after the blob is created, regardless of which branch ToHarfBuzzBlob takes.",
+        "steps": [
+          "In SKShaper.cs, change line 20 to: using var stream = Typeface.OpenStream(out index);",
+          "Then: using var blob = stream.ToHarfBuzzBlob();",
+          "Remove the disposal responsibility from BlobExtensions (but keep the if-branch callback for the memory-mapped case where Blob needs the asset alive)",
+          "Run tests"
+        ],
+        "pros": [
+          "Disposal responsibility is clear at the call site",
+          "Works regardless of which ToHarfBuzzBlob branch executes"
+        ],
+        "cons": [
+          "Conflicts with the if-branch pattern where Blob's release callback owns the asset lifetime — would cause double-dispose in the memory-mapped case",
+          "Requires reworking the if-branch callback to not dispose the asset"
+        ],
+        "confidence": 0.60,
+        "effort": "medium"
+      },
+      {
+        "title": "Always dispose asset in Blob release callback",
+        "description": "Modify the else branch to include asset disposal in the Blob's release callback alongside FreeCoTaskMem, making both branches consistently dispose the asset via the Blob's lifecycle.",
+        "steps": [
+          "Change else branch callback to: () => { Marshal.FreeCoTaskMem(ptr); asset.Dispose(); }",
+          "This ensures the asset lives as long as the Blob in both branches",
+          "Run tests to verify"
+        ],
+        "pros": [
+          "Both branches have symmetric disposal patterns",
+          "Asset lifetime is tied to Blob lifetime in both cases",
+          "Simple change"
+        ],
+        "cons": [
+          "Asset stays alive longer than necessary in the else branch (data was already copied)",
+          "Slightly more memory held until Blob is GC'd/disposed"
+        ],
+        "confidence": 0.85,
+        "effort": "low"
+      }
+    ],
+    "recommendedProposal": "Dispose SKStreamAsset in else branch after reading",
+    "recommendedReason": "Simplest fix — the data has already been fully copied into the allocated buffer, so the SKStreamAsset is no longer needed. Disposing it immediately after Read() is the most memory-efficient approach and requires only a single line change."
+  }
+}

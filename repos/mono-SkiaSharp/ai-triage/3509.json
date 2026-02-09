@@ -1,0 +1,263 @@
+{
+  "schemaVersion": "1.0",
+  "number": 3509,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-02-09T21:30:00Z",
+  "summary": "Vague report of images not appearing on screen — no code, no repro, no details provided",
+  "type": {
+    "value": "bug",
+    "confidence": 0.55,
+    "reason": "Title uses [BUG] prefix and type/bug label is applied, but the body contains no evidence of a bug — just a single vague sentence with no code, no error, no expected/actual behavior. Could equally be a usage question."
+  },
+  "area": {
+    "value": "SkiaSharp",
+    "confidence": 0.40,
+    "reason": "No specific API, class, or component mentioned. 'Images not appearing' could involve core SkiaSharp, Views, or even a MAUI/platform rendering issue. Defaulting to SkiaSharp as the broadest applicable area."
+  },
+  "backends": null,
+  "platforms": [
+    {
+      "value": "macOS",
+      "confidence": 0.75,
+      "reason": "Reporter selected 'macOS' in the platform field, though IDE is listed as 'Visual Studio (Windows)' which is contradictory — may be running VS for Mac or cross-compiling."
+    }
+  ],
+  "tenets": null,
+  "partner": null,
+  "regression": {
+    "isRegression": true,
+    "confidence": 0.50,
+    "reason": "Reporter listed 'Last Known Good Version' as 2.88.9, implying it worked before. However, no details confirm this — the field may have been filled mechanically from the template defaults.",
+    "workedInVersion": "2.88.9",
+    "brokeInVersion": "3.116.0"
+  },
+  "fixStatus": null,
+  "bugSignals": {
+    "hasCrash": false,
+    "hasStackTrace": false,
+    "reproQuality": "none",
+    "hasScreenshot": false,
+    "hasWorkaround": false,
+    "workaroundSummary": null,
+    "severity": "low",
+    "severityReason": "No crash, no data loss, no stack trace. Description is too vague to assess actual impact. 'Images not appearing' could range from a rendering bug to a simple API misuse."
+  },
+  "reproEvidence": {
+    "repoLinks": [
+      {
+        "url": "https://github.com/user/repo/tree/bug-123",
+        "description": "Placeholder repo link from the issue template — not an actual reproduction project."
+      }
+    ],
+    "environmentDetails": "SkiaSharp 3.116.0, Visual Studio (Windows), macOS. No OS version, no device info, no .NET version specified."
+  },
+  "versionAnalysis": {
+    "mentionedVersions": ["3.116.0", "2.88.9"],
+    "era": "modern",
+    "currentRelevance": "unknown",
+    "reason": "Version 3.116.0 is the current release. Last known good is 2.88.9 which is the previous major era. Without details on what changed or what API is involved, relevance cannot be determined.",
+    "migrationPath": null
+  },
+  "actionability": {
+    "suggestedAction": "request-info",
+    "confidence": 0.92,
+    "reason": "The issue contains essentially no actionable information — no code, no expected/actual behavior, no screenshots, no error messages. Cannot investigate without basic details.",
+    "requiresHumanReview": true,
+    "closeable": false,
+    "closeReason": null,
+    "duplicateOf": null,
+    "missingInfo": [
+      "reproduction-steps",
+      "expected-behavior",
+      "actual-behavior",
+      "sample-project",
+      "stack-trace",
+      "platform"
+    ],
+    "abandoned": false,
+    "abandonedReason": null
+  },
+  "suggestedResponse": {
+    "responseType": "request-info",
+    "confidence": 0.90,
+    "reason": "Almost every required detail is missing. Need code, expected behavior, actual behavior, and ideally a minimal repro project before any investigation is possible.",
+    "draft": "Thanks for filing this. To look into the images not appearing, we'd need a bit more detail:\n\n- A minimal code snippet or sample project showing how you're loading and displaying images\n- What you expect to see vs. what actually happens (blank canvas? exception? partial rendering?)\n- Any error output or warnings in the console/log\n\nThe version info is helpful — if this worked in 2.88.9 but not 3.116.0, a small repro project would let us narrow down the regression quickly. Would you be able to share one?"
+  },
+  "analysisNotes": {
+    "summary": "This is an extremely low-information bug report. The body contains one vague sentence ('I have some code that puts things on the screen, but nothing appears'), template placeholder code blocks, and no expected or actual behavior. Filed by mattleibow (a project contributor). The issue cannot be investigated in its current state.",
+    "keySignals": [
+      {
+        "text": "I have some code that puts things on the screen, but nothing appears.",
+        "source": "body",
+        "interpretation": "The only substantive sentence in the issue. Too vague to determine if this is a rendering bug, API misuse, or platform issue. No specific API or behavior mentioned.",
+        "supportedFields": ["type"]
+      },
+      {
+        "text": "// some C# code here",
+        "source": "body",
+        "interpretation": "Template placeholder — no actual code was provided. The code section is completely empty of real content.",
+        "supportedFields": ["bugSignals.reproQuality", "actionability"]
+      },
+      {
+        "text": "Expected Behavior: _No response_; Actual Behavior: _No response_",
+        "source": "body",
+        "interpretation": "Reporter did not fill in expected or actual behavior sections, making it impossible to understand what's broken.",
+        "supportedFields": ["actionability", "bugSignals.reproQuality"]
+      },
+      {
+        "text": "Last Known Good Version: 2.88.9",
+        "source": "body",
+        "interpretation": "Suggests a regression from 2.x to 3.x, but without details this could be a template default selection rather than confirmed regression testing.",
+        "supportedFields": ["regression"]
+      },
+      {
+        "text": "IDE: Visual Studio (Windows), Platform: macOS",
+        "source": "body",
+        "interpretation": "Contradictory — Visual Studio for Windows but targeting macOS. Could mean VS for Mac, remote debugging, or cross-compilation. Adds uncertainty to platform classification.",
+        "supportedFields": ["platforms"]
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "bug",
+        "expandedReason": "The [BUG] title prefix and type/bug label indicate the reporter intended this as a bug. However, with no error, no crash, and no actual behavior described, this could equally be a usage question. Confidence is low (0.55).",
+        "alternatives": [
+          {
+            "value": "question",
+            "whyRejected": "Reporter explicitly chose the bug template and the title says [BUG]. Deferring to their classification despite insufficient evidence."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "SkiaSharp",
+        "expandedReason": "No specific component, class, or API is mentioned. 'Images not appearing' is too generic to narrow down. Using SkiaSharp as the broadest default.",
+        "alternatives": [
+          {
+            "value": "SkiaSharp.Views",
+            "whyRejected": "'Appearing on screen' could imply a view component, but this is speculative without any code."
+          },
+          {
+            "value": "SkiaSharp.Views.Maui",
+            "whyRejected": "No mention of MAUI, Xamarin, or any UI framework."
+          }
+        ]
+      },
+      {
+        "field": "platforms",
+        "chosen": "macOS",
+        "expandedReason": "Reporter selected macOS in the platform field. The contradiction with 'Visual Studio (Windows)' IDE lowers confidence but the explicit platform selection is the best signal available."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "low",
+        "expandedReason": "No crash, no data loss, no stack trace. The vague description of 'images not appearing' could range from cosmetic to critical, but without evidence, defaulting to low.",
+        "alternatives": [
+          {
+            "value": "medium",
+            "whyRejected": "No evidence of functional breakage beyond the vague claim. Cannot justify medium without more detail."
+          }
+        ]
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "request-info",
+        "expandedReason": "The issue is missing nearly every required detail: no code, no expected behavior, no actual behavior, no error messages, no screenshots. Investigation is impossible without more information.",
+        "alternatives": [
+          {
+            "value": "needs-investigation",
+            "whyRejected": "Nothing to investigate — there's no code, no error, and no specific behavior described."
+          },
+          {
+            "value": "convert-to-discussion",
+            "whyRejected": "Reporter chose the bug template, so giving them a chance to provide details before converting."
+          }
+        ]
+      }
+    ],
+    "docsConsulted": [
+      {
+        "path": "references/triage-schema.json",
+        "relevance": "Referenced for field definitions, allowed enum values, and cross-field validation rules.",
+        "usedFor": ["type", "area", "actionability", "bugSignals"]
+      },
+      {
+        "path": "references/triage-examples.md",
+        "relevance": "Calibrated output format and severity/confidence levels against example issues.",
+        "usedFor": ["type", "bugSignals.severity", "actionability"]
+      },
+      {
+        "path": "references/research-by-type.md",
+        "relevance": "Checked bug research checklist. Most research steps are inapplicable due to lack of information in the issue.",
+        "usedFor": ["actionability"]
+      }
+    ],
+    "docsNotConsulted": "Did not consult documentation/packages.md, references/skia-patterns.md, or API docs because the issue provides no specific technical details (no API names, no error messages, no platform-specific symptoms) that would make those references relevant.",
+    "uncertainties": [
+      "Whether this is a real bug report or a test/template issue filed by the maintainer",
+      "What 'images not appearing' actually means — blank canvas, missing file, rendering error, or display issue",
+      "Whether the IDE/platform contradiction (VS Windows + macOS) indicates cross-compilation or a form-filling error",
+      "Whether the 2.88.9 last-known-good version is a confirmed regression or a template default"
+    ],
+    "assumptions": [
+      "Assumed the reporter intends this as a genuine bug report despite the lack of detail, because the type/bug label was applied",
+      "Assumed macOS is the target platform despite the VS Windows IDE selection, because the platform field was explicitly chosen"
+    ]
+  },
+  "resolutionAnalysis": {
+    "hypothesis": "The reporter is experiencing images not rendering in a SkiaSharp application on macOS, possibly a regression from 2.88.9 to 3.116.0. Without code or details, the root cause could be anything from incorrect API usage to a genuine rendering regression.",
+    "researchDone": [
+      "Reviewed issue body — found no actionable technical details",
+      "Checked for code snippets — only template placeholders present",
+      "Noted version gap from 2.88.9 to 3.116.0 — major version jump with many breaking changes",
+      "Checked for similar open issues — cannot narrow search without specific symptoms"
+    ],
+    "proposals": [
+      {
+        "title": "Request minimal reproduction project",
+        "description": "Ask the reporter to provide a minimal project or code snippet that demonstrates the issue, along with expected vs actual behavior.",
+        "steps": [
+          "Comment requesting a minimal repro project with specific code that fails",
+          "Ask for expected vs actual behavior description",
+          "Ask for any console output or error messages",
+          "Wait for response before investigating further"
+        ],
+        "pros": ["Gets the essential information needed for any investigation", "Respects reporter's time by asking once"],
+        "cons": ["Delays resolution until reporter responds", "Reporter may not respond"],
+        "confidence": 0.85,
+        "effort": "low"
+      },
+      {
+        "title": "Check 2.x to 3.x migration breaking changes",
+        "description": "If this is a regression from 2.88.9 to 3.116.0, review the migration guide and breaking changes between these versions for image-related APIs.",
+        "steps": [
+          "Review SkiaSharp 3.x migration guide for image API changes",
+          "Check if SKBitmap/SKImage APIs changed between versions",
+          "Identify common migration pitfalls for image loading/rendering",
+          "Share relevant migration notes with reporter"
+        ],
+        "pros": ["Addresses the most likely cause if this is a real regression", "Proactive — helps even before full repro"],
+        "cons": ["Speculative without knowing which APIs are involved", "May not apply if it's a usage error"],
+        "confidence": 0.40,
+        "effort": "medium"
+      },
+      {
+        "title": "Close as incomplete after timeout",
+        "description": "If no response after a reasonable period (e.g., 30 days), close the issue as incomplete with a note that it can be reopened with more details.",
+        "steps": [
+          "Post request-info comment",
+          "Wait 30 days for response",
+          "If no response, close with 'incomplete' label",
+          "Note that issue can be reopened with reproduction details"
+        ],
+        "pros": ["Keeps issue tracker clean", "Standard process for incomplete reports"],
+        "cons": ["May lose a valid bug report if reporter is busy", "Feels dismissive"],
+        "confidence": 0.70,
+        "effort": "low"
+      }
+    ],
+    "recommendedProposal": "Request minimal reproduction project",
+    "recommendedReason": "The single most effective action is getting actual code and behavior details. Everything else is speculative without this information."
+  }
+}

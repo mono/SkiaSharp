@@ -2,21 +2,27 @@
   "schemaVersion": "1.0",
   "number": 3385,
   "repo": "mono/SkiaSharp",
-  "analyzedAt": "2026-02-09T21:18:00Z",
-  "summary": "Request for Gray16 (16-bit grayscale) SKColorType, which does not exist in upstream Skia",
+  "analyzedAt": "2025-10-15T02:00:00Z",
+  "summary": "Feature request: add SKColorType.Gray16 for 16-bit grayscale PNG support",
   "type": {
     "value": "feature-request",
-    "confidence": 0.97,
-    "reason": "Explicitly filed as [FEATURE], labeled type/feature-request, requests adding a new enum value (SKColorType.Gray16) that doesn't exist."
+    "confidence": 0.98,
+    "reason": "Issue uses the feature request template and explicitly asks to 'add SkColorType.Gray16'. No broken behavior reported — this capability does not exist."
   },
   "area": {
     "value": "SkiaSharp",
-    "confidence": 0.9,
-    "reason": "SKColorType is a core SkiaSharp enum. The request involves the core pixel format enumeration, not views, native loading, or any other subsystem."
+    "confidence": 0.95,
+    "reason": "SKColorType is a core SkiaSharp enum defined in binding/SkiaSharp/Definitions.cs. This is a core API surface request."
   },
   "backends": null,
   "platforms": null,
-  "tenets": null,
+  "tenets": [
+    {
+      "value": "compatibility",
+      "confidence": 0.75,
+      "reason": "Request relates to supporting a standard image format (16-bit grayscale PNG) that other imaging libraries handle."
+    }
+  ],
   "partner": null,
   "regression": null,
   "fixStatus": null,
@@ -24,77 +30,85 @@
   "reproEvidence": null,
   "versionAnalysis": null,
   "actionability": {
-    "suggestedAction": "close-with-docs",
+    "suggestedAction": "keep-open",
     "confidence": 0.85,
-    "reason": "Gray16 does not exist in upstream Skia (only kGray_8_SkColorType). SkiaSharp wraps Skia and cannot add pixel formats that don't exist in the native library. Community member molesmoke already confirmed this. Can be closed with an explanation and workaround suggestions.",
+    "reason": "Valid feature request, but blocked by upstream Skia which has no kGray_16_SkColorType. The request is understandable — 16-bit grayscale PNGs are used in medical imaging, scientific data, and photography. However, implementation requires upstream Skia support first.",
     "requiresHumanReview": false,
-    "closeable": true,
-    "closeReason": "Gray16 is not supported by upstream Skia. SkiaSharp cannot add color types that don't exist at the native level."
+    "closeable": false,
+    "closeReason": null,
+    "duplicateOf": null,
+    "abandoned": false,
+    "abandonedReason": null
   },
   "suggestedResponse": {
     "responseType": "answer",
-    "confidence": 0.85,
-    "reason": "The upstream limitation is well-understood and workarounds exist using existing 16-bit color types. A clear explanation with alternatives would be helpful.",
-    "draft": "Thanks for the request \u2014 working with 16-bit grayscale data is a legitimate need, especially for medical imaging, scientific visualization, and similar use cases.\n\nAs @molesmoke noted, Skia itself doesn't have a `kGray_16` color type \u2014 it only defines `kGray_8` for grayscale. Since SkiaSharp wraps the native Skia library, we can't add pixel formats that don't exist upstream.\n\nThat said, there are a couple of approaches that might work depending on your use case:\n\n- **`SKColorType.Alpha16`** \u2014 stores a single 16-bit unorm channel per pixel. If you're working with raw grayscale intensity data (not rendering to screen), you could decode your 16-bit PNG externally and load the pixel data into an `Alpha16` bitmap.\n- **`SKColorType.RgbaF16`** \u2014 if you need to render the grayscale data, you could convert each 16-bit gray value into an RGBA half-float pixel (setting R=G=B=gray, A=1.0) which preserves the full precision.\n- **Manual pixel conversion** \u2014 decode the 16-bit PNG with a library like ImageSharp or the raw `SKCodec`, then convert to `Gray8` or another supported type if 8-bit precision is acceptable for your workflow.\n\nWould any of these approaches work for your scenario, or is there a specific rendering pipeline requirement that needs native Gray16 support?"
+    "confidence": 0.90,
+    "reason": "Can provide a clear technical explanation of why this isn't currently possible and suggest workarounds.",
+    "draft": "Thanks for the feature request. You're right that there's no `SKColorType.Gray16` — as noted in the comments, upstream Skia itself doesn't have a 16-bit grayscale color type (`kGray_16_SkColorType` doesn't exist in Skia's `SkColorType` enum).\n\nSince SkiaSharp wraps Skia's API surface, adding `Gray16` would require upstream support first.\n\nAs a potential workaround for reading 16-bit grayscale PNGs, you could:\n1. Decode the PNG using a library that supports 16-bit gray (e.g., `System.Drawing`, `ImageSharp`, or `libpng` directly)\n2. Convert the pixel data to a format SkiaSharp supports (e.g., `Rgba16161616` or `RgbaF16`) by replicating the gray value across RGB channels\n3. Create an `SKImage` from the converted pixel data\n\nThis adds a conversion step but lets you work with 16-bit data in SkiaSharp today."
   },
   "analysisNotes": {
-    "summary": "Feature request for a Gray16 (16-bit grayscale) color type in SKColorType. Upstream Skia only defines kGray_8_SkColorType \u2014 no 16-bit grayscale exists at the native level. SkiaSharp cannot add pixel formats beyond what Skia supports. Community already confirmed the upstream limitation.",
+    "summary": "User requests adding SKColorType.Gray16 for 16-bit grayscale PNG support. This is a feature request for functionality that does not exist in upstream Skia — confirmed by checking SkColorType.h which only defines kGray_8_SkColorType. A community member also confirmed no upstream support.",
     "keySignals": [
       {
         "text": "i want to use 16bit grayscale pngs but it looks like it doesnt exist in skiasharp",
         "source": "body",
-        "interpretation": "User has a concrete use case (16-bit grayscale PNGs) and has already checked the API surface to confirm the gap.",
-        "supportedFields": [
-          "type",
-          "area"
-        ]
+        "interpretation": "User wants to work with 16-bit grayscale PNGs and found the capability missing. This is a new feature request, not a bug.",
+        "supportedFields": ["type"]
       },
       {
         "text": "add SkColorType.Gray16",
         "source": "body",
-        "interpretation": "Specific enum value requested \u2014 this is a feature request for a new pixel format, not a question or bug.",
-        "supportedFields": [
-          "type"
-        ]
+        "interpretation": "Explicit request for a new enum value in the core SKColorType. This targets the SkiaSharp core API surface.",
+        "supportedFields": ["type", "area"]
       },
       {
         "text": "There's no Gray16 support upstream: https://api.skia.org/SkColorType_8h.html",
         "source": "comment 2",
-        "interpretation": "Community member confirmed upstream Skia lacks this type, which is the fundamental blocker. SkiaSharp cannot add what Skia doesn't have.",
-        "supportedFields": [
-          "actionability"
-        ]
+        "interpretation": "Community member confirmed the fundamental blocker — upstream Skia doesn't have this color type. This means SkiaSharp cannot add it without custom implementation or upstream changes.",
+        "supportedFields": ["actionability"]
+      },
+      {
+        "text": "[FEATURE] prefix in title and type/feature-request label",
+        "source": "labels",
+        "interpretation": "Issue already correctly labeled as feature request by automation.",
+        "supportedFields": ["type"]
       }
     ],
     "fieldRationales": [
       {
         "field": "type",
         "chosen": "feature-request",
-        "expandedReason": "The issue is filed with [FEATURE] prefix, uses the feature request template, and explicitly asks for adding a new enum value. Nothing is broken \u2014 the capability simply doesn't exist.",
+        "expandedReason": "The issue uses the feature request template, asks to 'add' a new enum value, and describes functionality that does not currently exist. There is no broken behavior — this is a request for new capability.",
         "alternatives": [
           {
             "value": "enhancement",
-            "whyRejected": "Enhancement implies improving existing functionality. Gray16 doesn't exist at all \u2014 this is a new capability request."
+            "whyRejected": "Enhancement implies improving existing functionality. Gray16 is entirely new — there's no existing grayscale 16-bit support to improve."
           }
         ]
       },
       {
         "field": "area",
         "chosen": "SkiaSharp",
-        "expandedReason": "SKColorType is part of the core SkiaSharp API surface. It maps directly to Skia's SkColorType enum. This isn't a views, HarfBuzz, or native loading issue."
+        "expandedReason": "SKColorType is defined in the core SkiaSharp binding (Definitions.cs). This isn't about views, platform-specific rendering, or native loading — it's about the core color type enumeration.",
+        "alternatives": [
+          {
+            "value": "libSkiaSharp.native",
+            "whyRejected": "While implementation would touch native code, the request is about the C# API surface. The native layer is an implementation detail."
+          }
+        ]
       },
       {
         "field": "actionability.suggestedAction",
-        "chosen": "close-with-docs",
-        "expandedReason": "The upstream limitation is definitive \u2014 Skia does not support kGray_16 and SkiaSharp cannot add pixel formats that don't exist in the native library. The community already confirmed this. The issue can be closed with an explanation and workaround suggestions.",
+        "chosen": "keep-open",
+        "expandedReason": "This is a valid feature request representing a real use case (16-bit grayscale imagery). However, it's blocked by upstream Skia's lack of Gray16 support. Keeping it open acknowledges the need while tracking the upstream dependency.",
         "alternatives": [
           {
-            "value": "keep-open",
-            "whyRejected": "Could be kept open as a tracking issue for potential upstream Skia changes, but since SkiaSharp has no control over upstream Skia's color type additions, it's more accurate to close with explanation."
+            "value": "close-with-docs",
+            "whyRejected": "While workarounds exist, this is a legitimate gap. Closing might dismiss a valid need that could be addressed if upstream adds support."
           },
           {
-            "value": "convert-to-discussion",
-            "whyRejected": "The answer is clear and definitive \u2014 there's nothing to discuss. The type doesn't exist upstream."
+            "value": "needs-investigation",
+            "whyRejected": "No investigation needed — the blocker is clear: upstream Skia doesn't support this color type."
           }
         ]
       }
@@ -102,121 +116,108 @@
     "docsConsulted": [
       {
         "path": "externals/skia/include/core/SkColorType.h",
-        "relevance": "Verified the complete list of upstream Skia color types \u2014 confirmed kGray_8_SkColorType exists but no kGray_16 variant. Also confirmed that 16-bit unorm types exist (kA16_unorm, kR16G16_unorm, kR16G16B16A16_unorm) which could serve as workarounds.",
-        "usedFor": [
-          "type",
-          "actionability",
-          "resolutionAnalysis"
-        ]
+        "relevance": "Confirmed that upstream Skia has no kGray_16_SkColorType — only kGray_8_SkColorType exists. The full enum was reviewed to verify no 16-bit grayscale variant exists.",
+        "usedFor": ["type", "actionability"]
       },
       {
         "path": "binding/SkiaSharp/Definitions.cs",
-        "relevance": "Confirmed SkiaSharp's SKColorType enum mirrors Skia's types. Gray8 is mapped, but no Gray16 exists. Also confirmed Alpha16, Rg1616, Rgba16161616 are available as potential workaround formats.",
-        "usedFor": [
-          "area",
-          "resolutionAnalysis"
-        ]
+        "relevance": "Reviewed the public SKColorType enum to confirm Gray8 exists (value 9) but no Gray16. Also confirmed the full set of color types SkiaSharp exposes.",
+        "usedFor": ["area", "actionability"]
       },
       {
         "path": "binding/SkiaSharp/EnumMappings.cs",
-        "relevance": "Confirmed the mapping pattern between SKColorType (public) and SKColorTypeNative (generated). Adding a new type requires both upstream Skia support and mapping code.",
-        "usedFor": [
-          "resolutionAnalysis"
-        ]
-      },
-      {
-        "path": "references/skia-patterns.md",
-        "relevance": "Checked for any known patterns related to pixel format limitations. No specific Gray16 patterns found.",
-        "usedFor": [
-          "analysisNotes"
-        ]
+        "relevance": "Checked the native-to-managed enum mapping to understand how color types are bridged between C API and C#.",
+        "usedFor": ["area"]
       }
     ],
-    "docsNotConsulted": "No need to check packages.md (not a deployment issue), no need to check rendering backend docs (not backend-specific), no need to check documentation/architecture.md (the limitation is upstream, not architectural).",
+    "docsNotConsulted": "No platform-specific docs, packages.md, or native loading diagnostics consulted — this is a cross-platform API surface request unrelated to deployment or platform quirks.",
     "uncertainties": [
-      "Unknown what the user's specific use case is \u2014 medical imaging, scientific data, photography? The optimal workaround depends on whether they need rendering or just data manipulation.",
-      "Unclear whether Skia has any plans to add Gray16 support upstream \u2014 the Skia team's roadmap is not public.",
-      "Unknown whether the user has tried any workarounds or if this is a blocking issue for their project."
+      "Whether Skia has plans to add a 16-bit grayscale color type in the future",
+      "Whether the user's use case (16-bit grayscale PNGs) could be adequately served by existing higher-bit-depth color types like Rgba16161616 with a conversion step",
+      "Whether there's demand from other users for this specific feature"
+    ],
+    "assumptions": [
+      "Assumed the user wants to both read and render 16-bit grayscale data, not just decode it"
     ]
   },
   "resolutionAnalysis": {
-    "hypothesis": "The user needs to work with 16-bit grayscale PNG images in SkiaSharp but the pixel format doesn't exist because upstream Skia only supports 8-bit grayscale (kGray_8_SkColorType). Workarounds exist using other 16-bit color types.",
+    "hypothesis": "User needs to work with 16-bit grayscale PNGs in SkiaSharp. The fundamental limitation is that upstream Skia only supports 8-bit grayscale (kGray_8_SkColorType). Any solution must either work around this limitation or wait for upstream support.",
     "researchDone": [
-      "Checked upstream Skia SkColorType.h \u2014 confirmed no kGray_16 type exists",
-      "Reviewed all available 16-bit color types in Skia: kA16_unorm, kR16G16_unorm, kR16G16B16A16_unorm, kA16_float, kR16G16_float, kRGBA_F16",
-      "Checked SkiaSharp's SKColorType enum and mapping code to understand how types are bridged",
-      "Searched for related issues \u2014 no prior Gray16 requests found",
-      "Verified community response about upstream limitation"
+      "Checked upstream Skia SkColorType.h — confirmed no Gray16 variant exists",
+      "Reviewed SkiaSharp SKColorType enum in Definitions.cs — Gray8 is present at value 9, no Gray16",
+      "Checked EnumMappings.cs for native enum bridging pattern",
+      "Reviewed comment from community member confirming no upstream support",
+      "Checked available high-bit-depth color types: Rgba16161616, RgbaF16, Alpha16 exist and could serve as conversion targets"
     ],
     "proposals": [
       {
-        "title": "Use Alpha16 as single-channel 16-bit storage",
-        "description": "Repurpose SKColorType.Alpha16 to store 16-bit grayscale data. Alpha16 is a single 16-bit unorm channel per pixel, which is structurally identical to what Gray16 would be.",
+        "title": "Workaround: convert Gray16 to Rgba16161616",
+        "description": "Decode 16-bit grayscale PNGs externally and convert pixel data to SKColorType.Rgba16161616 by replicating the gray value across R, G, B channels with full alpha.",
         "steps": [
-          "Decode the 16-bit PNG using an external library (e.g., ImageSharp) or raw SKCodec to get raw pixel bytes",
-          "Create an SKBitmap with SKColorType.Alpha16 and matching dimensions",
-          "Copy the 16-bit grayscale values into the Alpha16 pixel buffer using SKBitmap.SetPixels() or direct pointer access",
-          "Use the bitmap for data processing (note: rendering will interpret values as alpha, not luminance)"
+          "Decode the 16-bit grayscale PNG using an external library (e.g., ImageSharp, System.Drawing, or raw libpng P/Invoke)",
+          "Allocate a buffer for Rgba16161616 format (8 bytes per pixel: 4x uint16)",
+          "For each gray16 pixel value, write (gray, gray, gray, 0xFFFF) into the RGBA buffer",
+          "Create SKImageInfo with SKColorType.Rgba16161616 and create SKImage/SKBitmap from the converted data"
         ],
         "pros": [
-          "Exact same memory layout as Gray16 would be (1 channel, 16-bit unorm)",
-          "No precision loss",
-          "Uses existing SkiaSharp API"
-        ],
-        "cons": [
-          "Semantically incorrect \u2014 Skia treats it as alpha, not luminance",
-          "Rendering to screen will not display correctly without a custom shader",
-          "Requires manual pixel data handling"
-        ],
-        "confidence": 0.65,
-        "effort": "medium"
-      },
-      {
-        "title": "Convert to RgbaF16 for full-precision rendering",
-        "description": "Convert 16-bit grayscale values to RGBA half-float pixels (R=G=B=gray, A=1.0) which preserves the full 16-bit precision and renders correctly.",
-        "steps": [
-          "Decode the 16-bit PNG to get raw 16-bit grayscale pixel data",
-          "Allocate an SKBitmap with SKColorType.RgbaF16 and matching dimensions",
-          "For each pixel, convert the uint16 gray value to a half-float and replicate across R, G, B channels with A=1.0",
-          "Use the resulting bitmap normally \u2014 it will render as grayscale with full precision"
-        ],
-        "pros": [
-          "Renders correctly on screen",
+          "Works today with current SkiaSharp",
           "Preserves full 16-bit precision",
-          "Works with all SkiaSharp drawing operations"
+          "No upstream changes required"
         ],
         "cons": [
-          "4x memory overhead (8 bytes/pixel vs 2 bytes/pixel for true Gray16)",
-          "Requires manual pixel conversion code",
-          "Half-float conversion adds complexity"
-        ],
-        "confidence": 0.8,
-        "effort": "medium"
-      },
-      {
-        "title": "Use external library for 16-bit grayscale, SkiaSharp for rendering",
-        "description": "Use a dedicated image library (ImageSharp, LibTiff.NET) for 16-bit grayscale decoding and manipulation, then convert to an 8-bit or F16 format only when rendering through SkiaSharp.",
-        "steps": [
-          "Use SixLabors.ImageSharp or similar to decode and process 16-bit grayscale PNGs natively",
-          "Perform all 16-bit operations (windowing, level adjustments, etc.) in the external library",
-          "When ready to display, convert to SKBitmap with Gray8 (if 8-bit is acceptable) or RgbaF16 (if precision matters)",
-          "Use SkiaSharp only for the final rendering step"
-        ],
-        "pros": [
-          "Full native Gray16 support in the processing library",
-          "Clean separation of concerns",
-          "Best option for scientific/medical imaging workflows"
-        ],
-        "cons": [
-          "Additional dependency",
-          "Data copying between libraries",
-          "Two image APIs to learn and maintain"
+          "Requires external PNG decoding library",
+          "4x memory usage (8 bytes vs 2 bytes per pixel)",
+          "Extra conversion step adds complexity and processing time"
         ],
         "confidence": 0.85,
-        "effort": "medium"
+        "effort": "low"
+      },
+      {
+        "title": "Workaround: convert Gray16 to RgbaF16",
+        "description": "Convert 16-bit grayscale data to half-float RGBA format, which SkiaSharp supports natively.",
+        "steps": [
+          "Decode 16-bit grayscale PNG externally",
+          "Convert each uint16 gray value to half-float (gray/65535.0)",
+          "Write as (grayF16, grayF16, grayF16, 1.0F16) into RgbaF16 buffer",
+          "Create SKImage with SKColorType.RgbaF16"
+        ],
+        "pros": [
+          "Works today, no SkiaSharp changes needed",
+          "Half-float provides good precision for grayscale data",
+          "Compatible with GPU rendering paths"
+        ],
+        "cons": [
+          "Slight precision loss in float16 conversion for some values",
+          "8 bytes per pixel (same memory overhead as Rgba16161616)",
+          "Requires half-float conversion logic"
+        ],
+        "confidence": 0.80,
+        "effort": "low"
+      },
+      {
+        "title": "Request upstream Skia Gray16 support",
+        "description": "File a feature request with the Skia project to add kGray_16_SkColorType, then expose it in SkiaSharp once available.",
+        "steps": [
+          "File a feature request at https://issues.skia.org/ requesting kGray_16_SkColorType",
+          "Reference use cases: medical imaging (DICOM), scientific data, photography RAW processing",
+          "If accepted and implemented upstream, add Gray16 to SkiaSharp's SKColorType enum",
+          "Add C API mapping, enum mapping, and tests"
+        ],
+        "pros": [
+          "Proper native-level support with optimal memory layout (2 bytes per pixel)",
+          "Would benefit the entire Skia ecosystem",
+          "Correct long-term solution"
+        ],
+        "cons": [
+          "Requires upstream approval — no guarantee of acceptance",
+          "Timeline is unpredictable",
+          "Medical/scientific imaging may not be a Skia priority"
+        ],
+        "confidence": 0.40,
+        "effort": "high"
       }
     ],
-    "recommendedProposal": "Use external library for 16-bit grayscale, SkiaSharp for rendering",
-    "recommendedReason": "Most practical approach \u2014 dedicated image libraries have proper Gray16 support, and the conversion to SkiaSharp formats only happens at display time. This avoids fighting against Skia's lack of native Gray16 and gives the user the best tooling for their actual pixel manipulation needs."
+    "recommendedProposal": "Workaround: convert Gray16 to Rgba16161616",
+    "recommendedReason": "Provides a working solution today with full 16-bit precision, requires no SkiaSharp or Skia changes, and uses the existing Rgba16161616 color type. The 4x memory overhead is acceptable for most use cases."
   }
 }

@@ -1,0 +1,279 @@
+{
+  "schemaVersion": "1.0",
+  "number": 3393,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2025-10-23T00:00:00Z",
+  "summary": "All P/Invoke wrappers missing GC.KeepAlive calls, allowing premature GC of managed objects during native execution",
+  "type": {
+    "value": "bug",
+    "confidence": 0.95,
+    "reason": "The issue describes a real race condition between GC and native code execution. Objects passed to P/Invoke calls can be collected mid-call because the runtime cannot see into native code. This is a well-documented .NET correctness bug (Chris Brumme blog), not a feature request."
+  },
+  "area": {
+    "value": "SkiaSharp",
+    "confidence": 0.95,
+    "reason": "The bug is in the core C# binding layer (binding/SkiaSharp/*.cs) where P/Invoke calls are made. All public wrapper methods across the entire SkiaSharp binding surface are affected."
+  },
+  "backends": null,
+  "platforms": null,
+  "tenets": [
+    {
+      "value": "reliability",
+      "confidence": 0.95,
+      "reason": "Premature GC during P/Invoke is a race condition that leads to use-after-free crashes, AccessViolationExceptions, and data corruption — all reliability concerns. The issue is explicitly about preventing crashes from GC/finalizer races."
+    }
+  ],
+  "partner": {
+    "value": "unoplatform",
+    "confidence": 0.80,
+    "reason": "The issue directly references unoplatform/uno#21660 as a real-world Skia-related example of this bug manifesting in the Uno Platform."
+  },
+  "regression": {
+    "isRegression": false,
+    "confidence": 0.90,
+    "reason": "This is a latent correctness bug that has existed since SkiaSharp's inception. It is not a regression from a specific version — it is a systemic omission. The 'Last Known Good Version' field says 'Other', confirming no prior version was correct."
+  },
+  "fixStatus": null,
+  "bugSignals": {
+    "hasCrash": false,
+    "hasStackTrace": false,
+    "reproQuality": "steps-only",
+    "hasScreenshot": false,
+    "hasWorkaround": true,
+    "workaroundSummary": "Callers can add GC.KeepAlive(obj) after every SkiaSharp API call that passes managed objects, but this is impractical at scale and the responsibility should be on the library, not the consumer.",
+    "targetFrameworks": ["net8.0-android"],
+    "severity": "high",
+    "severityReason": "This is a systemic correctness issue affecting every public P/Invoke wrapper method across the entire SkiaSharp API surface. While crashes are intermittent (race condition), they are unrecoverable when they occur. The scope is massive — only ~14 GC.KeepAlive calls exist vs ~700+ SkiaApi P/Invoke call sites across 50+ files."
+  },
+  "reproEvidence": {
+    "codeSnippets": [
+      {
+        "language": "csharp",
+        "code": "var canvas = …\nvar picture = …\ncanvas.DrawPicture(picture);\n// `picture` is not referenced after this point.",
+        "context": "Demonstrates the pattern where picture can be GC'd during the DrawPicture P/Invoke call because nothing references it after the Handle is extracted."
+      },
+      {
+        "language": "csharp",
+        "code": "partial class SKCanvas {\n\tpublic void DrawPicture (SKPicture picture, SKPaint paint = null)\n\t{\n\t\tif (picture == null)\n\t\t\tthrow new ArgumentNullException (nameof (picture));\n\t\tSkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, null, paint == null ? IntPtr.Zero : paint.Handle);\n\t\tGC.KeepAlive (picture);\n\t\tGC.KeepAlive (paint);\n\t}\n}",
+        "context": "Proposed fix pattern showing GC.KeepAlive calls after each P/Invoke invocation."
+      }
+    ],
+    "repoLinks": [
+      {
+        "url": "https://github.com/mono/SkiaSharp/blob/34c5ed8272b9e0a138089d2e0a18f34f5592653f/binding/SkiaSharp/SKCanvas.cs#L533-L538",
+        "description": "The specific unprotected SKCanvas.DrawPicture P/Invoke call site."
+      },
+      {
+        "url": "https://github.com/unoplatform/uno/pull/21660",
+        "description": "Uno Platform PR that encountered this issue in practice with Skia-based rendering."
+      },
+      {
+        "url": "https://github.com/dotnet/java-interop/issues/719",
+        "description": "Same class of bug in dotnet/java-interop, demonstrating this is a well-known pattern."
+      }
+    ],
+    "stepsToReproduce": [
+      "Create an SKCanvas and an SKPicture (or any SKObject-derived parameter)",
+      "Call canvas.DrawPicture(picture) where picture is not referenced after the call",
+      "Under GC pressure, the runtime may collect picture while native Skia code is still using the handle",
+      "This causes use-after-free, AccessViolationException, or silent data corruption"
+    ],
+    "environmentDetails": "SkiaSharp 3.116.0, affects all platforms (reported as Android + All). The issue is in managed code and is platform-independent."
+  },
+  "versionAnalysis": {
+    "mentionedVersions": ["3.116.0"],
+    "era": "modern",
+    "currentRelevance": "likely",
+    "reason": "This is a systemic omission in the C# binding layer that has never been addressed. Current codebase shows only ~14 GC.KeepAlive calls across 6 files, while there are ~700+ SkiaApi P/Invoke call sites across 50+ files. The issue is relevant to all SkiaSharp versions.",
+    "migrationPath": null
+  },
+  "actionability": {
+    "suggestedAction": "needs-investigation",
+    "confidence": 0.90,
+    "reason": "This is a legitimate, well-documented .NET correctness issue. The reporter (jonpryor) is a highly experienced .NET/Xamarin developer who authored java-interop. The fix approach is clear (add GC.KeepAlive after P/Invoke calls) but the scope is enormous (~700+ call sites). Engineering needs to decide whether to do a manual audit, modify the code generator, or use a Roslyn analyzer.",
+    "requiresHumanReview": false,
+    "closeable": false
+  },
+  "suggestedResponse": null,
+  "analysisNotes": {
+    "summary": "Issue #3393 reports a systemic correctness bug: SkiaSharp's P/Invoke wrapper methods do not call GC.KeepAlive on managed object parameters, allowing the GC to collect them while native Skia code is still operating on their handles. This is a well-documented .NET pattern (Chris Brumme's blog) and has manifested in practice (Uno Platform PR #21660). The fix is clear but the scope is massive.",
+    "keySignals": [
+      {
+        "text": "once execution hits SkiaApi.sk_canvas_draw_picture(), nothing ensures that picture is kept alive. (Or canvas, for that matter!)",
+        "source": "body",
+        "interpretation": "Confirms the specific race condition: after Handle extraction, the GC can collect the managed object while native code is executing. This is the core bug.",
+        "supportedFields": ["type", "bugSignals.severity"]
+      },
+      {
+        "text": "This should be done for all public methods that invoke P/Invoke methods",
+        "source": "body",
+        "interpretation": "The reporter explicitly states this is a systemic issue affecting all P/Invoke wrappers, not just DrawPicture. This dramatically increases the scope and severity.",
+        "supportedFields": ["bugSignals.severity", "actionability"]
+      },
+      {
+        "text": "unoplatform/uno#21660 is a Skia-related example of this",
+        "source": "body",
+        "interpretation": "Real-world manifestation in the Uno Platform confirms this is not theoretical — the bug causes actual crashes in production.",
+        "supportedFields": ["type", "partner", "bugSignals"]
+      },
+      {
+        "text": "Context: Chris Brumme's blog post on Lifetime, GC.KeepAlive, handle recycling",
+        "source": "body",
+        "interpretation": "Well-established .NET correctness pattern documented by a CLR team member. This is not a new or controversial finding.",
+        "supportedFields": ["type"]
+      },
+      {
+        "text": "Platform / Operating System: Android, All",
+        "source": "body",
+        "interpretation": "While reported from Android context (via Uno), the issue affects all platforms since it's in the managed C# layer.",
+        "supportedFields": ["platforms"]
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "bug",
+        "expandedReason": "This is a correctness bug — a race condition between the GC and native code execution. The issue is not asking for a new feature; it's reporting that existing code is missing required safety guarantees (GC.KeepAlive) that prevent use-after-free during P/Invoke calls.",
+        "alternatives": [
+          {
+            "value": "enhancement",
+            "whyRejected": "While adding GC.KeepAlive could be seen as an enhancement, the absence of it is a correctness defect. The current behavior can cause crashes, making this a bug."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "SkiaSharp",
+        "expandedReason": "The affected code is in binding/SkiaSharp/*.cs — the core C# wrapper layer. All P/Invoke call sites across all wrapper classes are affected. This is not specific to Views, HarfBuzz, or any sub-package."
+      },
+      {
+        "field": "tenets",
+        "chosen": "reliability",
+        "expandedReason": "The bug causes race conditions leading to use-after-free, AccessViolationException, and potential data corruption. These are classic reliability issues — crashes under GC pressure."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "high",
+        "expandedReason": "The scope is enormous (~700+ unprotected P/Invoke call sites across 50+ files), and when the race is lost, the result is an unrecoverable crash or memory corruption. However, it requires GC pressure timing to trigger, so it's high rather than critical.",
+        "alternatives": [
+          {
+            "value": "critical",
+            "whyRejected": "While the consequences are severe, the bug requires specific GC timing to trigger. It's not a guaranteed crash on every call."
+          },
+          {
+            "value": "medium",
+            "whyRejected": "The systemic scope (all P/Invoke methods) and unrecoverable nature of the crashes warrant high severity."
+          }
+        ]
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The fix approach is conceptually clear (add GC.KeepAlive after P/Invoke calls) but requires architectural decision: manual audit of 700+ call sites, code generator modification, or Roslyn analyzer. Engineering needs to evaluate the best approach."
+      }
+    ],
+    "docsConsulted": [
+      {
+        "path": "references/skia-patterns.md",
+        "relevance": "Checked for related patterns around AccessViolationException and premature disposal. The 'Premature Disposal' section describes a related but distinct pattern (same-instance returns).",
+        "usedFor": ["type", "bugSignals"]
+      },
+      {
+        "path": "binding/SkiaSharp/SKCanvas.cs",
+        "relevance": "Verified the specific code referenced in the issue (lines 533-538). Confirmed no GC.KeepAlive calls exist in DrawPicture or other Canvas methods.",
+        "usedFor": ["area", "bugSignals"]
+      }
+    ],
+    "docsNotConsulted": "No native loading diagnostics (packages.md) needed — this is a managed code correctness issue, not a deployment/loading problem. No backend-specific docs needed — the bug is in the C# layer before any backend is involved.",
+    "uncertainties": [
+      "Whether the code generator (pwsh ./utils/generate.ps1) can be modified to automatically emit GC.KeepAlive calls, or if manual editing is required",
+      "Whether GC.KeepAlive(this) should be added to instance methods, or if that responsibility stays with the caller",
+      "The exact count of affected methods — grep shows ~700+ SkiaApi call sites but some may be in static methods or handle struct parameters that don't need protection",
+      "Whether any existing GC.KeepAlive calls (14 found) were added intentionally or coincidentally"
+    ]
+  },
+  "resolutionAnalysis": {
+    "hypothesis": "SkiaSharp's P/Invoke wrapper methods extract IntPtr handles from managed SKObject instances and pass them to native code, but do not prevent the GC from collecting those managed objects during the native call. This creates a race condition: the GC can finalize and dispose the managed object (closing the native handle) while Skia is still using it, causing use-after-free crashes.",
+    "researchDone": [
+      "Verified the specific code at SKCanvas.cs:533-538 — confirmed no GC.KeepAlive present",
+      "Counted GC.KeepAlive usage across binding/SkiaSharp/ — only ~14 calls in 6 files",
+      "Counted SkiaApi P/Invoke call sites — ~700+ across 50+ files",
+      "Checked for duplicate issues — no prior issues found for GC.KeepAlive/P/Invoke lifetime",
+      "Reviewed references/skia-patterns.md for related known patterns"
+    ],
+    "proposals": [
+      {
+        "title": "Systematic manual audit with GC.KeepAlive insertion",
+        "description": "Audit every public method in binding/SkiaSharp/ that calls SkiaApi.* and add GC.KeepAlive for all reference-type parameters (SKObject-derived) after the P/Invoke call. Include GC.KeepAlive(this) for instance methods.",
+        "steps": [
+          "Identify all public methods in binding/SkiaSharp/*.cs that call SkiaApi.* methods",
+          "For each method, identify reference-type parameters (SKObject-derived types)",
+          "Add GC.KeepAlive(param) for each reference-type parameter after the P/Invoke call",
+          "Add GC.KeepAlive(this) for instance methods that access Handle",
+          "Run full test suite to ensure no regressions"
+        ],
+        "pros": [
+          "Most thorough — covers every call site with human review",
+          "Can handle edge cases (nullable params, conditional logic) correctly",
+          "Allows adding GC.KeepAlive(this) selectively based on context"
+        ],
+        "cons": [
+          "Extremely labor-intensive (~700+ call sites in 50+ files)",
+          "Error-prone — easy to miss call sites or parameters",
+          "New methods added later could lack GC.KeepAlive without enforcement"
+        ],
+        "confidence": 0.85,
+        "effort": "high"
+      },
+      {
+        "title": "Roslyn analyzer to enforce GC.KeepAlive after P/Invoke",
+        "description": "Create a custom Roslyn analyzer that detects SkiaApi.* P/Invoke calls and verifies that all reference-type parameters have corresponding GC.KeepAlive calls. Combine with a bulk code fix to address existing violations.",
+        "steps": [
+          "Create a Roslyn DiagnosticAnalyzer that identifies SkiaApi.* call sites",
+          "Analyze parameter sources to detect SKObject-derived types",
+          "Report diagnostic if GC.KeepAlive is missing for any reference-type parameter",
+          "Implement a CodeFixProvider to automatically insert GC.KeepAlive calls",
+          "Run the code fix across the entire binding/SkiaSharp/ directory",
+          "Add the analyzer to the build to prevent future regressions"
+        ],
+        "pros": [
+          "Automated — catches all existing and future violations",
+          "Enforced at build time — new code cannot miss GC.KeepAlive",
+          "Code fix handles bulk application"
+        ],
+        "cons": [
+          "Significant upfront development effort for the analyzer",
+          "May produce false positives for struct parameters or static methods",
+          "Analyzer maintenance burden"
+        ],
+        "confidence": 0.80,
+        "effort": "high"
+      },
+      {
+        "title": "Modify code generator to emit GC.KeepAlive",
+        "description": "If the P/Invoke declarations or wrapper methods are generated (via pwsh ./utils/generate.ps1), modify the generator to automatically emit GC.KeepAlive calls for all reference-type parameters after P/Invoke invocations.",
+        "steps": [
+          "Investigate whether generate.ps1 generates the wrapper methods or just the P/Invoke declarations",
+          "If wrappers are generated, modify the template to include GC.KeepAlive for reference-type params",
+          "If wrappers are hand-written, this approach may not apply — fall back to manual audit",
+          "Regenerate and verify output",
+          "Run full test suite"
+        ],
+        "pros": [
+          "Systematic — all generated code gets GC.KeepAlive automatically",
+          "Future-proof — new generated methods will include it",
+          "Lower ongoing maintenance than manual approach"
+        ],
+        "cons": [
+          "May not cover hand-written wrapper methods (only generated ones)",
+          "Requires understanding the generator's template system",
+          "Generator may not have enough type information to distinguish reference vs value types"
+        ],
+        "confidence": 0.65,
+        "effort": "medium"
+      }
+    ],
+    "recommendedProposal": "Roslyn analyzer to enforce GC.KeepAlive after P/Invoke",
+    "recommendedReason": "While the manual audit is most thorough for initial fix, the Roslyn analyzer provides both the initial bulk fix (via CodeFixProvider) and ongoing enforcement at build time. This prevents the problem from recurring as new methods are added. The analyzer + code fix approach addresses both the immediate issue and the systemic risk."
+  }
+}

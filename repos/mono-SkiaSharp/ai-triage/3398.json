@@ -1,0 +1,267 @@
+{
+  "schemaVersion": "1.0",
+  "number": 3398,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2025-07-25T12:00:00Z",
+  "summary": "Intermittent crash in SKCanvas.DrawPath during Mapsui rendering in Avalonia desktop app on Windows 11",
+  "type": {
+    "value": "bug",
+    "confidence": 0.75,
+    "reason": "Reporter describes a hard crash with stack trace in sk_canvas_draw_path. However, the crash appears to originate from a threading violation in the third-party Mapsui library, not from a SkiaSharp defect."
+  },
+  "area": {
+    "value": "SkiaSharp",
+    "confidence": 0.85,
+    "reason": "The crash occurs in the core SkiaSharp API (SKCanvas.DrawPath / sk_canvas_draw_path), not in Views or other subpackages."
+  },
+  "backends": null,
+  "platforms": [
+    {
+      "value": "Windows-Classic",
+      "confidence": 0.90,
+      "reason": "Reporter explicitly states Windows 11, running Avalonia desktop (which uses Win32 APIs). Already labeled os/Windows-Classic."
+    }
+  ],
+  "tenets": [
+    {
+      "value": "reliability",
+      "confidence": 0.95,
+      "reason": "Hard process crash (unhandled exception terminating the process). Already labeled tenet/reliability."
+    }
+  ],
+  "partner": null,
+  "regression": {
+    "isRegression": false,
+    "confidence": 0.60,
+    "reason": "Reporter selected '2.88.9' as last known good version and '3.116.0' as current, but then commented the actual DLL version is 2.88.8.0. The version information is contradictory and unreliable. The intermittent threading crash pattern could exist in any version.",
+    "workedInVersion": "2.88.9",
+    "brokeInVersion": "3.116.0"
+  },
+  "fixStatus": null,
+  "bugSignals": {
+    "hasCrash": true,
+    "hasStackTrace": true,
+    "reproQuality": "steps-only",
+    "hasScreenshot": true,
+    "hasWorkaround": false,
+    "workaroundSummary": null,
+    "targetFrameworks": ["net9.0"],
+    "severity": "medium",
+    "severityReason": "Hard crash but intermittent, and strong evidence points to a threading violation in the third-party Mapsui library rather than a SkiaSharp defect. The crash is triggered by concurrent access to SkiaSharp objects from Mapsui's rendering and query threads."
+  },
+  "reproEvidence": {
+    "screenshots": [
+      {
+        "url": "https://github.com/user-attachments/assets/cf361924-61d3-4773-9689-b4c36b927b71",
+        "context": "Shown inline in description alongside text about crash when drawing graphics",
+        "source": "description"
+      },
+      {
+        "url": "https://github.com/user-attachments/assets/40e7de45-62b9-42bf-9c05-7073203d9258",
+        "context": "Shown inline in description alongside text about crash when drawing graphics",
+        "source": "description"
+      }
+    ],
+    "stepsToReproduce": [
+      "Create an Avalonia desktop application using Mapsui for map rendering (Avalonia 11.3.7, SkiaSharp 2.88.8.0)",
+      "Subscribe to the PointerMoved event on the map control",
+      "In the PointerMoved handler, call MapInfo's GetMapInfo() query method",
+      "Interact with the map by moving the pointer — crash occurs intermittently but frequently"
+    ],
+    "codeSnippets": [
+      {
+        "language": "text",
+        "code": "Application: AeroSpirit.Desktop.exe\nCoreCLR Version: 9.0.725.31616\n.NET Version: 9.0.7\nDescription: The process was terminated due to an unhandled exception.\nStack:\n   at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)\n   at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)\n   at SkiaSharp.SKCanvas.DrawPath(SkiaSharp.SKPath, SkiaSharp.SKPaint)\n   at Mapsui.Rendering.Skia.Extensions.SkCanvasExtensions.DrawPath(SKCanvas, CacheTracker<SKPath>, CacheTracker)\n   at Mapsui.Rendering.Skia.LineStringRenderer.Draw(SKCanvas, Viewport, VectorStyle, IFeature, LineString, Single, RenderService, Int32)\n   at Mapsui.Rendering.Skia.VectorStyleRenderer.",
+        "context": "Stack trace from comment 3 showing crash in sk_canvas_draw_path called through Mapsui rendering pipeline"
+      }
+    ],
+    "environmentDetails": "Windows 11, .NET 9.0.7, Avalonia 11.3.7, SkiaSharp DLL version 2.88.8.0 (form says 3.116.0 but comment corrects to 2.88.8), Visual Studio (Windows)"
+  },
+  "versionAnalysis": {
+    "mentionedVersions": ["3.116.0", "2.88.9", "2.88.8"],
+    "era": "maui-transition",
+    "currentRelevance": "unknown",
+    "reason": "Reporter selected 3.116.0 in the form but corrected to 2.88.8.0 in a comment. The 2.88.x series is the maui-transition era. The crash pattern (threading violation from Mapsui) would likely occur in any SkiaSharp version.",
+    "migrationPath": null
+  },
+  "actionability": {
+    "suggestedAction": "request-info",
+    "confidence": 0.80,
+    "reason": "The stack trace shows the crash originates from Mapsui's rendering pipeline calling SkiaSharp, with the intermittent nature strongly suggesting a threading violation. A community member also flagged this as likely a Mapsui issue. However, we should confirm with the reporter and suggest they file upstream with Mapsui before closing.",
+    "requiresHumanReview": false,
+    "closeable": false,
+    "closeReason": null,
+    "duplicateOf": null,
+    "missingInfo": ["sample-project", "stack-trace"],
+    "abandoned": false,
+    "abandonedReason": null
+  },
+  "suggestedResponse": {
+    "responseType": "request-info",
+    "confidence": 0.80,
+    "reason": "Need to guide the reporter toward Mapsui as the likely source while being respectful. Also need to clarify the version confusion and request a minimal reproduction.",
+    "draft": "Thanks for the stack trace in your follow-up comment — that's really helpful for narrowing this down.\n\nLooking at the stack, the crash is inside `Mapsui.Rendering.Skia.LineStringRenderer.Draw` → `SKCanvas.DrawPath`. The intermittent nature (\"occasionally, it does not necessarily appear, but it appears frequently\") combined with the fact that you're calling `GetMapInfo()` inside `PointerMoved` suggests this may be a concurrency issue — Mapsui's rendering and your query call may be accessing the same SkiaSharp objects (SKCanvas, SKPath, SKPaint) simultaneously. SkiaSharp objects are not thread-safe and concurrent access causes exactly this kind of intermittent crash.\n\nA couple of things that would help clarify:\n\n1. **Version**: You selected 3.116.0 in the form but mentioned 2.88.8.0 in a comment — could you confirm which version you're using? (`dotnet list package` in your project would show the exact NuGet version.)\n\n2. **Mapsui issue**: This crash pattern is very likely a threading bug in Mapsui rather than in SkiaSharp itself. Would you be able to report this to the [Mapsui project](https://github.com/Mapsui/Mapsui/issues) as well? They would be best positioned to add the necessary synchronization.\n\nAs an immediate workaround, you could try debouncing or throttling your `GetMapInfo()` calls in `PointerMoved`, or dispatching them off the rendering thread."
+  },
+  "analysisNotes": {
+    "summary": "Intermittent crash in SKCanvas.DrawPath when Mapsui renders map features during concurrent GetMapInfo() queries triggered by PointerMoved. The crash pattern and stack trace strongly suggest a threading violation in Mapsui, not a SkiaSharp defect. SkiaSharp objects are not thread-safe and concurrent access causes exactly this type of intermittent native crash.",
+    "keySignals": [
+      {
+        "text": "always collapse when drawing graphics, Occasionally, it does not necessarily appear, but it appears frequently",
+        "source": "body",
+        "interpretation": "Intermittent nature is a classic sign of a race condition / threading violation rather than a deterministic bug",
+        "supportedFields": ["type", "bugSignals.severity"]
+      },
+      {
+        "text": "The crash indeed occurred during the process of using MapInfo's query GetMapInfo(). It was retrieving MapInfo in the PointerMoved event.",
+        "source": "body",
+        "interpretation": "GetMapInfo() in PointerMoved likely triggers concurrent access to SkiaSharp objects while Mapsui is rendering, causing a threading violation",
+        "supportedFields": ["type", "bugSignals", "actionability"]
+      },
+      {
+        "text": "at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr) ... at Mapsui.Rendering.Skia.LineStringRenderer.Draw",
+        "source": "comment 3",
+        "interpretation": "Stack trace shows the crash path is entirely through Mapsui's rendering pipeline calling into SkiaSharp. No SkiaSharp-internal bug is evident.",
+        "supportedFields": ["area", "actionability"]
+      },
+      {
+        "text": "Looks more like a Mapsui issue? There's doesn't look like there's anything here that suggests that SkiaSharp is at fault...",
+        "source": "comment 4",
+        "interpretation": "Community member independently identified this as likely a Mapsui issue, corroborating the threading violation hypothesis",
+        "supportedFields": ["actionability"]
+      },
+      {
+        "text": "the SkiaSharp.dll version is 2.88.8.0",
+        "source": "comment 2",
+        "interpretation": "Contradicts the form selection of 3.116.0. Actual version is 2.88.8.0, making the regression claim unreliable.",
+        "supportedFields": ["versionAnalysis", "regression"]
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "bug",
+        "expandedReason": "The reporter describes a crash (process termination) with a stack trace. Even though the root cause is likely in Mapsui, the crash manifests in SkiaSharp's native code, so classifying as bug is appropriate for tracking. The confidence is lower (0.75) because this is likely an upstream issue, not a SkiaSharp defect.",
+        "alternatives": [
+          {
+            "value": "question",
+            "whyRejected": "This is a real crash with a stack trace, not a how-to question. Even if the root cause is usage, the symptom is broken behavior."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "SkiaSharp",
+        "expandedReason": "The crash occurs in the core SKCanvas.DrawPath API (sk_canvas_draw_path P/Invoke). This is the core SkiaSharp library, not Views, HarfBuzz, or native loading.",
+        "alternatives": [
+          {
+            "value": "SkiaSharp.Views",
+            "whyRejected": "While Avalonia uses SkiaSharp for rendering, the crash is in the core SKCanvas API, not in any View control. Avalonia manages its own Skia surface."
+          }
+        ]
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "medium",
+        "expandedReason": "Hard crash is typically high/critical, but this is downgraded to medium because: (1) it's intermittent, (2) it's almost certainly caused by threading misuse in Mapsui rather than a SkiaSharp defect, and (3) a workaround exists (avoiding concurrent GetMapInfo calls).",
+        "alternatives": [
+          {
+            "value": "high",
+            "whyRejected": "Would be appropriate if this were a SkiaSharp defect, but the evidence strongly points to upstream misuse."
+          }
+        ]
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "request-info",
+        "expandedReason": "Before closing, we should confirm the version confusion and gently redirect the reporter to Mapsui. Asking for a minimal reproduction without Mapsui would confirm whether SkiaSharp is at fault.",
+        "alternatives": [
+          {
+            "value": "convert-to-discussion",
+            "whyRejected": "There is a real crash occurring, which merits a proper issue response rather than just a discussion redirect."
+          },
+          {
+            "value": "needs-investigation",
+            "whyRejected": "The stack trace is clear enough that investigation would just confirm the threading hypothesis. Better to request info and redirect upstream."
+          }
+        ]
+      }
+    ],
+    "docsConsulted": [
+      {
+        "path": "references/skia-patterns.md",
+        "relevance": "Confirmed the 'AccessViolationException / hard crash' pattern: threading violation (sharing SKCanvas/SKPaint between threads) is a documented common cause of intermittent native crashes.",
+        "usedFor": ["type", "bugSignals", "actionability"]
+      },
+      {
+        "path": "references/research-by-type.md",
+        "relevance": "Followed bug research checklist: mapped stack trace to SkiaSharp source, checked for similar issues, identified API misuse vs actual defect.",
+        "usedFor": ["area", "actionability"]
+      }
+    ],
+    "docsNotConsulted": "No native loading diagnostics needed — this is a threading crash, not a loading issue. No packages.md consultation needed. No API XML docs needed since DrawPath is a well-known API.",
+    "uncertainties": [
+      "Cannot view the screenshots in the issue body — they may contain additional diagnostic information (error dialogs, stack traces)",
+      "Exact SkiaSharp version is uncertain: form says 3.116.0, comment says 2.88.8.0",
+      "Whether the crash can be reproduced without Mapsui (with just concurrent SKCanvas.DrawPath calls) is unknown",
+      "Whether Mapsui has documented thread-safety requirements for GetMapInfo() is unknown"
+    ],
+    "assumptions": [
+      "Assumed the crash is a threading violation based on the intermittent nature and the concurrent GetMapInfo/PointerMoved pattern. A disposed-object scenario is also possible but less likely given the intermittent behavior.",
+      "Assumed SkiaSharp DLL version 2.88.8.0 (from comment) is more accurate than the 3.116.0 form selection, as the reporter likely checked the actual file.",
+      "Assumed .NET 9.0 based on the stack trace showing 'CoreCLR Version: 9.0.725.31616'"
+    ]
+  },
+  "resolutionAnalysis": {
+    "hypothesis": "Mapsui is accessing SkiaSharp objects (SKCanvas, SKPath, SKPaint) concurrently from its rendering thread and the UI thread handling GetMapInfo() in PointerMoved. SkiaSharp objects are not thread-safe, and this concurrent access causes an intermittent native crash in sk_canvas_draw_path.",
+    "researchDone": [
+      "Analyzed stack trace: crash path is Mapsui.Rendering.Skia.LineStringRenderer → SKCanvas.DrawPath → sk_canvas_draw_path",
+      "Checked skia-patterns.md for common crash patterns — matches threading violation pattern exactly",
+      "Searched for similar Mapsui/Avalonia crash issues — no duplicates found in SkiaSharp",
+      "Reviewed SkiaSharp threading rules: SKCanvas, SKPaint, SKPath must not be shared between threads"
+    ],
+    "proposals": [
+      {
+        "title": "Redirect to Mapsui project",
+        "description": "Guide the reporter to file this issue with the Mapsui project, as the threading violation is in their rendering code.",
+        "steps": [
+          "Respond to the issue explaining the threading violation hypothesis",
+          "Link to Mapsui's GitHub issues page",
+          "Suggest the reporter include the stack trace and the PointerMoved/GetMapInfo concurrent access pattern in the upstream report",
+          "Close the SkiaSharp issue as external/not-a-bug after the reporter confirms"
+        ],
+        "pros": ["Directs the fix to the right project", "Mapsui team understands their threading model best"],
+        "cons": ["Reporter may feel dismissed", "If Mapsui doesn't fix it, the user is stuck"],
+        "confidence": 0.80,
+        "effort": "low"
+      },
+      {
+        "title": "Suggest workaround: throttle GetMapInfo calls",
+        "description": "Advise the reporter to debounce or throttle GetMapInfo() calls in PointerMoved to reduce concurrent access.",
+        "steps": [
+          "In the PointerMoved handler, add a debounce timer (e.g., 100ms) before calling GetMapInfo()",
+          "Alternatively, use a lock or SemaphoreSlim to ensure GetMapInfo is not called while rendering is in progress",
+          "Test to confirm crash frequency is reduced or eliminated"
+        ],
+        "pros": ["Immediate fix the user can apply", "No upstream changes needed"],
+        "cons": ["Treats the symptom not the root cause", "May reduce map interactivity/responsiveness"],
+        "confidence": 0.70,
+        "effort": "low"
+      },
+      {
+        "title": "Request minimal reproduction without Mapsui",
+        "description": "Ask the reporter to reproduce the crash with plain SkiaSharp code (concurrent DrawPath calls without Mapsui) to confirm whether SkiaSharp itself has a bug.",
+        "steps": [
+          "Ask the reporter to create a minimal Avalonia app that calls DrawPath concurrently from two threads",
+          "If it crashes, there may be a SkiaSharp issue (e.g., missing null checks before native calls)",
+          "If it doesn't crash, confirm this is a Mapsui-specific concurrency bug"
+        ],
+        "pros": ["Definitively identifies whether SkiaSharp has a bug", "Provides a clear repro for any SkiaSharp-side fix"],
+        "cons": ["Asks the reporter to do significant work", "Unlikely to reveal a SkiaSharp bug based on current evidence"],
+        "confidence": 0.60,
+        "effort": "medium"
+      }
+    ],
+    "recommendedProposal": "Redirect to Mapsui project",
+    "recommendedReason": "The stack trace clearly shows Mapsui's rendering pipeline as the call site, and the intermittent crash pattern matches a threading violation. The most effective resolution is for Mapsui to add proper synchronization around their SkiaSharp calls. A workaround suggestion should be included in the response to help the reporter immediately."
+  }
+}

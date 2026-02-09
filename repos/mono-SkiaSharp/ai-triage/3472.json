@@ -1,0 +1,275 @@
+{
+  "schemaVersion": "1.0",
+  "number": 3472,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-02-08T15:00:00Z",
+  "summary": "HarfBuzzSharp Blob.FromStream uses fixed pinning that expires before native code finishes using the pointer, causing potential GC crash",
+  "type": {
+    "value": "bug",
+    "confidence": 0.97,
+    "reason": "The code uses a fixed block to pin a managed byte array, but the pin expires when the block exits while the native Blob retains the now-unpinned pointer. GC can relocate the array, causing memory corruption or crash."
+  },
+  "area": {
+    "value": "HarfBuzzSharp",
+    "confidence": 0.99,
+    "reason": "The bug is in HarfBuzzSharp.Blob.FromStream() in binding/HarfBuzzSharp/Blob.cs, which is the HarfBuzzSharp binding layer."
+  },
+  "backends": null,
+  "platforms": null,
+  "tenets": [
+    {
+      "value": "reliability",
+      "confidence": 0.97,
+      "reason": "GC-induced memory corruption can cause random crashes, data corruption, or access violations — a core reliability issue."
+    }
+  ],
+  "partner": null,
+  "regression": {
+    "isRegression": false,
+    "confidence": 0.85,
+    "reason": "The same bug was reported in issue #2323 (Nov 2022) with identical code. This has been present since the method was first written. The reporter selected 2.88.9 as 'last known good' but the same code existed in that version too."
+  },
+  "fixStatus": {
+    "likelyFixed": false,
+    "confidence": 0.90,
+    "reason": "PR #3473 was submitted by the same reporter on the same day as the issue. It is still open and not yet merged.",
+    "relatedPRs": [3473],
+    "fixedInVersion": null,
+    "verificationStatus": "unverified"
+  },
+  "bugSignals": {
+    "hasCrash": true,
+    "hasStackTrace": false,
+    "reproQuality": "partial",
+    "hasScreenshot": false,
+    "hasWorkaround": true,
+    "workaroundSummary": "Use Marshal.AllocCoTaskMem to allocate unmanaged memory, copy stream data into it via UnmanagedMemoryStream, and pass the unmanaged pointer to the Blob constructor with a FreeCoTaskMem release delegate.",
+    "severity": "critical",
+    "severityReason": "Memory corruption from GC relocating data that native code holds a pointer to. Can cause crashes, silent data corruption, or access violations at unpredictable times. Affects all platforms."
+  },
+  "reproEvidence": {
+    "codeSnippets": [
+      {
+        "language": "csharp",
+        "code": "public static unsafe Blob FromStream (Stream stream)\n{\n    // TODO: check to see if we can avoid the second copy (the ToArray)\n    using var ms = new MemoryStream ();\n    stream.CopyTo (ms);\n    var data = ms.ToArray ();\n    fixed (byte* dataPtr = data) {\n        return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose ());\n    }\n}",
+        "context": "Current buggy implementation — fixed block pins array only during constructor call, but Blob retains the pointer after the pin expires."
+      },
+      {
+        "language": "csharp",
+        "code": "public static unsafe Blob FromStream (Stream stream)\n{\n    var length = (int)(stream.Length - stream.Position);\n    var dataPtr = Marshal.AllocCoTaskMem (length);\n    using var ums = new UnmanagedMemoryStream ((byte*)dataPtr, length, length, FileAccess.ReadWrite);\n    stream.CopyTo (ums);\n    return new Blob (dataPtr, length, MemoryMode.ReadOnly, () => Marshal.FreeCoTaskMem (dataPtr));\n}",
+        "context": "Reporter's proposed fix using unmanaged memory allocation to avoid GC interference."
+      }
+    ],
+    "relatedIssues": [2323],
+    "stepsToReproduce": [
+      "Call HarfBuzzSharp.Blob.FromStream() with any stream containing font data",
+      "Trigger GC (e.g., GC.Collect() or natural GC pressure) after the Blob is created",
+      "Access the Blob data — the pointer may now point to relocated or freed memory"
+    ],
+    "environmentDetails": "SkiaSharp 3.116.0, Visual Studio on Windows, reported as affecting all platforms"
+  },
+  "versionAnalysis": {
+    "mentionedVersions": ["3.116.0", "2.88.9"],
+    "era": "modern",
+    "currentRelevance": "likely",
+    "reason": "The buggy code exists in the current main branch at binding/HarfBuzzSharp/Blob.cs lines 71-82. The same code was present in 2.88.x — this is a latent bug, not a regression.",
+    "migrationPath": null
+  },
+  "actionability": {
+    "suggestedAction": "needs-investigation",
+    "confidence": 0.92,
+    "reason": "The bug is real and verified by code inspection. PR #3473 exists but needs review — the proposed fix has a limitation (assumes stream.Length is available). The fix approach is sound but implementation details need maintainer review.",
+    "requiresHumanReview": false,
+    "closeable": false,
+    "closeReason": null,
+    "abandoned": false,
+    "abandonedReason": null
+  },
+  "suggestedResponse": null,
+  "analysisNotes": {
+    "summary": "HarfBuzzSharp.Blob.FromStream() has a GC safety bug: it pins a managed byte array with a fixed block, passes the pointer to native code, but the pin expires when the fixed block exits. The native Blob retains the pointer, which becomes invalid if GC relocates the array. This is a latent bug present since the method was written, previously reported as #2323 in 2022. PR #3473 provides a fix.",
+    "keySignals": [
+      {
+        "text": "If GC runs after the blob is created, the managed array memory might be moved resulting in a crash",
+        "source": "body",
+        "interpretation": "Reporter correctly identifies the core issue — fixed pinning is temporary but the native pointer outlives it.",
+        "supportedFields": ["type", "bugSignals.severity"]
+      },
+      {
+        "text": "fixed (byte* dataPtr = data) { return new Blob ((IntPtr)dataPtr, ...); }",
+        "source": "body",
+        "interpretation": "The fixed block exits immediately after the Blob constructor, releasing the pin while native code retains the pointer.",
+        "supportedFields": ["type", "bugSignals"]
+      },
+      {
+        "text": "Should copy via an UnmanagedMemoryStream",
+        "source": "body",
+        "interpretation": "Reporter proposes allocating unmanaged memory instead, which is not subject to GC relocation.",
+        "supportedFields": ["bugSignals.hasWorkaround"]
+      },
+      {
+        "text": "// TODO: check to see if we can avoid the second copy (the ToArray)",
+        "source": "body",
+        "interpretation": "Existing TODO in the code acknowledges the implementation is suboptimal. The fix would address both the TODO and the GC safety issue.",
+        "supportedFields": ["type"]
+      },
+      {
+        "text": "Platform / Operating System: All",
+        "source": "body",
+        "interpretation": "GC safety issue affects all .NET runtimes and platforms equally.",
+        "supportedFields": ["platforms"]
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "bug",
+        "expandedReason": "The code has a clear memory safety bug: a managed array pointer is passed to native code but is not pinned for the lifetime of the native object. This can cause crashes or data corruption when GC runs.",
+        "alternatives": [
+          {
+            "value": "enhancement",
+            "whyRejected": "While the fix also improves performance (removes redundant copy), the core issue is a correctness bug that can cause crashes."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "HarfBuzzSharp",
+        "expandedReason": "The bug is in binding/HarfBuzzSharp/Blob.cs, specifically in the HarfBuzzSharp.Blob class. The existing label area/SkiaSharp is incorrect — the correct area is HarfBuzzSharp.",
+        "alternatives": [
+          {
+            "value": "SkiaSharp",
+            "whyRejected": "The Blob class is in the HarfBuzzSharp namespace, not SkiaSharp. No SkiaSharp code is involved."
+          }
+        ]
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "critical",
+        "expandedReason": "Memory corruption from dangling pointers can cause crashes, silent data corruption, or security vulnerabilities. The issue is non-deterministic (depends on GC timing), making it hard to diagnose and potentially affecting production systems unpredictably.",
+        "alternatives": [
+          {
+            "value": "high",
+            "whyRejected": "While a workaround exists (the reporter's proposed fix), the severity of memory corruption issues warrants critical rating because the consequences are unpredictable and potentially catastrophic."
+          }
+        ]
+      },
+      {
+        "field": "tenets",
+        "chosen": "reliability",
+        "expandedReason": "GC-induced memory corruption causes non-deterministic crashes — the hallmark of a reliability issue."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The bug is confirmed by code inspection and PR #3473 exists, but the PR needs maintainer review. The proposed fix assumes stream.Length is available, which doesn't hold for all Stream types (e.g., NetworkStream). The maintainer needs to review the fix approach.",
+        "alternatives": [
+          {
+            "value": "keep-open",
+            "whyRejected": "More urgency is warranted given the severity — this needs active investigation, not passive backlog treatment."
+          }
+        ]
+      }
+    ],
+    "docsConsulted": [
+      {
+        "path": "binding/HarfBuzzSharp/Blob.cs",
+        "relevance": "Verified the buggy code exists at lines 71-82, confirmed the fixed block only pins during the constructor call.",
+        "usedFor": ["type", "area", "bugSignals"]
+      },
+      {
+        "path": "references/research-by-type.md",
+        "relevance": "Guided bug research workflow — checked source code, searched for duplicates, checked for existing fixes.",
+        "usedFor": ["type", "actionability"]
+      }
+    ],
+    "docsNotConsulted": "No native loading or platform-specific docs needed — this is a pure managed memory safety issue in C# code, not a native binary or platform-specific problem.",
+    "uncertainties": [
+      "Whether PR #3473's fix handles non-seekable streams (the proposed fix uses stream.Length which requires seekability)",
+      "Whether there are other similar GC safety issues in HarfBuzzSharp or SkiaSharp bindings using the same fixed-block pattern",
+      "Whether issue #2323 should be closed as duplicate of #3472 or vice versa (2323 was filed first in 2022)"
+    ],
+    "assumptions": [
+      "Assumed the bug has existed since the method was written, not introduced in a specific version, based on the TODO comment being present in the code"
+    ]
+  },
+  "resolutionAnalysis": {
+    "hypothesis": "Blob.FromStream() pins a managed byte array using a fixed block, but the pin is only active during the Blob constructor call. After the fixed block exits, the GC can relocate the array while native HarfBuzz code still holds a pointer to the original location, causing use-after-move memory corruption.",
+    "researchDone": [
+      "Inspected binding/HarfBuzzSharp/Blob.cs source code (lines 71-82) confirming the bug",
+      "Found duplicate issue #2323 from Nov 2022 reporting the same exact concern",
+      "Found open PR #3473 from the same reporter with a proposed fix",
+      "Verified no other FromStream-like patterns exist in HarfBuzzSharp"
+    ],
+    "proposals": [
+      {
+        "title": "Merge PR #3473 with stream.Length fix",
+        "description": "Review and merge the existing PR which uses Marshal.AllocCoTaskMem and UnmanagedMemoryStream to avoid GC interference. May need modification for non-seekable streams.",
+        "steps": [
+          "Review PR #3473 for correctness",
+          "Address stream.Length assumption — add fallback for non-seekable streams (copy to MemoryStream first, then get length)",
+          "Add unit tests for Blob.FromStream with various stream types",
+          "Merge and close both #3472 and #2323"
+        ],
+        "pros": [
+          "Fix already written and submitted by the reporter",
+          "Uses unmanaged memory — completely avoids GC interference",
+          "Also resolves the TODO about removing the redundant copy",
+          "Performance improvement — eliminates double copy"
+        ],
+        "cons": [
+          "Proposed fix assumes stream.Length is available — needs modification for non-seekable streams",
+          "Changes memory ownership model (CoTaskMem vs managed array)"
+        ],
+        "confidence": 0.90,
+        "effort": "low"
+      },
+      {
+        "title": "Use GCHandle.Alloc with Pinned flag",
+        "description": "Pin the managed byte array for the lifetime of the Blob using GCHandle.Alloc(data, GCHandleType.Pinned) instead of switching to unmanaged memory.",
+        "steps": [
+          "Replace fixed block with GCHandle.Alloc(data, GCHandleType.Pinned)",
+          "Store GCHandle and free it in the release delegate",
+          "Keep the managed array referenced to prevent GC collection",
+          "Add unit tests"
+        ],
+        "pros": [
+          "Minimal change to existing code structure",
+          "Keeps managed memory — familiar pattern",
+          "Works with all stream types (keeps MemoryStream.CopyTo approach)"
+        ],
+        "cons": [
+          "Pinned objects fragment the managed heap",
+          "Still has the redundant ToArray copy the TODO mentions",
+          "Long-lived pins are generally discouraged in .NET"
+        ],
+        "confidence": 0.85,
+        "effort": "low"
+      },
+      {
+        "title": "Hybrid approach — MemoryStream buffer + unmanaged copy",
+        "description": "Keep the MemoryStream.CopyTo pattern for stream reading (works with all streams), then copy to unmanaged memory for the Blob pointer.",
+        "steps": [
+          "Read stream into MemoryStream as before (handles non-seekable streams)",
+          "Allocate unmanaged memory with Marshal.AllocCoTaskMem(ms.Length)",
+          "Copy from MemoryStream buffer to unmanaged memory using Marshal.Copy or Buffer.MemoryCopy",
+          "Create Blob with unmanaged pointer and FreeCoTaskMem release delegate",
+          "Add unit tests"
+        ],
+        "pros": [
+          "Works with all stream types including non-seekable",
+          "Uses unmanaged memory — no GC interference",
+          "Clear ownership semantics"
+        ],
+        "cons": [
+          "Still has double copy (stream → MemoryStream → unmanaged)",
+          "Slightly more memory usage during the copy"
+        ],
+        "confidence": 0.85,
+        "effort": "low"
+      }
+    ],
+    "recommendedProposal": "Merge PR #3473 with stream.Length fix",
+    "recommendedReason": "The fix is already written and addresses both the GC safety bug and the performance TODO. It just needs a small modification to handle non-seekable streams. Lowest effort path to resolution."
+  }
+}
