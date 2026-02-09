@@ -14,7 +14,7 @@ Reference for all NuGet packages produced by SkiaSharp — purpose, contents, an
 - [Views Packages](#views-packages) — UI controls for each platform
 - [GPU Backend Packages](#gpu-backend-packages) — Vulkan and Direct3D support
 - [Deployment & Containers](#deployment--containers) — Container and publishing guidance
-  - [Container Deployment](#container-deployment) — Common issues and fixes
+  - [Container Deployment](#container-deployment) — Which Linux package to use in containers
   - [Publishing Modes](#publishing-modes) — Framework-dependent, self-contained, single-file
 - [Obsolete Packages](#obsolete-packages) — Deprecated, do not use
 
@@ -142,15 +142,6 @@ If a NativeAssets package is only referenced in a transitive library, the native
 ### Container Deployment
 
 For containers, use `SkiaSharp.NativeAssets.Linux.NoDependencies` unless you specifically need fontconfig for system font enumeration. This package has zero third-party dependencies and works in minimal base images (`mcr.microsoft.com/dotnet/aspnet`, Alpine, distroless).
-
-Common container deployment issues:
-
-| Problem | Cause | Fix |
-|---------|-------|-----|
-| `DllNotFoundException: libSkiaSharp` | Native binary not in output | Ensure `SkiaSharp.NativeAssets.Linux.NoDependencies` (or `.Linux`) is a direct `PackageReference` in the application project |
-| `libfontconfig.so.1: cannot open` | Using `SkiaSharp.NativeAssets.Linux` in minimal container | Switch to `SkiaSharp.NativeAssets.Linux.NoDependencies` or install fontconfig in Dockerfile |
-| Wrong binary for container arch | RID mismatch (glibc vs musl) | Alpine needs `linux-musl-*` RIDs — `SkiaSharp.NativeAssets.Linux.NoDependencies` includes both variants |
-| Trimming removes transitive deps | .NET trimmer strips unused assemblies | Add missing assembly as a direct `PackageReference` |
 
 ### Publishing Modes
 

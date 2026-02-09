@@ -4,7 +4,7 @@
   "title": "SkiaSharp Issue Triage",
   "description": "Per-issue AI triage classification. All sections except type and actionability are nullable — use null if not applicable, never empty objects or arrays. Label-backed field values match exact GitHub label suffixes so prefix/ + value reconstructs the full label.",
   "type": "object",
-  "required": ["schemaVersion", "number", "repo", "analyzedAt", "summary", "type", "actionability"],
+  "required": ["schemaVersion", "number", "repo", "analyzedAt", "summary", "type", "actionability", "analysisNotes"],
   "additionalProperties": false,
 
   "$defs": {
@@ -197,6 +197,166 @@
           "type": ["string", "null"],
           "description": "Consolidated environment info: OS, IDE, .NET version, device, etc."
         }
+      }
+    },
+    "keySignal": {
+      "type": "object",
+      "description": "A specific signal extracted from the issue that drove one or more classification decisions.",
+      "required": ["text", "source", "interpretation"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string", "minLength": 1, "description": "Direct quote or paraphrase of the signal from the issue." },
+        "source": {
+          "type": "string", "minLength": 1,
+          "description": "Where this signal came from: 'title', 'body', 'comment N', 'labels', 'stack-trace'."
+        },
+        "interpretation": { "type": "string", "minLength": 1, "description": "What this signal means for triage — how it influenced decisions." },
+        "supportedFields": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Which classification fields this signal supports, e.g. ['type', 'area', 'bugSignals.severity']."
+        }
+      }
+    },
+    "fieldRationale": {
+      "type": "object",
+      "description": "Expanded reasoning for a single classified field, including alternatives that were considered and rejected.",
+      "required": ["field", "chosen", "expandedReason"],
+      "additionalProperties": false,
+      "properties": {
+        "field": { "type": "string", "minLength": 1, "description": "Name of the classified field, e.g. 'type', 'area', 'platforms', 'bugSignals.severity', 'actionability.suggestedAction'." },
+        "chosen": { "type": "string", "minLength": 1, "description": "The value that was chosen for this field." },
+        "expandedReason": { "type": "string", "minLength": 1, "description": "1-4 sentence explanation of how and why this value was chosen." },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["value", "whyRejected"],
+            "additionalProperties": false,
+            "properties": {
+              "value": { "type": "string", "minLength": 1, "description": "Alternative value that was considered." },
+              "whyRejected": { "type": "string", "minLength": 1, "description": "Why this alternative was not chosen." }
+            }
+          },
+          "description": "Other plausible values that were considered but rejected. Omit if classification was obvious."
+        }
+      }
+    },
+    "docReference": {
+      "type": "object",
+      "description": "A documentation source that was consulted during analysis.",
+      "required": ["path", "relevance"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "description": "File path or URL of the doc, e.g. 'documentation/packages.md', 'references/native-loading-diagnostics.md'." },
+        "relevance": { "type": "string", "minLength": 1, "description": "Why this doc was consulted and what it clarified." },
+        "usedFor": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Which classification fields this doc informed, e.g. ['area', 'bugSignals']."
+        }
+      }
+    },
+    "analysisNotesObject": {
+      "type": "object",
+      "description": "Structured reasoning explaining how each triage decision was made. Lets a human reviewer follow the logic, challenge specific decisions, and understand what was or wasn't consulted.",
+      "required": ["summary", "keySignals", "fieldRationales"],
+      "additionalProperties": false,
+      "properties": {
+        "summary": { "type": "string", "minLength": 1, "description": "1-3 sentence overview: what the AI understood the issue to be and why it was classified this way." },
+        "keySignals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/keySignal" },
+          "minItems": 1,
+          "description": "Specific signals from the issue that drove classification. Direct quotes preferred. Max ~10."
+        },
+        "fieldRationales": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fieldRationale" },
+          "minItems": 1,
+          "description": "Per-field reasoning for every non-null classified field (type, area, platforms, tenets, severity, suggestedAction, etc). Include alternatives considered."
+        },
+        "docsConsulted": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/docReference" },
+          "minItems": 1,
+          "description": "Documentation and references that were checked. Include why each was relevant."
+        },
+        "docsNotConsulted": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "description": "Why certain potentially-relevant docs were skipped (e.g. 'No GPU/backend signals so did not check rendering docs'). Null if all relevant docs were checked."
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "What is unclear and what info would resolve it. These are the places where human review is most valuable."
+        },
+        "assumptions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Explicit assumptions made when evidence was insufficient. Omit if no assumptions were needed."
+        }
+      }
+    },
+    "resolutionProposal": {
+      "type": "object",
+      "description": "A single proposed resolution with steps, tradeoffs, and effort estimate.",
+      "required": ["title", "description", "steps", "pros", "cons", "confidence", "effort"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "description": "Short name for this proposal, e.g. 'Switch to NoDependencies package'." },
+        "description": { "type": "string", "minLength": 1, "description": "What this proposal involves — 1-3 sentences." },
+        "steps": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Concrete steps to implement this resolution."
+        },
+        "pros": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Advantages of this approach."
+        },
+        "cons": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Disadvantages, risks, or limitations."
+        },
+        "confidence": { "$ref": "#/$defs/confidence", "description": "How confident this proposal would resolve the issue." },
+        "effort": {
+          "enum": ["low", "medium", "high"],
+          "description": "low=config change or docs update. medium=code change with tests. high=architectural change or multi-component fix."
+        }
+      }
+    },
+    "resolutionAnalysisObject": {
+      "type": "object",
+      "description": "Researched resolution proposals. For bugs: root cause and fix proposals. For questions: 3+ possible answers. For feature/enhancement requests: existing alternatives or workarounds. For docs gaps: draft answers or sample code. The goal is to give the maintainer 3+ ready-to-use options to help the developer quickly.",
+      "required": ["hypothesis", "researchDone", "proposals", "recommendedProposal", "recommendedReason"],
+      "additionalProperties": false,
+      "properties": {
+        "hypothesis": { "type": "string", "minLength": 1, "description": "Best understanding of the situation. For bugs: what's going wrong. For questions: what the user is trying to accomplish. For features: what capability is missing and why." },
+        "researchDone": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "What was investigated to form these proposals — docs read, code searched, similar issues checked, API docs reviewed, etc."
+        },
+        "proposals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/resolutionProposal" },
+          "minItems": 3,
+          "description": "At least 3 alternative approaches. For bugs: fix proposals. For questions: possible answers with code/docs. For features: existing workarounds or alternatives. The maintainer reviews and decides."
+        },
+        "recommendedProposal": { "type": "string", "minLength": 1, "description": "Title of the preferred proposal." },
+        "recommendedReason": { "type": "string", "minLength": 1, "description": "Why this proposal is recommended over the others." }
       }
     },
     "bugSignalsObject": {
@@ -405,6 +565,19 @@
             "draft": { "type": "string", "minLength": 1, "maxLength": 2000, "description": "Inline markdown for a GitHub comment. Keep concise and actionable." }
           }
         }
+      ]
+    },
+
+    "analysisNotes": {
+      "$ref": "#/$defs/analysisNotesObject",
+      "description": "Structured reasoning for every triage decision. Required — always explain your thinking."
+    },
+
+    "resolutionAnalysis": {
+      "description": "Researched proposals to help the developer. Should be populated for all issue types — bugs get fix proposals, questions get answers, features get alternatives. Null only for duplicates or truly abandoned issues where no response is useful.",
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/resolutionAnalysisObject" }
       ]
     }
   },

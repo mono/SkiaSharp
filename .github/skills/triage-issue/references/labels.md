@@ -2,17 +2,7 @@
 
 SkiaSharp uses prefixed GitHub labels. AI triage values must match the exact label suffix so that `prefix/ + value` reconstructs the GitHub label.
 
-**To get current valid values, always run the script first:**
-
-```bash
-pwsh .github/skills/triage-issue/scripts/get-labels.ps1          # all groups
-pwsh .github/skills/triage-issue/scripts/get-labels.ps1 type/     # type labels
-pwsh .github/skills/triage-issue/scripts/get-labels.ps1 area/     # area labels
-pwsh .github/skills/triage-issue/scripts/get-labels.ps1 backend/  # backend labels
-pwsh .github/skills/triage-issue/scripts/get-labels.ps1 os/       # platform labels
-```
-
-The script output is the source of truth. The tables below provide guidance on when to use each label.
+**Allowed values during triage come from `triage-schema.json` enums** — those are the source of truth. The tables below explain when to use each label. The `get-labels.ps1` script is a maintenance utility for updating the schema when labels change; it is not used during triage.
 
 ## Cardinality Rules
 
