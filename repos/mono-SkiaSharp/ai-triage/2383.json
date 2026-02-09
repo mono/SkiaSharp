@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "1.0",
+  "number": 2383,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-02-09T21:04:00Z",
+  "summary": "User asks if SkiaSharp supports a 24-bit (3 bytes/pixel, no alpha) color type equivalent to Format24bppRgb",
+  "type": {
+    "value": "question",
+    "confidence": 0.95,
+    "reason": "Title starts with 'Does skia supports...' and body describes a requirement, not broken behavior."
+  },
+  "area": {
+    "value": "SkiaSharp",
+    "confidence": 0.90,
+    "reason": "Core pixel format / color type API question — SKColorType and SKImageInfo are in the SkiaSharp core package."
+  },
+  "backends": null,
+  "platforms": null,
+  "tenets": [
+    {
+      "value": "compatibility",
+      "confidence": 0.80,
+      "reason": "User is migrating from System.Drawing and needs a compatible pixel format for interop."
+    }
+  ],
+  "partner": null,
+  "regression": null,
+  "fixStatus": null,
+  "bugSignals": null,
+  "reproEvidence": null,
+  "versionAnalysis": null,
+  "actionability": {
+    "suggestedAction": "close-with-docs",
+    "confidence": 0.88,
+    "reason": "The question has a clear answer: Skia does not support 24bpp natively, but Rgb888x (32bpp, alpha ignored) or manual pixel conversion can serve the same purpose.",
+    "requiresHumanReview": false,
+    "closeable": true,
+    "closeReason": "Answered — Skia has no 24bpp format; use Rgb888x or convert 24bpp data to 32bpp before loading.",
+    "abandoned": true,
+    "abandonedReason": "Issue opened 2023-02-13, zero comments, reporter never followed up."
+  },
+  "suggestedResponse": {
+    "responseType": "answer",
+    "confidence": 0.90,
+    "reason": "Direct technical answer with code example addresses all three of the user's requirements.",
+    "draft": "Thanks for the question — this is a common one when migrating from System.Drawing.\n\nSkia (and SkiaSharp) doesn't have a native 24-bit (3 bytes per pixel) color type. The closest is `SKColorType.Rgb888x`, which uses 4 bytes per pixel with the fourth byte unused (no alpha). This satisfies your \"8 bits per channel, no alpha\" requirement, but the stride will be `width * 4`, not `width * 3`.\n\nIf your source data is truly packed 24bpp RGB, you'd need to expand it to 32bpp before loading into an `SKBitmap`. Something like:\n\n```csharp\nvar info = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);\nusing var bitmap = new SKBitmap(info);\n\n// Copy 24bpp source into 32bpp destination\nvar src = sourcePixelSpan; // your 24bpp data\nvar dst = bitmap.GetPixels();\nfor (int i = 0, j = 0; i < src.Length; i += 3, j += 4)\n{\n    Marshal.WriteByte(dst + j, src[i]);       // R\n    Marshal.WriteByte(dst + j + 1, src[i+1]); // G\n    Marshal.WriteByte(dst + j + 2, src[i+2]); // B\n    Marshal.WriteByte(dst + j + 3, 0xFF);     // X (unused)\n}\n```\n\nAlternatively, if your source is a file (JPEG, PNG, BMP), `SKBitmap.Decode()` handles the format conversion automatically — no manual pixel wrangling needed.\n\nHope that helps!"
+  },
+  "analysisNotes": {
+    "summary": "User is migrating from System.Drawing and needs a SkiaSharp equivalent of Format24bppRgb (3 bytes per pixel, RGB, no alpha). Skia has no 24bpp color type — Rgb888x is 32bpp with unused 4th byte. The answer is straightforward: either use Rgb888x with manual pixel expansion, or let SKBitmap.Decode() handle format conversion.",
+    "keySignals": [
+      {
+        "text": "Does skia supports a 24-bit color type like System.Drawing.Imaging.PixelFormat.Format24bppRgb",
+        "source": "title",
+        "interpretation": "User is asking a capability question, not reporting broken behavior. They are coming from System.Drawing and looking for a compatible pixel format.",
+        "supportedFields": ["type", "area", "tenets"]
+      },
+      {
+        "text": "use 8 bits for each colors, no alpha, necessary to specify width, height and stride",
+        "source": "body",
+        "interpretation": "Three specific requirements: 8bpc, no alpha, stride control. Rgb888x satisfies the first two; InstallPixels/SKImageInfo provides stride control.",
+        "supportedFields": ["type", "resolutionAnalysis"]
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "question",
+        "expandedReason": "Title is phrased as a question ('Does skia supports...'), body lists requirements, and no broken behavior or error is described. This is a how-to/capability inquiry.",
+        "alternatives": [
+          {
+            "value": "feature-request",
+            "whyRejected": "Not requesting a new feature — asking how to achieve something. Rgb888x already partially addresses the need."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "SkiaSharp",
+        "expandedReason": "SKColorType, SKImageInfo, and SKBitmap pixel operations are all in the core SkiaSharp package."
+      },
+      {
+        "field": "tenets",
+        "chosen": "compatibility",
+        "expandedReason": "User explicitly references System.Drawing.Imaging.PixelFormat.Format24bppRgb, indicating a migration/interop scenario where format compatibility matters."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "close-with-docs",
+        "expandedReason": "The question has a definitive answer. No 24bpp type exists in Skia, but Rgb888x + pixel expansion achieves the same result. Issue is also 3 years old with zero follow-up.",
+        "alternatives": [
+          {
+            "value": "convert-to-discussion",
+            "whyRejected": "While it's a question, it's old and answered. Converting adds unnecessary noise to Discussions."
+          }
+        ]
+      }
+    ],
+    "docsConsulted": [
+      {
+        "path": "binding/SkiaSharp/Definitions.cs",
+        "relevance": "Confirmed SKColorType enum values. Verified Rgb888x is 4 bytes per pixel (not 3). No 24bpp type exists.",
+        "usedFor": ["type", "resolutionAnalysis"]
+      },
+      {
+        "path": "binding/SkiaSharp/SKBitmap.cs",
+        "relevance": "Confirmed InstallPixels API supports custom stride via SKImageInfo, addressing the user's third requirement.",
+        "usedFor": ["resolutionAnalysis"]
+      }
+    ],
+    "docsNotConsulted": "No platform-specific docs, backend docs, or native loading docs consulted — issue is purely about pixel format API with no platform or deployment context.",
+    "uncertainties": [
+      "Unclear exactly what the user's source data format is — raw byte array from System.Drawing, a file, or something else.",
+      "Unknown whether performance of per-pixel expansion is acceptable for the user's use case."
+    ]
+  },
+  "resolutionAnalysis": {
+    "hypothesis": "User has 24bpp RGB image data (likely from System.Drawing or interop) and wants to load it into an SKBitmap. Skia has no 24bpp color type, so the data needs conversion to a 32bpp format.",
+    "researchDone": [
+      "Checked SKColorType enum — confirmed no 24bpp type exists; Rgb888x is 32bpp with ignored 4th byte",
+      "Checked SKBitmap.InstallPixels — supports custom stride via SKImageInfo for raw pixel data",
+      "Checked SKBitmap.Decode — handles format conversion automatically for encoded images (JPEG, PNG, BMP)",
+      "Verified Rgb888x bytes-per-pixel is 4 in Definitions.cs"
+    ],
+    "proposals": [
+      {
+        "title": "Use Rgb888x with manual 24→32 pixel expansion",
+        "description": "Expand each 3-byte RGB pixel to 4 bytes (RGBx) and load with SKColorType.Rgb888x. This is the closest to the user's System.Drawing format.",
+        "steps": [
+          "Allocate new byte array of width * height * 4",
+          "Copy each 3-byte pixel to 4 bytes, padding with 0xFF",
+          "Create SKImageInfo with SKColorType.Rgb888x and SKAlphaType.Opaque",
+          "Use SKBitmap.InstallPixels or create bitmap from info and copy to GetPixels()"
+        ],
+        "pros": [
+          "Closest equivalent to Format24bppRgb semantics",
+          "Alpha channel is properly ignored",
+          "Full control over stride"
+        ],
+        "cons": [
+          "Requires manual pixel expansion loop — ~33% memory overhead",
+          "Slightly more code than other approaches"
+        ],
+        "confidence": 0.90,
+        "effort": "low"
+      },
+      {
+        "title": "Use Rgba8888 with alpha set to 0xFF",
+        "description": "Convert 24bpp data to standard RGBA 32bpp with alpha = 255 (fully opaque). Wider compatibility since Rgba8888 is the most commonly used type.",
+        "steps": [
+          "Allocate byte array of width * height * 4",
+          "For each pixel: copy R, G, B bytes and append 0xFF for alpha",
+          "Create SKImageInfo with SKColorType.Rgba8888, SKAlphaType.Opaque",
+          "Load into SKBitmap via InstallPixels"
+        ],
+        "pros": [
+          "Most widely compatible SKColorType — works everywhere",
+          "Interops well with other SkiaSharp APIs"
+        ],
+        "cons": [
+          "Same ~33% memory overhead as Rgb888x approach",
+          "Semantically 'has alpha' even though it's always opaque"
+        ],
+        "confidence": 0.85,
+        "effort": "low"
+      },
+      {
+        "title": "Decode from encoded image format",
+        "description": "If the source is a file or stream (JPEG, PNG, BMP), use SKBitmap.Decode() which handles all pixel format conversion automatically.",
+        "steps": [
+          "If source is a file: SKBitmap.Decode(filename)",
+          "If source is a stream: SKBitmap.Decode(stream)",
+          "If source is byte[]: SKBitmap.Decode(data)",
+          "Optionally specify target SKImageInfo to control output format"
+        ],
+        "pros": [
+          "Zero manual pixel manipulation",
+          "Handles BMP, JPEG, PNG, WebP, and other formats automatically",
+          "Simplest code path"
+        ],
+        "cons": [
+          "Only works if source is an encoded image, not raw pixel data",
+          "Less control over exact pixel layout"
+        ],
+        "confidence": 0.80,
+        "effort": "low"
+      }
+    ],
+    "recommendedProposal": "Use Rgb888x with manual 24→32 pixel expansion",
+    "recommendedReason": "Most directly answers the user's question about a 24bpp equivalent. Rgb888x is semantically identical to Format24bppRgb (RGB, no alpha) with the only difference being 4 bytes per pixel instead of 3. If the source turns out to be an encoded file, Decode() is even simpler."
+  }
+}
