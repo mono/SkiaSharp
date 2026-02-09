@@ -1,0 +1,1513 @@
+{
+  "generatedAt": "2026-02-09T23:04:12.5734924Z",
+  "totalCount": 6,
+  "summary": {
+    "needsInvestigation": 1,
+    "closeable": 5,
+    "quickWins": 5,
+    "needsHumanReview": 0,
+    "regressions": 2,
+    "abandoned": 2
+  },
+  "byType": [
+    {
+      "label": "bug",
+      "count": 3
+    },
+    {
+      "label": "question",
+      "count": 2
+    },
+    {
+      "label": "feature-request",
+      "count": 1
+    }
+  ],
+  "byArea": [
+    {
+      "label": "SkiaSharp",
+      "count": 3
+    },
+    {
+      "label": "SkiaSharp.Views.Forms",
+      "count": 1
+    },
+    {
+      "label": "libSkiaSharp.native",
+      "count": 1
+    }
+  ],
+  "byAction": [
+    {
+      "label": "close-as-fixed",
+      "count": 2
+    },
+    {
+      "label": "close-with-docs",
+      "count": 2
+    },
+    {
+      "label": "close-as-duplicate",
+      "count": 1
+    },
+    {
+      "label": "needs-investigation",
+      "count": 1
+    }
+  ],
+  "bySeverity": [
+    {
+      "label": "medium",
+      "count": 3
+    }
+  ],
+  "issues": [
+    {
+      "schemaVersion": "1.0",
+      "number": 3385,
+      "repo": "mono/SkiaSharp",
+      "analyzedAt": "2026-02-09T21:18:00Z",
+      "summary": "Request for Gray16 (16-bit grayscale) SKColorType, which does not exist in upstream Skia",
+      "type": {
+        "value": "feature-request",
+        "confidence": 0.97,
+        "reason": "Explicitly filed as [FEATURE], labeled type/feature-request, requests adding a new enum value (SKColorType.Gray16) that doesn\u0027t exist."
+      },
+      "area": {
+        "value": "SkiaSharp",
+        "confidence": 0.9,
+        "reason": "SKColorType is a core SkiaSharp enum. The request involves the core pixel format enumeration, not views, native loading, or any other subsystem."
+      },
+      "backends": null,
+      "platforms": null,
+      "tenets": null,
+      "partner": null,
+      "regression": null,
+      "fixStatus": null,
+      "bugSignals": null,
+      "reproEvidence": null,
+      "versionAnalysis": null,
+      "actionability": {
+        "suggestedAction": "close-with-docs",
+        "confidence": 0.85,
+        "reason": "Gray16 does not exist in upstream Skia (only kGray_8_SkColorType). SkiaSharp wraps Skia and cannot add pixel formats that don\u0027t exist in the native library. Community member molesmoke already confirmed this. Can be closed with an explanation and workaround suggestions.",
+        "requiresHumanReview": false,
+        "closeable": true,
+        "closeReason": "Gray16 is not supported by upstream Skia. SkiaSharp cannot add color types that don\u0027t exist at the native level."
+      },
+      "suggestedResponse": {
+        "responseType": "answer",
+        "confidence": 0.85,
+        "reason": "The upstream limitation is well-understood and workarounds exist using existing 16-bit color types. A clear explanation with alternatives would be helpful.",
+        "draft": "Thanks for the request \u2014 working with 16-bit grayscale data is a legitimate need, especially for medical imaging, scientific visualization, and similar use cases.\n\nAs @molesmoke noted, Skia itself doesn\u0027t have a \u0060kGray_16\u0060 color type \u2014 it only defines \u0060kGray_8\u0060 for grayscale. Since SkiaSharp wraps the native Skia library, we can\u0027t add pixel formats that don\u0027t exist upstream.\n\nThat said, there are a couple of approaches that might work depending on your use case:\n\n- **\u0060SKColorType.Alpha16\u0060** \u2014 stores a single 16-bit unorm channel per pixel. If you\u0027re working with raw grayscale intensity data (not rendering to screen), you could decode your 16-bit PNG externally and load the pixel data into an \u0060Alpha16\u0060 bitmap.\n- **\u0060SKColorType.RgbaF16\u0060** \u2014 if you need to render the grayscale data, you could convert each 16-bit gray value into an RGBA half-float pixel (setting R=G=B=gray, A=1.0) which preserves the full precision.\n- **Manual pixel conversion** \u2014 decode the 16-bit PNG with a library like ImageSharp or the raw \u0060SKCodec\u0060, then convert to \u0060Gray8\u0060 or another supported type if 8-bit precision is acceptable for your workflow.\n\nWould any of these approaches work for your scenario, or is there a specific rendering pipeline requirement that needs native Gray16 support?"
+      },
+      "analysisNotes": {
+        "summary": "Feature request for a Gray16 (16-bit grayscale) color type in SKColorType. Upstream Skia only defines kGray_8_SkColorType \u2014 no 16-bit grayscale exists at the native level. SkiaSharp cannot add pixel formats beyond what Skia supports. Community already confirmed the upstream limitation.",
+        "keySignals": [
+          {
+            "text": "i want to use 16bit grayscale pngs but it looks like it doesnt exist in skiasharp",
+            "source": "body",
+            "interpretation": "User has a concrete use case (16-bit grayscale PNGs) and has already checked the API surface to confirm the gap.",
+            "supportedFields": [
+              "type",
+              "area"
+            ]
+          },
+          {
+            "text": "add SkColorType.Gray16",
+            "source": "body",
+            "interpretation": "Specific enum value requested \u2014 this is a feature request for a new pixel format, not a question or bug.",
+            "supportedFields": [
+              "type"
+            ]
+          },
+          {
+            "text": "There\u0027s no Gray16 support upstream: https://api.skia.org/SkColorType_8h.html",
+            "source": "comment 2",
+            "interpretation": "Community member confirmed upstream Skia lacks this type, which is the fundamental blocker. SkiaSharp cannot add what Skia doesn\u0027t have.",
+            "supportedFields": [
+              "actionability"
+            ]
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "feature-request",
+            "expandedReason": "The issue is filed with [FEATURE] prefix, uses the feature request template, and explicitly asks for adding a new enum value. Nothing is broken \u2014 the capability simply doesn\u0027t exist.",
+            "alternatives": [
+              {
+                "value": "enhancement",
+                "whyRejected": "Enhancement implies improving existing functionality. Gray16 doesn\u0027t exist at all \u2014 this is a new capability request."
+              }
+            ]
+          },
+          {
+            "field": "area",
+            "chosen": "SkiaSharp",
+            "expandedReason": "SKColorType is part of the core SkiaSharp API surface. It maps directly to Skia\u0027s SkColorType enum. This isn\u0027t a views, HarfBuzz, or native loading issue."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "close-with-docs",
+            "expandedReason": "The upstream limitation is definitive \u2014 Skia does not support kGray_16 and SkiaSharp cannot add pixel formats that don\u0027t exist in the native library. The community already confirmed this. The issue can be closed with an explanation and workaround suggestions.",
+            "alternatives": [
+              {
+                "value": "keep-open",
+                "whyRejected": "Could be kept open as a tracking issue for potential upstream Skia changes, but since SkiaSharp has no control over upstream Skia\u0027s color type additions, it\u0027s more accurate to close with explanation."
+              },
+              {
+                "value": "convert-to-discussion",
+                "whyRejected": "The answer is clear and definitive \u2014 there\u0027s nothing to discuss. The type doesn\u0027t exist upstream."
+              }
+            ]
+          }
+        ],
+        "docsConsulted": [
+          {
+            "path": "externals/skia/include/core/SkColorType.h",
+            "relevance": "Verified the complete list of upstream Skia color types \u2014 confirmed kGray_8_SkColorType exists but no kGray_16 variant. Also confirmed that 16-bit unorm types exist (kA16_unorm, kR16G16_unorm, kR16G16B16A16_unorm) which could serve as workarounds.",
+            "usedFor": [
+              "type",
+              "actionability",
+              "resolutionAnalysis"
+            ]
+          },
+          {
+            "path": "binding/SkiaSharp/Definitions.cs",
+            "relevance": "Confirmed SkiaSharp\u0027s SKColorType enum mirrors Skia\u0027s types. Gray8 is mapped, but no Gray16 exists. Also confirmed Alpha16, Rg1616, Rgba16161616 are available as potential workaround formats.",
+            "usedFor": [
+              "area",
+              "resolutionAnalysis"
+            ]
+          },
+          {
+            "path": "binding/SkiaSharp/EnumMappings.cs",
+            "relevance": "Confirmed the mapping pattern between SKColorType (public) and SKColorTypeNative (generated). Adding a new type requires both upstream Skia support and mapping code.",
+            "usedFor": [
+              "resolutionAnalysis"
+            ]
+          },
+          {
+            "path": "references/skia-patterns.md",
+            "relevance": "Checked for any known patterns related to pixel format limitations. No specific Gray16 patterns found.",
+            "usedFor": [
+              "analysisNotes"
+            ]
+          }
+        ],
+        "docsNotConsulted": "No need to check packages.md (not a deployment issue), no need to check rendering backend docs (not backend-specific), no need to check documentation/architecture.md (the limitation is upstream, not architectural).",
+        "uncertainties": [
+          "Unknown what the user\u0027s specific use case is \u2014 medical imaging, scientific data, photography? The optimal workaround depends on whether they need rendering or just data manipulation.",
+          "Unclear whether Skia has any plans to add Gray16 support upstream \u2014 the Skia team\u0027s roadmap is not public.",
+          "Unknown whether the user has tried any workarounds or if this is a blocking issue for their project."
+        ]
+      },
+      "resolutionAnalysis": {
+        "hypothesis": "The user needs to work with 16-bit grayscale PNG images in SkiaSharp but the pixel format doesn\u0027t exist because upstream Skia only supports 8-bit grayscale (kGray_8_SkColorType). Workarounds exist using other 16-bit color types.",
+        "researchDone": [
+          "Checked upstream Skia SkColorType.h \u2014 confirmed no kGray_16 type exists",
+          "Reviewed all available 16-bit color types in Skia: kA16_unorm, kR16G16_unorm, kR16G16B16A16_unorm, kA16_float, kR16G16_float, kRGBA_F16",
+          "Checked SkiaSharp\u0027s SKColorType enum and mapping code to understand how types are bridged",
+          "Searched for related issues \u2014 no prior Gray16 requests found",
+          "Verified community response about upstream limitation"
+        ],
+        "proposals": [
+          {
+            "title": "Use Alpha16 as single-channel 16-bit storage",
+            "description": "Repurpose SKColorType.Alpha16 to store 16-bit grayscale data. Alpha16 is a single 16-bit unorm channel per pixel, which is structurally identical to what Gray16 would be.",
+            "steps": [
+              "Decode the 16-bit PNG using an external library (e.g., ImageSharp) or raw SKCodec to get raw pixel bytes",
+              "Create an SKBitmap with SKColorType.Alpha16 and matching dimensions",
+              "Copy the 16-bit grayscale values into the Alpha16 pixel buffer using SKBitmap.SetPixels() or direct pointer access",
+              "Use the bitmap for data processing (note: rendering will interpret values as alpha, not luminance)"
+            ],
+            "pros": [
+              "Exact same memory layout as Gray16 would be (1 channel, 16-bit unorm)",
+              "No precision loss",
+              "Uses existing SkiaSharp API"
+            ],
+            "cons": [
+              "Semantically incorrect \u2014 Skia treats it as alpha, not luminance",
+              "Rendering to screen will not display correctly without a custom shader",
+              "Requires manual pixel data handling"
+            ],
+            "confidence": 0.65,
+            "effort": "medium"
+          },
+          {
+            "title": "Convert to RgbaF16 for full-precision rendering",
+            "description": "Convert 16-bit grayscale values to RGBA half-float pixels (R=G=B=gray, A=1.0) which preserves the full 16-bit precision and renders correctly.",
+            "steps": [
+              "Decode the 16-bit PNG to get raw 16-bit grayscale pixel data",
+              "Allocate an SKBitmap with SKColorType.RgbaF16 and matching dimensions",
+              "For each pixel, convert the uint16 gray value to a half-float and replicate across R, G, B channels with A=1.0",
+              "Use the resulting bitmap normally \u2014 it will render as grayscale with full precision"
+            ],
+            "pros": [
+              "Renders correctly on screen",
+              "Preserves full 16-bit precision",
+              "Works with all SkiaSharp drawing operations"
+            ],
+            "cons": [
+              "4x memory overhead (8 bytes/pixel vs 2 bytes/pixel for true Gray16)",
+              "Requires manual pixel conversion code",
+              "Half-float conversion adds complexity"
+            ],
+            "confidence": 0.8,
+            "effort": "medium"
+          },
+          {
+            "title": "Use external library for 16-bit grayscale, SkiaSharp for rendering",
+            "description": "Use a dedicated image library (ImageSharp, LibTiff.NET) for 16-bit grayscale decoding and manipulation, then convert to an 8-bit or F16 format only when rendering through SkiaSharp.",
+            "steps": [
+              "Use SixLabors.ImageSharp or similar to decode and process 16-bit grayscale PNGs natively",
+              "Perform all 16-bit operations (windowing, level adjustments, etc.) in the external library",
+              "When ready to display, convert to SKBitmap with Gray8 (if 8-bit is acceptable) or RgbaF16 (if precision matters)",
+              "Use SkiaSharp only for the final rendering step"
+            ],
+            "pros": [
+              "Full native Gray16 support in the processing library",
+              "Clean separation of concerns",
+              "Best option for scientific/medical imaging workflows"
+            ],
+            "cons": [
+              "Additional dependency",
+              "Data copying between libraries",
+              "Two image APIs to learn and maintain"
+            ],
+            "confidence": 0.85,
+            "effort": "medium"
+          }
+        ],
+        "recommendedProposal": "Use external library for 16-bit grayscale, SkiaSharp for rendering",
+        "recommendedReason": "Most practical approach \u2014 dedicated image libraries have proper Gray16 support, and the conversion to SkiaSharp formats only happens at display time. This avoids fighting against Skia\u0027s lack of native Gray16 and gives the user the best tooling for their actual pixel manipulation needs."
+      },
+      "url": "https://github.com/mono/SkiaSharp/issues/3385"
+    },
+    {
+      "schemaVersion": "1.0",
+      "number": 3346,
+      "repo": "mono/SkiaSharp",
+      "analyzedAt": "2026-02-09T21:13:00Z",
+      "summary": "MAUI app crashes on Windows ARM64 when published as MSIX; installing VC\u002B\u002B Redistributable resolves it",
+      "type": {
+        "value": "bug",
+        "confidence": 0.95,
+        "reason": "Reporter describes a crash in published builds on ARM64 Windows. Debug/Release builds work; only published executable crashes. This is broken behavior, not a usage question."
+      },
+      "area": {
+        "value": "libSkiaSharp.native",
+        "confidence": 0.82,
+        "reason": "The crash is resolved by installing VC\u002B\u002B Redistributable, indicating the native binary (libSkiaSharp.dll or ANGLE libraries) has a dynamic dependency on the C\u002B\u002B runtime that isn\u0027t satisfied in a fresh ARM64 Windows deployment."
+      },
+      "backends": null,
+      "platforms": [
+        {
+          "value": "Windows-Classic",
+          "confidence": 0.95,
+          "reason": "Reporter explicitly states Windows ARM64, tested on Windows 10 and 11. The MAUI WinUI target is Windows-specific."
+        }
+      ],
+      "tenets": [
+        {
+          "value": "reliability",
+          "confidence": 0.95,
+          "reason": "Application crashes immediately on launch in published builds \u2014 a fundamental reliability failure."
+        }
+      ],
+      "partner": {
+        "value": "maui",
+        "confidence": 0.75,
+        "reason": "The repro project is a .NET MAUI app using SkiaSharp.Views.Maui.Controls. The MSIX packaging and ANGLE rendering surface are MAUI/WinUI concerns that may contribute to the issue."
+      },
+      "regression": null,
+      "fixStatus": {
+        "likelyFixed": false,
+        "confidence": 0.55,
+        "reason": "Maintainer mattleibow asked about GPU rendering and mentioned \u0027trying to release a fix for that\u0027, suggesting a related fix is in progress. However, the repro uses SKCanvasView (CPU rendering), so the GPU fix may not fully address this issue. The VC\u002B\u002B Redistributable dependency suggests a native build configuration issue that may require separate attention."
+      },
+      "bugSignals": {
+        "hasCrash": true,
+        "hasStackTrace": false,
+        "reproQuality": "complete",
+        "hasScreenshot": false,
+        "hasWorkaround": true,
+        "workaroundSummary": "Install Microsoft Visual C\u002B\u002B Redistributable on the target ARM64 Windows machine before running the published app.",
+        "targetFrameworks": [
+          "net9.0-windows10.0.19041.0"
+        ],
+        "severity": "medium",
+        "severityReason": "Crash on published builds is severe, but a workaround exists (installing VC\u002B\u002B Redistributable). The issue is specific to ARM64 Windows published deployments, which is a narrower audience."
+      },
+      "reproEvidence": {
+        "repoLinks": [
+          {
+            "url": "https://github.com/riccardomartins/ArmDemoTryout",
+            "description": ".NET MAUI app demonstrating the ARM64 Windows crash. Uses SkiaSharp.Views.Maui.Controls 3.119.0 and Svg.Skia 3.0.6 with MSIX packaging."
+          }
+        ],
+        "relatedIssues": [
+          3155,
+          136
+        ],
+        "stepsToReproduce": [
+          "Clone https://github.com/riccardomartins/ArmDemoTryout",
+          "Open in Visual Studio on a Windows ARM64 machine",
+          "Build and run in Debug or Release mode \u2014 works fine",
+          "Publish the app as MSIX for Windows ARM64",
+          "Run the published executable on a fresh ARM64 Windows machine without VC\u002B\u002B Redistributable installed",
+          "App starts and crashes immediately"
+        ],
+        "codeSnippets": [
+          {
+            "language": "xml",
+            "code": "\u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00223.119.0\u0022 /\u003E\n\u003CPackageReference Include=\u0022Svg.Skia\u0022 Version=\u00223.0.6\u0022 /\u003E",
+            "context": "Project dependencies from the repro csproj. Uses MAUI with MSIX packaging (WindowsPackageType=MSIX)."
+          }
+        ],
+        "environmentDetails": "Windows 10 and 11 ARM64, Visual Studio (Windows), SkiaSharp 3.116.0 (reported) / 3.119.0 (in csproj), .NET 9, MSIX packaging"
+      },
+      "versionAnalysis": {
+        "mentionedVersions": [
+          "3.116.0",
+          "3.119.0"
+        ],
+        "era": "modern",
+        "currentRelevance": "likely",
+        "reason": "The issue is reported against 3.116.0 but the repro project references 3.119.0, indicating it persists across recent versions. The VC\u002B\u002B Redistributable dependency on ARM64 is a build configuration issue that likely still exists in the latest builds."
+      },
+      "actionability": {
+        "suggestedAction": "needs-investigation",
+        "confidence": 0.85,
+        "reason": "The VC\u002B\u002B Redistributable dependency on ARM64 Windows suggests the native library is not statically linking the C\u002B\u002B runtime for ARM64 builds. This was fixed for x86/x64 in issue #136 (v1.68.0) but may not have been applied to ARM64. Additionally, the ANGLE libraries from NativeAssets.WinUI may also contribute. The maintainer\u0027s in-progress GPU fix may partially address this, but the CPU rendering repro suggests it\u0027s a broader native linking issue.",
+        "requiresHumanReview": false,
+        "closeable": false
+      },
+      "suggestedResponse": {
+        "responseType": "answer",
+        "confidence": 0.75,
+        "reason": "The reporter\u0027s VC\u002B\u002B Redistributable finding is a strong diagnostic signal. The maintainer already asked about GPU rendering but hasn\u0027t addressed the VC\u002B\u002B dependency question. A response acknowledging the finding and explaining the situation would be helpful.",
+        "draft": "Thanks for tracking that down \u2014 the VC\u002B\u002B Redistributable dependency is a really useful finding.\n\nTo answer your question: ideally, no, you shouldn\u0027t need to install the VC\u002B\u002B Redistributable separately. The native libraries should either statically link the C\u002B\u002B runtime or the MSIX package should include it.\n\nThis looks like it could be specific to the ARM64 build of the native libraries \u2014 the x64 builds have had static C\u002B\u002B runtime linking since v1.68.0, but the ARM64 build may not have the same configuration.\n\nA couple of things that would help narrow this down:\n- Are you using \u0060SKCanvasView\u0060 (CPU) or \u0060SKGLView\u0060 (GPU) in your app? (Looking at the repro code, it appears to be SKCanvasView.)\n- When you say \u0022crash immediately\u0022 \u2014 is there an exception in the Event Viewer or a crash dump? That would help pinpoint whether it\u0027s \u0060libSkiaSharp.dll\u0060 or one of the ANGLE libraries (\u0060libEGL.dll\u0060/\u0060libGLESv2.dll\u0060) that needs the runtime."
+      },
+      "analysisNotes": {
+        "summary": "A .NET MAUI app using SkiaSharp crashes on Windows ARM64 when published as MSIX, but works in Debug/Release modes. The reporter discovered that installing VC\u002B\u002B Redistributable resolves the crash, indicating the native binaries have a dynamic dependency on the C\u002B\u002B runtime not satisfied on fresh ARM64 deployments. The maintainer asked about GPU rendering and mentioned a fix in progress, but the repro uses CPU rendering (SKCanvasView).",
+        "keySignals": [
+          {
+            "text": "installing Microsoft Visual C\u002B\u002B Redistributable that app works correctly in a fresh arm64 windows",
+            "source": "comment 2",
+            "interpretation": "The native binary (libSkiaSharp.dll or ANGLE libraries) dynamically links to the C\u002B\u002B runtime rather than statically linking it. This is the root cause of the crash on fresh ARM64 systems.",
+            "supportedFields": [
+              "type",
+              "area",
+              "bugSignals.severity",
+              "bugSignals.hasWorkaround"
+            ]
+          },
+          {
+            "text": "runs correctly in Debug and Release modes on Windows ARM64, but when creating a Publish build for Windows ARM64, the app starts but crashes immediately",
+            "source": "body",
+            "interpretation": "Debug/Release work because Visual Studio installs VC\u002B\u002B runtime. Published MSIX on a fresh system lacks it. The difference is deployment context, not code.",
+            "supportedFields": [
+              "type",
+              "bugSignals.hasCrash",
+              "platforms"
+            ]
+          },
+          {
+            "text": "Were you using the GPU rendering? If so, I am trying to release a fix for that.",
+            "source": "comment 3",
+            "interpretation": "Maintainer is aware of a related ARM64 GPU issue and has a fix in progress. However, the repro uses SKCanvasView (CPU), so the GPU fix may not fully resolve this.",
+            "supportedFields": [
+              "fixStatus"
+            ]
+          },
+          {
+            "text": "SKPaintSurfaceEventArgs in MainPage.xaml.cs",
+            "source": "repro code",
+            "interpretation": "The repro uses SKCanvasView (CPU rendering via SKPaintSurfaceEventArgs), not SKGLView. This means the GPU fix mattleibow mentioned may not address this issue.",
+            "supportedFields": [
+              "backends",
+              "fixStatus"
+            ]
+          },
+          {
+            "text": "WindowsPackageType=MSIX and SkiaSharp.Views.Maui.Controls with WinUI target",
+            "source": "repro csproj",
+            "interpretation": "MAUI WinUI apps use ANGLE libraries (libEGL.dll, libGLESv2.dll from NativeAssets.WinUI) for the rendering surface. These ANGLE binaries may also require VC\u002B\u002B runtime.",
+            "supportedFields": [
+              "area",
+              "partner"
+            ]
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "bug",
+            "expandedReason": "The app crashes immediately on published builds on ARM64 Windows. This is clearly broken behavior \u2014 published apps should work without manual VC\u002B\u002B runtime installation."
+          },
+          {
+            "field": "area",
+            "chosen": "libSkiaSharp.native",
+            "expandedReason": "The crash is resolved by installing VC\u002B\u002B Redistributable, which points to the native binary build configuration. Either libSkiaSharp.dll ARM64 or the ANGLE libraries are dynamically linking the C\u002B\u002B runtime instead of statically linking it.",
+            "alternatives": [
+              {
+                "value": "SkiaSharp.Views.Maui",
+                "whyRejected": "While the repro uses MAUI, the root cause is in the native binary packaging, not the managed MAUI view layer."
+              },
+              {
+                "value": "Build",
+                "whyRejected": "Build area would suggest a build system issue, but this is specifically about native library linking configuration for ARM64."
+              }
+            ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "Windows-Classic",
+            "expandedReason": "Reported on Windows ARM64 (Windows 10 and 11). The os/Windows-Classic label is the correct match for Win32-based deployments."
+          },
+          {
+            "field": "bugSignals.severity",
+            "chosen": "medium",
+            "expandedReason": "The crash is severe (app won\u0027t start), but the workaround is simple (install VC\u002B\u002B Redistributable) and the affected audience is narrow (ARM64 Windows published deployments only).",
+            "alternatives": [
+              {
+                "value": "high",
+                "whyRejected": "A workaround exists (VC\u002B\u002B Redistributable installation), which lowers severity from high to medium."
+              },
+              {
+                "value": "low",
+                "whyRejected": "An app crash preventing all functionality is more than cosmetic/minor, even with a workaround."
+              }
+            ]
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "The VC\u002B\u002B Redistributable dependency on ARM64 needs investigation. Is it libSkiaSharp.dll or the ANGLE libraries? Was static linking intentionally omitted for ARM64? Is the maintainer\u0027s in-progress GPU fix sufficient? These questions need engineering investigation.",
+            "alternatives": [
+              {
+                "value": "close-as-fixed",
+                "whyRejected": "No fix has been released. The maintainer mentioned a fix in progress but hasn\u0027t confirmed it addresses this specific issue."
+              },
+              {
+                "value": "request-info",
+                "whyRejected": "The reporter provided a full repro project and identified the root cause (VC\u002B\u002B Redistributable). The reporter hasn\u0027t responded to the GPU rendering question, but there\u0027s enough info to investigate."
+              }
+            ]
+          },
+          {
+            "field": "partner",
+            "chosen": "maui",
+            "expandedReason": "The repro is a MAUI app and the MSIX packaging is MAUI/WinUI-specific. The ANGLE libraries from NativeAssets.WinUI are part of the MAUI/WinUI rendering pipeline and may contribute to the VC\u002B\u002B dependency."
+          }
+        ],
+        "docsConsulted": [
+          {
+            "path": "documentation/packages.md",
+            "relevance": "Confirmed NativeAssets.Win32 is auto-included for Windows targets and NativeAssets.WinUI contains ANGLE libraries (libEGL.dll, libGLESv2.dll). Publishing modes section confirmed self-contained and MSIX packaging behavior.",
+            "usedFor": [
+              "area",
+              "bugSignals"
+            ]
+          },
+          {
+            "path": "references/skia-patterns.md",
+            "relevance": "Contains direct entry: \u0027ARM64 \u002B VC\u002B\u002B Redistributable \u2014 Published apps on ARM64 Windows may need VC\u002B\u002B Redistributable installed. Self-contained publish doesn\u0027t always include it.\u0027 This confirms it\u0027s a known pattern.",
+            "usedFor": [
+              "type",
+              "area",
+              "bugSignals"
+            ]
+          }
+        ],
+        "docsNotConsulted": "Did not check rendering/GPU documentation since the repro uses CPU rendering (SKCanvasView). Did not check Linux or container docs as this is a Windows-specific issue.",
+        "uncertainties": [
+          "Whether the crash is in libSkiaSharp.dll or the ANGLE libraries (libEGL.dll/libGLESv2.dll) from NativeAssets.WinUI \u2014 both could require VC\u002B\u002B runtime",
+          "Whether the maintainer\u0027s in-progress GPU fix also addresses the VC\u002B\u002B runtime linking for CPU rendering scenarios",
+          "The reporter says version 3.116.0 but the repro csproj shows 3.119.0 \u2014 unclear if the version discrepancy matters",
+          "Whether the reporter responded to the GPU rendering question (no further comments after mattleibow\u0027s question \u2014 possible abandoned thread)"
+        ],
+        "assumptions": [
+          "Assumed the SKCanvasView usage in the repro code represents the reporter\u0027s actual usage pattern, making this a CPU rendering issue not a GPU one",
+          "Assumed the ARM64 native build configuration is the root cause since the same app works in Debug/Release (where VC\u002B\u002B runtime is available from VS)"
+        ]
+      },
+      "resolutionAnalysis": {
+        "hypothesis": "The ARM64 Windows build of libSkiaSharp.dll (or the ANGLE libraries from NativeAssets.WinUI) dynamically links the C\u002B\u002B runtime instead of statically linking it. When deployed via MSIX to a fresh ARM64 system, the C\u002B\u002B runtime isn\u0027t present, causing an immediate crash. Debug/Release from VS works because VS installs the VC\u002B\u002B runtime.",
+        "researchDone": [
+          "Reviewed repro project csproj \u2014 MAUI app with MSIX packaging, SkiaSharp.Views.Maui.Controls 3.119.0, Svg.Skia 3.0.6",
+          "Reviewed repro MainPage.xaml.cs \u2014 uses SKCanvasView (CPU rendering via SKPaintSurfaceEventArgs), not GPU",
+          "Checked issue #136 \u2014 static linking of C\u002B\u002B runtime was implemented in v1.68.0, but may not cover ARM64",
+          "Checked issue #3155 \u2014 related ARM64 Windows issue with GRGlInterface.Create() returning null (GPU/OpenGL specific)",
+          "Reviewed skia-patterns.md \u2014 documents ARM64 \u002B VC\u002B\u002B Redistributable as a known pattern",
+          "Reviewed packages.md \u2014 confirmed NativeAssets.WinUI contains ANGLE libraries that could also need VC\u002B\u002B runtime"
+        ],
+        "proposals": [
+          {
+            "title": "Statically link C\u002B\u002B runtime for ARM64 Windows builds",
+            "description": "Update the native build configuration to statically link the C\u002B\u002B runtime (/MT instead of /MD) for the ARM64 Windows target, matching what was done for x86/x64 in issue #136.",
+            "steps": [
+              "Check current ARM64 Windows build flags in the Skia build configuration (GN args)",
+              "Verify if /MT (static CRT) or /MD (dynamic CRT) is used for ARM64",
+              "If /MD, switch to /MT for ARM64 builds",
+              "Rebuild native binaries and verify the published MSIX works without VC\u002B\u002B Redistributable"
+            ],
+            "pros": [
+              "Eliminates the root cause",
+              "Consistent with x86/x64 builds",
+              "No user action required"
+            ],
+            "cons": [
+              "Slightly larger native binary",
+              "Need to verify ANGLE libraries don\u0027t also need the same fix"
+            ],
+            "confidence": 0.80,
+            "effort": "medium"
+          },
+          {
+            "title": "Include VC\u002B\u002B Redistributable in MSIX package",
+            "description": "Configure the MSIX packaging to include the VC\u002B\u002B Redistributable merge modules or declare a dependency on the VC\u002B\u002B runtime framework package.",
+            "steps": [
+              "Add VC\u002B\u002B runtime dependency to the MSIX manifest",
+              "Or include the VC\u002B\u002B merge modules in the MSIX package",
+              "Document the approach for MAUI developers targeting ARM64 Windows"
+            ],
+            "pros": [
+              "Doesn\u0027t require rebuilding native libraries",
+              "Standard MSIX packaging approach"
+            ],
+            "cons": [
+              "Pushes the fix to app developers rather than the library",
+              "May not work for non-MSIX deployment scenarios",
+              "Increases package size"
+            ],
+            "confidence": 0.60,
+            "effort": "low"
+          },
+          {
+            "title": "Workaround: Install VC\u002B\u002B Redistributable as prerequisite",
+            "description": "Document that ARM64 Windows deployments require the VC\u002B\u002B Redistributable, and recommend including it in deployment scripts or installation prerequisites.",
+            "steps": [
+              "Document the ARM64 VC\u002B\u002B Redistributable requirement in the SkiaSharp deployment guide",
+              "Add a note to the NativeAssets.Win32 package description",
+              "Optionally add a runtime check that provides a helpful error message instead of a crash"
+            ],
+            "pros": [
+              "Immediate solution for affected users",
+              "No code changes needed"
+            ],
+            "cons": [
+              "Doesn\u0027t fix the underlying issue",
+              "Poor user experience",
+              "Easy to miss in deployment planning"
+            ],
+            "confidence": 0.90,
+            "effort": "low"
+          }
+        ],
+        "recommendedProposal": "Statically link C\u002B\u002B runtime for ARM64 Windows builds",
+        "recommendedReason": "This is the proper fix that eliminates the dependency for all users. It\u0027s consistent with how x86/x64 builds were fixed in issue #136 and ensures ARM64 published apps work without additional prerequisites."
+      },
+      "url": "https://github.com/mono/SkiaSharp/issues/3346"
+    },
+    {
+      "schemaVersion": "1.0",
+      "number": 2511,
+      "repo": "mono/SkiaSharp",
+      "analyzedAt": "2026-02-09T21:30:00Z",
+      "summary": "AccessViolationException in NonAlertableWin32Lock during finalizer when closing WinForms app",
+      "type": {
+        "value": "bug",
+        "confidence": 0.95,
+        "reason": "Stack trace shows AccessViolationException crash during object finalization \u2014 clearly broken behavior, not a usage question."
+      },
+      "area": {
+        "value": "SkiaSharp",
+        "confidence": 0.90,
+        "reason": "Crash is in HandleDictionary/PlatformLock infrastructure used by the core SkiaSharp library, not in a view-specific or platform-specific package."
+      },
+      "backends": null,
+      "platforms": [
+        {
+          "value": "Windows-Classic",
+          "confidence": 0.90,
+          "reason": "Reporter says \u0027winform program\u0027 and the crash is in Win32 CRITICAL_SECTION, which is Windows-only. WinForms = Windows Classic."
+        }
+      ],
+      "tenets": [
+        {
+          "value": "reliability",
+          "confidence": 0.95,
+          "reason": "Uncatchable crash (AccessViolationException) during process shutdown is a reliability issue."
+        }
+      ],
+      "partner": null,
+      "regression": {
+        "isRegression": true,
+        "confidence": 0.80,
+        "reason": "The NonAlertableWin32Lock was introduced in v2.88.0 via PR #1817 to fix deadlocks (#1383). Issue #2194 confirms this crash started in v2.88.0 (worked in v2.80.4-preview.9). The crash cannot occur in older versions that used ReaderWriterLockSlim.",
+        "workedInVersion": "2.80.4",
+        "brokeInVersion": "2.88.0"
+      },
+      "fixStatus": null,
+      "bugSignals": {
+        "hasCrash": true,
+        "hasStackTrace": true,
+        "reproQuality": "steps-only",
+        "hasScreenshot": false,
+        "hasWorkaround": true,
+        "workaroundSummary": "Explicitly dispose all SkiaSharp objects (using statements) instead of relying on the finalizer. This avoids the finalizer code path entirely.",
+        "targetFrameworks": [
+          "net48"
+        ],
+        "severity": "medium",
+        "severityReason": "Crash during process shutdown \u2014 the application has already completed its work. Workaround exists (explicit disposal). Does not cause data loss or affect runtime operation."
+      },
+      "reproEvidence": {
+        "stepsToReproduce": [
+          "Create a WinForms application using SkiaSharp on Windows",
+          "Use SkiaSharp objects without explicitly disposing them (let GC/finalizer handle cleanup)",
+          "Close the application"
+        ],
+        "codeSnippets": [
+          {
+            "language": "text",
+            "code": "System.AccessViolationException: An attempt was made to read or write protected memory. This usually indicates that other memory is corrupted.\n   at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterCriticalSection(IntPtr lpCriticalSection)\n   at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterWriteLock()\n   at SkiaSharp.HandleDictionary.DeregisterHandle(IntPtr handle, SKObject instance)\n   at SkiaSharp.SKObject.DeregisterHandle(IntPtr handle, SKObject instance)\n   at SkiaSharp.SKObject.set_Handle(IntPtr value)\n   at SkiaSharp.SKNativeObject.Dispose(Boolean disposing)\n   at SkiaSharp.SKNativeObject.Finalize()",
+            "context": "Full stack trace from the crash on application exit"
+          }
+        ],
+        "relatedIssues": [
+          2194,
+          1817,
+          1383,
+          2181
+        ],
+        "environmentDetails": "Windows, WinForms application. No specific SkiaSharp version or .NET version mentioned by reporter."
+      },
+      "versionAnalysis": {
+        "era": "maui-transition",
+        "currentRelevance": "likely",
+        "reason": "The NonAlertableWin32Lock code with the same finalizer pattern still exists in the current codebase (3.x). The race condition between lock finalization and SKNativeObject finalization has not been structurally addressed \u2014 the Enter() null check guards against _cs being zero but not against freed memory (dangling pointer during GC shutdown).",
+        "migrationPath": null
+      },
+      "actionability": {
+        "suggestedAction": "close-as-duplicate",
+        "confidence": 0.85,
+        "reason": "Identical stack trace and same root cause as #2194, which was filed first and milestoned to v2.88.1. Issue #2511 provides no additional information beyond #2194. The issue is already closed and locked.",
+        "requiresHumanReview": false,
+        "closeable": true,
+        "closeReason": "Duplicate of #2194 \u2014 same AccessViolationException in NonAlertableWin32Lock.EnterCriticalSection during finalization.",
+        "duplicateOf": 2194,
+        "abandoned": false,
+        "abandonedReason": null
+      },
+      "suggestedResponse": null,
+      "analysisNotes": {
+        "summary": "Reporter experiences AccessViolationException when closing a WinForms application. The stack trace is identical to #2194 \u2014 a race condition in the NonAlertableWin32Lock\u0027s Win32 CRITICAL_SECTION during GC finalization at process shutdown. The lock object can be finalized (freeing the critical section memory) before all SKNativeObject finalizers complete, causing a use-after-free crash.",
+        "keySignals": [
+          {
+            "text": "System.AccessViolationException at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterCriticalSection(IntPtr lpCriticalSection)",
+            "source": "body",
+            "interpretation": "Crash inside Win32 EnterCriticalSection P/Invoke \u2014 the CRITICAL_SECTION memory has been freed or corrupted. This is the same signature as #2194.",
+            "supportedFields": [
+              "type",
+              "area",
+              "bugSignals.severity",
+              "actionability"
+            ]
+          },
+          {
+            "text": "at SkiaSharp.SKNativeObject.Finalize()",
+            "source": "body",
+            "interpretation": "Crash occurs on the finalizer thread during GC cleanup, not during normal application operation. This is a process-shutdown race condition, not a runtime bug.",
+            "supportedFields": [
+              "type",
+              "bugSignals.severity"
+            ]
+          },
+          {
+            "text": "When I close my winform program, this error will be reported",
+            "source": "body",
+            "interpretation": "Triggers on application exit. WinForms = Windows Classic platform. The crash only affects shutdown, not runtime operation.",
+            "supportedFields": [
+              "platforms",
+              "bugSignals.severity"
+            ]
+          },
+          {
+            "text": "HandleDictionary.DeregisterHandle \u2192 SKObject.set_Handle \u2192 SKNativeObject.Dispose(Boolean) \u2192 SKNativeObject.Finalize()",
+            "source": "body",
+            "interpretation": "The disposal path during finalization tries to acquire the HandleDictionary lock, but the lock\u0027s underlying CRITICAL_SECTION has already been freed by the NonAlertableWin32Lock\u0027s own finalizer.",
+            "supportedFields": [
+              "area",
+              "type"
+            ]
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "bug",
+            "expandedReason": "Despite the [BUG] prefix being empty, the content clearly describes a crash (AccessViolationException) with a full stack trace. This is broken behavior in SkiaSharp\u0027s internal memory management during finalization.",
+            "alternatives": [
+              {
+                "value": "question",
+                "whyRejected": "Reporter asks \u0027what is the problem?\u0027 but provides a definitive crash trace \u2014 this is a bug report with a question framing, not a how-to question."
+              }
+            ]
+          },
+          {
+            "field": "area",
+            "chosen": "SkiaSharp",
+            "expandedReason": "The crash is in HandleDictionary and PlatformLock, which are core SkiaSharp infrastructure classes. Not specific to any view, platform binding, or HarfBuzz component.",
+            "alternatives": [
+              {
+                "value": "SkiaSharp.Views",
+                "whyRejected": "While the reporter uses WinForms (which implies Views), the crash is in core object lifecycle management, not in any view-specific code."
+              }
+            ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "Windows-Classic",
+            "expandedReason": "Reporter says \u0027winform program\u0027 and the crash is in Win32 CRITICAL_SECTION P/Invoke, which only exists on Windows. WinForms maps to Windows-Classic (not WinUI)."
+          },
+          {
+            "field": "bugSignals.severity",
+            "chosen": "medium",
+            "expandedReason": "While an AccessViolationException is normally critical, this only occurs during process shutdown when the GC finalizer runs. The application has already completed its work. Users can work around it by explicitly disposing SkiaSharp objects. No data loss or runtime impact.",
+            "alternatives": [
+              {
+                "value": "critical",
+                "whyRejected": "Crash is only at shutdown, not during operation. No data loss. Workaround exists (explicit disposal)."
+              },
+              {
+                "value": "high",
+                "whyRejected": "Workaround exists and the crash doesn\u0027t affect application functionality \u2014 only the exit path."
+              }
+            ]
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "close-as-duplicate",
+            "expandedReason": "Issue #2194 was filed earlier (Aug 2022 vs Jun 2023) with the identical stack trace, more detail (version info, repro code), and was milestoned to v2.88.1 by mattleibow. Issue #2511 adds no new information. Already closed and locked."
+          }
+        ],
+        "docsConsulted": [
+          {
+            "path": "binding/SkiaSharp/PlatformLock.cs",
+            "relevance": "Confirmed the NonAlertableWin32Lock uses a finalizer to free the CRITICAL_SECTION. The Enter() method has an _cs != IntPtr.Zero guard, but this doesn\u0027t protect against freed-but-non-zero memory during GC shutdown race.",
+            "usedFor": [
+              "type",
+              "bugSignals",
+              "resolutionAnalysis"
+            ]
+          },
+          {
+            "path": "binding/SkiaSharp/HandleDictionary.cs",
+            "relevance": "Confirmed instancesLock is a static readonly field initialized via PlatformLock.Create(). During process shutdown, GC can finalize the lock object even though it\u0027s referenced by a static field.",
+            "usedFor": [
+              "area",
+              "resolutionAnalysis"
+            ]
+          },
+          {
+            "path": "references/skia-patterns.md",
+            "relevance": "Checked AccessViolationException pattern \u2014 documented as memory management bug. This case is a GC finalization ordering issue, not a typical use-after-dispose.",
+            "usedFor": [
+              "type",
+              "bugSignals"
+            ]
+          }
+        ],
+        "docsNotConsulted": "No native loading diagnostics needed \u2014 this is a managed-side locking issue, not a DllNotFoundException. No backend or platform-specific docs needed.",
+        "uncertainties": [
+          "No SkiaSharp version specified by the reporter \u2014 regression version range inferred from #2194",
+          "No .NET version specified \u2014 could be .NET Framework 4.x or .NET Core/5\u002B, which have different GC finalization behaviors",
+          "Whether the issue is still present in SkiaSharp 3.x \u2014 the code pattern exists but .NET runtime GC behavior may have changed",
+          "Whether the issue was actually addressed in v2.88.1 as milestoned on #2194"
+        ],
+        "assumptions": [
+          "Assumed the reporter is on a 2.88.x version since the NonAlertableWin32Lock was introduced in 2.88.0",
+          "Assumed WinForms implies .NET Framework 4.x (Windows Classic) based on the era, though modern WinForms on .NET 6\u002B is also possible"
+        ]
+      },
+      "resolutionAnalysis": {
+        "hypothesis": "During process shutdown, the .NET GC finalizer thread can finalize the NonAlertableWin32Lock (freeing the CRITICAL_SECTION memory) before all SKNativeObject finalizers complete. When a remaining SKNativeObject.Finalize() calls DeregisterHandle, it tries to enter the already-freed CRITICAL_SECTION, causing an AccessViolationException. This is a classic GC finalization ordering problem \u2014 static field references don\u0027t prevent finalization during shutdown.",
+        "researchDone": [
+          "Read PlatformLock.cs \u2014 confirmed NonAlertableWin32Lock has a finalizer that calls DeleteCriticalSection and FreeHGlobal",
+          "Read HandleDictionary.cs \u2014 confirmed instancesLock is a static readonly field (doesn\u0027t prevent GC finalization at shutdown)",
+          "Searched GitHub for identical issues \u2014 found #2194 with same stack trace, milestoned to v2.88.1",
+          "Checked PR #1817 \u2014 introduced the NonAlertableWin32Lock to fix alertable lock deadlocks (#1383)",
+          "Reviewed .NET GC documentation \u2014 during AppDomain unload/process exit, even rooted objects can be finalized"
+        ],
+        "proposals": [
+          {
+            "title": "Suppress finalization of HandleDictionary lock",
+            "description": "Call GC.SuppressFinalize on the NonAlertableWin32Lock instance after creation, and intentionally leak the CRITICAL_SECTION at process shutdown. The OS reclaims all process memory on exit anyway.",
+            "steps": [
+              "In HandleDictionary, after creating instancesLock, call GC.SuppressFinalize(instancesLock)",
+              "Alternatively, remove the ~NonAlertableWin32Lock() finalizer entirely and let the OS clean up on process exit",
+              "Run tests to verify no functional regression"
+            ],
+            "pros": [
+              "Eliminates the race condition entirely",
+              "No risk of behavior change during normal operation",
+              "OS always reclaims memory on process exit \u2014 no actual leak"
+            ],
+            "cons": [
+              "Technically \u0027leaks\u0027 the CRITICAL_SECTION if the lock is created multiple times (unlikely given it\u0027s a static field)",
+              "If SkiaSharp is ever used in a plugin/AppDomain unload scenario, the leak could accumulate"
+            ],
+            "confidence": 0.85,
+            "effort": "low"
+          },
+          {
+            "title": "Guard DeregisterHandle against finalized lock",
+            "description": "Wrap the lock acquisition in DeregisterHandle with a try-catch for AccessViolationException during finalization, or add an IsFinalized/IsDisposed flag to the lock.",
+            "steps": [
+              "Add a volatile bool _disposed flag to NonAlertableWin32Lock, set in the finalizer",
+              "In Enter(), check _disposed before calling EnterCriticalSection",
+              "In HandleDictionary.DeregisterHandle, skip lock acquisition if the lock is disposed (only when called from finalizer)"
+            ],
+            "pros": [
+              "Handles the race condition gracefully",
+              "No memory leak concerns"
+            ],
+            "cons": [
+              "Still has a tiny race window between checking _disposed and entering the critical section",
+              "Skipping the lock in the finalizer could theoretically cause dictionary corruption (benign at shutdown)"
+            ],
+            "confidence": 0.70,
+            "effort": "medium"
+          },
+          {
+            "title": "User workaround: explicit disposal",
+            "description": "Users should explicitly dispose all SkiaSharp objects using \u0027using\u0027 statements instead of relying on GC finalization. This avoids the finalizer code path entirely.",
+            "steps": [
+              "Wrap all SkiaSharp objects in \u0027using\u0027 statements or call Dispose() explicitly",
+              "Ensure disposal happens before the form closes (e.g., in FormClosing event)",
+              "Verify no AccessViolationException on exit"
+            ],
+            "pros": [
+              "Works immediately, no SkiaSharp update needed",
+              "Best practice for IDisposable objects anyway",
+              "Avoids all finalizer-related issues"
+            ],
+            "cons": [
+              "Requires code changes by the user",
+              "Some objects may be hard to track (e.g., cached objects, objects in third-party libraries like QuestPDF)",
+              "Doesn\u0027t fix the underlying issue in SkiaSharp"
+            ],
+            "confidence": 0.90,
+            "effort": "low"
+          }
+        ],
+        "recommendedProposal": "Suppress finalization of HandleDictionary lock",
+        "recommendedReason": "Simplest fix with highest confidence. The CRITICAL_SECTION is a singleton static field that lives for the process lifetime \u2014 suppressing finalization is safe and eliminates the race condition. The OS reclaims all process memory on exit."
+      },
+      "url": "https://github.com/mono/SkiaSharp/issues/2511"
+    },
+    {
+      "schemaVersion": "1.0",
+      "number": 2383,
+      "repo": "mono/SkiaSharp",
+      "analyzedAt": "2026-02-09T21:04:00Z",
+      "summary": "User asks if SkiaSharp supports a 24-bit (3 bytes/pixel, no alpha) color type equivalent to Format24bppRgb",
+      "type": {
+        "value": "question",
+        "confidence": 0.95,
+        "reason": "Title starts with \u0027Does skia supports...\u0027 and body describes a requirement, not broken behavior."
+      },
+      "area": {
+        "value": "SkiaSharp",
+        "confidence": 0.90,
+        "reason": "Core pixel format / color type API question \u2014 SKColorType and SKImageInfo are in the SkiaSharp core package."
+      },
+      "backends": null,
+      "platforms": null,
+      "tenets": [
+        {
+          "value": "compatibility",
+          "confidence": 0.80,
+          "reason": "User is migrating from System.Drawing and needs a compatible pixel format for interop."
+        }
+      ],
+      "partner": null,
+      "regression": null,
+      "fixStatus": null,
+      "bugSignals": null,
+      "reproEvidence": null,
+      "versionAnalysis": null,
+      "actionability": {
+        "suggestedAction": "close-with-docs",
+        "confidence": 0.88,
+        "reason": "The question has a clear answer: Skia does not support 24bpp natively, but Rgb888x (32bpp, alpha ignored) or manual pixel conversion can serve the same purpose.",
+        "requiresHumanReview": false,
+        "closeable": true,
+        "closeReason": "Answered \u2014 Skia has no 24bpp format; use Rgb888x or convert 24bpp data to 32bpp before loading.",
+        "abandoned": true,
+        "abandonedReason": "Issue opened 2023-02-13, zero comments, reporter never followed up."
+      },
+      "suggestedResponse": {
+        "responseType": "answer",
+        "confidence": 0.90,
+        "reason": "Direct technical answer with code example addresses all three of the user\u0027s requirements.",
+        "draft": "Thanks for the question \u2014 this is a common one when migrating from System.Drawing.\n\nSkia (and SkiaSharp) doesn\u0027t have a native 24-bit (3 bytes per pixel) color type. The closest is \u0060SKColorType.Rgb888x\u0060, which uses 4 bytes per pixel with the fourth byte unused (no alpha). This satisfies your \u00228 bits per channel, no alpha\u0022 requirement, but the stride will be \u0060width * 4\u0060, not \u0060width * 3\u0060.\n\nIf your source data is truly packed 24bpp RGB, you\u0027d need to expand it to 32bpp before loading into an \u0060SKBitmap\u0060. Something like:\n\n\u0060\u0060\u0060csharp\nvar info = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);\nusing var bitmap = new SKBitmap(info);\n\n// Copy 24bpp source into 32bpp destination\nvar src = sourcePixelSpan; // your 24bpp data\nvar dst = bitmap.GetPixels();\nfor (int i = 0, j = 0; i \u003C src.Length; i \u002B= 3, j \u002B= 4)\n{\n    Marshal.WriteByte(dst \u002B j, src[i]);       // R\n    Marshal.WriteByte(dst \u002B j \u002B 1, src[i\u002B1]); // G\n    Marshal.WriteByte(dst \u002B j \u002B 2, src[i\u002B2]); // B\n    Marshal.WriteByte(dst \u002B j \u002B 3, 0xFF);     // X (unused)\n}\n\u0060\u0060\u0060\n\nAlternatively, if your source is a file (JPEG, PNG, BMP), \u0060SKBitmap.Decode()\u0060 handles the format conversion automatically \u2014 no manual pixel wrangling needed.\n\nHope that helps!"
+      },
+      "analysisNotes": {
+        "summary": "User is migrating from System.Drawing and needs a SkiaSharp equivalent of Format24bppRgb (3 bytes per pixel, RGB, no alpha). Skia has no 24bpp color type \u2014 Rgb888x is 32bpp with unused 4th byte. The answer is straightforward: either use Rgb888x with manual pixel expansion, or let SKBitmap.Decode() handle format conversion.",
+        "keySignals": [
+          {
+            "text": "Does skia supports a 24-bit color type like System.Drawing.Imaging.PixelFormat.Format24bppRgb",
+            "source": "title",
+            "interpretation": "User is asking a capability question, not reporting broken behavior. They are coming from System.Drawing and looking for a compatible pixel format.",
+            "supportedFields": [
+              "type",
+              "area",
+              "tenets"
+            ]
+          },
+          {
+            "text": "use 8 bits for each colors, no alpha, necessary to specify width, height and stride",
+            "source": "body",
+            "interpretation": "Three specific requirements: 8bpc, no alpha, stride control. Rgb888x satisfies the first two; InstallPixels/SKImageInfo provides stride control.",
+            "supportedFields": [
+              "type",
+              "resolutionAnalysis"
+            ]
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "question",
+            "expandedReason": "Title is phrased as a question (\u0027Does skia supports...\u0027), body lists requirements, and no broken behavior or error is described. This is a how-to/capability inquiry.",
+            "alternatives": [
+              {
+                "value": "feature-request",
+                "whyRejected": "Not requesting a new feature \u2014 asking how to achieve something. Rgb888x already partially addresses the need."
+              }
+            ]
+          },
+          {
+            "field": "area",
+            "chosen": "SkiaSharp",
+            "expandedReason": "SKColorType, SKImageInfo, and SKBitmap pixel operations are all in the core SkiaSharp package."
+          },
+          {
+            "field": "tenets",
+            "chosen": "compatibility",
+            "expandedReason": "User explicitly references System.Drawing.Imaging.PixelFormat.Format24bppRgb, indicating a migration/interop scenario where format compatibility matters."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "close-with-docs",
+            "expandedReason": "The question has a definitive answer. No 24bpp type exists in Skia, but Rgb888x \u002B pixel expansion achieves the same result. Issue is also 3 years old with zero follow-up.",
+            "alternatives": [
+              {
+                "value": "convert-to-discussion",
+                "whyRejected": "While it\u0027s a question, it\u0027s old and answered. Converting adds unnecessary noise to Discussions."
+              }
+            ]
+          }
+        ],
+        "docsConsulted": [
+          {
+            "path": "binding/SkiaSharp/Definitions.cs",
+            "relevance": "Confirmed SKColorType enum values. Verified Rgb888x is 4 bytes per pixel (not 3). No 24bpp type exists.",
+            "usedFor": [
+              "type",
+              "resolutionAnalysis"
+            ]
+          },
+          {
+            "path": "binding/SkiaSharp/SKBitmap.cs",
+            "relevance": "Confirmed InstallPixels API supports custom stride via SKImageInfo, addressing the user\u0027s third requirement.",
+            "usedFor": [
+              "resolutionAnalysis"
+            ]
+          }
+        ],
+        "docsNotConsulted": "No platform-specific docs, backend docs, or native loading docs consulted \u2014 issue is purely about pixel format API with no platform or deployment context.",
+        "uncertainties": [
+          "Unclear exactly what the user\u0027s source data format is \u2014 raw byte array from System.Drawing, a file, or something else.",
+          "Unknown whether performance of per-pixel expansion is acceptable for the user\u0027s use case."
+        ]
+      },
+      "resolutionAnalysis": {
+        "hypothesis": "User has 24bpp RGB image data (likely from System.Drawing or interop) and wants to load it into an SKBitmap. Skia has no 24bpp color type, so the data needs conversion to a 32bpp format.",
+        "researchDone": [
+          "Checked SKColorType enum \u2014 confirmed no 24bpp type exists; Rgb888x is 32bpp with ignored 4th byte",
+          "Checked SKBitmap.InstallPixels \u2014 supports custom stride via SKImageInfo for raw pixel data",
+          "Checked SKBitmap.Decode \u2014 handles format conversion automatically for encoded images (JPEG, PNG, BMP)",
+          "Verified Rgb888x bytes-per-pixel is 4 in Definitions.cs"
+        ],
+        "proposals": [
+          {
+            "title": "Use Rgb888x with manual 24\u219232 pixel expansion",
+            "description": "Expand each 3-byte RGB pixel to 4 bytes (RGBx) and load with SKColorType.Rgb888x. This is the closest to the user\u0027s System.Drawing format.",
+            "steps": [
+              "Allocate new byte array of width * height * 4",
+              "Copy each 3-byte pixel to 4 bytes, padding with 0xFF",
+              "Create SKImageInfo with SKColorType.Rgb888x and SKAlphaType.Opaque",
+              "Use SKBitmap.InstallPixels or create bitmap from info and copy to GetPixels()"
+            ],
+            "pros": [
+              "Closest equivalent to Format24bppRgb semantics",
+              "Alpha channel is properly ignored",
+              "Full control over stride"
+            ],
+            "cons": [
+              "Requires manual pixel expansion loop \u2014 ~33% memory overhead",
+              "Slightly more code than other approaches"
+            ],
+            "confidence": 0.90,
+            "effort": "low"
+          },
+          {
+            "title": "Use Rgba8888 with alpha set to 0xFF",
+            "description": "Convert 24bpp data to standard RGBA 32bpp with alpha = 255 (fully opaque). Wider compatibility since Rgba8888 is the most commonly used type.",
+            "steps": [
+              "Allocate byte array of width * height * 4",
+              "For each pixel: copy R, G, B bytes and append 0xFF for alpha",
+              "Create SKImageInfo with SKColorType.Rgba8888, SKAlphaType.Opaque",
+              "Load into SKBitmap via InstallPixels"
+            ],
+            "pros": [
+              "Most widely compatible SKColorType \u2014 works everywhere",
+              "Interops well with other SkiaSharp APIs"
+            ],
+            "cons": [
+              "Same ~33% memory overhead as Rgb888x approach",
+              "Semantically \u0027has alpha\u0027 even though it\u0027s always opaque"
+            ],
+            "confidence": 0.85,
+            "effort": "low"
+          },
+          {
+            "title": "Decode from encoded image format",
+            "description": "If the source is a file or stream (JPEG, PNG, BMP), use SKBitmap.Decode() which handles all pixel format conversion automatically.",
+            "steps": [
+              "If source is a file: SKBitmap.Decode(filename)",
+              "If source is a stream: SKBitmap.Decode(stream)",
+              "If source is byte[]: SKBitmap.Decode(data)",
+              "Optionally specify target SKImageInfo to control output format"
+            ],
+            "pros": [
+              "Zero manual pixel manipulation",
+              "Handles BMP, JPEG, PNG, WebP, and other formats automatically",
+              "Simplest code path"
+            ],
+            "cons": [
+              "Only works if source is an encoded image, not raw pixel data",
+              "Less control over exact pixel layout"
+            ],
+            "confidence": 0.80,
+            "effort": "low"
+          }
+        ],
+        "recommendedProposal": "Use Rgb888x with manual 24\u219232 pixel expansion",
+        "recommendedReason": "Most directly answers the user\u0027s question about a 24bpp equivalent. Rgb888x is semantically identical to Format24bppRgb (RGB, no alpha) with the only difference being 4 bytes per pixel instead of 3. If the source turns out to be an encoded file, Decode() is even simpler."
+      },
+      "url": "https://github.com/mono/SkiaSharp/issues/2383"
+    },
+    {
+      "schemaVersion": "1.0",
+      "number": 1898,
+      "repo": "mono/SkiaSharp",
+      "analyzedAt": "2026-02-09T20:54:00Z",
+      "summary": "SkiaSharp.Views.Forms 2.88.0-preview.179 NuGet package missing DLLs for netcoreapp3.1 target framework",
+      "type": {
+        "value": "bug",
+        "confidence": 0.88,
+        "reason": "Reporter identifies that DLL files are missing from a published NuGet package \u2014 a packaging defect, not a usage question."
+      },
+      "area": {
+        "value": "SkiaSharp.Views.Forms",
+        "confidence": 0.95,
+        "reason": "Issue explicitly names SkiaSharp.Views.Forms package and links to its NuGet listing."
+      },
+      "backends": null,
+      "platforms": null,
+      "tenets": [
+        {
+          "value": "compatibility",
+          "confidence": 0.90,
+          "reason": "Missing target framework support is a cross-version compatibility issue \u2014 netcoreapp3.1 was advertised as added but the DLLs are absent."
+        }
+      ],
+      "partner": null,
+      "regression": {
+        "isRegression": true,
+        "confidence": 0.80,
+        "reason": "Reporter states netcoreapp3.1 support was added in preview.127 but is missing in preview.179, suggesting it regressed between preview versions.",
+        "workedInVersion": "2.88.0-preview.127",
+        "brokeInVersion": "2.88.0-preview.179"
+      },
+      "fixStatus": {
+        "likelyFixed": true,
+        "confidence": 0.85,
+        "reason": "SkiaSharp.Views.Forms is now an obsolete package replaced by SkiaSharp.Views.Maui.Controls. The 2.88.0 preview series was superseded by stable releases and then 3.x. .NET Core 3.1 reached end-of-life in December 2022.",
+        "verificationStatus": "inconclusive"
+      },
+      "bugSignals": {
+        "hasCrash": false,
+        "hasStackTrace": false,
+        "reproQuality": "complete",
+        "hasScreenshot": false,
+        "hasWorkaround": false,
+        "workaroundSummary": null,
+        "targetFrameworks": [
+          "netcoreapp3.1"
+        ],
+        "severity": "medium",
+        "severityReason": "Missing DLLs prevent using the package for a specific target framework, but this is a preview package and the target framework is now EOL."
+      },
+      "reproEvidence": {
+        "stepsToReproduce": [
+          "Install SkiaSharp.Views.Forms version 2.88.0-preview.179",
+          "Open the package in NuGet Package Explorer",
+          "Inspect the netcoreapp3.1 directory \u2014 it is empty (no DLL files)"
+        ],
+        "environmentDetails": "NuGet Package Explorer inspecting SkiaSharp.Views.Forms 2.88.0-preview.179"
+      },
+      "versionAnalysis": {
+        "mentionedVersions": [
+          "2.88.0-preview.127",
+          "2.88.0-preview.179"
+        ],
+        "era": "maui-transition",
+        "currentRelevance": "unlikely",
+        "reason": "Both mentioned versions are preview builds from the 2.88.0 series (late 2021). SkiaSharp has since shipped 2.88.x stable and moved to 3.x. .NET Core 3.1 reached end-of-life in December 2022. SkiaSharp.Views.Forms is now obsolete, replaced by SkiaSharp.Views.Maui.Controls.",
+        "migrationPath": "Upgrade to SkiaSharp 3.x with SkiaSharp.Views.Maui.Controls targeting net8.0\u002B."
+      },
+      "actionability": {
+        "suggestedAction": "close-as-fixed",
+        "confidence": 0.82,
+        "reason": "The issue concerns a preview version of an obsolete package targeting an EOL framework. SkiaSharp.Views.Forms is replaced by Views.Maui.Controls. No one is blocked by this anymore.",
+        "requiresHumanReview": false,
+        "closeable": true,
+        "closeReason": "Obsolete package/framework: SkiaSharp.Views.Forms is replaced by Views.Maui.Controls, and .NET Core 3.1 is EOL.",
+        "abandoned": true,
+        "abandonedReason": "No comments in 4\u002B years. Reporter never followed up. No maintainer engagement."
+      },
+      "suggestedResponse": {
+        "responseType": "close-message",
+        "confidence": 0.82,
+        "reason": "Issue is about an obsolete preview package targeting an EOL framework. A brief explanation with migration guidance is appropriate.",
+        "draft": "Thanks for flagging this packaging gap back in the 2.88 preview days \u2014 the 5 upvotes suggest others ran into it too.\n\nSince then, a lot has changed: .NET Core 3.1 reached end-of-life in December 2022, and \u0060SkiaSharp.Views.Forms\u0060 has been replaced by \u0060SkiaSharp.Views.Maui.Controls\u0060 in the 3.x series. The 2.88 preview packaging issues are no longer applicable.\n\nIf you\u0027re still working with SkiaSharp, the recommended path is upgrading to SkiaSharp 3.x targeting \u0060net8.0\u0060\u002B with \u0060SkiaSharp.Views.Maui.Controls\u0060.\n\nClosing this as superseded \u2014 but if anyone is still seeing a similar packaging gap in the current packages, please open a new issue and we\u0027ll look into it."
+      },
+      "analysisNotes": {
+        "summary": "A 4-year-old report that SkiaSharp.Views.Forms 2.88.0-preview.179 shipped with an empty netcoreapp3.1 directory. The package, the framework, and the preview series are all obsolete. This is a clear close candidate.",
+        "keySignals": [
+          {
+            "text": "Support for netcore 3.1 was added in 2.88.0-preview.127 version",
+            "source": "body",
+            "interpretation": "Establishes that netcoreapp3.1 support was intentionally added but subsequently lost \u2014 indicates a packaging regression between preview builds.",
+            "supportedFields": [
+              "type",
+              "regression"
+            ]
+          },
+          {
+            "text": "netcoreapp3.1 directory is empty in Nuget Package Explorer",
+            "source": "body",
+            "interpretation": "Clear evidence of a packaging defect \u2014 the TFM folder exists but contains no assemblies.",
+            "supportedFields": [
+              "type",
+              "bugSignals.reproQuality"
+            ]
+          },
+          {
+            "text": "2.88.0-preview.179 version of Views.Forms",
+            "source": "body",
+            "interpretation": "Pins this to a specific preview release in the MAUI-transition era. Both the package and the framework are now obsolete.",
+            "supportedFields": [
+              "area",
+              "versionAnalysis"
+            ]
+          },
+          {
+            "text": "0 comments, created 2021-12-22",
+            "source": "metadata",
+            "interpretation": "No engagement from reporter or maintainers in over 4 years. Strongly suggests the issue is no longer impacting anyone.",
+            "supportedFields": [
+              "actionability"
+            ]
+          },
+          {
+            "text": "5 thumbs-up reactions",
+            "source": "metadata",
+            "interpretation": "Others encountered the same preview packaging gap at the time, adding legitimacy to the original report, but no one followed up.",
+            "supportedFields": [
+              "bugSignals.severity"
+            ]
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "bug",
+            "expandedReason": "An empty TFM directory in a NuGet package is a packaging defect. The reporter demonstrates that the support was added in a prior preview and then lost \u2014 this is broken build/packaging behavior, not a feature request or question.",
+            "alternatives": [
+              {
+                "value": "feature-request",
+                "whyRejected": "netcoreapp3.1 support was explicitly added in preview.127 \u2014 this is a regression, not a new feature ask."
+              }
+            ]
+          },
+          {
+            "field": "area",
+            "chosen": "SkiaSharp.Views.Forms",
+            "expandedReason": "The issue names this specific package and links to its NuGet listing. No ambiguity."
+          },
+          {
+            "field": "tenets",
+            "chosen": "compatibility",
+            "expandedReason": "Missing target framework support is fundamentally a compatibility issue \u2014 the package claims to support netcoreapp3.1 (the folder exists) but provides no usable binaries."
+          },
+          {
+            "field": "bugSignals.severity",
+            "chosen": "medium",
+            "expandedReason": "Missing DLLs completely blocks usage on netcoreapp3.1 (could argue \u0027high\u0027), but this is a preview package and the framework is now EOL, reducing practical severity.",
+            "alternatives": [
+              {
+                "value": "high",
+                "whyRejected": "Would be high if the framework and package were still current, but both are obsolete."
+              }
+            ]
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "close-as-fixed",
+            "expandedReason": "The specific preview version, the package (Views.Forms), and the framework (netcoreapp3.1) are all end-of-life or obsolete. The issue is superseded by the 3.x release series.",
+            "alternatives": [
+              {
+                "value": "keep-open",
+                "whyRejected": "No one is using 2.88.0-preview.179 with netcoreapp3.1 in 2026. Keeping it open adds noise."
+              },
+              {
+                "value": "close-with-docs",
+                "whyRejected": "No specific doc addresses this \u2014 it\u0027s simply obsolete."
+              }
+            ]
+          }
+        ],
+        "docsConsulted": [
+          {
+            "path": "documentation/packages.md",
+            "relevance": "Confirmed SkiaSharp.Views.Forms is listed under Obsolete Packages with replacement SkiaSharp.Views.Maui.Controls. Also confirmed the current package matrix targets net8.0\u002B.",
+            "usedFor": [
+              "area",
+              "versionAnalysis",
+              "fixStatus",
+              "actionability"
+            ]
+          },
+          {
+            "path": "references/skia-patterns.md",
+            "relevance": "Checked for any known NuGet packaging patterns \u2014 none specific to this issue.",
+            "usedFor": [
+              "type"
+            ]
+          }
+        ],
+        "docsNotConsulted": "No API docs or rendering docs consulted \u2014 this is a pure packaging issue, not a runtime or API behavior problem.",
+        "uncertainties": [
+          "Whether the empty netcoreapp3.1 folder was intentional (build system dropped it) or accidental (regression in CI) \u2014 impossible to determine 4 years later.",
+          "Whether any 2.88.0 stable release ever included netcoreapp3.1 support for Views.Forms."
+        ]
+      },
+      "resolutionAnalysis": {
+        "hypothesis": "The 2.88.0-preview.179 NuGet build pipeline for SkiaSharp.Views.Forms accidentally produced an empty netcoreapp3.1 folder, likely a build configuration regression between preview.127 and preview.179. The issue is entirely moot now since both the package and the framework are obsolete.",
+        "researchDone": [
+          "Checked packages.md \u2014 SkiaSharp.Views.Forms is listed under Obsolete Packages, replaced by Views.Maui.Controls",
+          "Searched GitHub issues for duplicates \u2014 none found",
+          "Checked issue age and engagement \u2014 4\u002B years old with zero comments",
+          "Verified .NET Core 3.1 EOL status (December 2022)"
+        ],
+        "proposals": [
+          {
+            "title": "Close as superseded",
+            "description": "Close the issue with an explanation that the package, framework, and preview series are all obsolete. Point to the upgrade path.",
+            "steps": [
+              "Post a courteous close comment acknowledging the original report and the upvotes",
+              "Explain that Views.Forms is replaced by Views.Maui.Controls",
+              "Note that .NET Core 3.1 is EOL",
+              "Close the issue"
+            ],
+            "pros": [
+              "Reduces open issue count",
+              "Clear and respectful",
+              "Provides migration guidance"
+            ],
+            "cons": [
+              "Does not fix the historical defect (no one needs it fixed)"
+            ],
+            "confidence": 0.90,
+            "effort": "low"
+          },
+          {
+            "title": "Upgrade to SkiaSharp 3.x with MAUI",
+            "description": "For any reporter still affected, the resolution is migrating from Xamarin.Forms plus netcoreapp3.1 to .NET MAUI plus net8.0 with SkiaSharp 3.x.",
+            "steps": [
+              "Update project to target net8.0 or later",
+              "Replace Xamarin.Forms with .NET MAUI",
+              "Replace SkiaSharp.Views.Forms with SkiaSharp.Views.Maui.Controls",
+              "Update SkiaSharp to 3.x"
+            ],
+            "pros": [
+              "Modern supported stack",
+              "Active development and support"
+            ],
+            "cons": [
+              "Requires significant migration effort",
+              "May not be feasible for legacy projects"
+            ],
+            "confidence": 0.85,
+            "effort": "high"
+          },
+          {
+            "title": "Pin to 2.88.0-preview.127 (historical workaround)",
+            "description": "If someone in 2021 needed an immediate workaround, they could pin to the last preview that included netcoreapp3.1 DLLs.",
+            "steps": [
+              "Downgrade SkiaSharp.Views.Forms to 2.88.0-preview.127",
+              "Verify netcoreapp3.1 DLLs are present"
+            ],
+            "pros": [
+              "Immediate workaround at the time"
+            ],
+            "cons": [
+              "Uses an older preview with other potential issues",
+              "Completely irrelevant in 2026"
+            ],
+            "confidence": 0.70,
+            "effort": "low"
+          }
+        ],
+        "recommendedProposal": "Close as superseded",
+        "recommendedReason": "The issue is about a 4-year-old preview of an obsolete package targeting an EOL framework. No one is blocked by this, and the entire ecosystem has moved on. A respectful close with migration guidance is the right call."
+      },
+      "url": "https://github.com/mono/SkiaSharp/issues/1898"
+    },
+    {
+      "schemaVersion": "1.0",
+      "number": 1773,
+      "repo": "mono/SkiaSharp",
+      "analyzedAt": "2026-02-09T21:34:00Z",
+      "summary": "Accidental empty issue immediately closed by the author \u2014 no content or actionable information",
+      "type": {
+        "value": "question",
+        "confidence": 0.50,
+        "reason": "No content to classify. Title \u0027TO DELETE PLEASE\u0027 and empty body indicate accidental issue creation. \u0027question\u0027 is the closest fit but confidence is low since this is not a genuine issue of any type."
+      },
+      "area": null,
+      "backends": null,
+      "platforms": null,
+      "tenets": null,
+      "partner": null,
+      "regression": null,
+      "fixStatus": null,
+      "bugSignals": null,
+      "reproEvidence": null,
+      "versionAnalysis": null,
+      "actionability": {
+        "suggestedAction": "close-as-fixed",
+        "confidence": 0.95,
+        "reason": "Issue was already closed by the author within 26 minutes of opening. Empty body, no comments, no labels. No action required \u2014 correctly closed as accidental.",
+        "requiresHumanReview": false,
+        "closeable": true,
+        "closeReason": "Accidental issue, already closed by the author.",
+        "duplicateOf": null,
+        "abandoned": false,
+        "abandonedReason": null
+      },
+      "suggestedResponse": null,
+      "analysisNotes": {
+        "summary": "This is an accidental issue with no content. The title \u0027TO DELETE PLEASE\u0027 and empty body indicate the author created it by mistake and closed it themselves within 26 minutes. There is nothing to investigate, fix, or respond to.",
+        "keySignals": [
+          {
+            "text": "TO DELETE PLEASE",
+            "source": "title",
+            "interpretation": "Author explicitly asking for the issue to be deleted, indicating accidental creation.",
+            "supportedFields": [
+              "type",
+              "actionability.suggestedAction"
+            ]
+          },
+          {
+            "text": "Empty body with zero comments",
+            "source": "body",
+            "interpretation": "No technical content, no description, no reproduction steps \u2014 confirms accidental creation.",
+            "supportedFields": [
+              "type",
+              "area"
+            ]
+          },
+          {
+            "text": "Closed 26 minutes after opening",
+            "source": "body",
+            "interpretation": "Author self-closed almost immediately, confirming this was not intentional.",
+            "supportedFields": [
+              "actionability.suggestedAction"
+            ]
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "question",
+            "expandedReason": "There is no \u0027invalid\u0027 or \u0027noise\u0027 type in the schema. \u0027question\u0027 is the least committal classification for an issue with zero content. Confidence is set low (0.50) to reflect that this doesn\u0027t genuinely fit any category.",
+            "alternatives": [
+              {
+                "value": "bug",
+                "whyRejected": "No broken behavior described."
+              },
+              {
+                "value": "feature-request",
+                "whyRejected": "No feature requested."
+              },
+              {
+                "value": "documentation",
+                "whyRejected": "No docs gap identified."
+              }
+            ]
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "close-as-fixed",
+            "expandedReason": "Issue is already closed and requires no action. \u0027close-as-fixed\u0027 is the closest available option since the issue\u0027s lifecycle is complete \u2014 the author resolved it themselves by closing.",
+            "alternatives": [
+              {
+                "value": "request-info",
+                "whyRejected": "Issue is already closed and the author clearly doesn\u0027t intend to follow up."
+              },
+              {
+                "value": "convert-to-discussion",
+                "whyRejected": "No discussion content exists."
+              }
+            ]
+          }
+        ],
+        "docsConsulted": [
+          {
+            "path": "references/triage-schema.json",
+            "relevance": "Checked available type enum values to find the best fit for a contentless issue.",
+            "usedFor": [
+              "type"
+            ]
+          }
+        ],
+        "docsNotConsulted": "No technical docs consulted \u2014 the issue contains zero technical content. No packages.md, skia-patterns.md, or API docs were relevant.",
+        "uncertainties": [
+          "The true intent behind opening this issue is unknown \u2014 it may have been a test, an accident, or the author may have meant to write content but changed their mind."
+        ]
+      },
+      "resolutionAnalysis": null,
+      "url": "https://github.com/mono/SkiaSharp/issues/1773"
+    }
+  ]
+}
