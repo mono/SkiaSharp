@@ -1,0 +1,266 @@
+{
+  "schemaVersion": "1.0",
+  "number": 2511,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-02-09T21:30:00Z",
+  "summary": "AccessViolationException in NonAlertableWin32Lock during finalizer when closing WinForms app",
+  "type": {
+    "value": "bug",
+    "confidence": 0.95,
+    "reason": "Stack trace shows AccessViolationException crash during object finalization — clearly broken behavior, not a usage question."
+  },
+  "area": {
+    "value": "SkiaSharp",
+    "confidence": 0.90,
+    "reason": "Crash is in HandleDictionary/PlatformLock infrastructure used by the core SkiaSharp library, not in a view-specific or platform-specific package."
+  },
+  "backends": null,
+  "platforms": [
+    {
+      "value": "Windows-Classic",
+      "confidence": 0.90,
+      "reason": "Reporter says 'winform program' and the crash is in Win32 CRITICAL_SECTION, which is Windows-only. WinForms = Windows Classic."
+    }
+  ],
+  "tenets": [
+    {
+      "value": "reliability",
+      "confidence": 0.95,
+      "reason": "Uncatchable crash (AccessViolationException) during process shutdown is a reliability issue."
+    }
+  ],
+  "partner": null,
+  "regression": {
+    "isRegression": true,
+    "confidence": 0.80,
+    "reason": "The NonAlertableWin32Lock was introduced in v2.88.0 via PR #1817 to fix deadlocks (#1383). Issue #2194 confirms this crash started in v2.88.0 (worked in v2.80.4-preview.9). The crash cannot occur in older versions that used ReaderWriterLockSlim.",
+    "workedInVersion": "2.80.4",
+    "brokeInVersion": "2.88.0"
+  },
+  "fixStatus": null,
+  "bugSignals": {
+    "hasCrash": true,
+    "hasStackTrace": true,
+    "reproQuality": "steps-only",
+    "hasScreenshot": false,
+    "hasWorkaround": true,
+    "workaroundSummary": "Explicitly dispose all SkiaSharp objects (using statements) instead of relying on the finalizer. This avoids the finalizer code path entirely.",
+    "targetFrameworks": ["net48"],
+    "severity": "medium",
+    "severityReason": "Crash during process shutdown — the application has already completed its work. Workaround exists (explicit disposal). Does not cause data loss or affect runtime operation."
+  },
+  "reproEvidence": {
+    "stepsToReproduce": [
+      "Create a WinForms application using SkiaSharp on Windows",
+      "Use SkiaSharp objects without explicitly disposing them (let GC/finalizer handle cleanup)",
+      "Close the application"
+    ],
+    "codeSnippets": [
+      {
+        "language": "text",
+        "code": "System.AccessViolationException: An attempt was made to read or write protected memory. This usually indicates that other memory is corrupted.\n   at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterCriticalSection(IntPtr lpCriticalSection)\n   at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterWriteLock()\n   at SkiaSharp.HandleDictionary.DeregisterHandle(IntPtr handle, SKObject instance)\n   at SkiaSharp.SKObject.DeregisterHandle(IntPtr handle, SKObject instance)\n   at SkiaSharp.SKObject.set_Handle(IntPtr value)\n   at SkiaSharp.SKNativeObject.Dispose(Boolean disposing)\n   at SkiaSharp.SKNativeObject.Finalize()",
+        "context": "Full stack trace from the crash on application exit"
+      }
+    ],
+    "relatedIssues": [2194, 1817, 1383, 2181],
+    "environmentDetails": "Windows, WinForms application. No specific SkiaSharp version or .NET version mentioned by reporter."
+  },
+  "versionAnalysis": {
+    "era": "maui-transition",
+    "currentRelevance": "likely",
+    "reason": "The NonAlertableWin32Lock code with the same finalizer pattern still exists in the current codebase (3.x). The race condition between lock finalization and SKNativeObject finalization has not been structurally addressed — the Enter() null check guards against _cs being zero but not against freed memory (dangling pointer during GC shutdown).",
+    "migrationPath": null
+  },
+  "actionability": {
+    "suggestedAction": "close-as-duplicate",
+    "confidence": 0.85,
+    "reason": "Identical stack trace and same root cause as #2194, which was filed first and milestoned to v2.88.1. Issue #2511 provides no additional information beyond #2194. The issue is already closed and locked.",
+    "requiresHumanReview": false,
+    "closeable": true,
+    "closeReason": "Duplicate of #2194 — same AccessViolationException in NonAlertableWin32Lock.EnterCriticalSection during finalization.",
+    "duplicateOf": 2194,
+    "abandoned": false,
+    "abandonedReason": null
+  },
+  "suggestedResponse": null,
+  "analysisNotes": {
+    "summary": "Reporter experiences AccessViolationException when closing a WinForms application. The stack trace is identical to #2194 — a race condition in the NonAlertableWin32Lock's Win32 CRITICAL_SECTION during GC finalization at process shutdown. The lock object can be finalized (freeing the critical section memory) before all SKNativeObject finalizers complete, causing a use-after-free crash.",
+    "keySignals": [
+      {
+        "text": "System.AccessViolationException at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterCriticalSection(IntPtr lpCriticalSection)",
+        "source": "body",
+        "interpretation": "Crash inside Win32 EnterCriticalSection P/Invoke — the CRITICAL_SECTION memory has been freed or corrupted. This is the same signature as #2194.",
+        "supportedFields": ["type", "area", "bugSignals.severity", "actionability"]
+      },
+      {
+        "text": "at SkiaSharp.SKNativeObject.Finalize()",
+        "source": "body",
+        "interpretation": "Crash occurs on the finalizer thread during GC cleanup, not during normal application operation. This is a process-shutdown race condition, not a runtime bug.",
+        "supportedFields": ["type", "bugSignals.severity"]
+      },
+      {
+        "text": "When I close my winform program, this error will be reported",
+        "source": "body",
+        "interpretation": "Triggers on application exit. WinForms = Windows Classic platform. The crash only affects shutdown, not runtime operation.",
+        "supportedFields": ["platforms", "bugSignals.severity"]
+      },
+      {
+        "text": "HandleDictionary.DeregisterHandle → SKObject.set_Handle → SKNativeObject.Dispose(Boolean) → SKNativeObject.Finalize()",
+        "source": "body",
+        "interpretation": "The disposal path during finalization tries to acquire the HandleDictionary lock, but the lock's underlying CRITICAL_SECTION has already been freed by the NonAlertableWin32Lock's own finalizer.",
+        "supportedFields": ["area", "type"]
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "bug",
+        "expandedReason": "Despite the [BUG] prefix being empty, the content clearly describes a crash (AccessViolationException) with a full stack trace. This is broken behavior in SkiaSharp's internal memory management during finalization.",
+        "alternatives": [
+          {
+            "value": "question",
+            "whyRejected": "Reporter asks 'what is the problem?' but provides a definitive crash trace — this is a bug report with a question framing, not a how-to question."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "SkiaSharp",
+        "expandedReason": "The crash is in HandleDictionary and PlatformLock, which are core SkiaSharp infrastructure classes. Not specific to any view, platform binding, or HarfBuzz component.",
+        "alternatives": [
+          {
+            "value": "SkiaSharp.Views",
+            "whyRejected": "While the reporter uses WinForms (which implies Views), the crash is in core object lifecycle management, not in any view-specific code."
+          }
+        ]
+      },
+      {
+        "field": "platforms",
+        "chosen": "Windows-Classic",
+        "expandedReason": "Reporter says 'winform program' and the crash is in Win32 CRITICAL_SECTION P/Invoke, which only exists on Windows. WinForms maps to Windows-Classic (not WinUI)."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "medium",
+        "expandedReason": "While an AccessViolationException is normally critical, this only occurs during process shutdown when the GC finalizer runs. The application has already completed its work. Users can work around it by explicitly disposing SkiaSharp objects. No data loss or runtime impact.",
+        "alternatives": [
+          {
+            "value": "critical",
+            "whyRejected": "Crash is only at shutdown, not during operation. No data loss. Workaround exists (explicit disposal)."
+          },
+          {
+            "value": "high",
+            "whyRejected": "Workaround exists and the crash doesn't affect application functionality — only the exit path."
+          }
+        ]
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "close-as-duplicate",
+        "expandedReason": "Issue #2194 was filed earlier (Aug 2022 vs Jun 2023) with the identical stack trace, more detail (version info, repro code), and was milestoned to v2.88.1 by mattleibow. Issue #2511 adds no new information. Already closed and locked."
+      }
+    ],
+    "docsConsulted": [
+      {
+        "path": "binding/SkiaSharp/PlatformLock.cs",
+        "relevance": "Confirmed the NonAlertableWin32Lock uses a finalizer to free the CRITICAL_SECTION. The Enter() method has an _cs != IntPtr.Zero guard, but this doesn't protect against freed-but-non-zero memory during GC shutdown race.",
+        "usedFor": ["type", "bugSignals", "resolutionAnalysis"]
+      },
+      {
+        "path": "binding/SkiaSharp/HandleDictionary.cs",
+        "relevance": "Confirmed instancesLock is a static readonly field initialized via PlatformLock.Create(). During process shutdown, GC can finalize the lock object even though it's referenced by a static field.",
+        "usedFor": ["area", "resolutionAnalysis"]
+      },
+      {
+        "path": "references/skia-patterns.md",
+        "relevance": "Checked AccessViolationException pattern — documented as memory management bug. This case is a GC finalization ordering issue, not a typical use-after-dispose.",
+        "usedFor": ["type", "bugSignals"]
+      }
+    ],
+    "docsNotConsulted": "No native loading diagnostics needed — this is a managed-side locking issue, not a DllNotFoundException. No backend or platform-specific docs needed.",
+    "uncertainties": [
+      "No SkiaSharp version specified by the reporter — regression version range inferred from #2194",
+      "No .NET version specified — could be .NET Framework 4.x or .NET Core/5+, which have different GC finalization behaviors",
+      "Whether the issue is still present in SkiaSharp 3.x — the code pattern exists but .NET runtime GC behavior may have changed",
+      "Whether the issue was actually addressed in v2.88.1 as milestoned on #2194"
+    ],
+    "assumptions": [
+      "Assumed the reporter is on a 2.88.x version since the NonAlertableWin32Lock was introduced in 2.88.0",
+      "Assumed WinForms implies .NET Framework 4.x (Windows Classic) based on the era, though modern WinForms on .NET 6+ is also possible"
+    ]
+  },
+  "resolutionAnalysis": {
+    "hypothesis": "During process shutdown, the .NET GC finalizer thread can finalize the NonAlertableWin32Lock (freeing the CRITICAL_SECTION memory) before all SKNativeObject finalizers complete. When a remaining SKNativeObject.Finalize() calls DeregisterHandle, it tries to enter the already-freed CRITICAL_SECTION, causing an AccessViolationException. This is a classic GC finalization ordering problem — static field references don't prevent finalization during shutdown.",
+    "researchDone": [
+      "Read PlatformLock.cs — confirmed NonAlertableWin32Lock has a finalizer that calls DeleteCriticalSection and FreeHGlobal",
+      "Read HandleDictionary.cs — confirmed instancesLock is a static readonly field (doesn't prevent GC finalization at shutdown)",
+      "Searched GitHub for identical issues — found #2194 with same stack trace, milestoned to v2.88.1",
+      "Checked PR #1817 — introduced the NonAlertableWin32Lock to fix alertable lock deadlocks (#1383)",
+      "Reviewed .NET GC documentation — during AppDomain unload/process exit, even rooted objects can be finalized"
+    ],
+    "proposals": [
+      {
+        "title": "Suppress finalization of HandleDictionary lock",
+        "description": "Call GC.SuppressFinalize on the NonAlertableWin32Lock instance after creation, and intentionally leak the CRITICAL_SECTION at process shutdown. The OS reclaims all process memory on exit anyway.",
+        "steps": [
+          "In HandleDictionary, after creating instancesLock, call GC.SuppressFinalize(instancesLock)",
+          "Alternatively, remove the ~NonAlertableWin32Lock() finalizer entirely and let the OS clean up on process exit",
+          "Run tests to verify no functional regression"
+        ],
+        "pros": [
+          "Eliminates the race condition entirely",
+          "No risk of behavior change during normal operation",
+          "OS always reclaims memory on process exit — no actual leak"
+        ],
+        "cons": [
+          "Technically 'leaks' the CRITICAL_SECTION if the lock is created multiple times (unlikely given it's a static field)",
+          "If SkiaSharp is ever used in a plugin/AppDomain unload scenario, the leak could accumulate"
+        ],
+        "confidence": 0.85,
+        "effort": "low"
+      },
+      {
+        "title": "Guard DeregisterHandle against finalized lock",
+        "description": "Wrap the lock acquisition in DeregisterHandle with a try-catch for AccessViolationException during finalization, or add an IsFinalized/IsDisposed flag to the lock.",
+        "steps": [
+          "Add a volatile bool _disposed flag to NonAlertableWin32Lock, set in the finalizer",
+          "In Enter(), check _disposed before calling EnterCriticalSection",
+          "In HandleDictionary.DeregisterHandle, skip lock acquisition if the lock is disposed (only when called from finalizer)"
+        ],
+        "pros": [
+          "Handles the race condition gracefully",
+          "No memory leak concerns"
+        ],
+        "cons": [
+          "Still has a tiny race window between checking _disposed and entering the critical section",
+          "Skipping the lock in the finalizer could theoretically cause dictionary corruption (benign at shutdown)"
+        ],
+        "confidence": 0.70,
+        "effort": "medium"
+      },
+      {
+        "title": "User workaround: explicit disposal",
+        "description": "Users should explicitly dispose all SkiaSharp objects using 'using' statements instead of relying on GC finalization. This avoids the finalizer code path entirely.",
+        "steps": [
+          "Wrap all SkiaSharp objects in 'using' statements or call Dispose() explicitly",
+          "Ensure disposal happens before the form closes (e.g., in FormClosing event)",
+          "Verify no AccessViolationException on exit"
+        ],
+        "pros": [
+          "Works immediately, no SkiaSharp update needed",
+          "Best practice for IDisposable objects anyway",
+          "Avoids all finalizer-related issues"
+        ],
+        "cons": [
+          "Requires code changes by the user",
+          "Some objects may be hard to track (e.g., cached objects, objects in third-party libraries like QuestPDF)",
+          "Doesn't fix the underlying issue in SkiaSharp"
+        ],
+        "confidence": 0.90,
+        "effort": "low"
+      }
+    ],
+    "recommendedProposal": "Suppress finalization of HandleDictionary lock",
+    "recommendedReason": "Simplest fix with highest confidence. The CRITICAL_SECTION is a singleton static field that lives for the process lifetime — suppressing finalization is safe and eliminates the race condition. The OS reclaims all process memory on exit."
+  }
+}
