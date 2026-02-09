@@ -1,0 +1,225 @@
+{
+  "schemaVersion": "1.0",
+  "number": 1898,
+  "repo": "mono/SkiaSharp",
+  "analyzedAt": "2026-02-09T18:24:00Z",
+  "summary": "SkiaSharp.Views.Forms 2.88.0-preview.179 NuGet package has empty netcoreapp3.1 directory, missing DLLs",
+  "type": {
+    "value": "bug",
+    "confidence": 0.90,
+    "reason": "The netcoreapp3.1 directory is empty in the NuGet package despite support being added in an earlier preview. This is a packaging defect — DLLs that should be present are missing."
+  },
+  "area": {
+    "value": "SkiaSharp.Views.Forms",
+    "confidence": 0.97,
+    "reason": "Issue explicitly names SkiaSharp.Views.Forms package and links to its NuGet listing."
+  },
+  "backends": null,
+  "platforms": null,
+  "tenets": [
+    {
+      "value": "compatibility",
+      "confidence": 0.88,
+      "reason": "Issue is about missing TFM support that was previously added — a cross-version consistency problem in the NuGet package."
+    }
+  ],
+  "partner": null,
+  "regression": {
+    "isRegression": true,
+    "confidence": 0.85,
+    "reason": "Reporter states netcoreapp3.1 support was added in 2.88.0-preview.127 but is missing in 2.88.0-preview.179, indicating it regressed between preview builds.",
+    "workedInVersion": "2.88.0-preview.127",
+    "brokeInVersion": "2.88.0-preview.179"
+  },
+  "fixStatus": {
+    "likelyFixed": true,
+    "confidence": 0.80,
+    "reason": "SkiaSharp.Views.Forms is now obsolete, replaced by SkiaSharp.Views.Maui.Controls. The 2.88.x preview line was superseded by stable releases and then the 3.x line. The specific packaging defect in this preview is no longer relevant.",
+    "fixedInVersion": null,
+    "verificationStatus": "inconclusive"
+  },
+  "bugSignals": {
+    "hasCrash": false,
+    "hasStackTrace": false,
+    "reproQuality": "steps-only",
+    "hasScreenshot": false,
+    "hasWorkaround": false,
+    "workaroundSummary": null,
+    "targetFrameworks": ["netcoreapp3.1"],
+    "severity": "medium",
+    "severityReason": "Missing DLLs prevent usage of the package on netcoreapp3.1, but the package is now obsolete and netcoreapp3.1 is end-of-life."
+  },
+  "reproEvidence": {
+    "stepsToReproduce": [
+      "Install SkiaSharp.Views.Forms 2.88.0-preview.179",
+      "Inspect the NuGet package contents (e.g. via NuGet Package Explorer at https://nuget.info/packages/SkiaSharp.Views.Forms/2.88.0-preview.179)",
+      "Observe that the netcoreapp3.1 directory is empty — no DLL files present"
+    ],
+    "repoLinks": [
+      {
+        "url": "https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.120...v2.88.0-preview.127",
+        "description": "Release comparison showing netcoreapp3.1 support was added in preview.127"
+      }
+    ]
+  },
+  "versionAnalysis": {
+    "mentionedVersions": ["2.88.0-preview.120", "2.88.0-preview.127", "2.88.0-preview.179"],
+    "era": "xamarin-forms",
+    "currentRelevance": "unlikely",
+    "reason": "All mentioned versions are 2.88.0 previews from the Xamarin.Forms era (Dec 2021). SkiaSharp has since shipped stable 2.88.x releases and moved to the 3.x line. SkiaSharp.Views.Forms itself is obsolete, replaced by SkiaSharp.Views.Maui.Controls. Additionally, netcoreapp3.1 reached end-of-life in Dec 2022.",
+    "migrationPath": "Migrate from SkiaSharp.Views.Forms to SkiaSharp.Views.Maui.Controls and target net8.0+ with SkiaSharp 3.x."
+  },
+  "actionability": {
+    "suggestedAction": "close-as-fixed",
+    "confidence": 0.82,
+    "reason": "The package (SkiaSharp.Views.Forms) is obsolete and the target framework (netcoreapp3.1) is end-of-life. The issue existed in a preview build from 2021 that has been superseded by stable releases and a new major version. There is no actionable work to be done.",
+    "requiresHumanReview": false,
+    "closeable": true,
+    "closeReason": "SkiaSharp.Views.Forms is obsolete (replaced by SkiaSharp.Views.Maui.Controls) and netcoreapp3.1 is end-of-life. The preview versions referenced have been superseded.",
+    "abandoned": true,
+    "abandonedReason": "No comments from reporter or maintainers in over 4 years. Issue is from Dec 2021 with zero follow-up."
+  },
+  "suggestedResponse": {
+    "responseType": "close-message",
+    "confidence": 0.85,
+    "reason": "The issue references an obsolete package and an end-of-life framework. A clear explanation of the current state and migration path is appropriate.",
+    "draft": "Thanks for reporting this — the 5 reactions show this was definitely affecting others at the time.\n\nA lot has changed since this preview was published. `SkiaSharp.Views.Forms` has been retired and replaced by `SkiaSharp.Views.Maui.Controls`, and `netcoreapp3.1` itself reached end-of-life in December 2022. The 2.88.0 preview line was superseded by stable 2.88.x releases and then the 3.x series.\n\nFor anyone landing here now, the recommended path forward is to migrate to **SkiaSharp 3.x** with **SkiaSharp.Views.Maui.Controls** targeting `net8.0` or later.\n\nClosing this as the underlying package and framework are no longer supported. If anyone is still hitting a similar packaging issue with a current SkiaSharp version, please open a new issue — happy to look into it."
+  },
+  "analysisNotes": {
+    "summary": "Packaging defect in SkiaSharp.Views.Forms 2.88.0-preview.179 where the netcoreapp3.1 directory was empty despite support being added in preview.127. The issue is now moot — the package is obsolete (replaced by SkiaSharp.Views.Maui.Controls) and the TFM (netcoreapp3.1) has been end-of-life since Dec 2022.",
+    "keySignals": [
+      {
+        "text": "Support for netcore 3.1 was added in 2.88.0-preview.127 version",
+        "source": "body",
+        "interpretation": "Reporter verified that a prior preview included the support, indicating a regression in subsequent builds.",
+        "supportedFields": ["type", "regression"]
+      },
+      {
+        "text": "netcoreapp3.1 directory is empty in Nuget Package Explorer",
+        "source": "body",
+        "interpretation": "The DLLs are missing from the NuGet package — this is a build/packaging defect, not a runtime bug.",
+        "supportedFields": ["type", "bugSignals.reproQuality", "area"]
+      },
+      {
+        "text": "SkiaSharp.Views.Forms/2.88.0-preview.179",
+        "source": "body",
+        "interpretation": "Identifies the exact package and version. SkiaSharp.Views.Forms is now obsolete.",
+        "supportedFields": ["area", "versionAnalysis"]
+      },
+      {
+        "text": "5 thumbs-up reactions, 0 comments",
+        "source": "engagement",
+        "interpretation": "Multiple users affected at the time, but no follow-up from anyone in 4+ years suggests the issue became irrelevant as people moved on.",
+        "supportedFields": ["actionability"]
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "bug",
+        "expandedReason": "The package contains an empty directory where DLLs should exist. This is a packaging defect — the build pipeline failed to include the netcoreapp3.1 output despite it being added in an earlier preview.",
+        "alternatives": [
+          {
+            "value": "feature-request",
+            "whyRejected": "Reporter is not asking for new functionality — netcoreapp3.1 support was already added and then lost."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "SkiaSharp.Views.Forms",
+        "expandedReason": "Issue explicitly names SkiaSharp.Views.Forms and links to its NuGet package listing. The bug is specific to this package's build output."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "medium",
+        "expandedReason": "Missing DLLs completely prevent usage on netcoreapp3.1, but the package is now obsolete and the TFM is end-of-life. At the time it was filed, this was arguably high severity for affected users.",
+        "alternatives": [
+          {
+            "value": "high",
+            "whyRejected": "Would have been appropriate when filed, but given current obsolete status, medium better reflects the overall impact."
+          }
+        ]
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "close-as-fixed",
+        "expandedReason": "The entire package is obsolete and the TFM is end-of-life. While we can't confirm the specific preview bug was fixed in a subsequent preview, the issue is entirely moot in the current SkiaSharp landscape. Closing communicates there is no action to take.",
+        "alternatives": [
+          {
+            "value": "keep-open",
+            "whyRejected": "No actionable work remains — the package is obsolete and the framework is end-of-life."
+          },
+          {
+            "value": "close-with-docs",
+            "whyRejected": "Close-as-fixed is more accurate since the issue is resolved by the evolution of the project, not by documentation."
+          }
+        ]
+      }
+    ],
+    "docsConsulted": [
+      {
+        "path": "documentation/packages.md",
+        "relevance": "Confirmed SkiaSharp.Views.Forms is listed as obsolete, replaced by SkiaSharp.Views.Maui.Controls. This is the key fact supporting closure.",
+        "usedFor": ["area", "versionAnalysis", "actionability"]
+      }
+    ],
+    "docsNotConsulted": "No need to consult skia-patterns.md (not a rendering/platform quirk), API docs (not an API usage issue), or MAUI/Blazor docs (not relevant to this packaging defect).",
+    "uncertainties": [
+      "Cannot confirm whether the packaging defect was fixed in later 2.88.0 previews or in the stable 2.88.0 release — the NuGet package versions referenced are no longer easily inspectable.",
+      "Unclear whether the regression from preview.127 to preview.179 was intentional (netcoreapp3.1 support deliberately removed) or accidental (build configuration error)."
+    ]
+  },
+  "resolutionAnalysis": {
+    "hypothesis": "The netcoreapp3.1 target output was likely dropped from the SkiaSharp.Views.Forms build between preview.127 and preview.179 due to a build configuration change. Since both the package and the TFM are now obsolete, the practical resolution is migration.",
+    "researchDone": [
+      "Checked documentation/packages.md — confirmed SkiaSharp.Views.Forms is listed as obsolete with SkiaSharp.Views.Maui.Controls as replacement",
+      "Searched GitHub issues for similar netcoreapp3.1/Views.Forms packaging issues — no duplicates found",
+      "Verified netcoreapp3.1 end-of-life status (Dec 2022)",
+      "Confirmed current SkiaSharp version is 3.x targeting net8.0+"
+    ],
+    "proposals": [
+      {
+        "title": "Close as obsolete — migrate to SkiaSharp 3.x with MAUI",
+        "description": "The package and TFM are both end-of-life. The recommended path is to migrate to SkiaSharp.Views.Maui.Controls with net8.0+.",
+        "steps": [
+          "Replace SkiaSharp.Views.Forms with SkiaSharp.Views.Maui.Controls",
+          "Update SkiaSharp to 3.x",
+          "Re-target from netcoreapp3.1 to net8.0 or later",
+          "Update Xamarin.Forms app to .NET MAUI"
+        ],
+        "pros": ["Resolves the issue permanently", "Gets users onto supported packages and frameworks", "Access to latest SkiaSharp features and fixes"],
+        "cons": ["Requires significant migration effort from Xamarin.Forms to MAUI", "May not be feasible for legacy projects that cannot be migrated"],
+        "confidence": 0.90,
+        "effort": "high"
+      },
+      {
+        "title": "Pin to 2.88.0-preview.127 (historical workaround)",
+        "description": "Use the last preview version that included the netcoreapp3.1 DLLs.",
+        "steps": [
+          "Pin SkiaSharp.Views.Forms to version 2.88.0-preview.127",
+          "Ensure all SkiaSharp packages are pinned to matching preview versions"
+        ],
+        "pros": ["Immediate fix with no code changes", "Maintains netcoreapp3.1 support"],
+        "cons": ["Preview version — not stable release quality", "Very old, no security updates", "Both TFM and package are now end-of-life"],
+        "confidence": 0.75,
+        "effort": "low"
+      },
+      {
+        "title": "Use stable 2.88.x release instead of preview",
+        "description": "The 2.88.0 stable line may have fixed the packaging issue. Try the final stable 2.88.x release.",
+        "steps": [
+          "Update to the latest stable SkiaSharp.Views.Forms 2.88.x release",
+          "Verify netcoreapp3.1 DLLs are present in the package",
+          "If not present, netcoreapp3.1 may have been intentionally removed from stable"
+        ],
+        "pros": ["Uses a stable release rather than a preview", "Minimal change from current setup"],
+        "cons": ["netcoreapp3.1 may have been intentionally dropped in stable releases", "Still using obsolete packages"],
+        "confidence": 0.60,
+        "effort": "low"
+      }
+    ],
+    "recommendedProposal": "Close as obsolete — migrate to SkiaSharp 3.x with MAUI",
+    "recommendedReason": "Both SkiaSharp.Views.Forms and netcoreapp3.1 are end-of-life. Investing time in debugging a 4-year-old preview packaging issue has no practical value. The only sustainable path forward is migration."
+  }
+}
