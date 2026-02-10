@@ -6,7 +6,7 @@ Shared and type-specific research guidance. Read after classifying `type` in Pha
 
 Always do these regardless of type:
 
-1. **Search for duplicates** — `$CACHE/ai-triage/` for existing triages; search GitHub issues for similar titles/symptoms
+1. **Search for duplicates** — `grep` across `$CACHE/ai-triage/` for existing triages and `$CACHE/github/items/` for similar titles/symptoms. Use GitHub search (`gh search issues` or `search_issues` MCP) as a supplement.
 2. **Check issue age and activity** — Time since last comment, whether OP responded to requests, whether issue is abandoned
 3. **Extract all evidence** — Screenshots, code snippets, stack traces, environment details, attachments, repo links
 4. **Identify SkiaSharp version** — Check for version mentions, NuGet package references, csproj contents in repro code

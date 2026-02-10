@@ -7,7 +7,11 @@ description: Triage a SkiaSharp GitHub issue into structured JSON (type, area, p
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
-All issue data is **pre-cached** on the `docs-data-cache` branch (synced hourly). Never call the GitHub API for issue data.
+### Data sources
+
+**Local cache first.** Issue data is pre-cached on the `docs-data-cache` branch (synced hourly). The cache contains full issue JSON with comments, labels, and timeline — use it as the primary source. You can `grep` across all cached items for duplicate detection and cross-referencing.
+
+**GitHub CLI fallback.** If the issue is not in the cache (too new, or cache stale), use `gh` CLI or the GitHub MCP tools (`issue_read`, `get_file_contents`) to fetch it directly. Local cache is faster and searchable; API is the fallback, not forbidden.
 
 ```
 Phase 1 (Setup) → Phase 2 (Preprocess) → Phase 3 (Analyze) → Phase 4 (Validate) → Phase 5 (Persist)
@@ -37,19 +41,27 @@ fi
 
 ## Phase 2 — Preprocess
 
-### 1. Read the cached issue
+### 1. Read the issue
 
 ```bash
 cat $CACHE/github/items/{number}.json
 ```
 
-If missing, tell the user it will be available after the next hourly sync. **Stop.**
+If not in cache, fetch via GitHub CLI or MCP tools:
+
+```bash
+gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author
+```
 
 ### 2. Convert to annotated markdown
+
+If using cached JSON:
 
 ```bash
 pwsh .github/skills/triage-issue/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/issue-{number}.md
 ```
+
+If fetched via API, work directly from the `gh` output (skip the script).
 
 ### 3. Research (conditional)
 
