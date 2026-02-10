@@ -394,8 +394,11 @@ else
                 </details>
             }
 
-            <h4>Proposals</h4>
-            <div class="proposals-grid">
+            <div class="proposals-header">
+                <h4>Proposals</h4>
+                <span class="carousel-hint">← scroll →</span>
+            </div>
+            <div class="proposals-carousel">
                 @foreach (var proposal in res.Proposals)
                 {
                     var isRecommended = proposal.Title == res.RecommendedProposal;
@@ -472,100 +475,112 @@ else
         </div>
     }
 
-    <!-- Analysis Notes -->
+    <!-- Analysis Notes (Slide-out Sidebar) -->
     @if (_issue.AnalysisNotes is not null)
     {
-        var notes = _issue.AnalysisNotes;
-        <div class="detail-card">
-            <h3>Analysis</h3>
-            <div class="analysis-summary">
-                <p>@notes.Summary</p>
+        <button class="btn-analysis-toggle" @onclick="ToggleAnalysis">
+            🔬 Analysis Notes
+        </button>
+
+        <div class="analysis-sidebar @(_analysisOpen ? "open" : "")">
+            <div class="sidebar-header">
+                <h3>Analysis Notes</h3>
+                <button class="btn-sidebar-close" @onclick="ToggleAnalysis">✕</button>
             </div>
-
-            @if (notes.KeySignals is { Count: > 0 })
-            {
-                <h4>Key Signals</h4>
-                @foreach (var signal in notes.KeySignals)
-                {
-                    <div class="signal-card">
-                        <blockquote class="signal-quote">"@signal.Text"</blockquote>
-                        <span class="evidence-source">— @signal.Source</span>
-                        <p class="signal-interp">@signal.Interpretation</p>
-                        @if (signal.SupportedFields is { Count: > 0 })
-                        {
-                            <div class="supported-fields">
-                                @foreach (var f in signal.SupportedFields)
-                                {
-                                    <span class="label label-field">@f</span>
-                                }
-                            </div>
-                        }
-                    </div>
+            <div class="sidebar-body">
+                @{
+                    var notes = _issue.AnalysisNotes;
                 }
-            }
+                <div class="analysis-summary">
+                    <p>@notes.Summary</p>
+                </div>
 
-            @if (notes.FieldRationales is { Count: > 0 })
-            {
-                <h4>Field Rationales</h4>
-                @foreach (var fr in notes.FieldRationales)
+                @if (notes.KeySignals is { Count: > 0 })
                 {
-                    <div class="rationale-card">
-                        <div class="rationale-header">
-                            <span class="label label-field">@fr.Field</span>
-                            <span class="rationale-chosen">→ @fr.Chosen</span>
+                    <h4>Key Signals</h4>
+                    @foreach (var signal in notes.KeySignals)
+                    {
+                        <div class="signal-card">
+                            <blockquote class="signal-quote">"@signal.Text"</blockquote>
+                            <span class="evidence-source">— @signal.Source</span>
+                            <p class="signal-interp">@signal.Interpretation</p>
+                            @if (signal.SupportedFields is { Count: > 0 })
+                            {
+                                <div class="supported-fields">
+                                    @foreach (var f in signal.SupportedFields)
+                                    {
+                                        <span class="label label-field">@f</span>
+                                    }
+                                </div>
+                            }
                         </div>
-                        <p class="reason-text">@fr.ExpandedReason</p>
-                        @if (fr.Alternatives is { Count: > 0 })
-                        {
-                            <details class="alternatives">
-                                <summary>@fr.Alternatives.Count alternative(s) considered</summary>
-                                @foreach (var alt in fr.Alternatives)
-                                {
-                                    <div class="alt-item">
-                                        <span class="alt-value">@alt.Value</span>
-                                        <span class="alt-rejected">— @alt.WhyRejected</span>
-                                    </div>
-                                }
-                            </details>
-                        }
-                    </div>
+                    }
                 }
-            }
 
-            @if (notes.Uncertainties is { Count: > 0 })
-            {
-                <h4>Uncertainties</h4>
-                <ul class="uncertainty-list">
-                    @foreach (var u in notes.Uncertainties)
-                    {
-                        <li>@u</li>
-                    }
-                </ul>
-            }
-
-            @if (notes.Assumptions is { Count: > 0 })
-            {
-                <h4>Assumptions</h4>
-                <ul class="assumption-list">
-                    @foreach (var a in notes.Assumptions)
-                    {
-                        <li>@a</li>
-                    }
-                </ul>
-            }
-
-            @if (notes.DocsConsulted is { Count: > 0 })
-            {
-                <h4>Docs Consulted</h4>
-                @foreach (var doc in notes.DocsConsulted)
+                @if (notes.FieldRationales is { Count: > 0 })
                 {
-                    <div class="doc-ref">
-                        <code>@doc.Path</code>
-                        <span class="doc-relevance">— @doc.Relevance</span>
-                    </div>
+                    <h4>Field Rationales</h4>
+                    @foreach (var fr in notes.FieldRationales)
+                    {
+                        <div class="rationale-card">
+                            <div class="rationale-header">
+                                <span class="label label-field">@fr.Field</span>
+                                <span class="rationale-chosen">→ @fr.Chosen</span>
+                            </div>
+                            <p class="reason-text">@fr.ExpandedReason</p>
+                            @if (fr.Alternatives is { Count: > 0 })
+                            {
+                                <details class="alternatives">
+                                    <summary>@fr.Alternatives.Count alternative(s) considered</summary>
+                                    @foreach (var alt in fr.Alternatives)
+                                    {
+                                        <div class="alt-item">
+                                            <span class="alt-value">@alt.Value</span>
+                                            <span class="alt-rejected">— @alt.WhyRejected</span>
+                                        </div>
+                                    }
+                                </details>
+                            }
+                        </div>
+                    }
                 }
-            }
+
+                @if (notes.Uncertainties is { Count: > 0 })
+                {
+                    <h4>Uncertainties</h4>
+                    <ul class="uncertainty-list">
+                        @foreach (var u in notes.Uncertainties)
+                        {
+                            <li>@u</li>
+                        }
+                    </ul>
+                }
+
+                @if (notes.Assumptions is { Count: > 0 })
+                {
+                    <h4>Assumptions</h4>
+                    <ul class="assumption-list">
+                        @foreach (var a in notes.Assumptions)
+                        {
+                            <li>@a</li>
+                        }
+                    </ul>
+                }
+
+                @if (notes.DocsConsulted is { Count: > 0 })
+                {
+                    <h4>Docs Consulted</h4>
+                    @foreach (var doc in notes.DocsConsulted)
+                    {
+                        <div class="doc-ref">
+                            <code>@doc.Path</code>
+                            <span class="doc-relevance">— @doc.Relevance</span>
+                        </div>
+                    }
+                }
+            </div>
         </div>
+        <div class="analysis-backdrop @(_analysisOpen ? "open" : "")" @onclick="ToggleAnalysis"></div>
     }
 
     <!-- Bottom Navigation -->
@@ -602,6 +617,7 @@ else
     private int _currentIndex;
     private int _totalCount;
     private bool _loading = true;
+    private bool _analysisOpen;
 
     protected override async Task OnInitializedAsync()
     {
@@ -615,6 +631,8 @@ else
         if (!_loading)
             LoadIssue();
     }
+
+    private void ToggleAnalysis() => _analysisOpen = !_analysisOpen;
 
     private void LoadIssue()
     {
