@@ -39,12 +39,24 @@ else
             <h1>@_issue.Summary</h1>
         </div>
         <div class="detail-badges">
-            <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
+            <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value) has-rationale" style="position:relative">
+                @FormatLabel(_issue.Classification.Type.Value)
+                @{ var hdrTypeR = GetRationale("type"); }
+                @if (hdrTypeR is not null) { <span class="rationale-tooltip">@hdrTypeR</span> }
+            </span>
             @if (_issue.Evidence.BugSignals?.Severity is not null)
             {
-                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity">@FormatLabel(_issue.Evidence.BugSignals.Severity)</span>
+                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity has-rationale" style="position:relative">
+                    @FormatLabel(_issue.Evidence.BugSignals.Severity)
+                    @{ var hdrSevR = GetRationale("bugSignals.severity"); }
+                    @if (hdrSevR is not null) { <span class="rationale-tooltip">@hdrSevR</span> }
+                </span>
             }
-            <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction">@FormatLabel(_issue.Output.Actionability.SuggestedAction)</span>
+            <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction has-rationale" style="position:relative">
+                @FormatLabel(_issue.Output.Actionability.SuggestedAction)
+                @{ var hdrActR = GetRationale("actionability.suggestedAction"); }
+                @if (hdrActR is not null) { <span class="rationale-tooltip">@hdrActR</span> }
+            </span>
             <span class="confidence-pill-lg" title="Confidence: @_issue.Output.Actionability.Confidence.ToString("P0")">
                 <span class="confidence-bar @GetConfidenceClass(_issue.Output.Actionability.Confidence)" style="width: @((int)(_issue.Output.Actionability.Confidence * 100))%"></span>
                 <span class="confidence-text">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
@@ -200,7 +212,7 @@ else
                         <span class="rationale-tooltip">@sevRationale</span>
                     }
                 </span>
-                <span class="label">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality)</span>
+                <span class="label" title="Reproduction quality assessment">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality)</span>
             </div>
             <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.BugSignals.SeverityReason)</div>
             @if (_issue.Evidence.BugSignals.WorkaroundSummary is not null)
@@ -233,7 +245,11 @@ else
                     <h3>Regression</h3>
                     @if (_issue.Evidence.Regression.IsRegression)
                     {
-                        <span class="badge-regression">⚡ Regression</span>
+                        <span class="badge-regression has-rationale" style="position:relative">
+                            ⚡ Regression
+                            @{ var regRationale = GetRationale("regression"); }
+                            @if (regRationale is not null) { <span class="rationale-tooltip">@regRationale</span> }
+                        </span>
                         <span class="field-confidence">@_issue.Evidence.Regression.Confidence.ToString("P0")</span>
                         @if (_issue.Evidence.Regression.WorkedInVersion is not null)
                         {
@@ -298,7 +314,7 @@ else
             {
                 <div class="field-row">
                     <span class="field-label">Still relevant:</span>
-                    <span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance)</span>
+                    <span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance" title="Whether this issue still affects the latest version">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance)</span>
                 </div>
             }
             @if (_issue.Evidence.VersionAnalysis.MigrationPath is not null)
