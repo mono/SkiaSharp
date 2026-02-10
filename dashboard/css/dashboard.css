@@ -1794,3 +1794,199 @@ h2.category-danger { color: #dc3545; }
     font-size: 0.85rem;
     line-height: 1.6;
 }
+
+/* =========================== */
+/* Triage List - Compact Rows  */
+/* =========================== */
+
+.ai-triage-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid #6c757d;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    flex-wrap: wrap;
+    transition: background 0.1s;
+}
+
+.ai-triage-row:hover { background: #f0f4ff; }
+.ai-triage-row.action-investigate { border-left-color: #ffc107; }
+.ai-triage-row.action-close { border-left-color: #198754; }
+.ai-triage-row.action-discuss { border-left-color: #0dcaf0; }
+.ai-triage-row.action-info { border-left-color: #6c757d; }
+.ai-triage-row.action-keep { border-left-color: #0d6efd; }
+
+.ai-triage-row .ai-triage-title {
+    flex: 1;
+    min-width: 200px;
+}
+
+.label-sm { font-size: 0.65rem; padding: 0.1rem 0.4rem; }
+
+.badge-human-review-sm, .badge-regression-sm {
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+/* =========================== */
+/* Triage Detail Page          */
+/* =========================== */
+
+.triage-detail-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 0;
+}
+
+.triage-detail-nav.bottom-nav {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-back, .btn-prev, .btn-next {
+    text-decoration: none;
+    color: #0d6efd;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    transition: background 0.1s;
+}
+
+.btn-back:hover, .btn-prev:hover, .btn-next:hover {
+    background: #e9ecef;
+    text-decoration: none;
+}
+
+.nav-position {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.nav-counter {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.triage-detail-header {
+    margin-bottom: 1.5rem;
+}
+
+.detail-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.detail-title-row h1 {
+    font-size: 1.4rem;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.issue-link-lg {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #0d6efd;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.detail-badges {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
+.confidence-pill-lg {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 80px;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: visible;
+    position: relative;
+}
+
+.confidence-pill-lg .confidence-bar {
+    height: 100%;
+    border-radius: 4px;
+}
+
+.confidence-text {
+    font-size: 0.75rem;
+    color: #6c757d;
+    white-space: nowrap;
+    margin-left: 0.25rem;
+}
+
+.detail-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.detail-section-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .detail-section-grid { grid-template-columns: 1fr; }
+}
+
+.detail-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.detail-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #212529;
+    margin: 0 0 0.75rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.detail-card h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #495057;
+    margin: 1rem 0 0.5rem 0;
+}
+
+.detail-card h4:first-child { margin-top: 0; }
+
+/* Triage link on Issues page */
+.triage-link {
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+    opacity: 0.7;
+    transition: opacity 0.1s;
+}
+
+.triage-link:hover { opacity: 1; }
