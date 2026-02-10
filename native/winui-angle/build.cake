@@ -4,6 +4,8 @@ DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 string ANGLE_VERSION = GetVersion("ANGLE", "release");
 
+var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
+
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/msbuild.cake"
 
@@ -153,6 +155,7 @@ Task("ANGLE")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
+        CheckWindowsDependencies($"{outDir}/{target}.dll", excluded: VERIFY_EXCLUDED);
     }
 });
 
