@@ -1,6 +1,11 @@
 ---
 name: triage-issue
-description: Triage a SkiaSharp GitHub issue into structured JSON (type, area, platform, severity, actionability). Use when the user says "triage #123", "triage issue 123", "classify issue", or "analyze issue".
+description: >-
+  Triage a SkiaSharp GitHub issue or PR into structured JSON with classification
+  (type, area, platform, severity), suggested response, and automatable actions.
+  Triggers: "triage #123", "triage issue", "classify issue", "analyze issue",
+  "what's this issue about". Also triggered when an issue number is given after
+  the triage-issue skill is already mentioned.
 ---
 
 # Triage Issue
@@ -87,7 +92,9 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 
 #### meta + summary
 
-- `schemaVersion`: `"2.0"`, `analyzedAt`: ISO 8601 UTC, `currentLabels`: labels currently on the issue
+- `schemaVersion`: `"2.0"`
+- `analyzedAt`: ISO 8601 UTC
+- `currentLabels`: labels currently on the issue
 
 #### classification
 
@@ -135,7 +142,8 @@ Schema validates rationale coverage. Use short field names (e.g., `"type"` not `
 | `update-project` | low | |
 | `set-milestone` | low | |
 
-Each action: `{id, type, risk, description, reason, confidence, dependsOn, payload}`. Set `requiresHumanReview: true` if any key confidence < 0.70.
+Each action: `{id, type, risk, description, reason, confidence, dependsOn, payload}`. 
+Set `requiresHumanReview: true` if any key confidence < 0.70.
 
 ---
 
@@ -145,7 +153,9 @@ Each action: `{id, type, risk, description, reason, confidence, dependsOn, paylo
 pwsh .github/skills/triage-issue/scripts/validate-triage.ps1 /tmp/triage-{number}.json
 ```
 
-Exit 0 = valid → Phase 5. Exit 1 = fix and retry (max 3). Exit 2 = stop and report.
+- Exit 0 = valid → Phase 5
+- Exit 1 = fix and retry (max 3)
+- Exit 2 = stop and report
 
 ---
 
