@@ -5,24 +5,32 @@
 
 ## Current Focus
 
-**Phase**: AI Triage Dashboard Page — Complete
-**Status**: All components built, tested, and working
-**Branch**: docs-dashboard (skills branch)
+**Phase**: AI Triage Dashboard — Two-page layout complete
+**Status**: List page + detail page built, tested, deployed
+**Branch**: docs-dashboard
 
 ## Recent Changes
 
-### 2026-02-09 (AI Triage Dashboard Page)
-- **Created `Triage.razor`** — Full AI Triage page with:
-  - Summary cards (Needs Investigation, Closeable, Quick Wins, Regressions, Needs Human Review)
-  - Filter bar (Action, Type, Area, Severity, Sort By) with Clear Filters
-  - Expandable issue cards with 5 tabbed sections:
-    - **Overview**: Classification, Suggested Action, Bug Signals, Regression, Fix Status, Version Analysis
-    - **Evidence**: Steps to Reproduce, Code Snippets, Screenshots, Attachments, Repo Links, Related Issues, Environment
-    - **Analysis**: Key Signals with quotes, Field Rationales with expandable alternatives, Uncertainties, Assumptions, Docs Consulted
-    - **Resolution**: Hypothesis, Research Done, 3+ Proposals with recommended highlight, Steps & Tradeoffs
-    - **Response**: Draft response with Copy button, proper inline code rendering
-  - Confidence bars with color coding (green/yellow/red)
-  - Summary card click filters + dropdown filters work together
+### 2026-02-10 (Two-page Triage Layout)
+- **Refactored `Triage.razor`** — Compact clickable rows instead of expandable cards
+  - URL-persisted filters via `[SupplyParameterFromQuery]` + `NavigateTo(url, replace: true)`
+  - Rows link to detail page with filter context in query params
+  - Inline badges for regression (⚡) and human review (⚠)
+- **Created `TriageDetail.razor`** — Full detail page with:
+  - All triage sections rendered vertically (no tabs)
+  - Prev/next navigation preserving filters
+  - Back button returns to list with filters intact
+  - Classification + Action side-by-side grid
+  - Bug signals, regression, fix status, version analysis cards
+  - Evidence section: steps, code, screenshots, repo links, related issues
+  - Analysis: key signals with quotes, field rationales, uncertainties
+  - Resolution: hypothesis, research, 3+ proposals with recommendation
+  - Suggested response with Copy button
+- **Updated `Issues.razor`** — Added 🤖 triage link for triaged issues
+- **Added CSS** — Detail page nav, cards, compact rows, triage link styles
+
+### 2026-02-09 (AI Triage Dashboard Page — Initial)
+- **Created initial `Triage.razor`** — Full AI Triage page with summary cards, filters, expandable issue cards
 - **Created `TriageStats.cs`** — C# records matching triage-schema.json (Classification, BugSignals, ReproEvidence, VersionAnalysis, AnalysisNotes, ResolutionAnalysis, etc.)
 - **Added `GenerateTriageAsync`** to GenerateCommand — reads ai-triage/*.json from cache, computes summary stats, writes triage.json
 - **Added `AiTriagePath`** to CacheService
