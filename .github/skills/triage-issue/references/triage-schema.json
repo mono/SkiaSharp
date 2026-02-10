@@ -1672,6 +1672,471 @@
           }
         }
       }
+    },
+    {
+      "$comment": "fieldRationale: require 'type' when classification.type is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "type"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'area' when classification.area is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "area"
+            ],
+            "properties": {
+              "area": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "area"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'actionability.suggestedAction' when output.actionability is set",
+      "if": {
+        "properties": {
+          "output": {
+            "type": "object",
+            "required": [
+              "actionability"
+            ],
+            "properties": {
+              "actionability": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "output"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "actionability.suggestedAction"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'bugSignals.severity' when evidence.bugSignals is set",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "bugSignals"
+            ],
+            "properties": {
+              "bugSignals": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "bugSignals.severity"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'platforms' when classification.platforms is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "platforms"
+            ],
+            "properties": {
+              "platforms": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "platforms"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'tenets' when classification.tenets is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "tenets"
+            ],
+            "properties": {
+              "tenets": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "tenets"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'backends' when classification.backends is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "backends"
+            ],
+            "properties": {
+              "backends": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "backends"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'partner' when classification.partner is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "partner"
+            ],
+            "properties": {
+              "partner": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "partner"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'regression.isRegression' when evidence.regression is set",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "regression"
+            ],
+            "properties": {
+              "regression": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "regression.isRegression"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'fixStatus.likelyFixed' when evidence.fixStatus is set",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "fixStatus"
+            ],
+            "properties": {
+              "fixStatus": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "fixStatus.likelyFixed"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'versionAnalysis.currentRelevance' when evidence.versionAnalysis is set",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "versionAnalysis"
+            ],
+            "properties": {
+              "versionAnalysis": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "versionAnalysis.currentRelevance"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }
