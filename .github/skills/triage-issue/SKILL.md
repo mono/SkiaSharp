@@ -1,6 +1,6 @@
 ---
 name: triage-issue
-description: Triage a SkiaSharp GitHub issue into structured JSON (type, area, platform, severity, actionability). Use when the user says "triage #123", "triage issue 123", "classify issue", or "analyze issue". Produces a schema-validated JSON file with reasoning (analysisNotes) and resolution proposals (resolutionAnalysis), plus an optional GitHub response draft. Pushes to the data cache branch.
+description: Triage a SkiaSharp GitHub issue into structured JSON (type, area, platform, severity, actionability). Use when the user says "triage #123", "triage issue 123", "classify issue", or "analyze issue". Produces a schema-validated JSON file with classification, evidence, analysis (signals + rationales + resolution proposals), and automatable actions (label updates, comments, close/link operations). Pushes to the data cache branch.
 ---
 
 # Triage Issue
@@ -83,40 +83,52 @@ Write brief internal analysis (3-5 sentences), then classify the issue type. Aft
 
 ### 3. Generate JSON
 
-Produce the full triage JSON. Key rules:
+Produce the full triage JSON with 6 top-level groups: `meta`, `summary`, `classification`, `evidence`, `analysis`, `output`.
 
-- **`schemaVersion`**: `"1.0"`
-- **`analyzedAt`**: Full ISO 8601: `"2026-02-08T15:00:00Z"`
-- **Every classification**: needs `value`, `confidence` (0.0–1.0), and `reason`
-- **Label-backed fields**: exact label suffixes from schema enums
-- **`reproEvidence`**: extract ALL screenshots, attachments, repo links, code, steps — preserve every URL
-- **`bugSignals`**: REQUIRED for bugs, `null` for non-bugs (schema enforces)
-- **`duplicateOf`**: REQUIRED when `suggestedAction == "close-as-duplicate"`
+#### meta + summary
+
+- **`schemaVersion`**: `"2.0"`
+- **`analyzedAt`**: Full ISO 8601 UTC: `"2026-02-08T15:00:00Z"`
+- **`currentLabels`**: Array of labels currently on the issue (for delta computation)
+
+#### classification
+
+- **Every field**: needs `value` and `confidence` (0.0–1.0) — NO per-field `reason`
+- **Values ARE full GitHub labels**: `"type/bug"`, `"os/Linux"`, `"area/SkiaSharp"` — not bare suffixes
 - **Nullable sections**: use JSON `null`, never `{}` or `[]`
 
-#### analysisNotes (REQUIRED)
+#### evidence
 
-Explain your reasoning for every triage. Include:
-- **`keySignals`**: Direct quotes with source and which fields they support
+- **`bugSignals`**: REQUIRED for bugs, `null` for non-bugs (schema enforces)
+- **`reproEvidence`**: extract ALL screenshots, attachments, repo links, code, steps — preserve every URL
+- **`versionAnalysis`**: no `era` field — just `mentionedVersions`, `currentRelevance`, `reason`, `migrationPath`
+
+#### analysis (REQUIRED)
+
+Single reasoning section. All classification reasoning goes in `fieldRationales` (the only source of truth):
+
+- **`keySignals`**: Direct quotes with source and interpretation (no `supportedFields`)
 - **`fieldRationales`**: One per non-null classified field, with alternatives considered
-- **`docsConsulted`**: Every doc read, with relevance
-- **`docsNotConsulted`**: Why potentially-relevant docs were skipped (`null` if all were checked)
 - **`uncertainties`**: What's unclear and what would resolve it
 - **`assumptions`**: Explicit assumptions when evidence was insufficient (omit if none)
+- **`resolution`**: Proposals with `{title, description, confidence, effort}` — no steps/pros/cons
 
-#### resolutionAnalysis (3+ proposals)
+Resolution proposals populated for ALL issue types. Null only for duplicates or abandoned issues.
 
-Populated for ALL issue types — the goal is ready-to-use options for the maintainer:
-- **Bugs**: Fix proposals with steps, tradeoffs, effort
-- **Questions**: 3+ possible answers with code examples
-- **Features**: Existing alternatives, workarounds, implementation scope
-- **Docs gaps**: Draft content the maintainer can use directly
+#### output
 
-Null only for duplicates or truly abandoned issues.
+- **`actionability`**: `suggestedAction`, `confidence`, `reason`, `requiresHumanReview`, `missingInfo`
+  - No `closeable`/`closeReason`/`abandoned`/`duplicateOf` — those are now in actions
+- **`actions`**: Array of automatable operations, each independently approvable:
+  - `update-labels` (risk: low), `add-comment` (risk: high), `close-issue` (risk: medium)
+  - `link-related` (risk: low), `link-duplicate` (risk: medium), `convert-to-discussion` (risk: high)
+  - `update-project` (risk: low), `set-milestone` (risk: low)
+  - Each action: `{id, type, risk, description, reason, confidence, dependsOn, payload}`
+  - No `status` field — consumer adds this
 
-#### suggestedResponse.draft
+#### add-comment action (replaces suggestedResponse)
 
-When generating a draft, read [references/response-guidelines.md](references/response-guidelines.md) for tone and structure. Follow acknowledge → analyze → ask. Max 2000 chars, inline markdown.
+When generating a draft, read [references/response-guidelines.md](references/response-guidelines.md) for tone and structure. Follow acknowledge → analyze → ask. Max 2000 chars, inline markdown. Set `requiresHumanEdit: true` always.
 
 #### Confidence scoring
 
@@ -156,13 +168,18 @@ Re-triage replaces existing files. If the issue hasn't changed since `analyzedAt
 ```
 ✅ Triage written: ai-triage/{number}.json
 
-Type:       bug (0.98)
-Area:       SkiaSharp
+Type:       type/bug (0.98)
+Area:       area/SkiaSharp
 Severity:   critical — Fatal crash in disposal path
 Action:     needs-investigation
+
+Actions (3):
+  labels-1    update-labels    [low]  Add type/bug, area/SkiaSharp
+  comment-1   add-comment      [high] Post analysis response ⚠️ requires human edit
+  link-1      link-related     [low]  Cross-ref #1234
 ```
 
-If `suggestedResponse.draft` exists, show in a copy-paste block with "⚠️ requires human review" warning.
+If an `add-comment` action exists, show its `draftBody` in a copy-paste block with "⚠️ requires human review" warning.
 
 **⚠️ NEVER post draft responses via GitHub API.** Always present for human review.
 
