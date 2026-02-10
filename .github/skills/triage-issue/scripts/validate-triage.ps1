@@ -69,7 +69,7 @@ if ($actions -and $actions.Count -gt 0) {
     }
 }
 
-# --- fieldRationales coverage check ---
+# --- fieldRationales coverage check (not expressible in JSON Schema with PowerShell's validator) ---
 $rationaleFields = [System.Collections.Generic.HashSet[string]]::new()
 $analysis = $triage.analysis ?? $triage.analysisNotes
 if ($analysis) {

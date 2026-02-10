@@ -4,7 +4,14 @@
   "title": "SkiaSharp Issue Triage",
   "description": "Per-issue AI triage v2.1 with grouped sections: meta, classification, evidence, analysis, output. Classification values ARE full GitHub labels (e.g., 'type/bug', 'os/Linux'). Reasoning lives in analysis.fieldRationales (single source of truth).",
   "type": "object",
-"required": [ "meta", "summary", "classification", "evidence", "analysis", "output" ],
+  "required": [
+    "meta",
+    "summary",
+    "classification",
+    "evidence",
+    "analysis",
+    "output"
+  ],
   "additionalProperties": false,
   "$defs": {
     "confidence": {
@@ -16,7 +23,10 @@
     "classifiedField": {
       "type": "object",
       "description": "Base pattern for all classified values: value + confidence.",
-"required": [ "value", "confidence" ],
+      "required": [
+        "value",
+        "confidence"
+      ],
       "properties": {
         "value": {},
         "confidence": {
@@ -25,18 +35,27 @@
       }
     },
     "classifiedType": {
-      "description": "Issue type classification. Pick ONE best fit — trust issue content over title prefix. Values are full GitHub labels.",
+      "description": "Issue type classification. Pick ONE best fit \u2014 trust issue content over title prefix. Values are full GitHub labels.",
       "allOf": [
         {
           "$ref": "#/$defs/classifiedField"
         }
       ],
       "type": "object",
-"required": [ "value", "confidence" ],
+      "required": [
+        "value",
+        "confidence"
+      ],
       "additionalProperties": false,
       "properties": {
         "value": {
-"enum": [ "type/bug", "type/feature-request", "type/enhancement", "type/question", "type/documentation" ],
+          "enum": [
+            "type/bug",
+            "type/feature-request",
+            "type/enhancement",
+            "type/question",
+            "type/documentation"
+          ],
           "description": "type/bug=broken/crash. type/feature-request=new capability. type/enhancement=improve existing. type/question=how-to/support. type/documentation=docs/samples gap."
         },
         "confidence": {
@@ -52,7 +71,10 @@
         }
       ],
       "type": "object",
-"required": [ "value", "confidence" ],
+      "required": [
+        "value",
+        "confidence"
+      ],
       "additionalProperties": false,
       "properties": {
         "value": {
@@ -85,11 +107,23 @@
         }
       ],
       "type": "object",
-"required": [ "value", "confidence" ],
+      "required": [
+        "value",
+        "confidence"
+      ],
       "additionalProperties": false,
       "properties": {
         "value": {
-"enum": [ "backend/Direct3D", "backend/Metal", "backend/OpenGL", "backend/Raster", "backend/Vulkan", "backend/PDF", "backend/SVG", "backend/XPS" ]
+          "enum": [
+            "backend/Direct3D",
+            "backend/Metal",
+            "backend/OpenGL",
+            "backend/Raster",
+            "backend/Vulkan",
+            "backend/PDF",
+            "backend/SVG",
+            "backend/XPS"
+          ]
         },
         "confidence": {
           "$ref": "#/$defs/confidence"
@@ -104,7 +138,10 @@
         }
       ],
       "type": "object",
-"required": [ "value", "confidence" ],
+      "required": [
+        "value",
+        "confidence"
+      ],
       "additionalProperties": false,
       "properties": {
         "value": {
@@ -136,11 +173,18 @@
         }
       ],
       "type": "object",
-"required": [ "value", "confidence" ],
+      "required": [
+        "value",
+        "confidence"
+      ],
       "additionalProperties": false,
       "properties": {
         "value": {
-"enum": [ "tenet/compatibility", "tenet/performance", "tenet/reliability" ],
+          "enum": [
+            "tenet/compatibility",
+            "tenet/performance",
+            "tenet/reliability"
+          ],
           "description": "tenet/compatibility=cross-version. tenet/performance=speed/memory. tenet/reliability=crashes/corruption."
         },
         "confidence": {
@@ -156,11 +200,18 @@
         }
       ],
       "type": "object",
-"required": [ "value", "confidence" ],
+      "required": [
+        "value",
+        "confidence"
+      ],
       "additionalProperties": false,
       "properties": {
         "value": {
-"enum": [ "partner/maui", "partner/tizen", "partner/unoplatform" ]
+          "enum": [
+            "partner/maui",
+            "partner/tizen",
+            "partner/unoplatform"
+          ]
         },
         "confidence": {
           "$ref": "#/$defs/confidence"
@@ -169,7 +220,9 @@
     },
     "screenshot": {
       "type": "object",
-"required": [ "url" ],
+      "required": [
+        "url"
+      ],
       "additionalProperties": false,
       "properties": {
         "url": {
@@ -188,7 +241,10 @@
     },
     "attachment": {
       "type": "object",
-"required": [ "url", "filename" ],
+      "required": [
+        "url",
+        "filename"
+      ],
       "additionalProperties": false,
       "properties": {
         "url": {
@@ -199,7 +255,12 @@
           "type": "string"
         },
         "type": {
-"enum": [ "repro-project", "log-file", "config-file", "other" ]
+          "enum": [
+            "repro-project",
+            "log-file",
+            "config-file",
+            "other"
+          ]
         },
         "source": {
           "type": "string"
@@ -208,7 +269,9 @@
     },
     "repoLink": {
       "type": "object",
-"required": [ "url" ],
+      "required": [
+        "url"
+      ],
       "additionalProperties": false,
       "properties": {
         "url": {
@@ -222,7 +285,9 @@
     },
     "codeSnippet": {
       "type": "object",
-"required": [ "code" ],
+      "required": [
+        "code"
+      ],
       "additionalProperties": false,
       "properties": {
         "language": {
@@ -270,7 +335,7 @@
             "minimum": 1
           },
           "minItems": 1,
-          "description": "Issue numbers referenced in the thread (evidence — not the action to link them)."
+          "description": "Issue numbers referenced in the thread (evidence \u2014 not the action to link them)."
         },
         "stepsToReproduce": {
           "type": "array",
@@ -289,7 +354,10 @@
           "minItems": 1
         },
         "environmentDetails": {
-"type": [ "string", "null" ],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Consolidated environment info: OS, IDE, .NET version, device, etc."
         }
       }
@@ -297,7 +365,13 @@
     "bugSignalsObject": {
       "type": "object",
       "description": "Bug evidence extraction. REQUIRED when classification.type.value is 'bug', must be null for non-bugs.",
-"required": [ "hasCrash", "hasStackTrace", "reproQuality", "severity", "severityReason" ],
+      "required": [
+        "hasCrash",
+        "hasStackTrace",
+        "reproQuality",
+        "severity",
+        "severityReason"
+      ],
       "additionalProperties": false,
       "properties": {
         "hasCrash": {
@@ -309,7 +383,12 @@
           "description": "Is a stack trace provided?"
         },
         "reproQuality": {
-"enum": [ "complete", "partial", "steps-only", "none" ],
+          "enum": [
+            "complete",
+            "partial",
+            "steps-only",
+            "none"
+          ],
           "description": "complete=full repro project. partial=snippets. steps-only=description only. none=no repro."
         },
         "hasWorkaround": {
@@ -317,7 +396,10 @@
           "description": "Has a workaround been identified?"
         },
         "workaroundSummary": {
-"type": [ "string", "null" ],
+          "type": [
+            "string",
+            "null"
+          ],
           "maxLength": 500
         },
         "targetFrameworks": {
@@ -329,7 +411,12 @@
           "description": "Target frameworks mentioned, e.g. ['net8.0-android', 'net48']."
         },
         "severity": {
-"enum": [ "critical", "high", "medium", "low" ],
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ],
           "description": "critical=crash/data-loss/security. high=broken, no workaround. medium=broken, workaround exists. low=cosmetic."
         },
         "severityReason": {
@@ -340,7 +427,11 @@
     },
     "regressionObject": {
       "type": "object",
-"required": [ "isRegression", "confidence", "reason" ],
+      "required": [
+        "isRegression",
+        "confidence",
+        "reason"
+      ],
       "additionalProperties": false,
       "properties": {
         "isRegression": {
@@ -363,7 +454,11 @@
     },
     "fixStatusObject": {
       "type": "object",
-"required": [ "likelyFixed", "confidence", "reason" ],
+      "required": [
+        "likelyFixed",
+        "confidence",
+        "reason"
+      ],
       "additionalProperties": false,
       "properties": {
         "likelyFixed": {
@@ -391,16 +486,26 @@
           "minItems": 1
         },
         "fixedInVersion": {
-"type": [ "string", "null" ]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "verificationStatus": {
-"enum": [ "unverified", "verified-fixed", "verified-still-broken", "inconclusive" ]
+          "enum": [
+            "unverified",
+            "verified-fixed",
+            "verified-still-broken",
+            "inconclusive"
+          ]
         }
       }
     },
     "versionAnalysisObject": {
       "type": "object",
-"required": [ "reason" ],
+      "required": [
+        "reason"
+      ],
       "additionalProperties": false,
       "properties": {
         "mentionedVersions": {
@@ -411,25 +516,44 @@
           "minItems": 1
         },
         "currentRelevance": {
-"enum": [ "likely", "unlikely", "unknown" ]
+          "enum": [
+            "likely",
+            "unlikely",
+            "unknown"
+          ]
         },
         "reason": {
           "type": "string",
           "minLength": 1
         },
         "migrationPath": {
-"type": [ "string", "null" ]
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
     "actionabilityObject": {
       "type": "object",
       "description": "Suggested next action for the maintainer.",
-"required": [ "suggestedAction", "confidence", "reason" ],
+      "required": [
+        "suggestedAction",
+        "confidence",
+        "reason"
+      ],
       "additionalProperties": false,
       "properties": {
         "suggestedAction": {
-"enum": [ "needs-investigation", "close-as-fixed", "close-with-docs", "close-as-duplicate", "convert-to-discussion", "request-info", "keep-open" ]
+          "enum": [
+            "needs-investigation",
+            "close-as-fixed",
+            "close-with-docs",
+            "close-as-duplicate",
+            "convert-to-discussion",
+            "request-info",
+            "keep-open"
+          ]
         },
         "confidence": {
           "$ref": "#/$defs/confidence"
@@ -444,7 +568,16 @@
         "missingInfo": {
           "type": "array",
           "items": {
-"enum": [ "reproduction-steps", "version-number", "platform", "stack-trace", "expected-behavior", "actual-behavior", "sample-project", "device-info" ]
+            "enum": [
+              "reproduction-steps",
+              "version-number",
+              "platform",
+              "stack-trace",
+              "expected-behavior",
+              "actual-behavior",
+              "sample-project",
+              "device-info"
+            ]
           },
           "minItems": 1
         }
@@ -452,7 +585,11 @@
     },
     "keySignal": {
       "type": "object",
-"required": [ "text", "source", "interpretation" ],
+      "required": [
+        "text",
+        "source",
+        "interpretation"
+      ],
       "additionalProperties": false,
       "properties": {
         "text": {
@@ -474,7 +611,11 @@
     },
     "fieldRationale": {
       "type": "object",
-"required": [ "field", "chosen", "expandedReason" ],
+      "required": [
+        "field",
+        "chosen",
+        "expandedReason"
+      ],
       "additionalProperties": false,
       "properties": {
         "field": {
@@ -496,7 +637,10 @@
           "type": "array",
           "items": {
             "type": "object",
-"required": [ "value", "whyRejected" ],
+            "required": [
+              "value",
+              "whyRejected"
+            ],
             "additionalProperties": false,
             "properties": {
               "value": {
@@ -514,7 +658,12 @@
     },
     "resolutionProposal": {
       "type": "object",
-"required": [ "title", "description", "confidence", "effort" ],
+      "required": [
+        "title",
+        "description",
+        "confidence",
+        "effort"
+      ],
       "additionalProperties": false,
       "properties": {
         "title": {
@@ -529,14 +678,23 @@
           "$ref": "#/$defs/confidence"
         },
         "effort": {
-"enum": [ "low", "medium", "high" ]
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
         }
       }
     },
     "resolutionObject": {
       "type": "object",
       "description": "Researched resolution. For bugs: root cause + fixes. For questions: answers. For features: alternatives. Null only for duplicates or abandoned issues.",
-"required": [ "hypothesis", "proposals", "recommendedProposal", "recommendedReason" ],
+      "required": [
+        "hypothesis",
+        "proposals",
+        "recommendedProposal",
+        "recommendedReason"
+      ],
       "additionalProperties": false,
       "properties": {
         "hypothesis": {
@@ -612,12 +770,19 @@
       ]
     },
     "actionRisk": {
-"enum": [ "low", "medium", "high" ],
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
       "description": "low=reversible/cosmetic. medium=state change. high=irreversible or reputation-sensitive."
     },
     "updateLabelsPayload": {
       "type": "object",
-"required": [ "labelsToAdd", "labelsToRemove" ],
+      "required": [
+        "labelsToAdd",
+        "labelsToRemove"
+      ],
       "additionalProperties": false,
       "properties": {
         "labelsToAdd": {
@@ -640,11 +805,21 @@
     },
     "addCommentPayload": {
       "type": "object",
-"required": [ "commentType", "draftBody", "requiresHumanEdit" ],
+      "required": [
+        "commentType",
+        "draftBody",
+        "requiresHumanEdit"
+      ],
       "additionalProperties": false,
       "properties": {
         "commentType": {
-"enum": [ "answer", "documentation", "request-info", "close-message", "duplicate-notice" ],
+          "enum": [
+            "answer",
+            "documentation",
+            "request-info",
+            "close-message",
+            "duplicate-notice"
+          ],
           "description": "answer=direct answer. documentation=docs pointer. request-info=ask for details. close-message=close explanation. duplicate-notice=points to canonical."
         },
         "draftBody": {
@@ -658,7 +833,10 @@
           "description": "True = human must review/edit before posting."
         },
         "finalBody": {
-"type": [ "string", "null" ],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Human-edited version. Null until human edits."
         },
         "dedupeToken": {
@@ -670,22 +848,32 @@
     },
     "closeIssuePayload": {
       "type": "object",
-"required": [ "reason" ],
+      "required": [
+        "reason"
+      ],
       "additionalProperties": false,
       "properties": {
         "reason": {
-"enum": [ "completed", "not_planned" ],
+          "enum": [
+            "completed",
+            "not_planned"
+          ],
           "description": "GitHub close reasons."
         },
         "comment": {
-"type": [ "string", "null" ],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Optional brief close message."
         }
       }
     },
     "convertToDiscussionPayload": {
       "type": "object",
-"required": [ "categorySlug" ],
+      "required": [
+        "categorySlug"
+      ],
       "additionalProperties": false,
       "properties": {
         "categorySlug": {
@@ -694,14 +882,19 @@
           "description": "Discussion category, e.g. 'q-a'."
         },
         "comment": {
-"type": [ "string", "null" ],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Optional message before converting."
         }
       }
     },
     "linkRelatedPayload": {
       "type": "object",
-"required": [ "relatedIssues" ],
+      "required": [
+        "relatedIssues"
+      ],
       "additionalProperties": false,
       "properties": {
         "relatedIssues": {
@@ -714,14 +907,19 @@
           "description": "Issue numbers to cross-reference."
         },
         "comment": {
-"type": [ "string", "null" ],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Cross-reference comment text."
         }
       }
     },
     "linkDuplicatePayload": {
       "type": "object",
-"required": [ "duplicateOf" ],
+      "required": [
+        "duplicateOf"
+      ],
       "additionalProperties": false,
       "properties": {
         "duplicateOf": {
@@ -730,13 +928,19 @@
           "description": "Canonical issue number."
         },
         "comment": {
-"type": [ "string", "null" ]
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
     "updateProjectPayload": {
       "type": "object",
-"required": [ "projectId", "fieldUpdates" ],
+      "required": [
+        "projectId",
+        "fieldUpdates"
+      ],
       "additionalProperties": false,
       "properties": {
         "projectId": {
@@ -748,7 +952,10 @@
           "type": "array",
           "items": {
             "type": "object",
-"required": [ "fieldName", "value" ],
+            "required": [
+              "fieldName",
+              "value"
+            ],
             "additionalProperties": false,
             "properties": {
               "fieldName": {
@@ -767,7 +974,9 @@
     },
     "setMilestonePayload": {
       "type": "object",
-"required": [ "milestoneTitle" ],
+      "required": [
+        "milestoneTitle"
+      ],
       "additionalProperties": false,
       "properties": {
         "milestoneTitle": {
@@ -780,7 +989,15 @@
     "triageAction": {
       "type": "object",
       "description": "A single automatable operation. Each action is independently approvable.",
-"required": [ "id", "type", "risk", "description", "reason", "confidence", "payload" ],
+      "required": [
+        "id",
+        "type",
+        "risk",
+        "description",
+        "reason",
+        "confidence",
+        "payload"
+      ],
       "additionalProperties": false,
       "properties": {
         "id": {
@@ -789,7 +1006,16 @@
           "description": "Unique within this triage. Convention: shortname-N, e.g. labels-1, comment-1."
         },
         "type": {
-"enum": [ "update-labels", "add-comment", "close-issue", "convert-to-discussion", "link-related", "link-duplicate", "update-project", "set-milestone" ]
+          "enum": [
+            "update-labels",
+            "add-comment",
+            "close-issue",
+            "convert-to-discussion",
+            "link-related",
+            "link-duplicate",
+            "update-project",
+            "set-milestone"
+          ]
         },
         "risk": {
           "$ref": "#/$defs/actionRisk"
@@ -808,7 +1034,10 @@
           "$ref": "#/$defs/confidence"
         },
         "dependsOn": {
-"type": [ "string", "null" ],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "ID of prerequisite action, or null."
         },
         "payload": {
@@ -824,7 +1053,9 @@
                 "const": "update-labels"
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "properties": {
@@ -844,7 +1075,9 @@
                 "const": "add-comment"
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "properties": {
@@ -864,7 +1097,9 @@
                 "const": "close-issue"
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "properties": {
@@ -884,7 +1119,9 @@
                 "const": "convert-to-discussion"
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "properties": {
@@ -904,7 +1141,9 @@
                 "const": "link-related"
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "properties": {
@@ -924,7 +1163,9 @@
                 "const": "link-duplicate"
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "properties": {
@@ -944,7 +1185,9 @@
                 "const": "update-project"
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "properties": {
@@ -964,7 +1207,9 @@
                 "const": "set-milestone"
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "properties": {
@@ -984,7 +1229,13 @@
     "meta": {
       "type": "object",
       "description": "Issue identity and context.",
-"required": [ "schemaVersion", "number", "repo", "analyzedAt", "currentLabels" ],
+      "required": [
+        "schemaVersion",
+        "number",
+        "repo",
+        "analyzedAt",
+        "currentLabels"
+      ],
       "additionalProperties": false,
       "properties": {
         "schemaVersion": {
@@ -1023,7 +1274,9 @@
     "classification": {
       "type": "object",
       "description": "All label-mappable categories. Each value maps to a GitHub label via prefix/ + value.",
-"required": [ "type" ],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -1153,7 +1406,11 @@
     "analysis": {
       "type": "object",
       "description": "AI reasoning: signals, rationales, docs consulted, uncertainties, and resolution proposals.",
-"required": [ "summary", "keySignals", "fieldRationales" ],
+      "required": [
+        "summary",
+        "keySignals",
+        "fieldRationales"
+      ],
       "additionalProperties": false,
       "properties": {
         "summary": {
@@ -1211,7 +1468,10 @@
     "output": {
       "type": "object",
       "description": "Actionable results: what to do and how to do it.",
-"required": [ "actionability", "actions" ],
+      "required": [
+        "actionability",
+        "actions"
+      ],
       "additionalProperties": false,
       "properties": {
         "actionability": {
@@ -1242,13 +1502,19 @@
                     "const": "type/bug"
                   }
                 },
-"required": [ "value" ]
+                "required": [
+                  "value"
+                ]
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           }
         },
-"required": [ "classification" ]
+        "required": [
+          "classification"
+        ]
       },
       "then": {
         "properties": {
@@ -1258,7 +1524,9 @@
                 "$ref": "#/$defs/bugSignalsObject"
               }
             },
-"required": [ "bugSignals" ]
+            "required": [
+              "bugSignals"
+            ]
           }
         }
       }
@@ -1279,13 +1547,19 @@
                     }
                   }
                 },
-"required": [ "value" ]
+                "required": [
+                  "value"
+                ]
               }
             },
-"required": [ "type" ]
+            "required": [
+              "type"
+            ]
           }
         },
-"required": [ "classification" ]
+        "required": [
+          "classification"
+        ]
       },
       "then": {
         "properties": {
@@ -1313,13 +1587,19 @@
                     "const": "close-as-duplicate"
                   }
                 },
-"required": [ "suggestedAction" ]
+                "required": [
+                  "suggestedAction"
+                ]
               }
             },
-"required": [ "actionability" ]
+            "required": [
+              "actionability"
+            ]
           }
         },
-"required": [ "output" ]
+        "required": [
+          "output"
+        ]
       },
       "then": {
         "properties": {
@@ -1333,7 +1613,9 @@
                       "const": "link-duplicate"
                     }
                   },
-"required": [ "type" ]
+                  "required": [
+                    "type"
+                  ]
                 }
               }
             }
@@ -1355,13 +1637,19 @@
                     "const": "convert-to-discussion"
                   }
                 },
-"required": [ "suggestedAction" ]
+                "required": [
+                  "suggestedAction"
+                ]
               }
             },
-"required": [ "actionability" ]
+            "required": [
+              "actionability"
+            ]
           }
         },
-"required": [ "output" ]
+        "required": [
+          "output"
+        ]
       },
       "then": {
         "properties": {
@@ -1375,7 +1663,9 @@
                       "const": "convert-to-discussion"
                     }
                   },
-"required": [ "type" ]
+                  "required": [
+                    "type"
+                  ]
                 }
               }
             }
