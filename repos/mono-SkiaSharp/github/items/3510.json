@@ -1,0 +1,28 @@
+{
+  "number": 3510,
+  "type": "pr",
+  "state": "open",
+  "title": "Statically link CRT in ANGLE builds and add shared dependency verification",
+  "body": "## Summary\n\nFixes #3346 \u2014 ARM64 Windows crash in published MAUI apps due to missing VC\u002B\u002B Redistributable.\n\n## Root Cause\n\nANGLE\u0027s build configuration (\u0060native/winui-angle/build.cake\u0060) was missing the \u0060/MT\u0060 flag in \u0060extra_cflags\u0060, causing \u0060libEGL.dll\u0060 and \u0060libGLESv2.dll\u0060 to dynamically link against the C runtime (\u0060vcruntime140.dll\u0060). On ARM64 Windows machines without VC\u002B\u002B Redistributable pre-installed, this causes an immediate crash.\n\nBoth \u0060libSkiaSharp\u0060 (line 77 of \u0060native/windows/build.cake\u0060) and \u0060libHarfBuzzSharp\u0060 (\u0060/MT\u0060 in vcxproj) already had static CRT linking \u2014 ANGLE was the gap.\n\n## Changes\n\n### 1. Fix: Add \u0060/MT\u0060 to ANGLE builds\n- Added \u0060/MT\u0060 to \u0060extra_cflags\u0060 in \u0060native/winui-angle/build.cake\u0060, matching the pattern used by libSkiaSharp since v1.68.0 (#136)\n\n### 2. Shared dependency verification functions\n- Extracted \u0060CheckWindowsDependencies()\u0060 and \u0060CheckLinuxDependencies()\u0060 into \u0060scripts/cake/native-shared.cake\u0060\n- These parameterized functions replace duplicated \u0060CheckDeps()\u0060 implementations across build files\n\n### 3. Dependency verification coverage\n| Build | Before | After |\n|-------|--------|-------|\n| ANGLE (\u0060winui-angle\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| libSkiaSharp (\u0060windows\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| libHarfBuzzSharp (\u0060windows\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| WinUI Native (\u0060winui\u0060) | \u2705 Local CheckDeps | \u2705 Uses shared function |\n| Linux (\u0060linux\u0060) | \u2705 Local CheckDeps | \u2705 Uses shared function |\n\n## Precedent\n\n- **#136** \u2014 Original static CRT fix for libSkiaSharp (v1.68.0), exact same problem\n- **#3397** / **#3404** \u2014 Recently added \u0060/guard:cf\u0060 and \u0060/GS\u0060 to the same \u0060extra_cflags\u0060 line in ANGLE, confirming the pattern is safe\n\n## Testing\n\nThe dependency verification will catch any regression at build time \u2014 if a DLL links against VCRUNTIME or MSVCP, the build will fail with a clear error message.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-10T02:48:22",
+  "updatedAt": "2026-02-10T02:51:45",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "dev/issue-3346-static-crt-angle",
+  "additions": 107,
+  "deletions": 64,
+  "changedFiles": 5,
+  "commits": 2,
+  "reviews": []
+}
