@@ -4,8 +4,8 @@
 
 ## Current Status
 
-**Overall**: ✅ AI Triage Dashboard Page — Complete, tested, working
-**Notes**: Full triage UI with expandable cards, 5 tabs, filters, copy-to-clipboard. Schema-driven model.
+**Overall**: ✅ AI Triage Dashboard — Schema v2.0 migration complete
+**Notes**: Models, collector, and all pages migrated to grouped 6-section schema. Build succeeds with 0 errors.
 
 | Area | Status | Notes |
 |------|--------|-------|
@@ -18,6 +18,7 @@
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
 | AI Triage Skill | ✅ Complete | On main repo `skills/triage-issue` branch |
 | AI Triage Page | ✅ Complete | Dashboard page with full UI |
+| Schema v2.0 Migration | ✅ Complete | All models, collector, pages migrated |
 
 ---
 

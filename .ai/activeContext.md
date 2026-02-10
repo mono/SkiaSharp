@@ -5,13 +5,29 @@
 
 ## Current Focus
 
-**Phase**: AI Triage Dashboard — Two-page layout complete
-**Status**: List page + detail page built, tested, deployed
+**Phase**: AI Triage Dashboard — Schema v2.0 migration complete
+**Status**: All models, collector, and pages migrated to v2.0 grouped schema
 **Branch**: docs-dashboard
 
 ## Recent Changes
 
-### 2026-02-10 (Two-page Triage Layout)
+### 2026-02-11 (Schema v2.0 Migration)
+- **Migrated TriageStats.cs** — Complete rewrite of C# records for grouped 6-section schema (meta, summary, classification, evidence, analysis, output)
+  - `ClassifiedField` now has just `Value` + `Confidence` (no `Reason` — reasoning in `analysis.fieldRationales`)
+  - `ResolutionProposal` simplified: just `Title`, `Description`, `Confidence`, `Effort` (no Steps/Pros/Cons)
+  - `TriageAction` uses `JsonElement?` for polymorphic payload with typed getters (`GetLabelsPayload()`, `GetCommentPayload()`, etc.)
+  - New records: `TriageMeta`, `TriageClassification`, `TriageEvidence`, `TriageAnalysis`, `TriageOutput`
+- **Updated GenerateCommand.cs** — v2.0 JSON path extraction, `schemaVersion == "2.0"` check, closeable from actions array, removed abandoned tracking
+- **Updated Triage.razor** — All property paths updated, `StripPrefix()` for `type/bug` → `bug` CSS classes, filter logic updated
+- **Rewrote TriageDetail.razor** — Full rewrite for grouped sections:
+  - Classification shows value + confidence only (no per-field reason)
+  - Actions section replaces SuggestedResponse (loops through typed actions with risk badges)
+  - Analysis sidebar uses `_issue.Analysis` with fieldRationales, uncertainties, assumptions
+  - Simplified proposals carousel (no Steps/Pros/Cons)
+- **Fixed Issues.razor** — Updated triage number lookup for `Meta.Number` path
+- **Added Markdig** markdown rendering (previous commit) — All text fields use `MarkdownHelper.ToHtml()`
+
+### 2026-02-10 (Markdown Rendering + CSS Fingerprinting)
 - **Refactored `Triage.razor`** — Compact clickable rows instead of expandable cards
   - URL-persisted filters via `[SupplyParameterFromQuery]` + `NavigateTo(url, replace: true)`
   - Rows link to detail page with filter context in query params
