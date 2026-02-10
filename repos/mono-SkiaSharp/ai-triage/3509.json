@@ -56,7 +56,24 @@
       { "field": "area", "chosen": "area/SkiaSharp", "expandedReason": "No specific component mentioned. 'Images not appearing' is too vague to narrow down — could be core SkiaSharp, Views, or MAUI. Defaulting to the broadest area.", "alternatives": [{ "value": "area/SkiaSharp.Views", "whyRejected": "No mention of SKCanvasView, views, or any UI framework." }, { "value": "area/SkiaSharp.Views.Maui", "whyRejected": "No mention of MAUI, .NET MAUI, or any MAUI-specific types." }] },
       { "field": "platforms[0]", "chosen": "os/macOS", "expandedReason": "Reporter selected 'macOS' as platform. However, they also say IDE is 'Visual Studio (Windows)' which is contradictory — they may be developing on Windows targeting macOS, or this may be a template selection error.", "alternatives": [{ "value": "os/Windows-Classic", "whyRejected": "IDE says Visual Studio Windows but platform says macOS — trusting the explicit platform selection over IDE choice." }] },
       { "field": "bugSignals.severity", "chosen": "low", "expandedReason": "Cannot assess severity without any actual details. No crash, no stack trace, no repro, no description of the problem beyond the title. Defaulting to low until more information is available." },
-      { "field": "actionability.suggestedAction", "chosen": "request-info", "expandedReason": "The issue is entirely template placeholders. We need actual code, expected behavior, actual behavior, and ideally a sample project before any investigation can begin." }
+      { "field": "actionability.suggestedAction", "chosen": "request-info", "expandedReason": "The issue is entirely template placeholders. We need actual code, expected behavior, actual behavior, and ideally a sample project before any investigation can begin." },
+      {
+        "field": "platforms",
+        "chosen": "os/macOS",
+        "expandedReason": "Reporter selected macOS as the platform in the bug template. The IDE field says Visual Studio (Windows), which is contradictory — trusting the explicit platform selection over the IDE choice.",
+        "alternatives": [{ "value": "os/Windows-Classic", "whyRejected": "IDE says Visual Studio Windows but the explicit platform selection says macOS — prioritizing the direct platform field." }]
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "Reporter selected 2.88.9 as last known good version, but the entire report is template placeholders with no actual details. This selection may not reflect real testing, so regression cannot be confirmed."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "unknown",
+        "expandedReason": "Reporter selected 3.116.0 and 2.88.9, but no details confirm whether a real issue exists. The version selections may be default template values rather than reflecting actual testing.",
+        "alternatives": [{ "value": "likely", "whyRejected": "Without any actual issue details, we cannot determine if this affects current versions or is even a real bug." }]
+      }
     ],
     "uncertainties": [
       "Whether this is a real bug report or an accidental submission of the empty template",

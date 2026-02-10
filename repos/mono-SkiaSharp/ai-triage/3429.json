@@ -86,6 +86,32 @@
         "field": "regression",
         "chosen": "true",
         "expandedReason": "Reporter claims last known good version is 2.88.9. The v2-to-v3 jump involved a major rewrite of the native layer and views, making regression plausible but the specific breaking change hard to pinpoint."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "request-info",
+        "expandedReason": "The bug is real but critical details are missing: which WPF control (SKElement vs SKGLElement), GPU model/driver version, and a minimal repro. The existing OpenTK fix (#3309) might already resolve this if SKGLElement is in use.",
+        "alternatives": [{ "value": "needs-investigation", "whyRejected": "Cannot investigate effectively without knowing which WPF control is used — the existing SKGLElement memory leak fix may already apply." }]
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Windows-Classic",
+        "expandedReason": "WPF is a Windows-Classic (Win32/WPF) framework. The reporter runs on Windows with Nvidia Quadro GPUs and the workaround uses WPF-specific RenderOptions API."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability, tenet/performance",
+        "expandedReason": "Reliability: memory leak degrades application stability over time during normal drawing operations. Performance: the only workaround (software rendering) causes significant performance loss for the rest of the application."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "Reporter states last known good version is 2.88.9. The v2-to-v3 rewrite of the native layer and views makes regression plausible, though the large version gap means the exact breaking change is unidentified."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Reported on current SkiaSharp 3.116.0 with no indication the issue has been fixed in newer versions. The GPU-driver-specific nature makes it unlikely to self-resolve."
       }
     ],
     "uncertainties": [

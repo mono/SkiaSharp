@@ -109,6 +109,17 @@
         "field": "actionability.suggestedAction",
         "chosen": "close-as-duplicate",
         "expandedReason": "A community member identified this as a duplicate of #3422, which tracks the exact same issue (DllNotFoundException/TypeInitializationException for SkiaSharp in Blazor WASM on .NET 10). The symptoms, platform, and root cause are identical. #3422 has more detailed reproduction and community discussion."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "SkiaSharp Blazor WASM worked on .NET 9 but fails on .NET 10. The regression is in the .NET WASM toolchain, not SkiaSharp itself — rolling back SkiaSharp versions does not fix it."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Issue affects all SkiaSharp versions on .NET 10 WASM. The root cause is a .NET 10 toolchain change, not version-specific, as confirmed by #3422 where even 2.88.x versions fail.",
+        "alternatives": [{ "value": "outdated", "whyRejected": "The issue is not version-specific — it affects current and older versions equally on .NET 10." }]
       }
     ],
     "uncertainties": [

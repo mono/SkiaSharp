@@ -128,6 +128,28 @@
         "field": "bugSignals.severity",
         "chosen": "high",
         "expandedReason": "Silent data corruption in output — text elements lose their content without any error or warning. The only workaround is to serialize work or downgrade to 2.x. This is a regression affecting all 3.x versions."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "Well-documented regression with a complete repro project. Needs native-level debugging to identify the shared global state in Skia's SVG module causing the Windows-specific race condition.",
+        "alternatives": [{ "value": "close-wontfix", "whyRejected": "The bug has a high-quality reproduction and is a clear regression from 2.88.9 — it warrants investigation." }]
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability, tenet/compatibility",
+        "expandedReason": "tenet/reliability: Silent data corruption in SVG output with missing text values. tenet/compatibility: This is a regression from 2.88.9 to all 3.x versions, indicating a cross-version compatibility break."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "Reporter explicitly confirms 2.88.9 does not have the bug and all 3.x versions do. This aligns with the major Skia engine upgrade between 2.x and 3.x that likely changed SVG serialization internals."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Bug affects all SkiaSharp 3.x versions tested (3.116.0, 3.119.1, 3.119.2-preview.1) including the latest preview, confirming it remains unresolved.",
+        "alternatives": [{ "value": "outdated", "whyRejected": "The latest preview (3.119.2-preview.1) still exhibits the bug, so the issue is current." }]
       }
     ],
     "uncertainties": [

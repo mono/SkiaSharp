@@ -67,7 +67,29 @@
       { "field": "type", "chosen": "type/bug", "expandedReason": "This is a real memory safety defect found by code inspection. The fixed keyword only pins memory within its block scope, but the Blob outlives that scope. This is not a feature request or enhancement — it's broken code that can crash.", "alternatives": [{ "value": "type/enhancement", "whyRejected": "While the fix also improves performance, the core issue is a use-after-unpin memory safety bug, not an optimization request." }] },
       { "field": "area", "chosen": "area/HarfBuzzSharp", "expandedReason": "The bug is in HarfBuzzSharp.Blob.FromStream (binding/HarfBuzzSharp/Blob.cs), not in the SkiaSharp core library. The existing label area/SkiaSharp is incorrect.", "alternatives": [{ "value": "area/SkiaSharp", "whyRejected": "The Blob class is in the HarfBuzzSharp namespace and assembly, not SkiaSharp." }] },
       { "field": "bugSignals.severity", "chosen": "high", "expandedReason": "Memory safety bug with potential for hard crashes. No workaround other than avoiding the API entirely. The crash is non-deterministic (depends on GC timing), making it difficult to diagnose in production." },
-      { "field": "platforms", "chosen": "null", "expandedReason": "The reporter selected 'All' for platform. The bug is in managed C# code and affects all platforms equally since GC behavior is a .NET runtime concern, not platform-specific." }
+      { "field": "platforms", "chosen": "null", "expandedReason": "The reporter selected 'All' for platform. The bug is in managed C# code and affects all platforms equally since GC behavior is a .NET runtime concern, not platform-specific." },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The memory safety bug is clearly identified by code inspection with a concrete fix proposal. Needs brief investigation to check for similar fixed-block patterns elsewhere before applying the fix.",
+        "alternatives": [{ "value": "close-wontfix", "whyRejected": "This is a real memory safety defect with a dangling pointer — it must be fixed, not dismissed." }]
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability",
+        "expandedReason": "Memory safety bug where GC can relocate a managed array while a Blob still holds a raw pointer to it, causing potential hard crashes that are non-deterministic and difficult to diagnose."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "The buggy fixed-block pattern appears to have been present since the method was originally written. The reporter listed 2.88.9 as last known good, but this is likely a latent bug that manifests non-deterministically depending on GC timing."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The buggy code pattern still exists in the current source at binding/HarfBuzzSharp/Blob.cs. The issue was found by code inspection and the code has not been modified.",
+        "alternatives": [{ "value": "outdated", "whyRejected": "The vulnerable code path is unchanged in the latest version." }]
+      }
     ],
     "uncertainties": [
       "Whether this has been observed as an actual crash in production, or only identified by code inspection",

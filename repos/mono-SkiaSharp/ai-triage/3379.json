@@ -121,6 +121,31 @@
         "field": "actionability.suggestedAction",
         "chosen": "keep-open",
         "expandedReason": "PR #3380 is already open with the fix (version bump to 3.3.1). The issue should remain open until the PR is merged and released."
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Windows-Classic",
+        "expandedReason": "The issue is specific to WPF on Windows with .NET Framework 4.8. Strong-naming enforcement and the OpenTK.GLWpfControl dependency only apply to Windows Classic desktop scenarios."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/compatibility",
+        "expandedReason": "Strong-named applications cannot load non-strong-named assemblies, breaking backward compatibility for .NET Framework WPF consumers who upgraded from SkiaSharp 2.88.x to 3.x."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "SkiaSharp 2.88.9 did not have the OpenTK.GLWpfControl dependency. The 3.x series introduced it at version 3.3.0 which lacks strong-naming, breaking strong-named apps that previously worked."
+      },
+      {
+        "field": "fixStatus.likelyFixed",
+        "chosen": "false",
+        "expandedReason": "PR #3380 is open proposing bumping OpenTK.GLWpfControl from 3.3.0 to 3.3.1, but it has not been merged yet so the fix is not available in any release."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The csproj on main still references OpenTK.GLWpfControl 3.3.0 for net4x targets, so the issue is present in all SkiaSharp 3.x releases including the latest."
       }
     ],
     "uncertainties": [

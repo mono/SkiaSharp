@@ -128,6 +128,27 @@
         "field": "tenets",
         "chosen": "tenet/compatibility, tenet/reliability",
         "expandedReason": "Compatibility: worked in 2.88.9 but not in 3.116.0 in container deployments. Reliability: results in a hard crash (TypeInitializationException) on the first SkiaSharp API call."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The workaround exists but the root cause — why NoDependencies binary is not deployed in Aspire container builds — is undetermined and could be a SkiaSharp packaging issue or Aspire tooling bug.",
+        "alternatives": [{ "value": "close-answered", "whyRejected": "While a workaround was found, the underlying packaging/deployment bug remains unfixed and affects other users." }]
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Linux",
+        "expandedReason": "The issue occurs in Linux Azure Container Apps deployed via .NET Aspire. The DllNotFoundException for libSkiaSharp and missing libfontconfig are Linux-specific native dependency issues."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "User reports 2.88.9 as last known good version. However, the NoDependencies package may not have existed in 2.x, so this may be a new issue with 3.x packaging rather than a true regression of identical functionality."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Issue reported on 3.116.0 with no indication the native asset selection behavior in container deployments has been fixed in later releases."
       }
     ],
     "uncertainties": [

@@ -118,6 +118,22 @@
         "field": "bugSignals.severity",
         "chosen": "high",
         "expandedReason": "Apps using SkiaSharp cannot target Android 16+ at all. No user-side workaround exists — the fix must come from rebuilding the native library. High community engagement confirms broad impact."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The fix direction is clear (add linker flag), but needs verification of whether 3.x is also affected and where exactly in the build pipeline to add the flag. Maintainer already engaged.",
+        "alternatives": [{ "value": "close-wontfix", "whyRejected": "This is a hard blocker for Android 16+ deployment with high community interest — it must be fixed, not closed." }]
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "This is not a regression in SkiaSharp behavior — the library never supported 16 KB page alignment. It is a new external platform requirement from Google for Android 16+."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The 16 KB page alignment is a build-time linker flag, so all current native binaries (both 2.x and 3.x) are likely affected regardless of version."
       }
     ],
     "uncertainties": [

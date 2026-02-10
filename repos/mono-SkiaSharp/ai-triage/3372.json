@@ -39,7 +39,31 @@
       { "field": "type", "chosen": "type/feature-request", "expandedReason": "This is a request to change package dependency targeting, not a bug or enhancement to existing drawing/rendering behavior. The feature (split packages) is new in WinAppSDK 1.8.", "alternatives": [{ "value": "type/enhancement", "whyRejected": "Enhancement implies improving existing behavior. This is about adopting a new packaging model." }] },
       { "field": "area", "chosen": "area/SkiaSharp.Views", "expandedReason": "The change targets SkiaSharp.Views.WinUI specifically — its NuGet package dependency declarations.", "alternatives": [{ "value": "area/Build", "whyRejected": "While it involves NuGet packaging, the primary affected component is the Views.WinUI package." }] },
       { "field": "partner", "chosen": "partner/maui", "expandedReason": "dotMorten explicitly states MAUI RC2 is blocked on this change. MAUI is a key downstream consumer.", "alternatives": [{ "value": "partner/unoplatform", "whyRejected": "jeromelaban participates in discussion but Uno Platform is not requesting this change." }] },
-      { "field": "actionability.suggestedAction", "chosen": "keep-open", "expandedReason": "Legitimate feature request with active community discussion. Labels are already correct. Maintainer needs to weigh in on the version bump tradeoff." }
+      { "field": "actionability.suggestedAction", "chosen": "keep-open", "expandedReason": "Legitimate feature request with active community discussion. Labels are already correct. Maintainer needs to weigh in on the version bump tradeoff." },
+      {
+        "field": "platforms",
+        "chosen": "os/Windows-WinUI",
+        "expandedReason": "The request specifically targets SkiaSharp.Views.WinUI and its WinAppSDK dependency. The WinUI platform label was already applied to this issue.",
+        "alternatives": [
+          { "value": "os/Windows-Classic", "whyRejected": "This is about the WinUI/WinAppSDK package dependency, not classic Win32/WPF/WinForms." }
+        ]
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/compatibility",
+        "expandedReason": "The metapackage dependency forces all downstream consumers (including MAUI) to pull in the entire WinAppSDK, creating transitive dependency compatibility issues.",
+        "alternatives": [
+          { "value": "tenet/reliability", "whyRejected": "No crashes or runtime failures are reported — this is purely about package dependency management and version compatibility." }
+        ]
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "WinAppSDK 1.8 introduced split packages and MAUI RC2 is blocked on this change. The request targets current SDK versions and active ecosystem needs.",
+        "alternatives": [
+          { "value": "unlikely", "whyRejected": "The split packages in WinAppSDK 1.8 are a current feature and MAUI actively needs this change." }
+        ]
+      }
     ],
     "uncertainties": [
       "Whether bumping to WinAppSDK 1.8 minimum would break existing consumers on older WinAppSDK versions",

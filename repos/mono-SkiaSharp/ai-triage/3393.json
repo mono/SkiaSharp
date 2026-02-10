@@ -74,7 +74,23 @@
       { "field": "classification.platforms", "chosen": "null", "expandedReason": "While Android is mentioned in the form, the reporter explicitly says 'All' platforms are affected. The GC race is a .NET runtime behavior, not platform-specific. Removing os/Android is appropriate since this is cross-platform." },
       { "field": "tenets", "chosen": "tenet/reliability", "expandedReason": "Use-after-free due to GC racing with native code causes crashes, data corruption, or undefined behavior. This is a reliability concern." },
       { "field": "partner", "chosen": "partner/unoplatform", "expandedReason": "The Uno Platform team discovered this in practice (uno#21660) and the reporter (jonpryor) references their PR as evidence. Flagging for partner visibility." },
-      { "field": "bugSignals.severity", "chosen": "high", "expandedReason": "Non-deterministic use-after-free crash affecting the entire public API surface. The race is hard to reproduce but real, as demonstrated by the Uno Platform team. No easy workaround for consumers." }
+      { "field": "bugSignals.severity", "chosen": "high", "expandedReason": "Non-deterministic use-after-free crash affecting the entire public API surface. The race is hard to reproduce but real, as demonstrated by the Uno Platform team. No easy workaround for consumers." },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "Valid bug with a clear fix pattern (GC.KeepAlive), but requires a full audit of the binding surface to determine scope. The fix is well-understood technically but the effort is significant.",
+        "alternatives": [{ "value": "ready-to-fix", "whyRejected": "While the fix pattern is known, a full audit of hundreds of P/Invoke wrappers is needed before implementation can begin." }]
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "This has always been the case — the GC race exists in every version of SkiaSharp. The P/Invoke wrappers were never systematically protected with GC.KeepAlive calls."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "This is a latent bug present since the inception of the P/Invoke wrappers and has never been systematically addressed. Only a handful of methods currently have GC.KeepAlive calls."
+      }
     ],
     "uncertainties": [
       "How many of the ~hundreds of P/Invoke wrapper methods need GC.KeepAlive added — a full audit is needed",

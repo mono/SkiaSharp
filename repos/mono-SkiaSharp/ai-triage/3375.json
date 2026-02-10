@@ -4,17 +4,39 @@
     "number": 3375,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-08T15:00:00Z",
-    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "tenet/reliability"]
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "area/SkiaSharp",
+      "tenet/reliability"
+    ]
   },
   "summary": "SkiaSharp 3.116+ crashes on Windows x86 (.NET 8/9) with stack overflow at P/Invoke boundary; works on x64 and on older v2.88.9",
   "classification": {
-    "type": { "value": "type/bug", "confidence": 0.97 },
-    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.85 },
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.85
+    },
     "backends": null,
-    "platforms": [{ "value": "os/Windows-Classic", "confidence": 0.95 }],
+    "platforms": [
+      {
+        "value": "os/Windows-Classic",
+        "confidence": 0.95
+      }
+    ],
     "tenets": [
-      { "value": "tenet/reliability", "confidence": 0.95 },
-      { "value": "tenet/compatibility", "confidence": 0.85 }
+      {
+        "value": "tenet/reliability",
+        "confidence": 0.95
+      },
+      {
+        "value": "tenet/compatibility",
+        "confidence": 0.85
+      }
     ],
     "partner": null
   },
@@ -25,7 +47,11 @@
       "reproQuality": "steps-only",
       "hasWorkaround": true,
       "workaroundSummary": "Use x64 instead of x86, copy native DLLs to application root directory, or downgrade to SkiaSharp 2.88.9",
-      "targetFrameworks": ["net9.0", "net8.0", "netstandard2.0"],
+      "targetFrameworks": [
+        "net9.0",
+        "net8.0",
+        "netstandard2.0"
+      ],
       "severity": "high",
       "severityReason": "Hard crash (stack overflow) on x86 with no clean fix. Workarounds exist but require architecture change or version downgrade, which may not be viable for all users."
     },
@@ -39,14 +65,18 @@
       "environmentDetails": "Windows 11 Pro (ARM CPU) 23H2 build 22631; also reproduced on standard x86 Windows with .NET 8.0"
     },
     "versionAnalysis": {
-      "mentionedVersions": ["3.116.0", "3.119.1", "2.88.9"],
+      "mentionedVersions": [
+        "3.116.0",
+        "3.119.1",
+        "2.88.9"
+      ],
       "currentRelevance": "likely",
       "reason": "Issue reported against 3.116.0 and confirmed still present in 3.119.1. No indication of a fix in later versions.",
       "migrationPath": null
     },
     "regression": {
       "isRegression": true,
-      "confidence": 0.90,
+      "confidence": 0.9,
       "reason": "Original reporter states 2.88.9 works correctly with x86. Second commenter confirms x86 works with net472 (implying older SkiaSharp or same v3 but different runtime). The v2-to-v3 transition changed native library structure significantly.",
       "workedInVersion": "2.88.9",
       "brokeInVersion": "3.116.0"
@@ -79,31 +109,72 @@
       {
         "text": "When we rollback the SkiaSharp nuget to version 2.88.9 then DLLs loading from subdirectory also work as expected",
         "source": "body",
-        "interpretation": "Confirms regression — v2 native binaries work on x86, v3 do not"
+        "interpretation": "Confirms regression \u2014 v2 native binaries work on x86, v3 do not"
       }
     ],
     "fieldRationales": [
       {
         "field": "type",
         "chosen": "type/bug",
-        "expandedReason": "Application crashes with stack overflow when using SkiaSharp on x86. This is clearly broken behavior — a hard crash, not a usage question or feature request.",
-        "alternatives": [{ "value": "type/question", "whyRejected": "Reporter is not asking how to do something; they are reporting a crash that blocks their x86 builds." }]
+        "expandedReason": "Application crashes with stack overflow when using SkiaSharp on x86. This is clearly broken behavior \u2014 a hard crash, not a usage question or feature request.",
+        "alternatives": [
+          {
+            "value": "type/question",
+            "whyRejected": "Reporter is not asking how to do something; they are reporting a crash that blocks their x86 builds."
+          }
+        ]
       },
       {
         "field": "area",
         "chosen": "area/libSkiaSharp.native",
         "expandedReason": "The crash occurs at the P/Invoke boundary to the native library. The stack overflow at sk_bitmap_get_pixel_color indicates the native binary or its calling convention is the root cause, not the managed C# wrapper. The DLL loading path workaround also points to native binary issues.",
-        "alternatives": [{ "value": "area/SkiaSharp", "whyRejected": "While the P/Invoke declarations are in SkiaSharp, the root cause is more likely in the native binary's x86 compilation (calling convention or architecture mismatch)." }]
+        "alternatives": [
+          {
+            "value": "area/SkiaSharp",
+            "whyRejected": "While the P/Invoke declarations are in SkiaSharp, the root cause is more likely in the native binary's x86 compilation (calling convention or architecture mismatch)."
+          }
+        ]
       },
       {
         "field": "bugSignals.severity",
         "chosen": "high",
-        "expandedReason": "Hard crash (stack overflow) with no clean workaround — all workarounds require significant changes (switch architecture, restructure DLL deployment, or downgrade to v2). Two independent reporters confirm the issue."
+        "expandedReason": "Hard crash (stack overflow) with no clean workaround \u2014 all workarounds require significant changes (switch architecture, restructure DLL deployment, or downgrade to v2). Two independent reporters confirm the issue."
       },
       {
         "field": "regression",
         "chosen": "true",
         "expandedReason": "Explicitly stated: v2.88.9 works on x86, v3.116.0+ does not. The v2-to-v3 native library restructuring is the likely point where x86 support broke."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "Two reporters confirm the x86 crash with stack trace evidence, but root cause (calling convention mismatch vs native build issue) needs code inspection of P/Invoke declarations and native build config.",
+        "alternatives": [
+          {
+            "value": "close-wontfix",
+            "whyRejected": "This is a confirmed crash affecting x86 users with no clean workaround, not something to dismiss."
+          }
+        ]
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Windows-Classic",
+        "expandedReason": "Both reporters are on Windows, and the crash is specific to x86 P/Invoke calling conventions on Windows. No other platforms mentioned or affected."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability, tenet/compatibility",
+        "expandedReason": "Reliability: hard crash (stack overflow) with no managed exception handling. Compatibility: regression from v2.88.9 to v3.116.0+ breaking existing x86 deployments."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "Reporter explicitly states v2.88.9 works on x86 while v3.116.0+ crashes. Second reporter confirms x86 works under .NET Framework 4.7.2, pointing to a v2-to-v3 regression in native library structure."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Issue reported against 3.116.0 and confirmed still present in 3.119.1, with no indication of a fix in subsequent releases."
       }
     ],
     "uncertainties": [
@@ -122,7 +193,7 @@
         {
           "title": "Audit and fix x86 calling conventions in P/Invoke declarations",
           "description": "Review all DllImport/LibraryImport declarations in SkiaSharp for explicit CallingConvention specification. Ensure they match the native library's actual calling convention (likely cdecl). On x86, mismatched conventions cause stack corruption on every call.",
-          "confidence": 0.70,
+          "confidence": 0.7,
           "effort": "medium"
         },
         {
@@ -134,7 +205,7 @@
         {
           "title": "Test with explicit NativeLibrary.SetDllImportResolver",
           "description": "As a diagnostic step, use NativeLibrary.SetDllImportResolver to control exactly which native binary is loaded on x86. This would help isolate whether the issue is DLL resolution (wrong binary loaded) or a genuine calling convention problem.",
-          "confidence": 0.50,
+          "confidence": 0.5,
           "effort": "low"
         }
       ],
@@ -147,7 +218,9 @@
       "suggestedAction": "needs-investigation",
       "confidence": 0.85,
       "reason": "Real bug confirmed by two reporters with stack trace evidence. Root cause hypothesis is strong but needs verification through code inspection of P/Invoke declarations and native build configuration for x86.",
-      "missingInfo": ["sample-project"]
+      "missingInfo": [
+        "sample-project"
+      ]
     },
     "actions": [
       {
@@ -155,12 +228,17 @@
         "type": "update-labels",
         "risk": "low",
         "description": "Update area label to libSkiaSharp.native and add compatibility tenet",
-        "reason": "Crash is in native layer at P/Invoke boundary, and this is a v2→v3 regression affecting compatibility",
+        "reason": "Crash is in native layer at P/Invoke boundary, and this is a v2\u2192v3 regression affecting compatibility",
         "confidence": 0.85,
         "dependsOn": null,
         "payload": {
-          "labelsToAdd": ["area/libSkiaSharp.native", "tenet/compatibility"],
-          "labelsToRemove": ["area/SkiaSharp"]
+          "labelsToAdd": [
+            "area/libSkiaSharp.native",
+            "tenet/compatibility"
+          ],
+          "labelsToRemove": [
+            "area/SkiaSharp"
+          ]
         }
       },
       {
@@ -169,11 +247,11 @@
         "risk": "high",
         "description": "Post analysis acknowledging the bug and asking for a minimal repro project",
         "reason": "Two reporters confirm the issue but neither provides a minimal reproduction. A repro project would accelerate investigation of the x86 calling convention hypothesis.",
-        "confidence": 0.80,
+        "confidence": 0.8,
         "dependsOn": "labels-1",
         "payload": {
           "commentType": "request-info",
-          "draftBody": "Thanks for the report and for the additional confirmation from @TomPMoleman — the stack trace showing a stack overflow at `sk_bitmap_get_pixel_color` is very helpful.\n\nThe pattern here (x86 + .NET 8/9 = crash, while x64 and .NET Framework 4.7.2 work fine) suggests a possible calling convention mismatch at the P/Invoke boundary that only manifests on x86.\n\nWould either of you be able to share a minimal reproduction project? Even a small console app that references SkiaSharp and calls a single API when built for x86 would be enough to narrow this down.",
+          "draftBody": "Thanks for the report and for the additional confirmation from @TomPMoleman \u2014 the stack trace showing a stack overflow at `sk_bitmap_get_pixel_color` is very helpful.\n\nThe pattern here (x86 + .NET 8/9 = crash, while x64 and .NET Framework 4.7.2 work fine) suggests a possible calling convention mismatch at the P/Invoke boundary that only manifests on x86.\n\nWould either of you be able to share a minimal reproduction project? Even a small console app that references SkiaSharp and calls a single API when built for x86 would be enough to narrow this down.",
           "requiresHumanEdit": true,
           "finalBody": null,
           "dedupeToken": "triage-3375-comment-1"

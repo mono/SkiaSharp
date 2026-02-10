@@ -73,7 +73,36 @@
       { "field": "type", "chosen": "type/bug", "expandedReason": "Reporter describes incorrect rendering output (images undersized by ~60%) in XPS compared to PDF. This is clearly broken behavior, not a usage question or feature request. The [BUG] prefix matches the content.", "alternatives": [{ "value": "type/question", "whyRejected": "Not asking how to do something — reporting measurably wrong output." }] },
       { "field": "area", "chosen": "area/SkiaSharp", "expandedReason": "SKDocument.CreateXps() is in the core SkiaSharp package (binding/SkiaSharp/SKDocument.cs). The bug is in document generation, not views or HarfBuzz.", "alternatives": [{ "value": "area/libSkiaSharp.native", "whyRejected": "While the root cause is likely in native Skia XPS code, the surface-level API is in SkiaSharp core." }] },
       { "field": "backends", "chosen": "backend/XPS, backend/PDF", "expandedReason": "XPS is the primary affected backend. PDF is included because the bug is defined by the discrepancy between the two backends rendering the same SKPicture." },
-      { "field": "bugSignals.severity", "chosen": "medium", "expandedReason": "Incorrect visual output with no XPS-specific workaround. PDF workaround exists but doesn't help XPS-dependent workflows. Not a crash or data loss, but renders XPS output unusable for the reporter's label printing use case." }
+      { "field": "bugSignals.severity", "chosen": "medium", "expandedReason": "Incorrect visual output with no XPS-specific workaround. PDF workaround exists but doesn't help XPS-dependent workflows. Not a crash or data loss, but renders XPS output unusable for the reporter's label printing use case." },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "Real rendering bug with partial reproduction code. The double-scaling hypothesis needs confirmation and the version discrepancy needs clarification before a fix can proceed.",
+        "alternatives": [{ "value": "request-info", "whyRejected": "While version clarification is needed, the bug is substantive enough to warrant investigation rather than just requesting more info." }]
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Windows-Classic",
+        "expandedReason": "XPS is a Windows-specific document format and the reporter is using Windows 10/11. The XPS backend in Skia is only relevant on Windows.",
+        "alternatives": [{ "value": "os/macOS", "whyRejected": "XPS output is a Windows-specific technology; macOS does not use XPS for printing." }]
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability",
+        "expandedReason": "Embedded images render at incorrect size in XPS output, producing unreliable visual output. The same SKPicture renders correctly to PDF, confirming broken XPS backend behavior.",
+        "alternatives": [{ "value": "tenet/compatibility", "whyRejected": "Not a platform compatibility issue — this is incorrect rendering within a single platform/backend combination." }]
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "Reporter states last known good version is 2.88.9 and the bug appeared in v3. The major version boundary makes this a plausible regression though the large version gap makes pinpointing difficult.",
+        "alternatives": [{ "value": "false", "whyRejected": "Reporter explicitly identified a working version (2.88.9) and a broken version (3.116.0), indicating changed behavior." }]
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Reporter mentions both 3.116.0 and 3.119.1, both recent v3 releases. The XPS backend scaling issue is unlikely to have been fixed between these versions."
+      }
     ],
     "uncertainties": [
       "Which exact version was tested — 3.116.0 or 3.119.1? The description and form field disagree.",

@@ -126,6 +126,11 @@
           { "value": "keep-open", "whyRejected": "Valid option if the team wants to investigate ClickOnce-friendly packaging. Marked requiresHumanReview for this reason." },
           { "value": "needs-investigation", "whyRejected": "The root cause and workaround are already known. No further investigation needed." }
         ]
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "ClickOnce native asset deployment issue persists across SkiaSharp 3.x versions (3.116.0, 3.119.1) due to the runtimes/ folder convention used by NativeAssets packages. The root cause is a ClickOnce tooling limitation, not version-specific."
       }
     ],
     "uncertainties": [

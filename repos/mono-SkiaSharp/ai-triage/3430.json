@@ -103,6 +103,32 @@
         "field": "partner",
         "chosen": "partner/unoplatform",
         "expandedReason": "The bug is in the Uno Platform-specific view layer (SKXamlCanvas.Skia.cs). The reporter MartinZikmund is a well-known Uno Platform contributor. The fix may need coordination with Uno Platform."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The bug report identifies a clear logic error (double FreeBitmap) confirmed by source code inspection. The fix approach is known but needs verification with tests across all Uno Skia targets and size-change scenarios.",
+        "alternatives": [{ "value": "ready-to-fix", "whyRejected": "While the root cause is clear, the fix needs careful testing to ensure the bitmap lifecycle is correct across all resize scenarios." }]
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/WASM, os/Windows-WinUI",
+        "expandedReason": "The bug is in SKXamlCanvas.Skia.cs which targets all Uno Platform Skia backends. Reporter selected All platforms, and the code path affects both WASM and WinUI desktop Skia targets."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability",
+        "expandedReason": "NullReferenceException crash during canvas resize is a reliability issue — the application crashes during normal window resizing operations with no workaround."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "The SKXamlCanvas.Skia.cs file is relatively new and likely did not exist in 2.88.9. The reporter's last-known-good selection appears to be a form default rather than a tested version, making this a latent bug."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The bug is in current source code at a specific line (SKXamlCanvas.Skia.cs:72), confirmed by source inspection and not yet fixed."
       }
     ],
     "uncertainties": [

@@ -127,6 +127,18 @@
         "alternatives": [
           { "value": "request-info", "whyRejected": "While more info would help (packaged vs unpackaged, DLL presence), the stack trace and environment details are sufficient to classify and begin investigation." }
         ]
+      },
+      {
+        "field": "partner",
+        "chosen": "partner/maui",
+        "expandedReason": "The reporter is using a .NET MAUI app with LiveCharts2 for chart rendering. The crash occurs in SkiaSharp.Views.WinUI components invoked through the MAUI rendering pipeline.",
+        "alternatives": [{ "value": "null", "whyRejected": "The reporter explicitly describes a MAUI application and the crash path goes through MAUI-deployed WinUI views." }]
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Version 3.119.1 is a current stable release. The WinRT activation issue with PropertySetExtensions is a persistent architectural problem reported across multiple 3.x versions and not yet resolved.",
+        "alternatives": [{ "value": "outdated", "whyRejected": "The underlying WinRT component activation architecture has not changed in recent releases." }]
       }
     ],
     "uncertainties": [

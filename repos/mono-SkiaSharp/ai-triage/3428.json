@@ -135,6 +135,22 @@
           { "value": "critical", "whyRejected": "No crash or data loss. The app still runs, just shows white canvas." },
           { "value": "medium", "whyRejected": "Complete rendering failure with no confirmed workaround warrants high, not medium." }
         ]
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "GL rendering on iOS is completely broken on .NET 10 with no workaround. Need to determine whether .NET 10 or Apple removed EAGL support, and whether a fix is in SkiaSharp's scope or requires .NET runtime changes.",
+        "alternatives": [{ "value": "close-wontfix", "whyRejected": "OpenGL ES is deprecated by Apple but SKGLView is still a supported SkiaSharp component — the rendering failure needs a fix or a documented migration to Metal." }]
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "Reporter confirms the same SkiaSharp version (3.116.0) works on .NET 9 but fails on .NET 10, indicating a regression introduced by .NET 10 runtime or iOS SDK changes affecting EAGL context binding."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Issue is on current SkiaSharp 3.116.0 with .NET 10 and relates to Apple's ongoing deprecation of OpenGL ES, making it actively relevant to current development."
       }
     ],
     "uncertainties": [
