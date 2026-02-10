@@ -1,90 +1,62 @@
 {
-  "schemaVersion": "1.0",
-  "number": 1773,
-  "repo": "mono/SkiaSharp",
-  "analyzedAt": "2026-02-09T21:34:00Z",
-  "summary": "Accidental empty issue immediately closed by the author — no content or actionable information",
-  "type": {
-    "value": "question",
-    "confidence": 0.50,
-    "reason": "No content to classify. Title 'TO DELETE PLEASE' and empty body indicate accidental issue creation. 'question' is the closest fit but confidence is low since this is not a genuine issue of any type."
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 1773,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": []
   },
-  "area": null,
-  "backends": null,
-  "platforms": null,
-  "tenets": null,
-  "partner": null,
-  "regression": null,
-  "fixStatus": null,
-  "bugSignals": null,
-  "reproEvidence": null,
-  "versionAnalysis": null,
-  "actionability": {
-    "suggestedAction": "close-as-fixed",
-    "confidence": 0.95,
-    "reason": "Issue was already closed by the author within 26 minutes of opening. Empty body, no comments, no labels. No action required — correctly closed as accidental.",
-    "requiresHumanReview": false,
-    "closeable": true,
-    "closeReason": "Accidental issue, already closed by the author.",
-    "duplicateOf": null,
-    "abandoned": false,
-    "abandonedReason": null
+  "summary": "Empty issue with no content — accidental creation, immediately closed by author",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.55 },
+    "area": null,
+    "backends": null,
+    "platforms": null,
+    "tenets": null,
+    "partner": null
   },
-  "suggestedResponse": null,
-  "analysisNotes": {
-    "summary": "This is an accidental issue with no content. The title 'TO DELETE PLEASE' and empty body indicate the author created it by mistake and closed it themselves within 26 minutes. There is nothing to investigate, fix, or respond to.",
+  "evidence": {
+    "bugSignals": null,
+    "reproEvidence": null,
+    "versionAnalysis": null,
+    "regression": null,
+    "fixStatus": null
+  },
+  "analysis": {
+    "summary": "Issue has no body, no comments, and a title of 'TO DELETE PLEASE'. It was opened and closed within minutes on the same day. This is an accidental or test issue creation with zero actionable content.",
     "keySignals": [
-      {
-        "text": "TO DELETE PLEASE",
-        "source": "title",
-        "interpretation": "Author explicitly asking for the issue to be deleted, indicating accidental creation.",
-        "supportedFields": ["type", "actionability.suggestedAction"]
-      },
-      {
-        "text": "Empty body with zero comments",
-        "source": "body",
-        "interpretation": "No technical content, no description, no reproduction steps — confirms accidental creation.",
-        "supportedFields": ["type", "area"]
-      },
-      {
-        "text": "Closed 26 minutes after opening",
-        "source": "body",
-        "interpretation": "Author self-closed almost immediately, confirming this was not intentional.",
-        "supportedFields": ["actionability.suggestedAction"]
-      }
+      { "text": "TO DELETE PLEASE", "source": "title", "interpretation": "Author explicitly requests deletion — accidental issue creation" },
+      { "text": "Empty body", "source": "body", "interpretation": "No description, no repro, no question — nothing to act on" },
+      { "text": "Closed same day (2021-08-16)", "source": "body", "interpretation": "Author self-closed immediately, confirming this was unintentional" }
     ],
     "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "question",
-        "expandedReason": "There is no 'invalid' or 'noise' type in the schema. 'question' is the least committal classification for an issue with zero content. Confidence is set low (0.50) to reflect that this doesn't genuinely fit any category.",
-        "alternatives": [
-          { "value": "bug", "whyRejected": "No broken behavior described." },
-          { "value": "feature-request", "whyRejected": "No feature requested." },
-          { "value": "documentation", "whyRejected": "No docs gap identified." }
-        ]
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "close-as-fixed",
-        "expandedReason": "Issue is already closed and requires no action. 'close-as-fixed' is the closest available option since the issue's lifecycle is complete — the author resolved it themselves by closing.",
-        "alternatives": [
-          { "value": "request-info", "whyRejected": "Issue is already closed and the author clearly doesn't intend to follow up." },
-          { "value": "convert-to-discussion", "whyRejected": "No discussion content exists." }
-        ]
-      }
+      { "field": "type", "chosen": "type/question", "expandedReason": "No bug, feature, enhancement, or documentation request is described. The issue is empty. 'type/question' is the least-wrong classification for an issue with no actionable content. Low confidence reflects that none of the types truly fit.", "alternatives": [{ "value": "type/bug", "whyRejected": "No broken behavior described — no body at all." }, { "value": "type/feature-request", "whyRejected": "No feature requested." }] },
+      { "field": "actionability.suggestedAction", "chosen": "close-as-fixed", "expandedReason": "Issue is already closed with no content. No action is needed. 'close-as-fixed' reflects that the issue lifecycle is complete — there is nothing to investigate, answer, or fix." }
     ],
-    "docsConsulted": [
-      {
-        "path": "references/triage-schema.json",
-        "relevance": "Checked available type enum values to find the best fit for a contentless issue.",
-        "usedFor": ["type"]
-      }
-    ],
-    "docsNotConsulted": "No technical docs consulted — the issue contains zero technical content. No packages.md, skia-patterns.md, or API docs were relevant.",
-    "uncertainties": [
-      "The true intent behind opening this issue is unknown — it may have been a test, an accident, or the author may have meant to write content but changed their mind."
-    ]
+    "uncertainties": ["Whether the author intended to file a real issue and accidentally submitted early"],
+    "assumptions": ["Assumed accidental creation since the issue was self-closed within minutes with no follow-up"],
+    "resolution": null
   },
-  "resolutionAnalysis": null
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.95,
+      "reason": "Issue is already closed with no content — no action needed"
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Apply question label to empty issue",
+        "reason": "Matches classification — no better type fits an empty issue",
+        "confidence": 0.55,
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["type/question"],
+          "labelsToRemove": []
+        }
+      }
+    ]
+  }
 }

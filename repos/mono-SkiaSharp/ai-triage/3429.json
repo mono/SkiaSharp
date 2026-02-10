@@ -1,265 +1,167 @@
 {
-  "schemaVersion": "1.0",
-  "number": 3429,
-  "repo": "mono/SkiaSharp",
-  "analyzedAt": "2025-07-25T12:00:00Z",
-  "summary": "Memory leak in WPF on high-resolution monitors with Nvidia Quadro GPUs; mitigated by disabling hardware acceleration",
-  "type": {
-    "value": "bug",
-    "confidence": 0.92,
-    "reason": "Reporter describes a memory leak that occurs under specific hardware conditions (Nvidia Quadro + high-res monitor). This is broken behavior — memory should not leak regardless of GPU driver."
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3429,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-08T15:00:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "tenet/reliability"]
   },
-  "area": {
-    "value": "SkiaSharp.Views",
-    "confidence": 0.80,
-    "reason": "The issue occurs when drawing patterns in WPF, which uses SkiaSharp.Views WPF controls (e.g., SKElement). The workaround targets WPF's RenderOptions, indicating the interaction between the SkiaSharp view control and WPF's rendering pipeline."
+  "summary": "Memory leak in WPF on Windows with Nvidia Quadro GPU drivers when drawing patterns on high-resolution monitors; mitigated by WPF software-only rendering mode",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.75 },
+    "backends": null,
+    "platforms": [{ "value": "os/Windows-Classic", "confidence": 0.95 }],
+    "tenets": [
+      { "value": "tenet/reliability", "confidence": 0.90 },
+      { "value": "tenet/performance", "confidence": 0.85 }
+    ],
+    "partner": null
   },
-  "backends": null,
-  "platforms": [
-    {
-      "value": "Windows-Classic",
-      "confidence": 0.95,
-      "reason": "Reporter explicitly states Windows platform with WPF, and the workaround uses WPF-specific RenderOptions.ProcessRenderMode."
-    }
-  ],
-  "tenets": [
-    {
-      "value": "reliability",
-      "confidence": 0.90,
-      "reason": "Memory leak is a reliability issue — the application's memory grows unbounded over time."
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": false,
+      "hasStackTrace": false,
+      "reproQuality": "steps-only",
+      "hasWorkaround": true,
+      "workaroundSummary": "Set RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly in App.OnStartup to disable WPF hardware acceleration. Not practical for production due to performance impact on other application features.",
+      "severity": "medium",
+      "severityReason": "Memory leak in production use with a workaround that is impractical due to performance degradation. Only affects Nvidia Quadro series GPUs."
     },
-    {
-      "value": "performance",
-      "confidence": 0.75,
-      "reason": "Memory leak degrades performance over time, and the workaround (software rendering) is rejected due to performance impact on other features."
-    }
-  ],
-  "partner": null,
-  "regression": {
-    "isRegression": true,
-    "confidence": 0.80,
-    "reason": "Reporter states 'Last Known Good Version of SkiaSharp: 2.88.9 (Previous)' and current broken version is 3.116.0. This spans a major version boundary (2.x to 3.x) where significant rendering changes occurred.",
-    "workedInVersion": "2.88.9",
-    "brokeInVersion": "3.116.0"
+    "reproEvidence": {
+      "codeSnippets": [
+        {
+          "language": "csharp",
+          "code": "protected override void OnStartup(StartupEventArgs e)\n{\n    RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;\n    base.OnStartup(e);\n}",
+          "context": "Workaround that disables WPF hardware acceleration to avoid the memory leak"
+        }
+      ],
+      "relatedIssues": [3309, 2660, 2848],
+      "environmentDetails": "Windows, WPF, Nvidia Quadro series GPU, high resolution monitor, Visual Studio, SkiaSharp 3.116.0"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9"],
+      "currentRelevance": "likely",
+      "reason": "Issue reported on 3.116.0 which was current at time of filing. Last known good version is 2.88.9 (v2 series), suggesting the issue may have been introduced in the v3 rewrite.",
+      "migrationPath": null
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.70,
+      "reason": "Reporter states last known good version is 2.88.9. However, the gap between v2.88.9 and v3.116.0 is a major version jump spanning the v3 rewrite, so this is a broad regression claim rather than a pinpointed version.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    },
+    "fixStatus": null
   },
-  "fixStatus": null,
-  "bugSignals": {
-    "hasCrash": false,
-    "hasStackTrace": false,
-    "reproQuality": "steps-only",
-    "hasScreenshot": false,
-    "hasWorkaround": true,
-    "workaroundSummary": "Set RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly in App.OnStartup to disable WPF hardware acceleration. Reporter states this is impractical due to performance requirements.",
-    "severity": "medium",
-    "severityReason": "Memory leak is serious but does not crash. A workaround exists (software rendering) though it is impractical for the reporter. The issue is limited to a specific GPU family (Nvidia Quadro) on high-resolution monitors."
-  },
-  "reproEvidence": {
-    "stepsToReproduce": [
-      "Create a WPF application using SkiaSharp 3.116.0 to draw patterns",
-      "Run on a high-resolution monitor with an Nvidia Quadro series GPU",
-      "Observe memory growing over time (memory leak)",
-      "Verify the leak does not occur with Nvidia GeForce or AMD GPUs",
-      "Verify the leak does not occur when setting RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly"
-    ],
-    "codeSnippets": [
-      {
-        "language": "csharp",
-        "code": "protected override void OnStartup(StartupEventArgs e)\n{\n   // Mode to turn off hardware acceleration and enable software rendering only\n   // Completely exclude GPUs and handle all screen outputs with only CPU operations\n    RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;\n\n    base.OnStartup(e);\n}",
-        "context": "Workaround that disables WPF hardware acceleration to prevent the memory leak. Reporter confirms this fixes the leak but is impractical due to performance requirements."
-      }
-    ],
-    "environmentDetails": "Windows, Visual Studio, SkiaSharp 3.116.0, Nvidia Quadro series GPU, high-resolution monitor"
-  },
-  "versionAnalysis": {
-    "mentionedVersions": ["3.116.0", "2.88.9"],
-    "era": "modern",
-    "currentRelevance": "likely",
-    "reason": "Issue is reported on 3.116.0 which is the current version. The regression from 2.88.9 suggests a change in the 3.x rendering pipeline may have introduced this leak. This is likely still relevant in the latest builds.",
-    "migrationPath": null
-  },
-  "actionability": {
-    "suggestedAction": "request-info",
-    "confidence": 0.82,
-    "reason": "This is a real bug but lacks critical reproduction details: no sample project, no memory profiler output, no indication of which SkiaSharp WPF control is used (SKElement vs SKGLElement), and no actual behavior description beyond 'memory leak'. The GPU-specific nature makes it important but hard to investigate without more details.",
-    "requiresHumanReview": false,
-    "closeable": false,
-    "closeReason": null,
-    "duplicateOf": null,
-    "missingInfo": ["sample-project", "actual-behavior", "device-info"],
-    "abandoned": false,
-    "abandonedReason": null
-  },
-  "suggestedResponse": {
-    "responseType": "request-info",
-    "confidence": 0.80,
-    "reason": "The issue is plausible and well-investigated by the reporter (they isolated GPU driver and found a workaround), but we need more details to investigate — especially which WPF control is being used and memory profiler data.",
-    "draft": "Thanks for the thorough investigation — isolating the issue to Nvidia Quadro GPUs and finding the software rendering workaround is really helpful context.\n\nTo dig into this further, a few things would help:\n\n1. **Which SkiaSharp WPF control are you using?** (`SKElement`, `SKGLElement`, or a custom `WriteableBitmap` approach?) This matters because `SKGLElement` uses GPU rendering directly while `SKElement` renders to a bitmap that WPF then composites.\n\n2. **Could you share a minimal sample project that reproduces the leak?** Even a simple WPF app that draws a pattern in a loop would help us profile what's being leaked.\n\n3. **Memory profiler output** — if you have any diagnostics showing what objects are accumulating (e.g., from Visual Studio's diagnostic tools or dotMemory), that would narrow down whether the leak is in managed objects, native Skia resources, or WPF's rendering layer.\n\nThe fact that `RenderMode.SoftwareOnly` resolves it suggests the leak may be in how WPF composites the SkiaSharp surface with hardware acceleration — possibly a texture or render target not being released properly on Quadro drivers."
-  },
-  "analysisNotes": {
-    "summary": "Memory leak in a WPF application using SkiaSharp 3.116.0 that only manifests with Nvidia Quadro GPUs on high-resolution monitors. The workaround of disabling WPF hardware acceleration confirms the issue is at the intersection of SkiaSharp's WPF view surface management and GPU-accelerated compositing. This is a regression from 2.88.9.",
+  "analysis": {
+    "summary": "GPU-driver-specific memory leak in WPF when drawing patterns with SkiaSharp, isolated to Nvidia Quadro series. The WPF SoftwareOnly workaround points to an interaction between SkiaSharp rendering and WPF's hardware-accelerated compositing layer. Related to other GPU memory leak reports (#3309, #2660, #2848) but distinct due to Quadro-specific trigger.",
     "keySignals": [
-      {
-        "text": "When drawing patterns in wpf, a memory leak issue was encountered on the high resolution monitor",
-        "source": "body",
-        "interpretation": "WPF + high-DPI + pattern drawing triggers the leak. High-DPI may cause larger backing surfaces that amplify a per-frame leak.",
-        "supportedFields": ["type", "area", "platforms"]
-      },
-      {
-        "text": "it only occurred in the Nvidia Quadro series",
-        "source": "body",
-        "interpretation": "GPU-driver-specific issue. Quadro drivers handle GPU memory and texture management differently from GeForce consumer drivers. This points to a GPU resource leak (e.g., textures, render targets) that Quadro drivers don't auto-reclaim.",
-        "supportedFields": ["type", "bugSignals.severity"]
-      },
-      {
-        "text": "RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly",
-        "source": "body",
-        "interpretation": "Disabling WPF hardware acceleration fixes the leak. This means the leak occurs when WPF uses GPU compositing to present the SkiaSharp surface, not in SkiaSharp's own rendering.",
-        "supportedFields": ["bugSignals.hasWorkaround", "area"]
-      },
-      {
-        "text": "Last Known Good Version of SkiaSharp: 2.88.9",
-        "source": "body",
-        "interpretation": "Regression from 2.x to 3.x. The 3.x series changed how WPF views render and manage surfaces, which could have introduced a resource leak in the GPU compositing path.",
-        "supportedFields": ["regression"]
-      },
-      {
-        "text": "Due to the performance of other features of the current application, it is impossible to use the code above",
-        "source": "body",
-        "interpretation": "The workaround is impractical, making this a real blocker for the reporter rather than a resolved question.",
-        "supportedFields": ["bugSignals.severity", "actionability"]
-      }
+      { "text": "Memory Leak on Window with Nvidia GPU driver", "source": "title", "interpretation": "GPU-driver-specific memory leak, not a general SkiaSharp issue" },
+      { "text": "only occurred in the Nvidia Quadro series", "source": "body", "interpretation": "Highly specific to professional GPU line — suggests driver-level interaction, not a generic SkiaSharp bug" },
+      { "text": "doesn't happen with Nvidia Geforce or AMD", "source": "body", "interpretation": "Reporter did thorough cross-GPU testing, narrowing to Quadro-specific driver behavior" },
+      { "text": "RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly", "source": "body", "interpretation": "Disabling WPF hardware acceleration eliminates the leak, pointing to GPU compositing interaction as the root cause" },
+      { "text": "drawing patterns in wpf, a memory leak issue was encountered on the high resolution monitor", "source": "body", "interpretation": "High-DPI display may amplify the leak due to larger backing buffers or scaling operations" },
+      { "text": "Version 3.116.0, Last Known Good 2.88.9", "source": "body", "interpretation": "Possible regression from v2 to v3 series, though this is a large version gap" }
     ],
     "fieldRationales": [
       {
         "field": "type",
-        "chosen": "bug",
-        "expandedReason": "Memory leak is clearly broken behavior. The reporter describes a condition that should not happen — drawing in SkiaSharp should not leak memory regardless of GPU driver.",
-        "alternatives": [
-          { "value": "question", "whyRejected": "Though the reporter asks 'how can I solve that problem', the core issue is a genuine memory leak, not a usage question." }
-        ]
+        "chosen": "type/bug",
+        "expandedReason": "Reporter describes a memory leak that grows over time during normal drawing operations. This is broken behavior — memory should not leak during repeated draw calls.",
+        "alternatives": [{ "value": "type/question", "whyRejected": "Reporter is not asking how to do something — they are reporting broken behavior with a specific workaround they already found." }]
       },
       {
         "field": "area",
-        "chosen": "SkiaSharp.Views",
-        "expandedReason": "The issue is in WPF drawing with SkiaSharp, which involves the SkiaSharp.Views.WPF package. The workaround targeting WPF's RenderOptions confirms the issue is in how the view control interacts with WPF's rendering pipeline.",
-        "alternatives": [
-          { "value": "SkiaSharp", "whyRejected": "Core SkiaSharp is GPU-agnostic. The issue is specific to the WPF view layer's surface management." },
-          { "value": "libSkiaSharp.native", "whyRejected": "While the leak could be in native code, the WPF RenderOptions workaround points to the managed WPF integration layer." }
-        ]
-      },
-      {
-        "field": "platforms",
-        "chosen": "Windows-Classic",
-        "expandedReason": "WPF is a Windows-Classic technology. Reporter explicitly states Windows platform."
+        "chosen": "area/SkiaSharp.Views",
+        "expandedReason": "The issue occurs when drawing patterns in WPF, which uses SkiaSharp.Views.WPF controls. The workaround is a WPF-level rendering setting, further pointing to the views integration layer. Could also be area/libSkiaSharp.native if the native library leaks GPU memory on Quadro drivers.",
+        "alternatives": [{ "value": "area/libSkiaSharp.native", "whyRejected": "Possible, but the WPF SoftwareOnly workaround suggests the leak is in the compositing/presentation layer rather than core native rendering." }, { "value": "area/SkiaSharp", "whyRejected": "Too broad — the issue is specific to WPF rendering integration, not core SkiaSharp API." }]
       },
       {
         "field": "bugSignals.severity",
         "chosen": "medium",
-        "expandedReason": "Memory leak is serious for production applications but does not crash. A workaround exists (software rendering) even though it's impractical. The issue is limited to a specific GPU family.",
-        "alternatives": [
-          { "value": "high", "whyRejected": "Workaround exists and issue is limited to Nvidia Quadro on high-res monitors. Not affecting all users." },
-          { "value": "low", "whyRejected": "Memory leaks are not cosmetic — they degrade over time and can eventually cause OOM." }
-        ]
+        "expandedReason": "Memory leak that worsens over time, but has a workaround (software rendering). The workaround is impractical for production, but the issue is limited to Nvidia Quadro GPUs, reducing the affected population."
       },
       {
-        "field": "actionability.suggestedAction",
-        "chosen": "request-info",
-        "expandedReason": "The bug is plausible and the reporter did good investigative work, but we need: which WPF control is used, a sample project, and memory profiler data to investigate the root cause.",
-        "alternatives": [
-          { "value": "needs-investigation", "whyRejected": "Without knowing which control is used and having a repro, investigation would be unfocused." },
-          { "value": "keep-open", "whyRejected": "Requesting info is more actionable — it moves the issue forward." }
-        ]
+        "field": "regression",
+        "chosen": "true",
+        "expandedReason": "Reporter claims last known good version is 2.88.9. The v2-to-v3 jump involved a major rewrite of the native layer and views, making regression plausible but the specific breaking change hard to pinpoint."
       }
     ],
-    "docsConsulted": [
-      {
-        "path": "references/skia-patterns.md",
-        "relevance": "Checked for known Windows/WPF platform quirks and memory management patterns. No direct match for this GPU-specific leak pattern.",
-        "usedFor": ["type", "area"]
-      },
-      {
-        "path": "references/triage-schema.json",
-        "relevance": "Field definitions and allowed enum values for classification.",
-        "usedFor": ["type", "area", "platforms", "bugSignals"]
-      },
-      {
-        "path": "references/triage-examples.md",
-        "relevance": "Calibrated JSON output format and confidence scoring.",
-        "usedFor": ["type", "bugSignals"]
-      },
-      {
-        "path": "references/response-guidelines.md",
-        "relevance": "Tone and structure guidance for the suggested response draft.",
-        "usedFor": ["suggestedResponse"]
-      }
-    ],
-    "docsNotConsulted": "Did not check documentation/packages.md — issue is not about native loading or DllNotFoundException. Did not check API XML docs — issue is about a resource leak, not API usage.",
     "uncertainties": [
-      "Unknown which SkiaSharp WPF control is being used (SKElement vs SKGLElement vs custom). SKGLElement uses GPU rendering directly, which would be a very different leak path than SKElement's WritableBitmap approach.",
-      "No memory profiler data — unclear whether the leak is managed objects, native Skia surfaces, or GPU textures held by the WPF compositor.",
-      "The '3.116.0' version number appears non-standard (current versions are 3.x.y format like 3.116.1). This could be a typo or internal versioning.",
-      "No information on high-resolution monitor resolution or scaling factor. DPI scaling could affect surface allocation size and frequency.",
-      "Unclear what 'drawing patterns' means — it could be continuous redrawing (animation) or a specific draw pattern that leaks."
+      "Which WPF SkiaSharp control is being used (SKElement, SKGLElement, or SKXamlCanvas)?",
+      "Whether the leak is in SkiaSharp's rendering, WPF's compositing, or the Nvidia Quadro driver itself",
+      "Specific Nvidia Quadro model and driver version",
+      "Whether the issue is specific to high-DPI or also occurs on standard resolution monitors",
+      "Whether #3309 (SKGLElement OpenTK memory leak fix) resolves this issue as well"
     ],
     "assumptions": [
-      "Assumed the reporter is using a SkiaSharp.Views.WPF control (SKElement or SKGLElement) rather than a custom rendering approach, since they mention 'drawing patterns in wpf'.",
-      "Assumed the 'Nvidia Quadro series' refers to professional workstation GPUs with different driver behavior from consumer GeForce drivers."
-    ]
+      "Assumed the reporter is using a WPF SkiaSharp view control (SKElement or SKGLElement) since they mention 'drawing patterns in WPF'",
+      "Assumed the memory leak is reproducible and not a measurement artifact, based on the reporter's cross-GPU validation"
+    ],
+    "resolution": {
+      "hypothesis": "The Nvidia Quadro driver handles GPU resource management differently from GeForce and AMD drivers, causing SkiaSharp-rendered surfaces to leak GPU memory when composited through WPF's hardware-accelerated pipeline. The v3 rewrite may have changed how surfaces are allocated or recycled, exposing a Quadro-specific driver bug or resource management issue.",
+      "proposals": [
+        {
+          "title": "Check if SKGLElement OpenTK fix (#3309/#3311) resolves the issue",
+          "description": "Issue #3309 identified a memory leak in SKGLElement due to OpenTK not being disposed. If the reporter is using SKGLElement, the fix in #3311 (updating OpenTK dependency) may resolve this. Ask reporter which control they use.",
+          "confidence": 0.50,
+          "effort": "low"
+        },
+        {
+          "title": "Switch to SKElement (software-rendered) for the SkiaSharp control",
+          "description": "If using SKGLElement (GPU-accelerated), switching to SKElement (CPU-rendered) would avoid the GPU driver interaction while keeping WPF hardware acceleration for other UI elements. Better targeted than the full SoftwareOnly workaround.",
+          "confidence": 0.65,
+          "effort": "low"
+        },
+        {
+          "title": "Investigate GPU resource cache management on Quadro drivers",
+          "description": "Profile GPU memory allocation during pattern drawing to identify whether SkiaSharp's GrDirectContext resource cache behaves differently on Quadro. May need to explicitly flush or limit the GPU resource cache (GrDirectContext.SetResourceCacheLimit).",
+          "confidence": 0.55,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Check if SKGLElement OpenTK fix (#3309/#3311) resolves the issue",
+      "recommendedReason": "Lowest effort — an existing fix for WPF memory leaks may already address this. Determining the control type will immediately narrow the diagnosis."
+    }
   },
-  "resolutionAnalysis": {
-    "hypothesis": "WPF's hardware-accelerated compositing path leaks GPU resources (textures or render targets) when presenting SkiaSharp surfaces on Nvidia Quadro drivers with high-DPI scaling. The Quadro driver's GPU memory management handles texture lifecycle differently than GeForce/AMD, causing resources that should be released after each frame to accumulate.",
-    "researchDone": [
-      "Searched mono/SkiaSharp issues for similar memory leak + WPF + GPU reports — no duplicates found",
-      "Reviewed skia-patterns.md for known Windows/WPF quirks — no direct match",
-      "Analyzed the WPF RenderOptions.ProcessRenderMode workaround to understand the compositing path",
-      "Considered the 2.88.9 → 3.116.0 version gap for rendering pipeline changes"
-    ],
-    "proposals": [
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.85,
+      "reason": "Real bug with validated workaround, but missing critical details: which SkiaSharp WPF control is used, specific GPU model/driver version, and minimal reproduction project. Need this info to investigate effectively.",
+      "missingInfo": ["reproduction-steps", "sample-project", "device-info"]
+    },
+    "actions": [
       {
-        "title": "Use SKElement instead of SKGLElement",
-        "description": "If the reporter is using SKGLElement (GPU-accelerated), switching to SKElement (software rendering in SkiaSharp, but still allows WPF hardware compositing) may avoid the leak by removing Skia's direct GPU usage while keeping WPF hardware acceleration for the rest of the app.",
-        "steps": [
-          "Confirm which control the reporter is currently using",
-          "If SKGLElement, switch to SKElement in XAML",
-          "Test if memory leak persists — SKElement doesn't use GPU for Skia rendering",
-          "Measure performance impact of software SkiaSharp rendering vs GPU"
-        ],
-        "pros": ["Preserves WPF hardware acceleration for non-SkiaSharp content", "Simple code change", "Avoids GPU driver interaction for Skia rendering"],
-        "cons": ["May reduce SkiaSharp rendering performance", "Doesn't fix the root cause if the leak is in SKElement too"],
-        "confidence": 0.55,
-        "effort": "low"
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add area/SkiaSharp.Views and tenet/performance labels",
+        "reason": "WPF views integration is the affected component. Memory leak is both a reliability and performance concern.",
+        "confidence": 0.85,
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["area/SkiaSharp.Views", "tenet/performance"],
+          "labelsToRemove": []
+        }
       },
       {
-        "title": "Investigate and fix surface/texture leak in WPF view",
-        "description": "Profile the application to identify exactly which resources are leaking (managed objects, native Skia surfaces, or WPF render targets), then fix the disposal or caching logic in the SkiaSharp WPF view control.",
-        "steps": [
-          "Get a minimal reproduction project from the reporter",
-          "Profile with dotMemory and GPU profiler on Nvidia Quadro hardware",
-          "Identify the leaking resource type (managed SKSurface/SKImage, native texture, WPF render target)",
-          "Fix the resource lifecycle in the WPF view control code",
-          "Test fix across multiple GPU vendors and DPI settings"
-        ],
-        "pros": ["Fixes the root cause", "Benefits all users with this GPU/DPI combination"],
-        "cons": ["Requires Nvidia Quadro hardware to reproduce", "High investigation effort", "May reveal a driver bug that can't be fixed from SkiaSharp's side"],
-        "confidence": 0.70,
-        "effort": "high"
-      },
-      {
-        "title": "Disable WPF hardware acceleration only for SkiaSharp elements",
-        "description": "Instead of globally disabling hardware acceleration with RenderMode.SoftwareOnly, use WPF's per-element RenderOptions or BitmapCache to control compositing just for SkiaSharp views.",
-        "steps": [
-          "Set RenderOptions.ProcessRenderMode to Default (keep hardware acceleration)",
-          "Apply CacheMode = new BitmapCache() or RenderOptions.BitmapScalingMode on the SkiaSharp host element",
-          "Alternatively, host the SKElement in a HwndHost with software rendering while keeping the rest of the app hardware-accelerated",
-          "Test memory behavior and overall app performance"
-        ],
-        "pros": ["Keeps hardware acceleration for non-SkiaSharp UI", "No SkiaSharp code changes needed", "Can be applied selectively"],
-        "cons": ["May not fully resolve the leak if WPF still touches GPU for compositing", "HwndHost approach adds airspace complexity"],
-        "confidence": 0.50,
-        "effort": "medium"
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Request details about WPF control type, GPU model, and ask for minimal repro",
+        "reason": "Cannot investigate without knowing which SkiaSharp WPF control is in use and whether the existing SKGLElement fix applies",
+        "confidence": 0.85,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "request-info",
+          "draftBody": "Thanks for the thorough GPU testing — narrowing it to Nvidia Quadro specifically is really valuable information.\n\nThe fact that WPF's SoftwareOnly mode eliminates the leak is an important clue. It suggests the memory leak is in the interaction between the SkiaSharp rendering surface and WPF's hardware-accelerated compositing, rather than in SkiaSharp's drawing operations themselves.\n\nA couple of questions that would help narrow this down:\n\n1. Which SkiaSharp WPF control are you using — `SKElement` or `SKGLElement`? If it's `SKGLElement`, there's a known memory leak fix in #3309 / #3311 related to OpenTK disposal that might address this.\n\n2. Would you be able to share the Nvidia Quadro model and driver version? Some Quadro driver versions have known issues with GPU resource management under certain compositing scenarios.\n\nIf it's not too much trouble, a minimal reproduction project would make it much easier to investigate the specific interaction between SkiaSharp, WPF compositing, and the Quadro driver.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3429-comment-1"
+        }
       }
-    ],
-    "recommendedProposal": "Investigate and fix surface/texture leak in WPF view",
-    "recommendedReason": "While higher effort, this is the only proposal that addresses the root cause. The other proposals are workarounds. Getting a repro project first (via request-info) will make this investigation feasible."
+    ]
   }
 }

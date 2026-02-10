@@ -1,310 +1,207 @@
 {
-  "schemaVersion": "1.0",
-  "number": 3437,
-  "repo": "mono/SkiaSharp",
-  "analyzedAt": "2026-02-08T15:00:00Z",
-  "summary": "SKSvgCanvas text elements lose content and x/y attributes when used in parallel threads on Windows",
-  "type": {
-    "value": "bug",
-    "confidence": 0.98,
-    "reason": "Reporter describes broken SVG output with text elements rendered with missing values. Clear expected vs actual behavior with regression from 2.88.9."
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3437,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-08T19:00:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "tenet/reliability", "backend/SVG"]
   },
-  "area": {
-    "value": "SkiaSharp",
-    "confidence": 0.90,
-    "reason": "SKSvgCanvas.Create is in the core SkiaSharp binding (SKSVG.cs). The bug is in the underlying Skia SVG text rendering, not a view or platform-specific package."
-  },
-  "backends": [
-    {
-      "value": "SVG",
-      "confidence": 0.98,
-      "reason": "Issue exclusively involves SKSvgCanvas and its SVG text output."
-    }
-  ],
-  "platforms": [
-    {
-      "value": "Windows-Classic",
-      "confidence": 0.95,
-      "reason": "Reporter explicitly states Windows-only. Confirmed in comment: tested on Ubuntu 22.04 WSL with 50 parallel tasks and 100 text elements with no bug."
-    }
-  ],
-  "tenets": [
-    {
-      "value": "reliability",
-      "confidence": 0.95,
-      "reason": "SVG output is silently corrupted without any error or exception. This is a data corruption and reliability issue."
-    }
-  ],
-  "partner": null,
-  "regression": {
-    "isRegression": true,
-    "confidence": 0.92,
-    "reason": "Reporter explicitly states this is a regression from SkiaSharp 2.88.9. The 2.x to 3.x transition changed the underlying Skia version significantly.",
-    "workedInVersion": "2.88.9",
-    "brokeInVersion": "3.116.0"
-  },
-  "fixStatus": null,
-  "bugSignals": {
-    "hasCrash": false,
-    "hasStackTrace": false,
-    "reproQuality": "complete",
-    "hasScreenshot": false,
-    "hasWorkaround": false,
-    "workaroundSummary": null,
-    "targetFrameworks": ["net8.0"],
-    "severity": "high",
-    "severityReason": "Silent data corruption in SVG output with no workaround. Text content is dropped from rendered SVGs when using parallel tasks. No error is reported, making this hard to detect."
-  },
-  "reproEvidence": {
-    "repoLinks": [
-      {
-        "url": "https://github.com/jankurianski/skiasharp-svg-text-missing-bug",
-        "description": "Complete reproduction project demonstrating the threading bug with SKSvgCanvas text rendering on Windows."
-      }
+  "summary": "SKSvgCanvas produces <text> elements with missing text values and x/y attributes when used concurrently in parallel tasks on Windows — regression from 2.88.9",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.98 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "backends": [{ "value": "backend/SVG", "confidence": 0.98 }],
+    "platforms": [{ "value": "os/Windows-Classic", "confidence": 0.95 }],
+    "tenets": [
+      { "value": "tenet/reliability", "confidence": 0.95 },
+      { "value": "tenet/compatibility", "confidence": 0.85 }
     ],
-    "stepsToReproduce": [
-      "Clone https://github.com/jankurianski/skiasharp-svg-text-missing-bug",
-      "Run on Windows (Linux is unaffected)",
-      "The program creates 5 parallel Task.Run() calls, each creating an independent SKSvgCanvas and drawing 10 text elements",
-      "Inspect SVG output - some text elements will have empty x/y attributes and missing text content"
-    ],
-    "codeSnippets": [
-      {
-        "language": "csharp",
-        "code": "await Task.WhenAll(Enumerable.Range(0, 5).Select(i => Task.Run(() => drawSvgFunc(i)))).ConfigureAwait(false);",
-        "context": "Parallel SVG generation using Task.Run with separate SKSvgCanvas per task"
-      },
-      {
-        "language": "xml",
-        "code": "<text font-size=\"14\" font-family=\"Arial\" x=\"\" y=\"\">\n\n</text>",
-        "context": "Actual broken output with missing text content and positions"
-      }
-    ],
-    "environmentDetails": "Windows 11, Visual Studio Code, SkiaSharp 3.116.0 / 3.119.1 / 3.119.2-preview.1. Bug does NOT occur on Ubuntu 22.04.2 LTS (tested via WSL)."
+    "partner": null
   },
-  "versionAnalysis": {
-    "mentionedVersions": ["3.116.0", "3.119.1", "3.119.2-preview.1", "2.88.9"],
-    "era": "modern",
-    "currentRelevance": "likely",
-    "reason": "Bug confirmed on latest preview (3.119.2-preview.1) and all 3.x versions tested. The underlying Skia text shaping code is unlikely to have changed between these versions.",
-    "migrationPath": null
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": false,
+      "hasStackTrace": false,
+      "reproQuality": "complete",
+      "hasWorkaround": true,
+      "workaroundSummary": "Avoid parallel usage of SKSvgCanvas — serialize SVG generation to a single thread, or downgrade to SkiaSharp 2.88.9.",
+      "targetFrameworks": ["net8.0-windows"],
+      "severity": "high",
+      "severityReason": "Data corruption in SVG output with no simple workaround besides removing parallelism. Regression from 2.x."
+    },
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/jankurianski/skiasharp-svg-text-missing-bug",
+          "description": "Full reproduction project demonstrating parallel SKSvgCanvas text corruption on Windows"
+        }
+      ],
+      "stepsToReproduce": [
+        "Create multiple parallel tasks using Task.Run()",
+        "In each task, create an independent SKSvgCanvas writing to a MemoryStream",
+        "Draw multiple text elements using canvas.DrawText()",
+        "Dispose canvas to flush SVG output",
+        "Inspect resulting SVG — <text> elements will have empty x/y attributes and missing text content"
+      ],
+      "codeSnippets": [
+        {
+          "language": "csharp",
+          "code": "await Task.WhenAll(\n    Enumerable.Range(0, 5)\n    .Select(i => Task.Run(() => drawSvgFunc(i)))\n    ).ConfigureAwait(false);",
+          "context": "Parallel SVG generation triggering the bug — each task creates its own independent SKSvgCanvas"
+        }
+      ],
+      "environmentDetails": "Windows 11, Visual Studio Code, SkiaSharp 3.116.0 / 3.119.1 / 3.119.2-preview.1. Linux (Ubuntu 22.04.2 LTS via WSL) is unaffected."
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "3.119.1", "3.119.2-preview.1", "2.88.9"],
+      "currentRelevance": "likely",
+      "reason": "Bug affects all SkiaSharp 3.x versions tested including the latest preview. Confirmed working in 2.88.9.",
+      "migrationPath": null
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.92,
+      "reason": "Reporter explicitly states 2.88.9 does not have the bug and all 3.x versions do. This aligns with the major Skia engine upgrade between 2.x and 3.x.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    },
+    "fixStatus": null
   },
-  "actionability": {
-    "suggestedAction": "needs-investigation",
-    "confidence": 0.92,
-    "reason": "Well-documented bug with complete reproduction, clear regression, and platform isolation. Needs investigation into Skia SVG text rendering thread safety on Windows.",
-    "requiresHumanReview": false,
-    "closeable": false,
-    "closeReason": null,
-    "duplicateOf": null,
-    "abandoned": false,
-    "abandonedReason": null
-  },
-  "suggestedResponse": null,
-  "analysisNotes": {
-    "summary": "Thread-safety bug in SVG text rendering on Windows. Each parallel task creates its own independent SKSvgCanvas, SKPaint, SKTypeface, and SKFont. Despite no shared objects, text elements in the SVG output are silently corrupted. This points to shared global state in Skia's text pipeline (likely DirectWrite on Windows).",
+  "analysis": {
+    "summary": "Thread-safety bug in the SVG canvas backend on Windows. Independent SKSvgCanvas instances used in parallel tasks produce corrupted <text> elements with missing content and attributes. This is a regression from 2.88.9, suggesting the Skia 3.x SVG module introduced shared mutable global state.",
     "keySignals": [
       {
-        "text": "When creating an SKSvgCanvas in a thread (via Task.Run()), text elements will sometimes have their text value and x/y attribute values removed.",
+        "text": "text elements will sometimes have their text value and x/y attribute values removed",
         "source": "body",
-        "interpretation": "Race condition in SVG text serialization causing non-deterministic output corruption under concurrency",
-        "supportedFields": ["type", "bugSignals.severity", "tenets"]
+        "interpretation": "Data corruption in SVG output — not a crash but silent data loss"
       },
       {
-        "text": "This is a regression from SkiaSharp 2.88.9 which does not have the bug",
+        "text": "The more text elements being drawn and the more threads running the same task, the more likely the problem is to occur",
         "source": "body",
-        "interpretation": "Regression introduced in the 2.x to 3.x transition, likely due to Skia engine upgrade changing text shaping pipeline",
-        "supportedFields": ["regression"]
+        "interpretation": "Classic race condition symptom — probability increases with concurrency"
       },
       {
         "text": "This affects all SkiaSharp 3.x versions on Windows. Linux is unaffected.",
         "source": "body",
-        "interpretation": "Windows-specific, pointing to DirectWrite font system or Windows-specific text shaping code path",
-        "supportedFields": ["platforms", "bugSignals"]
+        "interpretation": "Windows-specific thread-safety issue, possibly related to platform-specific string formatting or locale handling"
       },
       {
-        "text": "I tested the bug on Ubuntu 22.04.2 LTS (using WSL) and the bug does not occur there. I even increased the number of text elements per SVG drawn from 10 to 100, and the number of parallel tasks from 5 to 50.",
-        "source": "comment 2",
-        "interpretation": "Rigorous cross-platform testing by reporter confirms Windows-only. Linux uses FreeType/fontconfig while Windows uses DirectWrite.",
-        "supportedFields": ["platforms"]
-      },
-      {
-        "text": "The more text elements being drawn and the more threads running the same task, the more likely the problem is to occur.",
+        "text": "This is a regression from SkiaSharp 2.88.9 which does not have the bug.",
         "source": "body",
-        "interpretation": "Classic race condition symptom where increased concurrency increases probability of corruption",
-        "supportedFields": ["type", "bugSignals"]
+        "interpretation": "Regression tied to the Skia engine upgrade from 2.x to 3.x"
+      },
+      {
+        "text": "I tested the bug on Ubuntu 22.04.2 LTS (using WSL) and the bug does not occur there",
+        "source": "comment 1",
+        "interpretation": "Reporter confirmed Linux is unaffected even with 100 elements and 50 parallel tasks — strongly platform-specific"
+      },
+      {
+        "text": "GitHub repository with full source code to reproduce",
+        "source": "body",
+        "interpretation": "Complete reproduction project available — high-quality bug report"
       }
     ],
     "fieldRationales": [
       {
         "field": "type",
-        "chosen": "bug",
-        "expandedReason": "Reporter describes clear broken behavior with SVG output silently corrupted. The issue template is BUG, expected vs actual behavior is documented, and there is a regression from a working version.",
-        "alternatives": [
-          {
-            "value": "question",
-            "whyRejected": "Not asking how to do something. Reporting incorrect output from a well-defined API operation."
-          }
-        ]
+        "chosen": "type/bug",
+        "expandedReason": "Clear broken behavior: SVG output data corruption where text elements lose their content and attributes. The reporter provides expected vs actual output showing the defect.",
+        "alternatives": [{ "value": "type/question", "whyRejected": "Not asking how to use threading — reporting data corruption in independent canvas instances." }]
       },
       {
         "field": "area",
-        "chosen": "SkiaSharp",
-        "expandedReason": "SKSvgCanvas is in the core SkiaSharp namespace (binding/SkiaSharp/SKSVG.cs). The C API call sk_svgcanvas_create_with_stream wraps SkSVGCanvas::Make. The thread-safety issue is in the native text pipeline, surfaced through the core binding.",
-        "alternatives": [
-          {
-            "value": "libSkiaSharp.native",
-            "whyRejected": "While the root cause is in native code, the issue is experienced through the managed API and the area/SkiaSharp label was already applied by maintainers."
-          }
-        ]
+        "chosen": "area/SkiaSharp",
+        "expandedReason": "SKSvgCanvas is part of the core SkiaSharp API surface (binding/SkiaSharp/). While it targets SVG output, the code path goes through the main SkiaSharp library.",
+        "alternatives": [{ "value": "area/libSkiaSharp.native", "whyRejected": "While the root cause is likely in native Skia SVG code, the entry point is through the managed SkiaSharp API." }]
       },
       {
         "field": "backends",
-        "chosen": "SVG",
-        "expandedReason": "The bug is exclusively about SVG canvas output. SKSvgCanvas produces SVG markup, and the corruption is in the SVG text elements."
+        "chosen": "backend/SVG",
+        "expandedReason": "The bug is specific to SKSvgCanvas — the SVG rendering backend. Standard raster canvas drawing is not affected."
       },
       {
         "field": "platforms",
-        "chosen": "Windows-Classic",
-        "expandedReason": "Explicitly Windows-only. Reporter tested Linux and confirmed no issue even with 50 parallel tasks and 100 text elements."
+        "chosen": "os/Windows-Classic",
+        "expandedReason": "Reporter confirmed the bug only occurs on Windows 11. Ubuntu 22.04 via WSL is unaffected even with significantly more parallelism."
       },
       {
         "field": "bugSignals.severity",
         "chosen": "high",
-        "expandedReason": "Silent data corruption with no workaround. The bug produces incorrect SVG output without any indication of failure. Server-side parallel SVG generation is a common use case.",
-        "alternatives": [
-          {
-            "value": "critical",
-            "whyRejected": "No crash, data loss, or security issue. The corruption is detectable by inspecting output."
-          },
-          {
-            "value": "medium",
-            "whyRejected": "No workaround exists. The only mitigation is to serialize SVG generation, which defeats the purpose of parallelism."
-          }
-        ]
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "needs-investigation",
-        "expandedReason": "The root cause needs to be identified in the Skia native SVG text rendering pipeline. The bug has an excellent reproduction and is clearly a real defect."
+        "expandedReason": "Silent data corruption in output — text elements lose their content without any error or warning. The only workaround is to serialize work or downgrade to 2.x. This is a regression affecting all 3.x versions."
       }
     ],
-    "docsConsulted": [
-      {
-        "path": "references/skia-patterns.md",
-        "relevance": "Checked threading patterns. Confirms Skia is not thread-safe. However, this issue involves separate instances per thread, not shared objects.",
-        "usedFor": ["type", "bugSignals"]
-      },
-      {
-        "path": "references/triage-schema.json",
-        "relevance": "Field definitions and enum values for generating valid triage JSON",
-        "usedFor": ["type", "area", "backends", "platforms", "bugSignals", "actionability"]
-      },
-      {
-        "path": "references/triage-examples.md",
-        "relevance": "Calibrated JSON output format and confidence levels",
-        "usedFor": ["type", "bugSignals", "actionability"]
-      },
-      {
-        "path": "binding/SkiaSharp/SKSVG.cs",
-        "relevance": "Confirmed SKSvgCanvas.Create wraps sk_svgcanvas_create_with_stream and returns a new SKCanvas instance per call.",
-        "usedFor": ["area"]
-      },
-      {
-        "path": "externals/skia/src/c/sk_svg.cpp",
-        "relevance": "C API calls SkSVGCanvas::Make which should create an independent canvas. Thread-safety issue must be deeper in text shaping or serialization.",
-        "usedFor": ["area", "bugSignals"]
-      }
-    ],
-    "docsNotConsulted": "No native loading docs needed as this is not a DllNotFoundException or deployment issue. No packages.md consultation needed as the correct binaries are loaded and functioning.",
     "uncertainties": [
-      "Exact location of the thread-safety violation: could be in SkSVGDevice text serialization, SkShaper/HarfBuzz text shaping, or DirectWrite font queries on Windows",
-      "Whether the fix should be in Skia native code or in the C# wrapper with synchronization",
-      "Whether other canvas backends (PDF, XPS) have similar threading issues with text rendering on Windows"
+      "Whether the root cause is in Skia's C++ SVG module or in the C API/P/Invoke layer — needs native debugging",
+      "Whether the issue affects other SVG element types beyond <text> or if it's specific to text rendering",
+      "Whether Windows-specific locale or string formatting functions used in SVG serialization are the source of the race condition",
+      "The exact shared mutable state causing the race — could be global buffers, static formatters, or locale-dependent number-to-string conversion"
     ],
     "assumptions": [
-      "Assumed net8.0 target framework since no explicit TFM was mentioned but the code uses modern C# features and runs on Windows 11",
-      "Assumed the repro project at the GitHub link is accurate based on the inline code in the issue body"
-    ]
+      "Assumed net8.0-windows target framework since reporter uses Windows 11 with VS Code but doesn't specify exact TFM",
+      "Assumed the race condition is in native Skia code rather than the managed wrapper since each thread creates fully independent managed objects"
+    ],
+    "resolution": {
+      "hypothesis": "The Skia 3.x SVG serialization module likely uses shared global state (possibly a string formatting buffer or locale-dependent number conversion function) that is not thread-safe on Windows. Linux uses different formatting functions (e.g., POSIX locale-independent formatting) that happen to be thread-safe, explaining the platform difference.",
+      "proposals": [
+        {
+          "title": "Add thread-safety documentation for SKSvgCanvas",
+          "description": "Document that Skia is not thread-safe and SKSvgCanvas instances should not be used concurrently, even if they are independent instances. This is the quickest mitigation but doesn't fix the underlying defect.",
+          "confidence": 0.90,
+          "effort": "low"
+        },
+        {
+          "title": "Investigate and fix shared state in Skia SVG module",
+          "description": "Debug the native Skia SVG serialization to identify the shared mutable state causing the race condition on Windows. This likely involves SkSVGDevice or related classes. May require an upstream Skia fix or a SkiaSharp-specific patch in the fork.",
+          "confidence": 0.65,
+          "effort": "high"
+        },
+        {
+          "title": "Add per-thread locking around SVG canvas operations",
+          "description": "Add a global lock in the managed SKSvgCanvas wrapper to serialize access to the SVG backend. This would fix the corruption but eliminate parallelism benefits for SVG generation.",
+          "confidence": 0.80,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Investigate and fix shared state in Skia SVG module",
+      "recommendedReason": "The root cause fix is the right long-term solution. Each independent canvas instance should be fully thread-safe. The regression from 2.x suggests a specific change that can be identified and fixed."
+    }
   },
-  "resolutionAnalysis": {
-    "hypothesis": "Skia's text shaping pipeline on Windows uses DirectWrite, which likely has global state or caching that is not thread-safe. When multiple threads simultaneously shape text for SVG serialization, the glyph positions and text content are corrupted by a race condition. This does not occur on Linux because FreeType/fontconfig have a different text shaping implementation. The regression from 2.88.9 to 3.x aligns with Skia's text pipeline rewrite between those engine versions.",
-    "researchDone": [
-      "Examined SKSvgCanvas C# binding (SKSVG.cs) - each Create call produces an independent SKCanvas",
-      "Examined C API sk_svg.cpp - SkSVGCanvas::Make creates independent canvas instances",
-      "Checked skia-patterns.md for known threading issues",
-      "Searched GitHub issues for related SKSvgCanvas threading bugs - no duplicates found",
-      "Reviewed issue comments - reporter confirmed Linux unaffected after rigorous testing"
-    ],
-    "proposals": [
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Well-documented regression with complete repro project. Needs native-level debugging to identify the shared global state in Skia's SVG module causing the Windows-specific race condition."
+    },
+    "actions": [
       {
-        "title": "Investigate and fix Skia SVG text thread safety",
-        "description": "Debug the race condition in the Skia native SVG text rendering path on Windows. Identify the shared global state and add appropriate synchronization.",
-        "steps": [
-          "Clone the reproduction repo and confirm the bug on Windows",
-          "Add logging in SkSVGDevice::drawGlyphRunList to trace text serialization",
-          "Identify whether corruption occurs during text shaping or SVG XML serialization",
-          "If in DirectWrite: add thread-local cache or mutex around font shaping calls",
-          "If in SVG serialization: add synchronization to the affected global state",
-          "Rebuild native library and verify fix with the reproduction project"
-        ],
-        "pros": [
-          "Addresses root cause",
-          "Fixes the issue for all users",
-          "Maintains parallel performance once the specific bottleneck is synchronized"
-        ],
-        "cons": [
-          "Requires native Skia code changes",
-          "Synchronization may introduce minor performance overhead",
-          "High effort requiring understanding of Skia text pipeline internals"
-        ],
-        "confidence": 0.80,
-        "effort": "high"
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add tenet/compatibility label to reflect this is a 2.x to 3.x regression",
+        "reason": "The regression from 2.88.9 to 3.x is a key signal — compatibility tenet captures this",
+        "confidence": 0.85,
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["tenet/compatibility"],
+          "labelsToRemove": []
+        }
       },
       {
-        "title": "Add managed-side lock around SVG canvas text operations",
-        "description": "Add a static lock in the SkiaSharp C# binding to serialize DrawText calls when using SKSvgCanvas. This is a workaround that prevents the race condition without fixing root cause.",
-        "steps": [
-          "Add a static object lock in SKCanvas or a helper class",
-          "In the C# DrawText overloads detect if the canvas is an SVG canvas and acquire the lock",
-          "Alternatively provide a thread-safe wrapper method",
-          "Test with the reproduction project to confirm the fix"
-        ],
-        "pros": [
-          "Can be implemented entirely in managed code with no Skia rebuild needed",
-          "Quick to implement and ship"
-        ],
-        "cons": [
-          "Serializes text drawing and reduces parallel performance",
-          "Detecting SVG canvas type at runtime adds complexity",
-          "Does not fix the root cause and may miss other thread-unsafe paths"
-        ],
-        "confidence": 0.65,
-        "effort": "medium"
-      },
-      {
-        "title": "Document thread-safety limitation and recommend serialization",
-        "description": "Document that SKSvgCanvas text rendering is not thread-safe on Windows and recommend users serialize SVG generation or use SemaphoreSlim to limit concurrency.",
-        "steps": [
-          "Add a thread-safety warning to SKSvgCanvas documentation",
-          "Provide a code sample showing SemaphoreSlim(1,1) pattern for parallel SVG generation",
-          "Respond to the issue with the workaround"
-        ],
-        "pros": [
-          "Immediate workaround for affected users",
-          "No code changes needed",
-          "Low risk"
-        ],
-        "cons": [
-          "Does not fix the bug and shifts burden to users",
-          "Serialization defeats the purpose of parallel SVG generation",
-          "May not be discoverable as users hit the bug before finding the docs"
-        ],
-        "confidence": 0.50,
-        "effort": "low"
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Acknowledge the high-quality report and confirm investigation is needed",
+        "reason": "Reporter provided excellent reproduction material and cross-platform testing. Acknowledge the regression and signal that native-level investigation is the next step.",
+        "confidence": 0.85,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "request-info",
+          "draftBody": "Thanks for the thorough report and the cross-platform testing — confirming Linux is unaffected is really helpful for narrowing this down.\n\nThis looks like a thread-safety issue in Skia's SVG serialization that's specific to Windows. Even though each task creates its own independent SKSvgCanvas, there may be shared global state in the native SVG module (possibly related to Windows string formatting or number-to-string conversion) that isn't safe to access concurrently.\n\nThe regression from 2.88.9 is a strong signal — the Skia engine was upgraded significantly between 2.x and 3.x, which likely changed how SVG text serialization works internally.\n\nThis needs investigation at the native Skia level to identify the shared state. In the meantime, serializing SVG generation to a single thread would be the safest workaround.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3437-comment-1"
+        }
       }
-    ],
-    "recommendedProposal": "Investigate and fix Skia SVG text thread safety",
-    "recommendedReason": "This is a regression with a clear reproduction and real-world impact on server-side parallel SVG generation. The root cause should be identified and fixed in the native layer. The reporter has done excellent work isolating the issue to Windows-only, which narrows the investigation to the DirectWrite text pipeline."
+    ]
   }
 }

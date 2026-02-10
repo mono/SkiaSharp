@@ -1,296 +1,215 @@
 {
-  "schemaVersion": "1.0",
-  "number": 3428,
-  "repo": "mono/SkiaSharp",
-  "analyzedAt": "2025-12-05T12:00:00Z",
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3428,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-08T15:00:00Z",
+    "currentLabels": ["type/bug", "os/iOS", "area/SkiaSharp.Views.Maui", "tenet/reliability"]
+  },
   "summary": "SKGLView fails to bind EAGLDrawable on .NET 10 MAUI iOS, rendering white canvas instead of content",
-  "type": {
-    "value": "bug",
-    "confidence": 0.95,
-    "reason": "Reporter describes broken rendering — expected content but gets white canvas with 'Failed to bind EAGLDrawable' error. This is clearly broken behavior in a previously working scenario."
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.95 },
+    "backends": [{ "value": "backend/OpenGL", "confidence": 0.92 }],
+    "platforms": [{ "value": "os/iOS", "confidence": 0.98 }],
+    "tenets": [
+      { "value": "tenet/reliability", "confidence": 0.90 },
+      { "value": "tenet/compatibility", "confidence": 0.85 }
+    ],
+    "partner": { "value": "partner/maui", "confidence": 0.85 }
   },
-  "area": {
-    "value": "SkiaSharp.Views.Maui",
-    "confidence": 0.95,
-    "reason": "Issue is in the MAUI SKGLView rendering pipeline. The reporter uses SKPaintGLSurfaceEventArgs and _glView in a MAUI context. GitHub labels also confirm area/SkiaSharp.Views.Maui."
-  },
-  "backends": [
-    {
-      "value": "OpenGL",
-      "confidence": 0.95,
-      "reason": "EAGLDrawable is the iOS OpenGL ES rendering surface. SKGLView uses GLKView with EAGLContext (OpenGLES2). The error 'Failed to bind EAGLDrawable' is an OpenGL ES framebuffer binding failure."
-    }
-  ],
-  "platforms": [
-    {
-      "value": "iOS",
-      "confidence": 0.98,
-      "reason": "Reporter explicitly states iOS. EAGLDrawable is iOS-specific OpenGL ES infrastructure. Labels include os/iOS."
-    }
-  ],
-  "tenets": [
-    {
-      "value": "reliability",
-      "confidence": 0.90,
-      "reason": "The GL view fails silently (white canvas) rather than rendering content. This is unexpected behavior that breaks the user's application."
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": false,
+      "hasStackTrace": false,
+      "reproQuality": "partial",
+      "hasWorkaround": false,
+      "workaroundSummary": null,
+      "targetFrameworks": ["net10.0-ios"],
+      "severity": "high",
+      "severityReason": "GL rendering is completely broken on iOS with .NET 10 — white canvas with no content. No workaround provided. Affects all SKGLView users targeting .NET 10 on iOS."
     },
-    {
-      "value": "compatibility",
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/Mapsui/Mapsui/blob/main/Mapsui.UI.Maui/MapControl.cs",
+          "description": "Mapsui MapControl source showing the GL paint surface handler code that triggers the issue."
+        }
+      ],
+      "stepsToReproduce": [
+        "Create a MAUI app targeting .NET 10 for iOS",
+        "Add SkiaSharp 3.116.0 with SKGLView (GL-accelerated rendering)",
+        "Run on an iOS device or simulator",
+        "Observe white canvas and 'Failed to bind EAGLDrawable' in device logs"
+      ],
+      "codeSnippets": [
+        {
+          "language": "csharp",
+          "code": "private void OnGLPaintSurface(object? sender, SKPaintGLSurfaceEventArgs args)\n{\n    if (_glView?.GRContext is null)\n    {\n        Logger.Log(LogLevel.Warning, \"Refresh can not be called because GRContext is null\");\n        return;\n    }\n    PaintSurface(args.Surface.Canvas);\n}",
+          "context": "Mapsui MapControl GL paint handler — the callback that should render content but results in white canvas."
+        }
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, .NET 10, MAUI, iOS, Visual Studio macOS. Works on .NET 9, broken on .NET 10. Last known good SkiaSharp version: 2.88.9."
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9"],
+      "currentRelevance": "likely",
+      "reason": "Issue is on latest SkiaSharp 3.116.0 with bleeding-edge .NET 10. The problem is likely related to .NET 10's iOS runtime changes rather than SkiaSharp version, since 3.116.0 works on .NET 9. Apple has deprecated OpenGL ES (EAGL) since iOS 12, and .NET 10 may have removed or changed EAGL support."
+    },
+    "regression": {
+      "isRegression": true,
       "confidence": 0.85,
-      "reason": "Issue is specific to .NET 10 — works on .NET 9. This is a cross-version compatibility problem, likely related to Apple deprecating OpenGL ES and .NET 10 changing EAGL handling."
-    }
-  ],
-  "partner": {
-    "value": "maui",
-    "confidence": 0.90,
-    "reason": "Issue is in the MAUI rendering pipeline. The .NET 10 target framework change may be a MAUI or runtime-level change affecting EAGL context initialization."
+      "reason": "Reporter states it works on .NET 9 but not .NET 10. Same SkiaSharp version (3.116.0) works on .NET 9 but fails on .NET 10, indicating a regression introduced by .NET 10 runtime or iOS SDK changes rather than by SkiaSharp itself.",
+      "workedInVersion": "3.116.0 on .NET 9",
+      "brokeInVersion": "3.116.0 on .NET 10"
+    },
+    "fixStatus": null
   },
-  "regression": {
-    "isRegression": true,
-    "confidence": 0.85,
-    "reason": "Reporter states it works on .NET 9 but not .NET 10. The same code and SkiaSharp version (3.116.0) works on .NET 9 but fails on .NET 10, indicating a regression introduced by .NET 10 or its iOS runtime changes.",
-    "workedInVersion": "3.116.0",
-    "brokeInVersion": "3.116.0"
-  },
-  "fixStatus": null,
-  "bugSignals": {
-    "hasCrash": false,
-    "hasStackTrace": false,
-    "reproQuality": "partial",
-    "hasScreenshot": false,
-    "hasWorkaround": false,
-    "workaroundSummary": null,
-    "targetFrameworks": ["net10.0-ios"],
-    "severity": "high",
-    "severityReason": "GL rendering is completely broken on iOS with .NET 10 — white canvas with no content. No workaround provided. This affects all users of SKGLView on .NET 10 iOS."
-  },
-  "reproEvidence": {
-    "repoLinks": [
-      {
-        "url": "https://github.com/Mapsui/Mapsui/blob/main/Mapsui.UI.Maui/MapControl.cs",
-        "description": "Mapsui MapControl source showing the GL paint surface handler code that triggers the issue."
-      }
-    ],
-    "relatedIssues": [646, 3388, 2840],
-    "stepsToReproduce": [
-      "Create a MAUI app targeting .NET 10 for iOS",
-      "Add SkiaSharp 3.116.0 with SKGLView (GL-accelerated rendering)",
-      "Run on an iOS device or simulator",
-      "Observe white canvas and 'Failed to bind EAGLDrawable' in device logs"
-    ],
-    "codeSnippets": [
-      {
-        "language": "csharp",
-        "code": "private void OnGLPaintSurface(object? sender, SKPaintGLSurfaceEventArgs args)\n{\n    if (_glView?.GRContext is null)\n    {\n        Logger.Log(LogLevel.Warning, \"Refresh can not be called because GRContext is null\");\n        return;\n    }\n    PaintSurface(args.Surface.Canvas);\n}",
-        "context": "Mapsui MapControl GL paint handler — the callback that should render content but results in white canvas."
-      }
-    ],
-    "environmentDetails": "SkiaSharp 3.116.0, .NET 10, MAUI, iOS, Visual Studio macOS. Works on .NET 9, broken on .NET 10. Last known good SkiaSharp version: 2.88.9."
-  },
-  "versionAnalysis": {
-    "mentionedVersions": ["3.116.0", "2.88.9"],
-    "era": "modern",
-    "currentRelevance": "likely",
-    "reason": "Issue is on latest SkiaSharp 3.116.0 with bleeding-edge .NET 10. The problem is likely related to .NET 10's iOS runtime changes rather than SkiaSharp version, since 3.116.0 works on .NET 9. Apple has deprecated OpenGL ES (EAGL) since iOS 12, and .NET 10 may have removed or changed EAGL support.",
-    "migrationPath": null
-  },
-  "actionability": {
-    "suggestedAction": "needs-investigation",
-    "confidence": 0.85,
-    "reason": "This is a real rendering failure on .NET 10 iOS that needs investigation. The root cause is likely .NET 10 or Apple's continued deprecation/removal of OpenGL ES (EAGL) on iOS. SkiaSharp's SKGLView uses GLKView with EAGLContext which is deprecated since iOS 12.",
-    "requiresHumanReview": false,
-    "closeable": false,
-    "closeReason": null,
-    "duplicateOf": null,
-    "missingInfo": ["device-info", "stack-trace"],
-    "abandoned": false,
-    "abandonedReason": null
-  },
-  "suggestedResponse": {
-    "responseType": "request-info",
-    "confidence": 0.80,
-    "reason": "Need to confirm .NET 10 preview version and iOS version, and investigate whether this is a .NET 10 runtime change or an Apple SDK change.",
-    "draft": "Thanks for reporting this — the EAGLDrawable binding failure is a significant signal.\n\nThe `SKGLView` on iOS uses `GLKView` with `EAGLContext` (OpenGL ES 2), which Apple deprecated back in iOS 12 in favor of Metal. The fact that this works on .NET 9 but not .NET 10 suggests that .NET 10's iOS runtime or the underlying Apple SDK may have changed how EAGL contexts are initialized or bound.\n\nA few questions that would help narrow this down:\n\n1. Which .NET 10 preview version are you using? (e.g., Preview 1, Preview 2)\n2. Does switching from `SKGLView` to `SKCanvasView` (CPU rendering) work as a temporary workaround?\n3. Do you see the full error message that @charlenni shared (`Failed to bind EAGLDrawable`) in your device logs as well?\n\nLonger term, the path forward for iOS GPU rendering is likely Metal rather than OpenGL ES, given Apple's deprecation timeline. But we need to understand what specifically changed in .NET 10 first."
-  },
-  "analysisNotes": {
-    "summary": "SKGLView fails to render on iOS when targeting .NET 10, producing a white canvas and 'Failed to bind EAGLDrawable' error. This is a regression from .NET 9 where the same SkiaSharp version works. The root cause is likely related to .NET 10's handling of the deprecated OpenGL ES (EAGL) APIs on iOS, since SKGLView depends on GLKView/EAGLContext which Apple deprecated in iOS 12.",
+  "analysis": {
+    "summary": "SKGLView fails to render on iOS when targeting .NET 10, producing a white canvas and 'Failed to bind EAGLDrawable' error. The root cause is likely .NET 10's handling of the deprecated OpenGL ES (EAGL) APIs on iOS, since SKGLView depends on GLKView/EAGLContext which Apple deprecated in iOS 12.",
     "keySignals": [
       {
         "text": "Failed to bind EAGLDrawable on .NET 10 in MAUI iOS",
         "source": "title",
-        "interpretation": "EAGLDrawable is the iOS OpenGL ES rendering surface. Failure to bind it means the GL framebuffer cannot be created, resulting in no rendering output.",
-        "supportedFields": ["type", "backends", "platforms"]
+        "interpretation": "EAGLDrawable is the iOS OpenGL ES rendering surface. Failure to bind it means the GL framebuffer cannot be created, resulting in no rendering output."
       },
       {
         "text": "not in .NET 9",
         "source": "body",
-        "interpretation": "Explicitly a .NET 10-specific regression. Same SkiaSharp version works on .NET 9, pointing to a runtime or SDK change.",
-        "supportedFields": ["regression", "tenets"]
+        "interpretation": "Explicitly a .NET 10-specific regression. Same SkiaSharp version works on .NET 9, pointing to a runtime or SDK change."
       },
       {
-        "text": "Failed to bind EAGLDrawable: <CAEAGLLayer: 0x1c2a3b840>",
+        "text": "Failed to bind EAGLDrawable: <CAEAGLLayer: 0x600001767a40> to GL_RENDERBUFFER 1",
         "source": "comment 2 (charlenni)",
-        "interpretation": "The actual iOS system error confirming EAGL layer binding failure. This is the same error pattern seen in historic issue #646.",
-        "supportedFields": ["type", "backends", "bugSignals"]
+        "interpretation": "Actual iOS system error confirming EAGL layer binding failure and incomplete framebuffer objects — the OpenGL ES rendering pipeline is broken."
       },
       {
         "text": "No error and a white canvas",
-        "source": "body (Actual Behavior)",
-        "interpretation": "The GL view silently fails to render — no crash, just blank output. This is a silent rendering failure, not a hard crash.",
-        "supportedFields": ["bugSignals.severity", "bugSignals.hasCrash"]
+        "source": "body",
+        "interpretation": "The GL view silently fails to render — no crash, just blank output. This is a silent rendering failure."
       },
       {
         "text": "Last Known Good Version of SkiaSharp: 2.88.9 (Previous)",
         "source": "body",
-        "interpretation": "Reporter considers 2.88.9 the last good version, but also clarifies the issue is .NET 10 specific. The SkiaSharp version may be less relevant than the .NET target framework.",
-        "supportedFields": ["versionAnalysis", "regression"]
-      },
-      {
-        "text": "ObsoletedOSPlatform ios12.0 Use Metal instead",
-        "source": "source code (SKGLView.cs line 23)",
-        "interpretation": "SKGLView itself is marked as obsoleted on iOS 12+, confirming this is a deprecated code path. The long-term fix is Metal.",
-        "supportedFields": ["area", "resolutionAnalysis"]
+        "interpretation": "Reporter considers 2.88.9 the last good version, but the issue is .NET 10 specific so the SkiaSharp version may be less relevant than the .NET target framework change."
       }
     ],
     "fieldRationales": [
       {
         "field": "type",
-        "chosen": "bug",
-        "expandedReason": "Reporter describes a rendering failure — expected content but gets white canvas. This is broken behavior, not a question or feature request. The [BUG] prefix and filed template confirm intent.",
-        "alternatives": [
-          {
-            "value": "question",
-            "whyRejected": "Reporter is not asking how to do something — they have working code that broke on .NET 10."
-          }
-        ]
+        "chosen": "type/bug",
+        "expandedReason": "Reporter describes a rendering failure — expected content but gets white canvas with 'Failed to bind EAGLDrawable' error. This is clearly broken behavior in a previously working scenario, not a question or feature request.",
+        "alternatives": [{ "value": "type/question", "whyRejected": "Reporter is not asking how to do something — they have working code that broke on .NET 10." }]
       },
       {
         "field": "area",
-        "chosen": "SkiaSharp.Views.Maui",
-        "expandedReason": "The issue is in the MAUI SKGLView rendering pipeline. The code uses SKPaintGLSurfaceEventArgs in a MAUI context. GitHub automation already applied this label.",
-        "alternatives": [
-          {
-            "value": "SkiaSharp.Views",
-            "whyRejected": "While the underlying SKGLView is in SkiaSharp.Views, the user is consuming it through MAUI controls, making SkiaSharp.Views.Maui more specific and accurate."
-          }
-        ]
+        "chosen": "area/SkiaSharp.Views.Maui",
+        "expandedReason": "The issue is in the MAUI SKGLView rendering pipeline. The code uses SKPaintGLSurfaceEventArgs in a MAUI context. The underlying SKGLView is consumed through MAUI controls.",
+        "alternatives": [{ "value": "area/SkiaSharp.Views", "whyRejected": "While SKGLView lives in SkiaSharp.Views, the user is consuming it through MAUI, making SkiaSharp.Views.Maui the more specific and accurate label." }]
       },
       {
         "field": "backends",
-        "chosen": "OpenGL",
-        "expandedReason": "EAGLDrawable and EAGLContext are the iOS-specific OpenGL ES rendering infrastructure. SKGLView.cs explicitly creates EAGLContext(EAGLRenderingAPI.OpenGLES2). The failure is in GL framebuffer binding."
+        "chosen": "backend/OpenGL",
+        "expandedReason": "EAGLDrawable and EAGLContext are the iOS-specific OpenGL ES rendering infrastructure. SKGLView explicitly creates EAGLContext(OpenGLES2). The failure is in GL framebuffer binding."
       },
       {
         "field": "platforms",
-        "chosen": "iOS",
-        "expandedReason": "Reporter explicitly states iOS. EAGL is iOS-only. No mention of other platforms being affected."
+        "chosen": "os/iOS",
+        "expandedReason": "Reporter explicitly states iOS. EAGL is iOS-only infrastructure. No mention of other platforms being affected."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability, tenet/compatibility",
+        "expandedReason": "Reliability: the GL view fails silently (white canvas) rather than rendering content. Compatibility: the issue is specific to .NET 10 — same code works on .NET 9, indicating a cross-version compatibility problem."
+      },
+      {
+        "field": "partner",
+        "chosen": "partner/maui",
+        "expandedReason": "Issue is in the MAUI rendering pipeline. The .NET 10 target framework change may be a MAUI or .NET runtime-level change affecting EAGL context initialization."
       },
       {
         "field": "bugSignals.severity",
         "chosen": "high",
-        "expandedReason": "GL rendering is completely broken on iOS with .NET 10 — no content rendered at all. No workaround provided. This affects all SKGLView users targeting .NET 10 on iOS. Not critical because it does not crash and SKCanvasView (CPU) likely still works.",
+        "expandedReason": "GL rendering is completely broken on iOS with .NET 10 — no content rendered at all, no workaround provided. Not critical because the app does not crash and SKCanvasView (CPU rendering) is likely a viable fallback.",
         "alternatives": [
-          {
-            "value": "critical",
-            "whyRejected": "No crash or data loss. The app still runs, just shows white canvas. SKCanvasView is likely a viable workaround."
-          },
-          {
-            "value": "medium",
-            "whyRejected": "Complete rendering failure with no confirmed workaround warrants high, not medium."
-          }
-        ]
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "needs-investigation",
-        "expandedReason": "The root cause needs investigation — is this a .NET 10 runtime change, an Apple SDK change, or something else? The fix may be in SkiaSharp (migrate to Metal), in MAUI, or may require a workaround recommendation.",
-        "alternatives": [
-          {
-            "value": "request-info",
-            "whyRejected": "While more info would help (exact .NET 10 preview, device), there is enough to start investigating the EAGL deprecation angle."
-          }
+          { "value": "critical", "whyRejected": "No crash or data loss. The app still runs, just shows white canvas." },
+          { "value": "medium", "whyRejected": "Complete rendering failure with no confirmed workaround warrants high, not medium." }
         ]
       }
     ],
-    "docsConsulted": [
-      {
-        "path": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
-        "relevance": "Confirmed SKGLView uses GLKView with EAGLContext(OpenGLES2), and is marked ObsoletedOSPlatform for ios12.0 with 'Use Metal instead'.",
-        "usedFor": ["backends", "area", "resolutionAnalysis"]
-      },
-      {
-        "path": "references/skia-patterns.md",
-        "relevance": "Checked for iOS platform quirks. Found macOS/iOS section but no specific EAGL deprecation guidance.",
-        "usedFor": ["platforms"]
-      }
-    ],
-    "docsNotConsulted": "Did not check documentation/packages.md — issue is not about native loading or DllNotFoundException. Did not check .docs tutorials — this is a rendering backend failure, not API misuse.",
     "uncertainties": [
       "Exact .NET 10 preview version not specified — different previews may have different EAGL support levels",
       "Unknown whether Apple fully removed EAGL support in a recent iOS SDK or if .NET 10 changed its OpenGL ES bindings",
       "Unknown whether SKCanvasView (CPU rendering) works as a workaround on .NET 10",
-      "Device model and iOS version not specified — could be relevant if newer hardware dropped EAGL support",
-      "Whether this is a SkiaSharp issue, a MAUI issue, or a .NET runtime issue is unclear without deeper investigation"
+      "Device model and iOS version not specified — could be relevant if newer hardware dropped EAGL support"
     ],
     "assumptions": [
       "Assumed the reporter is using a recent .NET 10 preview since they mention .NET 10 specifically",
       "Assumed EAGLDrawable error from charlenni's comment is the same error the original reporter sees, since they are both Mapsui contributors reporting the same problem"
-    ]
+    ],
+    "resolution": {
+      "hypothesis": ".NET 10's iOS runtime or Apple's latest SDK has changed how EAGLContext/EAGLDrawable binding works, breaking the deprecated OpenGL ES rendering path used by SKGLView. Apple deprecated OpenGL ES in iOS 12 (2018) and has been progressively removing support. SKGLView's GLKView+EAGLContext approach may no longer function correctly under .NET 10's updated iOS bindings.",
+      "proposals": [
+        {
+          "title": "Switch to SKCanvasView (CPU rendering) as workaround",
+          "description": "Replace SKGLView with SKCanvasView which uses CPU-based raster rendering instead of OpenGL ES. Avoids the deprecated EAGL path entirely. Immediate workaround but loses GPU acceleration.",
+          "confidence": 0.80,
+          "effort": "low"
+        },
+        {
+          "title": "Implement Metal backend for iOS GPU rendering",
+          "description": "Replace the OpenGL ES (EAGL) backend with Metal for iOS GPU rendering. This follows Apple's recommended migration path. Long-term correct solution but significant engineering effort.",
+          "confidence": 0.90,
+          "effort": "high"
+        },
+        {
+          "title": "Investigate and patch .NET 10 EAGL context initialization",
+          "description": "Debug why EAGLDrawable binding fails specifically on .NET 10. Create minimal repro, compare EAGL context state between .NET 9 and .NET 10, check if .NET 10 bindings removed or changed GLKit/EAGLContext APIs.",
+          "confidence": 0.50,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Implement Metal backend for iOS GPU rendering",
+      "recommendedReason": "Apple deprecated OpenGL ES in 2018 and has been progressively removing support. Patching EAGL is fighting a losing battle. SKCanvasView workaround can be recommended to users immediately while Metal support is implemented."
+    }
   },
-  "resolutionAnalysis": {
-    "hypothesis": ".NET 10's iOS runtime or Apple's latest SDK has changed how EAGLContext/EAGLDrawable binding works, breaking the deprecated OpenGL ES rendering path used by SKGLView. Apple deprecated OpenGL ES in iOS 12 (2018) and has been progressively removing support. SKGLView's GLKView+EAGLContext approach may no longer function correctly under .NET 10's updated iOS bindings.",
-    "researchDone": [
-      "Examined SKGLView.cs iOS source — confirms use of GLKView, EAGLContext(OpenGLES2), marked ObsoletedOSPlatform ios12.0",
-      "Searched for similar issues — found #646 (same 'Failed to bind EAGLDrawable' error from 2018, Xamarin era, closed 2024)",
-      "Found #3388 (SKGLView memory issues on iOS, related but different problem)",
-      "Found #2840 (SkiaSharp memory corruption on iOS with SKGLView, .NET 9 preview era)",
-      "Checked issue #646 comments — pauldendulk cross-posted the .NET 10 error there, mattleibow asked about MAUI in 2024",
-      "Reviewed charlenni's comment providing actual error message: 'Failed to bind EAGLDrawable'"
-    ],
-    "proposals": [
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Real rendering failure on .NET 10 iOS that needs investigation. Root cause is likely .NET 10 or Apple's continued deprecation of OpenGL ES (EAGL). Need to determine if this is fixable in SkiaSharp or requires .NET runtime changes.",
+      "missingInfo": ["device-info"]
+    },
+    "actions": [
       {
-        "title": "Switch to SKCanvasView (CPU rendering) as workaround",
-        "description": "Replace SKGLView with SKCanvasView which uses CPU-based raster rendering instead of OpenGL ES. This avoids the deprecated EAGL path entirely.",
-        "steps": [
-          "Replace SKGLView usage with SKCanvasView in MAUI XAML",
-          "Change SKPaintGLSurfaceEventArgs handlers to SKPaintSurfaceEventArgs handlers",
-          "Test on .NET 10 iOS to confirm CPU rendering works"
-        ],
-        "pros": ["Avoids deprecated OpenGL ES entirely", "Immediate workaround available now", "SKCanvasView is well-tested and stable"],
-        "cons": ["Loses GPU acceleration — slower rendering for complex scenes", "May not be acceptable for performance-critical apps like Mapsui map rendering"],
-        "confidence": 0.80,
-        "effort": "low"
-      },
-      {
-        "title": "Implement Metal backend for iOS SKGLView",
-        "description": "Replace the OpenGL ES (EAGL) backend with Metal for iOS GPU rendering. This would follow Apple's recommended migration path from OpenGL ES to Metal.",
-        "steps": [
-          "Create a new SKMetalView (or update SKGLView) using MTKView instead of GLKView",
-          "Implement Metal-based GRContext creation and surface management",
-          "Update MAUI handlers to use Metal view on iOS",
-          "Test across iOS versions and devices"
-        ],
-        "pros": ["Long-term correct solution — Metal is Apple's supported GPU API", "Better performance than OpenGL ES on modern iOS", "Future-proof against further EAGL deprecation"],
-        "cons": ["Significant engineering effort", "Requires Metal expertise", "May introduce new bugs in a new rendering path"],
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add OpenGL backend, compatibility tenet, and MAUI partner labels",
+        "reason": "Issue is specific to OpenGL backend on iOS, is a .NET 10 compatibility issue, and involves MAUI rendering pipeline",
         "confidence": 0.90,
-        "effort": "high"
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["backend/OpenGL", "tenet/compatibility", "partner/maui"],
+          "labelsToRemove": []
+        }
       },
       {
-        "title": "Investigate and patch .NET 10 EAGL context initialization",
-        "description": "Debug why EAGLDrawable binding fails specifically on .NET 10. The issue may be a timing change, a missing API binding, or a configuration difference that can be patched.",
-        "steps": [
-          "Create minimal .NET 10 iOS repro with SKGLView",
-          "Compare EAGL context state between .NET 9 and .NET 10 at bind time",
-          "Check if .NET 10 iOS bindings removed or changed GLKit/EAGLContext APIs",
-          "If a specific change is found, patch SKGLView initialization accordingly"
-        ],
-        "pros": ["Minimal change if root cause is simple", "Preserves existing GL rendering path", "Fastest fix if the issue is a small .NET 10 binding change"],
-        "cons": ["May be fighting Apple's deprecation — temporary fix at best", "Root cause may be in .NET runtime, not fixable in SkiaSharp"],
-        "confidence": 0.50,
-        "effort": "medium"
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Post analysis noting EAGL deprecation and requesting .NET 10 preview version details",
+        "reason": "Need to confirm .NET 10 preview version and offer SKCanvasView as interim workaround",
+        "confidence": 0.80,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "request-info",
+          "draftBody": "Thanks for reporting this — the EAGLDrawable binding failure is a significant signal.\n\nThe `SKGLView` on iOS uses `GLKView` with `EAGLContext` (OpenGL ES 2), which Apple deprecated back in iOS 12 in favor of Metal. The fact that this works on .NET 9 but not .NET 10 suggests that .NET 10's iOS runtime or the underlying Apple SDK may have changed how EAGL contexts are initialized or bound.\n\nA couple of questions that would help narrow this down:\n\n1. Which .NET 10 preview version are you using?\n2. Does switching from `SKGLView` to `SKCanvasView` (CPU rendering) work as a temporary workaround?\n\nLonger term, the path forward for iOS GPU rendering is likely Metal rather than OpenGL ES, given Apple's deprecation timeline. But we need to understand what specifically changed in .NET 10 first.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3428-comment-1"
+        }
       }
-    ],
-    "recommendedProposal": "Implement Metal backend for iOS SKGLView",
-    "recommendedReason": "While higher effort, this is the correct long-term solution. Apple deprecated OpenGL ES in 2018 and has been progressively removing support. Patching EAGL is fighting a losing battle. The SKCanvasView workaround can be recommended to users immediately while Metal support is implemented."
+    ]
   }
 }

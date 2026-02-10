@@ -1,224 +1,92 @@
 {
-  "schemaVersion": "1.0",
-  "number": 3402,
-  "repo": "mono/SkiaSharp",
-  "analyzedAt": "2025-07-24T12:00:00Z",
-  "summary": "Request for compressed indexed color bitmap support (1bpp, 2bpp, 4bpp) for retro game graphics",
-  "type": {
-    "value": "feature-request",
-    "confidence": 0.97,
-    "reason": "Issue uses the [FEATURE] prefix and feature request template. Requests new capability (compressed indexed color formats) that does not exist in SkiaSharp or upstream Skia."
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3402,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": ["type/feature-request"]
   },
-  "area": {
-    "value": "SkiaSharp",
-    "confidence": 0.90,
-    "reason": "The request targets core bitmap/pixel format support in SkiaSharp, not views or platform-specific rendering. SKBitmap and SKColorType are in the core SkiaSharp package."
+  "summary": "Feature request for 1bpp, 2bpp, and 4bpp indexed color bitmap support to minimize memory for retro game tile graphics",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "backends": null,
+    "platforms": null,
+    "tenets": [{ "value": "tenet/performance", "confidence": 0.80 }],
+    "partner": null
   },
-  "backends": null,
-  "platforms": null,
-  "tenets": [
-    {
-      "value": "performance",
-      "confidence": 0.85,
-      "reason": "The request explicitly focuses on minimizing memory usage by operating on compressed pixel formats without expanding them, citing GiB-scale memory savings."
-    }
-  ],
-  "partner": null,
-  "regression": null,
-  "fixStatus": null,
-  "bugSignals": null,
-  "reproEvidence": null,
-  "versionAnalysis": null,
-  "actionability": {
-    "suggestedAction": "keep-open",
-    "confidence": 0.80,
-    "reason": "This is a valid feature request but requires significant upstream Skia support that does not exist. Skia removed kIndex_8_SkColorType years ago and has no indexed color types. The request is well-structured and legitimate but unlikely to be implemented without upstream changes.",
-    "requiresHumanReview": false,
-    "closeable": false,
-    "closeReason": null,
-    "duplicateOf": null,
-    "abandoned": false,
-    "abandonedReason": null
+  "evidence": {
+    "bugSignals": null,
+    "reproEvidence": null,
+    "versionAnalysis": null,
+    "regression": null,
+    "fixStatus": null
   },
-  "suggestedResponse": {
-    "responseType": "answer",
-    "confidence": 0.80,
-    "reason": "The request involves fundamental pixel format support that upstream Skia removed. A technical explanation of the constraints plus workaround suggestions would be helpful.",
-    "draft": "Thanks for the detailed feature request and the memory calculations — that helps understand the scale of what you're working with.\n\nThis is unfortunately constrained by upstream Skia, which removed indexed color type support (`kIndex_8_SkColorType`) several years ago. SkiaSharp's `SKColorType` enum maps directly to Skia's supported pixel formats, and there are no 1bpp, 2bpp, or 4bpp indexed color types available in the underlying engine. Adding these would require changes to Skia itself, which is outside SkiaSharp's scope.\n\nFor your NES/SNES tile-based graphics system, a practical approach would be to store your tile data in your own compact binary format (the 4bpp format you described), then expand tiles to `SKColorType.Rgba8888` only when you need to render them to an `SKBitmap` or `SKCanvas`. Since NES/SNES screens are typically 256×240 or 512×448, the expanded render target would only be ~440 KB to ~920 KB per frame, which is very manageable. The bulk storage stays in your compact format.\n\nAlternatively, `SKColorType.Alpha8` (1 byte per pixel) could serve as a palette index buffer that you convert at render time."
-  },
-  "analysisNotes": {
-    "summary": "Feature request for compressed indexed color bitmap support (1bpp, 2bpp, 4bpp) driven by a retro game graphics use case in Avalonia UI. Upstream Skia does not support indexed color types — they were removed years ago — so this cannot be implemented in SkiaSharp without fundamental upstream changes.",
+  "analysis": {
+    "summary": "User requests sub-byte indexed color formats (1bpp, 2bpp, 4bpp) with native pixel operations for NES/SNES-style tile graphics in Avalonia UI. This requires functionality that upstream Skia explicitly removed (indexed color types) and would need significant new infrastructure.",
     "keySignals": [
-      {
-        "text": "[FEATURE] Drawing to and from compressed indexed color bitmaps",
-        "source": "title",
-        "interpretation": "Explicitly tagged as a feature request, requesting new pixel format capabilities.",
-        "supportedFields": ["type"]
-      },
-      {
-        "text": "Please support drawing to and from compressed 1bpp 2bpp and 4bpp indexed color graphics",
-        "source": "body",
-        "interpretation": "Requests specific sub-byte indexed color formats that do not exist in Skia or SkiaSharp.",
-        "supportedFields": ["type", "area"]
-      },
-      {
-        "text": "8 * 8 * 32 * 30 * 65536 pixels which in 4bpp color would be 1.87 GiB",
-        "source": "body",
-        "interpretation": "Memory optimization is a key driver — user wants to avoid 15 GiB at 32bpp. Performance/memory tenet applies.",
-        "supportedFields": ["tenets"]
-      },
-      {
-        "text": "Pixel operations should work on multiple pixels at a time with these formats without expanding them in memory",
-        "source": "body",
-        "interpretation": "Requests native operations on packed pixel formats — this would require fundamental changes to Skia's rendering pipeline.",
-        "supportedFields": ["type", "actionability"]
-      },
-      {
-        "text": "I am using avalonia ui which uses this and I wanted to make a nes/snes graphics system",
-        "source": "body",
-        "interpretation": "Use case is retro game tile graphics in Avalonia UI, not general-purpose bitmap manipulation.",
-        "supportedFields": ["area"]
-      }
+      { "text": "[FEATURE] Drawing to and from compressed indexed color bitmaps", "source": "title", "interpretation": "Explicit feature request for new pixel format support" },
+      { "text": "I wanted to make a nes/snes graphics system in avalonia ui", "source": "body", "interpretation": "Use case is retro game console graphics emulation — very niche, tile-based rendering" },
+      { "text": "8 * 8 * 32 * 30 * 65536 pixels which in 4bpp color would be 1.87 GiB", "source": "body", "interpretation": "Large tile atlas requiring sub-byte pixel formats for memory efficiency" },
+      { "text": "Pixel operations should work on multiple pixels at a time with these formats without expanding them in memory", "source": "body", "interpretation": "Requires native bitwise operations on packed formats — not just storage but computation" },
+      { "text": "Please support drawing to and from compressed 1bpp 2bpp and 4bpp indexed color graphics", "source": "body", "interpretation": "Core request: three new pixel formats plus drawing primitives for each" },
+      { "text": "Writing my own blitter", "source": "body", "interpretation": "User has considered alternatives but lacks implementation experience" }
     ],
     "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "feature-request",
-        "expandedReason": "The issue uses the [FEATURE] template, requests new capability that doesn't exist (indexed color formats), and describes no broken behavior. This is a request for entirely new functionality.",
-        "alternatives": [
-          {
-            "value": "enhancement",
-            "whyRejected": "Enhancement implies improving existing functionality. There is no existing indexed color support to enhance — Skia removed it entirely."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "SkiaSharp",
-        "expandedReason": "The request targets core pixel format and bitmap operations (SKColorType, SKBitmap). These live in the core SkiaSharp package, not in any Views or platform-specific package."
-      },
-      {
-        "field": "tenets",
-        "chosen": "performance",
-        "expandedReason": "The user explicitly calculates memory savings (1.87 GiB vs 15 GiB) and requests that operations work without expanding compressed formats. Memory efficiency is the primary motivation."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "keep-open",
-        "expandedReason": "The request is legitimate and well-structured, but implementation is blocked by upstream Skia lacking indexed color support. It should stay open as a tracked feature request but is unlikely to be actionable without Skia changes.",
-        "alternatives": [
-          {
-            "value": "close-with-docs",
-            "whyRejected": "While we can suggest workarounds, the feature request itself is valid and worth tracking."
-          },
-          {
-            "value": "convert-to-discussion",
-            "whyRejected": "The request is specific enough to be a feature request, not a general discussion topic."
-          }
-        ]
-      }
+      { "field": "type", "chosen": "type/feature-request", "expandedReason": "User explicitly requests new functionality that does not exist in SkiaSharp. Uses the feature request template. No broken behavior described — this is entirely new capability.", "alternatives": [{ "value": "type/enhancement", "whyRejected": "Enhancement improves existing functionality. Indexed color formats don't exist at all in SkiaSharp — this is new capability." }] },
+      { "field": "area", "chosen": "area/SkiaSharp", "expandedReason": "The request is for new pixel format types and drawing operations in the core SkiaSharp library (SKBitmap, SKColorType, pixel manipulation). Not views-specific or platform-specific.", "alternatives": [{ "value": "area/libSkiaSharp.native", "whyRejected": "While implementation would require native changes, the feature surface is in the managed API layer." }] },
+      { "field": "tenets", "chosen": "tenet/performance", "expandedReason": "The entire motivation is memory efficiency — storing tile graphics in sub-byte formats to reduce memory from 15 GiB (32bpp) to 1.87 GiB (4bpp). Performance/memory is the core driver." },
+      { "field": "actionability.suggestedAction", "chosen": "keep-open", "expandedReason": "This is a valid feature request but requires upstream Skia support that was intentionally removed. It should remain open for maintainer consideration, but the probability of implementation is low given Skia's direction away from indexed colors." }
     ],
-    "docsConsulted": [
-      {
-        "path": "binding/SkiaSharp/Definitions.cs",
-        "relevance": "Confirmed SKColorType enum has no indexed or sub-byte color types. Only direct color formats (Alpha8, Rgb565, Rgba8888, etc.) are supported.",
-        "usedFor": ["type", "area", "actionability"]
-      },
-      {
-        "path": "binding/SkiaSharp/SKBitmap.cs",
-        "relevance": "Found legacy Index8 reference in UnsupportedColorTypeMessage constant, confirming indexed color support was once considered but is no longer available.",
-        "usedFor": ["type", "actionability"]
-      }
-    ],
-    "docsNotConsulted": "No platform-specific docs, native loading docs, or rendering backend docs consulted — the request is about core pixel format support, not platform/backend specific.",
     "uncertainties": [
-      "Whether the user would accept a workaround using custom binary storage with render-time expansion to standard SKColorType formats",
-      "Whether upstream Skia has any plans to reintroduce indexed color support",
-      "The exact Avalonia UI integration requirements that might constrain workaround approaches"
+      "Whether the user specifically needs SkiaSharp integration or would accept a separate pixel buffer library for indexed formats",
+      "Whether partial support (e.g., converting indexed bitmaps to/from SKBitmap) would satisfy the requirement versus full native operations on packed formats"
     ],
     "assumptions": [
-      "Assumed the user is on a modern SkiaSharp 3.x version since no version was mentioned and the issue was filed in November 2025"
-    ]
+      "Assumed the user is using a recent version of SkiaSharp since no version was mentioned",
+      "Assumed 'compressed' refers to indexed/paletted color with sub-byte pixel packing, not image compression codecs like PNG or JPEG"
+    ],
+    "resolution": {
+      "hypothesis": "User wants to build a retro game tile graphics system with sub-byte indexed color formats. Skia removed kIndex_8_SkColorType years ago and does not support sub-byte pixel formats natively. SkiaSharp cannot expose what Skia doesn't provide without building an entirely separate pixel processing layer.",
+      "proposals": [
+        { "title": "Use SKBitmap with manual palette conversion", "description": "Store indexed color data in custom byte arrays and convert to 32bpp SKBitmap only when rendering. Keeps storage compact while using SkiaSharp for final display. User manages palette lookup in C# code.", "confidence": 0.75, "effort": "medium" },
+        { "title": "Use ImageSharp for indexed color processing", "description": "SixLabors.ImageSharp supports indexed/paletted formats natively. Use it for pixel manipulation on indexed buffers, then convert to SKBitmap for Avalonia rendering. Combines strengths of both libraries.", "confidence": 0.70, "effort": "medium" },
+        { "title": "Custom packed pixel buffer with Span<byte>", "description": "Implement a lightweight PackedPixelBuffer class using Span<byte> for bitwise operations on 1/2/4bpp data. Convert to SKBitmap via SKBitmap.InstallPixels when rendering. No external dependencies.", "confidence": 0.65, "effort": "high" }
+      ],
+      "recommendedProposal": "Use SKBitmap with manual palette conversion",
+      "recommendedReason": "Simplest approach that stays within the SkiaSharp ecosystem. Storage remains compact in custom arrays; conversion to SKBitmap happens only at render time. Matches how retro game emulators typically handle tile rendering."
+    }
   },
-  "resolutionAnalysis": {
-    "hypothesis": "The user wants to build a NES/SNES tile-based graphics system storing large amounts of pixel data in compact indexed color formats (1-4bpp), operating on them without expansion, and rendering via SkiaSharp in Avalonia UI. Upstream Skia removed indexed color support years ago, so native support in SkiaSharp is not feasible.",
-    "researchDone": [
-      "Checked SKColorType enum in binding/SkiaSharp/Definitions.cs — no indexed color types available",
-      "Found legacy Index8 reference in SKBitmap.cs indicating this was once partially supported but removed",
-      "Verified upstream Skia removed kIndex_8_SkColorType — modern Skia has no indexed color formats",
-      "Reviewed user's memory calculations and NES/SNES tile system requirements"
-    ],
-    "proposals": [
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.75,
+      "reason": "Valid feature request but requires upstream Skia support for indexed color types, which Skia intentionally removed. Low probability of implementation. Maintainer should decide whether to keep open or close as out-of-scope."
+    },
+    "actions": [
       {
-        "title": "Custom compact storage with render-time expansion",
-        "description": "Store tile data in a custom 4bpp binary format. When rendering, expand only the visible tiles into an SKBitmap with SKColorType.Rgba8888. NES/SNES screens are small (256x240), so the render target is under 1 MB.",
-        "steps": [
-          "Define a custom binary format for 4bpp indexed tile data with palette tables",
-          "Implement a tile expander that converts 4bpp tiles to Rgba8888 pixels using a palette lookup",
-          "Use SKBitmap.InstallPixels() or SKImage.FromPixels() to wrap the expanded pixel data for rendering",
-          "Only expand tiles that are visible on screen, keeping the bulk data in compact format"
-        ],
-        "pros": [
-          "Works today with current SkiaSharp — no upstream changes needed",
-          "Bulk storage stays compact as requested",
-          "NES/SNES screen resolution makes the expanded render buffer trivially small"
-        ],
-        "cons": [
-          "Requires user to implement the tile expansion/palette lookup logic",
-          "Cannot use SkiaSharp drawing operations directly on the compact format",
-          "Extra CPU cost for palette expansion at render time"
-        ],
-        "confidence": 0.85,
-        "effort": "medium"
+        "id": "labels-1", "type": "update-labels", "risk": "low",
+        "description": "Add area and performance tenet labels",
+        "reason": "Feature request already labeled correctly for type. Adding area/SkiaSharp and tenet/performance to match classification.",
+        "confidence": 0.90, "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["area/SkiaSharp", "tenet/performance"],
+          "labelsToRemove": []
+        }
       },
       {
-        "title": "Use Alpha8 as palette index buffer",
-        "description": "Use SKColorType.Alpha8 (1 byte per pixel) as a palette index buffer. Store palette-indexed pixel data where each byte is an index into a color table, then apply the palette via a custom SKColorFilter or shader at render time.",
-        "steps": [
-          "Create an SKBitmap with SKColorType.Alpha8",
-          "Write palette indices (0-255) as the pixel values",
-          "Create an SKShader or use SKColorFilter.CreateTable() to map alpha values to palette colors at render time",
-          "Render the Alpha8 bitmap through the color mapping pipeline"
-        ],
-        "pros": [
-          "Uses existing SkiaSharp APIs — no custom pixel format code needed",
-          "Palette changes are instant (just swap the color filter)",
-          "1 byte per pixel is reasonable for 8bpp indexed color"
-        ],
-        "cons": [
-          "Only supports 8bpp (256 colors), not 1bpp, 2bpp, or 4bpp",
-          "Somewhat hackish use of Alpha8 — not its intended purpose",
-          "Still 8x more memory than true 1bpp format"
-        ],
-        "confidence": 0.65,
-        "effort": "low"
-      },
-      {
-        "title": "Implement indexed color as a standalone C# library",
-        "description": "Create a separate .NET library that implements indexed color bitmap operations (1bpp, 2bpp, 4bpp) with palette support, and provides conversion to SkiaSharp types for rendering. This keeps the compressed format handling in managed code while using SkiaSharp only for final rendering.",
-        "steps": [
-          "Create a NuGet package with IndexedBitmap<T> supporting 1/2/4/8 bpp formats",
-          "Implement bitwise pixel read/write operations for packed formats",
-          "Add palette class with color lookup tables",
-          "Provide ToSKBitmap() and ToSKImage() conversion methods",
-          "Implement tile-based operations (blit, copy regions) on packed formats"
-        ],
-        "pros": [
-          "Full control over the indexed color format implementation",
-          "Can be optimized with SIMD for batch pixel operations",
-          "Reusable library for any retro graphics project",
-          "No dependency on upstream Skia changes"
-        ],
-        "cons": [
-          "Significant development effort",
-          "Not integrated into SkiaSharp's drawing pipeline",
-          "User would need to maintain or find such a library"
-        ],
-        "confidence": 0.75,
-        "effort": "high"
+        "id": "comment-1", "type": "add-comment", "risk": "high",
+        "description": "Post response explaining Skia's lack of indexed color support and suggesting workarounds",
+        "reason": "User needs to understand why this is difficult to implement and what alternatives exist",
+        "confidence": 0.80, "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "answer",
+          "draftBody": "Thanks for the detailed write-up on what you're trying to achieve — the NES/SNES tile graphics use case helps a lot in understanding the requirements.\n\nThe challenge here is that Skia (the underlying C++ library SkiaSharp wraps) removed support for indexed color types several years ago. There's no `kIndex_8_SkColorType` or sub-byte format in modern Skia, so SkiaSharp can't expose what doesn't exist upstream. Adding 1/2/4bpp indexed formats with native pixel operations would essentially mean building a separate pixel processing engine outside of Skia.\n\nFor the tile atlas approach you're describing, a practical workaround would be to keep your indexed color data in custom `byte[]` arrays (packed at 1/2/4bpp) and only convert to a 32bpp `SKBitmap` at render time using a palette lookup. This is actually how most retro game emulators handle it — the compact storage stays in your own format, and the graphics library only sees the final expanded pixels. The conversion cost for a single screen's worth of tiles is minimal.\n\nAnother option worth considering is SixLabors.ImageSharp, which does support indexed/paletted pixel formats natively. You could use it for the pixel manipulation side and convert to `SKBitmap` when handing off to Avalonia for display.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3402-comment-1"
+        }
       }
-    ],
-    "recommendedProposal": "Custom compact storage with render-time expansion",
-    "recommendedReason": "Most practical approach that works today. NES/SNES tile systems inherently work with small visible windows into large tile maps, so only expanding visible tiles keeps memory low while leveraging SkiaSharp for all rendering."
+    ]
   }
 }

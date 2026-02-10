@@ -1,268 +1,181 @@
 {
-  "schemaVersion": "1.0",
-  "number": 3430,
-  "repo": "mono/SkiaSharp",
-  "analyzedAt": "2025-07-25T12:00:00Z",
-  "summary": "NullReferenceException in SKXamlCanvas.DoInvalidate when canvas size changes due to FreeBitmap nullifying bitmap field",
-  "type": {
-    "value": "bug",
-    "confidence": 0.97,
-    "reason": "Reporter identifies a specific code path where FreeBitmap resets bitmap to null, causing NRE on subsequent access at line 72. This is broken behavior in resource management, not a usage question."
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3430,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-08T15:00:00Z",
+    "currentLabels": ["type/bug", "os/WASM", "area/SkiaSharp.Views.Uno", "os/Windows-WinUI", "tenet/reliability"]
   },
-  "area": {
-    "value": "SkiaSharp.Views.Uno",
-    "confidence": 0.99,
-    "reason": "The bug is in SKXamlCanvas.Skia.cs which is in source/SkiaSharp.Views.Uno/. GitHub labels also confirm area/SkiaSharp.Views.Uno."
+  "summary": "NullReferenceException in SKXamlCanvas.Skia when canvas resizes because FreeBitmap destroys the bitmap that CreateBitmap just allocated",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp.Views.Uno", "confidence": 0.97 },
+    "backends": null,
+    "platforms": [
+      { "value": "os/WASM", "confidence": 0.85 },
+      { "value": "os/Windows-WinUI", "confidence": 0.85 }
+    ],
+    "tenets": [{ "value": "tenet/reliability", "confidence": 0.95 }],
+    "partner": { "value": "partner/unoplatform", "confidence": 0.95 }
   },
-  "backends": null,
-  "platforms": [
-    {
-      "value": "WASM",
-      "confidence": 0.80,
-      "reason": "Uno Platform Skia backend targets WASM among other platforms. GitHub label os/WASM is applied."
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": true,
+      "hasStackTrace": false,
+      "reproQuality": "steps-only",
+      "hasWorkaround": false,
+      "workaroundSummary": null,
+      "severity": "medium",
+      "severityReason": "NRE crash when canvas resizes, but only affects the Uno Skia variant and requires a size change to trigger. No workaround provided, but the trigger condition is specific."
     },
-    {
-      "value": "Windows-WinUI",
-      "confidence": 0.80,
-      "reason": "SKXamlCanvas.Skia.cs is compiled for WinUI targets. GitHub label os/Windows-WinUI is applied."
-    }
-  ],
-  "tenets": [
-    {
-      "value": "reliability",
-      "confidence": 0.95,
-      "reason": "NullReferenceException crash during normal canvas resize operation. This is a reliability issue — the canvas should handle resize without throwing."
-    }
-  ],
-  "partner": {
-    "value": "unoplatform",
-    "confidence": 0.95,
-    "reason": "SKXamlCanvas is part of SkiaSharp.Views.Uno, the Uno Platform integration. Reporter MartinZikmund is a known Uno Platform contributor."
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/blob/fbd27f7ec2e2ad8bd0f0f0484dd467c5d8395ae1/source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs#L72",
+          "description": "Line 72 where bitmap.PixelBuffer throws NRE because bitmap was set to null by FreeBitmap"
+        }
+      ],
+      "stepsToReproduce": [
+        "Use SKXamlCanvas in an Uno Platform Skia-based app",
+        "Trigger a canvas size change (e.g. window resize)",
+        "DoInvalidate is called, which calls CreateBitmap",
+        "CreateBitmap calls FreeBitmap at line 87 (size changed), then creates new bitmap at line 91",
+        "CreateBitmap calls FreeBitmap again at line 106 (pixels null), which sets bitmap=null",
+        "Back in DoInvalidate, line 72 accesses bitmap.PixelBuffer — NRE"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, Visual Studio (Windows), Uno Platform Skia targets"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9"],
+      "currentRelevance": "likely",
+      "reason": "The bug is in current source code (SKXamlCanvas.Skia.cs). The reporter lists 2.88.9 as the last known good version, but the Skia-specific variant of SKXamlCanvas may not have existed in that version, making the regression claim uncertain."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.55,
+      "reason": "Reporter selected 2.88.9 as last good version from a form dropdown, but the SKXamlCanvas.Skia.cs file (Uno Skia variant) likely did not exist in 2.88.9. This may be a latent bug rather than a regression."
+    },
+    "fixStatus": null
   },
-  "regression": {
-    "isRegression": true,
-    "confidence": 0.65,
-    "reason": "Reporter selected '2.88.9 (Previous)' as last known good version and '3.116.0 (Current)' as the broken version, suggesting the issue was introduced between these versions. However, no explicit confirmation that resize worked in 2.88.x — the code structure may have been the same.",
-    "workedInVersion": "2.88.9",
-    "brokeInVersion": "3.116.0"
-  },
-  "fixStatus": null,
-  "bugSignals": {
-    "hasCrash": true,
-    "hasStackTrace": false,
-    "reproQuality": "steps-only",
-    "hasScreenshot": false,
-    "hasWorkaround": false,
-    "workaroundSummary": null,
-    "severity": "high",
-    "severityReason": "NullReferenceException crash during normal canvas resize operation with no known workaround. Any Uno Platform app using SKXamlCanvas that resizes will hit this."
-  },
-  "reproEvidence": {
-    "repoLinks": [
-      {
-        "url": "https://github.com/mono/SkiaSharp/blob/fbd27f7ec2e2ad8bd0f0f0484dd467c5d8395ae1/source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs#L72",
-        "description": "Direct link to the line that throws NRE — bitmap.PixelBuffer.AsStream() when bitmap is null"
-      }
-    ],
-    "stepsToReproduce": [
-      "Use SKXamlCanvas in an Uno Platform app",
-      "Trigger a canvas size change (e.g., window resize)",
-      "CreateBitmap detects size mismatch and calls FreeBitmap (sets bitmap=null, pixels=null)",
-      "CreateBitmap creates new WriteableBitmap (bitmap is now valid)",
-      "CreateBitmap detects pixels==null and calls FreeBitmap AGAIN (sets bitmap=null, destroying the just-created bitmap)",
-      "CreateBitmap allocates new pixels array",
-      "DoInvalidate accesses bitmap.PixelBuffer at line 72 — NRE because bitmap is null"
-    ],
-    "environmentDetails": "SkiaSharp 3.116.0, Visual Studio (Windows), Uno Platform, all platforms"
-  },
-  "versionAnalysis": {
-    "mentionedVersions": ["3.116.0", "2.88.9"],
-    "era": "modern",
-    "currentRelevance": "likely",
-    "reason": "The bug is in current code (3.116.0) and the file on the main branch still has the same logic. The issue is structural and version-independent.",
-    "migrationPath": null
-  },
-  "actionability": {
-    "suggestedAction": "needs-investigation",
-    "confidence": 0.90,
-    "reason": "Clear bug with identifiable root cause in CreateBitmap's double-call to FreeBitmap. Needs a code fix to restructure the bitmap/pixel allocation logic so FreeBitmap doesn't null out a freshly created bitmap.",
-    "requiresHumanReview": false,
-    "closeable": false,
-    "closeReason": null,
-    "duplicateOf": null,
-    "abandoned": false,
-    "abandonedReason": null
-  },
-  "suggestedResponse": null,
-  "analysisNotes": {
-    "summary": "The reporter correctly identified a race condition in SKXamlCanvas.CreateBitmap where the second call to FreeBitmap (in the pixel-reallocation block) nullifies the bitmap field that was just created in the bitmap-creation block. When DoInvalidate then accesses bitmap.PixelBuffer at line 72, it gets a NullReferenceException.",
+  "analysis": {
+    "summary": "The reporter identified a real race condition in SKXamlCanvas.Skia.cs where CreateBitmap calls FreeBitmap twice during a size change, destroying the WriteableBitmap before DoInvalidate can use it. The code path is clear from reading the source.",
     "keySignals": [
       {
-        "text": "This line of code may throw NRE if the canvas changed its size, because the FreeBitmap method may have reset bitmap field to null",
+        "text": "FreeBitmap method may have reset bitmap field to null",
         "source": "body",
-        "interpretation": "Reporter has read the source code and identified the exact failure path. This is a code-level analysis, not a symptom report.",
-        "supportedFields": ["type", "bugSignals.severity"]
+        "interpretation": "Reporter correctly identified the root cause: FreeBitmap nulls the bitmap field, and it is accessed after that"
       },
       {
-        "text": "Link to SKXamlCanvas.Skia.cs#L72",
+        "text": "This line of code may throw NRE if the canvas changed its size",
         "source": "body",
-        "interpretation": "Points directly to bitmap.PixelBuffer.AsStream() which throws NRE when bitmap is null after FreeBitmap resets it.",
-        "supportedFields": ["area", "reproEvidence"]
+        "interpretation": "The trigger is a canvas size change, which causes CreateBitmap to call FreeBitmap twice — once for size mismatch (line 87) and once for pixels mismatch (line 106)"
+      },
+      {
+        "text": "Link to SKXamlCanvas.Skia.cs line 72",
+        "source": "body",
+        "interpretation": "Points to bitmap.PixelBuffer.AsStream() where NRE occurs because bitmap is null after the double-FreeBitmap sequence"
       },
       {
         "text": "Version: 3.116.0, Last Known Good: 2.88.9",
         "source": "body",
-        "interpretation": "Suggests regression from 2.88.x to 3.x, though the code structure may have had this latent bug for a while.",
-        "supportedFields": ["regression", "versionAnalysis"]
-      },
-      {
-        "text": "Platform: All",
-        "source": "body",
-        "interpretation": "Bug is in shared Skia backend code, not platform-specific. Affects all Uno Platform Skia targets.",
-        "supportedFields": ["platforms"]
-      },
-      {
-        "text": "Author: MartinZikmund (CONTRIBUTOR)",
-        "source": "labels",
-        "interpretation": "Trusted source — MartinZikmund is a well-known Uno Platform contributor, lending high credibility to the code analysis.",
-        "supportedFields": ["type", "bugSignals"]
+        "interpretation": "May be a latent bug rather than a regression since the Skia variant of this file is relatively new"
       }
     ],
     "fieldRationales": [
       {
         "field": "type",
-        "chosen": "bug",
-        "expandedReason": "The issue describes broken behavior — a NullReferenceException thrown during normal canvas operation. The reporter has identified the exact code path causing the failure. This is clearly a defect, not a feature request or question."
+        "chosen": "type/bug",
+        "expandedReason": "The reporter describes a NullReferenceException caused by a logic error in resource management code. The bitmap field is set to null by FreeBitmap and then accessed without a null check. This is clearly broken behavior.",
+        "alternatives": [{ "value": "type/enhancement", "whyRejected": "This is not an improvement request — it's a crash caused by a logic error." }]
       },
       {
         "field": "area",
-        "chosen": "SkiaSharp.Views.Uno",
-        "expandedReason": "The bug is in SKXamlCanvas.Skia.cs which is in the SkiaSharp.Views.Uno package. The GitHub labels also confirm this classification."
+        "chosen": "area/SkiaSharp.Views.Uno",
+        "expandedReason": "The bug is in SKXamlCanvas.Skia.cs, which is part of the SkiaSharp.Views.Uno.WinUI.Skia project. This is specific to the Uno Platform Skia rendering path.",
+        "alternatives": [{ "value": "area/SkiaSharp.Views", "whyRejected": "The more specific area/SkiaSharp.Views.Uno label exists and the bug is Uno-specific." }]
       },
       {
         "field": "bugSignals.severity",
-        "chosen": "high",
-        "expandedReason": "NRE crash during normal resize with no workaround. Any Uno Platform app resizing its SKXamlCanvas window will hit this. Not critical because it doesn't cause data loss or security issues, but high because it's a crash with no workaround.",
-        "alternatives": [
-          {
-            "value": "critical",
-            "whyRejected": "No data loss or security implications — it's a crash in a UI rendering path that doesn't corrupt data."
-          },
-          {
-            "value": "medium",
-            "whyRejected": "No workaround exists, and the trigger (canvas resize) is a common user interaction."
-          }
-        ]
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "needs-investigation",
-        "expandedReason": "Root cause is well understood from code analysis. Needs engineering effort to fix the CreateBitmap logic so that FreeBitmap doesn't destroy a freshly allocated bitmap. A PR is needed.",
-        "alternatives": [
-          {
-            "value": "keep-open",
-            "whyRejected": "This is actionable now — the root cause is clear and a fix is straightforward."
-          }
-        ]
+        "chosen": "medium",
+        "expandedReason": "NRE crash with no workaround, but the trigger is specific (canvas resize on Uno Skia targets). Not critical because it doesn't cause data loss and only affects one platform variant."
       },
       {
         "field": "partner",
-        "chosen": "unoplatform",
-        "expandedReason": "SKXamlCanvas is the Uno Platform integration surface. The reporter is a known Uno Platform contributor. This directly affects Uno Platform apps."
+        "chosen": "partner/unoplatform",
+        "expandedReason": "The bug is in the Uno Platform-specific view layer (SKXamlCanvas.Skia.cs). The reporter MartinZikmund is a well-known Uno Platform contributor. The fix may need coordination with Uno Platform."
       }
     ],
-    "docsConsulted": [
-      {
-        "path": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
-        "relevance": "Source code analysis confirmed the exact bug: CreateBitmap's second FreeBitmap call at line 106 nullifies bitmap created at line 91, causing NRE at line 72 in DoInvalidate.",
-        "usedFor": ["type", "bugSignals", "resolutionAnalysis"]
-      },
-      {
-        "path": "references/skia-patterns.md",
-        "relevance": "Checked for known patterns around resource management and disposal issues. The 'Premature Disposal' pattern is relevant context.",
-        "usedFor": ["type", "bugSignals"]
-      }
-    ],
-    "docsNotConsulted": "No native loading diagnostics needed — this is a managed code logic bug, not a native binary issue. No rendering backend docs needed — the bug is in bitmap management, not rendering.",
     "uncertainties": [
-      "Whether the bug also existed in 2.88.x or if the code was restructured in 3.x — regression confidence is moderate",
-      "Whether there are other callers of FreeBitmap that could also be affected",
-      "Whether the fix should separate pixel management from bitmap management entirely or just reorder the logic"
+      "Whether this bug also exists in the non-Skia variants of SKXamlCanvas (UWP/WinUI native paths)",
+      "Whether the 2.88.9 last-known-good version claim is accurate or just a form default selection",
+      "Whether there are other callers or code paths that can trigger the same double-FreeBitmap issue"
     ],
     "assumptions": [
-      "Assumed the reporter's analysis is accurate based on their CONTRIBUTOR status and code-level description — confirmed by reading the source code directly"
-    ]
+      "Assumed the reporter's code analysis is correct based on source code inspection confirming the double-FreeBitmap path",
+      "Assumed 'All' platforms means all Uno Skia targets (WASM, WinUI desktop), not all SkiaSharp platforms"
+    ],
+    "resolution": {
+      "hypothesis": "CreateBitmap calls FreeBitmap at line 106 to free the old pixel buffer, but this also nulls the bitmap that was just created at line 91. The second FreeBitmap destroys the bitmap unnecessarily because it conflates pixel buffer management with bitmap management.",
+      "proposals": [
+        {
+          "title": "Add null check before accessing bitmap in DoInvalidate",
+          "description": "Guard line 72 with `if (bitmap != null)` before accessing bitmap.PixelBuffer. Simple defensive fix that prevents the NRE, but doesn't address the underlying logic issue where CreateBitmap returns with bitmap=null.",
+          "confidence": 0.70,
+          "effort": "low"
+        },
+        {
+          "title": "Separate pixel buffer freeing from bitmap freeing in CreateBitmap",
+          "description": "Split FreeBitmap into two concerns: one that frees pixels/handle only, and one that frees the bitmap. The second FreeBitmap call at line 106 only needs to free the pixel buffer, not the bitmap. This addresses the root cause by ensuring the bitmap created at line 91 survives the pixel reallocation.",
+          "confidence": 0.90,
+          "effort": "low"
+        },
+        {
+          "title": "Restructure CreateBitmap to handle bitmap and pixels independently",
+          "description": "Refactor CreateBitmap so that bitmap creation and pixel buffer allocation are managed separately with their own lifecycle. The bitmap should only be recreated when its dimensions change, and pixels should be reallocated independently. This is the cleanest fix but involves more refactoring.",
+          "confidence": 0.85,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Separate pixel buffer freeing from bitmap freeing in CreateBitmap",
+      "recommendedReason": "Addresses the root cause directly with minimal code change. The second FreeBitmap call only needs to free the GCHandle and pixel array, not the WriteableBitmap."
+    }
   },
-  "resolutionAnalysis": {
-    "hypothesis": "In CreateBitmap, when the canvas size changes: (1) FreeBitmap is called (bitmap=null, pixels=null), (2) a new bitmap is created, (3) the pixel check finds pixels==null and calls FreeBitmap AGAIN, which nullifies the just-created bitmap. The second FreeBitmap call is the root cause — it couples bitmap and pixel lifecycle incorrectly.",
-    "researchDone": [
-      "Analyzed SKXamlCanvas.Skia.cs CreateBitmap method line by line",
-      "Traced the execution path during canvas size change",
-      "Checked FreeBitmap implementation for side effects",
-      "Searched for duplicate issues — none found"
-    ],
-    "proposals": [
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "The bug report identifies a real logic error confirmed by source code inspection. The fix approach is clear but should be verified with a test to ensure the bitmap lifecycle is correct across all size-change scenarios."
+    },
+    "actions": [
       {
-        "title": "Separate pixel and bitmap freeing logic",
-        "description": "Split FreeBitmap into two methods: one for freeing the pixel buffer (FreePixels) and one for freeing the bitmap (FreeBitmap). The pixel reallocation block should only call FreePixels, not FreeBitmap.",
-        "steps": [
-          "Create a FreePixels method that frees pixelsHandle and sets pixels=null without touching bitmap",
-          "Update FreeBitmap to call FreePixels and then set bitmap=null",
-          "Change the pixel reallocation block (line 104-113) to call FreePixels instead of FreeBitmap",
-          "Test canvas resize behavior to confirm NRE is fixed"
-        ],
-        "pros": [
-          "Cleanly separates the two resource lifecycles",
-          "Most architecturally correct solution",
-          "Prevents future coupling bugs"
-        ],
-        "cons": [
-          "Slightly more invasive — introduces a new method"
-        ],
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add partner/unoplatform label — existing labels are already correct",
+        "reason": "The bug is in the Uno Platform-specific view layer and the reporter is an Uno Platform contributor",
         "confidence": 0.92,
-        "effort": "low"
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["partner/unoplatform"],
+          "labelsToRemove": []
+        }
       },
       {
-        "title": "Move bitmap creation after pixel allocation",
-        "description": "Restructure CreateBitmap so that all FreeBitmap calls happen before the bitmap is created. Free everything first, then allocate pixels, then create bitmap.",
-        "steps": [
-          "Combine the dimension checks into a single block that calls FreeBitmap once",
-          "Allocate pixels array first",
-          "Create WriteableBitmap last, after all freeing is done",
-          "Test canvas resize behavior"
-        ],
-        "pros": [
-          "No new methods needed — just reorder existing logic",
-          "Eliminates the double-free pattern"
-        ],
-        "cons": [
-          "May need careful handling of the 'bitmap exists but pixels changed' edge case",
-          "Less explicit about the separate lifecycles"
-        ],
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Post analysis confirming the bug and describing the root cause",
+        "reason": "Acknowledge the well-analyzed report and confirm the double-FreeBitmap root cause",
         "confidence": 0.85,
-        "effort": "low"
-      },
-      {
-        "title": "Guard bitmap access with null check in DoInvalidate",
-        "description": "Add a null check for bitmap before accessing bitmap.PixelBuffer in DoInvalidate, and early-return if bitmap is null.",
-        "steps": [
-          "Add 'if (bitmap == null) return;' before line 72 in DoInvalidate",
-          "Test that the canvas recovers on the next invalidation"
-        ],
-        "pros": [
-          "Simplest possible fix — one line",
-          "Prevents the NRE crash immediately"
-        ],
-        "cons": [
-          "Masks the root cause — CreateBitmap still has the coupling bug",
-          "Canvas may silently skip frames after resize until a subsequent invalidation",
-          "Doesn't fix the underlying resource management logic"
-        ],
-        "confidence": 0.60,
-        "effort": "low"
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "answer",
+          "draftBody": "Thanks for the clear analysis and the direct pointer to the problematic line.\n\nConfirmed — the issue is in `CreateBitmap()` where `FreeBitmap()` is called twice during a size change. The first call (line 87) correctly frees the old bitmap when dimensions change, and then a new `WriteableBitmap` is created (line 91). But the second call (line 106) frees the pixel buffer *and* nulls the bitmap that was just created, because `FreeBitmap()` doesn't distinguish between the two resources.\n\nThe fix would be to separate pixel buffer management from bitmap management in that second code path, so that reallocating the pixel array doesn't destroy the freshly created bitmap.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3430-comment-1"
+        }
       }
-    ],
-    "recommendedProposal": "Separate pixel and bitmap freeing logic",
-    "recommendedReason": "This is the cleanest fix that addresses the root cause: the coupling between bitmap and pixel lifecycles in FreeBitmap. By separating FreePixels from FreeBitmap, the pixel reallocation block can safely free/reallocate the pixel buffer without destroying the bitmap. Low effort, high correctness."
+    ]
   }
 }

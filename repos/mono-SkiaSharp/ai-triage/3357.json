@@ -1,174 +1,69 @@
 {
-  "schemaVersion": "1.0",
-  "number": 3357,
-  "repo": "mono/SkiaSharp",
-  "analyzedAt": "2025-09-05T00:00:00Z",
-  "summary": "Maintainer request to migrate XML API docs from docs folder into inline C# triple-slash comments",
-  "type": {
-    "value": "documentation",
-    "confidence": 0.95,
-    "reason": "The issue explicitly requests migrating API documentation from external XML files into inline C# source code comments. This is a documentation restructuring task."
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3357,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-09-04T20:00:00Z",
+    "currentLabels": ["area/Docs"]
   },
-  "area": {
-    "value": "Docs",
-    "confidence": 0.98,
-    "reason": "The issue is entirely about documentation migration. It already has the area/Docs label applied by the maintainer."
+  "summary": "Maintainer request to migrate XML API documentation from docs folder into inline C# source code triple-slash comments",
+  "classification": {
+    "type": { "value": "type/documentation", "confidence": 0.95 },
+    "area": { "value": "area/Docs", "confidence": 0.95 },
+    "backends": null,
+    "platforms": null,
+    "tenets": null,
+    "partner": null
   },
-  "backends": null,
-  "platforms": null,
-  "tenets": null,
-  "partner": null,
-  "regression": null,
-  "fixStatus": null,
-  "bugSignals": null,
-  "reproEvidence": null,
-  "versionAnalysis": null,
-  "actionability": {
-    "suggestedAction": "keep-open",
-    "confidence": 0.95,
-    "reason": "This is an active work item created by the maintainer (mattleibow) and assigned to Copilot bot. It represents an ongoing documentation migration task with a defined checklist and guide.",
-    "requiresHumanReview": false,
-    "closeable": false,
-    "closeReason": null,
-    "abandoned": false,
-    "abandonedReason": null
+  "evidence": {
+    "bugSignals": null,
+    "reproEvidence": null,
+    "versionAnalysis": null,
+    "regression": null,
+    "fixStatus": null
   },
-  "suggestedResponse": null,
-  "analysisNotes": {
-    "summary": "Maintainer-created work item to migrate XML API documentation from the docs/ folder into inline C# triple-slash comments in the source code. This is a structured documentation task with a guide, checklist, and clear rules (one type per commit, migrate all members).",
+  "analysis": {
+    "summary": "This is a documentation migration task filed by the maintainer (mattleibow). The issue requests migrating API documentation from a separate docs folder into inline C# source code comments. It references a migration guide and checklist, with specific rules about committing each type separately.",
     "keySignals": [
-      {
-        "text": "Can you help migrate my docs from the docs folder into the c# source.",
-        "source": "body",
-        "interpretation": "This is a documentation migration request, not a bug or feature. The maintainer wants to move API docs from external XML files to inline code comments.",
-        "supportedFields": ["type", "area"]
-      },
-      {
-        "text": "There is a guide here: ~/API.Docs.Migration.Guide.md",
-        "source": "body",
-        "interpretation": "A structured migration guide already exists, indicating this is a well-planned documentation task with established procedures.",
-        "supportedFields": ["type", "actionability"]
-      },
-      {
-        "text": "This is the checklist of APIs to migrate: ~/API.Docs.Migration.Checklist.md",
-        "source": "body",
-        "interpretation": "A checklist exists tracking which APIs need migration, confirming this is a multi-step ongoing task.",
-        "supportedFields": ["actionability"]
-      },
-      {
-        "text": "Each type should be migrated and commited separately.",
-        "source": "body",
-        "interpretation": "Clear process constraint: one type per commit for review purposes. This shapes how the work should be executed.",
-        "supportedFields": ["actionability"]
-      },
-      {
-        "text": "area/Docs label applied by maintainer",
-        "source": "labels",
-        "interpretation": "Maintainer explicitly categorized this as a documentation issue.",
-        "supportedFields": ["area"]
-      }
+      { "text": "Can you help migrate my docs from the docs folder into the c# source", "source": "body", "interpretation": "Explicit documentation migration request — not a bug, question, or feature" },
+      { "text": "There is a guide here: ~/API.Docs.Migration.Guide.md", "source": "body", "interpretation": "Structured migration task with existing tooling and guidelines" },
+      { "text": "Each type should be migrated and commited separately", "source": "body", "interpretation": "Operational constraint for the migration process, indicates incremental work" },
+      { "text": "Assigned to Copilot bot", "source": "labels", "interpretation": "This is an automation/agent task, not a user-reported issue" }
     ],
     "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "documentation",
-        "expandedReason": "The issue is entirely about migrating API documentation from one format/location to another. There is no broken behavior, no feature request, and no question being asked. It is a documentation restructuring task.",
-        "alternatives": [
-          {
-            "value": "enhancement",
-            "whyRejected": "While moving docs inline could be seen as an improvement, the core activity is documentation work, not improving API functionality."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "Docs",
-        "expandedReason": "The issue is about API documentation migration. The maintainer applied the area/Docs label. The work involves moving content from docs/ XML files into C# source files as triple-slash comments."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "keep-open",
-        "expandedReason": "This is an active, maintainer-created work item with a defined checklist. It is assigned to Copilot bot for execution. The task is ongoing and should remain open until the full checklist is completed.",
-        "alternatives": [
-          {
-            "value": "needs-investigation",
-            "whyRejected": "No investigation needed — the task is clearly defined with a guide and checklist."
-          }
-        ]
-      }
+      { "field": "type", "chosen": "type/documentation", "expandedReason": "The issue is entirely about migrating documentation from one location to another. No broken behavior, no new functionality, no question being asked. The maintainer is requesting a docs migration task.", "alternatives": [{ "value": "type/enhancement", "whyRejected": "Not improving existing functionality — purely a documentation format/location change." }, { "value": "type/feature-request", "whyRejected": "No new capability is being requested. The docs already exist and need to be moved." }] },
+      { "field": "area", "chosen": "area/Docs", "expandedReason": "The issue is about documentation files and their migration into source code. The area/Docs label is already applied and is the correct classification.", "alternatives": [{ "value": "area/SkiaSharp", "whyRejected": "While the target is C# source files in SkiaSharp, the work itself is documentation migration, not code changes." }] },
+      { "field": "actionability.suggestedAction", "chosen": "keep-open", "expandedReason": "This is an active task assigned to the Copilot bot. The maintainer filed it as a work item to be executed. It should remain open until the migration is complete." }
     ],
-    "docsConsulted": [
-      {
-        "path": "references/research-by-type.md",
-        "relevance": "Checked documentation-type research guidance to confirm approach for docs issues.",
-        "usedFor": ["type", "actionability"]
-      },
-      {
-        "path": "references/labels.md",
-        "relevance": "Confirmed area/Docs is the correct label for documentation issues and type/documentation is the correct classification.",
-        "usedFor": ["type", "area"]
-      }
-    ],
-    "docsNotConsulted": "No need to check packages.md, skia-patterns.md, or API XML docs since this is a documentation process issue, not a technical/API problem.",
-    "uncertainties": [
-      "The referenced files (API.Docs.Migration.Guide.md and API.Docs.Migration.Checklist.md) are at ~/path which may be relative — unclear how many types remain to migrate.",
-      "Unclear whether any types have already been migrated or if this is the initial request."
-    ]
+    "uncertainties": ["Whether the referenced migration guide and checklist files exist and are up to date", "How many types remain to be migrated from the checklist"],
+    "assumptions": ["Assumed this is a legitimate maintainer-filed work item since the author is mattleibow (project maintainer)", "Assumed the migration guide contains sufficient instructions for the assigned bot to execute"],
+    "resolution": {
+      "hypothesis": "The maintainer wants all API documentation migrated from standalone docs files into inline triple-slash XML comments in the C# source, with each type committed separately for review purposes.",
+      "proposals": [
+        { "title": "Execute migration per checklist", "description": "Follow the API.Docs.Migration.Guide.md and API.Docs.Migration.Checklist.md to migrate each type one at a time, committing separately. This is the approach requested in the issue.", "confidence": 0.95, "effort": "high" },
+        { "title": "Batch migration with squash commits", "description": "Migrate all types at once and use git interactive rebase to create per-type commits. Faster execution but riskier if conflicts arise.", "confidence": 0.60, "effort": "medium" }
+      ],
+      "recommendedProposal": "Execute migration per checklist",
+      "recommendedReason": "The maintainer explicitly requested one-type-at-a-time commits. Following the stated process ensures reviewability and matches the team's workflow."
+    }
   },
-  "resolutionAnalysis": {
-    "hypothesis": "The maintainer wants to consolidate API documentation by moving it from external XML files in the docs/ folder into inline triple-slash XML comments in the C# source code, following a defined guide and checklist.",
-    "researchDone": [
-      "Reviewed issue body for migration rules and constraints",
-      "Checked labels and assignee for context on issue status",
-      "Reviewed triage schema documentation type guidance"
-    ],
-    "proposals": [
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.90,
+      "reason": "Active work item assigned to Copilot bot. Migration task is in progress or pending execution."
+    },
+    "actions": [
       {
-        "title": "Execute migration per checklist",
-        "description": "Follow the API.Docs.Migration.Guide.md and work through the API.Docs.Migration.Checklist.md, migrating one type at a time with separate commits.",
-        "steps": [
-          "Read API.Docs.Migration.Guide.md for migration procedures",
-          "Read API.Docs.Migration.Checklist.md for the list of types to migrate",
-          "For each type: copy XML docs from docs/ into inline triple-slash comments in the C# source",
-          "Commit each type separately with a descriptive commit message",
-          "Mark each checklist item as complete"
-        ],
-        "pros": ["Follows maintainer's exact instructions", "One commit per type enables granular review", "Checklist provides clear tracking"],
-        "cons": ["Large number of commits if many types remain", "Manual process is time-consuming"],
-        "confidence": 0.95,
-        "effort": "high"
-      },
-      {
-        "title": "Automated migration script",
-        "description": "Create a script to parse the docs/ XML files and inject triple-slash comments into the corresponding C# source files, then manually review and commit per type.",
-        "steps": [
-          "Parse docs/ XML structure to map types to C# files",
-          "Generate triple-slash comments from XML content",
-          "Insert into source files at correct positions",
-          "Review each type's changes manually",
-          "Commit per type as required"
-        ],
-        "pros": ["Faster for large numbers of types", "Consistent formatting"],
-        "cons": ["Script may need edge case handling", "Still requires manual review and per-type commits", "Maintainer specifically asked agents not to build/test"],
-        "confidence": 0.70,
-        "effort": "medium"
-      },
-      {
-        "title": "Prioritized partial migration",
-        "description": "Migrate only the most commonly used types first, leaving less-used types for later.",
-        "steps": [
-          "Identify high-usage types from the checklist",
-          "Migrate those first following the guide",
-          "Commit each separately",
-          "Continue with remaining types in priority order"
-        ],
-        "pros": ["Gets most-impactful docs migrated first", "Reduces initial scope"],
-        "cons": ["Maintainer explicitly said to go through each item — partial migration may not align with intent", "Prioritization adds overhead"],
-        "confidence": 0.50,
-        "effort": "high"
+        "id": "labels-1", "type": "update-labels", "risk": "low",
+        "description": "Add type/documentation label to classify the issue type",
+        "reason": "Issue is a documentation migration task. area/Docs is already applied; adding the type label completes classification.",
+        "confidence": 0.95, "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["type/documentation"],
+          "labelsToRemove": []
+        }
       }
-    ],
-    "recommendedProposal": "Execute migration per checklist",
-    "recommendedReason": "The maintainer provided explicit instructions: follow the guide, use the checklist, migrate one type at a time with separate commits, and do not skip any type or member. The straightforward execution approach best matches these requirements."
+    ]
   }
 }
