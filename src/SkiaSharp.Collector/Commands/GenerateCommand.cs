@@ -757,6 +757,10 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             if (!Directory.Exists(triageDir))
                 continue;
 
+            // Build state lookup from GitHub index
+            var index = await cache.LoadGitHubIndexAsync();
+            var stateByNumber = index.Items.ToDictionary(i => i.Number, i => i.State);
+
             foreach (var file in Directory.GetFiles(triageDir, "*.json"))
             {
                 try
@@ -776,6 +780,10 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
 
                     var number = node["meta"]?["number"]?.GetValue<int>() ?? 0;
                     var repo = node["meta"]?["repo"]?.GetValue<string>() ?? repoConfig?.FullName ?? repoKey;
+
+                    // Inject issue state from GitHub index
+                    var state = stateByNumber.GetValueOrDefault(number, "open");
+                    node["meta"]!["state"] = state;
 
                     // Add URL for dashboard linking
                     node["url"] = $"https://github.com/{repo}/issues/{number}";

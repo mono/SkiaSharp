@@ -42,7 +42,8 @@ public record TriageMeta(
     int Number,
     string Repo,
     DateTime AnalyzedAt,
-    List<string>? CurrentLabels
+    List<string>? CurrentLabels,
+    string? State
 );
 
 // ── Classification ───────────────────────────────────────────────

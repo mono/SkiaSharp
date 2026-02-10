@@ -20,23 +20,23 @@ else
     <!-- Summary Cards -->
     <div class="triage-summary">
         <div class="triage-card triage-warning @(SelectedCard == "needs-investigation" ? "selected" : "")" @onclick='() => FilterByCard("needs-investigation")'>
-            <span class="triage-count">@_data.Summary.NeedsInvestigation</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Output.Actionability.SuggestedAction == "needs-investigation")</span>
             <span class="triage-label">Needs Investigation</span>
         </div>
         <div class="triage-card triage-success @(SelectedCard == "closeable" ? "selected" : "")" @onclick='() => FilterByCard("closeable")'>
-            <span class="triage-count">@_data.Summary.Closeable</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true)</span>
             <span class="triage-label">Closeable</span>
         </div>
         <div class="triage-card triage-info @(SelectedCard == "quick-wins" ? "selected" : "")" @onclick='() => FilterByCard("quick-wins")'>
-            <span class="triage-count">@_data.Summary.QuickWins</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true && i.Output.Actionability.RequiresHumanReview != true)</span>
             <span class="triage-label">Quick Wins</span>
         </div>
         <div class="triage-card triage-danger @(SelectedCard == "regressions" ? "selected" : "")" @onclick='() => FilterByCard("regressions")'>
-            <span class="triage-count">@_data.Summary.Regressions</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Evidence.Regression?.IsRegression == true)</span>
             <span class="triage-label">Regressions</span>
         </div>
         <div class="triage-card triage-author @(SelectedCard == "human-review" ? "selected" : "")" @onclick='() => FilterByCard("human-review")'>
-            <span class="triage-count">@_data.Summary.NeedsHumanReview</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Output.Actionability.RequiresHumanReview == true)</span>
             <span class="triage-label">Needs Human Review</span>
         </div>
     </div>
@@ -99,7 +99,7 @@ else
 
     <!-- Stats Bar -->
     <div class="stats-bar">
-        <span>Showing <strong>@_filtered.Count</strong> of @_data.TotalCount triaged issues</span>
+        <span>Showing <strong>@_filtered.Count</strong> of @_openCount open triaged issues</span>
     </div>
 
     <!-- Issue List (compact rows, click to navigate) -->
@@ -147,7 +147,9 @@ else
 
     private TriageData? _data;
     private List<TriagedIssue> _filtered = [];
+    private List<TriagedIssue> _openIssues = [];
     private bool _loading = true;
+    private int _openCount;
 
     private string SelectedCard { get; set; } = "";
     private string SelectedAction { get; set; } = "";
@@ -174,6 +176,8 @@ else
         SelectedSort = QSort ?? "newest";
 
         _data = await DataService.GetTriageDataAsync();
+        _openIssues = _data?.Issues.Where(i => i.Meta.State is null or "open").ToList() ?? [];
+        _openCount = _openIssues.Count;
         ApplyFiltersInternal();
         _loading = false;
     }
@@ -196,7 +200,7 @@ else
     {
         if (_data is null) return;
 
-        var query = _data.Issues.AsEnumerable();
+        var query = _openIssues.AsEnumerable();
 
         if (!string.IsNullOrEmpty(SelectedCard))
         {
