@@ -57,17 +57,17 @@ else
                 @{ var hdrActR = GetRationale("actionability.suggestedAction"); }
                 @if (hdrActR is not null) { <span class="rationale-tooltip">@hdrActR</span> }
             </span>
-            <span class="confidence-pill-lg" title="Confidence: @_issue.Output.Actionability.Confidence.ToString("P0")">
+            <span class="confidence-pill-lg" title="Overall confidence in the suggested action. 95%+ = explicit evidence, 80-94% = strong inference, 60-79% = ambiguous">
                 <span class="confidence-bar @GetConfidenceClass(_issue.Output.Actionability.Confidence)" style="width: @((int)(_issue.Output.Actionability.Confidence * 100))%"></span>
                 <span class="confidence-text">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
             </span>
             @if (_issue.Output.Actions?.Any(a => a.Type == "close-issue") == true)
             {
-                <span class="badge-closeable">✓ Closeable</span>
+                <span class="badge-closeable" title="Has a close-issue action — AI believes this can be closed">✓ Closeable</span>
             }
             @if (_issue.Output.Actionability.RequiresHumanReview == true)
             {
-                <span class="badge-human-review">⚠ Needs Human Review</span>
+                <span class="badge-human-review" title="Low confidence or high-risk action — a maintainer should verify before acting">⚠ Needs Human Review</span>
             }
         </div>
         <p class="detail-meta">
@@ -79,7 +79,7 @@ else
     <!-- Classification & Action (side by side) -->
     <div class="detail-section-grid">
         <div class="detail-card card-classification">
-            <h3>Classification</h3>
+            <h3 title="AI-assigned labels — hover each field for rationale">Classification</h3>
             <div class="field-row has-rationale">
                 <span class="field-label">Type:</span>
                 <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
@@ -193,15 +193,15 @@ else
     @if (_issue.Evidence.BugSignals is not null)
     {
         <div class="detail-card card-bug-signals">
-            <h3>Bug Signals</h3>
+            <h3 title="Bug indicators extracted from the issue">Bug Signals</h3>
             <div class="bug-signals-grid">
-                <span class="signal @(_issue.Evidence.BugSignals.HasCrash ? "signal-yes" : "signal-no")">
+                <span class="signal @(_issue.Evidence.BugSignals.HasCrash ? "signal-yes" : "signal-no")" title="Whether the issue involves a crash or fatal error">
                     @(_issue.Evidence.BugSignals.HasCrash ? "💥 Crash" : "No Crash")
                 </span>
-                <span class="signal @(_issue.Evidence.BugSignals.HasStackTrace ? "signal-yes" : "signal-no")">
+                <span class="signal @(_issue.Evidence.BugSignals.HasStackTrace ? "signal-yes" : "signal-no")" title="Whether a stack trace or error log was provided">
                     @(_issue.Evidence.BugSignals.HasStackTrace ? "📋 Stack Trace" : "No Stack Trace")
                 </span>
-                <span class="signal @(_issue.Evidence.BugSignals.HasWorkaround == true ? "signal-yes" : "signal-no")">
+                <span class="signal @(_issue.Evidence.BugSignals.HasWorkaround == true ? "signal-yes" : "signal-no")" title="Whether a workaround has been identified">
                     @(_issue.Evidence.BugSignals.HasWorkaround == true ? "🔧 Workaround" : "No Workaround")
                 </span>
                 <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity has-rationale" style="position:relative">
@@ -212,7 +212,7 @@ else
                         <span class="rationale-tooltip">@sevRationale</span>
                     }
                 </span>
-                <span class="label" title="Reproduction quality assessment">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality)</span>
+                <span class="label" title="@GetReproTooltip(_issue.Evidence.BugSignals.ReproQuality)">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality)</span>
             </div>
             <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.BugSignals.SeverityReason)</div>
             @if (_issue.Evidence.BugSignals.WorkaroundSummary is not null)
@@ -459,14 +459,14 @@ else
     @if (_issue.Output.Actions is { Count: > 0 })
     {
         <div class="detail-card card-response">
-            <h3>Actions</h3>
+            <h3 title="Proposed actions the AI recommends — each has a risk level and confidence">Actions</h3>
             @foreach (var action in _issue.Output.Actions)
             {
                 <div class="action-item" style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--border-color, #dee2e6); border-radius: 0.5rem;">
                     <div class="response-header">
-                        <span class="badge-action badge-act-@action.Type">@FormatLabel(action.Type)</span>
-                        <span class="badge-risk badge-risk-@action.Risk" style="@GetRiskStyle(action.Risk)">@FormatLabel(action.Risk) risk</span>
-                        <span class="field-confidence">@action.Confidence.ToString("P0")</span>
+                        <span class="badge-action badge-act-@action.Type" title="@GetActionTypeTooltip(action.Type)">@FormatLabel(action.Type)</span>
+                        <span class="badge-risk badge-risk-@action.Risk" style="@GetRiskStyle(action.Risk)" title="@GetRiskTooltip(action.Risk)">@FormatLabel(action.Risk) risk</span>
+                        <span class="field-confidence" title="How confident the AI is in this action">@action.Confidence.ToString("P0")</span>
                     </div>
                     <div class="reason-text md-content">@MarkdownHelper.ToHtml(action.Description)</div>
                     @if (!string.IsNullOrEmpty(action.Reason))
@@ -484,11 +484,11 @@ else
                                     <strong>Draft Response</strong>
                                     @if (commentPayload.CommentType is not null)
                                     {
-                                        <span class="label" style="margin-left: 0.5rem;">@FormatLabel(commentPayload.CommentType)</span>
+                                        <span class="label" style="margin-left: 0.5rem;" title="@GetCommentTypeTooltip(commentPayload.CommentType)">@FormatLabel(commentPayload.CommentType)</span>
                                     }
                                     @if (commentPayload.RequiresHumanEdit == true)
                                     {
-                                        <span class="badge-human-review" style="margin-left: 0.5rem;">✏ Needs Edit</span>
+                                        <span class="badge-human-review" style="margin-left: 0.5rem;" title="AI-drafted text that should be reviewed and edited before posting">✏ Needs Edit</span>
                                     }
                                     <button class="btn-copy" @onclick="() => CopyToClipboard(commentPayload.DraftBody)">📋 Copy</button>
                                 </div>
@@ -576,7 +576,7 @@ else
             @if (_issue.Analysis.KeySignals is { Count: > 0 })
             {
                 <div class="sidebar-section sidebar-signals">
-                    <h4>Key Signals</h4>
+                    <h4 title="Direct quotes from the issue that drove triage decisions">Key Signals</h4>
                     @foreach (var signal in _issue.Analysis.KeySignals)
                     {
                         <div class="signal-card">
@@ -591,7 +591,7 @@ else
             @if (_issue.Analysis.FieldRationales is { Count: > 0 })
             {
                 <div class="sidebar-section sidebar-rationales">
-                    <h4>Field Rationales</h4>
+                    <h4 title="Why each classification field was chosen, with alternatives considered">Field Rationales</h4>
                     @foreach (var fr in _issue.Analysis.FieldRationales)
                     {
                         <div class="rationale-card">
@@ -621,7 +621,7 @@ else
             @if (_issue.Analysis.Uncertainties is { Count: > 0 })
             {
                 <div class="sidebar-section sidebar-uncertainties">
-                    <h4>Uncertainties</h4>
+                    <h4 title="What's unclear — information that would improve the triage if available">Uncertainties</h4>
                     <ul class="uncertainty-list">
                         @foreach (var u in _issue.Analysis.Uncertainties)
                         {
@@ -634,7 +634,7 @@ else
             @if (_issue.Analysis.Assumptions is { Count: > 0 })
             {
                 <div class="sidebar-section sidebar-assumptions">
-                    <h4>Assumptions</h4>
+                    <h4 title="Explicit assumptions made when evidence was insufficient">Assumptions</h4>
                     <ul class="assumption-list">
                         @foreach (var a in _issue.Analysis.Assumptions)
                         {
@@ -823,6 +823,43 @@ else
         "medium" => "background: #ffc107; color: #212529;",
         "high" => "background: #dc3545; color: white;",
         _ => ""
+    };
+
+    private static string GetReproTooltip(string quality) => quality switch
+    {
+        "complete" => "Full reproducible project provided — easiest to diagnose",
+        "partial" => "Code snippets provided — requires assembling into repro",
+        "steps-only" => "Only reproduction steps described — no code or project",
+        "none" => "No reproduction material — diagnosis will be difficult",
+        _ => "Reproduction quality assessment"
+    };
+
+    private static string GetRiskTooltip(string risk) => risk switch
+    {
+        "low" => "Reversible action, cosmetic change — safe to auto-apply",
+        "medium" => "State change that requires moderate caution",
+        "high" => "Irreversible or reputation-sensitive — needs human review",
+        _ => "Action risk level"
+    };
+
+    private static string GetActionTypeTooltip(string type) => type switch
+    {
+        "update-labels" => "Add or remove GitHub labels on the issue",
+        "add-comment" => "Post a comment on the issue thread",
+        "close-issue" => "Close the issue with a reason",
+        "link-duplicate" => "Mark as duplicate of another issue",
+        "link-related" => "Cross-reference related issues",
+        _ => $"Action: {type}"
+    };
+
+    private static string GetCommentTypeTooltip(string type) => type switch
+    {
+        "answer" => "Direct answer to a support question",
+        "documentation" => "Pointer to relevant docs, samples, or guides",
+        "request-info" => "Ask for missing details before proceeding",
+        "close-message" => "Explanation provided when closing the issue",
+        "duplicate-notice" => "Reference to the canonical/original issue",
+        _ => $"Comment type: {type}"
     };
 
     private async Task CopyToClipboard(string text)
