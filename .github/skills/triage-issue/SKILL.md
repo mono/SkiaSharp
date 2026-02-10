@@ -108,12 +108,29 @@ Produce the full triage JSON with 6 top-level groups: `meta`, `summary`, `classi
 Single reasoning section. All classification reasoning goes in `fieldRationales` (the only source of truth):
 
 - **`keySignals`**: Direct quotes with source and interpretation (no `supportedFields`)
-- **`fieldRationales`**: One per non-null classified field, with alternatives considered
+- **`fieldRationales`**: Required for every judgment field listed below. Include `alternatives` for ambiguous choices.
 - **`uncertainties`**: What's unclear and what would resolve it
 - **`assumptions`**: Explicit assumptions when evidence was insufficient (omit if none)
 - **`resolution`**: Proposals with `{title, description, confidence, effort}` — no steps/pros/cons
 
 Resolution proposals populated for ALL issue types. Null only for duplicates or abandoned issues.
+
+##### fieldRationales — required fields
+
+**Always** (must have a rationale in every triage):
+- `classification.type`
+- `classification.area`
+- `output.actionability.suggestedAction`
+- `evidence.bugSignals.severity` (when bugSignals is non-null)
+
+**When set** (must have a rationale whenever the field is non-null):
+- `classification.platforms`
+- `classification.tenets`
+- `classification.backends`
+- `classification.partner`
+- `evidence.regression.isRegression`
+- `evidence.fixStatus.likelyFixed`
+- `evidence.versionAnalysis.currentRelevance`
 
 #### output
 

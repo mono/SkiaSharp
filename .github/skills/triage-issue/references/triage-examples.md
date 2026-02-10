@@ -45,7 +45,10 @@ Bug with stack trace, bugSignals required, analysis with fieldRationales and res
     "fieldRationales": [
       { "field": "type", "chosen": "type/bug", "expandedReason": "Reporter describes a crash with stack trace during a normal lifecycle event (view detachment). This is clearly broken behavior, not a usage question.", "alternatives": [{ "value": "type/question", "whyRejected": "Not asking how to do something — reporting a crash." }] },
       { "field": "area", "chosen": "area/SkiaSharp.Views", "expandedReason": "SKCanvasView is in the Views package. The crash occurs in view lifecycle methods.", "alternatives": [{ "value": "area/SkiaSharp", "whyRejected": "Crash is in view disposal, not core drawing." }] },
-      { "field": "bugSignals.severity", "chosen": "high", "expandedReason": "Hard crash with no workaround. Occurs during normal view lifecycle." }
+      { "field": "bugSignals.severity", "chosen": "high", "expandedReason": "Hard crash with no workaround. Occurs during normal view lifecycle." },
+      { "field": "platforms", "chosen": "os/Android", "expandedReason": "Reporter states crash only happens on Android, not iOS. Platform-specific disposal timing." },
+      { "field": "tenets", "chosen": "tenet/reliability", "expandedReason": "Application crash during normal view lifecycle is a reliability issue." },
+      { "field": "actionability.suggestedAction", "chosen": "needs-investigation", "expandedReason": "Root cause is unclear — could be threading, lifecycle ordering, or native surface management. Needs code investigation." }
     ],
     "uncertainties": ["Unclear if specific to Android 14+ or all versions", "Unknown if SKGLView has the same issue"],
     "assumptions": ["Assumed latest stable NativeAssets.Android since no version conflict mentioned"],
@@ -131,6 +134,8 @@ Question with resolution proposals, bugSignals null, close-with-docs action:
     ],
     "fieldRationales": [
       { "field": "type", "chosen": "type/question", "expandedReason": "Asking how to accomplish a task. No broken behavior described.", "alternatives": [{ "value": "type/documentation", "whyRejected": "Docs exist — user just hasn't found them." }] },
+      { "field": "area", "chosen": "area/SkiaSharp", "expandedReason": "Core font loading API (SKTypeface) is in the SkiaSharp package, not Views." },
+      { "field": "platforms", "chosen": "os/Linux", "expandedReason": "Reporter specifically asks about Linux where system fonts may not be available." },
       { "field": "actionability.suggestedAction", "chosen": "close-with-docs", "expandedReason": "SKTypeface.FromFile() and FromData() are documented. Can answer directly." }
     ],
     "uncertainties": ["Whether user needs system font enumeration or just custom font loading"],
@@ -227,6 +232,10 @@ Minimal triage for a duplicate issue — close + link actions:
       { "text": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow", "source": "stack-trace", "interpretation": "Same crash signature as #1234" }
     ],
     "fieldRationales": [
+      { "field": "type", "chosen": "type/bug", "expandedReason": "Same crash as #1234 — ObjectDisposedException during view detachment." },
+      { "field": "area", "chosen": "area/SkiaSharp.Views", "expandedReason": "Crash in SKCanvasView lifecycle, same as canonical issue #1234." },
+      { "field": "bugSignals.severity", "chosen": "high", "expandedReason": "Hard crash with no workaround, same severity as #1234." },
+      { "field": "platforms", "chosen": "os/Android", "expandedReason": "Android-only crash, identical to #1234." },
       { "field": "actionability.suggestedAction", "chosen": "close-as-duplicate", "expandedReason": "Stack trace is identical to #1234. Same Android version, same view lifecycle trigger." }
     ],
     "uncertainties": ["Whether reporter's environment is identical to #1234"],

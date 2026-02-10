@@ -69,6 +69,48 @@ if ($actions -and $actions.Count -gt 0) {
     }
 }
 
+# --- fieldRationales coverage check ---
+$rationaleFields = [System.Collections.Generic.HashSet[string]]::new()
+$analysis = $triage.analysis ?? $triage.analysisNotes
+if ($analysis) {
+    foreach ($fr in ($analysis.fieldRationales ?? @())) {
+        [void]$rationaleFields.Add($fr.field)
+    }
+}
+
+$cls = $triage.classification ?? $triage
+$ev = $triage.evidence ?? $triage
+$out = $triage.output ?? $triage
+
+# Always required
+$alwaysRequired = @(
+    @{ field = 'classification.type'; set = $null -ne ($cls.type ?? $null) },
+    @{ field = 'classification.area'; set = $null -ne ($cls.area ?? $null) },
+    @{ field = 'output.actionability.suggestedAction'; set = $null -ne (($out.actionability ?? $null)) },
+    @{ field = 'evidence.bugSignals.severity'; set = $null -ne (($ev.bugSignals ?? $null)) }
+)
+
+# When-set fields
+$whenSet = @(
+    @{ field = 'classification.platforms'; set = $null -ne ($cls.platforms ?? $null) },
+    @{ field = 'classification.tenets'; set = $null -ne ($cls.tenets ?? $null) },
+    @{ field = 'classification.backends'; set = $null -ne ($cls.backends ?? $null) },
+    @{ field = 'classification.partner'; set = $null -ne ($cls.partner ?? $null) },
+    @{ field = 'evidence.regression.isRegression'; set = $null -ne (($ev.regression ?? $null)) },
+    @{ field = 'evidence.fixStatus.likelyFixed'; set = $null -ne (($ev.fixStatus ?? $null)) },
+    @{ field = 'evidence.versionAnalysis.currentRelevance'; set = $null -ne (($ev.versionAnalysis ?? $null)) }
+)
+
+foreach ($check in ($alwaysRequired + $whenSet)) {
+    if ($check.set) {
+        # Accept both full path and short name (e.g., 'classification.type' or 'type')
+        $short = $check.field -replace '^(classification|evidence|output)\.', ''
+        if (-not $rationaleFields.Contains($check.field) -and -not $rationaleFields.Contains($short)) {
+            $errors += "Missing fieldRationale for '$($check.field)'"
+        }
+    }
+}
+
 if ($errors.Count -eq 0) {
     $number = $triage.meta.number ?? $triage.number ?? '?'
     Write-Host "✅ $(Split-Path $Path -Leaf) is valid (issue #$number)"
