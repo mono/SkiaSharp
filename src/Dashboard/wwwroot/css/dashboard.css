@@ -504,9 +504,11 @@
 
 .label {
     font-size: 0.75rem;
-    padding: 0.125rem 0.5rem;
+    padding: 0.2rem 0.6rem;
     background: #e9ecef;
     border-radius: 12px;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .pr-reasoning {
@@ -648,6 +650,8 @@ h2.category-danger { color: #dc3545; }
 .label-area { background: #e2d9f3; color: #432874; }
 .label-backend { background: #d1e7dd; color: #0f5132; }
 .label-os { background: #fff3cd; color: #664d03; }
+.label-tenet { background: #cff4fc; color: #055160; }
+.label-partner { background: #f8d7da; color: #842029; }
 .label-more { font-size: 0.7rem; color: #6c757d; }
 
 .age-fresh { color: #198754; }
@@ -1463,8 +1467,15 @@ h2.category-danger { color: #dc3545; }
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.4rem;
     flex-wrap: wrap;
+    padding: 0.25rem 0.4rem;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.field-row.has-rationale:hover {
+    background: rgba(0,0,0,0.03);
 }
 
 .field-label {
@@ -1477,6 +1488,50 @@ h2.category-danger { color: #dc3545; }
 .field-confidence {
     font-size: 0.75rem;
     color: #6c757d;
+}
+
+/* Tooltip-capable rows with rationale */
+.has-rationale {
+    position: relative;
+    cursor: help;
+}
+
+.rationale-tooltip {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: calc(100% + 6px);
+    z-index: 100;
+    background: #1a1a2e;
+    color: #e8e8f0;
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.45;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    max-width: 420px;
+    min-width: 240px;
+    width: max-content;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    pointer-events: none;
+    white-space: normal;
+}
+
+.rationale-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 20px;
+    border: 6px solid transparent;
+    border-bottom-color: #1a1a2e;
+}
+
+.has-rationale:hover > .rationale-tooltip {
+    display: block;
+}
+
+.action-detail.has-rationale {
+    cursor: help;
 }
 
 .reason-text {

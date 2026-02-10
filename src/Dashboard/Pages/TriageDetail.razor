@@ -68,65 +68,100 @@ else
     <div class="detail-section-grid">
         <div class="detail-card card-classification">
             <h3>Classification</h3>
-            <div class="field-row">
+            <div class="field-row has-rationale">
                 <span class="field-label">Type:</span>
                 <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
                 <span class="field-confidence">@_issue.Classification.Type.Confidence.ToString("P0")</span>
+                @{ var typeRationale = GetRationale("type"); }
+                @if (typeRationale is not null)
+                {
+                    <span class="rationale-tooltip">@typeRationale</span>
+                }
             </div>
             @if (_issue.Classification.Area is not null)
             {
-                <div class="field-row">
+                <div class="field-row has-rationale">
                     <span class="field-label">Area:</span>
-                    <span class="label">@_issue.Classification.Area.Value</span>
+                    <span class="label label-area">@FormatLabel(_issue.Classification.Area.Value)</span>
                     <span class="field-confidence">@_issue.Classification.Area.Confidence.ToString("P0")</span>
+                    @{ var areaRationale = GetRationale("area"); }
+                    @if (areaRationale is not null)
+                    {
+                        <span class="rationale-tooltip">@areaRationale</span>
+                    }
                 </div>
             }
             @if (_issue.Classification.Platforms is { Count: > 0 })
             {
-                <div class="field-row">
+                <div class="field-row has-rationale">
                     <span class="field-label">Platforms:</span>
                     @foreach (var p in _issue.Classification.Platforms)
                     {
-                        <span class="label">@p.Value</span>
+                        <span class="label label-os">@FormatLabel(p.Value)</span>
+                    }
+                    @{ var platformRationale = GetRationale("platforms"); }
+                    @if (platformRationale is not null)
+                    {
+                        <span class="rationale-tooltip">@platformRationale</span>
                     }
                 </div>
             }
             @if (_issue.Classification.Backends is { Count: > 0 })
             {
-                <div class="field-row">
+                <div class="field-row has-rationale">
                     <span class="field-label">Backends:</span>
                     @foreach (var b in _issue.Classification.Backends)
                     {
-                        <span class="label">@b.Value</span>
+                        <span class="label label-backend">@FormatLabel(b.Value)</span>
+                    }
+                    @{ var backendRationale = GetRationale("backends"); }
+                    @if (backendRationale is not null)
+                    {
+                        <span class="rationale-tooltip">@backendRationale</span>
                     }
                 </div>
             }
             @if (_issue.Classification.Tenets is { Count: > 0 })
             {
-                <div class="field-row">
+                <div class="field-row has-rationale">
                     <span class="field-label">Tenets:</span>
                     @foreach (var t in _issue.Classification.Tenets)
                     {
-                        <span class="label">@t.Value</span>
+                        <span class="label label-tenet">@FormatLabel(t.Value)</span>
+                    }
+                    @{ var tenetRationale = GetRationale("tenets"); }
+                    @if (tenetRationale is not null)
+                    {
+                        <span class="rationale-tooltip">@tenetRationale</span>
                     }
                 </div>
             }
             @if (_issue.Classification.Partner is not null)
             {
-                <div class="field-row">
+                <div class="field-row has-rationale">
                     <span class="field-label">Partner:</span>
-                    <span class="label">@_issue.Classification.Partner.Value</span>
+                    <span class="label label-partner">@FormatLabel(_issue.Classification.Partner.Value)</span>
+                    @{ var partnerRationale = GetRationale("partner"); }
+                    @if (partnerRationale is not null)
+                    {
+                        <span class="rationale-tooltip">@partnerRationale</span>
+                    }
                 </div>
             }
         </div>
 
         <div class="detail-card card-action">
             <h3>Suggested Action</h3>
-            <div class="action-detail">
+            <div class="action-detail has-rationale">
                 <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction">
                     @FormatLabel(_issue.Output.Actionability.SuggestedAction)
                 </span>
                 <span class="field-confidence">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
+                @{ var actionRationale = GetRationale("actionability.suggestedAction"); }
+                @if (actionRationale is not null)
+                {
+                    <span class="rationale-tooltip">@actionRationale</span>
+                }
             </div>
             <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Output.Actionability.Reason)</div>
             @if (_issue.Output.Actionability.MissingInfo is { Count: > 0 })
@@ -157,7 +192,14 @@ else
                 <span class="signal @(_issue.Evidence.BugSignals.HasWorkaround == true ? "signal-yes" : "signal-no")">
                     @(_issue.Evidence.BugSignals.HasWorkaround == true ? "🔧 Workaround" : "No Workaround")
                 </span>
-                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity">@FormatLabel(_issue.Evidence.BugSignals.Severity)</span>
+                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity has-rationale" style="position:relative">
+                    @FormatLabel(_issue.Evidence.BugSignals.Severity)
+                    @{ var sevRationale = GetRationale("bugSignals.severity"); }
+                    @if (sevRationale is not null)
+                    {
+                        <span class="rationale-tooltip">@sevRationale</span>
+                    }
+                </span>
                 <span class="label">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality)</span>
             </div>
             <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.BugSignals.SeverityReason)</div>
@@ -639,6 +681,15 @@ else
     }
 
     private void ToggleAnalysis() => _analysisOpen = !_analysisOpen;
+
+    private string? GetRationale(string fieldName)
+    {
+        if (_issue?.Analysis.FieldRationales is null) return null;
+        var match = _issue.Analysis.FieldRationales.FirstOrDefault(r =>
+            r.Field.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
+            r.Field.StartsWith(fieldName, StringComparison.OrdinalIgnoreCase));
+        return match?.ExpandedReason;
+    }
 
     private void LoadIssue()
     {
