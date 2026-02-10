@@ -66,7 +66,7 @@ else
 
     <!-- Classification & Action (side by side) -->
     <div class="detail-section-grid">
-        <div class="detail-card">
+        <div class="detail-card card-classification">
             <h3>Classification</h3>
             <div class="field-row">
                 <span class="field-label">Type:</span>
@@ -122,7 +122,7 @@ else
             }
         </div>
 
-        <div class="detail-card">
+        <div class="detail-card card-action">
             <h3>Suggested Action</h3>
             <div class="action-detail">
                 <span class="badge-action badge-act-@_issue.Actionability.SuggestedAction">
@@ -159,7 +159,7 @@ else
     <!-- Bug Signals -->
     @if (_issue.BugSignals is not null)
     {
-        <div class="detail-card">
+        <div class="detail-card card-bug-signals">
             <h3>Bug Signals</h3>
             <div class="bug-signals-grid">
                 <span class="signal @(_issue.BugSignals.HasCrash ? "signal-yes" : "signal-no")">
@@ -203,7 +203,7 @@ else
         <div class="detail-section-grid">
             @if (_issue.Regression is not null)
             {
-                <div class="detail-card">
+                <div class="detail-card card-regression">
                     <h3>Regression</h3>
                     @if (_issue.Regression.IsRegression)
                     {
@@ -233,7 +233,7 @@ else
             }
             @if (_issue.FixStatus is not null)
             {
-                <div class="detail-card">
+                <div class="detail-card card-fix-status">
                     <h3>Fix Status</h3>
                     <span class="@(_issue.FixStatus.LikelyFixed ? "badge-fixed" : "badge-unfixed")">
                         @(_issue.FixStatus.LikelyFixed ? "✓ Likely Fixed" : "✗ Not Fixed")
@@ -256,7 +256,7 @@ else
     <!-- Version Analysis -->
     @if (_issue.VersionAnalysis is not null)
     {
-        <div class="detail-card">
+        <div class="detail-card card-version">
             <h3>Version Analysis</h3>
             @if (_issue.VersionAnalysis.MentionedVersions is { Count: > 0 })
             {
@@ -290,7 +290,7 @@ else
     @if (_issue.ReproEvidence is not null)
     {
         var evidence = _issue.ReproEvidence;
-        <div class="detail-card">
+        <div class="detail-card card-evidence">
             <h3>Evidence</h3>
             @if (evidence.StepsToReproduce is { Count: > 0 })
             {
@@ -374,7 +374,7 @@ else
     @if (_issue.ResolutionAnalysis is not null)
     {
         var res = _issue.ResolutionAnalysis;
-        <div class="detail-card">
+        <div class="detail-card card-resolution">
             <h3>Resolution</h3>
             <div class="resolution-hypothesis">
                 <h4>Hypothesis</h4>
@@ -456,7 +456,7 @@ else
     @if (_issue.SuggestedResponse is not null)
     {
         var resp = _issue.SuggestedResponse;
-        <div class="detail-card">
+        <div class="detail-card card-response">
             <h3>Suggested Response</h3>
             <div class="response-header">
                 <span class="label">@FormatLabel(resp.ResponseType)</span>
