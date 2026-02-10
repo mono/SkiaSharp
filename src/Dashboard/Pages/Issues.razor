@@ -229,6 +229,10 @@ else
                     <tr @onclick="() => ExpandIssue(issue.Number)" class="@(ExpandedIssue == issue.Number ? "expanded" : "")">
                         <td class="col-number">
                             @issue.Number
+                            @if (_triagedNumbers.Contains(issue.Number))
+                            {
+                                <a href="triage/@issue.Number" class="triage-link" title="View AI Triage" @onclick:stopPropagation="true">🤖</a>
+                            }
                             @if (_data.Repos?.Count > 1 && !string.IsNullOrEmpty(issue.RepoSlug))
                             {
                                 <RepoBadge RepoSlug="@issue.RepoSlug" 
@@ -319,6 +323,7 @@ else
     private bool _loading = true;
     private IssuesData? _data;
     private TrendData? _trendData;
+    private HashSet<int> _triagedNumbers = [];
     private List<IssueInfo> _filteredIssues = [];
     private int? ExpandedIssue;
 
@@ -371,6 +376,14 @@ else
             await UpdateChartData();
         }
         catch { /* Trend data not yet available */ }
+
+        try
+        {
+            var triage = await DataService.GetTriageDataAsync();
+            if (triage is not null)
+                _triagedNumbers = triage.Issues.Select(i => i.Number).ToHashSet();
+        }
+        catch { /* Triage data not yet available */ }
         
         ApplyFiltersInternal(updateUrl: false); // Don't update URL on initial load
         _loading = false;
