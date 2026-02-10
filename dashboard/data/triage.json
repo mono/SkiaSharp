@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-10T03:13:49.6541486Z",
+  "generatedAt": "2026-02-10T03:36:24.0476326Z",
   "totalCount": 30,
   "summary": {
     "needsInvestigation": 14,
@@ -264,6 +264,33 @@
             "field": "actionability.suggestedAction",
             "chosen": "request-info",
             "expandedReason": "The issue is entirely template placeholders. We need actual code, expected behavior, actual behavior, and ideally a sample project before any investigation can begin."
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/macOS",
+            "expandedReason": "Reporter selected macOS as the platform in the bug template. The IDE field says Visual Studio (Windows), which is contradictory \u2014 trusting the explicit platform selection over the IDE choice.",
+            "alternatives": [
+              {
+                "value": "os/Windows-Classic",
+                "whyRejected": "IDE says Visual Studio Windows but the explicit platform selection says macOS \u2014 prioritizing the direct platform field."
+              }
+            ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "Reporter selected 2.88.9 as last known good version, but the entire report is template placeholders with no actual details. This selection may not reflect real testing, so regression cannot be confirmed."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "unknown",
+            "expandedReason": "Reporter selected 3.116.0 and 2.88.9, but no details confirm whether a real issue exists. The version selections may be default template values rather than reflecting actual testing.",
+            "alternatives": [
+              {
+                "value": "likely",
+                "whyRejected": "Without any actual issue details, we cannot determine if this affects current versions or is even a real bug."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -487,6 +514,38 @@
             "field": "platforms",
             "chosen": "null",
             "expandedReason": "The reporter selected \u0027All\u0027 for platform. The bug is in managed C# code and affects all platforms equally since GC behavior is a .NET runtime concern, not platform-specific."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "The memory safety bug is clearly identified by code inspection with a concrete fix proposal. Needs brief investigation to check for similar fixed-block patterns elsewhere before applying the fix.",
+            "alternatives": [
+              {
+                "value": "close-wontfix",
+                "whyRejected": "This is a real memory safety defect with a dangling pointer \u2014 it must be fixed, not dismissed."
+              }
+            ]
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability",
+            "expandedReason": "Memory safety bug where GC can relocate a managed array while a Blob still holds a raw pointer to it, causing potential hard crashes that are non-deterministic and difficult to diagnose."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "The buggy fixed-block pattern appears to have been present since the method was originally written. The reporter listed 2.88.9 as last known good, but this is likely a latent bug that manifests non-deterministically depending on GC timing."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The buggy code pattern still exists in the current source at binding/HarfBuzzSharp/Blob.cs. The issue was found by code inspection and the code has not been modified.",
+            "alternatives": [
+              {
+                "value": "outdated",
+                "whyRejected": "The vulnerable code path is unchanged in the latest version."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -749,6 +808,28 @@
                 "whyRejected": "While more info would help (packaged vs unpackaged, DLL presence), the stack trace and environment details are sufficient to classify and begin investigation."
               }
             ]
+          },
+          {
+            "field": "partner",
+            "chosen": "partner/maui",
+            "expandedReason": "The reporter is using a .NET MAUI app with LiveCharts2 for chart rendering. The crash occurs in SkiaSharp.Views.WinUI components invoked through the MAUI rendering pipeline.",
+            "alternatives": [
+              {
+                "value": "null",
+                "whyRejected": "The reporter explicitly describes a MAUI application and the crash path goes through MAUI-deployed WinUI views."
+              }
+            ]
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Version 3.119.1 is a current stable release. The WinRT activation issue with PropertySetExtensions is a persistent architectural problem reported across multiple 3.x versions and not yet resolved.",
+            "alternatives": [
+              {
+                "value": "outdated",
+                "whyRejected": "The underlying WinRT component activation architecture has not changed in recent releases."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -1005,6 +1086,38 @@
             "field": "bugSignals.severity",
             "chosen": "high",
             "expandedReason": "Silent data corruption in output \u2014 text elements lose their content without any error or warning. The only workaround is to serialize work or downgrade to 2.x. This is a regression affecting all 3.x versions."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "Well-documented regression with a complete repro project. Needs native-level debugging to identify the shared global state in Skia\u0027s SVG module causing the Windows-specific race condition.",
+            "alternatives": [
+              {
+                "value": "close-wontfix",
+                "whyRejected": "The bug has a high-quality reproduction and is a clear regression from 2.88.9 \u2014 it warrants investigation."
+              }
+            ]
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability, tenet/compatibility",
+            "expandedReason": "tenet/reliability: Silent data corruption in SVG output with missing text values. tenet/compatibility: This is a regression from 2.88.9 to all 3.x versions, indicating a cross-version compatibility break."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "Reporter explicitly confirms 2.88.9 does not have the bug and all 3.x versions do. This aligns with the major Skia engine upgrade between 2.x and 3.x that likely changed SVG serialization internals."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Bug affects all SkiaSharp 3.x versions tested (3.116.0, 3.119.1, 3.119.2-preview.1) including the latest preview, confirming it remains unresolved.",
+            "alternatives": [
+              {
+                "value": "outdated",
+                "whyRejected": "The latest preview (3.119.2-preview.1) still exhibits the bug, so the issue is current."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -1240,6 +1353,22 @@
             "field": "actionability.suggestedAction",
             "chosen": "close-as-duplicate",
             "expandedReason": "A community member identified this as a duplicate of #3422, which tracks the exact same issue (DllNotFoundException/TypeInitializationException for SkiaSharp in Blazor WASM on .NET 10). The symptoms, platform, and root cause are identical. #3422 has more detailed reproduction and community discussion."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "SkiaSharp Blazor WASM worked on .NET 9 but fails on .NET 10. The regression is in the .NET WASM toolchain, not SkiaSharp itself \u2014 rolling back SkiaSharp versions does not fix it."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Issue affects all SkiaSharp versions on .NET 10 WASM. The root cause is a .NET 10 toolchain change, not version-specific, as confirmed by #3422 where even 2.88.x versions fail.",
+            "alternatives": [
+              {
+                "value": "outdated",
+                "whyRejected": "The issue is not version-specific \u2014 it affects current and older versions equally on .NET 10."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -1469,6 +1598,37 @@
             "field": "partner",
             "chosen": "partner/unoplatform",
             "expandedReason": "The bug is in the Uno Platform-specific view layer (SKXamlCanvas.Skia.cs). The reporter MartinZikmund is a well-known Uno Platform contributor. The fix may need coordination with Uno Platform."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "The bug report identifies a clear logic error (double FreeBitmap) confirmed by source code inspection. The fix approach is known but needs verification with tests across all Uno Skia targets and size-change scenarios.",
+            "alternatives": [
+              {
+                "value": "ready-to-fix",
+                "whyRejected": "While the root cause is clear, the fix needs careful testing to ensure the bitmap lifecycle is correct across all resize scenarios."
+              }
+            ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/WASM, os/Windows-WinUI",
+            "expandedReason": "The bug is in SKXamlCanvas.Skia.cs which targets all Uno Platform Skia backends. Reporter selected All platforms, and the code path affects both WASM and WinUI desktop Skia targets."
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability",
+            "expandedReason": "NullReferenceException crash during canvas resize is a reliability issue \u2014 the application crashes during normal window resizing operations with no workaround."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "The SKXamlCanvas.Skia.cs file is relatively new and likely did not exist in 2.88.9. The reporter\u0027s last-known-good selection appears to be a form default rather than a tested version, making this a latent bug."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The bug is in current source code at a specific line (SKXamlCanvas.Skia.cs:72), confirmed by source inspection and not yet fixed."
           }
         ],
         "uncertainties": [
@@ -1702,6 +1862,37 @@
             "field": "regression",
             "chosen": "true",
             "expandedReason": "Reporter claims last known good version is 2.88.9. The v2-to-v3 jump involved a major rewrite of the native layer and views, making regression plausible but the specific breaking change hard to pinpoint."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "request-info",
+            "expandedReason": "The bug is real but critical details are missing: which WPF control (SKElement vs SKGLElement), GPU model/driver version, and a minimal repro. The existing OpenTK fix (#3309) might already resolve this if SKGLElement is in use.",
+            "alternatives": [
+              {
+                "value": "needs-investigation",
+                "whyRejected": "Cannot investigate effectively without knowing which WPF control is used \u2014 the existing SKGLElement memory leak fix may already apply."
+              }
+            ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-Classic",
+            "expandedReason": "WPF is a Windows-Classic (Win32/WPF) framework. The reporter runs on Windows with Nvidia Quadro GPUs and the workaround uses WPF-specific RenderOptions API."
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability, tenet/performance",
+            "expandedReason": "Reliability: memory leak degrades application stability over time during normal drawing operations. Performance: the only workaround (software rendering) causes significant performance loss for the rest of the application."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "Reporter states last known good version is 2.88.9. The v2-to-v3 rewrite of the native layer and views makes regression plausible, though the large version gap means the exact breaking change is unidentified."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Reported on current SkiaSharp 3.116.0 with no indication the issue has been fixed in newer versions. The GPU-driver-specific nature makes it unlikely to self-resolve."
           }
         ],
         "uncertainties": [
@@ -1977,6 +2168,27 @@
                 "whyRejected": "Complete rendering failure with no confirmed workaround warrants high, not medium."
               }
             ]
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "GL rendering on iOS is completely broken on .NET 10 with no workaround. Need to determine whether .NET 10 or Apple removed EAGL support, and whether a fix is in SkiaSharp\u0027s scope or requires .NET runtime changes.",
+            "alternatives": [
+              {
+                "value": "close-wontfix",
+                "whyRejected": "OpenGL ES is deprecated by Apple but SKGLView is still a supported SkiaSharp component \u2014 the rendering failure needs a fix or a documented migration to Metal."
+              }
+            ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "Reporter confirms the same SkiaSharp version (3.116.0) works on .NET 9 but fails on .NET 10, indicating a regression introduced by .NET 10 runtime or iOS SDK changes affecting EAGL context binding."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Issue is on current SkiaSharp 3.116.0 with .NET 10 and relates to Apple\u0027s ongoing deprecation of OpenGL ES, making it actively relevant to current development."
           }
         ],
         "uncertainties": [
@@ -2240,6 +2452,11 @@
                 "whyRejected": "The root cause and workaround are already known. No further investigation needed."
               }
             ]
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "ClickOnce native asset deployment issue persists across SkiaSharp 3.x versions (3.116.0, 3.119.1) due to the runtimes/ folder convention used by NativeAssets packages. The root cause is a ClickOnce tooling limitation, not version-specific."
           }
         ],
         "uncertainties": [
@@ -2503,6 +2720,27 @@
             "field": "bugSignals.severity",
             "chosen": "high",
             "expandedReason": "Complete failure to load the native library \u2014 SkiaSharp is entirely unusable in Blazor WASM on .NET 10. Workaround is inconsistent across platforms. Multiple users affected with community engagement."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "Real bug on .NET 10 WASM affecting multiple users with inconsistent workaround. Root cause is unclear \u2014 likely a .NET 10 platform change in native dependency handling \u2014 requiring investigation before a fix can be applied.",
+            "alternatives": [
+              {
+                "value": "close-wontfix",
+                "whyRejected": "Multiple users are affected and the issue is in SkiaSharp deployment scope, even if the root cause is a .NET 10 change."
+              }
+            ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "The issue occurs across all SkiaSharp versions (2.88.0 through 3.119.2-preview.1) on .NET 10 WASM. No SkiaSharp version ever worked on .NET 10 WASM, so this is a platform incompatibility rather than a SkiaSharp regression."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Issue persists across all tested SkiaSharp versions on .NET 10 WASM, indicating it is a current platform-level issue not tied to a specific SkiaSharp release."
           }
         ],
         "uncertainties": [
@@ -2716,6 +2954,16 @@
             "field": "actionability.suggestedAction",
             "chosen": "close-with-docs",
             "expandedReason": "The answer is clear: .lottie files are zip archives that must be extracted to get the raw Lottie JSON before passing to Skottie. The user can re-download the animation as .json from LottieFiles instead."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "Skottie has never supported the dotLottie (.lottie) zip archive format \u2014 it only parses raw Lottie JSON. This is not a regression but a format misunderstanding."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The issue is about format support, not a version-specific bug. The .lottie zip format has never been supported by Skottie in any version, so the behavior persists in current releases."
           }
         ],
         "uncertainties": [
@@ -2966,6 +3214,27 @@
             "field": "bugSignals.severity",
             "chosen": "high",
             "expandedReason": "Apps using SkiaSharp cannot target Android 16\u002B at all. No user-side workaround exists \u2014 the fix must come from rebuilding the native library. High community engagement confirms broad impact."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "The fix direction is clear (add linker flag), but needs verification of whether 3.x is also affected and where exactly in the build pipeline to add the flag. Maintainer already engaged.",
+            "alternatives": [
+              {
+                "value": "close-wontfix",
+                "whyRejected": "This is a hard blocker for Android 16\u002B deployment with high community interest \u2014 it must be fixed, not closed."
+              }
+            ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "This is not a regression in SkiaSharp behavior \u2014 the library never supported 16 KB page alignment. It is a new external platform requirement from Google for Android 16\u002B."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The 16 KB page alignment is a build-time linker flag, so all current native binaries (both 2.x and 3.x) are likely affected regardless of version."
           }
         ],
         "uncertainties": [
@@ -3383,6 +3652,55 @@
             "field": "bugSignals.severity",
             "chosen": "medium",
             "expandedReason": "Incorrect visual output with no XPS-specific workaround. PDF workaround exists but doesn\u0027t help XPS-dependent workflows. Not a crash or data loss, but renders XPS output unusable for the reporter\u0027s label printing use case."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "Real rendering bug with partial reproduction code. The double-scaling hypothesis needs confirmation and the version discrepancy needs clarification before a fix can proceed.",
+            "alternatives": [
+              {
+                "value": "request-info",
+                "whyRejected": "While version clarification is needed, the bug is substantive enough to warrant investigation rather than just requesting more info."
+              }
+            ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-Classic",
+            "expandedReason": "XPS is a Windows-specific document format and the reporter is using Windows 10/11. The XPS backend in Skia is only relevant on Windows.",
+            "alternatives": [
+              {
+                "value": "os/macOS",
+                "whyRejected": "XPS output is a Windows-specific technology; macOS does not use XPS for printing."
+              }
+            ]
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability",
+            "expandedReason": "Embedded images render at incorrect size in XPS output, producing unreliable visual output. The same SKPicture renders correctly to PDF, confirming broken XPS backend behavior.",
+            "alternatives": [
+              {
+                "value": "tenet/compatibility",
+                "whyRejected": "Not a platform compatibility issue \u2014 this is incorrect rendering within a single platform/backend combination."
+              }
+            ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "Reporter states last known good version is 2.88.9 and the bug appeared in v3. The major version boundary makes this a plausible regression though the large version gap makes pinpointing difficult.",
+            "alternatives": [
+              {
+                "value": "false",
+                "whyRejected": "Reporter explicitly identified a working version (2.88.9) and a broken version (3.116.0), indicating changed behavior."
+              }
+            ]
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Reporter mentions both 3.116.0 and 3.119.1, both recent v3 releases. The XPS backend scaling issue is unlikely to have been fixed between these versions."
           }
         ],
         "uncertainties": [
@@ -3488,7 +3806,7 @@
         "platforms": [
           {
             "value": "os/Windows-Classic",
-            "confidence": 0.90
+            "confidence": 0.9
           }
         ],
         "tenets": [
@@ -3551,7 +3869,7 @@
         },
         "regression": {
           "isRegression": false,
-          "confidence": 0.60,
+          "confidence": 0.6,
           "reason": "Reporter selected 2.88.9 as last known good and 3.116.0 as current, but then stated the actual DLL version is 2.88.8.0. The version information is contradictory and unreliable. The intermittent threading crash pattern could exist in any version."
         },
         "fixStatus": null
@@ -3633,6 +3951,38 @@
                 "whyRejected": "The stack trace is clear enough \u2014 investigation would just confirm the threading hypothesis. Better to request info and redirect upstream."
               }
             ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-Classic",
+            "expandedReason": "Reporter explicitly states Windows 11 environment. The crash occurs in a desktop Avalonia app on Windows, though the underlying threading issue could theoretically affect any platform.",
+            "alternatives": [
+              {
+                "value": "os/macOS",
+                "whyRejected": "No macOS environment mentioned; reporter only tested on Windows 11."
+              }
+            ]
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability",
+            "expandedReason": "The issue is an intermittent hard crash (process termination) during normal map rendering. This is a reliability problem \u2014 the app terminates unpredictably during expected usage.",
+            "alternatives": [
+              {
+                "value": "tenet/compatibility",
+                "whyRejected": "Not a compatibility issue \u2014 SkiaSharp runs fine on this platform; the crash is from concurrent access patterns."
+              }
+            ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "Version information is contradictory (form says 3.116.0, comment says 2.88.8.0). The threading crash pattern could exist in any SkiaSharp version since SkiaSharp objects have never been thread-safe."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "unknown",
+            "expandedReason": "Reporter selected 3.116.0 in the form but corrected to 2.88.8.0 in a comment. The contradictory version information makes current relevance uncertain, though the threading issue would affect any version."
           }
         ],
         "uncertainties": [
@@ -3652,19 +4002,19 @@
             {
               "title": "Redirect to Mapsui project",
               "description": "Guide the reporter to file this issue with the Mapsui project, as the threading violation is in their rendering code. Mapsui needs to add synchronization around their SkiaSharp calls.",
-              "confidence": 0.80,
+              "confidence": 0.8,
               "effort": "low"
             },
             {
               "title": "Suggest workaround: throttle GetMapInfo calls",
               "description": "Advise the reporter to debounce or throttle GetMapInfo() calls in PointerMoved to reduce concurrent access to SkiaSharp objects. This treats the symptom but provides an immediate fix.",
-              "confidence": 0.70,
+              "confidence": 0.7,
               "effort": "low"
             },
             {
               "title": "Request minimal reproduction without Mapsui",
               "description": "Ask the reporter to reproduce the crash with plain SkiaSharp code (concurrent DrawPath calls from two threads) to definitively confirm whether SkiaSharp itself has a bug or this is purely a Mapsui concurrency issue.",
-              "confidence": 0.60,
+              "confidence": 0.6,
               "effort": "medium"
             }
           ],
@@ -3675,7 +4025,7 @@
       "output": {
         "actionability": {
           "suggestedAction": "request-info",
-          "confidence": 0.80,
+          "confidence": 0.8,
           "reason": "The stack trace shows the crash originates from Mapsui\u0027s rendering pipeline calling SkiaSharp, with the intermittent nature strongly suggesting a threading violation. A community member also flagged this as likely a Mapsui issue. Should confirm version confusion and redirect to Mapsui before closing.",
           "missingInfo": [
             "sample-project",
@@ -3704,7 +4054,7 @@
             "risk": "high",
             "description": "Post analysis explaining likely threading violation and redirect to Mapsui",
             "reason": "Reporter needs version clarification, threading explanation, and upstream redirect to Mapsui project",
-            "confidence": 0.80,
+            "confidence": 0.8,
             "dependsOn": "labels-1",
             "payload": {
               "commentType": "request-info",
@@ -3734,11 +4084,11 @@
       "classification": {
         "type": {
           "value": "type/question",
-          "confidence": 0.80
+          "confidence": 0.8
         },
         "area": {
           "value": "area/libSkiaSharp.native",
-          "confidence": 0.90
+          "confidence": 0.9
         },
         "backends": null,
         "platforms": [
@@ -3750,7 +4100,7 @@
         "tenets": [
           {
             "value": "tenet/compatibility",
-            "confidence": 0.80
+            "confidence": 0.8
           }
         ],
         "partner": null
@@ -3843,6 +4193,11 @@
             "field": "actionability.suggestedAction",
             "chosen": "convert-to-discussion",
             "expandedReason": "Unity is not an officially supported platform. This is a community support question better suited to a Q\u0026A discussion where other Unity users can share their experiences."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "unknown",
+            "expandedReason": "No specific SkiaSharp version was mentioned in the issue. The user referenced NativeAssets packages but provided no version numbers, so relevance to current releases cannot be determined."
           }
         ],
         "uncertainties": [
@@ -3860,7 +4215,7 @@
             {
               "title": "Build libSkiaSharp from source for Unity WebGL",
               "description": "Compile libSkiaSharp using Emscripten with Unity-compatible settings. This would produce a .a static library that Unity can link into its WebGL build. Requires knowledge of Skia\u0027s build system (GN/Ninja) and Unity\u0027s native plugin requirements.",
-              "confidence": 0.50,
+              "confidence": 0.5,
               "effort": "high"
             },
             {
@@ -3872,7 +4227,7 @@
             {
               "title": "Use alternative 2D graphics for Unity WebGL",
               "description": "Consider Unity\u0027s built-in Vector Graphics package or other Unity-native solutions for vector art rendering in WebGL, since SkiaSharp does not officially support Unity as a host platform.",
-              "confidence": 0.70,
+              "confidence": 0.7,
               "effort": "low"
             }
           ],
@@ -3894,7 +4249,7 @@
             "risk": "low",
             "description": "Fix area label (Uno \u2192 native) and change type to question",
             "reason": "Unity is not Uno Platform \u2014 previous triage incorrectly applied area/SkiaSharp.Views.Uno. Content is a question, not a feature request.",
-            "confidence": 0.90,
+            "confidence": 0.9,
             "dependsOn": null,
             "payload": {
               "labelsToAdd": [
@@ -3914,7 +4269,7 @@
             "risk": "high",
             "description": "Explain Unity WebGL limitations and suggest alternatives",
             "reason": "User has been struggling for hours and deserves a clear explanation of why NativeAssets.WebAssembly does not work in Unity WebGL",
-            "confidence": 0.80,
+            "confidence": 0.8,
             "dependsOn": "labels-1",
             "payload": {
               "commentType": "answer",
@@ -4108,6 +4463,27 @@
             "field": "bugSignals.severity",
             "chosen": "high",
             "expandedReason": "Non-deterministic use-after-free crash affecting the entire public API surface. The race is hard to reproduce but real, as demonstrated by the Uno Platform team. No easy workaround for consumers."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "Valid bug with a clear fix pattern (GC.KeepAlive), but requires a full audit of the binding surface to determine scope. The fix is well-understood technically but the effort is significant.",
+            "alternatives": [
+              {
+                "value": "ready-to-fix",
+                "whyRejected": "While the fix pattern is known, a full audit of hundreds of P/Invoke wrappers is needed before implementation can begin."
+              }
+            ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "This has always been the case \u2014 the GC race exists in every version of SkiaSharp. The P/Invoke wrappers were never systematically protected with GC.KeepAlive calls."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "This is a latent bug present since the inception of the P/Invoke wrappers and has never been systematically addressed. Only a handful of methods currently have GC.KeepAlive calls."
           }
         ],
         "uncertainties": [
@@ -4358,6 +4734,32 @@
             "field": "tenets",
             "chosen": "tenet/compatibility, tenet/reliability",
             "expandedReason": "Compatibility: worked in 2.88.9 but not in 3.116.0 in container deployments. Reliability: results in a hard crash (TypeInitializationException) on the first SkiaSharp API call."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "The workaround exists but the root cause \u2014 why NoDependencies binary is not deployed in Aspire container builds \u2014 is undetermined and could be a SkiaSharp packaging issue or Aspire tooling bug.",
+            "alternatives": [
+              {
+                "value": "close-answered",
+                "whyRejected": "While a workaround was found, the underlying packaging/deployment bug remains unfixed and affects other users."
+              }
+            ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Linux",
+            "expandedReason": "The issue occurs in Linux Azure Container Apps deployed via .NET Aspire. The DllNotFoundException for libSkiaSharp and missing libfontconfig are Linux-specific native dependency issues."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "User reports 2.88.9 as last known good version. However, the NoDependencies package may not have existed in 2.x, so this may be a new issue with 3.x packaging rather than a true regression of identical functionality."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Issue reported on 3.116.0 with no indication the native asset selection behavior in container deployments has been fixed in later releases."
           }
         ],
         "uncertainties": [
@@ -4765,6 +5167,31 @@
             "field": "actionability.suggestedAction",
             "chosen": "keep-open",
             "expandedReason": "PR #3380 is already open with the fix (version bump to 3.3.1). The issue should remain open until the PR is merged and released."
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-Classic",
+            "expandedReason": "The issue is specific to WPF on Windows with .NET Framework 4.8. Strong-naming enforcement and the OpenTK.GLWpfControl dependency only apply to Windows Classic desktop scenarios."
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/compatibility",
+            "expandedReason": "Strong-named applications cannot load non-strong-named assemblies, breaking backward compatibility for .NET Framework WPF consumers who upgraded from SkiaSharp 2.88.x to 3.x."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "SkiaSharp 2.88.9 did not have the OpenTK.GLWpfControl dependency. The 3.x series introduced it at version 3.3.0 which lacks strong-naming, breaking strong-named apps that previously worked."
+          },
+          {
+            "field": "fixStatus.likelyFixed",
+            "chosen": "false",
+            "expandedReason": "PR #3380 is open proposing bumping OpenTK.GLWpfControl from 3.3.0 to 3.3.1, but it has not been merged yet so the fix is not available in any release."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The csproj on main still references OpenTK.GLWpfControl 3.3.0 for net4x targets, so the issue is present in all SkiaSharp 3.x releases including the latest."
           }
         ],
         "uncertainties": [
@@ -4872,7 +5299,7 @@
         "platforms": [
           {
             "value": "os/Android",
-            "confidence": 0.80
+            "confidence": 0.8
           },
           {
             "value": "os/Windows-Classic",
@@ -4882,7 +5309,7 @@
         "tenets": [
           {
             "value": "tenet/reliability",
-            "confidence": 0.90
+            "confidence": 0.9
           }
         ],
         "partner": null
@@ -4980,6 +5407,37 @@
             "field": "bugSignals.severity",
             "chosen": "medium",
             "expandedReason": "Memory leak that grows with each SKShaper creation. Not a crash, but can cause OOM on constrained devices over time. The leak is in library code, not user code, so there is no straightforward workaround."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "The code-level bug in ToHarfBuzzBlob() is confirmed by source analysis, but a memory profiling test should verify the leak and validate the proposed one-line disposal fix.",
+            "alternatives": [
+              {
+                "value": "close-fixed",
+                "whyRejected": "No fix has been merged yet; the bug is identified but not resolved."
+              }
+            ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Android, os/Windows-Classic",
+            "expandedReason": "Reporter first observed the leak on Android and confirmed it also reproduces on Windows. The bug is in managed code (BlobExtensions.cs) so it affects all platforms, but only Android and Windows are explicitly reported."
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability",
+            "expandedReason": "Memory leak that grows with each SKShaper instantiation can degrade performance over time and eventually cause OOM, particularly on resource-constrained Android devices."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "false",
+            "expandedReason": "The else branch in BlobExtensions.ToHarfBuzzBlob() has never disposed the SKStreamAsset since the extension was introduced. This is a latent bug, not a regression from a previously working state."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The leak exists in BlobExtensions.ToHarfBuzzBlob() which has not changed in recent versions; the else branch still does not dispose the SKStreamAsset."
           }
         ],
         "uncertainties": [
@@ -5003,13 +5461,13 @@
             {
               "title": "Always dispose SKStreamAsset after use in SKShaper constructor",
               "description": "Capture the SKStreamAsset in a variable in the SKShaper constructor and wrap it in a using statement, rather than relying on ToHarfBuzzBlob() to manage its lifetime. Decouples disposal responsibility from the extension method.",
-              "confidence": 0.80,
+              "confidence": 0.8,
               "effort": "low"
             },
             {
               "title": "Unify both paths to always copy data",
               "description": "Simplify ToHarfBuzzBlob() to always copy data and always dispose the asset, removing the memory-mapped optimization. Trades minor performance for simpler, less error-prone code.",
-              "confidence": 0.70,
+              "confidence": 0.7,
               "effort": "low"
             }
           ],
@@ -5141,7 +5599,7 @@
         },
         "regression": {
           "isRegression": true,
-          "confidence": 0.90,
+          "confidence": 0.9,
           "reason": "Original reporter states 2.88.9 works correctly with x86. Second commenter confirms x86 works with net472 (implying older SkiaSharp or same v3 but different runtime). The v2-to-v3 transition changed native library structure significantly.",
           "workedInVersion": "2.88.9",
           "brokeInVersion": "3.116.0"
@@ -5209,6 +5667,37 @@
             "field": "regression",
             "chosen": "true",
             "expandedReason": "Explicitly stated: v2.88.9 works on x86, v3.116.0\u002B does not. The v2-to-v3 native library restructuring is the likely point where x86 support broke."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "needs-investigation",
+            "expandedReason": "Two reporters confirm the x86 crash with stack trace evidence, but root cause (calling convention mismatch vs native build issue) needs code inspection of P/Invoke declarations and native build config.",
+            "alternatives": [
+              {
+                "value": "close-wontfix",
+                "whyRejected": "This is a confirmed crash affecting x86 users with no clean workaround, not something to dismiss."
+              }
+            ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-Classic",
+            "expandedReason": "Both reporters are on Windows, and the crash is specific to x86 P/Invoke calling conventions on Windows. No other platforms mentioned or affected."
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability, tenet/compatibility",
+            "expandedReason": "Reliability: hard crash (stack overflow) with no managed exception handling. Compatibility: regression from v2.88.9 to v3.116.0\u002B breaking existing x86 deployments."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "Reporter explicitly states v2.88.9 works on x86 while v3.116.0\u002B crashes. Second reporter confirms x86 works under .NET Framework 4.7.2, pointing to a v2-to-v3 regression in native library structure."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Issue reported against 3.116.0 and confirmed still present in 3.119.1, with no indication of a fix in subsequent releases."
           }
         ],
         "uncertainties": [
@@ -5227,7 +5716,7 @@
             {
               "title": "Audit and fix x86 calling conventions in P/Invoke declarations",
               "description": "Review all DllImport/LibraryImport declarations in SkiaSharp for explicit CallingConvention specification. Ensure they match the native library\u0027s actual calling convention (likely cdecl). On x86, mismatched conventions cause stack corruption on every call.",
-              "confidence": 0.70,
+              "confidence": 0.7,
               "effort": "medium"
             },
             {
@@ -5239,7 +5728,7 @@
             {
               "title": "Test with explicit NativeLibrary.SetDllImportResolver",
               "description": "As a diagnostic step, use NativeLibrary.SetDllImportResolver to control exactly which native binary is loaded on x86. This would help isolate whether the issue is DLL resolution (wrong binary loaded) or a genuine calling convention problem.",
-              "confidence": 0.50,
+              "confidence": 0.5,
               "effort": "low"
             }
           ],
@@ -5281,7 +5770,7 @@
             "risk": "high",
             "description": "Post analysis acknowledging the bug and asking for a minimal repro project",
             "reason": "Two reporters confirm the issue but neither provides a minimal reproduction. A repro project would accelerate investigation of the x86 calling convention hypothesis.",
-            "confidence": 0.80,
+            "confidence": 0.8,
             "dependsOn": "labels-1",
             "payload": {
               "commentType": "request-info",
@@ -5411,6 +5900,39 @@
             "field": "actionability.suggestedAction",
             "chosen": "keep-open",
             "expandedReason": "Legitimate feature request with active community discussion. Labels are already correct. Maintainer needs to weigh in on the version bump tradeoff."
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-WinUI",
+            "expandedReason": "The request specifically targets SkiaSharp.Views.WinUI and its WinAppSDK dependency. The WinUI platform label was already applied to this issue.",
+            "alternatives": [
+              {
+                "value": "os/Windows-Classic",
+                "whyRejected": "This is about the WinUI/WinAppSDK package dependency, not classic Win32/WPF/WinForms."
+              }
+            ]
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/compatibility",
+            "expandedReason": "The metapackage dependency forces all downstream consumers (including MAUI) to pull in the entire WinAppSDK, creating transitive dependency compatibility issues.",
+            "alternatives": [
+              {
+                "value": "tenet/reliability",
+                "whyRejected": "No crashes or runtime failures are reported \u2014 this is purely about package dependency management and version compatibility."
+              }
+            ]
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "WinAppSDK 1.8 introduced split packages and MAUI RC2 is blocked on this change. The request targets current SDK versions and active ecosystem needs.",
+            "alternatives": [
+              {
+                "value": "unlikely",
+                "whyRejected": "The split packages in WinAppSDK 1.8 are a current feature and MAUI actively needs this change."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -5556,7 +6078,7 @@
         },
         "regression": {
           "isRegression": true,
-          "confidence": 0.90,
+          "confidence": 0.9,
           "reason": "Reporter states last known good version is 2.88.9 and the issue appeared in 3.116.0. Related issue #3267 pinpoints the regression to when D3D12 support was added.",
           "workedInVersion": "2.88.9",
           "brokeInVersion": "3.116.0"
@@ -5656,6 +6178,22 @@
                 "whyRejected": "While the root cause is identical to #3267, this issue adds significant value with real-world scale data (1M installations, 0.1% affected on Win10). A community member suggested closing as duplicate, but the additional context is worth preserving."
               }
             ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "Reporter states last known good version is 2.88.9 and the crash appeared in 3.116.0, coinciding with when D3D12 rendering support was added to the Skia build."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The D3D12 static link-time dependency has not been changed to dynamic loading in any subsequent release. The root cause persists in current builds.",
+            "alternatives": [
+              {
+                "value": "unlikely",
+                "whyRejected": "No fix or workaround has been applied \u2014 systems without d3d12.dll will still crash on current SkiaSharp 3.x versions."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -5679,13 +6217,13 @@
             {
               "title": "Disable D3D12 backend in SkiaSharp build",
               "description": "Set skia_use_direct3d=false in the GN build args for Windows, removing the d3d12.dll dependency entirely. Simple change but removes D3D12 rendering capability for all users.",
-              "confidence": 0.80,
+              "confidence": 0.8,
               "effort": "low"
             },
             {
               "title": "Ship separate NativeAssets packages with and without D3D12",
               "description": "Provide two Windows native asset variants \u2014 one with D3D12 support and one without \u2014 allowing users to choose based on their target environment. Does not fix the root cause for the default package.",
-              "confidence": 0.60,
+              "confidence": 0.6,
               "effort": "high"
             }
           ],
@@ -5706,7 +6244,7 @@
             "risk": "low",
             "description": "Add backend/Direct3D and tenet/compatibility labels",
             "reason": "Classification identifies Direct3D backend involvement and compatibility regression from 2.x to 3.x. These labels are not yet on the issue.",
-            "confidence": 0.90,
+            "confidence": 0.9,
             "dependsOn": null,
             "payload": {
               "labelsToAdd": [
@@ -5737,7 +6275,7 @@
             "risk": "high",
             "description": "Post analysis acknowledging the issue and linking to #3267",
             "reason": "Reporter asked for updates and the issue has been open without maintainer response. A response acknowledging the problem and linking to the existing tracking issue is appropriate.",
-            "confidence": 0.80,
+            "confidence": 0.8,
             "dependsOn": "labels-1",
             "payload": {
               "commentType": "answer",
@@ -6070,6 +6608,44 @@
                 "whyRejected": "No fix has been released. The maintainer mentioned a fix in progress but hasn\u0027t confirmed it addresses this specific issue."
               }
             ]
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-Classic",
+            "expandedReason": "The crash occurs on Windows ARM64 when deploying a MAUI app as MSIX. The label reflects the Windows desktop deployment target where the VC\u002B\u002B runtime dependency manifests.",
+            "alternatives": [
+              {
+                "value": "os/Windows-WinUI",
+                "whyRejected": "While MAUI uses WinUI under the hood, the deployment issue is about the native binary on Windows desktop ARM64, not WinUI-specific behavior."
+              }
+            ]
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability",
+            "expandedReason": "The app crashes immediately on launch when published to ARM64 Windows without VC\u002B\u002B Redistributable. A hard crash preventing any app functionality is a core reliability issue.",
+            "alternatives": [
+              {
+                "value": "tenet/compatibility",
+                "whyRejected": "While there is a platform-specific aspect (ARM64 vs x64), the primary concern is that the published app crashes rather than a cross-version compatibility gap."
+              }
+            ]
+          },
+          {
+            "field": "fixStatus.likelyFixed",
+            "chosen": "false",
+            "expandedReason": "The maintainer mentioned an in-progress GPU fix, but the repro uses CPU rendering (SKCanvasView). The VC\u002B\u002B dependency suggests a native build config issue requiring separate attention."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "Reported on 3.116.0 and reproduced with 3.119.0, indicating the ARM64 VC\u002B\u002B runtime dependency persists across recent versions and likely remains unfixed.",
+            "alternatives": [
+              {
+                "value": "unlikely",
+                "whyRejected": "No evidence the static CRT linking was applied to ARM64 builds, so the issue likely persists in current releases."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -6087,19 +6663,19 @@
             {
               "title": "Statically link C\u002B\u002B runtime for ARM64 Windows builds",
               "description": "Update the native build configuration to statically link the C\u002B\u002B runtime (/MT instead of /MD) for the ARM64 Windows target, matching what was done for x86/x64 in issue #136 (v1.68.0). This eliminates the dependency for all users.",
-              "confidence": 0.80,
+              "confidence": 0.8,
               "effort": "medium"
             },
             {
               "title": "Include VC\u002B\u002B Redistributable in MSIX package",
               "description": "Configure the MSIX packaging to include the VC\u002B\u002B Redistributable merge modules or declare a dependency on the VC\u002B\u002B runtime framework package. Doesn\u0027t require rebuilding native libraries but pushes the fix to app developers.",
-              "confidence": 0.60,
+              "confidence": 0.6,
               "effort": "low"
             },
             {
               "title": "Document VC\u002B\u002B Redistributable requirement for ARM64",
               "description": "Document that ARM64 Windows deployments require the VC\u002B\u002B Redistributable, and recommend including it in deployment scripts or installation prerequisites. Immediate workaround for affected users.",
-              "confidence": 0.90,
+              "confidence": 0.9,
               "effort": "low"
             }
           ],
@@ -6136,7 +6712,7 @@
             "risk": "low",
             "description": "Cross-reference related ARM64 and CRT linking issues",
             "reason": "Issue #3155 is a related ARM64 Windows GPU issue. Issue #136 is where static CRT linking was implemented for x86/x64 \u2014 the same fix may need to be applied for ARM64.",
-            "confidence": 0.80,
+            "confidence": 0.8,
             "dependsOn": null,
             "payload": {
               "relatedIssues": [
@@ -6228,7 +6804,7 @@
         "regression": null,
         "fixStatus": {
           "likelyFixed": true,
-          "confidence": 0.90,
+          "confidence": 0.9,
           "reason": "PR #2195 added null checks to NonAlertableWin32Lock.Enter() and Leave() methods, preventing AccessViolationException when the critical section has already been finalized. This fix shipped in v2.88.1. The stack trace in #2511 is identical to #2194.",
           "relatedPRs": [
             2195
@@ -6293,6 +6869,44 @@
             "field": "actionability.suggestedAction",
             "chosen": "close-as-duplicate",
             "expandedReason": "The stack trace is identical to #2194. PR #2195 fixed this exact issue in v2.88.1. The issue was already closed with zero comments, confirming it was recognized as a known/fixed issue."
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-Classic",
+            "expandedReason": "The crash is in NonAlertableWin32Lock (Win32 CRITICAL_SECTION) and reporter explicitly says \u0022my winform program,\u0022 confirming a Windows Classic desktop application.",
+            "alternatives": [
+              {
+                "value": "os/Windows-WinUI",
+                "whyRejected": "WinForms is a classic Win32 framework, not WinUI/UWP."
+              }
+            ]
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability",
+            "expandedReason": "An uncatchable AccessViolationException during normal app shutdown is a reliability defect \u2014 finalizer cleanup should never crash the process.",
+            "alternatives": [
+              {
+                "value": "tenet/compatibility",
+                "whyRejected": "This is not a cross-version or cross-platform compatibility issue; it is a crash caused by non-deterministic finalizer ordering."
+              }
+            ]
+          },
+          {
+            "field": "fixStatus.likelyFixed",
+            "chosen": "true",
+            "expandedReason": "PR #2195 added null guards to NonAlertableWin32Lock.Enter() and Leave(), shipping in v2.88.1. The stack trace is identical to the fixed issue #2194."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "unlikely",
+            "expandedReason": "The fix shipped in v2.88.1 and current SkiaSharp is 3.x. The reporter likely used a pre-fix version given the identical stack trace to #2194.",
+            "alternatives": [
+              {
+                "value": "likely",
+                "whyRejected": "The null guards from PR #2195 are present in all versions since v2.88.1, so the crash cannot occur on current releases."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -6307,7 +6921,7 @@
       "output": {
         "actionability": {
           "suggestedAction": "close-as-duplicate",
-          "confidence": 0.90,
+          "confidence": 0.9,
           "reason": "Identical stack trace to #2194, which was fixed in PR #2195 (v2.88.1). Issue was already closed with no comments."
         },
         "actions": [
@@ -6335,7 +6949,7 @@
             "risk": "medium",
             "description": "Mark as duplicate of #2194",
             "reason": "Byte-for-byte identical stack trace \u2014 same finalizer ordering crash in NonAlertableWin32Lock",
-            "confidence": 0.90,
+            "confidence": 0.9,
             "dependsOn": null,
             "payload": {
               "duplicateOf": 2194,
@@ -6364,7 +6978,7 @@
             "risk": "medium",
             "description": "Close as duplicate of #2194",
             "reason": "Fixed in v2.88.1, identical to tracked issue",
-            "confidence": 0.90,
+            "confidence": 0.9,
             "dependsOn": "comment-1",
             "payload": {
               "reason": "not_planned",
@@ -6611,7 +7225,7 @@
         },
         "regression": {
           "isRegression": true,
-          "confidence": 0.80,
+          "confidence": 0.8,
           "reason": "Reporter states netcoreapp3.1 DLLs were present in preview.127 but missing in preview.179, indicating a regression between those preview builds.",
           "workedInVersion": "2.88.0-preview.127",
           "brokeInVersion": "2.88.0-preview.179"
@@ -6680,6 +7294,38 @@
             "field": "actionability.suggestedAction",
             "chosen": "close-as-fixed",
             "expandedReason": "This affects only obsolete preview builds (2.88.0-preview.179) and a now-EOL framework (.NET Core 3.1). The stable 2.88.0 release and all subsequent versions have shipped. No action is needed."
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/compatibility",
+            "expandedReason": "Empty netcoreapp3.1 directory in the NuGet package is a framework compatibility issue \u2014 the package advertises support for a TFM but fails to deliver assemblies.",
+            "alternatives": [
+              {
+                "value": "tenet/reliability",
+                "whyRejected": "The package does not crash; it simply lacks assemblies for the advertised TFM, making this a compatibility gap rather than a reliability failure."
+              }
+            ]
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "Reporter confirms netcoreapp3.1 DLLs were present in preview.127 but missing in preview.179, indicating assemblies were dropped between those preview builds."
+          },
+          {
+            "field": "fixStatus.likelyFixed",
+            "chosen": "true",
+            "expandedReason": "The 2.88.0 stable release and all subsequent versions have shipped since this preview. .NET Core 3.1 is EOL (December 2022), making the affected configuration obsolete."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "unlikely",
+            "expandedReason": ".NET Core 3.1 reached end-of-life in December 2022 and SkiaSharp 3.x is the current major version. The affected preview build is over 3 years old.",
+            "alternatives": [
+              {
+                "value": "likely",
+                "whyRejected": "Both the preview version and the target framework are obsolete \u2014 no supported configuration is affected."
+              }
+            ]
           }
         ],
         "uncertainties": [
@@ -6696,7 +7342,7 @@
             {
               "title": "Close as obsolete",
               "description": "The affected preview version is from 2021, .NET Core 3.1 is EOL (December 2022), and SkiaSharp 3.x is the current major version. No fix needed \u2014 the issue is moot.",
-              "confidence": 0.90,
+              "confidence": 0.9,
               "effort": "low"
             },
             {
@@ -6723,7 +7369,7 @@
             "risk": "low",
             "description": "Apply bug, Views.Forms, and compatibility labels",
             "reason": "Matches classification \u2014 packaging bug in Views.Forms affecting framework compatibility",
-            "confidence": 0.90,
+            "confidence": 0.9,
             "dependsOn": null,
             "payload": {
               "labelsToAdd": [
