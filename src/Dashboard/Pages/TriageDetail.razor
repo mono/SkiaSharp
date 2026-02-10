@@ -399,7 +399,8 @@ else
                 <span class="carousel-hint">← scroll →</span>
             </div>
             <div class="proposals-carousel">
-                @foreach (var proposal in res.Proposals)
+                @{ var sortedProposals = res.Proposals.OrderByDescending(p => p.Title == res.RecommendedProposal).ToList(); }
+                @foreach (var proposal in sortedProposals)
                 {
                     var isRecommended = proposal.Title == res.RecommendedProposal;
                     <div class="proposal-card @(isRecommended ? "proposal-recommended" : "")">
@@ -440,15 +441,15 @@ else
                                 }
                             </ul>
                         </div>
+                        @if (isRecommended && res.RecommendedReason is not null)
+                        {
+                            <div class="recommended-reason">
+                                <strong>Why:</strong> @res.RecommendedReason
+                            </div>
+                        }
                     </div>
                 }
             </div>
-            @if (res.RecommendedReason is not null)
-            {
-                <div class="recommended-reason">
-                    <strong>Why recommended:</strong> @res.RecommendedReason
-                </div>
-            }
         </div>
     }
 
