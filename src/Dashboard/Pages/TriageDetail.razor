@@ -35,32 +35,32 @@ else
     <!-- Header -->
     <div class="triage-detail-header">
         <div class="detail-title-row">
-            <a href="@_issue.Url" target="_blank" class="issue-link-lg">#@_issue.Number</a>
+            <a href="@_issue.Url" target="_blank" class="issue-link-lg">#@_issue.Meta.Number</a>
             <h1>@_issue.Summary</h1>
         </div>
         <div class="detail-badges">
-            <span class="badge-type badge-@_issue.Type.Value">@FormatLabel(_issue.Type.Value)</span>
-            @if (_issue.BugSignals?.Severity is not null)
+            <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
+            @if (_issue.Evidence.BugSignals?.Severity is not null)
             {
-                <span class="badge-severity badge-sev-@_issue.BugSignals.Severity">@FormatLabel(_issue.BugSignals.Severity)</span>
+                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity">@FormatLabel(_issue.Evidence.BugSignals.Severity)</span>
             }
-            <span class="badge-action badge-act-@_issue.Actionability.SuggestedAction">@FormatLabel(_issue.Actionability.SuggestedAction)</span>
-            <span class="confidence-pill-lg" title="Confidence: @_issue.Actionability.Confidence.ToString("P0")">
-                <span class="confidence-bar @GetConfidenceClass(_issue.Actionability.Confidence)" style="width: @((int)(_issue.Actionability.Confidence * 100))%"></span>
-                <span class="confidence-text">@_issue.Actionability.Confidence.ToString("P0")</span>
+            <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction">@FormatLabel(_issue.Output.Actionability.SuggestedAction)</span>
+            <span class="confidence-pill-lg" title="Confidence: @_issue.Output.Actionability.Confidence.ToString("P0")">
+                <span class="confidence-bar @GetConfidenceClass(_issue.Output.Actionability.Confidence)" style="width: @((int)(_issue.Output.Actionability.Confidence * 100))%"></span>
+                <span class="confidence-text">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
             </span>
-            @if (_issue.Actionability.Closeable == true)
+            @if (_issue.Output.Actions?.Any(a => a.Type == "close-issue") == true)
             {
                 <span class="badge-closeable">✓ Closeable</span>
             }
-            @if (_issue.Actionability.RequiresHumanReview == true)
+            @if (_issue.Output.Actionability.RequiresHumanReview == true)
             {
                 <span class="badge-human-review">⚠ Needs Human Review</span>
             }
         </div>
         <p class="detail-meta">
-            Analyzed: @_issue.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
-            · Repo: <a href="https://github.com/@_issue.Repo" target="_blank">@_issue.Repo</a>
+            Analyzed: @_issue.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
+            · Repo: <a href="https://github.com/@_issue.Meta.Repo" target="_blank">@_issue.Meta.Repo</a>
         </p>
     </div>
 
@@ -70,54 +70,52 @@ else
             <h3>Classification</h3>
             <div class="field-row">
                 <span class="field-label">Type:</span>
-                <span class="badge-type badge-@_issue.Type.Value">@FormatLabel(_issue.Type.Value)</span>
-                <span class="field-confidence">@_issue.Type.Confidence.ToString("P0")</span>
+                <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
+                <span class="field-confidence">@_issue.Classification.Type.Confidence.ToString("P0")</span>
             </div>
-            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Type.Reason)</div>
-            @if (_issue.Area is not null)
+            @if (_issue.Classification.Area is not null)
             {
                 <div class="field-row">
                     <span class="field-label">Area:</span>
-                    <span class="label">@_issue.Area.Value</span>
-                    <span class="field-confidence">@_issue.Area.Confidence.ToString("P0")</span>
+                    <span class="label">@_issue.Classification.Area.Value</span>
+                    <span class="field-confidence">@_issue.Classification.Area.Confidence.ToString("P0")</span>
                 </div>
-                <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Area.Reason)</div>
             }
-            @if (_issue.Platforms is { Count: > 0 })
+            @if (_issue.Classification.Platforms is { Count: > 0 })
             {
                 <div class="field-row">
                     <span class="field-label">Platforms:</span>
-                    @foreach (var p in _issue.Platforms)
+                    @foreach (var p in _issue.Classification.Platforms)
                     {
                         <span class="label">@p.Value</span>
                     }
                 </div>
             }
-            @if (_issue.Backends is { Count: > 0 })
+            @if (_issue.Classification.Backends is { Count: > 0 })
             {
                 <div class="field-row">
                     <span class="field-label">Backends:</span>
-                    @foreach (var b in _issue.Backends)
+                    @foreach (var b in _issue.Classification.Backends)
                     {
                         <span class="label">@b.Value</span>
                     }
                 </div>
             }
-            @if (_issue.Tenets is { Count: > 0 })
+            @if (_issue.Classification.Tenets is { Count: > 0 })
             {
                 <div class="field-row">
                     <span class="field-label">Tenets:</span>
-                    @foreach (var t in _issue.Tenets)
+                    @foreach (var t in _issue.Classification.Tenets)
                     {
                         <span class="label">@t.Value</span>
                     }
                 </div>
             }
-            @if (_issue.Partner is not null)
+            @if (_issue.Classification.Partner is not null)
             {
                 <div class="field-row">
                     <span class="field-label">Partner:</span>
-                    <span class="label">@_issue.Partner.Value</span>
+                    <span class="label">@_issue.Classification.Partner.Value</span>
                 </div>
             }
         </div>
@@ -125,29 +123,17 @@ else
         <div class="detail-card card-action">
             <h3>Suggested Action</h3>
             <div class="action-detail">
-                <span class="badge-action badge-act-@_issue.Actionability.SuggestedAction">
-                    @FormatLabel(_issue.Actionability.SuggestedAction)
+                <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction">
+                    @FormatLabel(_issue.Output.Actionability.SuggestedAction)
                 </span>
-                <span class="field-confidence">@_issue.Actionability.Confidence.ToString("P0")</span>
+                <span class="field-confidence">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
             </div>
-            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Actionability.Reason)</div>
-            @if (_issue.Actionability.Abandoned == true)
-            {
-                <span class="badge-abandoned">🕸 Abandoned</span>
-                @if (_issue.Actionability.AbandonedReason is not null)
-                {
-                    <div class="reason-text-sm md-content">@MarkdownHelper.ToHtml(_issue.Actionability.AbandonedReason)</div>
-                }
-            }
-            @if (_issue.Actionability.DuplicateOf is not null)
-            {
-                <p>Duplicate of <a href="https://github.com/@_issue.Repo/issues/@_issue.Actionability.DuplicateOf" target="_blank">#@_issue.Actionability.DuplicateOf</a></p>
-            }
-            @if (_issue.Actionability.MissingInfo is { Count: > 0 })
+            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Output.Actionability.Reason)</div>
+            @if (_issue.Output.Actionability.MissingInfo is { Count: > 0 })
             {
                 <div class="missing-info">
                     <strong>Missing:</strong>
-                    @foreach (var mi in _issue.Actionability.MissingInfo)
+                    @foreach (var mi in _issue.Output.Actionability.MissingInfo)
                     {
                         <span class="label label-missing">@FormatLabel(mi)</span>
                     }
@@ -157,39 +143,36 @@ else
     </div>
 
     <!-- Bug Signals -->
-    @if (_issue.BugSignals is not null)
+    @if (_issue.Evidence.BugSignals is not null)
     {
         <div class="detail-card card-bug-signals">
             <h3>Bug Signals</h3>
             <div class="bug-signals-grid">
-                <span class="signal @(_issue.BugSignals.HasCrash ? "signal-yes" : "signal-no")">
-                    @(_issue.BugSignals.HasCrash ? "💥 Crash" : "No Crash")
+                <span class="signal @(_issue.Evidence.BugSignals.HasCrash ? "signal-yes" : "signal-no")">
+                    @(_issue.Evidence.BugSignals.HasCrash ? "💥 Crash" : "No Crash")
                 </span>
-                <span class="signal @(_issue.BugSignals.HasStackTrace ? "signal-yes" : "signal-no")">
-                    @(_issue.BugSignals.HasStackTrace ? "📋 Stack Trace" : "No Stack Trace")
+                <span class="signal @(_issue.Evidence.BugSignals.HasStackTrace ? "signal-yes" : "signal-no")">
+                    @(_issue.Evidence.BugSignals.HasStackTrace ? "📋 Stack Trace" : "No Stack Trace")
                 </span>
-                <span class="signal @(_issue.BugSignals.HasScreenshot == true ? "signal-yes" : "signal-no")">
-                    @(_issue.BugSignals.HasScreenshot == true ? "📸 Screenshots" : "No Screenshots")
+                <span class="signal @(_issue.Evidence.BugSignals.HasWorkaround == true ? "signal-yes" : "signal-no")">
+                    @(_issue.Evidence.BugSignals.HasWorkaround == true ? "🔧 Workaround" : "No Workaround")
                 </span>
-                <span class="signal @(_issue.BugSignals.HasWorkaround == true ? "signal-yes" : "signal-no")">
-                    @(_issue.BugSignals.HasWorkaround == true ? "🔧 Workaround" : "No Workaround")
-                </span>
-                <span class="badge-severity badge-sev-@_issue.BugSignals.Severity">@FormatLabel(_issue.BugSignals.Severity)</span>
-                <span class="label">Repro: @FormatLabel(_issue.BugSignals.ReproQuality)</span>
+                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity">@FormatLabel(_issue.Evidence.BugSignals.Severity)</span>
+                <span class="label">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality)</span>
             </div>
-            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.BugSignals.SeverityReason)</div>
-            @if (_issue.BugSignals.WorkaroundSummary is not null)
+            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.BugSignals.SeverityReason)</div>
+            @if (_issue.Evidence.BugSignals.WorkaroundSummary is not null)
             {
                 <div class="workaround-box">
                     <strong>Workaround:</strong>
-                    <div class="md-content">@MarkdownHelper.ToHtml(_issue.BugSignals.WorkaroundSummary)</div>
+                    <div class="md-content">@MarkdownHelper.ToHtml(_issue.Evidence.BugSignals.WorkaroundSummary)</div>
                 </div>
             }
-            @if (_issue.BugSignals.TargetFrameworks is { Count: > 0 })
+            @if (_issue.Evidence.BugSignals.TargetFrameworks is { Count: > 0 })
             {
                 <div class="field-row" style="margin-top: 0.5rem">
                     <span class="field-label">Frameworks:</span>
-                    @foreach (var fw in _issue.BugSignals.TargetFrameworks)
+                    @foreach (var fw in _issue.Evidence.BugSignals.TargetFrameworks)
                     {
                         <span class="label">@fw</span>
                     }
@@ -199,29 +182,29 @@ else
     }
 
     <!-- Regression & Fix Status (side by side if both exist) -->
-    @if (_issue.Regression is not null || _issue.FixStatus is not null)
+    @if (_issue.Evidence.Regression is not null || _issue.Evidence.FixStatus is not null)
     {
         <div class="detail-section-grid">
-            @if (_issue.Regression is not null)
+            @if (_issue.Evidence.Regression is not null)
             {
                 <div class="detail-card card-regression">
                     <h3>Regression</h3>
-                    @if (_issue.Regression.IsRegression)
+                    @if (_issue.Evidence.Regression.IsRegression)
                     {
                         <span class="badge-regression">⚡ Regression</span>
-                        <span class="field-confidence">@_issue.Regression.Confidence.ToString("P0")</span>
-                        @if (_issue.Regression.WorkedInVersion is not null)
+                        <span class="field-confidence">@_issue.Evidence.Regression.Confidence.ToString("P0")</span>
+                        @if (_issue.Evidence.Regression.WorkedInVersion is not null)
                         {
                             <div class="field-row">
                                 <span class="field-label">Worked in:</span>
-                                <strong>@_issue.Regression.WorkedInVersion</strong>
+                                <strong>@_issue.Evidence.Regression.WorkedInVersion</strong>
                             </div>
                         }
-                        @if (_issue.Regression.BrokeInVersion is not null)
+                        @if (_issue.Evidence.Regression.BrokeInVersion is not null)
                         {
                             <div class="field-row">
                                 <span class="field-label">Broke in:</span>
-                                <strong>@_issue.Regression.BrokeInVersion</strong>
+                                <strong>@_issue.Evidence.Regression.BrokeInVersion</strong>
                             </div>
                         }
                     }
@@ -229,25 +212,25 @@ else
                     {
                         <span>Not a regression</span>
                     }
-                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Regression.Reason)</div>
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.Regression.Reason)</div>
                 </div>
             }
-            @if (_issue.FixStatus is not null)
+            @if (_issue.Evidence.FixStatus is not null)
             {
                 <div class="detail-card card-fix-status">
                     <h3>Fix Status</h3>
-                    <span class="@(_issue.FixStatus.LikelyFixed ? "badge-fixed" : "badge-unfixed")">
-                        @(_issue.FixStatus.LikelyFixed ? "✓ Likely Fixed" : "✗ Not Fixed")
+                    <span class="@(_issue.Evidence.FixStatus.LikelyFixed ? "badge-fixed" : "badge-unfixed")">
+                        @(_issue.Evidence.FixStatus.LikelyFixed ? "✓ Likely Fixed" : "✗ Not Fixed")
                     </span>
-                    <span class="field-confidence">@_issue.FixStatus.Confidence.ToString("P0")</span>
-                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.FixStatus.Reason)</div>
-                    @if (_issue.FixStatus.FixedInVersion is not null)
+                    <span class="field-confidence">@_issue.Evidence.FixStatus.Confidence.ToString("P0")</span>
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.FixStatus.Reason)</div>
+                    @if (_issue.Evidence.FixStatus.FixedInVersion is not null)
                     {
-                        <p>Fixed in: <strong>@_issue.FixStatus.FixedInVersion</strong></p>
+                        <p>Fixed in: <strong>@_issue.Evidence.FixStatus.FixedInVersion</strong></p>
                     }
-                    @if (_issue.FixStatus.VerificationStatus is not null)
+                    @if (_issue.Evidence.FixStatus.VerificationStatus is not null)
                     {
-                        <span class="label">@FormatLabel(_issue.FixStatus.VerificationStatus)</span>
+                        <span class="label">@FormatLabel(_issue.Evidence.FixStatus.VerificationStatus)</span>
                     }
                 </div>
             }
@@ -255,42 +238,42 @@ else
     }
 
     <!-- Version Analysis -->
-    @if (_issue.VersionAnalysis is not null)
+    @if (_issue.Evidence.VersionAnalysis is not null)
     {
         <div class="detail-card card-version">
             <h3>Version Analysis</h3>
-            @if (_issue.VersionAnalysis.MentionedVersions is { Count: > 0 })
+            @if (_issue.Evidence.VersionAnalysis.MentionedVersions is { Count: > 0 })
             {
                 <div class="field-row">
                     <span class="field-label">Versions:</span>
-                    @foreach (var v in _issue.VersionAnalysis.MentionedVersions)
+                    @foreach (var v in _issue.Evidence.VersionAnalysis.MentionedVersions)
                     {
                         <span class="label">@v</span>
                     }
                 </div>
             }
-            @if (_issue.VersionAnalysis.Era is not null)
-            {
-                <div class="field-row">
-                    <span class="field-label">Era:</span>
-                    <span class="label">@FormatLabel(_issue.VersionAnalysis.Era)</span>
-                </div>
-            }
-            @if (_issue.VersionAnalysis.CurrentRelevance is not null)
+            @if (_issue.Evidence.VersionAnalysis.CurrentRelevance is not null)
             {
                 <div class="field-row">
                     <span class="field-label">Still relevant:</span>
-                    <span class="label label-relevance-@_issue.VersionAnalysis.CurrentRelevance">@FormatLabel(_issue.VersionAnalysis.CurrentRelevance)</span>
+                    <span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance)</span>
                 </div>
             }
-            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.VersionAnalysis.Reason)</div>
+            @if (_issue.Evidence.VersionAnalysis.MigrationPath is not null)
+            {
+                <div class="field-row">
+                    <span class="field-label">Migration:</span>
+                    <span class="label">@_issue.Evidence.VersionAnalysis.MigrationPath</span>
+                </div>
+            }
+            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.VersionAnalysis.Reason)</div>
         </div>
     }
 
     <!-- Evidence -->
-    @if (_issue.ReproEvidence is not null)
+    @if (_issue.Evidence.ReproEvidence is not null)
     {
-        var evidence = _issue.ReproEvidence;
+        var evidence = _issue.Evidence.ReproEvidence;
         <div class="detail-card card-evidence">
             <h3>Evidence</h3>
             @if (evidence.StepsToReproduce is { Count: > 0 })
@@ -359,7 +342,7 @@ else
                 <div class="related-issues">
                     @foreach (var num in evidence.RelatedIssues)
                     {
-                        <a href="https://github.com/@_issue.Repo/issues/@num" target="_blank" class="related-issue-link">#@num</a>
+                        <a href="https://github.com/@_issue.Meta.Repo/issues/@num" target="_blank" class="related-issue-link">#@num</a>
                     }
                 </div>
             }
@@ -372,28 +355,15 @@ else
     }
 
     <!-- Resolution Analysis -->
-    @if (_issue.ResolutionAnalysis is not null)
+    @if (_issue.Analysis.Resolution is not null)
     {
-        var res = _issue.ResolutionAnalysis;
+        var res = _issue.Analysis.Resolution;
         <div class="detail-card card-resolution">
             <h3>Resolution</h3>
             <div class="resolution-hypothesis">
                 <h4>Hypothesis</h4>
                 <div class="md-content">@MarkdownHelper.ToHtml(res.Hypothesis)</div>
             </div>
-
-            @if (res.ResearchDone is { Count: > 0 })
-            {
-                <details class="research-done">
-                    <summary>Research performed (@res.ResearchDone.Count items)</summary>
-                    <ul>
-                        @foreach (var r in res.ResearchDone)
-                        {
-                            <li>@r</li>
-                        }
-                    </ul>
-                </details>
-            }
 
             <div class="proposals-header">
                 <h4>Proposals</h4>
@@ -415,33 +385,6 @@ else
                             <span class="label">Effort: @FormatLabel(proposal.Effort)</span>
                             <span class="field-confidence">@proposal.Confidence.ToString("P0")</span>
                         </div>
-                        <div class="proposal-steps">
-                            <strong>Steps:</strong>
-                            <ol>
-                                @foreach (var step in proposal.Steps)
-                                {
-                                    <li>@step</li>
-                                }
-                            </ol>
-                        </div>
-                        <div class="proposal-pros">
-                            <strong>Pros:</strong>
-                            <ul>
-                                @foreach (var pro in proposal.Pros)
-                                {
-                                    <li class="pro-item">@pro</li>
-                                }
-                            </ul>
-                        </div>
-                        <div class="proposal-cons">
-                            <strong>Cons:</strong>
-                            <ul>
-                                @foreach (var con in proposal.Cons)
-                                {
-                                    <li class="con-item">@con</li>
-                                }
-                            </ul>
-                        </div>
                         @if (isRecommended && res.RecommendedReason is not null)
                         {
                             <div class="recommended-reason">
@@ -454,146 +397,197 @@ else
         </div>
     }
 
-    <!-- Suggested Response -->
-    @if (_issue.SuggestedResponse is not null)
+    <!-- Actions -->
+    @if (_issue.Output.Actions is { Count: > 0 })
     {
-        var resp = _issue.SuggestedResponse;
         <div class="detail-card card-response">
-            <h3>Suggested Response</h3>
-            <div class="response-header">
-                <span class="label">@FormatLabel(resp.ResponseType)</span>
-                <span class="field-confidence">@resp.Confidence.ToString("P0")</span>
-            </div>
-            <div class="reason-text md-content">@MarkdownHelper.ToHtml(resp.Reason)</div>
-            <div class="response-draft">
-                <div class="draft-header">
-                    <strong>Draft Response</strong>
-                    <button class="btn-copy" @onclick="() => CopyToClipboard(resp.Draft)">📋 Copy</button>
-                </div>
-                <div class="draft-content md-content">
-                    @MarkdownHelper.ToHtml(resp.Draft)
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Analysis Notes (Slide-out Sidebar) -->
-    @if (_issue.AnalysisNotes is not null)
-    {
-        <button class="btn-analysis-toggle" @onclick="ToggleAnalysis">
-            🔬 Analysis Notes
-        </button>
-
-        <div class="analysis-sidebar @(_analysisOpen ? "open" : "")">
-            <div class="sidebar-header">
-                <h3>Analysis Notes</h3>
-                <button class="btn-sidebar-close" @onclick="ToggleAnalysis">✕</button>
-            </div>
-            <div class="sidebar-body">
-                @{
-                    var notes = _issue.AnalysisNotes;
-                }
-                <div class="analysis-summary md-content">
-                    @MarkdownHelper.ToHtml(notes.Summary)
-                </div>
-
-                @if (notes.KeySignals is { Count: > 0 })
-                {
-                    <div class="sidebar-section sidebar-signals">
-                        <h4>Key Signals</h4>
-                        @foreach (var signal in notes.KeySignals)
-                        {
-                            <div class="signal-card">
-                                <blockquote class="signal-quote">"@signal.Text"</blockquote>
-                                <span class="evidence-source">— @signal.Source</span>
-                                <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
-                                @if (signal.SupportedFields is { Count: > 0 })
-                                {
-                                    <div class="supported-fields">
-                                        @foreach (var f in signal.SupportedFields)
-                                        {
-                                            <span class="label label-field">@f</span>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        }
+            <h3>Actions</h3>
+            @foreach (var action in _issue.Output.Actions)
+            {
+                <div class="action-item" style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--border-color, #dee2e6); border-radius: 0.5rem;">
+                    <div class="response-header">
+                        <span class="badge-action badge-act-@action.Type">@FormatLabel(action.Type)</span>
+                        <span class="badge-risk badge-risk-@action.Risk" style="@GetRiskStyle(action.Risk)">@FormatLabel(action.Risk) risk</span>
+                        <span class="field-confidence">@action.Confidence.ToString("P0")</span>
                     </div>
-                }
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(action.Description)</div>
+                    @if (!string.IsNullOrEmpty(action.Reason))
+                    {
+                        <div class="reason-text-sm md-content" style="margin-top: 0.25rem; opacity: 0.8;">@MarkdownHelper.ToHtml(action.Reason)</div>
+                    }
 
-                @if (notes.FieldRationales is { Count: > 0 })
-                {
-                    <div class="sidebar-section sidebar-rationales">
-                        <h4>Field Rationales</h4>
-                        @foreach (var fr in notes.FieldRationales)
+                    @if (action.Type == "add-comment")
+                    {
+                        var commentPayload = action.GetCommentPayload();
+                        @if (commentPayload?.DraftBody is not null)
                         {
-                            <div class="rationale-card">
-                                <div class="rationale-header">
-                                    <span class="label label-field">@fr.Field</span>
-                                    <span class="rationale-chosen">→ @fr.Chosen</span>
+                            <div class="response-draft" style="margin-top: 0.5rem;">
+                                <div class="draft-header">
+                                    <strong>Draft Response</strong>
+                                    @if (commentPayload.CommentType is not null)
+                                    {
+                                        <span class="label" style="margin-left: 0.5rem;">@FormatLabel(commentPayload.CommentType)</span>
+                                    }
+                                    @if (commentPayload.RequiresHumanEdit == true)
+                                    {
+                                        <span class="badge-human-review" style="margin-left: 0.5rem;">✏ Needs Edit</span>
+                                    }
+                                    <button class="btn-copy" @onclick="() => CopyToClipboard(commentPayload.DraftBody)">📋 Copy</button>
                                 </div>
-                                <div class="reason-text md-content">@MarkdownHelper.ToHtml(fr.ExpandedReason)</div>
-                                @if (fr.Alternatives is { Count: > 0 })
+                                <div class="draft-content md-content">
+                                    @MarkdownHelper.ToHtml(commentPayload.DraftBody)
+                                </div>
+                            </div>
+                        }
+                    }
+                    else if (action.Type == "update-labels")
+                    {
+                        var labelsPayload = action.GetLabelsPayload();
+                        @if (labelsPayload is not null)
+                        {
+                            <div style="margin-top: 0.5rem;">
+                                @if (labelsPayload.LabelsToAdd is { Count: > 0 })
                                 {
-                                    <details class="alternatives">
-                                        <summary>@fr.Alternatives.Count alternative(s) considered</summary>
-                                        @foreach (var alt in fr.Alternatives)
-                                        {
-                                            <div class="alt-item">
-                                                <span class="alt-value">@alt.Value</span>
-                                                <span class="alt-rejected">— @alt.WhyRejected</span>
-                                            </div>
-                                        }
-                                    </details>
+                                    <span class="field-label">Add:</span>
+                                    @foreach (var lbl in labelsPayload.LabelsToAdd)
+                                    {
+                                        <span class="label" style="background: #28a745; color: white; margin-right: 0.25rem;">+ @lbl</span>
+                                    }
+                                }
+                                @if (labelsPayload.LabelsToRemove is { Count: > 0 })
+                                {
+                                    <span class="field-label" style="margin-left: 0.5rem;">Remove:</span>
+                                    @foreach (var lbl in labelsPayload.LabelsToRemove)
+                                    {
+                                        <span class="label" style="background: #dc3545; color: white; margin-right: 0.25rem;">− @lbl</span>
+                                    }
                                 }
                             </div>
                         }
-                    </div>
-                }
-
-                @if (notes.Uncertainties is { Count: > 0 })
-                {
-                    <div class="sidebar-section sidebar-uncertainties">
-                        <h4>Uncertainties</h4>
-                        <ul class="uncertainty-list">
-                            @foreach (var u in notes.Uncertainties)
-                            {
-                                <li>@u</li>
-                            }
-                        </ul>
-                    </div>
-                }
-
-                @if (notes.Assumptions is { Count: > 0 })
-                {
-                    <div class="sidebar-section sidebar-assumptions">
-                        <h4>Assumptions</h4>
-                        <ul class="assumption-list">
-                            @foreach (var a in notes.Assumptions)
-                            {
-                                <li>@a</li>
-                            }
-                        </ul>
-                    </div>
-                }
-
-                @if (notes.DocsConsulted is { Count: > 0 })
-                {
-                    <div class="sidebar-section sidebar-docs">
-                        <h4>Docs Consulted</h4>
-                        @foreach (var doc in notes.DocsConsulted)
+                    }
+                    else if (action.Type == "close-issue")
+                    {
+                        var closePayload = action.GetClosePayload();
+                        @if (closePayload?.Reason is not null)
                         {
-                            <div class="doc-ref">
-                                <code>@doc.Path</code>
-                                <span class="doc-relevance">— @doc.Relevance</span>
+                            <p style="margin-top: 0.5rem;">Close reason: <strong>@closePayload.Reason</strong></p>
+                        }
+                    }
+                    else if (action.Type == "link-duplicate")
+                    {
+                        var dupPayload = action.GetDuplicatePayload();
+                        @if (dupPayload?.DuplicateOf is not null)
+                        {
+                            <p style="margin-top: 0.5rem;">Duplicate of <a href="https://github.com/@_issue.Meta.Repo/issues/@dupPayload.DuplicateOf" target="_blank">#@dupPayload.DuplicateOf</a></p>
+                        }
+                    }
+                    else if (action.Type == "link-related")
+                    {
+                        var relPayload = action.GetRelatedPayload();
+                        @if (relPayload?.RelatedIssues is { Count: > 0 })
+                        {
+                            <div class="related-issues" style="margin-top: 0.5rem;">
+                                <span class="field-label">Related:</span>
+                                @foreach (var num in relPayload.RelatedIssues)
+                                {
+                                    <a href="https://github.com/@_issue.Meta.Repo/issues/@num" target="_blank" class="related-issue-link">#@num</a>
+                                }
                             </div>
                         }
-                    </div>
-                }
-            </div>
+                    }
+                </div>
+            }
         </div>
-        <div class="analysis-backdrop @(_analysisOpen ? "open" : "")" @onclick="ToggleAnalysis"></div>
     }
+
+    <!-- Analysis (Slide-out Sidebar) -->
+    <button class="btn-analysis-toggle" @onclick="ToggleAnalysis">
+        🔬 Analysis
+    </button>
+
+    <div class="analysis-sidebar @(_analysisOpen ? "open" : "")">
+        <div class="sidebar-header">
+            <h3>Analysis</h3>
+            <button class="btn-sidebar-close" @onclick="ToggleAnalysis">✕</button>
+        </div>
+        <div class="sidebar-body">
+            <div class="analysis-summary md-content">
+                @MarkdownHelper.ToHtml(_issue.Analysis.Summary)
+            </div>
+
+            @if (_issue.Analysis.KeySignals is { Count: > 0 })
+            {
+                <div class="sidebar-section sidebar-signals">
+                    <h4>Key Signals</h4>
+                    @foreach (var signal in _issue.Analysis.KeySignals)
+                    {
+                        <div class="signal-card">
+                            <blockquote class="signal-quote">"@signal.Text"</blockquote>
+                            <span class="evidence-source">— @signal.Source</span>
+                            <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (_issue.Analysis.FieldRationales is { Count: > 0 })
+            {
+                <div class="sidebar-section sidebar-rationales">
+                    <h4>Field Rationales</h4>
+                    @foreach (var fr in _issue.Analysis.FieldRationales)
+                    {
+                        <div class="rationale-card">
+                            <div class="rationale-header">
+                                <span class="label label-field">@fr.Field</span>
+                                <span class="rationale-chosen">→ @fr.Chosen</span>
+                            </div>
+                            <div class="reason-text md-content">@MarkdownHelper.ToHtml(fr.ExpandedReason)</div>
+                            @if (fr.Alternatives is { Count: > 0 })
+                            {
+                                <details class="alternatives">
+                                    <summary>@fr.Alternatives.Count alternative(s) considered</summary>
+                                    @foreach (var alt in fr.Alternatives)
+                                    {
+                                        <div class="alt-item">
+                                            <span class="alt-value">@alt.Value</span>
+                                            <span class="alt-rejected">— @alt.WhyRejected</span>
+                                        </div>
+                                    }
+                                </details>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (_issue.Analysis.Uncertainties is { Count: > 0 })
+            {
+                <div class="sidebar-section sidebar-uncertainties">
+                    <h4>Uncertainties</h4>
+                    <ul class="uncertainty-list">
+                        @foreach (var u in _issue.Analysis.Uncertainties)
+                        {
+                            <li>@u</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            @if (_issue.Analysis.Assumptions is { Count: > 0 })
+            {
+                <div class="sidebar-section sidebar-assumptions">
+                    <h4>Assumptions</h4>
+                    <ul class="assumption-list">
+                        @foreach (var a in _issue.Analysis.Assumptions)
+                        {
+                            <li>@a</li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="analysis-backdrop @(_analysisOpen ? "open" : "")" @onclick="ToggleAnalysis"></div>
 
     <!-- Bottom Navigation -->
     <div class="triage-detail-nav bottom-nav">
@@ -652,22 +646,21 @@ else
 
         var filtered = ApplyFilters(_data.Issues);
         _totalCount = filtered.Count;
-        _currentIndex = filtered.FindIndex(i => i.Number == Number);
+        _currentIndex = filtered.FindIndex(i => i.Meta.Number == Number);
 
         if (_currentIndex >= 0)
         {
             _issue = filtered[_currentIndex];
-            _prevNumber = _currentIndex > 0 ? filtered[_currentIndex - 1].Number : null;
-            _nextNumber = _currentIndex < filtered.Count - 1 ? filtered[_currentIndex + 1].Number : null;
+            _prevNumber = _currentIndex > 0 ? filtered[_currentIndex - 1].Meta.Number : null;
+            _nextNumber = _currentIndex < filtered.Count - 1 ? filtered[_currentIndex + 1].Meta.Number : null;
         }
         else
         {
-            // Issue not in filtered list — show it anyway but no prev/next
-            _issue = _data.Issues.FirstOrDefault(i => i.Number == Number);
+            _issue = _data.Issues.FirstOrDefault(i => i.Meta.Number == Number);
             _prevNumber = null;
             _nextNumber = null;
             _totalCount = _data.Issues.Count;
-            _currentIndex = _data.Issues.FindIndex(i => i.Number == Number);
+            _currentIndex = _data.Issues.FindIndex(i => i.Meta.Number == Number);
         }
     }
 
@@ -675,35 +668,34 @@ else
     {
         var query = issues.AsEnumerable();
 
-        // Card filter (summary card presets)
         if (!string.IsNullOrEmpty(Card))
         {
             query = Card switch
             {
-                "needs-investigation" => query.Where(i => i.Actionability.SuggestedAction == "needs-investigation"),
-                "closeable" => query.Where(i => i.Actionability.Closeable == true),
-                "quick-wins" => query.Where(i => i.Actionability.Closeable == true && i.Actionability.RequiresHumanReview != true),
-                "regressions" => query.Where(i => i.Regression?.IsRegression == true),
-                "human-review" => query.Where(i => i.Actionability.RequiresHumanReview == true),
+                "needs-investigation" => query.Where(i => i.Output.Actionability.SuggestedAction == "needs-investigation"),
+                "closeable" => query.Where(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true),
+                "quick-wins" => query.Where(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true && i.Output.Actionability.RequiresHumanReview != true),
+                "regressions" => query.Where(i => i.Evidence.Regression?.IsRegression == true),
+                "human-review" => query.Where(i => i.Output.Actionability.RequiresHumanReview == true),
                 _ => query
             };
         }
 
         if (!string.IsNullOrEmpty(Action))
-            query = query.Where(i => i.Actionability.SuggestedAction == Action);
+            query = query.Where(i => i.Output.Actionability.SuggestedAction == Action);
         if (!string.IsNullOrEmpty(Type))
-            query = query.Where(i => i.Type.Value == Type);
+            query = query.Where(i => i.Classification.Type.Value == Type);
         if (!string.IsNullOrEmpty(Area))
-            query = query.Where(i => i.Area?.Value == Area);
+            query = query.Where(i => i.Classification.Area?.Value == Area);
         if (!string.IsNullOrEmpty(Severity))
-            query = query.Where(i => i.BugSignals?.Severity == Severity);
+            query = query.Where(i => i.Evidence.BugSignals?.Severity == Severity);
 
         var sort = Sort ?? "newest";
         query = sort switch
         {
-            "confidence" => query.OrderByDescending(i => i.Actionability.Confidence),
-            "severity" => query.OrderByDescending(i => SeverityOrder(i.BugSignals?.Severity)),
-            _ => query.OrderByDescending(i => i.Number)
+            "confidence" => query.OrderByDescending(i => i.Output.Actionability.Confidence),
+            "severity" => query.OrderByDescending(i => SeverityOrder(i.Evidence.BugSignals?.Severity)),
+            _ => query.OrderByDescending(i => i.Meta.Number)
         };
 
         return query.ToList();
@@ -742,14 +734,28 @@ else
     };
 
     private static string FormatLabel(string value) =>
-        string.Join(' ', value.Split('-').Select(w =>
+        string.Join(' ', StripPrefix(value).Split('-').Select(w =>
             w.Length > 0 ? char.ToUpper(w[0]) + w[1..] : w));
+
+    private static string StripPrefix(string value)
+    {
+        var slashIndex = value.IndexOf('/');
+        return slashIndex >= 0 ? value[(slashIndex + 1)..] : value;
+    }
 
     private static string GetConfidenceClass(double c) => c switch
     {
         >= 0.85 => "confidence-high",
         >= 0.70 => "confidence-medium",
         _ => "confidence-low"
+    };
+
+    private static string GetRiskStyle(string risk) => risk switch
+    {
+        "low" => "background: #28a745; color: white;",
+        "medium" => "background: #ffc107; color: #212529;",
+        "high" => "background: #dc3545; color: white;",
+        _ => ""
     };
 
     private async Task CopyToClipboard(string text)

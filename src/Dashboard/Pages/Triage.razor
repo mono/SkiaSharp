@@ -69,7 +69,7 @@ else
                 <option value="">All Areas</option>
                 @foreach (var a in _data.ByArea)
                 {
-                    <option value="@a.Label">@a.Label (@a.Count)</option>
+                    <option value="@a.Label">@FormatLabel(a.Label) (@a.Count)</option>
                 }
             </select>
         </div>
@@ -106,27 +106,27 @@ else
     <div class="ai-triage-list">
         @foreach (var issue in _filtered)
         {
-            <a href="@GetDetailUrl(issue.Number)" class="ai-triage-row @GetActionClass(issue.Actionability.SuggestedAction)">
-                <span class="issue-link">#@issue.Number</span>
+            <a href="@GetDetailUrl(issue.Meta.Number)" class="ai-triage-row @GetActionClass(issue.Output.Actionability.SuggestedAction)">
+                <span class="issue-link">#@issue.Meta.Number</span>
                 <span class="ai-triage-title">@issue.Summary</span>
-                <span class="badge-type badge-@issue.Type.Value">@FormatLabel(issue.Type.Value)</span>
-                @if (issue.Area is not null)
+                <span class="badge-type badge-@StripPrefix(issue.Classification.Type.Value)">@FormatLabel(issue.Classification.Type.Value)</span>
+                @if (issue.Classification.Area is not null)
                 {
-                    <span class="label label-sm">@issue.Area.Value</span>
+                    <span class="label label-sm">@FormatLabel(issue.Classification.Area.Value)</span>
                 }
-                @if (issue.BugSignals?.Severity is not null)
+                @if (issue.Evidence.BugSignals?.Severity is not null)
                 {
-                    <span class="badge-severity badge-sev-@issue.BugSignals.Severity">@FormatLabel(issue.BugSignals.Severity)</span>
+                    <span class="badge-severity badge-sev-@issue.Evidence.BugSignals.Severity">@FormatLabel(issue.Evidence.BugSignals.Severity)</span>
                 }
-                <span class="badge-action badge-act-@issue.Actionability.SuggestedAction">@FormatLabel(issue.Actionability.SuggestedAction)</span>
-                <span class="confidence-pill" title="Confidence: @issue.Actionability.Confidence.ToString("P0")">
-                    <span class="confidence-bar @GetConfidenceClass(issue.Actionability.Confidence)" style="width: @((int)(issue.Actionability.Confidence * 100))%"></span>
+                <span class="badge-action badge-act-@issue.Output.Actionability.SuggestedAction">@FormatLabel(issue.Output.Actionability.SuggestedAction)</span>
+                <span class="confidence-pill" title="Confidence: @issue.Output.Actionability.Confidence.ToString("P0")">
+                    <span class="confidence-bar @GetConfidenceClass(issue.Output.Actionability.Confidence)" style="width: @((int)(issue.Output.Actionability.Confidence * 100))%"></span>
                 </span>
-                @if (issue.Actionability.RequiresHumanReview == true)
+                @if (issue.Output.Actionability.RequiresHumanReview == true)
                 {
                     <span class="badge-human-review-sm" title="Needs human review">⚠</span>
                 }
-                @if (issue.Regression?.IsRegression == true)
+                @if (issue.Evidence.Regression?.IsRegression == true)
                 {
                     <span class="badge-regression-sm" title="Regression">⚡</span>
                 }
@@ -202,29 +202,29 @@ else
         {
             query = SelectedCard switch
             {
-                "needs-investigation" => query.Where(i => i.Actionability.SuggestedAction == "needs-investigation"),
-                "closeable" => query.Where(i => i.Actionability.Closeable == true),
-                "quick-wins" => query.Where(i => i.Actionability.Closeable == true && i.Actionability.RequiresHumanReview != true),
-                "regressions" => query.Where(i => i.Regression?.IsRegression == true),
-                "human-review" => query.Where(i => i.Actionability.RequiresHumanReview == true),
+                "needs-investigation" => query.Where(i => i.Output.Actionability.SuggestedAction == "needs-investigation"),
+                "closeable" => query.Where(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true),
+                "quick-wins" => query.Where(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true && i.Output.Actionability.RequiresHumanReview != true),
+                "regressions" => query.Where(i => i.Evidence.Regression?.IsRegression == true),
+                "human-review" => query.Where(i => i.Output.Actionability.RequiresHumanReview == true),
                 _ => query
             };
         }
 
         if (!string.IsNullOrEmpty(SelectedAction))
-            query = query.Where(i => i.Actionability.SuggestedAction == SelectedAction);
+            query = query.Where(i => i.Output.Actionability.SuggestedAction == SelectedAction);
         if (!string.IsNullOrEmpty(SelectedType))
-            query = query.Where(i => i.Type.Value == SelectedType);
+            query = query.Where(i => i.Classification.Type.Value == SelectedType);
         if (!string.IsNullOrEmpty(SelectedArea))
-            query = query.Where(i => i.Area?.Value == SelectedArea);
+            query = query.Where(i => i.Classification.Area?.Value == SelectedArea);
         if (!string.IsNullOrEmpty(SelectedSeverity))
-            query = query.Where(i => i.BugSignals?.Severity == SelectedSeverity);
+            query = query.Where(i => i.Evidence.BugSignals?.Severity == SelectedSeverity);
 
         query = SelectedSort switch
         {
-            "confidence" => query.OrderByDescending(i => i.Actionability.Confidence),
-            "severity" => query.OrderByDescending(i => SeverityOrder(i.BugSignals?.Severity)),
-            _ => query.OrderByDescending(i => i.Number)
+            "confidence" => query.OrderByDescending(i => i.Output.Actionability.Confidence),
+            "severity" => query.OrderByDescending(i => SeverityOrder(i.Evidence.BugSignals?.Severity)),
+            _ => query.OrderByDescending(i => i.Meta.Number)
         };
 
         _filtered = query.ToList();
@@ -272,9 +272,15 @@ else
         UpdateUrl();
     }
 
-    private static string FormatLabel(string value) =>
-        string.Join(' ', value.Split('-').Select(w =>
+    private static string FormatLabel(string value)
+    {
+        var stripped = StripPrefix(value);
+        return string.Join(' ', stripped.Split('-').Select(w =>
             w.Length > 0 ? char.ToUpper(w[0]) + w[1..] : w));
+    }
+
+    private static string StripPrefix(string value) =>
+        value.Contains('/') ? value[(value.IndexOf('/') + 1)..] : value;
 
     private static string GetActionClass(string action) => action switch
     {

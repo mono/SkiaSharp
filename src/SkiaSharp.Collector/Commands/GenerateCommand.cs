@@ -746,8 +746,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         var byArea = new Dictionary<string, int>();
         var byAction = new Dictionary<string, int>();
         var bySeverity = new Dictionary<string, int>();
-        var summaryStats = new { NeedsInvestigation = 0, Closeable = 0, QuickWins = 0, NeedsHumanReview = 0, Regressions = 0, Abandoned = 0 };
-        int needsInvestigation = 0, closeable = 0, quickWins = 0, needsHumanReview = 0, regressions = 0, abandoned = 0;
+        int needsInvestigation = 0, closeable = 0, quickWins = 0, needsHumanReview = 0, regressions = 0;
 
         foreach (var repoKey in repoKeys)
         {
@@ -766,21 +765,42 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                     var node = System.Text.Json.Nodes.JsonNode.Parse(json)?.AsObject();
                     if (node is null) continue;
 
-                    var number = node["number"]?.GetValue<int>() ?? 0;
-                    var repo = node["repo"]?.GetValue<string>() ?? repoConfig?.FullName ?? repoKey;
+                    // Schema v2.0 uses grouped structure: meta, classification, evidence, analysis, output
+                    var schemaVersion = node["meta"]?["schemaVersion"]?.GetValue<string>();
+                    if (schemaVersion != "2.0")
+                    {
+                        if (!settings.Quiet)
+                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: schema {schemaVersion ?? "unknown"} (need 2.0)[/]");
+                        continue;
+                    }
+
+                    var number = node["meta"]?["number"]?.GetValue<int>() ?? 0;
+                    var repo = node["meta"]?["repo"]?.GetValue<string>() ?? repoConfig?.FullName ?? repoKey;
 
                     // Add URL for dashboard linking
                     node["url"] = $"https://github.com/{repo}/issues/{number}";
 
-                    // Extract classification values for summary stats
-                    var typeValue = node["type"]?["value"]?.GetValue<string>();
-                    var areaValue = node["area"]?["value"]?.GetValue<string>();
-                    var action = node["actionability"]?["suggestedAction"]?.GetValue<string>();
-                    var severity = node["bugSignals"]?["severity"]?.GetValue<string>();
-                    var isCloseable = node["actionability"]?["closeable"]?.GetValue<bool>() ?? false;
-                    var isHumanReview = node["actionability"]?["requiresHumanReview"]?.GetValue<bool>() ?? false;
-                    var isAbandoned = node["actionability"]?["abandoned"]?.GetValue<bool>() ?? false;
-                    var isRegression = node["regression"]?["isRegression"]?.GetValue<bool>() ?? false;
+                    // Extract classification values for summary stats (v2 paths)
+                    var typeValue = node["classification"]?["type"]?["value"]?.GetValue<string>();
+                    var areaValue = node["classification"]?["area"]?["value"]?.GetValue<string>();
+                    var action = node["output"]?["actionability"]?["suggestedAction"]?.GetValue<string>();
+                    var severity = node["evidence"]?["bugSignals"]?["severity"]?.GetValue<string>();
+                    var isHumanReview = node["output"]?["actionability"]?["requiresHumanReview"]?.GetValue<bool>() ?? false;
+                    var isRegression = node["evidence"]?["regression"]?["isRegression"]?.GetValue<bool>() ?? false;
+
+                    // Closeable = has a close-issue action
+                    var hasCloseAction = false;
+                    if (node["output"]?["actions"] is System.Text.Json.Nodes.JsonArray actions)
+                    {
+                        foreach (var a in actions)
+                        {
+                            if (a?["type"]?.GetValue<string>() == "close-issue")
+                            {
+                                hasCloseAction = true;
+                                break;
+                            }
+                        }
+                    }
 
                     if (typeValue is not null) byType[typeValue] = byType.GetValueOrDefault(typeValue) + 1;
                     if (areaValue is not null) byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
@@ -788,11 +808,10 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                     if (severity is not null) bySeverity[severity] = bySeverity.GetValueOrDefault(severity) + 1;
 
                     if (action == "needs-investigation") needsInvestigation++;
-                    if (isCloseable) closeable++;
-                    if (isCloseable && !isHumanReview) quickWins++;
+                    if (hasCloseAction) closeable++;
+                    if (hasCloseAction && !isHumanReview) quickWins++;
                     if (isHumanReview) needsHumanReview++;
                     if (isRegression) regressions++;
-                    if (isAbandoned) abandoned++;
 
                     issues.Add(node);
                 }
@@ -805,7 +824,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         }
 
         // Sort issues by number descending (newest first)
-        issues.Sort((a, b) => (b["number"]?.GetValue<int>() ?? 0).CompareTo(a["number"]?.GetValue<int>() ?? 0));
+        issues.Sort((a, b) => (b["meta"]?["number"]?.GetValue<int>() ?? 0).CompareTo(a["meta"]?["number"]?.GetValue<int>() ?? 0));
 
         static List<System.Text.Json.Nodes.JsonObject> ToLabelCounts(Dictionary<string, int> dict) =>
             dict.OrderByDescending(kv => kv.Value)
@@ -830,8 +849,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 ["closeable"] = closeable,
                 ["quickWins"] = quickWins,
                 ["needsHumanReview"] = needsHumanReview,
-                ["regressions"] = regressions,
-                ["abandoned"] = abandoned
+                ["regressions"] = regressions
             },
             ["byType"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(byType).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
             ["byArea"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(byArea).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
