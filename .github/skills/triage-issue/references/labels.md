@@ -1,60 +1,42 @@
 # Label Taxonomy
 
-SkiaSharp uses prefixed GitHub labels. AI triage values must match the exact label suffix so that `prefix/ + value` reconstructs the GitHub label.
+Values are **full GitHub labels** (e.g., `type/bug`, `os/Linux`) — use exactly as listed below.
 
-**Allowed values during triage come from `triage-schema.json` enums** — those are the source of truth. The tables below explain when to use each label.
+## Cardinality
 
-## Cardinality Rules
+| Prefix | Card. | Rule |
+|--------|-------|------|
+| `type/` | **1** (required) | One type per issue — pick the best fit |
+| `area/` | **1** (required) | Primary component — "where in the codebase?" |
+| `os/` | **0–N** | All platforms affected (omit if cross-platform) |
+| `backend/` | **0–N** | All rendering backends affected (omit if not backend-specific) |
+| `tenet/` | **0–N** | Quality tenets that apply |
+| `partner/` | **0–1** | Third-party partner flag |
 
-| Prefix | Cardinality | Rule |
-|--------|-------------|------|
-| `type/` | **Single** | One type per issue — pick the best fit |
-| `area/` | **Single** | Primary component — "where in the codebase?" |
-| `backend/` | **Multiple** | All rendering backends affected |
-| `os/` | **Multiple** | All platforms affected |
-| `tenet/` | **Multiple** | All quality tenets that apply |
-| `partner/` | **Single** | One third-party partner flag |
-| `status/` | **Multiple** | Can stack (informational, not set by AI) |
-| `backport/` | N/A | Excluded from triage — tooling label |
+## Valid Labels
 
-## Usage Guidance
+### type/ (required, single)
+`type/bug` · `type/feature-request` · `type/enhancement` · `type/question` · `type/documentation`
 
-### `type/` — Issue Type
+### area/ (required, single)
+`area/SkiaSharp` · `area/SkiaSharp.Views` · `area/SkiaSharp.Views.Maui` · `area/SkiaSharp.Views.Blazor` · `area/SkiaSharp.Views.Forms` · `area/SkiaSharp.Views.Uno` · `area/SkiaSharp.HarfBuzz` · `area/HarfBuzzSharp` · `area/SkiaSharp.Workbooks` · `area/libSkiaSharp.native` · `area/libHarfBuzzSharp.native` · `area/Build` · `area/Docs`
 
-| Value | When to Use |
-|-------|-------------|
-| `bug` | Something is broken — crashes, wrong output, performance regressions |
-| `feature-request` | New functionality that doesn't exist yet — new API, new platform |
-| `enhancement` | Improvement to existing functionality — faster, easier, better errors |
-| `question` | Support question, how-to, "can SkiaSharp do X?" |
-| `documentation` | User needs docs, samples, or examples — confusion, not a defect |
+Pick the most specific match. SKCanvasView in MAUI → `area/SkiaSharp.Views.Maui`. DllNotFoundException → `area/libSkiaSharp.native`.
 
-### `area/` — Component Area
+### os/ (optional, multiple)
+`os/Android` · `os/iOS` · `os/macOS` · `os/Linux` · `os/Windows-Classic` · `os/Windows-WinUI` · `os/Windows-Universal-UWP` · `os/Windows-Nano-Server` · `os/WASM` · `os/Tizen` · `os/tvOS` · `os/watchOS`
 
-Pick the most specific match. If it's about SKCanvasView in MAUI, use `SkiaSharp.Views.Maui` not `SkiaSharp`. Use `libSkiaSharp.native` for DllNotFoundException / native loading issues.
+### backend/ (optional, multiple)
+`backend/Direct3D` · `backend/Metal` · `backend/OpenGL` · `backend/Raster` · `backend/Vulkan` · `backend/PDF` · `backend/SVG` · `backend/XPS`
 
-### `backend/` — Rendering Backend
+### tenet/ (optional, multiple)
+`tenet/compatibility` · `tenet/performance` · `tenet/reliability`
 
-Only include if the issue is backend-specific. General SkiaSharp API issues don't need a backend.
+### partner/ (optional, single)
+`partner/maui` · `partner/tizen` · `partner/unoplatform`
 
-**Note**: `backend/Android` is the Android rendering pipeline, distinct from `os/Android` which is the operating system.
+## Tips
 
-### `os/` — Platform
-
-Only include if the issue is platform-specific. Cross-platform API issues don't need a platform.
-
-### `tenet/` — Quality Tenet
-
-- `compatibility` — Compatibility with previous versions or cross-platform consistency
-- `performance` — Speed, memory, throughput, file size
-- `reliability` — Crashes, data corruption, unexpected behavior
-
-### `partner/` — Partner Flag
-
-Flag for a third-party partner team to look at. Only set when the issue clearly falls in their domain.
-
-## Classification Tips
-
-- If an issue has `[BUG]` in the title but is actually a question, classify as `question` — trust the content, not the prefix
-- If ambiguous between `enhancement` and `feature-request`: enhancement improves what exists, feature-request adds something new
-- If ambiguous between `question` and `documentation`: question asks "how?", documentation says "we need docs/samples for X"
+- Trust content over title prefixes: `[BUG]` title but actually a question → `type/question`
+- `enhancement` improves what exists; `feature-request` adds something new
+- `question` asks "how?"; `documentation` says "we need docs for X"

@@ -194,25 +194,18 @@ Question with resolution proposals, bugSignals null, close-with-docs action:
 
 ## Duplicate Example
 
-Minimal triage for a duplicate issue — close + link actions:
+Same structure as bug, with key differences: `analysis.resolution: null`, `actionability.suggestedAction: "close-as-duplicate"`, and actions include `link-duplicate` → `add-comment` → `close-issue` chain:
 
 ```json
 {
-  "meta": {
-    "schemaVersion": "2.0",
-    "number": 9999,
-    "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-08T15:00:00Z",
-    "currentLabels": []
-  },
+  "meta": { "schemaVersion": "2.0", "number": 9999, "repo": "mono/SkiaSharp", "analyzedAt": "2026-02-08T15:00:00Z", "currentLabels": [] },
   "summary": "Duplicate of #1234 — same Android disposal crash",
   "classification": {
     "type": { "value": "type/bug", "confidence": 0.95 },
     "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
     "backends": null,
     "platforms": [{ "value": "os/Android", "confidence": 0.95 }],
-    "tenets": null,
-    "partner": null
+    "tenets": null, "partner": null
   },
   "evidence": {
     "bugSignals": {
@@ -222,69 +215,30 @@ Minimal triage for a duplicate issue — close + link actions:
       "severity": "high", "severityReason": "Same as #1234"
     },
     "reproEvidence": { "relatedIssues": [1234] },
-    "versionAnalysis": null,
-    "regression": null,
-    "fixStatus": null
+    "versionAnalysis": null, "regression": null, "fixStatus": null
   },
   "analysis": {
-    "summary": "Identical stack trace and reproduction steps as #1234. Same Android disposal crash.",
+    "summary": "Identical stack trace and reproduction steps as #1234.",
     "keySignals": [
-      { "text": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow", "source": "stack-trace", "interpretation": "Same crash signature as #1234" }
+      { "text": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow", "source": "stack-trace", "interpretation": "Same crash as #1234" }
     ],
     "fieldRationales": [
-      { "field": "type", "chosen": "type/bug", "expandedReason": "Same crash as #1234 — ObjectDisposedException during view detachment." },
-      { "field": "area", "chosen": "area/SkiaSharp.Views", "expandedReason": "Crash in SKCanvasView lifecycle, same as canonical issue #1234." },
-      { "field": "bugSignals.severity", "chosen": "high", "expandedReason": "Hard crash with no workaround, same severity as #1234." },
-      { "field": "platforms", "chosen": "os/Android", "expandedReason": "Android-only crash, identical to #1234." },
-      { "field": "actionability.suggestedAction", "chosen": "close-as-duplicate", "expandedReason": "Stack trace is identical to #1234. Same Android version, same view lifecycle trigger." }
+      { "field": "type", "chosen": "type/bug", "expandedReason": "Same crash as #1234." },
+      { "field": "area", "chosen": "area/SkiaSharp.Views", "expandedReason": "Crash in SKCanvasView lifecycle." },
+      { "field": "bugSignals.severity", "chosen": "high", "expandedReason": "Hard crash, no workaround." },
+      { "field": "platforms", "chosen": "os/Android", "expandedReason": "Android-only crash." },
+      { "field": "actionability.suggestedAction", "chosen": "close-as-duplicate", "expandedReason": "Identical stack trace to #1234." }
     ],
     "uncertainties": ["Whether reporter's environment is identical to #1234"],
     "resolution": null
   },
   "output": {
-    "actionability": {
-      "suggestedAction": "close-as-duplicate",
-      "confidence": 0.95,
-      "reason": "Identical stack trace to #1234"
-    },
+    "actionability": { "suggestedAction": "close-as-duplicate", "confidence": 0.95, "reason": "Identical stack trace to #1234" },
     "actions": [
-      {
-        "id": "labels-1", "type": "update-labels", "risk": "low",
-        "description": "Apply bug and android labels",
-        "reason": "Matches classification",
-        "confidence": 0.95, "dependsOn": null,
-        "payload": {
-          "labelsToAdd": ["type/bug", "area/SkiaSharp.Views", "os/Android"],
-          "labelsToRemove": []
-        }
-      },
-      {
-        "id": "dup-1", "type": "link-duplicate", "risk": "medium",
-        "description": "Mark as duplicate of #1234",
-        "reason": "Identical crash signature",
-        "confidence": 0.95, "dependsOn": null,
-        "payload": { "duplicateOf": 1234, "comment": null }
-      },
-      {
-        "id": "comment-1", "type": "add-comment", "risk": "high",
-        "description": "Notify reporter of duplicate",
-        "reason": "Let reporter know their issue is tracked",
-        "confidence": 0.90, "dependsOn": "dup-1",
-        "payload": {
-          "commentType": "duplicate-notice",
-          "draftBody": "This appears to be the same Android disposal crash tracked in #1234. Closing as duplicate — any updates will be posted there.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-9999-comment-1"
-        }
-      },
-      {
-        "id": "close-1", "type": "close-issue", "risk": "medium",
-        "description": "Close as duplicate",
-        "reason": "Duplicate of #1234",
-        "confidence": 0.95, "dependsOn": "comment-1",
-        "payload": { "reason": "not_planned", "comment": null }
-      }
+      { "id": "labels-1", "type": "update-labels", "risk": "low", "description": "Apply labels", "reason": "Matches classification", "confidence": 0.95, "dependsOn": null, "payload": { "labelsToAdd": ["type/bug", "area/SkiaSharp.Views", "os/Android"], "labelsToRemove": [] } },
+      { "id": "dup-1", "type": "link-duplicate", "risk": "medium", "description": "Mark as duplicate of #1234", "reason": "Identical crash signature", "confidence": 0.95, "dependsOn": null, "payload": { "duplicateOf": 1234, "comment": null } },
+      { "id": "comment-1", "type": "add-comment", "risk": "high", "description": "Notify reporter", "reason": "Let reporter know", "confidence": 0.90, "dependsOn": "dup-1", "payload": { "commentType": "duplicate-notice", "draftBody": "This appears to be the same Android disposal crash tracked in #1234. Closing as duplicate — any updates will be posted there.", "requiresHumanEdit": true, "finalBody": null, "dedupeToken": "triage-9999-comment-1" } },
+      { "id": "close-1", "type": "close-issue", "risk": "medium", "description": "Close as duplicate", "reason": "Duplicate of #1234", "confidence": 0.95, "dependsOn": "comment-1", "payload": { "reason": "not_planned", "comment": null } }
     ]
   }
 }
