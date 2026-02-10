@@ -73,7 +73,7 @@ else
                 <span class="badge-type badge-@_issue.Type.Value">@FormatLabel(_issue.Type.Value)</span>
                 <span class="field-confidence">@_issue.Type.Confidence.ToString("P0")</span>
             </div>
-            <p class="reason-text">@_issue.Type.Reason</p>
+            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Type.Reason)</div>
             @if (_issue.Area is not null)
             {
                 <div class="field-row">
@@ -81,7 +81,7 @@ else
                     <span class="label">@_issue.Area.Value</span>
                     <span class="field-confidence">@_issue.Area.Confidence.ToString("P0")</span>
                 </div>
-                <p class="reason-text">@_issue.Area.Reason</p>
+                <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Area.Reason)</div>
             }
             @if (_issue.Platforms is { Count: > 0 })
             {
@@ -130,13 +130,13 @@ else
                 </span>
                 <span class="field-confidence">@_issue.Actionability.Confidence.ToString("P0")</span>
             </div>
-            <p class="reason-text">@_issue.Actionability.Reason</p>
+            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Actionability.Reason)</div>
             @if (_issue.Actionability.Abandoned == true)
             {
                 <span class="badge-abandoned">🕸 Abandoned</span>
                 @if (_issue.Actionability.AbandonedReason is not null)
                 {
-                    <p class="reason-text-sm">@_issue.Actionability.AbandonedReason</p>
+                    <div class="reason-text-sm md-content">@MarkdownHelper.ToHtml(_issue.Actionability.AbandonedReason)</div>
                 }
             }
             @if (_issue.Actionability.DuplicateOf is not null)
@@ -177,11 +177,12 @@ else
                 <span class="badge-severity badge-sev-@_issue.BugSignals.Severity">@FormatLabel(_issue.BugSignals.Severity)</span>
                 <span class="label">Repro: @FormatLabel(_issue.BugSignals.ReproQuality)</span>
             </div>
-            <p class="reason-text">@_issue.BugSignals.SeverityReason</p>
+            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.BugSignals.SeverityReason)</div>
             @if (_issue.BugSignals.WorkaroundSummary is not null)
             {
                 <div class="workaround-box">
-                    <strong>Workaround:</strong> @_issue.BugSignals.WorkaroundSummary
+                    <strong>Workaround:</strong>
+                    <div class="md-content">@MarkdownHelper.ToHtml(_issue.BugSignals.WorkaroundSummary)</div>
                 </div>
             }
             @if (_issue.BugSignals.TargetFrameworks is { Count: > 0 })
@@ -228,7 +229,7 @@ else
                     {
                         <span>Not a regression</span>
                     }
-                    <p class="reason-text">@_issue.Regression.Reason</p>
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Regression.Reason)</div>
                 </div>
             }
             @if (_issue.FixStatus is not null)
@@ -239,7 +240,7 @@ else
                         @(_issue.FixStatus.LikelyFixed ? "✓ Likely Fixed" : "✗ Not Fixed")
                     </span>
                     <span class="field-confidence">@_issue.FixStatus.Confidence.ToString("P0")</span>
-                    <p class="reason-text">@_issue.FixStatus.Reason</p>
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.FixStatus.Reason)</div>
                     @if (_issue.FixStatus.FixedInVersion is not null)
                     {
                         <p>Fixed in: <strong>@_issue.FixStatus.FixedInVersion</strong></p>
@@ -282,7 +283,7 @@ else
                     <span class="label label-relevance-@_issue.VersionAnalysis.CurrentRelevance">@FormatLabel(_issue.VersionAnalysis.CurrentRelevance)</span>
                 </div>
             }
-            <p class="reason-text">@_issue.VersionAnalysis.Reason</p>
+            <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.VersionAnalysis.Reason)</div>
         </div>
     }
 
@@ -378,7 +379,7 @@ else
             <h3>Resolution</h3>
             <div class="resolution-hypothesis">
                 <h4>Hypothesis</h4>
-                <p>@res.Hypothesis</p>
+                <div class="md-content">@MarkdownHelper.ToHtml(res.Hypothesis)</div>
             </div>
 
             @if (res.ResearchDone is { Count: > 0 })
@@ -409,7 +410,7 @@ else
                             <span class="badge-recommended">★ Recommended</span>
                         }
                         <h5>@proposal.Title</h5>
-                        <p>@proposal.Description</p>
+                        <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
                         <div class="proposal-meta">
                             <span class="label">Effort: @FormatLabel(proposal.Effort)</span>
                             <span class="field-confidence">@proposal.Confidence.ToString("P0")</span>
@@ -463,14 +464,14 @@ else
                 <span class="label">@FormatLabel(resp.ResponseType)</span>
                 <span class="field-confidence">@resp.Confidence.ToString("P0")</span>
             </div>
-            <p class="reason-text">@resp.Reason</p>
+            <div class="reason-text md-content">@MarkdownHelper.ToHtml(resp.Reason)</div>
             <div class="response-draft">
                 <div class="draft-header">
                     <strong>Draft Response</strong>
                     <button class="btn-copy" @onclick="() => CopyToClipboard(resp.Draft)">📋 Copy</button>
                 </div>
-                <div class="draft-content">
-                    @((MarkupString)FormatMarkdown(resp.Draft))
+                <div class="draft-content md-content">
+                    @MarkdownHelper.ToHtml(resp.Draft)
                 </div>
             </div>
         </div>
@@ -492,8 +493,8 @@ else
                 @{
                     var notes = _issue.AnalysisNotes;
                 }
-                <div class="analysis-summary">
-                    <p>@notes.Summary</p>
+                <div class="analysis-summary md-content">
+                    @MarkdownHelper.ToHtml(notes.Summary)
                 </div>
 
                 @if (notes.KeySignals is { Count: > 0 })
@@ -505,7 +506,7 @@ else
                             <div class="signal-card">
                                 <blockquote class="signal-quote">"@signal.Text"</blockquote>
                                 <span class="evidence-source">— @signal.Source</span>
-                                <p class="signal-interp">@signal.Interpretation</p>
+                                <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
                                 @if (signal.SupportedFields is { Count: > 0 })
                                 {
                                     <div class="supported-fields">
@@ -531,7 +532,7 @@ else
                                     <span class="label label-field">@fr.Field</span>
                                     <span class="rationale-chosen">→ @fr.Chosen</span>
                                 </div>
-                                <p class="reason-text">@fr.ExpandedReason</p>
+                                <div class="reason-text md-content">@MarkdownHelper.ToHtml(fr.ExpandedReason)</div>
                                 @if (fr.Alternatives is { Count: > 0 })
                                 {
                                     <details class="alternatives">
@@ -750,13 +751,6 @@ else
         >= 0.70 => "confidence-medium",
         _ => "confidence-low"
     };
-
-    private static string FormatMarkdown(string md)
-    {
-        var html = System.Text.RegularExpressions.Regex.Replace(md, "`([^`]+)`", "<code>$1</code>");
-        html = html.Replace("\n\n", "</p><p>").Replace("\n", "<br/>");
-        return $"<p>{html}</p>";
-    }
 
     private async Task CopyToClipboard(string text)
     {
