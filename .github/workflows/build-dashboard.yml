@@ -43,6 +43,42 @@ jobs:
       - name: Publish
         run: dotnet publish src/Dashboard/Dashboard.csproj --configuration Release --output ./publish
 
+      - name: Fingerprint static assets
+        run: |
+          # Create fingerprinted copies of CSS files and update index.html references
+          python3 -c "
+          import json, shutil, re, os
+          manifest = json.load(open('./publish/Dashboard.staticwebassets.endpoints.json'))
+          index_path = './publish/wwwroot/index.html'
+          index = open(index_path).read()
+          done = set()
+          for ep in manifest['Endpoints']:
+              route = ep['Route']
+              asset = ep.get('AssetFile', '')
+              if route == asset or route in done:
+                  continue
+              # Only fingerprint CSS (not compressed, not framework JS which is already handled)
+              if not route.endswith('.css'):
+                  continue
+              # Skip compressed variants — we only want the plain source file
+              if asset.endswith('.gz') or asset.endswith('.br'):
+                  continue
+              # Route must have a hash (fingerprinted) and asset must not
+              if not re.search(r'\.[a-z0-9]{8,}\.', route):
+                  continue
+              src = os.path.join('./publish/wwwroot', asset)
+              dst = os.path.join('./publish/wwwroot', route)
+              if os.path.exists(src) and not os.path.exists(dst):
+                  os.makedirs(os.path.dirname(dst), exist_ok=True)
+                  shutil.copy2(src, dst)
+                  if asset in index:
+                      index = index.replace(asset, route, 1)
+                      done.add(route)
+                      print(f'  {asset} -> {route}')
+          open(index_path, 'w').write(index)
+          print('Fingerprinted', len(done), 'static assets')
+          "
+
       - name: Set base href for GitHub Pages
         run: sed -i 's|<base href="/" />|<base href="/SkiaSharp/dashboard/" />|' ./publish/wwwroot/index.html
 
