@@ -19,7 +19,7 @@ Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated tria
 **GitHub CLI fallback.** If the issue is not in the cache (too new, or cache stale), use `gh` CLI or the GitHub MCP tools (`issue_read`, `get_file_contents`) to fetch it directly. Local cache is faster and searchable; API is the fallback, not forbidden.
 
 ```
-Phase 1 (Setup) → Phase 2 (Preprocess) → Phase 3 (Analyze) → Phase 4 (Validate) → Phase 5 (Persist)
+Phase 1 (Setup) → Phase 2 (Preprocess) → Phase 3 (Analyze) → Phase 3.5 (Workaround Search) → Phase 3.7 (Validate Code) → Phase 4 (Schema Validate) → Phase 5 (Persist)
 ```
 
 ---
@@ -114,7 +114,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 - **`keySignals`**: Direct quotes with source and interpretation
 - **`fieldRationales`**: Required for every judgment field (see below). Include `alternatives` for ambiguous choices.
 - **`uncertainties`**: What's unclear and what would resolve it
-- **`resolution`**: Proposals with `{title, description, confidence, effort}`. Null only for duplicates/abandoned.
+- **`resolution`**: Proposals with `{title, description, confidence, effort}` plus optional `{category, codeSnippet, validated}`. Null only for duplicates/abandoned. Use `category` to distinguish workarounds from fixes; include `codeSnippet` for copy-paste-ready code.
 
 ##### fieldRationales — required fields
 
@@ -144,6 +144,33 @@ Schema validates rationale coverage. Use short field names (e.g., `"type"` not `
 
 Each action: `{id, type, risk, description, reason, confidence, dependsOn, payload}`. 
 Set `requiresHumanReview: true` if any key confidence < 0.70.
+
+---
+
+## Phase 3.5 — Workaround Search
+
+For bugs, questions, and feature requests: **actively search for workarounds** the reporter can use now. Follow [references/workaround-search.md](references/workaround-search.md) — 9 sources in priority order (cached triages → closed issues → known patterns → source code → docs → web).
+
+- Set proposal `category` to `"workaround"` / `"fix"` / `"alternative"` / `"investigation"`
+- Include `codeSnippet` on any proposal with copy-paste-ready code
+- Set `validated` to `"untested"` initially (upgraded in Phase 3.7)
+
+Skip this phase for duplicates and abandoned issues (resolution is null).
+
+---
+
+## Phase 3.7 — Workaround Validation (conditional)
+
+If any proposal `description`, `codeSnippet`, or `add-comment` `draftBody` contains fenced code blocks or `SK*` API calls: validate with 3 parallel agents per [references/workaround-validation.md](references/workaround-validation.md).
+
+**Gate:** No code blocks → skip (set `validated: "untested"`). ~60% of triages skip this step.
+
+**Agents** (parallel `explore` type, Haiku model):
+1. **API correctness** — do the SK* types/methods exist with correct signatures?
+2. **Behavioral correctness** — disposal, null-checks, threading, does it solve the problem?
+3. **Platform safety** — will it work on the reporter's platform?
+
+**Synthesis:** All pass → `validated: "yes"`. Any warn → add caveats to draftBody, reduce confidence. Any fail → fix or strip code, set `validated: "no"`.
 
 ---
 

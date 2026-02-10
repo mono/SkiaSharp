@@ -55,9 +55,9 @@ Bug with stack trace, bugSignals required, analysis with fieldRationales and res
     "resolution": {
       "hypothesis": "Android detaches views on a different thread than iOS, causing use-after-free of the native surface.",
       "proposals": [
-        { "title": "Guard disposal with null check", "description": "Add null/disposed check before accessing native surface in OnDetachedFromWindow. Simple fix, low risk, but may mask deeper issue.", "confidence": 0.75, "effort": "low" },
-        { "title": "Synchronize disposal with UI thread", "description": "Post disposal to UI thread to ensure surface validity. Addresses root cause but may introduce timing issues.", "confidence": 0.70, "effort": "medium" },
-        { "title": "Weak reference to native surface", "description": "Hold weak reference to prevent use-after-free. More invasive but prevents crash definitively.", "confidence": 0.65, "effort": "medium" }
+        { "title": "Guard disposal with null check", "description": "Add null/disposed check before accessing native surface in OnDetachedFromWindow. Simple fix, low risk, but may mask deeper issue.", "confidence": 0.75, "effort": "low", "category": "workaround", "codeSnippet": "protected override void OnDetachedFromWindow()\n{\n    if (surface != null && !surface.IsDisposed)\n        surface.Dispose();\n    base.OnDetachedFromWindow();\n}", "validated": "untested" },
+        { "title": "Synchronize disposal with UI thread", "description": "Post disposal to UI thread to ensure surface validity. Addresses root cause but may introduce timing issues.", "confidence": 0.70, "effort": "medium", "category": "fix" },
+        { "title": "Weak reference to native surface", "description": "Hold weak reference to prevent use-after-free. More invasive but prevents crash definitively.", "confidence": 0.65, "effort": "medium", "category": "fix" }
       ],
       "recommendedProposal": "Guard disposal with null check",
       "recommendedReason": "Lowest risk, addresses the immediate crash."
@@ -142,9 +142,9 @@ Question with resolution proposals, bugSignals null, close-with-docs action:
     "resolution": {
       "hypothesis": "User wants to render text with a custom .ttf font on Linux where system fonts may not be available.",
       "proposals": [
-        { "title": "SKTypeface.FromFile()", "description": "Load font directly from file path. Simplest approach, no dependencies, but requires knowing file path at runtime.", "confidence": 0.90, "effort": "low" },
-        { "title": "SKTypeface.FromData() with embedded resource", "description": "Embed font as resource, load from byte array. Font travels with assembly, no file path concerns.", "confidence": 0.90, "effort": "low" },
-        { "title": "SKFontManager with NativeAssets.Linux", "description": "Use system font enumeration via fontconfig. Access to all system fonts but requires fontconfig dependency.", "confidence": 0.75, "effort": "medium" }
+        { "title": "SKTypeface.FromFile()", "description": "Load font directly from file path. Simplest approach, no dependencies, but requires knowing file path at runtime.", "confidence": 0.90, "effort": "low", "category": "workaround", "codeSnippet": "using var typeface = SKTypeface.FromFile(\"/path/to/font.ttf\");\nusing var paint = new SKPaint { Typeface = typeface };\ncanvas.DrawText(\"Hello\", 50, 50, paint);", "validated": "yes" },
+        { "title": "SKTypeface.FromData() with embedded resource", "description": "Embed font as resource, load from byte array. Font travels with assembly, no file path concerns.", "confidence": 0.90, "effort": "low", "category": "alternative", "codeSnippet": "using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(\"MyApp.Fonts.custom.ttf\");\nusing var data = SKData.Create(stream);\nusing var typeface = SKTypeface.FromData(data);", "validated": "yes" },
+        { "title": "SKFontManager with NativeAssets.Linux", "description": "Use system font enumeration via fontconfig. Access to all system fonts but requires fontconfig dependency.", "confidence": 0.75, "effort": "medium", "category": "alternative" }
       ],
       "recommendedProposal": "SKTypeface.FromFile()",
       "recommendedReason": "Simplest and most portable. Works regardless of fontconfig availability."

@@ -11,6 +11,7 @@ Always do these regardless of type:
 3. **Extract all evidence** — Screenshots, code snippets, stack traces, environment details, attachments, repo links
 4. **Identify SkiaSharp version** — Check for version mentions, NuGet package references, csproj contents in repro code
 5. **Check for member/maintainer comments** — These often contain diagnosis or workarounds already
+6. **Search for workarounds** — Follow [references/workaround-search.md](workaround-search.md) to find actionable workarounds the reporter can use immediately. Extract search terms (API names, error messages, class names) from the issue and search all sources in priority order.
 
 ## Bug Research
 
@@ -22,6 +23,8 @@ Always do these regardless of type:
 - [references/skia-patterns.md](skia-patterns.md) → known platform quirks, common traps, diagnostic heuristics
 - `.docs/docs/docs/` → if bug involves API misuse vs actual defect
 - Similar closed issues → check if there's an existing fix or documented workaround
+
+**Workaround search:** Follow [workaround-search.md](workaround-search.md) → "Search Patterns by Issue Type" → match the bug subcategory (crash, wrong output, or deployment). For crashes, prioritize checking `skia-patterns.md` common traps. For deployment issues, read `documentation/packages.md` first — it almost always has the answer.
 
 **Proposal archetypes:**
 1. Workaround the user can apply now
@@ -41,6 +44,8 @@ Always do these regardless of type:
 - `mslearn`/`microsoft_docs_search` → if about non-SkiaSharp tech (MAUI, Blazor, WPF, ASP.NET)
 - Existing closed issues → often the same question was answered before
 
+**Workaround search:** Follow [workaround-search.md](workaround-search.md) → "Search Patterns by Issue Type" → "Question: how to do X". Start with tutorials and samples, then assemble a code snippet.
+
 **Proposal archetypes:**
 1. Direct answer with code example
 2. Alternative approach if the "obvious" answer has caveats
@@ -57,6 +62,8 @@ Always do these regardless of type:
 - Upstream Skia → does the C++ API support this? (`externals/skia/include/`)
 - [documentation/architecture.md](../../documentation/architecture.md) → understand which layer would need changes
 - Similar issues/PRs → has this been requested or attempted before?
+
+**Workaround search:** Follow [workaround-search.md](workaround-search.md) → "Search Patterns by Issue Type" → "Feature request: API doesn't exist". Search source for partial solutions and upstream Skia C++ headers.
 
 **Proposal archetypes:**
 1. Existing workaround using current API

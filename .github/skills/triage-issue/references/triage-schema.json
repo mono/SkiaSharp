@@ -683,6 +683,28 @@
             "medium",
             "high"
           ]
+        },
+        "category": {
+          "enum": [
+            "workaround",
+            "fix",
+            "alternative",
+            "investigation"
+          ],
+          "description": "workaround=user can apply now. fix=change needed in SkiaSharp. alternative=different approach. investigation=needs more research before acting."
+        },
+        "codeSnippet": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Copy-paste-ready code the user can apply. Typically for workarounds or alternative approaches."
+        },
+        "validated": {
+          "enum": [
+            "yes",
+            "no",
+            "untested"
+          ],
+          "description": "yes=confirmed working. no=known not to work. untested=plausible but unverified."
         }
       }
     },
@@ -818,15 +840,16 @@
             "documentation",
             "request-info",
             "close-message",
-            "duplicate-notice"
+            "duplicate-notice",
+            "workaround"
           ],
-          "description": "answer=direct answer. documentation=docs pointer. request-info=ask for details. close-message=close explanation. duplicate-notice=points to canonical."
+          "description": "answer=direct answer. documentation=docs pointer. request-info=ask for details. close-message=close explanation. duplicate-notice=points to canonical. workaround=actionable workaround with code snippet."
         },
         "draftBody": {
           "type": "string",
           "minLength": 1,
           "maxLength": 2000,
-          "description": "Markdown draft. NEVER posted automatically."
+          "description": "Markdown draft. NEVER posted automatically. When commentType is 'workaround', MUST include the recommended proposal's codeSnippet in a fenced code block."
         },
         "requiresHumanEdit": {
           "type": "boolean",
