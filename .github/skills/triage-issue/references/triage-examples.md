@@ -2,14 +2,16 @@
 
 Full JSON examples for reference. Read once per session to calibrate output format.
 
+**v2.1 changes:** Every example now includes `analysis.codeInvestigation` — source code signals are mandatory. `schemaVersion` is `"2.1"`.
+
 ## Bug Example
 
-Bug with stack trace, bugSignals required, analysis with fieldRationales and resolution proposals, actions array:
+Bug with stack trace, bugSignals required, analysis with codeInvestigation, fieldRationales and resolution proposals, actions array:
 
 ```json
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "2.1",
     "number": 1234,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-08T15:00:00Z",
@@ -41,6 +43,10 @@ Bug with stack trace, bugSignals required, analysis with fieldRationales and res
     "keySignals": [
       { "text": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow", "source": "stack-trace", "interpretation": "Native surface accessed after disposal" },
       { "text": "works on iOS, crashes on Android only", "source": "body", "interpretation": "Platform-specific disposal timing issue" }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKCanvasView.cs", "lines": "45-78", "relevance": "OnDetachedFromWindow disposes native surface without null-check — use-after-free if called on background thread" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/iOS/SKCanvasView.cs", "lines": "52-70", "relevance": "iOS equivalent checks IsDisposed before accessing surface — explains why iOS doesn't crash" }
     ],
     "fieldRationales": [
       { "field": "type", "chosen": "type/bug", "expandedReason": "Reporter describes a crash with stack trace during a normal lifecycle event (view detachment). This is clearly broken behavior, not a usage question.", "alternatives": [{ "value": "type/question", "whyRejected": "Not asking how to do something — reporting a crash." }] },
@@ -105,7 +111,7 @@ Question with resolution proposals, bugSignals null, close-with-docs action:
 ```json
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "2.1",
     "number": 5678,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-08T15:00:00Z",
@@ -131,6 +137,10 @@ Question with resolution proposals, bugSignals null, close-with-docs action:
     "summary": "User asking how to load custom fonts on Linux. Usage question — the API exists and works.",
     "keySignals": [
       { "text": "How do I load a custom .ttf font?", "source": "body", "interpretation": "How-to question about existing API" }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKTypeface.cs", "lines": "45-62", "relevance": "SKTypeface.FromFile() and FromData() are public, well-documented APIs — confirms this is a usage question, not a missing feature" },
+      { "file": "tests/Tests/SKTypefaceTest.cs", "lines": "28-55", "relevance": "Test coverage for FromFile/FromData confirms these APIs work on Linux (test runs cross-platform)" }
     ],
     "fieldRationales": [
       { "field": "type", "chosen": "type/question", "expandedReason": "Asking how to accomplish a task. No broken behavior described.", "alternatives": [{ "value": "type/documentation", "whyRejected": "Docs exist — user just hasn't found them." }] },
@@ -198,7 +208,7 @@ Same structure as bug, with key differences: `analysis.resolution: null`, `actio
 
 ```json
 {
-  "meta": { "schemaVersion": "2.0", "number": 9999, "repo": "mono/SkiaSharp", "analyzedAt": "2026-02-08T15:00:00Z", "currentLabels": [] },
+  "meta": { "schemaVersion": "2.1", "number": 9999, "repo": "mono/SkiaSharp", "analyzedAt": "2026-02-08T15:00:00Z", "currentLabels": [] },
   "summary": "Duplicate of #1234 — same Android disposal crash",
   "classification": {
     "type": { "value": "type/bug", "confidence": 0.95 },
@@ -221,6 +231,10 @@ Same structure as bug, with key differences: `analysis.resolution: null`, `actio
     "summary": "Identical stack trace and reproduction steps as #1234.",
     "keySignals": [
       { "text": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow", "source": "stack-trace", "interpretation": "Same crash as #1234" }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKCanvasView.cs", "lines": "45-78", "relevance": "Same disposal code path as #1234 — confirms duplicate, not a separate issue" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKCanvasView.cs", "lines": "12-20", "relevance": "Class declaration and inheritance match #1234's report — same component, same version" }
     ],
     "fieldRationales": [
       { "field": "type", "chosen": "type/bug", "expandedReason": "Same crash as #1234." },

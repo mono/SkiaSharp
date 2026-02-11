@@ -19,7 +19,7 @@ Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated tria
 **GitHub CLI fallback.** If the issue is not in the cache (too new, or cache stale), use `gh` CLI or the GitHub MCP tools (`issue_read`, `get_file_contents`) to fetch it directly. Local cache is faster and searchable; API is the fallback, not forbidden.
 
 ```
-Phase 1 (Setup) → Phase 2 (Preprocess) → Phase 3 (Analyze) → Phase 3.5 (Workaround Search) → Phase 3.7 (Validate Code) → Phase 4 (Schema Validate) → Phase 5 (Persist)
+Phase 1 (Setup) → Phase 2 (Preprocess + Investigate) → Phase 3 (Analyze) → Phase 3.5 (Workaround Search) → Phase 3.7 (Validate Code) → Phase 4 (Schema Validate) → Phase 5 (Persist)
 ```
 
 ---
@@ -68,7 +68,21 @@ pwsh .github/skills/triage-issue/scripts/issue-to-markdown.ps1 $CACHE/github/ite
 
 If fetched via API, work directly from the `gh` output (skip the script).
 
-### 3. Research (conditional)
+### 3. Code Investigation (MANDATORY)
+
+**Before ANY classification**, search the source code for the types, methods, APIs, or behaviors mentioned in the issue. Read the relevant files. Record every finding in `analysis.codeInvestigation` as `{file, lines, relevance}`.
+
+**Do NOT classify until you have examined source code.** The schema requires at least one `codeInvestigation` entry. Close-* actions require at least two.
+
+**Steps:**
+1. Grep for the types/methods/APIs mentioned in the issue
+2. Read the relevant source files (platform handlers, core APIs, etc.)
+3. Check if the reported behavior matches current code
+4. For bugs: trace the code path — does the issue still exist?
+5. For feature requests: has it been implemented since filing?
+6. For questions: does the source confirm or contradict the assumption?
+
+### 4. Additional Research
 
 | Signal in issue | Source to consult |
 |----------------|-------------------|
@@ -92,7 +106,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 
 #### meta + summary
 
-- `schemaVersion`: `"2.0"`
+- `schemaVersion`: `"2.1"`
 - `analyzedAt`: ISO 8601 UTC
 - `currentLabels`: labels currently on the issue
 
@@ -112,6 +126,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 #### analysis
 
 - **`keySignals`**: Direct quotes with source and interpretation
+- **`codeInvestigation`**: Source code signals from mandatory investigation — `{file, lines, relevance}` for each file examined. At least one required; close-* actions require at least two.
 - **`fieldRationales`**: Required for every judgment field (see below). Include `alternatives` for ambiguous choices.
 - **`uncertainties`**: What's unclear and what would resolve it
 - **`resolution`**: Proposals with `{title, description, confidence, effort}` plus optional `{category, codeSnippet, validated}`. Null only for duplicates/abandoned. Use `category` to distinguish workarounds from fixes; include `codeSnippet` for copy-paste-ready code.
@@ -219,6 +234,20 @@ git commit -m "ai-triage: classify #{number}"
 git push  # Rebase up to 3x on conflict
 cd ..
 ```
+
+---
+
+## Anti-Patterns (NEVER DO)
+
+1. **Pre-baked delegation.** NEVER write your classification in a sub-agent prompt. Sub-agents investigate and return evidence. YOU classify based on their evidence.
+
+2. **Age-based closure.** NEVER close an issue because it's old. Old issues with no code fix are STILL OPEN BUGS/REQUESTS.
+
+3. **Platform-deprecated ≠ stale.** NEVER assume a Xamarin.Forms issue is stale. Check if the same code/gap exists in MAUI before suggesting closure.
+
+4. **Assertion without citation.** NEVER write "the code does X" without a `{file, lines}` entry in `codeInvestigation`. No file:line = no claim.
+
+5. **Batch shortcuts.** When triaging multiple issues, each gets FULL investigation. Parallel investigation is fine; parallel conclusions are not.
 
 ---
 
