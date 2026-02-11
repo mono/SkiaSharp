@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mono/SkiaSharp/triage-schema.json",
   "title": "SkiaSharp Issue Triage",
-  "description": "Per-issue AI triage v2.1 with grouped sections: meta, classification, evidence, analysis, output. Classification values ARE full GitHub labels (e.g., 'type/bug', 'os/Linux'). Reasoning lives in analysis.fieldRationales (single source of truth).",
+  "description": "Per-issue AI triage v2.1 with grouped sections: meta, classification, evidence, analysis, output. Classification values ARE full GitHub labels (e.g., 'type/bug', 'os/Linux'). Reasoning lives in analysis.fieldRationales (single source of truth). v2.1 adds mandatory codeInvestigation \u2014 source code signals with file:line citations.",
   "type": "object",
   "required": [
     "meta",
@@ -1246,6 +1246,33 @@
           }
         }
       ]
+    },
+    "sourceSignal": {
+      "type": "object",
+      "description": "A source code signal from investigation. Traces a triage claim to actual code.",
+      "required": [
+        "file",
+        "lines",
+        "relevance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative path from repo root, e.g. 'source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs'."
+        },
+        "lines": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Line range examined, e.g. '54-95' or 'full'."
+        },
+        "relevance": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this code shows about the issue, e.g. 'Only handles Began/Moved/Ended/Cancelled \u2014 no Entered/Exited'."
+        }
+      }
     }
   },
   "properties": {
@@ -1262,7 +1289,7 @@
       "additionalProperties": false,
       "properties": {
         "schemaVersion": {
-          "const": "2.0"
+          "const": "2.1"
         },
         "number": {
           "type": "integer",
@@ -1432,7 +1459,8 @@
       "required": [
         "summary",
         "keySignals",
-        "fieldRationales"
+        "fieldRationales",
+        "codeInvestigation"
       ],
       "additionalProperties": false,
       "properties": {
@@ -1485,6 +1513,14 @@
               "$ref": "#/$defs/resolutionObject"
             }
           ]
+        },
+        "codeInvestigation": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceSignal"
+          },
+          "minItems": 1,
+          "description": "Source code signals gathered during mandatory investigation. Like keySignals but from reading actual source files. Every triage must cite at least one source file."
         }
       }
     },
@@ -2155,6 +2191,86 @@
                     "field"
                   ]
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "close-* actions require at least 2 code investigation signals as evidence",
+      "if": {
+        "properties": {
+          "output": {
+            "type": "object",
+            "required": [
+              "actionability"
+            ],
+            "properties": {
+              "actionability": {
+                "type": "object",
+                "properties": {
+                  "suggestedAction": {
+                    "pattern": "^close-"
+                  }
+                },
+                "required": [
+                  "suggestedAction"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "output"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "codeInvestigation": {
+                "minItems": 2
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "dismissing relevance (unlikely) requires code investigation evidence",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "versionAnalysis"
+            ],
+            "properties": {
+              "versionAnalysis": {
+                "type": "object",
+                "properties": {
+                  "currentRelevance": {
+                    "const": "unlikely"
+                  }
+                },
+                "required": [
+                  "currentRelevance"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "codeInvestigation": {
+                "minItems": 1
               }
             }
           }
