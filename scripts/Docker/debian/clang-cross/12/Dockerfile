@@ -54,7 +54,7 @@ RUN . /etc/skia-env \
     && cd /skia-utils/libfontconfig-dev \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
          riscv64) FC_VERSION=2.15.0-2.3 ; FC_DEV_PKG=libfontconfig-dev  ; FC_RT_PKG=libfontconfig1 ;; \
-         *)       FC_VERSION=2.14.1-4   ; FC_DEV_PKG=libfontconfig1-dev ; FC_RT_PKG=libfontconfig1 ;; \
+         *)       FC_VERSION=2.13.1-4.2 ; FC_DEV_PKG=libfontconfig1-dev ; FC_RT_PKG=libfontconfig1 ;; \
        esac \
     && TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
     && FC_DEV_URL=http://deb.debian.org/debian/pool/main/f/fontconfig/${FC_DEV_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
