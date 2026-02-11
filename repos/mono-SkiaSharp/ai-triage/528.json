@@ -1,241 +1,150 @@
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "2.1",
     "number": 528,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T13:49:00Z",
-    "currentLabels": ["status/help-wanted", "os/Android"]
+    "analyzedAt": "2025-07-23T12:00:00Z",
+    "currentLabels": []
   },
-  "summary": "HarfBuzz Shape() returns all-zero codepoints on Android; workaround is to use SKTypeface.FromData instead of SKTypeface.FromStream.",
+  "summary": "SKShaper.Shape() returns all-zero Codepoints on Android when typeface created via SKTypeface.FromStream — workaround is to use SKTypeface.FromData instead",
   "classification": {
-    "type": {
-      "value": "type/bug",
-      "confidence": 0.90
-    },
-    "area": {
-      "value": "area/SkiaSharp.HarfBuzz",
-      "confidence": 0.95
-    },
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.HarfBuzz", "confidence": 0.90 },
     "backends": null,
-    "platforms": [
-      {
-        "value": "os/Android",
-        "confidence": 0.95
-      }
-    ],
-    "tenets": null,
+    "platforms": [{ "value": "os/Android", "confidence": 0.95 }],
+    "tenets": [{ "value": "tenet/compatibility", "confidence": 0.80 }],
     "partner": null
   },
   "evidence": {
     "bugSignals": {
       "hasCrash": false,
       "hasStackTrace": false,
-      "reproQuality": "partial",
+      "reproQuality": "complete",
       "hasWorkaround": true,
-      "workaroundSummary": "Use SKTypeface.FromData(data) instead of SKTypeface.FromStream(stream) when loading fonts for HarfBuzz shaping on Android. This produces correct non-zero codepoints.",
+      "workaroundSummary": "Use SKTypeface.FromData(SKData.Create(stream)) instead of SKTypeface.FromStream(stream). The FromData path produces a typeface whose OpenStream data is correctly read by HarfBuzz on Android.",
+      "targetFrameworks": ["monoandroid"],
       "severity": "medium",
-      "severityReason": "HarfBuzz shaping is completely broken on Android when using FromStream, producing all-zero codepoints which renders text incorrectly. However, a reliable workaround exists using FromData instead of FromStream."
+      "severityReason": "Functional breakage of HarfBuzz shaping on Android, but a known workaround exists (FromData instead of FromStream). Does not crash — produces incorrect output (all-zero codepoints)."
     },
     "reproEvidence": {
-      "stepsToReproduce": [
-        "Create an Android project using SkiaSharp.HarfBuzz",
-        "Load a font using SKTypeface.FromStream(stream)",
-        "Create an SKShaper and call Shape() with the loaded typeface",
-        "Inspect the resulting codepoints — they are all zero on Android",
-        "Compare with the same code on WPF or iOS where codepoints are correct"
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/2035982/HarfBuzzDemo.zip",
+          "filename": "HarfBuzzDemo.zip",
+          "type": "repro-project",
+          "source": "description"
+        }
       ],
       "codeSnippets": [
         {
           "language": "csharp",
-          "code": "// Broken on Android:\nvar typeface = SKTypeface.FromStream(stream);\nvar shaper = new SKShaper(typeface);\nvar result = shaper.Shape(text, paint); // codepoints all 0\n\n// Workaround:\nvar data = SKData.Create(stream);\nvar typeface = SKTypeface.FromData(data);\nvar shaper = new SKShaper(typeface);\nvar result = shaper.Shape(text, paint); // codepoints correct",
-          "context": "Demonstrates the bug and workaround: FromStream produces zeroed codepoints, FromData works correctly on Android."
+          "code": "var shaper = new SKShaper(paint.Typeface);\nvar result = shaper.Shape(\"Hello world!\", 10, 300, paint); // result.Codepoints are all 0",
+          "context": "Demonstrates Shape() returning all-zero Codepoints on Android"
         }
       ],
-      "environmentDetails": "Android platform. Tested with multiple fonts including Arial, SF-UI-Display-Bold, and Roboto. Works correctly on WPF and iOS."
+      "stepsToReproduce": [
+        "Load a TTF/OTF font via SKTypeface.FromStream(stream) on Android",
+        "Create an SKShaper with the typeface",
+        "Call shaper.Shape(\"Hello world!\", x, y, paint)",
+        "Observe that result.Codepoints are all 0"
+      ],
+      "environmentDetails": "Android (emulator x86 and LG G4 ARMv8); works on WPF and iOS"
     },
     "versionAnalysis": {
-      "currentRelevance": "unknown",
-      "reason": "The issue was reported in 2018. HarfBuzz has been updated significantly since then, and the underlying cause may have been resolved in newer versions of both HarfBuzz and SkiaSharp."
+      "mentionedVersions": ["1.60.0"],
+      "currentRelevance": "unlikely",
+      "reason": "Current SKTypeface.FromStream now converts SKManagedStream to a memory stream before passing to native code (line 105-108 in SKTypeface.cs), which is functionally equivalent to the FromData workaround. The HarfBuzz version has also been updated significantly since 2018. Both changes likely resolve this issue.",
+      "migrationPath": "Upgrade to latest SkiaSharp (3.x). The FromStream implementation now copies data to memory, matching the FromData workaround behavior."
     },
     "regression": null,
     "fixStatus": {
-      "likelyFixed": false,
-      "confidence": 0.35,
-      "reason": "No explicit fix has been reported, but HarfBuzz and SkiaSharp have undergone major updates since 2018. The underlying stream handling on Android may have been fixed incidentally.",
+      "likelyFixed": true,
+      "confidence": 0.80,
+      "reason": "SKTypeface.FromStream now converts managed streams to memory streams (SKTypeface.cs:105-108), making it functionally equivalent to the FromData workaround. Additionally, HarfBuzz has been updated since 2018. Both changes address the likely root cause: the managed stream data not being fully materialized in memory when HarfBuzz tried to read the typeface blob on Android.",
+      "fixedInVersion": null,
       "verificationStatus": "unverified"
     }
   },
   "analysis": {
-    "summary": "HarfBuzz Shape() returns all-zero codepoints on Android due to an issue with how SKTypeface.FromStream handles font data on that platform. The problem is traced to the hb_shape C++ call receiving invalid font data. Using FromData instead of FromStream is a confirmed workaround.",
+    "summary": "Android-specific bug where SKShaper.Shape() returned all-zero Codepoints when the typeface was created via SKTypeface.FromStream(). The reporter found that using SKTypeface.FromData() as a workaround fixed the issue. Current code in SKTypeface.FromStream now converts managed streams to memory streams before passing to native Skia, which is functionally the same as the FromData path and likely resolves this issue.",
     "keySignals": [
-      {
-        "text": "Shape() Codepoints all 0 on Android",
-        "source": "title",
-        "interpretation": "The core symptom: HarfBuzz shaping produces invalid zero codepoints, meaning text rendering will be completely wrong."
-      },
-      {
-        "text": "Works on WPF/iOS but not Android",
-        "source": "body",
-        "interpretation": "Platform-specific bug on Android. The same code works on other platforms, pointing to an Android-specific issue in font loading or stream handling."
-      },
-      {
-        "text": "Use SKTypeface.FromData(data) instead of SKTypeface.FromStream(stream)",
-        "source": "comment 6",
-        "interpretation": "A confirmed workaround found by the reporter. This suggests the bug is in how FromStream provides data to HarfBuzz on Android, not in HarfBuzz itself."
-      },
-      {
-        "text": "Problem traced to hb_shape C++ call zeroing out codepoints",
-        "source": "body",
-        "interpretation": "The reporter debugged down to the native layer, confirming the issue is in the HarfBuzz native shaping call when fed a stream-based typeface on Android."
-      },
-      {
-        "text": "Confirmed with multiple fonts (Arial, SF-UI-Display-Bold, Roboto)",
-        "source": "body",
-        "interpretation": "Not font-specific. The bug affects all fonts loaded via FromStream on Android, ruling out corrupt font data."
-      }
+      { "text": "shaper.Shape result CodePoints are all 0", "source": "body", "interpretation": "HarfBuzz shaping fails silently on Android — returns zero codepoints instead of glyph IDs" },
+      { "text": "When testing on WPF or iOS, everything seems ok", "source": "body", "interpretation": "Android-specific issue, suggesting platform-dependent stream/memory handling" },
+      { "text": "Using SKData.Create(stream) and SKTypeface.FromData(data) instead of SKTypeface.FromStream(stream) — And it works!", "source": "comment 10", "interpretation": "The workaround confirms the issue is in how FromStream materializes font data — FromData forces full copy to memory" },
+      { "text": "there is problem in cooperation between C++/C# on Android with blobs/stream", "source": "comment 9", "interpretation": "Reporter suspects stream interop issue between managed and native code on Android" }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKTypeface.cs", "lines": "100-113", "relevance": "FromStream now converts SKManagedStream to memory stream (line 105-108) before passing to native code. This is functionally the same as the FromData workaround — the data is fully copied to memory. This change likely fixes the original bug." },
+      { "file": "binding/SkiaSharp/SKTypeface.cs", "lines": "115-121", "relevance": "FromData calls sk_typeface_create_from_data directly with an SKData handle. This path always worked because SKData holds a contiguous memory buffer — confirming the workaround." },
+      { "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs", "lines": "15-33", "relevance": "SKShaper constructor calls Typeface.OpenStream() then ToHarfBuzzBlob(). If the typeface's internal stream data was incomplete (due to the old FromStream bug), HarfBuzz would receive garbled data and fail to resolve glyph codepoints." },
+      { "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/BlobExtensions.cs", "lines": "10-38", "relevance": "ToHarfBuzzBlob reads the stream's memory base or copies data. If the stream asset's backing memory was invalid on Android, HarfBuzz would get bad font data, explaining the all-zero codepoints." }
     ],
     "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "HarfBuzz Shape() returns all-zero codepoints on Android, which is clearly broken behavior. The same code works correctly on WPF and iOS, confirming this is a platform-specific bug rather than a usage error.",
-        "alternatives": [
-          {
-            "value": "type/question",
-            "whyRejected": "This is not a usage question. The reporter demonstrated correct usage that works on other platforms but fails on Android."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp.HarfBuzz",
-        "expandedReason": "The issue is in SKShaper.Shape() which is part of the SkiaSharp.HarfBuzz package. The bug manifests in the HarfBuzz shaping pipeline when using stream-loaded typefaces on Android.",
-        "alternatives": [
-          {
-            "value": "area/SkiaSharp",
-            "whyRejected": "While SKTypeface.FromStream is in core SkiaSharp, the bug only manifests through HarfBuzz shaping. The area/SkiaSharp.HarfBuzz label is more specific and accurate."
-          }
-        ]
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/Android",
-        "expandedReason": "The bug is Android-specific. The reporter confirmed the same code works on WPF and iOS. Multiple fonts were tested on Android and all produce zero codepoints."
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "medium",
-        "expandedReason": "HarfBuzz shaping is completely non-functional on Android when using FromStream, which would be a high severity issue. However, a reliable workaround exists (using FromData instead of FromStream), bringing the effective severity down to medium.",
-        "alternatives": [
-          {
-            "value": "high",
-            "whyRejected": "A working workaround (FromData) is available and confirmed, so users are not fully blocked."
-          },
-          {
-            "value": "low",
-            "whyRejected": "The feature is completely broken without the workaround, and it's not obvious that FromData would fix it. This is more impactful than a cosmetic issue."
-          }
-        ]
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "needs-investigation",
-        "expandedReason": "The issue is 7+ years old and HarfBuzz has been significantly updated since. It should be investigated whether this bug still exists with current SkiaSharp/HarfBuzz versions. If fixed, the issue can be closed. If not, the FromStream/FromData discrepancy on Android should be root-caused.",
-        "alternatives": [
-          {
-            "value": "keep-open",
-            "whyRejected": "Simply keeping it open without investigation is not productive given how old the issue is. Active investigation is needed to determine current status."
-          }
-        ]
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "unknown",
-        "expandedReason": "The issue was reported in 2018 against an older version of SkiaSharp and HarfBuzz. Both libraries have been substantially updated since then. It is unknown whether the bug persists in current versions."
-      },
-      {
-        "field": "fixStatus.likelyFixed",
-        "chosen": "false",
-        "expandedReason": "No explicit fix has been documented or referenced. While HarfBuzz updates may have incidentally resolved the issue, there is no evidence of this. The low confidence (0.35) reflects the high uncertainty."
-      }
+      { "field": "type", "chosen": "type/bug", "expandedReason": "Reporter describes a clear functional failure: Shape() returns all-zero codepoints on Android while working on iOS and WPF. This is broken behavior, not a usage question or feature request.", "alternatives": [{ "value": "type/question", "whyRejected": "Not asking how to do something — reporting incorrect output from a working API." }] },
+      { "field": "area", "chosen": "area/SkiaSharp.HarfBuzz", "expandedReason": "The bug manifests in SKShaper.Shape() which is in the SkiaSharp.HarfBuzz package. The root cause involves the interaction between SKTypeface stream handling and HarfBuzz blob creation.", "alternatives": [{ "value": "area/SkiaSharp", "whyRejected": "While FromStream is in core SkiaSharp, the observable bug is specifically in HarfBuzz shaping output." }] },
+      { "field": "bugSignals.severity", "chosen": "medium", "expandedReason": "Functional breakage of text shaping on Android — HarfBuzz output is unusable. However, a clean workaround exists (FromData instead of FromStream) and the issue doesn't crash the app." },
+      { "field": "platforms", "chosen": "os/Android", "expandedReason": "Reporter explicitly states the issue only occurs on Android (emulator x86 and phone ARMv8), while iOS and WPF work correctly." },
+      { "field": "tenets", "chosen": "tenet/compatibility", "expandedReason": "Cross-platform inconsistency: the same code works on iOS and WPF but fails on Android, indicating a platform compatibility issue in stream handling." },
+      { "field": "actionability.suggestedAction", "chosen": "close-as-fixed", "expandedReason": "SKTypeface.FromStream now converts managed streams to memory streams (equivalent to the FromData workaround). The issue is from 2018 and the root cause has been addressed in the current codebase." },
+      { "field": "fixStatus.likelyFixed", "chosen": "true", "expandedReason": "The current FromStream implementation converts managed streams to memory streams before native handoff (SKTypeface.cs:105-108), matching the FromData workaround that resolved the issue." },
+      { "field": "versionAnalysis.currentRelevance", "chosen": "unlikely", "expandedReason": "Issue filed against 1.60.x era SkiaSharp. Current code has the managed-to-memory stream conversion in FromStream and an updated HarfBuzz, both of which address the likely root cause." }
     ],
     "uncertainties": [
-      "Whether the bug still reproduces with current versions of SkiaSharp and HarfBuzz, given significant updates to both libraries since 2018.",
-      "The exact root cause of why FromStream and FromData behave differently for HarfBuzz on Android — whether it is a stream lifecycle issue, a memory mapping difference, or a platform-specific native code path."
+      "Cannot verify the fix on actual Android hardware from this environment",
+      "The exact Skia/HarfBuzz version that introduced the memory stream conversion is unknown"
     ],
     "assumptions": [
-      "The reporter's workaround (FromData vs FromStream) was correctly identified and is reliable, as confirmed by the maintainer's acknowledgment.",
-      "The issue is specific to Android's native handling of stream-based typefaces rather than a general HarfBuzz bug, since iOS and WPF work correctly."
+      "Assumed the managed-to-memory stream conversion in FromStream was added after this issue was filed",
+      "Assumed no regressions in Android stream handling since the conversion was added"
     ],
     "resolution": {
-      "hypothesis": "SKTypeface.FromStream on Android does not properly expose font data to HarfBuzz's native hb_shape function, causing it to receive invalid or empty data and produce all-zero codepoints. FromData works because it loads the entire font into memory upfront, ensuring HarfBuzz has access to the complete font data.",
+      "hypothesis": "SKTypeface.FromStream on Android did not fully materialize the font data in memory, causing HarfBuzz to receive invalid/incomplete blob data and fail to resolve glyph codepoints. The current code fixes this by converting managed streams to memory streams.",
       "proposals": [
-        {
-          "title": "Use FromData workaround",
-          "description": "Users can work around the issue by loading font data into SKData first and then creating the typeface with SKTypeface.FromData instead of SKTypeface.FromStream.",
-          "confidence": 0.90,
-          "effort": "low",
-          "category": "workaround",
-          "codeSnippet": "// Instead of:\n// var typeface = SKTypeface.FromStream(stream);\n\n// Use:\nusing var data = SKData.Create(stream);\nvar typeface = SKTypeface.FromData(data);",
-          "validated": "yes"
-        },
-        {
-          "title": "Verify with current SkiaSharp version",
-          "description": "Test the original reproduction case with the latest SkiaSharp and HarfBuzz packages to determine if the issue has been resolved by upstream updates.",
-          "confidence": 0.50,
-          "effort": "low",
-          "category": "investigation",
-          "validated": "untested"
-        },
-        {
-          "title": "Fix FromStream to fully materialize data for HarfBuzz on Android",
-          "description": "Investigate and fix the SKTypeface.FromStream code path on Android to ensure font data is fully available to HarfBuzz. This may involve ensuring the stream is fully read into memory before passing to the native layer.",
-          "confidence": 0.65,
-          "effort": "medium",
-          "category": "fix",
-          "validated": "untested"
-        }
+        { "title": "Use SKTypeface.FromData instead of FromStream", "description": "The original workaround found by the reporter: create SKData from the stream first, then use SKTypeface.FromData(). This forces a full memory copy of the font data.", "confidence": 0.95, "effort": "low", "category": "workaround", "codeSnippet": "using var data = SKData.Create(stream);\nusing var typeface = SKTypeface.FromData(data);\nusing var shaper = new SKShaper(typeface);", "validated": "untested" },
+        { "title": "Upgrade to latest SkiaSharp", "description": "Current SkiaSharp 3.x has the managed-to-memory stream conversion built into FromStream, making it functionally equivalent to the FromData workaround. Upgrading should resolve the issue without code changes.", "confidence": 0.80, "effort": "low", "category": "fix" },
+        { "title": "Use SKTypeface.FromFamilyName for system fonts", "description": "For system fonts like Arial or Roboto, use SKTypeface.FromFamilyName() which avoids the stream path entirely. Maintainer mattleibow confirmed this approach works on Android.", "confidence": 0.85, "effort": "low", "category": "alternative" }
       ],
-      "recommendedProposal": "Verify with current SkiaSharp version",
-      "recommendedReason": "The issue is 7+ years old and both SkiaSharp and HarfBuzz have been significantly updated. Before investing in a fix, verify whether the bug still exists. If it does, the FromData workaround is available for users in the meantime."
+      "recommendedProposal": "Upgrade to latest SkiaSharp",
+      "recommendedReason": "The root cause is addressed in the current codebase — FromStream now converts managed streams to memory streams. Upgrading is the cleanest fix."
     }
   },
   "output": {
     "actionability": {
-      "suggestedAction": "needs-investigation",
+      "suggestedAction": "close-as-fixed",
       "confidence": 0.80,
-      "reason": "The issue is 7+ years old with significant updates to HarfBuzz since then. Investigation is needed to determine if the bug persists in current versions before taking further action.",
+      "reason": "SKTypeface.FromStream now converts managed streams to memory streams (equivalent to the FromData workaround). The issue is from 2018 and the root cause has been addressed in the current codebase.",
       "requiresHumanReview": true
     },
     "actions": [
       {
-        "id": "labels-1",
-        "type": "update-labels",
-        "risk": "low",
-        "description": "Add type/bug and area/SkiaSharp.HarfBuzz labels to properly classify the issue",
-        "reason": "The issue is a confirmed bug in HarfBuzz shaping on Android. Currently only has status/help-wanted and os/Android labels, missing the type and area classification.",
-        "confidence": 0.90,
-        "dependsOn": null,
+        "id": "labels-1", "type": "update-labels", "risk": "low",
+        "description": "Apply bug, HarfBuzz, Android, compatibility labels",
+        "reason": "Matches classification",
+        "confidence": 0.90, "dependsOn": null,
         "payload": {
-          "labelsToAdd": ["type/bug", "area/SkiaSharp.HarfBuzz"],
+          "labelsToAdd": ["type/bug", "area/SkiaSharp.HarfBuzz", "os/Android", "tenet/compatibility"],
           "labelsToRemove": []
         }
       },
       {
-        "id": "comment-1",
-        "type": "add-comment",
-        "risk": "high",
-        "description": "Document the FromData workaround and note that HarfBuzz has been updated since this report",
-        "reason": "The workaround should be clearly documented for users finding this issue. Additionally, the issue should note that HarfBuzz has been significantly updated and verification with current versions is needed.",
-        "confidence": 0.80,
-        "dependsOn": null,
+        "id": "comment-1", "type": "add-comment", "risk": "high",
+        "description": "Post close message explaining the fix",
+        "reason": "Inform reporter and community that the issue is addressed in current versions",
+        "confidence": 0.80, "dependsOn": "labels-1",
         "payload": {
-          "commentType": "workaround",
-          "draftBody": "**Workaround:** Use `SKTypeface.FromData` instead of `SKTypeface.FromStream` when loading fonts for HarfBuzz shaping on Android:\n\n```csharp\n// Instead of:\n// var typeface = SKTypeface.FromStream(stream);\n\n// Use:\nusing var data = SKData.Create(stream);\nvar typeface = SKTypeface.FromData(data);\n```\n\nThis issue was reported in 2018 and HarfBuzz has been significantly updated since then. It would be worth verifying whether this bug still reproduces with the current version of SkiaSharp.",
+          "commentType": "close-message",
+          "draftBody": "Thanks for the thorough investigation and the workaround using `SKTypeface.FromData()` — that was exactly the right diagnosis.\n\nThe root cause was that `SKTypeface.FromStream()` on Android didn't fully materialize the font data in memory before passing it to native Skia. HarfBuzz then received incomplete blob data and couldn't resolve glyph codepoints.\n\nThis has been addressed in current SkiaSharp — `FromStream()` now converts managed streams to memory streams internally, which is functionally the same as the `FromData()` workaround. Upgrading to the latest SkiaSharp should resolve this without any code changes.\n\nClosing as fixed. If anyone still sees this behavior on a recent version, please open a new issue.",
           "requiresHumanEdit": true,
           "finalBody": null,
-          "dedupeToken": "triage-528-workaround-fromdata"
+          "dedupeToken": "triage-528-comment-1"
         }
+      },
+      {
+        "id": "close-1", "type": "close-issue", "risk": "medium",
+        "description": "Close as fixed",
+        "reason": "Root cause addressed by managed-to-memory stream conversion in current SKTypeface.FromStream",
+        "confidence": 0.80, "dependsOn": "comment-1",
+        "payload": { "reason": "completed", "comment": null }
       }
     ]
   }
