@@ -1,4 +1,5 @@
 Param(
+  [string] $WorkloadVersion = '',
   [string] $Tizen = ''
 )
 
@@ -9,14 +10,23 @@ if (!$Tizen) {
 }
 
 # Install .NET workloads needed by the repo.
+# Use --version to pin to a specific workload set version for reproducibility.
 $Workloads = @('android', 'macos', 'wasm-tools')
 if (!$IsLinux) {
   $Workloads += @('ios', 'tvos', 'maccatalyst', 'maui')
 }
 
-Write-Host "Installing .NET workloads: $($Workloads -join ', ')..."
+$versionArgs = @()
+if ($WorkloadVersion) {
+  $versionArgs = @('--version', $WorkloadVersion)
+  Write-Host "Installing .NET workloads (version $WorkloadVersion): $($Workloads -join ', ')..."
+} else {
+  Write-Host "Installing .NET workloads: $($Workloads -join ', ')..."
+}
+
 & dotnet workload install `
   @Workloads `
+  @versionArgs `
   --source https://api.nuget.org/v3/index.json `
   --skip-sign-check `
   --verbosity diagnostic

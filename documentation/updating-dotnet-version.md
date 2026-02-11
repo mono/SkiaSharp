@@ -16,7 +16,8 @@ This checklist documents every file that needs updating when bumping the .NET SD
 
 ### 1. SDK & Workloads
 
-- [ ] **`global.json`** — Update `sdk.version` and `sdk.workloadVersion` to the new SDK version
+- [ ] **`global.json`** — Update `sdk.version` to the new SDK feature band (e.g., `10.0.100`)
+- [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_WORKLOAD_VERSION` to match the new SDK version
 - [ ] **`scripts/install-dotnet-workloads.ps1`** — Review Tizen script URL (Samsung repo may update)
 
 ### 2. Central Build Props
@@ -114,8 +115,8 @@ Since platform workloads only support 2 versions at a time, testing a preview me
    - `TFMCurrent` ← the preview version (e.g., `net11.0`)
    - `global.json` SDK version ← preview SDK (e.g., `11.0.100-preview.1`)
    - `global.json` `allowPrerelease` ← `true`
-   - `global.json` `workloadVersion` ← remove or set to preview workload version
    - `DOTNET_VERSION` ← preview SDK version
+   - `DOTNET_WORKLOAD_VERSION` ← preview workload set version
 3. Build and test on the branch
 4. Merge when the new .NET version goes GA
 
@@ -133,6 +134,6 @@ dotnet workload list
 
 ## Workload Pinning
 
-Workloads are pinned via `global.json` using the `workloadVersion` field under `sdk`. This replaces the old rollback file approach. The pipeline uses `dotnet workload restore` which reads project files to determine required workloads.
+Workloads are pinned via the `DOTNET_WORKLOAD_VERSION` pipeline variable, which is passed to `install-dotnet-workloads.ps1` as `--version`. This uses the .NET SDK workload sets feature (`dotnet workload install --version <version>`) for reproducible builds. The workload version is NOT set in `global.json` because native builds (which skip SDK/workload install) would fail if the pinned version isn't pre-installed on the agent.
 
 **Exception:** Tizen is not an official workload — it uses Samsung's custom install scripts from `Samsung/Tizen.NET` repository.
