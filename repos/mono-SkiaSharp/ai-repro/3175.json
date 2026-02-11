@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3175,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T22:14:26Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Bug confirmed: SKBitmap.Decode returns null when given a non-seekable Stream whose Read() method returns fewer bytes than requested (short reads). This is valid .NET Stream behavior — Stream.Read is allowed to return fewer bytes than requested even when more data is available. Azure Blob download streams and other network streams commonly exhibit this pattern. The workaround of copying to MemoryStream first works because MemoryStream.Read always returns the full requested amount. The bug affects PNG, BMP, and likely all formats. Reproduced on both SkiaSharp 3.116.0 and 3.119.2.",
+  "reproductionTime": "~8 minutes",
+  "triageFile": null,
+  "triageNotes": null,
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Decode returns null with short-read non-seekable streams for both PNG and BMP"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same failure on latest stable release — bug still present"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.116.0" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project and add SkiaSharp 3.116.0",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.116.0' added.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Baseline test: Decode 52MB PNG from MemoryStream (seekable, full reads)",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "Size: 4000x4000 — decoded correctly from MemoryStream",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Decode same PNG from non-seekable ShortReadStream (returns 1-8192 random bytes per Read call, simulating Azure Blob download behavior)",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "ShortRead(8192): FAIL - Decode returned null",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Decode PNG from ShortReadStream with 1-256 byte reads (extreme short reads)",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "ShortRead(256): FAIL - Decode returned null",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Decode PNG from NonSeekableWrapper (non-seekable but delegates to MemoryStream.Read which returns full requested bytes)",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "NonSeekableWrapper: Size=4000x4000, PASS (6400 samples match)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Decode PNG via SKManagedStream wrapping non-seekable ShortReadStream",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "SKManagedStream(NonSeekable): FAIL - Decode returned null",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Create SKCodec directly from non-seekable ShortReadStream",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "FAIL: SKCodec.Create returned null with non-seekable stream",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 8,
+      "description": "Decode BMP (45MB) from ShortReadStream to verify issue affects multiple formats",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "BMP ShortRead: FAIL - Decode returned null",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 9,
+      "description": "Updated to SkiaSharp 3.119.2 (latest stable) and re-ran all tests — same failures",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp && dotnet run",
+      "output": "All short-read stream tests still FAIL with null decode. NonSeekableWrapper still PASS.",
+      "result": "failure"
+    }
+  ],
+  "artifacts": null,
+  "errorMessages": {
+    "primaryError": "SKBitmap.Decode returns null when Stream.Read() returns fewer bytes than requested (short reads on non-seekable streams). SkiaSharp's internal stream bridge treats partial reads as EOF instead of looping to read remaining bytes.",
+    "stackTrace": null,
+    "additionalErrors": [
+      "SKCodec.Create also returns null with the same stream type",
+      "SKManagedStream wrapping a short-read stream also fails",
+      "Bug affects both PNG and BMP formats — likely all image formats"
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "blockers": null
+}
