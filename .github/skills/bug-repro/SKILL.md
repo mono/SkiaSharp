@@ -96,6 +96,23 @@ Extract from the issue:
 
 If not stated, use the latest stable release as the default.
 
+### 2b. Verify "last known good" version feasibility
+
+If the reporter names a "last known good" version, verify it's testable before planning:
+
+```bash
+# Quick-check: download nupkg and inspect contents
+curl -sLo /tmp/check.nupkg "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.{version}.nupkg"
+unzip -l /tmp/check.nupkg | grep -E "lib/|runtimes/"
+```
+
+Check:
+- **TFMs in `lib/`**: `netstandard1.3` or `netstandard2.0` = compatible with .NET 8+
+- **Native assets in `runtimes/`**: need a match for current platform/arch
+- **No arm64 native?** Try Rosetta: `arch -x86_64 dotnet run` (note arch in results)
+
+**NEVER write "version X is too old" without running this check.**
+
 ### 3. Environment check
 
 - What platform are we on? (macOS/Linux/Windows)
@@ -333,3 +350,5 @@ Blockers: none
 6. **Giving up too early.** NEVER conclude `not-reproduced` or `needs-platform` after just one attempt. Try multiple approaches, different versions, different test data. The value of this skill is persistence.
 
 7. **Building from source first.** ALWAYS start with released NuGet packages in a standalone project. Only build from source in Phase 3C after reproducing with released versions.
+
+8. **Pre-emptive version assumptions.** NEVER assume a NuGet version is incompatible without inspecting the nupkg. All blockers about version compatibility must cite evidence (TFMs found, native assets present/missing, actual error when attempted).

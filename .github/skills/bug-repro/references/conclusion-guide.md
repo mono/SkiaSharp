@@ -111,6 +111,18 @@ A list of specific reasons reproduction was incomplete. Each entry should be act
 - `"Couldn't reproduce"` — too vague, not actionable
 - `"Need more info"` — say what info specifically
 
+### Blocker evidence requirements
+
+Version/compatibility blockers must cite concrete evidence:
+
+| Blocker Type | Required Evidence |
+|--------------|-------------------|
+| "Version X won't work" | nupkg TFM listing showing no compatible target, OR actual build/runtime error |
+| "No native binary" | nupkg `runtimes/` listing showing missing RID, AND confirmation Rosetta isn't viable |
+| "Platform unavailable" | Attempted on available platform, noted specific limitation |
+
+**Anti-pattern:** "Version 1.60.1 is too old for .NET 8" — this is speculation. Spend 30 seconds checking the nupkg before claiming blocked.
+
 ### `notes`
 
 Free-text summary for humans. Write 1–3 sentences covering:
