@@ -33,8 +33,16 @@
     }
   ],
   "engagement": {
-    "syncedAt": "2026-02-10T15:35:22.1515428Z",
+    "syncedAt": "2026-02-11T18:51:53.9900638Z",
     "reactions": [],
-    "comments": []
+    "comments": [
+      {
+        "id": 3883672151,
+        "author": "mattleibow",
+        "body": "## CI Results (Build #155844)\n\nAll **62 native build jobs passed** \u2705 \u2014 zero failures.\n\n### What this PR proves\n\n**Windows dependency verification works:** The new \u0060CheckWindowsDependencies\u0060 calls confirm that all produced Windows DLLs \u2014 ANGLE (\u0060libEGL.dll\u0060, \u0060libGLESv2.dll\u0060), \u0060libSkiaSharp.dll\u0060, and \u0060libHarfBuzzSharp.dll\u0060 \u2014 do **not** link against \u0060VCRUNTIME\u0060 or \u0060MSVCP\u0060. ANGLE already produces statically-linked CRT binaries when \u0060is_component_build=false\u0060, so no \u0060/MT\u0060 flag was needed. The verification catches any future regression at build time.\n\n**Fontconfig fix works:** The loongarch64 Docker builds (previously failing with \u0060ar: libfontconfig1.deb: file format not recognized\u0060 because Debian removed \u00602.17.1-3\u0060 from their pool) now succeed with \u00602.17.1-4\u0060. Also proactively fixed Debian 11/12/13 wildcard pins (\u00602.13.1-2\u0060 \u2192 \u00602.13.1-4.2\u0060, the oldest still available on \u0060deb.debian.org\u0060).",
+        "createdAt": "2026-02-11T10:53:32",
+        "reactions": []
+      }
+    ]
   }
 }

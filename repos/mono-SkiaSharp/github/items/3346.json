@@ -29,7 +29,7 @@
   "commentCount": 4,
   "reactionCount": 0,
   "engagement": {
-    "syncedAt": "2026-02-06T13:24:17.0162277Z",
+    "syncedAt": "2026-02-11T18:51:55.3946677Z",
     "reactions": [],
     "comments": [
       {
@@ -51,6 +51,13 @@
         "author": "mattleibow",
         "body": "Were you using the GPU rendering? If so, I am trying to release a fix for that.\n\n",
         "createdAt": "2025-09-06T08:28:24",
+        "reactions": []
+      },
+      {
+        "id": 3883706352,
+        "author": "mattleibow",
+        "body": "Closing as fixed. CI on PR #3510 confirms that the ANGLE DLLs (\u0060libEGL.dll\u0060, \u0060libGLESv2.dll\u0060) do not depend on \u0060VCRUNTIME\u0060 or \u0060MSVCP\u0060 \u2014 they are already statically linked. #3510 adds build-time dependency verification to catch any future regression. This matches the reporter\u0027s finding that installing VC\u002B\u002B Redistributable resolved the crash.",
+        "createdAt": "2026-02-11T11:00:52",
         "reactions": []
       }
     ]
