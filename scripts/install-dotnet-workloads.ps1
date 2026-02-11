@@ -1,8 +1,5 @@
 Param(
-  [string] $SourceUrl = '',
-  [string] $InstallDir = '',
-  [string] $Tizen = '',
-  [boolean] $IsPreview = $false
+  [string] $Tizen = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,43 +8,13 @@ if (!$Tizen) {
   $Tizen = '<latest>'
 }
 
-$feed1 = 'https://api.nuget.org/v3/index.json'
-$feed2 = 'https://api.nuget.org/v3/index.json'
-$feed3 = 'https://api.nuget.org/v3/index.json'
-if ($IsPreview) {
-  $feed1 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json'
-  $feed2 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json'
-  $feed3 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json'
-}
+# Workloads are pinned via global.json workloadVersion.
+# `dotnet workload restore` installs workloads required by projects in the repo.
+Write-Host "Restoring .NET workloads (pinned via global.json workload set)..."
+& dotnet workload restore --verbosity diagnostic
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-$Workloads = 'android','macos','wasm-tools'
-if (!$IsLinux) {
-  $Workloads += 'ios','tvos','maccatalyst','maui'
-}
-if ($IsPreview) {
-  $Workloads += 'wasm-tools-net7'
-} else {
-  $Workloads += 'wasm-tools-net6'
-}
-
-if ($SourceUrl) {
-  $Rollback = '--from-rollback-file',"$SourceUrl"
-} elseif ($IsPreview) {
-  Write-Error "A preview workload install was requested, but no rollback file was provided. Specify the -SourceUrl."
-  exit 1
-}
-
-Write-Host "Installing .NET workloads..."
-& dotnet workload install `
-  @Workloads `
-  @Rollback `
-  --source https://api.nuget.org/v3/index.json `
-  --source $feed1 `
-  --source $feed2 `
-  --source $feed3 `
-  --skip-sign-check `
-  --verbosity diagnostic
-
+# Tizen is not an official workload — it uses Samsung's custom install scripts.
 Write-Host "Installing Tizen workloads..."
 New-Item -ItemType Directory -Force './output/tmp' | Out-Null
 if ($IsLinux -or $IsMacOS) {

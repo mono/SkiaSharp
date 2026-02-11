@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TFMCurrent);$(TFMPrevious);$(TFMNext)</TargetFrameworks>
+    <TargetFrameworks>$(TFMCurrent);$(TFMPrevious);$(TFMBase)</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Blazor</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Blazor</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.Blazor</PackagingGroup>
@@ -27,6 +27,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.0" Condition="$(TargetFramework.StartsWith('net7.0'))" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" Condition="$(TargetFramework.StartsWith('net8.0'))" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" Condition="$(TargetFramework.StartsWith('net9.0'))" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" Condition="$(TargetFramework.StartsWith('net10.0'))" />
     <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.7.1" PrivateAssets="all" />
   </ItemGroup>
 

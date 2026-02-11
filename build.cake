@@ -282,7 +282,7 @@ Task ("tests-netcore")
 
     var failedTests = 0;
 
-    var tfm = "net8.0";
+    var tfm = "net10.0";
     var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
@@ -330,7 +330,7 @@ Task ("tests-android")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Release";
-    var tfm = "net8.0-android";
+    var tfm = "net10.0-android";
     var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
 
@@ -362,7 +362,7 @@ Task ("tests-ios")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net8.0-ios";
+    var tfm = "net10.0-ios";
     var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
@@ -394,7 +394,7 @@ Task ("tests-maccatalyst")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net8.0-maccatalyst";
+    var tfm = "net10.0-maccatalyst";
     var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 

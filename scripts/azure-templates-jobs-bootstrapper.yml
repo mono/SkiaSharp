@@ -24,7 +24,7 @@ parameters:
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
-  installPreviewVs: false                       # whether or not to install the preview VS
+  installPreviewVs: false                       # whether or not to install the preview VS (deprecated: use DOTNET_VERSION directly for preview SDKs)
   installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
@@ -199,10 +199,6 @@ jobs:
               version: $(DOTNET_VERSION)
             retryCountOnTaskFailure: 3
             displayName: Install .NET $(DOTNET_VERSION)
-          - pwsh: .\scripts\install-dotnet.ps1 -Version $env:DOTNET_VERSION_PREVIEW -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
-            displayName: Install the preview version of .NET
-            retryCountOnTaskFailure: 3
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
           - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
             - pwsh: .\scripts\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
               displayName: Fix the Microsoft.WinFX.* file
@@ -218,12 +214,8 @@ jobs:
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
           # install workloads
-          - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $true
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.DOTNET_VERSION_PREVIEW, ''))
-            retryCountOnTaskFailure: 3
-            displayName: Install the preview .NET workloads
-          - pwsh: .\scripts\install-dotnet-workloads.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet" -SourceUrl "$env:DOTNET_WORKLOAD_SOURCE" -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -IsPreview $false
-            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), eq(variables.DOTNET_VERSION_PREVIEW, ''))
+          - pwsh: .\scripts\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN"
+            condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             retryCountOnTaskFailure: 3
             displayName: Install the .NET workloads
 
