@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2759,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T22:41:14Z"
+  },
+  "conclusion": "partial",
+  "notes": "The reporter references issue #933 and says the problem persists in 2.88.6, but does not attach their own test file. The only available test image is image1.png from #933, which is a structurally malformed PNG: it has 12 bytes of garbage data after the IDAT chunk instead of a proper IEND terminator. SKBitmap.Decode returns null and SKCodec.GetPixels returns ErrorInInput for this file across all tested versions (2.88.3, 2.88.6, 3.119.2). When the same image is resaved by macOS (producing a valid PNG with proper IEND), it decodes successfully. The related issue #1981 (multi-IDAT zlib bug) was fixed and osm-liberty.png from that issue now decodes correctly. The core question is whether SkiaSharp/Skia should tolerate malformed PNGs missing IEND — other decoders (macOS ImageIO, browsers) do. The reporter's actual file may have different corruption than the GitHub-hosted copy.",
+  "reproductionTime": "~10 minutes",
+  "triageFile": null,
+  "triageNotes": null,
+  "versionResults": [
+    {
+      "version": "2.88.3",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "SKBitmap.Decode returns null for malformed image1.png (no IEND chunk). SKCodec.GetPixels returns ErrorInInput."
+    },
+    {
+      "version": "2.88.6",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same null result. Reporter's version — confirms bug still present."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same null result on latest stable. Not fixed."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "2.88.3" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Download test image from issue #933 (image1.png hosted on GitHub user-images) and the osm-liberty.png from issue #1981 WPF.zip attachment",
+      "layer": "setup",
+      "command": "curl -sLo image1.png 'https://user-images.githubusercontent.com/31235892/63347183-...png' && curl -sLo WPF.zip 'https://github.com/mono/SkiaSharp/files/8356177/WPF.zip' && unzip WPF.zip '*/osm-liberty.png'",
+      "output": "image1.png: 29310 bytes, 152x152 RGBA\nosm-liberty-original.png: 48207 bytes, 512x248 RGBA",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Analyze PNG structure of image1.png — found malformed: has IHDR, sRGB, gAMA, IDAT (29224 bytes) then 12 bytes of garbage data instead of IEND chunk",
+      "layer": "setup",
+      "command": "python3 PNG chunk parser",
+      "output": "@8: IHDR len=13\n@33: sRGB len=1\n@46: gAMA len=4\n@62: IDAT len=29224, CRC=e9ce4a73\n@29298: 0xf36ae20f len=3843970927 — EXTENDS BEYOND FILE (garbage, not IEND)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Test SKBitmap.Decode with malformed image1.png on SkiaSharp 2.88.3 — all decode methods return null, SKCodec returns ErrorInInput",
+      "layer": "csharp",
+      "command": "dotnet run (SkiaSharp 2.88.3)",
+      "output": "SKBitmap.Decode(path): RETURNED NULL\nSKBitmap.Decode(byte[]): RETURNED NULL\nSKBitmap.Decode(Stream): RETURNED NULL\nSKCodec.GetPixels result: ErrorInInput",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify osm-liberty-original.png from #1981 (the zlib/multi-IDAT issue) now decodes correctly — confirms that bug was fixed",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "SKBitmap.Decode: 512x248 OK, 731/1300 sampled pixels have non-zero alpha (sprite atlas with transparent areas)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Resave image1.png via macOS sips to produce a valid PNG with proper IEND — the resaved version decodes successfully in SkiaSharp",
+      "layer": "csharp",
+      "command": "sips -s format png image1.png --out image1-resaved.png && dotnet run",
+      "output": "Resaved (proper IEND): 152x152 OK, center=(144,144,144,255)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test a programmatically truncated PNG (generated valid PNG with IEND removed) — this decodes successfully, showing Skia tolerates some truncation",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "truncated PNG (no IEND): 200x200 OK, center=(255,0,0,255)\nSKCodec.GetPixels result: Success",
+      "result": "success"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Test with SkiaSharp 2.88.6 and 3.119.2 — same null result on both versions for malformed image1.png",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp --version {2.88.6,3.119.2} && dotnet run",
+      "output": "2.88.6: NULL, ErrorInInput\n3.119.2: NULL, ErrorInInput",
+      "result": "failure"
+    }
+  ],
+  "artifacts": [
+    {
+      "filename": "image1.png",
+      "description": "Malformed 152x152 PNG from issue #933 — missing IEND chunk, has 12 garbage bytes after IDAT CRC. This is the only test file available for reproduction.",
+      "source": "issue-attachment",
+      "url": "https://user-images.githubusercontent.com/31235892/63347183-4943cb80-c35f-11e9-8d58-247cad52b13b.png",
+      "available": true
+    },
+    {
+      "filename": "osm-liberty-original.png",
+      "description": "Multi-IDAT PNG from issue #1981 WPF.zip. 512x248, 48KB. Was problematic due to zlib bug, now decodes correctly.",
+      "source": "issue-attachment",
+      "url": "https://github.com/mono/SkiaSharp/files/8356177/WPF.zip",
+      "available": true
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKBitmap.Decode returns null for a malformed PNG (missing IEND chunk, garbage trailing bytes). SKCodec.GetPixels returns ErrorInInput. The PNG is structurally invalid but decodable by lenient decoders (macOS ImageIO, browsers).",
+    "stackTrace": null,
+    "additionalErrors": [
+      "SKCodec.Create succeeds (can parse IHDR) but GetPixels fails with ErrorInInput",
+      "Resaving the same image with a proper IEND chunk makes it decode successfully"
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.3",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Reporter does not attach their own test file — references image1.png from issue #933 which was embedded as a GitHub screenshot and may have been re-processed. The actual file the reporter is testing with may have different structural issues.",
+    "Reporter claims it worked in SkiaSharp 1.60.1 but that version is too old to test with .NET 8. Cannot verify the regression claim."
+  ]
+}
