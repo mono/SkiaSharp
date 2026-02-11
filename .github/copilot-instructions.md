@@ -352,6 +352,7 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 
 | Task | Skill | Triggers |
 |------|-------|----------|
+| Triage issue | `triage-issue` | "triage #NNNN", "triage issue", "classify issue", "analyze issue" |
 | Fix bug | `bug-fix` | "investigate #NNNN", "fix issue", crash, exception, "undefined symbol", incorrect output, wrong behavior, memory leak, "fails", "broken", "doesn't work" |
 | Add new API | `add-api` | "expose", "wrap method", issue requests new functionality |
 | Update dependency | `native-dependency-update` | "bump libpng", "fix CVE in zlib" |
@@ -375,6 +376,7 @@ Work directly for:
 
 | If Issue Contains... | Type | Skill |
 |---------------------|------|-------|
+| "triage", "classify", "analyze issue" | Triage | `triage-issue` |
 | "crash", "exception", "wrong", "fails", "broken", "hard crash", "segfault", "undefined symbol", "AccessViolation" | Bug | `bug-fix` |
 | "add", "expose", "missing", "support", "new method", "feature request" | New API | `add-api` |
 | "docs", "documentation", "XML", "comments" | Docs | `api-docs` |
@@ -401,3 +403,4 @@ Work directly for:
 | API Design | `documentation/api-design.md` |
 | Error Handling | `documentation/error-handling.md` |
 | Debugging | `documentation/debugging-methodology.md` |
+| NuGet Packages | `documentation/packages.md` |
