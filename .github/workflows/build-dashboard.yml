@@ -34,14 +34,14 @@ jobs:
 
       # Generate dashboard data from cache
       - name: Generate dashboard data
-        run: dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
+        run: dotnet run --project src/SkiaSharp.Triage.Cli -- generate --from-cache .data-cache -o src/SkiaSharp.Triage.Dashboard/wwwroot/data
 
       # Build and deploy
       - name: Restore dependencies
-        run: dotnet restore src/Dashboard/Dashboard.csproj
+        run: dotnet restore src/SkiaSharp.Triage.Dashboard/SkiaSharp.Triage.Dashboard.csproj
 
       - name: Publish
-        run: dotnet publish src/Dashboard/Dashboard.csproj --configuration Release --output ./publish
+        run: dotnet publish src/SkiaSharp.Triage.Dashboard/SkiaSharp.Triage.Dashboard.csproj --configuration Release --output ./publish
 
       - name: Fingerprint static assets
         run: |
@@ -98,7 +98,7 @@ jobs:
       - name: Deploy root 404.html for SPA routing
         run: |
           mkdir -p ./root-404
-          cp ./src/Dashboard/wwwroot/root-404.html ./root-404/404.html
+          cp ./src/SkiaSharp.Triage.Dashboard/wwwroot/root-404.html ./root-404/404.html
 
       - name: Deploy root 404.html
         uses: peaceiris/actions-gh-pages@v4

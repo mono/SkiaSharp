@@ -92,7 +92,7 @@ jobs:
       - name: Sync NuGet
         if: steps.nuget-check.outputs.run == 'true'
         run: |
-          dotnet run --project src/SkiaSharp.Collector -- sync nuget \
+          dotnet run --project src/SkiaSharp.Triage.Cli -- sync nuget \
             --repo mono/SkiaSharp \
             --cache-path .data-cache
 
@@ -101,7 +101,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          dotnet run --project src/SkiaSharp.Collector -- sync community \
+          dotnet run --project src/SkiaSharp.Triage.Cli -- sync community \
             --repo mono/SkiaSharp \
             --cache-path .data-cache
 
@@ -147,7 +147,7 @@ jobs:
             fi
             
             set +e
-            dotnet run --project src/SkiaSharp.Collector -- sync github \
+            dotnet run --project src/SkiaSharp.Triage.Cli -- sync github \
               --repo mono/SkiaSharp \
               --cache-path .data-cache \
               --items-only \
@@ -209,7 +209,7 @@ jobs:
             echo "========================================"
             
             set +e
-            dotnet run --project src/SkiaSharp.Collector -- sync github \
+            dotnet run --project src/SkiaSharp.Triage.Cli -- sync github \
               --repo mono/SkiaSharp \
               --cache-path .data-cache \
               --engagement-only \
@@ -301,7 +301,7 @@ jobs:
       - name: Sync NuGet
         if: steps.nuget-check.outputs.run == 'true'
         run: |
-          dotnet run --project src/SkiaSharp.Collector -- sync nuget \
+          dotnet run --project src/SkiaSharp.Triage.Cli -- sync nuget \
             --repo mono/SkiaSharp.Extended \
             --cache-path .data-cache
 
@@ -310,7 +310,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          dotnet run --project src/SkiaSharp.Collector -- sync community \
+          dotnet run --project src/SkiaSharp.Triage.Cli -- sync community \
             --repo mono/SkiaSharp.Extended \
             --cache-path .data-cache
 
@@ -352,7 +352,7 @@ jobs:
             fi
             
             set +e
-            dotnet run --project src/SkiaSharp.Collector -- sync github \
+            dotnet run --project src/SkiaSharp.Triage.Cli -- sync github \
               --repo mono/SkiaSharp.Extended \
               --cache-path .data-cache \
               --items-only \
@@ -400,7 +400,7 @@ jobs:
             echo "Extended engagement checkpoint $BATCH"
             
             set +e
-            dotnet run --project src/SkiaSharp.Collector -- sync github \
+            dotnet run --project src/SkiaSharp.Triage.Cli -- sync github \
               --repo mono/SkiaSharp.Extended \
               --cache-path .data-cache \
               --engagement-only \

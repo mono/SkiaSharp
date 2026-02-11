@@ -1,4 +1,4 @@
-# SkiaSharp Dashboard - Copilot Instructions
+# SkiaSharp Triage Dashboard - Copilot Instructions
 
 > This file provides context for GitHub Copilot and other AI assistants working on this project.
 > For deeper context, see the `.ai/` folder.
@@ -21,13 +21,13 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 
 ## Solution Structure
 
-**Solution**: `SkiaSharp.slnx` (new XML-based format)
+**Solution**: `SkiaSharp.Triage.slnx` (new XML-based format)
 
 **Projects**:
 | Project | Path | Purpose |
 |---------|------|---------|
-| Dashboard | `src/Dashboard/` | Blazor WASM app |
-| SkiaSharp.Collector | `src/SkiaSharp.Collector/` | .NET CLI for data sync & generation |
+| SkiaSharp.Triage.Dashboard | `src/SkiaSharp.Triage.Dashboard/` | Blazor WASM app |
+| SkiaSharp.Triage.Cli | `src/SkiaSharp.Triage.Cli/` | .NET CLI for data sync & generation |
 
 **Page Structure:**
 | Page | Route | Purpose |
@@ -124,7 +124,7 @@ Both use `concurrency: cancel-in-progress: false` to allow queuing.
 
 ## Collector CLI
 
-The `SkiaSharp.Collector` .NET console app has two main modes:
+The `SkiaSharp.Triage.Cli` .NET console app has two main modes:
 
 ### Sync Mode (populates cache)
 ```bash
@@ -169,15 +169,15 @@ dotnet run -- nuget -o ./data         # Just NuGet stats
 git worktree add .data-cache docs-data-cache
 
 # Sync data locally (all sources)
-dotnet run --project src/SkiaSharp.Collector -- sync github --cache-path .data-cache
-dotnet run --project src/SkiaSharp.Collector -- sync nuget --cache-path .data-cache
-dotnet run --project src/SkiaSharp.Collector -- sync community --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Triage.Cli -- sync github --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Triage.Cli -- sync nuget --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Triage.Cli -- sync community --cache-path .data-cache
 
 # Generate dashboard JSON
-dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
+dotnet run --project src/SkiaSharp.Triage.Cli -- generate --from-cache .data-cache -o src/SkiaSharp.Triage.Dashboard/wwwroot/data
 
 # Run dashboard
-cd src/Dashboard && dotnet run
+cd src/SkiaSharp.Triage.Dashboard && dotnet run
 ```
 
 **Base href**: Uses `/` locally, CI changes to `/SkiaSharp/dashboard/` via sed.
@@ -218,7 +218,7 @@ cd src/Dashboard && dotnet run
 ## Project Structure
 
 ```
-src/Dashboard/
+src/SkiaSharp.Triage.Dashboard/
 ├── Pages/           # Routable pages (@page directive)
 ├── Components/      # Reusable UI components
 ├── Layout/          # MainLayout, NavMenu
@@ -228,7 +228,7 @@ src/Dashboard/
     ├── css/         # Stylesheets
     └── images/      # Static images
 
-src/SkiaSharp.Collector/
+src/SkiaSharp.Triage.Cli/
 ├── Commands/        # CLI commands (sync, generate, legacy)
 ├── Services/        # GitHubService, NuGetService, CacheService
 └── Models/          # CacheModels, output models

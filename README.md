@@ -34,33 +34,33 @@ The dashboard loads JSON files from `wwwroot/data/`. These are **generated files
 
 ```bash
 # Generate all dashboard JSON from the data cache
-dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
+dotnet run --project src/SkiaSharp.Triage.Cli -- generate --from-cache .data-cache -o src/SkiaSharp.Triage.Dashboard/wwwroot/data
 ```
 
 To sync fresh data from APIs into the cache first:
 
 ```bash
 # Sync GitHub data (issues, PRs, engagement)
-dotnet run --project src/SkiaSharp.Collector -- sync github --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Triage.Cli -- sync github --cache-path .data-cache
 
 # Sync NuGet package data
-dotnet run --project src/SkiaSharp.Collector -- sync nuget --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Triage.Cli -- sync nuget --cache-path .data-cache
 
 # Sync community data (contributors)
-dotnet run --project src/SkiaSharp.Collector -- sync community --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Triage.Cli -- sync community --cache-path .data-cache
 ```
 
 ### Run the Dashboard
 
 ```bash
-cd src/Dashboard
+cd src/SkiaSharp.Triage.Dashboard
 dotnet run
 ```
 
 ### Build for Production
 
 ```bash
-cd src/Dashboard
+cd src/SkiaSharp.Triage.Dashboard
 dotnet publish -c Release
 ```
 
@@ -110,5 +110,5 @@ docs-live/dashboard/ (GitHub Pages)
 
 | Project | Path | Purpose |
 |---------|------|---------|
-| Dashboard | `src/Dashboard/` | Blazor WASM app |
-| SkiaSharp.Collector | `src/SkiaSharp.Collector/` | CLI for data sync and generation |
+| SkiaSharp.Triage.Dashboard | `src/SkiaSharp.Triage.Dashboard/` | Blazor WASM app |
+| SkiaSharp.Triage.Cli | `src/SkiaSharp.Triage.Cli/` | CLI for data sync and generation |
