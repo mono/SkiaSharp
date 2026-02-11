@@ -5,7 +5,7 @@
 <PageTitle>AI Triage - SkiaSharp Dashboard</PageTitle>
 
 <h1>AI Triage</h1>
-<p class="subtitle">AI-powered issue classification and resolution proposals</p>
+<p class="subtitle">AI-powered issue classification, resolution proposals, and bug reproduction</p>
 
 @if (_loading)
 {
@@ -20,24 +20,28 @@ else
     <!-- Summary Cards -->
     <div class="triage-summary">
         <div class="triage-card triage-warning @(SelectedCard == "needs-investigation" ? "selected" : "")" @onclick='() => FilterByCard("needs-investigation")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Output.Actionability.SuggestedAction == SuggestedAction.NeedsInvestigation)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Action == "needs-investigation")</span>
             <span class="triage-label">Needs Investigation</span>
         </div>
         <div class="triage-card triage-success @(SelectedCard == "closeable" ? "selected" : "")" @onclick='() => FilterByCard("closeable")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Closeable)</span>
             <span class="triage-label">Closeable</span>
         </div>
         <div class="triage-card triage-info @(SelectedCard == "quick-wins" ? "selected" : "")" @onclick='() => FilterByCard("quick-wins")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true && i.Output.Actionability.RequiresHumanReview != true)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Closeable && !i.HumanReview)</span>
             <span class="triage-label">Quick Wins</span>
         </div>
         <div class="triage-card triage-danger @(SelectedCard == "regressions" ? "selected" : "")" @onclick='() => FilterByCard("regressions")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Evidence.Regression?.IsRegression == true)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.IsRegression)</span>
             <span class="triage-label">Regressions</span>
         </div>
         <div class="triage-card triage-author @(SelectedCard == "human-review" ? "selected" : "")" @onclick='() => FilterByCard("human-review")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Output.Actionability.RequiresHumanReview == true)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.HumanReview)</span>
             <span class="triage-label">Needs Human Review</span>
+        </div>
+        <div class="triage-card triage-repro @(SelectedCard == "has-repro" ? "selected" : "")" @onclick='() => FilterByCard("has-repro")'>
+            <span class="triage-count">@_openIssues.Count(i => i.HasRepro)</span>
+            <span class="triage-label">Has Reproduction</span>
         </div>
     </div>
 
@@ -84,6 +88,17 @@ else
             </select>
         </div>
         <div class="filter-group">
+            <label>Repro</label>
+            <select @bind="SelectedRepro" @bind:after="ApplyFilters">
+                <option value="">All</option>
+                <option value="has-repro">Has Reproduction</option>
+                <option value="reproduced">Reproduced</option>
+                <option value="not-reproduced">Not Reproduced</option>
+                <option value="wrong-output">Wrong Output</option>
+                <option value="partial">Partial</option>
+            </select>
+        </div>
+        <div class="filter-group">
             <label>Sort By</label>
             <select @bind="SelectedSort" @bind:after="ApplyFilters">
                 <option value="newest">Newest First</option>
@@ -99,37 +114,50 @@ else
 
     <!-- Stats Bar -->
     <div class="stats-bar">
-        <span>Showing <strong>@_filtered.Count</strong> of @_openCount open triaged issues</span>
+        <span>Showing <strong>@_filtered.Count</strong> of @_openCount open issues</span>
     </div>
 
     <!-- Issue List (compact rows, click to navigate) -->
     <div class="ai-triage-list">
         @foreach (var issue in _filtered)
         {
-            <a href="@GetDetailUrl(issue.Meta.Number)" class="ai-triage-row @GetActionClass(issue.Output.Actionability.SuggestedAction)">
+            <a href="@GetDetailUrl(issue.Number)" class="ai-triage-row @GetActionClass(issue.Action)">
 
-                <span class="issue-link">#@issue.Meta.Number</span>
-                <span class="ai-triage-title">@issue.Summary</span>
-                <span class="badge-type badge-@StripPrefix(issue.Classification.Type.Value)">@FormatLabel(issue.Classification.Type.Value)</span>
-                @if (issue.Classification.Area is not null)
+                <span class="issue-link">#@issue.Number</span>
+                <span class="ai-triage-title">@issue.Title</span>
+                @if (issue.Type is not null)
                 {
-                    <span class="label label-sm">@FormatLabel(issue.Classification.Area.Value)</span>
+                    <span class="badge-type badge-@StripPrefix(issue.Type)">@FormatLabel(issue.Type)</span>
                 }
-                @if (issue.Evidence.BugSignals?.Severity is not null)
+                @if (issue.Area is not null)
                 {
-                    <span class="badge-severity badge-sev-@issue.Evidence.BugSignals.Severity.ToJsonString()">@FormatLabel(issue.Evidence.BugSignals.Severity.ToJsonString())</span>
+                    <span class="label label-sm">@FormatLabel(issue.Area)</span>
                 }
-                <span class="badge-action badge-act-@issue.Output.Actionability.SuggestedAction.ToJsonString()">@FormatLabel(issue.Output.Actionability.SuggestedAction.ToJsonString())</span>
-                <span class="confidence-pill" title="Confidence: @issue.Output.Actionability.Confidence.ToString("P0")">
-                    <span class="confidence-bar @GetConfidenceClass(issue.Output.Actionability.Confidence)" style="width: @((int)(issue.Output.Actionability.Confidence * 100))%"></span>
-                </span>
-                @if (issue.Output.Actionability.RequiresHumanReview == true)
+                @if (issue.Severity is not null)
+                {
+                    <span class="badge-severity badge-sev-@issue.Severity">@FormatLabel(issue.Severity)</span>
+                }
+                @if (issue.Action is not null)
+                {
+                    <span class="badge-action badge-act-@issue.Action">@FormatLabel(issue.Action)</span>
+                }
+                @if (issue.Confidence is not null)
+                {
+                    <span class="confidence-pill" title="Confidence: @issue.Confidence.Value.ToString("P0")">
+                        <span class="confidence-bar @GetConfidenceClass(issue.Confidence.Value)" style="width: @((int)(issue.Confidence.Value * 100))%"></span>
+                    </span>
+                }
+                @if (issue.HumanReview)
                 {
                     <span class="badge-human-review-sm" title="Needs human review">⚠</span>
                 }
-                @if (issue.Evidence.Regression?.IsRegression == true)
+                @if (issue.IsRegression)
                 {
                     <span class="badge-regression-sm" title="Regression">⚡</span>
+                }
+                @if (issue.HasRepro)
+                {
+                    <span class="badge-repro badge-repro-@(issue.ReproConclusion ?? "unknown")" title="Reproduction: @FormatLabel(issue.ReproConclusion ?? "unknown")">🧪</span>
                 }
             </a>
         }
@@ -144,11 +172,12 @@ else
     [SupplyParameterFromQuery(Name = "type")] public string? QType { get; set; }
     [SupplyParameterFromQuery(Name = "area")] public string? QArea { get; set; }
     [SupplyParameterFromQuery(Name = "severity")] public string? QSeverity { get; set; }
+    [SupplyParameterFromQuery(Name = "repro")] public string? QRepro { get; set; }
     [SupplyParameterFromQuery(Name = "sort")] public string? QSort { get; set; }
 
-    private TriageData? _data;
-    private List<TriagedIssue> _filtered = [];
-    private List<TriagedIssue> _openIssues = [];
+    private TriageIndex? _data;
+    private List<TriageIndexEntry> _filtered = [];
+    private List<TriageIndexEntry> _openIssues = [];
     private bool _loading = true;
     private int _openCount;
 
@@ -157,6 +186,7 @@ else
     private string SelectedType { get; set; } = "";
     private string SelectedArea { get; set; } = "";
     private string SelectedSeverity { get; set; } = "";
+    private string SelectedRepro { get; set; } = "";
     private string SelectedSort { get; set; } = "newest";
 
     private bool HasFilters =>
@@ -164,20 +194,21 @@ else
         !string.IsNullOrEmpty(SelectedAction) ||
         !string.IsNullOrEmpty(SelectedType) ||
         !string.IsNullOrEmpty(SelectedArea) ||
-        !string.IsNullOrEmpty(SelectedSeverity);
+        !string.IsNullOrEmpty(SelectedSeverity) ||
+        !string.IsNullOrEmpty(SelectedRepro);
 
     protected override async Task OnInitializedAsync()
     {
-        // Restore filters from URL
         SelectedCard = QCard ?? "";
         SelectedAction = QAction ?? "";
         SelectedType = QType ?? "";
         SelectedArea = QArea ?? "";
         SelectedSeverity = QSeverity ?? "";
+        SelectedRepro = QRepro ?? "";
         SelectedSort = QSort ?? "newest";
 
-        _data = await DataService.GetTriageDataAsync();
-        _openIssues = _data?.Issues.Where(i => i.Meta.State is null or "open").ToList() ?? [];
+        _data = await DataService.GetTriageIndexAsync();
+        _openIssues = _data?.Issues.Where(i => i.State is "open").ToList() ?? [];
         _openCount = _openIssues.Count;
         ApplyFiltersInternal();
         _loading = false;
@@ -207,29 +238,38 @@ else
         {
             query = SelectedCard switch
             {
-                "needs-investigation" => query.Where(i => i.Output.Actionability.SuggestedAction == SuggestedAction.NeedsInvestigation),
-                "closeable" => query.Where(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true),
-                "quick-wins" => query.Where(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true && i.Output.Actionability.RequiresHumanReview != true),
-                "regressions" => query.Where(i => i.Evidence.Regression?.IsRegression == true),
-                "human-review" => query.Where(i => i.Output.Actionability.RequiresHumanReview == true),
+                "needs-investigation" => query.Where(i => i.Action == "needs-investigation"),
+                "closeable" => query.Where(i => i.Closeable),
+                "quick-wins" => query.Where(i => i.Closeable && !i.HumanReview),
+                "regressions" => query.Where(i => i.IsRegression),
+                "human-review" => query.Where(i => i.HumanReview),
+                "has-repro" => query.Where(i => i.HasRepro),
                 _ => query
             };
         }
 
         if (!string.IsNullOrEmpty(SelectedAction))
-            query = query.Where(i => i.Output.Actionability.SuggestedAction.ToJsonString() == SelectedAction);
+            query = query.Where(i => i.Action == SelectedAction);
         if (!string.IsNullOrEmpty(SelectedType))
-            query = query.Where(i => i.Classification.Type.Value == SelectedType);
+            query = query.Where(i => i.Type == SelectedType);
         if (!string.IsNullOrEmpty(SelectedArea))
-            query = query.Where(i => i.Classification.Area.Value == SelectedArea);
+            query = query.Where(i => i.Area == SelectedArea);
         if (!string.IsNullOrEmpty(SelectedSeverity))
-            query = query.Where(i => i.Evidence.BugSignals?.Severity.ToJsonString() == SelectedSeverity);
+            query = query.Where(i => i.Severity == SelectedSeverity);
+        if (!string.IsNullOrEmpty(SelectedRepro))
+        {
+            query = SelectedRepro switch
+            {
+                "has-repro" => query.Where(i => i.HasRepro),
+                _ => query.Where(i => i.ReproConclusion == SelectedRepro)
+            };
+        }
 
         query = SelectedSort switch
         {
-            "confidence" => query.OrderByDescending(i => i.Output.Actionability.Confidence),
-            "severity" => query.OrderByDescending(i => SeverityOrder(i.Evidence.BugSignals?.Severity)),
-            _ => query.OrderByDescending(i => i.Meta.Number)
+            "confidence" => query.OrderByDescending(i => i.Confidence ?? 0),
+            "severity" => query.OrderByDescending(i => SeverityOrder(i.Severity)),
+            _ => query.OrderByDescending(i => i.Number)
         };
 
         _filtered = query.ToList();
@@ -243,6 +283,7 @@ else
         if (!string.IsNullOrEmpty(SelectedType)) parts.Add($"type={SelectedType}");
         if (!string.IsNullOrEmpty(SelectedArea)) parts.Add($"area={SelectedArea}");
         if (!string.IsNullOrEmpty(SelectedSeverity)) parts.Add($"severity={SelectedSeverity}");
+        if (!string.IsNullOrEmpty(SelectedRepro)) parts.Add($"repro={SelectedRepro}");
         if (!string.IsNullOrEmpty(SelectedSort) && SelectedSort != "newest") parts.Add($"sort={SelectedSort}");
         var url = parts.Count > 0 ? $"triage?{string.Join('&', parts)}" : "triage";
         Navigation.NavigateTo(url, replace: true);
@@ -256,13 +297,14 @@ else
         if (!string.IsNullOrEmpty(SelectedType)) parts.Add($"type={SelectedType}");
         if (!string.IsNullOrEmpty(SelectedArea)) parts.Add($"area={SelectedArea}");
         if (!string.IsNullOrEmpty(SelectedSeverity)) parts.Add($"severity={SelectedSeverity}");
+        if (!string.IsNullOrEmpty(SelectedRepro)) parts.Add($"repro={SelectedRepro}");
         if (!string.IsNullOrEmpty(SelectedSort) && SelectedSort != "newest") parts.Add($"sort={SelectedSort}");
         return parts.Count > 0 ? $"triage/{number}?{string.Join('&', parts)}" : $"triage/{number}";
     }
 
-    private static int SeverityOrder(BugSeverity? severity) => severity switch
+    private static int SeverityOrder(string? severity) => severity switch
     {
-        BugSeverity.Critical => 4, BugSeverity.High => 3, BugSeverity.Medium => 2, BugSeverity.Low => 1, _ => 0
+        "critical" => 4, "high" => 3, "medium" => 2, "low" => 1, _ => 0
     };
 
     private void ClearFilters()
@@ -272,6 +314,7 @@ else
         SelectedType = "";
         SelectedArea = "";
         SelectedSeverity = "";
+        SelectedRepro = "";
         SelectedSort = "newest";
         ApplyFiltersInternal();
         UpdateUrl();
@@ -287,13 +330,13 @@ else
     private static string StripPrefix(string value) =>
         value.Contains('/') ? value[(value.IndexOf('/') + 1)..] : value;
 
-    private static string GetActionClass(SuggestedAction action) => action switch
+    private static string GetActionClass(string? action) => action switch
     {
-        SuggestedAction.NeedsInvestigation => "action-investigate",
-        SuggestedAction.CloseAsFixed or SuggestedAction.CloseWithDocs or SuggestedAction.CloseAsDuplicate => "action-close",
-        SuggestedAction.ConvertToDiscussion => "action-discuss",
-        SuggestedAction.RequestInfo => "action-info",
-        SuggestedAction.KeepOpen => "action-keep",
+        "needs-investigation" => "action-investigate",
+        "close-as-fixed" or "close-with-docs" or "close-as-duplicate" => "action-close",
+        "convert-to-discussion" => "action-discuss",
+        "request-info" => "action-info",
+        "keep-open" => "action-keep",
         _ => ""
     };
 

@@ -37,4 +37,31 @@ public class DashboardDataService(HttpClient http)
 
     public async Task<TriageData?> GetTriageDataAsync() =>
         await http.GetFromJsonAsync<TriageData>("data/triage.json", TriageJsonOptions.Default);
+
+    public async Task<TriageIndex?> GetTriageIndexAsync() =>
+        await http.GetFromJsonAsync<TriageIndex>("data/triage-index.json", TriageJsonOptions.Default);
+
+    public async Task<TriagedIssue?> GetTriageDetailAsync(int number)
+    {
+        try
+        {
+            return await http.GetFromJsonAsync<TriagedIssue>($"data/triage/{number}.json", TriageJsonOptions.Default);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    public async Task<ReproResult?> GetReproDetailAsync(int number)
+    {
+        try
+        {
+            return await http.GetFromJsonAsync<ReproResult>($"data/repro/{number}.json", TriageJsonOptions.Default);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
 }

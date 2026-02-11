@@ -1,3 +1,5 @@
+using SkiaSharp.Triage.Models;
+
 namespace SkiaSharp.Triage.Cli.Models;
 
 // GitHub Stats - Multi-repo version
@@ -75,7 +77,6 @@ public record CommitInfo(
     DateTime Date
 );
 
-public record LabelCount(string Label, int Count);
 
 // Repo summary for UI dropdown
 public record RepoSummary(

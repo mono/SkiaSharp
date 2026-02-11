@@ -1,3 +1,5 @@
+using SkiaSharp.Triage.Models;
+
 namespace SkiaSharp.Triage.Cli.Models;
 
 // Issues Data - Multi-repo version

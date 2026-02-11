@@ -1,3 +1,5 @@
+using SkiaSharp.Triage.Models;
+
 namespace SkiaSharp.Triage.Dashboard.Services;
 
 // Multi-repo GitHub stats (new format)
@@ -54,8 +56,6 @@ public record IssueStats(
     int ClosedLast30Days,
     List<LabelCount> ByLabel
 );
-
-public record LabelCount(string Label, int Count);
 
 public record PullRequestStats(
     int Open,

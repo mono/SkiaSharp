@@ -741,94 +741,233 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
     private async Task GenerateTriageAsync(CacheService rootCache, DashboardConfig config, List<string> repoKeys, GenerateSettings settings)
     {
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine("\n[bold]Generating triage.json...[/]");
+            AnsiConsole.MarkupLine("\n[bold]Generating triage + repro data...[/]");
 
         var issues = new List<TriagedIssue>();
+        var indexEntries = new List<TriageIndexEntry>();
+        var triageNumbers = new HashSet<int>();
+        var reproNumbers = new HashSet<int>();
         var byType = new Dictionary<string, int>();
         var byArea = new Dictionary<string, int>();
         var byAction = new Dictionary<string, int>();
         var bySeverity = new Dictionary<string, int>();
         int needsInvestigation = 0, closeable = 0, quickWins = 0, needsHumanReview = 0, regressions = 0;
+        int withRepro = 0, reproduced = 0, notReproduced = 0;
+
+        // Ensure output subdirectories exist
+        var triageOutputDir = Path.Combine(settings.OutputDir, "triage");
+        var reproOutputDir = Path.Combine(settings.OutputDir, "repro");
+        Directory.CreateDirectory(triageOutputDir);
+        Directory.CreateDirectory(reproOutputDir);
 
         foreach (var repoKey in repoKeys)
         {
             var cache = string.IsNullOrEmpty(repoKey) ? rootCache : rootCache.ForRepo(repoKey);
             var repoConfig = GetRepoConfig(config, repoKey);
-            var triageDir = cache.AiTriagePath;
 
-            if (!Directory.Exists(triageDir))
-                continue;
-
-            // Build state lookup from GitHub index
+            // Build state/title lookup from GitHub index
             var index = await cache.LoadGitHubIndexAsync();
-            var stateByNumber = index.Items.ToDictionary(i => i.Number, i => i.State);
+            var itemByNumber = index.Items.ToDictionary(i => i.Number);
 
-            foreach (var file in Directory.GetFiles(triageDir, "*.json"))
+            // ── Process triage files ──
+            var triageDir = cache.AiTriagePath;
+            if (Directory.Exists(triageDir))
             {
-                try
+                foreach (var file in Directory.GetFiles(triageDir, "*.json"))
                 {
-                    var json = await File.ReadAllTextAsync(file);
-                    var issue = JsonSerializer.Deserialize<TriagedIssue>(json, TriageJsonOptions.Default);
-                    if (issue is null) continue;
+                    try
+                    {
+                        var json = await File.ReadAllTextAsync(file);
+                        var issue = JsonSerializer.Deserialize<TriagedIssue>(json, TriageJsonOptions.Default);
+                        if (issue is null) continue;
 
-                    // Accept v2.0 and v2.1
-                    if (issue.Meta.SchemaVersion is not "2.0" and not "2.1")
+                        // Accept v2.0 and v2.1
+                        if (issue.Meta.SchemaVersion is not "2.0" and not "2.1")
+                        {
+                            if (!settings.Quiet)
+                                AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: schema {issue.Meta.SchemaVersion} (need 2.0 or 2.1)[/]");
+                            continue;
+                        }
+
+                        var repo = issue.Meta.Repo ?? repoConfig?.FullName ?? repoKey;
+                        var state = itemByNumber.TryGetValue(issue.Meta.Number, out var item) ? item.State : "open";
+
+                        issue = issue with
+                        {
+                            Meta = issue.Meta with { State = state },
+                            Url = $"https://github.com/{repo}/issues/{issue.Meta.Number}"
+                        };
+
+                        // Write per-issue triage detail file
+                        var detailPath = Path.Combine(triageOutputDir, $"{issue.Meta.Number}.json");
+                        await File.WriteAllTextAsync(detailPath, JsonSerializer.Serialize(issue, TriageJsonOptions.Default));
+
+                        // Compute summary stats
+                        var typeValue = issue.Classification.Type.Value;
+                        var areaValue = issue.Classification.Area.Value;
+                        var action = issue.Output.Actionability.SuggestedAction;
+                        var severity = issue.Evidence.BugSignals?.Severity;
+                        var isHumanReview = issue.Output.Actionability.RequiresHumanReview ?? false;
+                        var isRegression = issue.Evidence.Regression?.IsRegression ?? false;
+                        var hasCloseAction = issue.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) ?? false;
+
+                        byType[typeValue] = byType.GetValueOrDefault(typeValue) + 1;
+                        byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
+                        var actionStr = action.ToJsonString();
+                        byAction[actionStr] = byAction.GetValueOrDefault(actionStr) + 1;
+                        if (severity is not null)
+                        {
+                            var sevStr = severity.Value.ToJsonString();
+                            bySeverity[sevStr] = bySeverity.GetValueOrDefault(sevStr) + 1;
+                        }
+
+                        if (action == SuggestedAction.NeedsInvestigation) needsInvestigation++;
+                        if (hasCloseAction) closeable++;
+                        if (hasCloseAction && !isHumanReview) quickWins++;
+                        if (isHumanReview) needsHumanReview++;
+                        if (isRegression) regressions++;
+
+                        triageNumbers.Add(issue.Meta.Number);
+                        issues.Add(issue);
+
+                        // Build index entry (repro fields added later if available)
+                        indexEntries.Add(new TriageIndexEntry(
+                            Number: issue.Meta.Number,
+                            Title: issue.Summary,
+                            Type: typeValue,
+                            Area: areaValue,
+                            Severity: severity?.ToJsonString(),
+                            Action: actionStr,
+                            Confidence: issue.Output.Actionability.Confidence,
+                            HumanReview: isHumanReview,
+                            IsRegression: isRegression,
+                            Closeable: hasCloseAction,
+                            State: state,
+                            AnalyzedAt: issue.Meta.AnalyzedAt,
+                            HasTriage: true,
+                            HasRepro: false,
+                            ReproConclusion: null
+                        ));
+                    }
+                    catch (Exception ex)
                     {
                         if (!settings.Quiet)
-                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: schema {issue.Meta.SchemaVersion} (need 2.0 or 2.1)[/]");
-                        continue;
+                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping triage {Path.GetFileName(file)}: {ex.Message}[/]");
                     }
-
-                    var repo = issue.Meta.Repo ?? repoConfig?.FullName ?? repoKey;
-
-                    // Inject issue state and URL via with expressions
-                    var state = stateByNumber.GetValueOrDefault(issue.Meta.Number, "open");
-                    issue = issue with
-                    {
-                        Meta = issue.Meta with { State = state },
-                        Url = $"https://github.com/{repo}/issues/{issue.Meta.Number}"
-                    };
-
-                    // Compute summary stats from typed properties
-                    var typeValue = issue.Classification.Type.Value;
-                    var areaValue = issue.Classification.Area.Value;
-                    var action = issue.Output.Actionability.SuggestedAction;
-                    var severity = issue.Evidence.BugSignals?.Severity;
-                    var isHumanReview = issue.Output.Actionability.RequiresHumanReview ?? false;
-                    var isRegression = issue.Evidence.Regression?.IsRegression ?? false;
-                    var hasCloseAction = issue.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) ?? false;
-
-                    byType[typeValue] = byType.GetValueOrDefault(typeValue) + 1;
-                    byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
-                    var actionStr = action.ToJsonString();
-                    byAction[actionStr] = byAction.GetValueOrDefault(actionStr) + 1;
-                    if (severity is not null)
-                    {
-                        var sevStr = severity.Value.ToJsonString();
-                        bySeverity[sevStr] = bySeverity.GetValueOrDefault(sevStr) + 1;
-                    }
-
-                    if (action == SuggestedAction.NeedsInvestigation) needsInvestigation++;
-                    if (hasCloseAction) closeable++;
-                    if (hasCloseAction && !isHumanReview) quickWins++;
-                    if (isHumanReview) needsHumanReview++;
-                    if (isRegression) regressions++;
-
-                    issues.Add(issue);
                 }
-                catch (Exception ex)
+            }
+
+            // ── Process repro files ──
+            var reproDir = cache.AiReproPath;
+            if (Directory.Exists(reproDir))
+            {
+                foreach (var file in Directory.GetFiles(reproDir, "*.json"))
                 {
-                    if (!settings.Quiet)
-                        AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: {ex.Message}[/]");
+                    try
+                    {
+                        var json = await File.ReadAllTextAsync(file);
+                        var repro = JsonSerializer.Deserialize<ReproResult>(json, TriageJsonOptions.Default);
+                        if (repro is null) continue;
+
+                        if (repro.Meta.SchemaVersion is not "1.0")
+                        {
+                            if (!settings.Quiet)
+                                AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: repro schema {repro.Meta.SchemaVersion} (need 1.0)[/]");
+                            continue;
+                        }
+
+                        var number = repro.Meta.Number;
+
+                        // Write per-issue repro detail file
+                        var detailPath = Path.Combine(reproOutputDir, $"{number}.json");
+                        await File.WriteAllTextAsync(detailPath, JsonSerializer.Serialize(repro, TriageJsonOptions.Default));
+
+                        reproNumbers.Add(number);
+                        var conclusionStr = repro.Conclusion.ToJsonString();
+
+                        // Repro stats
+                        withRepro++;
+                        if (repro.Conclusion is ReproConclusion.Reproduced or ReproConclusion.WrongOutput or ReproConclusion.Partial)
+                            reproduced++;
+                        else if (repro.Conclusion == ReproConclusion.NotReproduced)
+                            notReproduced++;
+
+                        // Check if this issue already has a triage index entry
+                        var existingIdx = indexEntries.FindIndex(e => e.Number == number);
+                        if (existingIdx >= 0)
+                        {
+                            // Update existing entry with repro data
+                            var existing = indexEntries[existingIdx];
+                            indexEntries[existingIdx] = existing with
+                            {
+                                HasRepro = true,
+                                ReproConclusion = conclusionStr
+                            };
+                        }
+                        else
+                        {
+                            // Repro-only issue (no triage yet) — get title/state from GitHub index
+                            var state = itemByNumber.TryGetValue(number, out var item) ? item.State : "open";
+                            var title = item?.Title ?? $"Issue #{number}";
+
+                            indexEntries.Add(new TriageIndexEntry(
+                                Number: number,
+                                Title: title,
+                                Type: null,
+                                Area: null,
+                                Severity: null,
+                                Action: null,
+                                Confidence: null,
+                                HumanReview: false,
+                                IsRegression: false,
+                                Closeable: false,
+                                State: state,
+                                AnalyzedAt: repro.Meta.AnalyzedAt,
+                                HasTriage: false,
+                                HasRepro: true,
+                                ReproConclusion: conclusionStr
+                            ));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!settings.Quiet)
+                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping repro {Path.GetFileName(file)}: {ex.Message}[/]");
+                    }
                 }
             }
         }
 
-        // Sort issues by number descending (newest first)
+        // Sort by number descending (newest first)
         issues.Sort((a, b) => b.Meta.Number.CompareTo(a.Meta.Number));
+        indexEntries.Sort((a, b) => b.Number.CompareTo(a.Number));
 
-        // Build output wrapper
-        var output = new
+        // ── Write triage-index.json ──
+        var triageIndex = new TriageIndex(
+            GeneratedAt: DateTime.UtcNow,
+            TotalCount: indexEntries.Count,
+            Summary: new TriageIndexSummary(
+                NeedsInvestigation: needsInvestigation,
+                Closeable: closeable,
+                QuickWins: quickWins,
+                NeedsHumanReview: needsHumanReview,
+                Regressions: regressions,
+                WithRepro: withRepro,
+                Reproduced: reproduced,
+                NotReproduced: notReproduced
+            ),
+            ByType: [.. byType.OrderByDescending(kv => kv.Value).Select(kv => new LabelCount(kv.Key, kv.Value))],
+            ByArea: [.. byArea.OrderByDescending(kv => kv.Value).Select(kv => new LabelCount(kv.Key, kv.Value))],
+            ByAction: [.. byAction.OrderByDescending(kv => kv.Value).Select(kv => new LabelCount(kv.Key, kv.Value))],
+            BySeverity: [.. bySeverity.OrderByDescending(kv => kv.Value).Select(kv => new LabelCount(kv.Key, kv.Value))],
+            Issues: indexEntries
+        );
+
+        var indexPath = Path.Combine(settings.OutputDir, "triage-index.json");
+        await File.WriteAllTextAsync(indexPath, JsonSerializer.Serialize(triageIndex, TriageJsonOptions.Default));
+
+        // ── Write legacy triage.json (backwards compatibility) ──
+        var legacyOutput = new
         {
             GeneratedAt = DateTime.UtcNow,
             TotalCount = issues.Count,
@@ -847,12 +986,16 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             Issues = issues
         };
 
-        var outputPath = Path.Combine(settings.OutputDir, "triage.json");
-        var jsonStr = JsonSerializer.Serialize(output, TriageJsonOptions.Default);
-        await File.WriteAllTextAsync(outputPath, jsonStr);
+        var legacyPath = Path.Combine(settings.OutputDir, "triage.json");
+        await File.WriteAllTextAsync(legacyPath, JsonSerializer.Serialize(legacyOutput, TriageJsonOptions.Default));
 
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath} ({issues.Count} triaged issues)[/]");
+        {
+            AnsiConsole.MarkupLine($"[green]  ✓ {indexPath} ({indexEntries.Count} entries, {triageNumbers.Count} triage, {reproNumbers.Count} repro)[/]");
+            AnsiConsole.MarkupLine($"[green]  ✓ {triageOutputDir}/ ({triageNumbers.Count} files)[/]");
+            AnsiConsole.MarkupLine($"[green]  ✓ {reproOutputDir}/ ({reproNumbers.Count} files)[/]");
+            AnsiConsole.MarkupLine($"[green]  ✓ {legacyPath} ({issues.Count} triaged issues, legacy)[/]");
+        }
     }
 }
 

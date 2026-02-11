@@ -1,5 +1,6 @@
 using SkiaSharp.Triage.Cli.Models;
 using SkiaSharp.Triage.Cli.Services;
+using SkiaSharp.Triage.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 

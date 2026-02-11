@@ -1,3 +1,5 @@
+using SkiaSharp.Triage.Models;
+
 namespace SkiaSharp.Triage.Dashboard.Services;
 
 // Repo summary for filter dropdown
