@@ -63,7 +63,8 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
       "filesCreated": [
         {
           "filename": "Program.cs",
-          "description": "Console app that creates SKMatrix.CreateScale(-2, 1), calls MapRect on unit rect, prints Left/Top/Right/Bottom values."
+          "description": "Console app that creates SKMatrix.CreateScale(-2, 1), calls MapRect on unit rect, prints Left/Top/Right/Bottom values.",
+          "content": "using SkiaSharp;\n\nvar matrix = SKMatrix.CreateScale(-2, 1);\nvar source = new SKRect(0, 0, 1, 1);\nvar mapped = matrix.MapRect(source);\n\nConsole.WriteLine($\"Matrix: ScaleX={matrix.ScaleX}, ScaleY={matrix.ScaleY}\");\nConsole.WriteLine($\"Input:  SKRect({source.Left}, {source.Top}, {source.Right}, {source.Bottom})\");\nConsole.WriteLine($\"Output: SKRect({mapped.Left}, {mapped.Top}, {mapped.Right}, {mapped.Bottom})\");\nConsole.WriteLine($\"Expected Left=-2, Right=0\");\nConsole.WriteLine(mapped.Left == -2 ? \"PASS\" : \"BUG: MapRect normalized the rect\");"
         }
       ],
       "result": null

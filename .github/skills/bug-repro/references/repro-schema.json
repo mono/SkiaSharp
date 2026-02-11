@@ -209,10 +209,16 @@
                   "additionalProperties": false,
                   "properties": {
                     "filename": { "type": "string", "description": "Filename (no path) or relative path from project root." },
-                    "description": { "type": "string", "description": "What this file contains and why it was created." }
+                    "description": { "type": "string", "description": "What this file contains and why it was created." },
+                    "content": {
+                      "oneOf": [
+                        { "type": "string", "description": "Full source code content. Include for source files (Program.cs, .csproj) that form the reproduction. Omit for generated/binary files." },
+                        { "type": "null" }
+                      ]
+                    }
                   }
                 },
-                "description": "Files created in this step. Capture filename and description only, NOT full content."
+                "description": "Files created in this step. Include content for source files that form the reproduction."
               },
               { "type": "null" }
             ]

@@ -118,6 +118,15 @@ Check:
 - What platform are we on? (macOS/Linux/Windows)
 - Docker available? (unreliable on macOS — treat as optional)
 - GPU available? (for rendering bugs)
+- **.NET workloads installed?** Phase 3C requires building from source, which needs platform workloads:
+  ```bash
+  dotnet workload list
+  ```
+  If `ios`, `macos`, `maccatalyst`, or `android` are missing, install them **now** — don't wait until Phase 3C:
+  ```bash
+  dotnet workload install ios macos maccatalyst android
+  ```
+  If this requires `sudo` or elevated permissions, ask the user for help. Do **NOT** skip, look for workarounds, or treat this as a blocker. Missing workloads are a solvable setup problem.
 
 ### 4. Plan
 
@@ -164,7 +173,7 @@ For each step, capture:
 |------|-----|-------|
 | Command run | Exact command (redact absolute paths) | — |
 | Output | stdout/stderr | **2KB** for success, **4KB** for failure/wrong-output |
-| Files created | Filename + description only (NOT full content) | — |
+| Files created | Filename, description, and **source code content** for repro files | — |
 | Errors | Error message + first 50 lines of stack trace | 5KB |
 | Layer | `setup` / `csharp` / `c-api` / `native` / `deployment` | — |
 | Result | `success` / `failure` / `wrong-output` / `skip` | — |
@@ -204,18 +213,69 @@ dotnet run
 
 Record the result. If the bug is gone on latest, this is valuable — note it in `fixedInVersion`.
 
-### 3C. Test on main branch (optional, if reproduced)
+### 3C. Test on main branch (required, if reproduced)
 
-If still reproduced on latest release, optionally test against source on main:
+> **🛑 MANDATORY:** If the bug reproduced on latest release, you MUST test on main.
+> Do NOT skip this step. Do NOT declare the task complete without a `versionResults` entry for `main (source)`.
+> If the build fails, fix the build (install workloads, resolve errors). If you truly cannot build,
+> record `result: "not-tested"` with a `notes` field explaining exactly what failed and what you tried.
+
+If still reproduced on latest release, test against source on main:
+
+#### Step 1 — Build
 
 ```bash
 # Back in the SkiaSharp repo working directory
 [ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
-dotnet build binding/SkiaSharp/SkiaSharp.csproj
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~RelevantTestName"
+dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
+> Build the **test project** (not just SkiaSharp.csproj) — it transitively builds all dependencies
+> and sets up the native library loading that tests need.
+
+**If the build fails** (e.g., missing workloads, SDK errors):
+1. Read the error message — it usually tells you exactly what to do
+2. Fix it (install workloads, update SDK, etc.)
+3. If fixing requires `sudo` or user input, ask the user — do NOT give up
+4. Only record `not-tested` after genuinely exhausting all options
+
+#### Step 2 — Test
+
+**If an existing test covers the bug** (search with `grep -r "MethodName\|BugKeyword" tests/`):
+
+```bash
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter "FullyQualifiedName~RelevantTestName"
+```
+
+**If no existing test covers the bug** (most reproduction scenarios), use `dotnet test` with the test project infrastructure. Write a one-off test or reuse the reproduction approach from Phase 3A:
+
+```bash
+# Copy any needed test assets into the test content directory
+cp /tmp/repro-{number}/test-file.xyz tests/Content/images/
+
+# Run the full test suite (or a relevant subset) to verify the infrastructure works
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter "FullyQualifiedName~SKCodecTest"
+```
+
+Then write a targeted xUnit test in the existing test files and run it:
+
+```bash
+# Add a test method to the appropriate test file (e.g., tests/Tests/SkiaSharp/SKCodecTest.cs)
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~YourNewTestName"
+```
+
+> **Do NOT** create standalone `/tmp` projects that reference source-built DLLs and manually copy
+> native libraries. The test project already handles native library resolution. Use it.
+
+#### Step 3 — Record
+
 Record whether the bug exists on main. If fixed on main but not released, note the version gap.
+
+**versionResults:** The output JSON MUST always include an entry for `main (source)` in `versionResults`. This is true even if you used `result: "not-tested"` — in that case, explain why in `notes`.
+
+> **Clean up:** Remove any test assets you copied into `tests/Content/` and any test methods you
+> added. These are throwaway reproduction artifacts, not permanent additions. Use `git checkout`
+> to revert test file changes.
 
 ---
 
@@ -352,3 +412,5 @@ Blockers: none
 7. **Building from source first.** ALWAYS start with released NuGet packages in a standalone project. Only build from source in Phase 3C after reproducing with released versions.
 
 8. **Pre-emptive version assumptions.** NEVER assume a NuGet version is incompatible without inspecting the nupkg. All blockers about version compatibility must cite evidence (TFMs found, native assets present/missing, actual error when attempted).
+
+9. **Abandoning on environment issues.** NEVER give up when hitting solvable environment problems (missing workloads, missing tools, `sudo` prompts, SDK version mismatches). These are setup steps, not blockers. Fix them — install the workload, update the SDK, ask the user for elevated permissions. If the error message tells you the fix, do the fix.
