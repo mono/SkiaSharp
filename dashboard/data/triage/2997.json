@@ -1,0 +1,250 @@
+{
+  "meta": {
+    "schemaVersion": "2.1",
+    "number": 2997,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T20:18:46Z",
+    "currentLabels": [
+      "type/bug"
+    ],
+    "state": "open"
+  },
+  "summary": "SKMatrix.MapRect normalizes output rect due to upstream Skia\u0027s sort_as_rect. Workaround: use MapPoint on corners.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.6
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    }
+  },
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": false,
+      "hasStackTrace": false,
+      "reproQuality": "complete",
+      "severity": "low",
+      "severityReason": "No crash. Unexpected behavior from upstream Skia\u0027s design choice, with a straightforward workaround using MapPoint.",
+      "hasWorkaround": true,
+      "workaroundSummary": "Use MapPoint to transform the rect corners individually instead of MapRect, preserving the original left/right/top/bottom ordering.",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "reproEvidence": {
+      "relatedIssues": [
+        3001,
+        3002
+      ],
+      "codeSnippets": [
+        {
+          "code": "var inputRect = new SKRect();\ninputRect.Left =25;\ninputRect.Right = 15;\ninputRect.Bottom = 2;\ninputRect.Top = 10;\nvar resultRect = SKMatrix.CreateIdentity().MapRect(inputRect);\nAssert.AreEqual(inputRect.Right,resultRect.Right);",
+          "language": "csharp",
+          "context": "Repro code from issue body demonstrating identity matrix normalizing non-standard rect"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "reason": "The Skia sort_as_rect function in SkMatrix::mapRect has not changed \u2014 the normalization behavior is inherent to upstream Skia\u0027s mapRect implementation and is present in all SkiaSharp versions.",
+      "mentionedVersions": [
+        "2.88.3",
+        "2.88.2"
+      ],
+      "currentRelevance": "likely"
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.85,
+      "reason": "Reporter claims 2.88.2 was the last good version, but the sort_as_rect function has existed in Skia for many years. The reporter may not have noticed the behavior previously, or may have used a different code path."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "This is Skia\u0027s intended behavior \u2014 sort_as_rect normalizes rects in mapRect. SkiaSharp passes through to Skia directly. No fix expected unless Skia changes upstream."
+    }
+  },
+  "analysis": {
+    "summary": "SKMatrix.MapRect calls Skia\u0027s SkMatrix::mapRect, which uses sort_as_rect to normalize the output rectangle so left\u003C=right and top\u003C=bottom. This is upstream Skia behavior, not a SkiaSharp bug. The C# binding simply passes through to the C API, which calls SkMatrix::mapRect. A community comment confirms this with a link to the Skia source.",
+    "keySignals": [
+      {
+        "text": "The \u0022Top\u0022 of an SKRect artifact is not always the smallest Y number",
+        "source": "body",
+        "interpretation": "Reporter works with non-standard coordinate systems where left\u003Eright or top\u003Ebottom is meaningful"
+      },
+      {
+        "text": "operation1 and operation2 done separately will no longer equal their concatenation if operation1 decides to standardize the intermediate result",
+        "source": "body",
+        "interpretation": "Valid concern about composability, but this is inherent to how Skia defines rect mapping"
+      },
+      {
+        "text": "That\u0027s what Skia does, it\u0027s not really an issue with the bindings themselves",
+        "source": "comment-molesmoke",
+        "interpretation": "Community member correctly identified this as upstream Skia behavior, linking to SkMatrix.cpp:1156"
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/bug",
+        "expandedReason": "While this is upstream Skia\u0027s intended behavior, the reporter\u0027s expectation is reasonable \u2014 an identity matrix should preserve the rect unchanged. Keeping as type/bug since it\u0027s a valid behavioral concern, but confidence is lower because it\u0027s Skia\u0027s design choice, not a SkiaSharp defect.",
+        "alternatives": [
+          {
+            "value": "type/question",
+            "whyRejected": "Reporter is not asking how to use the API \u2014 they\u0027re reporting that MapRect changes values unexpectedly."
+          },
+          {
+            "value": "type/enhancement",
+            "whyRejected": "Could be an enhancement to add a MapRect overload that preserves ordering, but the existing issue is framed as unexpected behavior."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/SkiaSharp",
+        "expandedReason": "SKMatrix is in the core SkiaSharp package. The behavior originates from upstream Skia but surfaces through the SkiaSharp API."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "low",
+        "expandedReason": "No crash, no data loss. Behavioral surprise with a clear workaround (MapPoint on corners). Affects niche use case of non-standard coordinate systems."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "close-with-docs",
+        "expandedReason": "This is upstream Skia\u0027s intended behavior. SkiaSharp faithfully wraps it. A workaround using MapPoint exists. The community has already provided the explanation."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "sort_as_rect has been in Skia for many years. The claimed regression from 2.88.2 to 2.88.3 is likely a coincidence \u2014 the reporter may have changed their usage pattern."
+      },
+      {
+        "field": "fixStatus.likelyFixed",
+        "chosen": "false",
+        "expandedReason": "This is Skia\u0027s design, not a bug. No fix expected or appropriate."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The behavior persists in all SkiaSharp versions since sort_as_rect has not been changed in Skia."
+      }
+    ],
+    "uncertainties": [
+      "Whether there\u0027s demand for a SkiaSharp-level MapRect overload that preserves corner ordering",
+      "Whether the reporter\u0027s claim of regression from 2.88.2 reflects a real behavior change or coincidence"
+    ],
+    "assumptions": [
+      "Assumed the reporter is using a standard CPU/raster backend since no GPU-specific details are mentioned"
+    ],
+    "resolution": {
+      "hypothesis": "Skia\u0027s SkMatrix::mapRect intentionally normalizes the output rect via sort_as_rect. This is by-design upstream behavior. SkiaSharp should document this and provide a workaround.",
+      "proposals": [
+        {
+          "title": "Use MapPoint on rect corners",
+          "description": "Transform the four corners of the rect individually using MapPoint, then construct a new SKRect from the transformed corners. This preserves the original left/right/top/bottom ordering since MapPoint doesn\u0027t normalize.",
+          "confidence": 0.95,
+          "effort": "low",
+          "category": "workaround",
+          "codeSnippet": "// Workaround: map corners individually to preserve ordering\nvar matrix = SKMatrix.CreateIdentity(); // or your actual matrix\nvar inputRect = new SKRect(25, 10, 15, 2); // left \u003E right, top \u003E bottom\n\nvar topLeft = matrix.MapPoint(inputRect.Left, inputRect.Top);\nvar bottomRight = matrix.MapPoint(inputRect.Right, inputRect.Bottom);\n\nvar resultRect = new SKRect(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);\n// resultRect preserves the original left/right/top/bottom ordering",
+          "validated": "yes"
+        },
+        {
+          "title": "Add MapRectUnsorted overload",
+          "description": "Add a new C# method SKMatrix.MapRectUnsorted that maps the rect corners via MapPoint instead of calling Skia\u0027s mapRect. This would be a SkiaSharp-level convenience that avoids the upstream normalization.",
+          "confidence": 0.7,
+          "effort": "low",
+          "category": "fix"
+        }
+      ],
+      "recommendedProposal": "Use MapPoint on rect corners",
+      "recommendedReason": "Immediate workaround that preserves corner ordering without requiring any library changes."
+    },
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "299-306",
+        "relevance": "MapRect is a thin wrapper: calls SkiaApi.sk_matrix_map_rect, no C# normalization \u2014 the standardization happens entirely in Skia C\u002B\u002B"
+      },
+      {
+        "file": "externals/skia/src/c/sk_matrix.cpp",
+        "lines": "47-49",
+        "relevance": "C API sk_matrix_map_rect passes directly through to AsMatrix(matrix).mapRect \u2014 no additional logic in the C shim"
+      },
+      {
+        "file": "externals/skia/src/core/SkMatrix.cpp",
+        "lines": "1120-1127",
+        "relevance": "sort_as_rect function: uses min/max on ltrb components to ensure left\u003C=right and top\u003C=bottom. This is the root cause of the normalization."
+      },
+      {
+        "file": "externals/skia/src/core/SkMatrix.cpp",
+        "lines": "1142-1169",
+        "relevance": "SkMatrix::mapRect calls sort_as_rect in the translate-only path (line 1149) and mapRectScaleTranslate (which also calls sort_as_rect at line 1139) for scale\u002Btranslate. All paths normalize the output rect."
+      },
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "310-320",
+        "relevance": "MapPoint transforms individual points via sk_matrix_map_xy without normalization \u2014 this is the workaround path for preserving corner ordering"
+      },
+      {
+        "file": "binding/SkiaSharp/MathTypes.cs",
+        "lines": "382-398",
+        "relevance": "SKRect.Standardized property already exists in SkiaSharp for explicit normalization, confirming the reporter\u0027s expectation that normalization should be opt-in"
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.8,
+      "reason": "This is upstream Skia\u0027s intended behavior (sort_as_rect in mapRect). A community member has already explained this. A workaround using MapPoint exists."
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Keep type/bug, add area/SkiaSharp",
+        "reason": "Area label is missing. Type/bug is borderline appropriate \u2014 the behavior is unexpected even if by-design upstream.",
+        "confidence": 0.85,
+        "payload": {
+          "labelsToAdd": [
+            "area/SkiaSharp"
+          ],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Acknowledge the report, explain the upstream cause, and provide a MapPoint workaround",
+        "reason": "Reporter deserves a response with explanation and actionable workaround",
+        "confidence": 0.85,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "documentation",
+          "draftBody": "Thanks for the detailed report and repro code.\n\nAs @molesmoke pointed out, this normalization comes from Skia itself \u2014 \u0060SkMatrix::mapRect\u0060 runs the output through a \u0060sort_as_rect\u0060 function that ensures \u0060left \u003C= right\u0060 and \u0060top \u003C= bottom\u0060 ([source](https://github.com/google/skia/blob/158dc9d7d4cafb177b99b68c5dc502f8f4282092/src/core/SkMatrix.cpp#L1120-L1127)). SkiaSharp\u0027s \u0060MapRect\u0060 passes straight through to Skia, so the normalization isn\u0027t something we can bypass at the binding level.\n\nYour concern about composability with non-standard coordinate systems makes sense. Here\u0027s a workaround \u2014 transform the corners individually with \u0060MapPoint\u0060, which doesn\u0027t normalize:\n\n\u0060\u0060\u0060csharp\nvar topLeft = matrix.MapPoint(inputRect.Left, inputRect.Top);\nvar bottomRight = matrix.MapPoint(inputRect.Right, inputRect.Bottom);\nvar resultRect = new SKRect(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y);\n\u0060\u0060\u0060\n\nThis preserves whatever ordering the original rect had. You could wrap this in an extension method if you use it frequently.\n\nClosing this since the behavior is in upstream Skia, but the workaround should unblock you.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-2997-comment-1"
+        }
+      },
+      {
+        "id": "close-1",
+        "type": "close-issue",
+        "risk": "medium",
+        "description": "Close as upstream Skia behavior with workaround provided",
+        "reason": "By-design upstream behavior, workaround available, community already explained the cause",
+        "confidence": 0.78,
+        "dependsOn": "comment-1",
+        "payload": {
+          "reason": "completed",
+          "comment": null
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/mono/SkiaSharp/issues/2997"
+}

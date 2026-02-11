@@ -1,0 +1,284 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3437,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-08T19:00:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "area/SkiaSharp",
+      "tenet/reliability",
+      "backend/SVG"
+    ],
+    "state": "open"
+  },
+  "summary": "SKSvgCanvas produces \u003Ctext\u003E elements with missing text values and x/y attributes when used concurrently in parallel tasks on Windows \u2014 regression from 2.88.9",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "backends": [
+      {
+        "value": "backend/SVG",
+        "confidence": 0.98
+      }
+    ],
+    "platforms": [
+      {
+        "value": "os/Windows-Classic",
+        "confidence": 0.95
+      }
+    ],
+    "tenets": [
+      {
+        "value": "tenet/reliability",
+        "confidence": 0.95
+      },
+      {
+        "value": "tenet/compatibility",
+        "confidence": 0.85
+      }
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": false,
+      "hasStackTrace": false,
+      "reproQuality": "complete",
+      "severity": "high",
+      "severityReason": "Data corruption in SVG output with no simple workaround besides removing parallelism. Regression from 2.x.",
+      "hasWorkaround": true,
+      "workaroundSummary": "Avoid parallel usage of SKSvgCanvas \u2014 serialize SVG generation to a single thread, or downgrade to SkiaSharp 2.88.9.",
+      "targetFrameworks": [
+        "net8.0-windows"
+      ]
+    },
+    "reproEvidence": {
+      "repoLinks": [
+        {
+          "url": "https://github.com/jankurianski/skiasharp-svg-text-missing-bug",
+          "description": "Full reproduction project demonstrating parallel SKSvgCanvas text corruption on Windows"
+        }
+      ],
+      "stepsToReproduce": [
+        "Create multiple parallel tasks using Task.Run()",
+        "In each task, create an independent SKSvgCanvas writing to a MemoryStream",
+        "Draw multiple text elements using canvas.DrawText()",
+        "Dispose canvas to flush SVG output",
+        "Inspect resulting SVG \u2014 \u003Ctext\u003E elements will have empty x/y attributes and missing text content"
+      ],
+      "codeSnippets": [
+        {
+          "code": "await Task.WhenAll(\n    Enumerable.Range(0, 5)\n    .Select(i =\u003E Task.Run(() =\u003E drawSvgFunc(i)))\n    ).ConfigureAwait(false);",
+          "language": "csharp",
+          "context": "Parallel SVG generation triggering the bug \u2014 each task creates its own independent SKSvgCanvas"
+        }
+      ],
+      "environmentDetails": "Windows 11, Visual Studio Code, SkiaSharp 3.116.0 / 3.119.1 / 3.119.2-preview.1. Linux (Ubuntu 22.04.2 LTS via WSL) is unaffected."
+    },
+    "versionAnalysis": {
+      "reason": "Bug affects all SkiaSharp 3.x versions tested including the latest preview. Confirmed working in 2.88.9.",
+      "mentionedVersions": [
+        "3.116.0",
+        "3.119.1",
+        "3.119.2-preview.1",
+        "2.88.9"
+      ],
+      "currentRelevance": "likely"
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.92,
+      "reason": "Reporter explicitly states 2.88.9 does not have the bug and all 3.x versions do. This aligns with the major Skia engine upgrade between 2.x and 3.x.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "Thread-safety bug in the SVG canvas backend on Windows. Independent SKSvgCanvas instances used in parallel tasks produce corrupted \u003Ctext\u003E elements with missing content and attributes. This is a regression from 2.88.9, suggesting the Skia 3.x SVG module introduced shared mutable global state.",
+    "keySignals": [
+      {
+        "text": "text elements will sometimes have their text value and x/y attribute values removed",
+        "source": "body",
+        "interpretation": "Data corruption in SVG output \u2014 not a crash but silent data loss"
+      },
+      {
+        "text": "The more text elements being drawn and the more threads running the same task, the more likely the problem is to occur",
+        "source": "body",
+        "interpretation": "Classic race condition symptom \u2014 probability increases with concurrency"
+      },
+      {
+        "text": "This affects all SkiaSharp 3.x versions on Windows. Linux is unaffected.",
+        "source": "body",
+        "interpretation": "Windows-specific thread-safety issue, possibly related to platform-specific string formatting or locale handling"
+      },
+      {
+        "text": "This is a regression from SkiaSharp 2.88.9 which does not have the bug.",
+        "source": "body",
+        "interpretation": "Regression tied to the Skia engine upgrade from 2.x to 3.x"
+      },
+      {
+        "text": "I tested the bug on Ubuntu 22.04.2 LTS (using WSL) and the bug does not occur there",
+        "source": "comment 1",
+        "interpretation": "Reporter confirmed Linux is unaffected even with 100 elements and 50 parallel tasks \u2014 strongly platform-specific"
+      },
+      {
+        "text": "GitHub repository with full source code to reproduce",
+        "source": "body",
+        "interpretation": "Complete reproduction project available \u2014 high-quality bug report"
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/bug",
+        "expandedReason": "Clear broken behavior: SVG output data corruption where text elements lose their content and attributes. The reporter provides expected vs actual output showing the defect.",
+        "alternatives": [
+          {
+            "value": "type/question",
+            "whyRejected": "Not asking how to use threading \u2014 reporting data corruption in independent canvas instances."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/SkiaSharp",
+        "expandedReason": "SKSvgCanvas is part of the core SkiaSharp API surface (binding/SkiaSharp/). While it targets SVG output, the code path goes through the main SkiaSharp library.",
+        "alternatives": [
+          {
+            "value": "area/libSkiaSharp.native",
+            "whyRejected": "While the root cause is likely in native Skia SVG code, the entry point is through the managed SkiaSharp API."
+          }
+        ]
+      },
+      {
+        "field": "backends",
+        "chosen": "backend/SVG",
+        "expandedReason": "The bug is specific to SKSvgCanvas \u2014 the SVG rendering backend. Standard raster canvas drawing is not affected."
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Windows-Classic",
+        "expandedReason": "Reporter confirmed the bug only occurs on Windows 11. Ubuntu 22.04 via WSL is unaffected even with significantly more parallelism."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "high",
+        "expandedReason": "Silent data corruption in output \u2014 text elements lose their content without any error or warning. The only workaround is to serialize work or downgrade to 2.x. This is a regression affecting all 3.x versions."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "Well-documented regression with a complete repro project. Needs native-level debugging to identify the shared global state in Skia\u0027s SVG module causing the Windows-specific race condition.",
+        "alternatives": [
+          {
+            "value": "close-wontfix",
+            "whyRejected": "The bug has a high-quality reproduction and is a clear regression from 2.88.9 \u2014 it warrants investigation."
+          }
+        ]
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability, tenet/compatibility",
+        "expandedReason": "tenet/reliability: Silent data corruption in SVG output with missing text values. tenet/compatibility: This is a regression from 2.88.9 to all 3.x versions, indicating a cross-version compatibility break."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "true",
+        "expandedReason": "Reporter explicitly confirms 2.88.9 does not have the bug and all 3.x versions do. This aligns with the major Skia engine upgrade between 2.x and 3.x that likely changed SVG serialization internals."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "Bug affects all SkiaSharp 3.x versions tested (3.116.0, 3.119.1, 3.119.2-preview.1) including the latest preview, confirming it remains unresolved.",
+        "alternatives": [
+          {
+            "value": "outdated",
+            "whyRejected": "The latest preview (3.119.2-preview.1) still exhibits the bug, so the issue is current."
+          }
+        ]
+      }
+    ],
+    "uncertainties": [
+      "Whether the root cause is in Skia\u0027s C\u002B\u002B SVG module or in the C API/P/Invoke layer \u2014 needs native debugging",
+      "Whether the issue affects other SVG element types beyond \u003Ctext\u003E or if it\u0027s specific to text rendering",
+      "Whether Windows-specific locale or string formatting functions used in SVG serialization are the source of the race condition",
+      "The exact shared mutable state causing the race \u2014 could be global buffers, static formatters, or locale-dependent number-to-string conversion"
+    ],
+    "assumptions": [
+      "Assumed net8.0-windows target framework since reporter uses Windows 11 with VS Code but doesn\u0027t specify exact TFM",
+      "Assumed the race condition is in native Skia code rather than the managed wrapper since each thread creates fully independent managed objects"
+    ],
+    "resolution": {
+      "hypothesis": "The Skia 3.x SVG serialization module likely uses shared global state (possibly a string formatting buffer or locale-dependent number conversion function) that is not thread-safe on Windows. Linux uses different formatting functions (e.g., POSIX locale-independent formatting) that happen to be thread-safe, explaining the platform difference.",
+      "proposals": [
+        {
+          "title": "Add thread-safety documentation for SKSvgCanvas",
+          "description": "Document that Skia is not thread-safe and SKSvgCanvas instances should not be used concurrently, even if they are independent instances. This is the quickest mitigation but doesn\u0027t fix the underlying defect.",
+          "confidence": 0.9,
+          "effort": "low"
+        },
+        {
+          "title": "Investigate and fix shared state in Skia SVG module",
+          "description": "Debug the native Skia SVG serialization to identify the shared mutable state causing the race condition on Windows. This likely involves SkSVGDevice or related classes. May require an upstream Skia fix or a SkiaSharp-specific patch in the fork.",
+          "confidence": 0.65,
+          "effort": "high"
+        },
+        {
+          "title": "Add per-thread locking around SVG canvas operations",
+          "description": "Add a global lock in the managed SKSvgCanvas wrapper to serialize access to the SVG backend. This would fix the corruption but eliminate parallelism benefits for SVG generation.",
+          "confidence": 0.8,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Investigate and fix shared state in Skia SVG module",
+      "recommendedReason": "The root cause fix is the right long-term solution. Each independent canvas instance should be fully thread-safe. The regression from 2.x suggests a specific change that can be identified and fixed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Well-documented regression with complete repro project. Needs native-level debugging to identify the shared global state in Skia\u0027s SVG module causing the Windows-specific race condition."
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add tenet/compatibility label to reflect this is a 2.x to 3.x regression",
+        "reason": "The regression from 2.88.9 to 3.x is a key signal \u2014 compatibility tenet captures this",
+        "confidence": 0.85,
+        "payload": {
+          "labelsToAdd": [
+            "tenet/compatibility"
+          ],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Acknowledge the high-quality report and confirm investigation is needed",
+        "reason": "Reporter provided excellent reproduction material and cross-platform testing. Acknowledge the regression and signal that native-level investigation is the next step.",
+        "confidence": 0.85,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "request-info",
+          "draftBody": "Thanks for the thorough report and the cross-platform testing \u2014 confirming Linux is unaffected is really helpful for narrowing this down.\n\nThis looks like a thread-safety issue in Skia\u0027s SVG serialization that\u0027s specific to Windows. Even though each task creates its own independent SKSvgCanvas, there may be shared global state in the native SVG module (possibly related to Windows string formatting or number-to-string conversion) that isn\u0027t safe to access concurrently.\n\nThe regression from 2.88.9 is a strong signal \u2014 the Skia engine was upgraded significantly between 2.x and 3.x, which likely changed how SVG text serialization works internally.\n\nThis needs investigation at the native Skia level to identify the shared state. In the meantime, serializing SVG generation to a single thread would be the safest workaround.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3437-comment-1"
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/mono/SkiaSharp/issues/3437"
+}

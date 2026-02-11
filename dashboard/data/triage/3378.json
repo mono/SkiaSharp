@@ -1,0 +1,247 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3378,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-08T19:00:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "os/Android",
+      "area/SkiaSharp",
+      "backend/Metal",
+      "tenet/reliability"
+    ],
+    "state": "open"
+  },
+  "summary": "Memory leak in ToHarfBuzzBlob() \u2014 SKStreamAsset not disposed in the non-memory-mapped code path",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.HarfBuzz",
+      "confidence": 0.95
+    },
+    "platforms": [
+      {
+        "value": "os/Android",
+        "confidence": 0.8
+      },
+      {
+        "value": "os/Windows-Classic",
+        "confidence": 0.75
+      }
+    ],
+    "tenets": [
+      {
+        "value": "tenet/reliability",
+        "confidence": 0.9
+      }
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": false,
+      "hasStackTrace": false,
+      "reproQuality": "partial",
+      "severity": "medium",
+      "severityReason": "Memory leak that grows with each SKShaper instantiation. No crash, but can degrade application performance over time and eventually cause OOM on resource-constrained devices like Android.",
+      "hasWorkaround": false,
+      "targetFrameworks": [
+        "net8.0-android"
+      ]
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        {
+          "code": "class TextSegmentShaper : IDisposable\n{\n    public SKPaint Paint { get; set; }\n    public SKShaper Shaper { get; set; }\n    ...\n    protected virtual void Dispose(bool disposing)\n    {\n        if (!disposedValue)\n        {\n            Paint?.Dispose();\n            Shaper?.Dispose();\n            ...\n        }\n    }\n}",
+          "language": "csharp",
+          "context": "User\u0027s wrapper class that properly disposes SKShaper, but the underlying leak is in ToHarfBuzzBlob()"
+        }
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, Visual Studio (Windows), first observed on Android but also reproduces on Windows"
+    },
+    "versionAnalysis": {
+      "reason": "The leak exists in BlobExtensions.ToHarfBuzzBlob() which has not changed in recent versions. The else branch at line 28-30 copies data from SKStreamAsset but never disposes it.",
+      "mentionedVersions": [
+        "3.116.0"
+      ],
+      "currentRelevance": "likely"
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.85,
+      "reason": "The code in BlobExtensions.cs has had this pattern since the extension was introduced. The else branch has never disposed the SKStreamAsset. This is a latent bug, not a regression."
+    }
+  },
+  "analysis": {
+    "summary": "Confirmed memory leak in BlobExtensions.ToHarfBuzzBlob(). When the SKStreamAsset has no memory base (the else branch), data is copied to unmanaged memory but the SKStreamAsset is never disposed. The if branch correctly disposes via the Blob\u0027s destroy callback, but the else branch only frees the copied CoTaskMem allocation. Title says SKShader but the actual issue is about SKShaper (HarfBuzz).",
+    "keySignals": [
+      {
+        "text": "I think the bug is in ToHarfBuzzBlob() extension - it doesn\u0027t dispose SKStreamAsset in all paths",
+        "source": "body",
+        "interpretation": "User correctly identified the root cause. The else branch in ToHarfBuzzBlob() copies data but never disposes the source SKStreamAsset."
+      },
+      {
+        "text": "SKShaper Shaper = new SKShaper(typeface)",
+        "source": "body",
+        "interpretation": "SKShaper constructor calls Typeface.OpenStream().ToHarfBuzzBlob(), creating the leak on every instantiation."
+      },
+      {
+        "text": "First observed bug on Android, but seems to be a problem also on Windows",
+        "source": "body",
+        "interpretation": "Cross-platform code bug \u2014 affects all platforms, more visible on memory-constrained Android devices."
+      },
+      {
+        "text": "Title says SKShader but code references SKShaper",
+        "source": "title",
+        "interpretation": "Typo in title \u2014 the actual issue is about SKShaper in the HarfBuzz package, not SKShader."
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/bug",
+        "expandedReason": "Reporter describes a memory leak with code evidence pointing to a specific disposal path bug. This is broken behavior in the library, not a usage question.",
+        "alternatives": [
+          {
+            "value": "type/question",
+            "whyRejected": "Not asking how to do something \u2014 reporting a code defect with specific root cause analysis."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/SkiaSharp.HarfBuzz",
+        "expandedReason": "The leak is in BlobExtensions.ToHarfBuzzBlob() which is in the SkiaSharp.HarfBuzz package. SKShaper is also in this package. The current label area/SkiaSharp is incorrect.",
+        "alternatives": [
+          {
+            "value": "area/SkiaSharp",
+            "whyRejected": "The bug is not in core SkiaSharp. BlobExtensions and SKShaper are in the SkiaSharp.HarfBuzz package."
+          }
+        ]
+      },
+      {
+        "field": "backends",
+        "chosen": "null",
+        "expandedReason": "This is a managed code memory leak in a HarfBuzz extension method. It has nothing to do with rendering backends. The existing backend/Metal label is incorrect."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "medium",
+        "expandedReason": "Memory leak that grows with each SKShaper creation. Not a crash, but can cause OOM on constrained devices over time. The leak is in library code, not user code, so there is no straightforward workaround."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The code-level bug in ToHarfBuzzBlob() is confirmed by source analysis, but a memory profiling test should verify the leak and validate the proposed one-line disposal fix.",
+        "alternatives": [
+          {
+            "value": "close-fixed",
+            "whyRejected": "No fix has been merged yet; the bug is identified but not resolved."
+          }
+        ]
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Android, os/Windows-Classic",
+        "expandedReason": "Reporter first observed the leak on Android and confirmed it also reproduces on Windows. The bug is in managed code (BlobExtensions.cs) so it affects all platforms, but only Android and Windows are explicitly reported."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability",
+        "expandedReason": "Memory leak that grows with each SKShaper instantiation can degrade performance over time and eventually cause OOM, particularly on resource-constrained Android devices."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "The else branch in BlobExtensions.ToHarfBuzzBlob() has never disposed the SKStreamAsset since the extension was introduced. This is a latent bug, not a regression from a previously working state."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The leak exists in BlobExtensions.ToHarfBuzzBlob() which has not changed in recent versions; the else branch still does not dispose the SKStreamAsset."
+      }
+    ],
+    "uncertainties": [
+      "Whether the else branch (non-memory-mapped path) is commonly hit in practice \u2014 if most streams have a memory base, the leak may be rare",
+      "Exact memory footprint per leak \u2014 depends on font file size, could be significant for large fonts",
+      "Whether the title typo (SKShader vs SKShaper) has caused confusion in previous triage"
+    ],
+    "assumptions": [
+      "Assumed net8.0-android as target framework since user mentions Android and SkiaSharp 3.116.0",
+      "Assumed the leak is cross-platform based on code analysis, not limited to Android and Windows"
+    ],
+    "resolution": {
+      "hypothesis": "In BlobExtensions.ToHarfBuzzBlob(), the else branch copies font data from the SKStreamAsset into unmanaged memory but never disposes the SKStreamAsset. The if branch correctly passes asset.Dispose() as the Blob destroy callback, but the else branch only frees the CoTaskMem copy.",
+      "proposals": [
+        {
+          "title": "Dispose SKStreamAsset in else branch",
+          "description": "Add asset.Dispose() in the else branch of ToHarfBuzzBlob() after reading data, mirroring how the if branch handles disposal via the Blob callback. This is a one-line fix in BlobExtensions.cs.",
+          "confidence": 0.92,
+          "effort": "low"
+        },
+        {
+          "title": "Always dispose SKStreamAsset after use in SKShaper constructor",
+          "description": "Capture the SKStreamAsset in a variable in the SKShaper constructor and wrap it in a using statement, rather than relying on ToHarfBuzzBlob() to manage its lifetime. Decouples disposal responsibility from the extension method.",
+          "confidence": 0.8,
+          "effort": "low"
+        },
+        {
+          "title": "Unify both paths to always copy data",
+          "description": "Simplify ToHarfBuzzBlob() to always copy data and always dispose the asset, removing the memory-mapped optimization. Trades minor performance for simpler, less error-prone code.",
+          "confidence": 0.7,
+          "effort": "low"
+        }
+      ],
+      "recommendedProposal": "Dispose SKStreamAsset in else branch",
+      "recommendedReason": "Minimal change, directly fixes the root cause. The if branch already correctly manages disposal via the Blob callback, so adding disposal in the else branch makes both paths consistent."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Code-level bug confirmed by source analysis. The fix is straightforward but should be verified with a memory profiling test to confirm the leak and validate the fix.",
+      "requiresHumanReview": true
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Correct area to SkiaSharp.HarfBuzz and remove incorrect Metal backend label",
+        "reason": "The bug is in BlobExtensions.ToHarfBuzzBlob() in the SkiaSharp.HarfBuzz package, not core SkiaSharp. No rendering backend is involved.",
+        "confidence": 0.95,
+        "payload": {
+          "labelsToAdd": [
+            "area/SkiaSharp.HarfBuzz"
+          ],
+          "labelsToRemove": [
+            "area/SkiaSharp",
+            "backend/Metal"
+          ]
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Acknowledge the bug report and confirm the root cause analysis",
+        "reason": "User correctly identified the root cause \u2014 confirm their analysis and outline the likely fix",
+        "confidence": 0.85,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "answer",
+          "draftBody": "Thanks for the detailed analysis \u2014 you\u0027re right that \u0060ToHarfBuzzBlob()\u0060 in \u0060BlobExtensions.cs\u0060 doesn\u0027t dispose the \u0060SKStreamAsset\u0060 in all paths.\n\nWhen the stream has a memory base, disposal is handled via the \u0060Blob\u0060 destroy callback. But when it falls through to the \u0060else\u0060 branch (data is copied to unmanaged memory), the \u0060SKStreamAsset\u0060 is never disposed.\n\nThis would leak one \u0060SKStreamAsset\u0060 per \u0060SKShaper\u0060 instantiation, which lines up with what you\u0027re seeing. The fix should be straightforward \u2014 disposing the asset after reading in the else branch.\n\n(Note: the issue title mentions SKShader, but the actual bug is in SKShaper/HarfBuzz \u2014 just flagging in case it causes confusion.)",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3378-comment-1"
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/mono/SkiaSharp/issues/3378"
+}

@@ -1,0 +1,241 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3472,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-08T19:00:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "area/SkiaSharp",
+      "tenet/reliability"
+    ],
+    "state": "open"
+  },
+  "summary": "HarfBuzzSharp Blob.FromStream uses a pinned managed array pointer that becomes invalid after the fixed block exits, causing potential GC-related crashes",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/HarfBuzzSharp",
+      "confidence": 0.95
+    },
+    "tenets": [
+      {
+        "value": "tenet/reliability",
+        "confidence": 0.95
+      }
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": true,
+      "hasStackTrace": false,
+      "reproQuality": "partial",
+      "severity": "high",
+      "severityReason": "Memory safety bug: the fixed block exits before the Blob is used, so GC can relocate the managed byte array causing use-after-move crashes. No workaround exists short of avoiding FromStream entirely.",
+      "hasWorkaround": false
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        {
+          "code": "public static unsafe Blob FromStream (Stream stream)\n{\n\tusing var ms = new MemoryStream ();\n\tstream.CopyTo (ms);\n\tvar data = ms.ToArray ();\n\n\tfixed (byte* dataPtr = data) {\n\t\treturn new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () =\u003E ms.Dispose ());\n\t}\n}",
+          "language": "csharp",
+          "context": "Current buggy implementation in binding/HarfBuzzSharp/Blob.cs"
+        },
+        {
+          "code": "public static unsafe Blob FromStream (Stream stream)\n{\n\tvar length = (int)(stream.Length - stream.Position);\n\n\tvar dataPtr = Marshal.AllocCoTaskMem (length);\n\n\tusing var ums = new UnmanagedMemoryStream ((byte*)dataPtr, length, length, FileAccess.ReadWrite);\n\tstream.CopyTo (ums);\n\n\treturn new Blob (dataPtr, length, MemoryMode.ReadOnly, () =\u003E Marshal.FreeCoTaskMem (dataPtr));\n}",
+          "language": "csharp",
+          "context": "Reporter\u0027s proposed fix using unmanaged memory allocation"
+        }
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, Visual Studio (Windows), affects all platforms"
+    },
+    "versionAnalysis": {
+      "reason": "The buggy code pattern exists in the current source (binding/HarfBuzzSharp/Blob.cs lines 71-82). The issue was found by code inspection, not runtime testing, and the code has not changed.",
+      "mentionedVersions": [
+        "3.116.0",
+        "2.88.9"
+      ],
+      "currentRelevance": "likely"
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.8,
+      "reason": "The reporter lists 2.88.9 as \u0027Last Known Good Version\u0027 but this appears to be a latent bug present since the method was written \u2014 the fixed block has always exited before the Blob could be used. It likely manifests non-deterministically depending on GC timing."
+    }
+  },
+  "analysis": {
+    "summary": "Real memory safety bug in HarfBuzzSharp\u0027s Blob.FromStream. The fixed statement pins a managed byte array only for the duration of the block, but the resulting Blob holds the pointer beyond that scope. After the fixed block exits, the GC is free to relocate the managed array, leaving the Blob with a dangling pointer.",
+    "keySignals": [
+      {
+        "text": "If GC runs after the blob is created, the managed array memory might be moved resulting in a crash",
+        "source": "body",
+        "interpretation": "Reporter correctly identifies the root cause: the fixed block scope is too narrow"
+      },
+      {
+        "text": "fixed (byte* dataPtr = data) { return new Blob((IntPtr)dataPtr, ...); }",
+        "source": "body",
+        "interpretation": "The fixed block exits immediately after Blob construction, unpinning the managed array while the Blob still holds the pointer"
+      },
+      {
+        "text": "Should copy via an UnmanagedMemoryStream",
+        "source": "body",
+        "interpretation": "Reporter provides a concrete fix using Marshal.AllocCoTaskMem for GC-safe unmanaged memory"
+      },
+      {
+        "text": "TODO: check to see if we can avoid the second copy (the ToArray)",
+        "source": "body",
+        "interpretation": "Existing TODO comment in the code acknowledges the implementation is suboptimal"
+      },
+      {
+        "text": "This should also improve performance since it removes the redundant copy",
+        "source": "comment 2",
+        "interpretation": "The proposed fix also eliminates an unnecessary buffer copy \u2014 stream \u2192 MemoryStream \u2192 byte[] becomes stream \u2192 unmanaged buffer"
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/bug",
+        "expandedReason": "This is a real memory safety defect found by code inspection. The fixed keyword only pins memory within its block scope, but the Blob outlives that scope. This is not a feature request or enhancement \u2014 it\u0027s broken code that can crash.",
+        "alternatives": [
+          {
+            "value": "type/enhancement",
+            "whyRejected": "While the fix also improves performance, the core issue is a use-after-unpin memory safety bug, not an optimization request."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/HarfBuzzSharp",
+        "expandedReason": "The bug is in HarfBuzzSharp.Blob.FromStream (binding/HarfBuzzSharp/Blob.cs), not in the SkiaSharp core library. The existing label area/SkiaSharp is incorrect.",
+        "alternatives": [
+          {
+            "value": "area/SkiaSharp",
+            "whyRejected": "The Blob class is in the HarfBuzzSharp namespace and assembly, not SkiaSharp."
+          }
+        ]
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "high",
+        "expandedReason": "Memory safety bug with potential for hard crashes. No workaround other than avoiding the API entirely. The crash is non-deterministic (depends on GC timing), making it difficult to diagnose in production."
+      },
+      {
+        "field": "platforms",
+        "chosen": "null",
+        "expandedReason": "The reporter selected \u0027All\u0027 for platform. The bug is in managed C# code and affects all platforms equally since GC behavior is a .NET runtime concern, not platform-specific."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The memory safety bug is clearly identified by code inspection with a concrete fix proposal. Needs brief investigation to check for similar fixed-block patterns elsewhere before applying the fix.",
+        "alternatives": [
+          {
+            "value": "close-wontfix",
+            "whyRejected": "This is a real memory safety defect with a dangling pointer \u2014 it must be fixed, not dismissed."
+          }
+        ]
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability",
+        "expandedReason": "Memory safety bug where GC can relocate a managed array while a Blob still holds a raw pointer to it, causing potential hard crashes that are non-deterministic and difficult to diagnose."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "The buggy fixed-block pattern appears to have been present since the method was originally written. The reporter listed 2.88.9 as last known good, but this is likely a latent bug that manifests non-deterministically depending on GC timing."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The buggy code pattern still exists in the current source at binding/HarfBuzzSharp/Blob.cs. The issue was found by code inspection and the code has not been modified.",
+        "alternatives": [
+          {
+            "value": "outdated",
+            "whyRejected": "The vulnerable code path is unchanged in the latest version."
+          }
+        ]
+      }
+    ],
+    "uncertainties": [
+      "Whether this has been observed as an actual crash in production, or only identified by code inspection",
+      "Whether SkiaSharp\u0027s SKData or other classes have similar fixed-block scope issues"
+    ],
+    "assumptions": [
+      "Assumed the reporter\u0027s version selection of 2.88.9 as \u0027Last Known Good\u0027 is likely a form field default rather than evidence of a regression, since the buggy pattern appears to have been present since the method was written"
+    ],
+    "resolution": {
+      "hypothesis": "The fixed block in Blob.FromStream exits immediately after constructing the Blob, unpinning the managed byte array. The Blob holds a raw pointer to what was pinned memory, but after unpinning, the GC can relocate the array, leaving a dangling pointer. The fix is to use unmanaged memory that the GC cannot move.",
+      "proposals": [
+        {
+          "title": "Use Marshal.AllocCoTaskMem with UnmanagedMemoryStream",
+          "description": "Allocate unmanaged memory, copy stream data directly into it via UnmanagedMemoryStream, and pass the unmanaged pointer to Blob with a release delegate that calls Marshal.FreeCoTaskMem. This is the reporter\u0027s proposed fix. It eliminates the GC safety issue and removes one redundant buffer copy (stream \u2192 MemoryStream \u2192 ToArray becomes stream \u2192 unmanaged buffer).",
+          "confidence": 0.9,
+          "effort": "low"
+        },
+        {
+          "title": "Use GCHandle.Alloc to pin the managed array",
+          "description": "Instead of fixed, use GCHandle.Alloc(data, GCHandleType.Pinned) to pin the managed array for the lifetime of the Blob. Free the GCHandle in the release delegate. This is simpler but keeps the redundant copy and long-lived GC pinning can fragment the managed heap.",
+          "confidence": 0.8,
+          "effort": "low"
+        },
+        {
+          "title": "Use NativeMemory.Alloc (modern .NET)",
+          "description": "Use System.Runtime.InteropServices.NativeMemory.Alloc instead of Marshal.AllocCoTaskMem for a more modern API. Functionally equivalent but uses the newer .NET API surface. May require conditional compilation for older target frameworks.",
+          "confidence": 0.75,
+          "effort": "low"
+        }
+      ],
+      "recommendedProposal": "Use Marshal.AllocCoTaskMem with UnmanagedMemoryStream",
+      "recommendedReason": "Directly addresses the root cause, eliminates the redundant copy, uses well-established APIs available on all target frameworks, and matches the reporter\u0027s well-reasoned proposal."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "The bug is clearly identified by code inspection with a concrete fix proposal. Needs brief investigation to check for similar patterns elsewhere (e.g., SkiaSharp\u0027s SKData) before applying the fix."
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Correct area label from SkiaSharp to HarfBuzzSharp and remove incorrect Windows-Classic platform label",
+        "reason": "Bug is in HarfBuzzSharp.Blob, not SkiaSharp core. Platform is All, not Windows-specific.",
+        "confidence": 0.95,
+        "payload": {
+          "labelsToAdd": [
+            "area/HarfBuzzSharp"
+          ],
+          "labelsToRemove": [
+            "area/SkiaSharp",
+            "os/Windows-Classic"
+          ]
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Acknowledge the bug report and confirm the analysis is correct",
+        "reason": "Reporter provided excellent analysis with a concrete fix. Acknowledging and confirming encourages high-quality reports.",
+        "confidence": 0.85,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "answer",
+          "draftBody": "Thanks for the thorough analysis \u2014 you\u0027re right that the \u0060fixed\u0060 block scope is too narrow here. Once the block exits, the managed array is unpinned and the GC is free to relocate it, leaving the \u0060Blob\u0060 with a dangling pointer.\n\nYour proposed fix using \u0060Marshal.AllocCoTaskMem\u0060 with \u0060UnmanagedMemoryStream\u0060 looks correct and also has the nice side effect of eliminating the redundant \u0060ToArray()\u0060 copy.\n\nWe should also check whether similar patterns exist elsewhere in the codebase before applying the fix.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3472-comment-1"
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/mono/SkiaSharp/issues/3472"
+}

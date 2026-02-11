@@ -1,0 +1,276 @@
+{
+  "meta": {
+    "schemaVersion": "2.1",
+    "number": 243,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-23T12:00:00Z",
+    "currentLabels": [
+      "os/Windows-Classic",
+      "area/Build",
+      "type/feature-request"
+    ],
+    "state": "open"
+  },
+  "summary": "Request to bundle ANGLE native binaries for win7 runtimes to enable GPU-accelerated OpenGL ES rendering via DirectX on Windows 7",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.85
+    },
+    "backends": [
+      {
+        "value": "backend/OpenGL",
+        "confidence": 0.8
+      }
+    ],
+    "platforms": [
+      {
+        "value": "os/Windows-Classic",
+        "confidence": 0.92
+      }
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "screenshots": [
+        {
+          "url": "https://i.imgur.com/DZWkJdg.png",
+          "context": "ANGLE rendering capabilities chart showing DX9 support",
+          "source": "description"
+        }
+      ],
+      "relatedIssues": [
+        1158,
+        1519,
+        1521,
+        2950,
+        2970,
+        3267
+      ],
+      "codeSnippets": [
+        {
+          "code": "https://www.dropbox.com/s/ayi8ill098jxh1d/angle-d3d9.zip?dl=0",
+          "language": "text",
+          "context": "OP provided pre-built ANGLE targeting D3D9, compatible with WinXP, from chromium/2550 branch"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "reason": "Issue filed in 2017 against unspecified SkiaSharp version. Since then, ANGLE support was added for WinUI/UWP, Direct3D backend was added to Skia, and Win7 reached EOL in January 2020. The original Win7-specific request is no longer relevant, but the broader ANGLE-for-desktop-Windows topic persists in #1521.",
+      "currentRelevance": "unlikely",
+      "migrationPath": "For GPU rendering on Windows desktop, use Direct3D backend (GRBackend.Direct3D) via SkiaSharp.Direct3D.Vortice, or ANGLE via GRGlInterface.CreateAngle() if libEGL.dll/libGLESv2.dll are present. See #1521 for WPF-specific ANGLE work."
+    }
+  },
+  "analysis": {
+    "summary": "Feature request from 2017 to bundle ANGLE for Win7 GPU rendering. Since then, SkiaSharp added ANGLE support for WinUI, a Direct3D backend, and GRGlInterface.CreateAngle() for assembling ANGLE interfaces on Windows. Win7 reached EOL in 2020 and the OP themselves suggested closing. The broader desktop ANGLE integration (WPF) is tracked in #1521.",
+    "keySignals": [
+      {
+        "text": "Angle has support even for DX9-based rendering which is preinstalled on Win7",
+        "source": "body",
+        "interpretation": "Original motivation was Win7 GPU support via ANGLE\u0027s DX9 backend \u2014 a platform now EOL"
+      },
+      {
+        "text": "Is it OK to close this issue?",
+        "source": "comment 6",
+        "interpretation": "OP (kekekeks, Avalonia maintainer) themselves suggested closing in April 2020"
+      },
+      {
+        "text": "We are shipping a patched version of ANGLE that is capable of running properly on top of Microsoft Basic Render Driver",
+        "source": "comment 5",
+        "interpretation": "Avalonia ships their own patched ANGLE \u2014 bundling SkiaSharp\u0027s would conflict"
+      },
+      {
+        "text": "some graphics drivers (e. g. AMD) ship their own libEGL.dll in system32. So including ANGLE with Skia will break users who are using AMD EGL implementation",
+        "source": "comment 14",
+        "interpretation": "Significant DLL conflict risk identified \u2014 bundling ANGLE is architecturally problematic"
+      },
+      {
+        "text": "Maybe skia will get a DX backend - I see some work on that now...",
+        "source": "comment 7",
+        "interpretation": "Maintainer anticipated Direct3D backend, which now exists as GRBackend.Direct3D"
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/feature-request",
+        "expandedReason": "Reporter requests bundling a new native dependency (ANGLE) that isn\u0027t currently included. This is adding new capability, not fixing broken behavior.",
+        "alternatives": [
+          {
+            "value": "type/enhancement",
+            "whyRejected": "ANGLE bundling would be new functionality, not improving an existing feature."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/Build",
+        "expandedReason": "The request is about including ANGLE native binaries in the build/packaging pipeline. The API support (GRGlInterface.CreateAngle) already exists \u2014 only the build-time bundling of libEGL.dll/libGLESv2.dll is missing.",
+        "alternatives": [
+          {
+            "value": "area/libSkiaSharp.native",
+            "whyRejected": "Not about libSkiaSharp itself; about adding a separate ANGLE native dependency to the package."
+          }
+        ]
+      },
+      {
+        "field": "backends",
+        "chosen": "backend/OpenGL",
+        "expandedReason": "ANGLE provides OpenGL ES over DirectX. The request enables GL-based rendering on Windows systems without native OpenGL support."
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Windows-Classic",
+        "expandedReason": "Explicitly about Windows desktop runtimes (originally Win7). ANGLE for UWP/WinUI is already handled."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "unlikely",
+        "expandedReason": "The specific Win7 use case is no longer relevant (EOL Jan 2020). The broader desktop ANGLE need is better tracked in #1521 (Angle WPF). SkiaSharp now has a Direct3D backend as an alternative. The OP themselves suggested closing."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "close-with-docs",
+        "expandedReason": "The original Win7 motivation is obsolete, the OP requested closure, DLL conflict risks were identified, and the remaining desktop ANGLE work is tracked in #1521. The Direct3D backend and existing CreateAngle() API address the underlying GPU rendering need through different means."
+      }
+    ],
+    "uncertainties": [
+      "Whether any users still need ANGLE specifically for Win7 given its EOL status",
+      "Whether #1521 (Angle WPF) fully supersedes the desktop ANGLE bundling need from this issue"
+    ],
+    "assumptions": [
+      "Assumed Win7 EOL makes the original Win7-specific request obsolete",
+      "Assumed #1521 tracks the remaining desktop ANGLE integration work"
+    ],
+    "resolution": {
+      "hypothesis": "The original Win7 ANGLE request is obsolete. GPU rendering on Windows desktop is now achievable through the Direct3D backend or by manually providing ANGLE DLLs alongside the application.",
+      "proposals": [
+        {
+          "title": "Use Direct3D backend instead of ANGLE",
+          "description": "SkiaSharp now supports GRBackend.Direct3D with the SkiaSharp.Direct3D.Vortice package. This provides native DirectX rendering without ANGLE as a middleman.",
+          "confidence": 0.8,
+          "effort": "low",
+          "category": "alternative",
+          "validated": "untested"
+        },
+        {
+          "title": "Manually bundle ANGLE DLLs with application",
+          "description": "GRGlInterface.CreateAngle() already loads libEGL.dll and libGLESv2.dll if present. Users can include pre-built ANGLE binaries in their application output directory for Windows desktop GL rendering.",
+          "confidence": 0.85,
+          "effort": "low",
+          "category": "workaround",
+          "codeSnippet": "// 1. Place libEGL.dll and libGLESv2.dll in your app\u0027s output directory\n// 2. Create ANGLE-backed GL interface:\nvar glInterface = GRGlInterface.CreateAngle();\nif (glInterface != null)\n{\n    using var context = GRContext.CreateGl(glInterface);\n    // Use GPU-accelerated rendering\n}",
+          "validated": "untested"
+        },
+        {
+          "title": "Track WPF ANGLE integration in #1521",
+          "description": "The broader need for ANGLE in WPF/WinForms views is tracked in issue #1521 which includes a working implementation approach. Close this Win7-specific issue and consolidate efforts there.",
+          "confidence": 0.85,
+          "effort": "low",
+          "category": "alternative",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Track WPF ANGLE integration in #1521",
+      "recommendedReason": "Consolidates the remaining desktop ANGLE work into a focused issue while acknowledging that the Win7-specific request is moot."
+    },
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/GRGlInterface.cs",
+        "lines": "27-48",
+        "relevance": "GRGlInterface.Create() already falls back to CreateAngle() on Windows. CreateAngle() loads libEGL.dll and libGLESv2.dll if present. ANGLE interface assembly is supported \u2014 the issue is about bundling the DLLs, not adding API support."
+      },
+      {
+        "file": "binding/SkiaSharp/GRGlInterface.cs",
+        "lines": "125-198",
+        "relevance": "AngleLoader class loads libEGL.dll and libGLESv2.dll via LoadLibrary on Windows. Already handles UWP (LoadPackagedLibrary) and desktop (LoadLibrary). The loader infrastructure exists; what\u0027s missing is bundling the binaries for desktop."
+      },
+      {
+        "file": "binding/SkiaSharp/EnumMappings.cs",
+        "lines": "8-16",
+        "relevance": "GRBackend enum includes Direct3D = 4, confirming a native D3D backend now exists as an alternative to ANGLE for Windows GPU rendering."
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "1-50",
+        "relevance": "ANGLE is already used for WinUI rendering via AngleSwapChainPanel with GlesContext. Shows ANGLE integration exists for UWP/WinUI but not for WPF/WinForms desktop."
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKGLControl.cs",
+        "lines": "1-50",
+        "relevance": "WinForms GL control uses OpenTK (native OpenGL), not ANGLE. This is where ANGLE could help on systems without proper OpenGL drivers, but this is tracked in #1521."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.82,
+      "reason": "Win7 is EOL, OP requested closure, DLL conflict risks make bundling problematic, Direct3D backend exists as alternative, and remaining desktop ANGLE work is tracked in #1521."
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add backend/OpenGL label to reflect the rendering backend involved",
+        "reason": "ANGLE provides OpenGL ES \u2014 the backend label was missing from current labels",
+        "confidence": 0.85,
+        "payload": {
+          "labelsToAdd": [
+            "backend/OpenGL"
+          ],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "link-1",
+        "type": "link-related",
+        "risk": "low",
+        "description": "Cross-reference #1521 (Angle WPF) as the continuation of desktop ANGLE work",
+        "reason": "The broader desktop ANGLE topic evolved from this issue into #1521",
+        "confidence": 0.88,
+        "payload": {
+          "relatedIssues": [
+            1521
+          ],
+          "comment": null
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Post closing comment explaining the current state of ANGLE and D3D support",
+        "reason": "Explain why this specific request is being closed and where ongoing work is tracked",
+        "confidence": 0.8,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "close-message",
+          "draftBody": "Thanks for filing this and for the thorough discussion.\n\nSince this was filed, a few things have changed:\n\n- Windows 7 reached end of life in January 2020\n- SkiaSharp now has a native Direct3D backend (\u0060GRBackend.Direct3D\u0060) via \u0060SkiaSharp.Direct3D.Vortice\u0060\n- \u0060GRGlInterface.CreateAngle()\u0060 already supports assembling an ANGLE interface if \u0060libEGL.dll\u0060 and \u0060libGLESv2.dll\u0060 are present in the app directory\n- Bundling ANGLE has DLL conflict risks (AMD drivers ship \u0060libEGL.dll\u0060 in system32, as noted above)\n\nThe remaining need for ANGLE in WPF/WinForms views is tracked in #1521. Closing this Win7-specific request as the original use case is no longer applicable.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-243-comment-1"
+        }
+      },
+      {
+        "id": "close-1",
+        "type": "close-issue",
+        "risk": "medium",
+        "description": "Close as completed \u2014 original Win7 use case is obsolete",
+        "reason": "Win7 EOL, OP requested closure, and remaining work tracked in #1521",
+        "confidence": 0.8,
+        "dependsOn": "comment-1",
+        "payload": {
+          "reason": "not_planned",
+          "comment": null
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/mono/SkiaSharp/issues/243"
+}

@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-02-11T20:34:14.9945158Z",
-  "totalCount": 42,
+  "generatedAt": "2026-02-11T23:33:04.8386275Z",
+  "totalCount": 45,
   "summary": {
     "needsInvestigation": 18,
-    "closeable": 11,
-    "quickWins": 9,
+    "closeable": 12,
+    "quickWins": 10,
     "needsHumanReview": 7,
-    "regressions": 11
+    "regressions": 13
   },
   "byType": [
     {
       "label": "type/bug",
-      "count": 28
+      "count": 31
     },
     {
       "label": "type/question",
@@ -33,7 +33,7 @@
   "byArea": [
     {
       "label": "area/SkiaSharp",
-      "count": 15
+      "count": 18
     },
     {
       "label": "area/libSkiaSharp.native",
@@ -83,7 +83,7 @@
     },
     {
       "label": "keep-open",
-      "count": 9
+      "count": 10
     },
     {
       "label": "close-with-docs",
@@ -95,11 +95,11 @@
     },
     {
       "label": "request-info",
-      "count": 2
+      "count": 3
     },
     {
       "label": "close-as-duplicate",
-      "count": 2
+      "count": 3
     },
     {
       "label": "convert-to-discussion",
@@ -109,7 +109,7 @@
   "bySeverity": [
     {
       "label": "medium",
-      "count": 13
+      "count": 15
     },
     {
       "label": "high",
@@ -117,7 +117,7 @@
     },
     {
       "label": "low",
-      "count": 3
+      "count": 4
     },
     {
       "label": "critical",
@@ -6575,6 +6575,532 @@
     {
       "meta": {
         "schemaVersion": "2.1",
+        "number": 3188,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-11T22:25:00Z",
+        "currentLabels": [
+          "type/bug"
+        ],
+        "state": "open"
+      },
+      "summary": "DrawVertices outputs black triangle instead of colored gradient in SkiaSharp 3.x \u2014 upstream Skia behavior change requires a shader on the paint when using vertex colors with SKBlendMode.Modulate",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.75
+        },
+        "area": {
+          "value": "area/SkiaSharp",
+          "confidence": 0.95
+        },
+        "platforms": [
+          {
+            "value": "os/Windows-Classic",
+            "confidence": 0.95
+          }
+        ],
+        "tenets": [
+          {
+            "value": "tenet/compatibility",
+            "confidence": 0.88
+          }
+        ]
+      },
+      "evidence": {
+        "bugSignals": {
+          "hasCrash": false,
+          "hasStackTrace": false,
+          "reproQuality": "complete",
+          "severity": "medium",
+          "severityReason": "No crash but produces visually wrong output (black instead of colored vertices). Simple workaround exists. The SkiaSharp sample itself has the same issue, suggesting documentation/migration guidance is needed.",
+          "hasWorkaround": true,
+          "workaroundSummary": "Set a white shader on the paint: \u0060paint.Shader = SKShader.CreateColor(SKColors.White)\u0060. This gives the same visual result as SkiaSharp 2.x without a shader."
+        },
+        "reproEvidence": {
+          "screenshots": [
+            {
+              "url": "https://github.com/user-attachments/assets/afa656d4-1966-496c-be0f-50d3d325f554",
+              "context": "Expected: gradient triangle (v2.88.9)"
+            },
+            {
+              "url": "https://github.com/user-attachments/assets/5a9f1421-92d4-49f6-8f65-e7fb990cb82f",
+              "context": "Actual: black triangle (v3.116.1)"
+            }
+          ],
+          "relatedIssues": [
+            351,
+            1687,
+            3319
+          ],
+          "codeSnippets": [
+            {
+              "code": "var paint = new SKPaint { IsAntialias = true };\nvar vertices = new[] { new SKPoint(110, 20), new SKPoint(160, 200), new SKPoint(10, 200) };\nvar colors = new[] { SKColors.Red, SKColors.Green, SKColors.Blue };\nsurface.Canvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);",
+              "language": "csharp",
+              "context": "Minimal reproduction from reporter \u2014 identical to DrawVerticesSample.cs in SkiaSharp samples"
+            }
+          ],
+          "environmentDetails": "Windows 11, .NET 8, Visual Studio, SkiaSharp 3.116.1"
+        },
+        "versionAnalysis": {
+          "reason": "The behavior change is in upstream Skia, not SkiaSharp C# code. SKCanvas.DrawVertices uses SKBlendMode.Modulate by default, which multiplies vertex colors by the paint color/shader. Without a shader, the paint\u0027s default black color causes all vertex colors to be black. This was different in the Skia version used by SkiaSharp 2.88.x.",
+          "mentionedVersions": [
+            "3.116.1",
+            "2.88.9"
+          ],
+          "currentRelevance": "likely",
+          "migrationPath": "Set paint.Shader = SKShader.CreateColor(SKColors.White) before calling DrawVertices to restore v2 behavior."
+        },
+        "regression": {
+          "isRegression": true,
+          "confidence": 0.82,
+          "reason": "The behavior changed between SkiaSharp 2.88.9 (Skia m88) and 3.116.x (newer Skia milestone). In the older Skia, drawVertices with vertex colors and no shader produced the expected gradient. In the newer Skia, the blend mode strictly applies the paint color (black by default) against vertex colors via Modulate, producing black. This is an upstream Skia behavioral change, not a SkiaSharp wrapper bug.",
+          "workedInVersion": "2.88.9",
+          "brokeInVersion": "3.116.0"
+        }
+      },
+      "analysis": {
+        "summary": "This is an upstream Skia behavioral change exposed in SkiaSharp 3.x. The DrawVertices overloads in SKCanvas.cs use SKBlendMode.Modulate by default (line 915). In Modulate mode, vertex colors are multiplied by the paint\u0027s source \u2014 either a shader or the opaque paint color. Without a shader, the default paint color is black (0,0,0), so Modulate produces black regardless of vertex colors. A community member already provided the correct workaround: set a white shader on the paint.",
+        "keySignals": [
+          {
+            "text": "Passing in a color array works fine in v2.88.9 but after updating to 3.116.1 the output is simply black",
+            "source": "body",
+            "interpretation": "Classic v2\u2192v3 behavioral regression. The code didn\u0027t change \u2014 the underlying Skia engine changed how it handles vertex colors without a shader."
+          },
+          {
+            "text": "Code copied from Samples",
+            "source": "body",
+            "interpretation": "The reporter is using the exact same code as DrawVerticesSample.cs \u2014 the sample itself is broken in v3, confirming this is a SkiaSharp-side issue (at minimum a docs/sample problem)."
+          },
+          {
+            "text": "paint.Shader = SKShader.CreateColor(SKColors.White)",
+            "source": "comment-1",
+            "interpretation": "Community workaround by molesmoke. Setting a white shader means Modulate multiplies vertex colors by white (1,1,1), preserving the original vertex colors."
+          },
+          {
+            "text": "https://api.skia.org/classSkCanvas.html",
+            "source": "comment-1",
+            "interpretation": "Community member linked upstream Skia docs confirming the behavior is intentional in newer Skia \u2014 vertex colors blend with shader or \u0027opaque paint color\u0027."
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "type/bug",
+            "expandedReason": "While this is technically an upstream Skia behavioral change, it manifests as a breaking change in SkiaSharp 3.x that produces incorrect visual output from code that worked in 2.x. The SkiaSharp sample itself is broken. This warrants bug classification because: (1) existing code silently produces wrong output, (2) no migration guidance was provided, (3) the SkiaSharp convenience overloads hardcode SKBlendMode.Modulate without documentation of the shader requirement.",
+            "alternatives": [
+              {
+                "value": "type/enhancement",
+                "whyRejected": "Could argue this is \u0027expected behavior\u0027 per upstream Skia, but the silent breakage of existing code without migration guidance makes it a bug from the user\u0027s perspective."
+              }
+            ]
+          },
+          {
+            "field": "area",
+            "chosen": "area/SkiaSharp",
+            "expandedReason": "The DrawVertices methods and their default blend mode are in core SkiaSharp (SKCanvas.cs). The upstream Skia behavior change surfaces through SkiaSharp\u0027s convenience overloads."
+          },
+          {
+            "field": "bugSignals.severity",
+            "chosen": "medium",
+            "expandedReason": "Visual output is wrong (black instead of gradient), but no crash or data loss. Workaround is simple (one line) and already provided by a community member. The severity is elevated slightly because the breakage is silent \u2014 no error or warning, just wrong output."
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Windows-Classic",
+            "expandedReason": "Reporter tested on Windows 11. The issue is platform-independent (it\u0027s in the blend mode logic), but only Windows was explicitly tested."
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/compatibility",
+            "expandedReason": "This is a v2\u2192v3 compatibility break. Existing code produces different (wrong) output after upgrading, with no compile-time or runtime warning."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "Working v2 code produces black output in v3. The regression is in upstream Skia\u0027s handling of drawVertices blend mode with no shader, exposed through SkiaSharp\u0027s unchanged wrapper code."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The behavior is inherent to the Skia version in SkiaSharp 3.x and will persist. Workaround or convenience API change needed."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "keep-open",
+            "expandedReason": "The SkiaSharp sample itself is broken and the convenience overloads may need updating (e.g., default to SKBlendMode.Dst when colors are provided and no shader exists, or document the shader requirement). Workaround exists but the API should be improved or documented."
+          }
+        ],
+        "uncertainties": [
+          "Whether SkiaSharp should change the default blend mode in the convenience overloads (e.g., use Dst instead of Modulate when no shader is present) or just document the requirement",
+          "Whether this affects all platforms or just CPU raster surfaces (reporter only tested on Windows)",
+          "Whether SkiaSharp 3.x migration guide already mentions this change (none found)"
+        ],
+        "assumptions": [
+          "Assumed the upstream Skia behavior change is intentional based on the Skia API docs and community member\u0027s analysis",
+          "Assumed the default SKPaint color is black (0xFF000000) based on Skia\u0027s default initialization"
+        ],
+        "resolution": {
+          "hypothesis": "Upstream Skia changed how drawVertices blends vertex colors with the paint source. Without a shader, the paint\u0027s default black color is used as the blend source with Modulate mode, producing black output. Setting a white shader restores the v2 behavior.",
+          "proposals": [
+            {
+              "title": "Set a white shader on the paint (workaround)",
+              "description": "Add \u0060paint.Shader = SKShader.CreateColor(SKColors.White)\u0060 before calling DrawVertices. This makes the Modulate blend multiply vertex colors by white (1,1,1), preserving them. This is the workaround suggested by community member molesmoke.",
+              "confidence": 0.92,
+              "effort": "low",
+              "category": "workaround",
+              "codeSnippet": "var paint = new SKPaint\n{\n    IsAntialias = true,\n    Shader = SKShader.CreateColor(SKColors.White)\n};\n\nvar vertices = new[] { new SKPoint(110, 20), new SKPoint(160, 200), new SKPoint(10, 200) };\nvar colors = new[] { SKColors.Red, SKColors.Green, SKColors.Blue };\n\ncanvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);",
+              "validated": "yes"
+            },
+            {
+              "title": "Update convenience overloads to use SKBlendMode.Dst",
+              "description": "Change the default blend mode in the convenience DrawVertices overloads from Modulate to Dst when vertex colors are provided. Dst uses only the destination (vertex colors) and ignores the paint color. This would restore v2 visual behavior without requiring users to change their code.",
+              "confidence": 0.55,
+              "effort": "low",
+              "category": "fix"
+            },
+            {
+              "title": "Update sample and add migration docs",
+              "description": "Fix DrawVerticesSample.cs to include a shader on the paint, and add a note to SkiaSharp 3.x migration guide about the DrawVertices behavior change.",
+              "confidence": 0.85,
+              "effort": "low",
+              "category": "fix"
+            }
+          ],
+          "recommendedProposal": "Set a white shader on the paint (workaround)",
+          "recommendedReason": "Immediate fix for users. The convenience overload change needs design discussion. The sample/docs fix should also happen regardless."
+        },
+        "codeInvestigation": [
+          {
+            "file": "binding/SkiaSharp/SKCanvas.cs",
+            "lines": "912-916",
+            "relevance": "DrawVertices(SKVertexMode, SKPoint[], SKColor[], SKPaint) creates SKVertices.CreateCopy then calls DrawVertices with SKBlendMode.Modulate. The Modulate blend mode multiplies vertex colors by paint source. Without a shader, paint source = paint color (black by default), so result is black."
+          },
+          {
+            "file": "binding/SkiaSharp/SKCanvas.cs",
+            "lines": "936-943",
+            "relevance": "The core DrawVertices overload passes blend mode directly to sk_canvas_draw_vertices. No SkiaSharp-level transformation of colors \u2014 the behavior change is purely in native Skia\u0027s handling of the blend."
+          },
+          {
+            "file": "samples/Gallery/Shared/Samples/DrawVerticesSample.cs",
+            "lines": "19-31",
+            "relevance": "The official SkiaSharp sample uses identical code to the reporter \u2014 no shader set on paint. This sample is broken in v3 and needs updating, confirming this is a known gap."
+          },
+          {
+            "file": "externals/skia/include/core/SkCanvas.h",
+            "lines": "1953-1975",
+            "relevance": "Upstream Skia docs state: mode \u0027combines vertices colors with SkShader if present or SkPaint opaque color if not\u0027. This clarifies the new behavior \u2014 without a shader, the paint\u0027s opaque color (default black) is used in the blend."
+          }
+        ]
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "keep-open",
+          "confidence": 0.8,
+          "reason": "Real behavioral regression with a simple workaround. Keep open to track the sample fix and potential convenience API improvement. The workaround is already provided by a community member."
+        },
+        "actions": [
+          {
+            "id": "labels-1",
+            "type": "update-labels",
+            "risk": "low",
+            "description": "Apply area, platform, and compatibility labels",
+            "reason": "Matches classification \u2014 core SkiaSharp behavioral change on Windows, v2\u2192v3 compatibility issue",
+            "confidence": 0.92,
+            "payload": {
+              "labelsToAdd": [
+                "area/SkiaSharp",
+                "os/Windows-Classic",
+                "tenet/compatibility"
+              ],
+              "labelsToRemove": []
+            }
+          },
+          {
+            "id": "comment-1",
+            "type": "add-comment",
+            "risk": "high",
+            "description": "Acknowledge the regression, confirm the workaround, and explain the upstream Skia change",
+            "reason": "Reporter needs confirmation and context for the behavior change",
+            "confidence": 0.85,
+            "dependsOn": "labels-1",
+            "payload": {
+              "commentType": "workaround",
+              "draftBody": "Thanks for the clear reproduction \u2014 and thanks to @molesmoke for the workaround.\n\nThis is a behavioral change in the upstream Skia engine that SkiaSharp 3.x is built on. In the newer Skia, \u0060drawVertices\u0060 with \u0060Modulate\u0060 blend mode strictly blends vertex colors with the paint\u0027s source \u2014 either a shader, or the paint\u0027s opaque color. Without a shader, the default paint color is black, so \u0060Modulate\u0060 (multiply) produces black regardless of vertex colors.\n\nThe workaround @molesmoke posted is correct \u2014 setting a white shader makes the multiply a no-op on the vertex colors:\n\n\u0060\u0060\u0060csharp\nvar paint = new SKPaint\n{\n    IsAntialias = true,\n    Shader = SKShader.CreateColor(SKColors.White)\n};\n\u0060\u0060\u0060\n\nOur own \u0060DrawVerticesSample.cs\u0060 has the same issue, so we\u0027ll need to update that too. We\u0027ll also look at whether the convenience overloads should default to a different blend mode when no shader is set.\n\nAs a best practice, wrap \u0060SKPaint\u0060 in a \u0060using\u0060 statement to ensure proper disposal.",
+              "requiresHumanEdit": true,
+              "finalBody": null,
+              "dedupeToken": "triage-3188-comment-1"
+            }
+          }
+        ]
+      },
+      "url": "https://github.com/mono/SkiaSharp/issues/3188"
+    },
+    {
+      "meta": {
+        "schemaVersion": "2.1",
+        "number": 3175,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-11T22:12:00Z",
+        "currentLabels": [
+          "type/bug"
+        ],
+        "state": "open"
+      },
+      "summary": "SKBitmap.Decode returns incomplete/corrupt image when reading from Azure Blob stream due to single-call Stream.Read in SKManagedStream \u2014 duplicate of #1962",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.97
+        },
+        "area": {
+          "value": "area/SkiaSharp",
+          "confidence": 0.95
+        },
+        "platforms": [
+          {
+            "value": "os/Linux",
+            "confidence": 0.9
+          },
+          {
+            "value": "os/Windows-Classic",
+            "confidence": 0.9
+          }
+        ],
+        "tenets": [
+          {
+            "value": "tenet/reliability",
+            "confidence": 0.92
+          }
+        ]
+      },
+      "evidence": {
+        "bugSignals": {
+          "hasCrash": false,
+          "hasStackTrace": false,
+          "reproQuality": "partial",
+          "severity": "medium",
+          "severityReason": "Image decoding produces corrupt/incomplete output but doesn\u0027t crash. The reporter has a working workaround (MemoryStream copy). Affects network/chunked streams only.",
+          "hasWorkaround": true,
+          "workaroundSummary": "Copy the Azure Blob stream to a MemoryStream before calling SKBitmap.Decode. The reporter already discovered this workaround independently."
+        },
+        "reproEvidence": {
+          "relatedIssues": [
+            1962,
+            2514,
+            2249,
+            1985,
+            335
+          ],
+          "codeSnippets": [
+            {
+              "code": "await using var image = await blobStorage.GetBlob(blobName, cancellationToken);\nawait using MemoryStream memoryStream = new();\nawait image.CopyToAsync(memoryStream, cancellationToken);\nmemoryStream.Seek(0, SeekOrigin.Begin);\nusing var originalImage = SKBitmap.Decode(memoryStream);",
+              "language": "csharp",
+              "context": "body"
+            }
+          ],
+          "environmentDetails": "Azure Blob Storage stream with 4MB default chunk size. Visual Studio on Windows. Targets Linux and Windows."
+        },
+        "versionAnalysis": {
+          "reason": "The root cause \u2014 a single stream.Read() call in SKManagedStream.OnReadManagedStream that doesn\u0027t loop to fill the buffer \u2014 has been present since PR #1510 (SkiaSharp 2.80.3) and remains unfixed in 3.116.x. The reporter\u0027s claim that 2.88.9 was \u0027last known good\u0027 is likely inaccurate; the regression was introduced in 2.80.3 per #1962.",
+          "mentionedVersions": [
+            "3.116.0",
+            "2.88.9"
+          ],
+          "currentRelevance": "likely"
+        },
+        "regression": {
+          "isRegression": true,
+          "confidence": 0.9,
+          "reason": "PR #1510 (commit 61b71d6e4893) replaced BinaryReader.ReadBytes() \u2014 which loops internally until all requested bytes are read or EOF \u2014 with a single stream.Read() call that may return fewer bytes than requested per the .NET Stream contract.",
+          "workedInVersion": "2.80.2",
+          "brokeInVersion": "2.80.3"
+        },
+        "fixStatus": {
+          "likelyFixed": false,
+          "confidence": 0.95,
+          "reason": "Inspected SKManagedStream.OnReadManagedStream at line 99 of binding/SkiaSharp/SKManagedStream.cs \u2014 still uses a single stream.Read() call without a read loop. The bug remains in current main branch."
+        }
+      },
+      "analysis": {
+        "summary": "This is a duplicate of #1962 (and related to #2514, #2249, #1985, #335). The root cause is in SKManagedStream.OnReadManagedStream which calls stream.Read() once without looping. Per the .NET Stream.Read contract, a single call may return fewer bytes than requested even when more data is available (e.g., Azure Blob streams deliver data in chunks). Skia\u0027s native code interprets the short read as a signal that no more data is available, causing incomplete image decoding. The reporter\u0027s workaround of copying to MemoryStream first is correct \u2014 MemoryStream.Read always returns the full requested amount when data is available.",
+        "keySignals": [
+          {
+            "text": "When png is larger than 4mb it looks like image creates only for first 4mb, but image size is correct",
+            "source": "body",
+            "interpretation": "Azure Blob default chunk size is 4MB. stream.Read returns one chunk, Skia treats short read as EOF, so only the first 4MB of pixel data is decoded."
+          },
+          {
+            "text": "When I\u0027m copying blob stream into memory stream it works correctly",
+            "source": "body",
+            "interpretation": "MemoryStream.Read returns all requested bytes from its internal buffer, so the single-read issue doesn\u0027t manifest \u2014 confirms root cause is partial stream reads."
+          },
+          {
+            "text": "Even if I change default size of stream chunk for example into 50mb png/bmp images belove 50mb downloads correctly",
+            "source": "body",
+            "interpretation": "Increasing Azure Blob stream buffer size makes a single Read return all bytes, further confirming the single-call Read as root cause."
+          },
+          {
+            "text": "Last Known Good Version: 2.88.9",
+            "source": "body",
+            "interpretation": "Likely inaccurate \u2014 regression was introduced in 2.80.3 per #1962. Reporter may not have tested with chunked streams on earlier versions."
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "type/bug",
+            "expandedReason": "The reporter describes incorrect behavior \u2014 images decoded from Azure Blob streams are incomplete/corrupt while the same images decode correctly from MemoryStream. This is caused by a known code defect in SKManagedStream.",
+            "alternatives": [
+              {
+                "value": "type/question",
+                "whyRejected": "Not asking how to do something. Reporting a reproducible defect with clear root cause."
+              }
+            ]
+          },
+          {
+            "field": "area",
+            "chosen": "area/SkiaSharp",
+            "expandedReason": "The bug is in SKManagedStream.OnReadManagedStream in the core SkiaSharp binding. Not in Views or any other sub-package."
+          },
+          {
+            "field": "bugSignals.severity",
+            "chosen": "medium",
+            "expandedReason": "Produces corrupt output but doesn\u0027t crash. The workaround (MemoryStream copy) is simple and the reporter already found it. However, it\u0027s a correctness bug that affects many users with network/cloud streams."
+          },
+          {
+            "field": "platforms",
+            "chosen": "os/Linux, os/Windows-Classic",
+            "expandedReason": "Reporter lists both Linux and Windows as affected. The bug is platform-independent (it\u0027s in managed C# code), but these are the platforms the reporter tested on."
+          },
+          {
+            "field": "tenets",
+            "chosen": "tenet/reliability",
+            "expandedReason": "Decoding produces silently corrupt images from certain stream types \u2014 a reliability concern."
+          },
+          {
+            "field": "regression.isRegression",
+            "chosen": "true",
+            "expandedReason": "PR #1510 changed from BinaryReader.ReadBytes (which loops internally) to stream.Read (which doesn\u0027t guarantee full reads). This was documented in detail by #1962."
+          },
+          {
+            "field": "fixStatus.likelyFixed",
+            "chosen": "false",
+            "expandedReason": "Verified in current source: SKManagedStream.cs line 99 still uses a single stream.Read() call without a loop."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "likely",
+            "expandedReason": "The buggy code path is unchanged in the current main branch. The issue remains relevant."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "close-as-duplicate",
+            "expandedReason": "This is the same bug as #1962, which has a detailed root cause analysis and is still open. Closing as duplicate consolidates tracking."
+          }
+        ],
+        "uncertainties": [
+          "Reporter claims 2.88.9 was the last known good version, but #1962 documents the regression at 2.80.3 \u2014 the reporter may not have tested chunked streams on the older version",
+          "Whether the reporter is using SKBitmap.Decode(Stream) directly on the blob stream or through another path \u2014 the code shown uses MemoryStream (the workaround)"
+        ],
+        "assumptions": [
+          "Assumed the reporter tried SKBitmap.Decode directly with the blob stream before discovering the MemoryStream workaround, even though the code shown already uses the workaround",
+          "Assumed Azure Blob stream is seekable (CanSeek=true) based on the default Azure SDK behavior, routing it through SKManagedStream rather than SKFrontBufferedManagedStream"
+        ],
+        "codeInvestigation": [
+          {
+            "file": "binding/SkiaSharp/SKManagedStream.cs",
+            "lines": "89-112",
+            "relevance": "OnReadManagedStream calls stream.Read() once at line 99 without looping. Per .NET docs, Stream.Read may return fewer bytes than requested even when more data is available \u2014 this is the root cause. Azure Blob streams return data in chunks (default 4MB), so a single Read returns at most one chunk."
+          },
+          {
+            "file": "binding/SkiaSharp/SKCodec.cs",
+            "lines": "278-290",
+            "relevance": "WrapManagedStream decides the stream wrapper: seekable streams get SKManagedStream (the buggy path), non-seekable get SKFrontBufferedManagedStream. Azure Blob streams are seekable, so they hit the buggy SKManagedStream path."
+          },
+          {
+            "file": "binding/SkiaSharp/SKBitmap.cs",
+            "lines": "461-471",
+            "relevance": "SKBitmap.Decode(Stream) creates an SKCodec from the stream, which wraps it in SKManagedStream. The codec then reads through SKManagedStream during decoding, hitting the partial-read bug."
+          },
+          {
+            "file": "binding/SkiaSharp/SKFrontBufferedManagedStream.cs",
+            "lines": "64-124",
+            "relevance": "The non-seekable stream path also doesn\u0027t loop reads (line 91, 111), but passes through to SKManagedStream which has the same bug. Related issue #2514 reports partial reads on non-seekable streams too."
+          }
+        ]
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "close-as-duplicate",
+          "confidence": 0.92,
+          "reason": "This is the same root cause as #1962 \u2014 SKManagedStream.OnReadManagedStream uses a single stream.Read() call that doesn\u0027t loop to fill the buffer. Multiple other issues (#2514, #2249, #1985, #335) report the same problem with network/cloud streams."
+        },
+        "actions": [
+          {
+            "id": "labels-1",
+            "type": "update-labels",
+            "risk": "low",
+            "description": "Apply area, platform, and tenet labels",
+            "reason": "Matches classification \u2014 core SkiaSharp bug affecting Linux and Windows, reliability tenet",
+            "confidence": 0.95,
+            "payload": {
+              "labelsToAdd": [
+                "area/SkiaSharp",
+                "os/Linux",
+                "os/Windows-Classic",
+                "tenet/reliability"
+              ],
+              "labelsToRemove": []
+            }
+          },
+          {
+            "id": "dup-1",
+            "type": "link-duplicate",
+            "risk": "medium",
+            "description": "Mark as duplicate of #1962",
+            "reason": "Identical root cause: SKManagedStream.OnReadManagedStream single-call Stream.Read bug. #1962 has detailed analysis and is the canonical tracking issue.",
+            "confidence": 0.92,
+            "payload": {
+              "duplicateOf": 1962,
+              "comment": null
+            }
+          },
+          {
+            "id": "comment-1",
+            "type": "add-comment",
+            "risk": "high",
+            "description": "Acknowledge the bug, confirm workaround, and link to the canonical issue",
+            "reason": "Reporter needs confirmation their workaround is correct and a pointer to the tracked issue",
+            "confidence": 0.88,
+            "dependsOn": "dup-1",
+            "payload": {
+              "commentType": "duplicate-notice",
+              "draftBody": "Thanks for the report \u2014 you\u0027ve identified a real bug, and your workaround of copying to a \u0060MemoryStream\u0060 first is the right approach.\n\nThe root cause is in \u0060SKManagedStream.OnReadManagedStream\u0060, which calls \u0060stream.Read()\u0060 once without looping. Per the .NET \u0060Stream.Read\u0060 contract, a single call can return fewer bytes than requested even when more data is available \u2014 which is exactly what happens with Azure Blob streams that deliver data in chunks.\n\nThis is tracked in #1962 (and also reported in #2514, #2249). Closing as a duplicate so discussion stays consolidated there.\n\nIn the meantime, the \u0060MemoryStream\u0060 copy workaround you\u0027re already using is the most reliable path:\n\n\u0060\u0060\u0060csharp\nawait using var blobStream = await blobStorage.GetBlob(blobName, cancellationToken);\nawait using var memoryStream = new MemoryStream();\nawait blobStream.CopyToAsync(memoryStream, cancellationToken);\nmemoryStream.Seek(0, SeekOrigin.Begin);\nusing var bitmap = SKBitmap.Decode(memoryStream);\n\u0060\u0060\u0060\n\nNote: \u0060SKBitmap.Decode()\u0060 can return \u0060null\u0060 if the codec fails to parse the image, so you may want to add a null check before using the result.",
+              "requiresHumanEdit": true,
+              "finalBody": null,
+              "dedupeToken": "triage-3175-comment-1"
+            }
+          },
+          {
+            "id": "close-1",
+            "type": "close-issue",
+            "risk": "medium",
+            "description": "Close as duplicate of #1962",
+            "reason": "Same root cause, same code path, canonical issue is #1962",
+            "confidence": 0.92,
+            "dependsOn": "comment-1",
+            "payload": {
+              "reason": "not_planned",
+              "comment": null
+            }
+          }
+        ]
+      },
+      "url": "https://github.com/mono/SkiaSharp/issues/3175"
+    },
+    {
+      "meta": {
+        "schemaVersion": "2.1",
         "number": 2997,
         "repo": "mono/SkiaSharp",
         "analyzedAt": "2026-02-11T20:18:46Z",
@@ -6821,6 +7347,208 @@
         ]
       },
       "url": "https://github.com/mono/SkiaSharp/issues/2997"
+    },
+    {
+      "meta": {
+        "schemaVersion": "2.1",
+        "number": 2759,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-11T22:41:00Z",
+        "currentLabels": [
+          "type/bug"
+        ],
+        "state": "open"
+      },
+      "summary": "SKBitmap.Decode returns null for a specific PNG \u2014 follow-up to #933/#1981. No image file attached, insufficient info to diagnose.",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.72
+        },
+        "area": {
+          "value": "area/SkiaSharp",
+          "confidence": 0.9
+        }
+      },
+      "evidence": {
+        "bugSignals": {
+          "hasCrash": false,
+          "hasStackTrace": false,
+          "reproQuality": "none",
+          "severity": "low",
+          "severityReason": "No crash, SKBitmap.Decode returns null for an unattached PNG file. No reproduction material provided \u2014 no image file, no error output from SKCodec, no details about the PNG format. Without the actual image, this cannot be investigated.",
+          "hasWorkaround": false
+        },
+        "reproEvidence": {
+          "relatedIssues": [
+            933,
+            1981,
+            2801,
+            2874,
+            2429
+          ],
+          "codeSnippets": [
+            {
+              "code": "SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(@\u0022C:\\Temp\\image1.png\u0022);\nAssert.IsNotNull(bmp);",
+              "language": "csharp",
+              "context": "Reporter\u0027s reproduction code \u2014 references a local file not attached to the issue"
+            }
+          ],
+          "environmentDetails": "Windows, Visual Studio, SkiaSharp 2.88.6 (description) / 2.88.3 (form field). All platforms claimed affected."
+        },
+        "versionAnalysis": {
+          "reason": "Reporter claims the issue persists in 2.88.6, but without the actual PNG file, we cannot determine if this is the same zlib bug fixed in #1981 or a different PNG decoding issue (e.g., CRC mismatch as in #2874, or format-specific codec failure as in #2429). The version field says 2.88.3 but the description says 2.88.6 \u2014 inconsistency reduces confidence.",
+          "mentionedVersions": [
+            "2.88.6",
+            "2.88.3",
+            "2.88.2"
+          ],
+          "currentRelevance": "unknown"
+        }
+      },
+      "analysis": {
+        "summary": "The reporter reopens #933 (closed as dup of #1981) claiming the fix didn\u0027t work. However, they provide no image file, no SKCodec error output, and no details about the PNG\u0027s properties (bit depth, color type, interlacing, chunk structure). Multiple distinct PNG decoding issues exist in SkiaSharp \u2014 the zlib SSE bug (#1981), CRC mismatch rejection (#2874), and format-specific codec failures (#2429, #2801). Without the image, we cannot determine which issue this is or whether the #1981 fix addresses it.",
+        "keySignals": [
+          {
+            "text": "This is follow-up of #933 issue, which is closed as resolved, but the problem is still there 2.88.6 version",
+            "source": "body",
+            "interpretation": "Reporter believes #933\u0027s fix didn\u0027t work. However, #933 was closed as dup of #1981, which was fixed by updating zlib. The reporter may be hitting a different PNG issue entirely."
+          },
+          {
+            "text": "SKBitmap.Decode(@\u0022C:\\Temp\\image1.png\u0022)",
+            "source": "body",
+            "interpretation": "References a local file (image1.png) that is not attached to this issue. Same filename as #933 \u2014 but #933\u0027s image was an inline GitHub attachment that may no longer be the same format."
+          },
+          {
+            "text": "Version: 2.88.3 (Current) / Last Known Good: 2.88.2",
+            "source": "body",
+            "interpretation": "Contradicts the description which says 2.88.6. The 2.88.2\u21922.88.3 transition aligns with the original #1981 regression (zlib SSE changes), but 2.88.6 should include the fix."
+          }
+        ],
+        "fieldRationales": [
+          {
+            "field": "type",
+            "chosen": "type/bug",
+            "expandedReason": "Reporter describes SKBitmap.Decode returning null for a valid PNG. If the image is genuinely valid, this is a bug. However, without the image, we can\u0027t confirm validity \u2014 the PNG might have CRC errors, unusual encoding, or other issues that Skia intentionally rejects.",
+            "alternatives": [
+              {
+                "value": "type/question",
+                "whyRejected": "Reporter is not asking how to use an API \u2014 they report a specific failure. Even though the report is incomplete, the intent is a bug report."
+              }
+            ]
+          },
+          {
+            "field": "area",
+            "chosen": "area/SkiaSharp",
+            "expandedReason": "SKBitmap.Decode is in the core SkiaSharp binding. The failure could be in native Skia\u0027s codec, but the entry point is SkiaSharp."
+          },
+          {
+            "field": "bugSignals.severity",
+            "chosen": "low",
+            "expandedReason": "No crash, no stack trace, no reproduction material. The report has zero comments and no image file attached. Cannot investigate without additional information from the reporter."
+          },
+          {
+            "field": "actionability.suggestedAction",
+            "chosen": "request-info",
+            "expandedReason": "We need the actual PNG file to diagnose the issue. We also need SKCodecResult output to understand why decoding fails. Without these, we cannot determine if this is a new bug, an unfixed old bug, or an invalid image."
+          },
+          {
+            "field": "versionAnalysis.currentRelevance",
+            "chosen": "unknown",
+            "expandedReason": "Without the actual PNG file, we cannot determine if this is the same zlib bug fixed in #1981 (which would be fixed in current versions) or a different PNG issue. The reporter\u0027s version info is contradictory (2.88.3 vs 2.88.6)."
+          }
+        ],
+        "uncertainties": [
+          "Whether the PNG file is the same one from #933 \u2014 the original #933 image was embedded as a GitHub attachment but we can\u0027t verify it\u0027s the same file referenced as C:\\Temp\\image1.png",
+          "Whether the reporter actually tested on 2.88.6 (description) or 2.88.3 (version field) \u2014 these are different releases",
+          "Whether the PNG has structural issues (CRC mismatch, unusual bit depth, interlacing) that Skia intentionally rejects",
+          "Whether upgrading to SkiaSharp 3.x (with newer Skia/zlib) would resolve this"
+        ],
+        "assumptions": [
+          "Assumed the reporter\u0027s PNG is a local copy of the image from #933, but cannot verify without the file",
+          "Assumed the issue is platform-independent since the decode path is the same on all platforms, despite reporter selecting \u0027All\u0027"
+        ],
+        "resolution": {
+          "hypothesis": "SKBitmap.Decode returns null because Skia\u0027s native codec rejects the PNG. The reason could be: (1) the same zlib decompression bug from #1981 (unlikely if on 2.88.6\u002B), (2) CRC mismatch in PNG chunks (like #2874), (3) unsupported PNG features, or (4) a different native codec bug. Without the image, we cannot distinguish these.",
+          "proposals": [
+            {
+              "title": "Use SKCodec.Create with SKCodecResult to diagnose",
+              "description": "Use the SKCodec.Create overload that returns an SKCodecResult to get the specific failure reason. This narrows down whether it\u0027s a codec initialization failure or a pixel decoding failure.",
+              "confidence": 0.85,
+              "effort": "low",
+              "category": "investigation",
+              "codeSnippet": "var codec = SKCodec.Create(@\u0022C:\\Temp\\image1.png\u0022, out var result);\nConsole.WriteLine($\u0022Codec result: {result}\u0022);\nif (codec != null)\n{\n    var info = codec.Info;\n    Console.WriteLine($\u0022Size: {info.Width}x{info.Height}, ColorType: {info.ColorType}, AlphaType: {info.AlphaType}\u0022);\n    \n    var bitmap = new SKBitmap(info);\n    var pixelResult = codec.GetPixels(info, bitmap.GetPixels(out _));\n    Console.WriteLine($\u0022Pixel result: {pixelResult}\u0022);\n}",
+              "validated": "untested"
+            },
+            {
+              "title": "Try SkiaSharp 3.x",
+              "description": "SkiaSharp 3.x uses a significantly newer Skia engine with updated libpng and zlib. If the issue is a native codec bug, upgrading may resolve it.",
+              "confidence": 0.5,
+              "effort": "medium",
+              "category": "alternative"
+            }
+          ],
+          "recommendedProposal": "Use SKCodec.Create with SKCodecResult to diagnose",
+          "recommendedReason": "First step is diagnosis \u2014 we need to know WHY the decode fails before we can fix or work around it."
+        },
+        "codeInvestigation": [
+          {
+            "file": "binding/SkiaSharp/SKBitmap.cs",
+            "lines": "539-549",
+            "relevance": "SKBitmap.Decode(string) creates SKCodec via SKCodec.Create(filename). If the codec is null (Skia rejected the image), Decode returns null. The reporter sees null, meaning SKCodec.Create failed \u2014 but we don\u0027t know why without the image."
+          },
+          {
+            "file": "binding/SkiaSharp/SKCodec.cs",
+            "lines": "232-241",
+            "relevance": "SKCodec.Create(string) opens an SKFileStream and passes to sk_codec_new_from_stream. The out parameter SKCodecResult would reveal the failure reason, but the reporter\u0027s code doesn\u0027t capture it."
+          },
+          {
+            "file": "binding/SkiaSharp/SKBitmap.cs",
+            "lines": "446-459",
+            "relevance": "Even if SKCodec creation succeeds, Decode(codec, bitmapInfo) can still return null if GetPixels fails (result != Success \u0026\u0026 result != IncompleteInput). This is a second failure point."
+          }
+        ]
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "request-info",
+          "confidence": 0.88,
+          "reason": "The report is missing critical information: no image file attached, no SKCodecResult output, and conflicting version numbers. Cannot investigate without the actual PNG file."
+        },
+        "actions": [
+          {
+            "id": "labels-1",
+            "type": "update-labels",
+            "risk": "low",
+            "description": "Apply area label",
+            "reason": "Matches classification \u2014 core SkiaSharp decode issue",
+            "confidence": 0.9,
+            "payload": {
+              "labelsToAdd": [
+                "area/SkiaSharp"
+              ],
+              "labelsToRemove": []
+            }
+          },
+          {
+            "id": "comment-1",
+            "type": "add-comment",
+            "risk": "high",
+            "description": "Request the PNG file and diagnostic output",
+            "reason": "Cannot investigate without the actual image and codec error details",
+            "confidence": 0.85,
+            "dependsOn": "labels-1",
+            "payload": {
+              "commentType": "request-info",
+              "draftBody": "Thanks for the follow-up. We understand this is frustrating, especially since #933 was closed.\n\nTo investigate, we\u0027d need two things:\n\n1. **The actual PNG file** \u2014 could you attach \u0060image1.png\u0060 to this issue? (Drag and drop, or zip it first if GitHub won\u0027t accept the format.) Without the file, we can\u0027t reproduce or diagnose.\n\n2. **The codec error** \u2014 this will tell us exactly why Skia rejected it:\n\n\u0060\u0060\u0060csharp\nvar codec = SKCodec.Create(@\u0022C:\\Temp\\image1.png\u0022, out var result);\nConsole.WriteLine($\u0022Codec result: {result}\u0022);\n\u0060\u0060\u0060\n\nThere are several distinct reasons Skia can reject a PNG (format issues, CRC mismatches, compression quirks), and the fix depends on which one it is. The \u0060SKCodecResult\u0060 output will point us in the right direction.\n\nAlso \u2014 could you confirm which SkiaSharp version you\u0027re on? The description mentions 2.88.6, but the version field says 2.88.3.",
+              "requiresHumanEdit": true,
+              "finalBody": null,
+              "dedupeToken": "triage-2759-comment-1"
+            }
+          }
+        ]
+      },
+      "url": "https://github.com/mono/SkiaSharp/issues/2759"
     },
     {
       "meta": {

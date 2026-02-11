@@ -1,0 +1,170 @@
+{
+  "meta": {
+    "schemaVersion": "2.1",
+    "number": 911,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": [],
+    "state": "open"
+  },
+  "summary": "Feature request to add a \u0027Getting Started\u0027 section to README.md with links to tutorials, guides, and API documentation",
+  "classification": {
+    "type": {
+      "value": "type/documentation",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/Docs",
+      "confidence": 0.92
+    }
+  },
+  "evidence": {},
+  "analysis": {
+    "summary": "User requests a curated \u0027Getting Started\u0027 section in README.md with links to introduction guides, platform-specific tutorials, and API docs. The README has been improved since 2019 with badge links to API docs and guides, but still lacks a dedicated Getting Started section. The request remains partially valid \u2014 the README has docs/guide badges but no prominent onboarding section for new users.",
+    "keySignals": [
+      {
+        "text": "I am just starting with using SkiaSharp and the first thing I noticed was it wasn\u0027t obvious as to where to go to get started",
+        "source": "body",
+        "interpretation": "New-user onboarding pain point \u2014 documentation discovery is poor"
+      },
+      {
+        "text": "Could we add a \u0027Getting Started\u0027 to the readme.md?",
+        "source": "body",
+        "interpretation": "Concrete proposal for a specific README improvement"
+      },
+      {
+        "text": "I\u0027d be happy to collaborate on this and help out",
+        "source": "body",
+        "interpretation": "Reporter offered to contribute \u2014 community engagement opportunity"
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/documentation",
+        "expandedReason": "The request is specifically about improving documentation \u2014 adding a Getting Started section to the README with links to tutorials, guides, and API docs. No code change or new functionality is requested.",
+        "alternatives": [
+          {
+            "value": "type/enhancement",
+            "whyRejected": "While it improves the README, the content is purely about documentation links and onboarding text, not a code or feature enhancement."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/Docs",
+        "expandedReason": "The change targets README.md which is project documentation. The area/Docs label is the correct fit for documentation improvements."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "keep-open",
+        "expandedReason": "The request is still partially valid \u2014 while the README has been improved with badge links since 2019, it still lacks a dedicated Getting Started section. The reporter offered to contribute. This is a low-effort improvement that would help new users."
+      }
+    ],
+    "uncertainties": [
+      "Whether the maintainer considers the current badge links sufficient for new user onboarding",
+      "Whether the Xamarin-era tutorial links from 2019 are still current or need MAUI equivalents"
+    ],
+    "assumptions": [
+      "Assumed the request is still relevant despite being from 2019, since the README still lacks a dedicated Getting Started section"
+    ],
+    "resolution": {
+      "hypothesis": "New users struggle to find getting-started resources because the README lacks a prominent onboarding section. The badge links exist but are not discoverable by users looking for a clear starting point.",
+      "proposals": [
+        {
+          "title": "Add Getting Started section to README",
+          "description": "Add a \u0027## Getting Started\u0027 section between the platform list and \u0027Using SkiaSharp\u0027 with links to the SkiaSharp guides, API docs, and samples directory. Low effort, high discoverability improvement.",
+          "confidence": 0.85,
+          "effort": "low",
+          "category": "fix",
+          "codeSnippet": "## Getting Started\n\nNew to SkiaSharp? Here are some resources to help you get started:\n\n- **[SkiaSharp Guides](https://docs.microsoft.com/xamarin/graphics-games/skiasharp/)** \u2014 Tutorials and walkthroughs\n- **[API Documentation](https://docs.microsoft.com/dotnet/api/SkiaSharp/)** \u2014 Complete API reference\n- **[Samples](samples/)** \u2014 Example projects for various platforms\n- **[Skia API Reference](https://skia.org/)** \u2014 Underlying Skia engine documentation",
+          "validated": "untested"
+        },
+        {
+          "title": "Create a dedicated getting-started.md",
+          "description": "Create documentation/getting-started.md with step-by-step setup for each platform (MAUI, WPF, Console, Blazor) and link from README. More comprehensive but higher effort.",
+          "confidence": 0.75,
+          "effort": "medium",
+          "category": "alternative"
+        },
+        {
+          "title": "Enhance existing \u0027Using SkiaSharp\u0027 section",
+          "description": "Instead of a new section, expand \u0027Using SkiaSharp\u0027 to include a minimal code example and links to guides alongside the NuGet install instructions.",
+          "confidence": 0.7,
+          "effort": "low",
+          "category": "alternative"
+        }
+      ],
+      "recommendedProposal": "Add Getting Started section to README",
+      "recommendedReason": "Lowest effort, directly addresses the request, and follows the existing README pattern of linking to detailed docs."
+    },
+    "codeInvestigation": [
+      {
+        "file": "README.md",
+        "lines": "10-13",
+        "relevance": "README already has badge links to SkiaSharp API Docs, HarfBuzzSharp API Docs, and SkiaSharp Guides \u2014 partial coverage of what was requested, but badges are easy to miss and not organized as a \u0027Getting Started\u0027 section"
+      },
+      {
+        "file": "README.md",
+        "lines": "38-49",
+        "relevance": "The \u0027Using SkiaSharp\u0027 section only covers NuGet install, not how to actually use the API. No code examples, no \u0027hello world\u0027, no tutorial links in the main text"
+      },
+      {
+        "file": "README.md",
+        "lines": "57-64",
+        "relevance": "Building section links to documentation/building.md \u2014 shows pattern of linking to detailed docs, which could be replicated for a Getting Started section"
+      },
+      {
+        "file": "documentation/",
+        "lines": "N/A",
+        "relevance": "15 documentation markdown files exist covering architecture, building, APIs, etc. \u2014 but no getting-started.md or introduction.md for new users"
+      },
+      {
+        "file": "samples/",
+        "lines": "N/A",
+        "relevance": "Samples directory exists with Basic and Gallery projects, but README doesn\u0027t prominently link to these for new users"
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.8,
+      "reason": "Valid documentation improvement request. README still lacks a dedicated Getting Started section despite having badge links. Low-effort change with high value for new users."
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Apply documentation and docs labels",
+        "reason": "Matches classification as a documentation request about project docs",
+        "confidence": 0.9,
+        "payload": {
+          "labelsToAdd": [
+            "type/documentation",
+            "area/Docs"
+          ],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Acknowledge request and note partial progress since 2019",
+        "reason": "Issue has had zero comments since 2019 \u2014 a response acknowledges the valid request and provides context on what already exists",
+        "confidence": 0.8,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "answer",
+          "draftBody": "Thanks for the suggestion. The README has gained some documentation links since this was filed (API docs and guides badges at the top), but a dedicated Getting Started section would make these more discoverable for new users.\n\nA section like this between the platform list and \u0022Using SkiaSharp\u0022 would address the gap:\n\n\u0060\u0060\u0060markdown\n## Getting Started\n\nNew to SkiaSharp? Here are some resources to help you get started:\n\n- **[SkiaSharp Guides](https://docs.microsoft.com/xamarin/graphics-games/skiasharp/)** \u2014 Tutorials and walkthroughs\n- **[API Documentation](https://docs.microsoft.com/dotnet/api/SkiaSharp/)** \u2014 Complete API reference\n- **[Samples](samples/)** \u2014 Example projects for various platforms\n\u0060\u0060\u0060\n\nContributions welcome if you\u0027d still like to help with this.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-911-comment-1"
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/mono/SkiaSharp/issues/911"
+}

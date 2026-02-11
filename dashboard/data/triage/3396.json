@@ -1,0 +1,223 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 3396,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": [
+      "type/feature-request",
+      "os/WASM",
+      "area/SkiaSharp.Views.Uno"
+    ],
+    "state": "open"
+  },
+  "summary": "User unable to load libSkiaSharp native library in Unity WebGL \u2014 gets DllNotFoundException despite trying multiple NativeAssets packages",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.8
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      {
+        "value": "os/WASM",
+        "confidence": 0.95
+      }
+    ],
+    "tenets": [
+      {
+        "value": "tenet/compatibility",
+        "confidence": 0.8
+      }
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Download managed SkiaSharp NuGet and NativeAssets.Windows, NativeAssets.Android, NativeAssets.WebAssembly",
+        "Set up Unity project targeting WebGL",
+        "Place libSkiaSharp.a files in Unity project",
+        "Build and run \u2014 browser console shows DllNotFoundException for libSkiaSharp"
+      ],
+      "environmentDetails": "Unity 2021.2 and 2022.3, targeting WebGL/WebAssembly"
+    },
+    "versionAnalysis": {
+      "reason": "No specific SkiaSharp version mentioned. User references NativeAssets.Windows, NativeAssets.Android, and NativeAssets.WebAssembly NuGet packages but no version numbers."
+    }
+  },
+  "analysis": {
+    "summary": "User is trying to use SkiaSharp in Unity WebGL, which is not an officially supported scenario. Unity\u0027s native plugin system differs from .NET\u0027s standard P/Invoke, and the NativeAssets.WebAssembly package is designed for Blazor/browser WASM via Emscripten, not Unity\u0027s WebGL build pipeline. The DllNotFoundException indicates the native library is not being linked into the Unity WebGL build correctly.",
+    "keySignals": [
+      {
+        "text": "[FEATURE] Can\u0027t get it to work on Unity WebGL",
+        "source": "title",
+        "interpretation": "Filed as feature request but content is a how-to question about unsupported platform"
+      },
+      {
+        "text": "DLLNotFound libSkiaSharp",
+        "source": "body",
+        "interpretation": "Native library not loading \u2014 Unity WebGL requires static linking via Emscripten, not dynamic loading"
+      },
+      {
+        "text": "I have downloaded the managed SkiaSharp nuget and the Native.Windows and Native.Android and Native.WebAssemebly nugets",
+        "source": "body",
+        "interpretation": "User tried NativeAssets.WebAssembly but it is designed for Blazor WASM, not Unity WebGL"
+      },
+      {
+        "text": "I have so far got it to run on Windows and Android",
+        "source": "body",
+        "interpretation": "SkiaSharp works in Unity for desktop/Android where dynamic linking is possible"
+      },
+      {
+        "text": "I am not sure if this is because the managed C# dll is expecting a dynamic linked library instead of a static one",
+        "source": "body",
+        "interpretation": "User correctly suspects the static vs dynamic linking mismatch"
+      },
+      {
+        "text": "Has anyone got this working on Unity for WebGL?",
+        "source": "body",
+        "interpretation": "Asking for community help \u2014 this is a question, not a feature request"
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/question",
+        "expandedReason": "Despite the [FEATURE] template prefix, the actual content is asking how to get SkiaSharp working in Unity WebGL. The user says \u0027Has anyone got this working?\u0027 and \u0027I have been trying for about 5 hours\u0027. This is a support/how-to question about an unsupported platform, not a request for new API functionality.",
+        "alternatives": [
+          {
+            "value": "type/feature-request",
+            "whyRejected": "User is not requesting a new API or capability \u2014 they are asking how to make existing functionality work in Unity WebGL. The [FEATURE] prefix comes from the issue template, but the content is a usage question."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/libSkiaSharp.native",
+        "expandedReason": "The core error is DllNotFoundException for libSkiaSharp, which is a native library loading issue. The previous label area/SkiaSharp.Views.Uno was incorrect \u2014 Unity and Uno Platform are entirely different frameworks.",
+        "alternatives": [
+          {
+            "value": "area/SkiaSharp.Views.Uno",
+            "whyRejected": "Unity is NOT Uno Platform. These are completely different technologies. The previous automated triage incorrectly conflated them."
+          }
+        ]
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/WASM",
+        "expandedReason": "Unity WebGL compiles to WebAssembly. The os/WASM label is the correct platform classification."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/compatibility",
+        "expandedReason": "This is fundamentally a cross-platform compatibility question \u2014 SkiaSharp works on Windows and Android in Unity but not in the WebGL/WASM target."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "convert-to-discussion",
+        "expandedReason": "Unity is not an officially supported platform. This is a community support question better suited to a Q\u0026A discussion where other Unity users can share their experiences."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "unknown",
+        "expandedReason": "No specific SkiaSharp version was mentioned in the issue. The user referenced NativeAssets packages but provided no version numbers, so relevance to current releases cannot be determined."
+      }
+    ],
+    "uncertainties": [
+      "Whether SkiaSharp can technically work in Unity WebGL at all given the static linking requirement",
+      "Which exact SkiaSharp version the user is trying to use",
+      "Whether the user has tried building libSkiaSharp from source with Emscripten for Unity\u0027s WebGL target"
+    ],
+    "assumptions": [
+      "Assumed the user is using the latest stable SkiaSharp since no version was specified",
+      "Assumed Unity WebGL requires static linking of native plugins based on Unity documentation reference in the issue"
+    ],
+    "resolution": {
+      "hypothesis": "Unity WebGL requires native plugins to be statically linked .a files compiled with Emscripten, but the NativeAssets.WebAssembly package provides binaries built for the Blazor/browser WASM runtime, not for Unity\u0027s build pipeline. The P/Invoke mechanism in Unity WebGL also works differently from standard .NET.",
+      "proposals": [
+        {
+          "title": "Build libSkiaSharp from source for Unity WebGL",
+          "description": "Compile libSkiaSharp using Emscripten with Unity-compatible settings. This would produce a .a static library that Unity can link into its WebGL build. Requires knowledge of Skia\u0027s build system (GN/Ninja) and Unity\u0027s native plugin requirements.",
+          "confidence": 0.5,
+          "effort": "high"
+        },
+        {
+          "title": "Use SkiaSharp.Views.Blazor approach as reference",
+          "description": "Study how SkiaSharp.Views.Blazor integrates with WebAssembly and adapt the approach for Unity WebGL. The Blazor integration already solves WASM compilation but uses a different hosting model.",
+          "confidence": 0.35,
+          "effort": "high"
+        },
+        {
+          "title": "Use alternative 2D graphics for Unity WebGL",
+          "description": "Consider Unity\u0027s built-in Vector Graphics package or other Unity-native solutions for vector art rendering in WebGL, since SkiaSharp does not officially support Unity as a host platform.",
+          "confidence": 0.7,
+          "effort": "low"
+        }
+      ],
+      "recommendedProposal": "Use alternative 2D graphics for Unity WebGL",
+      "recommendedReason": "Unity is not an officially supported platform for SkiaSharp. Getting it to work in WebGL would require significant custom build work with no guarantee of success or ongoing support. Unity\u0027s own vector graphics tools are a more sustainable path."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "convert-to-discussion",
+      "confidence": 0.75,
+      "reason": "Unity is not an officially supported platform for SkiaSharp. This is a community support question better suited to a Q\u0026A discussion where Unity users can share experiences and workarounds.",
+      "requiresHumanReview": true
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Fix area label (Uno \u2192 native) and change type to question",
+        "reason": "Unity is not Uno Platform \u2014 previous triage incorrectly applied area/SkiaSharp.Views.Uno. Content is a question, not a feature request.",
+        "confidence": 0.9,
+        "payload": {
+          "labelsToAdd": [
+            "type/question",
+            "area/libSkiaSharp.native",
+            "tenet/compatibility"
+          ],
+          "labelsToRemove": [
+            "type/feature-request",
+            "area/SkiaSharp.Views.Uno"
+          ]
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Explain Unity WebGL limitations and suggest alternatives",
+        "reason": "User has been struggling for hours and deserves a clear explanation of why NativeAssets.WebAssembly does not work in Unity WebGL",
+        "confidence": 0.8,
+        "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "answer",
+          "draftBody": "Thanks for the detailed write-up of what you\u0027ve tried \u2014 that\u0027s helpful context.\n\nThe \u0060NativeAssets.WebAssembly\u0060 package is built for the Blazor/browser WASM runtime, not for Unity\u0027s WebGL pipeline. Unity WebGL requires native plugins to be statically linked \u0060.a\u0060 files compiled with Emscripten using Unity-compatible settings, which is a different build target than what the NuGet package provides.\n\nYour intuition about static vs dynamic linking is on the right track \u2014 Unity WebGL can\u0027t dynamically load \u0060.dll\u0060 or \u0060.so\u0060 files the way desktop and Android can. The native library needs to be compiled specifically for Unity\u0027s Emscripten toolchain and placed in a \u0060Plugins/WebGL\u0060 folder.\n\nUnity is not an officially supported host platform for SkiaSharp, so getting this working would require building libSkiaSharp from source targeting Unity\u0027s Emscripten environment \u2014 which is a significant undertaking. You might want to explore Unity\u0027s built-in Vector Graphics package or other Unity-native solutions for vector art in WebGL as a more sustainable alternative.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-3396-comment-1"
+        }
+      },
+      {
+        "id": "convert-1",
+        "type": "convert-to-discussion",
+        "risk": "high",
+        "description": "Convert to Q\u0026A discussion for community input",
+        "reason": "This is a support question about an unsupported platform \u2014 better suited to discussion format where Unity users can share experiences",
+        "confidence": 0.65,
+        "dependsOn": "comment-1",
+        "payload": {
+          "categorySlug": "q-a",
+          "comment": null
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/mono/SkiaSharp/issues/3396"
+}
