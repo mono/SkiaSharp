@@ -8,10 +8,18 @@ if (!$Tizen) {
   $Tizen = '<latest>'
 }
 
-# Workloads are resolved from the installed SDK version.
-# `dotnet workload restore` installs workloads required by projects in the repo.
-Write-Host "Restoring .NET workloads..."
-& dotnet workload restore --verbosity diagnostic
+# Install .NET workloads needed by the repo.
+$Workloads = @('android', 'macos', 'wasm-tools')
+if (!$IsLinux) {
+  $Workloads += @('ios', 'tvos', 'maccatalyst', 'maui')
+}
+
+Write-Host "Installing .NET workloads: $($Workloads -join ', ')..."
+& dotnet workload install `
+  @Workloads `
+  --source https://api.nuget.org/v3/index.json `
+  --skip-sign-check `
+  --verbosity diagnostic
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Tizen is not an official workload — it uses Samsung's custom install scripts.
