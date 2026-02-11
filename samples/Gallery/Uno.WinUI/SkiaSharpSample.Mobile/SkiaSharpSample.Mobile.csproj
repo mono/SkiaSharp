@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net6.0-android;net6.0-ios;net6.0-maccatalyst;net6.0-macos</TargetFrameworks>
+    <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst;net10.0-macos</TargetFrameworks>
     <SingleProject>true</SingleProject>
     <OutputType>Exe</OutputType>
     <EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
@@ -9,12 +9,12 @@
     <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <RuntimeIdentifier Condition="'$(TargetFramework)' == 'net6.0-ios'">iossimulator-x64</RuntimeIdentifier>
-    <RuntimeIdentifier Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">maccatalyst-x64</RuntimeIdentifier>
-    <RuntimeIdentifier Condition="'$(TargetFramework)' == 'net6.0-macos'">osx-x64</RuntimeIdentifier>
-    <InvariantGlobalization Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">true</InvariantGlobalization>
+    <RuntimeIdentifier Condition="'$(TargetFramework)' == 'net10.0-ios'">iossimulator-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(TargetFramework)' == 'net10.0-maccatalyst'">maccatalyst-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(TargetFramework)' == 'net10.0-macos'">osx-x64</RuntimeIdentifier>
+    <InvariantGlobalization Condition="'$(TargetFramework)' == 'net10.0-maccatalyst'">true</InvariantGlobalization>
     <!-- Debugger workaround https://github.com/dotnet/maui-samples/blob/8aa6b8780b12e97b157514c3bdc54bb4a13001cd/HelloMacCatalyst/HelloMacCatalyst.csproj#L7 -->
-    <!-- <MtouchExtraArgs Condition="'$(TargetFramework)' == 'net6.0-maccatalyst'">$(MtouchExtraArgs) -setenv:MONO_THREADS_SUSPEND=preemptive</MtouchExtraArgs> -->
+    <!-- <MtouchExtraArgs Condition="'$(TargetFramework)' == 'net10.0-maccatalyst'">$(MtouchExtraArgs) -setenv:MONO_THREADS_SUSPEND=preemptive</MtouchExtraArgs> -->
     <!-- Required for C# Hot Reload -->
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
     <IsUnoHead>true</IsUnoHead>
@@ -23,13 +23,13 @@
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);WINUI</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0-android'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net10.0-android'">
     <DefineConstants>$(DefineConstants);__ANDROID__</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0-macos'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-macos'">
     <DefineConstants>$(DefineConstants);__MACOS__</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0-ios' or '$(TargetFramework)'=='net6.0-maccatalyst'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net10.0-ios' or '$(TargetFramework)'=='net10.0-maccatalyst'">
     <DefineConstants>$(DefineConstants);__IOS__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -51,21 +51,21 @@
       <Name>SkiaSharp.Views.Uno.WinUI</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net6.0-android'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net10.0-android'">
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.4.0.4" />
     <PackageReference Include="Uno.UniversalImageLoader" Version="1.9.35" />
     <AndroidAsset Include="..\..\Shared\Media\content-font.ttf">
       <Link>Android\Assets\Media\content-font.ttf</Link>
     </AndroidAsset>
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net6.0-ios' or '$(TargetFramework)'=='net6.0-maccatalyst'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net10.0-ios' or '$(TargetFramework)'=='net10.0-maccatalyst'">
     <PackageReference Include="Uno.Extensions.Logging.OSLog" Version="1.4.0" />
     <BundleResource Include="..\..\Shared\Media\content-font.ttf">
       <Link>iOS\Resources\content-font.ttf</Link>
     </BundleResource>
     <BundleResource Include="Resources\Fonts\winjs-symbols.ttf" Link="iOS\Resources\winjs-symbols.ttf" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0-macos'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-macos'">
     <BundleResource Include="Resources\Fonts\winjs-symbols.ttf" Link="macOS\Resources\Fonts\winjs-symbols.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </BundleResource>
