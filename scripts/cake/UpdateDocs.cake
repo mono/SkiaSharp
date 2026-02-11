@@ -13,14 +13,14 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
-    await AddDep("Microsoft.WindowsAppSDK", "net6.0-windows10.0.18362.0");
+    await AddDep("Microsoft.WindowsAppSDK", "net10.0-windows10.0.18362.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
     await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
     await AddDep("Microsoft.Windows.SDK.Contracts", "netstandard2.0");
     await AddDep("System.Runtime.WindowsRuntime", "netstandard2.0");
     await AddDep("System.Runtime.WindowsRuntime.UI.Xaml", "netstandard2.0");
-    await AddDep("Microsoft.WindowsDesktop.App.Ref", "net6.0");
-    await AddDep("Microsoft.AspNetCore.Components", "net6.0");
+    await AddDep("Microsoft.WindowsDesktop.App.Ref", "net10.0");
+    await AddDep("Microsoft.AspNetCore.Components", "net10.0");
     await AddDep("OpenTK.GLWpfControl", "netcoreapp3.1");
     await AddDep("Microsoft.Maui.Core", "net10.0");
     await AddDep("Microsoft.Maui.Controls.Core", "net10.0");
