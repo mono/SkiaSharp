@@ -122,9 +122,9 @@ Check:
   ```bash
   dotnet workload list
   ```
-  If `ios`, `macos`, `maccatalyst`, or `android` are missing, install them **now** — don't wait until Phase 3C:
+  If `maui`, `ios`, `macos`, `maccatalyst`, or `android` are missing, install them **now** — don't wait until Phase 3C:
   ```bash
-  dotnet workload install ios macos maccatalyst android
+  dotnet workload install maui ios macos maccatalyst android
   ```
   If this requires `sudo` or elevated permissions, ask the user for help. Do **NOT** skip, look for workarounds, or treat this as a blocker. Missing workloads are a solvable setup problem.
 
