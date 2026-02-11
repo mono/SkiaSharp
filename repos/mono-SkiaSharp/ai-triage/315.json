@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 315,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T13:49:00Z",
+    "currentLabels": []
+  },
+  "summary": "Pinch and pan gestures with touch effect not working on Android in Xamarin.Forms",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.70 },
+    "area": { "value": "area/SkiaSharp.Views.Forms", "confidence": 0.90 },
+    "backends": null,
+    "platforms": [{ "value": "os/Android", "confidence": 0.95 }],
+    "tenets": null,
+    "partner": null
+  },
+  "evidence": {
+    "bugSignals": null,
+    "reproEvidence": {
+      "repoLinks": [{ "url": "https://github.com/JavedAppdevelopment/DrawTrackingForms", "description": "Minimal repro project from 2017 demonstrating pinch/pan gesture issue on Android" }],
+      "environmentDetails": "Xamarin.Forms, Android"
+    },
+    "versionAnalysis": {
+      "reason": "Issue filed against Xamarin.Forms which has been deprecated since May 2024. Project has been superseded by .NET MAUI. The SkiaSharp.Views.Forms package is no longer actively maintained.",
+      "currentRelevance": "unlikely",
+      "migrationPath": "Migrate to .NET MAUI and use SkiaSharp.Views.Maui for gesture handling"
+    },
+    "regression": null,
+    "fixStatus": null
+  },
+  "analysis": {
+    "summary": "User reports pinch/pan gestures with touch not working on Android in Xamarin.Forms. This appears to be a usage question about combining SkiaSharp touch handling with Xamarin.Forms gestures. Xamarin.Forms is now deprecated, making this issue obsolete.",
+    "keySignals": [
+      { "text": "Pinch and Pan Gesture with touch effect not works for android", "source": "title", "interpretation": "Gesture handling conflict between SkiaSharp touch events and Xamarin.Forms gesture recognizers on Android" },
+      { "text": "https://github.com/JavedAppdevelopment/DrawTrackingForms", "source": "body", "interpretation": "Repro project provided but from 2017, targeting deprecated Xamarin.Forms platform" },
+      { "text": "Any updates?", "source": "comment 1", "interpretation": "Single community comment from 2019, no maintainer response — issue appears abandoned" }
+    ],
+    "fieldRationales": [
+      { "field": "type", "chosen": "type/question", "expandedReason": "The issue describes gestures 'not working' but provides no error messages, stack traces, or specific broken behavior. It reads as a usage question about how to combine pinch/pan gestures with SkiaSharp touch handling on Android.", "alternatives": [{ "value": "type/bug", "whyRejected": "No error output, stack trace, or clear description of expected vs actual behavior. More likely a gesture conflict or usage issue than a SkiaSharp bug." }] },
+      { "field": "area", "chosen": "area/SkiaSharp.Views.Forms", "expandedReason": "The issue specifically involves SKCanvasView in Xamarin.Forms with gesture recognizers, which is in the SkiaSharp.Views.Forms package." },
+      { "field": "platforms", "chosen": "os/Android", "expandedReason": "Title explicitly states the issue is Android-specific. Gesture handling differences between Android and iOS are well-known in Xamarin.Forms." },
+      { "field": "versionAnalysis.currentRelevance", "chosen": "unlikely", "expandedReason": "Xamarin.Forms was deprecated in May 2024 and archived. The SkiaSharp.Views.Forms package is no longer actively maintained. Any fix would need to target the successor platform (.NET MAUI)." },
+      { "field": "actionability.suggestedAction", "chosen": "close-with-docs", "expandedReason": "Xamarin.Forms is deprecated. The issue is 7+ years old with no maintainer engagement. Users should migrate to .NET MAUI where gesture handling has been redesigned." }
+    ],
+    "uncertainties": ["Whether the gesture issue was specific to the user's implementation or a genuine platform bug in SkiaSharp.Views.Forms on Android"],
+    "assumptions": ["Assumed the user was combining Xamarin.Forms gesture recognizers with SkiaSharp touch events, which is a common source of gesture conflicts on Android"],
+    "resolution": {
+      "hypothesis": "The user wants pinch and pan gestures to work alongside SkiaSharp touch handling on Android. The likely cause is gesture conflict between Xamarin.Forms gesture recognizers and SkiaSharp's native touch handling.",
+      "proposals": [
+        { "title": "Migrate to .NET MAUI with SkiaSharp.Views.Maui", "description": "Xamarin.Forms is deprecated. Migrate to .NET MAUI and use SkiaSharp.Views.Maui which has improved touch and gesture handling integration. MAUI's gesture system handles the Android gesture conflicts better.", "confidence": 0.85, "effort": "high", "category": "alternative" },
+        { "title": "Use SKTouchEffect instead of Forms gesture recognizers", "description": "In the Xamarin.Forms era, using SKTouchEffect directly on the SKCanvasView instead of combining with Forms GestureRecognizers avoids the Android gesture conflict. Handle pinch/pan logic manually from touch events.", "confidence": 0.70, "effort": "medium", "category": "workaround", "codeSnippet": "var touchEffect = new SKTouchEffect();\ntouchEffect.TouchAction += OnTouchAction;\nskCanvasView.Effects.Add(touchEffect);\nskCanvasView.EnableTouchEvents = true;\n\nvoid OnTouchAction(object sender, SKTouchEventArgs e)\n{\n    // Handle pinch/pan manually using touch points\n    e.Handled = true;\n}", "validated": "untested" }
+      ],
+      "recommendedProposal": "Migrate to .NET MAUI with SkiaSharp.Views.Maui",
+      "recommendedReason": "Xamarin.Forms is deprecated. The recommended path forward is MAUI, which has better gesture integration with SkiaSharp."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "Xamarin.Forms is deprecated, issue is 7+ years old, no maintainer engagement. Users should migrate to .NET MAUI."
+    },
+    "actions": [
+      {
+        "id": "labels-1", "type": "update-labels", "risk": "low",
+        "description": "Apply question, views.forms, and android labels",
+        "reason": "Issue has no labels currently; classification identifies type/question, area/SkiaSharp.Views.Forms, and os/Android",
+        "confidence": 0.90, "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["type/question", "area/SkiaSharp.Views.Forms", "os/Android"],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "comment-1", "type": "add-comment", "risk": "high",
+        "description": "Post closing message noting Xamarin.Forms deprecation and suggesting MAUI migration",
+        "reason": "Inform reporter and future visitors that Xamarin.Forms is deprecated and the path forward is .NET MAUI",
+        "confidence": 0.85, "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "close-message",
+          "draftBody": "Closing this issue as Xamarin.Forms has been [deprecated and archived](https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin) in favor of .NET MAUI.\n\nIf you're still experiencing gesture issues with SkiaSharp, please try migrating to **SkiaSharp.Views.Maui** which has improved touch and gesture handling integration. The `SKTouchEffect` approach in MAUI handles the Android gesture conflicts better.\n\nIf the issue persists on MAUI, please open a new issue with a reproduction project targeting the current platform.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-315-comment-1"
+        }
+      },
+      {
+        "id": "close-1", "type": "close-issue", "risk": "medium",
+        "description": "Close as not planned — platform deprecated, stale",
+        "reason": "Xamarin.Forms is deprecated, issue is 7+ years old with no resolution path on the original platform",
+        "confidence": 0.85, "dependsOn": "comment-1",
+        "payload": { "reason": "not_planned", "comment": null }
+      }
+    ]
+  }
+}

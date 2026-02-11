@@ -1,0 +1,156 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 552,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T13:49:00Z",
+    "currentLabels": [
+      "type/enhancement",
+      "area/SkiaSharp.Views"
+    ]
+  },
+  "summary": "Investigate reusing SKSurface across draw calls in SkiaSharp views to avoid expensive repeated construction.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "backends": null,
+    "platforms": null,
+    "tenets": [
+      {
+        "value": "tenet/performance",
+        "confidence": 0.90
+      }
+    ],
+    "partner": null
+  },
+  "evidence": {
+    "bugSignals": null,
+    "reproEvidence": {
+      "relatedIssues": [534]
+    },
+    "versionAnalysis": null,
+    "regression": null,
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.55,
+      "reason": "PR #534 introduced some surface reuse improvements, but this tracking issue was left open, suggesting the work was not fully completed across all view implementations. The issue has been dormant for over 6 years with no further updates.",
+      "relatedPRs": [534],
+      "fixedInVersion": null,
+      "verificationStatus": "inconclusive"
+    }
+  },
+  "analysis": {
+    "summary": "This is an internal tracking issue filed by the maintainer (mattleibow) to investigate reusing SKSurface across draw calls. SKSurface construction is expensive and should be amortized. PR #534 partially addressed this, but the issue remains open, suggesting incomplete coverage across all view platforms.",
+    "keySignals": [
+      {
+        "text": "SKSurface construction is expensive; should be reused across draws",
+        "source": "body",
+        "interpretation": "Maintainer identified a performance optimization opportunity: avoid recreating SKSurface on every draw call."
+      },
+      {
+        "text": "References PR #534 which created surface reuse improvements",
+        "source": "body",
+        "interpretation": "Some work was already done via PR #534, but the issue remaining open suggests incomplete coverage."
+      },
+      {
+        "text": "Filed by mattleibow as internal tracking issue",
+        "source": "body",
+        "interpretation": "This is a maintainer-driven investigation task, not a user-reported problem. No external reproduction needed."
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/enhancement",
+        "expandedReason": "This is an internal performance investigation task filed by the maintainer. It describes an optimization opportunity (reusing SKSurface) rather than reporting broken functionality. The existing labels correctly classify this as an enhancement."
+      },
+      {
+        "field": "area",
+        "chosen": "area/SkiaSharp.Views",
+        "expandedReason": "SKSurface reuse is relevant to all SkiaSharp view implementations across platforms. The views package is responsible for creating and managing surfaces during draw calls."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/performance",
+        "expandedReason": "The core motivation is performance: SKSurface construction is expensive, and reusing surfaces across draw calls reduces allocation overhead and improves rendering throughput. This is a clear performance tenet issue."
+      },
+      {
+        "field": "fixStatus.likelyFixed",
+        "chosen": "false",
+        "expandedReason": "PR #534 introduced some surface reuse improvements, but the issue was left open by the maintainer, indicating the work was not considered complete. After 6+ years of inactivity, it is unclear whether subsequent changes have fully addressed surface reuse across all view implementations."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The issue requires investigation into current surface reuse patterns across all view implementations (Android, iOS, macOS, etc.) to determine which platforms still recreate surfaces unnecessarily. The 6+ year dormancy means the codebase has changed significantly since this was filed."
+      }
+    ],
+    "uncertainties": [
+      "Whether PR #534 and subsequent changes have already addressed surface reuse across all view platforms in the current codebase.",
+      "Whether the SkiaSharp 3.x rewrite changed surface management patterns enough to make this issue obsolete."
+    ],
+    "assumptions": [
+      "The issue remains relevant because the maintainer did not close it after PR #534 was merged, suggesting incomplete work.",
+      "SKSurface construction cost is still a measurable performance concern in current SkiaSharp versions."
+    ],
+    "resolution": {
+      "hypothesis": "SKSurface is being recreated on every draw call in some or all view implementations, causing unnecessary allocation overhead. Surfaces should be cached and reused when the underlying context and dimensions have not changed.",
+      "proposals": [
+        {
+          "title": "Audit current surface reuse across all views",
+          "description": "Review all view implementations (Android, iOS, macOS, Windows, Blazor, MAUI) to identify which ones still recreate SKSurface on every draw call. Compare against the improvements from PR #534 to determine remaining gaps.",
+          "confidence": 0.80,
+          "effort": "low",
+          "category": "investigation",
+          "validated": "untested"
+        },
+        {
+          "title": "Implement surface caching with invalidation",
+          "description": "Cache the SKSurface instance and only recreate it when the surface dimensions, pixel format, or GPU context change. This requires tracking the surface parameters and comparing them on each draw call to decide whether to reuse or recreate.",
+          "confidence": 0.75,
+          "effort": "medium",
+          "category": "fix",
+          "validated": "untested"
+        },
+        {
+          "title": "Close as addressed if audit shows full coverage",
+          "description": "If the audit reveals that all current view implementations already reuse surfaces effectively (perhaps through changes made after PR #534), close this issue as completed with a summary of findings.",
+          "confidence": 0.50,
+          "effort": "low",
+          "category": "alternative",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Audit current surface reuse across all views",
+      "recommendedReason": "Before implementing any changes, an audit is needed to understand the current state. PR #534 and 6+ years of development may have already addressed this. The audit is low-effort and will determine whether further work is needed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.80,
+      "reason": "An audit of current surface reuse patterns is needed before any action can be taken. The issue is 6+ years old and the codebase has evolved significantly since it was filed."
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add tenet/performance label to reflect the performance optimization nature of this issue",
+        "reason": "The issue is fundamentally about performance optimization (avoiding expensive SKSurface reconstruction). The existing type/enhancement and area/SkiaSharp.Views labels are correct; adding tenet/performance completes the classification.",
+        "confidence": 0.90,
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["tenet/performance"],
+          "labelsToRemove": []
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 310,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T13:49:00Z",
+    "currentLabels": ["type/enhancement", "status/low-priority", "os/Windows-Classic", "area/SkiaSharp.Views"]
+  },
+  "summary": "GDI+ error when resizing SKControl during OnPaint due to reentrant paint calls",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.85 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
+    "backends": null,
+    "platforms": [{ "value": "os/Windows-Classic", "confidence": 0.95 }],
+    "tenets": [{ "value": "tenet/reliability", "confidence": 0.75 }],
+    "partner": null
+  },
+  "evidence": {
+    "bugSignals": null,
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKControl in a WinForms application",
+        "In the PaintSurface event handler, modify the control's Height property",
+        "Resizing triggers a reentrant OnPaint call while the first paint is still executing",
+        "GDI+ throws 'A generic error occurred in GDI+'"
+      ],
+      "environmentDetails": "Windows, WinForms, SKControl"
+    },
+    "versionAnalysis": null,
+    "regression": null,
+    "fixStatus": null
+  },
+  "analysis": {
+    "summary": "Enhancement request to add a defensive guard in SKControl.OnPaint preventing reentrant paint calls. Root cause is well understood: resizing the control inside PaintSurface triggers reentrant OnPaint. OP found workaround by moving height calculation outside the paint event.",
+    "keySignals": [
+      { "text": "A generic error occurred in GDI+", "source": "title", "interpretation": "GDI+ error caused by reentrant painting, not a SkiaSharp bug per se" },
+      { "text": "modifying the very canvas you are drawing on, while you are doing said drawing is bad", "source": "comment 5", "interpretation": "Maintainer confirmed this is expected behavior — modifying control during paint is invalid" },
+      { "text": "move height calculation outside paint event", "source": "body", "interpretation": "OP found their own workaround by avoiding reentrancy" }
+    ],
+    "fieldRationales": [
+      { "field": "type", "chosen": "type/enhancement", "expandedReason": "This is not a bug — the behavior is expected when modifying a control during its own paint cycle. The request is for a defensive guard to prevent the reentrant crash, which is an enhancement to existing SKControl behavior.", "alternatives": [{ "value": "type/bug", "whyRejected": "Maintainer confirmed this is expected behavior. Modifying a control during its paint event is an invalid operation in GDI+." }] },
+      { "field": "area", "chosen": "area/SkiaSharp.Views", "expandedReason": "SKControl is part of the SkiaSharp.Views package, specifically the WinForms view implementation." },
+      { "field": "platforms", "chosen": "os/Windows-Classic", "expandedReason": "SKControl is a WinForms control, which is Windows-specific. The GDI+ error is specific to the Windows GDI+ rendering pipeline." },
+      { "field": "tenets", "chosen": "tenet/reliability", "expandedReason": "A defensive reentrancy guard would improve reliability by preventing crashes when users accidentally modify the control during paint events." },
+      { "field": "actionability.suggestedAction", "chosen": "close-as-fixed", "expandedReason": "Root cause was identified and confirmed by maintainer. OP found a workaround. The issue is 7+ years old with no further activity. The behavior is by-design and documented in the thread." }
+    ],
+    "uncertainties": ["Whether a reentrancy guard in SKControl.OnPaint would be desired as a future enhancement or if the current behavior is intentionally left as-is"],
+    "assumptions": ["Assumed the issue is fully resolved from the reporter's perspective since they found a workaround and there has been no follow-up in 7+ years"],
+    "resolution": {
+      "hypothesis": "The GDI+ error occurs because resizing the control inside PaintSurface triggers a reentrant OnPaint call. The solution is to avoid modifying the control geometry during paint.",
+      "proposals": [
+        { "title": "Move layout logic outside paint event", "description": "Move any control resizing or height calculation outside the PaintSurface event handler. This is the OP's own workaround and avoids the reentrancy entirely.", "confidence": 0.95, "effort": "low", "category": "workaround", "codeSnippet": "// Instead of resizing inside PaintSurface:\nprivate void SKControl_PaintSurface(object sender, SKPaintSurfaceEventArgs e)\n{\n    // Do NOT modify control.Height here\n    // Only perform drawing operations\n}\n\n// Calculate size elsewhere, e.g. on a timer or layout event:\nprivate void RecalculateSize()\n{\n    skControl.Height = calculatedHeight;\n}", "validated": "yes" },
+        { "title": "Add reentrancy guard in SKControl.OnPaint", "description": "Add a boolean flag in SKControl.OnPaint to detect and skip reentrant calls. This would prevent the GDI+ crash but requires a code change in SkiaSharp.Views.", "confidence": 0.70, "effort": "low", "category": "fix", "codeSnippet": "private bool _isPainting;\nprotected override void OnPaint(PaintEventArgs e)\n{\n    if (_isPainting) return;\n    _isPainting = true;\n    try { base.OnPaint(e); }\n    finally { _isPainting = false; }\n}", "validated": "untested" },
+        { "title": "Use BeginInvoke for deferred resize", "description": "Defer the resize operation using BeginInvoke so it executes after the current paint cycle completes. Avoids reentrancy while keeping the logic near the paint code.", "confidence": 0.80, "effort": "low", "category": "alternative", "codeSnippet": "private void SKControl_PaintSurface(object sender, SKPaintSurfaceEventArgs e)\n{\n    var newHeight = CalculateHeight(e);\n    BeginInvoke(new Action(() => skControl.Height = newHeight));\n}", "validated": "untested" }
+      ],
+      "recommendedProposal": "Move layout logic outside paint event",
+      "recommendedReason": "Confirmed working by the OP. Simplest and most reliable approach — avoids the root cause entirely without requiring SkiaSharp code changes."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.85,
+      "reason": "Root cause identified, workaround confirmed by OP, maintainer documented expected behavior, 7+ years idle"
+    },
+    "actions": [
+      {
+        "id": "labels-1", "type": "update-labels", "risk": "low",
+        "description": "Add tenet/reliability label to match classification",
+        "reason": "Issue involves crash prevention and reliability improvement; tenet/reliability is not yet applied",
+        "confidence": 0.90, "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["tenet/reliability"],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "comment-1", "type": "add-comment", "risk": "high",
+        "description": "Post closing message summarizing root cause and workaround",
+        "reason": "Document the resolution for future visitors before closing",
+        "confidence": 0.85, "dependsOn": "labels-1",
+        "payload": {
+          "commentType": "close-message",
+          "draftBody": "Closing this as resolved — the root cause was identified in the thread: modifying the control's size inside the `PaintSurface` event triggers a reentrant `OnPaint` call, which causes the GDI+ error.\n\n**Workaround:** Move any layout/resize logic outside the paint event handler (e.g., use `BeginInvoke` or handle it in a separate layout event).\n\nThis is expected GDI+/WinForms behavior — resizing a control during its own paint cycle is not supported. Thanks for the detailed investigation!",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-310-comment-1"
+        }
+      },
+      {
+        "id": "close-1", "type": "close-issue", "risk": "medium",
+        "description": "Close as completed — root cause identified, workaround exists",
+        "reason": "Issue is fully understood, workaround confirmed, 7+ years with no further activity",
+        "confidence": 0.85, "dependsOn": "comment-1",
+        "payload": { "reason": "completed", "comment": null }
+      }
+    ]
+  }
+}

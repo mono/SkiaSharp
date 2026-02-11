@@ -1,0 +1,224 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 533,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T13:49:00Z",
+    "currentLabels": [
+      "type/bug",
+      "type/enhancement",
+      "status/help-wanted",
+      "os/Android",
+      "area/SkiaSharp.Views",
+      "backend/OpenGL"
+    ]
+  },
+  "summary": "SKGLView on Android runs at uncapped framerates (300-1000fps) after upgrade from 1.59.3 to 1.60.1 due to switch from GLSurfaceView (vsync) to TextureView (no vsync).",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.80
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "backends": [
+      {
+        "value": "backend/OpenGL",
+        "confidence": 0.95
+      }
+    ],
+    "platforms": [
+      {
+        "value": "os/Android",
+        "confidence": 0.95
+      }
+    ],
+    "tenets": [
+      {
+        "value": "tenet/performance",
+        "confidence": 0.85
+      }
+    ],
+    "partner": null
+  },
+  "evidence": {
+    "bugSignals": null,
+    "reproEvidence": {
+      "relatedIssues": [534],
+      "stepsToReproduce": [
+        "Upgrade SkiaSharp from 1.59.3 to 1.60.1",
+        "Use SKGLView with PaintSurface event handler",
+        "Observe framerate is uncapped at 300-1000fps instead of previous 60fps"
+      ],
+      "environmentDetails": "Android devices with OpenGL ES; observed after SkiaSharp 1.60.1 upgrade from 1.59.3"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["1.59.3", "1.60.1"],
+      "currentRelevance": "likely",
+      "reason": "The underlying TextureView architecture is still used in current SkiaSharp Android views, so uncapped framerate behavior likely persists. The Choreographer-based vsync approach has not been implemented.",
+      "migrationPath": null
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.75,
+      "reason": "Behavior changed from capped 60fps to uncapped framerates when switching from GLSurfaceView to TextureView in 1.60.1. However, mattleibow confirmed this was an intentional architectural change (TextureView provides better compositing), not a regression. The lack of vsync is a missing feature, not a broken one.",
+      "workedInVersion": "1.59.3",
+      "brokeInVersion": "1.60.1"
+    },
+    "fixStatus": null
+  },
+  "analysis": {
+    "summary": "Classified as enhancement rather than bug because the switch from GLSurfaceView to TextureView was intentional. The missing vsync/framerate capping is a feature gap in the new architecture, not broken functionality. The issue affects Android OpenGL views and is primarily a performance concern.",
+    "keySignals": [
+      {
+        "text": "After upgrading from 1.59.3 to 1.60.1, SKGLView framerate went from capped 60fps to uncapped 300-1000fps",
+        "source": "body",
+        "interpretation": "Behavioral change after version upgrade suggests regression, but was later confirmed as intentional architecture change."
+      },
+      {
+        "text": "Switched from GLSurfaceView (vsync) to TextureView (no vsync)",
+        "source": "comment 1",
+        "interpretation": "mattleibow identified root cause: TextureView does not provide built-in vsync like GLSurfaceView did."
+      },
+      {
+        "text": "Suggested investigating Choreographer API for proper vsync",
+        "source": "comment 1",
+        "interpretation": "Maintainer acknowledged the gap and proposed a solution direction, confirming this is an enhancement opportunity."
+      },
+      {
+        "text": "Community provided FPS capping code workarounds",
+        "source": "comments",
+        "interpretation": "Multiple users contributed workarounds spanning 2018-2024, indicating ongoing community impact and demand for a proper solution."
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/enhancement",
+        "expandedReason": "The switch from GLSurfaceView to TextureView was intentional and provides better compositing. The uncapped framerate is a missing feature (vsync support) in the new architecture, not broken functionality. mattleibow acknowledged this is by design.",
+        "alternatives": [
+          {
+            "value": "type/bug",
+            "whyRejected": "Currently labeled as type/bug, but maintainer confirmed the behavior change was intentional. TextureView simply does not cap framerate by design."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/SkiaSharp.Views",
+        "expandedReason": "SKGLView is part of the SkiaSharp.Views package which provides platform-specific rendering views. The issue is specifically about the Android SKGLView rendering pipeline and its framerate behavior."
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Android",
+        "expandedReason": "The issue is specific to Android's GLSurfaceView/TextureView rendering pipeline. SKGLView on other platforms uses different rendering backends and is not affected by this TextureView vsync behavior."
+      },
+      {
+        "field": "backends",
+        "chosen": "backend/OpenGL",
+        "expandedReason": "SKGLView uses OpenGL ES on Android. The framerate capping issue is tied to the OpenGL surface type (GLSurfaceView vs TextureView) and how vsync is handled in the OpenGL rendering path."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/performance",
+        "expandedReason": "Running at 300-1000fps when 60fps is sufficient wastes CPU/GPU cycles, drains battery, and generates unnecessary heat. This is fundamentally a performance optimization issue requiring vsync or framerate capping."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "Although behavior changed between versions, mattleibow confirmed the switch to TextureView was intentional. The uncapped framerate is a side effect of a deliberate architectural improvement, not a regression in functionality."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The TextureView architecture is still used in current SkiaSharp Android views. No Choreographer-based vsync has been implemented since this issue was filed, so the uncapped framerate behavior likely persists in current versions."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "Integrating Android's Choreographer API for proper vsync requires investigation into how it interacts with the TextureView rendering pipeline. mattleibow suggested this direction but it has not been implemented. Community workarounds exist but a proper framework-level solution is needed."
+      }
+    ],
+    "uncertainties": [
+      "Whether Choreographer API integration would introduce latency or compatibility issues with specific Android versions.",
+      "Whether the current SkiaSharp 3.x architecture still uses the same TextureView approach or has changed."
+    ],
+    "assumptions": [
+      "The TextureView architecture from 1.60.1 is still in use in current SkiaSharp versions.",
+      "Community-provided FPS capping workarounds are functional but not ideal as a long-term solution."
+    ],
+    "resolution": {
+      "hypothesis": "SKGLView on Android needs a vsync or framerate capping mechanism since the switch from GLSurfaceView to TextureView removed built-in vsync. Android's Choreographer API is the recommended approach for frame-synchronous rendering.",
+      "proposals": [
+        {
+          "title": "Integrate Choreographer API for vsync",
+          "description": "Use Android's Choreographer.postFrameCallback to synchronize SKGLView rendering with the display refresh rate. This provides proper vsync without manual framerate capping and aligns with Android best practices.",
+          "confidence": 0.70,
+          "effort": "medium",
+          "category": "fix",
+          "validated": "untested"
+        },
+        {
+          "title": "Add configurable MaxFrameRate property",
+          "description": "Expose a MaxFrameRate property on SKGLView that allows developers to cap the rendering framerate. Default to 60fps or display refresh rate. This provides user control without requiring Choreographer integration.",
+          "confidence": 0.60,
+          "effort": "low",
+          "category": "alternative",
+          "validated": "untested"
+        },
+        {
+          "title": "User-side FPS capping workaround",
+          "description": "Use a timer or Stopwatch-based approach in the PaintSurface handler to skip frames when called too frequently. Multiple community members have shared working implementations in the issue comments.",
+          "confidence": 0.85,
+          "effort": "low",
+          "category": "workaround",
+          "codeSnippet": "// In your PaintSurface handler:\nprivate readonly Stopwatch _stopwatch = Stopwatch.StartNew();\nprivate const double TargetFrameTime = 1000.0 / 60.0; // 60 FPS\n\nvoid OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    if (_stopwatch.Elapsed.TotalMilliseconds < TargetFrameTime)\n        return;\n    _stopwatch.Restart();\n    // ... your drawing code ...\n}",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Integrate Choreographer API for vsync",
+      "recommendedReason": "Choreographer provides the proper Android-native mechanism for display-synchronized rendering. It avoids the CPU waste of uncapped rendering and is more reliable than user-side framerate capping approaches."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.80,
+      "reason": "Choreographer API integration requires investigation into the current TextureView rendering pipeline and how to properly synchronize frame callbacks without breaking existing functionality.",
+      "requiresHumanReview": true
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Remove type/bug (this is an enhancement), add tenet/performance label",
+        "reason": "The issue is not a bug (TextureView behavior is by design). Adding tenet/performance reflects the framerate/battery impact. type/enhancement, os/Android, area/SkiaSharp.Views, and backend/OpenGL are already present.",
+        "confidence": 0.85,
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["tenet/performance"],
+          "labelsToRemove": ["type/bug"]
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Suggest Choreographer API for vsync and acknowledge community workarounds",
+        "reason": "Provide guidance on the recommended approach (Choreographer) and acknowledge that user-side FPS capping is a viable interim workaround, as community members have demonstrated.",
+        "confidence": 0.75,
+        "dependsOn": null,
+        "payload": {
+          "commentType": "workaround",
+          "draftBody": "This issue stems from the intentional switch from `GLSurfaceView` (which provided built-in vsync) to `TextureView` (which does not). The recommended long-term fix is to integrate Android's [Choreographer API](https://developer.android.com/reference/android/view/Choreographer) to synchronize rendering with the display refresh rate.\n\nIn the meantime, you can cap the framerate in your `PaintSurface` handler:\n\n```csharp\nprivate readonly Stopwatch _stopwatch = Stopwatch.StartNew();\nprivate const double TargetFrameTime = 1000.0 / 60.0; // 60 FPS\n\nvoid OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    if (_stopwatch.Elapsed.TotalMilliseconds < TargetFrameTime)\n        return;\n    _stopwatch.Restart();\n    // ... your drawing code ...\n}\n```\n\nThis is a user-side workaround; a proper framework-level solution using Choreographer is still needed.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-533-vsync-workaround"
+        }
+      }
+    ]
+  }
+}

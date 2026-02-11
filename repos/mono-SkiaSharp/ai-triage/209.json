@@ -1,0 +1,217 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 209,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T13:49:00Z",
+    "currentLabels": ["type/bug", "status/help-wanted"]
+  },
+  "summary": "AccessViolationException in SKBitmap.Decode during concurrent decoding on IIS. Workaround: use byte arrays instead of streams or serialize with SemaphoreSlim.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "backends": null,
+    "platforms": null,
+    "tenets": [
+      {
+        "value": "tenet/reliability",
+        "confidence": 0.90
+      }
+    ],
+    "partner": null
+  },
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": true,
+      "hasStackTrace": true,
+      "reproQuality": "partial",
+      "hasWorkaround": true,
+      "workaroundSummary": "Use SemaphoreSlim(1) to serialize decode calls, or load stream into byte array first and use SKCodec.Create + SKBitmap.Decode(codec) instead of passing streams directly.",
+      "severity": "high",
+      "severityReason": "AccessViolationException crashes the process and cannot be caught. Affects server-side scenarios (IIS) where concurrent image decoding is common."
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        {
+          "language": "csharp",
+          "code": "// Concurrent decode causing crash\nParallel.ForEach(images, img => {\n    using var bitmap = SKBitmap.Decode(stream);\n});",
+          "context": "Reported in issue comments as the pattern that triggers the AccessViolationException"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.2", "2.88.5"],
+      "currentRelevance": "likely",
+      "reason": "Reports span from 2016 to 2024 across multiple SkiaSharp versions. The 2023 report on v2.88.5 confirms the issue persists with streams. One user noted reverting to 2.80.2 fixed their specific stream-related crash, suggesting the issue may have worsened in later versions.",
+      "migrationPath": null
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.70,
+      "reason": "The issue has been reported since 2016 and appears to be a fundamental thread-safety limitation in Skia's codec layer rather than a regression. One user found 2.80.2 more stable, but the core concurrency issue has existed across all versions."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.85,
+      "reason": "No PRs or commits addressing this specific thread-safety issue have been identified. The issue remains open with status/help-wanted label and reports continue through 2024."
+    }
+  },
+  "analysis": {
+    "summary": "This is a confirmed thread-safety bug in Skia's codec layer that causes AccessViolationException during concurrent SKBitmap.Decode operations, particularly on server-side IIS. While individual Decode calls on independent objects should theoretically be safe, the underlying Skia codec functions appear to use shared state that is not thread-safe.",
+    "keySignals": [
+      {
+        "text": "AccessViolationException at sk_codec_get_info, sk_codec_get_pixels, sk_codec_new_from_stream",
+        "source": "body",
+        "interpretation": "Crash occurs in native Skia codec layer during concurrent access, indicating thread-safety issue in the C++ code rather than the C# wrapper."
+      },
+      {
+        "text": "Concurrent bitmap decoding on IIS causes process crash",
+        "source": "body",
+        "interpretation": "Server-side scenarios with high concurrency are the primary trigger, making this high-severity for web applications."
+      },
+      {
+        "text": "Using SemaphoreSlim(1) to serialize decode calls works around the crash",
+        "source": "comments",
+        "interpretation": "Confirms the issue is related to concurrent access rather than a general decode bug."
+      },
+      {
+        "text": "Loading into byte array first and using SKCodec.Create + SKBitmap.Decode(codec) avoids the crash",
+        "source": "comments",
+        "interpretation": "Stream-based decode paths may have additional thread-safety issues beyond the codec itself."
+      },
+      {
+        "text": "Reports span 2016-2024 across multiple SkiaSharp versions including 2.88.5",
+        "source": "comments",
+        "interpretation": "Long-standing issue that has not been resolved, indicating a fundamental architectural limitation."
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/bug",
+        "expandedReason": "The issue reports AccessViolationException crashes during concurrent bitmap decoding. This is clearly broken behavior — independent Decode calls on separate objects should not crash the process. Already correctly labeled as type/bug."
+      },
+      {
+        "field": "area",
+        "chosen": "area/SkiaSharp",
+        "expandedReason": "The crash occurs in core SKBitmap.Decode and SKCodec operations (sk_codec_get_info, sk_codec_get_pixels, sk_codec_new_from_stream). These are fundamental SkiaSharp APIs in the main library, not in Views or other sub-packages."
+      },
+      {
+        "field": "tenets",
+        "chosen": "tenet/reliability",
+        "expandedReason": "AccessViolationException is an unrecoverable crash that kills the process. This is a textbook reliability issue — the application becomes unstable under concurrent load with no way to gracefully handle the failure."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "high",
+        "expandedReason": "The crash is an AccessViolationException which cannot be caught and terminates the process. However, a workaround exists (serialize decodes or use byte arrays), so it does not rise to critical. Server-side IIS applications are particularly affected."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "needs-investigation",
+        "expandedReason": "The root cause in Skia's codec layer needs investigation to determine if this can be fixed with locking in the C API shim, or if it requires upstream Skia changes. The workaround should be documented more prominently."
+      },
+      {
+        "field": "regression.isRegression",
+        "chosen": "false",
+        "expandedReason": "The issue has been reported since 2016 and exists across all reported versions. While one user found 2.80.2 more stable, the fundamental thread-safety limitation appears to have always existed in Skia's codec layer."
+      },
+      {
+        "field": "fixStatus.likelyFixed",
+        "chosen": "false",
+        "expandedReason": "No fix has been applied. The issue remains open with active reports through 2024 and a status/help-wanted label indicating it needs community or maintainer attention."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "likely",
+        "expandedReason": "The most recent report from 2023 on v2.88.5 confirms the issue persists. Given no known fix has been applied, it is likely still present in current versions."
+      }
+    ],
+    "uncertainties": [
+      "Whether the thread-safety issue is in Skia's codec layer itself or in SkiaSharp's C API shim — the stack traces point to Skia internals.",
+      "Whether newer Skia versions have addressed any of the underlying thread-safety concerns in the codec path.",
+      "The exact scope of the issue — whether it affects all image formats or only specific codecs (JPEG, PNG, etc.)."
+    ],
+    "assumptions": [
+      "The AccessViolationException stack traces reported in comments are accurate and representative of the core issue.",
+      "The workaround of using byte arrays instead of streams is broadly applicable and not format-specific."
+    ],
+    "resolution": {
+      "hypothesis": "Skia's image codec layer uses shared mutable state (possibly global codec registries or memory pools) that is not protected for concurrent access, causing memory corruption when multiple threads decode simultaneously.",
+      "proposals": [
+        {
+          "title": "Add mutex locking in C API codec functions",
+          "description": "Add a global mutex around sk_codec_new_from_stream, sk_codec_get_info, and sk_codec_get_pixels in the C API shim to serialize codec operations. This would prevent concurrent access to the unsafe Skia internals.",
+          "confidence": 0.60,
+          "effort": "medium",
+          "category": "fix",
+          "validated": "untested"
+        },
+        {
+          "title": "Document workaround: use byte arrays for concurrent decode",
+          "description": "Add prominent documentation that stream-based concurrent decoding is unsafe. Recommend loading streams into byte arrays first, then using SKCodec.Create + SKBitmap.Decode(codec) for thread-safe concurrent decoding.",
+          "confidence": 0.85,
+          "effort": "low",
+          "category": "workaround",
+          "codeSnippet": "// Thread-safe concurrent decode pattern\nvar bytes = await stream.ReadAllBytesAsync();\nusing var data = SKData.CreateCopy(bytes);\nusing var codec = SKCodec.Create(data);\nusing var bitmap = SKBitmap.Decode(codec);",
+          "validated": "yes"
+        },
+        {
+          "title": "Investigate upstream Skia thread-safety improvements",
+          "description": "Research whether newer versions of Skia have improved thread-safety in the codec layer. If upstream fixes exist, updating the Skia dependency may resolve the issue.",
+          "confidence": 0.40,
+          "effort": "high",
+          "category": "investigation",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Document workaround: use byte arrays for concurrent decode",
+      "recommendedReason": "The byte-array workaround has been confirmed working by multiple users and can be documented immediately with low effort. This provides immediate value while a proper fix is investigated."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.80,
+      "reason": "The root cause in Skia's codec layer needs deeper investigation. In the meantime, the workaround should be documented and the issue kept open for a proper fix.",
+      "requiresHumanReview": true
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add area/SkiaSharp and tenet/reliability labels",
+        "reason": "Issue affects core SKBitmap.Decode/SKCodec (area/SkiaSharp) and causes unrecoverable process crashes (tenet/reliability). These labels are missing from the current label set.",
+        "confidence": 0.90,
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["area/SkiaSharp", "tenet/reliability"],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Acknowledge long-standing issue and document workaround",
+        "reason": "This issue has been open since 2016 with 28 comments. A summary comment acknowledging the thread-safety limitation and clearly documenting the known workaround would help users finding this issue.",
+        "confidence": 0.85,
+        "dependsOn": null,
+        "payload": {
+          "commentType": "workaround",
+          "draftBody": "This is a long-standing thread-safety limitation in Skia's codec layer that causes `AccessViolationException` when decoding images concurrently.\n\n**Recommended workaround:** Load streams into byte arrays before decoding to avoid the concurrent stream access issue:\n\n```csharp\n// Thread-safe concurrent decode pattern\nvar bytes = await stream.ReadAllBytesAsync();\nusing var data = SKData.CreateCopy(bytes);\nusing var codec = SKCodec.Create(data);\nusing var bitmap = SKBitmap.Decode(codec);\n```\n\nAlternatively, use `SemaphoreSlim(1, 1)` to serialize decode operations if byte-array loading is not practical.\n\nThe underlying issue is in Skia's native codec layer and needs further investigation to determine if it can be addressed with locking in the C API shim or requires upstream changes.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-209-workaround"
+        }
+      }
+    ]
+  }
+}

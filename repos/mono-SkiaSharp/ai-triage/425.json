@@ -1,0 +1,203 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 425,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T13:49:00Z",
+    "currentLabels": ["type/bug", "status/skia-update-required"]
+  },
+  "summary": "SKCodec.Origin returns TopLeft for DNG/CR2 files that contain EXIF orientation data, because Skia's DNG codec ignores EXIF orientation.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.90
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.85
+    },
+    "backends": null,
+    "platforms": null,
+    "tenets": null,
+    "partner": null
+  },
+  "evidence": {
+    "bugSignals": {
+      "hasCrash": false,
+      "hasStackTrace": false,
+      "reproQuality": "partial",
+      "hasWorkaround": false,
+      "workaroundSummary": null,
+      "severity": "low",
+      "severityReason": "Affects only DNG/CR2 raw photo files. JPEG and WebP correctly report EXIF orientation. The impact is limited to a niche set of image formats used primarily in professional photography."
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load a DNG or CR2 file that has EXIF orientation metadata using SKCodec",
+        "Read the SKCodec.Origin property",
+        "Observe that it returns SKCodecOrigin.TopLeft regardless of the actual EXIF orientation"
+      ],
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/issues/425",
+          "filename": "sample.dng",
+          "type": "other",
+          "source": "body"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "currentRelevance": "unknown",
+      "reason": "Issue was reported in 2018. Skia's DNG codec may or may not have been updated since then to support EXIF orientation. The status/skia-update-required label suggests this is still pending an upstream fix."
+    },
+    "regression": null,
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.40,
+      "reason": "The issue was labeled status/skia-update-required and there is no evidence that Skia's DNG codec has been updated to read EXIF orientation. However, several years have passed and upstream Skia may have addressed this.",
+      "verificationStatus": "unverified"
+    }
+  },
+  "analysis": {
+    "summary": "This is a confirmed upstream Skia limitation where the DNG codec does not read EXIF orientation data. The maintainer verified that only JPEG and WebP codecs respect EXIF orientation in Skia. The fix depends on upstream Skia changes.",
+    "keySignals": [
+      {
+        "text": "I can confirm this is happening",
+        "source": "comment 1",
+        "interpretation": "Maintainer confirmed the bug, establishing it as a verified issue rather than user error."
+      },
+      {
+        "text": "A basic check reveals that the DNG codec ignores this. The only ones that appear to respect this are jpeg and webp.",
+        "source": "comment 1",
+        "interpretation": "Root cause identified: this is a Skia upstream codec limitation, not a SkiaSharp wrapper bug. Only JPEG and WebP codecs handle EXIF orientation."
+      },
+      {
+        "text": "status/skia-update-required label",
+        "source": "labels",
+        "interpretation": "Maintainer has already triaged this as requiring an upstream Skia fix, meaning SkiaSharp cannot resolve it independently."
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/bug",
+        "expandedReason": "SKCodec.Origin returns incorrect data for DNG/CR2 files. The EXIF orientation is present in the file but the codec ignores it, producing wrong results. This is confirmed broken behavior, not a missing feature.",
+        "alternatives": [
+          {
+            "value": "type/feature-request",
+            "whyRejected": "The API exists and claims to return orientation; it returns wrong data. This is incorrect behavior, not a missing capability."
+          }
+        ]
+      },
+      {
+        "field": "area",
+        "chosen": "area/SkiaSharp",
+        "expandedReason": "SKCodec is part of the core SkiaSharp library. While the root cause is in upstream Skia's DNG codec, the affected API surface is SKCodec.Origin in the main SkiaSharp package."
+      },
+      {
+        "field": "bugSignals.severity",
+        "chosen": "low",
+        "expandedReason": "The bug only affects DNG and CR2 raw photo formats. JPEG and WebP, which are far more commonly used, work correctly. There is no crash or data loss, only incorrect orientation metadata. The impact is limited to professional photography workflows using raw formats.",
+        "alternatives": [
+          {
+            "value": "medium",
+            "whyRejected": "No workaround exists within SkiaSharp, but the narrow scope of affected formats keeps this at low severity."
+          }
+        ]
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "keep-open",
+        "expandedReason": "This is a confirmed bug that requires an upstream Skia fix. It should remain open as a tracking issue. The status/skia-update-required label is already applied, and newer Skia versions should be checked periodically to see if this has been addressed."
+      },
+      {
+        "field": "versionAnalysis.currentRelevance",
+        "chosen": "unknown",
+        "expandedReason": "The issue is over 7 years old. It is unknown whether newer versions of Skia have added EXIF orientation support to the DNG codec. Verification against current Skia is needed."
+      },
+      {
+        "field": "fixStatus.likelyFixed",
+        "chosen": "false",
+        "expandedReason": "There is no evidence that Skia's DNG codec has been updated to support EXIF orientation. The issue remains labeled status/skia-update-required with no follow-up indicating resolution."
+      }
+    ],
+    "uncertainties": [
+      "Whether newer versions of upstream Skia have added EXIF orientation support to the DNG and CR2 codecs since 2018.",
+      "Whether SkiaSharp could implement a workaround by reading EXIF data independently of Skia's codec."
+    ],
+    "assumptions": [
+      "The sample DNG and CR2 files attached to the issue contain valid EXIF orientation data, as confirmed by the maintainer.",
+      "The issue persists in current SkiaSharp versions since no fix has been reported."
+    ],
+    "resolution": {
+      "hypothesis": "Skia's DNG codec does not implement EXIF orientation reading, causing SKCodec.Origin to always return TopLeft for DNG/CR2 files regardless of actual orientation.",
+      "proposals": [
+        {
+          "title": "Wait for upstream Skia DNG codec fix",
+          "description": "Monitor upstream Skia for changes to the DNG codec that add EXIF orientation support. When fixed upstream, update SkiaSharp's Skia dependency to pick up the fix.",
+          "confidence": 0.50,
+          "effort": "low",
+          "category": "investigation",
+          "validated": "untested"
+        },
+        {
+          "title": "Implement EXIF orientation reading in SkiaSharp wrapper",
+          "description": "Add a SkiaSharp-level workaround that reads EXIF orientation from raw files using a separate EXIF parser, bypassing Skia's codec limitation. This would require adding EXIF parsing logic to the C# layer.",
+          "confidence": 0.60,
+          "effort": "medium",
+          "category": "workaround",
+          "validated": "untested"
+        },
+        {
+          "title": "Check if current Skia version resolves the issue",
+          "description": "Test SKCodec.Origin with DNG/CR2 files on the current version of SkiaSharp to determine if upstream Skia has already fixed this in the years since the report.",
+          "confidence": 0.70,
+          "effort": "low",
+          "category": "investigation",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Check if current Skia version resolves the issue",
+      "recommendedReason": "Over 7 years have passed since the original report. The lowest-effort first step is to verify whether newer Skia versions have already addressed this, before investing in workarounds."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.80,
+      "reason": "This is a confirmed upstream Skia limitation. The issue should remain open as a tracking bug until either upstream Skia fixes the DNG codec or a SkiaSharp-level workaround is implemented.",
+      "requiresHumanReview": true
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add area/SkiaSharp label to classify the component area",
+        "reason": "The issue affects SKCodec.Origin which is in the core SkiaSharp library. The area label is currently missing.",
+        "confidence": 0.85,
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["area/SkiaSharp"],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Add triage comment noting upstream Skia limitation and suggesting verification with current Skia version",
+        "reason": "The issue is 7+ years old with the status/skia-update-required label. A comment should note this is an upstream limitation and suggest checking if newer Skia versions have resolved it.",
+        "confidence": 0.75,
+        "dependsOn": null,
+        "payload": {
+          "commentType": "answer",
+          "draftBody": "This issue was confirmed as an upstream Skia limitation — the DNG codec does not read EXIF orientation data. Only the JPEG and WebP codecs support this.\n\nSince this was reported in 2018, it would be worth verifying whether newer versions of Skia have addressed this. If the issue persists with the current SkiaSharp release, this remains blocked on an upstream Skia fix.\n\nThe `status/skia-update-required` label is already applied.",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-425-upstream-status"
+        }
+      }
+    ]
+  }
+}

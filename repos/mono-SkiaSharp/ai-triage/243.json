@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 243,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T13:49:00Z",
+    "currentLabels": ["os/Windows-Classic", "area/Build", "type/feature-request"]
+  },
+  "summary": "Obsolete request to bundle ANGLE for Win7 OpenGL support. OP asked to close; Win7 is EOL; Skia now has Direct3D backend.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.90
+    },
+    "backends": [
+      {
+        "value": "backend/OpenGL",
+        "confidence": 0.80
+      }
+    ],
+    "platforms": [
+      {
+        "value": "os/Windows-Classic",
+        "confidence": 0.95
+      }
+    ],
+    "tenets": null,
+    "partner": null
+  },
+  "evidence": {
+    "bugSignals": null,
+    "reproEvidence": null,
+    "versionAnalysis": null,
+    "regression": null,
+    "fixStatus": null
+  },
+  "analysis": {
+    "summary": "This is an obsolete feature request to bundle ANGLE with SkiaSharp for Windows 7 OpenGL support. The OP themselves suggested closing it, Windows 7 is EOL, Skia now has a Direct3D backend, and the OP ships their own patched ANGLE separately.",
+    "keySignals": [
+      {
+        "text": "Include ANGLE for win7-* runtimes",
+        "source": "title",
+        "interpretation": "Feature request for bundling ANGLE, a third-party OpenGL-to-DirectX translation layer, specifically for Windows 7 support."
+      },
+      {
+        "text": "OP suggested closing the issue",
+        "source": "comment 6",
+        "interpretation": "The original requester themselves concluded this is not needed from SkiaSharp and asked for it to be closed."
+      },
+      {
+        "text": "OP ships their own patched ANGLE and asked SkiaSharp NOT to bundle it",
+        "source": "comment 5",
+        "interpretation": "Bundling ANGLE in SkiaSharp would actually cause DLL conflicts for the primary requester (Avalonia), making this counterproductive."
+      },
+      {
+        "text": "Last activity was 2020-09-20, over 5 years ago",
+        "source": "labels",
+        "interpretation": "No community interest or activity in years, confirming the request is abandoned."
+      }
+    ],
+    "fieldRationales": [
+      {
+        "field": "type",
+        "chosen": "type/feature-request",
+        "expandedReason": "This is a request to add new functionality (bundling ANGLE) that SkiaSharp does not currently provide. Already correctly labeled as type/feature-request."
+      },
+      {
+        "field": "area",
+        "chosen": "area/Build",
+        "expandedReason": "The request is about build/packaging — including ANGLE DLLs in SkiaSharp NuGet packages for specific runtimes. Already correctly labeled as area/Build."
+      },
+      {
+        "field": "platforms",
+        "chosen": "os/Windows-Classic",
+        "expandedReason": "The request specifically targets Windows 7 (win7-*) runtimes which fall under the Windows Classic desktop platform. Already correctly labeled."
+      },
+      {
+        "field": "backends",
+        "chosen": "backend/OpenGL",
+        "expandedReason": "ANGLE provides OpenGL ES support by translating to DirectX. The request is fundamentally about enabling the OpenGL backend on Windows 7 where native OpenGL drivers may be insufficient."
+      },
+      {
+        "field": "actionability.suggestedAction",
+        "chosen": "close-with-docs",
+        "expandedReason": "Multiple factors make this request obsolete: Windows 7 is EOL, Skia has a Direct3D backend, the OP asked to close it, and bundling ANGLE would cause DLL conflicts for the primary requester. Closing with an explanation documenting the rationale.",
+        "alternatives": [
+          {
+            "value": "keep-open",
+            "whyRejected": "No community interest in 5+ years, OP asked to close, and the underlying platform (Win7) is EOL."
+          }
+        ]
+      }
+    ],
+    "uncertainties": [
+      "Whether any other consumers besides Avalonia still need ANGLE bundled with SkiaSharp for legacy Windows support."
+    ],
+    "assumptions": [
+      "Windows 7 end-of-life status means SkiaSharp does not need to actively support it with additional bundled dependencies.",
+      "The Skia Direct3D backend provides a viable alternative for GPU-accelerated rendering on Windows without needing ANGLE."
+    ],
+    "resolution": {
+      "hypothesis": "The request is obsolete because the target platform (Windows 7) is EOL, Skia now has native Direct3D support, the OP ships their own ANGLE, and the OP asked for closure.",
+      "proposals": [
+        {
+          "title": "Close as won't-fix",
+          "description": "Close the issue as not planned. Windows 7 is EOL, Skia has Direct3D backend support, the OP asked to close it, and bundling ANGLE would cause DLL conflicts for the primary requester (Avalonia).",
+          "confidence": 0.90,
+          "effort": "low",
+          "category": "alternative",
+          "validated": "untested"
+        },
+        {
+          "title": "Create separate ANGLE NuGet package",
+          "description": "If there is future demand, create a separate SkiaSharp.ANGLE NuGet package that consumers can opt into without DLL conflict risk. This was the conclusion of the original discussion.",
+          "confidence": 0.40,
+          "effort": "high",
+          "category": "alternative",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Close as won't-fix",
+      "recommendedReason": "All stakeholders agree this is not needed. The OP asked for closure, Windows 7 is EOL, and Skia's Direct3D backend provides a modern alternative. Keeping this open adds noise to the backlog."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.90,
+      "reason": "The OP asked to close, Windows 7 is EOL, Skia has Direct3D backend, and no activity in 5+ years. This request is obsolete and should be closed with an explanation.",
+      "requiresHumanReview": true
+    },
+    "actions": [
+      {
+        "id": "labels-1",
+        "type": "update-labels",
+        "risk": "low",
+        "description": "Add backend/OpenGL label",
+        "reason": "The issue is specifically about ANGLE which provides OpenGL ES support via DirectX translation. Adding backend/OpenGL improves discoverability and classification accuracy.",
+        "confidence": 0.80,
+        "dependsOn": null,
+        "payload": {
+          "labelsToAdd": ["backend/OpenGL"],
+          "labelsToRemove": []
+        }
+      },
+      {
+        "id": "comment-1",
+        "type": "add-comment",
+        "risk": "high",
+        "description": "Explain closure rationale noting Win7 EOL and OP's request to close",
+        "reason": "A clear closure comment documents why this was closed for future reference and acknowledges the original discussion.",
+        "confidence": 0.90,
+        "dependsOn": null,
+        "payload": {
+          "commentType": "close-message",
+          "draftBody": "Closing this as won't-fix based on the discussion and changed circumstances:\n\n- **Windows 7 is end-of-life** — active support for Win7-specific features is no longer warranted.\n- **Skia now has a Direct3D backend** — this provides GPU-accelerated rendering on Windows without needing ANGLE.\n- **The original requester asked to close this** and ships their own patched ANGLE separately.\n- **Bundling ANGLE would cause DLL conflicts** for consumers who ship their own version.\n\nIf there's future demand for an official ANGLE package, a separate opt-in NuGet (e.g., `SkiaSharp.ANGLE`) would be the appropriate approach to avoid conflicts.\n\nThank you to everyone who contributed to this discussion!",
+          "requiresHumanEdit": true,
+          "finalBody": null,
+          "dedupeToken": "triage-243-close"
+        }
+      },
+      {
+        "id": "close-1",
+        "type": "close-issue",
+        "risk": "medium",
+        "description": "Close as not planned",
+        "reason": "Windows 7 EOL, OP asked to close, Skia Direct3D backend exists, no activity in 5+ years. The feature request is obsolete.",
+        "confidence": 0.90,
+        "dependsOn": "comment-1",
+        "payload": {
+          "reason": "not_planned",
+          "comment": null
+        }
+      }
+    ]
+  }
+}
