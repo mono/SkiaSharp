@@ -214,7 +214,7 @@ jobs:
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
           # install workloads
-          - pwsh: .\scripts\install-dotnet-workloads.ps1 -WorkloadVersion "$env:DOTNET_WORKLOAD_VERSION" -Tizen "$env:DOTNET_WORKLOAD_TIZEN"
+          - pwsh: .\scripts\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN"
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             retryCountOnTaskFailure: 3
             displayName: Install the .NET workloads

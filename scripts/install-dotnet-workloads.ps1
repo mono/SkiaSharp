@@ -1,5 +1,4 @@
 Param(
-  [string] $WorkloadVersion = '',
   [string] $Tizen = ''
 )
 
@@ -10,7 +9,7 @@ if (!$Tizen) {
 }
 
 # Install Tizen FIRST — it's not an official workload and uses Samsung's custom scripts.
-# Must be installed before the official workloads pin via --version (workload-set mode).
+# Must be installed before the official workloads to avoid conflicts.
 Write-Host "Installing Tizen workloads..."
 New-Item -ItemType Directory -Force './output/tmp' | Out-Null
 if ($IsLinux -or $IsMacOS) {
@@ -23,24 +22,17 @@ if ($IsLinux -or $IsMacOS) {
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Install official .NET workloads needed by the repo.
-# Use --version to pin to a specific workload set version for reproducibility.
+# Do NOT use --version (workload-set mode) as it makes the SDK ignore
+# the Samsung Tizen workload manifest which is installed separately.
 $Workloads = @('android', 'macos', 'wasm-tools')
 if (!$IsLinux) {
   $Workloads += @('ios', 'tvos', 'maccatalyst', 'maui')
 }
 
-$versionArgs = @()
-if ($WorkloadVersion) {
-  $versionArgs = @('--version', $WorkloadVersion)
-  Write-Host "Installing .NET workloads (version $WorkloadVersion): $($Workloads -join ', ')..."
-} else {
-  Write-Host "Installing .NET workloads: $($Workloads -join ', ')..."
-}
+Write-Host "Installing .NET workloads: $($Workloads -join ', ')..."
 
 & dotnet workload install `
   @Workloads `
-  @versionArgs `
   --source https://api.nuget.org/v3/index.json `
-  --skip-sign-check `
-  --verbosity diagnostic
+  --skip-sign-check
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
