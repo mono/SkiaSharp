@@ -1,0 +1,29 @@
+{
+  "number": 3516,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add bug-repro skill for systematic bug reproduction",
+  "body": "## Summary\n\nNew AI skill that systematically reproduces SkiaSharp bugs and produces structured JSON output.\n\n### What it does\n\nWhen triggered with \u0060repro #123\u0060, this skill:\n\n1. **Fetches the issue** and optionally reads existing triage data\n2. **Creates a standalone console project** using the reporter\u0027s NuGet version\n3. **Reproduces step-by-step**, capturing commands, output, and errors\n4. **Tests across versions** \u2014 reporter\u0027s version \u2192 latest stable \u2192 optionally main\n5. **Produces schema-validated JSON** with conclusion, steps, environment, and version results\n\n### Key design decisions\n\n- **Standalone projects with released NuGet packages** \u2014 not source builds. Creates portable reproductions anyone can run\n- **Multi-version testing** \u2014 if reproduced, tests latest release to check if already fixed\n- **Soft pipeline** \u2014 optionally consumes triage data as hints, but works without it\n- **Lean v1 schema** \u2014 focused on essentials, cut aggressively based on 5-model review\n- **Push hard** \u2014 encourages persistent, creative reproduction attempts\n\n### Architecture review\n\nThis design was reviewed by 5 AI models across 3 rounds:\n- Round 1: Architecture decision (3 skills vs merged) \u2014 unanimous for 3 separate skills\n- Round 2: Plan review \u2014 identified 11 issues, all addressed\n- Round 3: Skill-creator compliance review \u2014 all flagged issues fixed\n\n### Files\n\n| File | Lines | Purpose |\n|------|-------|---------|\n| \u0060SKILL.md\u0060 | 335 | 5-phase workflow with frontmatter triggers |\n| \u0060references/repro-schema.json\u0060 | 439 | JSON Schema v1.0 with conditional validation |\n| \u0060references/repro-strategies.md\u0060 | 248 | Reproduction strategies by bug category |\n| \u0060references/repro-examples.md\u0060 | 332 | 3 validated example outputs |\n| \u0060references/conclusion-guide.md\u0060 | 141 | Conclusion values and evidence requirements |\n| \u0060scripts/validate-repro.ps1\u0060 | 93 | Schema \u002B semantic validation |\n| \u0060copilot-instructions.md\u0060 | \u002B2 | Routing table updated |\n\n### Validation\n\nAll 3 example JSONs pass schema validation \u2705\nSkill passes \u0060quick_validate.py\u0060 \u2705",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-11T22:25:20",
+  "updatedAt": "2026-02-11T22:36:57",
+  "closedAt": "2026-02-11T22:36:55",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-11T22:36:55",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/add-bug-repro-skill",
+  "additions": 1590,
+  "deletions": 0,
+  "changedFiles": 7,
+  "commits": 4,
+  "reviews": []
+}
