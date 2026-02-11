@@ -136,7 +136,7 @@ public class SyncCommunityCommand : AsyncCommand<SyncCommunitySettings>
 
     private static GitHubClient CreateOctokitClient()
     {
-        var client = new GitHubClient(new ProductHeaderValue("SkiaSharp-Collector"));
+        var client = new GitHubClient(new ProductHeaderValue("SkiaSharp-Triage"));
         var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrEmpty(token))
             client.Credentials = new Credentials(token);

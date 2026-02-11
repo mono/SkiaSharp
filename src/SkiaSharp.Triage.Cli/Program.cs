@@ -11,7 +11,7 @@ class Program
 
         app.Configure(config =>
         {
-            config.SetApplicationName("skiasharp-collector");
+            config.SetApplicationName("skiasharp-triage");
             config.SetApplicationVersion("1.0.0");
 
             // ===== New Cache-Based Commands =====
@@ -42,7 +42,7 @@ class Program
 
             // ===== Legacy Direct-API Commands (still useful for quick testing) =====
             config.AddCommand<AllCommand>("all")
-                .WithDescription("Run all collectors directly (legacy)")
+                .WithDescription("Run all data sources directly (legacy)")
                 .WithExample("all", "-o", "./data");
 
             config.AddCommand<GitHubCommand>("github")

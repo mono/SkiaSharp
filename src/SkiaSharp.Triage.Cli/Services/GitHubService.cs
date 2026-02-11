@@ -22,7 +22,7 @@ public sealed class GitHubService : IDisposable
         _repo = repo;
         _verbose = verbose;
 
-        _client = new GitHubClient(new ProductHeaderValue("SkiaSharp-Collector"));
+        _client = new GitHubClient(new ProductHeaderValue("SkiaSharp-Triage"));
 
         var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrEmpty(token))

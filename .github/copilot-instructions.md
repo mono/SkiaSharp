@@ -122,7 +122,7 @@ Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinc
 
 Both use `concurrency: cancel-in-progress: false` to allow queuing.
 
-## Collector CLI
+## Triage CLI
 
 The `SkiaSharp.Triage.Cli` .NET console app has two main modes:
 

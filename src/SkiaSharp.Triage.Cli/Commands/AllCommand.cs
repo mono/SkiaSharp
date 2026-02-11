@@ -9,14 +9,14 @@ public class AllCommand : AsyncCommand<NuGetSettings>
     {
         if (!settings.Quiet)
         {
-            AnsiConsole.Write(new Rule("[bold blue]SkiaSharp Dashboard Collector[/]").RuleStyle("blue"));
+            AnsiConsole.Write(new Rule("[bold blue]SkiaSharp Triage CLI[/]").RuleStyle("blue"));
             AnsiConsole.WriteLine();
         }
 
         var results = new List<(string name, bool success)>();
 
-        // Run each collector
-        var collectors = new (string name, Func<Task<int>> run)[]
+        // Run each data source
+        var sources = new (string name, Func<Task<int>> run)[]
         {
             ("GitHub Stats", () => new GitHubCommand().ExecuteAsync(context, settings)),
             ("NuGet Stats", () => new NuGetCommand().ExecuteAsync(context, settings)),
@@ -25,7 +25,7 @@ public class AllCommand : AsyncCommand<NuGetSettings>
             ("PR Triage", () => new PrTriageCommand().ExecuteAsync(context, settings))
         };
 
-        foreach (var (name, run) in collectors)
+        foreach (var (name, run) in sources)
         {
             if (!settings.Quiet)
             {
@@ -54,7 +54,7 @@ public class AllCommand : AsyncCommand<NuGetSettings>
             AnsiConsole.Write(new Rule("[bold]Summary[/]").RuleStyle("green"));
 
             var table = new Table()
-                .AddColumn("Collector")
+                .AddColumn("Source")
                 .AddColumn("Status");
 
             foreach (var (name, success) in results)
@@ -66,9 +66,9 @@ public class AllCommand : AsyncCommand<NuGetSettings>
 
             var allSuccess = results.All(r => r.success);
             if (allSuccess)
-                AnsiConsole.MarkupLine($"\n[bold green]All collectors completed successfully![/]");
+                AnsiConsole.MarkupLine($"\n[bold green]All sources completed successfully![/]");
             else
-                AnsiConsole.MarkupLine($"\n[bold yellow]Some collectors failed. Check logs above.[/]");
+                AnsiConsole.MarkupLine($"\n[bold yellow]Some sources failed. Check logs above.[/]");
         }
 
         return results.All(r => r.success) ? 0 : 1;
