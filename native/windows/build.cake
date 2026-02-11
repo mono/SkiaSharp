@@ -11,6 +11,8 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
+var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
+
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/msbuild.cake"
 
@@ -82,6 +84,7 @@ Task("libSkiaSharp")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.dll"), outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.pdb"), outDir);
+        CheckWindowsDependencies($"{outDir}/libSkiaSharp.dll", excluded: VERIFY_EXCLUDED);
     }
 });
 
@@ -103,6 +106,7 @@ Task("libHarfBuzzSharp")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.dll", outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.pdb", outDir);
+        CheckWindowsDependencies($"{outDir}/libHarfBuzzSharp.dll", excluded: VERIFY_EXCLUDED);
     }
 });
 

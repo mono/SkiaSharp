@@ -45,6 +45,99 @@ Task("git-sync-deps")
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// DEPENDENCY VERIFICATION
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] included = null)
+{
+    excluded = excluded ?? new string[0];
+    included = included ?? new string[0];
+
+    if (excluded.Length > 0)
+        Information($"Making sure that there are no dependencies on: {string.Join(", ", excluded)}");
+    if (included.Length > 0)
+        Information($"Making sure that there ARE dependencies on: {string.Join(", ", included)}");
+
+    var dumpbins = GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Host*/*/dumpbin.exe");
+    if (dumpbins.Count == 0) {
+        throw new Exception("Could not find dumpbin.exe, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+    }
+
+    RunProcess(dumpbins.First(), $"/dependents {dll}", out var stdoutEnum);
+    var stdout = stdoutEnum.ToArray();
+
+    var needed = MatchRegex(@"\s\s+(\S+\.dll)", stdout).ToList();
+
+    Information("Dependencies:");
+    foreach (var need in needed) {
+        Information($"    {need}");
+    }
+
+    foreach (var exclude in excluded) {
+        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{dll} contained a dependency on {exclude}.");
+    }
+
+    foreach (var include in included) {
+        if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{dll} is missing an expected dependency on {include}.");
+    }
+}
+
+void CheckLinuxDependencies(FilePath so, string[] excluded = null, string[] included = null, string maxGlibc = null)
+{
+    excluded = excluded ?? new string[0];
+    included = included ?? new string[0];
+
+    if (excluded.Length > 0)
+        Information($"Making sure that there are no dependencies on: {string.Join(", ", excluded)}");
+    if (included.Length > 0)
+        Information($"Making sure that there ARE dependencies on: {string.Join(", ", included)}");
+
+    RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
+    var stdout = stdoutEnum.ToArray();
+
+    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
+
+    Information("Dependencies:");
+    foreach (var need in needed) {
+        Information($"    {need}");
+    }
+
+    foreach (var exclude in excluded) {
+        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{so} contained a dependency on {exclude}.");
+    }
+
+    foreach (var include in included) {
+        if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
+            throw new Exception($"{so} is missing an expected dependency on {include}.");
+    }
+
+    if (!string.IsNullOrEmpty(maxGlibc)) {
+        var maxVersion = System.Version.Parse(maxGlibc);
+
+        var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
+        glibcs.Sort();
+
+        Information("GLIBC:");
+        foreach (var glibc in glibcs) {
+            Information($"    {glibc}");
+        }
+
+        foreach (var glibc in glibcs) {
+            var version = System.Version.Parse(glibc);
+            if (version > maxVersion)
+                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {maxVersion}.");
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// HELPERS
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void RunPython(DirectoryPath working, FilePath script, string args = "")
 {
     RunProcess(PYTHON_EXE, new ProcessSettings {

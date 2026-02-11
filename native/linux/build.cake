@@ -15,8 +15,7 @@ var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
 var VERIFY_INCLUDED = Argument("verifyIncluded", Argument("verifyincluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-var VERIFY_GLIBC_MAX_VAR = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
-var VERIFY_GLIBC_MAX = string.IsNullOrEmpty(VERIFY_GLIBC_MAX_VAR) ? null : System.Version.Parse(VERIFY_GLIBC_MAX_VAR);
+var VERIFY_GLIBC_MAX = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));
@@ -37,47 +36,11 @@ if (!string.IsNullOrEmpty(AR))
 
 void CheckDeps(FilePath so, bool checkIncluded = true)
 {
-    Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
-    if (checkIncluded && VERIFY_INCLUDED.Length > 0)
-        Information($"Making sure that there ARE dependencies on: {string.Join(", ", VERIFY_INCLUDED)}");
-
-    RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
-    var stdout = stdoutEnum.ToArray();
-
-    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
-
-    Information("Dependencies:");
-    foreach (var need in needed) {
-        Information($"    {need}");
-    }
-
-    foreach (var exclude in VERIFY_EXCLUDED) {
-        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{so} contained a dependency on {exclude}.");
-    }
-
-    if (checkIncluded) {
-        foreach (var include in VERIFY_INCLUDED) {
-            if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
-                throw new Exception($"{so} is missing an expected dependency on {include}.");
-        }
-    }
-
-    var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
-    glibcs.Sort();
-
-    Information("GLIBC:");
-    foreach (var glibc in glibcs) {
-        Information($"    {glibc}");
-    }
-    
-    if (VERIFY_GLIBC_MAX != null) {
-        foreach (var glibc in glibcs) {
-            var version = System.Version.Parse(glibc);
-            if (version > VERIFY_GLIBC_MAX)
-                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {VERIFY_GLIBC_MAX}.");
-        }
-    }
+    CheckLinuxDependencies(
+        so,
+        excluded: VERIFY_EXCLUDED,
+        included: checkIncluded ? VERIFY_INCLUDED : null,
+        maxGlibc: string.IsNullOrEmpty(VERIFY_GLIBC_MAX) ? null : VERIFY_GLIBC_MAX);
 }
 
 Task("libSkiaSharp")
