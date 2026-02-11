@@ -15,9 +15,9 @@ $feed1 = 'https://api.nuget.org/v3/index.json'
 $feed2 = 'https://api.nuget.org/v3/index.json'
 $feed3 = 'https://api.nuget.org/v3/index.json'
 if ($IsPreview) {
-  $feed1 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json'
-  $feed2 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json'
-  $feed3 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json'
+  $feed1 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json'
+  $feed2 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json'
+  $feed3 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json'
 }
 
 $Workloads = 'android','macos','wasm-tools'
@@ -25,9 +25,9 @@ if (!$IsLinux) {
   $Workloads += 'ios','tvos','maccatalyst','maui'
 }
 if ($IsPreview) {
-  $Workloads += 'wasm-tools-net7'
+  $Workloads += 'wasm-tools-net9'
 } else {
-  $Workloads += 'wasm-tools-net6'
+  $Workloads += 'wasm-tools-net8'
 }
 
 if ($SourceUrl) {
