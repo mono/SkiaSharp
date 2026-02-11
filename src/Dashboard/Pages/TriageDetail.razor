@@ -603,116 +603,106 @@ else
         </div>
     }
 
-    <!-- Analysis (Slide-out Sidebar) -->
-    <button class="btn-analysis-toggle" @onclick="ToggleAnalysis">
-        🔬 Analysis
-    </button>
-
-    <div class="analysis-sidebar @(_analysisOpen ? "open" : "")">
-        <div class="sidebar-header">
-            <h3>Analysis</h3>
-            <button class="btn-sidebar-close" @onclick="ToggleAnalysis">✕</button>
+    <!-- Analysis -->
+    <section class="triage-section analysis-section">
+        <h3>🔬 Analysis</h3>
+        <div class="analysis-summary md-content">
+            @MarkdownHelper.ToHtml(_issue.Analysis.Summary)
         </div>
-        <div class="sidebar-body">
-            <div class="analysis-summary md-content">
-                @MarkdownHelper.ToHtml(_issue.Analysis.Summary)
+
+        @if (_issue.Analysis.KeySignals is { Count: > 0 })
+        {
+            <div class="sidebar-section sidebar-signals">
+                <h4 title="Direct quotes from the issue that drove triage decisions">Key Signals</h4>
+                @foreach (var signal in _issue.Analysis.KeySignals)
+                {
+                    <div class="signal-card">
+                        <blockquote class="signal-quote">"@signal.Text"</blockquote>
+                        <span class="evidence-source">— @signal.Source</span>
+                        <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
+                    </div>
+                }
             </div>
+        }
 
-            @if (_issue.Analysis.KeySignals is { Count: > 0 })
-            {
-                <div class="sidebar-section sidebar-signals">
-                    <h4 title="Direct quotes from the issue that drove triage decisions">Key Signals</h4>
-                    @foreach (var signal in _issue.Analysis.KeySignals)
-                    {
-                        <div class="signal-card">
-                            <blockquote class="signal-quote">"@signal.Text"</blockquote>
-                            <span class="evidence-source">— @signal.Source</span>
-                            <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
+        @if (_issue.Analysis.CodeInvestigation is { Count: > 0 })
+        {
+            <div class="sidebar-section sidebar-code-investigation">
+                <h4 title="Source code files examined during investigation">Code Investigation</h4>
+                @foreach (var entry in _issue.Analysis.CodeInvestigation)
+                {
+                    <div class="code-investigation-card">
+                        <div class="code-file-ref">
+                            <a href="@GetFileUrl(entry)" target="_blank" rel="noopener" title="View on GitHub">
+                                <code>@entry.File</code>
+                                @if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
+                                {
+                                    <span class="code-lines">L@(entry.Lines)</span>
+                                }
+                            </a>
                         </div>
-                    }
-                </div>
-            }
+                        <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Relevance)</div>
+                    </div>
+                }
+            </div>
+        }
 
-            @if (_issue.Analysis.CodeInvestigation is { Count: > 0 })
-            {
-                <div class="sidebar-section sidebar-code-investigation">
-                    <h4 title="Source code files examined during investigation">Code Investigation</h4>
-                    @foreach (var entry in _issue.Analysis.CodeInvestigation)
-                    {
-                        <div class="code-investigation-card">
-                            <div class="code-file-ref">
-                                <a href="@GetFileUrl(entry)" target="_blank" rel="noopener" title="View on GitHub">
-                                    <code>@entry.File</code>
-                                    @if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
-                                    {
-                                        <span class="code-lines">L@(entry.Lines)</span>
-                                    }
-                                </a>
-                            </div>
-                            <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Relevance)</div>
+        @if (_issue.Analysis.FieldRationales is { Count: > 0 })
+        {
+            <div class="sidebar-section sidebar-rationales">
+                <h4 title="Why each classification field was chosen, with alternatives considered">Field Rationales</h4>
+                @foreach (var fr in _issue.Analysis.FieldRationales)
+                {
+                    <div class="rationale-card">
+                        <div class="rationale-header">
+                            <span class="label label-field">@fr.Field</span>
+                            <span class="rationale-chosen">→ @fr.Chosen</span>
                         </div>
-                    }
-                </div>
-            }
-
-            @if (_issue.Analysis.FieldRationales is { Count: > 0 })
-            {
-                <div class="sidebar-section sidebar-rationales">
-                    <h4 title="Why each classification field was chosen, with alternatives considered">Field Rationales</h4>
-                    @foreach (var fr in _issue.Analysis.FieldRationales)
-                    {
-                        <div class="rationale-card">
-                            <div class="rationale-header">
-                                <span class="label label-field">@fr.Field</span>
-                                <span class="rationale-chosen">→ @fr.Chosen</span>
-                            </div>
-                            <div class="reason-text md-content">@MarkdownHelper.ToHtml(fr.ExpandedReason)</div>
-                            @if (fr.Alternatives is { Count: > 0 })
-                            {
-                                <details class="alternatives">
-                                    <summary>@fr.Alternatives.Count alternative(s) considered</summary>
-                                    @foreach (var alt in fr.Alternatives)
-                                    {
-                                        <div class="alt-item">
-                                            <span class="alt-value">@alt.Value</span>
-                                            <span class="alt-rejected">— @alt.WhyRejected</span>
-                                        </div>
-                                    }
-                                </details>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-
-            @if (_issue.Analysis.Uncertainties is { Count: > 0 })
-            {
-                <div class="sidebar-section sidebar-uncertainties">
-                    <h4 title="What's unclear — information that would improve the triage if available">Uncertainties</h4>
-                    <ul class="uncertainty-list">
-                        @foreach (var u in _issue.Analysis.Uncertainties)
+                        <div class="reason-text md-content">@MarkdownHelper.ToHtml(fr.ExpandedReason)</div>
+                        @if (fr.Alternatives is { Count: > 0 })
                         {
-                            <li>@u</li>
+                            <details class="alternatives">
+                                <summary>@fr.Alternatives.Count alternative(s) considered</summary>
+                                @foreach (var alt in fr.Alternatives)
+                                {
+                                    <div class="alt-item">
+                                        <span class="alt-value">@alt.Value</span>
+                                        <span class="alt-rejected">— @alt.WhyRejected</span>
+                                    </div>
+                                }
+                            </details>
                         }
-                    </ul>
-                </div>
-            }
+                    </div>
+                }
+            </div>
+        }
 
-            @if (_issue.Analysis.Assumptions is { Count: > 0 })
-            {
-                <div class="sidebar-section sidebar-assumptions">
-                    <h4 title="Explicit assumptions made when evidence was insufficient">Assumptions</h4>
-                    <ul class="assumption-list">
-                        @foreach (var a in _issue.Analysis.Assumptions)
-                        {
-                            <li>@a</li>
-                        }
-                    </ul>
-                </div>
-            }
-        </div>
-    </div>
-    <div class="analysis-backdrop @(_analysisOpen ? "open" : "")" @onclick="ToggleAnalysis"></div>
+        @if (_issue.Analysis.Uncertainties is { Count: > 0 })
+        {
+            <div class="sidebar-section sidebar-uncertainties">
+                <h4 title="What's unclear — information that would improve the triage if available">Uncertainties</h4>
+                <ul class="uncertainty-list">
+                    @foreach (var u in _issue.Analysis.Uncertainties)
+                    {
+                        <li>@u</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (_issue.Analysis.Assumptions is { Count: > 0 })
+        {
+            <div class="sidebar-section sidebar-assumptions">
+                <h4 title="Explicit assumptions made when evidence was insufficient">Assumptions</h4>
+                <ul class="assumption-list">
+                    @foreach (var a in _issue.Analysis.Assumptions)
+                    {
+                        <li>@a</li>
+                    }
+                </ul>
+            </div>
+        }
+    </section>
 
     <!-- Bottom Navigation -->
     <div class="triage-detail-nav bottom-nav">
@@ -748,7 +738,6 @@ else
     private int _currentIndex;
     private int _totalCount;
     private bool _loading = true;
-    private bool _analysisOpen;
 
     protected override async Task OnInitializedAsync()
     {
@@ -762,8 +751,6 @@ else
         if (!_loading)
             LoadIssue();
     }
-
-    private void ToggleAnalysis() => _analysisOpen = !_analysisOpen;
 
     private string? GetRationale(string fieldName)
     {

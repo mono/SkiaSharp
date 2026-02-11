@@ -2270,99 +2270,34 @@ h2.category-danger { color: #dc3545; }
 /* Analysis Slide-out Sidebar  */
 /* =========================== */
 
-.btn-analysis-toggle {
-    position: fixed;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    background: #495057;
-    color: #fff;
-    border: none;
-    padding: 0.75rem 0.5rem;
-    border-radius: 8px 0 0 8px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    z-index: 1040;
-    letter-spacing: 0.05em;
-    transition: background 0.15s;
+/* Analysis section (inline at bottom of page) */
+.analysis-section {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-top: 1.5rem;
 }
 
-.btn-analysis-toggle:hover {
-    background: #212529;
-}
-
-.analysis-sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 420px;
-    max-width: 90vw;
-    height: 100vh;
-    background: #fff;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-    z-index: 1050;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.analysis-sidebar.open {
-    transform: translateX(0);
-}
-
-.sidebar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid #e9ecef;
-    flex-shrink: 0;
-}
-
-.sidebar-header h3 {
+.analysis-section > h3 {
     font-size: 1rem;
     font-weight: 700;
-    color: #212529;
-    margin: 0;
+    color: #495057;
+    margin: 0 0 0.75rem 0;
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-.btn-sidebar-close {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    line-height: 1;
-}
-
-.btn-sidebar-close:hover {
-    background: #f1f3f5;
-    color: #212529;
-}
-
-.sidebar-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.25rem;
-}
-
-.sidebar-body h4 {
+.analysis-section .analysis-summary {
     font-size: 0.9rem;
-    font-weight: 700;
     color: #495057;
-    margin: 1.25rem 0 0.5rem 0;
+    margin-bottom: 1rem;
 }
 
-.sidebar-body h4:first-child {
-    margin-top: 0;
+.analysis-section h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 /* Sidebar section cards */
@@ -2387,17 +2322,3 @@ h2.category-danger { color: #dc3545; }
 .sidebar-assumptions  { border-left-color: #f59e0b; background: #fffbeb; }
 .sidebar-docs         { border-left-color: #64748b; background: #f8fafc; }
 
-.analysis-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: 1045;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.analysis-backdrop.open {
-    opacity: 1;
-    pointer-events: auto;
-}
