@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3279,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-11T22:12:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Confirmed all 5 compiler errors (CS0117 x4, CS1501 x1) when using v2 SKMatrix APIs against SkiaSharp 3.119.0. The APIs (MakeIdentity, MakeTranslation, MakeScale, MakeRotation, PostConcat with ref) were marked [Obsolete] in v2.88.9 with migration guidance and fully removed in v3. This is an intentional breaking change, not a bug. The v3 equivalents (CreateIdentity, CreateTranslation, CreateScale, CreateRotation, instance PostConcat) all work correctly.",
+  "reproductionTime": "~5 minutes",
+  "triageFile": null,
+  "triageNotes": null,
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "v2 APIs compile and run correctly (with [Obsolete] warnings). All Make* methods and static PostConcat(ref,...) work."
+    },
+    {
+      "version": "3.119.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "All 5 reported compiler errors confirmed: CS0117 for MakeIdentity, MakeTranslation, MakeScale, MakeRotation; CS1501 for PostConcat(ref, matrix). APIs were removed in v3."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.119.0" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project and add SkiaSharp 3.119.0",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.0",
+      "output": "Restore succeeded. PackageReference for package 'SkiaSharp' version '3.119.0' added.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write code using reporter's v2 APIs (MakeIdentity, MakeTranslation, MakeScale, MakeRotation, PostConcat with ref) against v3",
+      "layer": "csharp",
+      "command": null,
+      "output": null,
+      "filesCreated": [
+        { "filename": "Program.cs", "description": "Uses all 5 v2 SKMatrix APIs reported in the issue: MakeIdentity, MakeTranslation, MakeScale, MakeRotation, and PostConcat(ref, matrix)." }
+      ],
+      "result": null
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build the project — expect compiler errors CS0117 and CS1501",
+      "layer": "csharp",
+      "command": "dotnet build",
+      "output": "error CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity'\nerror CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'\nerror CS0117: 'SKMatrix' does not contain a definition for 'MakeScale'\nerror CS0117: 'SKMatrix' does not contain a definition for 'MakeRotation'\nerror CS1501: No overload for method 'PostConcat' takes 2 arguments\nBuild failed with 5 error(s)",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify v3 equivalent APIs work: CreateIdentity, CreateTranslation, CreateScale, CreateRotation, instance PostConcat",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "SkiaSharp version: 3.119.0.0\nRuntime: .NET 8.0.23\n1. CreateIdentity: 1, 1, 1\n2. CreateTranslation(100,200): TransX=100, TransY=200\n3. CreateScale(2,2,50,50): ScaleX=2, ScaleY=2\n4. CreateRotation(1.0,50,50): ScaleX=0.5403\n5. PostConcat (instance): TransX=-148.41, TransY=296.24\nAll v3 APIs work correctly.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify v2 APIs work on SkiaSharp 2.88.9 — confirms they existed but were already marked [Obsolete]",
+      "layer": "csharp",
+      "command": "dotnet run (with SkiaSharp 2.88.9)",
+      "output": "warning CS0618: 'SKMatrix.MakeIdentity()' is obsolete: 'Use CreateIdentity() instead.'\nwarning CS0618: 'SKMatrix.MakeTranslation(float, float)' is obsolete: 'Use CreateTranslation(float, float) instead.'\nwarning CS0618: 'SKMatrix.PostConcat(ref SKMatrix, SKMatrix)' is obsolete: 'Use PostConcat(SKMatrix) instead.'\nwarning CS0618: 'SKMatrix.MakeScale(float, float, float, float)' is obsolete: 'Use CreateScale(float, float, float, float) instead.'\nwarning CS0618: 'SKMatrix.MakeRotation(float, float, float)' is obsolete: 'Use CreateRotation(float, float, float) instead.'\nAll v2 APIs work correctly.",
+      "result": "success"
+    }
+  ],
+  "artifacts": null,
+  "errorMessages": {
+    "primaryError": "CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity' / 'MakeTranslation' / 'MakeScale' / 'MakeRotation' and CS1501: No overload for method 'PostConcat' takes 2 arguments",
+    "stackTrace": null,
+    "additionalErrors": [
+      "These are compile-time errors, not runtime errors. The v2 APIs were marked [Obsolete] in 2.88.x and removed in 3.x."
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.0",
+    "dockerUsed": false
+  },
+  "blockers": null
+}
