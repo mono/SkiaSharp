@@ -8,9 +8,9 @@ if (!$Tizen) {
   $Tizen = '<latest>'
 }
 
-# Workloads are pinned via global.json workloadVersion.
+# Workloads are resolved from the installed SDK version.
 # `dotnet workload restore` installs workloads required by projects in the repo.
-Write-Host "Restoring .NET workloads (pinned via global.json workload set)..."
+Write-Host "Restoring .NET workloads..."
 & dotnet workload restore --verbosity diagnostic
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
