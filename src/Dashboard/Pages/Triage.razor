@@ -20,15 +20,15 @@ else
     <!-- Summary Cards -->
     <div class="triage-summary">
         <div class="triage-card triage-warning @(SelectedCard == "needs-investigation" ? "selected" : "")" @onclick='() => FilterByCard("needs-investigation")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Output.Actionability.SuggestedAction == "needs-investigation")</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Output.Actionability.SuggestedAction == SuggestedAction.NeedsInvestigation)</span>
             <span class="triage-label">Needs Investigation</span>
         </div>
         <div class="triage-card triage-success @(SelectedCard == "closeable" ? "selected" : "")" @onclick='() => FilterByCard("closeable")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true)</span>
             <span class="triage-label">Closeable</span>
         </div>
         <div class="triage-card triage-info @(SelectedCard == "quick-wins" ? "selected" : "")" @onclick='() => FilterByCard("quick-wins")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true && i.Output.Actionability.RequiresHumanReview != true)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true && i.Output.Actionability.RequiresHumanReview != true)</span>
             <span class="triage-label">Quick Wins</span>
         </div>
         <div class="triage-card triage-danger @(SelectedCard == "regressions" ? "selected" : "")" @onclick='() => FilterByCard("regressions")'>
@@ -107,6 +107,7 @@ else
         @foreach (var issue in _filtered)
         {
             <a href="@GetDetailUrl(issue.Meta.Number)" class="ai-triage-row @GetActionClass(issue.Output.Actionability.SuggestedAction)">
+
                 <span class="issue-link">#@issue.Meta.Number</span>
                 <span class="ai-triage-title">@issue.Summary</span>
                 <span class="badge-type badge-@StripPrefix(issue.Classification.Type.Value)">@FormatLabel(issue.Classification.Type.Value)</span>
@@ -116,9 +117,9 @@ else
                 }
                 @if (issue.Evidence.BugSignals?.Severity is not null)
                 {
-                    <span class="badge-severity badge-sev-@issue.Evidence.BugSignals.Severity">@FormatLabel(issue.Evidence.BugSignals.Severity)</span>
+                    <span class="badge-severity badge-sev-@issue.Evidence.BugSignals.Severity.ToJsonString()">@FormatLabel(issue.Evidence.BugSignals.Severity.ToJsonString())</span>
                 }
-                <span class="badge-action badge-act-@issue.Output.Actionability.SuggestedAction">@FormatLabel(issue.Output.Actionability.SuggestedAction)</span>
+                <span class="badge-action badge-act-@issue.Output.Actionability.SuggestedAction.ToJsonString()">@FormatLabel(issue.Output.Actionability.SuggestedAction.ToJsonString())</span>
                 <span class="confidence-pill" title="Confidence: @issue.Output.Actionability.Confidence.ToString("P0")">
                     <span class="confidence-bar @GetConfidenceClass(issue.Output.Actionability.Confidence)" style="width: @((int)(issue.Output.Actionability.Confidence * 100))%"></span>
                 </span>
@@ -206,9 +207,9 @@ else
         {
             query = SelectedCard switch
             {
-                "needs-investigation" => query.Where(i => i.Output.Actionability.SuggestedAction == "needs-investigation"),
-                "closeable" => query.Where(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true),
-                "quick-wins" => query.Where(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true && i.Output.Actionability.RequiresHumanReview != true),
+                "needs-investigation" => query.Where(i => i.Output.Actionability.SuggestedAction == SuggestedAction.NeedsInvestigation),
+                "closeable" => query.Where(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true),
+                "quick-wins" => query.Where(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true && i.Output.Actionability.RequiresHumanReview != true),
                 "regressions" => query.Where(i => i.Evidence.Regression?.IsRegression == true),
                 "human-review" => query.Where(i => i.Output.Actionability.RequiresHumanReview == true),
                 _ => query
@@ -216,13 +217,13 @@ else
         }
 
         if (!string.IsNullOrEmpty(SelectedAction))
-            query = query.Where(i => i.Output.Actionability.SuggestedAction == SelectedAction);
+            query = query.Where(i => i.Output.Actionability.SuggestedAction.ToJsonString() == SelectedAction);
         if (!string.IsNullOrEmpty(SelectedType))
             query = query.Where(i => i.Classification.Type.Value == SelectedType);
         if (!string.IsNullOrEmpty(SelectedArea))
-            query = query.Where(i => i.Classification.Area?.Value == SelectedArea);
+            query = query.Where(i => i.Classification.Area.Value == SelectedArea);
         if (!string.IsNullOrEmpty(SelectedSeverity))
-            query = query.Where(i => i.Evidence.BugSignals?.Severity == SelectedSeverity);
+            query = query.Where(i => i.Evidence.BugSignals?.Severity.ToJsonString() == SelectedSeverity);
 
         query = SelectedSort switch
         {
@@ -259,9 +260,9 @@ else
         return parts.Count > 0 ? $"triage/{number}?{string.Join('&', parts)}" : $"triage/{number}";
     }
 
-    private static int SeverityOrder(string? severity) => severity switch
+    private static int SeverityOrder(BugSeverity? severity) => severity switch
     {
-        "critical" => 4, "high" => 3, "medium" => 2, "low" => 1, _ => 0
+        BugSeverity.Critical => 4, BugSeverity.High => 3, BugSeverity.Medium => 2, BugSeverity.Low => 1, _ => 0
     };
 
     private void ClearFilters()
@@ -286,13 +287,13 @@ else
     private static string StripPrefix(string value) =>
         value.Contains('/') ? value[(value.IndexOf('/') + 1)..] : value;
 
-    private static string GetActionClass(string action) => action switch
+    private static string GetActionClass(SuggestedAction action) => action switch
     {
-        "needs-investigation" => "action-investigate",
-        "close-as-fixed" or "close-with-docs" or "close-as-duplicate" => "action-close",
-        "convert-to-discussion" => "action-discuss",
-        "request-info" => "action-info",
-        "keep-open" => "action-keep",
+        SuggestedAction.NeedsInvestigation => "action-investigate",
+        SuggestedAction.CloseAsFixed or SuggestedAction.CloseWithDocs or SuggestedAction.CloseAsDuplicate => "action-close",
+        SuggestedAction.ConvertToDiscussion => "action-discuss",
+        SuggestedAction.RequestInfo => "action-info",
+        SuggestedAction.KeepOpen => "action-keep",
         _ => ""
     };
 

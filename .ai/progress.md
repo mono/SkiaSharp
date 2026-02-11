@@ -4,210 +4,118 @@
 
 ## Current Status
 
-**Overall**: ✅ AI Triage Dashboard — Schema v2.0 migration complete
-**Notes**: Models, collector, and all pages migrated to grouped 6-section schema. Build succeeds with 0 errors.
+**Overall**: ✅ AI Triage Dashboard — Schema v2.1 migration verified in browser
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Phase 1 | ✅ Complete | Initial dashboard |
-| Phase 2 | ✅ Complete | Restructure with charts |
-| Phase 2.7 | ✅ Complete | NuGet grouped layout + legacy toggle |
-| Phase 3 | ✅ Complete | .NET collector CLI replaces PowerShell |
-| Phase 4 | ✅ Complete | Data cache with engagement scoring |
-| Phase 5 | ✅ Complete | Multi-repo extension |
+| Dashboard App | ✅ Complete | Blazor WASM at [`src/Dashboard/`](../src/Dashboard/) |
+| Collector CLI | ✅ Complete | .NET CLI at [`src/SkiaSharp.Collector/`](../src/SkiaSharp.Collector/) |
+| Triage Models | ✅ Complete | Shared library at [`src/SkiaSharp.Triage.Models/`](../src/SkiaSharp.Triage.Models/) |
+| Schema v2.1 | ✅ Complete | 14 enums, typed deserialization, v2.0 + v2.1 compat |
+| Multi-Repo | ✅ Complete | SkiaSharp + Extended, parallel sync |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
-| AI Triage Skill | ✅ Complete | On main repo `skills/triage-issue` branch |
-| AI Triage Page | ✅ Complete | Dashboard page with full UI |
-| Schema v2.0 Migration | ✅ Complete | All models, collector, pages migrated |
+| AI Triage Skill | ✅ Complete | On `main` branch at `.github/skills/triage-issue/` |
 
 ---
 
-## AI Triage Skill ✅ (Ready to Commit)
+## Schema v2.1 Migration ✅
 
-### Core Pipeline ✅
+### Shared Library ([`src/SkiaSharp.Triage.Models/`](../src/SkiaSharp.Triage.Models/))
+
+- [x] [`TriageEnums.cs`](../src/SkiaSharp.Triage.Models/TriageEnums.cs) — 14 C# enums with `[JsonStringEnumMemberName]`
+- [x] [`TriageModels.cs`](../src/SkiaSharp.Triage.Models/TriageModels.cs) — record types (`TriagedIssue` → all children)
+- [x] [`TriagePayloads.cs`](../src/SkiaSharp.Triage.Models/TriagePayloads.cs) — `TriageAction` + 8 payload types
+- [x] [`TriageJsonOptions.cs`](../src/SkiaSharp.Triage.Models/TriageJsonOptions.cs) — centralized serializer config
+- [x] [`TriageEnumExtensions.cs`](../src/SkiaSharp.Triage.Models/TriageEnumExtensions.cs) — `.ToJsonString()` extension
+
+### Collector ([`src/SkiaSharp.Collector/`](../src/SkiaSharp.Collector/))
+
+- [x] [`GenerateCommand.cs`](../src/SkiaSharp.Collector/Commands/GenerateCommand.cs) — typed `Deserialize<TriagedIssue>()`, replaces `JsonNode` DOM
+- [x] Accepts both v2.0 and v2.1 schema versions
+- [x] `with` expressions for immutable record mutation
+
+### Dashboard ([`src/Dashboard/`](../src/Dashboard/))
+
+- [x] [`TriageStats.cs`](../src/Dashboard/Services/TriageStats.cs) — gutted, keeps only `TriageData` wrapper
+- [x] [`DashboardDataService.cs`](../src/Dashboard/Services/DashboardDataService.cs) — uses `TriageJsonOptions.Default`
+- [x] [`Triage.razor`](../src/Dashboard/Pages/Triage.razor) — enum-based filters and comparisons
+- [x] [`TriageDetail.razor`](../src/Dashboard/Pages/TriageDetail.razor) — Code Investigation sidebar, enhanced proposals (category, code snippet, validated), new action types
+
+### Verification
+
+- [x] Build: 0 errors, 0 warnings
+- [x] End-to-end: all 41 triage files (30 v2.0 + 11 v2.1) generate successfully
+- [x] Visual: triage list + detail pages verified in browser
+
+---
+
+## AI Triage Skill ✅
+
+Core pipeline on `main` branch at `.github/skills/triage-issue/`:
+
 - [x] JSON Schema (`triage-schema.json`) — draft 2020-12 with cross-field rules
-- [x] Preprocessor (`issue-to-markdown.ps1`) — annotated markdown from cached JSON
-- [x] Validator (`validate-triage.ps1`) — Test-Json with full error collection
-- [x] Label fetcher (`get-labels.ps1`) — `-Json` mode for machine-readable output
-- [x] SKILL.md — hardened for reliability (env checks, error handling, push retry)
-- [x] Tested on real issues: #2794, #3239, #3429, #3484
-- [x] Cross-field rules tested: 6/6 error cases caught
+- [x] `issue-to-markdown.ps1` — annotated markdown from cached JSON
+- [x] `validate-triage.ps1` — `Test-Json` with full error collection
+- [x] `get-labels.ps1` — `-Json` mode for machine-readable output
+- [x] `SKILL.md` — hardened for reliability (env checks, error handling, push retry)
 - [x] 5-model review applied (GPT-5, Opus 4.5, Gemini 3, GPT-5.1, Sonnet 4)
-
-### Review Fixes Applied ✅
-- [x] Backend enum corrected (live label verification)
-- [x] Empty array/object constraints (`minItems:1`, `minProperties:1`)
-- [x] UTC enforcement on `analyzedAt`
-- [x] Pipeline input with `begin/process/end` blocks
-- [x] Culture-safe datetime parsing
-- [x] `-Json` switch for get-labels.ps1
-- [x] SKILL.md environment checks, error handling, exit codes
-- [x] Push failure handling with retry
-
-### Remaining
 - [ ] Test with real AI (invoke skill on real issue via Copilot CLI)
 
 ---
 
-## Phase 5: Multi-Repository Extension ✅ (Complete)
+## Multi-Repo Extension ✅ (v0.11–0.12)
 
-### Data Migration & Full Sync ✅
-- [x] Migrate existing cache to `repos/mono-SkiaSharp/` structure
-- [x] Run full parallel sync (both jobs completed successfully)
-- [x] SkiaSharp: 3,183 items, 50 NuGet packages
-- [x] Extended: 329 items, 4 NuGet packages  
-- [x] Build & deploy with merged multi-repo data
-
-### Cache Restructure ✅
-- [x] Create `config.json` with repo list and NuGet discovery settings
-- [x] Create `ConfigModels.cs` and `ConfigService.cs`
-- [x] Update `CacheService` for per-repo paths: `repos/{key}/github/`, `repos/{key}/nuget/`
-- [x] Contributors moved to `github/` folder
-
-### Multi-Repo Sync ✅
-- [x] Update `SyncGitHubCommand` with `--repo owner/name` argument
-- [x] Update `SyncCommunityCommand` for per-repo
-- [x] Add `DiscoverPackagesAsync()` to `NuGetService` (versions-txt + nuget-search)
-- [x] Update `SyncNuGetCommand` for per-repo config
-
-### Parallel Workflow ✅
-- [x] Split sync into parallel jobs (sync-skiasharp, sync-extended)
-- [x] Add rebase-retry push logic for conflict resolution
-- [x] Add `--repo` filter in workflow_dispatch
-
-### Generate Consolidation ✅
-- [x] Update `GenerateCommand` to discover repos from `repos/*/`
-- [x] Add `repo`, `repoSlug`, `repoColor` fields to issues/PRs/packages
-- [x] Merge contributors (deduplicate by login, track per-repo)
-- [x] Per-repo breakdown in all stats
-- [x] MonthlyTrend with per-repo breakdown dictionaries
-
-### Dashboard UI ✅
-- [x] Update all service models for multi-repo fields
-- [x] `MultiRepoGitHubStats` with `Repos` + `Total`
-- [x] Home/Community pages use `Total` stats
-- [x] All models backward compatible (new fields optional)
+- [x] [`config.json`](../src/SkiaSharp.Collector/config.json) — repo list + NuGet discovery settings
+- [x] [`ConfigService.cs`](../src/SkiaSharp.Collector/Services/ConfigService.cs) / [`ConfigModels.cs`](../src/SkiaSharp.Collector/Models/ConfigModels.cs)
+- [x] [`CacheService.cs`](../src/SkiaSharp.Collector/Services/CacheService.cs) — per-repo paths `repos/{key}/`
+- [x] [`sync-data-cache.yml`](../github/workflows/sync-data-cache.yml) — parallel jobs with rebase-retry
+- [x] [`GenerateCommand.cs`](../src/SkiaSharp.Collector/Commands/GenerateCommand.cs) — discovers repos, merges contributors, per-repo breakdowns
+- [x] [`RepoBadge.razor`](../src/Dashboard/Components/RepoBadge.razor) — repo filter + badge component
 
 ---
 
-## Phase 1 (Completed)
+## Earlier Phases ✅
 
-### Milestone 1: Foundation ✅
-- [x] Orphan dashboard branch
+<details>
+<summary>Phase 1–3: Foundation, Restructure, CLI Migration</summary>
+
+### Phase 1: Foundation ✅
+
+- [x] Orphan `docs-dashboard` branch
 - [x] Blazor WASM project (.NET 10, C# 14)
-- [x] Project structure
+- [x] 5 pages: Home, Issues, Pull Requests, Community, NuGet
 
-### Milestone 2: Data Layer ✅
-- [x] GitHub, NuGet, Community, PR Triage collectors
-- [x] Data models and services
-- [x] Microsoft vs Community detection
+### Phase 2: Dashboard Restructure ✅
 
-### Milestone 3: Initial UI ✅
-- [x] 5 pages: Home, GitHub, NuGet, Community, PR Triage
-- [x] Navigation, layout, styling
-- [x] SkiaSharp logo
+| Page | Route | File |
+|------|-------|------|
+| Home (Insights) | `/` | [`Home.razor`](../src/Dashboard/Pages/Home.razor) |
+| Issues | `/issues` | [`Issues.razor`](../src/Dashboard/Pages/Issues.razor) |
+| AI Triage | `/triage` | [`Triage.razor`](../src/Dashboard/Pages/Triage.razor) |
+| Triage Detail | `/triage/{id}` | [`TriageDetail.razor`](../src/Dashboard/Pages/TriageDetail.razor) |
+| Pull Requests | `/pull-requests` | [`PrTriage.razor`](../src/Dashboard/Pages/PrTriage.razor) |
+| Community | `/community` | [`Community.razor`](../src/Dashboard/Pages/Community.razor) |
+| NuGet | `/nuget` | [`NuGet.razor`](../src/Dashboard/Pages/NuGet.razor) |
 
-### Milestone 4: CI/CD ✅
-- [x] Single unified workflow
-- [x] SPA routing fix (root 404.html)
-- [x] 6-hour scheduled builds
+### Phase 2.7: NuGet Page Redesign ✅
 
----
+- [x] Dynamic package list from VERSIONS.txt (50 packages)
+- [x] Collapsible group structure with subgroups
+- [x] Legacy toggle, group/subgroup subtotals
 
-## Phase 2: Dashboard Restructure ✅
+### Phase 3: Collector CLI Migration ✅
 
-### Page Structure
-| Page | Route | Status |
-|------|-------|--------|
-| Home (Insights) | `/` | ✅ Complete |
-| Issues | `/issues` | ✅ Complete |
-| Pull Requests | `/pull-requests` | ✅ Complete |
-| Community | `/community` | ✅ Complete |
-| NuGet | `/nuget` | ✅ Grouped layout with legacy toggle |
+| Component | Path |
+|-----------|------|
+| GitHub sync | [`SyncGitHubCommand.cs`](../src/SkiaSharp.Collector/Commands/SyncGitHubCommand.cs) |
+| NuGet sync | [`SyncNuGetCommand.cs`](../src/SkiaSharp.Collector/Commands/SyncNuGetCommand.cs) |
+| Community sync | [`SyncCommunityCommand.cs`](../src/SkiaSharp.Collector/Commands/SyncCommunityCommand.cs) |
+| Generate | [`GenerateCommand.cs`](../src/SkiaSharp.Collector/Commands/GenerateCommand.cs) |
+| GitHub API | [`GitHubService.cs`](../src/SkiaSharp.Collector/Services/GitHubService.cs) |
+| NuGet API | [`NuGetService.cs`](../src/SkiaSharp.Collector/Services/NuGetService.cs) |
+| Cache mgmt | [`CacheService.cs`](../src/SkiaSharp.Collector/Services/CacheService.cs) |
 
-### Phase 2.1: Data Layer ✅
-- [x] Create `collect-issues.ps1` (paginated, all open issues)
-- [x] Update `collect-pr-triage.ps1` (add labels, size, author type)
-- [x] Create `IssueStats.cs` data model (renamed to IssuesData)
-- [x] Update `PrTriageStats.cs` with new fields
-- [x] Add `GetIssuesDataAsync()` to service
-
-### Phase 2.2: Home Page (Insights) ✅
-- [x] Add Blazor-ApexCharts NuGet package
-- [x] Create health metrics cards row
-- [x] Create "by type" bar chart
-- [x] Create "by age" bar chart
-- [x] Create "by area" horizontal bar chart
-- [x] Create "PRs by size" chart
-- [x] Add triage summary section
-- [x] Add click handlers → navigate to filtered pages
-
-### Phase 2.3: Issues Page ✅
-- [x] Create `Issues.razor` page
-- [x] Add filter dropdowns (Type, Area, Backend, OS, Age)
-- [x] Add stats bar (showing X of Y)
-- [x] Add sortable issues table
-- [x] Implement URL-based filter state (`?type=bug&age=stale`)
-- [x] Add expandable issue rows
-
-### Phase 2.4: Pull Requests Page ✅
-- [x] Add dual routes (`/pr-triage` and `/pull-requests`)
-- [x] Add filter dropdowns (Size, Age, Author Type, Draft)
-- [x] Add clickable triage summary cards (5 categories)
-- [x] Add categorized PR lists with badges
-- [x] Implement URL-based filter state
-
-### Phase 2.5: Community Page ✅
-- [x] Add stars, forks, watchers from GitHub stats
-- [x] Keep contributors section with MS/Community breakdown
-- [x] Add issues/PRs overview with 30-day activity
-- [x] Remove GitHub.razor page
-- [x] Update navigation
-
----
-
-## Phase 2.7: NuGet Page Redesign ✅
-
-### Collector Enhancements
-- [x] Dynamic package list from VERSIONS.txt (main + release/2.x branches)
-- [x] Union gives 50 packages total
-- [x] `isLegacy` flag based on configurable `$minSupportedMajorVersion`
-- [x] Switch from Registration API to Search API (better download stats)
-
-### Page Layout
-- [x] Total downloads hero card (975M+)
-- [x] Collapsible group structure with subgroups for ALL groups:
-  - SkiaSharp (Core, Native Assets)
-  - SkiaSharp Views (Native Platform, .NET MAUI, Xamarin.Forms, Uno Platform, Web)
-  - SkiaSharp Extensions (Text, Animation, GPU Backends)
-  - HarfBuzzSharp (Core, Native Assets)
-- [x] "Show legacy packages" checkbox (default off)
-- [x] Group/subgroup subtotals
-- [x] Styled cards with package info
-
----
-
-## Phase 3: Collector CLI Migration ✅
-
-### .NET Console App
-- [x] Create `src/SkiaSharp.Collector/` project (.NET 10)
-- [x] Add Spectre.Console.Cli, Octokit, NuGet.Protocol packages
-- [x] Create 6 commands: all, github, nuget, community, issues, pr-triage
-
-### Shared Services
-- [x] GitHubService - API client with rate limiting, MS membership check
-- [x] NuGetService - Search API, dynamic package list, legacy detection
-- [x] LabelParser - Shared label parsing and age/size categories
-- [x] OutputService - JSON serialization
-
-### Project Cleanup
-- [x] Move project from `collectors/` to `src/`
-- [x] Add to solution
-- [x] Delete PowerShell scripts (5 files, 975 lines removed)
-- [x] Convert solution to `.slnx` format
-
-### CI/CD Integration
-- [x] Update workflow: single `dotnet run -- all` instead of 5 `pwsh` calls
+</details>
 
 ---
 
@@ -217,42 +125,41 @@ None! 🎉
 
 ---
 
-## SPA Routing (SOLVED)
+## SPA Routing (Solved)
 
-Navigation bugs were fixed by:
-1. Using relative URLs in `NavigateTo()` - no leading slash
-2. Not calling `NavigateTo()` on initial page load
-3. Using spa-github-pages redirect pattern with segmentCount=2
+1. Use relative URLs in `NavigateTo()` — no leading slash
+2. Don't call `NavigateTo()` in `OnInitializedAsync()` without a guard
+3. `404.html` uses spa-github-pages redirect with `segmentCount = 2`
 
-See `.github/copilot-instructions.md` for full documentation.
+See [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) for full documentation.
 
-## Future Ideas (Icebox)
+---
 
-1. Pagination for large issue/PR lists (currently shows all)
-2. Trend charts (historical data over time)
-3. Milestone tracking
-4. CI/CD build status integration
-5. Release progress view
-6. AI-powered PR triage recommendations
-7. Historical engagement data for trend analysis
+## Future Ideas
+
+- Stacked area charts for trends (per-repo breakdown)
+- Per-repo breakdown cards on Home page
+- Milestone tracking
+- Release progress view
+- Historical engagement data for trend analysis
+
+---
 
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.13.0 | 2026-02-11 | Schema v2.1: shared library, 14 enums, typed deserialization, new UI features |
+| 0.12.0 | 2026-02-10 | AI Triage detail page, compact list, triage links from Issues |
 | 0.11.0 | 2026-02-05 | Multi-repository extension: per-repo cache, parallel sync, merged stats |
 | 0.10.0 | 2026-02-05 | Issue/PR trend charts: stats cards, monthly activity, time range dropdown |
-| 0.9.1 | 2026-02-04 | Refactor to NuGet.Protocol SDK, all versions have downloads |
+| 0.9.1 | 2026-02-04 | Refactor to NuGet.Protocol SDK |
 | 0.9.0 | 2026-02-04 | NuGet charts, sorting filters, engagement loop fix |
-| 0.8.0 | 2026-02-04 | Community sync: contributors, MS membership, repo stats |
-| 0.7.1 | 2026-02-04 | Checkpoint-based engagement sync (100 items/commit, loop until rate limit) |
-| 0.7.0 | 2026-02-04 | Workflow restructure: NuGet first, batched engagement, 3-step sync |
-| 0.6.1 | 2026-02-04 | Added push trigger to sync workflow |
-| 0.6.0 | 2026-02-04 | Data cache architecture with engagement scoring |
-| 0.5.0 | 2026-02-04 | .NET collector CLI replaces 5 PowerShell scripts |
-| 0.4.0 | 2026-02-04 | NuGet page redesign - grouped layout, legacy toggle, 50 packages |
-| 0.3.2 | 2026-02-03 | NuGet collector fixed - 822M+ downloads now shown |
-| 0.3.1 | 2026-02-03 | SPA routing fix - navigation fully working |
-| 0.3.0 | 2026-02-03 | Phase 2: Charts, filters, restructure |
-| 0.2.0 | 2026-02-03 | MS/Community split, SPA fix, unified workflow |
+| 0.8.0 | 2026-02-04 | Community sync: contributors, MS membership |
+| 0.7.x | 2026-02-04 | Checkpoint engagement sync, workflow restructure |
+| 0.6.x | 2026-02-04 | Data cache architecture with engagement scoring |
+| 0.5.0 | 2026-02-04 | .NET collector CLI replaces PowerShell scripts |
+| 0.4.0 | 2026-02-04 | NuGet page redesign — grouped layout, 50 packages |
+| 0.3.x | 2026-02-03 | SPA routing fix, charts, filters |
+| 0.2.0 | 2026-02-03 | MS/Community split, unified workflow |
 | 0.1.0 | 2026-02-03 | Initial implementation |

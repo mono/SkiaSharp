@@ -1,5 +1,7 @@
+using System.Text.Json;
 using SkiaSharp.Collector.Models;
 using SkiaSharp.Collector.Services;
+using SkiaSharp.Triage.Models;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -741,7 +743,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Generating triage.json...[/]");
 
-        var issues = new List<System.Text.Json.Nodes.JsonObject>();
+        var issues = new List<TriagedIssue>();
         var byType = new Dictionary<string, int>();
         var byArea = new Dictionary<string, int>();
         var byAction = new Dictionary<string, int>();
@@ -766,62 +768,53 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 try
                 {
                     var json = await File.ReadAllTextAsync(file);
-                    var node = System.Text.Json.Nodes.JsonNode.Parse(json)?.AsObject();
-                    if (node is null) continue;
+                    var issue = JsonSerializer.Deserialize<TriagedIssue>(json, TriageJsonOptions.Default);
+                    if (issue is null) continue;
 
-                    // Schema v2.0 uses grouped structure: meta, classification, evidence, analysis, output
-                    var schemaVersion = node["meta"]?["schemaVersion"]?.GetValue<string>();
-                    if (schemaVersion != "2.0")
+                    // Accept v2.0 and v2.1
+                    if (issue.Meta.SchemaVersion is not "2.0" and not "2.1")
                     {
                         if (!settings.Quiet)
-                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: schema {schemaVersion ?? "unknown"} (need 2.0)[/]");
+                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: schema {issue.Meta.SchemaVersion} (need 2.0 or 2.1)[/]");
                         continue;
                     }
 
-                    var number = node["meta"]?["number"]?.GetValue<int>() ?? 0;
-                    var repo = node["meta"]?["repo"]?.GetValue<string>() ?? repoConfig?.FullName ?? repoKey;
+                    var repo = issue.Meta.Repo ?? repoConfig?.FullName ?? repoKey;
 
-                    // Inject issue state from GitHub index
-                    var state = stateByNumber.GetValueOrDefault(number, "open");
-                    node["meta"]!["state"] = state;
-
-                    // Add URL for dashboard linking
-                    node["url"] = $"https://github.com/{repo}/issues/{number}";
-
-                    // Extract classification values for summary stats (v2 paths)
-                    var typeValue = node["classification"]?["type"]?["value"]?.GetValue<string>();
-                    var areaValue = node["classification"]?["area"]?["value"]?.GetValue<string>();
-                    var action = node["output"]?["actionability"]?["suggestedAction"]?.GetValue<string>();
-                    var severity = node["evidence"]?["bugSignals"]?["severity"]?.GetValue<string>();
-                    var isHumanReview = node["output"]?["actionability"]?["requiresHumanReview"]?.GetValue<bool>() ?? false;
-                    var isRegression = node["evidence"]?["regression"]?["isRegression"]?.GetValue<bool>() ?? false;
-
-                    // Closeable = has a close-issue action
-                    var hasCloseAction = false;
-                    if (node["output"]?["actions"] is System.Text.Json.Nodes.JsonArray actions)
+                    // Inject issue state and URL via with expressions
+                    var state = stateByNumber.GetValueOrDefault(issue.Meta.Number, "open");
+                    issue = issue with
                     {
-                        foreach (var a in actions)
-                        {
-                            if (a?["type"]?.GetValue<string>() == "close-issue")
-                            {
-                                hasCloseAction = true;
-                                break;
-                            }
-                        }
+                        Meta = issue.Meta with { State = state },
+                        Url = $"https://github.com/{repo}/issues/{issue.Meta.Number}"
+                    };
+
+                    // Compute summary stats from typed properties
+                    var typeValue = issue.Classification.Type.Value;
+                    var areaValue = issue.Classification.Area.Value;
+                    var action = issue.Output.Actionability.SuggestedAction;
+                    var severity = issue.Evidence.BugSignals?.Severity;
+                    var isHumanReview = issue.Output.Actionability.RequiresHumanReview ?? false;
+                    var isRegression = issue.Evidence.Regression?.IsRegression ?? false;
+                    var hasCloseAction = issue.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) ?? false;
+
+                    byType[typeValue] = byType.GetValueOrDefault(typeValue) + 1;
+                    byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
+                    var actionStr = action.ToJsonString();
+                    byAction[actionStr] = byAction.GetValueOrDefault(actionStr) + 1;
+                    if (severity is not null)
+                    {
+                        var sevStr = severity.Value.ToJsonString();
+                        bySeverity[sevStr] = bySeverity.GetValueOrDefault(sevStr) + 1;
                     }
 
-                    if (typeValue is not null) byType[typeValue] = byType.GetValueOrDefault(typeValue) + 1;
-                    if (areaValue is not null) byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
-                    if (action is not null) byAction[action] = byAction.GetValueOrDefault(action) + 1;
-                    if (severity is not null) bySeverity[severity] = bySeverity.GetValueOrDefault(severity) + 1;
-
-                    if (action == "needs-investigation") needsInvestigation++;
+                    if (action == SuggestedAction.NeedsInvestigation) needsInvestigation++;
                     if (hasCloseAction) closeable++;
                     if (hasCloseAction && !isHumanReview) quickWins++;
                     if (isHumanReview) needsHumanReview++;
                     if (isRegression) regressions++;
 
-                    issues.Add(node);
+                    issues.Add(issue);
                 }
                 catch (Exception ex)
                 {
@@ -832,42 +825,30 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         }
 
         // Sort issues by number descending (newest first)
-        issues.Sort((a, b) => (b["meta"]?["number"]?.GetValue<int>() ?? 0).CompareTo(a["meta"]?["number"]?.GetValue<int>() ?? 0));
+        issues.Sort((a, b) => b.Meta.Number.CompareTo(a.Meta.Number));
 
-        static List<System.Text.Json.Nodes.JsonObject> ToLabelCounts(Dictionary<string, int> dict) =>
-            dict.OrderByDescending(kv => kv.Value)
-                .Select(kv =>
-                {
-                    var obj = new System.Text.Json.Nodes.JsonObject
-                    {
-                        ["label"] = kv.Key,
-                        ["count"] = kv.Value
-                    };
-                    return obj;
-                })
-                .ToList();
-
-        var output = new System.Text.Json.Nodes.JsonObject
+        // Build output wrapper
+        var output = new
         {
-            ["generatedAt"] = DateTime.UtcNow.ToString("o"),
-            ["totalCount"] = issues.Count,
-            ["summary"] = new System.Text.Json.Nodes.JsonObject
+            GeneratedAt = DateTime.UtcNow,
+            TotalCount = issues.Count,
+            Summary = new
             {
-                ["needsInvestigation"] = needsInvestigation,
-                ["closeable"] = closeable,
-                ["quickWins"] = quickWins,
-                ["needsHumanReview"] = needsHumanReview,
-                ["regressions"] = regressions
+                NeedsInvestigation = needsInvestigation,
+                Closeable = closeable,
+                QuickWins = quickWins,
+                NeedsHumanReview = needsHumanReview,
+                Regressions = regressions
             },
-            ["byType"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(byType).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
-            ["byArea"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(byArea).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
-            ["byAction"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(byAction).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
-            ["bySeverity"] = new System.Text.Json.Nodes.JsonArray(ToLabelCounts(bySeverity).Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray()),
-            ["issues"] = new System.Text.Json.Nodes.JsonArray(issues.Select(x => (System.Text.Json.Nodes.JsonNode)x).ToArray())
+            ByType = byType.OrderByDescending(kv => kv.Value).Select(kv => new { Label = kv.Key, Count = kv.Value }),
+            ByArea = byArea.OrderByDescending(kv => kv.Value).Select(kv => new { Label = kv.Key, Count = kv.Value }),
+            ByAction = byAction.OrderByDescending(kv => kv.Value).Select(kv => new { Label = kv.Key, Count = kv.Value }),
+            BySeverity = bySeverity.OrderByDescending(kv => kv.Value).Select(kv => new { Label = kv.Key, Count = kv.Value }),
+            Issues = issues
         };
 
         var outputPath = Path.Combine(settings.OutputDir, "triage.json");
-        var jsonStr = output.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        var jsonStr = JsonSerializer.Serialize(output, TriageJsonOptions.Default);
         await File.WriteAllTextAsync(outputPath, jsonStr);
 
         if (!settings.Quiet)

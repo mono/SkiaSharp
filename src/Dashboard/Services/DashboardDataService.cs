@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SkiaSharp.Triage.Models;
 
 namespace SkiaSharp.Dashboard.Services;
 
@@ -35,5 +36,5 @@ public class DashboardDataService(HttpClient http)
         await http.GetFromJsonAsync<TrendData>("data/github-trends.json", JsonOptions);
 
     public async Task<TriageData?> GetTriageDataAsync() =>
-        await http.GetFromJsonAsync<TriageData>("data/triage.json", JsonOptions);
+        await http.GetFromJsonAsync<TriageData>("data/triage.json", TriageJsonOptions.Default);
 }

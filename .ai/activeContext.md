@@ -1,192 +1,101 @@
 # Active Context
 
 > Current focus, recent changes, immediate next steps, and working patterns.
-> **Update this file frequently** - it's the "working memory" for AI assistants.
+> **Update this file frequently** — it's the "working memory" for AI assistants.
 
 ## Current Focus
 
-**Phase**: AI Triage Dashboard — Schema v2.0 migration complete
-**Status**: All models, collector, and pages migrated to v2.0 grouped schema
-**Branch**: docs-dashboard
+| | |
+|---|---|
+| **Phase** | AI Triage Dashboard — Schema v2.1 migration verified |
+| **Status** | Shared library with C# enums, typed deserialization, visually verified in browser |
+| **Branch** | `docs-dashboard` |
 
 ## Recent Changes
 
-### 2026-02-11 (Schema v2.0 Migration)
-- **Migrated TriageStats.cs** — Complete rewrite of C# records for grouped 6-section schema (meta, summary, classification, evidence, analysis, output)
-  - `ClassifiedField` now has just `Value` + `Confidence` (no `Reason` — reasoning in `analysis.fieldRationales`)
-  - `ResolutionProposal` simplified: just `Title`, `Description`, `Confidence`, `Effort` (no Steps/Pros/Cons)
-  - `TriageAction` uses `JsonElement?` for polymorphic payload with typed getters (`GetLabelsPayload()`, `GetCommentPayload()`, etc.)
-  - New records: `TriageMeta`, `TriageClassification`, `TriageEvidence`, `TriageAnalysis`, `TriageOutput`
-- **Updated GenerateCommand.cs** — v2.0 JSON path extraction, `schemaVersion == "2.0"` check, closeable from actions array, removed abandoned tracking
-- **Updated Triage.razor** — All property paths updated, `StripPrefix()` for `type/bug` → `bug` CSS classes, filter logic updated
-- **Rewrote TriageDetail.razor** — Full rewrite for grouped sections:
-  - Classification shows value + confidence only (no per-field reason)
-  - Actions section replaces SuggestedResponse (loops through typed actions with risk badges)
-  - Analysis sidebar uses `_issue.Analysis` with fieldRationales, uncertainties, assumptions
-  - Simplified proposals carousel (no Steps/Pros/Cons)
-- **Fixed Issues.razor** — Updated triage number lookup for `Meta.Number` path
-- **Added Markdig** markdown rendering (previous commit) — All text fields use `MarkdownHelper.ToHtml()`
+### 2026-02-11 — Schema v2.1 Migration (Shared Library + Enums)
 
-### 2026-02-10 (Markdown Rendering + CSS Fingerprinting)
-- **Refactored `Triage.razor`** — Compact clickable rows instead of expandable cards
-  - URL-persisted filters via `[SupplyParameterFromQuery]` + `NavigateTo(url, replace: true)`
-  - Rows link to detail page with filter context in query params
-  - Inline badges for regression (⚡) and human review (⚠)
-- **Created `TriageDetail.razor`** — Full detail page with:
-  - All triage sections rendered vertically (no tabs)
-  - Prev/next navigation preserving filters
-  - Back button returns to list with filters intact
-  - Classification + Action side-by-side grid
-  - Bug signals, regression, fix status, version analysis cards
-  - Evidence section: steps, code, screenshots, repo links, related issues
-  - Analysis: key signals with quotes, field rationales, uncertainties
-  - Resolution: hypothesis, research, 3+ proposals with recommendation
-  - Suggested response with Copy button
-- **Updated `Issues.razor`** — Added 🤖 triage link for triaged issues
-- **Added CSS** — Detail page nav, cards, compact rows, triage link styles
+Created [`src/SkiaSharp.Triage.Models/`](../src/SkiaSharp.Triage.Models/) — shared library, single source of truth for triage types:
 
-### 2026-02-09 (AI Triage Dashboard Page — Initial)
-- **Created initial `Triage.razor`** — Full AI Triage page with summary cards, filters, expandable issue cards
-- **Created `TriageStats.cs`** — C# records matching triage-schema.json (Classification, BugSignals, ReproEvidence, VersionAnalysis, AnalysisNotes, ResolutionAnalysis, etc.)
-- **Added `GenerateTriageAsync`** to GenerateCommand — reads ai-triage/*.json from cache, computes summary stats, writes triage.json
-- **Added `AiTriagePath`** to CacheService
-- **Added `GetTriageDataAsync()`** to DashboardDataService
-- **Updated NavMenu** — Added "AI Triage" between Issues and Pull Requests
-- **Added ~400 lines CSS** — Full styling for triage cards, badges, tabs, confidence bars, proposals grid, code blocks, etc.
-- **Fixed backtick rendering** — FormatMarkdown now uses regex for proper paired `<code>` tags
+| File | Contents |
+|------|----------|
+| [`TriageEnums.cs`](../src/SkiaSharp.Triage.Models/TriageEnums.cs) | 14 C# enums with `[JsonStringEnumMemberName]` attributes |
+| [`TriageModels.cs`](../src/SkiaSharp.Triage.Models/TriageModels.cs) | All record types (`TriagedIssue`, `TriageMeta`, `TriageClassification`, etc.) |
+| [`TriagePayloads.cs`](../src/SkiaSharp.Triage.Models/TriagePayloads.cs) | `TriageAction` + 8 payload types (including 3 new: discussion, project, milestone) |
+| [`TriageJsonOptions.cs`](../src/SkiaSharp.Triage.Models/TriageJsonOptions.cs) | Centralized `JsonSerializerOptions` shared by Dashboard and Collector |
+| [`TriageEnumExtensions.cs`](../src/SkiaSharp.Triage.Models/TriageEnumExtensions.cs) | `.ToJsonString()` extension for enum → JSON string conversion |
 
-### 2026-02-08 (Scripts → PowerShell 7.5)
-- **Converted all 3 scripts** from C# (.NET 10 file-based apps) to PowerShell 7.5+
-  - `validate-triage.ps1` (43 lines) — Uses built-in `Test-Json -Schema` which fully supports draft 2020-12, `$defs`, `if/then`, `oneOf`, `pattern`, cross-field rules. Collects all errors via `-ErrorVariable`.
-  - `get-labels.ps1` (72 lines) — Native `ConvertFrom-Json`, `Group-Object`, `Where-Object`. File-based 10-min cache with `Get-Item .LastWriteTime`.
-  - `issue-to-markdown.ps1` (278 lines) — Idiomatic PowerShell: `?.`/`??` operators, `-replace` chains, `[regex]::Matches()`, `ConvertFrom-Json` dot notation. Output verified **identical** to Python on issues #2794, #3239, #3429, #3484.
-- **Removed**: `validate-triage.cs`, `get-labels.cs`, `issue-to-markdown.cs`
-- **Total**: 393 lines PowerShell (down from 651 C#, 595 Python/Bash)
-- **Only dependency**: `pwsh` and `gh` CLI
-- **Key learnings**:
-  - `Test-Json` in PowerShell 7.5 fully supports JSON Schema draft 2020-12 (no third-party library needed)
-  - `-like '*[bot]'` treats brackets as character classes → use `.EndsWith('[bot]')` instead
-  - `Write-Output` appends a trailing newline → use `[Console]::Write()` for exact output control
-  - Non-static local functions were still needed in C# for closures; PowerShell eliminates this entirely with script-scoped variables
+Other changes:
 
-### 2026-02-07 (Triage Skill Review)
-- Reviewed Copilot triage skill (schema, labels, scripts, validator) and documented specific actionable improvements.
+- **[`GenerateCommand.cs`](../src/SkiaSharp.Collector/Commands/GenerateCommand.cs)** — replaced `JsonNode` DOM with `JsonSerializer.Deserialize<TriagedIssue>()`; accepts v2.0 + v2.1; uses `with` expressions for record mutation
+- **[`TriageStats.cs`](../src/Dashboard/Services/TriageStats.cs)** — gutted: removed all triage types (moved to shared lib), keeps only `TriageData` wrapper
+- **[`DashboardDataService.cs`](../src/Dashboard/Services/DashboardDataService.cs)** — uses `TriageJsonOptions.Default` for triage endpoint
+- **[`TriageDetail.razor`](../src/Dashboard/Pages/TriageDetail.razor)** — Code Investigation sidebar, enhanced proposal cards (category, code snippet, validated), new action type handlers (convert-to-discussion, update-project, set-milestone), all helpers use enum types
+- **[`Triage.razor`](../src/Dashboard/Pages/Triage.razor)** — enum-based comparisons and helper methods
 
-### 2026-02-06 (Sync Design Review)
+### 2026-02-10 — Triage Detail Page + Compact List
 
-- Reviewed full/resume GitHub sync design and documented edge cases around page drift, resume markers, crash windows, and concurrency.
-- Completed adversarial reliability review of GitHub sync (state, rate limits, and checkpoint loop failure modes).
+- **[`Triage.razor`](../src/Dashboard/Pages/Triage.razor)** — compact clickable rows, URL-persisted filters, inline regression/review badges
+- **[`TriageDetail.razor`](../src/Dashboard/Pages/TriageDetail.razor)** — full detail page: classification, actions, evidence, analysis sidebar, resolution proposals, draft response with Copy button
+- **[`Issues.razor`](../src/Dashboard/Pages/Issues.razor)** — added 🤖 triage link for triaged issues
 
-### 2026-02-05 (UI Enhancements - v0.12.0)
+### 2026-02-09 — AI Triage Dashboard Page (Initial)
 
-**Repo Badges & Filters ✅**
-- Created `RepoBadge.razor` component (rounded pill with repo name)
-- Added Repository filter dropdown to Issues page
-- Added Repository filter dropdown to PRs page
-- Repo badges display in issue table rows and PR cards
-- URL query param support: `?repo=mono/SkiaSharp.Extended`
+- **[`Triage.razor`](../src/Dashboard/Pages/Triage.razor)** — initial page with summary cards, filters, expandable issue cards
+- **[`TriageStats.cs`](../src/Dashboard/Services/TriageStats.cs)** — C# records matching triage-schema.json
+- **[`GenerateCommand.cs`](../src/SkiaSharp.Collector/Commands/GenerateCommand.cs)** — `GenerateTriageAsync` reads ai-triage/*.json, computes summary stats
+- **[`NavMenu.razor`](../src/Dashboard/Layout/NavMenu.razor)** — added "AI Triage" nav item
 
-**Extended NuGet Sync Fix ✅**
-- Updated author filter to accept "Xamarin" (Xamarin Inc. is Microsoft)
-- Added `supportedPackages` whitelist for legacy detection
-- Now syncs all 13 Extended packages (was 4)
-- Only Extended + UI.Maui marked as supported, rest are legacy
+### 2026-02-08 — Scripts → PowerShell 7.5
 
-**NuGet Page Grouping ✅**
-- Added "SkiaSharp.Extended" as new top-level group
-- Subgroups: Core, UI Controls, Iconify
-- All 13 Extended packages properly categorized
+Converted 3 scripts from C# to PowerShell 7.5+ (393 lines, down from 651 C#). Scripts live on `main` branch at `.github/skills/triage-issue/references/`:
+- `validate-triage.ps1` — `Test-Json -Schema` (draft 2020-12)
+- `get-labels.ps1` — label fetcher with file-based cache
+- `issue-to-markdown.ps1` — annotated markdown from cached JSON
 
-**Live Dashboard Stats**:
-| Metric | Total | SkiaSharp | Extended |
-|--------|-------|-----------|----------|
-| Stars | 5,514 | 5,257 | 257 |
-| Open Issues | 690 | 658 | 32 |
-| Open PRs | 70 | 52 | 18 |
-| NuGet Packages | 63 | 50 | 13 |
-| Contributors | 105 | (merged) | (merged) |
+### 2026-02-07 — Triage Skill Review
 
-**Phase 1: Cache Restructure ✅**
-- Created `config.json` with repo list (SkiaSharp + Extended)
-- Created `ConfigModels.cs` and `ConfigService.cs`
-- Updated `CacheService` for per-repo paths: `repos/{key}/github/`, `repos/{key}/nuget/`
-- Contributors moved to `github/` folder (it's GitHub API data)
+Reviewed Copilot triage skill and documented improvements.
 
-**Phase 2: Multi-Repo Sync ✅**
-- Updated all sync commands to accept `--repo owner/name` argument
-- `SyncGitHubCommand`, `SyncCommunityCommand`: per-repo cache paths
-- `NuGetService`: Added `DiscoverPackagesAsync()` with two strategies:
-  - `versions-txt`: Parse VERSIONS.txt files for SkiaSharp
-  - `nuget-search`: Search NuGet API for `SkiaSharp.Extended*` by Microsoft
-- `SyncNuGetCommand`: Uses per-repo config and cache paths
+### 2026-02-06 — Sync Design Review
 
-**Phase 3: Parallel Workflow ✅**
-- Split `sync-data-cache.yml` into parallel jobs:
-  - `sync-skiasharp`: Syncs mono/SkiaSharp
-  - `sync-extended`: Syncs mono/SkiaSharp.Extended
-- Added rebase-retry push logic (different folders = no conflicts)
-- Added `--repo` filter in workflow_dispatch for testing
+Adversarial reliability review of GitHub sync (page drift, resume markers, crash windows, concurrency).
 
-**Phase 4: Generate Consolidation ✅**
-- Updated `GenerateCommand` to discover repos from `repos/*/` structure
-- Added `repo`, `repoSlug`, `repoColor` fields to issues/PRs
-- Merged contributors (deduplicate by login, track per-repo contributions)
-- Per-repo breakdown in all stats (byRepo dictionaries)
-- MonthlyTrend includes per-repo breakdown for stacked charts
+### 2026-02-05 — Multi-Repo Extension (v0.12.0)
 
-**Phase 5: Dashboard UI ✅**
-- Updated all service models for multi-repo fields
-- `MultiRepoGitHubStats` replaces `GitHubStats` with `Repos` + `Total`
-- Home/Community pages use `Total` stats
-- All models backward compatible (new fields optional)
+- **[`RepoBadge.razor`](../src/Dashboard/Components/RepoBadge.razor)** — repo pill component
+- **[`config.json`](../src/SkiaSharp.Collector/config.json)** — repo list + NuGet discovery settings
+- **[`ConfigService.cs`](../src/SkiaSharp.Collector/Services/ConfigService.cs)** / [`ConfigModels.cs`](../src/SkiaSharp.Collector/Models/ConfigModels.cs) — multi-repo config
+- **[`CacheService.cs`](../src/SkiaSharp.Collector/Services/CacheService.cs)** — per-repo paths: `repos/{key}/github/`, `repos/{key}/nuget/`
+- **`sync-data-cache.yml`** — parallel jobs with rebase-retry push
 
-## Architecture Summary
+## Architecture
 
 ```
-docs-dashboard/                      # SOURCE CODE BRANCH
-├── src/SkiaSharp.Collector/
-│   ├── config.json                  # Repo list + NuGet discovery settings
-│   └── ...
-
-docs-data-cache/                     # DATA CACHE BRANCH
-└── repos/
-    ├── mono-SkiaSharp/
-    │   ├── github/
-    │   │   ├── sync-meta.json
-    │   │   ├── repo.json
-    │   │   ├── contributors.json
-    │   │   ├── index.json
-    │   │   └── items/*.json
-    │   └── nuget/
-    │       ├── sync-meta.json
-    │       ├── index.json
-    │       └── packages/*.json
-    └── mono-SkiaSharp.Extended/
-        └── ... (same structure)
+docs-dashboard branch                   docs-data-cache branch
+├── src/                                └── repos/
+│   ├── SkiaSharp.Triage.Models/  ←NEW      ├── mono-SkiaSharp/
+│   │   ├── TriageEnums.cs                  │   ├── github/ (sync-meta, repo, index, items/*)
+│   │   ├── TriageModels.cs                 │   ├── nuget/  (sync-meta, index, packages/*)
+│   │   ├── TriagePayloads.cs               │   └── ai-triage/*.json
+│   │   ├── TriageJsonOptions.cs            └── mono-SkiaSharp.Extended/
+│   │   └── TriageEnumExtensions.cs             └── ... (same structure)
+│   ├── Dashboard/
+│   │   ├── Pages/ (Home, Issues, Triage, TriageDetail, PrTriage, Community, NuGet)
+│   │   ├── Services/ (DashboardDataService, TriageStats, GitHubStats, ...)
+│   │   └── Layout/ (MainLayout, NavMenu)
+│   └── SkiaSharp.Collector/
+│       ├── Commands/ (Generate, Sync*, legacy)
+│       ├── Services/ (Cache, GitHub, NuGet, Config)
+│       └── Models/ (CacheModels, ConfigModels, ...)
+└── .github/workflows/          (on GitHub, not in orphan branch checkout)
+    ├── sync-data-cache.yml
+    └── build-dashboard.yml
 ```
-
-### Parallel Sync with Rebase-Retry
-```yaml
-jobs:
-  sync-skiasharp:
-    # Syncs to repos/mono-SkiaSharp/*
-    # Uses rebase-retry for push conflicts
-    
-  sync-extended:  # Runs in PARALLEL
-    # Syncs to repos/mono-SkiaSharp.Extended/*
-    # Different folders = no git conflicts on rebase
-```
-
-### NuGet Discovery
-| Repo | Method | Details |
-|------|--------|---------|
-| mono/SkiaSharp | versions-txt | Parse VERSIONS.txt from main + release/2.x |
-| mono/SkiaSharp.Extended | nuget-search | Search `SkiaSharp.Extended*` by Microsoft |
 
 ## Context for Next AI Session
 
-When resuming work:
-1. Read ALL files in `.ai/` folder first
+1. Read ALL files in `.ai/` first
 2. Branch is `docs-dashboard`
 3. Data cache is `docs-data-cache` branch with `repos/` structure
 4. Live at https://mono.github.io/SkiaSharp/dashboard/
@@ -194,28 +103,14 @@ When resuming work:
 
 ## Remaining Enhancements (Future)
 
-- [ ] Repo filter dropdown on Issues/PRs pages
-- [ ] Repo color badges on issue/PR table rows
 - [ ] Stacked area charts for trends (using per-repo breakdown)
 - [ ] Per-repo breakdown cards on Home page
 
 ## Previous Completed Phases
 
-### Phase 5 - Issue/PR Trend Charts (v0.10.0) ✅
-- Monthly activity charts with time range dropdown
-- Stats cards for issues and PRs
-- Merged/MergedAt fields for PR tracking
-
-### Phase 4 - Data Cache Architecture ✅
-- Separate cache branch with sync commands
-- Engagement scoring with hot issue detection
-- Checkpoint-based sync with rate limit handling
-
-### Phase 3 - Collector CLI ✅
-- .NET CLI replaces PowerShell scripts
-- Commands: sync github/nuget/community, generate
-
-### Phase 2 - Dashboard Features ✅
-- NuGet page with grouped layout
-- SPA routing fixed
-- Charts with ApexCharts
+| Phase | Version | Summary |
+|-------|---------|---------|
+| Issue/PR Trend Charts | v0.10.0 | Monthly activity charts, stats cards, time range dropdown |
+| Data Cache Architecture | v0.6–0.8 | Cache branch, engagement scoring, checkpoint sync |
+| Collector CLI | v0.5.0 | .NET CLI replaces PowerShell scripts |
+| Dashboard Features | v0.3.0 | Charts, filters, SPA routing, NuGet grouped layout |

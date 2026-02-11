@@ -46,14 +46,14 @@ else
             </span>
             @if (_issue.Evidence.BugSignals?.Severity is not null)
             {
-                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity has-rationale" style="position:relative">
-                    @FormatLabel(_issue.Evidence.BugSignals.Severity)
+                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.ToJsonString() has-rationale" style="position:relative">
+                    @FormatLabel(_issue.Evidence.BugSignals.Severity.ToJsonString())
                     @{ var hdrSevR = GetRationale("bugSignals.severity"); }
                     @if (hdrSevR is not null) { <span class="rationale-tooltip">@hdrSevR</span> }
                 </span>
             }
-            <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction has-rationale" style="position:relative">
-                @FormatLabel(_issue.Output.Actionability.SuggestedAction)
+            <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction.ToJsonString() has-rationale" style="position:relative">
+                @FormatLabel(_issue.Output.Actionability.SuggestedAction.ToJsonString())
                 @{ var hdrActR = GetRationale("actionability.suggestedAction"); }
                 @if (hdrActR is not null) { <span class="rationale-tooltip">@hdrActR</span> }
             </span>
@@ -61,7 +61,7 @@ else
                 <span class="confidence-bar @GetConfidenceClass(_issue.Output.Actionability.Confidence)" style="width: @((int)(_issue.Output.Actionability.Confidence * 100))%"></span>
                 <span class="confidence-text">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
             </span>
-            @if (_issue.Output.Actions?.Any(a => a.Type == "close-issue") == true)
+            @if (_issue.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true)
             {
                 <span class="badge-closeable" title="Has a close-issue action — AI believes this can be closed">✓ Closeable</span>
             }
@@ -165,8 +165,8 @@ else
         <div class="detail-card card-action">
             <h3>Suggested Action</h3>
             <div class="action-detail has-rationale">
-                <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction">
-                    @FormatLabel(_issue.Output.Actionability.SuggestedAction)
+                <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction.ToJsonString()">
+                    @FormatLabel(_issue.Output.Actionability.SuggestedAction.ToJsonString())
                 </span>
                 <span class="field-confidence">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
                 @{ var actionRationale = GetRationale("actionability.suggestedAction"); }
@@ -182,7 +182,7 @@ else
                     <strong>Missing:</strong>
                     @foreach (var mi in _issue.Output.Actionability.MissingInfo)
                     {
-                        <span class="label label-missing">@FormatLabel(mi)</span>
+                        <span class="label label-missing">@FormatLabel(mi.ToJsonString())</span>
                     }
                 </div>
             }
@@ -204,15 +204,15 @@ else
                 <span class="signal @(_issue.Evidence.BugSignals.HasWorkaround == true ? "signal-yes" : "signal-no")" title="Whether a workaround has been identified">
                     @(_issue.Evidence.BugSignals.HasWorkaround == true ? "🔧 Workaround" : "No Workaround")
                 </span>
-                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity has-rationale" style="position:relative">
-                    @FormatLabel(_issue.Evidence.BugSignals.Severity)
+                <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.ToJsonString() has-rationale" style="position:relative">
+                    @FormatLabel(_issue.Evidence.BugSignals.Severity.ToJsonString())
                     @{ var sevRationale = GetRationale("bugSignals.severity"); }
                     @if (sevRationale is not null)
                     {
                         <span class="rationale-tooltip">@sevRationale</span>
                     }
                 </span>
-                <span class="label" title="@GetReproTooltip(_issue.Evidence.BugSignals.ReproQuality)">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality)</span>
+                <span class="label" title="@GetReproTooltip(_issue.Evidence.BugSignals.ReproQuality)">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality.ToJsonString())</span>
             </div>
             <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.BugSignals.SeverityReason)</div>
             @if (_issue.Evidence.BugSignals.WorkaroundSummary is not null)
@@ -288,7 +288,7 @@ else
                     }
                     @if (_issue.Evidence.FixStatus.VerificationStatus is not null)
                     {
-                        <span class="label">@FormatLabel(_issue.Evidence.FixStatus.VerificationStatus)</span>
+                        <span class="label">@FormatLabel(_issue.Evidence.FixStatus.VerificationStatus.Value.ToJsonString())</span>
                     }
                 </div>
             }
@@ -314,7 +314,7 @@ else
             {
                 <div class="field-row">
                     <span class="field-label">Still relevant:</span>
-                    <span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance" title="Whether this issue still affects the latest version">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance)</span>
+                    <span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString()" title="Whether this issue still affects the latest version">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString())</span>
                 </div>
             }
             @if (_issue.Evidence.VersionAnalysis.MigrationPath is not null)
@@ -379,7 +379,7 @@ else
                         <a href="@att.Url" target="_blank">📎 @att.Filename</a>
                         @if (att.Type is not null)
                         {
-                            <span class="label">@FormatLabel(att.Type)</span>
+                            <span class="label">@FormatLabel(att.Type.Value.ToJsonString())</span>
                         }
                     </div>
                 }
@@ -440,9 +440,24 @@ else
                         <h5>@proposal.Title</h5>
                         <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
                         <div class="proposal-meta">
-                            <span class="label">Effort: @FormatLabel(proposal.Effort)</span>
+                            @if (proposal.Category is not null)
+                            {
+                                <span class="label badge-category badge-cat-@proposal.Category.Value.ToJsonString()">@FormatLabel(proposal.Category.Value.ToJsonString())</span>
+                            }
+                            <span class="label">Effort: @FormatLabel(proposal.Effort.ToJsonString())</span>
                             <span class="field-confidence">@proposal.Confidence.ToString("P0")</span>
+                            @if (proposal.Validated is not null)
+                            {
+                                <span class="label badge-validated badge-val-@proposal.Validated.Value.ToJsonString()">@FormatLabel(proposal.Validated.Value.ToJsonString())</span>
+                            }
                         </div>
+                        @if (proposal.CodeSnippet is not null)
+                        {
+                            <details class="proposal-code">
+                                <summary>Code Snippet</summary>
+                                <pre class="code-block"><code>@proposal.CodeSnippet</code></pre>
+                            </details>
+                        }
                         @if (isRecommended && res.RecommendedReason is not null)
                         {
                             <div class="recommended-reason">
@@ -464,8 +479,8 @@ else
             {
                 <div class="action-item" style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--border-color, #dee2e6); border-radius: 0.5rem;">
                     <div class="response-header">
-                        <span class="badge-action badge-act-@action.Type" title="@GetActionTypeTooltip(action.Type)">@FormatLabel(action.Type)</span>
-                        <span class="badge-risk badge-risk-@action.Risk" style="@GetRiskStyle(action.Risk)" title="@GetRiskTooltip(action.Risk)">@FormatLabel(action.Risk) risk</span>
+                        <span class="badge-action badge-act-@action.Type.ToJsonString()" title="@GetActionTypeTooltip(action.Type)">@FormatLabel(action.Type.ToJsonString())</span>
+                        <span class="badge-risk badge-risk-@action.Risk.ToJsonString()" style="@GetRiskStyle(action.Risk)" title="@GetRiskTooltip(action.Risk)">@FormatLabel(action.Risk.ToJsonString()) risk</span>
                         <span class="field-confidence" title="How confident the AI is in this action">@action.Confidence.ToString("P0")</span>
                     </div>
                     <div class="reason-text md-content">@MarkdownHelper.ToHtml(action.Description)</div>
@@ -474,7 +489,7 @@ else
                         <div class="reason-text-sm md-content" style="margin-top: 0.25rem; opacity: 0.8;">@MarkdownHelper.ToHtml(action.Reason)</div>
                     }
 
-                    @if (action.Type == "add-comment")
+                    @if (action.Type == ActionType.AddComment)
                     {
                         var commentPayload = action.GetCommentPayload();
                         @if (commentPayload?.DraftBody is not null)
@@ -482,11 +497,11 @@ else
                             <div class="response-draft" style="margin-top: 0.5rem;">
                                 <div class="draft-header">
                                     <strong>Draft Response</strong>
-                                    @if (commentPayload.CommentType is not null)
+                                    @if (commentPayload is not null)
                                     {
-                                        <span class="label" style="margin-left: 0.5rem;" title="@GetCommentTypeTooltip(commentPayload.CommentType)">@FormatLabel(commentPayload.CommentType)</span>
+                                        <span class="label" style="margin-left: 0.5rem;" title="@GetCommentTypeTooltip(commentPayload.CommentType)">@FormatLabel(commentPayload.CommentType.ToJsonString())</span>
                                     }
-                                    @if (commentPayload.RequiresHumanEdit == true)
+                                    @if (commentPayload!.RequiresHumanEdit == true)
                                     {
                                         <span class="badge-human-review" style="margin-left: 0.5rem;" title="AI-drafted text that should be reviewed and edited before posting">✏ Needs Edit</span>
                                     }
@@ -498,7 +513,7 @@ else
                             </div>
                         }
                     }
-                    else if (action.Type == "update-labels")
+                    else if (action.Type == ActionType.UpdateLabels)
                     {
                         var labelsPayload = action.GetLabelsPayload();
                         @if (labelsPayload is not null)
@@ -523,7 +538,7 @@ else
                             </div>
                         }
                     }
-                    else if (action.Type == "close-issue")
+                    else if (action.Type == ActionType.CloseIssue)
                     {
                         var closePayload = action.GetClosePayload();
                         @if (closePayload?.Reason is not null)
@@ -531,7 +546,7 @@ else
                             <p style="margin-top: 0.5rem;">Close reason: <strong>@closePayload.Reason</strong></p>
                         }
                     }
-                    else if (action.Type == "link-duplicate")
+                    else if (action.Type == ActionType.LinkDuplicate)
                     {
                         var dupPayload = action.GetDuplicatePayload();
                         @if (dupPayload?.DuplicateOf is not null)
@@ -539,7 +554,7 @@ else
                             <p style="margin-top: 0.5rem;">Duplicate of <a href="https://github.com/@_issue.Meta.Repo/issues/@dupPayload.DuplicateOf" target="_blank">#@dupPayload.DuplicateOf</a></p>
                         }
                     }
-                    else if (action.Type == "link-related")
+                    else if (action.Type == ActionType.LinkRelated)
                     {
                         var relPayload = action.GetRelatedPayload();
                         @if (relPayload?.RelatedIssues is { Count: > 0 })
@@ -551,6 +566,36 @@ else
                                     <a href="https://github.com/@_issue.Meta.Repo/issues/@num" target="_blank" class="related-issue-link">#@num</a>
                                 }
                             </div>
+                        }
+                    }
+                    else if (action.Type == ActionType.ConvertToDiscussion)
+                    {
+                        var discPayload = action.GetDiscussionPayload();
+                        @if (discPayload is not null)
+                        {
+                            <p style="margin-top: 0.5rem;">Convert to discussion: <strong>@discPayload.CategorySlug</strong></p>
+                        }
+                    }
+                    else if (action.Type == ActionType.UpdateProject)
+                    {
+                        var projPayload = action.GetProjectPayload();
+                        @if (projPayload?.FieldUpdates is { Count: > 0 })
+                        {
+                            <div style="margin-top: 0.5rem;">
+                                <span class="field-label">Project updates:</span>
+                                @foreach (var field in projPayload.FieldUpdates)
+                                {
+                                    <span class="label" style="margin-right: 0.25rem;">@field.FieldName → @field.Value</span>
+                                }
+                            </div>
+                        }
+                    }
+                    else if (action.Type == ActionType.SetMilestone)
+                    {
+                        var msPayload = action.GetMilestonePayload();
+                        @if (msPayload is not null)
+                        {
+                            <p style="margin-top: 0.5rem;">Set milestone: <strong>@msPayload.MilestoneTitle</strong></p>
                         }
                     }
                 </div>
@@ -583,6 +628,28 @@ else
                             <blockquote class="signal-quote">"@signal.Text"</blockquote>
                             <span class="evidence-source">— @signal.Source</span>
                             <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (_issue.Analysis.CodeInvestigation is { Count: > 0 })
+            {
+                <div class="sidebar-section sidebar-code-investigation">
+                    <h4 title="Source code files examined during investigation">Code Investigation</h4>
+                    @foreach (var entry in _issue.Analysis.CodeInvestigation)
+                    {
+                        <div class="code-investigation-card">
+                            <div class="code-file-ref">
+                                <a href="@GetFileUrl(entry)" target="_blank" rel="noopener" title="View on GitHub">
+                                    <code>@entry.File</code>
+                                    @if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
+                                    {
+                                        <span class="code-lines">L@(entry.Lines)</span>
+                                    }
+                                </a>
+                            </div>
+                            <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Relevance)</div>
                         </div>
                     }
                 </div>
@@ -739,9 +806,9 @@ else
         {
             query = Card switch
             {
-                "needs-investigation" => query.Where(i => i.Output.Actionability.SuggestedAction == "needs-investigation"),
-                "closeable" => query.Where(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true),
-                "quick-wins" => query.Where(i => i.Output.Actions?.Any(a => a.Type == "close-issue") == true && i.Output.Actionability.RequiresHumanReview != true),
+                "needs-investigation" => query.Where(i => i.Output.Actionability.SuggestedAction == SuggestedAction.NeedsInvestigation),
+                "closeable" => query.Where(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true),
+                "quick-wins" => query.Where(i => i.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true && i.Output.Actionability.RequiresHumanReview != true),
                 "regressions" => query.Where(i => i.Evidence.Regression?.IsRegression == true),
                 "human-review" => query.Where(i => i.Output.Actionability.RequiresHumanReview == true),
                 _ => query
@@ -749,13 +816,13 @@ else
         }
 
         if (!string.IsNullOrEmpty(Action))
-            query = query.Where(i => i.Output.Actionability.SuggestedAction == Action);
+            query = query.Where(i => i.Output.Actionability.SuggestedAction.ToJsonString() == Action);
         if (!string.IsNullOrEmpty(Type))
             query = query.Where(i => i.Classification.Type.Value == Type);
         if (!string.IsNullOrEmpty(Area))
-            query = query.Where(i => i.Classification.Area?.Value == Area);
+            query = query.Where(i => i.Classification.Area.Value == Area);
         if (!string.IsNullOrEmpty(Severity))
-            query = query.Where(i => i.Evidence.BugSignals?.Severity == Severity);
+            query = query.Where(i => i.Evidence.BugSignals?.Severity.ToJsonString() == Severity);
 
         var sort = Sort ?? "newest";
         query = sort switch
@@ -795,9 +862,9 @@ else
         return parts.Count > 0 ? $"triage/{number}?{string.Join('&', parts)}" : $"triage/{number}";
     }
 
-    private static int SeverityOrder(string? severity) => severity switch
+    private static int SeverityOrder(BugSeverity? severity) => severity switch
     {
-        "critical" => 4, "high" => 3, "medium" => 2, "low" => 1, _ => 0
+        BugSeverity.Critical => 4, BugSeverity.High => 3, BugSeverity.Medium => 2, BugSeverity.Low => 1, _ => 0
     };
 
     private static string FormatLabel(string value) =>
@@ -817,48 +884,52 @@ else
         _ => "confidence-low"
     };
 
-    private static string GetRiskStyle(string risk) => risk switch
+    private static string GetRiskStyle(ActionRisk risk) => risk switch
     {
-        "low" => "background: #28a745; color: white;",
-        "medium" => "background: #ffc107; color: #212529;",
-        "high" => "background: #dc3545; color: white;",
+        ActionRisk.Low => "background: #28a745; color: white;",
+        ActionRisk.Medium => "background: #ffc107; color: #212529;",
+        ActionRisk.High => "background: #dc3545; color: white;",
         _ => ""
     };
 
-    private static string GetReproTooltip(string quality) => quality switch
+    private static string GetReproTooltip(ReproQuality quality) => quality switch
     {
-        "complete" => "Full reproducible project provided — easiest to diagnose",
-        "partial" => "Code snippets provided — requires assembling into repro",
-        "steps-only" => "Only reproduction steps described — no code or project",
-        "none" => "No reproduction material — diagnosis will be difficult",
+        ReproQuality.Complete => "Full reproducible project provided — easiest to diagnose",
+        ReproQuality.Partial => "Code snippets provided — requires assembling into repro",
+        ReproQuality.StepsOnly => "Only reproduction steps described — no code or project",
+        ReproQuality.None => "No reproduction material — diagnosis will be difficult",
         _ => "Reproduction quality assessment"
     };
 
-    private static string GetRiskTooltip(string risk) => risk switch
+    private static string GetRiskTooltip(ActionRisk risk) => risk switch
     {
-        "low" => "Reversible action, cosmetic change — safe to auto-apply",
-        "medium" => "State change that requires moderate caution",
-        "high" => "Irreversible or reputation-sensitive — needs human review",
+        ActionRisk.Low => "Reversible action, cosmetic change — safe to auto-apply",
+        ActionRisk.Medium => "State change that requires moderate caution",
+        ActionRisk.High => "Irreversible or reputation-sensitive — needs human review",
         _ => "Action risk level"
     };
 
-    private static string GetActionTypeTooltip(string type) => type switch
+    private static string GetActionTypeTooltip(ActionType type) => type switch
     {
-        "update-labels" => "Add or remove GitHub labels on the issue",
-        "add-comment" => "Post a comment on the issue thread",
-        "close-issue" => "Close the issue with a reason",
-        "link-duplicate" => "Mark as duplicate of another issue",
-        "link-related" => "Cross-reference related issues",
+        ActionType.UpdateLabels => "Add or remove GitHub labels on the issue",
+        ActionType.AddComment => "Post a comment on the issue thread",
+        ActionType.CloseIssue => "Close the issue with a reason",
+        ActionType.LinkDuplicate => "Mark as duplicate of another issue",
+        ActionType.LinkRelated => "Cross-reference related issues",
+        ActionType.ConvertToDiscussion => "Convert issue to a GitHub Discussion",
+        ActionType.UpdateProject => "Update GitHub project fields",
+        ActionType.SetMilestone => "Set milestone on the issue",
         _ => $"Action: {type}"
     };
 
-    private static string GetCommentTypeTooltip(string type) => type switch
+    private static string GetCommentTypeTooltip(CommentType type) => type switch
     {
-        "answer" => "Direct answer to a support question",
-        "documentation" => "Pointer to relevant docs, samples, or guides",
-        "request-info" => "Ask for missing details before proceeding",
-        "close-message" => "Explanation provided when closing the issue",
-        "duplicate-notice" => "Reference to the canonical/original issue",
+        CommentType.Answer => "Direct answer to a support question",
+        CommentType.Documentation => "Pointer to relevant docs, samples, or guides",
+        CommentType.RequestInfo => "Ask for missing details before proceeding",
+        CommentType.CloseMessage => "Explanation provided when closing the issue",
+        CommentType.DuplicateNotice => "Reference to the canonical/original issue",
+        CommentType.Workaround => "Actionable workaround with code snippet",
         _ => $"Comment type: {type}"
     };
 
@@ -869,6 +940,24 @@ else
             await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
         }
         catch { }
+    }
+
+    private string GetFileUrl(CodeInvestigationEntry entry)
+    {
+        var repo = _issue?.Meta.Repo ?? "mono/SkiaSharp";
+        var file = entry.File.TrimEnd('/');
+        var url = $"https://github.com/{repo}/blob/main/{file}";
+        if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A" && entry.Lines.Contains('-'))
+        {
+            var parts = entry.Lines.Split('-');
+            if (parts.Length == 2)
+                url += $"#L{parts[0]}-L{parts[1]}";
+        }
+        else if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
+        {
+            url += $"#L{entry.Lines}";
+        }
+        return url;
     }
 
     [Inject] private Microsoft.JSInterop.IJSRuntime JSRuntime { get; set; } = default!;
