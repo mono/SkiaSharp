@@ -1,0 +1,28 @@
+{
+  "number": 3514,
+  "type": "pr",
+  "state": "open",
+  "title": "Update to .NET 10 SDK and restructure TFMs",
+  "body": "## Summary\n\nUpdate SkiaSharp from .NET 8 to .NET 10, restructuring the TFM system and modernizing workload management.\n\n## Changes (48 files)\n\n### Build System\n- **global.json**: Pin SDK to \u006010.0.103\u0060 with workload sets (\u0060workloadVersion\u0060)\n- **SkiaSharp.Build.props**: Restructure TFM properties:\n  - \u0060TFMBase=net6.0\u0060 (class libs only)\n  - \u0060TFMPrevious=net9.0\u0060 (full platform support)\n  - \u0060TFMCurrent=net10.0\u0060 (full platform support)\n  - Removed \u0060TFMNext\u0060 entirely\n- Remove MAUI TPV workaround (dotnet/maui#24263 fixed in .NET 9\u002B)\n- Add full \u0060PlatformTargetFrameworksPrevious\u0060 block (was referenced but never defined)\n- Add \u0060MauiTargetFrameworksPrevious\u0060, \u0060MauiTargetFrameworksAppPrevious\u0060, \u0060UnoTargetFrameworksPrevious\u0060\n\n### Platform TPVs\n| Platform | Previous (net9) | Current (net10) |\n|----------|----------------|-----------------|\n| Android | 35.0 | 36.0 |\n| iOS/MacCatalyst/tvOS | 18.0 | 18.0 |\n| macOS | 15.0 | 15.0 |\n| Tizen | 7.0 | 7.0 |\n| Windows | 10.0.19041.0 | 10.0.19041.0 |\n\n### Workloads\n- Replace \u0060install-dotnet-workloads.ps1\u0060 with \u0060dotnet workload restore\u0060 (pinned via global.json workload sets)\n- Tizen Samsung custom scripts preserved as separate step\n- Remove \u0060DOTNET_VERSION_PREVIEW\u0060 variable and preview SDK install step (no longer needed \u2014 preview testing is done by shifting the TFM chain)\n- Remove old dotnet6/7/8 preview feeds from \u0060nuget.config\u0060\n\n### Pipelines\n- \u0060DOTNET_VERSION\u0060: 8.0.304 \u2192 10.0.103\n- \u0060XCODE_VERSION\u0060: 15.4 \u2192 16.2\n- \u0060EMSCRIPTEN_VERSION\u0060: 3.1.34 \u2192 3.1.56\n- Test device versions updated for .NET 10 era\n- WASM pipeline: added .NET 10 Emscripten entry\n\n### Other\n- 14 NativeAssets csproj files \u2192 \u0060TFMPrevious;TFMCurrent\u0060 pattern\n- 16 sample projects updated\n- Cake build scripts: hardcoded TFMs \u002B UpdateDocs ref package names\n- Utility projects: net8.0 \u2192 net10.0\n- New \u0060documentation/updating-dotnet-version.md\u0060 \u2014 checklist for future .NET upgrades\n\n## Notes\n- TPVs should be verified against actual workload manifests after SDK install\n- Gallery samples (net6/7 era Uno) intentionally left unchanged\n- \u0060IsTargetFrameworkCompatible(\u0027net7.0\u0027)\u0060 conditions are safe (floor check)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-11T13:16:32",
+  "updatedAt": "2026-02-11T18:05:23",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "update/dotnet-10",
+  "additions": 290,
+  "deletions": 209,
+  "changedFiles": 58,
+  "commits": 6,
+  "reviews": []
+}

@@ -1,0 +1,38 @@
+{
+  "number": 3512,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update to .NET 10 SDK with four-tier TFM system (Base/Previous/Current/Next)",
+  "body": "**Description of Change**\n\nUpgrades the build system from .NET 8 SDK to .NET 10 SDK. Introduces a four-tier TFM architecture to support class library backward compatibility (net6.0) while providing full platform TFMs for both net9.0 and net10.0.\n\n**TFM tiers** (defined in \u0060source/SkiaSharp.Build.props\u0060):\n\n| Tier | Value | Scope |\n|------|-------|-------|\n| \u0060TFMBase\u0060 | \u0060net6.0\u0060 | Base TFM only \u2014 class library compat, no platform TFMs |\n| \u0060TFMPrevious\u0060 | \u0060net9.0\u0060 | Full platform TFMs (net9.0-android, net9.0-ios, etc.) |\n| \u0060TFMCurrent\u0060 | \u0060net10.0\u0060 | Full platform TFMs \u2014 primary shipping version |\n| \u0060TFMNext\u0060 | *(empty)* | Reserved for previews |\n\n**Core build system** (\u0060source/SkiaSharp.Build.props\u0060):\n- Added \u0060TFMBase\u0060 property and \u0060BasicTargetFrameworksBase\u0060, \u0060WindowsTargetFrameworksBase\u0060\n- Added \u0060PlatformTargetFrameworksPrevious\u0060 so net9.0 platform apps resolve matching assemblies\n- Added \u0060MauiTargetFrameworksPrevious\u0060, \u0060MauiTargetFrameworksAppPrevious\u0060, \u0060UnoTargetFrameworksPrevious\u0060\n- Updated TPVs: Android 36.0, iOS/MacCatalyst 18.0, macOS 15.0 for Current; Android 35.0 for Previous\n- Extended MAUI TPV workaround to cover Previous values\n\n**SDK \u0026 config**:\n- \u0060global.json\u0060: 8.0.100 \u2192 10.0.100\n- \u0060nuget.config\u0060: Added dotnet9/dotnet10 feeds, removed dotnet6/7/8\n\n**Azure Pipelines** (\u0060scripts/\u0060):\n- \u0060azure-templates-variables.yml\u0060: DOTNET_VERSION 10.0.102, XCODE 16.2, iOS test 18.2, Android test API 35\n- \u0060install-dotnet-workloads.ps1\u0060: Updated preview feeds to dotnet9/10, WASM workload names\n\n**Build scripts**: \u0060build.cake\u0060, \u0060UtilsManaged.cake\u0060, \u0060UpdateDocs.cake\u0060 \u2014 hardcoded TFMs updated to net10.0\n\n**Blazor Views**: Now targets \u0060TFMCurrent;TFMPrevious;TFMBase;TFMNext\u0060 with matching ASP.NET Components.Web refs\n\n**Samples \u0026 tests**: All 20\u002B sample projects updated to net10.0; integration test project updated\n\n**Documentation**: Created \u0060documentation/updating-dotnet-version.md\u0060 \u2014 step-by-step guide for future .NET version upgrades covering all files, the TFM flow architecture, and verification steps.\n\n**Bugs Fixed**\n\nNone.\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\n- NuGet packages now ship net10.0 and net9.0 platform TFMs instead of net8.0. net6.0 is included as a base TFM for class library consumers.\n- \u0060netstandard2.0\u0060, \u0060netstandard2.1\u0060, and \u0060net462\u0060 targets are unchanged.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [ ] Has tests (configuration-only changes \u2014 verified via build across net6.0, net9.0, net10.0, netstandard2.0, netstandard2.1, net462)\n- [ ] Rebased on top of main at time of PR\n- [ ] Merged related skia PRs\n- [x] Changes adhere to coding standard\n- [x] Updated documentation\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Please update the repo to use the latest version of dotnet 10. Right now it is pinned to net8 in the global json. \n\u003E \n\u003E We want to build using dotnet 10.\n\u003E \n\u003E This will mean adjusting some tfms, but that is ok. However we do want to build with the oldest tfms still supported by dotnet 10. I believe this means we will want to build with things like net9-android and similar. \n\u003E \n\u003E Please do a thorough investigation of how the build and tfms and things are set up. Have a look at the various props and targets files to get a full picture. \n\u003E \n\u003E Please record your analysis of this process and how things fit together. We also want to update the copilot instructions or create a doc that we can use in future to more easily do this again when a new version of dotnet is released. \n\u003E \n\u003E Please also look at the yml pipelines and see what versions of things exist and what will need to change. \n\u003E \n\u003E We need the end result to still work with net9 projects as this is still supported. \n\u003E \n\u003E Please have a look at everything \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-11T02:36:38",
+  "updatedAt": "2026-02-11T17:55:31",
+  "closedAt": "2026-02-11T17:55:30",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/update-dotnet-to-version-10",
+  "additions": 369,
+  "deletions": 93,
+  "changedFiles": 31,
+  "commits": 5,
+  "reviews": []
+}

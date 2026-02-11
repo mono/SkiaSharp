@@ -1,9 +1,9 @@
 {
   "number": 3510,
   "type": "pr",
-  "state": "open",
-  "title": "Statically link CRT in ANGLE builds and add shared dependency verification",
-  "body": "## Summary\n\nFixes #3346 \u2014 ARM64 Windows crash in published MAUI apps due to missing VC\u002B\u002B Redistributable.\n\n## Root Cause\n\nANGLE\u0027s build configuration (\u0060native/winui-angle/build.cake\u0060) was missing the \u0060/MT\u0060 flag in \u0060extra_cflags\u0060, causing \u0060libEGL.dll\u0060 and \u0060libGLESv2.dll\u0060 to dynamically link against the C runtime (\u0060vcruntime140.dll\u0060). On ARM64 Windows machines without VC\u002B\u002B Redistributable pre-installed, this causes an immediate crash.\n\nBoth \u0060libSkiaSharp\u0060 (line 77 of \u0060native/windows/build.cake\u0060) and \u0060libHarfBuzzSharp\u0060 (\u0060/MT\u0060 in vcxproj) already had static CRT linking \u2014 ANGLE was the gap.\n\n## Changes\n\n### 1. Fix: Add \u0060/MT\u0060 to ANGLE builds\n- Added \u0060/MT\u0060 to \u0060extra_cflags\u0060 in \u0060native/winui-angle/build.cake\u0060, matching the pattern used by libSkiaSharp since v1.68.0 (#136)\n\n### 2. Shared dependency verification functions\n- Extracted \u0060CheckWindowsDependencies()\u0060 and \u0060CheckLinuxDependencies()\u0060 into \u0060scripts/cake/native-shared.cake\u0060\n- These parameterized functions replace duplicated \u0060CheckDeps()\u0060 implementations across build files\n\n### 3. Dependency verification coverage\n| Build | Before | After |\n|-------|--------|-------|\n| ANGLE (\u0060winui-angle\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| libSkiaSharp (\u0060windows\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| libHarfBuzzSharp (\u0060windows\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| WinUI Native (\u0060winui\u0060) | \u2705 Local CheckDeps | \u2705 Uses shared function |\n| Linux (\u0060linux\u0060) | \u2705 Local CheckDeps | \u2705 Uses shared function |\n\n## Precedent\n\n- **#136** \u2014 Original static CRT fix for libSkiaSharp (v1.68.0), exact same problem\n- **#3397** / **#3404** \u2014 Recently added \u0060/guard:cf\u0060 and \u0060/GS\u0060 to the same \u0060extra_cflags\u0060 line in ANGLE, confirming the pattern is safe\n\n## Testing\n\nThe dependency verification will catch any regression at build time \u2014 if a DLL links against VCRUNTIME or MSVCP, the build will fail with a clear error message.",
+  "state": "closed",
+  "title": "Add shared dependency verification and fix Docker fontconfig pins",
+  "body": "## Summary\n\nAdds build-time verification that native Windows DLLs do not dynamically link against the C runtime, and fixes broken fontconfig version pins in Linux Docker cross-compilation images.\n\nRelated to #3346 \u2014 ARM64 Windows crash in published MAUI apps when VC\u002B\u002B Redistributable is not installed. CI confirms all Windows native binaries (including ANGLE) are already statically linked \u2014 this PR adds verification to prevent regressions.\n\n## Changes\n\n### 1. Shared dependency verification functions (\u0060scripts/cake/native-shared.cake\u0060)\n- \u0060CheckWindowsDependencies(dll, excluded, included)\u0060 \u2014 uses \u0060dumpbin /dependents\u0060 to verify Windows DLLs\n- \u0060CheckLinuxDependencies(so, excluded, included, maxGlibc)\u0060 \u2014 uses \u0060readelf -dV\u0060 to verify Linux shared objects\n- Replaces duplicated \u0060CheckDeps()\u0060 implementations across build files\n\n### 2. Windows dependency verification coverage\n| Build | Before | After |\n|-------|--------|-------|\n| ANGLE (\u0060winui-angle\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| libSkiaSharp (\u0060windows\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| libHarfBuzzSharp (\u0060windows\u0060) | \u274C No verification | \u2705 Rejects VCRUNTIME/MSVCP |\n| WinUI Native (\u0060winui\u0060) | \u2705 Local CheckDeps | \u2705 Uses shared function |\n| Linux (\u0060linux\u0060) | \u2705 Local CheckDeps | \u2705 Uses shared function |\n\n### 3. Fix Docker fontconfig version pins\nDebian removed old fontconfig packages from \u0060deb.debian.org\u0060, breaking cross-compilation Docker builds. Updated to the oldest available version for each Debian release:\n\n| Dockerfile | Old version | New version | Notes |\n|---|---|---|---|\n| Debian 11 | \u00602.13.1-2\u0060 (404) | \u00602.13.1-4.2\u0060 | Oldest 2.13.x on deb.debian.org |\n| Debian 12 | \u00602.13.1-2\u0060 (404) | \u00602.13.1-4.2\u0060 | Oldest 2.13.x on deb.debian.org |\n| Debian 13 \u0060*\u0060 | \u00602.13.1-2\u0060 (404) | \u00602.13.1-4.2\u0060 | Oldest 2.13.x on deb.debian.org |\n| Debian 13 loong64 | \u00602.17.1-3\u0060 (404) | \u00602.17.1-4\u0060 | Oldest available for loong64 |\n| Debian 10 | \u00602.13.1-2\u0060 | *(unchanged)* | Uses archive.debian.org (retains old packages) |\n| All riscv64 | \u00602.15.0-2.3\u0060 | *(unchanged)* | Still available |\n\n## CI Results\n\nAll **62 native build jobs pass**, including:\n- \u2705 **ANGLE WinUI arm64/x64/x86** \u2014 dependency verification confirms no VCRUNTIME/MSVCP linkage\n- \u2705 **libSkiaSharp** and **libHarfBuzzSharp** Windows builds \u2014 same verification\n- \u2705 **Linux loongarch64** (both with and without deps) \u2014 previously failing due to fontconfig 404, now fixed\n- \u2705 All other Linux, macOS, WASM, and Android builds",
   "author": {
     "login": "mattleibow",
     "type": "User"
@@ -11,20 +11,27 @@
   "labels": [],
   "assignees": [],
   "createdAt": "2026-02-10T02:48:22",
-  "updatedAt": "2026-02-10T03:43:40",
-  "commentCount": 0,
+  "updatedAt": "2026-02-11T12:32:20",
+  "closedAt": "2026-02-11T12:32:18",
+  "commentCount": 1,
   "reactionCount": 0,
   "draft": false,
-  "mergeable": true,
-  "merged": false,
-  "mergeableState": "blocked",
+  "merged": true,
+  "mergedAt": "2026-02-11T12:32:18",
+  "mergeableState": "unknown",
   "baseBranch": "main",
   "headBranch": "dev/issue-3346-static-crt-angle",
-  "additions": 107,
-  "deletions": 64,
-  "changedFiles": 5,
-  "commits": 1,
-  "reviews": [],
+  "additions": 111,
+  "deletions": 68,
+  "changedFiles": 8,
+  "commits": 4,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-11T02:43:16"
+    }
+  ],
   "engagement": {
     "syncedAt": "2026-02-10T15:35:22.1515428Z",
     "reactions": [],
