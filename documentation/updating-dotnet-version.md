@@ -4,13 +4,19 @@ This guide documents the process for updating SkiaSharp to target a new .NET SDK
 
 ## Overview
 
-SkiaSharp's build system is centralized in `source/SkiaSharp.Build.props`, which defines three TFM (Target Framework Moniker) tiers:
+SkiaSharp's build system is centralized in `source/SkiaSharp.Build.props`, which defines four TFM (Target Framework Moniker) tiers:
 
 | Property | Purpose | Example |
 |----------|---------|---------|
-| `TFMPrevious` | Oldest supported .NET version (all TFMs including platform) | `net9.0` |
+| `TFMBase` | Oldest .NET version for class library support (base TFM only, no platforms) | `net6.0` |
+| `TFMPrevious` | Previous .NET version with full platform support (all TFMs) | `net9.0` |
 | `TFMCurrent` | Primary shipping .NET version (all TFMs) | `net10.0` |
 | `TFMNext` | Preview/upcoming .NET version (empty when not in use) | *(empty)* |
+
+- **TFMBase** provides backward compatibility for class libraries (e.g., a net6.0 project consuming SkiaSharp). It only adds the base TFM — no platform-specific TFMs like `-android` or `-ios`.
+- **TFMPrevious** provides full platform support (net9.0-android, net9.0-ios, etc.) for apps still on the previous .NET version.
+- **TFMCurrent** is the primary shipping version with all platform TFMs.
+- **TFMNext** is for preview versions of upcoming .NET releases.
 
 These properties flow to all `.csproj` files via MSBuild variables like `$(AllTargetFrameworks)`, `$(PlatformTargetFrameworks)`, `$(MauiTargetFrameworks)`, etc.
 
@@ -36,13 +42,19 @@ The `rollForward: latestMinor` setting allows using any 10.0.x patch version.
 
 This is the **most important file**. Update these sections:
 
-#### a) TFM Versions (lines ~61-66)
+#### a) TFM Versions (lines ~61-68)
 
 ```xml
-<TFMPrevious>net9.0</TFMPrevious>  <!-- was net8.0, shift to previous -->
-<TFMCurrent>net10.0</TFMCurrent>   <!-- now the current shipping version -->
+<TFMBase>net6.0</TFMBase>          <!-- oldest class library support -->
+<TFMPrevious>net9.0</TFMPrevious>  <!-- previous version with platform TFMs -->
+<TFMCurrent>net10.0</TFMCurrent>   <!-- primary shipping version -->
 <TFMNext></TFMNext>                 <!-- empty until next preview -->
 ```
+
+When upgrading (e.g., .NET 10 → .NET 11):
+- Keep TFMBase as-is (unless dropping old .NET support entirely)
+- Move TFMCurrent to TFMPrevious
+- Set TFMCurrent to the new .NET version
 
 #### b) Target Platform Versions (TPV)
 
@@ -129,11 +141,39 @@ await AddDep("Microsoft.iOS.Ref.net10.0_18.0", "net10.0");
 await AddDep("Microsoft.MacCatalyst.Ref.net10.0_18.0", "net10.0");
 ```
 
-### 8. Sample Projects — `samples/`
+### 8. Azure Pipeline Variables — `scripts/azure-templates-variables.yml`
+
+Update the .NET SDK version and related workload configuration:
+
+```yaml
+DOTNET_VERSION: '10.0.102'           # was '8.0.304'
+DOTNET_WORKLOAD_SOURCE: ''           # update to .NET 10 MAUI workload source
+DOTNET_WORKLOAD_TIZEN: ''            # update to .NET 10 Tizen workload version
+XCODE_VERSION: '16.2'                # update to Xcode version matching .NET 10
+XCODE_VERSION_NATIVE: '16.2'
+IOS_TEST_DEVICE_VERSION: 18.2        # update to match current iOS version
+ANDROID_TEST_DEVICE_VERSION: 35      # update to match current Android API level
+ANDROID_PLATFORM_VERSIONS: 21,35     # update max API level
+```
+
+### 9. WASM Native Stages — `scripts/azure-templates-stages-native-wasm.yml`
+
+If a new Emscripten version is needed for the new .NET version, add a section:
+
+```yaml
+# .NET 10
+- 3.1.56:
+  displayName: 3.1.56
+  version: 3.1.56
+  features: _wasmeh,st
+# ... (threading, SIMD variants)
+```
+
+### 10. Sample Projects — `samples/`
 
 Update all hardcoded TFMs in sample `.csproj` files. These are standalone projects that don't use the centralized TFM variables.
 
-### 9. Test Projects — `tests/`
+### 11. Test Projects — `tests/`
 
 - `tests/SkiaSharp.Tests.Integration/` has a hardcoded TFM that needs updating
 - Other test projects use `$(TFMCurrent)` and update automatically
@@ -144,17 +184,21 @@ The TFM flow works as follows:
 
 ```
 SkiaSharp.Build.props
-  ├── TFMCurrent (net10.0) → BasicTargetFrameworksCurrent (netstandard2.0;netstandard2.1;net462;net10.0)
-  │                        → PlatformTargetFrameworksCurrent (net10.0-ios18.0;net10.0-android36.0;...)
+  ├── TFMBase (net6.0)     → BasicTargetFrameworksBase (net6.0)
+  │                        → WindowsTargetFrameworksBase (net6.0-windows10.0.19041.0)
+  │                        → (no platform TFMs — class library support only)
   │
   ├── TFMPrevious (net9.0) → BasicTargetFrameworksPrevious (net9.0)
   │                        → PlatformTargetFrameworksPrevious (net9.0-ios18.0;net9.0-android35.0;...)
   │
+  ├── TFMCurrent (net10.0) → BasicTargetFrameworksCurrent (netstandard2.0;netstandard2.1;net462;net10.0)
+  │                        → PlatformTargetFrameworksCurrent (net10.0-ios18.0;net10.0-android36.0;...)
+  │
   └── TFMNext ("")         → (empty, nothing generated)
 
 Combined:
-  BasicTargetFrameworks = Current + Previous + Next
-  PlatformTargetFrameworks = Current + Previous + Next
+  BasicTargetFrameworks = Current + Base + Previous + Next
+  PlatformTargetFrameworks = Current + Previous + Next   (no Base — Base has no platform TFMs)
   AllTargetFrameworks = Basic + Platform
 ```
 
@@ -189,7 +233,8 @@ This automatically covers net10.0+, so no changes are needed unless a new WASM b
 
 ## Notes
 
-- **CI pipelines:** The GitHub Actions workflows in this repo don't contain .NET SDK version references — they use the global.json. If Azure Pipelines are added, they would need updating.
+- **Azure Pipelines:** The Azure DevOps pipeline templates are in `scripts/azure-templates-*.yml`. The key file is `scripts/azure-templates-variables.yml` which defines `DOTNET_VERSION`, workload sources, Xcode versions, and test device versions. The bootstrapper template (`azure-templates-jobs-bootstrapper.yml`) uses these variables to install the SDK.
 - **Workloads:** Platform builds (iOS, Android, etc.) require workloads to be installed: `dotnet workload install maui`
-- **Backward compatibility:** The `netstandard2.0` and `netstandard2.1` targets ensure compatibility with older .NET versions that don't have specific TFM support.
+- **Backward compatibility:** The `netstandard2.0`, `netstandard2.1`, and `TFMBase` (net6.0) targets ensure compatibility with older .NET versions that don't have specific TFM support.
 - **Windows TFMs** always include the Windows SDK version (e.g., `10.0.19041.0`) unlike other platforms.
+- **WebAssembly targets** use `VersionGreaterThanOrEquals` conditions that automatically handle new .NET versions without changes.
