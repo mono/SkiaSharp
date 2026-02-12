@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3188,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T17:55:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3188.json"
+  },
+  "conclusion": "wrong-output",
+  "assessment": "likely-bug",
+  "notes": "Reproduced on macOS arm64: DrawVertices with vertex colors produces a solid black triangle instead of a colored gradient. The default SKPaint color is black (#ff000000), and in SkiaSharp 3.x the paint color appears to be modulated with vertex colors, resulting in all-black output. In v2.88.9, vertex colors display correctly as a gradient. Bug persists on latest release (3.119.2) and on main branch source.",
+  "reproductionTime": "~8 minutes",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.116.1" }
+    ]
+  },
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Vertex colors display correctly as a gradient triangle with Red, Green, Blue vertices."
+    },
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "wrong-output",
+      "notes": "Triangle is solid black — all sampled pixels are #ff000000. Reporter's version."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "wrong-output",
+      "notes": "Still black on latest stable release."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "wrong-output",
+      "notes": "Test DrawVerticesWithColorsProducesColoredTriangle fails — center pixel is #ff000000. Bug persists on main."
+    }
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone .NET 8 console project and add SkiaSharp 3.116.1 NuGet package",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.1",
+      "exitCode": 0,
+      "output": "Restore succeeded.\nPackageReference for package 'SkiaSharp' version '3.116.1' added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 3.116.1",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.1\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code from issue #3188 — draws a triangle with vertex colors and inspects pixel values",
+          "content": "using SkiaSharp;\n\nvar imageInfo = new SKImageInfo(\n    width: 200,\n    height: 200,\n    colorType: SKColorType.Rgba8888,\n    alphaType: SKAlphaType.Premul);\n\nusing var surface = SKSurface.Create(imageInfo);\nvar canvas = surface.Canvas;\n\ncanvas.Clear(SKColors.White);\nusing var paint = new SKPaint\n{\n    IsAntialias = true\n};\n\nvar vertices = new[] { new SKPoint(110, 20), new SKPoint(160, 200), new SKPoint(10, 200) };\nvar colors = new[] { SKColors.Red, SKColors.Green, SKColors.Blue };\n\ncanvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);\n\nusing var image = surface.Snapshot();\nusing var pngData = image.Encode(SKEncodedImageFormat.Png, 100);\n\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKSurface).Assembly.GetName().Version}\");\nConsole.WriteLine($\"PNG data size: {pngData?.Size ?? 0} bytes\");\n\nif (pngData != null && pngData.Size > 0)\n{\n    var filePath = \"output.png\";\n    using (var fileStream = File.Create(filePath))\n    {\n        pngData.SaveTo(fileStream);\n    }\n\n    using var peekBitmap = new SKBitmap(imageInfo);\n    surface.ReadPixels(imageInfo, peekBitmap.GetPixels(), imageInfo.RowBytes, 0, 0);\n\n    var centerPixel = peekBitmap.GetPixel(93, 140);\n    Console.WriteLine($\"Center pixel (93,140): {centerPixel}\");\n\n    var topPixel = peekBitmap.GetPixel(110, 30);\n    Console.WriteLine($\"Near top vertex (110,30): {topPixel}\");\n\n    Console.WriteLine($\"Paint color: {paint.Color}\");\n\n    bool isBlack = centerPixel.Red < 10 && centerPixel.Green < 10 && centerPixel.Blue < 10 && centerPixel.Alpha > 200;\n    Console.WriteLine(isBlack ? \"RESULT: Triangle appears BLACK (bug)\" : \"RESULT: Triangle appears COLORED (expected)\");\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction with SkiaSharp 3.116.1 — reporter's version",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.116.0.0\nPNG data null: False\nPNG data size: 1160 bytes\nImage saved to: output-v3.116.1.png\nFile size: 1160 bytes\nCenter pixel (93,140): R=0 G=0 B=0 A=255\nNear top vertex (110,30): R=0 G=0 B=0 A=255\nNear bottom-left (20,190): R=0 G=0 B=0 A=255\nNear bottom-right (150,190): R=0 G=0 B=0 A=255\nPaint color: R=0 G=0 B=0 A=255\nRESULT: Triangle appears BLACK (bug confirmed)",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run reproduction with SkiaSharp 2.88.9 — reporter's last known good version",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp --version 2.88.9 && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\nPNG data null: False\nPNG data size: 4044 bytes\nImage saved to: output-v2.88.9.png\nCenter pixel (93,140): R=84 G=43 B=85 A=255\nNear top vertex (110,30): R=240 G=5 B=4 A=255\nNear bottom-left (20,190): R=13 G=4 B=233 A=255\nNear bottom-right (150,190): R=13 G=115 B=12 A=255\nPaint color: R=0 G=0 B=0 A=255\nRESULT: Triangle appears COLORED (expected behavior)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run reproduction with SkiaSharp 3.119.2 — latest stable release",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp --version 3.119.2 && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nPNG data null: False\nPNG data size: 1157 bytes\nImage saved to: output-v3.116.1.png\nFile size: 1157 bytes\nCenter pixel (93,140): R=0 G=0 B=0 A=255\nNear top vertex (110,30): R=0 G=0 B=0 A=255\nNear bottom-left (20,190): R=0 G=0 B=0 A=255\nNear bottom-right (150,190): R=0 G=0 B=0 A=255\nPaint color: R=0 G=0 B=0 A=255\nRESULT: Triangle appears BLACK (bug confirmed)",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Build SkiaSharp test project from main branch source and run DrawVertices test",
+      "layer": "csharp",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj && dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter DrawVerticesWithColorsProducesColoredTriangle",
+      "exitCode": 1,
+      "output": "Failed SkiaSharp.Tests.SKCanvasTest.DrawVerticesWithColorsProducesColoredTriangle [259 ms]\nError Message:\n Center pixel is black (#ff000000) - vertex colors not applied. Top pixel: #ff000000\nExpected: False\nActual:   True\n\nFailed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
+      "result": "wrong-output"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "DrawVertices renders solid black triangle instead of colored gradient — all pixel samples return #ff000000 when vertex colors (Red, Green, Blue) should produce interpolated color values"
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "affected-platforms",
+        "upstream": "Classified as os/Windows-Classic only",
+        "corrected": "Bug also reproduces on macOS arm64 — this is a cross-platform rendering regression, not Windows-specific"
+      }
+    ]
+  }
+}
