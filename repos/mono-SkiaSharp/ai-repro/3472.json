@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3472,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:31:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3472.json"
+  },
+  "conclusion": "not-reproduced",
+  "assessment": "likely-bug",
+  "notes": "Runtime manifestation could not be triggered: tested with 10 iterations of GC.Collect with memory pressure, no AccessViolationException occurred. However, code inspection objectively confirms the reported defect exists: Blob.FromStream uses a fixed block (lines 79-81) that only pins the managed byte[] during constructor call, then exits, leaving HarfBuzz's native code with a raw pointer to unpinned memory. The GC can relocate or collect this array at any time. Bug confirmed by triage analysis, related issues (#2323, #3393), and PR #3473 with correct fix. The bug is real but intermittent—runtime crashes depend on GC timing and memory layout. Defect present in reporter version (3.116.0), latest (3.119.2), and main (2026-02-12).",
+  "reproductionTime": "~18 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Runtime test with 10 GC cycles completed without crash. Code inspection confirms fixed block defect exists."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Same result as 3.116.0 - no runtime crash, but code defect still present."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Existing test (HBBlobTest.ShouldCreateFromStream) passes. Code inspection shows fixed block pattern unchanged."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.HarfBuzz",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console app with reporter's version (3.116.0)",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp.HarfBuzz --version 3.116.0",
+      "exitCode": 0,
+      "output": "info : PackageReference for package 'SkiaSharp.HarfBuzz' version '3.116.0' added to file '$HOME/tmp/repro-3472/Repro/Repro.csproj'.\nlog  : Restored $HOME/tmp/repro-3472/Repro/Repro.csproj (in 220 ms).",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console app project file targeting net8.0 with SkiaSharp.HarfBuzz 3.116.0 and unsafe code enabled",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp.HarfBuzz\" Version=\"3.116.0\" />\n  </ItemGroup>\n\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that creates Blob from MemoryStream, forces GC with memory pressure, then attempts to use the blob across 10 iterations to try to trigger AccessViolationException",
+          "content": "using System;\nusing System.IO;\nusing HarfBuzzSharp;\n\n// Reproduction for #3472: Blob.FromStream GC safety issue\n// More aggressive test with multiple iterations and memory pressure\n\nConsole.WriteLine(\"Testing Blob.FromStream GC safety (10 iterations with memory pressure)...\");\n\nfor (int iteration = 1; iteration <= 10; iteration++)\n{\n    Console.WriteLine($\"\\nIteration {iteration}:\");\n    \n    // Create a blob from a stream\n    var fontData = new byte[1024];\n    Array.Fill(fontData, (byte)(0x40 + iteration));\n    \n    using var stream = new MemoryStream(fontData);\n    var blob = Blob.FromStream(stream);\n    \n    Console.WriteLine($\"  Blob created: Length={blob.Length}\");\n    \n    // Create memory pressure to encourage GC compaction\n    var garbage = new byte[10 * 1024 * 1024]; // 10 MB\n    \n    // Force multiple GC cycles with compaction\n    GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);\n    GC.WaitForPendingFinalizers();\n    GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);\n    \n    Console.WriteLine($\"  GC completed\");\n    \n    // Try to use the blob - this may access the now-stale pointer\n    try\n    {\n        var length = blob.Length;\n        \n        // Try to create a Face - this definitely dereferences the pointer\n        try\n        {\n            using var face = new Face(blob, 0);\n            Console.WriteLine($\"  Face created\");\n        }\n        catch (AccessViolationException)\n        {\n            Console.WriteLine($\"  ACCESS VIOLATION - GC safety bug confirmed!\");\n            return 1;\n        }\n        catch\n        {\n            // Other exceptions OK (invalid font data)\n            Console.WriteLine($\"  Face creation failed (expected - dummy data)\");\n        }\n    }\n    catch (AccessViolationException ex)\n    {\n        Console.WriteLine($\"  ACCESS VIOLATION: {ex.Message}\");\n        return 1;\n    }\n    finally\n    {\n        blob.Dispose();\n    }\n}\n\nConsole.WriteLine(\"\\nAll iterations completed without AccessViolation\");\nConsole.WriteLine(\"Note: GC bug is intermittent and may not manifest on every run\");\nreturn 0;"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction with version 3.116.0 - 10 iterations with GC pressure attempting to trigger AccessViolationException from stale pointer",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "Testing Blob.FromStream GC safety (10 iterations with memory pressure)...\n\nIteration 1:\n  Blob created: Length=1024\n  GC completed\n  Face created\n\n[...iterations 2-9 omitted for brevity...]\n\nIteration 10:\n  Blob created: Length=1024\n  GC completed\n  Face created\n\nAll iterations completed without AccessViolation\nNote: GC bug is intermittent and may not manifest on every run",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Code inspection of Blob.FromStream source confirms the reported defect objectively exists despite no runtime crash",
+      "layer": "csharp",
+      "output": "File: binding/HarfBuzzSharp/Blob.cs, lines 71-82:\n\npublic static unsafe Blob FromStream (Stream stream)\n{\n    using var ms = new MemoryStream ();\n    stream.CopyTo (ms);\n    var data = ms.ToArray ();\n\n    fixed (byte* dataPtr = data) {\n        return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose ());\n    }\n}\n\nAnalysis: The fixed block (lines 79-81) pins 'data' ONLY during the Blob constructor call. After line 81, the block exits and 'data' becomes unpinned. The native HarfBuzz library received the raw pointer via hb_blob_create with MemoryMode.ReadOnly (meaning don't copy), so HarfBuzz stores this pointer and will dereference it throughout the blob's lifetime. However, nothing keeps the managed byte[] rooted or pinned after FromStream returns, allowing GC to relocate or collect the array at any time. This is objectively a use-after-move/use-after-free bug, even though runtime manifestation is intermittent and depends on GC timing.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test on latest release (3.119.2) to check if bug is fixed",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp.HarfBuzz && dotnet run",
+      "exitCode": 0,
+      "output": "info : PackageReference for package 'SkiaSharp.HarfBuzz' version '3.119.2' added to file '$HOME/tmp/repro-3472/Repro/Repro.csproj'.\n\n[...test output same as step 2...]\n\nAll iterations completed without AccessViolation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Build from source (main branch) to test if bug is fixed in development",
+      "layer": "setup",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    13 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:21.77",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Run existing test HBBlobTest.ShouldCreateFromStream on main branch",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~HBBlobTest.ShouldCreateFromStream\"",
+      "exitCode": 0,
+      "output": "Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: < 1 ms - SkiaSharp.Tests.dll (net8.0)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Code inspection of main branch confirms bug still present (as of 2026-02-12)",
+      "layer": "csharp",
+      "command": "grep -A 12 'public static unsafe Blob FromStream' binding/HarfBuzzSharp/Blob.cs",
+      "exitCode": 0,
+      "output": "public static unsafe Blob FromStream (Stream stream)\n{\n    // TODO: check to see if we can avoid the second copy (the ToArray)\n\n    using var ms = new MemoryStream ();\n    stream.CopyTo (ms);\n    var data = ms.ToArray ();\n\n    fixed (byte* dataPtr = data) {\n        return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose ());\n    }\n}\n\nResult: Same fixed block pattern present in main. Bug not fixed.",
+      "result": "success"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "GC safety defect (code inspection): fixed block only pins managed byte[] during Blob constructor, leaving HarfBuzz with pointer to unpinned memory",
+    "additionalErrors": [
+      "MemoryMode.ReadOnly tells HarfBuzz not to copy, so it uses the provided pointer directly throughout blob lifetime",
+      "Release delegate only disposes MemoryStream, doesn't keep byte[] array rooted or pinned",
+      "Runtime manifestation is intermittent - depends on GC timing, memory pressure, and compaction behavior",
+      "Previous reports (#2323) confirmed AccessViolationException and corrupted glyph data in production"
+    ]
+  },
+  "environment": {
+    "os": "Darwin (macOS)",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  }
+}
