@@ -1,16 +1,17 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 209,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2025-07-22T20:00:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/209.json"
   },
   "conclusion": "not-reproduced",
   "notes": "Attempted to reproduce AccessViolationException during concurrent SKBitmap.Decode operations as described in issue #209. Tested with 100 threads × 200 iterations (20,000 total decodes) using both byte array and stream-based decode paths. All operations completed successfully with zero errors on SkiaSharp 3.119.2 and main branch source. The original issue was reported in 2016 with SkiaSharp ~1.x and appears to have been fixed in subsequent releases. Multiple commenters also noted the issue was resolved by updating versions or fixing disposal patterns.",
   "assessment": "likely-bug",
   "reproductionTime": "~12 minutes",
-  "triageFile": "ai-triage/209.json",
-  "triageNotes": "Triage classified as type/bug with tenet/reliability, which is consistent with the threading/memory corruption nature of the issue.",
   "versionResults": [
     {
       "version": "3.119.2",
@@ -117,17 +118,14 @@
       "filename": "baboon.jpg",
       "description": "Test image used for concurrent decode stress test, from SkiaSharp test content.",
       "source": "test-data",
-      "url": null,
       "available": true
     }
   ],
-  "errorMessages": null,
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
     "dotnetVersion": "8.0.417",
     "skiaSharpVersion": "3.119.2",
     "dockerUsed": false
-  },
-  "blockers": null
+  }
 }

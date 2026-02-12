@@ -1,16 +1,17 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 425,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2025-02-12T02:30:00Z"
   },
+  "inputs": {
+    "triageFile": "ai-triage/425.json"
+  },
   "conclusion": "reproduced",
-  "assessment": "likely-bug",
   "notes": "Reproduced: SKCodec.EncodedOrigin returns TopLeft for DNG and CR2 raw camera files that have non-TopLeft EXIF orientation tags (RightTop=6 for DNG, LeftBottom=8 for CR2). Verified using Python EXIF parsing that the orientation tags exist in the files. Bug exists on latest NuGet release (3.119.2) and on main branch. Root cause is in upstream Skia's SkRawCodec which never reads EXIF orientation — the base SkCodec constructor defaults to kTopLeft_SkEncodedOrigin.",
+  "assessment": "likely-bug",
   "reproductionTime": "~12 minutes",
-  "triageFile": "ai-triage/425.json",
-  "triageNotes": "Triage correctly identified this as an upstream Skia limitation in SkRawCodec.cpp. Confirmed by reproduction that the bug persists on latest release and main.",
   "versionResults": [
     {
       "version": "3.119.2",
@@ -84,8 +85,7 @@
           "description": "Reproduction code that opens DNG/CR2 files with SKCodec and checks EncodedOrigin",
           "content": "using SkiaSharp;\n\nstring[] testFiles = {\n    \"../APC_0316.dng\",  // Expected: RightTop (6)\n    \"../APC_0193.dng\",  // Expected: RightTop (6)\n    \"../IMG_1361.CR2\",  // Expected: LeftBottom (8)\n};\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}\");\nConsole.WriteLine($\"OS: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine();\n\nbool anyFailed = false;\n\nforeach (var file in testFiles)\n{\n    string fullPath = Path.GetFullPath(file);\n    if (!File.Exists(fullPath))\n    {\n        Console.WriteLine($\"SKIP: {Path.GetFileName(file)} - file not found\");\n        continue;\n    }\n\n    Console.Write($\"{Path.GetFileName(file)}: \");\n\n    using var stream = new SKFileStream(fullPath);\n    using var codec = SKCodec.Create(stream);\n\n    if (codec == null)\n    {\n        Console.WriteLine(\"FAIL - codec is null (format not supported)\");\n        anyFailed = true;\n        continue;\n    }\n\n    var origin = codec.EncodedOrigin;\n    var format = codec.EncodedFormat;\n    Console.WriteLine($\"Format={format}, EncodedOrigin={origin}, Size={codec.Info.Width}x{codec.Info.Height}\");\n\n    if (origin == SKEncodedOrigin.TopLeft)\n    {\n        Console.WriteLine($\"  *** BUG: Origin is TopLeft - likely ignoring EXIF orientation tag\");\n        anyFailed = true;\n    }\n    else\n    {\n        Console.WriteLine($\"  OK: Non-default orientation detected\");\n    }\n}\n\nConsole.WriteLine();\nConsole.WriteLine(anyFailed ? \"RESULT: Bug reproduced - orientation not read correctly\" : \"RESULT: All orientations read correctly\");"
         }
-      ],
-      "result": null
+      ]
     },
     {
       "stepNumber": 4,
@@ -131,7 +131,6 @@
   ],
   "errorMessages": {
     "primaryError": "SKCodec.EncodedOrigin returns TopLeft for DNG and CR2 files that have non-TopLeft EXIF orientation tags",
-    "stackTrace": null,
     "additionalErrors": [
       "Assert.Equal() Failure — Expected: RightTop, Actual: TopLeft (APC_0316.dng)",
       "Assert.Equal() Failure — Expected: LeftBottom, Actual: TopLeft (IMG_1361.CR2)"
@@ -143,6 +142,5 @@
     "dotnetVersion": "8.0.417",
     "skiaSharpVersion": "3.119.2",
     "dockerUsed": false
-  },
-  "blockers": null
+  }
 }

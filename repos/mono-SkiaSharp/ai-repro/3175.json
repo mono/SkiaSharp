@@ -1,15 +1,16 @@
 {
   "meta": {
-    "schemaVersion": "1.0",
+    "schemaVersion": "2.0",
     "number": 3175,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-11T23:55:00Z"
   },
+  "inputs": {
+    "triageFile": "ai-triage/3175.json"
+  },
   "conclusion": "reproduced",
   "notes": "Bug confirmed: SKManagedStream.OnReadManagedStream performs a single stream.Read() call instead of looping until the buffer is filled. Per the .NET Stream.Read() contract, Read() may return fewer bytes than requested even when more data is available. When decoding from a non-seekable stream that returns partial reads (e.g., Azure Blob Storage with chunked downloads), pixels beyond the first chunk boundary are decoded as zero/transparent. Bug reproduced on 3.116.0, 3.119.2 (latest), and main branch source. Chunk sizes <= 2048 bytes consistently trigger the bug; 4096+ bytes happen to work due to Skia's internal buffer alignment. Seekable streams are not affected because Skia can seek back and re-read.",
   "reproductionTime": "~8 minutes",
-  "triageFile": "ai-triage/3175.json",
-  "triageNotes": "Triage correctly identified the root cause: PR #1510 replaced BinaryReader.ReadBytes() (which loops internally) with a single stream.Read() call. Triage listed this as a regression from 2.80.3, which aligns with reproduction findings.",
   "versionResults": [
     {
       "version": "3.116.0",
@@ -34,7 +35,10 @@
     "type": "console",
     "tfm": "net8.0",
     "packages": [
-      { "name": "SkiaSharp", "version": "3.116.0" }
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
     ]
   },
   "reproductionSteps": [
@@ -86,7 +90,6 @@
   ],
   "errorMessages": {
     "primaryError": "SKBitmap.Decode produces corrupt image (96%+ pixels are zero/transparent) when reading from a non-seekable stream whose Read() returns fewer bytes than requested. Root cause: SKManagedStream.OnReadManagedStream (binding/SkiaSharp/SKManagedStream.cs:99) calls stream.Read() once without looping, violating the .NET Stream.Read() contract.",
-    "stackTrace": null,
     "additionalErrors": [
       "Assert.Equal() Failure: Expected #ffa39360, Actual #00000000 (first corrupt pixel in main branch test)"
     ]
@@ -97,7 +100,5 @@
     "dotnetVersion": "8.0.417",
     "skiaSharpVersion": "3.116.0",
     "dockerUsed": false
-  },
-  "blockers": null,
-  "artifacts": null
+  }
 }

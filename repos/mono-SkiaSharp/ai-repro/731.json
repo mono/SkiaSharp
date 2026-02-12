@@ -1,13 +1,13 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 731,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-07-15T20:00:00Z"
   },
   "conclusion": "reproduced",
-  "assessment": "likely-bug",
   "notes": "Issue #731 reports SKShader.CreateRadialGradient being significantly slower than CreateLinearGradient in v1.68.0. Reproduced a 9.14x slowdown on SkiaSharp 2.88.9 (radial=0.571ms vs linear=0.063ms per DrawRect on a 500x500 bitmap), confirming the performance regression exists in the v2 line. The reporter's exact version (1.68.0) could not be tested because its macOS native is x86_64-only. However, the bug is fixed in SkiaSharp 3.119.2 (1.06x ratio) and on main branch. Radial and Sweep gradients were both slow compared to Linear in v2.88.9, suggesting the issue may be related to Skia's internal shader rasterization path for radial/sweep gradients in older versions.",
+  "assessment": "likely-bug",
   "reproductionTime": "~12 minutes",
   "versionResults": [
     {

@@ -1,126 +1,111 @@
 {
   "meta": {
-    "schemaVersion": "2.1",
+    "schemaVersion": "3.0",
     "number": 315,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-24T12:00:00Z",
-    "currentLabels": []
+    "analyzedAt": "2025-07-24T12:00:00Z"
   },
   "summary": "Touch events on Android prevent Xamarin.Forms pinch/pan gesture recognizers from receiving events — architectural mismatch between Android and iOS touch handling",
   "classification": {
-    "type": { "value": "type/bug", "confidence": 0.80 },
-    "area": { "value": "area/SkiaSharp.Views.Forms", "confidence": 0.85 },
-    "backends": null,
-    "platforms": [{ "value": "os/Android", "confidence": 0.95 }],
-    "tenets": [{ "value": "tenet/compatibility", "confidence": 0.80 }],
-    "partner": null
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.8
+    },
+    "area": {
+      "value": "area/views.forms",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/Android"
+    ]
   },
   "evidence": {
     "bugSignals": {
-      "hasCrash": false,
-      "hasStackTrace": false,
-      "reproQuality": "partial",
-      "hasWorkaround": true,
-      "workaroundSummary": "Avoid combining EnableTouchEvents with Xamarin.Forms PinchGestureRecognizer/PanGestureRecognizer on Android; handle multi-touch gestures directly via SKTouchEventArgs instead.",
-      "targetFrameworks": ["xamarin.android"],
-      "severity": "medium",
-      "severityReason": "Feature works on iOS but not Android. Not a crash, but prevents combined touch+gesture use on Android. Workaround exists (handle all gestures through SkiaSharp touch events directly)."
-    },
-    "reproEvidence": {
-      "repoLinks": [
-        { "url": "https://github.com/JavedAppdevelopment/DrawTrackingForms", "description": "Reporter's Xamarin.Forms project demonstrating combined draw/pinch/pan" }
-      ],
-      "relatedIssues": [309]
-    },
-    "versionAnalysis": {
-      "reason": "No specific SkiaSharp version mentioned. Issue filed June 2017 shortly after #309 added touch events. Xamarin.Forms is now deprecated; same architectural pattern persists in MAUI handlers.",
-      "currentRelevance": "likely",
-      "migrationPath": "Xamarin.Forms is deprecated. If the same issue occurs in MAUI, a new issue should be filed against area/SkiaSharp.Views.Maui."
-    },
-    "regression": null,
-    "fixStatus": null
+      "severity": "medium"
+    }
   },
   "analysis": {
     "summary": "On Android, SKTouchHandler subscribes to view.Touch and sets e.Handled = args.Handled, which consumes the event and prevents Xamarin.Forms gesture recognizers (pinch/pan) from receiving it. On iOS, SKTouchHandler extends UIGestureRecognizer, which naturally coexists with other gesture recognizers. This architectural difference causes the same code to work on iOS but not Android. The Xamarin.Forms views have been removed, but the identical Android-vs-iOS touch handling pattern persists in the MAUI handlers.",
-    "keySignals": [
-      { "text": "Pinch and Pan with Touch works in iOS version but not work in Android version", "source": "body", "interpretation": "Platform-specific behavior — same code, different results. Points to architectural difference in touch handling." },
-      { "text": "#309 introduces TouchEvents but somehow they interfere with Xamarin.Forms GestureRecognizers on Android", "source": "comment 1", "interpretation": "Confirms the issue is about touch event consumption preventing framework gesture propagation." },
-      { "text": "project is in Xamarin.Forms, and uses same code for touch as in SkiaSharp FingerPrint demo", "source": "body", "interpretation": "Reporter followed official sample code — not a usage error." }
-    ],
+    "rationale": "type: Reporter describes a feature that works on iOS but not Android using the same code. This is broken platform parity, not a usage question or feature request. area: Issue was filed against Xamarin.Forms SKCanvasView with PinchGestureRecognizer/PanGestureRecognizer. The Xamarin.Forms views package is the affected area. bugSignals.severity: Not a crash. Feature is broken on one platform. Workaround exists: handle pinch/pan via SKTouchEventArgs multi-touch data instead of using framework gesture recognizers. platforms: Reporter explicitly states it works on iOS but fails on Android. Comment #1 confirms the Android-specific gesture interference. tenets: Cross-platform parity issue — same code behaves differently on iOS vs Android. actionability.suggestedAction: The Xamarin.Forms views are removed, but the same Android touch handling architecture persists in MAUI. A maintainer needs to decide: close as Forms-deprecated, or retarget to track the MAUI parallel. versionAnalysis.currentRelevance: The Android SKTouchHandler in MAUI still uses view.Touch with e.Handled, the same pattern that caused the original issue. The bug pattern persists even though the Forms views are gone.",
     "codeInvestigation": [
-      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs", "lines": "41-109", "relevance": "Android SKTouchHandler hooks into view.Touch event and sets e.Handled = args.Handled (lines 71, 86, 97, 106). When Handled is true, Android stops propagating the event to parent views and framework gesture recognizers — this is the root cause." },
-      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs", "lines": "10-110", "relevance": "iOS SKTouchHandler extends UIGestureRecognizer (line 10) and uses IgnoreTouch for unhandled events (line 62). UIGestureRecognizer coexists with other gesture recognizers by design — explains why iOS works correctly." },
-      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Android.cs", "lines": "45-52", "relevance": "MAUI Android handler creates SKTouchHandler with the same pattern — confirms the architectural gap persists beyond Xamarin.Forms." }
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
+        "lines": "41-109",
+        "finding": "Android SKTouchHandler hooks into view.Touch event and sets e.Handled = args.Handled (lines 71, 86, 97, 106). When Handled is true, Android stops propagating the event to parent views and framework gesture recognizers — this is the root cause.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "10-110",
+        "finding": "iOS SKTouchHandler extends UIGestureRecognizer (line 10) and uses IgnoreTouch for unhandled events (line 62). UIGestureRecognizer coexists with other gesture recognizers by design — explains why iOS works correctly.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKCanvasView/SKCanvasViewHandler.Android.cs",
+        "lines": "45-52",
+        "finding": "MAUI Android handler creates SKTouchHandler with the same pattern — confirms the architectural gap persists beyond Xamarin.Forms.",
+        "relevance": "related"
+      }
     ],
-    "fieldRationales": [
-      { "field": "type", "chosen": "type/bug", "expandedReason": "Reporter describes a feature that works on iOS but not Android using the same code. This is broken platform parity, not a usage question or feature request.", "alternatives": [{ "value": "type/feature-request", "whyRejected": "Touch events and gesture recognizers both exist — the issue is they don't coexist on Android, which is a bug in event propagation." }] },
-      { "field": "area", "chosen": "area/SkiaSharp.Views.Forms", "expandedReason": "Issue was filed against Xamarin.Forms SKCanvasView with PinchGestureRecognizer/PanGestureRecognizer. The Xamarin.Forms views package is the affected area.", "alternatives": [{ "value": "area/SkiaSharp.Views.Maui", "whyRejected": "Issue predates MAUI. Although the same pattern exists in MAUI, this specific report targets Forms." }] },
-      { "field": "bugSignals.severity", "chosen": "medium", "expandedReason": "Not a crash. Feature is broken on one platform. Workaround exists: handle pinch/pan via SKTouchEventArgs multi-touch data instead of using framework gesture recognizers." },
-      { "field": "platforms", "chosen": "os/Android", "expandedReason": "Reporter explicitly states it works on iOS but fails on Android. Comment #1 confirms the Android-specific gesture interference." },
-      { "field": "tenets", "chosen": "tenet/compatibility", "expandedReason": "Cross-platform parity issue — same code behaves differently on iOS vs Android." },
-      { "field": "actionability.suggestedAction", "chosen": "needs-investigation", "expandedReason": "The Xamarin.Forms views are removed, but the same Android touch handling architecture persists in MAUI. A maintainer needs to decide: close as Forms-deprecated, or retarget to track the MAUI parallel.", "alternatives": [{ "value": "close-as-fixed", "whyRejected": "The Forms views are gone, but the architectural gap persists in MAUI — closing would lose the signal." }] },
-      { "field": "versionAnalysis.currentRelevance", "chosen": "likely", "expandedReason": "The Android SKTouchHandler in MAUI still uses view.Touch with e.Handled, the same pattern that caused the original issue. The bug pattern persists even though the Forms views are gone." }
+    "workarounds": [
+      "Avoid combining EnableTouchEvents with Xamarin.Forms PinchGestureRecognizer/PanGestureRecognizer on Android; handle multi-touch gestures directly via SKTouchEventArgs instead."
     ],
-    "uncertainties": [
+    "nextQuestions": [
       "Whether MAUI's gesture system handles the Android touch event coexistence differently than Xamarin.Forms did",
       "Whether the reporter's linked GitHub repo still exists or is accessible",
       "Whether setting e.Handled = false on Android would cause other side effects (like duplicate events or touch tracking loss)"
     ],
-    "assumptions": [
-      "Assumed the Xamarin.Forms-era Android touch handler had the same pattern as the current MAUI handler, since #309 introduced the architecture"
-    ],
     "resolution": {
       "hypothesis": "Android's view.Touch event handler in SKTouchHandler consumes events by setting e.Handled = true, preventing framework gesture recognizers from receiving them. iOS avoids this by using UIGestureRecognizer which coexists with other recognizers. The fix would be to change the Android handler to not consume events (or use a gesture recognizer pattern), or to handle multi-touch gestures entirely within SkiaSharp's touch events.",
       "proposals": [
-        { "title": "Handle pinch/pan via SKTouchEventArgs multi-touch", "description": "Instead of using Xamarin.Forms/MAUI PinchGestureRecognizer and PanGestureRecognizer, handle all gesture detection directly from SKTouchEventArgs multi-touch data (multiple pointer IDs, coordinates). This avoids the framework gesture conflict entirely.", "confidence": 0.80, "effort": "medium", "category": "workaround", "codeSnippet": "// Track multiple touch points in your Touch handler\nprivate readonly Dictionary<long, SKPoint> touchPoints = new();\n\nvoid OnTouch(object sender, SKTouchEventArgs e)\n{\n    switch (e.ActionType)\n    {\n        case SKTouchAction.Pressed:\n            touchPoints[e.Id] = e.Location;\n            break;\n        case SKTouchAction.Moved:\n            touchPoints[e.Id] = e.Location;\n            if (touchPoints.Count == 2)\n            {\n                // Calculate pinch/pan from the two points\n                var points = touchPoints.Values.ToArray();\n                var distance = SKPoint.Distance(points[0], points[1]);\n                var center = new SKPoint(\n                    (points[0].X + points[1].X) / 2,\n                    (points[0].Y + points[1].Y) / 2);\n                // Use distance for zoom, center for pan\n            }\n            break;\n        case SKTouchAction.Released:\n        case SKTouchAction.Cancelled:\n            touchPoints.Remove(e.Id);\n            break;\n    }\n    e.Handled = true;\n}", "validated": "untested" },
-        { "title": "Set e.Handled = false to allow gesture propagation", "description": "Modify the Android SKTouchHandler to not set e.Handled = true, allowing framework gesture recognizers to also receive the events. Risk: may cause duplicate handling or lose touch tracking.", "confidence": 0.50, "effort": "low", "category": "investigation" },
-        { "title": "Refactor Android touch to use GestureDetector", "description": "Replace Android's view.Touch event subscription with an Android GestureDetector-based approach that can coexist with other gesture recognizers, similar to how iOS uses UIGestureRecognizer.", "confidence": 0.65, "effort": "high", "category": "fix" }
-      ],
-      "recommendedProposal": "Handle pinch/pan via SKTouchEventArgs multi-touch",
-      "recommendedReason": "Most practical immediate workaround. Avoids the framework gesture conflict entirely and gives full control over gesture interpretation. Works on both iOS and Android."
+        {
+          "description": "Instead of using Xamarin.Forms/MAUI PinchGestureRecognizer and PanGestureRecognizer, handle all gesture detection directly from SKTouchEventArgs multi-touch data (multiple pointer IDs, coordinates). This avoids the framework gesture conflict entirely.",
+          "confidence": 0.8,
+          "effort": "medium"
+        },
+        {
+          "description": "Modify the Android SKTouchHandler to not set e.Handled = true, allowing framework gesture recognizers to also receive the events. Risk: may cause duplicate handling or lose touch tracking.",
+          "confidence": 0.5,
+          "effort": "small"
+        },
+        {
+          "description": "Replace Android's view.Touch event subscription with an Android GestureDetector-based approach that can coexist with other gesture recognizers, similar to how iOS uses UIGestureRecognizer.",
+          "confidence": 0.65,
+          "effort": "large"
+        }
+      ]
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
-      "confidence": 0.70,
-      "reason": "The Xamarin.Forms views are removed, but the same Android touch handling architecture persists in MAUI. A maintainer needs to decide whether to close this Forms-era issue or retarget it for MAUI.",
-      "requiresHumanReview": true,
-      "missingInfo": ["platform"]
+      "confidence": 0.7,
+      "reason": "The Xamarin.Forms views are removed, but the same Android touch handling architecture persists in MAUI. A maintainer needs to decide whether to close this Forms-era issue or retarget it for MAUI."
     },
     "actions": [
       {
-        "id": "labels-1", "type": "update-labels", "risk": "low",
+        "type": "update-labels",
         "description": "Apply bug, views.forms, android, compatibility labels",
-        "reason": "Matches classification — bug in touch event handling affecting Android platform parity",
-        "confidence": 0.85, "dependsOn": null,
-        "payload": {
-          "labelsToAdd": ["type/bug", "area/SkiaSharp.Views.Forms", "os/Android", "tenet/compatibility"],
-          "labelsToRemove": []
-        }
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Forms",
+          "os/Android",
+          "tenet/compatibility"
+        ]
       },
       {
-        "id": "link-1", "type": "link-related", "risk": "low",
+        "type": "link-related",
         "description": "Cross-reference #309 (touch events feature PR)",
-        "reason": "Comment #1 explicitly references #309 as the source of the touch event interference",
-        "confidence": 0.90, "dependsOn": null,
-        "payload": {
-          "relatedIssues": [309],
-          "comment": null
-        }
+        "risk": "low",
+        "confidence": 0.9
       },
       {
-        "id": "comment-1", "type": "add-comment", "risk": "high",
+        "type": "add-comment",
         "description": "Post analysis with workaround for handling gestures via SKTouchEventArgs",
-        "reason": "Issue is 8 years old with no response. Provides actionable workaround and notes the Xamarin.Forms to MAUI migration context.",
-        "confidence": 0.70, "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "workaround",
-          "draftBody": "Thanks for the report and the repro project.\n\nThe root cause is an architectural difference between iOS and Android touch handling in SkiaSharp. On iOS, SkiaSharp uses a `UIGestureRecognizer` that naturally coexists with other gesture recognizers. On Android, it subscribes to the `View.Touch` event and marks events as handled, which prevents framework gesture recognizers (pinch, pan) from receiving them.\n\nHere's a workaround — handle pinch/pan directly through SkiaSharp's multi-touch events instead of using framework gesture recognizers:\n\n```csharp\nprivate readonly Dictionary<long, SKPoint> touchPoints = new();\n\nvoid OnTouch(object sender, SKTouchEventArgs e)\n{\n    switch (e.ActionType)\n    {\n        case SKTouchAction.Pressed:\n            touchPoints[e.Id] = e.Location;\n            break;\n        case SKTouchAction.Moved:\n            touchPoints[e.Id] = e.Location;\n            if (touchPoints.Count == 2)\n            {\n                var points = touchPoints.Values.ToArray();\n                var distance = SKPoint.Distance(points[0], points[1]);\n                var center = new SKPoint(\n                    (points[0].X + points[1].X) / 2,\n                    (points[0].Y + points[1].Y) / 2);\n                // Use distance for zoom, center for pan\n            }\n            break;\n        case SKTouchAction.Released:\n        case SKTouchAction.Cancelled:\n            touchPoints.Remove(e.Id);\n            break;\n    }\n    e.Handled = true;\n}\n```\n\nNote: Xamarin.Forms is now deprecated. If you experience the same issue in .NET MAUI, please open a new issue so we can track it specifically.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-315-comment-1"
-        }
+        "risk": "high",
+        "confidence": 0.7
       }
     ]
   }

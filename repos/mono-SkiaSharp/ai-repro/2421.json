@@ -1,6 +1,6 @@
 {
   "meta": {
-    "schemaVersion": "1.0",
+    "schemaVersion": "2.0",
     "number": 2421,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-11T23:42:00Z"
@@ -8,8 +8,6 @@
   "conclusion": "needs-hardware",
   "notes": "Issue reports that SKPaint constructor crashes on iOS physical device with '@rpath/libSkiaSharp.framework/libSkiaSharp' native loading error. Works on iOS simulator and Android. Reproduced the native loading on macOS console successfully with both 2.88.3 and 3.119.2 — SKPaint creates without error. Attempted to build a MAUI project targeting iOS with 2.88.3 NativeAssets but the build itself failed because the 2.88.3 iOS native assets contain device-only binaries (built for 'iOS' not 'iOS-simulator'), confirming the framework packaging issue. The actual crash requires deploying to a physical iOS device to observe the @rpath resolution failure. No iOS device is available in this environment.",
   "reproductionTime": "~8 minutes",
-  "triageFile": null,
-  "triageNotes": null,
   "versionResults": [
     {
       "version": "2.88.3",
@@ -34,8 +32,14 @@
     "type": "console",
     "tfm": "net8.0",
     "packages": [
-      { "name": "SkiaSharp", "version": "2.88.3" },
-      { "name": "SkiaSharp", "version": "3.119.2" }
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.3"
+      },
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.2"
+      }
     ]
   },
   "reproductionSteps": [

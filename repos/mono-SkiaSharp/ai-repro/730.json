@@ -1,6 +1,6 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 730,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-12T00:27:29Z"
@@ -9,8 +9,6 @@
   "notes": "This bug requires Windows with UWP (Universal Windows Platform) and the ANGLE OpenGL ES emulation layer. The crash occurs in SkiaSharp.Views.UWP.AngleSwapChainPanel.EnsureRenderSurface() when a parent Xamarin.Forms view is rotated via ViewExtensions.RotateYTo, causing the EGL surface to become invalid. The entire reproduction stack — SKGLView on UWP, AngleSwapChainPanel, GlesContext, SwapChainPanel composition events, and Xamarin.Forms UWP — is unavailable on macOS. The relevant source code (AngleSwapChainPanel.cs, GlesContext.cs) exists in the SkiaSharp codebase under SkiaSharp.Views.WinUI, confirming this is a real code path but one that can only execute on Windows.",
   "assessment": "likely-bug",
   "reproductionTime": "~5 minutes",
-  "triageFile": null,
-  "triageNotes": null,
   "versionResults": [
     {
       "version": "1.68.0-preview28",
@@ -25,17 +23,11 @@
       "notes": "Cannot test — bug is in UWP-specific ANGLE/EGL surface management code that only runs on Windows."
     }
   ],
-  "reproProject": null,
   "reproductionSteps": [
     {
       "stepNumber": 1,
       "description": "Analyze issue requirements: SKGLView exception on UWP when parent view is rotated with ViewExtensions.RotateYTo. Requires Xamarin.Forms UWP app with ANGLE OpenGL ES backend (AngleSwapChainPanel).",
-      "layer": "setup",
-      "command": null,
-      "exitCode": null,
-      "output": null,
-      "filesCreated": null,
-      "result": null
+      "layer": "setup"
     },
     {
       "stepNumber": 2,
@@ -44,7 +36,6 @@
       "command": "uname -ms && sw_vers",
       "exitCode": 0,
       "output": "Darwin arm64\nProductName: macOS\nProductVersion: 26.2",
-      "filesCreated": null,
       "result": "success"
     },
     {
@@ -54,25 +45,18 @@
       "command": "find source/SkiaSharp.Views/SkiaSharp.Views.WinUI -name 'AngleSwapChainPanel.cs' -o -name 'GlesContext.cs'",
       "exitCode": 0,
       "output": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs\nsource/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
-      "filesCreated": null,
       "result": "success"
     },
     {
       "stepNumber": 4,
       "description": "Confirm that Xamarin.Forms UWP tooling is unavailable on macOS. UWP development requires Windows and Visual Studio with UWP workload. No Docker workaround exists for UWP apps.",
       "layer": "deployment",
-      "command": null,
-      "exitCode": null,
-      "output": null,
-      "filesCreated": null,
       "result": "skip"
     }
   ],
-  "artifacts": null,
   "errorMessages": {
     "primaryError": "System.Exception: Failed to create EGL surface (reported by user — not reproduced locally)",
-    "stackTrace": "System.Exception: Failed to create EGL surface\n   at SkiaSharp.Views.GlesInterop.GlesContext.CreateSurface(SwapChainPanel panel, Nullable`1 renderSurfaceSize, Nullable`1 resolutionScale)\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.EnsureRenderSurface()\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.OnCompositionChanged(SwapChainPanel sender, Object args)",
-    "additionalErrors": null
+    "stackTrace": "System.Exception: Failed to create EGL surface\n   at SkiaSharp.Views.GlesInterop.GlesContext.CreateSurface(SwapChainPanel panel, Nullable`1 renderSurfaceSize, Nullable`1 resolutionScale)\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.EnsureRenderSurface()\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.OnCompositionChanged(SwapChainPanel sender, Object args)"
   },
   "environment": {
     "os": "macOS 26.2",

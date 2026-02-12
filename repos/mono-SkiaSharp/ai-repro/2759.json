@@ -1,6 +1,6 @@
 {
   "meta": {
-    "schemaVersion": "1.0",
+    "schemaVersion": "2.0",
     "number": 2759,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-11T22:41:14Z"
@@ -8,8 +8,6 @@
   "conclusion": "partial",
   "notes": "The reporter references issue #933 and says the problem persists in 2.88.6, but does not attach their own test file. The only available test image is image1.png from #933, which is a structurally malformed PNG: it has 12 bytes of garbage data after the IDAT chunk instead of a proper IEND terminator. SKBitmap.Decode returns null and SKCodec.GetPixels returns ErrorInInput for this file across all tested versions (2.88.3, 2.88.6, 3.119.2). When the same image is resaved by macOS (producing a valid PNG with proper IEND), it decodes successfully. The related issue #1981 (multi-IDAT zlib bug) was fixed and osm-liberty.png from that issue now decodes correctly. The core question is whether SkiaSharp/Skia should tolerate malformed PNGs missing IEND — other decoders (macOS ImageIO, browsers) do. The reporter's actual file may have different corruption than the GitHub-hosted copy.",
   "reproductionTime": "~10 minutes",
-  "triageFile": null,
-  "triageNotes": null,
   "versionResults": [
     {
       "version": "2.88.3",
@@ -34,7 +32,10 @@
     "type": "console",
     "tfm": "net8.0",
     "packages": [
-      { "name": "SkiaSharp", "version": "2.88.3" }
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.3"
+      }
     ]
   },
   "reproductionSteps": [
@@ -113,7 +114,6 @@
   ],
   "errorMessages": {
     "primaryError": "SKBitmap.Decode returns null for a malformed PNG (missing IEND chunk, garbage trailing bytes). SKCodec.GetPixels returns ErrorInInput. The PNG is structurally invalid but decodable by lenient decoders (macOS ImageIO, browsers).",
-    "stackTrace": null,
     "additionalErrors": [
       "SKCodec.Create succeeds (can parse IHDR) but GetPixels fails with ErrorInInput",
       "Resaving the same image with a proper IEND chunk makes it decode successfully"

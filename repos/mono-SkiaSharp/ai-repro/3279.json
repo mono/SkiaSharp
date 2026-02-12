@@ -1,36 +1,13 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 3279,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-12T00:18:00Z"
   },
   "conclusion": "reproduced",
-  "assessment": "breaking-change",
   "notes": "Reproduced all 5 compiler errors as reported. SKMatrix.MakeIdentity(), MakeTranslation(), MakeScale(), MakeRotation() were renamed to CreateIdentity()/Identity, CreateTranslation(), CreateScale(), CreateRotation() in SkiaSharp 3.x. The static PostConcat(ref SKMatrix, SKMatrix) was changed to an instance method PostConcat(SKMatrix). These APIs were marked [Obsolete] in v2.88.9 with migration guidance before removal in v3.x. This is an intentional breaking change, not a regression.",
-  "errorMessages": {
-    "primaryError": "CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity'/'MakeTranslation'/'MakeScale'/'MakeRotation'; CS1501: No overload for method 'PostConcat' takes 2 arguments",
-    "additionalErrors": [
-      "CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'",
-      "CS0117: 'SKMatrix' does not contain a definition for 'MakeScale'",
-      "CS0117: 'SKMatrix' does not contain a definition for 'MakeRotation'",
-      "CS1501: No overload for method 'PostConcat' takes 2 arguments"
-    ]
-  },
-  "environment": {
-    "os": "macOS",
-    "arch": "arm64",
-    "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "3.119.0",
-    "dockerUsed": false
-  },
-  "reproProject": {
-    "type": "console",
-    "tfm": "net8.0",
-    "packages": [
-      { "name": "SkiaSharp", "version": "3.119.0" }
-    ]
-  },
+  "assessment": "breaking-change",
   "versionResults": [
     {
       "version": "2.88.9",
@@ -51,6 +28,16 @@
       "notes": "Make* APIs are completely removed from SKMatrix.cs on main. The replacement Create* APIs and instance PostConcat() work correctly — all 20 SKMatrix tests pass."
     }
   ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.0"
+      }
+    ]
+  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
@@ -119,5 +106,20 @@
       "output": "Passed! - Failed: 0, Passed: 20, Skipped: 0, Total: 20"
     }
   ],
-  "artifacts": null
+  "errorMessages": {
+    "primaryError": "CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity'/'MakeTranslation'/'MakeScale'/'MakeRotation'; CS1501: No overload for method 'PostConcat' takes 2 arguments",
+    "additionalErrors": [
+      "CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'",
+      "CS0117: 'SKMatrix' does not contain a definition for 'MakeScale'",
+      "CS0117: 'SKMatrix' does not contain a definition for 'MakeRotation'",
+      "CS1501: No overload for method 'PostConcat' takes 2 arguments"
+    ]
+  },
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.0",
+    "dockerUsed": false
+  }
 }

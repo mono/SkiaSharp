@@ -1,16 +1,14 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 648,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-12T00:49:24Z"
   },
   "conclusion": "not-reproduced",
-  "assessment": "likely-bug",
   "notes": "Attempted to reproduce large image resize blank output and 'Unable to allocate pixels' error using synthetic 14034x9921 JPEG images. All tests passed on macOS ARM64 with ample system memory — bitmap allocation (531 MB), JPEG encode/decode, and DrawImage resize to 1920x1357 all succeeded with correct pixel content. The bug is environment-dependent: it manifests on memory-constrained systems where Skia cannot allocate contiguous memory for large bitmaps. Comment 7 confirms this is a memory pressure issue when managing multiple large SKBitmap instances. The issue labels include 'status/skia-update-required' and 'area/libSkiaSharp.native', indicating the fix requires upstream Skia changes (better memory allocation error reporting, GC memory pressure integration).",
+  "assessment": "likely-bug",
   "reproductionTime": "~12 minutes",
-  "triageFile": null,
-  "triageNotes": null,
   "versionResults": [
     {
       "version": "2.88.9",
@@ -61,8 +59,7 @@
           "description": "Reproduction code with 4 tests: (1) large bitmap creation, (2) large image decode+resize via SKSurface, (3) SKBitmap.Decode on large image, (4) pixel verification to check for blank output",
           "content": "using SkiaSharp;\nusing System;\nusing System.IO;\nusing System.Runtime.InteropServices;\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKBitmap).Assembly.GetName().Version}\");\n\n// Test 1: Create large bitmap (14034x9921 - reporter's size)\nint largeWidth = 14034;\nint largeHeight = 9921;\nConsole.WriteLine($\"Test 1: Create large bitmap ({largeWidth}x{largeHeight})...\");\ntry\n{\n    using var largeBitmap = new SKBitmap(largeWidth, largeHeight);\n    Console.WriteLine($\"  Bitmap created: {largeBitmap.Width}x{largeBitmap.Height}\");\n    Console.WriteLine($\"  ByteCount: {largeBitmap.ByteCount:N0} bytes\");\n    using var canvas = new SKCanvas(largeBitmap);\n    canvas.Clear(SKColors.Red);\n    var pixel = largeBitmap.GetPixel(100, 100);\n    Console.WriteLine($\"  Pixel is Red: {pixel == SKColors.Red}\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"  ERROR: {ex.GetType().Name}: {ex.Message}\");\n}\n\n// Test 2: Decode and resize large JPEG (reporter's scenario)\nConsole.WriteLine(\"Test 2: Large image decode + resize via SKSurface...\");\ntry\n{\n    byte[] jpegData;\n    using (var srcBitmap = new SKBitmap(14034, 9921))\n    {\n        using var srcCanvas = new SKCanvas(srcBitmap);\n        srcCanvas.Clear(SKColors.Green);\n        using var paint = new SKPaint { Color = SKColors.Red };\n        srcCanvas.DrawCircle(7000, 5000, 2000, paint);\n        using var srcImage = SKImage.FromBitmap(srcBitmap);\n        using var data = srcImage.Encode(SKEncodedImageFormat.Jpeg, 80);\n        jpegData = data.ToArray();\n    }\n\n    using var sourceStream = new SKMemoryStream(jpegData);\n    using var codec = SKCodec.Create(sourceStream);\n    sourceStream.Seek(0);\n    using var image = SKImage.FromEncodedData(SKData.Create(sourceStream));\n\n    int targetW = 1920;\n    int targetH = (int)(9921.0 / 14034.0 * 1920);\n    var resizeInfo = new SKImageInfo(targetW, targetH);\n    using var surface = SKSurface.Create(resizeInfo);\n    surface.Canvas.Clear(SKColors.White);\n    surface.Canvas.DrawImage(image, new SKRect(0, 0, targetW, targetH));\n    surface.Canvas.Flush();\n\n    using var newImage = surface.Snapshot();\n    using var newData = newImage.Encode(SKEncodedImageFormat.Jpeg, 85);\n\n    using var verBmp = SKBitmap.Decode(newData);\n    var cp = verBmp.GetPixel(verBmp.Width / 2, verBmp.Height / 2);\n    bool blank = cp == SKColors.White || cp.Alpha == 0;\n    Console.WriteLine($\"  Image appears blank: {blank}\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"  ERROR: {ex.GetType().Name}: {ex.Message}\");\n}\n\n// Test 3: SKBitmap.Decode directly (triggers allocation error per comment 5)\nConsole.WriteLine(\"Test 3: SKBitmap.Decode on large image...\");\ntry\n{\n    using var bm = new SKBitmap(14034, 9921);\n    using var cv = new SKCanvas(bm);\n    cv.Clear(SKColors.Blue);\n    using var im = SKImage.FromBitmap(bm);\n    using var dt = im.Encode(SKEncodedImageFormat.Jpeg, 70);\n    using var decoded = SKBitmap.Decode(dt.ToArray());\n    Console.WriteLine($\"  Decoded OK: {decoded.Width}x{decoded.Height}\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"  ERROR: {ex.GetType().Name}: {ex.Message}\");\n}"
         }
-      ],
-      "result": null
+      ]
     },
     {
       "stepNumber": 3,
@@ -92,14 +89,11 @@
       "result": "success"
     }
   ],
-  "artifacts": null,
-  "errorMessages": null,
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
     "dotnetVersion": "8.0.417",
     "skiaSharpVersion": "2.88.9 / 3.119.2 / main (source)",
     "dockerUsed": false
-  },
-  "blockers": null
+  }
 }

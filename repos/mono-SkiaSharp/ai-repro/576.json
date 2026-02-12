@@ -1,23 +1,17 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 576,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2025-07-25T12:00:00Z"
   },
-  "conclusion": "partial",
-  "assessment": "user-error",
-  "notes": "Reporter observed 30-40MB memory step-ups per iteration when calling SKSurface.Snapshot() in a loop on a GPU-backed surface (Intel HD Graphics 520, OpenGL) without disposing the previous SKImage before overwriting the reference. Reporter confirmed in comment #2 that the root cause was not disposing SKImage before overwriting. Tested the same disposal pattern with CPU-backed surfaces on macOS arm64: with CPU surfaces, GC can reclaim leaked SKImage memory (recovered 94KB from 50 leaked 1024x1024 images). The core bug pattern (not disposing before overwriting) is reproducible as a code pattern, but the severe GPU memory leak (30-40MB per iteration, immune to GC.Collect) is specific to GPU-backed surfaces on Intel HD Graphics, which requires OpenGL/GPU hardware not available in this environment.",
-  "triageFile": "ai-triage/576.json",
-  "triageNotes": "Triage classified as type/question with user-error root cause. Aligns with reproduction findings.",
-  "reproductionTime": "~8 minutes",
-  "reproProject": {
-    "type": "console",
-    "tfm": "net8.0",
-    "packages": [
-      { "name": "SkiaSharp", "version": "2.88.9" }
-    ]
+  "inputs": {
+    "triageFile": "ai-triage/576.json"
   },
+  "conclusion": "partial",
+  "notes": "Reporter observed 30-40MB memory step-ups per iteration when calling SKSurface.Snapshot() in a loop on a GPU-backed surface (Intel HD Graphics 520, OpenGL) without disposing the previous SKImage before overwriting the reference. Reporter confirmed in comment #2 that the root cause was not disposing SKImage before overwriting. Tested the same disposal pattern with CPU-backed surfaces on macOS arm64: with CPU surfaces, GC can reclaim leaked SKImage memory (recovered 94KB from 50 leaked 1024x1024 images). The core bug pattern (not disposing before overwriting) is reproducible as a code pattern, but the severe GPU memory leak (30-40MB per iteration, immune to GC.Collect) is specific to GPU-backed surfaces on Intel HD Graphics, which requires OpenGL/GPU hardware not available in this environment.",
+  "assessment": "user-error",
+  "reproductionTime": "~8 minutes",
   "versionResults": [
     {
       "version": "2.88.9",
@@ -38,6 +32,16 @@
       "notes": "All 6 SKSurface.Snapshot() tests pass. No memory leak with CPU-backed surfaces."
     }
   ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.9"
+      }
+    ]
+  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
@@ -92,7 +96,6 @@
       "available": true
     }
   ],
-  "errorMessages": null,
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",

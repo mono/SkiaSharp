@@ -1,16 +1,14 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 754,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-12T00:35:19Z"
   },
   "conclusion": "reproduced",
-  "assessment": "likely-bug",
   "notes": "Reproduced on SkiaSharp 3.119.1, 3.119.2 (latest), and main (source). SKBitmap.Decode(codec, imageInfo) returns null when requesting SKColorType.Gray8, both with default AlphaType (Premul) and explicit AlphaType.Opaque. The codec reports the image as Rgba8888/Opaque. Default decoding (without specifying Gray8) works fine but returns 4 bytes per pixel. The bug has persisted from 1.68.0 through 3.119.2 and remains unfixed on main.",
+  "assessment": "likely-bug",
   "reproductionTime": "~10 minutes",
-  "triageFile": null,
-  "triageNotes": null,
   "versionResults": [
     {
       "version": "3.119.1",
@@ -35,7 +33,10 @@
     "type": "console",
     "tfm": "net8.0",
     "packages": [
-      { "name": "SkiaSharp", "version": "3.119.1" }
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.1"
+      }
     ]
   },
   "reproductionSteps": [
@@ -74,8 +75,7 @@
           "description": "Reproduction code: attempts SKBitmap.Decode with Gray8 imageInfo, default decode, and Gray8+Opaque",
           "content": "using SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}\");\n\nvar bytes = File.ReadAllBytes(\"gray8.png\");\nvar stream1 = new MemoryStream(bytes);\nvar codec = SKCodec.Create(stream1);\nConsole.WriteLine($\"Codec Info: {codec.Info.Width}x{codec.Info.Height}, ColorType={codec.Info.ColorType}, AlphaType={codec.Info.AlphaType}\");\nConsole.WriteLine($\"Codec BytesPerPixel: {codec.Info.BytesPerPixel}\");\n\n// Method 1: Reporter's code\nvar imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Gray8);\nvar bitmap = SKBitmap.Decode(codec, imageInfo);\nConsole.WriteLine($\"Method 1 (Gray8/Premul) bitmap == null: {bitmap == null}\");\n\n// Method 2: Default decode\nvar stream2 = new MemoryStream(bytes);\nvar bitmap2 = SKBitmap.Decode(stream2);\nConsole.WriteLine($\"Method 2 (default) bitmap == null: {bitmap2 == null}\");\nif (bitmap2 != null) Console.WriteLine($\"  BytesPerPixel: {bitmap2.BytesPerPixel}, ColorType: {bitmap2.ColorType}\");\n\n// Method 3: Gray8 + Opaque\nvar stream3 = new MemoryStream(bytes);\nvar codec3 = SKCodec.Create(stream3);\nvar imageInfo3 = new SKImageInfo(codec3.Info.Width, codec3.Info.Height, SKColorType.Gray8, SKAlphaType.Opaque);\nvar bitmap3 = SKBitmap.Decode(codec3, imageInfo3);\nConsole.WriteLine($\"Method 3 (Gray8/Opaque) bitmap == null: {bitmap3 == null}\");"
         }
-      ],
-      "result": null
+      ]
     },
     {
       "stepNumber": 4,
@@ -116,7 +116,6 @@
   ],
   "errorMessages": {
     "primaryError": "SKBitmap.Decode(codec, imageInfo) returns null when imageInfo.ColorType is Gray8, even though the codec successfully reads the image and default decoding works.",
-    "stackTrace": null,
     "additionalErrors": [
       "Both AlphaType.Premul (default) and AlphaType.Opaque produce null result with Gray8 color type"
     ]
@@ -127,6 +126,5 @@
     "dotnetVersion": "8.0.417",
     "skiaSharpVersion": "3.119.1",
     "dockerUsed": false
-  },
-  "blockers": null
+  }
 }

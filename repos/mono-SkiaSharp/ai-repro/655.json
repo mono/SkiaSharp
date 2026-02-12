@@ -1,20 +1,13 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 655,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-12T00:50:01Z"
   },
   "conclusion": "not-reproduced",
-  "assessment": "likely-bug",
   "notes": "Could not reproduce the path intersection bug on any available version. Reporter used SkiaSharp 1.60.3 which only ships x64 macOS native binaries (no arm64), so it could not be tested on current macOS arm64 hardware. Tested on SkiaSharp 2.88.9 (earliest version with arm64 macOS support) and 3.119.2 (latest stable) — both correctly return 4 intersection points. Also verified on main (source) via the test project — intersection returns points correctly. The bug was likely fixed in an upstream Skia update between SkiaSharp 1.60.3 and 2.88.9. The issue is from 2018 and the reporter's Skia fiddle link confirms the C++ pathops worked correctly even then, suggesting this was a SkiaSharp/Skia version-specific bug that has since been resolved.",
-  "reproProject": {
-    "type": "console",
-    "tfm": "net8.0",
-    "packages": [
-      {"name": "SkiaSharp", "version": "2.88.9"}
-    ]
-  },
+  "assessment": "likely-bug",
   "versionResults": [
     {
       "version": "1.60.3",
@@ -41,6 +34,16 @@
       "notes": "Test passed — intersection returns points correctly on main branch."
     }
   ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.9"
+      }
+    ]
+  },
   "reproductionSteps": [
     {
       "stepNumber": 1,

@@ -1,15 +1,16 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "2.0",
     "number": 533,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2025-07-25T12:00:00Z"
   },
+  "inputs": {
+    "triageFile": "ai-triage/533.json"
+  },
   "conclusion": "needs-platform",
-  "assessment": "likely-bug",
   "notes": "Issue #533 reports uncapped framerates (300-1000fps) on Android when using SKGLView with HasRenderLoop=true after upgrading from SkiaSharp 1.59.3 to 1.60.1. The root cause is that GLTextureView.cs (custom GL threading implementation) does not call eglSwapInterval for VSync, whereas the previously-used Android GLSurfaceView framework class handled VSync internally. Code inspection of the current source confirms no eglSwapInterval or Choreographer-based frame pacing exists in GLTextureView.cs. The MAUI SKGLViewHandler on Android still uses SKGLTextureView with Rendermode.Continuously. Reproducing this bug requires running on an Android device or emulator to measure actual framerate — no Android tooling (emulator, adb) is available in the current macOS environment. The reporter's version (SkiaSharp.Views.Forms 1.60.1) targets Xamarin.Forms (MonoAndroid/netstandard1.3) and is incompatible with modern .NET 8.0.",
-  "triageFile": "ai-triage/533.json",
-  "triageNotes": "Triage data confirmed the root cause (GLTextureView lacks eglSwapInterval/VSync) and classification as os/Android + area/SkiaSharp.Views + backend/OpenGL, all consistent with source code inspection.",
+  "assessment": "likely-bug",
   "versionResults": [
     {
       "version": "1.60.1",
@@ -30,7 +31,6 @@
       "notes": "Source inspection of GLTextureView.cs confirms no eglSwapInterval call and no Choreographer frame pacing. The rendering loop in Rendermode.Continuously runs as fast as possible (draw-swap-draw loop with no throttle). The issue is still present in source."
     }
   ],
-  "reproProject": null,
   "reproductionSteps": [
     {
       "stepNumber": 1,
@@ -63,19 +63,15 @@
       "stepNumber": 4,
       "description": "Inspect GLTextureView rendering loop to confirm it runs uncapped in Rendermode.Continuously — the IsReadyToDraw() method at line 1081 returns true continuously when renderMode == Rendermode.Continuously, and the main loop (lines 1028-1058) just draws and swaps with no delay or throttle",
       "layer": "csharp",
-      "output": "IsReadyToDraw() at line 1083 returns true when renderMode == Rendermode.Continuously regardless of requestRender flag. The main rendering loop draws a frame (line 1033), swaps buffers (line 1037), and immediately loops back with no sleep, yield, or frame pacing. This confirms the reported uncapped framerate behavior.",
-      "result": null
+      "output": "IsReadyToDraw() at line 1083 returns true when renderMode == Rendermode.Continuously regardless of requestRender flag. The main rendering loop draws a frame (line 1033), swaps buffers (line 1037), and immediately loops back with no sleep, yield, or frame pacing. This confirms the reported uncapped framerate behavior."
     },
     {
       "stepNumber": 5,
       "description": "Verify MAUI SKGLViewHandler on Android uses SKGLTextureView (not GLSurfaceView) and sets Rendermode.Continuously when HasRenderLoop=true",
       "layer": "csharp",
-      "output": "SKGLViewHandler.Android.cs at line 11 declares 'ViewHandler<ISKGLView, SKGLTextureView>'. MapHasRenderLoop at line 66 sets handler.PlatformView.RenderMode = Rendermode.Continuously when view.HasRenderLoop is true. This confirms current MAUI Android apps using SKGLView with HasRenderLoop=true will hit uncapped framerates.",
-      "result": null
+      "output": "SKGLViewHandler.Android.cs at line 11 declares 'ViewHandler<ISKGLView, SKGLTextureView>'. MapHasRenderLoop at line 66 sets handler.PlatformView.RenderMode = Rendermode.Continuously when view.HasRenderLoop is true. This confirms current MAUI Android apps using SKGLView with HasRenderLoop=true will hit uncapped framerates."
     }
   ],
-  "artifacts": null,
-  "errorMessages": null,
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
