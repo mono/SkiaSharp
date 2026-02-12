@@ -461,6 +461,10 @@ else
                 <!-- Conclusion Badge -->
                 <div class="repro-conclusion">
                     <span class="badge-repro-conclusion badge-repro-@_repro.Conclusion.ToJsonString()">@FormatLabel(_repro.Conclusion.ToJsonString())</span>
+                    @if (!string.IsNullOrEmpty(_repro.Assessment))
+                    {
+                        <span class="badge-assessment">@FormatLabel(_repro.Assessment)</span>
+                    }
                     @if (!string.IsNullOrEmpty(_repro.Notes))
                     {
                         <p class="repro-notes">@_repro.Notes</p>
@@ -614,6 +618,10 @@ else
                                         @if (step.Result is not null)
                                         {
                                             <span class="badge-step-result badge-sr-@step.Result.Value.ToJsonString()">@FormatLabel(step.Result.Value.ToJsonString())</span>
+                                        }
+                                        @if (step.ExitCode is not null && step.ExitCode != 0)
+                                        {
+                                            <span class="badge-exit-code">exit @step.ExitCode</span>
                                         }
                                     </div>
                                     <p class="step-description">@step.Description</p>

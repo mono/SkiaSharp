@@ -869,10 +869,10 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                         var repro = JsonSerializer.Deserialize<ReproResult>(json, TriageJsonOptions.Default);
                         if (repro is null) continue;
 
-                        if (repro.Meta.SchemaVersion is not "1.0")
+                        if (repro.Meta.SchemaVersion is not "1.0" and not "1.1")
                         {
                             if (!settings.Quiet)
-                                AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: repro schema {repro.Meta.SchemaVersion} (need 1.0)[/]");
+                                AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: repro schema {repro.Meta.SchemaVersion} (need 1.0 or 1.1)[/]");
                             continue;
                         }
 

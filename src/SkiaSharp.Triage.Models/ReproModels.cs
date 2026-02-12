@@ -8,6 +8,7 @@ public record ReproResult(
     string Notes,
     List<ReproStep> ReproductionSteps,
     ReproEnvironment Environment,
+    string? Assessment = null,
     string? ReproductionTime = null,
     string? TriageFile = null,
     string? TriageNotes = null,
@@ -36,7 +37,8 @@ public record ReproStep(
     string? Command = null,
     string? Output = null,
     List<ReproFileCreated>? FilesCreated = null,
-    StepResult? Result = null
+    StepResult? Result = null,
+    int? ExitCode = null
 );
 
 public record ReproFileCreated(
