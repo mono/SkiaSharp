@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 576,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T17:25:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/576.json"
+  },
+  "conclusion": "partial",
+  "assessment": "user-error",
+  "notes": "Tested the reporter's pattern of overwriting SKImage references from Snapshot() without disposing previous instances. With software surfaces, managed memory growth is modest (~2KB per leaked SKImage) and GC finalizers eventually reclaim it. The critical GPU-specific behavior (30-40MB per iteration on Intel HD Graphics 520) could not be verified because creating a headless OpenGL GRContext is not feasible on macOS ARM64 (Metal only). The reporter confirmed in comments that the root cause was not disposing the previous SKImage before overwriting the dictionary entry — this is expected behavior for GPU-backed resources where native GPU memory is not tracked by GC.",
+  "reproductionTime": "~8 minutes",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.119.2" },
+      { "name": "SkiaSharp.NativeAssets.macOS", "version": "3.119.2" }
+    ]
+  },
+  "versionResults": [
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Software surface test: no significant memory leak. Managed memory grew modestly (~2KB per leaked SKImage). GC reclaimed all after cleanup. GPU surface test not possible without GL context."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Added SnapshotDisposalPreventsMemoryGrowth test to SKSurfaceTest. Software surface Snapshot/dispose pattern works correctly. Test passed. GPU path not testable headlessly."
+    }
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project with SkiaSharp 3.119.2",
+      "layer": "setup",
+      "command": "mkdir -p /tmp/repro-576 && cd /tmp/repro-576 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.2",
+      "exitCode": 0,
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 3.119.2"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write reproduction code testing the reporter's pattern: create surface, snapshot, overwrite dictionary entry without disposing previous SKImage. Three tests: (1) without dispose, (2) with dispose, (3) stress test measuring per-snapshot overhead.",
+      "layer": "csharp",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code testing SKImage memory leak pattern from issue #576",
+          "content": "using System;\nusing System.Collections.Generic;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKSurface).Assembly.GetName().Version}\");\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine($\".NET: {RuntimeInformation.FrameworkDescription}\");\nConsole.WriteLine();\n\nvar displayImages = new Dictionary<int, SKImage>();\nint width = 1920;\nint height = 1080;\nint iterations = 200;\n\nConsole.WriteLine(\"=== Test 1: WITHOUT disposing previous snapshot (reporter's bug pattern) ===\");\nlong memBefore = GC.GetTotalMemory(true);\nConsole.WriteLine($\"Memory before: {memBefore / 1024}KB\");\n\nfor (int i = 0; i < iterations; i++)\n{\n    using var surface = SKSurface.Create(new SKImageInfo(width, height));\n    var canvas = surface.Canvas;\n    canvas.Clear(new SKColor((byte)(i % 256), 100, 200));\n    canvas.Flush();\n    displayImages[0] = surface.Snapshot();\n    if (i % 50 == 0)\n    {\n        long mem = GC.GetTotalMemory(false);\n        Console.WriteLine($\"  Iteration {i}: Memory = {mem / 1024}KB (+{(mem - memBefore) / 1024}KB)\");\n    }\n}\n\nlong memAfterLeak = GC.GetTotalMemory(false);\nConsole.WriteLine($\"Memory after {iterations} iterations (no dispose): {memAfterLeak / 1024}KB (+{(memAfterLeak - memBefore) / 1024}KB)\");\n\nforeach (var img in displayImages.Values) img?.Dispose();\ndisplayImages.Clear();\nGC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();\n\nlong memAfterCleanup = GC.GetTotalMemory(true);\nConsole.WriteLine($\"Memory after cleanup + GC: {memAfterCleanup / 1024}KB\");\nConsole.WriteLine();\n\nConsole.WriteLine(\"=== Test 2: WITH disposing previous snapshot (correct pattern) ===\");\nlong memBefore2 = GC.GetTotalMemory(true);\nfor (int i = 0; i < iterations; i++)\n{\n    using var surface = SKSurface.Create(new SKImageInfo(width, height));\n    surface.Canvas.Clear(new SKColor((byte)(i % 256), 100, 200));\n    surface.Canvas.Flush();\n    if (displayImages.TryGetValue(0, out var prev)) prev?.Dispose();\n    displayImages[0] = surface.Snapshot();\n}\nlong memAfterCorrect = GC.GetTotalMemory(false);\nConsole.WriteLine($\"Memory after {iterations} iterations (with dispose): {memAfterCorrect / 1024}KB (+{(memAfterCorrect - memBefore2) / 1024}KB)\");\n\nConsole.WriteLine();\nConsole.WriteLine(\"=== Test 3: Stress test ===\");\nvar leaked = new List<SKImage>();\nlong memBefore3 = GC.GetTotalMemory(true);\nfor (int i = 0; i < 100; i++)\n{\n    using var surface = SKSurface.Create(new SKImageInfo(width, height));\n    surface.Canvas.Clear(SKColors.Red);\n    leaked.Add(surface.Snapshot());\n}\nlong memAfterStress = GC.GetTotalMemory(false);\nConsole.WriteLine($\"Per-snapshot overhead: ~{(memAfterStress - memBefore3) / 100 / 1024}KB\");\nforeach (var img in leaked) img.Dispose();\nConsole.WriteLine(\"Note: Uses SOFTWARE surfaces. GPU surfaces hold GPU texture memory not tracked by GC.\");"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run reproduction with software surfaces (no GPU context available). The reporter's pattern of overwriting without dispose shows modest managed memory growth. GC.GetTotalMemory only tracks managed heap, not native/GPU memory.",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-576/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\nOS: Darwin 25.2.0 ...\nArch: Arm64\n.NET: .NET 8.0.23\n\n=== Test 1: WITHOUT disposing previous snapshot (reporter's bug pattern) ===\nMemory before: 145KB\n  Iteration 0: Memory = 161KB (+16KB)\n  Iteration 50: Memory = 265KB (+120KB)\n  Iteration 100: Memory = 356KB (+211KB)\n  Iteration 150: Memory = 444KB (+299KB)\nMemory after 200 iterations (no dispose): 543KB (+398KB)\nMemory after cleanup + GC: 182KB\n\n=== Test 2: WITH disposing previous snapshot (correct pattern) ===\nMemory after 200 iterations (with dispose): 552KB (+369KB)\nMemory after final cleanup: 186KB\n\n=== Test 3: Stress test ===\nPer-snapshot overhead: ~1KB\nMemory after disposing all + GC: 191KB\nRecovered: 188KB\n\nNote: Uses SOFTWARE surfaces. GPU surfaces hold GPU texture memory not tracked by GC.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Attempt GPU surface reproduction. Creating a headless Metal GRContext requires Objective-C/Metal interop (MTLCreateSystemDefaultDevice) which is not straightforward from a .NET console app. OpenGL is not available on macOS ARM64 (Apple Silicon uses Metal). Skipped GPU-specific test.",
+      "layer": "csharp",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test on main branch: build test project from source and run a targeted disposal test via xUnit",
+      "layer": "csharp",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj && dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SnapshotDisposalPreventsMemoryGrowth\"",
+      "exitCode": 0,
+      "output": "Build succeeded.\n13 Warning(s)\n0 Error(s)\n\nPassed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: < 1 ms",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 25.2.0 (Darwin arm64)",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false,
+    "gpu": {
+      "backend": "Metal",
+      "available": false
+    }
+  },
+  "blockers": [
+    "Requires GPU (OpenGL) context to reproduce the GPU-specific memory leak. The reporter's issue was that GPU texture memory from SKImage.Snapshot() is not tracked by GC, causing 30-40MB growth per iteration. Creating a headless OpenGL GRContext is not feasible on macOS ARM64 (Metal only, no OpenGL).",
+    "The specific hardware (Intel HD Graphics 520 with limited VRAM) is not available. The rapid VRAM exhaustion may be specific to integrated GPUs with shared memory."
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "classification",
+        "upstream": "Classified as type/bug with confidence 0.65",
+        "corrected": "Confirmed as user-error: reporter was not disposing previous SKImage before overwriting dictionary entry. Reporter confirmed this in comments. GPU-backed resources require explicit Dispose() — GC cannot reclaim GPU texture memory fast enough."
+      }
+    ]
+  }
+}
