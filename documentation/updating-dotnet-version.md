@@ -98,7 +98,18 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 
 ### 11. NuGet & Feeds
 
-- [ ] `nuget.config` — Remove old preview feeds, keep nuget.org + dotnet-public + dotnet-eng
+- [ ] `nuget.config` — Remove old preview feeds, keep dotnet-public + dotnet-eng + test-device-runners
+
+> **Note:** `nuget.org` is a disallowed source in the SkiaSharp CI pipeline. If you encounter missing package restore errors during development, you can temporarily add nuget.org to work through issues, but it **must be removed before merging**. Request mirroring for any missing packages.
+
+## Pre-Merge Checklist
+
+Before merging a .NET upgrade PR, verify these items:
+
+- [ ] **`nuget.config`** — Must NOT contain `nuget.org` source (disallowed in CI)
+- [ ] **`scripts/azure-pipelines-complete.yml`** — `buildExternals` parameter must be reset to `'latest'` (not a specific build ID)
+- [ ] **All CI stages pass** — Tests, samples, API diff, and package stages must be green
+- [ ] **Documentation updated** — `documentation/updating-dotnet-version.md` reflects any new learnings
 
 ## Known Issues & Breaking Changes
 
