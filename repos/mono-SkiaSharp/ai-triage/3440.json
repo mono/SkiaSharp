@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3440,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:52:04Z",
+    "currentLabels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Windows-WinUI", "tenet/reliability"]
+  },
+  "summary": "MAUI app using LiveCharts2 with SkiaSharp 3.119.1 crashes on certain Windows 11 systems with a COMException (Element not found) during WinRT activation of SkiaSharp.Views.WinUI.Native.PropertySetExtensions. The crash occurs in the ANGLE/OpenGL rendering path (SKSwapChainPanel) when GlesContext.CreateSurface() calls PropertySetExtensions.AddSingle() to set EGL surface properties. The WinRT runtime cannot locate or activate the native C++/WinRT component, suggesting a deployment or WinRT registration issue specific to certain machine configurations.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.85 },
+    "platforms": ["os/Windows-WinUI"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/reliability"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "isRegression": false,
+      "errorType": "COMException / TypeInitializationException",
+      "errorMessage": "System.Runtime.InteropServices.COMException: Element not found. The type initializer for 'SkiaSharp.Views.WinUI.Native.PropertySetExtensions' threw an exception.",
+      "stackTrace": "System.Runtime.InteropServices.COMException: Element not found.\n  at void Marshal.ThrowExceptionForHR(int errorCode)()\n  at new BaseActivationFactory(string typeNamespace, string typeFullName)()\n  at static PropertySetExtensions()()\nSystem.TypeInitializationException:\n  at IObjectReference PropertySetExtensions.get__objRef_global__SkiaSharp_Views_WinUI_Native_IPropertySetExtensionsStatics()()\n  at void PropertySetExtensions.AddSingle(PropertySet propertySet, string key, float value)()\n  at void GlesContext.CreateSurface(SwapChainPanel panel, Size? renderSurfaceSize, float? resolutionScale)()\n  at void AngleSwapChainPanel.EnsureRenderSurface()()\n  at void AngleSwapChainPanel.OnLoaded(object sender, RoutedEventArgs e)()\n  at int RoutedEventHandler.Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e)()",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-windows10.0.19041.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI app with LiveCharts2 that uses SkiaSharp for rendering",
+        "Deploy to certain Windows 11 systems (Lenovo 83C4 confirmed)",
+        "Observe crash when the chart control loads and attempts GL rendering"
+      ],
+      "codeSnippets": [
+        "<liveCharts:CartesianChart x:Name=\"Graph\" AbsoluteLayout.LayoutBounds=\"0,0,1,1\" AbsoluteLayout.LayoutFlags=\"PositionProportional,SizeProportional\" ZoomMode=\"None\" EasingFunction=\"{x:Null}\" />"
+      ],
+      "environmentDetails": "Windows 11 (10.0.26100.7462), Lenovo 83C4 (IdeaPad), SkiaSharp 3.119.1, MAUI with LiveCharts2",
+      "relatedIssues": [2948]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.1"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The PropertySetExtensions WinRT component and ANGLE rendering path have not changed since 3.119.1. The native WinUI component architecture is the same on main."
+    }
+  },
+  "analysis": {
+    "summary": "The crash occurs because the WinRT runtime cannot activate the SkiaSharp.Views.WinUI.Native.PropertySetExtensions class from the native C++/WinRT component DLL. This class is only used in the ANGLE/OpenGL rendering path (SKSwapChainPanel → GlesContext.CreateSurface), not in the CPU rendering path (SKXamlCanvas). LiveCharts2 appears to use the GL view (SKGLView → SKSwapChainPanel) on Windows, triggering this code path. The 'Element not found' COMException from BaseActivationFactory indicates the WinRT activation infrastructure cannot locate the class registration — either the native DLL is not deployed, is the wrong architecture, or the activation metadata is missing. Issue #2948 reported the identical stack trace with a different COM error (REGDB_E_CLASSNOTREG / 0x80040154) during Microsoft Store certification and was resolved externally. The 'certain systems' qualifier suggests an environment-specific deployment or WinRT registration issue.",
+    "rationale": "Classified as type/bug because this is a crash with a clear stack trace during normal rendering. The area is SkiaSharp.Views.Maui because the reporter uses MAUI, though the actual failure is in the WinUI views layer (SkiaSharp.Views.WinUI.Native). The crash is specific to the OpenGL/ANGLE backend path because PropertySetExtensions is only invoked during EGL surface creation in GlesContext.CreateSurface. Severity is high because it completely prevents rendering, but not critical because it only affects certain systems and only the GL path.",
+    "keySignals": [
+      { "text": "COMException: Element not found at BaseActivationFactory", "source": "issue body", "interpretation": "WinRT activation failure — the runtime cannot find the class registration for PropertySetExtensions. This is a deployment/packaging issue, not a code logic bug." },
+      { "text": "crashes on certain systems", "source": "issue body", "interpretation": "Environment-specific — not all Windows deployments are affected, pointing to machine-specific factors (policy, DLL deployment, architecture)." },
+      { "text": "We have tried both with HA enabled and disabled", "source": "issue body", "interpretation": "Reporter tested hardware acceleration toggle — rules out simple GPU driver issues. The problem is in WinRT component activation, not GPU rendering itself." },
+      { "text": "SKGLViewHandler.Windows.cs uses SKSwapChainPanel (line 7)", "source": "code search", "interpretation": "MAUI's GL view handler on Windows creates SKSwapChainPanel, which inherits AngleSwapChainPanel, which calls PropertySetExtensions via GlesContext. LiveCharts2 likely uses the GL view path." },
+      { "text": "SKCanvasViewHandler.Windows.cs uses SKXamlCanvas (line 8)", "source": "code search", "interpretation": "The CPU rendering path (SKXamlCanvas) does NOT use PropertySetExtensions at all — it's a pure managed implementation. This path would not be affected." },
+      { "text": "#2948 closed: 'fixed by Microsoft Store adjusting their setup'", "source": "issue #2948 comment", "interpretation": "Identical stack trace with different COM error code. External environment fix resolved it — further evidence this is deployment/environment, not a code bug." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs", "lines": "77-114", "finding": "CreateSurface() calls PropertySetExtensions.AddSingle() at line 104 and PropertySetExtensions.AddSize() at line 98 to configure EGL surface creation properties. These are the call sites that trigger the WinRT activation of the native component.", "relevance": "direct" },
+      { "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/PropertySetExtensions.cpp", "lines": "1-19", "finding": "The C++/WinRT component implementation is straightforward — just wraps PropertyValue::CreateSingle() and PropertyValue::CreateSize(). The code itself is correct; the issue is WinRT activation, not the implementation.", "relevance": "direct" },
+      { "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/PropertySetExtensions.idl", "lines": "1-8", "finding": "IDL declares the runtimeclass in namespace SkiaSharp.Views.WinUI.Native. WinRT activation requires the DLL containing this class to be findable by the activation system.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs", "lines": "124-135", "finding": "OnLoaded creates GlesContext and calls EnsureRenderSurface(), which calls glesContext.CreateSurface(). This is the entry point from the XAML lifecycle that triggers the crash.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs", "lines": "1-279", "finding": "SKXamlCanvas is entirely managed — uses WriteableBitmap for CPU rendering, no dependency on SkiaSharp.Views.WinUI.Native. Confirmed as an unaffected alternative rendering path.", "relevance": "related" },
+      { "file": "binding/SkiaSharp.NativeAssets.WinUI/SkiaSharp.NativeAssets.WinUI.csproj", "lines": "8-15", "finding": "NativeAssets.WinUI package includes architecture-specific DLLs (x64, x86, arm64) from output/native/winui/. If this package's content is not properly deployed, the WinRT DLL will be missing.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Windows.cs", "lines": "7-13", "finding": "MAUI's SKGLViewHandler on Windows creates SKSwapChainPanel (the ANGLE/GL path). LiveCharts2 uses this GL view handler, causing it to hit the PropertySetExtensions activation path.", "relevance": "related" }
+    ],
+    "errorFingerprint": "COMException-ElementNotFound-PropertySetExtensions-WinUI",
+    "workarounds": [
+      "If LiveCharts2 supports it, configure the chart to use CPU rendering (SKCanvasView) instead of GPU rendering (SKGLView) to avoid the ANGLE/PropertySetExtensions code path entirely.",
+      "Add an explicit PackageReference to SkiaSharp.NativeAssets.WinUI in the application project to ensure the native DLLs are deployed correctly, rather than relying on transitive references through LiveCharts2.",
+      "Verify that SkiaSharp.Views.WinUI.Native.dll, libEGL.dll, and libGLESv2.dll are present in the application output directory after publish."
+    ],
+    "nextQuestions": [
+      "Is the app deployed as packaged (MSIX) or unpackaged? Unpackaged WinUI apps may have different WinRT activation behavior.",
+      "Are the native WinUI DLLs (SkiaSharp.Views.WinUI.Native.dll, libEGL.dll, libGLESv2.dll) present in the deployment output on the affected system?",
+      "What is the target architecture (x64, x86, arm64) and does it match the deployed native binaries?",
+      "Is the app published as framework-dependent or self-contained? Framework-dependent publish may not copy native assets correctly.",
+      "Does LiveCharts2 offer a way to use SKCanvasView (CPU) instead of SKGLView (GPU) on Windows?"
+    ],
+    "resolution": {
+      "hypothesis": "The WinRT activation of SkiaSharp.Views.WinUI.Native.PropertySetExtensions fails on certain systems because the native C++/WinRT DLL is either not deployed to the output directory, is the wrong architecture, or the WinRT activation metadata is not properly registered in the app's deployment manifest. This is a deployment/packaging issue that manifests environment-specifically, similar to #2948.",
+      "proposals": [
+        {
+          "title": "Verify native DLL deployment",
+          "description": "Check that SkiaSharp.Views.WinUI.Native.dll is present alongside the app executable on the failing system. If missing, add an explicit PackageReference to SkiaSharp.NativeAssets.WinUI in the application project.",
+          "codeSnippet": "<PackageReference Include=\"SkiaSharp.NativeAssets.WinUI\" Version=\"3.119.1\" />",
+          "confidence": 0.65,
+          "effort": "trivial"
+        },
+        {
+          "title": "Switch to CPU rendering path",
+          "description": "If LiveCharts2 supports it, configure the rendering to use SKCanvasView (CPU/WriteableBitmap) instead of SKGLView (ANGLE/OpenGL) on Windows. This completely avoids the PropertySetExtensions WinRT component. This is the most robust workaround since it eliminates the dependency on the native WinUI component.",
+          "confidence": 0.80,
+          "effort": "small"
+        },
+        {
+          "title": "Eliminate PropertySetExtensions dependency",
+          "description": "Replace the WinRT PropertySetExtensions component with direct P/Invoke or managed code in GlesContext.CreateSurface(). The component only does PropertyValue::CreateSingle() and PropertyValue::CreateSize() — these could potentially be done via the managed WinRT APIs without a separate native DLL, eliminating the WinRT activation requirement entirely.",
+          "confidence": 0.60,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Verify native DLL deployment",
+      "recommendedReason": "Most likely root cause based on #2948 precedent. Quick to verify and eliminates the most common cause of WinRT activation failures. If the DLLs are present, then the CPU rendering workaround is the next best option."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.80,
+      "reason": "Need to confirm whether native DLLs are present on the failing system, the deployment mode (packaged vs unpackaged, self-contained vs framework-dependent), and architecture details to diagnose the WinRT activation failure."
+    },
+    "missingInfo": [
+      "Whether SkiaSharp.Views.WinUI.Native.dll is present in the app's output/deployment directory on the affected system",
+      "Deployment mode: packaged (MSIX) or unpackaged, self-contained or framework-dependent",
+      "Target architecture (x64, x86, or arm64) of the published app",
+      "Whether the issue is reproducible on a clean Windows 11 install or only on specific machines"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correct — type/bug, area/SkiaSharp.Views.Maui, os/Windows-WinUI, tenet/reliability all apply",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Windows-WinUI", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request deployment details and suggest diagnostic steps",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the stack trace — this helps narrow things down.\n\nThe crash is in the WinRT activation of `SkiaSharp.Views.WinUI.Native.PropertySetExtensions`, which is a native C++/WinRT component used only by the OpenGL/ANGLE rendering path (`SKSwapChainPanel`). LiveCharts2 uses this GPU-accelerated path on Windows. The \"Element not found\" error means the WinRT runtime can't locate the component's class registration on the affected system.\n\nWe've seen a very similar issue before (#2948) where the same stack trace appeared during Microsoft Store certification — that turned out to be an environment/deployment issue.\n\nTo help diagnose:\n1. Could you check if `SkiaSharp.Views.WinUI.Native.dll` is present in your app's output directory on the affected machine?\n2. Is the app deployed as packaged (MSIX) or unpackaged?\n3. Is it published as self-contained or framework-dependent?\n4. What target architecture are you building for (x64, arm64)?\n\nAs an immediate workaround, you can try adding an explicit package reference to ensure the native assets are deployed:\n\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.WinUI\" Version=\"3.119.1\" />\n```\n\nIf LiveCharts2 supports configuring the rendering backend, switching to CPU rendering (which uses `SKXamlCanvas` instead of `SKSwapChainPanel`) would bypass this component entirely."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2948 — identical stack trace, different COM error code",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 2948
+      }
+    ]
+  }
+}
