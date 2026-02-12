@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 310,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:40:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/310.json"
+  },
+  "conclusion": "needs-platform",
+  "assessment": "likely-bug",
+  "notes": "This bug requires Windows with WinForms GUI to reproduce. The SKControl.OnPaint method (source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs:30-57) calls LockBits, fires PaintSurface (user code), then UnlockBits. If user code triggers a re-entrant OnPaint (e.g. by resizing the control), CreateBitmap() disposes and recreates the locked bitmap, causing UnlockBits to throw ExternalException on the stale BitmapData reference. Code review of main confirms no re-entrancy guard has been added — the bug still exists. The reporter thoroughly investigated and confirmed the re-entrancy as the root cause. A boolean guard (e.g. 'if (isPainting) return;') in OnPaint would prevent the crash.",
+  "reproductionTime": "~5 minutes",
+  "versionResults": [
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Cannot test on macOS — WinForms/GDI+ requires Windows."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Code review of SKControl.cs on main confirms no re-entrancy guard exists. The LockBits/OnPaintSurface/UnlockBits pattern (lines 43-55) is unchanged since the issue was filed. Bug very likely still present."
+    }
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Verify current environment — macOS arm64 cannot run WinForms/GDI+ applications",
+      "layer": "setup",
+      "command": "uname -s && uname -m",
+      "exitCode": 0,
+      "output": "Darwin\narm64",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Review SKControl.OnPaint source code on main to check for re-entrancy guard. Lines 30-57: LockBits (line 43) -> OnPaintSurface (line 49) -> UnlockBits (line 55). No guard found. CreateBitmap() (lines 72-85) disposes bitmap when size changes via FreeBitmap().",
+      "layer": "csharp",
+      "command": "grep -n 'reentran\\|_painting\\|isPaint\\|isRendering\\|guard' source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+      "exitCode": 1,
+      "output": "No re-entrancy guard found",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Check git history for SKControl.cs — no fixes related to re-entrancy have been committed",
+      "layer": "csharp",
+      "command": "git log --oneline --all -- source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+      "exitCode": 0,
+      "output": "fddb8222f Things should be good now...\n6f4992665 Fix more things\n4f10d3219 some fixes\n646e0b872 Lots more now\n4a687a87b Fix the what the `IgnorePixelScaling` property works (#1804)\n5e8dc3e2c Split the desktop projects and packages (#899)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Cannot create or run WinForms reproduction project on macOS — System.Windows.Forms and System.Drawing.Bitmap with GDI+ are Windows-only. The bug requires a Windows GUI environment with actual WinForms controls to trigger re-entrant OnPaint events.",
+      "layer": "setup",
+      "result": "skip"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "System.Runtime.InteropServices.ExternalException (0x80004005): A generic error occurred in GDI+ at System.Drawing.Bitmap.UnlockBits — caused by re-entrant OnPaint disposing and recreating a locked bitmap"
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Requires Windows with WinForms GUI — SKControl is a System.Windows.Forms.Control subclass using System.Drawing.Bitmap with GDI+ LockBits/UnlockBits, none of which are available on macOS",
+    "Bug requires UI interaction (re-entrant OnPaint triggered by control resize within paint event, involving parent scrollable container) — cannot be simulated headless or in Docker"
+  ]
+}
