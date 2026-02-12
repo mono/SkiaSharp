@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3357,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:13:03Z",
+    "currentLabels": ["area/Docs"]
+  },
+  "summary": "Maintainer request to migrate API documentation from external XML files (docs/SkiaSharpAPI/*.xml, ~240 files) into inline C# XML doc comments in the binding source files. PR #3363 attempted this but was closed without merging because NuGet doc tooling cannot handle packages with different APIs across target frameworks. The issue remains open as a desired long-term goal, blocked on tooling.",
+  "classification": {
+    "type": { "value": "type/documentation", "confidence": 0.98 },
+    "area": { "value": "area/Docs", "confidence": 0.98 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [3356, 3358, 3363, 3410]
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "PR #3363 attempted the migration but was closed without merging. Maintainer commented: 'the automated tooling to process nugets do not support nugets with different apis in different tfms. For now, we still have to use a separate docs repo.' The migration is blocked on NuGet documentation tooling, not on the content itself.",
+      "relatedPRs": [3363]
+    }
+  },
+  "analysis": {
+    "summary": "This is a maintainer-initiated docs migration task. The goal is to move all API documentation from the external XML doc repo (docs/SkiaSharpAPI/) into triple-slash (///) XML doc comments directly in the C# source (binding/SkiaSharp/*.cs). Multiple attempts were made (#3356 partial WIP, #3358 closed, PR #3363 with 40 commits touching 165 files). PR #3363 was the most complete attempt but was closed by the maintainer because NuGet doc generation tooling cannot produce correct documentation for packages that expose different APIs across different TFMs (e.g., net8.0 vs net8.0-ios). The issue remains open and desired.",
+    "rationale": "Classified as type/documentation because the issue is entirely about moving documentation content between formats (external XML → inline C# comments). Area is area/Docs because it concerns the documentation infrastructure, not any specific SkiaSharp API component. No platforms, backends, or tenets apply since this is a cross-cutting docs task.",
+    "keySignals": [
+      { "text": "Can you help migrate my docs from the docs folder into the c# source", "source": "issue body", "interpretation": "Maintainer-initiated documentation migration request. Clear intent — not a question or bug." },
+      { "text": "Closing this for now as the automated tooling to process nugets do not support nugets with different apis in different tfms", "source": "PR #3363 comment by mattleibow", "interpretation": "The migration is technically feasible but blocked on NuGet doc tooling. The issue is NOT abandoned — maintainer said 'for now' and 'I will continue to investigate'." },
+      { "text": "Each type should be migrated and committed separately", "source": "issue body", "interpretation": "Maintainer wants atomic commits per type for review workflow. This constraint makes the migration a large but well-structured task." },
+      { "text": "Fixes #3357", "source": "PR #3363 body", "interpretation": "PR #3363 was the official attempt to resolve this issue. Its closure without merge confirms the issue is still open." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKBitmap.cs", "lines": "1-15", "finding": "Zero inline XML doc comments (/// <summary>). No triple-slash comments on any public member. Confirms the migration has not been done for this major class.", "relevance": "direct" },
+      { "file": "docs/SkiaSharpAPI/SkiaSharp/SKBitmap.xml", "lines": "1-30", "finding": "Full XML API documentation exists externally — type summary, remarks, member docs. This is the source material that needs to be migrated into the C# source.", "relevance": "direct" },
+      { "file": "docs/SkiaSharpAPI/SkiaSharp/", "finding": "~240 XML doc files exist covering SkiaSharp types. Corresponding 85 C# source files in binding/SkiaSharp/ have essentially no inline docs.", "relevance": "context" }
+    ],
+    "nextQuestions": [
+      "Has the NuGet doc tooling limitation been resolved since PR #3363 was closed (Jan 2026)?",
+      "Should the migration proceed in stages (e.g., types with consistent APIs across TFMs first)?",
+      "Are the migration guide files (API.Docs.Migration.Guide.md, API.Docs.Migration.Checklist.md) available somewhere or need to be recreated?"
+    ],
+    "resolution": {
+      "hypothesis": "The migration is blocked on NuGet documentation tooling not supporting different APIs across TFMs. Once that tooling limitation is resolved (either upstream fix or a workaround like conditional XML doc generation), the migration can proceed using the PR #3363 approach.",
+      "proposals": [
+        { "title": "Wait for tooling fix", "description": "Monitor NuGet/dotnet SDK updates for support of per-TFM XML documentation in packages. The migration content is ready (proven by PR #3363's 40 commits) but cannot ship until tooling supports it.", "confidence": 0.70, "effort": "trivial" },
+        { "title": "Migrate with conditional compilation", "description": "Use #if directives or partial classes to provide different docs per TFM, allowing the NuGet doc extractor to process each TFM separately. This adds complexity but may unblock the migration.", "confidence": 0.40, "effort": "large" },
+        { "title": "Migrate common-API types first", "description": "Identify types whose public API surface is identical across all TFMs and migrate those first. This sidesteps the multi-TFM tooling issue for a subset of the docs.", "confidence": 0.60, "effort": "medium" }
+      ],
+      "recommendedProposal": "Wait for tooling fix",
+      "recommendedReason": "The maintainer explicitly closed PR #3363 to wait for tooling improvements. Forcing the migration now would reproduce the same problem. The content is ready and can be re-applied quickly once tooling supports it."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.92,
+      "reason": "The maintainer opened this issue and explicitly said the PR was closed 'for now' — indicating this remains a desired goal. The issue is blocked on external tooling, not abandoned. Keep open to track when the tooling limitation is resolved."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply documentation type label alongside existing area/Docs",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": ["type/documentation", "area/Docs"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the closed PR that attempted this migration",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3363
+      }
+    ]
+  }
+}
