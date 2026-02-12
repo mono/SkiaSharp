@@ -1,0 +1,79 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3429,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:24:16Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3429.json"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Memory leak reproduction requires Windows OS with Nvidia Quadro GPU and high-resolution monitor. The issue is specific to WPF's D3D compositor interaction with Quadro drivers and cannot be reproduced on macOS. Triage analysis correctly identified this as a WPF framework issue (dotnet/wpf#10005) triggered by SkiaSharp's rendering workload, not a SkiaSharp code bug. Code verification confirms: (1) SKElement implementation matches triage findings - creates WriteableBitmap, passes to WPF compositor which leaks on Quadro drivers; (2) SKGLElement disposal bug (#3309) remains unfixed in main branch - PR #3311 is still open as of 2026-02-12. If reporter uses SKGLElement, that PR would fix the OpenTK disposal leak, but not the broader WPF+Quadro compositor issue.",
+  "assessment": "likely-bug",
+  "blockers": [
+    "Reproduction requires Windows operating system with WPF framework support",
+    "Reproduction requires Nvidia Quadro series GPU with specific driver behavior - leak does not occur on Nvidia GeForce or AMD GPUs",
+    "Reproduction requires high-resolution monitor with DPI scaling to trigger WPF compositor memory leak under GPU texture churn"
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Verify environment constraints - check if Windows with Nvidia Quadro GPU is available",
+      "layer": "setup",
+      "command": "uname -s && uname -m",
+      "output": "Darwin\narm64",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify SKElement.cs implementation matches triage findings about WriteableBitmap compositor leak path",
+      "layer": "csharp",
+      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Check SKGLElement.cs disposal implementation and verify if PR #3311 has been merged",
+      "layer": "csharp",
+      "command": "gh pr view 3311 --repo mono/SkiaSharp --json state,merged",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify related issues and external references cited in triage",
+      "layer": "setup",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.1-preview (source main branch)",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "2.88.9 (reporter - last known good)",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Cannot test memory leak behavior on macOS - requires Windows with WPF and Nvidia Quadro GPU. Reporter claims this version worked without leaks."
+    },
+    {
+      "version": "3.116.0 (reporter - broken)",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Cannot test memory leak behavior on macOS - requires Windows with WPF and Nvidia Quadro GPU. Reporter observes unbounded memory growth with this version."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Cannot test memory leak behavior on macOS. Code verification shows: (1) SKElement WriteableBitmap path unchanged - still vulnerable to WPF compositor leak on affected drivers; (2) SKGLElement disposal bug (#3309) remains unfixed - PR #3311 not yet merged."
+    }
+  ],
+  "feedback": {
+    "triageCorrections": []
+  }
+}
