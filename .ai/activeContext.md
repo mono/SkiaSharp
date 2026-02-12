@@ -7,23 +7,41 @@
 
 | | |
 |---|---|
-| **Phase** | AI Triage Dashboard — Schema v2.1 migration verified |
-| **Status** | Shared library with C# enums, typed deserialization, visually verified in browser |
+| **Phase** | AI Triage Dashboard — Schema v1.0 rewrite complete |
+| **Status** | All 3 schemas (triage, repro, fix) rewritten, pipeline stepper, fix tab added |
 | **Branch** | `docs-dashboard` |
 
 ## Recent Changes
 
-### 2026-02-11 — Schema v2.1 Migration (Shared Library + Enums)
+### 2026-02-12 — Schema v1.0 Rewrite (Clean Cut)
 
-Created [`src/SkiaSharp.Triage.Models/`](../src/SkiaSharp.Triage.Models/) — shared library, single source of truth for triage types:
+Complete rewrite for new v1.0 schemas across all 3 AI skills (triage, repro, fix):
 
-| File | Contents |
-|------|----------|
-| [`TriageEnums.cs`](../src/SkiaSharp.Triage.Models/TriageEnums.cs) | 14 C# enums with `[JsonStringEnumMemberName]` attributes |
-| [`TriageModels.cs`](../src/SkiaSharp.Triage.Models/TriageModels.cs) | All record types (`TriagedIssue`, `TriageMeta`, `TriageClassification`, etc.) |
-| [`TriagePayloads.cs`](../src/SkiaSharp.Triage.Models/TriagePayloads.cs) | `TriageAction` + 8 payload types (including 3 new: discussion, project, milestone) |
-| [`TriageJsonOptions.cs`](../src/SkiaSharp.Triage.Models/TriageJsonOptions.cs) | Centralized `JsonSerializerOptions` shared by Dashboard and Collector |
-| [`TriageEnumExtensions.cs`](../src/SkiaSharp.Triage.Models/TriageEnumExtensions.cs) | `.ToJsonString()` extension for enum → JSON string conversion |
+**Models (`src/SkiaSharp.Triage.Models/`):**
+| File | Changes |
+|------|---------|
+| `TriageModels.cs` | Flat actions (no payloads), new BugSignals fields, CodeRelevance enum, rationale replaces fieldRationales |
+| `TriageEnums.cs` | Removed: VerificationStatus, AttachmentType, CommentType, CloseReason, ProposalCategory, ProposalValidation, MissingInfoKind. Added: CodeRelevance. Updated: ReproQuality (removed steps-only), ProposalEffort (trivial/small/medium/large) |
+| `TriagePayloads.cs` | **DELETED** — typed payloads eliminated, flat fields on TriageAction |
+| `ReproModels.cs` | Added: ReproInputs, ReproFeedback, TriageCorrection. Moved TriageFile into Inputs object |
+| `ReproEnums.cs` | Added: ReproAssessment enum |
+| `FixModels.cs` | **NEW** — FixResult, FixRootCause, FixChanges, FixTests, FixVerification, FixPR, FixFeedback |
+| `FixEnums.cs` | **NEW** — FixStatus, RootCauseCategory, RootCauseArea, ChangeType, RiskLevel, TestResult, ReproScenarioResult, PRStatus, CorrectionSource |
+| `TriageIndexModels.cs` | Removed HumanReview field |
+
+**CLI (`src/SkiaSharp.Triage.Cli/`):**
+- Deleted 6 legacy commands + Settings.cs (−827 lines)
+- Updated GenerateCommand: v1.0 version gates, fix file generation, nullable area
+- Added AiFixPath to CacheService
+
+**Dashboard:**
+- Actions tab: flat field rendering (labels, comment, linkedIssue)
+- BugSignals: errorType/errorMessage/stackTrace display
+- Analysis tab: rationale, workarounds, nextQuestions, relevance badges
+- Repro tab: feedback corrections, inputs display
+- **NEW Fix tab**: root cause, changes, tests, verification, PR, feedback
+- **NEW Pipeline stepper**: Triage → Repro → Fix visual header
+- GetFixDetailAsync added to DashboardDataService
 
 Other changes:
 

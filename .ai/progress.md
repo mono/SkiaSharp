@@ -4,17 +4,17 @@
 
 ## Current Status
 
-**Overall**: ✅ AI Triage Dashboard — Schema v2.1 migration verified in browser
+**Overall**: ✅ Schema v1.0 rewrite complete — all 3 AI skills (triage, repro, fix) supported
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Dashboard App | ✅ Complete | Blazor WASM at [`src/Dashboard/`](../src/Dashboard/) |
-| Collector CLI | ✅ Complete | .NET CLI at [`src/SkiaSharp.Collector/`](../src/SkiaSharp.Collector/) |
-| Triage Models | ✅ Complete | Shared library at [`src/SkiaSharp.Triage.Models/`](../src/SkiaSharp.Triage.Models/) |
-| Schema v2.1 | ✅ Complete | 14 enums, typed deserialization, v2.0 + v2.1 compat |
+| Dashboard App | ✅ Complete | Blazor WASM at `src/SkiaSharp.Triage.Dashboard/` |
+| Triage CLI | ✅ Complete | .NET CLI at `src/SkiaSharp.Triage.Cli/` |
+| Triage Models | ✅ Complete | Shared library at `src/SkiaSharp.Triage.Models/` |
+| Schema v1.0 | ✅ Complete | Triage, Repro, Fix — strong types, no legacy |
+| Fix Support | ✅ Complete | Fix tab, fix file generation, pipeline stepper |
 | Multi-Repo | ✅ Complete | SkiaSharp + Extended, parallel sync |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
-| AI Triage Skill | ✅ Complete | On `main` branch at `.github/skills/triage-issue/` |
 
 ---
 
