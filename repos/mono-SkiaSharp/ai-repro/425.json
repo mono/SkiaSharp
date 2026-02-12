@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 425,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T17:10:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/425.json"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Reproduced on SkiaSharp 3.116.1 (latest NuGet) and main (source). SKCodec.EncodedOrigin returns TopLeft for DNG files (expected RightTop/6) and CR2 files (expected LeftBottom/8). MetadataExtractor confirms the correct EXIF orientation values. Maintainer (mattleibow) confirmed in 2018 that the DNG codec in Skia ignores orientation — only JPEG and WebP codecs parse it. Root cause is in upstream Skia's SkRawCodec which does not pass EXIF orientation to the base SkCodec constructor.",
+  "reproductionTime": "~8 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "All 3 sample files (2 DNG, 1 CR2) return TopLeft instead of actual EXIF orientation."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "xUnit tests confirm: APC_0316.dng expected RightTop got TopLeft; IMG_1361.CR2 expected LeftBottom got TopLeft."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.116.1" },
+      { "name": "MetadataExtractor", "version": "2.9.0" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project and add SkiaSharp 3.116.1 + MetadataExtractor packages",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.1 && dotnet add package MetadataExtractor",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 3.116.1 and MetadataExtractor 2.9.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"MetadataExtractor\" Version=\"2.9.0\" />\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.1\" />\n  </ItemGroup>\n\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that compares SKCodec.EncodedOrigin against MetadataExtractor EXIF orientation for DNG/CR2 files",
+          "content": "using SkiaSharp;\nusing MetadataExtractor;\nusing MetadataExtractor.Formats.Exif;\n\n// Issue #425: SKCodec.EncodedOrigin returns TopLeft for DNG/CR2 files\n// Expected: actual EXIF orientation from the file metadata\n\nstring[] files = {\n    \"APC_0316.dng\",\n    \"APC_0193.dng\",\n    \"IMG_1361.CR2\"\n};\n\nConsole.WriteLine($\"SkiaSharp Codec Origin Test - Issue #425\");\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKCodec).Assembly.GetName().Version}\");\nConsole.WriteLine();\n\nforeach (var file in files)\n{\n    var filename = Path.GetFileName(file);\n    Console.WriteLine($\"--- {filename} ---\");\n\n    // Read EXIF orientation using MetadataExtractor (ground truth)\n    string exifOrientation = \"unknown\";\n    try\n    {\n        var directories = ImageMetadataReader.ReadMetadata(file);\n        var ifd0 = directories.OfType<ExifIfd0Directory>().FirstOrDefault();\n        if (ifd0 != null && ifd0.TryGetUInt16(ExifDirectoryBase.TagOrientation, out var orient))\n        {\n            exifOrientation = $\"{orient} ({(SKEncodedOrigin)orient})\";\n        }\n        else\n        {\n            exifOrientation = \"not found in IFD0\";\n        }\n    }\n    catch (Exception ex)\n    {\n        exifOrientation = $\"error: {ex.Message}\";\n    }\n    Console.WriteLine($\"  EXIF orientation (MetadataExtractor): {exifOrientation}\");\n\n    // Read orientation using SKCodec\n    try\n    {\n        using var stream = new SKFileStream(file);\n        using var codec = SKCodec.Create(stream);\n        if (codec != null)\n        {\n            Console.WriteLine($\"  SKCodec.EncodedOrigin: {codec.EncodedOrigin}\");\n            Console.WriteLine($\"  SKCodec dimensions: {codec.Info.Width}x{codec.Info.Height}\");\n            Console.WriteLine($\"  Match: {(exifOrientation.Contains(codec.EncodedOrigin.ToString()) ? \"YES\" : \"NO - BUG!\")}\");\n        }\n        else\n        {\n            Console.WriteLine($\"  SKCodec.Create returned null (codec not supported)\");\n        }\n    }\n    catch (Exception ex)\n    {\n        Console.WriteLine($\"  SKCodec error: {ex.Message}\");\n    }\n    Console.WriteLine();\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Download sample DNG and CR2 files from issue attachments (APC_0316.dng, APC_0193.dng, IMG_1361.CR2)",
+      "layer": "setup",
+      "command": "curl -sLo APC_0316.zip 'https://github.com/mono/SkiaSharp/files/1616452/APC_0316.zip' && unzip -o APC_0316.zip && curl -sLo APC_0193.zip 'https://github.com/mono/SkiaSharp/files/1616453/APC_0193.zip' && unzip -o APC_0193.zip && curl -sLo IMG_1361.zip 'https://github.com/mono/SkiaSharp/files/1645431/IMG_1361.zip' && unzip -o IMG_1361.zip",
+      "exitCode": 0,
+      "output": "inflating: APC_0316.dng\ninflating: APC_0193.dng\ninflating: IMG_1361.CR2",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run reproduction with SkiaSharp 3.116.1 — compare SKCodec.EncodedOrigin against MetadataExtractor EXIF orientation",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Codec Origin Test - Issue #425\nSkiaSharp version: 3.116.0.0\n\n--- APC_0316.dng ---\n  EXIF orientation (MetadataExtractor): 6 (RightTop)\n  SKCodec.EncodedOrigin: TopLeft\n  SKCodec dimensions: 4032x3024\n  Match: NO - BUG!\n\n--- APC_0193.dng ---\n  EXIF orientation (MetadataExtractor): 6 (RightTop)\n  SKCodec.EncodedOrigin: TopLeft\n  SKCodec dimensions: 4032x3024\n  Match: NO - BUG!\n\n--- IMG_1361.CR2 ---\n  EXIF orientation (MetadataExtractor): 8 (LeftBottom)\n  SKCodec.EncodedOrigin: TopLeft\n  SKCodec dimensions: 1536x1024\n  Match: NO - BUG!",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test on main branch (source) — add DNG/CR2 InlineData to existing CodecCanLoadCorrectOrigin test and run",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter 'FullyQualifiedName~CodecCanLoadCorrectOrigin'",
+      "exitCode": 1,
+      "output": "Failed SkiaSharp.Tests.SKCodecTest.CodecCanLoadCorrectOrigin(image: \"APC_0316.dng\", origin: RightTop) [10 ms]\n  Assert.Equal() Failure\n  Expected: RightTop\n  Actual:   TopLeft\n\nFailed SkiaSharp.Tests.SKCodecTest.CodecCanLoadCorrectOrigin(image: \"IMG_1361.CR2\", origin: LeftBottom) [5 ms]\n  Assert.Equal() Failure\n  Expected: LeftBottom\n  Actual:   TopLeft\n\nPassed SkiaSharp.Tests.SKCodecTest.CodecCanLoadCorrectOrigin(image: \"P8211052.JPG\", origin: LeftBottom)\nPassed SkiaSharp.Tests.SKCodecTest.CodecCanLoadCorrectOrigin(image: \"PA010741.JPG\", origin: LeftBottom)\n\nTotal tests: 4, Passed: 2, Failed: 2",
+      "result": "failure"
+    }
+  ],
+  "artifacts": [
+    {
+      "filename": "APC_0316.dng",
+      "description": "DNG sample with EXIF orientation 6 (RightTop), SKCodec returns TopLeft",
+      "source": "issue-attachment",
+      "url": "https://github.com/mono/SkiaSharp/files/1616452/APC_0316.zip",
+      "available": true
+    },
+    {
+      "filename": "APC_0193.dng",
+      "description": "DNG sample with EXIF orientation 6 (RightTop), SKCodec returns TopLeft",
+      "source": "issue-attachment",
+      "url": "https://github.com/mono/SkiaSharp/files/1616453/APC_0193.zip",
+      "available": true
+    },
+    {
+      "filename": "IMG_1361.CR2",
+      "description": "CR2 sample with EXIF orientation 8 (LeftBottom), SKCodec returns TopLeft",
+      "source": "issue-attachment",
+      "url": "https://github.com/mono/SkiaSharp/files/1645431/IMG_1361.zip",
+      "available": true
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKCodec.EncodedOrigin returns TopLeft for all DNG/CR2 RAW files instead of their actual EXIF orientation (RightTop/LeftBottom)",
+    "additionalErrors": [
+      "APC_0316.dng: Expected RightTop (6), got TopLeft (1)",
+      "APC_0193.dng: Expected RightTop (6), got TopLeft (1)",
+      "IMG_1361.CR2: Expected LeftBottom (8), got TopLeft (1)"
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  }
+}
