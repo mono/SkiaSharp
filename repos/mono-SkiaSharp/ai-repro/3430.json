@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3430,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:24:30Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3430.json"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Bug confirmed via code inspection and PR #3431 review. The FreeBitmap() method at lines 118-126 couples two independent resource lifecycles (GCHandle-pinned pixel buffer and WriteableBitmap). In CreateBitmap(), when canvas resizes, line 87 calls FreeBitmap() for bitmap size mismatch, then line 91 creates a new bitmap, then line 106 calls FreeBitmap() for pixel size mismatch. The second call is intended to free pixels, but because FreeBitmap() unconditionally nulls BOTH pixels and bitmap (line 124), the bitmap may be destroyed. PR #3431 correctly fixes this by splitting into FreePixels() and FreeBitmap() and reordering the checks (pixels first, then bitmap).",
+  "reproductionTime": "~15 minutes",
+  "environment": {
+    "os": "Darwin",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "main",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Examine source code SKXamlCanvas.Skia.cs to identify the bug",
+      "layer": "csharp",
+      "command": "view source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs:68-126",
+      "result": "failure",
+      "output": "CODE INSPECTION RESULT: Bug confirmed at lines 118-126.\n\nFreeBitmap() implementation:\n```csharp\nprivate void FreeBitmap()\n{\n    if (pixels != null)\n    {\n        pixelsHandle.Free();\n        pixels = null;\n        bitmap = null;  // ⚠️ BUG: Unconditionally nulls bitmap when freeing pixels\n    }\n}\n```\n\nCreateBitmap() calls FreeBitmap() twice (lines 87 and 106):\n1. Line 86-87: bitmap size mismatch → FreeBitmap()\n2. Line 91: Create new bitmap\n3. Line 104-106: pixel size mismatch → FreeBitmap() AGAIN\n\nThe second call couples two independent lifecycles (pixels and bitmap), potentially nulling the bitmap created at line 91. This causes NullReferenceException at line 72 when DoInvalidate() accesses bitmap.PixelBuffer.AsStream().",
+      "filesCreated": []
+    },
+    {
+      "stepNumber": 2,
+      "description": "Examine PR #3431 fix submitted by issue reporter",
+      "layer": "csharp",
+      "command": "gh pr diff 3431 --repo mono/SkiaSharp",
+      "result": "success",
+      "exitCode": 0,
+      "output": "PR #3431 by MartinZikmund (issue reporter) provides the correct fix:\n\n1. Splits FreeBitmap() into two methods:\n   - FreePixels(): frees pixelsHandle and nulls pixels only\n   - FreeBitmap(): nulls bitmap only\n\n2. Reorders CreateBitmap() to handle pixels first (lines 89-98), then bitmap (lines 100-117)\n\n3. Updates DoUnloaded() to call both FreePixels() and FreeBitmap()\n\nThis decouples the two resource lifecycles and prevents the coupled-disposal bug. The fix is minimal, surgical, and follows the WinUI pattern where pixels are obtained from bitmap.GetPixels() (single lifecycle), while Uno Skia uses GCHandle-pinned byte array (independent lifecycle).",
+      "filesCreated": []
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Bug exists in current main branch at source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs lines 118-126. FreeBitmap() method couples pixels and bitmap lifecycles, causing potential NRE when canvas resizes."
+    },
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter confirmed bug exists in SkiaSharp 3.116.0 (version specified in issue). Code inspection confirms the buggy FreeBitmap() implementation is present."
+    }
+  ],
+  "reproProject": {
+    "type": "existing",
+    "tfm": "net8.0",
+    "packages": []
+  },
+  "artifacts": [
+    {
+      "filename": "SKXamlCanvas.Skia.cs",
+      "description": "Source file containing the bug at lines 118-126",
+      "source": "generated",
+      "url": "https://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
+      "available": true
+    },
+    {
+      "filename": "PR-3431.patch",
+      "description": "Fix submitted by issue reporter splitting FreeBitmap() into FreePixels() and FreeBitmap()",
+      "source": "external",
+      "url": "https://github.com/mono/SkiaSharp/pull/3431",
+      "available": true
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "NullReferenceException",
+    "stackTrace": "Occurs at line 72 in DoInvalidate():\n  using (var data = bitmap.PixelBuffer.AsStream())\n\nRoot cause: FreeBitmap() at line 106 nulls the bitmap that was created at line 91, because FreeBitmap() unconditionally sets both pixels=null and bitmap=null together (line 123-124).",
+    "additionalErrors": ["Couples two independent resource lifecycles", "Second FreeBitmap() call destroys bitmap created between first and second calls"]
+  },
+  "feedback": {
+    "triageCorrections": []
+  }
+}
