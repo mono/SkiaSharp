@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3422,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:15:00Z"
+  },
+  "inputs": {
+    "triageFile": ".data-cache/repos/mono-SkiaSharp/ai-triage/3422.json"
+  },
+  "conclusion": "partial",
+  "notes": "Build succeeds and libSkiaSharp.a is correctly linked into the WASM binary, but runtime testing requires a browser. Root cause confirmed: SkiaSharp.Views.Blazor packages only ship net6.0/net8.0, not net10.0. .NET 10 falls back to net8.0 at build time.",
+  "assessment": "breaking-change",
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2-preview.1",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "3.119.2-preview.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Build succeeded. Native library linked. TFM fallback to net8.0. Runtime not tested."
+    },
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Package inspection confirms same issue: only net6.0/net8.0 TFMs."
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "TFMNext empty. .NET 10 not added to main. PR #3514 tracks this."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.119.2-preview.1"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WebAssembly project targeting net10.0",
+      "layer": "setup",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0",
+      "result": "success",
+      "exitCode": 0,
+      "output": "The template was created successfully."
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp.Views.Blazor package",
+      "layer": "setup",
+      "command": "dotnet add package SkiaSharp.Views.Blazor --version 3.119.2-preview.1",
+      "result": "success",
+      "exitCode": 0,
+      "output": "info : Installed SkiaSharp.Views.Blazor 3.119.2-preview.1",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Project file",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk.BlazorWebAssembly\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.AspNetCore.Components.WebAssembly\" Version=\"10.0.2\" />\n    <PackageReference Include=\"Microsoft.AspNetCore.Components.WebAssembly.DevServer\" Version=\"10.0.2\" PrivateAssets=\"all\" />\n    <PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"3.119.2-preview.1\" />\n  </ItemGroup>\n</Project>"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Create Razor component with reporter's code",
+      "layer": "csharp",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Pages/SkiaTest.razor",
+          "description": "Razor component with SKCanvasView",
+          "content": "@page \"/skiatest\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\" IgnorePixelScaling=\"true\" />\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs args)\n    {\n        var canvas = args.Surface.Canvas;\n        canvas.Clear(SkiaSharp.SKColors.White);\n        using var paint = new SkiaSharp.SKPaint\n        {\n            Color = SkiaSharp.SKColors.Black,\n            IsAntialias = true,\n            Style = SkiaSharp.SKPaintStyle.Fill\n        };\n        using var font = new SkiaSharp.SKFont { Size = 24 };\n        var coord = new SkiaSharp.SKPoint(args.Info.Width / 2, (args.Info.Height + font.Size) / 2);\n        canvas.DrawText(\"SkiaSharp\", coord, font, paint);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build Blazor WASM project",
+      "layer": "csharp",
+      "command": "dotnet build",
+      "result": "success",
+      "exitCode": 0,
+      "output": "Build succeeded in 14.1s"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify native library linked",
+      "layer": "native",
+      "command": "strings obj/Debug/net10.0/wasm/for-build/dotnet.native.wasm | grep sk_image | head -5",
+      "result": "success",
+      "exitCode": 0,
+      "output": "sk_image_new_raster_copy\nsk_imagefilter_new_drop_shadow_only\nsk_image_is_alpha_only"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Inspect package TFMs",
+      "layer": "deployment",
+      "command": "unzip -l ~/.nuget/packages/skiasharp.views.blazor/3.119.2-preview.1/*.nupkg | grep lib/",
+      "result": "wrong-output",
+      "exitCode": 0,
+      "output": "lib/net8.0/SkiaSharp.Views.Blazor.dll\nlib/net6.0/SkiaSharp.Views.Blazor.dll"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Runtime test",
+      "layer": "deployment",
+      "result": "skip"
+    }
+  ],
+  "blockers": [
+    "Browser required for WASM runtime testing. Build and native linking verified. Root cause (missing net10.0 TFM) confirmed via package inspection."
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "build-outcome",
+        "upstream": "Triage suggests build failure",
+        "corrected": "Build succeeds on macOS arm64. Native library correctly linked. Failure occurs at runtime in browser."
+      }
+    ]
+  }
+}
