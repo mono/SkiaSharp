@@ -13,30 +13,33 @@ description: >
 
 # Bug Fix Skill
 
+**Bug pipeline: Step 3 of 3 (Fix).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
 ## ⛔ CRITICAL: SEQUENTIAL EXECUTION REQUIRED
 
-> **🛑 PHASES MUST BE EXECUTED IN STRICT ORDER. NO PARALLELIZATION. NO SKIPPING.**
+> **🛑 PHASES MUST BE EXECUTED IN STRICT ORDER. NO PARALLELIZATION. NO REORDERING.**
 >
 > ```
 > Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8
 > ```
 >
 > **STOP** at each phase gate. Do not proceed until gate criteria are met.
+> **Phases may be abbreviated** when `ai-triage/{n}.json` and/or `ai-repro/{n}.json` exist — but you must explicitly consume them and meet the gate with evidence (don’t redo the work).
 > **NEVER** say "in parallel" — phases are strictly sequential.
-> **NEVER** start research (Phase 3) before PR exists (Phase 2).
+> **NEVER** start *new* research (Phase 3) before PR exists (Phase 2).
 
 ---
 
 ## Workflow Overview
 
 ```
-1. Understand   → Fetch issue, extract key details
-2. Create PR    → 🛑 STOP: Create PR before ANY investigation
-3. Research     → Search related issues, READ ALL COMMENTS
-4. Reproduce    → 🛑 MANDATORY: Test on target platform
-5. Investigate  → Find root cause (often already found in Phase 3!)
+1. Understand   → Fetch issue, consume ai-triage/ai-repro if present
+2. Create PR    → 🛑 STOP: Create PR before ANY *new* research
+3. Research     → Delta research (triage already did first-pass)
+4. Reproduce    → Prefer ai-repro project; Docker only if needed
+5. Investigate  → Root cause (guided by repro version matrix + triage codeInvestigation)
 6. Fix          → Minimal change
 7. Test         → Regression test + existing tests
 8. Finalize     → Rewrite PR description, link all fixed issues
@@ -48,23 +51,47 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 
 - GitHub API access (fetch issues, search issues, read comments)
 - Git with push access
-- Docker for cross-platform testing (check: `docker --version`)
+- Local data cache worktree (`docs-data-cache`) for ai-triage/ai-repro handoff
+- Docker for cross-platform testing (optional; check: `docker --version`)
 
 ---
 
-## Phase 1: Understand the Issue
+## Phase 1: Understand the Issue (pipeline intake)
 
-Fetch the issue from GitHub. Extract:
+### 1. Prefer the data cache (handoff)
+
+```bash
+pwsh --version    # Requires 7.5+
+
+# Cache worktree
+[ -d ".data-cache" ] || git worktree add .data-cache docs-data-cache
+git -C .data-cache pull --rebase origin docs-data-cache
+CACHE=".data-cache/repos/mono-SkiaSharp"
+
+TRIAGE="$CACHE/ai-triage/NNNN.json"
+REPRO="$CACHE/ai-repro/NNNN.json"
+```
+
+- If `TRIAGE` exists: treat it as the **authoritative classification + codeInvestigation**. Extract key details and uncertainties.
+- If `REPRO` exists: treat it as the **authoritative factual reproduction record** (versions tested + minimal repro source).
+
+If cache is missing the issue/JSONs, fall back to `gh`.
+
+### 2. Extract only what you need to open the PR
+
+Extract (from issue + triage/repro if present):
 - Symptoms, error messages, stack traces
 - Platform (OS, arch, .NET version, SkiaSharp version)
-- Last working version (if mentioned)
-- Reproduction steps or code snippets
+- Version status (reproduces on latest? on main?)
+- Minimal reproduction steps / code (prefer `ai-repro`)
 
-This phase is quick — get enough context to create the PR.
+**Do not redo triage’s work here.** No deep code investigation and no broad related-issue search yet.
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Issue title, symptoms, and error message (if any)
 - [ ] Target platform identified
+- [ ] Noted whether `ai-triage/NNNN.json` exists
+- [ ] Noted whether `ai-repro/NNNN.json` exists
 
 ### ⛔ AFTER PHASE 1: STOP AND CREATE PR
 
@@ -123,16 +150,25 @@ Create PR using investigation template from [references/pr-templates.md](referen
 
 ---
 
-## Phase 3: Research Related Issues
+## Phase 3: Research Related Issues (delta)
 
 > 🛑 **PREREQUISITE: Phase 2 must be complete. PR must exist.**
 > 
 > If you have not created the draft PR yet, STOP and go back to Phase 2.
 
+If `ai-triage/NNNN.json` exists, it already contains:
+- related issues discovered during workaround/duplicate search
+- code investigation entry points
+- workaround proposals and missing info
+
+**Your job in Phase 3 is delta research only:**
+- confirm/expand on the *most relevant* related issues (especially ones with diagnosis in comments)
+- run additional searches only if triage confidence is low, triage is stale, or repro contradicts triage
+
 > 🛑 **CRITICAL: This phase often SOLVES the bug.**
 > 
 > The community may have already diagnosed the root cause in issue comments.
-> READ ALL COMMENTS on related issues before investigating yourself.
+> READ ALL COMMENTS on the most relevant related issues before investigating yourself.
 
 Search GitHub issues for:
 - Same error message (e.g., `undefined symbol: uuid_generate_random`)
@@ -158,17 +194,25 @@ but you MUST still proceed to Phase 4 (Reproduce) to validate the hypothesis.**
 
 ---
 
-## Phase 4: Reproduce
+## Phase 4: Reproduce (prefer ai-repro)
 
-> ⛔ **REPRODUCTION IS MANDATORY. NO EXCEPTIONS.**
+> ⛔ **REPRODUCTION IS MANDATORY.**
+>
+> This phase is satisfied either by:
+> - **Re-running** the minimal repro locally, OR
+> - **Consuming an existing** `ai-repro/NNNN.json` that already reproduced the issue on the relevant version/platform and includes the minimal repro source.
 >
 > Even if you think you know the root cause from Phase 3:
 > - Community diagnosis could be a workaround, not the real fix
 > - The hypothesis could be wrong or incomplete
 > - You need evidence, not assumptions
-> - Reproduction validates the issue actually exists
->
-> **NEVER skip this phase.** Always attempt reproduction.
+
+If `ai-repro/NNNN.json` exists and `conclusion` is `reproduced`/`wrong-output`:
+- Rehydrate the repro source from `reproductionSteps[].filesCreated[].content` into a local folder (e.g., `/tmp/repro-NNNN/`) and run it.
+- Prefer this NuGet-based repro as the baseline; use Docker only if the host cannot exercise the target platform.
+
+If no `ai-repro` exists:
+- Reproduce using the **same approach as bug-repro** (standalone NuGet project first; Docker only when needed).
 
 ### 4.1 Target Platform Requirements
 
@@ -211,8 +255,8 @@ Add to PR description:
 Document each attempt in PR. After exhausting ALL options: ask user for details, but still proceed with code review while waiting.
 
 ### ✅ GATE: Do not proceed until you have:
-- [ ] Attempted reproduction on target platform (Docker if needed)
-- [ ] Documented ALL reproduction attempts and results in PR
+- [ ] Either (a) re-ran the minimal repro, or (b) consumed `ai-repro/NNNN.json` as the baseline reproduction record
+- [ ] Documented the reproduction evidence/results in the PR (including version matrix)
 - [ ] If reproduction failed: documented what was tried and asked user for help
 
 ---
@@ -364,6 +408,63 @@ Mark PR as ready for review (remove draft status).
 
 ---
 
+## Phase 9: Generate Fix JSON
+
+Generate structured output for the pipeline. Schema: [references/fix-schema.json](references/fix-schema.json)
+
+### 1. Generate JSON
+
+Write to `/tmp/fix-{number}.json`:
+
+- `meta`: schemaVersion `"1.0"`, number, repo, analyzedAt (ISO 8601 UTC)
+- `inputs`: `{ triageFile, reproFile }` — paths to upstream files consumed (if any)
+- `status`: one of `in-progress`, `fixed`, `cannot-fix`, `needs-info`, `duplicate`
+- `summary`: one-line description of what was fixed and how
+- `rootCause`: `{ category, area, description, affectedFiles? }` — what was wrong and why
+- `changes`: `{ files: [{ path, changeType, summary }], breakingChange, risk }`
+- `tests`: `{ regressionTestAdded, testsAdded?, command?, result }`
+- `verification`: `{ reproScenario, notes? }` — did the repro scenario pass after the fix?
+- `pr`: `{ number?, url, status }` (optional)
+- `feedback`: corrections to triage/repro findings (optional, see below)
+- `relatedIssues`: other issue numbers fixed or related (optional)
+
+### 2. Record upstream corrections
+
+If the fix discovered that triage or repro got something wrong, record it:
+
+```json
+"feedback": {
+  "corrections": [
+    {
+      "source": "triage",
+      "topic": "root-cause",
+      "upstream": "Triage suggested native Skia bug",
+      "corrected": "Actually a missing managed-side validation"
+    }
+  ]
+}
+```
+
+### 3. Validate
+
+```bash
+pwsh .github/skills/bug-fix/scripts/validate-fix.ps1 /tmp/fix-{number}.json
+```
+
+### 4. Persist
+
+```bash
+cd .data-cache
+mkdir -p repos/mono-SkiaSharp/ai-fix
+cp /tmp/fix-{number}.json repos/mono-SkiaSharp/ai-fix/{number}.json
+git add repos/mono-SkiaSharp/ai-fix/{number}.json
+git commit -m "ai-fix: fix #{number}"
+git push  # Rebase up to 3x on conflict
+cd ..
+```
+
+---
+
 ## Error Recovery
 
 | Issue | Recovery |
@@ -385,8 +486,9 @@ Before marking complete, verify ALL gates were passed:
 - [ ] **Phase 1**: Issue understood, key details extracted
 - [ ] **Phase 2**: Draft PR created and used as living document
 - [ ] **Phase 3**: Related issues searched, ALL comments read, diagnosis collected
-- [ ] **Phase 4**: Reproduced issue (mandatory - no skipping allowed)
+- [ ] **Phase 4**: Baseline reproduction established (re-ran repro or consumed `ai-repro/NNNN.json`)
 - [ ] **Phase 5**: Root cause identified and documented
 - [ ] **Phase 6**: Minimal fix implemented
 - [ ] **Phase 7**: Build passes, tests pass
 - [ ] **Phase 8**: PR finalized with "Fixes #NNNN"
+- [ ] **Phase 9**: Fix JSON generated, validated, and persisted

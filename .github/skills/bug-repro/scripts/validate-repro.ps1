@@ -1,5 +1,5 @@
 <#
-.SYNOPSIS Validate a bug-repro JSON file against repro-schema.json (v1.0).
+.SYNOPSIS Validate a bug-repro JSON file against repro-schema.json.
 .EXAMPLE  pwsh scripts/validate-repro.ps1 ai-repro/2997.json
 .NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.5+.
 #>
@@ -15,17 +15,10 @@ $json = Get-Content $Path -Raw
 $repro = $json | ConvertFrom-Json -Depth 50
 $errors = @()
 
-# --- Schema validation (suppress oneOf null-branch noise) ---
+# --- Schema validation ---
 if (-not ($json | Test-Json -SchemaFile $schemaPath -ErrorVariable schemaErrors -ErrorAction SilentlyContinue)) {
     $errors += $schemaErrors | ForEach-Object {
         $_.Exception.Message -replace '^The JSON is not valid with the schema: ', ''
-    } | Where-Object {
-        $_ -notmatch 'should be "null"' -and
-        $_ -notmatch 'is not valid under any of the given schemas' -and
-        $_ -notmatch "Expected.*at '/conclusion'" -and
-        $_ -notmatch "Expected.*at '/reproductionSteps/\d+/result'" -and
-        $_ -notmatch 'should contain at least 1 matching items' -and
-        $_ -notmatch "match one of the values specified by the enum at '/conclusion'"
     } | Sort-Object -Unique
 }
 
@@ -49,6 +42,17 @@ if ($steps) {
         if ($s.command -and $s.command -match $absPathPattern) {
             $errors += "Step $n command contains absolute path — redact usernames"
         }
+        # exitCode consistency
+        if ($s.command -and $s.result -and $s.result -ne 'skip') {
+            if ($null -ne $s.exitCode) {
+                if ($s.exitCode -eq 0 -and $s.result -eq 'failure') {
+                    $errors += "Step $n has exitCode 0 but result 'failure'"
+                }
+                if ($s.exitCode -gt 0 -and $s.result -eq 'success') {
+                    $errors += "Step $n has exitCode $($s.exitCode) but result 'success'"
+                }
+            }
+        }
     }
 }
 
@@ -57,7 +61,7 @@ if ($repro.errorMessages.stackTrace -and $repro.errorMessages.stackTrace.Length 
     $errors += "stackTrace is $($repro.errorMessages.stackTrace.Length) chars (max 5000)"
 }
 
-# Conclusion ↔ step-result consistency
+# Conclusion ↔ step-result consistency (supplement schema allOf)
 $conclusion = $repro.conclusion
 $results = @($steps | Where-Object { $_.result } | ForEach-Object { $_.result })
 switch ($conclusion) {
@@ -75,10 +79,13 @@ switch ($conclusion) {
         if ($results -notcontains 'success') {
             $errors += "Conclusion is 'not-reproduced' but no step has result 'success'"
         }
+        if ($results -contains 'failure' -or $results -contains 'wrong-output') {
+            $errors += "Conclusion is 'not-reproduced' but step(s) have 'failure'/'wrong-output'"
+        }
     }
     { $_ -in 'needs-platform', 'needs-hardware', 'partial', 'inconclusive' } {
         if (-not $repro.blockers -or $repro.blockers.Count -eq 0) {
-            $errors += "Conclusion is '$conclusion' but blockers is null or empty"
+            $errors += "Conclusion is '$conclusion' but blockers is missing or empty"
         }
     }
 }

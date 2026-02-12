@@ -10,6 +10,8 @@ description: >-
 
 # Bug Reproduction
 
+**Bug pipeline: Step 2 of 3 (Repro).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+
 Systematically reproduce a SkiaSharp bug and produce structured, schema-validated reproduction JSON.
 
 ```
@@ -66,7 +68,7 @@ If triage exists:
 - Read the JSON and extract useful hints: `codeInvestigation`, `bugSignals`, `classification`, `resolution.proposals`
 - Use these as **hints only** — reproduction must verify independently
 - If `classification.type.value` is NOT `type/bug`: log a warning and auto-proceed (do NOT prompt the user)
-- Record the triage file path in output JSON (`triageFile` field)
+- Record the triage file path in output JSON (`inputs.triageFile` field)
 
 If triage does NOT exist: proceed from issue data alone — no blocking.
 
@@ -96,11 +98,37 @@ Extract from the issue:
 
 If not stated, use the latest stable release as the default.
 
+### 2b. Verify "last known good" version feasibility
+
+If the reporter names a "last known good" version, verify it's testable before planning:
+
+```bash
+# Quick-check: download nupkg and inspect contents
+curl -sLo /tmp/check.nupkg "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.{version}.nupkg"
+unzip -l /tmp/check.nupkg | grep -E "lib/|runtimes/"
+```
+
+Check:
+- **TFMs in `lib/`**: `netstandard1.3` or `netstandard2.0` = compatible with .NET 8+
+- **Native assets in `runtimes/`**: need a match for current platform/arch
+- **No arm64 native?** Try Rosetta: `arch -x86_64 dotnet run` (note arch in results)
+
+**NEVER write "version X is too old" without running this check.**
+
 ### 3. Environment check
 
 - What platform are we on? (macOS/Linux/Windows)
 - Docker available? (unreliable on macOS — treat as optional)
 - GPU available? (for rendering bugs)
+- **.NET workloads installed?** Phase 3C requires building from source, which needs platform workloads:
+  ```bash
+  dotnet workload list
+  ```
+  If `maui`, `ios`, `macos`, `maccatalyst`, or `android` are missing, install them **now** — don't wait until Phase 3C:
+  ```bash
+  dotnet workload install maui ios macos maccatalyst android
+  ```
+  If this requires `sudo` or elevated permissions, ask the user for help. Do **NOT** skip, look for workarounds, or treat this as a blocker. Missing workloads are a solvable setup problem.
 
 ### 4. Plan
 
@@ -134,6 +162,7 @@ dotnet add package SkiaSharp --version {reporter_version}
 - **Use the reporter's code** if provided in the issue — copy it as closely as possible
 - If no code provided: create minimal code from the issue description
 - The code should **clearly demonstrate** the bug (print values, save images, assert conditions)
+- **Handoff requirement (for bug-fix):** when you create/edit repro files (`Program.cs`, `.csproj`, helper `.cs` files), capture their full text in JSON via `reproductionSteps[].filesCreated[].content` (text only; omit binaries)
 
 #### 3. Run and capture
 
@@ -146,11 +175,25 @@ For each step, capture:
 | What | How | Limit |
 |------|-----|-------|
 | Command run | Exact command (redact absolute paths) | — |
+| Exit code | Process/command exit code (0=success) | — |
 | Output | stdout/stderr | **2KB** for success, **4KB** for failure/wrong-output |
-| Files created | Filename + description only (NOT full content) | — |
+| Files created | Filename, description, and **source code content** for repro files | — |
 | Errors | Error message + first 50 lines of stack trace | 5KB |
 | Layer | `setup` / `csharp` / `c-api` / `native` / `deployment` | — |
 | Result | `success` / `failure` / `wrong-output` / `skip` | — |
+
+**⚠️ Step Result = Observed Outcome, Not Expected Outcome**
+
+Step `result` values describe **what actually happened**, not whether it was "supposed to happen":
+
+| You Run | What Happens | Step Result | Why |
+|---------|--------------|-------------|-----|
+| `dotnet build` | Build succeeds, exits 0 | `success` | Command succeeded |
+| `dotnet build` | Build fails with CS0117 | `failure` | Command failed (non-zero exit) |
+| `dotnet build` with old API | Build fails with CS0117 (reporter said it fails) | **`failure`** | **Command still failed — matching the report doesn't make it a success** |
+| Render image | Exits 0 but pixels wrong | `wrong-output` | Process succeeded, output incorrect |
+
+**Anti-pattern**: Marking a build failure as `result: "success"` because "we expected it to fail" or "the reporter said it would fail". The step FAILED — that's `result: "failure"`. The fact that this matches the report goes in the overall **conclusion** (`reproduced`), not the step result.
 
 **Truncation:** If output exceeds limits, keep first and last portions with `[...truncated N lines...]` in the middle.
 
@@ -187,18 +230,69 @@ dotnet run
 
 Record the result. If the bug is gone on latest, this is valuable — note it in `fixedInVersion`.
 
-### 3C. Test on main branch (optional, if reproduced)
+### 3C. Test on main branch (required, if reproduced)
 
-If still reproduced on latest release, optionally test against source on main:
+> **🛑 MANDATORY:** If the bug reproduced on latest release, you MUST test on main.
+> Do NOT skip this step. Do NOT declare the task complete without a `versionResults` entry for `main (source)`.
+> If the build fails, fix the build (install workloads, resolve errors). If you truly cannot build,
+> record `result: "not-tested"` with a `notes` field explaining exactly what failed and what you tried.
+
+If still reproduced on latest release, test against source on main:
+
+#### Step 1 — Build
 
 ```bash
 # Back in the SkiaSharp repo working directory
 [ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
-dotnet build binding/SkiaSharp/SkiaSharp.csproj
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~RelevantTestName"
+dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
+> Build the **test project** (not just SkiaSharp.csproj) — it transitively builds all dependencies
+> and sets up the native library loading that tests need.
+
+**If the build fails** (e.g., missing workloads, SDK errors):
+1. Read the error message — it usually tells you exactly what to do
+2. Fix it (install workloads, update SDK, etc.)
+3. If fixing requires `sudo` or user input, ask the user — do NOT give up
+4. Only record `not-tested` after genuinely exhausting all options
+
+#### Step 2 — Test
+
+**If an existing test covers the bug** (search with `grep -r "MethodName\|BugKeyword" tests/`):
+
+```bash
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter "FullyQualifiedName~RelevantTestName"
+```
+
+**If no existing test covers the bug** (most reproduction scenarios), use `dotnet test` with the test project infrastructure. Write a one-off test or reuse the reproduction approach from Phase 3A:
+
+```bash
+# Copy any needed test assets into the test content directory
+cp /tmp/repro-{number}/test-file.xyz tests/Content/images/
+
+# Run the full test suite (or a relevant subset) to verify the infrastructure works
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter "FullyQualifiedName~SKCodecTest"
+```
+
+Then write a targeted xUnit test in the existing test files and run it:
+
+```bash
+# Add a test method to the appropriate test file (e.g., tests/Tests/SkiaSharp/SKCodecTest.cs)
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~YourNewTestName"
+```
+
+> **Do NOT** create standalone `/tmp` projects that reference source-built DLLs and manually copy
+> native libraries. The test project already handles native library resolution. Use it.
+
+#### Step 3 — Record
+
 Record whether the bug exists on main. If fixed on main but not released, note the version gap.
+
+**versionResults:** The output JSON MUST always include an entry for `main (source)` in `versionResults`. This is true even if you used `result: "not-tested"` — in that case, explain why in `notes`.
+
+> **Clean up:** Remove any test assets you copied into `tests/Content/` and any test methods you
+> added. These are throwaway reproduction artifacts, not permanent additions. Use `git checkout`
+> to revert test file changes.
 
 ---
 
@@ -206,13 +300,26 @@ Record whether the bug exists on main. If fixed on main but not released, note t
 
 ### 1. Choose conclusion
 
-Read [references/conclusion-guide.md](references/conclusion-guide.md) and select the appropriate value:
+Read [references/conclusion-guide.md](references/conclusion-guide.md) and select the appropriate value.
+
+> **⚠️ CRITICAL: Factual vs Editorial (NO JUDGMENT ALLOWED)**
+> Your ONLY job is to determine: **Did the reported symptoms occur?**
+> Do NOT judge if it is "working as designed", a "breaking change", or "user error".
+> - If reporter says "Build fails with error X" and you get error X → `reproduced`
+> - If reporter says "Crash on startup" and you get a crash → `reproduced`
+> - Even if the error is "Working as Designed" or a known breaking change, the fact remains: **it reproduced.**
+>
+> **Do not use `not-reproduced` just because you think the behavior is correct.**
+>
+> **Anti-pattern from real failure (NEVER DO THIS):**
+> - ❌ Reporter: "MakeIdentity() gives CS0117" → You: CS0117 observed → Conclusion: `not-reproduced` + Note: "API was renamed"
+> - ✅ Reporter: "MakeIdentity() gives CS0117" → You: CS0117 observed → Conclusion: `reproduced` + Note: "Confirmed CS0117. This is an intentional API rename in SkiaSharp 3.x."
 
 | Conclusion | When |
 |------------|------|
-| `reproduced` | Bug confirmed — crash, exception, or wrong values |
+| `reproduced` | **Reported behavior occurred** — crash, exception, compiler error, or wrong values (even if intentional/by-design) |
 | `wrong-output` | Process succeeds but visual/rendered output is incorrect |
-| `not-reproduced` | All steps passed, reported behavior not observed |
+| `not-reproduced` | Reported behavior **did not occur** — steps passed when reporter said they'd fail |
 | `needs-platform` | Requires unavailable OS/platform or native rebuild |
 | `needs-hardware` | Requires specific hardware (GPU, device) |
 | `partial` | Some aspects reproduced, others unverifiable |
@@ -229,6 +336,12 @@ Before generating JSON:
 
 Write to `/tmp/repro-{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json)
 
+> **⚠️ Schema rules:**
+> - `meta.schemaVersion` must be `"1.0"`
+> - **Optional fields: OMIT them entirely** — do NOT set them to `null`. If a field is not applicable, leave it out of the JSON.
+> - `inputs.triageFile` replaces the old root-level `triageFile`/`triageNotes` fields (those no longer exist)
+> - `additionalProperties: false` — no extra fields allowed at any level
+
 Required fields:
 - `meta`: schemaVersion `"1.0"`, number, repo (`"mono/SkiaSharp"`), analyzedAt (ISO 8601 UTC)
 - `conclusion`: one of the enum values
@@ -236,11 +349,41 @@ Required fields:
 - `reproductionSteps`: array of steps with stepNumber, description, layer
 - `environment`: os, arch, dotnetVersion, skiaSharpVersion, dockerUsed
 
+Optional (recommended) — include only when applicable, otherwise omit entirely:
+- `inputs`: `{ triageFile }` if triage data was consumed
+- `assessment`: editorial classification (e.g., `"breaking-change"`) without corrupting factual `conclusion`
+- `versionResults`, `reproProject`, `artifacts`, `errorMessages`
+- `feedback`: corrections to triage findings (see below)
+
 Conditional requirements:
 - `reproduced` → ≥1 step with result `failure` or `wrong-output`
 - `wrong-output` → ≥1 step with result `wrong-output`
 - `not-reproduced` → ≥1 step with result `success`
 - `needs-platform` / `needs-hardware` / `partial` / `inconclusive` → `blockers` required
+
+For steps that ran a `command` and have `result` of `success` / `failure` / `wrong-output`, include `exitCode` (0 = success, non-zero = failure).
+
+### 4. Feedback (when triage was consumed)
+
+If triage data was consumed (`inputs.triageFile` is set) and reproduction contradicts any triage finding, record the correction in the `feedback.triageCorrections` array:
+
+```json
+"feedback": {
+  "triageCorrections": [
+    {
+      "topic": "classification",
+      "upstream": "Classified as type/question with confidence 0.7",
+      "corrected": "Confirmed crash with AccessViolationException — this is a real bug"
+    }
+  ]
+}
+```
+
+Common correction scenarios:
+- Triage classified as "question" but repro confirmed a real crash → correct classification
+- Triage said "platform/Windows" but repro shows it affects all platforms → correct scope
+- Triage missed evidence that repro discovered → add to corrections
+- Triage's codeInvestigation pointed to wrong files → note the correct location
 
 ---
 
@@ -307,7 +450,7 @@ Blockers: none
 | `reproductionSteps[].output` (success) | 2KB | Head/tail with `[...truncated...]` |
 | `reproductionSteps[].output` (failure) | 4KB | Head/tail with `[...truncated...]` |
 | `errorMessages.stackTrace` | 5KB / 50 lines | First 50 lines |
-| File content | Never inline | Filename + description only |
+| File content (text) | Inline OK for small repro source files | Include `Program.cs`, `.csproj`, etc. via `filesCreated[].content` (redact paths); omit binaries |
 | Binary assets | Never inline | URL/filename reference in `artifacts` |
 
 **Redaction rules:**
@@ -333,3 +476,11 @@ Blockers: none
 6. **Giving up too early.** NEVER conclude `not-reproduced` or `needs-platform` after just one attempt. Try multiple approaches, different versions, different test data. The value of this skill is persistence.
 
 7. **Building from source first.** ALWAYS start with released NuGet packages in a standalone project. Only build from source in Phase 3C after reproducing with released versions.
+
+8. **Editorial judgment in conclusion.** NEVER let "this isn't really a bug" influence the conclusion. If the reported behavior occurred, that's `reproduced`. Your opinion that it's intentional, documented, or working-as-designed goes in `notes`, not `conclusion`. Reproduction is factual observation, not bug triage.
+
+9. **Mismarking step results.** NEVER mark a step `result: "success"` just because the failure was expected. Step `result` describes the TECHNICAL outcome of the command (exit code 0 vs 1). A build that fails with 4 compiler errors is `result: "failure"` even if that confirms the bug.
+
+10. **Pre-emptive version assumptions.** NEVER assume a NuGet version is incompatible without inspecting the nupkg. All blockers about version compatibility must cite evidence (TFMs found, native assets present/missing, actual error when attempted).
+
+11. **Abandoning on environment issues.** NEVER give up when hitting solvable environment problems (missing workloads, missing tools, `sudo` prompts, SDK version mismatches). These are setup steps, not blockers. Fix them — install the workload, update the SDK, ask the user for elevated permissions. If the error message tells you the fix, do the fix.

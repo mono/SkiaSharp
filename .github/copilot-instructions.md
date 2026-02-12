@@ -363,6 +363,18 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 | Test release | `release-testing` | "test the release", "verify packages" |
 | Publish release | `release-publish` | "push to nuget", "tag release" |
 
+### Bug Pipeline (3 steps)
+
+The first three skills form a pipeline. Each can run standalone, but they work best in sequence:
+
+| Step | Skill | Produces | Schema |
+|------|-------|----------|--------|
+| 1 | `triage-issue` | `ai-triage/{n}.json` | Triage |
+| 2 | `bug-repro` | `ai-repro/{n}.json` | Repro |
+| 3 | `bug-fix` | `ai-fix/{n}.json` + PR | Fix |
+
+See [documentation/bug-pipeline.md](documentation/bug-pipeline.md) for handoff contracts and feedback loop.
+
 ### When NOT to Use Skills
 
 Work directly for:

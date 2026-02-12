@@ -4,19 +4,35 @@ How to choose the correct `conclusion` value for a bug reproduction attempt.
 
 ---
 
+## ⚠️ Critical Principle: Factual vs Editorial
+
+**Reproduction is FACTUAL, not editorial.**
+
+| Question | Type | Who Decides |
+|----------|------|-------------|
+| "Did the reported behavior occur?" | **Factual** | You (the reproducer) |
+| "Is this behavior a defect?" | **Editorial** | Maintainers |
+| "Should this be fixed?" | **Editorial** | Maintainers |
+
+**Your job is ONLY to answer the factual question.** If the reporter says "I get error X" and you get error X, that's `reproduced` — even if error X is intentional, documented, or working-as-designed.
+
+**Example:** Reporter says "SKMatrix.MakeIdentity() gives CS0117 in v3.0". You try it and get CS0117. Conclusion = `reproduced`. Your opinion that "this is an intentional API rename" goes in `notes`, NOT in the conclusion.
+
+---
+
 ## Decision Flowchart
 
 ```
-Did reproduction succeed?
-├─ Yes, observed the bug
-│  ├─ Crash/exception? → reproduced
+Did the REPORTED BEHAVIOR occur?
+├─ Yes, observed what reporter described
+│  ├─ Crash/exception/error? → reproduced
 │  └─ Wrong visual output? → wrong-output
-├─ No, all steps passed → not-reproduced
+├─ No, behavior differs from report → not-reproduced
 ├─ Couldn't run at all
 │  ├─ Missing platform/OS? → needs-platform
 │  ├─ Missing hardware? → needs-hardware
 │  └─ Missing info/assets? → partial or inconclusive
-└─ Some aspects worked, some didn't → partial
+└─ Some aspects matched, some didn't → partial
 ```
 
 ---
@@ -25,21 +41,33 @@ Did reproduction succeed?
 
 ### `reproduced`
 
-Bug confirmed. The reported behavior was observed.
+**The reported behavior was observed.** This is a factual statement, not a judgment.
 
 - **Required evidence:** ≥1 reproduction step with `result: "failure"` or `result: "wrong-output"`
-- **Required:** `primaryError` describing the crash, exception, or incorrect behavior
-- **Use when:** code throws an exception, crashes, returns wrong values, or behaves contrary to documentation
+- **Required:** `primaryError` describing what was observed (error message, exception, incorrect value)
+- **Use when:** the behavior the reporter described actually occurred — crash, exception, compiler error, wrong return value, etc.
 - **Example:** `"SKMatrix.MapRect returns normalized rect instead of preserving orientation"`
+- **Example (Breaking Change):** `"Build fails with CS0117 as reported (intentional breaking change in v3.0)"`
+
+**⚠️ CRITICAL: "Working as Designed" is still `reproduced`.**
+If the user reports a breaking change error (e.g., CS0117), and you verify they are correct (it does fail with CS0117), the conclusion is `reproduced`. Do NOT downgrade to `not-reproduced`. Use `notes` to explain it is intentional.
+
+**Example of correct handling:**
+- Reporter: "MakeIdentity() gives CS0117 error"
+- You observe: CS0117 error
+- Conclusion: `reproduced`
+- Notes: "Reproduced as reported. Note: this API was intentionally renamed in v3.0 — see migration guide. This may be working-as-designed."
 
 ### `not-reproduced`
 
-Bug NOT confirmed. All reproduction steps passed.
+**The reported behavior was NOT observed.** All steps completed differently than the reporter described.
 
 - **Required evidence:** ≥1 reproduction step with `result: "success"`
 - **Required:** description of what WAS observed — prove you actually tried
 - **Common reasons:** already fixed in current version, environment difference, missing repro details from reporter
 - **Important:** this does NOT mean the bug doesn't exist. It means it could not be observed in the current environment. Always note what was tested so humans can evaluate whether the reproduction attempt was valid.
+
+**⚠️ This is NOT for "it's not a bug":** If the reported behavior occurred (you saw the same error/crash/output), use `reproduced` even if you believe the behavior is intentional. `not-reproduced` means the behavior literally didn't happen.
 
 ### `wrong-output`
 
@@ -97,6 +125,22 @@ Cannot determine whether the bug exists. Results are ambiguous or information is
 
 ## Supporting Fields
 
+### `assessment` (optional)
+
+A structured, **editorial** classification of what you think is happening, without corrupting the factual `conclusion`.
+
+Use this when the behavior is reproduced but appears intentional (API rename, breaking change, documentation gap, etc.).
+
+Recommended values:
+- `"unknown"`
+- `"likely-bug"`
+- `"working-as-designed"`
+- `"breaking-change"`
+- `"docs-gap"`
+- `"user-error"`
+
+**Example (#3279-style):** conclusion = `reproduced`, assessment = `breaking-change`, notes explain the rename/migration guidance.
+
 ### `blockers[]`
 
 A list of specific reasons reproduction was incomplete. Each entry should be actionable — a human reading it should know exactly what's missing.
@@ -111,6 +155,18 @@ A list of specific reasons reproduction was incomplete. Each entry should be act
 - `"Couldn't reproduce"` — too vague, not actionable
 - `"Need more info"` — say what info specifically
 
+### Blocker evidence requirements
+
+Version/compatibility blockers must cite concrete evidence:
+
+| Blocker Type | Required Evidence |
+|--------------|-------------------|
+| "Version X won't work" | nupkg TFM listing showing no compatible target, OR actual build/runtime error |
+| "No native binary" | nupkg `runtimes/` listing showing missing RID, AND confirmation Rosetta isn't viable |
+| "Platform unavailable" | Attempted on available platform, noted specific limitation |
+
+**Anti-pattern:** "Version 1.60.1 is too old for .NET 8" — this is speculation. Spend 30 seconds checking the nupkg before claiming blocked.
+
 ### `notes`
 
 Free-text summary for humans. Write 1–3 sentences covering:
@@ -118,7 +174,15 @@ Free-text summary for humans. Write 1–3 sentences covering:
 2. What you observed (the result)
 3. Any caveats or suggestions for further investigation
 
-**Example:** `"Built a minimal console app using SKBitmap.Decode with the provided JPEG. Decoding succeeded and pixel spot-checks matched expected values. Reporter may be hitting a platform-specific codepath — suggest testing on Windows."`
+**Editorial observations go here.** If you believe the behavior is:
+- Intentional / working-as-designed
+- A documentation issue rather than a code bug
+- A breaking change that was announced in release notes
+- User error or misunderstanding
+
+...put that assessment in `notes`, NOT in the `conclusion`. The conclusion is factual; notes are for interpretation.
+
+**Example:** `"Reproduced: CS0117 errors occur when using SKMatrix.MakeIdentity() in v3.0. However, this appears to be an intentional API rename (now SKMatrix.Identity property) — see migration guide. Suggest closing as by-design with documentation pointer."`
 
 ---
 

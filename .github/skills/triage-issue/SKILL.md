@@ -10,6 +10,8 @@ description: >-
 
 # Triage Issue
 
+**Bug pipeline: Step 1 of 3 (Triage).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
 ### Data sources
@@ -104,61 +106,68 @@ Read [references/labels.md](references/labels.md) for valid label values and car
 
 Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate JSON with 6 groups:
 
+> **⚠️ Schema rules:**
+> - `meta.schemaVersion` must be `"1.0"`
+> - **Optional fields: OMIT them entirely** — do NOT set them to `null`. If a field is not applicable, leave it out of the JSON.
+> - `classification.platforms`, `classification.backends`, and `classification.tenets` are simple string arrays (no confidence wrapper)
+> - `classification.partner` is a single string (no confidence wrapper)
+> - `evidence.bugSignals` includes: `severity`, `isRegression`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality`, `targetFrameworks`
+> - `evidence.regression` and `evidence.fixStatus` are optional objects — include when signals exist
+> - `analysis.keySignals[]` captures structured evidence quotes `{text, source, interpretation}`
+> - `analysis.resolution.proposals[]` include `title`, `codeSnippet` when applicable
+> - `analysis.resolution.recommendedProposal` names the best proposal to try first
+> - `analysis.rationale` is a single summary string (not per-field)
+> - `output.actions` are simplified: `{ type, description }` with optional `risk`, `confidence`, `labels`, `comment`, `linkedIssue`
+> - `additionalProperties: false` — no extra fields allowed at any level
+
 #### meta + summary
 
-- `schemaVersion`: `"2.1"`
+- `schemaVersion`: `"1.0"`
 - `analyzedAt`: ISO 8601 UTC
 - `currentLabels`: labels currently on the issue
 
 #### classification
 
 - `type` and `area` are **compulsory** (non-nullable) — every issue must have both
-- Every field has `value` (full GitHub label) and `confidence` (0.0–1.0)
-- Nullable sections: use JSON `null`, never `{}` or `[]`
+- `type` and `area` have `value` (full GitHub label) and `confidence` (0.0–1.0)
+- `platforms`, `backends`, and `tenets` are simple string arrays (no confidence) — omit if not applicable
+- `partner` is a single string — omit if no partner involvement
 - Valid labels: see [references/labels.md](references/labels.md)
 
 #### evidence
 
-- `bugSignals`: REQUIRED for bugs, `null` for non-bugs (schema enforces)
-- `reproEvidence`: extract ALL screenshots, attachments, repo links, code, steps — preserve every URL
-- `versionAnalysis`: `mentionedVersions`, `currentRelevance`, `reason`, `migrationPath`
+- `bugSignals`: REQUIRED for bugs — `severity`, `isRegression`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality` (complete/partial/none), `targetFrameworks` (TFM strings)
+- `reproEvidence`: extract ALL screenshots, attachments, code snippets, steps — preserve every URL. Include `relatedIssues` (issue numbers) and `repoLinks` (external repro repos) when found.
+- `versionAnalysis`: `mentionedVersions`, `workedIn`, `brokeIn`, `currentRelevance` (likely/unlikely/unknown), `relevanceReason`
+- `regression`: Include when regression signals exist — `{isRegression, confidence, reason, workedInVersion, brokeInVersion}`
+- `fixStatus`: Include when there's evidence the issue may already be fixed — `{likelyFixed, confidence, reason, relatedPRs, relatedCommits, fixedInVersion}`
 
 #### analysis
 
-- **`keySignals`**: Direct quotes with source and interpretation
-- **`codeInvestigation`**: Source code signals from mandatory investigation — `{file, lines, relevance}` for each file examined. At least one required; close-* actions require at least two.
-- **`fieldRationales`**: Required for every judgment field (see below). Include `alternatives` for ambiguous choices.
-- **`uncertainties`**: What's unclear and what would resolve it
-- **`resolution`**: Proposals with `{title, description, confidence, effort}` plus optional `{category, codeSnippet, validated}`. Null only for duplicates/abandoned. Use `category` to distinguish workarounds from fixes; include `codeSnippet` for copy-paste-ready code.
-
-##### fieldRationales — required fields
-
-**Compulsory** (every triage — `type` and `area` are never nullable):
-- `type`, `area`
-
-**When set** (rationale required whenever the field is non-null):
-- `actionability.suggestedAction`, `bugSignals.severity`, `platforms`, `tenets`, `backends`, `partner`, `regression.isRegression`, `fixStatus.likelyFixed`, `versionAnalysis.currentRelevance`
-
-Schema validates rationale coverage. Use short field names (e.g., `"type"` not `"classification.type"`).
+- **`codeInvestigation`**: Source code signals from mandatory investigation — `{file, lines?, finding, relevance}` for each file examined. At least one required for bugs; close-* actions require at least two.
+- **`keySignals`**: Structured evidence quotes — `{text, source, interpretation}` for each signal that drove triage decisions. Enables downstream querying and audit.
+- **`rationale`**: Single paragraph explaining key classification decisions (type, area, severity). Replace the former per-field rationales with one concise explanation.
+- **`workarounds`**: Array of workaround strings found during triage.
+- **`nextQuestions`**: Open questions that repro or fix should investigate.
+- **`errorFingerprint`**: Normalized fingerprint of the error for cross-issue dedup (optional).
+- **`resolution`**: Proposals with `{title?, description, codeSnippet?, confidence?, effort?}`. Include `recommendedProposal` (title of best proposal) and `recommendedReason`. Null only for duplicates/abandoned.
 
 #### output
 
-- **`actionability`**: `suggestedAction`, `confidence`, `reason`, `requiresHumanReview`, `missingInfo`
-- **`actions`**: Automatable operations, each independently approvable:
+- **`actionability`**: `suggestedAction`, `confidence`, `reason`
+- **`missingInfo`**: Information needed from the reporter (optional array).
+- **`actions`**: Simplified automatable operations — each is `{type, description}` with optional `risk`, `confidence`, `labels`, `comment`, `linkedIssue`:
 
 | Type | Risk | Notes |
 |------|------|-------|
-| `update-labels` | low | |
-| `add-comment` | high | Read [references/response-guidelines.md](references/response-guidelines.md) for tone |
+| `update-labels` | low | Include `labels` array |
+| `add-comment` | high | Read [references/response-guidelines.md](references/response-guidelines.md) for tone. Include `comment` text |
 | `close-issue` | medium | |
-| `link-related` | low | |
-| `link-duplicate` | medium | |
+| `link-related` | low | Include `linkedIssue` number |
+| `link-duplicate` | medium | Include `linkedIssue` number |
 | `convert-to-discussion` | high | |
 | `update-project` | low | |
 | `set-milestone` | low | |
-
-Each action: `{id, type, risk, description, reason, confidence, dependsOn, payload}`. 
-Set `requiresHumanReview: true` if any key confidence < 0.70.
 
 ---
 
@@ -222,6 +231,10 @@ Actions:
   comment-1  add-comment     [high] ⚠️ requires human edit
   link-1     link-related    [low]  Cross-ref #1234
 ```
+
+**Pipeline hint:**
+- If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **bug-repro** (`ai-repro/{number}.json`).
+- If repro already exists and reproduces: next step is **bug-fix** (consume both JSONs).
 
 If `add-comment` exists, show `draftBody` in a copy-paste block. **⚠️ NEVER post via GitHub API.**
 
