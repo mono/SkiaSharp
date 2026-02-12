@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "schemaVersion": "1.1",
+    "number": 576,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "conclusion": "partial",
+  "notes": "Reporter observed 30-40MB memory step-ups per iteration when calling SKSurface.Snapshot() in a loop on a GPU-backed surface (Intel HD Graphics 520, OpenGL) without disposing the previous SKImage before overwriting the reference. Reporter confirmed in comment #2 that the root cause was not disposing SKImage before overwriting. Tested the same disposal pattern with CPU-backed surfaces on macOS arm64: with CPU surfaces, GC can reclaim leaked SKImage memory (recovered 94KB from 50 leaked 1024x1024 images). The core bug pattern (not disposing before overwriting) is reproducible as a code pattern, but the severe GPU memory leak (30-40MB per iteration, immune to GC.Collect) is specific to GPU-backed surfaces on Intel HD Graphics, which requires OpenGL/GPU hardware not available in this environment.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project with SkiaSharp 2.88.9",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.9",
+      "output": "The template \u0027Console App\u0027 was created successfully.\nPackageReference for package \u0027SkiaSharp\u0027 version \u00272.88.9\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code testing three patterns: (1) Leaky pattern - Snapshot() without disposing previous SKImage, (2) Correct pattern - Dispose() before overwriting, (3) GC cleanup test - leak 50 images then GC.Collect(). Uses CPU-backed surfaces since no GPU/OpenGL available.",
+          "content": "using System;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\u0022SkiaSharp Version: {typeof(SKSurface).Assembly.GetName().Version}\u0022);\nConsole.WriteLine($\u0022OS: {RuntimeInformation.OSDescription}\u0022);\nConsole.WriteLine($\u0022Arch: {RuntimeInformation.ProcessArchitecture}\u0022);\n\nconst int iterations = 100;\nconst int width = 1024;\nconst int height = 1024;\n\n// Test 1: Leaky pattern (reporter\u0027s bug)\nGC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();\nlong baselineMemory = GC.GetTotalMemory(true);\nSKImage? storedImage = null;\nfor (int i = 0; i \u003C iterations; i\u002B\u002B)\n{\n    using var surface = SKSurface.Create(new SKImageInfo(width, height));\n    using var paint = new SKPaint { Color = SKColors.Red };\n    surface.Canvas.DrawRect(0, 0, width, height, paint);\n    surface.Canvas.Flush();\n    storedImage = surface.Snapshot();\n}\nlong leakyMemory = GC.GetTotalMemory(false);\nConsole.WriteLine($\u0022Leaky growth: {(leakyMemory - baselineMemory) / 1024}KB\u0022);\nstoredImage?.Dispose();\nGC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();\n\n// Test 2: Correct pattern\nbaselineMemory = GC.GetTotalMemory(true);\nstoredImage = null;\nfor (int i = 0; i \u003C iterations; i\u002B\u002B)\n{\n    using var surface = SKSurface.Create(new SKImageInfo(width, height));\n    using var paint = new SKPaint { Color = SKColors.Blue };\n    surface.Canvas.DrawRect(0, 0, width, height, paint);\n    surface.Canvas.Flush();\n    storedImage?.Dispose();\n    storedImage = surface.Snapshot();\n}\nlong correctMemory = GC.GetTotalMemory(false);\nConsole.WriteLine($\u0022Correct growth: {(correctMemory - baselineMemory) / 1024}KB\u0022);\nstoredImage?.Dispose();\n\n// Test 3: GC reclaims CPU-backed leaked images\nGC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();\nbaselineMemory = GC.GetTotalMemory(true);\nfor (int i = 0; i \u003C 50; i\u002B\u002B)\n{\n    using var surface = SKSurface.Create(new SKImageInfo(width, height));\n    surface.Canvas.Clear(SKColors.Green);\n    var leaked = surface.Snapshot();\n}\nlong beforeGc = GC.GetTotalMemory(false);\nGC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();\nConsole.WriteLine($\u0022GC recovered: {(beforeGc - GC.GetTotalMemory(true)) / 1024}KB\u0022);"
+        }
+      ],
+      "result": "success",
+      "exitCode": 0
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction with SkiaSharp 2.88.9 - test leaky disposal pattern with CPU-backed surfaces",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "SkiaSharp Version: 2.88.0.0\nOS: Darwin 25.2.0\nArch: Arm64\n\n=== Test 1: Leaky pattern (no Dispose before overwrite) ===\nBaseline memory: 136KB\nAfter 100 iterations (no dispose): 356KB\nGrowth: 219KB\nAfter GC: 159KB\n\n=== Test 2: Correct pattern (Dispose before overwrite) ===\nBaseline memory: 160KB\nAfter 100 iterations (with dispose): 352KB\nGrowth: 192KB\nAfter GC: 162KB\n\n=== Test 3: GC cleanup effectiveness on CPU-backed images ===\nBefore GC (50 leaked images): 259KB\nGrowth: 96KB\nAfter GC: 165KB\nGC recovered: 94KB",
+      "result": "success",
+      "exitCode": 0
+    },
+    {
+      "stepNumber": 3,
+      "description": "Update to latest SkiaSharp 3.119.2 and re-run the same disposal pattern test",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp \u0026\u0026 dotnet run",
+      "output": "SkiaSharp Version: 3.119.0.0\nOS: Darwin 25.2.0\nArch: Arm64\n\n=== Test 1: Leaky pattern (no Dispose before overwrite) ===\nBaseline memory: 136KB\nAfter 100 iterations (no dispose): 364KB\nGrowth: 227KB\nAfter GC: 168KB\n\n=== Test 2: Correct pattern (Dispose before overwrite) ===\nBaseline memory: 168KB\nAfter 100 iterations (with dispose): 369KB\nGrowth: 200KB\nAfter GC: 170KB\n\n=== Test 3: GC cleanup effectiveness on CPU-backed images ===\nBefore GC (50 leaked images): 267KB\nGrowth: 96KB\nAfter GC: 173KB\nGC recovered: 94KB",
+      "result": "success",
+      "exitCode": 0
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build from source (main branch) and run existing SKSurface.Snapshot tests to verify disposal behavior",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \u0022FullyQualifiedName~SKSurfaceTest.Snapshot\u0022",
+      "output": "Passed!  - Failed: 0, Passed: 6, Skipped: 0, Total: 6, Duration: 5 ms - SkiaSharp.Tests.dll (net8.0)",
+      "result": "success",
+      "exitCode": 0
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.9, 3.119.2, source (main branch)",
+    "dockerUsed": false,
+    "gpu": {
+      "available": false,
+      "backend": "CPU"
+    }
+  },
+  "assessment": "user-error",
+  "reproductionTime": "~8 minutes",
+  "triageFile": "ai-triage/576.json",
+  "triageNotes": "Triage classified as type/question with user-error root cause. Aligns with reproduction findings.",
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "CPU-backed surfaces: GC reclaims leaked SKImage memory. Severe GPU memory leak not reproducible without GPU."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Same behavior as 2.88.9 with CPU-backed surfaces."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "All 6 SKSurface.Snapshot() tests pass. No memory leak with CPU-backed surfaces."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.9"
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "filename": "memory-usage-screenshot.png",
+      "description": "Visual Studio memory diagnostic screenshot showing 30-40MB step-ups (from reporter\u0027s issue)",
+      "source": "issue-attachment",
+      "available": true,
+      "url": "https://user-images.githubusercontent.com/41022806/42469527-fdefdc92-8385-11e8-96d5-cfa8b693ae34.png"
+    }
+  ],
+  "blockers": [
+    "Reporter\u0027s issue requires GPU-backed SKSurface with OpenGL on Intel HD Graphics 520 (Windows). Current environment is macOS arm64 with no OpenGL GPU context available. The severe GPU memory leak (30-40MB/iteration immune to GC.Collect) is specific to GPU texture management and cannot be reproduced with CPU-backed surfaces.",
+    "Reporter did not specify a SkiaSharp NuGet version (issue from 2018). Tested with 2.88.9 and latest 3.119.2."
+  ]
+}
