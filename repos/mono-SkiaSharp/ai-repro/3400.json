@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3400,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:02:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3400.json"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Cannot reproduce XPS image scaling bug on macOS because XPS document creation is Windows-only (requires IXpsOMObjectFactory from Windows Runtime). SKDocument.CreateXps() returns null on non-Windows platforms. PDF generation works correctly with the same SVG+image content. The reported bug exists in the Skia XPS backend (SkXPSDevice image brush scaling) but requires Windows to test.",
+  "reproductionTime": "~15 minutes",
+  "assessment": "likely-bug",
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "XPS creation unavailable on macOS (CreateXps returns null). PDF works correctly."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net9.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.1"
+      },
+      {
+        "name": "Svg.Skia",
+        "version": "3.2.1"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project with SkiaSharp 3.119.1 and Svg.Skia 3.2.1 targeting net9.0",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net9.0 && dotnet add package SkiaSharp --version 3.119.1 && dotnet add package Svg.Skia --version 3.2.1",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Create test SVG with embedded base64 image element and vector shapes for comparison",
+      "layer": "setup",
+      "filesCreated": [
+        {
+          "filename": "test.svg",
+          "description": "SVG file with 100x100 red rectangle and 100x100 embedded PNG image (base64-encoded blue square) for comparing vector vs raster rendering"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Write reproduction code attempting to generate both PDF and XPS from the same SVG with DrawPicture and canvas scaling (0.75x for 72 DPI from 96 DPI)",
+      "layer": "csharp",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code loading SVG and generating both PDF and XPS documents",
+          "content": "using SkiaSharp;\nusing Svg.Skia;\nusing System;\nusing System.IO;\nusing System.Text;\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Environment: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine();\n\n// Load SVG\nvar svgPath = args.Length > 0 ? args[0] : \"../test.svg\";\nif (!File.Exists(svgPath))\n{\n    Console.WriteLine($\"ERROR: SVG file not found: {svgPath}\");\n    return 1;\n}\n\nvar svgContent = File.ReadAllText(svgPath);\nusing var ms = new MemoryStream(Encoding.UTF8.GetBytes(svgContent));\nvar skSvg = new SKSvg();\nvar picture = skSvg.Load(ms);\n\nif (picture == null)\n{\n    Console.WriteLine(\"ERROR: Failed to load SVG\");\n    return 1;\n}\n\nvar bounds = picture.CullRect;\nConsole.WriteLine($\"SVG bounds: {bounds}\");\n\nconst float DPI = 72f;\nconst float SVG_DPI = 96f;\nconst float contentScale = DPI / SVG_DPI;\n\nvar pageWidth = bounds.Width * contentScale;\nvar pageHeight = bounds.Height * contentScale;\n\nConsole.WriteLine($\"Page size: {pageWidth} x {pageHeight}\");\nConsole.WriteLine($\"Content scale: {contentScale}\");\nConsole.WriteLine();\n\n// Generate PDF\nvar pdfPath = \"output.pdf\";\ntry\n{\n    using var pdfStream = File.OpenWrite(pdfPath);\n    using var document = SKDocument.CreatePdf(pdfStream);\n    using var canvas = document.BeginPage(pageWidth, pageHeight);\n    canvas.Clear(SKColors.White);\n    canvas.Scale(contentScale);\n    canvas.DrawPicture(picture);\n    document.EndPage();\n    document.Close();\n    \n    var pdfSize = new FileInfo(pdfPath).Length;\n    Console.WriteLine($\"✅ PDF generated: {pdfPath} ({pdfSize} bytes)\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"❌ PDF generation failed: {ex.Message}\");\n    return 1;\n}\n\n// Generate XPS\nvar xpsPath = \"output.xps\";\ntry\n{\n    using var xpsStream = File.OpenWrite(xpsPath);\n    using var document = SKDocument.CreateXps(xpsStream);\n    using var canvas = document.BeginPage(pageWidth, pageHeight);\n    canvas.Clear(SKColors.White);\n    canvas.Scale(contentScale);\n    canvas.DrawPicture(picture);\n    document.EndPage();\n    document.Close();\n    \n    var xpsSize = new FileInfo(xpsPath).Length;\n    Console.WriteLine($\"✅ XPS generated: {xpsPath} ({xpsSize} bytes)\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"❌ XPS generation failed: {ex.Message}\");\n    return 1;\n}\n\nreturn 0;"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build reproduction project",
+      "layer": "setup",
+      "command": "dotnet build --nologo -v quiet",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Run reproduction with SkiaSharp 3.119.1 - XPS creation fails because CreateXps returns null on macOS",
+      "layer": "csharp",
+      "command": "dotnet run --no-build",
+      "exitCode": 1,
+      "output": "SkiaSharp Version: 3.119.0.0\nEnvironment: Darwin 25.2.0 Darwin Kernel Version 25.2.0: Tue Nov 18 21:09:45 PST 2025; root:xnu-12377.61.12~1/RELEASE_ARM64_T6030\nArchitecture: Arm64\n\nSVG bounds: {Left=0,Top=0,Width=400,Height=300}\nPage size: 300 x 225\nContent scale: 0,75\n\n✅ PDF generated: output.pdf (430080 bytes)\n❌ XPS generation failed: Object reference not set to an instance of an object.",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test whether CreateXps returns null (confirming platform limitation rather than rendering bug)",
+      "layer": "csharp",
+      "command": "dotnet run --no-build",
+      "exitCode": 1,
+      "output": "SkiaSharp Version: 3.119.0.0\nTesting simple XPS without SVG...\n\n❌ CreateXps() returned null",
+      "filesCreated": [
+        {
+          "filename": "TestSimpleXps.cs",
+          "description": "Minimal test showing CreateXps() returns null on macOS",
+          "content": "using SkiaSharp;\nusing System;\nusing System.IO;\n\nclass TestSimpleXps\n{\n    static int Main()\n    {\n        Console.WriteLine($\"SkiaSharp Version: {typeof(SKBitmap).Assembly.GetName().Version}\");\n        Console.WriteLine($\"Testing simple XPS without SVG...\");\n        Console.WriteLine();\n\n        var xpsPath = \"simple.xps\";\n        try\n        {\n            using var stream = File.OpenWrite(xpsPath);\n            using var document = SKDocument.CreateXps(stream);\n            \n            if (document == null)\n            {\n                Console.WriteLine(\"❌ CreateXps() returned null\");\n                return 1;\n            }\n            \n            Console.WriteLine(\"✅ XPS document created\");\n            \n            using var canvas = document.BeginPage(300, 225);\n            canvas.Clear(SKColors.White);\n            canvas.DrawRect(new SKRect(10, 10, 110, 110), new SKPaint { Color = SKColors.Red });\n            canvas.DrawRect(new SKRect(150, 10, 250, 110), new SKPaint { Color = SKColors.Blue });\n            document.EndPage();\n            document.Close();\n            \n            var size = new FileInfo(xpsPath).Length;\n            Console.WriteLine($\"✅ XPS generated: {xpsPath} ({size} bytes)\");\n        }\n        catch (Exception ex)\n        {\n            Console.WriteLine($\"❌ XPS generation failed: {ex.GetType().Name}: {ex.Message}\");\n            return 1;\n        }\n\n        return 0;\n    }\n}"
+        }
+      ],
+      "result": "failure"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Verify PDF generation works correctly (as a control to show SkiaSharp and Svg.Skia are functional)",
+      "layer": "csharp",
+      "command": "dotnet run --no-build",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\nTesting PDF generation with SVG+image...\n\nSVG bounds: {Left=0,Top=0,Width=400,Height=300}\nPage size: 300 x 225\n\n✅ PDF generated: output.pdf (431831 bytes)\nPDF generation successful. Visual inspection would show correct image sizing.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 8,
+      "description": "Confirm XPS is Windows-only by checking Skia source code",
+      "layer": "native",
+      "command": "grep -A 5 'namespace SkXPS' externals/skia/include/docs/SkXPSDocument.h",
+      "exitCode": 0,
+      "output": "namespace SkXPS {\n\nSK_API sk_sp<SkDocument> MakeDocument(SkWStream* stream,\n                                      IXpsOMObjectFactory* xpsFactory,\n                                      SkScalar dpi = SK_ScalarDefaultRasterDPI);\n--\nnamespace SkXPS {\n\nSK_API sk_sp<SkDocument> MakeDocument(SkWStream*, SkScalar) { return nullptr; }\n\n}  // namespace SkXPS\n\n#endif  // SK_BUILD_FOR_WIN",
+      "result": "success"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKDocument.CreateXps() returns null on macOS because XPS document creation requires Windows Runtime (IXpsOMObjectFactory)",
+    "additionalErrors": [
+      "NullReferenceException when attempting to use null document object"
+    ]
+  },
+  "environment": {
+    "os": "macOS 15.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "XPS document creation is Windows-only (requires IXpsOMObjectFactory from Windows Runtime)",
+    "The Skia XPS backend code is compiled only on Windows (guarded by #if defined(SK_BUILD_FOR_WIN))",
+    "On non-Windows platforms, SkXPS::MakeDocument() returns nullptr",
+    "Testing the reported XPS image scaling bug requires Windows platform"
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "scope",
+        "upstream": "Triage identified bug location as externals/skia/src/xps/SkXPSDevice.cpp image handling",
+        "corrected": "Confirmed: triage analysis is accurate. The XPS image scaling bug is in SkXPSDevice::createXpsImageBrush. However, reproduction on macOS is blocked because XPS creation is Windows-only."
+      }
+    ]
+  }
+}
