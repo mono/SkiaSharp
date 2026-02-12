@@ -1,208 +1,176 @@
 {
   "meta": {
-    "schemaVersion": "2.1",
+    "schemaVersion": "1.0",
     "number": 552,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-22T12:00:00Z",
+    "analyzedAt": "2026-02-12T15:33:51Z",
     "currentLabels": [
       "type/enhancement",
       "area/SkiaSharp.Views"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "Investigate reusing SKSurface instances across draw calls in view implementations to improve performance",
+  "summary": "Maintainer-filed enhancement to investigate reusing SKSurface instances across draw calls in all SkiaSharp view implementations. Constructing SKSurface each frame is reported as expensive, and related issue #534 identified slow GTK rendering from this pattern. Currently, most views (WPF, WinForms, WinUI, Blazor, Android, Apple) create a new SKSurface per frame even though they reuse the underlying backing buffer. Only the GTK3 SKDrawingArea actually caches and reuses the SKSurface object itself.",
   "classification": {
     "type": {
       "value": "type/enhancement",
-      "confidence": 0.95
+      "confidence": 0.98
     },
     "area": {
       "value": "area/SkiaSharp.Views",
-      "confidence": 0.95
+      "confidence": 0.98
     },
     "tenets": [
-      {
-        "value": "tenet/performance",
-        "confidence": 0.92
-      }
+      "tenet/performance"
     ]
   },
   "evidence": {
     "reproEvidence": {
       "relatedIssues": [
-        534
-      ],
-      "codeSnippets": [
-        {
-          "code": "It appears the constructing a SKSurface is expensive, so we should see if we can reuse instances across draws.",
-          "language": "text",
-          "context": "Issue description \u2014 the core observation motivating this enhancement"
-        }
+        534,
+        1251,
+        1617,
+        2190
       ]
     },
     "versionAnalysis": {
-      "reason": "Filed against SkiaSharp 1.x era (June 2018). The underlying performance concern about SKSurface construction cost remains relevant in current SkiaSharp \u2014 some views still create new SKSurface each frame (WPF, WinUI, Blazor, Android) while GTK3 already reuses surfaces. The enhancement is still applicable.",
-      "currentRelevance": "likely"
+      "currentRelevance": "likely",
+      "relevanceReason": "Most view implementations still create a new SKSurface per frame. Only GTK3 reuses the surface. The core pattern has not changed since the issue was filed, though #1617 refactored the Android surface factory without addressing surface reuse."
     },
     "fixStatus": {
       "likelyFixed": false,
-      "confidence": 0.8,
-      "reason": "Partially addressed. GTK3 SKDrawingArea already reuses SKSurface across draws when size is unchanged. Apple SKCGSurfaceFactory reuses backing memory but still creates new SKSurface per draw. WPF SKElement, WinUI SKXamlCanvas, Blazor SKCanvasView, and Android SurfaceFactory all create new SKSurface each frame. The inconsistency across platforms means the enhancement is not fully implemented.",
-      "verificationStatus": "inconclusive"
+      "confidence": 0.9,
+      "reason": "Code investigation shows most platforms still create SKSurface per frame. GTK3 is the only view that reuses the SKSurface object. #1617 refactored Android but didn\u0027t add surface reuse.",
+      "relatedPRs": [
+        1617
+      ]
     }
   },
   "analysis": {
-    "summary": "This is a self-filed enhancement by the maintainer (mattleibow) to investigate reusing SKSurface instances across draw calls in SkiaSharp view implementations. The concern is that SKSurface.Create() has non-trivial cost per frame. Code investigation shows inconsistent patterns across platforms \u2014 GTK3 already reuses surfaces, while WPF, WinUI, Blazor, and Android create new ones per frame.",
-    "keySignals": [
-      {
-        "text": "It appears the constructing a SKSurface is expensive, so we should see if we can reuse instances across draws.",
-        "source": "body",
-        "interpretation": "Maintainer has profiled or observed that SKSurface construction is a hot path in view rendering."
-      },
-      {
-        "text": "Here is PR that was created to improve drawing: #534",
-        "source": "body",
-        "interpretation": "References GTK rendering performance issue \u2014 suggests this enhancement was motivated by real-world slow rendering reports."
-      },
-      {
-        "text": "Filed by mattleibow (maintainer)",
-        "source": "labels",
-        "interpretation": "Self-filed enhancement \u2014 high signal that this is a legitimate performance concern from someone who knows the codebase."
-      }
-    ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/enhancement",
-        "expandedReason": "The issue explicitly asks to improve existing view implementations by reusing SKSurface instances. This is an optimization of existing functionality, not a new feature or a bug fix. The existing labels correctly classify this.",
-        "alternatives": [
-          {
-            "value": "type/feature-request",
-            "whyRejected": "Not requesting new functionality \u2014 the views already work, this is about making them faster."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp.Views",
-        "expandedReason": "The enhancement targets SKSurface usage in view implementations across platforms (WPF, Android, iOS, GTK, WinUI, Blazor). All affected code is in the SkiaSharp.Views package family."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/performance",
-        "expandedReason": "The core concern is rendering performance \u2014 reducing per-frame allocation cost of SKSurface.Create(). This is a pure performance optimization."
-      },
-      {
-        "field": "fixStatus.likelyFixed",
-        "chosen": "false",
-        "expandedReason": "GTK3 SKDrawingArea already reuses surfaces (the desired pattern exists), but WPF, WinUI, Blazor, Apple, and Android views still create new SKSurface each frame. The enhancement is partially addressed but not systematically applied across all platforms."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "The per-frame SKSurface.Create() pattern still exists in most view implementations. The performance concern about allocation cost is architecture-level and hasn\u0027t been obsoleted by any Skia or .NET changes."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "keep-open",
-        "expandedReason": "This is a legitimate performance enhancement filed by the maintainer. The investigation is still valid \u2014 most view platforms haven\u0027t adopted the surface-reuse pattern that GTK3 already uses. No reason to close."
-      }
-    ],
-    "uncertainties": [
-      "Whether SKSurface.Create() wrapping an existing memory buffer is actually expensive enough to warrant the complexity of caching the surface object (vs just caching the backing buffer)",
-      "Whether reusing SKSurface has correctness implications \u2014 the surface\u0027s internal state (canvas, dirty regions) may need resetting between frames",
-      "Whether modern Skia versions have optimized SKSurface creation enough to make this enhancement low-priority"
-    ],
-    "assumptions": [
-      "Assumed the performance concern in the 2018 issue remains relevant since the same SKSurface.Create() pattern is still used in most views",
-      "Assumed GTK3 SKDrawingArea\u0027s surface reuse pattern is the reference implementation since it\u0027s the only view that caches the SKSurface object"
-    ],
-    "resolution": {
-      "hypothesis": "SKSurface.Create() has non-trivial per-call overhead even when wrapping pre-allocated memory. Caching the surface object (as GTK3 does) and only recreating on size change would reduce per-frame allocation pressure across all view platforms.",
-      "proposals": [
-        {
-          "title": "Adopt GTK3 surface-reuse pattern across all views",
-          "description": "Refactor WPF, WinUI, Blazor, Apple, and Android view implementations to store SKSurface as a field and only recreate when the backing buffer size changes, matching the existing GTK3 SKDrawingArea pattern. Requires careful handling of surface disposal on size change and view teardown.",
-          "confidence": 0.8,
-          "effort": "medium",
-          "category": "fix",
-          "validated": "untested"
-        },
-        {
-          "title": "Benchmark SKSurface.Create() to quantify the gain",
-          "description": "Before refactoring all views, profile SKSurface.Create() with pre-allocated memory to measure actual per-call cost. If the cost is negligible in current Skia, the enhancement may be deprioritized. Use BenchmarkDotNet with varying surface sizes.",
-          "confidence": 0.85,
-          "effort": "low",
-          "category": "investigation",
-          "validated": "untested"
-        },
-        {
-          "title": "Extract shared SurfaceCache utility",
-          "description": "Create a shared internal SurfaceCache class (like SurfaceFactory but with surface reuse) that all view implementations can use. Centralizes the caching logic and ensures consistent behavior across platforms. Reduces per-platform maintenance.",
-          "confidence": 0.7,
-          "effort": "medium",
-          "category": "fix",
-          "validated": "untested"
-        }
-      ],
-      "recommendedProposal": "Benchmark SKSurface.Create() to quantify the gain",
-      "recommendedReason": "Before investing effort in refactoring all platform views, a quick benchmark would confirm whether the optimization is still worthwhile with current Skia versions. If significant, proceed with the shared SurfaceCache approach."
-    },
+    "summary": "All SkiaSharp view implementations except GTK3 create a new SKSurface per draw frame via SKSurface.Create(). The backing memory (bitmaps, pixel buffers) is already reused when the size doesn\u0027t change, but the SKSurface object itself is allocated and disposed each frame. GTK3\u0027s SKDrawingArea demonstrates the reuse pattern \u2014 it stores the surface as a field and only recreates it when dimensions change. Applying this pattern across all views would eliminate per-frame SKSurface allocations, reducing GC pressure in high-frame-rate scenarios.",
     "codeInvestigation": [
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk3/SKDrawingArea.cs",
-        "lines": "12-88",
-        "relevance": "GTK3 view ALREADY implements surface reuse \u2014 stores SKSurface as a field and only recreates when size changes (line 78-88). This is the target pattern the enhancement wants to adopt across all views."
+        "finding": "GTK3 stores SKSurface as field \u0027surface\u0027, only recreates when pix dimensions change (line 78-88). This is the ONLY view that reuses SKSurface. Model to follow for other platforms.",
+        "relevance": "direct",
+        "lines": "12-87"
       },
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKCGSurfaceFactory.cs",
-        "lines": "25-66",
-        "relevance": "Apple factory reuses backing NSMutableData buffer when size unchanged (line 42-46), but still calls SKSurface.Create() each frame (line 66). Partial reuse \u2014 buffer allocated once, surface object recreated."
+        "finding": "CreateSurface() reuses the bitmapData/dataProvider when memory size matches, but always calls SKSurface.Create() returning a new surface per frame (line 66). Surface itself is not cached.",
+        "relevance": "direct",
+        "lines": "25-66"
       },
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SurfaceFactory.cs",
-        "lines": "30-57",
-        "relevance": "Android factory reuses Bitmap but creates new SKSurface each frame (line 50) and explicitly disposes it in DrawSurface (line 57). No surface reuse."
+        "finding": "CreateSurface() reuses the Android Bitmap when dimensions match, but calls SKSurface.Create() every frame with bitmap.LockPixels() (line 50). Surface not cached.",
+        "relevance": "direct",
+        "lines": "30-50"
       },
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
-        "lines": "63-83",
-        "relevance": "WPF creates new SKSurface each frame with \u0027using\u0027 statement (line 73). Reuses WriteableBitmap but not the surface. No surface reuse."
+        "finding": "OnRender creates SKSurface in a using block every frame (line 73). WriteableBitmap is reused but surface is not.",
+        "relevance": "direct",
+        "lines": "71-84"
       },
       {
-        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
-        "lines": "195",
-        "relevance": "WinUI creates new SKSurface each frame with \u0027using\u0027 statement. Same pattern as WPF \u2014 no surface reuse."
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+        "finding": "OnPaint creates SKSurface in a using block every frame (line 46). System.Drawing.Bitmap reused, surface not.",
+        "relevance": "direct",
+        "lines": "43-52"
       },
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
-        "lines": "95",
-        "relevance": "Blazor creates new SKSurface each frame with \u0027using\u0027 statement. No surface reuse."
+        "finding": "OnRenderFrame creates SKSurface in a using block every frame (line 95). Pixel buffer reused, surface not.",
+        "relevance": "direct",
+        "lines": "93-106"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
+        "finding": "DoInvalidate creates SKSurface in a using block every frame (line 195). WriteableBitmap reused, surface not.",
+        "relevance": "direct",
+        "lines": "193-206"
       }
-    ]
+    ],
+    "rationale": "Classified as enhancement (not bug) because the existing code works correctly \u2014 this is a performance optimization opportunity. The issue was filed by the maintainer (mattleibow) and explicitly labeled as type/enhancement. The area is clearly SkiaSharp.Views since all affected code is in the view layer. The performance tenet applies since this is about reducing per-frame allocations.",
+    "keySignals": [
+      {
+        "text": "constructing a SKSurface is expensive, so we should see if we can reuse instances across draws",
+        "source": "issue body",
+        "interpretation": "Maintainer identifies per-frame SKSurface construction as a performance concern."
+      },
+      {
+        "text": "PR that was created to improve drawing: #534",
+        "source": "issue body",
+        "interpretation": "GTK slow rendering was the original catalyst \u2014 #534 was about flickering/slow resize on Linux."
+      },
+      {
+        "text": "GTK3 SKDrawingArea stores surface as a field and only recreates on resize",
+        "source": "code search",
+        "interpretation": "One platform already implements the reuse pattern, proving feasibility."
+      },
+      {
+        "text": "SkSwapChainPanel makes unnecessary per-frame heap allocations (#1251)",
+        "source": "related issue",
+        "interpretation": "Community also reports per-frame allocation as a performance issue in WinUI view."
+      }
+    ],
+    "nextQuestions": [
+      "How expensive is SKSurface.Create() when given pre-allocated memory? Need benchmarks comparing new-per-frame vs reuse.",
+      "For views using LockPixels/BackBuffer patterns (Android, WPF), can a cached SKSurface be re-pointed at the locked memory each frame, or does a new surface need to be created?",
+      "Does SKSurface.Create with the same memory pointer return an internally cached surface, or always allocate a new Skia object?",
+      "Should SKPaintSurfaceEventArgs also be reused per #1251\u0027s suggestion to further reduce per-frame allocations?"
+    ],
+    "resolution": {
+      "hypothesis": "SKSurface.Create() has non-trivial cost even when wrapping pre-allocated memory, because it creates a new SkSurface C\u002B\u002B object each call. Caching the SKSurface and reusing it when the backing memory and dimensions haven\u0027t changed would eliminate this cost.",
+      "proposals": [
+        {
+          "description": "Store SKSurface as a field in each factory/view. Only recreate when dimensions change (like GTK3\u0027s SKDrawingArea already does). For Apple\u0027s SKCGSurfaceFactory: cache the surface alongside bitmapData. For Android\u0027s SurfaceFactory: cache alongside bitmap. For WPF/WinForms/WinUI/Blazor: promote from local using-block to field with disposal on resize.",
+          "title": "Apply GTK3 pattern to all factory classes",
+          "confidence": 0.7,
+          "effort": "medium"
+        },
+        {
+          "description": "Before changing all views, benchmark SKSurface.Create() with pre-allocated memory to quantify the actual cost. If trivial, the optimization may not be worth the added complexity. Use BenchmarkDotNet to compare new-per-frame vs reuse patterns.",
+          "title": "Benchmark first, then optimize",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "description": "Create a surface pool keyed by SKImageInfo. Views check out a surface, use it, and return it. More complex but handles dynamic sizing better than per-field caching.",
+          "title": "Pool SKSurface instances",
+          "confidence": 0.5,
+          "effort": "large"
+        }
+      ],
+      "recommendedProposal": "Benchmark first, then optimize",
+      "recommendedReason": "Without benchmarks, it\u0027s unclear if SKSurface.Create() with pre-allocated memory is truly expensive. The GTK3 pattern works but adding cached state to all views increases complexity and risk of use-after-dispose bugs. Measure first, then apply the GTK3 pattern selectively to views where the cost is meaningful."
+    }
   },
   "output": {
     "actionability": {
       "suggestedAction": "keep-open",
-      "confidence": 0.88,
-      "reason": "Legitimate performance enhancement filed by maintainer. Most view platforms still use per-frame SKSurface creation. The enhancement is partially implemented (GTK3) but not systematically applied."
+      "confidence": 0.9,
+      "reason": "Valid performance enhancement filed by maintainer. Most views still exhibit the per-frame SKSurface allocation pattern. Related issue #1251 also reports per-frame allocation concerns. The issue remains actionable."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Add performance tenet label; existing type/enhancement and area/SkiaSharp.Views labels are already correct",
         "risk": "low",
-        "description": "Add tenet/performance label to reflect the performance optimization nature of this enhancement",
-        "reason": "Current labels correctly have type/enhancement and area/SkiaSharp.Views but miss the performance tenet which is the core concern",
-        "confidence": 0.92,
-        "payload": {
-          "labelsToAdd": [
-            "tenet/performance"
-          ],
-          "labelsToRemove": []
-        }
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #1251 which reports the same per-frame allocation concern for SKSwapChainPanel",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 1251
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/552"
+  }
 }

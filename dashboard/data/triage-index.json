@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-02-12T15:33:48.174614Z",
-  "totalCount": 7,
+  "generatedAt": "2026-02-12T15:38:24.6868621Z",
+  "totalCount": 8,
   "summary": {
     "needsInvestigation": 4,
     "closeable": 1,
@@ -17,7 +17,7 @@
     },
     {
       "label": "type/enhancement",
-      "count": 1
+      "count": 2
     },
     {
       "label": "type/feature-request",
@@ -27,7 +27,7 @@
   "byArea": [
     {
       "label": "area/SkiaSharp.Views",
-      "count": 3
+      "count": 4
     },
     {
       "label": "area/libSkiaSharp.native",
@@ -53,7 +53,7 @@
     },
     {
       "label": "keep-open",
-      "count": 2
+      "count": 3
     },
     {
       "label": "close-as-fixed",
@@ -75,6 +75,20 @@
     }
   ],
   "issues": [
+    {
+      "number": 552,
+      "title": "Maintainer-filed enhancement to investigate reusing SKSurface instances across draw calls in all SkiaSharp view implementations. Constructing SKSurface each frame is reported as expensive, and related issue #534 identified slow GTK rendering from this pattern. Currently, most views (WPF, WinForms, WinUI, Blazor, Android, Apple) create a new SKSurface per frame even though they reuse the underlying backing buffer. Only the GTK3 SKDrawingArea actually caches and reuses the SKSurface object itself.",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views",
+      "action": "keep-open",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T15:33:51Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
     {
       "number": 533,
       "title": "Android SKGLView renders at uncapped framerate (300\u002B FPS) after switch from GLSurfaceView to GLTextureView in v1.60.1. The custom GLTextureView does not call eglSwapInterval, so VSync is not enforced, causing excessive CPU/GPU/battery drain when HasRenderLoop is enabled.",
