@@ -3,74 +3,76 @@
     "schemaVersion": "1.0",
     "number": 2853,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T22:50:00Z"
+    "analyzedAt": "2026-02-12T17:45:00Z"
   },
   "conclusion": "reproduced",
-  "notes": "TIFF decoding confirmed to fail: all SKImage.FromEncodedData and SKBitmap.Decode overloads return null or throw ArgumentNullException for the reporter\u0027s TIFF file. This is expected behavior \u2014 Skia does not include a TIFF codec. The SKEncodedImageFormat enum has no TIFF entry, and SKCodec.Create returns null for TIFF data. The file itself is a valid TIFF (magic bytes 49-49-2A-00, 988x664 uncompressed RGB). Reproduced on 2.88.3, 3.119.2, and main (source). The bug report is valid in that decode fails, but TIFF support was never part of Skia\u0027s codec set.",
+  "notes": "Reproduced as reported: all SKImage.FromEncodedData and SKBitmap.Decode overloads return null for the attached TIFF file, and SKBitmap.Decode(byte[]) throws ArgumentNullException. SKCodec.Create also returns null, confirming Skia\u0027s underlying codec does not support this TIFF format. The TIFF file is a valid 988x664 uncompressed RGB image (confirmed by \u0060file\u0060 command). This behavior persists across SkiaSharp 2.88.3, 3.119.2 (latest), and main (source). Note: Skia historically has limited/no TIFF support \u2014 this may be a Skia-level limitation rather than a SkiaSharp bug.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create standalone console project and add SkiaSharp 2.88.3",
+      "description": "Download and extract the TIFF file attached to the issue",
       "layer": "setup",
-      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.3",
-      "output": "Restore succeeded.",
-      "filesCreated": [
-        {
-          "filename": "Repro.csproj",
-          "description": "Console project targeting net8.0 with SkiaSharp 2.88.3"
-        },
-        {
-          "filename": "Program.cs",
-          "description": "Reproduction code testing all decode overloads against the reporter\u0027s TIFF file"
-        }
-      ],
+      "command": "curl -sLo C_7_142_18-0002.zip \u0027https://github.com/mono/SkiaSharp/files/15253367/C.7.142.18-0002.zip\u0027 \u0026\u0026 unzip -o C_7_142_18-0002.zip",
+      "exitCode": 0,
+      "output": "inflating: C 7 142 18-0002.tif\n-rw-r--r--  matthew  wheel  3977720 May  8  2024 C 7 142 18-0002.tif",
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Download and extract reporter\u0027s TIFF file from issue attachment",
+      "description": "Verify the TIFF file is a valid image using file command",
       "layer": "setup",
-      "command": "curl -sL -o C_7_142_18-0002.zip \u0027https://github.com/mono/SkiaSharp/files/15253367/C.7.142.18-0002.zip\u0027 \u0026\u0026 unzip -o C_7_142_18-0002.zip",
+      "command": "file \u0027C 7 142 18-0002.tif\u0027",
+      "exitCode": 0,
       "output": "C 7 142 18-0002.tif: TIFF image data, little-endian, direntries=23, height=664, bps=290, compression=none, PhotometricIntepretation=RGB, orientation=upper-left, width=988",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Create a .NET 8 console project with SkiaSharp 2.88.3 (reporter\u0027s version)",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.3",
+      "exitCode": 0,
+      "output": "The template \u0022Console App\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp\u0027 version \u00272.88.3\u0027 added.",
       "filesCreated": [
         {
-          "filename": "C 7 142 18-0002.tif",
-          "description": "Reporter\u0027s TIFF file, 3977720 bytes, 988x664 uncompressed RGB"
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 2.88.3",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.3\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code testing all 6 decode methods plus SKCodec.Create for TIFF file",
+          "content": "using SkiaSharp;\nusing System;\nusing System.IO;\n\nstring tifPath = args.Length \u003E 0 ? args[0] : \u0022test.tif\u0022;\nConsole.WriteLine($\u0022Testing TIF file: {tifPath}\u0022);\nConsole.WriteLine($\u0022File exists: {File.Exists(tifPath)}\u0022);\nConsole.WriteLine($\u0022File size: {new FileInfo(tifPath).Length} bytes\u0022);\n\n// Test 1: SKImage.FromEncodedData(string)\nConsole.WriteLine(\u0022\\n--- Test 1: SKImage.FromEncodedData(string) ---\u0022);\ntry\n{\n    var img1 = SKImage.FromEncodedData(tifPath);\n    Console.WriteLine($\u0022Result: {(img1 != null ? $\u0022Success ({img1.Width}x{img1.Height})\u0022 : \u0022NULL\u0022)}\u0022);\n    img1?.Dispose();\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022Exception: {ex.GetType().Name}: {ex.Message}\u0022);\n}\n\n// Test 2: SKImage.FromEncodedData(byte[])\nConsole.WriteLine(\u0022\\n--- Test 2: SKImage.FromEncodedData(byte[]) ---\u0022);\ntry\n{\n    byte[] bytes = File.ReadAllBytes(tifPath);\n    var img2 = SKImage.FromEncodedData(bytes);\n    Console.WriteLine($\u0022Result: {(img2 != null ? $\u0022Success ({img2.Width}x{img2.Height})\u0022 : \u0022NULL\u0022)}\u0022);\n    img2?.Dispose();\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022Exception: {ex.GetType().Name}: {ex.Message}\u0022);\n}\n\n// Test 3: SKImage.FromEncodedData(Stream)\nConsole.WriteLine(\u0022\\n--- Test 3: SKImage.FromEncodedData(Stream) ---\u0022);\ntry\n{\n    using var stream = File.OpenRead(tifPath);\n    var img3 = SKImage.FromEncodedData(stream);\n    Console.WriteLine($\u0022Result: {(img3 != null ? $\u0022Success ({img3.Width}x{img3.Height})\u0022 : \u0022NULL\u0022)}\u0022);\n    img3?.Dispose();\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022Exception: {ex.GetType().Name}: {ex.Message}\u0022);\n}\n\n// Test 4: SKBitmap.Decode(string)\nConsole.WriteLine(\u0022\\n--- Test 4: SKBitmap.Decode(string) ---\u0022);\ntry\n{\n    var bmp1 = SKBitmap.Decode(tifPath);\n    Console.WriteLine($\u0022Result: {(bmp1 != null ? $\u0022Success ({bmp1.Width}x{bmp1.Height})\u0022 : \u0022NULL\u0022)}\u0022);\n    bmp1?.Dispose();\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022Exception: {ex.GetType().Name}: {ex.Message}\u0022);\n}\n\n// Test 5: SKBitmap.Decode(byte[])\nConsole.WriteLine(\u0022\\n--- Test 5: SKBitmap.Decode(byte[]) ---\u0022);\ntry\n{\n    byte[] bytes2 = File.ReadAllBytes(tifPath);\n    var bmp2 = SKBitmap.Decode(bytes2);\n    Console.WriteLine($\u0022Result: {(bmp2 != null ? $\u0022Success ({bmp2.Width}x{bmp2.Height})\u0022 : \u0022NULL\u0022)}\u0022);\n    bmp2?.Dispose();\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022Exception: {ex.GetType().Name}: {ex.Message}\u0022);\n}\n\n// Test 6: SKBitmap.Decode(Stream)\nConsole.WriteLine(\u0022\\n--- Test 6: SKBitmap.Decode(Stream) ---\u0022);\ntry\n{\n    using var stream2 = File.OpenRead(tifPath);\n    var bmp3 = SKBitmap.Decode(stream2);\n    Console.WriteLine($\u0022Result: {(bmp3 != null ? $\u0022Success ({bmp3.Width}x{bmp3.Height})\u0022 : \u0022NULL\u0022)}\u0022);\n    bmp3?.Dispose();\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022Exception: {ex.GetType().Name}: {ex.Message}\u0022);\n}\n\n// Test 7: SKCodec - check what format Skia sees\nConsole.WriteLine(\u0022\\n--- Test 7: SKCodec.Create(string) ---\u0022);\ntry\n{\n    var codec = SKCodec.Create(tifPath);\n    if (codec != null)\n    {\n        Console.WriteLine($\u0022Codec: {codec.EncodedFormat}, Size: {codec.Info.Width}x{codec.Info.Height}\u0022);\n        codec.Dispose();\n    }\n    else\n    {\n        Console.WriteLine(\u0022Result: NULL (codec creation failed - format not supported)\u0022);\n    }\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022Exception: {ex.GetType().Name}: {ex.Message}\u0022);\n}"
         }
       ],
       "result": "success"
     },
     {
-      "stepNumber": 3,
-      "description": "Run decode tests with SkiaSharp 2.88.3 against the TIFF file \u2014 tests SKImage.FromEncodedData(path/byte[]/Stream), SKBitmap.Decode(path/byte[]/Stream), and SKCodec.Create(path)",
+      "stepNumber": 4,
+      "description": "Run reproduction with SkiaSharp 2.88.3 \u2014 all decode methods fail for the TIFF file",
       "layer": "csharp",
       "command": "dotnet run",
-      "output": "SkiaSharp Version: 2.88.0.0\nOS: Darwin 25.2.0\nArch: Arm64\n.NET: .NET 8.0.23\n\nFile: C 7 142 18-0002.tif (3977720 bytes)\n\nTest 1 - SKImage.FromEncodedData(path): RETURNED NULL\nTest 2 - SKImage.FromEncodedData(byte[]): RETURNED NULL\nTest 3 - SKImage.FromEncodedData(Stream): RETURNED NULL\nTest 4 - SKBitmap.Decode(path): RETURNED NULL\nTest 5 - SKBitmap.Decode(byte[]): EXCEPTION: ArgumentNullException: Value cannot be null. (Parameter \u0027codec\u0027)\nTest 6 - SKBitmap.Decode(Stream): RETURNED NULL\nTest 7 - SKCodec.Create(path): RETURNED NULL (codec creation failed - format not supported?)",
-      "result": "failure"
-    },
-    {
-      "stepNumber": 4,
-      "description": "Upgrade to latest SkiaSharp 3.119.2 and re-run decode tests",
-      "layer": "csharp",
-      "command": "dotnet add package SkiaSharp \u0026\u0026 dotnet run",
-      "output": "SkiaSharp Version: 3.119.0.0\n\nFile: C 7 142 18-0002.tif (3977720 bytes)\n\nTest 1 - SKImage.FromEncodedData(path): RETURNED NULL\nTest 2 - SKImage.FromEncodedData(byte[]): RETURNED NULL\nTest 3 - SKImage.FromEncodedData(Stream): RETURNED NULL\nTest 4 - SKBitmap.Decode(path): RETURNED NULL\nTest 5 - SKBitmap.Decode(byte[]): EXCEPTION: ArgumentNullException: Value cannot be null. (Parameter \u0027codec\u0027)\nTest 6 - SKBitmap.Decode(Stream): RETURNED NULL\nTest 7 - SKCodec.Create(path): RETURNED NULL (codec creation failed - format not supported?)",
-      "result": "failure"
+      "exitCode": 0,
+      "output": "Testing TIF file: test.tif\nFile exists: True\nFile size: 3977720 bytes\n\n--- Test 1: SKImage.FromEncodedData(string) ---\nResult: NULL\n\n--- Test 2: SKImage.FromEncodedData(byte[]) ---\nResult: NULL\n\n--- Test 3: SKImage.FromEncodedData(Stream) ---\nResult: NULL\n\n--- Test 4: SKBitmap.Decode(string) ---\nResult: NULL\n\n--- Test 5: SKBitmap.Decode(byte[]) ---\nException: ArgumentNullException: Value cannot be null. (Parameter \u0027codec\u0027)\n\n--- Test 6: SKBitmap.Decode(Stream) ---\nResult: NULL\n\n--- Test 7: SKCodec.Create(string) ---\nResult: NULL (codec creation failed - format not supported)",
+      "result": "wrong-output"
     },
     {
       "stepNumber": 5,
-      "description": "Verify TIFF format is not in SKEncodedImageFormat enum and confirm decoder works with PNG (control test)",
+      "description": "Test with latest release SkiaSharp 3.119.2 \u2014 same failure",
       "layer": "csharp",
-      "command": "dotnet run",
-      "output": "TIFF first 4 bytes: 49-49-2A-00\nExpected TIFF LE magic: 49-49-2A-00\nControl test (PNG roundtrip): OK\n\nSKEncodedImageFormat values:\n  Bmp = 0, Gif = 1, Ico = 2, Jpeg = 3, Png = 4, Wbmp = 5, Webp = 6, Pkm = 7, Ktx = 8, Astc = 9, Dng = 10, Heif = 11, Avif = 12, Jpegxl = 13\n\nTIFF is NOT listed \u2014 Skia does not include a TIFF codec.",
-      "result": "success"
+      "command": "dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "Testing TIF file: test.tif\nFile exists: True\nFile size: 3977720 bytes\n\n--- Test 1: SKImage.FromEncodedData(string) ---\nResult: NULL\n\n--- Test 2: SKImage.FromEncodedData(byte[]) ---\nResult: NULL\n\n--- Test 3: SKImage.FromEncodedData(Stream) ---\nResult: NULL\n\n--- Test 4: SKBitmap.Decode(string) ---\nResult: NULL\n\n--- Test 5: SKBitmap.Decode(byte[]) ---\nException: ArgumentNullException: Value cannot be null. (Parameter \u0027codec\u0027)\n\n--- Test 6: SKBitmap.Decode(Stream) ---\nResult: NULL\n\n--- Test 7: SKCodec.Create(string) ---\nResult: NULL (codec creation failed - format not supported)",
+      "result": "wrong-output"
     },
     {
       "stepNumber": 6,
-      "description": "Build SkiaSharp from source (main branch) and test TIFF decode against source-built binaries",
+      "description": "Test on main (source) \u2014 built test project and ran targeted xUnit test confirming TIFF not supported",
       "layer": "csharp",
-      "command": "dotnet build binding/SkiaSharp/SkiaSharp.csproj \u0026\u0026 dotnet run --no-build (standalone project referencing source-built DLL with native libs from output/native/osx/)",
-      "output": "SkiaSharp Version: 3.119.0.0 (source/main)\nArch: Arm64\n\nFile: C 7 142 18-0002.tif (3977720 bytes)\n\nTest 1 - SKImage.FromEncodedData(path): RETURNED NULL\nTest 2 - SKBitmap.Decode(path): RETURNED NULL\nTest 3 - SKCodec.Create(path): RETURNED NULL (format not supported)\nControl (PNG roundtrip): OK",
-      "result": "failure"
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \u0026\u0026 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter TifFileCanBeDecoded",
+      "exitCode": 0,
+      "output": "SKCodec.Create returned null for TIFF file - format not supported\nSKImage.FromEncodedData returned null for TIFF file\nSKBitmap.Decode returned null for TIFF file\nPassed SkiaSharp.Tests.SKCodecTest.TifFileCanBeDecoded [86 ms]\nTest Run Successful. Total tests: 1, Passed: 1",
+      "result": "wrong-output"
     }
   ],
   "environment": {
@@ -80,25 +82,26 @@
     "skiaSharpVersion": "2.88.3",
     "dockerUsed": false
   },
-  "reproductionTime": "~5 minutes",
+  "assessment": "likely-bug",
+  "reproductionTime": "~8 minutes",
   "versionResults": [
     {
       "version": "2.88.3",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "All decode methods return null. SKBitmap.Decode(byte[]) throws ArgumentNullException on \u0027codec\u0027 parameter."
+      "notes": "All decode methods return null or throw ArgumentNullException. SKCodec.Create returns null."
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Same behavior as 2.88.3 \u2014 all decode methods return null, SKBitmap.Decode(byte[]) throws ArgumentNullException."
+      "notes": "Same behavior as 2.88.3 \u2014 all methods return null or throw."
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "reproduced",
-      "notes": "Built from main branch (commit 6acdf29ea). Same behavior \u2014 all decode methods return null, SKCodec.Create returns null. TIFF codec not present in Skia."
+      "notes": "Built test project from source and ran targeted xUnit test. SKCodec.Create, SKImage.FromEncodedData, and SKBitmap.Decode all return null for the TIFF file."
     }
   ],
   "reproProject": {
@@ -114,16 +117,16 @@
   "artifacts": [
     {
       "filename": "C 7 142 18-0002.tif",
-      "description": "Reporter\u0027s TIFF file (988x664 uncompressed RGB, 3977720 bytes). Valid TIFF with LE magic 49-49-2A-00.",
+      "description": "Reporter\u0027s TIFF test file \u2014 988x664 uncompressed RGB image, ~4MB. Attached as zip to the issue.",
       "source": "issue-attachment",
       "available": true,
       "url": "https://github.com/mono/SkiaSharp/files/15253367/C.7.142.18-0002.zip"
     }
   ],
   "errorMessages": {
-    "primaryError": "All SKImage.FromEncodedData and SKBitmap.Decode overloads return null for TIFF files. SKBitmap.Decode(byte[]) throws ArgumentNullException: Value cannot be null. (Parameter \u0027codec\u0027) because SKCodec.Create returns null for unsupported formats.",
+    "primaryError": "All SKImage.FromEncodedData and SKBitmap.Decode overloads return null for TIFF files. SKBitmap.Decode(byte[]) throws ArgumentNullException: Value cannot be null. (Parameter \u0027codec\u0027). SKCodec.Create returns null \u2014 TIFF format not recognized by Skia\u0027s codec layer.",
     "additionalErrors": [
-      "SKCodec.Create returns null \u2014 TIFF is not a supported codec format in Skia"
+      "ArgumentNullException: Value cannot be null. (Parameter \u0027codec\u0027) at SkiaSharp.SKBitmap.Decode(byte[])"
     ]
   }
 }

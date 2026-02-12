@@ -3,61 +3,67 @@
     "schemaVersion": "1.0",
     "number": 3188,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T22:25:26Z"
+    "analyzedAt": "2026-02-12T17:55:00Z"
   },
   "conclusion": "wrong-output",
-  "notes": "Bug confirmed: Canvas.DrawVertices with vertex colors produces a solid black triangle in SkiaSharp v3 (3.116.1 and 3.119.2) but renders a correctly colored gradient triangle in v2.88.9. The process does not crash \u2014 the output image is valid but visually wrong. All triangle pixels are R=0,G=0,B=0,A=255 instead of the expected RGB gradient. This appears to be caused by an upstream Skia API change where DrawVertices now requires a shader on the paint to apply vertex colors. Setting paint.Shader = SKShader.CreateColor(SKColors.White) restores correct behavior. This is a behavioral regression from v2 to v3 that should be documented or handled in the C# wrapper.",
+  "notes": "Reproduced on macOS arm64: DrawVertices with vertex colors produces a solid black triangle instead of a colored gradient. The default SKPaint color is black (#ff000000), and in SkiaSharp 3.x the paint color appears to be modulated with vertex colors, resulting in all-black output. In v2.88.9, vertex colors display correctly as a gradient. Bug persists on latest release (3.119.2) and on main branch source.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create console project and add SkiaSharp 2.88.9 (last known good version)",
+      "description": "Create standalone .NET 8 console project and add SkiaSharp 3.116.1 NuGet package",
       "layer": "setup",
-      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.9",
+      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.116.1",
+      "exitCode": 0,
+      "output": "Restore succeeded.\nPackageReference for package \u0027SkiaSharp\u0027 version \u00273.116.1\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 3.116.1",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code from issue #3188 \u2014 draws a triangle with vertex colors and inspects pixel values",
+          "content": "using SkiaSharp;\n\nvar imageInfo = new SKImageInfo(\n    width: 200,\n    height: 200,\n    colorType: SKColorType.Rgba8888,\n    alphaType: SKAlphaType.Premul);\n\nusing var surface = SKSurface.Create(imageInfo);\nvar canvas = surface.Canvas;\n\ncanvas.Clear(SKColors.White);\nusing var paint = new SKPaint\n{\n    IsAntialias = true\n};\n\nvar vertices = new[] { new SKPoint(110, 20), new SKPoint(160, 200), new SKPoint(10, 200) };\nvar colors = new[] { SKColors.Red, SKColors.Green, SKColors.Blue };\n\ncanvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);\n\nusing var image = surface.Snapshot();\nusing var pngData = image.Encode(SKEncodedImageFormat.Png, 100);\n\nConsole.WriteLine($\u0022SkiaSharp version: {typeof(SKSurface).Assembly.GetName().Version}\u0022);\nConsole.WriteLine($\u0022PNG data size: {pngData?.Size ?? 0} bytes\u0022);\n\nif (pngData != null \u0026\u0026 pngData.Size \u003E 0)\n{\n    var filePath = \u0022output.png\u0022;\n    using (var fileStream = File.Create(filePath))\n    {\n        pngData.SaveTo(fileStream);\n    }\n\n    using var peekBitmap = new SKBitmap(imageInfo);\n    surface.ReadPixels(imageInfo, peekBitmap.GetPixels(), imageInfo.RowBytes, 0, 0);\n\n    var centerPixel = peekBitmap.GetPixel(93, 140);\n    Console.WriteLine($\u0022Center pixel (93,140): {centerPixel}\u0022);\n\n    var topPixel = peekBitmap.GetPixel(110, 30);\n    Console.WriteLine($\u0022Near top vertex (110,30): {topPixel}\u0022);\n\n    Console.WriteLine($\u0022Paint color: {paint.Color}\u0022);\n\n    bool isBlack = centerPixel.Red \u003C 10 \u0026\u0026 centerPixel.Green \u003C 10 \u0026\u0026 centerPixel.Blue \u003C 10 \u0026\u0026 centerPixel.Alpha \u003E 200;\n    Console.WriteLine(isBlack ? \u0022RESULT: Triangle appears BLACK (bug)\u0022 : \u0022RESULT: Triangle appears COLORED (expected)\u0022);\n}"
+        }
+      ],
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Run reporter\u0027s DrawVertices code with SkiaSharp 2.88.9 \u2014 renders gradient triangle correctly",
+      "description": "Run reproduction with SkiaSharp 3.116.1 \u2014 reporter\u0027s version",
       "layer": "csharp",
       "command": "dotnet run",
-      "output": "Center of triangle (93,140): R=84 G=43 B=85 A=255\nPixel(110,50): R=212 G=15 B=14 A=255\nPixel(60,180): R=28 G=34 B=160 A=255\nPixel(140,180): R=28 G=102 B=24 A=255\nRESULT: Triangle has COLOR (expected behavior)",
-      "filesCreated": [
-        {
-          "filename": "output-no-shader.png",
-          "description": "200x200 PNG with correctly rendered gradient triangle (red/green/blue vertices)"
-        }
-      ],
-      "result": "success"
-    },
-    {
-      "stepNumber": 3,
-      "description": "Update to SkiaSharp 3.116.1 (reporter\u0027s version) and run same code \u2014 triangle is solid black",
-      "layer": "csharp",
-      "command": "dotnet add package SkiaSharp --version 3.116.1 \u0026\u0026 dotnet run",
-      "output": "Center of triangle (93,140): R=0 G=0 B=0 A=255\nPixel(110,50): R=0 G=0 B=0 A=255\nPixel(60,180): R=0 G=0 B=0 A=255\nPixel(140,180): R=0 G=0 B=0 A=255\nRESULT: Triangle is BLACK (bug present)",
-      "filesCreated": [
-        {
-          "filename": "output-no-shader.png",
-          "description": "200x200 PNG with solid black triangle \u2014 vertex colors not applied"
-        }
-      ],
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.116.0.0\nPNG data null: False\nPNG data size: 1160 bytes\nImage saved to: output-v3.116.1.png\nFile size: 1160 bytes\nCenter pixel (93,140): R=0 G=0 B=0 A=255\nNear top vertex (110,30): R=0 G=0 B=0 A=255\nNear bottom-left (20,190): R=0 G=0 B=0 A=255\nNear bottom-right (150,190): R=0 G=0 B=0 A=255\nPaint color: R=0 G=0 B=0 A=255\nRESULT: Triangle appears BLACK (bug confirmed)",
       "result": "wrong-output"
     },
     {
-      "stepNumber": 4,
-      "description": "Update to SkiaSharp 3.119.2 (latest stable) and re-run \u2014 still black",
+      "stepNumber": 3,
+      "description": "Run reproduction with SkiaSharp 2.88.9 \u2014 reporter\u0027s last known good version",
       "layer": "csharp",
-      "command": "dotnet add package SkiaSharp \u0026\u0026 dotnet run",
-      "output": "Center of triangle (93,140): R=0 G=0 B=0 A=255\nPixel(110,50): R=0 G=0 B=0 A=255\nRESULT: Triangle is BLACK (bug present)",
+      "command": "dotnet add package SkiaSharp --version 2.88.9 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\nPNG data null: False\nPNG data size: 4044 bytes\nImage saved to: output-v2.88.9.png\nCenter pixel (93,140): R=84 G=43 B=85 A=255\nNear top vertex (110,30): R=240 G=5 B=4 A=255\nNear bottom-left (20,190): R=13 G=4 B=233 A=255\nNear bottom-right (150,190): R=13 G=115 B=12 A=255\nPaint color: R=0 G=0 B=0 A=255\nRESULT: Triangle appears COLORED (expected behavior)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run reproduction with SkiaSharp 3.119.2 \u2014 latest stable release",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nPNG data null: False\nPNG data size: 1157 bytes\nImage saved to: output-v3.116.1.png\nFile size: 1157 bytes\nCenter pixel (93,140): R=0 G=0 B=0 A=255\nNear top vertex (110,30): R=0 G=0 B=0 A=255\nNear bottom-left (20,190): R=0 G=0 B=0 A=255\nNear bottom-right (150,190): R=0 G=0 B=0 A=255\nPaint color: R=0 G=0 B=0 A=255\nRESULT: Triangle appears BLACK (bug confirmed)",
       "result": "wrong-output"
     },
     {
       "stepNumber": 5,
-      "description": "Test community workaround: set paint.Shader = SKShader.CreateColor(SKColors.White) before DrawVertices \u2014 gradient renders correctly on all v3 versions",
+      "description": "Build SkiaSharp test project from main branch source and run DrawVertices test",
       "layer": "csharp",
-      "command": "dotnet run",
-      "output": "Pixel(110,50): R=212 G=15 B=14 A=255\nPixel(60,180): R=28 G=34 B=160 A=255\nPixel(140,180): R=28 G=102 B=24 A=255\nRESULT with shader: Triangle has COLOR",
-      "result": "success"
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \u0026\u0026 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter DrawVerticesWithColorsProducesColoredTriangle",
+      "exitCode": 1,
+      "output": "Failed SkiaSharp.Tests.SKCanvasTest.DrawVerticesWithColorsProducesColoredTriangle [259 ms]\nError Message:\n Center pixel is black (#ff000000) - vertex colors not applied. Top pixel: #ff000000\nExpected: False\nActual:   True\n\nFailed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
+      "result": "wrong-output"
     }
   ],
   "environment": {
@@ -67,25 +73,35 @@
     "skiaSharpVersion": "3.116.1",
     "dockerUsed": false
   },
-  "reproductionTime": "~5 minutes",
+  "inputs": {
+    "triageFile": "ai-triage/3188.json"
+  },
+  "assessment": "likely-bug",
+  "reproductionTime": "~8 minutes",
   "versionResults": [
     {
       "version": "2.88.9",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Gradient triangle renders correctly with vertex colors. Pixel(110,50)=R212,G15,B14 (red), Pixel(60,180)=R28,G34,B160 (blue)."
+      "notes": "Vertex colors display correctly as a gradient triangle with Red, Green, Blue vertices."
     },
     {
       "version": "3.116.1",
       "source": "nuget",
       "result": "wrong-output",
-      "notes": "Triangle is solid black. All sampled pixels are R=0,G=0,B=0,A=255."
+      "notes": "Triangle is solid black \u2014 all sampled pixels are #ff000000. Reporter\u0027s version."
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "wrong-output",
-      "notes": "Same black triangle. Still not fixed in latest stable release."
+      "notes": "Still black on latest stable release."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "wrong-output",
+      "notes": "Test DrawVerticesWithColorsProducesColoredTriangle fails \u2014 center pixel is #ff000000. Bug persists on main."
     }
   ],
   "reproProject": {
@@ -98,23 +114,16 @@
       }
     ]
   },
-  "artifacts": [
-    {
-      "filename": "expected-gradient-triangle.png",
-      "description": "Reporter\u0027s screenshot showing expected gradient triangle output from v2.88.9",
-      "source": "issue-attachment",
-      "available": true,
-      "url": "https://github.com/user-attachments/assets/afa656d4-1966-496c-be0f-50d3d325f554"
-    },
-    {
-      "filename": "actual-black-triangle.png",
-      "description": "Reporter\u0027s screenshot showing black triangle output from v3.116.1",
-      "source": "issue-attachment",
-      "available": true,
-      "url": "https://github.com/user-attachments/assets/5a9f1421-92d4-49f6-8f65-e7fb990cb82f"
-    }
-  ],
   "errorMessages": {
-    "primaryError": "DrawVertices with vertex colors renders solid black triangle instead of gradient. All pixels inside triangle are R=0,G=0,B=0,A=255. Upstream Skia changed DrawVertices to require a shader on the paint for vertex colors to be applied."
+    "primaryError": "DrawVertices renders solid black triangle instead of colored gradient \u2014 all pixel samples return #ff000000 when vertex colors (Red, Green, Blue) should produce interpolated color values"
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "affected-platforms",
+        "upstream": "Classified as os/Windows-Classic only",
+        "corrected": "Bug also reproduces on macOS arm64 \u2014 this is a cross-platform rendering regression, not Windows-specific"
+      }
+    ]
   }
 }
