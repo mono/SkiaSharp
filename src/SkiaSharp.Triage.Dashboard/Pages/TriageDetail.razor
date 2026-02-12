@@ -78,25 +78,8 @@ else
     <PipelineStepper HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" HasFix="@(_fix is not null)" />
 
     <!-- Tabs -->
-    <div class="detail-tabs">
-        @if (_issue is not null)
-        {
-            <span class="detail-tab @(_activeTab == "triage" ? "active" : "")" @onclick='() => _activeTab = "triage"'>Triage</span>
-        }
-        @if (_repro is not null)
-        {
-            <span class="detail-tab @(_activeTab == "repro" ? "active" : "")" @onclick='() => _activeTab = "repro"'>Reproduction<span class="tab-badge">🧪</span></span>
-        }
-        @if (_fix is not null)
-        {
-            <span class="detail-tab @(_activeTab == "fix" ? "active" : "")" @onclick='() => _activeTab = "fix"'>Fix<span class="tab-badge">🔧</span></span>
-        }
-        @if (_issue is not null)
-        {
-            <span class="detail-tab @(_activeTab == "actions" ? "active" : "")" @onclick='() => _activeTab = "actions"'>Actions<span class="tab-badge">⚡</span></span>
-            <span class="detail-tab @(_activeTab == "analysis" ? "active" : "")" @onclick='() => _activeTab = "analysis"'>Analysis<span class="tab-badge">🔬</span></span>
-        }
-    </div>
+    <DetailTabs HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" HasFix="@(_fix is not null)" 
+                ActiveTab="@_activeTab" OnTabChanged="@(tab => _activeTab = tab)" />
 
     @* ═══ Tab 1: Triage ═══ *@
     @if (_issue is not null)
