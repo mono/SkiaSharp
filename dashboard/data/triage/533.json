@@ -1,286 +1,212 @@
 {
   "meta": {
-    "schemaVersion": "2.1",
+    "schemaVersion": "1.0",
     "number": 533,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-24T12:00:00Z",
+    "analyzedAt": "2026-02-12T15:25:36Z",
     "currentLabels": [
       "type/bug",
+      "type/enhancement",
       "status/help-wanted",
       "os/Android",
       "area/SkiaSharp.Views",
       "backend/OpenGL"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "SKGLView on Android runs at uncapped framerates (300-1000fps) after switch from GLSurfaceView to TextureView \u2014 no VSync or frame pacing in custom GL thread",
+  "summary": "Android SKGLView renders at uncapped framerate (300\u002B FPS) after switch from GLSurfaceView to GLTextureView in v1.60.1. The custom GLTextureView does not call eglSwapInterval, so VSync is not enforced, causing excessive CPU/GPU/battery drain when HasRenderLoop is enabled.",
   "classification": {
     "type": {
-      "value": "type/bug",
-      "confidence": 0.82
+      "value": "type/enhancement",
+      "confidence": 0.85
     },
     "area": {
       "value": "area/SkiaSharp.Views",
-      "confidence": 0.95
+      "confidence": 0.98
     },
-    "backends": [
-      {
-        "value": "backend/OpenGL",
-        "confidence": 0.95
-      }
-    ],
     "platforms": [
-      {
-        "value": "os/Android",
-        "confidence": 0.95
-      }
+      "os/Android"
+    ],
+    "backends": [
+      "backend/OpenGL"
     ],
     "tenets": [
-      {
-        "value": "tenet/performance",
-        "confidence": 0.9
-      }
+      "tenet/performance"
     ]
   },
   "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an Android app with SKGLView (or SKGLTextureView)",
+        "Set HasRenderLoop = true (or RenderMode = Rendermode.Continuously)",
+        "Measure FPS using Stopwatch in PaintSurface handler",
+        "Observe FPS of 300-1200\u002B instead of display-capped 60 FPS"
+      ],
+      "environmentDetails": "Originally reported on Samsung Galaxy S7 Edge, Android 7 API 24, SkiaSharp 1.60.1. Confirmed on emulators (1200 FPS) and Motorola Moto g6 (140 FPS), Galaxy Note 3 (230 FPS).",
+      "relatedIssues": [
+        729
+      ]
+    },
     "bugSignals": {
-      "hasCrash": false,
-      "hasStackTrace": false,
-      "reproQuality": "steps-only",
       "severity": "medium",
-      "severityReason": "Uncapped FPS wastes battery and CPU/GPU resources but does not crash. Frame-based animations break, but a time-based approach is the correct pattern anyway. Workaround exists.",
-      "hasWorkaround": true,
-      "workaroundSummary": "Use a time-based game loop instead of frame-based. Alternatively, use a Stopwatch-based frame limiter in the PaintSurface callback to throttle rendering to the desired FPS.",
+      "isRegression": true,
+      "errorType": "performance",
+      "reproQuality": "complete",
       "targetFrameworks": [
+        "net7.0-android",
         "net8.0-android"
       ]
     },
-    "reproEvidence": {
-      "relatedIssues": [
-        2112,
-        2555
-      ],
-      "stepsToReproduce": [
-        "Create a Xamarin.Forms or MAUI project with an SKGLView",
-        "Set HasRenderLoop to true",
-        "In PaintSurface, measure elapsed time between calls",
-        "Observe FPS exceeds 60 (often 300-1000fps depending on device)"
-      ],
-      "codeSnippets": [
-        {
-          "code": "Stopwatch sw = Stopwatch.StartNew();\nTimeSpan last;\n\nprivate void OnPaint(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    var c = sw.Elapsed;\n    var ts = c - last;\n    last = c;\n    var fps = 1.0 / (ts.TotalSeconds);\n    Log.Debug(\u0022FPS\u0022, fps.ToString(\u00220,000.00\u0022));\n}",
-          "language": "csharp",
-          "context": "FPS measurement code from maintainer comment"
-        }
-      ],
-      "environmentDetails": "Android 7\u002B API 24, Samsung Galaxy S7 Edge. Also confirmed on Motorola Moto g6 (API 28), Galaxy Note 3 (API 21), and emulators."
-    },
     "versionAnalysis": {
-      "reason": "The root cause (GLTextureView lacks eglSwapInterval/VSync) is still present in the current codebase. The GLTextureView.cs custom GL thread has no frame pacing mechanism.",
       "mentionedVersions": [
         "1.59.3",
         "1.60.1"
       ],
-      "currentRelevance": "likely"
+      "workedIn": "1.59.3",
+      "brokeIn": "1.60.1",
+      "currentRelevance": "likely",
+      "relevanceReason": "The GLTextureView code is still in the current codebase and still does not call eglSwapInterval. The same Rendermode.Continuously loop runs without any frame pacing. SKGLTextureView is the default GL view for Android in both Xamarin.Forms and MAUI."
     },
     "regression": {
       "isRegression": true,
-      "confidence": 0.9,
-      "reason": "Behavior changed when SkiaSharp switched from Android\u0027s GLSurfaceView (which has built-in VSync via eglSwapInterval) to a custom GLTextureView (which does not set eglSwapInterval). Maintainer confirmed this in comment 2.",
+      "confidence": 0.95,
+      "reason": "GLSurfaceView (used in v1.59.3) internally calls eglSwapInterval(1) which enforces VSync. The replacement GLTextureView (v1.60.1\u002B) does not, so the render loop runs uncapped.",
       "workedInVersion": "1.59.3",
       "brokeInVersion": "1.60.1"
     }
   },
   "analysis": {
-    "summary": "The Android SKGLView renders at uncapped framerates because the custom GLTextureView implementation does not call eglSwapInterval to enable VSync. The old GLSurfaceView had VSync built-in. The maintainer acknowledged this is a real issue and investigated Choreographer as a potential fix, but no implementation was made.",
-    "keySignals": [
-      {
-        "text": "Application framerate went from a capped 60fps to a ~300fps",
-        "source": "body",
-        "interpretation": "Clear regression in frame pacing after version upgrade"
-      },
-      {
-        "text": "we are no longer using the old GLSurfaceView to render the content, but the new TextureView",
-        "source": "comment 2",
-        "interpretation": "Maintainer identifies root cause as the GLSurfaceView\u2192TextureView migration"
-      },
-      {
-        "text": "Having uncapped is nice, but a heavy drain. Also, it is no point having the updates faster than the screen - that wastes resources.",
-        "source": "comment 8",
-        "interpretation": "Maintainer confirms uncapped FPS is a problem worth fixing"
-      },
-      {
-        "text": "We might be able to look at Choreographer",
-        "source": "comment 9",
-        "interpretation": "Maintainer proposed Choreographer as potential solution but never implemented it"
-      },
-      {
-        "text": "I really need to look at this. Noticing 1.2K FPS in some emulators.",
-        "source": "comment 6",
-        "interpretation": "Maintainer re-confirmed the problem persists 2 years later"
-      }
-    ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "This is a behavioral regression: FPS was capped at 60 in 1.59.3 (GLSurfaceView with VSync) and became uncapped in 1.60.1 (GLTextureView without VSync). The maintainer acknowledged it as a real problem worth fixing. Frame-based animations break and battery is wasted.",
-        "alternatives": [
-          {
-            "value": "type/enhancement",
-            "whyRejected": "While adding Choreographer support would be an enhancement, the core issue is a regression \u2014 VSync was removed when switching to TextureView. Existing behavior broke."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp.Views",
-        "expandedReason": "The issue is in the Android platform view layer (GLTextureView, SKGLTextureView, SKGLViewHandler.Android), all part of SkiaSharp.Views."
-      },
-      {
-        "field": "backends",
-        "chosen": "backend/OpenGL",
-        "expandedReason": "The issue is specific to the OpenGL rendering path (GLTextureView, EGL). CPU-based SKCanvasView is not affected."
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/Android",
-        "expandedReason": "The GLTextureView custom implementation is Android-specific. iOS and other platforms have their own rendering pipelines."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/performance",
-        "expandedReason": "Uncapped FPS wastes CPU/GPU cycles and drains battery. Rendering faster than the display refresh rate provides no visual benefit."
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "medium",
-        "expandedReason": "No crash or data loss. Animations based on frame count break, and battery drains faster than necessary. However, a time-based animation loop is the recommended pattern anyway, and multiple users note the higher FPS is actually beneficial for responsive rendering."
-      },
-      {
-        "field": "regression.isRegression",
-        "chosen": "true",
-        "expandedReason": "Maintainer confirmed in comment 2 that the switch from GLSurfaceView to TextureView caused the behavior change. Version 1.59.3 was capped, 1.60.1 is not."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "The GLTextureView.cs code still does not call eglSwapInterval. The same uncapped render loop exists in the current codebase."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "needs-investigation",
-        "expandedReason": "The root cause is clear (missing eglSwapInterval/Choreographer), but the implementation approach needs investigation \u2014 adding eglSwapInterval(1) could cause issues with TextureView, and Choreographer integration is non-trivial. The maintainer explored options but never committed to an approach."
-      }
-    ],
-    "uncertainties": [
-      "Whether adding eglSwapInterval(1) to GLTextureView\u0027s EglHelper would work correctly with TextureView-based EGL surfaces",
-      "Whether Choreographer-based frame pacing would introduce input latency or other side effects",
-      "Whether some users depend on the uncapped behavior for non-display rendering (offscreen rendering, benchmarks)"
-    ],
-    "assumptions": [
-      "Assumed the issue still reproduces on current SkiaSharp since the GLTextureView code has not added any frame pacing",
-      "Assumed the reporter\u0027s target framework equivalent today would be net8.0-android since original was Xamarin.Android"
-    ],
-    "resolution": {
-      "hypothesis": "The custom GLTextureView does not set eglSwapInterval(1) like Android\u0027s built-in GLSurfaceView does. This means eglSwapBuffers returns immediately instead of waiting for the next VSync, causing the render thread to loop as fast as possible.",
-      "proposals": [
-        {
-          "title": "Add eglSwapInterval(1) to EglHelper",
-          "description": "Add egl.EglSwapInterval(eglDisplay, 1) after creating the EGL surface in GLTextureView.EglHelper. This enables VSync, capping FPS to the display refresh rate. This is what Android\u0027s GLSurfaceView does internally.",
-          "confidence": 0.7,
-          "effort": "low",
-          "category": "fix",
-          "validated": "untested"
-        },
-        {
-          "title": "Integrate Android Choreographer for frame pacing",
-          "description": "Use Android\u0027s Choreographer API to schedule frame callbacks at the display refresh rate. This is the approach the maintainer proposed in comment 9. More robust than raw eglSwapInterval but requires significant refactoring of the GL thread loop.",
-          "confidence": 0.65,
-          "effort": "high",
-          "category": "fix",
-          "validated": "untested"
-        },
-        {
-          "title": "Use time-based animation instead of frame-based",
-          "description": "Users can work around the issue by measuring elapsed time between frames and using delta-time for animations instead of assuming a fixed frame rate. This is the correct game loop pattern regardless of frame rate.",
-          "confidence": 0.9,
-          "effort": "low",
-          "category": "workaround",
-          "codeSnippet": "private readonly Stopwatch _sw = Stopwatch.StartNew();\nprivate TimeSpan _last;\n\nprivate void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    var now = _sw.Elapsed;\n    var deltaTime = (now - _last).TotalSeconds;\n    _last = now;\n\n    // Use deltaTime for all animations instead of assuming fixed FPS\n    var speed = 100.0; // pixels per second\n    position \u002B= speed * deltaTime;\n}",
-          "validated": "untested"
-        }
-      ],
-      "recommendedProposal": "Use time-based animation instead of frame-based",
-      "recommendedReason": "Immediate workaround for the reporter. Time-based animation is the correct pattern for any frame rate. The underlying fix (eglSwapInterval or Choreographer) should be implemented in SkiaSharp but requires investigation."
-    },
+    "summary": "When SkiaSharp switched from Android\u0027s GLSurfaceView to a custom GLTextureView in v1.60.1, VSync-based frame pacing was lost. GLSurfaceView internally uses eglSwapInterval(1), capping rendering to the display\u0027s refresh rate. The custom GLTextureView never calls eglSwapInterval, so Rendermode.Continuously loops as fast as the GPU can render \u2014 300-1200\u002B FPS, wasting battery and CPU/GPU resources.",
     "codeInvestigation": [
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs",
-        "lines": "634-641",
-        "relevance": "The Swap() method calls EglSwapBuffers but does NOT call eglSwapInterval \u2014 this is the missing VSync. Android\u0027s GLSurfaceView sets eglSwapInterval(1) by default which caps FPS to display refresh rate."
+        "finding": "EglHelper.Swap() calls egl.EglSwapBuffers but never calls eglSwapInterval. Without eglSwapInterval(1), EGL swap does not block on VSync, so the render loop runs uncapped.",
+        "relevance": "direct",
+        "lines": "634-641"
       },
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs",
-        "lines": "1081-1083",
-        "relevance": "IsReadyToDraw() returns true continuously when renderMode == Rendermode.Continuously, causing the GL thread to loop as fast as possible with no throttle."
-      },
-      {
-        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Android.cs",
-        "lines": "61-68",
-        "relevance": "MapHasRenderLoop sets RenderMode to Rendermode.Continuously when HasRenderLoop is true, triggering the uncapped render loop in GLTextureView."
+        "finding": "IsReadyToDraw() returns true continuously when renderMode == Rendermode.Continuously, with no frame-pacing delay. The while loop in GuardedRun spins as fast as swap\u002Brender allows.",
+        "relevance": "direct",
+        "lines": "1081-1083"
       },
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureView.cs",
-        "lines": "36-43",
-        "relevance": "SKGLTextureView extends GLTextureView \u2014 inherits the uncapped render loop. No frame pacing override."
+        "finding": "SKGLTextureView.Initialize() does not set any frame pacing \u2014 just sets EGL version, config, and renderer. No Choreographer or eglSwapInterval setup.",
+        "relevance": "direct",
+        "lines": "36-43"
       },
       {
         "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLSurfaceView.cs",
-        "lines": "9-10",
-        "relevance": "SKGLSurfaceView extends Android\u0027s GLSurfaceView which has native VSync. This is the old implementation that capped FPS correctly."
+        "finding": "SKGLSurfaceView extends Android.Opengl.GLSurfaceView which internally manages eglSwapInterval. This was the previous implementation that DID have VSync.",
+        "relevance": "related",
+        "lines": "9"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Android.cs",
+        "finding": "MAUI handler maps HasRenderLoop to Rendermode.Continuously/WhenDirty on the same SKGLTextureView \u2014 confirming MAUI apps are also affected by the uncapped framerate.",
+        "relevance": "related",
+        "lines": "61-68"
       }
-    ]
+    ],
+    "rationale": "Classified as enhancement rather than bug because the maintainer explicitly stated \u0027SkiaSharp will always render as fast as possible\u0027 and that frame-rate limiting was never an intentional feature. However, this is a regression in practical behavior (VSync was inherited from GLSurfaceView) and causes real resource waste. The area is SkiaSharp.Views (Android GL view layer), with performance tenet due to battery drain. Medium severity \u2014 not a crash but a significant resource problem for render-loop apps.",
+    "keySignals": [
+      {
+        "text": "Application framerate went from a capped 60fps to a ~300fps",
+        "source": "issue body",
+        "interpretation": "Clear regression in frame pacing behavior after the GLSurfaceView to TextureView switch."
+      },
+      {
+        "text": "I _see_ the change, and I think it has to do with the fact that we are no longer using the old GLSurfaceView but the new TextureView",
+        "source": "comment #2 (mattleibow)",
+        "interpretation": "Maintainer confirmed root cause is the view type change."
+      },
+      {
+        "text": "Having uncapped is nice, but a heavy drain. Also, it is no point having the updates faster than the screen - that wastes resources.",
+        "source": "comment #8 (mattleibow)",
+        "interpretation": "Maintainer agrees this should be fixed \u2014 rendering faster than display refresh is wasteful."
+      },
+      {
+        "text": "We might be able to look at Choreographer",
+        "source": "comment #9 (mattleibow)",
+        "interpretation": "Maintainer identified Android Choreographer as the proper fix approach for display-synced rendering."
+      },
+      {
+        "text": "Noticing 1.2K FPS in some emulators",
+        "source": "comment #6 (mattleibow)",
+        "interpretation": "Problem persists and is extreme in some environments."
+      }
+    ],
+    "workarounds": [
+      "Use time-based animation (delta-time) instead of frame-based animation to decouple logic from frame rate",
+      "Implement a manual frame limiter using Stopwatch to skip rendering when elapsed time is less than target interval (e.g., 1000/60 ms)",
+      "Use RenderMode = Rendermode.WhenDirty and call RequestRender() from a timer at the desired interval"
+    ],
+    "nextQuestions": [
+      "Would adding eglSwapInterval(1) to the EglHelper.CreateSurface path be sufficient, or would it break apps that want uncapped rendering?",
+      "Should frame pacing be opt-in (new property like TargetFrameRate) or opt-out (VSync by default with an option to disable)?",
+      "Is Android Choreographer the right approach, or is eglSwapInterval(1) simpler and sufficient for most use cases?"
+    ],
+    "resolution": {
+      "hypothesis": "The GLTextureView never calls eglSwapInterval(1), so EGL swap buffers returns immediately instead of blocking until VSync. Adding eglSwapInterval or integrating Android Choreographer would cap rendering to the display refresh rate.",
+      "proposals": [
+        {
+          "description": "Call eglSwapInterval(display, 1) in the EglHelper after creating the EGL surface. This is the simplest fix and mirrors what GLSurfaceView does internally. It caps rendering to the display\u0027s refresh rate via VSync.",
+          "title": "Add eglSwapInterval(1) to EglHelper",
+          "confidence": 0.75,
+          "effort": "small"
+        },
+        {
+          "description": "Use Android\u0027s Choreographer.postFrameCallback to schedule rendering at the display\u0027s refresh rate. This is the approach recommended by the maintainer and provides better frame pacing than eglSwapInterval alone. The Frame Pacing Library (games SDK) is an even more sophisticated option but harder to integrate.",
+          "title": "Integrate Android Choreographer for frame pacing",
+          "confidence": 0.7,
+          "effort": "medium"
+        },
+        {
+          "description": "As a workaround, set RenderMode to WhenDirty and use a timer to call RequestRender() at the desired frame rate. Note: System.Timers.Timer may not be ideal on Android \u2014 consider using Android.OS.Handler or View.PostDelayed() instead. Be sure to dispose the timer when the view is destroyed, and call OnPause/OnResume for proper lifecycle management.",
+          "title": "Use WhenDirty mode with timer-based invalidation",
+          "codeSnippet": "// Set the view to only render on demand\nskglView.RenderMode = Rendermode.WhenDirty;\n\n// Timer-based invalidation at ~60 FPS\n// Note: store timer as a field and dispose on cleanup\nvar timer = new System.Timers.Timer(16.67);\ntimer.Elapsed \u002B= (s, e) =\u003E skglView.RequestRender();\ntimer.Start();\n\n// In cleanup/Dispose:\n// timer.Stop();\n// timer.Dispose();",
+          "confidence": 0.7,
+          "effort": "trivial"
+        },
+        {
+          "description": "Decouple animation from frame rate by using elapsed time between frames. This doesn\u0027t reduce GPU usage but makes animations correct regardless of FPS. Initialize lastFrame before first use to avoid a large delta on the first frame.",
+          "title": "Use delta-time for animation logic",
+          "codeSnippet": "Stopwatch sw = Stopwatch.StartNew();\nTimeSpan lastFrame = sw.Elapsed; // Initialize to avoid large first-frame delta\n\nvoid OnPaint(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    var now = sw.Elapsed;\n    var deltaTime = (now - lastFrame).TotalSeconds;\n    lastFrame = now;\n    \n    // Use deltaTime for all animation:\n    position \u002B= velocity * (float)deltaTime;\n}",
+          "confidence": 0.85,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Use WhenDirty mode with timer-based invalidation",
+      "recommendedReason": "Gives immediate relief with no engine changes needed. Users can control exact frame rate. The proper fix (eglSwapInterval or Choreographer) requires engine-level changes and design decisions about opt-in vs opt-out."
+    }
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.8,
-      "reason": "Root cause is clear (missing VSync in GLTextureView) but the fix approach needs investigation. Adding eglSwapInterval may not work with TextureView surfaces. Choreographer integration is complex. Issue has been open since 2018 with maintainer acknowledgment.",
-      "requiresHumanReview": true
+      "reason": "Root cause is well-understood (missing eglSwapInterval/Choreographer in GLTextureView), but the fix requires a design decision: should VSync be default, opt-in, or configurable? The maintainer has been tracking this since 2018 and identified Choreographer as the approach."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Normalize labels to single type (enhancement, not bug \u2014 maintainer confirmed uncapped was by design)",
         "risk": "low",
-        "description": "Labels are already correct \u2014 no changes needed",
-        "reason": "Current labels (type/bug, area/SkiaSharp.Views, os/Android, backend/OpenGL) match classification exactly. Adding tenet/performance.",
-        "confidence": 0.95,
-        "payload": {
-          "labelsToAdd": [
-            "tenet/performance"
-          ],
-          "labelsToRemove": []
-        }
+        "confidence": 0.85,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "os/Android",
+          "backend/OpenGL",
+          "tenet/performance"
+        ]
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Post analysis with workaround for frame pacing",
         "risk": "high",
-        "description": "Post workaround with time-based animation pattern",
-        "reason": "Issue has been open 6\u002B years with no fix. Providing a concrete workaround helps affected users.",
-        "confidence": 0.8,
-        "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "workaround",
-          "draftBody": "Thanks for the report \u2014 this is a known issue caused by the switch from \u0060GLSurfaceView\u0060 (which has built-in VSync) to a custom \u0060GLTextureView\u0060 that doesn\u0027t call \u0060eglSwapInterval\u0060.\n\nHere\u0027s a workaround you can use now: switch to time-based animation instead of frame-based. This is the correct pattern regardless of frame rate:\n\n\u0060\u0060\u0060csharp\nprivate readonly Stopwatch _sw = Stopwatch.StartNew();\nprivate TimeSpan _last;\n\nprivate void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    var now = _sw.Elapsed;\n    var deltaTime = (now - _last).TotalSeconds;\n    _last = now;\n\n    // Use deltaTime for all animations\n    var speed = 100.0; // pixels per second\n    position \u002B= speed * deltaTime;\n}\n\u0060\u0060\u0060\n\nThe underlying issue (adding \u0060eglSwapInterval\u0060 or Choreographer-based frame pacing to the TextureView render loop) is still open for investigation.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-533-comment-1"
-        }
+        "confidence": 0.75,
+        "comment": "This issue is still relevant in the current codebase. The root cause is confirmed: \u0060GLTextureView\u0060 (which replaced \u0060GLSurfaceView\u0060 in v1.60.1) does not call \u0060eglSwapInterval\u0060, so the render loop runs uncapped when using \u0060Rendermode.Continuously\u0060.\n\nHere\u0027s a workaround you can use: switch to \u0060Rendermode.WhenDirty\u0060 and drive rendering from a timer at your target frame rate:\n\n\u0060\u0060\u0060csharp\n// Set the view to only render on demand\nskglView.RenderMode = Rendermode.WhenDirty;\n\n// Timer-based invalidation at ~60 FPS\n// Store timer as a field and dispose on cleanup\nvar timer = new System.Timers.Timer(16.67);\ntimer.Elapsed \u002B= (s, e) =\u003E skglView.RequestRender();\ntimer.Start();\n\n// In cleanup/Dispose:\n// timer.Stop();\n// timer.Dispose();\n\u0060\u0060\u0060\n\n**Note:** On Android, \u0060Android.OS.Handler\u0060 or \u0060View.PostDelayed()\u0060 may be more reliable than \u0060System.Timers.Timer\u0060 for frame timing. Be sure to call \u0060OnPause()\u0060/\u0060OnResume()\u0060 for proper lifecycle management.\n\nFor animation correctness regardless of frame rate, use delta-time (initialize \u0060lastFrame\u0060 to avoid a large first-frame delta):\n\n\u0060\u0060\u0060csharp\nvar sw = Stopwatch.StartNew();\nvar lastFrame = sw.Elapsed;\n\nvoid OnPaint(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    var now = sw.Elapsed;\n    var deltaTime = (now - lastFrame).TotalSeconds;\n    lastFrame = now;\n    position \u002B= velocity * (float)deltaTime;\n}\n\u0060\u0060\u0060\n\nA proper engine-level fix would involve either adding \u0060eglSwapInterval(1)\u0060 to the EGL setup, or integrating Android\u0027s Choreographer API for display-synced rendering. Both approaches have tradeoffs around whether VSync should be default or opt-in."
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/533"
+  }
 }
