@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1898,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T15:53:16Z",
+    "currentLabels": []
+  },
+  "summary": "Reporter observes that SkiaSharp.Views.Forms 2.88.0-preview.179 has an empty netcoreapp3.1 directory in NuGet Package Explorer. The directory actually contains _._placeholder files, which is a standard NuGet convention for declaring TFM support without dedicated assemblies — the netstandard2.0 assembly is used at runtime. Both netcoreapp3.1 (EOL Dec 2022) and Xamarin.Forms (superseded by MAUI) are obsolete, and SkiaSharp 3.x removed Views.Forms entirely.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp.Views.Forms", "confidence": 0.95 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Install SkiaSharp.Views.Forms 2.88.0-preview.179",
+        "Open the package in NuGet Package Explorer",
+        "Observe the netcoreapp3.1 directory appears empty"
+      ],
+      "relatedIssues": [1561, 1774]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.0-preview.127", "2.88.0-preview.179"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The issue concerns netcoreapp3.1 support in SkiaSharp.Views.Forms, both of which are obsolete. netcoreapp3.1 reached EOL December 2022. Xamarin.Forms has been superseded by .NET MAUI. SkiaSharp 3.x removed Views.Forms entirely (PR #2505)."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.90,
+      "reason": "The _._files in the netcoreapp3.1 directory are intentional NuGet packaging — they declare TFM support while falling back to netstandard2.0 assemblies. The stable 2.88.0 release shipped with the same packaging and netcoreapp3.1 WPF apps worked. The perceived 'missing DLLs' were never actually missing; the netstandard2.0 assembly provides the runtime support. Additionally, the entire Views.Forms package was removed in SkiaSharp 3.x.",
+      "relatedPRs": [1774]
+    }
+  },
+  "analysis": {
+    "summary": "The reporter misidentified NuGet _._placeholder files as missing DLL content. The netcoreapp3.1 support in SkiaSharp.Views.Forms was added via PR #1774 using the standard NuGet convention: _._placeholders in lib/netcoreapp3.1/ declare TFM compatibility while the netstandard2.0 assembly provides the actual runtime implementation. The .targets file in build/netcoreapp3.1/ handles WPF build integration. This is working-as-designed NuGet packaging, not a bug.",
+    "rationale": "Classified as type/question because the reporter describes expected behavior (empty directory in NuGet Package Explorer) as a bug, but the _._files ARE the intended support mechanism. The nuspec at v2.88.0-preview.179 correctly declares netcoreapp3.1 with _._placeholders, dependency groups, and .targets files — matching the pattern added in PR #1774. This is area/SkiaSharp.Views.Forms as it concerns the Views.Forms NuGet package specifically. Platform is Windows-Classic because netcoreapp3.1 + Xamarin.Forms.WPF is the WPF desktop scenario.",
+    "keySignals": [
+      {
+        "text": "netcoreapp3.1 directory is empty in Nuget Package Explorer",
+        "source": "issue body",
+        "interpretation": "Reporter is viewing _._placeholder files, which NuGet Package Explorer may display as empty. This is standard NuGet packaging for declaring TFM support without dedicated assemblies."
+      },
+      {
+        "text": "Support for netcore 3.1 was added in 2.88.0-preview.127",
+        "source": "issue body",
+        "interpretation": "Correctly identifies PR #1774. The support WAS added — via _._placeholders + netstandard2.0 fallback, not dedicated assemblies."
+      },
+      {
+        "text": "nuspec includes _._in lib/netcoreapp3.1/ and ref/netcoreapp3.1/, plus .targets file",
+        "source": "code search (v2.88.0-preview.179:nuget/SkiaSharp.Views.Forms.nuspec)",
+        "interpretation": "Confirms the packaging is intentional and correct. The _._marker + .targets file is the standard pattern for framework compatibility."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "nuget/SkiaSharp.Views.Forms.nuspec",
+        "finding": "At v2.88.0-preview.179, the nuspec includes: dependency group for netcoreapp3.1 (with Xamarin.Forms and Xamarin.Forms.Platform.WPF), _._placeholder files in lib/netcoreapp3.1/ and ref/netcoreapp3.1/, and the SkiaSharp.Views.Forms.targets file copied to build/netcoreapp3.1/. This is the correct NuGet packaging pattern for declaring TFM support via netstandard fallback.",
+        "relevance": "direct"
+      },
+      {
+        "file": "nuget/SkiaSharp.Views.Forms.nuspec",
+        "finding": "The nuspec was completely removed in commit bc5020b9e (PR #2505 — 'Modernize the repository and prepare SkiaSharp 3.0'). SkiaSharp 3.x does not include Views.Forms at all, making this issue moot for current versions.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "The netcoreapp3.1 support is working as designed — the _._files are NuGet placeholders that cause the netstandard2.0 assembly to be used at runtime. No workaround needed.",
+      "For modern development, migrate to SkiaSharp.Views.Maui (for .NET MAUI) or SkiaSharp.Views.WPF (for WPF on .NET 6+)."
+    ],
+    "resolution": {
+      "hypothesis": "The reporter misunderstood NuGet _._placeholder files as missing content. The netcoreapp3.1 directory intentionally contains only _._files because the actual assembly comes from netstandard2.0 fallback resolution.",
+      "proposals": [
+        {
+          "title": "Close as by-design",
+          "description": "The _._files are the standard NuGet mechanism for declaring TFM support without dedicated assemblies. The netstandard2.0 assembly provides the runtime implementation for netcoreapp3.1. Both TFMs (netcoreapp3.1 and Xamarin.Forms) are now obsolete.",
+          "confidence": 0.90,
+          "effort": "trivial"
+        },
+        {
+          "title": "Upgrade to modern stack",
+          "description": "Migrate from Xamarin.Forms + netcoreapp3.1 to .NET MAUI + net8.0 (or later) with SkiaSharp.Views.Maui. This is the supported path forward.",
+          "confidence": 0.95,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Close as by-design",
+      "recommendedReason": "The packaging is correct — _._files are intentional NuGet convention. The issue doesn't describe any actual runtime failure. Both netcoreapp3.1 and Xamarin.Forms are EOL."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.88,
+      "reason": "The _._files are working-as-designed NuGet packaging. No runtime issue was reported. Both netcoreapp3.1 and Xamarin.Forms are EOL, and SkiaSharp 3.x has removed Views.Forms entirely."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and Views.Forms labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/question", "area/SkiaSharp.Views.Forms", "os/Windows-Classic", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain NuGet _._convention and obsolescence of netcoreapp3.1 + Xamarin.Forms",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the report. The `netcoreapp3.1` directory in the NuGet package intentionally contains `_._` placeholder files — this is a standard NuGet convention that declares framework compatibility while using the `netstandard2.0` assembly at runtime. The `.targets` file in `build/netcoreapp3.1/` handles the WPF build integration. So the package does support netcoreapp3.1; it just doesn't need a dedicated assembly for it.\n\nThat said, both `netcoreapp3.1` and `Xamarin.Forms` have reached end-of-life. For new projects, SkiaSharp 3.x with `SkiaSharp.Views.Maui` (for .NET MAUI) or `SkiaSharp.Views.WPF` (for WPF on .NET 8+) is the supported path forward."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — packaging is by-design and both technologies are EOL",
+        "risk": "medium",
+        "confidence": 0.85
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference original netcoreapp3.1 support issue",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 1561
+      }
+    ]
+  }
+}
