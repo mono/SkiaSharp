@@ -41,7 +41,8 @@ public record ReproStep(
 
 public record ReproFileCreated(
     string Filename,
-    string Description
+    string Description,
+    string? Content = null
 );
 
 // ── Version Results ──────────────────────────────────────────────
