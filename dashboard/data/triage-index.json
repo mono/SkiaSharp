@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-02-12T16:13:03.46162Z",
-  "totalCount": 21,
+  "generatedAt": "2026-02-12T16:20:12.3907133Z",
+  "totalCount": 24,
   "summary": {
-    "needsInvestigation": 5,
-    "closeable": 6,
-    "quickWins": 6,
-    "regressions": 4,
+    "needsInvestigation": 6,
+    "closeable": 7,
+    "quickWins": 7,
+    "regressions": 5,
     "withRepro": 0,
     "reproduced": 0,
     "notReproduced": 0
@@ -13,23 +13,23 @@
   "byType": [
     {
       "label": "type/bug",
-      "count": 13
+      "count": 14
     },
     {
       "label": "type/question",
       "count": 3
     },
     {
-      "label": "type/enhancement",
-      "count": 2
-    },
-    {
       "label": "type/feature-request",
-      "count": 2
+      "count": 3
     },
     {
       "label": "type/documentation",
-      "count": 1
+      "count": 2
+    },
+    {
+      "label": "type/enhancement",
+      "count": 2
     }
   ],
   "byArea": [
@@ -39,14 +39,18 @@
     },
     {
       "label": "area/SkiaSharp.Views",
-      "count": 4
+      "count": 5
     },
     {
       "label": "area/libSkiaSharp.native",
-      "count": 3
+      "count": 4
     },
     {
       "label": "area/SkiaSharp.Views.Forms",
+      "count": 2
+    },
+    {
+      "label": "area/Docs",
       "count": 2
     },
     {
@@ -55,10 +59,6 @@
     },
     {
       "label": "area/SkiaSharp.Views.Maui",
-      "count": 1
-    },
-    {
-      "label": "area/Docs",
       "count": 1
     }
   ],
@@ -69,11 +69,11 @@
     },
     {
       "label": "needs-investigation",
-      "count": 5
+      "count": 6
     },
     {
       "label": "keep-open",
-      "count": 4
+      "count": 5
     },
     {
       "label": "close-as-fixed",
@@ -81,7 +81,7 @@
     },
     {
       "label": "close-as-duplicate",
-      "count": 2
+      "count": 3
     },
     {
       "label": "request-info",
@@ -94,11 +94,11 @@
       "count": 7
     },
     {
-      "label": "low",
-      "count": 3
+      "label": "high",
+      "count": 4
     },
     {
-      "label": "high",
+      "label": "low",
       "count": 3
     },
     {
@@ -107,6 +107,52 @@
     }
   ],
   "issues": [
+    {
+      "number": 3372,
+      "title": "Replace Microsoft.WindowsAppSDK metapackage with Microsoft.WindowsAppSDK.WinUI sub-package (v1.8) to avoid forcing full metapackage on downstream consumers",
+      "issueTitle": "[FEATURE] Upgrade SkiaSharp.Views.WinUI to 1.8",
+      "type": "type/feature-request",
+      "area": "area/SkiaSharp.Views",
+      "action": "needs-investigation",
+      "confidence": 0.75,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:15:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3365,
+      "title": "Duplicate of #3267 \u2014 libSkiaSharp.dll has hard link-time dependency on d3d12.dll, crashing on Windows systems without DX12",
+      "issueTitle": "[BUG] libSkiaSharp.dll Requires d3d12.dll causing crashes on systems without DX12",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "high",
+      "action": "close-as-duplicate",
+      "confidence": 0.9,
+      "isRegression": true,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:15:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3357,
+      "title": "Maintainer request to migrate API documentation from external XML files (docs/SkiaSharpAPI/*.xml, ~240 files) into inline C# XML doc comments in the binding source files. PR #3363 attempted this but was closed without merging because NuGet doc tooling cannot handle packages with different APIs across target frameworks. The issue remains open as a desired long-term goal, blocked on tooling.",
+      "issueTitle": "Migrate to inline code docs",
+      "type": "type/documentation",
+      "area": "area/Docs",
+      "action": "keep-open",
+      "confidence": 0.92,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:13:03Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
     {
       "number": 3346,
       "title": "Published Windows ARM64 app using SkiaSharp 3.116.0 crashes immediately on launch. Works fine in Debug and Release modes, only fails when published. Reporter found that installing the Microsoft Visual C\u002B\u002B Redistributable resolves the crash, suggesting a missing dynamic CRT dependency in the native binaries. Issue was closed after PR #3510 added build-time verification that ANGLE DLLs (libEGL.dll, libGLESv2.dll) and all Windows native binaries are statically linked against the CRT, preventing future regressions.",
