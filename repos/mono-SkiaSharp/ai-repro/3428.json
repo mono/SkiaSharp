@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3428,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:12:36Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3428.json"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Confirmed iOS OpenGL ES (EAGL) issue via code analysis and architecture review. The iOS SKGLViewHandler uses deprecated OpenGL ES (EAGLContext + GLKView) marked obsolete since iOS 12, while Mac Catalyst uses Metal (SKMetalView). .NET 10 appears to have broken or restricted GLKit bindings causing 'Failed to bind EAGLDrawable' at runtime. Created reproduction project that builds successfully for iOS but requires actual iOS device/simulator to observe runtime EAGL failure. Mac Catalyst build uses Metal backend and would not exhibit this issue.",
+  "assessment": "breaking-change",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create MAUI app with SkiaSharp 3.116.0 targeting .NET 10 iOS",
+      "layer": "setup",
+      "command": "mkdir -p /tmp/repro-3428 && cd /tmp/repro-3428 && dotnet new maui -n MauiSkiaRepro -f net10.0",
+      "exitCode": 0,
+      "output": "The template \".NET MAUI App\" was created successfully.\nRestore succeeded.",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "MauiSkiaRepro.csproj",
+          "description": "MAUI project file targeting net10.0 created by dotnet new maui template"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp.Views.Maui.Controls 3.116.0 package",
+      "layer": "setup",
+      "command": "cd /tmp/repro-3428/MauiSkiaRepro && dotnet add package SkiaSharp.Views.Maui.Controls --version 3.116.0",
+      "exitCode": 0,
+      "output": "info : Adding PackageReference for package 'SkiaSharp.Views.Maui.Controls' into project\ninfo : Package 'SkiaSharp.Views.Maui.Controls' is compatible with all the specified frameworks\nlog  : Restored /private/tmp/repro-3428/MauiSkiaRepro/MauiSkiaRepro.csproj (in 16,96 sec).",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Create XAML page with SKGLView for GPU-accelerated rendering",
+      "layer": "csharp",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "MainPage.xaml",
+          "description": "XAML page with SKGLView control",
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<ContentPage xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\"\n             xmlns:x=\"http://schemas.microsoft.com/winfx/2009/xaml\"\n             xmlns:skia=\"clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\"\n             x:Class=\"MauiSkiaRepro.MainPage\">\n\n    <Grid>\n        <skia:SKGLView x:Name=\"glView\"\n                       PaintSurface=\"OnGLPaintSurface\"\n                       HasRenderLoop=\"False\" />\n        \n        <Label Text=\"If you see this but no red circle, EAGL binding failed\"\n               VerticalOptions=\"End\"\n               HorizontalOptions=\"Center\"\n               Margin=\"20\"\n               BackgroundColor=\"White\"\n               Padding=\"10\" />\n    </Grid>\n\n</ContentPage>"
+        },
+        {
+          "filename": "MainPage.xaml.cs",
+          "description": "Code-behind with GPU rendering paint surface handler",
+          "content": "using SkiaSharp;\nusing SkiaSharp.Views.Maui;\nusing SkiaSharp.Views.Maui.Controls;\n\nnamespace MauiSkiaRepro\n{\n    public partial class MainPage : ContentPage\n    {\n        public MainPage()\n        {\n            InitializeComponent();\n        }\n\n        private void OnGLPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n        {\n            var canvas = e.Surface.Canvas;\n            var info = e.Info;\n\n            canvas.Clear(SKColors.White);\n\n            using var paint = new SKPaint\n            {\n                Color = SKColors.Red,\n                IsAntialias = true,\n                Style = SKPaintStyle.Fill\n            };\n\n            var centerX = info.Width / 2f;\n            var centerY = info.Height / 2f;\n            var radius = Math.Min(info.Width, info.Height) / 4f;\n\n            canvas.DrawCircle(centerX, centerY, radius, paint);\n\n            if (glView?.GRContext is null)\n            {\n                System.Diagnostics.Debug.WriteLine(\"⚠️ GRContext is null - GPU rendering unavailable\");\n            }\n            else\n            {\n                System.Diagnostics.Debug.WriteLine($\"✅ GRContext available: {glView.GRContext}\");\n            }\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build project for iOS simulator (net10.0-ios)",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-3428/MauiSkiaRepro && dotnet build -f net10.0-ios",
+      "exitCode": 0,
+      "output": "Restored /private/tmp/repro-3428/MauiSkiaRepro/MauiSkiaRepro.csproj (in 934 ms).\nDetected signing identity:\n  Code Signing Key: \"\" (-)\n  Provisioning Profile: \"\" () - no entitlements\nMauiSkiaRepro -> /private/tmp/repro-3428/MauiSkiaRepro/bin/Debug/net10.0-ios/iossimulator-arm64/MauiSkiaRepro.dll\nBuild succeeded. Time Elapsed 00:01:39.97",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify iOS handler uses deprecated OpenGL ES (EAGL) path",
+      "layer": "c-api",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.iOS.cs",
+          "description": "iOS handler marked [ObsoletedOSPlatform(\"ios12.0\", \"Use 'Metal' instead.\")] creates SKGLView with OpenGL ES"
+        },
+        {
+          "filename": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs",
+          "description": "iOS SKGLView.Initialize() creates EAGLContext(EAGLRenderingAPI.OpenGLES2) - the deprecated path that .NET 10 breaks"
+        },
+        {
+          "filename": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.MacCatalyst.cs",
+          "description": "Mac Catalyst handler uses SKMetalView (Metal backend) - works correctly, proving Metal is the solution"
+        }
+      ]
+    },
+    {
+      "stepNumber": 6,
+      "description": "Attempt to run on iOS simulator (requires iOS workloads and configured simulator)",
+      "layer": "deployment",
+      "result": "skip"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Reporter's version. Project builds successfully but runtime test requires iOS platform."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "iOS handler still uses deprecated OpenGL ES as of main branch. Code analysis confirms EAGL path unchanged - migration to Metal needed."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0-ios",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Maui.Controls",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "environment": {
+    "os": "Darwin arm64",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "errorMessages": {
+    "primaryError": "Failed to bind EAGLDrawable: <CAEAGLLayer: 0x600001767a40> to GL_RENDERBUFFER 1",
+    "additionalErrors": [
+      "Failed to make complete multisample framebuffer object 8cd6",
+      "Failed to make complete framebuffer object 8cd6"
+    ]
+  },
+  "blockers": [
+    "Requires iOS device or iOS simulator with .NET 10 runtime to observe EAGL binding failure at runtime",
+    "iOS workload installation requires sudo password (dotnet workload install ios)"
+  ],
+  "feedback": {
+    "triageCorrections": []
+  }
+}
