@@ -1,18 +1,17 @@
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "1.0",
     "number": 3435,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-08T15:00:00Z",
+    "analyzedAt": "2026-02-12T16:47:05Z",
     "currentLabels": [
       "type/bug",
       "os/Windows-Classic",
       "area/libSkiaSharp.native",
       "tenet/reliability"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "DllNotFoundException for libSkiaSharp in Blazor WASM after upgrading from .NET 9 to .NET 10 \u2014 duplicate of #3422",
+  "summary": "DllNotFoundException for libSkiaSharp in a Blazor WASM app after upgrading from .NET 9 to .NET 10. Tried SkiaSharp 3.116.1 and 3.119.2-preview.1; both fail on .NET 10 though 3.116.1 worked on .NET 9. This is a duplicate of #3422 \u2014 SkiaSharp does not yet target net10.0 (TFMCurrent is net8.0, TFMNext is empty), so the Blazor WASM package has no net10.0 assets and native static linking fails. PR #3514 tracks adding .NET 10 support.",
   "classification": {
     "type": {
       "value": "type/bug",
@@ -20,232 +19,179 @@
     },
     "area": {
       "value": "area/SkiaSharp.Views.Blazor",
-      "confidence": 0.9
+      "confidence": 0.92
     },
     "platforms": [
-      {
-        "value": "os/WASM",
-        "confidence": 0.95
-      }
+      "os/WASM"
     ],
     "tenets": [
-      {
-        "value": "tenet/reliability",
-        "confidence": 0.92
-      },
-      {
-        "value": "tenet/compatibility",
-        "confidence": 0.88
-      }
+      "tenet/compatibility"
     ]
   },
   "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create or upgrade a Blazor WASM app to .NET 10",
+        "Add SkiaSharp.Views.Blazor 3.116.1 or 3.119.2-preview.1",
+        "Run the app \u2014 DllNotFoundException: libSkiaSharp at runtime"
+      ],
+      "environmentDetails": "Blazor WASM, .NET 10, SkiaSharp 3.116.1 and 3.119.2-preview.1",
+      "relatedIssues": [
+        3422
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/user/repo",
+          "description": "Reporter\u0027s reproduction repository"
+        }
+      ]
+    },
     "bugSignals": {
-      "hasCrash": true,
-      "hasStackTrace": false,
-      "reproQuality": "none",
       "severity": "high",
-      "severityReason": "Complete failure to load libSkiaSharp in Blazor WASM on .NET 10. SkiaSharp is entirely unusable in this scenario. Multiple users affected across #3422.",
-      "hasWorkaround": true,
-      "workaroundSummary": "Downgrade to .NET 9 which works with SkiaSharp 3.116.1. Also, \u0027dotnet workload restore\u0027 may help per #3422 comments, though results are inconsistent.",
+      "isRegression": true,
+      "errorType": "DllNotFoundException",
+      "errorMessage": "System.DllNotFoundException: libSkiaSharp",
+      "reproQuality": "partial",
       "targetFrameworks": [
         "net10.0"
       ]
     },
-    "reproEvidence": {
-      "relatedIssues": [
-        3422
-      ],
-      "environmentDetails": "Blazor WASM targeting .NET 10. Tried SkiaSharp 3.116.1 and 3.119.2-preview.1. Previously worked on .NET 9 with 3.116.1."
-    },
     "versionAnalysis": {
-      "reason": "Issue affects all SkiaSharp versions on .NET 10 WASM. The root cause is a .NET 10 WASM toolchain change, not a SkiaSharp version-specific regression. Confirmed by #3422 where even 2.88.x versions fail.",
       "mentionedVersions": [
         "3.116.1",
         "3.119.2-preview.1"
       ],
-      "currentRelevance": "likely"
+      "workedIn": "3.116.1 on .NET 9",
+      "brokeIn": "3.116.1 on .NET 10",
+      "currentRelevance": "likely",
+      "relevanceReason": "SkiaSharp still does not target net10.0 \u2014 TFMCurrent is net8.0 and TFMNext is empty in source/SkiaSharp.Build.props. PR #3514 is open but not yet merged."
     },
     "regression": {
-      "isRegression": true,
+      "isRegression": false,
+      "confidence": 0.9,
+      "reason": "Not a regression in SkiaSharp \u2014 the same SkiaSharp version works on .NET 9. The failure is caused by upgrading the .NET SDK to 10, which SkiaSharp does not yet support. The behavior is \u0027not yet supported\u0027 rather than \u0027previously worked and broke\u0027."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
       "confidence": 0.85,
-      "reason": "SkiaSharp Blazor WASM worked on .NET 9 but fails on .NET 10. The regression is in the .NET platform\u0027s WASM toolchain, not in SkiaSharp itself \u2014 rolling back SkiaSharp versions does not fix it.",
-      "workedInVersion": "3.116.1",
-      "brokeInVersion": "3.116.1"
+      "reason": "PR #3514 (Update to .NET 10 SDK and restructure TFMs) is open and would resolve this, but it has not been merged yet.",
+      "relatedPRs": [
+        3514
+      ]
     }
   },
   "analysis": {
-    "summary": "Duplicate of #3422. DllNotFoundException for libSkiaSharp in Blazor WASM on .NET 10. The .NET 10 WASM toolchain changed how native static linking works, breaking SkiaSharp\u0027s NativeAssets.WebAssembly integration. All SkiaSharp versions are affected.",
-    "keySignals": [
+    "summary": "Blazor WASM on .NET 10 fails with DllNotFoundException because SkiaSharp does not yet target net10.0. WASM uses static linking \u2014 the .a files are compiled into dotnet.wasm via NativeFileReference at build time. While the NativeFileReference targets file has a net9.0\u002B fallback condition, the Blazor Views package itself only ships net8.0 and net6.0 TFMs, so .NET 10 projects cannot consume it properly. This is identical to #3422.",
+    "codeInvestigation": [
       {
-        "text": "System.DllNotFoundException: libSkiaSharp",
-        "source": "title",
-        "interpretation": "Native library not found \u2014 on WASM this means the .a file was not statically linked into dotnet.wasm during build."
+        "file": "source/SkiaSharp.Build.props",
+        "finding": "TFMPrevious=net6.0, TFMCurrent=net8.0, TFMNext is empty. No .NET 10 target framework is configured.",
+        "relevance": "direct",
+        "lines": "62-66"
       },
       {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "finding": "TargetFrameworks=$(TFMCurrent);$(TFMPrevious);$(TFMNext) resolves to net8.0;net6.0 \u2014 no net10.0 target.",
+        "relevance": "direct",
+        "lines": "4"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "NativeFileReference conditions include a net9.0\u002B fallback (VersionGreaterThanOrEquals 9.0), but the Blazor package not having a net10.0 TFM means the overall integration is incomplete for .NET 10.",
+        "relevance": "related",
+        "lines": "32-40"
+      }
+    ],
+    "rationale": "Classified as type/bug because the reporter describes a runtime failure, not a usage question. Area is SkiaSharp.Views.Blazor because the failure is specific to Blazor WASM deployment and the missing net10.0 TFM in the Blazor package. Platform is os/WASM (not os/Windows-Classic as currently labeled) because the issue is in the WASM static linking pipeline, not Windows-specific. Tenet is tenet/compatibility because this is about .NET version compatibility. This is a duplicate of #3422 which reports the exact same problem with more detail.",
+    "keySignals": [
+      {
         "text": "Started getting this runtime error after upgrading Blazor app from .Net 9 to .Net 10",
-        "source": "body",
-        "interpretation": "Clearly identifies .NET 10 upgrade as the trigger, matching #3422 pattern exactly."
+        "source": "issue body",
+        "interpretation": "The .NET SDK upgrade is the trigger \u2014 SkiaSharp version didn\u0027t change, ruling out a SkiaSharp regression."
       },
       {
         "text": ".Net 9 app worked with 3.116.1",
-        "source": "body",
-        "interpretation": "Confirms this is a .NET 10 regression, not a SkiaSharp version issue."
+        "source": "issue body",
+        "interpretation": "Confirms the same SkiaSharp version works on .NET 9. The gap is .NET 10 support, not a SkiaSharp defect."
       },
       {
-        "text": "Platform: Blazor, WASM",
-        "source": "body",
-        "interpretation": "This is a WASM issue, not Windows-Classic as currently labeled."
+        "text": "Duplicate of #3422",
+        "source": "comment #2 by Webreaper",
+        "interpretation": "Community member identified this as a duplicate. #3422 has a full triage confirming the same root cause."
       },
       {
-        "text": "Duplicate of https://github.com/mono/SkiaSharp/issues/3422",
-        "source": "comment 2",
-        "interpretation": "Community member identifies this as a duplicate of the canonical .NET 10 Blazor WASM issue."
+        "text": "TFMCurrent=net8.0, TFMNext is empty",
+        "source": "code search: source/SkiaSharp.Build.props:64-66",
+        "interpretation": "No .NET 10 TFM configured \u2014 the Blazor package ships net8.0;net6.0 only."
       }
     ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "DllNotFoundException is a clear runtime crash. The reporter describes something that previously worked (Blazor WASM with .NET 9) now failing after upgrading to .NET 10. This is broken behavior, not a usage question.",
-        "alternatives": [
-          {
-            "value": "type/question",
-            "whyRejected": "Reporter is not asking how to do something \u2014 they are reporting a crash that occurred after a .NET version upgrade."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp.Views.Blazor",
-        "expandedReason": "The issue is in a Blazor WASM app using SkiaSharp. The root cause is the WASM static linking pipeline managed by SkiaSharp.Views.Blazor and NativeAssets.WebAssembly packages. The current label area/libSkiaSharp.native is less specific \u2014 the native binary itself is fine, it\u0027s the WASM linking integration that\u0027s broken.",
-        "alternatives": [
-          {
-            "value": "area/libSkiaSharp.native",
-            "whyRejected": "While the native library fails to load, the root cause is in the WASM static linking pipeline, not the native binary itself. area/SkiaSharp.Views.Blazor better captures where the fix needs to happen."
-          }
-        ]
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/WASM",
-        "expandedReason": "Reporter explicitly states platform is \u0027Blazor, WASM\u0027. The current os/Windows-Classic label is incorrect \u2014 the issue is about WebAssembly execution in the browser, not Windows desktop. Windows is merely the development machine OS."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/reliability, tenet/compatibility",
-        "expandedReason": "tenet/reliability: DllNotFoundException causes complete failure. tenet/compatibility: This is a cross-version compatibility issue \u2014 SkiaSharp doesn\u0027t work with .NET 10\u0027s WASM toolchain."
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "high",
-        "expandedReason": "Complete inability to use SkiaSharp in Blazor WASM on .NET 10. Workaround is to stay on .NET 9, which is viable but limits adoption.",
-        "alternatives": [
-          {
-            "value": "critical",
-            "whyRejected": ".NET 10 is still in preview and users can stay on .NET 9. Not a data-loss or security issue."
-          }
-        ]
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "close-as-duplicate",
-        "expandedReason": "A community member identified this as a duplicate of #3422, which tracks the exact same issue (DllNotFoundException/TypeInitializationException for SkiaSharp in Blazor WASM on .NET 10). The symptoms, platform, and root cause are identical. #3422 has more detailed reproduction and community discussion."
-      },
-      {
-        "field": "regression.isRegression",
-        "chosen": "true",
-        "expandedReason": "SkiaSharp Blazor WASM worked on .NET 9 but fails on .NET 10. The regression is in the .NET WASM toolchain, not SkiaSharp itself \u2014 rolling back SkiaSharp versions does not fix it."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "Issue affects all SkiaSharp versions on .NET 10 WASM. The root cause is a .NET 10 toolchain change, not version-specific, as confirmed by #3422 where even 2.88.x versions fail.",
-        "alternatives": [
-          {
-            "value": "outdated",
-            "whyRejected": "The issue is not version-specific \u2014 it affects current and older versions equally on .NET 10."
-          }
-        ]
-      }
+    "errorFingerprint": "DllNotFoundException-libSkiaSharp-WASM-net10",
+    "workarounds": [
+      "Stay on .NET 9 until SkiaSharp officially adds .NET 10 support (PR #3514)",
+      "Run \u0060dotnet workload install wasm-tools\u0060 \u2014 reported to help for some users on Windows (not confirmed universally)"
     ],
-    "uncertainties": [
-      "Whether the reporter tried \u0027dotnet workload restore\u0027 as suggested in #3422",
-      "Whether the reporter\u0027s development environment is Windows or another OS \u2014 they selected \u0027Blazor, WASM\u0027 as platform but the previous triage labeled it Windows-Classic"
+    "nextQuestions": [
+      "Will PR #3514 fully resolve this, or are additional Emscripten version changes needed for .NET 10?"
     ],
-    "assumptions": [
-      "Assumed this is the same root cause as #3422 based on identical symptoms (DllNotFoundException: libSkiaSharp in Blazor WASM on .NET 10) and the community duplicate identification",
-      "Assumed the reporter\u0027s platform selection of \u0027Blazor, WASM\u0027 is accurate and os/Windows-Classic was a triage error"
-    ]
+    "resolution": {
+      "hypothesis": "SkiaSharp does not yet target .NET 10. The Blazor WASM package only ships net8.0 and net6.0 TFMs, so .NET 10 projects fail at the native static linking step, producing a DllNotFoundException.",
+      "proposals": [
+        {
+          "description": "Downgrade the project to net9.0 until SkiaSharp ships official .NET 10 support. .NET 9 \u002B SkiaSharp 3.116.1 is a known-working combination for Blazor WASM.",
+          "title": "Stay on .NET 9",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "description": "PR #3514 restructures TFMs to include net10.0 as TFMCurrent and updates the SDK. This is the proper fix that will add official .NET 10 support to SkiaSharp including the Blazor WASM package.",
+          "title": "Merge PR #3514",
+          "confidence": 0.85,
+          "effort": "large"
+        }
+      ],
+      "recommendedProposal": "Stay on .NET 9",
+      "recommendedReason": "Immediate workaround with high confidence. The proper fix (PR #3514) is pending review and not yet available to end users."
+    }
   },
   "output": {
     "actionability": {
       "suggestedAction": "close-as-duplicate",
-      "confidence": 0.9,
-      "reason": "Identical symptoms to #3422: DllNotFoundException for libSkiaSharp in Blazor WASM on .NET 10. Community member confirms duplicate. #3422 is the canonical issue with more detail and discussion."
+      "confidence": 0.92,
+      "reason": "Identical root cause to #3422 (Blazor WASM \u002B .NET 10 = DllNotFoundException). Community member already identified the duplicate. #3422 has a more detailed report with code samples and broader version testing."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Fix incorrect labels: replace os/Windows-Classic with os/WASM and area/libSkiaSharp.native with area/SkiaSharp.Views.Blazor; add tenet/compatibility",
         "risk": "low",
-        "description": "Fix platform and area labels: replace incorrect Windows-Classic with WASM, replace libSkiaSharp.native with Views.Blazor, add compatibility tenet",
-        "reason": "Current labels have incorrect platform (Windows-Classic instead of WASM) and less specific area. This is a Blazor WASM issue, not a Windows desktop issue.",
         "confidence": 0.92,
-        "payload": {
-          "labelsToAdd": [
-            "os/WASM",
-            "area/SkiaSharp.Views.Blazor",
-            "tenet/compatibility"
-          ],
-          "labelsToRemove": [
-            "os/Windows-Classic",
-            "area/libSkiaSharp.native"
-          ]
-        }
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM",
+          "tenet/compatibility"
+        ]
       },
       {
-        "id": "dup-1",
         "type": "link-duplicate",
+        "description": "Mark as duplicate of #3422 \u2014 same root cause (no .NET 10 TFM support in Blazor WASM package)",
         "risk": "medium",
-        "description": "Mark as duplicate of #3422",
-        "reason": "Identical issue: DllNotFoundException for libSkiaSharp in Blazor WASM on .NET 10. Confirmed by community member and matching symptoms.",
-        "confidence": 0.9,
-        "payload": {
-          "duplicateOf": 3422,
-          "comment": null
-        }
+        "confidence": 0.92,
+        "linkedIssue": 3422
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Post duplicate acknowledgement with workaround",
         "risk": "high",
-        "description": "Notify reporter of duplicate and suggest workaround",
-        "reason": "Let reporter know this is tracked in #3422 and provide interim guidance",
-        "confidence": 0.88,
-        "dependsOn": "dup-1",
-        "payload": {
-          "commentType": "duplicate-notice",
-          "draftBody": "Thanks for reporting this. This is the same .NET 10 Blazor WASM compatibility issue tracked in #3422 \u2014 the \u0060DllNotFoundException\u0060 happens because the .NET 10 WASM toolchain changed how native libraries are statically linked, which affects all SkiaSharp versions.\n\nAs an interim workaround, some users have had success running \u0060dotnet workload restore\u0060 to ensure the WASM workload is properly installed for .NET 10. If that doesn\u0027t help, staying on .NET 9 is a reliable fallback until this is resolved.\n\nClosing in favor of #3422 where the investigation is being tracked.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-3435-comment-1"
-        }
+        "confidence": 0.9,
+        "comment": "Thanks for the report. This is a duplicate of #3422 \u2014 SkiaSharp does not yet target .NET 10, so the Blazor WASM native static linking fails.\n\nAs a workaround, stay on .NET 9 until .NET 10 support ships. PR #3514 tracks adding .NET 10 TFM support.\n\nClosing as duplicate of #3422."
       },
       {
-        "id": "close-1",
         "type": "close-issue",
-        "risk": "medium",
         "description": "Close as duplicate of #3422",
-        "reason": "Duplicate of #3422 \u2014 same root cause and symptoms",
-        "confidence": 0.9,
-        "dependsOn": "comment-1",
-        "payload": {
-          "reason": "not_planned",
-          "comment": null
-        }
+        "risk": "medium",
+        "confidence": 0.9
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/3435"
+  }
 }

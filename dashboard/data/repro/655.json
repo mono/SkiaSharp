@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 655,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T17:20:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "notes": "Could not reproduce the path intersection bug. Reporter used SkiaSharp 1.60.3 which only has x86_64 macOS natives (incompatible with arm64, Rosetta unavailable). Tested with SkiaSharp 2.88.9 and 3.119.2 \u2014 both correctly return 4 intersection points. Also confirmed working on main (source) via xUnit test. The bug was likely fixed in a subsequent Skia engine update between 1.60.3 and 2.88.9. Issue is labeled status/skia-update-required, suggesting the fix was expected to come from an upstream Skia update.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project and write reproduction code from issue #655",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 dotnet add package SkiaSharp --version 1.60.3",
+      "exitCode": 0,
+      "output": "Project created and package added successfully.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project referencing SkiaSharp",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00221.60.3\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code from issue #655 \u2014 creates two paths with near-zero coordinates and tests intersection",
+          "content": "using System;\nusing SkiaSharp;\n\nclass Program\n{\n    private static float SkBits2Float(uint n)\n    {\n        byte[] data = BitConverter.GetBytes(n);\n        return BitConverter.ToSingle(data, 0);\n    }\n\n    static void Main(string[] args)\n    {\n        Console.WriteLine($\u0022SkiaSharp version: {typeof(SKPath).Assembly.GetName().Version}\u0022);\n        Console.WriteLine($\u0022Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}\u0022);\n        Console.WriteLine($\u0022OS: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\u0022);\n        Console.WriteLine($\u0022Arch: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}\u0022);\n        Console.WriteLine();\n\n        SKPath path_a = new SKPath();\n        path_a.FillType = SKPathFillType.Winding;\n        path_a.MoveTo(SkBits2Float(0x00000000), SkBits2Float(0x44070000));\n        path_a.LineTo(SkBits2Float(0x44340000), SkBits2Float(0x44070000));\n        path_a.LineTo(SkBits2Float(0x44340000), SkBits2Float(0x00000000));\n        path_a.LineTo(SkBits2Float(0x00000000), SkBits2Float(0x00000000));\n        path_a.Close();\n\n        SKPath path_b = new SKPath();\n        path_b.FillType = SKPathFillType.EvenOdd;\n        path_b.MoveTo(SkBits2Float(0xB6D27CA9), SkBits2Float(0x44070000));\n        path_b.LineTo(SkBits2Float(0x44340000), SkBits2Float(0x44070000));\n        path_b.LineTo(SkBits2Float(0x44340000), SkBits2Float(0x36CCD0F6));\n        path_b.LineTo(SkBits2Float(0xB6D27CA9), SkBits2Float(0x36CCD0F6));\n        path_b.Close();\n\n        Console.WriteLine($\u0022Path A point count: {path_a.PointCount}\u0022);\n        Console.WriteLine($\u0022Path B point count: {path_b.PointCount}\u0022);\n\n        SKPath path_r = path_a.Op(path_b, SKPathOp.Intersect);\n\n        if (path_r != null)\n        {\n            Console.WriteLine($\u0022Result point count: {path_r.PointCount}\u0022);\n            if (path_r.PointCount == 0)\n                Console.WriteLine(\u0022BUG: Intersection result has 0 points!\u0022);\n            else\n                Console.WriteLine(\u0022OK: Intersection produced points.\u0022);\n        }\n        else\n        {\n            Console.WriteLine(\u0022BUG: Op returned null!\u0022);\n        }\n    }\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Skip SkiaSharp 1.60.3 \u2014 native library has no arm64 support and Rosetta unavailable",
+      "layer": "native",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run with SkiaSharp 2.88.9 plus NativeAssets.macOS on macOS arm64",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp --version 2.88.9 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.macOS --version 2.88.9 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\nPath A point count: 4\nPath B point count: 4\nResult point count: 4\nResult bounds: {Left=0,Top=6,104E-06,Width=720,Height=540}\nOK: Intersection produced points.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run with latest SkiaSharp 3.119.2 on macOS arm64",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nPath A point count: 4\nPath B point count: 4\nResult point count: 4\nResult bounds: {Left=0,Top=6,104E-06,Width=720,Height=540}\nOK: Intersection produced points.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test on main (source) using xUnit test infrastructure with temporary test method",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter FullyQualifiedName~PathOpIntersectWithNearZeroCoordinatesReturnsPoints",
+      "exitCode": 0,
+      "output": "Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "assessment": "likely-bug",
+  "reproductionTime": "~8 minutes",
+  "versionResults": [
+    {
+      "version": "1.60.3",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Reporter\u0027s version. Only has i386/x86_64 macOS native \u2014 incompatible with arm64. Rosetta unavailable (dotnet is arm64-only). Nupkg inspection confirmed: runtimes/osx/native/libSkiaSharp.dylib contains only i386 and x86_64 slices."
+    },
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Intersection returns 4 points correctly. Bug appears fixed."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Intersection returns 4 points correctly. Bug not present."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "xUnit test PathOpIntersectWithNearZeroCoordinatesReturnsPoints passed \u2014 intersection returns points."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.2"
+      }
+    ]
+  }
+}

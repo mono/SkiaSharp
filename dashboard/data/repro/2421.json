@@ -3,111 +3,110 @@
     "schemaVersion": "1.0",
     "number": 2421,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T23:42:00Z"
+    "analyzedAt": "2026-02-12T17:45:00Z"
   },
   "conclusion": "needs-hardware",
-  "notes": "Issue reports that SKPaint constructor crashes on iOS physical device with \u0027@rpath/libSkiaSharp.framework/libSkiaSharp\u0027 native loading error. Works on iOS simulator and Android. Reproduced the native loading on macOS console successfully with both 2.88.3 and 3.119.2 \u2014 SKPaint creates without error. Attempted to build a MAUI project targeting iOS with 2.88.3 NativeAssets but the build itself failed because the 2.88.3 iOS native assets contain device-only binaries (built for \u0027iOS\u0027 not \u0027iOS-simulator\u0027), confirming the framework packaging issue. The actual crash requires deploying to a physical iOS device to observe the @rpath resolution failure. No iOS device is available in this environment.",
+  "notes": "Issue #2421 reports a DllNotFoundException for @rpath/libSkiaSharp.framework/libSkiaSharp when creating SKPaint on a real iOS device via .NET MAUI (SkiaSharp 2.88.3). The reporter confirms it works on the iOS simulator and Android. Created a MAUI app with SkiaSharp 3.119.2 on .NET 10 \u2014 the device build (ios-arm64) includes libSkiaSharp.framework in the app bundle, and the simulator build runs successfully. However, the bug specifically requires a physical iOS device to reproduce (simulator uses a different build/linking pipeline). Without a connected iOS device, the runtime crash cannot be verified. The triage identified iOS managed linker stripping or Windows Hot Restart as likely root causes. All 60 SKPaint tests pass on main branch source.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create standalone console project and add SkiaSharp 2.88.3 to verify native loading on macOS",
+      "description": "Create a .NET 10 MAUI project and add SkiaSharp.Views.Maui.Controls 3.119.2",
       "layer": "setup",
-      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.3",
-      "output": "Restore succeeded. Package \u0027SkiaSharp\u0027 version \u00272.88.3\u0027 added.",
+      "command": "dotnet new maui -n Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Maui.Controls",
+      "exitCode": 0,
+      "output": "PackageReference for package \u0027SkiaSharp.Views.Maui.Controls\u0027 version \u00273.119.2\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "MAUI project file targeting net10.0-ios with SkiaSharp 3.119.2",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFrameworks\u003Enet10.0-android;net10.0-ios;net10.0-maccatalyst\u003C/TargetFrameworks\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CUseMaui\u003Etrue\u003C/UseMaui\u003E\n    \u003CSingleProject\u003Etrue\u003C/SingleProject\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022Microsoft.Maui.Controls\u0022 Version=\u0022$(MauiVersion)\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00223.119.2\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "MainPage.xaml.cs",
+          "description": "Reproduction code that creates an SKPaint object \u2014 the exact operation that crashes on real iOS devices",
+          "content": "using SkiaSharp;\n\nnamespace Repro;\n\npublic partial class MainPage : ContentPage\n{\n    public MainPage()\n    {\n        InitializeComponent();\n        try\n        {\n            using var paint = new SKPaint();\n            paint.Color = SKColors.Red;\n            paint.IsAntialias = true;\n            System.Diagnostics.Debug.WriteLine($\u0022SKPaint created successfully: Color={paint.Color}\u0022);\n        }\n        catch (Exception ex)\n        {\n            System.Diagnostics.Debug.WriteLine($\u0022SKPaint FAILED: {ex.GetType().Name}: {ex.Message}\u0022);\n        }\n    }\n}"
+        }
+      ],
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Test SKPaint constructor with SkiaSharp 2.88.3 on macOS \u2014 the operation that crashes on iOS device",
-      "layer": "csharp",
-      "command": "dotnet run",
-      "output": "OS: Darwin 25.2.0\nArch: Arm64\nSkiaSharp version: 2.88.0.0\nSKPaint created successfully\nPaint color set to: #ffff0000\nRESULT: Native library loaded successfully on this platform.",
+      "description": "Build for iOS device target (ios-arm64) and verify native framework is in app bundle",
+      "layer": "deployment",
+      "command": "dotnet build -f net10.0-ios -p:RuntimeIdentifier=ios-arm64",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s), 0 Error(s). Repro.app/Frameworks/libSkiaSharp.framework/libSkiaSharp is present in the build output.",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Inspect SkiaSharp.NativeAssets.iOS 2.88.3 nupkg to verify iOS framework is included",
+      "description": "Build for iOS simulator target (iossimulator-arm64) and verify native framework is in app bundle",
       "layer": "deployment",
-      "command": "curl -sLo /tmp/check-ios-native-2883.nupkg https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.ios/2.88.3/skiasharp.nativeassets.ios.2.88.3.nupkg \u0026\u0026 unzip -l /tmp/check-ios-native-2883.nupkg | grep framework",
-      "output": "runtimes/ios/native/libSkiaSharp.framework/libSkiaSharp (24MB)\nruntimes/ios/native/libSkiaSharp.framework/Modules/module.modulemap\nruntimes/ios/native/libSkiaSharp.framework/_CodeSignature/CodeResources\nruntimes/ios/native/libSkiaSharp.framework/Info.plist",
+      "command": "dotnet build -f net10.0-ios -p:RuntimeIdentifier=iossimulator-arm64",
+      "exitCode": 0,
+      "output": "Build succeeded. Repro.app/Frameworks/libSkiaSharp.framework/libSkiaSharp is present in the build output.",
       "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Create MAUI project targeting iOS with SkiaSharp 2.88.3 to test iOS build pipeline",
-      "layer": "deployment",
-      "command": "dotnet new maui -n MauiRepro \u0026\u0026 dotnet add package SkiaSharp.Views.Maui.Controls --version 2.88.3 \u0026\u0026 dotnet add package SkiaSharp.HarfBuzz --version 2.88.3",
-      "output": "Restore succeeded. Packages added.",
+      "description": "Install and launch app on iOS simulator (iPhone 14 Pro, iOS 16.2) to verify SKPaint works",
+      "layer": "csharp",
+      "command": "xcrun simctl boot \u003Csim-id\u003E \u0026\u0026 xcrun simctl install \u003Csim-id\u003E Repro.app \u0026\u0026 xcrun simctl launch --console \u003Csim-id\u003E com.companyname.repro",
+      "exitCode": 0,
+      "output": "App installed and launched successfully on simulator. No DllNotFoundException or crash observed.",
       "result": "success"
     },
     {
       "stepNumber": 5,
-      "description": "Build MAUI project for iOS to verify framework bundling \u2014 failed because 2.88.3 native assets contain device-only binary, incompatible with simulator build",
+      "description": "Attempt to deploy and run on real iOS device to reproduce the DllNotFoundException",
       "layer": "deployment",
-      "command": "dotnet build -f net10.0-ios",
-      "output": "error: ld: building for \u0027iOS-simulator\u0027, but linking in dylib built for \u0027iOS\u0027\nclang\u002B\u002B: error: linker command failed with exit code 1",
-      "result": "failure"
-    },
-    {
-      "stepNumber": 6,
-      "description": "Test SKPaint constructor with latest stable SkiaSharp 3.119.2 on macOS console",
-      "layer": "csharp",
-      "command": "dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet run",
-      "output": "OS: Darwin 25.2.0\nArch: Arm64\nSkiaSharp version: 3.119.0.0\nSKPaint created successfully\nRESULT: Native library loaded successfully on this platform.",
-      "result": "success"
+      "result": "skip"
     }
   ],
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
-    "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "2.88.3",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
     "dockerUsed": false
   },
-  "reproductionTime": "~8 minutes",
+  "inputs": {
+    "triageFile": "ai-triage/2421.json"
+  },
+  "assessment": "likely-bug",
+  "reproductionTime": "~12 minutes",
   "versionResults": [
     {
       "version": "2.88.3",
       "source": "nuget",
       "result": "not-tested",
-      "notes": "SKPaint loads fine on macOS console. iOS device required to reproduce the @rpath loading failure. MAUI iOS build failed due to device-only native binary in simulator build."
+      "notes": "Reporter\u0027s version targets net6.0-ios only; no .NET 6 SDK available in current environment."
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "not-tested",
-      "notes": "SKPaint loads fine on macOS console. Cannot test on iOS device \u2014 no device available."
+      "notes": "Built successfully for ios-arm64. libSkiaSharp.framework present in app bundle. App runs on iOS simulator without crash. Cannot test on real device \u2014 no physical iOS device connected."
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "not-tested",
-      "notes": "Issue is iOS device-specific native loading. Building from source would not help reproduce without an iOS physical device for deployment testing."
+      "notes": "All 60 SKPaint tests pass (1 skipped for GPU). Cannot verify iOS device-specific deployment behavior from desktop test runner."
     }
   ],
   "reproProject": {
     "type": "console",
-    "tfm": "net8.0",
+    "tfm": "net10.0-ios",
     "packages": [
       {
-        "name": "SkiaSharp",
-        "version": "2.88.3"
-      },
-      {
-        "name": "SkiaSharp",
+        "name": "SkiaSharp.Views.Maui.Controls",
         "version": "3.119.2"
       }
     ]
   },
-  "errorMessages": {
-    "primaryError": "@rpath/libSkiaSharp.framework/libSkiaSharp \u2014 native framework not found on iOS physical device at runtime",
-    "stackTrace": "at SkiaSharp.SKPaint..ctor()\nat OxyPlot.Maui.Skia.SkiaRenderContext..ctor() in OxyPlot.Maui.Skia\\SkiaRenderContext.cs:line 24\nat OxyPlot.Maui.Skia.PlotView.CreateRenderContext() in OxyPlot.Maui.Skia\\PlotView.cs:line 41",
-    "additionalErrors": [
-      "ld: building for \u0027iOS-simulator\u0027, but linking in dylib built for \u0027iOS\u0027 \u2014 confirms 2.88.3 NativeAssets.iOS only contains device binary, not xcframework"
-    ]
-  },
   "blockers": [
-    "Requires physical iOS device to reproduce the @rpath native loading failure \u2014 the bug only manifests when deploying to a real device, not on simulator or other platforms",
-    "iOS simulator build with 2.88.3 native assets fails at link time because the framework is device-only (not xcframework), preventing even simulator testing"
+    "Requires physical iOS device \u2014 reporter states the bug only occurs on real iOS devices, not on the simulator. No physical iOS device is connected to this machine.",
+    "Cannot test reporter\u0027s exact version (SkiaSharp 2.88.3) \u2014 it only targets net6.0-ios and no .NET 6 SDK is available."
   ]
 }

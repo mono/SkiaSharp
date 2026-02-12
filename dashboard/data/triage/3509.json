@@ -1,15 +1,14 @@
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "1.0",
     "number": 3509,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-24T12:00:00Z",
+    "analyzedAt": "2026-02-12T17:02:00Z",
     "currentLabels": [
       "type/bug"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "Incomplete bug report \u2014 images not appearing on screen, but no actual code, repro steps, or error details provided (template placeholders only)",
+  "summary": "Near-empty bug report: \u0027images not appearing\u0027 with no code, no steps, no logs, no screenshots. Template placeholders left unfilled.",
   "classification": {
     "type": {
       "value": "type/bug",
@@ -17,242 +16,125 @@
     },
     "area": {
       "value": "area/SkiaSharp",
-      "confidence": 0.45
+      "confidence": 0.4
     },
     "platforms": [
-      {
-        "value": "os/macOS",
-        "confidence": 0.65
-      }
+      "os/macOS"
     ]
   },
   "evidence": {
-    "bugSignals": {
-      "hasCrash": false,
-      "hasStackTrace": false,
-      "reproQuality": "none",
-      "severity": "low",
-      "severityReason": "No actual details provided \u2014 the issue body contains only the default template placeholders with no real code, no expected/actual behavior, and no error information. Cannot assess real severity.",
-      "hasWorkaround": false
-    },
     "reproEvidence": {
-      "repoLinks": [
-        {
-          "url": "https://github.com/user/repo/tree/bug-123",
-          "description": "Template placeholder URL \u2014 not a real repro project"
-        }
-      ],
-      "codeSnippets": [
-        {
-          "code": "// some C# code here",
-          "language": "cs",
-          "context": "Template placeholder \u2014 no real code provided"
-        }
-      ],
-      "environmentDetails": "IDE: Visual Studio (Windows), Platform: macOS, SkiaSharp 3.116.0, Last Known Good: 2.88.9"
+      "stepsToReproduce": [],
+      "environmentDetails": "SkiaSharp 3.116.0, macOS, Visual Studio (Windows)"
+    },
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "wrong-output",
+      "reproQuality": "none"
     },
     "versionAnalysis": {
-      "reason": "Reporter selected 3.116.0 as current and 2.88.9 as last known good, suggesting a possible regression across a major version boundary (v2 \u2192 v3). However, no details were provided to confirm whether the issue is real or if this was just default template selection.",
       "mentionedVersions": [
         "3.116.0",
         "2.88.9"
       ],
-      "currentRelevance": "unknown"
-    },
-    "regression": {
-      "isRegression": false,
-      "confidence": 0.3,
-      "reason": "Reporter selected 2.88.9 as last known good version, which could indicate regression from v2 to v3. However, the entire report is template placeholders, so this selection may not reflect actual testing."
+      "workedIn": "2.88.9",
+      "currentRelevance": "unknown",
+      "relevanceReason": "No code or reproduction provided \u2014 impossible to determine if the issue is real or a usage error."
     }
   },
   "analysis": {
-    "summary": "This issue contains only the default bug template with placeholder text \u2014 no actual code, no expected or actual behavior, no screenshots, no logs. The title mentions images not appearing but provides zero actionable information. Cannot determine root cause or even confirm a real bug exists.",
+    "summary": "The issue body consists almost entirely of unfilled template placeholders. The description says \u0027I have some code that puts things on the screen, but nothing appears\u0027 without providing any actual code, expected behavior, actual behavior, screenshots, or log output. The code block contains only the template placeholder text. There is no actionable information to investigate.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "DrawImage methods exist with multiple overloads. All delegate to sk_canvas_draw_image_rect(). No obvious bugs in the C# wrapper \u2014 null checks on image and paint parameters are present.",
+        "relevance": "context",
+        "lines": "455-510"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "finding": "FromEncodedData() and related factory methods are well-defined. Return null on failure (not throw). No TODO or known issues that would cause silent rendering failures.",
+        "relevance": "context",
+        "lines": "158-232"
+      }
+    ],
+    "rationale": "Classified as type/bug at low confidence because the reporter selected [BUG] template but provided zero evidence. Area is generic area/SkiaSharp because no specific component is identified. Severity is unknown \u2014 without code or reproduction steps, this could range from a trivial usage error to a real rendering bug. The mention of 2.88.9 as \u0027last known good\u0027 hints at a possible regression but without any code this cannot be verified.",
     "keySignals": [
       {
-        "text": "My images are not appearing in the screen",
-        "source": "title",
-        "interpretation": "Vague description of visual output issue \u2014 could be rendering, loading, drawing, or display problem"
+        "text": "I have some code that puts things on the screen, but nothing appears.",
+        "source": "issue body",
+        "interpretation": "Entire description \u2014 too vague to classify. Could be usage error, missing NuGet package, incorrect API usage, or a real rendering bug."
       },
       {
-        "text": "// some C# code here",
-        "source": "body",
-        "interpretation": "Code section contains the template placeholder, not actual code \u2014 reporter did not fill in the template"
+        "text": "Code section contains only template placeholder text",
+        "source": "issue body",
+        "interpretation": "Reporter did not fill in the bug template. No actual code was provided."
       },
       {
-        "text": "Expected Behavior: _No response_",
-        "source": "body",
-        "interpretation": "No expected behavior described \u2014 cannot determine what the reporter expects to happen"
+        "text": "Version 3.116.0 current, 2.88.9 last known good",
+        "source": "issue body",
+        "interpretation": "Suggests a possible regression from v2 to v3, but without code this is unverifiable."
       },
       {
-        "text": "Actual Behavior: _No response_",
-        "source": "body",
-        "interpretation": "No actual behavior described \u2014 cannot determine what is actually happening"
-      },
-      {
-        "text": "Version: 3.116.0, Last Known Good: 2.88.9",
-        "source": "body",
-        "interpretation": "Version fields were filled in, suggesting possible v2-to-v3 migration issue, but could also be default selections"
+        "text": "Platform: macOS, IDE: Visual Studio (Windows)",
+        "source": "issue body",
+        "interpretation": "Slight inconsistency \u2014 macOS platform but Windows IDE. May indicate cross-compilation or confusion."
       }
     ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "The reporter used the bug template and the title says \u0027[BUG]\u0027. While the content is empty, they claim something is not working (\u0027images not appearing\u0027). Keeping type/bug but with very low confidence since there is no actual evidence of broken behavior.",
-        "alternatives": [
-          {
-            "value": "type/question",
-            "whyRejected": "The reporter chose the bug template and claims something is broken, not asking how to do something. However, with so little info, this could easily be a usage question."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp",
-        "expandedReason": "No specific component mentioned. \u0027Images not appearing\u0027 is too vague to narrow down \u2014 could be core SkiaSharp, Views, or MAUI. Defaulting to the broadest area.",
-        "alternatives": [
-          {
-            "value": "area/SkiaSharp.Views",
-            "whyRejected": "No mention of SKCanvasView, views, or any UI framework."
-          },
-          {
-            "value": "area/SkiaSharp.Views.Maui",
-            "whyRejected": "No mention of MAUI, .NET MAUI, or any MAUI-specific types."
-          }
-        ]
-      },
-      {
-        "field": "platforms[0]",
-        "chosen": "os/macOS",
-        "expandedReason": "Reporter selected \u0027macOS\u0027 as platform. However, they also say IDE is \u0027Visual Studio (Windows)\u0027 which is contradictory \u2014 they may be developing on Windows targeting macOS, or this may be a template selection error.",
-        "alternatives": [
-          {
-            "value": "os/Windows-Classic",
-            "whyRejected": "IDE says Visual Studio Windows but platform says macOS \u2014 trusting the explicit platform selection over IDE choice."
-          }
-        ]
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "low",
-        "expandedReason": "Cannot assess severity without any actual details. No crash, no stack trace, no repro, no description of the problem beyond the title. Defaulting to low until more information is available."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "request-info",
-        "expandedReason": "The issue is entirely template placeholders. We need actual code, expected behavior, actual behavior, and ideally a sample project before any investigation can begin."
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/macOS",
-        "expandedReason": "Reporter selected macOS as the platform in the bug template. The IDE field says Visual Studio (Windows), which is contradictory \u2014 trusting the explicit platform selection over the IDE choice.",
-        "alternatives": [
-          {
-            "value": "os/Windows-Classic",
-            "whyRejected": "IDE says Visual Studio Windows but the explicit platform selection says macOS \u2014 prioritizing the direct platform field."
-          }
-        ]
-      },
-      {
-        "field": "regression.isRegression",
-        "chosen": "false",
-        "expandedReason": "Reporter selected 2.88.9 as last known good version, but the entire report is template placeholders with no actual details. This selection may not reflect real testing, so regression cannot be confirmed."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "unknown",
-        "expandedReason": "Reporter selected 3.116.0 and 2.88.9, but no details confirm whether a real issue exists. The version selections may be default template values rather than reflecting actual testing.",
-        "alternatives": [
-          {
-            "value": "likely",
-            "whyRejected": "Without any actual issue details, we cannot determine if this affects current versions or is even a real bug."
-          }
-        ]
-      }
-    ],
-    "uncertainties": [
-      "Whether this is a real bug report or an accidental submission of the empty template",
-      "What kind of images \u2014 SKImage, SKBitmap, or UI framework image controls",
-      "Whether the issue is in core SkiaSharp drawing, views rendering, or a platform-specific display problem",
-      "Whether the v2.88.9 \u0027last known good\u0027 reflects actual testing or default selection",
-      "Whether the macOS platform selection is accurate given the Windows IDE selection"
-    ],
-    "assumptions": [
-      "Assumed this is an intentional (not accidental) submission based on title containing a specific complaint",
-      "Assumed macOS is the target platform despite contradictory IDE selection"
+    "nextQuestions": [
+      "What actual code is the reporter using to draw images?",
+      "Is this SKCanvasView (MAUI/Forms), SKControl (WPF), or direct SKCanvas usage?",
+      "What image format and loading method is being used?",
+      "Is the SKImage being created successfully (non-null)?",
+      "What platform target framework is the project using?"
     ],
     "resolution": {
-      "hypothesis": "The reporter has code that should display images using SkiaSharp but nothing appears on screen. Without any details, the most common causes are: incorrect drawing coordinates, missing invalidation/refresh of the canvas view, image loading failures returning null, or v2-to-v3 API migration issues.",
+      "hypothesis": "Cannot form a hypothesis without reproduction code. The issue could be anything from a missing NuGet package to incorrect canvas setup to a real rendering regression.",
       "proposals": [
         {
-          "title": "Request complete bug report",
-          "description": "Ask the reporter to fill in the template with actual code, expected behavior, actual behavior, and ideally a minimal repro project. This is a prerequisite for any investigation.",
-          "confidence": 0.95,
-          "effort": "low"
-        },
-        {
-          "title": "Check for v2-to-v3 migration issues",
-          "description": "If the reporter confirms this worked in v2.88.9, investigate common v3 migration pitfalls like API changes, namespace changes, or rendering pipeline differences.",
-          "confidence": 0.4,
-          "effort": "medium"
-        },
-        {
-          "title": "Provide common image rendering checklist",
-          "description": "Share a checklist of common reasons images don\u0027t appear: null image from loading, drawing at wrong coordinates, canvas not invalidated, view not sized correctly.",
-          "confidence": 0.5,
-          "effort": "low"
+          "description": "Ask the reporter to fill in the template with actual code, expected behavior, and actual behavior. A minimal repro project would be ideal.",
+          "title": "Request complete reproduction",
+          "confidence": 1,
+          "effort": "trivial"
         }
       ],
-      "recommendedProposal": "Request complete bug report",
-      "recommendedReason": "Cannot investigate without any actual information. The template is completely empty."
+      "recommendedProposal": "Request complete reproduction",
+      "recommendedReason": "No analysis is possible without actual code. The template is almost entirely unfilled."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "request-info",
-      "confidence": 0.92,
-      "reason": "The issue body contains only template placeholders \u2014 no real code, no expected/actual behavior, no logs, no screenshots. Investigation is impossible without more details.",
-      "requiresHumanReview": false,
-      "missingInfo": [
-        "reproduction-steps",
-        "expected-behavior",
-        "actual-behavior",
-        "sample-project"
-      ]
+      "confidence": 0.95,
+      "reason": "The issue contains no actionable information \u2014 no code, no steps, no logs, no screenshots. Template placeholders were left unfilled."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Keep type/bug label, add area and platform",
         "risk": "low",
-        "description": "Add area/SkiaSharp and os/macOS labels",
-        "reason": "Matches classification \u2014 generic SkiaSharp area and macOS platform",
-        "confidence": 0.5,
-        "payload": {
-          "labelsToAdd": [
-            "area/SkiaSharp",
-            "os/macOS"
-          ],
-          "labelsToRemove": []
-        }
+        "confidence": 0.6,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/macOS"
+        ]
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Request missing information from the reporter",
         "risk": "high",
-        "description": "Request the reporter to fill in the bug template with actual details",
-        "reason": "Issue body contains only placeholder text \u2014 need real code and behavior description to investigate",
         "confidence": 0.9,
-        "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "request-info",
-          "draftBody": "Thanks for opening this issue.\n\nIt looks like the bug template still has the placeholder text in the Code, Expected Behavior, and Actual Behavior sections. Without actual code or a description of what\u0027s happening, it\u0027s hard to investigate further.\n\nWould you be able to update the issue with:\n- The code you\u0027re using to load and display the images (even a short snippet helps)\n- What you expect to see vs. what actually happens\n\nIf you have a small repro project, that would be ideal \u2014 but even a code snippet and description of the behavior would help narrow this down.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-3509-comment-1"
-        }
+        "comment": "Thanks for reporting this. Unfortunately, the issue template wasn\u0027t filled in with the details we need to investigate \u2014 there\u0027s no actual code, expected/actual behavior, or log output.\n\nWould you be able to update the issue with:\n1. The actual code you\u0027re using to load and draw images\n2. What you expect to see vs what actually happens\n3. Your target framework (e.g., \u0060net8.0-macos\u0060)\n4. A screenshot of the blank output\n\nA minimal reproduction project (even a few lines) would help us diagnose this quickly. Without code, we can\u0027t determine whether this is a usage issue or a real rendering bug."
       }
+    ],
+    "missingInfo": [
+      "Actual code that reproduces the issue (not template placeholder)",
+      "Expected behavior vs actual behavior",
+      "Target framework (net8.0-macos, net8.0, etc.)",
+      "Which SkiaSharp view/control is being used",
+      "Screenshots showing the blank output",
+      "Any error messages or log output"
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/3509"
+  }
 }

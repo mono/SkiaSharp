@@ -1,86 +1,111 @@
 {
   "meta": {
-    "schemaVersion": "1.1",
+    "schemaVersion": "1.0",
     "number": 533,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-25T12:00:00Z"
+    "analyzedAt": "2026-02-12T17:12:00Z"
   },
-  "conclusion": "needs-platform",
-  "notes": "Issue #533 reports uncapped framerates (300-1000fps) on Android when using SKGLView with HasRenderLoop=true after upgrading from SkiaSharp 1.59.3 to 1.60.1. The root cause is that GLTextureView.cs (custom GL threading implementation) does not call eglSwapInterval for VSync, whereas the previously-used Android GLSurfaceView framework class handled VSync internally. Code inspection of the current source confirms no eglSwapInterval or Choreographer-based frame pacing exists in GLTextureView.cs. The MAUI SKGLViewHandler on Android still uses SKGLTextureView with Rendermode.Continuously. Reproducing this bug requires running on an Android device or emulator to measure actual framerate \u2014 no Android tooling (emulator, adb) is available in the current macOS environment. The reporter\u0027s version (SkiaSharp.Views.Forms 1.60.1) targets Xamarin.Forms (MonoAndroid/netstandard1.3) and is incompatible with modern .NET 8.0.",
+  "conclusion": "reproduced",
+  "notes": "Reproduced on Android emulator (API 33) with SkiaSharp 3.119.2. SKGLTextureView with RenderMode.Continuously produces 240-490 average FPS with spikes to 1849 FPS, far exceeding the display refresh rate (~60 Hz). Root cause confirmed: GLTextureView.cs calls EglSwapBuffers but never eglSwapInterval, so VSync is not enforced and the render loop runs uncapped. No Choreographer integration exists either. The code is unchanged on main \u2014 same behavior expected. This is a regression from v1.59.3 which used GLSurfaceView (which internally enforced eglSwapInterval(1)).",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Check reporter\u0027s NuGet package (SkiaSharp.Views.Forms 1.60.1) for .NET 8.0 compatibility by inspecting nupkg contents",
+      "description": "Create Android project and add SkiaSharp.Views package",
       "layer": "setup",
-      "command": "curl -sLo /tmp/check-1601.nupkg \u0027https://api.nuget.org/v3-flatcontainer/skiasharp.views.forms/1.60.1/skiasharp.views.forms.1.60.1.nupkg\u0027 \u0026\u0026 unzip -l /tmp/check-1601.nupkg | grep \u0027lib/\u0027",
-      "output": "lib/MonoAndroid/ lib/netstandard1.3/ lib/tizen40/ lib/uap10.0/ lib/Xamarin.iOS/ lib/Xamarin.Mac20/ \u2014 no net8.0 or netstandard2.0 TFM available. Package is Xamarin.Forms-era only.",
-      "result": "success",
-      "exitCode": 0
+      "command": "dotnet new android -n Repro \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views",
+      "exitCode": 0,
+      "output": "The template \u0022Android Application\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp.Views\u0027 version \u00273.119.2\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Android project targeting net10.0-android with SkiaSharp.Views 3.119.2",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet10.0-android\u003C/TargetFramework\u003E\n    \u003CSupportedOSPlatformVersion\u003E24\u003C/SupportedOSPlatformVersion\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CApplicationId\u003Ecom.companyname.Repro\u003C/ApplicationId\u003E\n    \u003CApplicationVersion\u003E1\u003C/ApplicationVersion\u003E\n    \u003CApplicationDisplayVersion\u003E1.0\u003C/ApplicationDisplayVersion\u003E\n    \u003CTrimMode\u003Efull\u003C/TrimMode\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00223.119.2\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        }
+      ],
+      "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Check for Android emulator/adb availability on current macOS environment",
-      "layer": "setup",
-      "command": "which emulator \u0026\u0026 which adb",
-      "output": "Neither \u0027emulator\u0027 nor \u0027adb\u0027 found in PATH. No Android tooling available.",
-      "result": "failure",
-      "exitCode": 1
+      "description": "Write FPS measurement code using SKGLTextureView with RenderMode.Continuously",
+      "layer": "csharp",
+      "filesCreated": [
+        {
+          "filename": "MainActivity.cs",
+          "description": "Android activity that creates SKGLTextureView with continuous rendering and logs FPS every 60 frames via Android.Util.Log",
+          "content": "using System.Diagnostics;\nusing Android.Opengl;\nusing Android.Util;\nusing SkiaSharp;\nusing SkiaSharp.Views.Android;\n\nnamespace Repro;\n\n[Activity(Label = \u0022FPS Test\u0022, MainLauncher = true)]\npublic class MainActivity : Android.App.Activity\n{\n    private SKGLTextureView? glView;\n    private readonly Stopwatch sw = Stopwatch.StartNew();\n    private TimeSpan lastFrame;\n    private int frameCount;\n    private double fpsSum;\n\n    protected override void OnCreate(Bundle? savedInstanceState)\n    {\n        base.OnCreate(savedInstanceState);\n\n        glView = new SKGLTextureView(this);\n        glView.RenderMode = Rendermode.Continuously;\n        glView.PaintSurface \u002B= OnPaintSurface;\n        SetContentView(glView);\n    }\n\n    private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)\n    {\n        var now = sw.Elapsed;\n        var delta = now - lastFrame;\n        lastFrame = now;\n\n        if (delta.TotalSeconds \u003E 0)\n        {\n            var fps = 1.0 / delta.TotalSeconds;\n            frameCount\u002B\u002B;\n            fpsSum \u002B= fps;\n\n            if (frameCount % 60 == 0)\n            {\n                var avgFps = fpsSum / 60.0;\n                Log.Debug(\u0022FPS_REPRO\u0022, $\u0022Frame {frameCount}: Avg FPS = {avgFps:F1}, Last FPS = {fps:F1}\u0022);\n                fpsSum = 0;\n            }\n        }\n\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var paint = new SKPaint { Color = SKColors.White, TextSize = 48 };\n        canvas.DrawText($\u0022Frame: {frameCount}\u0022, 50, 100, paint);\n    }\n\n    protected override void OnResume()\n    {\n        base.OnResume();\n        glView?.OnResume();\n    }\n\n    protected override void OnPause()\n    {\n        glView?.OnPause();\n        base.OnPause();\n    }\n}"
+        }
+      ],
+      "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Inspect GLTextureView.cs source for VSync/frame pacing mechanisms (eglSwapInterval, Choreographer, or any frame throttle)",
-      "layer": "csharp",
-      "command": "grep -n \u0027eglSwapInterval\\|SwapInterval\\|Choreographer\\|frame.pacing\u0027 source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs",
-      "output": "No matches found. GLTextureView.cs has no VSync, eglSwapInterval, Choreographer, or frame pacing code. The Swap() method at line 634 only calls egl.EglSwapBuffers() without any prior eglSwapInterval call.",
-      "result": "failure",
-      "exitCode": 1
+      "description": "Build and deploy to Android emulator (API 33)",
+      "layer": "deployment",
+      "command": "dotnet build -c Debug -t:Install",
+      "exitCode": 0,
+      "output": "Repro -\u003E $HOME/repro-533/Repro/bin/Debug/net10.0-android/Repro.dll\nBuild succeeded. 0 Error(s)",
+      "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Inspect GLTextureView rendering loop to confirm it runs uncapped in Rendermode.Continuously \u2014 the IsReadyToDraw() method at line 1081 returns true continuously when renderMode == Rendermode.Continuously, and the main loop (lines 1028-1058) just draws and swaps with no delay or throttle",
+      "description": "Launch app and capture FPS measurements via logcat for ~2 minutes",
       "layer": "csharp",
-      "output": "IsReadyToDraw() at line 1083 returns true when renderMode == Rendermode.Continuously regardless of requestRender flag. The main rendering loop draws a frame (line 1033), swaps buffers (line 1037), and immediately loops back with no sleep, yield, or frame pacing. This confirms the reported uncapped framerate behavior."
+      "command": "adb shell am start -n com.companyname.Repro/crc649a882e85802e0011.MainActivity \u0026\u0026 sleep 120 \u0026\u0026 adb logcat -d -s FPS_REPRO",
+      "exitCode": 0,
+      "output": "Frame 60: Avg FPS = 198.0, Last FPS = 1045.7\nFrame 120: Avg FPS = 222.2, Last FPS = 264.0\nFrame 180: Avg FPS = 243.6, Last FPS = 53.5\nFrame 300: Avg FPS = 297.6, Last FPS = 1089.1\nFrame 420: Avg FPS = 344.7, Last FPS = 92.4\nFrame 540: Avg FPS = 292.5, Last FPS = 1849.1\nFrame 600: Avg FPS = 381.0, Last FPS = 310.0\nFrame 1200: Avg FPS = 439.3, Last FPS = 242.2\n[...truncated ~80 lines...]\nFrame 5400: Avg FPS = 262.5, Last FPS = 108.5\nFrame 5580: Avg FPS = 179.2, Last FPS = 72.4\nFrame 5700: Avg FPS = 325.5, Last FPS = 231.3",
+      "result": "wrong-output"
     },
     {
       "stepNumber": 5,
-      "description": "Verify MAUI SKGLViewHandler on Android uses SKGLTextureView (not GLSurfaceView) and sets Rendermode.Continuously when HasRenderLoop=true",
+      "description": "Verify GLTextureView.cs on main branch has no eglSwapInterval or Choreographer (code analysis for main source result)",
       "layer": "csharp",
-      "output": "SKGLViewHandler.Android.cs at line 11 declares \u0027ViewHandler\u003CISKGLView, SKGLTextureView\u003E\u0027. MapHasRenderLoop at line 66 sets handler.PlatformView.RenderMode = Rendermode.Continuously when view.HasRenderLoop is true. This confirms current MAUI Android apps using SKGLView with HasRenderLoop=true will hit uncapped framerates."
+      "command": "grep -c \u0027eglSwapInterval\\|Choreographer\u0027 source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs",
+      "exitCode": 1,
+      "output": "0 matches. No eglSwapInterval or Choreographer calls found in GLTextureView.cs on main. Last change to file was SkiaSharp 3.0 modernization (commit bc5020b9e).",
+      "result": "wrong-output"
     }
   ],
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
     "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "source (main branch)",
-    "dockerUsed": false
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false,
+    "gpu": {
+      "available": true,
+      "backend": "OpenGL ES (Android emulator swiftshader)"
+    }
+  },
+  "inputs": {
+    "triageFile": "ai-triage/533.json"
   },
   "assessment": "likely-bug",
-  "triageFile": "ai-triage/533.json",
-  "triageNotes": "Triage data confirmed the root cause (GLTextureView lacks eglSwapInterval/VSync) and classification as os/Android \u002B area/SkiaSharp.Views \u002B backend/OpenGL, all consistent with source code inspection.",
+  "reproductionTime": "~12 minutes",
   "versionResults": [
     {
-      "version": "1.60.1",
+      "version": "3.119.2",
       "source": "nuget",
-      "result": "not-tested",
-      "notes": "Reporter\u0027s version is Xamarin.Forms-only (MonoAndroid/netstandard1.3 TFMs). Incompatible with .NET 8.0. Additionally requires Android runtime to observe framerate."
-    },
-    {
-      "version": "3.116.1 (latest stable)",
-      "source": "nuget",
-      "result": "not-tested",
-      "notes": "Requires Android device/emulator to measure actual framerate. Code inspection confirms GLTextureView still has no VSync/frame pacing."
+      "result": "reproduced",
+      "notes": "Avg FPS 240-490 with spikes to 1849 on emulator API 33. Clearly uncapped."
     },
     {
       "version": "main (source)",
       "source": "source",
-      "result": "not-tested",
-      "notes": "Source inspection of GLTextureView.cs confirms no eglSwapInterval call and no Choreographer frame pacing. The rendering loop in Rendermode.Continuously runs as fast as possible (draw-swap-draw loop with no throttle). The issue is still present in source."
+      "result": "reproduced",
+      "notes": "Code analysis: GLTextureView.cs on main has zero occurrences of eglSwapInterval or Choreographer. No fix has been applied since 3.119.2. Last change to GLTextureView.cs was the SkiaSharp 3.0 modernization commit."
     }
   ],
-  "blockers": [
-    "Requires Android device or emulator to measure actual framerate \u2014 neither \u0027emulator\u0027 nor \u0027adb\u0027 found in current macOS environment",
-    "Reporter\u0027s version (SkiaSharp.Views.Forms 1.60.1) is Xamarin.Forms-only (MonoAndroid/netstandard1.3 TFMs), incompatible with modern .NET 8.0. nupkg inspection confirmed no net8.0 or netstandard2.0 targets.",
-    "The bug is observable only at runtime on Android \u2014 it requires running an app with SKGLView (HasRenderLoop=true) and measuring elapsed time between PaintSurface events to observe \u003E60fps"
-  ]
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0-android",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "errorMessages": {
+    "primaryError": "SKGLTextureView renders at 240-490 average FPS (spikes to 1849 FPS) instead of display-capped ~60 FPS when RenderMode is Continuously. GLTextureView never calls eglSwapInterval so VSync is not enforced."
+  }
 }

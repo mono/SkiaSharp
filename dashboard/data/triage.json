@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-02-12T16:49:35.6204298Z",
-  "totalCount": 39,
+  "generatedAt": "2026-02-12T17:42:35.2355896Z",
+  "totalCount": 46,
   "summary": {
-    "needsInvestigation": 11,
-    "closeable": 9,
-    "quickWins": 9,
-    "regressions": 8
+    "needsInvestigation": 14,
+    "closeable": 10,
+    "quickWins": 10,
+    "regressions": 9
   },
   "byType": [
     {
       "label": "type/bug",
-      "count": 25
+      "count": 32
     },
     {
       "label": "type/question",
@@ -21,18 +21,18 @@
       "count": 5
     },
     {
-      "label": "type/documentation",
+      "label": "type/enhancement",
       "count": 2
     },
     {
-      "label": "type/enhancement",
+      "label": "type/documentation",
       "count": 2
     }
   ],
   "byArea": [
     {
       "label": "area/SkiaSharp",
-      "count": 15
+      "count": 17
     },
     {
       "label": "area/libSkiaSharp.native",
@@ -40,11 +40,11 @@
     },
     {
       "label": "area/SkiaSharp.Views",
-      "count": 6
+      "count": 7
     },
     {
-      "label": "area/SkiaSharp.Views.Forms",
-      "count": 2
+      "label": "area/SkiaSharp.Views.Maui",
+      "count": 3
     },
     {
       "label": "area/SkiaSharp.HarfBuzz",
@@ -55,18 +55,26 @@
       "count": 2
     },
     {
-      "label": "area/SkiaSharp.Views.Maui",
+      "label": "area/SkiaSharp.Views.Blazor",
       "count": 2
     },
     {
-      "label": "area/SkiaSharp.Views.Blazor",
+      "label": "area/SkiaSharp.Views.Forms",
+      "count": 2
+    },
+    {
+      "label": "area/HarfBuzzSharp",
+      "count": 1
+    },
+    {
+      "label": "area/SkiaSharp.Views.Uno",
       "count": 1
     }
   ],
   "byAction": [
     {
       "label": "needs-investigation",
-      "count": 11
+      "count": 14
     },
     {
       "label": "close-with-docs",
@@ -74,33 +82,33 @@
     },
     {
       "label": "keep-open",
-      "count": 8
+      "count": 9
     },
     {
       "label": "close-as-fixed",
       "count": 5
     },
     {
-      "label": "close-as-duplicate",
-      "count": 3
+      "label": "request-info",
+      "count": 4
     },
     {
-      "label": "request-info",
-      "count": 2
+      "label": "close-as-duplicate",
+      "count": 4
     }
   ],
   "bySeverity": [
     {
       "label": "medium",
-      "count": 13
+      "count": 14
     },
     {
       "label": "high",
-      "count": 8
+      "count": 13
     },
     {
       "label": "low",
-      "count": 3
+      "count": 4
     },
     {
       "label": "critical",
@@ -108,6 +116,1398 @@
     }
   ],
   "issues": [
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3509,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T17:02:00Z",
+        "currentLabels": [
+          "type/bug"
+        ]
+      },
+      "summary": "Near-empty bug report: \u0027images not appearing\u0027 with no code, no steps, no logs, no screenshots. Template placeholders left unfilled.",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.5
+        },
+        "area": {
+          "value": "area/SkiaSharp",
+          "confidence": 0.4
+        },
+        "platforms": [
+          "os/macOS"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [],
+          "environmentDetails": "SkiaSharp 3.116.0, macOS, Visual Studio (Windows)"
+        },
+        "bugSignals": {
+          "severity": "low",
+          "errorType": "wrong-output",
+          "reproQuality": "none"
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.0",
+            "2.88.9"
+          ],
+          "workedIn": "2.88.9",
+          "currentRelevance": "unknown",
+          "relevanceReason": "No code or reproduction provided \u2014 impossible to determine if the issue is real or a usage error."
+        }
+      },
+      "analysis": {
+        "summary": "The issue body consists almost entirely of unfilled template placeholders. The description says \u0027I have some code that puts things on the screen, but nothing appears\u0027 without providing any actual code, expected behavior, actual behavior, screenshots, or log output. The code block contains only the template placeholder text. There is no actionable information to investigate.",
+        "codeInvestigation": [
+          {
+            "file": "binding/SkiaSharp/SKCanvas.cs",
+            "finding": "DrawImage methods exist with multiple overloads. All delegate to sk_canvas_draw_image_rect(). No obvious bugs in the C# wrapper \u2014 null checks on image and paint parameters are present.",
+            "relevance": "context",
+            "lines": "455-510"
+          },
+          {
+            "file": "binding/SkiaSharp/SKImage.cs",
+            "finding": "FromEncodedData() and related factory methods are well-defined. Return null on failure (not throw). No TODO or known issues that would cause silent rendering failures.",
+            "relevance": "context",
+            "lines": "158-232"
+          }
+        ],
+        "rationale": "Classified as type/bug at low confidence because the reporter selected [BUG] template but provided zero evidence. Area is generic area/SkiaSharp because no specific component is identified. Severity is unknown \u2014 without code or reproduction steps, this could range from a trivial usage error to a real rendering bug. The mention of 2.88.9 as \u0027last known good\u0027 hints at a possible regression but without any code this cannot be verified.",
+        "keySignals": [
+          {
+            "text": "I have some code that puts things on the screen, but nothing appears.",
+            "source": "issue body",
+            "interpretation": "Entire description \u2014 too vague to classify. Could be usage error, missing NuGet package, incorrect API usage, or a real rendering bug."
+          },
+          {
+            "text": "Code section contains only template placeholder text",
+            "source": "issue body",
+            "interpretation": "Reporter did not fill in the bug template. No actual code was provided."
+          },
+          {
+            "text": "Version 3.116.0 current, 2.88.9 last known good",
+            "source": "issue body",
+            "interpretation": "Suggests a possible regression from v2 to v3, but without code this is unverifiable."
+          },
+          {
+            "text": "Platform: macOS, IDE: Visual Studio (Windows)",
+            "source": "issue body",
+            "interpretation": "Slight inconsistency \u2014 macOS platform but Windows IDE. May indicate cross-compilation or confusion."
+          }
+        ],
+        "nextQuestions": [
+          "What actual code is the reporter using to draw images?",
+          "Is this SKCanvasView (MAUI/Forms), SKControl (WPF), or direct SKCanvas usage?",
+          "What image format and loading method is being used?",
+          "Is the SKImage being created successfully (non-null)?",
+          "What platform target framework is the project using?"
+        ],
+        "resolution": {
+          "hypothesis": "Cannot form a hypothesis without reproduction code. The issue could be anything from a missing NuGet package to incorrect canvas setup to a real rendering regression.",
+          "proposals": [
+            {
+              "description": "Ask the reporter to fill in the template with actual code, expected behavior, and actual behavior. A minimal repro project would be ideal.",
+              "title": "Request complete reproduction",
+              "confidence": 1,
+              "effort": "trivial"
+            }
+          ],
+          "recommendedProposal": "Request complete reproduction",
+          "recommendedReason": "No analysis is possible without actual code. The template is almost entirely unfilled."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "request-info",
+          "confidence": 0.95,
+          "reason": "The issue contains no actionable information \u2014 no code, no steps, no logs, no screenshots. Template placeholders were left unfilled."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Keep type/bug label, add area and platform",
+            "risk": "low",
+            "confidence": 0.6,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp",
+              "os/macOS"
+            ]
+          },
+          {
+            "type": "add-comment",
+            "description": "Request missing information from the reporter",
+            "risk": "high",
+            "confidence": 0.9,
+            "comment": "Thanks for reporting this. Unfortunately, the issue template wasn\u0027t filled in with the details we need to investigate \u2014 there\u0027s no actual code, expected/actual behavior, or log output.\n\nWould you be able to update the issue with:\n1. The actual code you\u0027re using to load and draw images\n2. What you expect to see vs what actually happens\n3. Your target framework (e.g., \u0060net8.0-macos\u0060)\n4. A screenshot of the blank output\n\nA minimal reproduction project (even a few lines) would help us diagnose this quickly. Without code, we can\u0027t determine whether this is a usage issue or a real rendering bug."
+          }
+        ],
+        "missingInfo": [
+          "Actual code that reproduces the issue (not template placeholder)",
+          "Expected behavior vs actual behavior",
+          "Target framework (net8.0-macos, net8.0, etc.)",
+          "Which SkiaSharp view/control is being used",
+          "Screenshots showing the blank output",
+          "Any error messages or log output"
+        ]
+      }
+    },
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3472,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:52:04Z",
+        "currentLabels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      "summary": "HarfBuzzSharp.Blob.FromStream uses a fixed block that only pins the managed byte array during constructor call \u2014 after it exits, GC can move or collect the array while native HarfBuzz still holds the raw pointer, causing crashes or data corruption",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.99
+        },
+        "area": {
+          "value": "area/HarfBuzzSharp",
+          "confidence": 0.99
+        },
+        "tenets": [
+          "tenet/reliability"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [
+            "Create a Blob from a Stream using Blob.FromStream()",
+            "Use the Blob (e.g., create a Face and shape text)",
+            "GC.Collect() or wait for GC compaction",
+            "Access the Blob data \u2014 crash or corrupted data"
+          ],
+          "environmentDetails": "All platforms, all .NET versions. Confirmed by multiple reporters.",
+          "relatedIssues": [
+            2323,
+            3393,
+            3394,
+            2821,
+            3473
+          ],
+          "repoLinks": []
+        },
+        "bugSignals": {
+          "severity": "high",
+          "isRegression": false,
+          "errorType": "crash",
+          "errorMessage": "AccessViolationException or corrupted glyph data (codepoints become 0)",
+          "reproQuality": "complete",
+          "targetFrameworks": [
+            "net8.0",
+            "net9.0"
+          ]
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.0"
+          ],
+          "currentRelevance": "likely",
+          "relevanceReason": "The buggy code in Blob.FromStream has not changed since it was first introduced (commit c1549d923). Bug exists in all versions of HarfBuzzSharp that include FromStream."
+        },
+        "fixStatus": {
+          "likelyFixed": false,
+          "confidence": 0.95,
+          "reason": "PR #3473 has been submitted by the reporter with a correct fix using Marshal.AllocCoTaskMem, but it has not been merged yet.",
+          "relatedPRs": [
+            3473
+          ]
+        }
+      },
+      "analysis": {
+        "summary": "Blob.FromStream creates a managed byte[] via MemoryStream.ToArray(), pins it with a fixed block, passes the pointer to hb_blob_create with MemoryMode.ReadOnly, then the fixed block exits. HarfBuzz holds the raw pointer but the GC can now relocate or collect the array. This is a use-after-move/use-after-free bug.",
+        "codeInvestigation": [
+          {
+            "file": "binding/HarfBuzzSharp/Blob.cs",
+            "finding": "FromStream uses fixed block that only pins the byte array during the Blob constructor call. After the fixed block exits at line 81, the managed byte[] \u0027data\u0027 is unpinned. HarfBuzz\u0027s hb_blob_create stores the raw pointer and uses it for the blob\u0027s lifetime, but the GC can relocate or collect the array at any time.",
+            "relevance": "direct",
+            "lines": "71-82"
+          },
+          {
+            "file": "binding/HarfBuzzSharp/Blob.cs",
+            "finding": "The private Create method passes the pointer to hb_blob_create with MemoryMode.ReadOnly, which tells HarfBuzz to use the pointer directly without copying. The pointer must remain valid for the blob\u0027s lifetime, but the fixed block ensures validity only during the constructor.",
+            "relevance": "direct",
+            "lines": "84-89"
+          },
+          {
+            "file": "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs",
+            "finding": "MemoryMode enum: ReadOnly=1 means HarfBuzz does not copy data. Duplicate=0 would make HarfBuzz copy (and be safe), but ReadOnly is explicitly specified.",
+            "relevance": "direct",
+            "lines": "7295-7304"
+          },
+          {
+            "file": "binding/SkiaSharp/SKData.cs",
+            "finding": "SKData.CreateCopy uses fixed blocks correctly \u2014 the native function (sk_data_new_with_copy) copies the data within the fixed block, so the pointer doesn\u0027t need to outlive it. This is the correct pattern for when you want to pass managed data to native code.",
+            "relevance": "related",
+            "lines": "68-73"
+          }
+        ],
+        "rationale": "This is clearly a bug, not a usage issue. The fixed block only pins the byte[] for the duration of the Blob constructor call. After the fixed block exits, the managed array is unpinned and may be relocated by GC compaction. Since MemoryMode.ReadOnly tells HarfBuzz not to copy the data, HarfBuzz directly uses the now-stale pointer. The area is area/HarfBuzzSharp (not area/SkiaSharp) since the bug is in the HarfBuzzSharp.Blob class. Severity is high because it causes crashes or silent data corruption. The os/Windows-Classic label is incorrect \u2014 this affects all platforms. Issue #2323 reported the same bug ~3 years earlier and was confirmed by user TJYSunset who experienced AccessViolationException and zeroed-out glyph codepoints.",
+        "keySignals": [
+          {
+            "text": "fixed (byte* dataPtr = data) { return new Blob((IntPtr)dataPtr, ...) }",
+            "source": "binding/HarfBuzzSharp/Blob.cs:79-81",
+            "interpretation": "The fixed block only pins \u0027data\u0027 during the Blob constructor. After the block exits, dataPtr is stale."
+          },
+          {
+            "text": "MemoryMode.ReadOnly",
+            "source": "binding/HarfBuzzSharp/Blob.cs:80",
+            "interpretation": "ReadOnly tells HarfBuzz NOT to copy the data \u2014 it uses the provided pointer directly. The pointer must remain valid for the blob\u0027s lifetime."
+          },
+          {
+            "text": "releaseDelegate: () =\u003E ms.Dispose()",
+            "source": "binding/HarfBuzzSharp/Blob.cs:80",
+            "interpretation": "The release delegate disposes the MemoryStream, but ms.ToArray() returns an independent copy. The byte[] \u0027data\u0027 has no GC root after the method returns."
+          },
+          {
+            "text": "At best all codepoints in Buffer.GlyphInfos becomes 0, at worst AccessViolationException",
+            "source": "#2323 comment by TJYSunset",
+            "interpretation": "Confirmed real-world impact \u2014 silent data corruption and hard crashes."
+          },
+          {
+            "text": "#2323 opened 2023 reporting identical issue",
+            "source": "#2323",
+            "interpretation": "This bug was reported ~3 years ago as a question and confirmed by a user, but never fixed."
+          }
+        ],
+        "workarounds": [
+          "Allocate unmanaged memory with Marshal.AllocHGlobal, copy stream data into it, and construct the Blob with a release delegate that frees the unmanaged memory.",
+          "Use Blob.FromFile() instead of Blob.FromStream() when loading from a file path."
+        ],
+        "nextQuestions": [
+          "Should this use MemoryMode.Duplicate instead to let HarfBuzz copy the data, avoiding unmanaged allocation entirely?",
+          "PR #3473 needs review \u2014 does the edge case handling (non-seekable streams, empty streams) match expectations?"
+        ],
+        "resolution": {
+          "hypothesis": "The fixed block in FromStream only pins the managed byte array during the Blob constructor call. After the method returns, nothing roots or pins the array, so HarfBuzz holds a dangling pointer.",
+          "proposals": [
+            {
+              "description": "PR #3473 replaces the managed byte array with unmanaged memory via Marshal.AllocCoTaskMem. The release delegate calls Marshal.FreeCoTaskMem. This is the correct fix \u2014 the pointer remains valid for the blob\u0027s lifetime and is freed when HarfBuzz destroys the blob.",
+              "title": "Merge PR #3473 (AllocCoTaskMem)",
+              "confidence": 0.92,
+              "effort": "small"
+            },
+            {
+              "description": "Change MemoryMode.ReadOnly to MemoryMode.Duplicate so HarfBuzz copies the data internally. Simpler change but incurs an extra copy. The fixed block would be sufficient since hb_blob_create would copy during the constructor call.",
+              "title": "Use MemoryMode.Duplicate",
+              "confidence": 0.85,
+              "effort": "trivial"
+            },
+            {
+              "description": "Users can work around by allocating unmanaged memory and creating the Blob manually instead of using FromStream.",
+              "title": "Workaround: manual unmanaged allocation",
+              "codeSnippet": "var length = (int)(stream.Length - stream.Position);\nvar dataPtr = Marshal.AllocHGlobal(length);\ntry {\n    using var ums = new UnmanagedMemoryStream((byte*)dataPtr, length, length, FileAccess.ReadWrite);\n    stream.CopyTo(ums);\n    var blob = new Blob(dataPtr, length, MemoryMode.ReadOnly, () =\u003E Marshal.FreeHGlobal(dataPtr));\n} catch {\n    Marshal.FreeHGlobal(dataPtr);\n    throw;\n}",
+              "confidence": 0.9,
+              "effort": "small"
+            }
+          ],
+          "recommendedProposal": "Merge PR #3473 (AllocCoTaskMem)",
+          "recommendedReason": "The reporter already submitted a well-structured PR with tests. It correctly handles non-seekable streams, empty streams, and exception cleanup. Review and merge is the fastest path to resolution."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "needs-investigation",
+          "confidence": 0.95,
+          "reason": "A fix PR (#3473) already exists from the reporter. The bug is confirmed, the fix is correct in approach. Needs code review and merge."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Fix area label from area/SkiaSharp to area/HarfBuzzSharp, remove os/Windows-Classic (affects all platforms)",
+            "risk": "low",
+            "confidence": 0.98,
+            "labels": [
+              "type/bug",
+              "area/HarfBuzzSharp",
+              "tenet/reliability"
+            ]
+          },
+          {
+            "type": "link-related",
+            "description": "Cross-reference #2323 (same bug reported as a question ~3 years ago)",
+            "risk": "low",
+            "confidence": 0.95,
+            "linkedIssue": 2323
+          },
+          {
+            "type": "link-related",
+            "description": "Cross-reference #3393 (broader GC safety initiative for P/Invokes)",
+            "risk": "low",
+            "confidence": 0.85,
+            "linkedIssue": 3393
+          },
+          {
+            "type": "add-comment",
+            "description": "Acknowledge the bug, confirm it\u0027s a known GC safety issue, note that PR #3473 is ready for review",
+            "risk": "high",
+            "confidence": 0.9,
+            "comment": "Thanks for the detailed analysis and the fix in #3473 \u2014 this is a real GC safety bug.\n\nThe \u0060fixed\u0060 block in \u0060FromStream\u0060 only pins the managed \u0060byte[]\u0060 during the \u0060Blob\u0060 constructor call. After it exits, HarfBuzz holds a dangling pointer since \u0060MemoryMode.ReadOnly\u0060 tells it not to copy. This was also reported in #2323 and confirmed to cause \u0060AccessViolationException\u0060 and corrupted glyph data in production.\n\nYour fix using \u0060Marshal.AllocCoTaskMem\u0060 is the right approach \u2014 it keeps the pointer stable for the blob\u0027s lifetime. We\u0027ll review #3473."
+          }
+        ]
+      }
+    },
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3440,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:52:04Z",
+        "currentLabels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Maui",
+          "os/Windows-WinUI",
+          "tenet/reliability"
+        ]
+      },
+      "summary": "MAUI app using LiveCharts2 with SkiaSharp 3.119.1 crashes on certain Windows 11 systems with a COMException (Element not found) during WinRT activation of SkiaSharp.Views.WinUI.Native.PropertySetExtensions. The crash occurs in the ANGLE/OpenGL rendering path (SKSwapChainPanel) when GlesContext.CreateSurface() calls PropertySetExtensions.AddSingle() to set EGL surface properties. The WinRT runtime cannot locate or activate the native C\u002B\u002B/WinRT component, suggesting a deployment or WinRT registration issue specific to certain machine configurations.",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.95
+        },
+        "area": {
+          "value": "area/SkiaSharp.Views.Maui",
+          "confidence": 0.85
+        },
+        "platforms": [
+          "os/Windows-WinUI"
+        ],
+        "backends": [
+          "backend/OpenGL"
+        ],
+        "tenets": [
+          "tenet/reliability"
+        ],
+        "partner": "partner/maui"
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [
+            "Create a MAUI app with LiveCharts2 that uses SkiaSharp for rendering",
+            "Deploy to certain Windows 11 systems (Lenovo 83C4 confirmed)",
+            "Observe crash when the chart control loads and attempts GL rendering"
+          ],
+          "codeSnippets": [
+            "\u003CliveCharts:CartesianChart x:Name=\u0022Graph\u0022 AbsoluteLayout.LayoutBounds=\u00220,0,1,1\u0022 AbsoluteLayout.LayoutFlags=\u0022PositionProportional,SizeProportional\u0022 ZoomMode=\u0022None\u0022 EasingFunction=\u0022{x:Null}\u0022 /\u003E"
+          ],
+          "environmentDetails": "Windows 11 (10.0.26100.7462), Lenovo 83C4 (IdeaPad), SkiaSharp 3.119.1, MAUI with LiveCharts2",
+          "relatedIssues": [
+            2948
+          ]
+        },
+        "bugSignals": {
+          "severity": "high",
+          "isRegression": false,
+          "errorType": "COMException / TypeInitializationException",
+          "errorMessage": "System.Runtime.InteropServices.COMException: Element not found. The type initializer for \u0027SkiaSharp.Views.WinUI.Native.PropertySetExtensions\u0027 threw an exception.",
+          "stackTrace": "System.Runtime.InteropServices.COMException: Element not found.\n  at void Marshal.ThrowExceptionForHR(int errorCode)()\n  at new BaseActivationFactory(string typeNamespace, string typeFullName)()\n  at static PropertySetExtensions()()\nSystem.TypeInitializationException:\n  at IObjectReference PropertySetExtensions.get__objRef_global__SkiaSharp_Views_WinUI_Native_IPropertySetExtensionsStatics()()\n  at void PropertySetExtensions.AddSingle(PropertySet propertySet, string key, float value)()\n  at void GlesContext.CreateSurface(SwapChainPanel panel, Size? renderSurfaceSize, float? resolutionScale)()\n  at void AngleSwapChainPanel.EnsureRenderSurface()()\n  at void AngleSwapChainPanel.OnLoaded(object sender, RoutedEventArgs e)()\n  at int RoutedEventHandler.Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e)()",
+          "reproQuality": "partial",
+          "targetFrameworks": [
+            "net8.0-windows10.0.19041.0"
+          ]
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.119.1"
+          ],
+          "currentRelevance": "likely",
+          "relevanceReason": "The PropertySetExtensions WinRT component and ANGLE rendering path have not changed since 3.119.1. The native WinUI component architecture is the same on main."
+        }
+      },
+      "analysis": {
+        "summary": "The crash occurs because the WinRT runtime cannot activate the SkiaSharp.Views.WinUI.Native.PropertySetExtensions class from the native C\u002B\u002B/WinRT component DLL. This class is only used in the ANGLE/OpenGL rendering path (SKSwapChainPanel \u2192 GlesContext.CreateSurface), not in the CPU rendering path (SKXamlCanvas). LiveCharts2 appears to use the GL view (SKGLView \u2192 SKSwapChainPanel) on Windows, triggering this code path. The \u0027Element not found\u0027 COMException from BaseActivationFactory indicates the WinRT activation infrastructure cannot locate the class registration \u2014 either the native DLL is not deployed, is the wrong architecture, or the activation metadata is missing. Issue #2948 reported the identical stack trace with a different COM error (REGDB_E_CLASSNOTREG / 0x80040154) during Microsoft Store certification and was resolved externally. The \u0027certain systems\u0027 qualifier suggests an environment-specific deployment or WinRT registration issue.",
+        "codeInvestigation": [
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs",
+            "finding": "CreateSurface() calls PropertySetExtensions.AddSingle() at line 104 and PropertySetExtensions.AddSize() at line 98 to configure EGL surface creation properties. These are the call sites that trigger the WinRT activation of the native component.",
+            "relevance": "direct",
+            "lines": "77-114"
+          },
+          {
+            "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/PropertySetExtensions.cpp",
+            "finding": "The C\u002B\u002B/WinRT component implementation is straightforward \u2014 just wraps PropertyValue::CreateSingle() and PropertyValue::CreateSize(). The code itself is correct; the issue is WinRT activation, not the implementation.",
+            "relevance": "direct",
+            "lines": "1-19"
+          },
+          {
+            "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/PropertySetExtensions.idl",
+            "finding": "IDL declares the runtimeclass in namespace SkiaSharp.Views.WinUI.Native. WinRT activation requires the DLL containing this class to be findable by the activation system.",
+            "relevance": "direct",
+            "lines": "1-8"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+            "finding": "OnLoaded creates GlesContext and calls EnsureRenderSurface(), which calls glesContext.CreateSurface(). This is the entry point from the XAML lifecycle that triggers the crash.",
+            "relevance": "direct",
+            "lines": "124-135"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
+            "finding": "SKXamlCanvas is entirely managed \u2014 uses WriteableBitmap for CPU rendering, no dependency on SkiaSharp.Views.WinUI.Native. Confirmed as an unaffected alternative rendering path.",
+            "relevance": "related",
+            "lines": "1-279"
+          },
+          {
+            "file": "binding/SkiaSharp.NativeAssets.WinUI/SkiaSharp.NativeAssets.WinUI.csproj",
+            "finding": "NativeAssets.WinUI package includes architecture-specific DLLs (x64, x86, arm64) from output/native/winui/. If this package\u0027s content is not properly deployed, the WinRT DLL will be missing.",
+            "relevance": "related",
+            "lines": "8-15"
+          },
+          {
+            "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Windows.cs",
+            "finding": "MAUI\u0027s SKGLViewHandler on Windows creates SKSwapChainPanel (the ANGLE/GL path). LiveCharts2 uses this GL view handler, causing it to hit the PropertySetExtensions activation path.",
+            "relevance": "related",
+            "lines": "7-13"
+          }
+        ],
+        "rationale": "Classified as type/bug because this is a crash with a clear stack trace during normal rendering. The area is SkiaSharp.Views.Maui because the reporter uses MAUI, though the actual failure is in the WinUI views layer (SkiaSharp.Views.WinUI.Native). The crash is specific to the OpenGL/ANGLE backend path because PropertySetExtensions is only invoked during EGL surface creation in GlesContext.CreateSurface. Severity is high because it completely prevents rendering, but not critical because it only affects certain systems and only the GL path.",
+        "keySignals": [
+          {
+            "text": "COMException: Element not found at BaseActivationFactory",
+            "source": "issue body",
+            "interpretation": "WinRT activation failure \u2014 the runtime cannot find the class registration for PropertySetExtensions. This is a deployment/packaging issue, not a code logic bug."
+          },
+          {
+            "text": "crashes on certain systems",
+            "source": "issue body",
+            "interpretation": "Environment-specific \u2014 not all Windows deployments are affected, pointing to machine-specific factors (policy, DLL deployment, architecture)."
+          },
+          {
+            "text": "We have tried both with HA enabled and disabled",
+            "source": "issue body",
+            "interpretation": "Reporter tested hardware acceleration toggle \u2014 rules out simple GPU driver issues. The problem is in WinRT component activation, not GPU rendering itself."
+          },
+          {
+            "text": "SKGLViewHandler.Windows.cs uses SKSwapChainPanel (line 7)",
+            "source": "code search",
+            "interpretation": "MAUI\u0027s GL view handler on Windows creates SKSwapChainPanel, which inherits AngleSwapChainPanel, which calls PropertySetExtensions via GlesContext. LiveCharts2 likely uses the GL view path."
+          },
+          {
+            "text": "SKCanvasViewHandler.Windows.cs uses SKXamlCanvas (line 8)",
+            "source": "code search",
+            "interpretation": "The CPU rendering path (SKXamlCanvas) does NOT use PropertySetExtensions at all \u2014 it\u0027s a pure managed implementation. This path would not be affected."
+          },
+          {
+            "text": "#2948 closed: \u0027fixed by Microsoft Store adjusting their setup\u0027",
+            "source": "issue #2948 comment",
+            "interpretation": "Identical stack trace with different COM error code. External environment fix resolved it \u2014 further evidence this is deployment/environment, not a code bug."
+          }
+        ],
+        "errorFingerprint": "COMException-ElementNotFound-PropertySetExtensions-WinUI",
+        "workarounds": [
+          "If LiveCharts2 supports it, configure the chart to use CPU rendering (SKCanvasView) instead of GPU rendering (SKGLView) to avoid the ANGLE/PropertySetExtensions code path entirely.",
+          "Add an explicit PackageReference to SkiaSharp.NativeAssets.WinUI in the application project to ensure the native DLLs are deployed correctly, rather than relying on transitive references through LiveCharts2.",
+          "Verify that SkiaSharp.Views.WinUI.Native.dll, libEGL.dll, and libGLESv2.dll are present in the application output directory after publish."
+        ],
+        "nextQuestions": [
+          "Is the app deployed as packaged (MSIX) or unpackaged? Unpackaged WinUI apps may have different WinRT activation behavior.",
+          "Are the native WinUI DLLs (SkiaSharp.Views.WinUI.Native.dll, libEGL.dll, libGLESv2.dll) present in the deployment output on the affected system?",
+          "What is the target architecture (x64, x86, arm64) and does it match the deployed native binaries?",
+          "Is the app published as framework-dependent or self-contained? Framework-dependent publish may not copy native assets correctly.",
+          "Does LiveCharts2 offer a way to use SKCanvasView (CPU) instead of SKGLView (GPU) on Windows?"
+        ],
+        "resolution": {
+          "hypothesis": "The WinRT activation of SkiaSharp.Views.WinUI.Native.PropertySetExtensions fails on certain systems because the native C\u002B\u002B/WinRT DLL is either not deployed to the output directory, is the wrong architecture, or the WinRT activation metadata is not properly registered in the app\u0027s deployment manifest. This is a deployment/packaging issue that manifests environment-specifically, similar to #2948.",
+          "proposals": [
+            {
+              "description": "Check that SkiaSharp.Views.WinUI.Native.dll is present alongside the app executable on the failing system. If missing, add an explicit PackageReference to SkiaSharp.NativeAssets.WinUI in the application project.",
+              "title": "Verify native DLL deployment",
+              "codeSnippet": "\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WinUI\u0022 Version=\u00223.119.1\u0022 /\u003E",
+              "confidence": 0.65,
+              "effort": "trivial"
+            },
+            {
+              "description": "If LiveCharts2 supports it, configure the rendering to use SKCanvasView (CPU/WriteableBitmap) instead of SKGLView (ANGLE/OpenGL) on Windows. This completely avoids the PropertySetExtensions WinRT component. This is the most robust workaround since it eliminates the dependency on the native WinUI component.",
+              "title": "Switch to CPU rendering path",
+              "confidence": 0.8,
+              "effort": "small"
+            },
+            {
+              "description": "Replace the WinRT PropertySetExtensions component with direct P/Invoke or managed code in GlesContext.CreateSurface(). The component only does PropertyValue::CreateSingle() and PropertyValue::CreateSize() \u2014 these could potentially be done via the managed WinRT APIs without a separate native DLL, eliminating the WinRT activation requirement entirely.",
+              "title": "Eliminate PropertySetExtensions dependency",
+              "confidence": 0.6,
+              "effort": "medium"
+            }
+          ],
+          "recommendedProposal": "Verify native DLL deployment",
+          "recommendedReason": "Most likely root cause based on #2948 precedent. Quick to verify and eliminates the most common cause of WinRT activation failures. If the DLLs are present, then the CPU rendering workaround is the next best option."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "request-info",
+          "confidence": 0.8,
+          "reason": "Need to confirm whether native DLLs are present on the failing system, the deployment mode (packaged vs unpackaged, self-contained vs framework-dependent), and architecture details to diagnose the WinRT activation failure."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp.Views.Maui, os/Windows-WinUI, tenet/reliability all apply",
+            "risk": "low",
+            "confidence": 0.95,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp.Views.Maui",
+              "os/Windows-WinUI",
+              "tenet/reliability"
+            ]
+          },
+          {
+            "type": "add-comment",
+            "description": "Request deployment details and suggest diagnostic steps",
+            "risk": "high",
+            "confidence": 0.8,
+            "comment": "Thanks for the stack trace \u2014 this helps narrow things down.\n\nThe crash is in the WinRT activation of \u0060SkiaSharp.Views.WinUI.Native.PropertySetExtensions\u0060, which is a native C\u002B\u002B/WinRT component used only by the OpenGL/ANGLE rendering path (\u0060SKSwapChainPanel\u0060). LiveCharts2 uses this GPU-accelerated path on Windows. The \u0022Element not found\u0022 error means the WinRT runtime can\u0027t locate the component\u0027s class registration on the affected system.\n\nWe\u0027ve seen a very similar issue before (#2948) where the same stack trace appeared during Microsoft Store certification \u2014 that turned out to be an environment/deployment issue.\n\nTo help diagnose:\n1. Could you check if \u0060SkiaSharp.Views.WinUI.Native.dll\u0060 is present in your app\u0027s output directory on the affected machine?\n2. Is the app deployed as packaged (MSIX) or unpackaged?\n3. Is it published as self-contained or framework-dependent?\n4. What target architecture are you building for (x64, arm64)?\n\nAs an immediate workaround, you can try adding an explicit package reference to ensure the native assets are deployed:\n\n\u0060\u0060\u0060xml\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WinUI\u0022 Version=\u00223.119.1\u0022 /\u003E\n\u0060\u0060\u0060\n\nIf LiveCharts2 supports configuring the rendering backend, switching to CPU rendering (which uses \u0060SKXamlCanvas\u0060 instead of \u0060SKSwapChainPanel\u0060) would bypass this component entirely."
+          },
+          {
+            "type": "link-related",
+            "description": "Cross-reference #2948 \u2014 identical stack trace, different COM error code",
+            "risk": "low",
+            "confidence": 0.9,
+            "linkedIssue": 2948
+          }
+        ],
+        "missingInfo": [
+          "Whether SkiaSharp.Views.WinUI.Native.dll is present in the app\u0027s output/deployment directory on the affected system",
+          "Deployment mode: packaged (MSIX) or unpackaged, self-contained or framework-dependent",
+          "Target architecture (x64, x86, or arm64) of the published app",
+          "Whether the issue is reproducible on a clean Windows 11 install or only on specific machines"
+        ]
+      }
+    },
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3437,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:52:04Z",
+        "currentLabels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "area/SkiaSharp",
+          "tenet/reliability",
+          "backend/SVG"
+        ]
+      },
+      "summary": "When using SKSvgCanvas in parallel via Task.Run on Windows, \u003Ctext\u003E elements intermittently lose their text content and x/y attribute values, producing empty \u003Ctext\u003E tags. The issue is a data race in Skia\u0027s text rendering pipeline (GlyphsToUnichars \u2192 DirectWrite font subsystem) that manifests only on Windows. It affects all SkiaSharp 3.x versions and is a regression from 2.88.9. Linux is unaffected.",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.98
+        },
+        "area": {
+          "value": "area/SkiaSharp",
+          "confidence": 0.8
+        },
+        "platforms": [
+          "os/Windows-Classic"
+        ],
+        "backends": [
+          "backend/SVG"
+        ],
+        "tenets": [
+          "tenet/reliability"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [
+            "Create multiple parallel tasks via Task.Run",
+            "In each task, create an SKSvgCanvas writing to a MemoryStream",
+            "Draw multiple text elements using canvas.DrawText with a font",
+            "Dispose the canvas to flush SVG output",
+            "Check the SVG string for blank \u003Ctext\u003E elements (regex: \u003E\\s\u002B\u003C/text\u003E)"
+          ],
+          "codeSnippets": [
+            "await Task.WhenAll(Enumerable.Range(0, 5).Select(i =\u003E Task.Run(() =\u003E drawSvgFunc(i)))).ConfigureAwait(false);"
+          ],
+          "environmentDetails": "Windows 11, Visual Studio Code, SkiaSharp 3.116.0 / 3.119.1 / 3.119.2-preview.1",
+          "repoLinks": [
+            {
+              "url": "https://github.com/jankurianski/skiasharp-svg-text-missing-bug",
+              "description": "Full reproduction project by reporter"
+            }
+          ]
+        },
+        "bugSignals": {
+          "severity": "high",
+          "isRegression": true,
+          "errorType": "data-corruption",
+          "errorMessage": "SVG \u003Ctext\u003E elements have empty text content and empty x/y attributes when SKSvgCanvas is used in parallel threads",
+          "reproQuality": "complete"
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.0",
+            "3.119.1",
+            "3.119.2-preview.1",
+            "2.88.9"
+          ],
+          "workedIn": "2.88.9",
+          "brokeIn": "3.116.0",
+          "currentRelevance": "likely",
+          "relevanceReason": "The SVG text rendering code path (SkSVGDevice::onDrawGlyphRunList \u2192 SVGTextBuilder \u2192 GlyphsToUnichars) has not changed between 3.116.0 and the current main branch. The underlying DirectWrite font subsystem code is also unchanged."
+        },
+        "regression": {
+          "isRegression": true,
+          "confidence": 0.9,
+          "reason": "Reporter explicitly states 2.88.9 does not have the bug. The entire text rendering pipeline was rewritten between SkiaSharp 2.x and 3.x (Skia upgraded from m88 to m116\u002B), changing how glyphs are shaped, cached, and reversed to unicode. The new pipeline likely introduced a thread-safety issue in the Windows DirectWrite font subsystem.",
+          "workedInVersion": "2.88.9",
+          "brokeInVersion": "3.116.0"
+        }
+      },
+      "analysis": {
+        "summary": "Data race in Skia\u0027s SVG text rendering on Windows. When multiple threads create separate SKSvgCanvas instances and draw text, the SVG \u003Ctext\u003E elements intermittently lose their content. The SVGTextBuilder (SkSVGDevice.cpp:1033) calls SkFontPriv::GlyphsToUnichars to reverse glyph IDs back to unicode characters. This calls typeface-\u003EgetGlyphToUnicodeMap() which on Windows uses DirectWrite COM interfaces (IDWriteFontFace). The race likely occurs in the shared DirectWrite font subsystem or Skia\u0027s internal glyph/strike caching, causing GlyphsToUnichars to return all-zero values, which SVGTextBuilder discards as NUL characters, producing empty text and position strings.",
+        "codeInvestigation": [
+          {
+            "file": "binding/SkiaSharp/SKSVG.cs",
+            "finding": "SKSvgCanvas.Create delegates directly to sk_svgcanvas_create_with_stream. No threading protection or documentation about thread-safety. Each call creates a separate canvas backed by a separate stream, so the C# layer itself is thread-safe.",
+            "relevance": "context",
+            "lines": "17-33"
+          },
+          {
+            "file": "externals/skia/src/svg/SkSVGDevice.cpp",
+            "finding": "SVGTextBuilder (line 1033) reverses glyph IDs to unicode via SkFontPriv::GlyphsToUnichars. If GlyphsToUnichars returns all NUL (\\0) values, the switch at line 1068 discards all characters (discardPos=true), producing empty fText/fPosXStr/fPosYStr \u2014 exactly matching the reported symptoms.",
+            "relevance": "direct",
+            "lines": "1033-1150"
+          },
+          {
+            "file": "externals/skia/src/core/SkFont.cpp",
+            "finding": "GlyphsToUnichars calls typeface-\u003EgetGlyphToUnicodeMap() which allocates a buffer of numGlyphs unichars and fills it via the platform-specific typeface implementation. On concurrent access, the typeface\u0027s internal state or the glyph-to-unicode map could be corrupted.",
+            "relevance": "direct",
+            "lines": "477-491"
+          },
+          {
+            "file": "externals/skia/src/ports/SkTypeface_win_dw.cpp",
+            "finding": "DWriteFontTypeface::getGlyphToUnicodeMap accesses IDWriteFontFace and IDWriteFontFace1 COM interfaces. Uses GetGlyphCount(), GetUnicodeRanges(), and glyph_to_unicode_map() which call GetGlyphIndices(). DirectWrite is documented as thread-safe for most read operations, but there may be undocumented races in the font face caching or when multiple threads call GetGlyphIndices simultaneously.",
+            "relevance": "direct",
+            "lines": "610-631"
+          },
+          {
+            "file": "externals/skia/src/c/sk_svg.cpp",
+            "finding": "The C API sk_svgcanvas_create_with_stream does not expose the flags parameter from SkSVGCanvas::Make. The kConvertTextToPaths_Flag (which would avoid the GlyphsToUnichars code path) is not available through the SkiaSharp API.",
+            "relevance": "related",
+            "lines": "16-18"
+          },
+          {
+            "file": "externals/skia/include/svg/SkSVGCanvas.h",
+            "finding": "SkSVGCanvas supports kConvertTextToPaths_Flag which emits text as \u003Cpath\u003E elements instead of \u003Ctext\u003E. This bypasses GlyphsToUnichars entirely and would avoid the race condition, but the flag is not exposed in the C API.",
+            "relevance": "related",
+            "lines": "23-26"
+          }
+        ],
+        "rationale": "This is clearly a bug (type/bug, 0.98) \u2014 the reporter describes broken output that should work. Area is area/SkiaSharp rather than area/libSkiaSharp.native because while the root cause is in native Skia code, the fix surface includes both the C API (missing flags parameter) and potentially the C# layer. Severity is high because text rendering silently produces corrupt output with no error. The Windows-only \u002B Linux-unaffected pattern strongly points to the DirectWrite font backend as the differentiator (FreeType on Linux vs DirectWrite on Windows).",
+        "keySignals": [
+          {
+            "text": "The more text elements being drawn and the more threads running the same task, the more likely the problem is to occur",
+            "source": "issue body",
+            "interpretation": "Classic data race signature \u2014 probability increases with contention, not deterministic."
+          },
+          {
+            "text": "This affects all SkiaSharp 3.x versions on Windows. Linux is unaffected.",
+            "source": "issue body",
+            "interpretation": "Platform-specific font backend is the differentiator. Windows uses DirectWrite (SkTypeface_win_dw), Linux uses FreeType (SkFontHost_FreeType). The bug is in the Windows-specific code path."
+          },
+          {
+            "text": "This is a regression from SkiaSharp 2.88.9 which does not have the bug.",
+            "source": "issue body",
+            "interpretation": "Skia\u0027s text pipeline was rewritten between m88 and m116. The GlyphRunBuilder and strike cache architecture changed significantly."
+          },
+          {
+            "text": "\u003Ctext\u003E elements have empty x/y attributes and no text content",
+            "source": "issue body (actual behavior)",
+            "interpretation": "SVGTextBuilder.fText, fPosXStr, fPosYStr are all empty. This means either runSize was 0 or all unichars were NUL (\\0), causing all characters to be discarded in the switch(c) case \u0027\\0\u0027 branch at SkSVGDevice.cpp:1068-1073."
+          },
+          {
+            "text": "I tested on Ubuntu 22.04.2 LTS (using WSL) and the bug does not occur there, even with 100 text elements and 50 parallel tasks",
+            "source": "comment #2",
+            "interpretation": "Confirms Windows-only. FreeType\u0027s getGlyphToUnicodeMap uses its own cmap parsing which is likely thread-safe, while DWrite\u0027s implementation may have COM threading issues."
+          }
+        ],
+        "workarounds": [
+          "Serialize SVG generation tasks using SemaphoreSlim(1,1) or a lock to ensure only one thread renders SVG text at a time on Windows.",
+          "Use sequential processing instead of Parallel/Task.Run for SVG generation on Windows."
+        ],
+        "nextQuestions": [
+          "Is the race in DWrite\u0027s IDWriteFontFace::GetGlyphIndices or in Skia\u0027s glyph cache/strike cache?",
+          "Would exposing kConvertTextToPaths_Flag in the C API be a viable permanent workaround?",
+          "Does the issue reproduce with SKSurface (raster) \u002B drawText \u002B readPixels in parallel, or is it specific to the SVG text\u2192unicode reversal path?",
+          "Can we reproduce this with a pure Skia C\u002B\u002B test to confirm it\u0027s an upstream Skia bug?"
+        ],
+        "resolution": {
+          "hypothesis": "The race condition occurs in the DWrite font subsystem when multiple threads simultaneously call getGlyphToUnicodeMap on the same or related typeface instances. On Windows, concurrent GetGlyphIndices calls through IDWriteFontFace may corrupt the glyph-to-unicode mapping, causing GlyphsToUnichars to return NUL characters. The SVGTextBuilder then discards all NUL characters, producing empty text and position attributes. FreeType on Linux likely has better internal locking, explaining the platform difference.",
+          "proposals": [
+            {
+              "description": "Users can wrap their SVG generation in a SemaphoreSlim(1,1) to ensure only one thread renders SVG at a time. This is a workaround, not a fix, but unblocks the reporter immediately.",
+              "title": "Serialize SVG text rendering (workaround)",
+              "codeSnippet": "private static readonly SemaphoreSlim _svgLock = new SemaphoreSlim(1, 1);\n\nawait Task.WhenAll(Enumerable.Range(0, 5).Select(i =\u003E Task.Run(async () =\u003E {\n    await _svgLock.WaitAsync();\n    try {\n        return drawSvgFunc(i);\n    } finally {\n        _svgLock.Release();\n    }\n})));",
+              "confidence": 0.9,
+              "effort": "trivial"
+            },
+            {
+              "description": "Add a flags parameter to sk_svgcanvas_create_with_stream (or a new overload sk_svgcanvas_create_with_stream_and_flags) to expose SkSVGCanvas::kConvertTextToPaths_Flag. When enabled, text is emitted as \u003Cpath\u003E elements, completely bypassing the GlyphsToUnichars code path and the race condition. Trade-off: SVG text is no longer selectable/searchable.",
+              "title": "Expose kConvertTextToPaths_Flag in C API",
+              "confidence": 0.8,
+              "effort": "small"
+            },
+            {
+              "description": "Investigate and fix the data race in the Windows DirectWrite font path. This would involve identifying whether the race is in Skia\u0027s glyph cache or in DWrite COM calls, and adding appropriate synchronization. May require an upstream Skia bug report.",
+              "title": "Fix upstream thread-safety in Skia DWrite font subsystem",
+              "confidence": 0.5,
+              "effort": "large"
+            }
+          ],
+          "recommendedProposal": "Serialize SVG text rendering (workaround)",
+          "recommendedReason": "Immediately unblocks the reporter with a simple code change. The flag exposure and upstream fix are better long-term solutions but require more investigation and code changes."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "needs-investigation",
+          "confidence": 0.9,
+          "reason": "Confirmed bug with complete reproduction, regression from 2.x to 3.x. Root cause is likely in Skia\u0027s Windows DirectWrite font subsystem threading. Needs deeper investigation to determine if fix should be in Skia (upstream), in the C API (expose flags), or both."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability, backend/SVG all match the classification.",
+            "risk": "low",
+            "confidence": 0.98,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp",
+              "os/Windows-Classic",
+              "tenet/reliability",
+              "backend/SVG"
+            ]
+          },
+          {
+            "type": "add-comment",
+            "description": "Post acknowledgement with workaround and technical analysis",
+            "risk": "high",
+            "confidence": 0.85,
+            "comment": "Thanks for the thorough report and reproduction repo \u2014 this is clearly a data race in Skia\u0027s text rendering pipeline on Windows.\n\nHere\u0027s a workaround you can use while we investigate: serialize your SVG generation tasks so only one thread renders at a time.\n\n\u0060\u0060\u0060csharp\nprivate static readonly SemaphoreSlim _svgLock = new SemaphoreSlim(1, 1);\n\nawait Task.WhenAll(Enumerable.Range(0, 5).Select(i =\u003E Task.Run(async () =\u003E {\n    await _svgLock.WaitAsync();\n    try {\n        return drawSvgFunc(i);\n    } finally {\n        _svgLock.Release();\n    }\n})));\n\u0060\u0060\u0060\n\nThe root cause appears to be in the SVG text rendering path: when \u0060SkSVGDevice\u0060 emits \u0060\u003Ctext\u003E\u0060 elements, it calls \u0060GlyphsToUnichars\u0060 to reverse glyph IDs back to unicode characters. On Windows, this goes through the DirectWrite font subsystem (\u0060IDWriteFontFace\u0060) which has a threading issue causing the glyph-to-unicode mapping to return empty/NUL values under concurrent access. FreeType on Linux doesn\u0027t have this issue, explaining the platform difference.\n\nWe\u0027re also looking at exposing Skia\u0027s \u0060kConvertTextToPaths_Flag\u0060 which would avoid this code path entirely by emitting text as \u0060\u003Cpath\u003E\u0060 elements (trade-off: text is no longer selectable in the SVG)."
+          }
+        ]
+      }
+    },
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3435,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:47:05Z",
+        "currentLabels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "area/libSkiaSharp.native",
+          "tenet/reliability"
+        ]
+      },
+      "summary": "DllNotFoundException for libSkiaSharp in a Blazor WASM app after upgrading from .NET 9 to .NET 10. Tried SkiaSharp 3.116.1 and 3.119.2-preview.1; both fail on .NET 10 though 3.116.1 worked on .NET 9. This is a duplicate of #3422 \u2014 SkiaSharp does not yet target net10.0 (TFMCurrent is net8.0, TFMNext is empty), so the Blazor WASM package has no net10.0 assets and native static linking fails. PR #3514 tracks adding .NET 10 support.",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.95
+        },
+        "area": {
+          "value": "area/SkiaSharp.Views.Blazor",
+          "confidence": 0.92
+        },
+        "platforms": [
+          "os/WASM"
+        ],
+        "tenets": [
+          "tenet/compatibility"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [
+            "Create or upgrade a Blazor WASM app to .NET 10",
+            "Add SkiaSharp.Views.Blazor 3.116.1 or 3.119.2-preview.1",
+            "Run the app \u2014 DllNotFoundException: libSkiaSharp at runtime"
+          ],
+          "environmentDetails": "Blazor WASM, .NET 10, SkiaSharp 3.116.1 and 3.119.2-preview.1",
+          "relatedIssues": [
+            3422
+          ],
+          "repoLinks": [
+            {
+              "url": "https://github.com/user/repo",
+              "description": "Reporter\u0027s reproduction repository"
+            }
+          ]
+        },
+        "bugSignals": {
+          "severity": "high",
+          "isRegression": true,
+          "errorType": "DllNotFoundException",
+          "errorMessage": "System.DllNotFoundException: libSkiaSharp",
+          "reproQuality": "partial",
+          "targetFrameworks": [
+            "net10.0"
+          ]
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.1",
+            "3.119.2-preview.1"
+          ],
+          "workedIn": "3.116.1 on .NET 9",
+          "brokeIn": "3.116.1 on .NET 10",
+          "currentRelevance": "likely",
+          "relevanceReason": "SkiaSharp still does not target net10.0 \u2014 TFMCurrent is net8.0 and TFMNext is empty in source/SkiaSharp.Build.props. PR #3514 is open but not yet merged."
+        },
+        "regression": {
+          "isRegression": false,
+          "confidence": 0.9,
+          "reason": "Not a regression in SkiaSharp \u2014 the same SkiaSharp version works on .NET 9. The failure is caused by upgrading the .NET SDK to 10, which SkiaSharp does not yet support. The behavior is \u0027not yet supported\u0027 rather than \u0027previously worked and broke\u0027."
+        },
+        "fixStatus": {
+          "likelyFixed": false,
+          "confidence": 0.85,
+          "reason": "PR #3514 (Update to .NET 10 SDK and restructure TFMs) is open and would resolve this, but it has not been merged yet.",
+          "relatedPRs": [
+            3514
+          ]
+        }
+      },
+      "analysis": {
+        "summary": "Blazor WASM on .NET 10 fails with DllNotFoundException because SkiaSharp does not yet target net10.0. WASM uses static linking \u2014 the .a files are compiled into dotnet.wasm via NativeFileReference at build time. While the NativeFileReference targets file has a net9.0\u002B fallback condition, the Blazor Views package itself only ships net8.0 and net6.0 TFMs, so .NET 10 projects cannot consume it properly. This is identical to #3422.",
+        "codeInvestigation": [
+          {
+            "file": "source/SkiaSharp.Build.props",
+            "finding": "TFMPrevious=net6.0, TFMCurrent=net8.0, TFMNext is empty. No .NET 10 target framework is configured.",
+            "relevance": "direct",
+            "lines": "62-66"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+            "finding": "TargetFrameworks=$(TFMCurrent);$(TFMPrevious);$(TFMNext) resolves to net8.0;net6.0 \u2014 no net10.0 target.",
+            "relevance": "direct",
+            "lines": "4"
+          },
+          {
+            "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+            "finding": "NativeFileReference conditions include a net9.0\u002B fallback (VersionGreaterThanOrEquals 9.0), but the Blazor package not having a net10.0 TFM means the overall integration is incomplete for .NET 10.",
+            "relevance": "related",
+            "lines": "32-40"
+          }
+        ],
+        "rationale": "Classified as type/bug because the reporter describes a runtime failure, not a usage question. Area is SkiaSharp.Views.Blazor because the failure is specific to Blazor WASM deployment and the missing net10.0 TFM in the Blazor package. Platform is os/WASM (not os/Windows-Classic as currently labeled) because the issue is in the WASM static linking pipeline, not Windows-specific. Tenet is tenet/compatibility because this is about .NET version compatibility. This is a duplicate of #3422 which reports the exact same problem with more detail.",
+        "keySignals": [
+          {
+            "text": "Started getting this runtime error after upgrading Blazor app from .Net 9 to .Net 10",
+            "source": "issue body",
+            "interpretation": "The .NET SDK upgrade is the trigger \u2014 SkiaSharp version didn\u0027t change, ruling out a SkiaSharp regression."
+          },
+          {
+            "text": ".Net 9 app worked with 3.116.1",
+            "source": "issue body",
+            "interpretation": "Confirms the same SkiaSharp version works on .NET 9. The gap is .NET 10 support, not a SkiaSharp defect."
+          },
+          {
+            "text": "Duplicate of #3422",
+            "source": "comment #2 by Webreaper",
+            "interpretation": "Community member identified this as a duplicate. #3422 has a full triage confirming the same root cause."
+          },
+          {
+            "text": "TFMCurrent=net8.0, TFMNext is empty",
+            "source": "code search: source/SkiaSharp.Build.props:64-66",
+            "interpretation": "No .NET 10 TFM configured \u2014 the Blazor package ships net8.0;net6.0 only."
+          }
+        ],
+        "errorFingerprint": "DllNotFoundException-libSkiaSharp-WASM-net10",
+        "workarounds": [
+          "Stay on .NET 9 until SkiaSharp officially adds .NET 10 support (PR #3514)",
+          "Run \u0060dotnet workload install wasm-tools\u0060 \u2014 reported to help for some users on Windows (not confirmed universally)"
+        ],
+        "nextQuestions": [
+          "Will PR #3514 fully resolve this, or are additional Emscripten version changes needed for .NET 10?"
+        ],
+        "resolution": {
+          "hypothesis": "SkiaSharp does not yet target .NET 10. The Blazor WASM package only ships net8.0 and net6.0 TFMs, so .NET 10 projects fail at the native static linking step, producing a DllNotFoundException.",
+          "proposals": [
+            {
+              "description": "Downgrade the project to net9.0 until SkiaSharp ships official .NET 10 support. .NET 9 \u002B SkiaSharp 3.116.1 is a known-working combination for Blazor WASM.",
+              "title": "Stay on .NET 9",
+              "confidence": 0.95,
+              "effort": "trivial"
+            },
+            {
+              "description": "PR #3514 restructures TFMs to include net10.0 as TFMCurrent and updates the SDK. This is the proper fix that will add official .NET 10 support to SkiaSharp including the Blazor WASM package.",
+              "title": "Merge PR #3514",
+              "confidence": 0.85,
+              "effort": "large"
+            }
+          ],
+          "recommendedProposal": "Stay on .NET 9",
+          "recommendedReason": "Immediate workaround with high confidence. The proper fix (PR #3514) is pending review and not yet available to end users."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "close-as-duplicate",
+          "confidence": 0.92,
+          "reason": "Identical root cause to #3422 (Blazor WASM \u002B .NET 10 = DllNotFoundException). Community member already identified the duplicate. #3422 has a more detailed report with code samples and broader version testing."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Fix incorrect labels: replace os/Windows-Classic with os/WASM and area/libSkiaSharp.native with area/SkiaSharp.Views.Blazor; add tenet/compatibility",
+            "risk": "low",
+            "confidence": 0.92,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp.Views.Blazor",
+              "os/WASM",
+              "tenet/compatibility"
+            ]
+          },
+          {
+            "type": "link-duplicate",
+            "description": "Mark as duplicate of #3422 \u2014 same root cause (no .NET 10 TFM support in Blazor WASM package)",
+            "risk": "medium",
+            "confidence": 0.92,
+            "linkedIssue": 3422
+          },
+          {
+            "type": "add-comment",
+            "description": "Post duplicate acknowledgement with workaround",
+            "risk": "high",
+            "confidence": 0.9,
+            "comment": "Thanks for the report. This is a duplicate of #3422 \u2014 SkiaSharp does not yet target .NET 10, so the Blazor WASM native static linking fails.\n\nAs a workaround, stay on .NET 9 until .NET 10 support ships. PR #3514 tracks adding .NET 10 TFM support.\n\nClosing as duplicate of #3422."
+          },
+          {
+            "type": "close-issue",
+            "description": "Close as duplicate of #3422",
+            "risk": "medium",
+            "confidence": 0.9
+          }
+        ]
+      }
+    },
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3430,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:47:05Z",
+        "currentLabels": [
+          "type/bug",
+          "os/WASM",
+          "area/SkiaSharp.Views.Uno",
+          "os/Windows-WinUI",
+          "tenet/reliability"
+        ]
+      },
+      "summary": "NullReferenceException in SKXamlCanvas.Skia.cs when canvas resizes \u2014 FreeBitmap() nulls bitmap field that was just recreated",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.98
+        },
+        "area": {
+          "value": "area/SkiaSharp.Views.Uno",
+          "confidence": 0.99
+        },
+        "platforms": [
+          "os/WASM",
+          "os/Windows-WinUI",
+          "os/Linux",
+          "os/macOS"
+        ],
+        "tenets": [
+          "tenet/reliability"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [
+            "Use Uno Platform\u0027s SKXamlCanvas on a Skia backend (WASM, WinUI via Skia, Linux, macOS)",
+            "Resize the canvas so both bitmap and pixel dimensions change",
+            "CreateBitmap() calls FreeBitmap() twice \u2014 second call nulls the freshly-created bitmap",
+            "DoInvalidate() accesses bitmap.PixelBuffer.AsStream() on null bitmap \u2192 NRE"
+          ],
+          "environmentDetails": "Uno Platform Skia backends (WASM, Desktop), SkiaSharp 3.116.0",
+          "relatedIssues": [
+            2967,
+            3255,
+            3431
+          ]
+        },
+        "bugSignals": {
+          "severity": "high",
+          "isRegression": false,
+          "errorType": "NullReferenceException",
+          "errorMessage": "NullReferenceException at bitmap.PixelBuffer.AsStream() in DoInvalidate after CreateBitmap nulls bitmap",
+          "reproQuality": "complete",
+          "targetFrameworks": [
+            "net8.0"
+          ]
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.0",
+            "2.88.9"
+          ],
+          "workedIn": "2.88.9",
+          "currentRelevance": "likely",
+          "relevanceReason": "The buggy code in SKXamlCanvas.Skia.cs has not changed since commit c264c449b (Fix SKXamlCanvas on Uno Skia to use Bgra8888 #2918). The bug is still present on main."
+        },
+        "fixStatus": {
+          "likelyFixed": false,
+          "confidence": 0.95,
+          "reason": "PR #3431 by the same author (MartinZikmund) provides the fix but has not been merged yet. The fix splits FreeBitmap into two methods: FreePixels() for pixel buffer management and FreeBitmap() for bitmap-only cleanup.",
+          "relatedPRs": [
+            3431
+          ]
+        }
+      },
+      "analysis": {
+        "summary": "The FreeBitmap() method unconditionally nulls both the pixels array and the bitmap. In CreateBitmap(), when the canvas resizes, FreeBitmap() is called first for bitmap size mismatch (line 87), a new bitmap is created (lines 89-102), then FreeBitmap() is called again for pixel size mismatch (line 106), which nulls the just-created bitmap. DoInvalidate() then hits NRE at line 72 accessing bitmap.PixelBuffer.",
+        "codeInvestigation": [
+          {
+            "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
+            "finding": "CreateBitmap() calls FreeBitmap() at line 87 (bitmap size mismatch) and again at line 106 (pixel size mismatch). The second call nulls bitmap that was just created at line 91. This is because FreeBitmap() unconditionally nulls both pixels and bitmap at lines 120-126.",
+            "relevance": "direct",
+            "lines": "86-113"
+          },
+          {
+            "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
+            "finding": "DoInvalidate() accesses bitmap.PixelBuffer.AsStream() at line 72 without null-checking bitmap. After CreateBitmap() returns with bitmap=null due to the double-free, this throws NRE.",
+            "relevance": "direct",
+            "lines": "68-78"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
+            "finding": "WinUI version\u0027s CreateBitmap() only has one allocation block: create bitmap then get pixels from it via bitmap.GetPixels(). FreeBitmap() safely clears both because they share a lifecycle. The Uno Skia version diverges by using a separate GCHandle-pinned byte array.",
+            "relevance": "related",
+            "lines": "229-255"
+          },
+          {
+            "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
+            "finding": "FreeBitmap() sets both pixels=null and bitmap=null inside a single if(pixels!=null) guard. This couples two independent resources \u2014 the bitmap and the pinned pixel buffer \u2014 into a single disposal path.",
+            "relevance": "direct",
+            "lines": "118-126"
+          }
+        ],
+        "rationale": "This is clearly a bug \u2014 the code path deterministically causes NRE whenever both bitmap and pixel dimensions change simultaneously (i.e., every canvas resize). The reporter linked the exact line and correctly identified the root cause. The WinUI version doesn\u0027t have this problem because pixels are obtained from bitmap.GetPixels() (single lifecycle), whereas the Uno Skia version uses a separate GCHandle-pinned byte array with an independent lifecycle. Severity is high because it\u0027s a crash on a common operation (canvas resize).",
+        "keySignals": [
+          {
+            "text": "FreeBitmap method may have reset bitmap field to null",
+            "source": "issue body",
+            "interpretation": "Reporter correctly identified the root cause \u2014 FreeBitmap() nulls bitmap but is called twice in CreateBitmap()."
+          },
+          {
+            "text": "bitmap?.PixelWidth != info.Width \u2192 FreeBitmap() ... then pixels == null \u2192 FreeBitmap() again",
+            "source": "SKXamlCanvas.Skia.cs lines 86-113",
+            "interpretation": "Second FreeBitmap() call at line 106 destroys the bitmap created at line 91, because FreeBitmap() unconditionally nulls both pixels and bitmap."
+          },
+          {
+            "text": "WinUI version uses bitmap.GetPixels() \u2014 pixels tied to bitmap lifecycle",
+            "source": "SkiaSharp.Views.WinUI/SKXamlCanvas.cs line 240",
+            "interpretation": "The WinUI version has a single lifecycle for pixels\u002Bbitmap, so FreeBitmap() safely clears both. The Uno Skia version has separate lifecycles, making the combined free incorrect."
+          },
+          {
+            "text": "PR #3431 splits FreeBitmap into FreePixels() and FreeBitmap()",
+            "source": "PR #3431 diff",
+            "interpretation": "Fix is already submitted by the reporter. The approach correctly separates the two lifecycles and reorders operations to handle pixels first, then bitmap."
+          }
+        ],
+        "nextQuestions": [
+          "Should the PR #3431 include a unit test that resizes the canvas and verifies no NRE?",
+          "Are there other Uno platform-specific canvas types (e.g., WASM, Android, iOS) with similar combined disposal patterns?"
+        ],
+        "resolution": {
+          "hypothesis": "FreeBitmap() couples two independent resource lifecycles (bitmap and pinned pixel buffer). When canvas resizes, both conditions trigger FreeBitmap(), and the second call destroys the bitmap that was just recreated between the two calls.",
+          "proposals": [
+            {
+              "description": "PR #3431 by MartinZikmund correctly splits FreeBitmap() into FreePixels() (handles GCHandle \u002B byte array) and FreeBitmap() (handles bitmap only). It also reorders CreateBitmap() to handle pixels first, then bitmap, preventing the double-null scenario.",
+              "title": "Merge PR #3431",
+              "confidence": 0.95,
+              "effort": "trivial"
+            },
+            {
+              "description": "As a defensive measure, add a null check for bitmap before accessing bitmap.PixelBuffer in DoInvalidate(). This doesn\u0027t fix the root cause but prevents the crash.",
+              "title": "Add null guard in DoInvalidate",
+              "codeSnippet": "if (bitmap == null)\n    return;\nusing (var data = bitmap.PixelBuffer.AsStream())\n{\n    data.Write(pixels, 0, pixels.Length);\n    data.Flush();\n}\nbitmap.Invalidate();",
+              "confidence": 0.7,
+              "effort": "trivial"
+            }
+          ],
+          "recommendedProposal": "Merge PR #3431",
+          "recommendedReason": "The PR is already submitted by a trusted contributor (MartinZikmund, Uno Platform team), addresses the root cause by decoupling the two resource lifecycles, and follows the same split-responsibility pattern used elsewhere in the codebase."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "keep-open",
+          "confidence": 0.95,
+          "reason": "Root cause is confirmed by code inspection, and a correct fix (PR #3431) is already submitted. The fix is minimal and surgical \u2014 it splits a method and reorders operations."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp.Views.Uno, os/WASM, os/Windows-WinUI, tenet/reliability. Add os/Linux and os/macOS since all Uno Skia backends are affected.",
+            "risk": "low",
+            "confidence": 0.9,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp.Views.Uno",
+              "os/WASM",
+              "os/Windows-WinUI",
+              "os/Linux",
+              "os/macOS",
+              "tenet/reliability"
+            ]
+          },
+          {
+            "type": "add-comment",
+            "description": "Acknowledge the bug report and note that PR #3431 looks correct",
+            "risk": "high",
+            "confidence": 0.9,
+            "comment": "Thanks for the detailed report and the fix in #3431.\n\nConfirmed the root cause: \u0060FreeBitmap()\u0060 nulls both \u0060pixels\u0060 and \u0060bitmap\u0060 together, but \u0060CreateBitmap()\u0060 has two separate conditions that each call \u0060FreeBitmap()\u0060. When the canvas resizes, the second call (for pixel size mismatch at line 106) destroys the bitmap that was just recreated (at line 91), causing the NRE at line 72.\n\nThe WinUI version avoids this because \u0060pixels\u0060 is obtained from \u0060bitmap.GetPixels()\u0060 \u2014 a single lifecycle. The Uno Skia version uses a separate \u0060GCHandle\u0060-pinned byte array, so the two resources need independent disposal.\n\nPR #3431\u0027s approach of splitting into \u0060FreePixels()\u0060 and \u0060FreeBitmap()\u0060 looks correct and minimal."
+          },
+          {
+            "type": "link-related",
+            "description": "Cross-reference PR #3431 which contains the fix",
+            "risk": "low",
+            "confidence": 0.98,
+            "linkedIssue": 3431
+          }
+        ]
+      }
+    },
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3429,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:47:05Z",
+        "currentLabels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "tenet/reliability"
+        ]
+      },
+      "summary": "Memory leak in WPF SkiaSharp rendering on Nvidia Quadro GPUs at high DPI \u2014 root cause is WPF compositor/driver interaction, not SkiaSharp itself",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.75
+        },
+        "area": {
+          "value": "area/SkiaSharp.Views",
+          "confidence": 0.7
+        },
+        "platforms": [
+          "os/Windows-Classic"
+        ],
+        "tenets": [
+          "tenet/reliability"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [
+            "Create a WPF application using SkiaSharp (SKElement or SKGLElement)",
+            "Run on a system with Nvidia Quadro GPU and a high-resolution monitor",
+            "Draw patterns repeatedly \u2014 observe memory growing without bound",
+            "Confirm leak does not occur with AMD, Nvidia GeForce, or when using RenderMode.SoftwareOnly"
+          ],
+          "environmentDetails": "Windows, Nvidia Quadro series GPU, high-resolution monitor, SkiaSharp 3.116.0",
+          "relatedIssues": [
+            3309,
+            3311,
+            1569
+          ],
+          "repoLinks": [
+            {
+              "url": "https://github.com/dotnet/wpf/issues/10005",
+              "description": "WPF runtime bug: memory leak on certain graphics cards"
+            },
+            {
+              "url": "https://github.com/beto-rodriguez/SkiaSharp-wpf-memory-leak",
+              "description": "SKGLElement memory leak repro project from #3309"
+            },
+            {
+              "url": "https://forums.developer.nvidia.com/t/quadro-card-memory-leak-under-per-frame-vbo-churn/349313",
+              "description": "Nvidia forum: Quadro memory leak under per-frame VBO churn"
+            }
+          ]
+        },
+        "bugSignals": {
+          "severity": "medium",
+          "isRegression": false,
+          "errorType": "memory-leak",
+          "reproQuality": "partial",
+          "targetFrameworks": [
+            "net8.0-windows"
+          ]
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.0",
+            "2.88.9"
+          ],
+          "workedIn": "2.88.9",
+          "brokeIn": "3.116.0",
+          "currentRelevance": "likely",
+          "relevanceReason": "The WPF rendering code in SKElement.cs and SKGLElement.cs has not fundamentally changed since 3.116.0. However, the regression from 2.88.9 may relate to changes in bitmap size, rendering frequency, or the switch from SkiaSharp v2 to v3 internals rather than WPF view code itself."
+        },
+        "regression": {
+          "isRegression": false,
+          "confidence": 0.6,
+          "reason": "Reporter claims 2.88.9 worked, but this is likely a WPF/driver interaction that depends on bitmap sizes, rendering frequency, and GPU driver version \u2014 not a direct SkiaSharp code regression. The root cause (dotnet/wpf#10005) affects WPF apps broadly, not just SkiaSharp."
+        }
+      },
+      "analysis": {
+        "summary": "Memory leak when rendering SkiaSharp content in WPF on Nvidia Quadro GPUs at high DPI. The reporter\u0027s workaround (disabling WPF hardware acceleration) confirms the leak is in WPF\u0027s D3D compositor layer, not in SkiaSharp\u0027s rendering code. This is a known WPF framework issue (dotnet/wpf#10005) affecting how GPU drivers manage texture memory for WriteableBitmap compositing. SkiaSharp contributes by creating large bitmaps on each render cycle, but the leak is in the WPF/driver layer.",
+        "codeInvestigation": [
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+            "finding": "OnRender creates/reuses a WriteableBitmap, writes SkiaSharp pixels to it, then calls drawingContext.DrawImage(). The bitmap is cached (line 66) and only recreated on size change. WPF\u0027s compositor uploads this bitmap to GPU texture memory via D3D \u2014 the leak occurs in that upload/retention path on Nvidia Quadro drivers.",
+            "relevance": "direct",
+            "lines": "45-89"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+            "finding": "SKGLElement uses OpenGL via OpenTK for GPU-accelerated rendering. Known memory leak exists (#3309) because Dispose does not call base GLWpfControl.Dispose(). PR #3311 fixes this. If the reporter uses SKGLElement, this could be the root cause.",
+            "relevance": "direct",
+            "lines": "117-181"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+            "finding": "Release() disposes canvas, surface, renderTarget, and grContext but does NOT call base.Dispose(). This leaves OpenTK\u0027s GPU resources (framebuffers, textures) leaked. Fixed by PR #3311.",
+            "relevance": "related",
+            "lines": "192-218"
+          }
+        ],
+        "rationale": "Classified as type/bug because memory grows unboundedly \u2014 that\u0027s broken behavior regardless of root cause. Area is SkiaSharp.Views because the WPF view controls (SKElement, SKGLElement) are the integration point, even though the root cause is in WPF\u0027s compositor. Severity is medium because it requires a specific GPU (Nvidia Quadro) and high-DPI setup. The reporter\u0027s SoftwareOnly workaround is the key signal: it proves the leak is in WPF\u0027s hardware-accelerated rendering pipeline, not in SkiaSharp\u0027s pixel generation. The claim of regression from 2.88.9 has low confidence as a SkiaSharp regression because the underlying WPF/driver interaction likely changed with driver updates or the move to v3.",
+        "keySignals": [
+          {
+            "text": "it only occurred in the Nvidia Quadro series",
+            "source": "issue body",
+            "interpretation": "GPU-driver-specific issue \u2014 not a SkiaSharp code bug. Nvidia Quadro drivers have known memory management issues with WPF\u0027s D3D compositor."
+          },
+          {
+            "text": "RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly... issue does not occur",
+            "source": "issue body",
+            "interpretation": "Disabling WPF hardware acceleration eliminates the leak, proving the issue is in WPF\u0027s GPU compositing layer, not in SkiaSharp\u0027s rendering."
+          },
+          {
+            "text": "I\u0027ve checked that it doesn\u0027t happen with Nvidia Geforce, AMD",
+            "source": "issue body",
+            "interpretation": "Leak is driver-specific, not code-specific. Consumer Nvidia drivers (GeForce) handle the same WPF compositor workload without leaking."
+          },
+          {
+            "text": "Last Known Good Version: 2.88.9",
+            "source": "issue body",
+            "interpretation": "May correlate with driver updates or v2\u2192v3 rendering differences rather than a specific SkiaSharp regression."
+          }
+        ],
+        "workarounds": [
+          "Disable Nvidia \u0027Threaded Optimization\u0027 in Nvidia Control Panel for the application",
+          "If using SKGLElement, switch to SKElement (CPU-based rendering avoids OpenTK disposal leak)",
+          "Try rolling back the Nvidia Quadro driver to an earlier version (e.g., 553.62 or 572.60)"
+        ],
+        "nextQuestions": [
+          "Which WPF control is the reporter using \u2014 SKElement (CPU) or SKGLElement (GL)?",
+          "What is the exact Nvidia Quadro model and driver version?",
+          "What is the monitor resolution / DPI scaling percentage?",
+          "Does the leak correlate with specific drawing operations, or any SkiaSharp rendering?"
+        ],
+        "resolution": {
+          "hypothesis": "The memory leak is in WPF\u0027s D3D compositor layer when compositing WriteableBitmap or OpenGL interop textures on Nvidia Quadro GPU drivers. SkiaSharp triggers it by producing large bitmaps or GL surfaces on each render cycle, but the retention/leak occurs downstream in WPF \u002B driver. If using SKGLElement specifically, the known OpenTK disposal bug (#3309) may be the direct cause.",
+          "proposals": [
+            {
+              "description": "In Nvidia Control Panel, set \u0027Threaded Optimization\u0027 to OFF for the application. This has been reported to resolve WPF memory leaks with Quadro drivers on the Nvidia developer forums.",
+              "title": "Disable Nvidia Threaded Optimization",
+              "confidence": 0.55,
+              "effort": "trivial"
+            },
+            {
+              "description": "If currently using SKGLElement (OpenGL-accelerated), switch to SKElement (CPU-based SkiaSharp rendering to WriteableBitmap). This avoids the known OpenTK disposal leak (#3309) and reduces GPU memory pressure. WPF still uses hardware acceleration for compositing, but the SkiaSharp-side GPU resources are eliminated.",
+              "title": "Switch from SKGLElement to SKElement",
+              "confidence": 0.6,
+              "effort": "small"
+            },
+            {
+              "description": "Try downgrading to Nvidia Quadro driver version 553.62 or 572.60. Per Nvidia forum reports, certain driver versions have fixed or mitigated this class of GPU memory leak.",
+              "title": "Roll back Nvidia Quadro driver",
+              "confidence": 0.45,
+              "effort": "small"
+            },
+            {
+              "description": "If the reporter uses SKGLElement, merging PR #3311 would fix the known OpenTK disposal leak by updating OpenTK and calling base.Dispose(). This doesn\u0027t fix the broader WPF compositor issue but eliminates a confirmed leak path.",
+              "title": "Merge PR #3311 (SKGLElement disposal fix)",
+              "confidence": 0.7,
+              "effort": "small"
+            }
+          ],
+          "recommendedProposal": "Disable Nvidia Threaded Optimization",
+          "recommendedReason": "Lowest effort, highest chance of addressing the WPF compositor leak specifically reported. If it doesn\u0027t help, asking which control (SKElement vs SKGLElement) the reporter uses will determine whether #3311 is relevant."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "needs-investigation",
+          "confidence": 0.75,
+          "reason": "The report lacks critical information: which WPF control (SKElement vs SKGLElement), GPU model, driver version, DPI scaling. The leak may be a known WPF framework issue (dotnet/wpf#10005) or the known SKGLElement disposal bug (#3309). Need reporter clarification to determine which."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Labels are already correct: type/bug, os/Windows-Classic, tenet/reliability. Add area/SkiaSharp.Views.",
+            "risk": "low",
+            "confidence": 0.85,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp.Views",
+              "os/Windows-Classic",
+              "tenet/reliability"
+            ]
+          },
+          {
+            "type": "add-comment",
+            "description": "Ask for clarification on control type and GPU details, provide driver-side workaround",
+            "risk": "high",
+            "confidence": 0.8,
+            "comment": "Thanks for the detailed investigation \u2014 the fact that disabling WPF hardware acceleration resolves it is a strong signal that the leak is in WPF\u0027s D3D compositor layer rather than in SkiaSharp\u0027s rendering code itself. This is consistent with a known WPF framework issue ([dotnet/wpf#10005](https://github.com/dotnet/wpf/issues/10005)) affecting certain GPU drivers.\n\nA few questions to help narrow this down:\n\n1. Which SkiaSharp WPF control are you using \u2014 \u0060SKElement\u0060 or \u0060SKGLElement\u0060?\n2. What is the exact Nvidia Quadro model and driver version?\n3. What DPI scaling percentage is your high-resolution monitor set to?\n\nIf you\u0027re using \u0060SKGLElement\u0060, there\u0027s a known memory leak in the current OpenTK integration ([#3309](https://github.com/mono/SkiaSharp/issues/3309)) with a pending fix in [#3311](https://github.com/mono/SkiaSharp/issues/3311). Switching to \u0060SKElement\u0060 (CPU-based rendering) may resolve the leak while keeping WPF hardware acceleration enabled for the rest of your UI.\n\nAs an alternative workaround, try disabling **Threaded Optimization** in the Nvidia Control Panel for your application \u2014 this has been reported to mitigate WPF memory leaks with Quadro drivers."
+          },
+          {
+            "type": "link-related",
+            "description": "Cross-reference with SKGLElement disposal leak",
+            "risk": "low",
+            "confidence": 0.7,
+            "linkedIssue": 3309
+          }
+        ],
+        "missingInfo": [
+          "Which WPF SkiaSharp control: SKElement or SKGLElement?",
+          "Nvidia Quadro model and driver version",
+          "Monitor resolution and Windows DPI scaling percentage",
+          "Minimal reproduction project or code snippet"
+        ]
+      }
+    },
     {
       "meta": {
         "schemaVersion": "1.0",

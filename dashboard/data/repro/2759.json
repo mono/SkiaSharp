@@ -3,66 +3,76 @@
     "schemaVersion": "1.0",
     "number": 2759,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T22:41:14Z"
+    "analyzedAt": "2026-02-12T17:45:00Z"
   },
-  "conclusion": "partial",
-  "notes": "The reporter references issue #933 and says the problem persists in 2.88.6, but does not attach their own test file. The only available test image is image1.png from #933, which is a structurally malformed PNG: it has 12 bytes of garbage data after the IDAT chunk instead of a proper IEND terminator. SKBitmap.Decode returns null and SKCodec.GetPixels returns ErrorInInput for this file across all tested versions (2.88.3, 2.88.6, 3.119.2). When the same image is resaved by macOS (producing a valid PNG with proper IEND), it decodes successfully. The related issue #1981 (multi-IDAT zlib bug) was fixed and osm-liberty.png from that issue now decodes correctly. The core question is whether SkiaSharp/Skia should tolerate malformed PNGs missing IEND \u2014 other decoders (macOS ImageIO, browsers) do. The reporter\u0027s actual file may have different corruption than the GitHub-hosted copy.",
+  "conclusion": "not-reproduced",
+  "notes": "Tested SKBitmap.Decode with multiple PNG types (16-bit RGB, 8-bit RGBA, 8-bit colormap/palette, large 8-bit RGBA) across SkiaSharp 2.88.3, 2.88.6, 3.119.2, and main (source). All decodes succeeded on all versions. Also tested edge cases: truncated PNGs (10%, 50%, 90%), empty files, header-only files, and non-existent paths \u2014 all behaved correctly. The reporter\u0027s specific PNG file (image1.png) was never attached to the issue, making it impossible to reproduce the exact failure. The original #933/#1981 was a zlib SSE decompression bug fixed in 2.88.1. Without the reporter\u0027s specific image, we cannot determine whether their PNG triggers a different code path. The reporter was asked (via triage) to provide the sample file but never responded.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Download test image from issue #933 (image1.png hosted on GitHub user-images) and the osm-liberty.png from issue #1981 WPF.zip attachment",
+      "description": "Create standalone console project with SkiaSharp 2.88.3 and copy test PNG files (baboon.png 16-bit RGB, color-wheel.png 8-bit RGBA, index8.png 8-bit colormap, testimage.png 8-bit RGBA)",
       "layer": "setup",
-      "command": "curl -sLo image1.png \u0027https://user-images.githubusercontent.com/31235892/63347183-...png\u0027 \u0026\u0026 curl -sLo WPF.zip \u0027https://github.com/mono/SkiaSharp/files/8356177/WPF.zip\u0027 \u0026\u0026 unzip WPF.zip \u0027*/osm-liberty.png\u0027",
-      "output": "image1.png: 29310 bytes, 152x152 RGBA\nosm-liberty-original.png: 48207 bytes, 512x248 RGBA",
+      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.3",
+      "exitCode": 0,
+      "output": "The template \u0022Console App\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp\u0027 version \u00272.88.3\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 2.88.3",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.3\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code testing SKBitmap.Decode with multiple PNG types via file path, stream, and byte array",
+          "content": "using System;\nusing System.IO;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\u0022SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\u0022);\nConsole.WriteLine($\u0022OS: {RuntimeInformation.OSDescription}\u0022);\nConsole.WriteLine($\u0022Arch: {RuntimeInformation.ProcessArchitecture}\u0022);\nConsole.WriteLine();\n\nvar pngFiles = new[]\n{\n    \u0022baboon.png\u0022,      // 16-bit RGB\n    \u0022color-wheel.png\u0022, // 8-bit RGBA\n    \u0022index8.png\u0022,      // 8-bit colormap (palette)\n    \u0022testimage.png\u0022,   // 8-bit RGBA large\n};\n\nint failures = 0;\nforeach (var file in pngFiles)\n{\n    var path = Path.Combine(AppContext.BaseDirectory, file);\n    if (!File.Exists(path))\n        path = Path.Combine(Directory.GetCurrentDirectory(), file);\n    if (!File.Exists(path))\n    {\n        Console.WriteLine($\u0022[SKIP] {file} - not found\u0022);\n        continue;\n    }\n\n    var bmp = SKBitmap.Decode(path);\n    if (bmp == null)\n    {\n        Console.WriteLine($\u0022[FAIL] SKBitmap.Decode(\\\u0022{file}\\\u0022) returned null\u0022);\n        failures\u002B\u002B;\n        using var codec = SKCodec.Create(path, out var codecResult);\n        Console.WriteLine($\u0022       SKCodec.Create result: {codecResult}, codec null: {codec == null}\u0022);\n    }\n    else\n    {\n        Console.WriteLine($\u0022[PASS] {file}: {bmp.Width}x{bmp.Height}, ColorType={bmp.ColorType}, AlphaType={bmp.AlphaType}\u0022);\n        bmp.Dispose();\n    }\n}\n\nConsole.WriteLine();\nConsole.WriteLine(\u0022--- Stream decode test ---\u0022);\nforeach (var file in pngFiles)\n{\n    var path = Path.Combine(AppContext.BaseDirectory, file);\n    if (!File.Exists(path))\n        path = Path.Combine(Directory.GetCurrentDirectory(), file);\n    if (!File.Exists(path)) continue;\n\n    using var stream = File.OpenRead(path);\n    using var skStream = new SKManagedStream(stream);\n    using var codec = SKCodec.Create(skStream, out var result);\n    if (codec == null)\n    {\n        Console.WriteLine($\u0022[FAIL] SKCodec.Create(stream) for {file}: result={result}\u0022);\n        failures\u002B\u002B;\n    }\n    else\n        Console.WriteLine($\u0022[PASS] {file}: codec OK, format={codec.EncodedFormat}, result={result}\u0022);\n}\n\nConsole.WriteLine();\nConsole.WriteLine(\u0022--- Byte array decode test ---\u0022);\nforeach (var file in pngFiles)\n{\n    var path = Path.Combine(AppContext.BaseDirectory, file);\n    if (!File.Exists(path))\n        path = Path.Combine(Directory.GetCurrentDirectory(), file);\n    if (!File.Exists(path)) continue;\n\n    var bytes = File.ReadAllBytes(path);\n    using var data = SKData.CreateCopy(bytes);\n    using var bmp = SKBitmap.Decode(data);\n    if (bmp == null)\n    {\n        Console.WriteLine($\u0022[FAIL] SKBitmap.Decode(SKData) for {file} returned null\u0022);\n        failures\u002B\u002B;\n    }\n    else\n        Console.WriteLine($\u0022[PASS] {file}: {bmp.Width}x{bmp.Height}\u0022);\n}\n\nConsole.WriteLine();\nConsole.WriteLine($\u0022Total failures: {failures}\u0022);\nreturn failures \u003E 0 ? 1 : 0;"
+        }
+      ],
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Analyze PNG structure of image1.png \u2014 found malformed: has IHDR, sRGB, gAMA, IDAT (29224 bytes) then 12 bytes of garbage data instead of IEND chunk",
-      "layer": "setup",
-      "command": "python3 PNG chunk parser",
-      "output": "@8: IHDR len=13\n@33: sRGB len=1\n@46: gAMA len=4\n@62: IDAT len=29224, CRC=e9ce4a73\n@29298: 0xf36ae20f len=3843970927 \u2014 EXTENDS BEYOND FILE (garbage, not IEND)",
+      "description": "Run reproduction with SkiaSharp 2.88.3 \u2014 test SKBitmap.Decode(string) with 4 PNG types plus stream and byte array decode paths",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\n\n[PASS] baboon.png: 512x512, ColorType=Rgba8888, AlphaType=Opaque\n[PASS] color-wheel.png: 128x128, ColorType=Rgba8888, AlphaType=Premul\n[PASS] index8.png: 1024x1218, ColorType=Rgba8888, AlphaType=Premul\n[PASS] testimage.png: 1920x1080, ColorType=Rgba8888, AlphaType=Premul\n\n--- Stream decode test ---\n[PASS] baboon.png: codec OK, format=Png, result=Success\n[PASS] color-wheel.png: codec OK, format=Png, result=Success\n[PASS] index8.png: codec OK, format=Png, result=Success\n[PASS] testimage.png: codec OK, format=Png, result=Success\n\n--- Byte array decode test ---\n[PASS] baboon.png: 512x512\n[PASS] color-wheel.png: 128x128\n[PASS] index8.png: 1024x1218\n[PASS] testimage.png: 1920x1080\n\nTotal failures: 0",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Test SKBitmap.Decode with malformed image1.png on SkiaSharp 2.88.3 \u2014 all decode methods return null, SKCodec returns ErrorInInput",
+      "description": "Test edge cases: large 4096x4096 gradient PNG, truncated PNGs at 10%/50%/90%, empty file, header-only file, non-existent path",
       "layer": "csharp",
-      "command": "dotnet run (SkiaSharp 2.88.3)",
-      "output": "SKBitmap.Decode(path): RETURNED NULL\nSKBitmap.Decode(byte[]): RETURNED NULL\nSKBitmap.Decode(Stream): RETURNED NULL\nSKCodec.GetPixels result: ErrorInInput",
-      "result": "failure"
+      "command": "dotnet run (with edge-case Program.cs)",
+      "exitCode": 0,
+      "output": "--- Edge case: Large gradient PNG ---\n[PASS] Large gradient: 4096x4096\n--- Edge case: Truncated PNG ---\n  Truncated at 10%: Decode=True, Codec=True, Result=Success\n  Truncated at 50%: Decode=True, Codec=True, Result=Success\n  Truncated at 90%: Decode=True, Codec=True, Result=Success\n--- Edge case: Empty file ---\n  Empty file: Decode=False (null expected)\n--- Edge case: PNG header only ---\n  Header-only: Decode=False (null expected)\n--- Edge case: Non-existent file ---\n  Non-existent: Decode=False\n\nTotal edge-case failures (unexpected null on valid PNG): 0",
+      "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Verify osm-liberty-original.png from #1981 (the zlib/multi-IDAT issue) now decodes correctly \u2014 confirms that bug was fixed",
+      "description": "Test with SkiaSharp 2.88.6 (version mentioned in issue body)",
       "layer": "csharp",
-      "command": "dotnet run",
-      "output": "SKBitmap.Decode: 512x248 OK, 731/1300 sampled pixels have non-zero alpha (sprite atlas with transparent areas)",
+      "command": "dotnet add package SkiaSharp --version 2.88.6 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\n[PASS] baboon.png: 512x512, ColorType=Rgba8888, AlphaType=Opaque\n[PASS] color-wheel.png: 128x128, ColorType=Rgba8888, AlphaType=Premul\n[PASS] index8.png: 1024x1218, ColorType=Rgba8888, AlphaType=Premul\n[PASS] testimage.png: 1920x1080, ColorType=Rgba8888, AlphaType=Premul\nTotal failures: 0",
       "result": "success"
     },
     {
       "stepNumber": 5,
-      "description": "Resave image1.png via macOS sips to produce a valid PNG with proper IEND \u2014 the resaved version decodes successfully in SkiaSharp",
+      "description": "Test with latest SkiaSharp 3.119.2 (latest stable)",
       "layer": "csharp",
-      "command": "sips -s format png image1.png --out image1-resaved.png \u0026\u0026 dotnet run",
-      "output": "Resaved (proper IEND): 152x152 OK, center=(144,144,144,255)",
+      "command": "dotnet add package SkiaSharp \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\n[PASS] baboon.png: 512x512, ColorType=Rgba8888, AlphaType=Opaque\n[PASS] color-wheel.png: 128x128, ColorType=Rgba8888, AlphaType=Premul\n[PASS] index8.png: 1024x1218, ColorType=Rgba8888, AlphaType=Premul\n[PASS] testimage.png: 1920x1080, ColorType=Rgba8888, AlphaType=Premul\nTotal failures: 0",
       "result": "success"
     },
     {
       "stepNumber": 6,
-      "description": "Test a programmatically truncated PNG (generated valid PNG with IEND removed) \u2014 this decodes successfully, showing Skia tolerates some truncation",
+      "description": "Build and run existing decode tests on main branch (source) \u2014 CanDecodePotentiallyCorruptPngFiles, CanDecodeImageStreams, TestBitmapDecodeDrawsCorrectly",
       "layer": "csharp",
-      "command": "dotnet run",
-      "output": "truncated PNG (no IEND): 200x200 OK, center=(255,0,0,255)\nSKCodec.GetPixels result: Success",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \u0022FullyQualifiedName~SKBitmapTest.TestBitmapDecodeDrawsCorrectly|FullyQualifiedName~SKBitmapTest.CanDecodePotentiallyCorruptPngFiles|FullyQualifiedName~SKBitmapTest.CanDecodeImageStreams\u0022",
+      "exitCode": 0,
+      "output": "Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7, Duration: 74 ms - SkiaSharp.Tests.dll (net8.0)",
       "result": "success"
-    },
-    {
-      "stepNumber": 7,
-      "description": "Test with SkiaSharp 2.88.6 and 3.119.2 \u2014 same null result on both versions for malformed image1.png",
-      "layer": "csharp",
-      "command": "dotnet add package SkiaSharp --version {2.88.6,3.119.2} \u0026\u0026 dotnet run",
-      "output": "2.88.6: NULL, ErrorInInput\n3.119.2: NULL, ErrorInInput",
-      "result": "failure"
     }
   ],
   "environment": {
@@ -72,25 +82,35 @@
     "skiaSharpVersion": "2.88.3",
     "dockerUsed": false
   },
-  "reproductionTime": "~10 minutes",
+  "inputs": {
+    "triageFile": "ai-triage/2759.json"
+  },
+  "assessment": "unknown",
+  "reproductionTime": "~12 minutes",
   "versionResults": [
     {
       "version": "2.88.3",
       "source": "nuget",
-      "result": "reproduced",
-      "notes": "SKBitmap.Decode returns null for malformed image1.png (no IEND chunk). SKCodec.GetPixels returns ErrorInInput."
+      "result": "not-reproduced",
+      "notes": "All 4 PNG types decoded successfully via SKBitmap.Decode(string), SKCodec.Create(stream), and SKBitmap.Decode(SKData)."
     },
     {
       "version": "2.88.6",
       "source": "nuget",
-      "result": "reproduced",
-      "notes": "Same null result. Reporter\u0027s version \u2014 confirms bug still present."
+      "result": "not-reproduced",
+      "notes": "All 4 PNG types decoded successfully. Same results as 2.88.3."
     },
     {
       "version": "3.119.2",
       "source": "nuget",
-      "result": "reproduced",
-      "notes": "Same null result on latest stable. Not fixed."
+      "result": "not-reproduced",
+      "notes": "All 4 PNG types decoded successfully on latest stable release."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Ran 7 existing decode-related tests (CanDecodePotentiallyCorruptPngFiles, CanDecodeImageStreams, TestBitmapDecodeDrawsCorrectly) \u2014 all passed."
     }
   ],
   "reproProject": {
@@ -106,28 +126,18 @@
   "artifacts": [
     {
       "filename": "image1.png",
-      "description": "Malformed 152x152 PNG from issue #933 \u2014 missing IEND chunk, has 12 garbage bytes after IDAT CRC. This is the only test file available for reproduction.",
+      "description": "Reporter\u0027s PNG file that fails to decode. Never attached to the issue \u2014 this is the critical missing artifact preventing reproduction.",
       "source": "issue-attachment",
-      "available": true,
-      "url": "https://user-images.githubusercontent.com/31235892/63347183-4943cb80-c35f-11e9-8d58-247cad52b13b.png"
-    },
-    {
-      "filename": "osm-liberty-original.png",
-      "description": "Multi-IDAT PNG from issue #1981 WPF.zip. 512x248, 48KB. Was problematic due to zlib bug, now decodes correctly.",
-      "source": "issue-attachment",
-      "available": true,
-      "url": "https://github.com/mono/SkiaSharp/files/8356177/WPF.zip"
+      "available": false
     }
   ],
-  "errorMessages": {
-    "primaryError": "SKBitmap.Decode returns null for a malformed PNG (missing IEND chunk, garbage trailing bytes). SKCodec.GetPixels returns ErrorInInput. The PNG is structurally invalid but decodable by lenient decoders (macOS ImageIO, browsers).",
-    "additionalErrors": [
-      "SKCodec.Create succeeds (can parse IHDR) but GetPixels fails with ErrorInInput",
-      "Resaving the same image with a proper IEND chunk makes it decode successfully"
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "reproduction-feasibility",
+        "upstream": "Triage recommended requesting sample image (actionability: request-info, confidence 0.90)",
+        "corrected": "Confirmed: without the reporter\u0027s specific PNG file, the bug cannot be reproduced. All standard PNG types (16-bit RGB, 8-bit RGBA, 8-bit colormap) and edge cases (truncated, large, empty) decode correctly across all tested versions."
+      }
     ]
-  },
-  "blockers": [
-    "Reporter does not attach their own test file \u2014 references image1.png from issue #933 which was embedded as a GitHub screenshot and may have been re-processed. The actual file the reporter is testing with may have different structural issues.",
-    "Reporter claims it worked in SkiaSharp 1.60.1 but that version is too old to test with .NET 8. Cannot verify the regression claim."
-  ]
+  }
 }

@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-02-12T16:49:35.6140336Z",
-  "totalCount": 39,
+  "generatedAt": "2026-02-12T17:42:35.2270161Z",
+  "totalCount": 52,
   "summary": {
-    "needsInvestigation": 11,
-    "closeable": 9,
-    "quickWins": 9,
-    "regressions": 8,
-    "withRepro": 0,
-    "reproduced": 0,
-    "notReproduced": 0
+    "needsInvestigation": 14,
+    "closeable": 10,
+    "quickWins": 10,
+    "regressions": 9,
+    "withRepro": 12,
+    "reproduced": 5,
+    "notReproduced": 4
   },
   "byType": [
     {
       "label": "type/bug",
-      "count": 25
+      "count": 32
     },
     {
       "label": "type/question",
@@ -24,18 +24,18 @@
       "count": 5
     },
     {
-      "label": "type/documentation",
+      "label": "type/enhancement",
       "count": 2
     },
     {
-      "label": "type/enhancement",
+      "label": "type/documentation",
       "count": 2
     }
   ],
   "byArea": [
     {
       "label": "area/SkiaSharp",
-      "count": 15
+      "count": 17
     },
     {
       "label": "area/libSkiaSharp.native",
@@ -43,11 +43,11 @@
     },
     {
       "label": "area/SkiaSharp.Views",
-      "count": 6
+      "count": 7
     },
     {
-      "label": "area/SkiaSharp.Views.Forms",
-      "count": 2
+      "label": "area/SkiaSharp.Views.Maui",
+      "count": 3
     },
     {
       "label": "area/SkiaSharp.HarfBuzz",
@@ -58,18 +58,26 @@
       "count": 2
     },
     {
-      "label": "area/SkiaSharp.Views.Maui",
+      "label": "area/SkiaSharp.Views.Blazor",
       "count": 2
     },
     {
-      "label": "area/SkiaSharp.Views.Blazor",
+      "label": "area/SkiaSharp.Views.Forms",
+      "count": 2
+    },
+    {
+      "label": "area/HarfBuzzSharp",
+      "count": 1
+    },
+    {
+      "label": "area/SkiaSharp.Views.Uno",
       "count": 1
     }
   ],
   "byAction": [
     {
       "label": "needs-investigation",
-      "count": 11
+      "count": 14
     },
     {
       "label": "close-with-docs",
@@ -77,33 +85,33 @@
     },
     {
       "label": "keep-open",
-      "count": 8
+      "count": 9
     },
     {
       "label": "close-as-fixed",
       "count": 5
     },
     {
-      "label": "close-as-duplicate",
-      "count": 3
+      "label": "request-info",
+      "count": 4
     },
     {
-      "label": "request-info",
-      "count": 2
+      "label": "close-as-duplicate",
+      "count": 4
     }
   ],
   "bySeverity": [
     {
       "label": "medium",
-      "count": 13
+      "count": 14
     },
     {
       "label": "high",
-      "count": 8
+      "count": 13
     },
     {
       "label": "low",
-      "count": 3
+      "count": 4
     },
     {
       "label": "critical",
@@ -111,6 +119,118 @@
     }
   ],
   "issues": [
+    {
+      "number": 3509,
+      "title": "Near-empty bug report: \u0027images not appearing\u0027 with no code, no steps, no logs, no screenshots. Template placeholders left unfilled.",
+      "issueTitle": "[BUG] My images are not appearing in the screen",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "low",
+      "action": "request-info",
+      "confidence": 0.95,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T17:02:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3472,
+      "title": "HarfBuzzSharp.Blob.FromStream uses a fixed block that only pins the managed byte array during constructor call \u2014 after it exits, GC can move or collect the array while native HarfBuzz still holds the raw pointer, causing crashes or data corruption",
+      "issueTitle": "[BUG] Blob FromStream is not GC safe",
+      "type": "type/bug",
+      "area": "area/HarfBuzzSharp",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.95,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:52:04Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3440,
+      "title": "MAUI app using LiveCharts2 with SkiaSharp 3.119.1 crashes on certain Windows 11 systems with a COMException (Element not found) during WinRT activation of SkiaSharp.Views.WinUI.Native.PropertySetExtensions. The crash occurs in the ANGLE/OpenGL rendering path (SKSwapChainPanel) when GlesContext.CreateSurface() calls PropertySetExtensions.AddSingle() to set EGL surface properties. The WinRT runtime cannot locate or activate the native C\u002B\u002B/WinRT component, suggesting a deployment or WinRT registration issue specific to certain machine configurations.",
+      "issueTitle": "[BUG] Exception: SkiaSharp.Views.WinUI.Native.PropertySetExtensions",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Maui",
+      "severity": "high",
+      "action": "request-info",
+      "confidence": 0.8,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:52:04Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3437,
+      "title": "When using SKSvgCanvas in parallel via Task.Run on Windows, \u003Ctext\u003E elements intermittently lose their text content and x/y attribute values, producing empty \u003Ctext\u003E tags. The issue is a data race in Skia\u0027s text rendering pipeline (GlyphsToUnichars \u2192 DirectWrite font subsystem) that manifests only on Windows. It affects all SkiaSharp 3.x versions and is a regression from 2.88.9. Linux is unaffected.",
+      "issueTitle": "[BUG] text elements missing values when \u0060SKSvgCanvas\u0060 is used in parallel",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.9,
+      "isRegression": true,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:52:04Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3435,
+      "title": "DllNotFoundException for libSkiaSharp in a Blazor WASM app after upgrading from .NET 9 to .NET 10. Tried SkiaSharp 3.116.1 and 3.119.2-preview.1; both fail on .NET 10 though 3.116.1 worked on .NET 9. This is a duplicate of #3422 \u2014 SkiaSharp does not yet target net10.0 (TFMCurrent is net8.0, TFMNext is empty), so the Blazor WASM package has no net10.0 assets and native static linking fails. PR #3514 tracks adding .NET 10 support.",
+      "issueTitle": "[BUG] System.DllNotFoundException: libSkiaSharp",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "high",
+      "action": "close-as-duplicate",
+      "confidence": 0.92,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:47:05Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3430,
+      "title": "NullReferenceException in SKXamlCanvas.Skia.cs when canvas resizes \u2014 FreeBitmap() nulls bitmap field that was just recreated",
+      "issueTitle": "[BUG] Resources are not freed correctly in Uno Platform\u0027s \u0060SKXamlCanvas\u0060",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Uno",
+      "severity": "high",
+      "action": "keep-open",
+      "confidence": 0.95,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:47:05Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3429,
+      "title": "Memory leak in WPF SkiaSharp rendering on Nvidia Quadro GPUs at high DPI \u2014 root cause is WPF compositor/driver interaction, not SkiaSharp itself",
+      "issueTitle": "[BUG]  Memory Leak on Window with Nvidia GPU driver",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.75,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:47:05Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
     {
       "number": 3428,
       "title": "SKGLView in MAUI on iOS fails with \u0027Failed to bind EAGLDrawable\u0027 on .NET 10, resulting in a white canvas with no rendering. The iOS MAUI handler uses OpenGL ES (GLKView \u002B EAGLContext) which Apple deprecated in iOS 12. The Mac Catalyst handler already uses Metal (SKMetalView), but the iOS handler still relies on the deprecated EAGL/GLKit path. .NET 10 likely tightened or broke GLKit support, surfacing this as a runtime failure. SkiaSharp 3.116.0 on iOS via Mapsui MapControl.",
@@ -471,7 +591,8 @@
       "state": "open",
       "analyzedAt": "2026-02-12T16:00:00Z",
       "hasTriage": true,
-      "hasRepro": false
+      "hasRepro": true,
+      "reproConclusion": "not-reproduced"
     },
     {
       "number": 2511,
@@ -503,7 +624,8 @@
       "state": "open",
       "analyzedAt": "2026-02-12T15:53:00Z",
       "hasTriage": true,
-      "hasRepro": false
+      "hasRepro": true,
+      "reproConclusion": "needs-hardware"
     },
     {
       "number": 2383,
@@ -566,6 +688,78 @@
       "hasRepro": false
     },
     {
+      "number": 754,
+      "title": "[BUG] SkiaSharp Gray8 decoding returns null",
+      "issueTitle": "[BUG] SkiaSharp Gray8 decoding returns null",
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T17:35:00Z",
+      "hasTriage": false,
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
+    },
+    {
+      "number": 736,
+      "title": "SkiaSharp.Views.Mac namespace does not exist",
+      "issueTitle": "SkiaSharp.Views.Mac namespace does not exist",
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T17:25:00Z",
+      "hasTriage": false,
+      "hasRepro": true,
+      "reproConclusion": "needs-platform"
+    },
+    {
+      "number": 731,
+      "title": "Why is SKShader.CreateRadialGradient so slow in 1.68.0?",
+      "issueTitle": "Why is SKShader.CreateRadialGradient so slow in 1.68.0?",
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T17:30:00Z",
+      "hasTriage": false,
+      "hasRepro": true,
+      "reproConclusion": "partial"
+    },
+    {
+      "number": 730,
+      "title": "SKGLView exception when ViewExtensions.RotateYTo called on parent view [Xamarin Forms UWP]",
+      "issueTitle": "SKGLView exception when ViewExtensions.RotateYTo called on parent view [Xamarin Forms UWP]",
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T17:25:00Z",
+      "hasTriage": false,
+      "hasRepro": true,
+      "reproConclusion": "needs-platform"
+    },
+    {
+      "number": 655,
+      "title": "Wrong calculation of path\u0027s intersection.",
+      "issueTitle": "Wrong calculation of path\u0027s intersection.",
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T17:20:00Z",
+      "hasTriage": false,
+      "hasRepro": true,
+      "reproConclusion": "not-reproduced"
+    },
+    {
+      "number": 648,
+      "title": "Large images shows blank after resizing",
+      "issueTitle": "Large images shows blank after resizing",
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T17:25:00Z",
+      "hasTriage": false,
+      "hasRepro": true,
+      "reproConclusion": "not-reproduced"
+    },
+    {
       "number": 607,
       "title": "SKTouchAction.Entered and SKTouchAction.Exited events are not fired on iOS and Android \u2014 only implemented on Windows and Tizen",
       "issueTitle": "Feature Request: Implement entered and exited on iOS / Android",
@@ -594,7 +788,8 @@
       "state": "open",
       "analyzedAt": "2026-02-12T15:38:00Z",
       "hasTriage": true,
-      "hasRepro": false
+      "hasRepro": true,
+      "reproConclusion": "partial"
     },
     {
       "number": 552,
@@ -625,7 +820,8 @@
       "state": "open",
       "analyzedAt": "2026-02-12T15:25:36Z",
       "hasTriage": true,
-      "hasRepro": false
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
     },
     {
       "number": 528,
@@ -657,7 +853,8 @@
       "state": "open",
       "analyzedAt": "2026-02-12T15:09:01Z",
       "hasTriage": true,
-      "hasRepro": false
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
     },
     {
       "number": 315,
@@ -720,7 +917,8 @@
       "state": "open",
       "analyzedAt": "2026-02-12T14:50:00Z",
       "hasTriage": true,
-      "hasRepro": false
+      "hasRepro": true,
+      "reproConclusion": "not-reproduced"
     }
   ]
 }
