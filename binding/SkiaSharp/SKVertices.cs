@@ -22,28 +22,30 @@ namespace SkiaSharp
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_vertices_unref (Handle);
 
-		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKColor[] colors)
-		{
-			return CreateCopy (vmode, positions, null, colors, null);
-		}
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKColor[] colors) =>
+			CreateCopy (vmode, positions.AsSpan (), colors.AsSpan ());
 
-		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors)
-		{
-			return CreateCopy (vmode, positions, texs, colors, null);
-		}
+		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKColor> colors) =>
+			CreateCopy (vmode, positions, null, colors, null);
 
-		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices)
-		{
-			if (positions == null)
-				throw new ArgumentNullException (nameof (positions));
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors) =>
+			CreateCopy (vmode, positions.AsSpan (), texs.AsSpan (), colors.AsSpan ());
 
+		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors) =>
+			CreateCopy (vmode, positions, texs, colors, null);
+
+		public static SKVertices CreateCopy (SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices) =>
+			CreateCopy (vmode, positions.AsSpan (), texs.AsSpan (), colors.AsSpan (), indices.AsSpan ());
+
+		public static SKVertices CreateCopy (SKVertexMode vmode, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<SKPoint> texs, ReadOnlySpan<SKColor> colors, ReadOnlySpan<UInt16> indices)
+		{
 			if (texs != null && positions.Length != texs.Length)
 				throw new ArgumentException ("The number of texture coordinates must match the number of vertices.", nameof (texs));
 			if (colors != null && positions.Length != colors.Length)
 				throw new ArgumentException ("The number of colors must match the number of vertices.", nameof (colors));
 
 			var vertexCount = positions.Length;
-			var indexCount = indices?.Length ?? 0;
+			var indexCount = indices.Length;
 
 			fixed (SKPoint* p = positions)
 			fixed (SKPoint* t = texs)

@@ -28,11 +28,14 @@ namespace SkiaSharp
 		}
 
 		public SKMatrix (float[] values)
+			: this (new ReadOnlySpan<float> (values))
 		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
+		}
+
+		public SKMatrix (ReadOnlySpan<float> values)
+		{
 			if (values.Length != Indices.Count)
-				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
+				throw new ArgumentException ($"The values must have a length of {Indices.Count}.", nameof (values));
 
 			scaleX = values[Indices.ScaleX];
 			skewX = values[Indices.SkewX];
@@ -74,32 +77,16 @@ namespace SkiaSharp
 					skewY, scaleY, transY,
 					persp0, persp1, persp2
 				};
-			set {
-				if (value == null)
-					throw new ArgumentNullException (nameof (Values));
-				if (value.Length != Indices.Count)
-					throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (Values));
-
-				scaleX = value[Indices.ScaleX];
-				skewX = value[Indices.SkewX];
-				transX = value[Indices.TransX];
-
-				skewY = value[Indices.SkewY];
-				scaleY = value[Indices.ScaleY];
-				transY = value[Indices.TransY];
-
-				persp0 = value[Indices.Persp0];
-				persp1 = value[Indices.Persp1];
-				persp2 = value[Indices.Persp2];
-			}
+			set => SetValues (new ReadOnlySpan<float> (value));
 		}
 
-		public readonly void GetValues (float[] values)
+		public readonly void GetValues (float[] values) =>
+			GetValues (values.AsSpan ());
+
+		public readonly void GetValues (Span<float> values)
 		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
-				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
+				throw new ArgumentException ($"The values must have a length of {Indices.Count}.", nameof (values));
 
 			values[Indices.ScaleX] = scaleX;
 			values[Indices.SkewX] = skewX;
@@ -112,6 +99,24 @@ namespace SkiaSharp
 			values[Indices.Persp0] = persp0;
 			values[Indices.Persp1] = persp1;
 			values[Indices.Persp2] = persp2;
+		}
+
+		public void SetValues (ReadOnlySpan<float> values)
+		{
+			if (values.Length != Indices.Count)
+				throw new ArgumentException ($"The values must have a length of {Indices.Count}.", nameof(values));
+
+			scaleX = values[Indices.ScaleX];
+			skewX = values[Indices.SkewX];
+			transX = values[Indices.TransX];
+
+			skewY = values[Indices.SkewY];
+			scaleY = values[Indices.ScaleY];
+			transY = values[Indices.TransY];
+
+			persp0 = values[Indices.Persp0];
+			persp1 = values[Indices.Persp1];
+			persp2 = values[Indices.Persp2];
 		}
 
 		// Create*
@@ -331,23 +336,13 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly void MapPoints (SKPoint[] result, SKPoint[] points)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-			if (result.Length != points.Length)
-				throw new ArgumentException ("Buffers must be the same size.");
+		public readonly void MapPoints (SKPoint[] result, SKPoint[] points) =>
+			MapPoints (result.AsSpan (), points.AsSpan ());
 
-			fixed (SKMatrix* t = &this)
-			fixed (SKPoint* rp = result)
-			fixed (SKPoint* pp = points) {
-				SkiaApi.sk_matrix_map_points (t, rp, pp, result.Length);
-			}
-		}
+		public readonly SKPoint[] MapPoints (SKPoint[] points) =>
+			MapPoints (points.AsSpan ());
 
-		public readonly SKPoint[] MapPoints (SKPoint[] points)
+		public readonly SKPoint[] MapPoints (ReadOnlySpan<SKPoint> points)
 		{
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
@@ -383,23 +378,13 @@ namespace SkiaSharp
 			}
 		}
 
-		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (vectors == null)
-				throw new ArgumentNullException (nameof (vectors));
-			if (result.Length != vectors.Length)
-				throw new ArgumentException ("Buffers must be the same size.");
+		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors) =>
+			MapVectors (result.AsSpan (), vectors.AsSpan ());
 
-			fixed (SKMatrix* t = &this)
-			fixed (SKPoint* rp = result)
-			fixed (SKPoint* pp = vectors) {
-				SkiaApi.sk_matrix_map_vectors (t, rp, pp, result.Length);
-			}
-		}
+		public readonly SKPoint[] MapVectors (SKPoint[] vectors) =>
+			MapVectors (vectors.AsSpan ());
 
-		public readonly SKPoint[] MapVectors (SKPoint[] vectors)
+		public readonly SKPoint[] MapVectors (ReadOnlySpan<SKPoint> vectors)
 		{
 			if (vectors == null)
 				throw new ArgumentNullException (nameof (vectors));

@@ -122,13 +122,26 @@ namespace SkiaSharp
 
 		public SKPoint[] GetLine ()
 		{
-			var temp = new SKPoint[2];
-			fixed (SKPoint* t = temp) {
-				var result = SkiaApi.sk_path_is_line (Handle, t);
+			Span<SKPoint> temp = stackalloc SKPoint[2];
+			if (TryGetLine (temp)) {
+				return temp.ToArray ();
+			} else {
+				return null;
+			}
+		}
+
+		public bool TryGetLine (Span<SKPoint> points)
+		{
+			if (points.Length != 2)
+				throw new ArgumentException ("Points must have a length of 2.");
+
+			fixed (SKPoint* p = points) {
+				var result = SkiaApi.sk_path_is_line (Handle, p);
 				if (result) {
-					return temp;
+					return true;
 				} else {
-					return null;
+					points.Clear ();
+					return false;
 				}
 			}
 		}
@@ -168,8 +181,13 @@ namespace SkiaSharp
 			return points;
 		}
 
-		public int GetPoints (SKPoint[] points, int max)
+		public int GetPoints (SKPoint[] points, int max) =>
+			GetPoints (points.AsSpan (), max);
+
+		public int GetPoints (Span<SKPoint> points, int max)
 		{
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
 			fixed (SKPoint* p = points) {
 				return SkiaApi.sk_path_get_points (Handle, p, max);
 			}
@@ -399,14 +417,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public void AddPoly (SKPoint[] points, bool close = true)
-		{
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-			fixed (SKPoint* p = points) {
-				SkiaApi.sk_path_add_poly (Handle, p, points.Length, close);
-			}
-		}
+		public void AddPoly (SKPoint[] points, bool close = true) =>
+			AddPoly (points.AsSpan (), close);
 
 		public Iterator CreateIterator (bool forceClose) =>
 			new Iterator (this, forceClose);
@@ -509,10 +521,13 @@ namespace SkiaSharp
 			var quadCount = 1 << pow2;
 			var ptCount = 2 * quadCount + 1;
 			pts = new SKPoint[ptCount];
-			return ConvertConicToQuads (p0, p1, p2, w, pts, pow2);
+			return ConvertConicToQuads (p0, p1, p2, w, pts.AsSpan (), pow2);
 		}
 
-		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, SKPoint[] pts, int pow2)
+		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, SKPoint[] pts, int pow2) =>
+			ConvertConicToQuads (p0, p1, p2, w, pts.AsSpan (), pow2);
+
+		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, Span<SKPoint> pts, int pow2)
 		{
 			if (pts == null)
 				throw new ArgumentNullException (nameof (pts));

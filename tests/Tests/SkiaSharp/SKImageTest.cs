@@ -9,6 +9,22 @@ namespace SkiaSharp.Tests
 	public class SKImageTest : SKTest
 	{
 		[SkippableFact]
+		public void TestDecodeByteArray()
+		{
+			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			var image = SKImage.FromEncodedData(data.ToArray());
+			Assert.NotNull(image);
+		}
+
+		[SkippableFact]
+		public void TestDecodeSpan()
+		{
+			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			var image = SKImage.FromEncodedData(data.AsSpan());
+			Assert.NotNull(image);
+		}
+
+		[SkippableFact]
 		public void TestLazyImage()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -201,6 +217,20 @@ namespace SkiaSharp.Tests
 				var px = bmp.GetPixels(out var length);
 				var dst = new byte[(int)length];
 				Marshal.Copy(px, dst, 0, (int)length);
+				using (var image = SKImage.FromPixelCopy(bmp.Info, dst))
+				{
+					ValidateTestPixmap(image.PeekPixels());
+				}
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void TestFromPixelCopySpan()
+		{
+			using (var bmp = CreateTestBitmap())
+			{
+				var px = bmp.GetPixels(out var length);
+				var dst = new Span<byte>((void*)px, (int)length);
 				using (var image = SKImage.FromPixelCopy(bmp.Info, dst))
 				{
 					ValidateTestPixmap(image.PeekPixels());

@@ -11,7 +11,7 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
-		
+
 		public bool IsAtEnd {
 			get {
 				return SkiaApi.sk_stream_is_at_end (Handle);
@@ -175,7 +175,7 @@ namespace SkiaSharp
 			get {
 				return (int)SkiaApi.sk_stream_get_position (Handle);
 			}
-			set { 
+			set {
 				Seek (value);
 			}
 		}
@@ -378,7 +378,7 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
-		
+
 		public virtual int BytesWritten {
 			get {
 				return (int)SkiaApi.sk_wstream_bytes_written (Handle);

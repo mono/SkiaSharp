@@ -45,12 +45,12 @@ namespace SkiaSharp
 		internal static byte[] GetBytes (this Encoding encoding, ReadOnlySpan<char> text)
 		{
 			if (text.Length == 0)
-				return new byte[0];
+				return Array.Empty<byte> ();
 
 			fixed (char* t = text) {
 				var byteCount = encoding.GetByteCount (t, text.Length);
 				if (byteCount == 0)
-					return new byte[0];
+					return Array.Empty<byte> ();
 
 				var bytes = new byte[byteCount];
 				fixed (byte* b = bytes) {

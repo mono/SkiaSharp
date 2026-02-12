@@ -78,7 +78,10 @@ namespace SkiaSharp
 		public static SKColorSpace CreateIcc (IntPtr input, long length) =>
 			CreateIcc (SKColorSpaceIccProfile.Create (input, length));
 
-		public static SKColorSpace CreateIcc (byte[] input, long length)
+		public static SKColorSpace CreateIcc (byte[] input, long length) =>
+			CreateIcc (input.AsSpan (), length);
+
+		public static SKColorSpace CreateIcc (ReadOnlySpan<byte> input, long length)
 		{
 			if (input == null)
 				throw new ArgumentNullException (nameof (input));
