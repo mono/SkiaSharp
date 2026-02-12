@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3509,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T17:02:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Near-empty bug report: 'images not appearing' with no code, no steps, no logs, no screenshots. Template placeholders left unfilled.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.5
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.4
+    },
+    "platforms": [
+      "os/macOS"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "wrong-output",
+      "reproQuality": "none"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [],
+      "environmentDetails": "SkiaSharp 3.116.0, macOS, Visual Studio (Windows)"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "currentRelevance": "unknown",
+      "relevanceReason": "No code or reproduction provided \u2014 impossible to determine if the issue is real or a usage error."
+    }
+  },
+  "analysis": {
+    "summary": "The issue body consists almost entirely of unfilled template placeholders. The description says 'I have some code that puts things on the screen, but nothing appears' without providing any actual code, expected behavior, actual behavior, screenshots, or log output. The code block contains only the template placeholder text. There is no actionable information to investigate.",
+    "rationale": "Classified as type/bug at low confidence because the reporter selected [BUG] template but provided zero evidence. Area is generic area/SkiaSharp because no specific component is identified. Severity is unknown \u2014 without code or reproduction steps, this could range from a trivial usage error to a real rendering bug. The mention of 2.88.9 as 'last known good' hints at a possible regression but without any code this cannot be verified.",
+    "keySignals": [
+      {
+        "text": "I have some code that puts things on the screen, but nothing appears.",
+        "source": "issue body",
+        "interpretation": "Entire description \u2014 too vague to classify. Could be usage error, missing NuGet package, incorrect API usage, or a real rendering bug."
+      },
+      {
+        "text": "Code section contains only template placeholder text",
+        "source": "issue body",
+        "interpretation": "Reporter did not fill in the bug template. No actual code was provided."
+      },
+      {
+        "text": "Version 3.116.0 current, 2.88.9 last known good",
+        "source": "issue body",
+        "interpretation": "Suggests a possible regression from v2 to v3, but without code this is unverifiable."
+      },
+      {
+        "text": "Platform: macOS, IDE: Visual Studio (Windows)",
+        "source": "issue body",
+        "interpretation": "Slight inconsistency \u2014 macOS platform but Windows IDE. May indicate cross-compilation or confusion."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "455-510",
+        "finding": "DrawImage methods exist with multiple overloads. All delegate to sk_canvas_draw_image_rect(). No obvious bugs in the C# wrapper \u2014 null checks on image and paint parameters are present.",
+        "relevance": "context"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "158-232",
+        "finding": "FromEncodedData() and related factory methods are well-defined. Return null on failure (not throw). No TODO or known issues that would cause silent rendering failures.",
+        "relevance": "context"
+      }
+    ],
+    "nextQuestions": [
+      "What actual code is the reporter using to draw images?",
+      "Is this SKCanvasView (MAUI/Forms), SKControl (WPF), or direct SKCanvas usage?",
+      "What image format and loading method is being used?",
+      "Is the SKImage being created successfully (non-null)?",
+      "What platform target framework is the project using?"
+    ],
+    "resolution": {
+      "hypothesis": "Cannot form a hypothesis without reproduction code. The issue could be anything from a missing NuGet package to incorrect canvas setup to a real rendering regression.",
+      "proposals": [
+        {
+          "title": "Request complete reproduction",
+          "description": "Ask the reporter to fill in the template with actual code, expected behavior, and actual behavior. A minimal repro project would be ideal.",
+          "confidence": 1.0,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Request complete reproduction",
+      "recommendedReason": "No analysis is possible without actual code. The template is almost entirely unfilled."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.95,
+      "reason": "The issue contains no actionable information \u2014 no code, no steps, no logs, no screenshots. Template placeholders were left unfilled."
+    },
+    "missingInfo": [
+      "Actual code that reproduces the issue (not template placeholder)",
+      "Expected behavior vs actual behavior",
+      "Target framework (net8.0-macos, net8.0, etc.)",
+      "Which SkiaSharp view/control is being used",
+      "Screenshots showing the blank output",
+      "Any error messages or log output"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Keep type/bug label, add area and platform",
+        "risk": "low",
+        "confidence": 0.6,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/macOS"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request missing information from the reporter",
+        "risk": "high",
+        "confidence": 0.9,
+        "comment": "Thanks for reporting this. Unfortunately, the issue template wasn't filled in with the details we need to investigate \u2014 there's no actual code, expected/actual behavior, or log output.\n\nWould you be able to update the issue with:\n1. The actual code you're using to load and draw images\n2. What you expect to see vs what actually happens\n3. Your target framework (e.g., `net8.0-macos`)\n4. A screenshot of the blank output\n\nA minimal reproduction project (even a few lines) would help us diagnose this quickly. Without code, we can't determine whether this is a usage issue or a real rendering bug."
+      }
+    ]
+  }
+}
