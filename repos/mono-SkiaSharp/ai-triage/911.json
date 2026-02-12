@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 911,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T15:46:26Z",
+    "currentLabels": []
+  },
+  "summary": "Feature request to add a 'Getting Started' section to README.md with curated links to introductory tutorials, platform-specific guides (Xamarin Forms, WPF, etc.), and API documentation to help new users find resources quickly.",
+  "classification": {
+    "type": { "value": "type/documentation", "confidence": 0.92 },
+    "area": { "value": "area/Docs", "confidence": 0.95 }
+  },
+  "evidence": {
+    "versionAnalysis": {
+      "currentRelevance": "likely",
+      "relevanceReason": "The README still lacks a dedicated 'Getting Started' section. While badge links to API docs and guides exist in the header, there is no curated section with introductory tutorials or platform-specific guides."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter requests a 'Getting Started' section in README.md to centralize learning resources for new users. The README currently has badge links to API docs and guides in the header and a 'Using SkiaSharp' section with NuGet install instructions, but no curated onboarding section with tutorials or platform-specific guides. The request is straightforward documentation improvement.",
+    "rationale": "Classified as type/documentation (not feature-request) because the ask is specifically about improving documentation content in README.md — no code changes needed. Area is area/Docs since it's purely about documentation structure. The request remains relevant: while the README has some doc links as badges, it still lacks the kind of curated 'Getting Started' section the reporter describes. Note that some of the specific links suggested by the reporter (Xamarin-era tutorials) may now be outdated and would need updating to current .NET/MAUI equivalents.",
+    "keySignals": [
+      { "text": "I am just starting with using SkiaSharp and the first thing I noticed was it wasn't obvious as to where to go to get started", "source": "issue body", "interpretation": "New user perspective — onboarding friction is real. README is the first thing users see." },
+      { "text": "Could we add a 'Getting Started' to the readme.md?", "source": "issue body", "interpretation": "Concrete, actionable proposal with example content structure." },
+      { "text": "I'd be happy to collaborate on this and help out", "source": "issue body", "interpretation": "Reporter offered to contribute — could be invited to submit a PR." }
+    ],
+    "codeInvestigation": [
+      { "file": "README.md", "lines": "11-13", "finding": "Badge links to SkiaSharp API Docs, HarfBuzzSharp API Docs, and SkiaSharp Guides exist but are small badges in the header — easy to miss for newcomers.", "relevance": "direct" },
+      { "file": "README.md", "lines": "38-55", "finding": "The 'Using SkiaSharp' section only covers NuGet installation. No tutorial links, no getting started guidance, no platform-specific setup instructions.", "relevance": "direct" },
+      { "file": "README.md", "lines": "57-64", "finding": "The 'Building SkiaSharp' section links to documentation/building.md — shows precedent for linking to detailed guides from README.", "relevance": "context" },
+      { "file": "documentation/", "finding": "Contains architecture, building, packages, and API design docs. No 'getting-started.md' or tutorial content exists in the repo.", "relevance": "context" }
+    ],
+    "nextQuestions": [
+      "Which tutorials and guides should be linked? The Xamarin-era links suggested in 2019 may be outdated.",
+      "Should the Getting Started section link to Microsoft Learn docs for MAUI/SkiaSharp integration?",
+      "Should the repo include its own getting-started guide, or just link to external resources?"
+    ],
+    "resolution": {
+      "hypothesis": "The README lacks a discoverable 'Getting Started' section. Adding one with curated links to current documentation would improve the new user experience.",
+      "proposals": [
+        {
+          "title": "Add Getting Started section to README",
+          "description": "Add a 'Getting Started' section between the introductory paragraph and 'Using SkiaSharp', with links to the Microsoft Learn SkiaSharp guides, API documentation, and platform-specific setup guides. Update the suggested links from the 2019 issue to current .NET/MAUI equivalents.",
+          "confidence": 0.90,
+          "effort": "trivial"
+        },
+        {
+          "title": "Invite reporter to submit PR",
+          "description": "Since the reporter offered to collaborate, invite them to submit a PR with their proposed Getting Started section. This leverages their newcomer perspective for the best onboarding content.",
+          "confidence": 0.70,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Add Getting Started section to README",
+      "recommendedReason": "Low effort, high impact for new users. Can be done by maintainer or invited contributor. The reporter's template is a good starting point but needs updated links."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Valid documentation improvement that hasn't been addressed. The README still lacks a Getting Started section. Low effort to implement."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply documentation and docs area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/documentation", "area/Docs"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request and note that links need updating for current .NET ecosystem",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for this suggestion — a Getting Started section in the README would definitely help new users find their way.\n\nThe README currently has badge links to the API docs and guides, but they're easy to miss. A dedicated section with curated links would be a nice improvement.\n\nNote that some of the links you suggested (the Xamarin-era tutorials) have been superseded by newer .NET/MAUI resources. An updated version would want to link to the current Microsoft Learn documentation. If you're still interested in contributing this, a PR would be welcome."
+      }
+    ]
+  }
+}
