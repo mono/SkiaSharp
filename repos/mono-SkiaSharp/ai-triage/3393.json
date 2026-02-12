@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3393,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:23:33Z",
+    "currentLabels": ["type/bug", "os/Android", "area/SkiaSharp", "tenet/reliability"]
+  },
+  "summary": "SkiaSharp's P/Invoke wrapper methods do not call GC.KeepAlive() on managed parameters after native calls, allowing the .NET GC to prematurely collect objects whose IntPtr handles are still in use by native Skia code. This is a systemic issue affecting ~910 P/Invoke call sites across 50+ files in binding/SkiaSharp/, with only 14 existing GC.KeepAlive calls. Under GC pressure (especially on mobile/Android), this race condition can cause crashes, data corruption, or AccessViolationExceptions. Version 3.116.0 is reported, but this has existed since the library's inception.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.98 },
+    "tenets": ["tenet/reliability"],
+    "partner": "partner/unoplatform"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "isRegression": false,
+      "errorType": "potential AccessViolationException / use-after-free crash",
+      "errorMessage": "Managed objects can be GC-collected while native code is operating on their handles",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-android"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKCanvas and SKPicture instance",
+        "Call canvas.DrawPicture(picture) where picture is not referenced afterward",
+        "Under GC pressure, the GC may collect picture (and finalize it) while native sk_canvas_draw_picture() is still executing",
+        "This causes a race between the application and the GC/Finalizer, eventually resulting in a crash"
+      ],
+      "codeSnippets": [
+        "var canvas = …\nvar picture = …\ncanvas.DrawPicture(picture);\n// `picture` is not referenced after this point — GC can collect it"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, VS Code macOS, Android + All platforms",
+      "relatedIssues": [1258],
+      "repoLinks": [
+        { "url": "https://github.com/unoplatform/uno/pull/21660", "description": "Uno Platform PR demonstrating the real-world crash from missing GC.KeepAlive" },
+        { "url": "https://github.com/dotnet/java-interop/issues/719", "description": "Same pattern in dotnet/java-interop — non-Skia example of the same GC race" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The issue is systemic — 910 P/Invoke call sites across 50+ files still lack GC.KeepAlive. Only 14 calls exist (added via PR #1258 in 2020 for pixel operations). No version has comprehensively addressed this."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "Draft PR #3394 (by Copilot) covers ~40 methods (~20% of affected call sites) but is incomplete, still in draft, and has not been merged. The vast majority of P/Invoke wrappers remain unprotected.",
+      "relatedPRs": [3394, 1258]
+    }
+  },
+  "analysis": {
+    "summary": "Systemic GC safety bug: nearly all SkiaSharp P/Invoke wrappers extract IntPtr handles from managed objects and pass them to native calls without GC.KeepAlive(), creating a race condition where the GC can finalize and dispose the native handle while Skia is still using it. The reporter (jonpryor, a .NET runtime expert) provides authoritative references including Chris Brumme's blog post on handle lifetime. The issue is confirmed by a real-world crash in Uno Platform (uno#21660). The fix pattern is well-understood (add GC.KeepAlive after each P/Invoke call for all reference-type parameters) and is already used in 14 places, but 910+ call sites remain unprotected.",
+    "rationale": "This is clearly a bug — the reporter demonstrates a race condition that violates .NET P/Invoke safety rules. The area is area/SkiaSharp because the problem is in the C# binding layer (binding/SkiaSharp/*.cs), not in views or native code. Severity is high because it can cause crashes and data corruption, though it requires GC pressure to trigger (making it intermittent and hard to diagnose). The tenet/reliability label is correct. The partner/unoplatform label is warranted because the issue was discovered via Uno Platform's own investigation.",
+    "keySignals": [
+      { "text": "Once execution hits SkiaApi.sk_canvas_draw_picture(), nothing ensures that picture is kept alive. (Or canvas, for that matter!)", "source": "issue body", "interpretation": "The reporter identifies the exact race condition: Handle extracted → P/Invoke entered → GC can collect → finalizer disposes native handle → crash." },
+      { "text": "unoplatform/uno#21660 is a Skia-related example of this", "source": "issue body", "interpretation": "Real-world evidence: Uno Platform hit this crash in production and had to fix it on their side." },
+      { "text": "14 GC.KeepAlive calls vs 910 P/Invoke calls across binding/SkiaSharp/", "source": "code search", "interpretation": "Only ~1.5% of P/Invoke call sites are protected. The existing KeepAlive calls (from PR #1258) prove the maintainer agrees with the pattern — it just wasn't applied systematically." },
+      { "text": "50 files in binding/SkiaSharp have P/Invoke calls but zero GC.KeepAlive", "source": "code search", "interpretation": "The problem is pervasive — SKCanvas (67 calls), SKPath (92 calls), SKPaint (49 calls), SKFont (42 calls) all have zero protection." },
+      { "text": "The reporter is jonpryor — .NET runtime team member and Xamarin/java-interop maintainer", "source": "issue author", "interpretation": "Authoritative source. The reporter understands .NET GC semantics deeply and cites the canonical reference (Chris Brumme's blog)." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "533-538", "finding": "DrawPicture(SKPicture, SKPaint) passes picture.Handle and paint.Handle to SkiaApi.sk_canvas_draw_picture() without any GC.KeepAlive. 67 total P/Invoke calls in this file, 0 GC.KeepAlive calls.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKData.cs", "lines": "165-192", "finding": "SKData.Create(SKStream) correctly uses try/finally with GC.KeepAlive(stream) — this is the reference pattern. 5 GC.KeepAlive calls protect stream and this references.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/SKObject.cs", "lines": "28-35", "finding": "SKObject has a KeepAliveObjects ConcurrentDictionary for long-lived references, but this doesn't protect transient P/Invoke parameters — only retained references.", "relevance": "context" },
+      { "file": "binding/SkiaSharp/SKPaint.cs", "finding": "49 P/Invoke calls, 0 GC.KeepAlive. Property setters like Shader, MaskFilter, ColorFilter pass parameter.Handle without protection.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKPath.cs", "finding": "92 P/Invoke calls, 0 GC.KeepAlive. AddPath, Op, and other methods taking SKPath parameters are all unprotected.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKImage.cs", "lines": "1-34", "finding": "34 P/Invoke calls, 3 GC.KeepAlive. Some protection exists for bitmap and this references in pixel operations (from PR #1258), but most factory methods and instance methods remain unprotected.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Callers can add GC.KeepAlive() after their own SkiaSharp API calls to keep parameters alive, e.g.: canvas.DrawPicture(picture); GC.KeepAlive(picture); GC.KeepAlive(canvas);",
+      "Keep explicit references to all SkiaSharp objects in scope until drawing operations complete (e.g., store in a field or local variable that's used after the draw call)"
+    ],
+    "nextQuestions": [
+      "Should GC.KeepAlive(this) also be added to instance methods, or should callers be responsible for keeping the receiver alive?",
+      "Can the code generator (pwsh ./utils/generate.ps1) be modified to automatically emit GC.KeepAlive for generated bindings?",
+      "What is the performance impact of adding GC.KeepAlive to every P/Invoke wrapper? (Expected: negligible — it's a no-op that just marks a reference as live)",
+      "Should PR #3394 be completed and merged, or should a fresh comprehensive approach be taken?"
+    ],
+    "resolution": {
+      "hypothesis": "The .NET GC can collect managed SkiaSharp objects while their native handles are still in use by Skia C++ code, because the C# wrappers extract IntPtr handles before P/Invoke calls and never mark the managed objects as still-live afterward. The fix is to add GC.KeepAlive() for all reference-type parameters after every P/Invoke call.",
+      "proposals": [
+        {
+          "title": "Complete systematic GC.KeepAlive audit",
+          "description": "Add GC.KeepAlive() calls after every P/Invoke invocation for all reference-type parameters. This covers ~910 call sites across 50+ files. Draft PR #3394 already covers ~20% — complete the remaining ~80%.",
+          "codeSnippet": "public void DrawPicture (SKPicture picture, SKPaint paint = null)\n{\n    if (picture == null)\n        throw new ArgumentNullException (nameof (picture));\n    SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, null, paint == null ? IntPtr.Zero : paint.Handle);\n    GC.KeepAlive (this);\n    GC.KeepAlive (picture);\n    GC.KeepAlive (paint);\n}",
+          "confidence": 0.95,
+          "effort": "large"
+        },
+        {
+          "title": "Modify generator to emit GC.KeepAlive",
+          "description": "If the P/Invoke bindings are partially generated (*.generated.cs), modify the generator (utils/generate.ps1) to automatically emit GC.KeepAlive for all reference-type parameters in generated wrappers. This prevents future regressions.",
+          "confidence": 0.75,
+          "effort": "medium"
+        },
+        {
+          "title": "Caller-side workaround",
+          "description": "As an immediate workaround, callers can add GC.KeepAlive() after their own SkiaSharp API calls. This is not a real fix but can prevent crashes in critical code paths while the library fix is developed.",
+          "codeSnippet": "var canvas = surface.Canvas;\nvar picture = recorder.EndRecording();\ncanvas.DrawPicture(picture);\nGC.KeepAlive(picture);\nGC.KeepAlive(canvas);",
+          "confidence": 0.90,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Complete systematic GC.KeepAlive audit",
+      "recommendedReason": "The caller-side workaround is impractical at scale — every consumer would need to add GC.KeepAlive everywhere. A systematic audit with GC.KeepAlive in every wrapper method is the correct fix, follows the pattern already established in SKData.cs, and PR #3394 provides a starting point."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "The bug is well-understood and the fix pattern is clear, but the scope is massive (~910 call sites). Draft PR #3394 needs review and completion. The issue should remain open to track the systematic audit."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Current labels are already correct. Add partner/unoplatform since the issue was discovered via Uno Platform's investigation.",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp", "tenet/reliability", "partner/unoplatform"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report, confirm the scope of the problem, reference existing work",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the thorough writeup and references — this is a real and well-understood GC safety issue.\n\nA code audit confirms the scope: there are ~910 P/Invoke call sites across 50+ files in `binding/SkiaSharp/`, but only 14 `GC.KeepAlive` calls (mostly in `SKData` and `SKImage` from PR #1258). Key files like `SKCanvas` (67 calls), `SKPath` (92 calls), and `SKPaint` (49 calls) have zero protection.\n\nDraft PR #3394 started addressing this for ~40 methods (~20% coverage), but the remaining ~80% still needs work.\n\nAs an immediate workaround, callers can add `GC.KeepAlive()` after their SkiaSharp calls:\n\n```csharp\ncanvas.DrawPicture(picture);\nGC.KeepAlive(picture);\nGC.KeepAlive(canvas);\n```\n\nWe'll also look into whether the generator can be updated to emit `GC.KeepAlive` automatically to prevent future regressions."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to existing draft PR #3394 which partially addresses this",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3394
+      }
+    ]
+  }
+}
