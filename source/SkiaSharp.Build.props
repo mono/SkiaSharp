@@ -129,13 +129,11 @@
   <!-- .NET MAUI -->
   <PropertyGroup>
     <MauiTargetFrameworksPlatformCurrent>$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksPlatformCurrent>
-    <MauiTargetFrameworksPlatformCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-tizen$(TPVTizenCurrent)</MauiTargetFrameworksPlatformCurrent>
     <MauiTargetFrameworksPlatformCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</MauiTargetFrameworksPlatformCurrent>
     <MauiTargetFrameworksCurrent>$(TFMCurrent);$(MauiTargetFrameworksPlatformCurrent)</MauiTargetFrameworksCurrent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMPrevious)' != ''">
     <MauiTargetFrameworksPlatformPrevious>$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksPlatformPrevious>
-    <MauiTargetFrameworksPlatformPrevious Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksPlatformPrevious);$(TFMPrevious)-tizen$(TPVTizenPrevious)</MauiTargetFrameworksPlatformPrevious>
     <MauiTargetFrameworksPlatformPrevious Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformPrevious);$(TFMPrevious)-windows$(TPVWindowsPrevious)</MauiTargetFrameworksPlatformPrevious>
     <MauiTargetFrameworksPrevious>$(TFMPrevious);$(MauiTargetFrameworksPlatformPrevious)</MauiTargetFrameworksPrevious>
   </PropertyGroup>
@@ -146,12 +144,10 @@
   <!-- .NET MAUI Apps (no TPV) -->
   <PropertyGroup>
     <MauiTargetFrameworksAppCurrent>$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksAppCurrent>
-    <MauiTargetFrameworksAppCurrent Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksAppCurrent);$(TFMCurrent)-tizen</MauiTargetFrameworksAppCurrent>
     <MauiTargetFrameworksAppCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksAppCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</MauiTargetFrameworksAppCurrent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMPrevious)' != ''">
     <MauiTargetFrameworksAppPrevious>$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksAppPrevious>
-    <MauiTargetFrameworksAppPrevious Condition="$(IsNetTizenSupported)">$(MauiTargetFrameworksAppPrevious);$(TFMPrevious)-tizen</MauiTargetFrameworksAppPrevious>
     <MauiTargetFrameworksAppPrevious Condition="$(IsWindows)">$(MauiTargetFrameworksAppPrevious);$(TFMPrevious)-windows$(TPVWindowsPrevious)</MauiTargetFrameworksAppPrevious>
   </PropertyGroup>
 
