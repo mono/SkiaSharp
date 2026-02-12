@@ -49,20 +49,17 @@ else
         <div class="detail-badges">
             @if (_issue is not null)
             {
-                <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value) has-rationale" style="position:relative">
+                <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">
                     @FormatLabel(_issue.Classification.Type.Value)
-                    @if (_issue.Analysis.Rationale is not null) { <span class="rationale-tooltip">@_issue.Analysis.Rationale</span> }
                 </span>
                 @if (_issue.Evidence.BugSignals?.Severity is not null)
                 {
-                    <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString() has-rationale" style="position:relative">
+                    <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString()">
                         @FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())
-                        @if (_issue.Analysis.Rationale is not null) { <span class="rationale-tooltip">@_issue.Analysis.Rationale</span> }
                     </span>
                 }
-                <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction.ToJsonString() has-rationale" style="position:relative">
+                <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction.ToJsonString()">
                     @FormatLabel(_issue.Output.Actionability.SuggestedAction.ToJsonString())
-                    <span class="rationale-tooltip">@_issue.Output.Actionability.Reason</span>
                 </span>
                 <span class="confidence-pill-lg" title="Overall confidence in the suggested action. 95%+ = explicit evidence, 80-94% = strong inference, 60-79% = ambiguous">
                     <span class="confidence-bar @GetConfidenceClass(_issue.Output.Actionability.Confidence)" style="width: @((int)(_issue.Output.Actionability.Confidence * 100))%"></span>
@@ -130,91 +127,66 @@ else
             <!-- Classification & Action (side by side) -->
             <div class="detail-section-grid">
                 <div class="detail-card card-classification">
-                    <h3 title="AI-assigned labels — hover each field for rationale">Classification</h3>
-                    <div class="field-row has-rationale">
+                    <h3>Classification</h3>
+                    <div class="field-row">
                         <span class="field-label">Type:</span>
                         <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
                         <span class="field-confidence">@_issue.Classification.Type.Confidence.ToString("P0")</span>
-                        @if (_issue.Analysis.Rationale is not null)
-                        {
-                            <span class="rationale-tooltip">@_issue.Analysis.Rationale</span>
-                        }
                     </div>
                     @if (_issue.Classification.Area is not null)
                     {
-                        <div class="field-row has-rationale">
+                        <div class="field-row">
                             <span class="field-label">Area:</span>
                             <span class="label label-area">@FormatLabel(_issue.Classification.Area.Value)</span>
                             <span class="field-confidence">@_issue.Classification.Area.Confidence.ToString("P0")</span>
-                            @if (_issue.Analysis.Rationale is not null)
-                            {
-                                <span class="rationale-tooltip">@_issue.Analysis.Rationale</span>
-                            }
                         </div>
                     }
                     @if (_issue.Classification.Platforms is { Count: > 0 })
                     {
-                        <div class="field-row has-rationale">
+                        <div class="field-row">
                             <span class="field-label">Platforms:</span>
                             @foreach (var p in _issue.Classification.Platforms)
                             {
                                 <span class="label label-os">@FormatLabel(p)</span>
                             }
-                            @if (_issue.Analysis.Rationale is not null)
-                            {
-                                <span class="rationale-tooltip">@_issue.Analysis.Rationale</span>
-                            }
                         </div>
                     }
                     @if (_issue.Classification.Backends is { Count: > 0 })
                     {
-                        <div class="field-row has-rationale">
+                        <div class="field-row">
                             <span class="field-label">Backends:</span>
                             @foreach (var b in _issue.Classification.Backends)
                             {
                                 <span class="label label-backend">@FormatLabel(b)</span>
                             }
-                            @if (_issue.Analysis.Rationale is not null)
-                            {
-                                <span class="rationale-tooltip">@_issue.Analysis.Rationale</span>
-                            }
                         </div>
                     }
                     @if (_issue.Classification.Tenets is { Count: > 0 })
                     {
-                        <div class="field-row has-rationale">
+                        <div class="field-row">
                             <span class="field-label">Tenets:</span>
                             @foreach (var t in _issue.Classification.Tenets)
                             {
                                 <span class="label label-tenet">@FormatLabel(t)</span>
                             }
-                            @if (_issue.Analysis.Rationale is not null)
-                            {
-                                <span class="rationale-tooltip">@_issue.Analysis.Rationale</span>
-                            }
                         </div>
                     }
                     @if (_issue.Classification.Partner is not null)
                     {
-                        <div class="field-row has-rationale">
+                        <div class="field-row">
                             <span class="field-label">Partner:</span>
                             <span class="label label-partner">@FormatLabel(_issue.Classification.Partner)</span>
-                            @if (_issue.Analysis.Rationale is not null)
-                            {
-                                <span class="rationale-tooltip">@_issue.Analysis.Rationale</span>
-                            }
                         </div>
                     }
                 </div>
 
                 <div class="detail-card card-action">
                     <h3>Suggested Action</h3>
-                    <div class="action-detail has-rationale">
+                    <div class="action-detail">
                         <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction.ToJsonString()">
                             @FormatLabel(_issue.Output.Actionability.SuggestedAction.ToJsonString())
                         </span>
                         <span class="field-confidence">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
-                        <span class="rationale-tooltip">@_issue.Output.Actionability.Reason</span>
                     </div>
                     <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Output.Actionability.Reason)</div>
                     @if (_issue.Output.MissingInfo is { Count: > 0 })
@@ -292,9 +264,8 @@ else
                             <h3>Regression</h3>
                             @if (_issue.Evidence.Regression.IsRegression)
                             {
-                                <span class="badge-regression has-rationale" style="position:relative">
+                                <span class="badge-regression">
                                     ⚡ Regression
-                                    @if (_issue.Evidence.Regression.Reason is not null) { <span class="rationale-tooltip">@_issue.Evidence.Regression.Reason</span> }
                                 </span>
                                 <span class="field-confidence">@_issue.Evidence.Regression.Confidence.ToString("P0")</span>
                                 @if (_issue.Evidence.Regression.WorkedInVersion is not null)
@@ -354,13 +325,9 @@ else
                     }
                     @if (_issue.Evidence.VersionAnalysis.CurrentRelevance is not null)
                     {
-                        <div class="field-row has-rationale">
+                        <div class="field-row">
                             <span class="field-label">Still relevant:</span>
                             <span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString()">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString())</span>
-                            @if (_issue.Evidence.VersionAnalysis.RelevanceReason is not null)
-                            {
-                                <span class="rationale-tooltip">@_issue.Evidence.VersionAnalysis.RelevanceReason</span>
-                            }
                         </div>
                     }
                     @if (_issue.Evidence.VersionAnalysis.WorkedIn is not null)
