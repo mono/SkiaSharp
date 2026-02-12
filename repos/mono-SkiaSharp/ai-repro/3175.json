@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3175,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T17:55:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3175.json"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Reproduced: SKManagedStream.OnReadManagedStream performs a single stream.Read() call without looping. When a stream returns fewer bytes than requested (valid per .NET Stream contract), Skia treats the short read as EOF and stops decoding. A 13MB PNG decoded through a ChunkedStream (max 2048 bytes per read) produces a 2000x2000 bitmap with zero pixel data \u2014 all rows are blank. With chunk sizes >= 4096 (matching Skia's internal read request size), decoding works because no short reads occur. This affects any .NET stream that returns partial reads: Azure Blob Storage, network streams, buffered streams crossing buffer boundaries. The reporter's scenario (Azure Blob with 4MB default chunk size) triggers when Skia's 4096-byte read request crosses a chunk boundary in the Azure buffer, causing a partial return. Duplicate of #1962. Bug exists on 3.116.0, 3.119.2, and main.",
+  "reproductionTime": "~12 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "ChunkedStream with 2048-byte limit: 8 reads total, short read on request #8 (requested 4096, got 2048), Skia stops. Image 2000x2000 but all pixels blank."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Identical behavior to 3.116.0. Same 8 reads, same short read, same blank image."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Test DecodeFromChunkedStreamReadsAllData failed: expected bottom pixel #ff2fc4c8, got #00000000. Bug still present on main."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project and add SkiaSharp 3.116.0",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.116.0' added.",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 3.116.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write reproduction code with instrumented ChunkedStream that limits Read() to a max chunk size, simulating Azure Blob stream behavior. Generates a 13MB PNG with random pixels, then decodes through ChunkedStream with various chunk sizes.",
+      "layer": "csharp",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code: creates a large PNG, decodes through ChunkedStream wrapper that limits bytes per Read() call to simulate Azure Blob chunked delivery",
+          "content": "using SkiaSharp;\nusing System;\nusing System.IO;\nusing System.Collections.Generic;\n\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine();\n\nconst int width = 2000;\nconst int height = 2000;\nbyte[] pngBytes;\n\nusing (var bmp = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul))\n{\n    var rng = new Random(42);\n    for (int y = 0; y < height; y++)\n        for (int x = 0; x < width; x++)\n            bmp.SetPixel(x, y, new SKColor((byte)rng.Next(256), (byte)rng.Next(256), (byte)rng.Next(256)));\n    \n    using var image = SKImage.FromBitmap(bmp);\n    using var data = image.Encode(SKEncodedImageFormat.Png, 100);\n    pngBytes = data.ToArray();\n}\n\nConsole.WriteLine($\"PNG: {pngBytes.Length} bytes ({pngBytes.Length / 1024.0 / 1024.0:F2} MB)\");\nConsole.WriteLine();\n\nforeach (var chunkSize in new[] { 2048, 4096, 4 * 1024 * 1024 })\n{\n    var reads = new List<(int requested, int returned)>();\n    using var inner = new MemoryStream(pngBytes);\n    using var chunked = new InstrumentedChunkedStream(inner, chunkSize, reads);\n    using var bitmap = SKBitmap.Decode(chunked);\n    \n    int shortReads = 0;\n    foreach (var (req, ret) in reads)\n        if (ret < req && ret > 0) shortReads++;\n    \n    int lastRow = bitmap == null ? -1 : FindLastRow(bitmap, width, height);\n    bool ok = lastRow == height - 1;\n    \n    Console.WriteLine($\"[chunk={chunkSize,10}] reads={reads.Count}, short_reads={shortReads}, lastRow={lastRow}/{height - 1} {(ok ? \"OK\" : \"TRUNCATED\")}\");\n}\n\nstatic int FindLastRow(SKBitmap bmp, int w, int h)\n{\n    for (int y = h - 1; y >= 0; y--)\n        if (bmp.GetPixel(w / 2, y).Alpha > 0) return y;\n    return -1;\n}\n\nclass InstrumentedChunkedStream : Stream\n{\n    private readonly Stream _inner;\n    private readonly int _chunkSize;\n    private readonly List<(int requested, int returned)> _reads;\n\n    public InstrumentedChunkedStream(Stream inner, int chunkSize, List<(int, int)> reads)\n    {\n        _inner = inner;\n        _chunkSize = chunkSize;\n        _reads = reads;\n    }\n\n    public override bool CanRead => true;\n    public override bool CanSeek => true;\n    public override bool CanWrite => false;\n    public override long Length => _inner.Length;\n    public override long Position { get => _inner.Position; set => _inner.Position = value; }\n\n    public override int Read(byte[] buffer, int offset, int count)\n    {\n        int toRead = Math.Min(count, _chunkSize);\n        int ret = _inner.Read(buffer, offset, toRead);\n        _reads.Add((count, ret));\n        return ret;\n    }\n\n    public override long Seek(long offset, SeekOrigin origin) => _inner.Seek(offset, origin);\n    public override void SetLength(long value) => _inner.SetLength(value);\n    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();\n    public override void Flush() => _inner.Flush();\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run reproduction with SkiaSharp 3.116.0 (reporter's version). ChunkedStream with 2048-byte limit causes Skia to stop after one short read \u2014 image is completely blank despite correct dimensions.",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.116.0.0\n\nPNG: 13840553 bytes (13.20 MB)\n\n[chunk=      2048] reads=8, short_reads=1, lastRow=-1/1999 TRUNCATED\n[chunk=      4096] reads=6758, short_reads=0, lastRow=1999/1999 OK\n[chunk=   4194304] reads=6758, short_reads=0, lastRow=1999/1999 OK",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Update to SkiaSharp 3.119.2 (latest stable) and rerun. Same truncation behavior \u2014 bug not fixed.",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp --version 3.119.2 && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\n\nPNG: 13840553 bytes (13.20 MB)\n\n[chunk=      2048] reads=8, short_reads=1, lastRow=-1/1999 TRUNCATED\n[chunk=      4096] reads=6758, short_reads=0, lastRow=1999/1999 OK\n[chunk=   4194304] reads=6758, short_reads=0, lastRow=1999/1999 OK",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test on main (source) by adding a temporary xUnit test to SKManagedStreamTest.cs. Created a 500x500 PNG with random pixels, decoded through ChunkedStream (2048 limit), compared bottom pixel. Test fails: expected #ff2fc4c8, got #00000000.",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter \"FullyQualifiedName~DecodeFromChunkedStreamReadsAllData\" --no-restore",
+      "exitCode": 1,
+      "output": "Failed SkiaSharp.Tests.SKManagedStreamTest.DecodeFromChunkedStreamReadsAllData [43 s]\nError Message:\n Assert.Equal() Failure\nExpected: #ff2fc4c8\nActual:   #00000000\nFailed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
+      "result": "failure"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKBitmap.Decode produces blank image when underlying stream returns partial reads (fewer bytes than requested). Skia's PNG codec makes 4096-byte read requests; a single short read causes Skia to treat the stream as ended, producing a bitmap with correct dimensions but zero pixel data."
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  }
+}
