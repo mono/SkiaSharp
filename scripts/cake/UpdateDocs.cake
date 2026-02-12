@@ -24,10 +24,10 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("OpenTK.GLWpfControl", "netcoreapp3.1");
     await AddDep("Microsoft.Maui.Core", "net10.0");
     await AddDep("Microsoft.Maui.Controls.Core", "net10.0");
-    await AddDep("Microsoft.iOS.Ref.net10.0_18.0", "net10.0");
-    await AddDep("Microsoft.MacCatalyst.Ref.net10.0_18.0", "net10.0");
-    await AddDep("Microsoft.tvOS.Ref.net10.0_18.0", "net10.0");
-    await AddDep("Microsoft.macOS.Ref.net10.0_15.0", "net10.0");
+    await AddDep("Microsoft.iOS.Ref.net10.0_26.0", "net10.0");
+    await AddDep("Microsoft.MacCatalyst.Ref.net10.0_26.0", "net10.0");
+    await AddDep("Microsoft.tvOS.Ref.net10.0_26.0", "net10.0");
+    await AddDep("Microsoft.macOS.Ref.net10.0_26.0", "net10.0");
     await AddDep("Samsung.Tizen.Ref", "net10.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.iOS/v1.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.TVOS/v1.0");
