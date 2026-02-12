@@ -15,6 +15,32 @@ Write-Host "Configuring workload update mode to 'manifests'..."
 & dotnet workload config --update-mode manifests
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+# Install Tizen BEFORE official workloads — Samsung's script uses
+# 'dotnet workload install tizen --skip-manifest-update' internally,
+# which must run before official workloads change the workload state.
+Write-Host "Installing Tizen workloads..."
+New-Item -ItemType Directory -Force './output/tmp' | Out-Null
+if ($IsLinux -or $IsMacOS) {
+  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile './output/tmp/workload-install.sh'
+  bash output/tmp/workload-install.sh --version "$Tizen"
+} else {
+  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile './output/tmp/workload-install.ps1'
+  ./output/tmp/workload-install.ps1 -Version "$Tizen"
+}
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Diagnostic: show manifest directory for debugging
+$dotnetRoot = (Get-Command dotnet).Source | Split-Path
+$manifestDir = Join-Path $dotnetRoot "sdk-manifests" "10.0.100"
+Write-Host "Manifest directory contents:"
+if (Test-Path $manifestDir) {
+  Get-ChildItem $manifestDir -Recurse -Filter "WorkloadManifest.json" | ForEach-Object { Write-Host "  $($_.FullName)" }
+}
+
+# Show installed workloads
+Write-Host "Installed workloads:"
+& dotnet workload list
+
 # Install official .NET workloads needed by the repo.
 $Workloads = @('android', 'macos', 'wasm-tools')
 if (!$IsLinux) {
@@ -30,15 +56,6 @@ Write-Host "Installing .NET workloads: $($Workloads -join ', ')..."
   --skip-manifest-update
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Tizen is not an official workload — it uses Samsung's custom install scripts.
-# Install AFTER official workloads so Tizen manifest is not overwritten.
-Write-Host "Installing Tizen workloads..."
-New-Item -ItemType Directory -Force './output/tmp' | Out-Null
-if ($IsLinux -or $IsMacOS) {
-  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile './output/tmp/workload-install.sh'
-  bash output/tmp/workload-install.sh --version "$Tizen"
-} else {
-  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile './output/tmp/workload-install.ps1'
-  ./output/tmp/workload-install.ps1 -Version "$Tizen"
-}
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+# Verify Tizen is still visible after official workload install
+Write-Host "Workloads after install:"
+& dotnet workload list
