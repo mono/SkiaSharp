@@ -1,10 +1,15 @@
 {
   "meta": {
-    "schemaVersion": "3.0",
+    "schemaVersion": "1.0",
     "number": 3421,
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2025-07-25T12:00:00Z",
-    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "tenet/reliability"]
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "area/SkiaSharp",
+      "tenet/reliability"
+    ]
   },
   "summary": "User reports that loading a .lottie file via SkiaSharp.Skottie.Animation.Create() returns null silently. The .lottie format (dotLottie) is a ZIP archive containing Lottie JSON and associated assets, while Skottie's parser expects raw Lottie JSON data. The null return is expected behavior — the JSON parser fails because the input is a ZIP binary, not JSON text. The user needs to extract the Lottie JSON from the .lottie archive before passing it to the Skottie API.",
   "classification": {
@@ -16,7 +21,9 @@
       "value": "area/skottie",
       "confidence": 0.95
     },
-    "platforms": ["os/Windows-Classic"]
+    "platforms": [
+      "os/Windows-Classic"
+    ]
   },
   "evidence": {
     "reproEvidence": {
@@ -41,7 +48,9 @@
       "environmentDetails": "Windows 11 Desktop, Visual Studio (Windows), SkiaSharp 3.116.0"
     },
     "versionAnalysis": {
-      "mentionedVersions": ["3.116.0"]
+      "mentionedVersions": [
+        "3.116.0"
+      ]
     }
   },
   "analysis": {
@@ -120,7 +129,11 @@
         "description": "Reclassify as question about .lottie format support, add skottie area label",
         "risk": "low",
         "confidence": 0.85,
-        "labels": ["type/question", "area/SkiaSharp", "os/Windows-Classic"]
+        "labels": [
+          "type/question",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
       },
       {
         "type": "add-comment",
