@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 243,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:36:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/243.json"
+  },
+  "conclusion": "inconclusive",
+  "assessment": "working-as-designed",
+  "notes": "Issue #243 is a feature request (type/feature-request, confidence 0.95) asking for ANGLE GPU rendering libraries to be bundled with SkiaSharp for Windows desktop (WPF/WinForms). There is no defective behavior to reproduce — the current behavior (no ANGLE DLLs in NuGet, raster-only WinForms/WPF views) is by design. Verified: SkiaSharp 3.116.1 Win32 NativeAssets contains only libSkiaSharp.dll with no ANGLE binaries; WinForms SKControl uses System.Drawing.Bitmap (raster path). The codebase does have ANGLE infrastructure (GRGlInterface.CreateAngle, AngleSwapChainPanel for WinUI) but these are not exposed for WPF/WinForms. Additionally, reproduction of any Windows-specific behavior is not possible on the current macOS environment.",
+  "reproductionTime": "~5 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Inspected NuGet package contents. Win32 NativeAssets contain only libSkiaSharp.dll (x64/x86/arm64) — no ANGLE DLLs (libEGL.dll, libGLESv2.dll). This confirms the feature gap but there is no bug to test."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Inspected WinForms SKControl source — uses System.Drawing.Bitmap (raster only), no GPU path. ANGLE infrastructure exists in WinUI views only. No bug behavior to test."
+    }
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Inspect SkiaSharp 3.116.1 Win32 NativeAssets NuGet package for ANGLE binaries",
+      "layer": "deployment",
+      "command": "curl -sLo /tmp/check-native-win.nupkg 'https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.win32/3.116.1/skiasharp.nativeassets.win32.3.116.1.nupkg' && unzip -l /tmp/check-native-win.nupkg | grep -E 'runtimes/'",
+      "exitCode": 0,
+      "output": "runtimes/win-x64/native/libSkiaSharp.dll\nruntimes/win-x86/native/libSkiaSharp.dll\nruntimes/win-arm64/native/libSkiaSharp.dll",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify WinForms SKControl uses raster-only rendering (no GPU/ANGLE path)",
+      "layer": "csharp",
+      "command": "grep -n 'SKSurface.Create\\|GRContext\\|Angle\\|GPU' source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs",
+      "exitCode": 0,
+      "output": "46:\t\t\t\tusing (var surface = SKSurface.Create(info, data.Scan0, data.Stride))\n\nNo GRContext, Angle, or GPU references found — confirms raster-only rendering.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify ANGLE infrastructure exists in WinUI views (demonstrating the feature gap between WinUI and WPF/WinForms)",
+      "layer": "csharp",
+      "command": "grep -rl 'Angle\\|libEGL\\|libGLES' source/SkiaSharp.Views/ | head -5",
+      "exitCode": 0,
+      "output": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs\nsource/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/Egl.cs\nsource/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Feature request (type/feature-request) — no defective behavior exists to reproduce. The absence of ANGLE in the NuGet package is the expected current state, not a bug.",
+    "Windows-specific: ANGLE GPU rendering is only relevant on Windows desktop (WPF/WinForms). Current environment is macOS arm64."
+  ]
+}
