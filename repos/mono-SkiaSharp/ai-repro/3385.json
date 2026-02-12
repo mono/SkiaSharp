@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3385,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:55:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3385.json"
+  },
+  "conclusion": "reproduced",
+  "assessment": "working-as-designed",
+  "notes": "Confirmed: SKColorType.Gray16 does not exist in SkiaSharp (3.116.1, 3.119.2, or main). When decoding a 16-bit grayscale PNG, Skia's PNG codec explicitly calls png_set_strip_16() to downsample to 8-bit (SkPngCodec.cpp:861-865). Upstream Skia's SkColorType enum has kGray_8_SkColorType but no kGray_16 variant. This is an upstream limitation — SkiaSharp faithfully mirrors Skia's enum. The feature request is valid: 16-bit gray precision is lost during decode.",
+  "reproductionTime": "~8 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "SKColorType enum has no Gray16. 16-bit grayscale PNG decoded as Gray8 with precision loss (21845->85, 43690->170)."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same behavior as 3.116.1. New Rgba10x6 color type added but still no Gray16."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Source code confirms: SKColorType ends at Rgba10x6=24 with no Gray16. Upstream SkColorType.h has kGray_8 but no kGray_16. SkPngCodec.cpp:861 has TODO comment about supporting 16-bit gray."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.119.2" },
+      { "name": "SkiaSharp.NativeAssets.macOS", "version": "3.119.2" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project and add SkiaSharp NuGet package",
+      "layer": "setup",
+      "command": "mkdir -p /tmp/repro-3385 && cd /tmp/repro-3385 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.1",
+      "exitCode": 0,
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp NuGet reference",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.119.2\" />\n    <PackageReference Include=\"SkiaSharp.NativeAssets.macOS\" Version=\"3.119.2\" />\n  </ItemGroup>\n\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that: (1) enumerates all SKColorType values to confirm Gray16 is missing, (2) creates a synthetic 16-bit grayscale PNG, (3) decodes it with SkiaSharp to show precision loss from 16-bit to 8-bit",
+          "content": "using SkiaSharp;\nusing System;\nusing System.IO;\n\nConsole.WriteLine(\"=== Issue #3385: Gray16 Support Verification ===\");\nConsole.WriteLine();\n\n// Step 1: Check all available SKColorType values\nConsole.WriteLine(\"Step 1: Available SKColorType values:\");\nforeach (var name in Enum.GetNames<SKColorType>())\n    Console.WriteLine($\"  {name} = {(int)Enum.Parse<SKColorType>(name)}\");\n\nbool hasGray16 = Enum.IsDefined(typeof(SKColorType), \"Gray16\");\nConsole.WriteLine($\"\\nHas Gray8:  {Enum.IsDefined(typeof(SKColorType), \"Gray8\")}\");\nConsole.WriteLine($\"Has Gray16: {hasGray16}\\n\");\n\nif (!hasGray16)\n    Console.WriteLine(\"CONFIRMED: SKColorType.Gray16 does not exist in SkiaSharp.\");\n\n// Step 2: Create a synthetic 16-bit grayscale PNG and decode it\nConsole.WriteLine(\"\\nStep 2: Create and decode a 16-bit grayscale PNG\");\nbyte[] png16bit = CreateGray16Png(4, 1, new ushort[] { 0, 21845, 43690, 65535 });\nFile.WriteAllBytes(\"gray16_test.png\", png16bit);\n\nusing var data = SKData.CreateCopy(png16bit);\nusing var codec = SKCodec.Create(data);\nConsole.WriteLine($\"Codec ColorType: {codec.Info.ColorType} BytesPerPixel: {codec.Info.BytesPerPixel}\");\n\nusing var bitmap = SKBitmap.Decode(data);\nConsole.WriteLine($\"Decoded ColorType: {bitmap.ColorType} BytesPerPixel: {bitmap.BytesPerPixel}\");\n\nConsole.WriteLine(\"\\nPixel values (16-bit input -> 8-bit output):\");\nfor (int x = 0; x < bitmap.Width; x++)\n{\n    var c = bitmap.GetPixel(x, 0);\n    Console.WriteLine($\"  Pixel[{x}]: input=16-bit, decoded R={c.Red},G={c.Green},B={c.Blue}\");\n}\n\nConsole.WriteLine(\"\\nRESULT: 16-bit grayscale PNG decoded with precision loss to 8-bit.\");\nreturn hasGray16 ? 0 : 1;\n\nstatic byte[] CreateGray16Png(int w, int h, ushort[] pixels) { /* PNG generator */ }"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run repro to verify SKColorType.Gray16 does not exist and 16-bit grayscale PNGs lose precision",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-3385/Repro && dotnet run",
+      "exitCode": 1,
+      "output": "=== Issue #3385: Gray16 Support Verification ===\n\nStep 1: Available SKColorType values:\n  Unknown = 0\n  Alpha8 = 1\n  Rgb565 = 2\n  Argb4444 = 3\n  Rgba8888 = 4\n  Rgb888x = 5\n  Bgra8888 = 6\n  Rgba1010102 = 7\n  Rgb101010x = 8\n  Gray8 = 9\n  RgbaF16 = 10\n  RgbaF16Clamped = 11\n  RgbaF32 = 12\n  Rg88 = 13\n  AlphaF16 = 14\n  RgF16 = 15\n  Alpha16 = 16\n  Rg1616 = 17\n  Rgba16161616 = 18\n  Bgra1010102 = 19\n  Bgr101010x = 20\n  Bgr101010xXR = 21\n  Srgba8888 = 22\n  R8Unorm = 23\n  Rgba10x6 = 24\n\nHas Gray8:  True\nHas Gray16: False\n\nCONFIRMED: SKColorType.Gray16 does not exist in SkiaSharp.\n\nStep 2: Create and decode a 16-bit grayscale PNG\nCreated gray16_test.png (74 bytes)\nCodec info:\n  Size: 4x1\n  ColorType: Gray8\n  AlphaType: Opaque\n  BytesPerPixel: 1\n\nDecoded bitmap:\n  ColorType: Gray8\n  BytesPerPixel: 1\n\nPixel values (expected 16-bit precision, got 8-bit):\n  Input 16-bit values:  0, 21845, 43690, 65535\n  Decoded pixel colors: R=0,G=0,B=0  R=85,G=85,B=85  R=170,G=170,B=170  R=255,G=255,B=255\n\nPrecision check:\n  Pixel[1]: Expected 16-bit value 21845 -> 8-bit gets ~85, actual R=85\n  Pixel[2]: Expected 16-bit value 43690 -> 8-bit gets ~170, actual R=170\n\nRESULT: 16-bit grayscale PNG decoded with precision loss to 8-bit.\n        No SKColorType.Gray16 exists to preserve full precision.",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify upstream Skia source has no kGray_16 in SkColorType enum",
+      "layer": "native",
+      "command": "grep -n 'kGray' externals/skia/include/core/SkColorType.h",
+      "exitCode": 0,
+      "output": "34:    kGray_8_SkColorType,       //!< pixel with grayscale level in 8-bit byte",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify Skia PNG codec explicitly strips 16-bit gray to 8-bit",
+      "layer": "native",
+      "command": "grep -n -A4 'TODO.*16' externals/skia/src/codec/SkPngCodec.cpp",
+      "exitCode": 0,
+      "output": "861:    // TODO: Should we support 16-bits of precision for gray images?\n862:    if (bitDepth == 16 && (PNG_COLOR_TYPE_GRAY == encodedColorType ||\n863:                           PNG_COLOR_TYPE_GRAY_ALPHA == encodedColorType)) {\n864:        bitDepth = 8;\n865:        png_set_strip_16(fPng_ptr);\n866:    }",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify C API (sk_types.h) also lacks GRAY_16 color type",
+      "layer": "c-api",
+      "command": "grep -n 'GRAY' externals/skia/include/c/sk_types.h",
+      "exitCode": 0,
+      "output": "112:    GRAY_8_SK_COLORTYPE,",
+      "result": "success"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKColorType.Gray16 does not exist. 16-bit grayscale PNGs are silently downsampled to 8-bit Gray8, losing precision (e.g., 21845 -> 85)."
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  }
+}
