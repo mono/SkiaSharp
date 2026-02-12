@@ -3,103 +3,179 @@
     "schemaVersion": "1.0",
     "number": 2759,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T22:41:00Z"
+    "analyzedAt": "2026-02-12T13:47:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
   },
-  "summary": "SKBitmap.Decode returns null for a specific PNG — follow-up to #933/#1981. No image file attached, insufficient info to diagnose.",
+  "summary": "SKBitmap.Decode returns null for a specific PNG \u2014 follow-up to #933 (dup of #1981). The zlib SSE fix shipped in v2.88.1 but reporter claims issue persists on v2.88.3/2.88.6. No PNG file attached \u2014 cannot verify if same or different issue.",
   "classification": {
     "type": {
       "value": "type/bug",
-      "confidence": 0.72
+      "confidence": 0.7
     },
     "area": {
       "value": "area/SkiaSharp",
-      "confidence": 0.9
+      "confidence": 0.92
     }
   },
   "evidence": {
-    "reproEvidence": {
-      "environmentDetails": "Windows, Visual Studio, SkiaSharp 2.88.6 (description) / 2.88.3 (form field). All platforms claimed affected.",
-      "codeSnippets": [
-        "csharp: SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(@\"C:\\Temp\\image1.png\");\nAssert.IsNotNull(bmp);"
-      ]
-    },
     "bugSignals": {
-      "severity": "low"
+      "severity": "low",
+      "errorType": "wrong-output",
+      "errorMessage": "SKBitmap.Decode returns null",
+      "reproQuality": "none",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call SKBitmap.Decode on a specific PNG file (not provided)",
+        "Observe that the return value is null"
+      ],
+      "environmentDetails": "Windows, Visual Studio, SkiaSharp 2.88.3 or 2.88.6 (conflicting info). Reporter claims 'All' platforms affected.",
+      "codeSnippets": [
+        "SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(@\"C:\\Temp\\image1.png\");\nAssert.IsNotNull(bmp);"
+      ],
+      "relatedIssues": [
+        933,
+        1981,
+        1621,
+        1378
+      ]
     },
     "versionAnalysis": {
       "mentionedVersions": [
         "2.88.6",
         "2.88.3",
         "2.88.2"
+      ],
+      "workedIn": "2.88.2",
+      "brokeIn": "2.88.3",
+      "currentRelevance": "unknown",
+      "relevanceReason": "The zlib SSE fix for #1981 shipped in v2.88.1, so both 2.88.2 and 2.88.3 already contain that fix. If the reporter's version info is accurate, this would be a DIFFERENT bug from #1981. However, the version field contradicts the description (2.88.3 vs 2.88.6), and without the PNG file we cannot determine which bug this is."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.45,
+      "reason": "The #1981 zlib SSE fix shipped in v2.88.1, which is before the reporter's stated versions. If the reporter is using the same PNG from #933, the zlib fix should have resolved it. But SkiaSharp 3.x has further zlib (v1.3.0.1+) and libpng (v1.6.54) updates that may fix additional PNG decoding edge cases. Without the image file, we can't determine if this is fixed in current versions.",
+      "relatedPRs": [
+        2045,
+        2510,
+        3058,
+        3059,
+        3452
       ]
     }
   },
   "analysis": {
-    "summary": "The reporter reopens #933 (closed as dup of #1981) claiming the fix didn't work. However, they provide no image file, no SKCodec error output, and no details about the PNG's properties (bit depth, color type, interlacing, chunk structure). Multiple distinct PNG decoding issues exist in SkiaSharp — the zlib SSE bug (#1981), CRC mismatch rejection (#2874), and format-specific codec failures (#2429, #2801). Without the image, we cannot determine which issue this is or whether the #1981 fix addresses it.",
-    "rationale": "type: Reporter describes SKBitmap.Decode returning null for a valid PNG. If the image is genuinely valid, this is a bug. However, without the image, we can't confirm validity — the PNG might have CRC errors, unusual encoding, or other issues that Skia intentionally rejects. area: SKBitmap.Decode is in the core SkiaSharp binding. The failure could be in native Skia's codec, but the entry point is SkiaSharp. bugSignals.severity: No crash, no stack trace, no reproduction material. The report has zero comments and no image file attached. Cannot investigate without additional information from the reporter. actionability.suggestedAction: We need the actual PNG file to diagnose the issue. We also need SKCodecResult output to understand why decoding fails. Without these, we cannot determine if this is a new bug, an unfixed old bug, or an invalid image. versionAnalysis.currentRelevance: Without the actual PNG file, we cannot determine if this is the same zlib bug fixed in #1981 (which would be fixed in current versions) or a different PNG issue. The reporter's version info is contradictory (2.88.3 vs 2.88.6).",
+    "summary": "Reporter claims SKBitmap.Decode returns null for a PNG, referencing #933 (closed as dup of #1981). The #1981 zlib SSE bug was fixed in v2.88.1 via PR #2045. The reporter's claimed versions (2.88.3 current, 2.88.2 last good) both post-date that fix, suggesting either a different PNG decoding bug or incorrect version reporting. No PNG file is attached, making investigation impossible. Zero comments, no engagement since filing.",
+    "rationale": "Classified as type/bug because the reporter describes an API returning null for what they claim is a valid PNG. Confidence is 0.70 because without the image we can't confirm the PNG is valid \u2014 it may have CRC errors, unusual encoding, or other issues Skia intentionally rejects. Area is core SkiaSharp since SKBitmap.Decode is in binding/SkiaSharp/. Severity is low because no crash occurs (returns null gracefully), no stack trace, no reproduction material provided, and zero community engagement. The report is incomplete and uninvestigable without the actual PNG file.",
+    "keySignals": [
+      {
+        "text": "This is follow-up of #933 issue, which is closed as resolved, but the problem is still there 2.88.6 version",
+        "source": "issue body",
+        "interpretation": "Reporter believes the #933/#1981 fix didn't work for their case. But the zlib fix shipped in v2.88.1 \u2014 both v2.88.3 and v2.88.6 include it. This may be a different PNG issue."
+      },
+      {
+        "text": "Version: 2.88.3 (Current), Last Known Good: 2.88.2 (Previous)",
+        "source": "issue form fields",
+        "interpretation": "Contradicts the description which says 2.88.6. Both 2.88.2 and 2.88.3 post-date the v2.88.1 zlib fix, so the regression window doesn't align with the #1981 fix timeline."
+      },
+      {
+        "text": "No image file attached, no SKCodecResult, no Expected/Actual behavior filled in",
+        "source": "issue template",
+        "interpretation": "Incomplete report. Cannot investigate without the PNG file. The original #933 had GitHub-embedded images, but we can't confirm the reporter is using those exact files."
+      }
+    ],
     "codeInvestigation": [
       {
         "file": "binding/SkiaSharp/SKBitmap.cs",
         "lines": "539-549",
-        "finding": "SKBitmap.Decode(string) creates SKCodec via SKCodec.Create(filename). If the codec is null (Skia rejected the image), Decode returns null. The reporter sees null, meaning SKCodec.Create failed — but we don't know why without the image.",
-        "relevance": "related"
+        "finding": "SKBitmap.Decode(string) creates an SKCodec via SKCodec.Create(filename). If the codec is null (Skia rejected the image), Decode returns null. The null return is by design for invalid/unsupported images.",
+        "relevance": "direct"
       },
       {
         "file": "binding/SkiaSharp/SKCodec.cs",
         "lines": "232-241",
-        "finding": "SKCodec.Create(string) opens an SKFileStream and passes to sk_codec_new_from_stream. The out parameter SKCodecResult would reveal the failure reason, but the reporter's code doesn't capture it.",
-        "relevance": "related"
+        "finding": "SKCodec.Create(string, out SKCodecResult) exposes the failure reason. The reporter's code doesn't capture the SKCodecResult, which would reveal whether the failure is in codec initialization or pixel decoding.",
+        "relevance": "direct"
       },
       {
         "file": "binding/SkiaSharp/SKBitmap.cs",
         "lines": "446-459",
-        "finding": "Even if SKCodec creation succeeds, Decode(codec, bitmapInfo) can still return null if GetPixels fails (result != Success && result != IncompleteInput). This is a second failure point.",
+        "finding": "Decode(SKCodec, SKImageInfo) can return null even if codec creation succeeds \u2014 if GetPixels returns a result other than Success or IncompleteInput. This is a second failure point.",
         "relevance": "related"
       }
     ],
     "nextQuestions": [
-      "Whether the PNG file is the same one from #933 — the original #933 image was embedded as a GitHub attachment but we can't verify it's the same file referenced as C:\\Temp\\image1.png",
-      "Whether the reporter actually tested on 2.88.6 (description) or 2.88.3 (version field) — these are different releases",
-      "Whether the PNG has structural issues (CRC mismatch, unusual bit depth, interlacing) that Skia intentionally rejects",
-      "Whether upgrading to SkiaSharp 3.x (with newer Skia/zlib) would resolve this"
+      "What PNG file is the reporter using? Is it the same image from #933 or a different one?",
+      "What is the actual SKCodecResult when attempting to decode? This would distinguish codec initialization failure from pixel decoding failure.",
+      "Is the reporter actually on 2.88.3, 2.88.6, or something else? The version info is contradictory.",
+      "Does the PNG have structural issues (CRC errors, unusual bit depth, interlacing) that Skia intentionally rejects?",
+      "Does the issue reproduce on SkiaSharp 3.x with newer libpng/zlib?"
     ],
     "resolution": {
-      "hypothesis": "SKBitmap.Decode returns null because Skia's native codec rejects the PNG. The reason could be: (1) the same zlib decompression bug from #1981 (unlikely if on 2.88.6+), (2) CRC mismatch in PNG chunks (like #2874), (3) unsupported PNG features, or (4) a different native codec bug. Without the image, we cannot distinguish these.",
+      "hypothesis": "SKBitmap.Decode returns null because Skia's native PNG codec rejects the image. Since the zlib SSE fix (#2045) is already included in the reporter's stated versions, this is likely a different issue from #1981 \u2014 possibly CRC mismatch, unsupported PNG features, or another native codec bug. Without the PNG file, this cannot be confirmed.",
       "proposals": [
         {
-          "description": "Use the SKCodec.Create overload that returns an SKCodecResult to get the specific failure reason. This narrows down whether it's a codec initialization failure or a pixel decoding failure.",
-          "confidence": 0.85,
-          "effort": "small"
+          "title": "Diagnose with SKCodecResult",
+          "description": "Use the SKCodec.Create overload that returns an SKCodecResult to determine the specific failure reason. This distinguishes codec initialization failures (bad file, unsupported format) from pixel decoding failures.",
+          "codeSnippet": "using var codec = SKCodec.Create(@\"C:\\Temp\\image1.png\", out var result);\nConsole.WriteLine($\"Result: {result}\"); // e.g., Success, InvalidInput, ErrorInInput\nif (codec != null)\n{\n    var info = codec.Info;\n    Console.WriteLine($\"Size: {info.Width}x{info.Height}, Color: {info.ColorType}, Alpha: {info.AlphaType}\");\n    using var bitmap = SKBitmap.Decode(codec);\n    Console.WriteLine($\"Bitmap: {bitmap != null}\");\n}",
+          "confidence": 0.9,
+          "effort": "trivial"
         },
         {
-          "description": "SkiaSharp 3.x uses a significantly newer Skia engine with updated libpng and zlib. If the issue is a native codec bug, upgrading may resolve it.",
+          "title": "Upgrade to SkiaSharp 3.x",
+          "description": "SkiaSharp 3.x ships with significantly newer Skia, libpng (1.6.54), and zlib (1.3.0.1+). Multiple PNG decoding bugs have been fixed since 2.88.x. If the issue is a native codec bug, upgrading may resolve it.",
           "confidence": 0.5,
           "effort": "medium"
+        },
+        {
+          "title": "Re-encode PNG externally",
+          "description": "If the PNG has unusual encoding (rare bit depth, CRC issues), re-saving it with a standard tool (e.g., ImageMagick, Paint.NET) often resolves codec failures. This was confirmed to work for #1981.",
+          "confidence": 0.6,
+          "effort": "trivial"
         }
-      ]
+      ],
+      "recommendedProposal": "Diagnose with SKCodecResult",
+      "recommendedReason": "Before attempting fixes, we need to know WHY the decode fails. SKCodecResult will reveal whether it's a codec initialization failure, pixel decoding error, or something else entirely."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "request-info",
-      "confidence": 0.88,
-      "reason": "The report is missing critical information: no image file attached, no SKCodecResult output, and conflicting version numbers. Cannot investigate without the actual PNG file."
+      "confidence": 0.9,
+      "reason": "Cannot investigate without the PNG file. The report has conflicting version numbers, no image attachment, no SKCodecResult, and no community engagement (0 comments). The referenced #933/#1981 was fixed via zlib update in v2.88.1, which predates the reporter's stated version."
     },
+    "missingInfo": [
+      "The actual PNG file that fails to decode",
+      "SKCodecResult output from SKCodec.Create(filename, out result)",
+      "Clarification on the actual SkiaSharp version (description says 2.88.6, form field says 2.88.3)"
+    ],
     "actions": [
       {
         "type": "update-labels",
-        "description": "Apply area label",
+        "description": "Apply area label (type/bug already present)",
         "risk": "low",
-        "confidence": 0.9,
+        "confidence": 0.92,
         "labels": [
+          "type/bug",
           "area/SkiaSharp"
         ]
       },
       {
         "type": "add-comment",
-        "description": "Request the PNG file and diagnostic output",
+        "description": "Request the PNG file and diagnostic SKCodecResult output",
         "risk": "high",
-        "confidence": 0.85
+        "confidence": 0.88,
+        "comment": "Thanks for the report. The underlying issue in #933/#1981 was a zlib SSE bug that was fixed in SkiaSharp 2.88.1 (PR #2045). Since you're on 2.88.3+, that fix should already be included \u2014 so this may be a different PNG decoding issue.\n\nTo investigate, we need two things:\n\n1. **The PNG file** that fails to decode \u2014 without it we can't reproduce or diagnose the issue.\n\n2. **The codec result** \u2014 this tells us exactly why decoding fails:\n\n```csharp\nusing var codec = SKCodec.Create(@\"C:\\Temp\\image1.png\", out var result);\nConsole.WriteLine($\"Result: {result}\");\nif (codec != null)\n{\n    Console.WriteLine($\"Size: {codec.Info.Width}x{codec.Info.Height}\");\n    Console.WriteLine($\"Color: {codec.Info.ColorType}, Alpha: {codec.Info.AlphaType}\");\n}\n```\n\nAlso, could you clarify which SkiaSharp version you're using? The description mentions 2.88.6 but the version field says 2.88.3.\n\nIf possible, testing on SkiaSharp 3.x would also help \u2014 it ships with updated libpng and zlib that fix additional PNG edge cases."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the parent issue #1981 (zlib SSE fix)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 1981
       }
     ]
   }
