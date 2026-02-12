@@ -8,124 +8,56 @@
   "inputs": {
     "triageFile": "ai-triage/607.json"
   },
-  "conclusion": "reproduced",
+  "conclusion": "needs-platform",
+  "notes": "Issue #607 requests SKTouchAction.Entered and SKTouchAction.Exited event support on iOS and Android. Source code inspection confirms the implementation gap: the Windows SKTouchHandler wires PointerEntered/PointerExited to SKTouchAction.Entered/Exited, and Tizen partially maps PointStateType.Leave to Exited, but the Apple (iOS/macOS) and Android SKTouchHandler classes only fire Pressed, Moved, Released, and Cancelled — they never emit Entered or Exited. Runtime verification of touch event behavior requires actual iOS and Android devices or emulators, which are not available in this environment.",
   "assessment": "working-as-designed",
-  "notes": "Reproduced: SKTouchAction.Entered and SKTouchAction.Exited events are never fired on iOS, Mac Catalyst, or Android. The Apple SKTouchHandler only maps TouchesBegan/Moved/Ended/Cancelled to Pressed/Moved/Released/Cancelled. The Android handler only maps MotionEventActions Down/PointerDown/Move/Up/PointerUp/Cancel. Neither handler contains any code path that produces Entered or Exited events. Windows handler fully implements them via PointerEntered/PointerExited. A MAUI repro app was built and deployed to Mac Catalyst (which shares the Apple handler with iOS) confirming only Pressed, Moved, Released, and Cancelled events are produced. This is a feature gap that has existed since the original Xamarin.Forms era (2018) and persists through the MAUI migration.",
-  "reproductionTime": "~12 minutes",
+  "reproductionTime": "~5 minutes",
   "versionResults": [
-    {
-      "version": "3.119.2",
-      "source": "nuget",
-      "result": "reproduced",
-      "notes": "Built MAUI repro app with SkiaSharp.Views.Maui.Controls 3.119.2 for Mac Catalyst. Apple handler has no Entered/Exited code paths."
-    },
     {
       "version": "main (source)",
       "source": "source",
-      "result": "reproduced",
-      "notes": "Source inspection of Apple and Android SKTouchHandler on main confirms same gap \u2014 no Entered/Exited code paths. Last modified in commits 04ff977ac and bc5020b9e, neither of which added Entered/Exited support."
+      "result": "not-tested",
+      "notes": "Source code inspection confirms the gap: Apple SKTouchHandler (TouchesBegan/Moved/Ended/Cancelled) and Android SKTouchHandler (Down/Move/Up/Cancel) never emit Entered or Exited. Runtime verification requires iOS/Android devices."
     }
   ],
-  "reproProject": {
-    "type": "console",
-    "tfm": "net10.0-maccatalyst",
-    "packages": [
-      {
-        "name": "SkiaSharp.Views.Maui.Controls",
-        "version": "3.119.2"
-      }
-    ]
-  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create MAUI project and add SkiaSharp.Views.Maui.Controls package",
-      "layer": "setup",
-      "command": "dotnet new maui -n Repro && cd Repro && dotnet add package SkiaSharp.Views.Maui.Controls --version 3.119.2",
-      "exitCode": 0,
-      "output": "Restore succeeded.\nPackageReference for package 'SkiaSharp.Views.Maui.Controls' version '3.119.2' added.",
-      "filesCreated": [
-        {
-          "filename": "Repro.csproj",
-          "description": "MAUI project targeting net10.0-android, net10.0-ios, net10.0-maccatalyst with SkiaSharp.Views.Maui.Controls 3.119.2",
-          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n\t<PropertyGroup>\n\t\t<TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>\n\t\t<OutputType>Exe</OutputType>\n\t\t<RootNamespace>Repro</RootNamespace>\n\t\t<UseMaui>true</UseMaui>\n\t\t<SingleProject>true</SingleProject>\n\t\t<ImplicitUsings>enable</ImplicitUsings>\n\t\t<Nullable>enable</Nullable>\n\t</PropertyGroup>\n\n\t<ItemGroup>\n\t\t<PackageReference Include=\"Microsoft.Maui.Controls\" Version=\"$(MauiVersion)\" />\n\t\t<PackageReference Include=\"SkiaSharp.Views.Maui.Controls\" Version=\"3.119.2\" />\n\t</ItemGroup>\n\n</Project>"
-        },
-        {
-          "filename": "MauiProgram.cs",
-          "description": "MAUI program with UseSkiaSharp() registration",
-          "content": "using Microsoft.Extensions.Logging;\nusing SkiaSharp.Views.Maui.Controls.Hosting;\n\nnamespace Repro;\n\npublic static class MauiProgram\n{\n\tpublic static MauiApp CreateMauiApp()\n\t{\n\t\tvar builder = MauiApp.CreateBuilder();\n\t\tbuilder\n\t\t\t.UseMauiApp<App>()\n\t\t\t.UseSkiaSharp()\n\t\t\t.ConfigureFonts(fonts =>\n\t\t\t{\n\t\t\t\tfonts.AddFont(\"OpenSans-Regular.ttf\", \"OpenSansRegular\");\n\t\t\t\tfonts.AddFont(\"OpenSans-Semibold.ttf\", \"OpenSansSemibold\");\n\t\t\t});\n\n\t\treturn builder.Build();\n\t}\n}"
-        }
-      ],
-      "result": "success"
-    },
-    {
-      "stepNumber": 2,
-      "description": "Write MAUI page with SKCanvasView that subscribes to Touch events and logs all SKTouchAction values received, with special markers for Entered/Exited",
-      "layer": "csharp",
-      "filesCreated": [
-        {
-          "filename": "MainPage.xaml",
-          "description": "XAML page with SKCanvasView with EnableTouchEvents=True and Touch event handler",
-          "content": "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<ContentPage xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\"\n             xmlns:x=\"http://schemas.microsoft.com/winfx/2009/xaml\"\n             xmlns:skia=\"clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\"\n             x:Class=\"Repro.MainPage\"\n             Title=\"Touch Event Repro #607\">\n    <VerticalStackLayout Padding=\"20\" Spacing=\"10\">\n        <Label x:Name=\"StatusLabel\" Text=\"Touch the canvas and drag in/out\" FontSize=\"16\"/>\n        <Label x:Name=\"EventLog\" Text=\"Events will appear here...\" FontSize=\"12\" MaxLines=\"20\"/>\n        <skia:SKCanvasView x:Name=\"CanvasView\"\n                           HeightRequest=\"300\"\n                           WidthRequest=\"300\"\n                           EnableTouchEvents=\"True\"\n                           PaintSurface=\"OnPaintSurface\"\n                           Touch=\"OnTouch\"/>\n    </VerticalStackLayout>\n</ContentPage>"
-        },
-        {
-          "filename": "MainPage.xaml.cs",
-          "description": "Code-behind that counts and logs every SKTouchAction received, highlighting if Entered/Exited ever fire",
-          "content": "using SkiaSharp;\nusing SkiaSharp.Views.Maui;\nusing SkiaSharp.Views.Maui.Controls;\n\nnamespace Repro;\n\npublic partial class MainPage : ContentPage\n{\n    private readonly Dictionary<SKTouchAction, int> _eventCounts = new();\n    private readonly List<string> _eventLog = new();\n\n    public MainPage()\n    {\n        InitializeComponent();\n        foreach (SKTouchAction action in Enum.GetValues<SKTouchAction>())\n            _eventCounts[action] = 0;\n    }\n\n    private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.LightGray);\n        using var paint = new SKPaint { Color = SKColors.Blue, Style = SKPaintStyle.Stroke, StrokeWidth = 3 };\n        canvas.DrawRect(10, 10, e.Info.Width - 20, e.Info.Height - 20, paint);\n    }\n\n    private void OnTouch(object sender, SKTouchEventArgs e)\n    {\n        _eventCounts[e.ActionType]++;\n        var msg = $\"[{DateTime.Now:HH:mm:ss.fff}] {e.ActionType} at ({e.Location.X:F0},{e.Location.Y:F0})\";\n        _eventLog.Insert(0, msg);\n        if (_eventLog.Count > 20) _eventLog.RemoveAt(20);\n        EventLog.Text = string.Join(\"\\n\", _eventLog);\n        var summary = string.Join(\", \", _eventCounts.Where(kv => kv.Value > 0).Select(kv => $\"{kv.Key}={kv.Value}\"));\n        StatusLabel.Text = $\"Events: {summary}\";\n        if (e.ActionType == SKTouchAction.Entered) StatusLabel.Text += \" *** ENTERED FIRED! ***\";\n        if (e.ActionType == SKTouchAction.Exited) StatusLabel.Text += \" *** EXITED FIRED! ***\";\n        e.Handled = true;\n    }\n}"
-        }
-      ],
-      "result": "success"
-    },
-    {
-      "stepNumber": 3,
-      "description": "Build MAUI app for Mac Catalyst (uses same Apple SKTouchHandler as iOS)",
-      "layer": "deployment",
-      "command": "dotnet build -f net10.0-maccatalyst",
-      "exitCode": 0,
-      "output": "Build succeeded.\n    2 Warning(s)\n    0 Error(s)\nTime Elapsed 00:00:12.25",
-      "result": "success"
-    },
-    {
-      "stepNumber": 4,
-      "description": "Search Apple SKTouchHandler for any code path producing Entered or Exited events \u2014 confirms these events are never generated on iOS/Mac Catalyst",
+      "description": "Inspect Apple (iOS/macOS) SKTouchHandler source code for Entered/Exited event support",
       "layer": "csharp",
       "command": "grep -n 'Entered\\|Exited' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
       "exitCode": 1,
-      "output": "(no matches \u2014 Entered and Exited are never produced by the Apple handler)",
-      "result": "failure"
+      "output": "No matches found. The Apple touch handler only fires Pressed (TouchesBegan), Moved (TouchesMoved), Released (TouchesEnded), and Cancelled (TouchesCancelled). No Entered or Exited events are emitted.",
+      "result": "skip"
     },
     {
-      "stepNumber": 5,
-      "description": "Search Android SKTouchHandler for any code path producing Entered or Exited events \u2014 confirms these events are never generated on Android",
+      "stepNumber": 2,
+      "description": "Inspect Android SKTouchHandler source code for Entered/Exited event support",
       "layer": "csharp",
       "command": "grep -n 'Entered\\|Exited' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
       "exitCode": 1,
-      "output": "(no matches \u2014 Entered and Exited are never produced by the Android handler)",
-      "result": "failure"
+      "output": "No matches found. The Android touch handler maps MotionEventActions Down/PointerDown to Pressed, Move to Moved, Up/PointerUp to Released, and Cancel to Cancelled. No Entered or Exited events are emitted.",
+      "result": "skip"
     },
     {
-      "stepNumber": 6,
-      "description": "Verify Windows SKTouchHandler source \u2014 confirm Entered/Exited ARE implemented via PointerEntered/PointerExited, demonstrating the cross-platform inconsistency.",
+      "stepNumber": 3,
+      "description": "Verify Windows SKTouchHandler implements Entered/Exited as a reference",
       "layer": "csharp",
       "command": "grep -n 'Entered\\|Exited' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
       "exitCode": 0,
-      "output": "29:\t\t\t\tview.PointerEntered -= OnPointerEntered;\n30:\t\t\t\tview.PointerExited -= OnPointerExited;\n38:\t\t\t\t\tview.PointerEntered += OnPointerEntered;\n39:\t\t\t\t\tview.PointerExited += OnPointerExited;\n59:\t\tprivate void OnPointerEntered(...)\n61:\t\t\targs.Handled = CommonHandler(sender, SKTouchAction.Entered, args);\n64:\t\tprivate void OnPointerExited(...)\n66:\t\t\targs.Handled = CommonHandler(sender, SKTouchAction.Exited, args);",
+      "output": "29: view.PointerEntered -= OnPointerEntered;\n30: view.PointerExited -= OnPointerExited;\n38: view.PointerEntered += OnPointerEntered;\n39: view.PointerExited += OnPointerExited;\n59: private void OnPointerEntered(...)\n61: args.Handled = CommonHandler(sender, SKTouchAction.Entered, args);\n64: private void OnPointerExited(...)\n66: args.Handled = CommonHandler(sender, SKTouchAction.Exited, args);",
       "result": "success"
     }
   ],
-  "errorMessages": {
-    "primaryError": "SKTouchAction.Entered and SKTouchAction.Exited are defined in the enum but never produced by Apple (iOS/Mac Catalyst) or Android platform touch handlers",
-    "additionalErrors": [
-      "Apple handler only produces: Pressed, Moved, Released, Cancelled",
-      "Android handler only produces: Pressed, Moved, Released, Cancelled",
-      "Windows handler correctly produces all events including Entered and Exited"
-    ]
-  },
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
     "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "3.119.2",
+    "skiaSharpVersion": "main (source)",
     "dockerUsed": false
-  }
+  },
+  "blockers": [
+    "Runtime verification of SKTouchAction.Entered/Exited requires iOS and Android devices or emulators to test touch event firing — these are not available in the current macOS development environment",
+    "This is a feature request (type/feature-request) for missing functionality rather than a bug with existing functionality — the Entered/Exited enum values exist but were never wired up on iOS/Android platforms"
+  ]
 }
