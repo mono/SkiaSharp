@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2511,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:47:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/2511.json"
+  },
+  "conclusion": "needs-platform",
+  "assessment": "likely-bug",
+  "notes": "The reported AccessViolationException occurs in NonAlertableWin32Lock.EnterCriticalSection, a Windows-only code path using Win32 CRITICAL_SECTION (Kernel32.dll P/Invoke). On macOS/Linux, SkiaSharp uses ReadWriteLock (managed ReaderWriterLockSlim) instead, which has no finalizer and cannot trigger this race condition. Created a standalone repro that deliberately leaks SKObjects to force finalizer cleanup — runs cleanly on macOS as expected since the vulnerable code path is Windows-only. Triage confirms this is a duplicate of #2194, fixed in v2.88.1 by PR #2195 which added null-checks before entering/leaving the CRITICAL_SECTION. The fix is verified present on main (PlatformLock.cs lines 123, 130). Reproducing the actual crash requires Windows.",
+  "reproductionTime": "~8 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.0",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Ran on macOS arm64 — no crash because ReadWriteLock is used instead of NonAlertableWin32Lock. The vulnerable code path (Win32 CRITICAL_SECTION) only exists on Windows."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Ran on macOS arm64 — same as 2.88.0, no crash. Fix was shipped in 2.88.1 regardless."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Built and ran SKObjectTest and finalizer tests from source — all pass. Verified the null-check fix from PR #2195 is present in PlatformLock.cs (lines 123, 130). The crash cannot be triggered on macOS."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.0"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project with SkiaSharp 2.88.0 (pre-fix version, reporter did not specify version but triage identifies pre-2.88.1)",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.0",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\ninfo : PackageReference for package 'SkiaSharp' version '2.88.0' added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that creates SkiaSharp objects without explicit disposal to force finalizer cleanup, simulating the app shutdown race condition",
+          "content": "// Reproduction for issue #2511: AccessViolationException during finalizer-driven\n// handle deregistration when closing a WinForms app.\n//\n// The crash occurs in NonAlertableWin32Lock.EnterCriticalSection during\n// SKNativeObject.Finalize() → Dispose(false) → DeregisterHandle → EnterWriteLock.\n// This is a finalizer ordering race: if the static NonAlertableWin32Lock is\n// finalized before SKObject instances, the freed CRITICAL_SECTION causes an AV.\n//\n// This code path is Windows-only (NonAlertableWin32Lock uses Kernel32.dll).\n// On macOS/Linux, ReadWriteLock (managed ReaderWriterLockSlim) is used instead.\n\nusing System;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Runtime: {RuntimeInformation.FrameworkDescription}\");\n\n// Create several SkiaSharp objects without explicit disposal,\n// forcing them to be cleaned up by the finalizer during app exit.\n// On Windows with SkiaSharp < 2.88.1, this can trigger the\n// AccessViolationException if NonAlertableWin32Lock is finalized first.\nfor (int i = 0; i < 50; i++)\n{\n    var bitmap = new SKBitmap(100, 100);\n    var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.Red);\n    using var paint = new SKPaint();\n    canvas.DrawCircle(50, 50, 40, paint);\n    // Intentionally NOT disposing bitmap and canvas\n    // to force finalizer cleanup\n}\n\n// Force a GC to test finalizer behavior\nGC.Collect();\nGC.WaitForPendingFinalizers();\nGC.Collect();\n\nConsole.WriteLine(\"GC cycle completed without crash.\");\nConsole.WriteLine(\"Note: The reported crash (AccessViolationException in NonAlertableWin32Lock)\");\nConsole.WriteLine(\"only occurs on Windows where Win32 CRITICAL_SECTION is used.\");\nConsole.WriteLine(\"On macOS/Linux, ReadWriteLock (managed ReaderWriterLockSlim) is used instead.\");\nConsole.WriteLine(\"Done.\");"
+        },
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 2.88.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.0\" />\n  </ItemGroup>\n</Project>"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run repro with SkiaSharp 2.88.0 on macOS arm64 — attempt to trigger finalizer race condition",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "OS: Darwin 25.2.0 Darwin Kernel Version 25.2.0\nArch: Arm64\nSkiaSharp version: 2.88.0.0\nRuntime: .NET 8.0.23\nGC cycle completed without crash.\nNote: The reported crash (AccessViolationException in NonAlertableWin32Lock)\nonly occurs on Windows where Win32 CRITICAL_SECTION is used.\nOn macOS/Linux, ReadWriteLock (managed ReaderWriterLockSlim) is used instead.\nDone.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Test with latest SkiaSharp release (3.119.2) on macOS arm64",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp && dotnet run",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp' version '3.119.2' updated.\nOS: Darwin 25.2.0 Darwin Kernel Version 25.2.0\nArch: Arm64\nSkiaSharp version: 3.119.0.0\nRuntime: .NET 8.0.23\nGC cycle completed without crash.\nDone.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build SkiaSharp test project from source (main branch) to verify fix is present",
+      "layer": "csharp",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    13 Warning(s)\n    0 Error(s)\nTime Elapsed 00:00:33.68",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Run SKObjectTest and finalizer-related tests from source to verify disposal/finalization works correctly on main",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SKObjectTest|FullyQualifiedName~Finalize\"",
+      "exitCode": 0,
+      "output": "Passed! - Failed: 0, Passed: 14, Skipped: 0, Total: 14",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Verify the null-check fix from PR #2195 is present in PlatformLock.cs on main — Enter() checks _cs != IntPtr.Zero before calling EnterCriticalSection",
+      "layer": "csharp",
+      "command": "grep -n '_cs != IntPtr.Zero' binding/SkiaSharp/PlatformLock.cs",
+      "exitCode": 0,
+      "output": "112:\t\t\t\tif (_cs != IntPtr.Zero) {\n123:\t\t\t\tif (_cs != IntPtr.Zero) {\n130:\t\t\t\tif (_cs != IntPtr.Zero) {",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.0",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Requires Windows — the crash occurs in NonAlertableWin32Lock.EnterCriticalSection which uses Win32 Kernel32.dll CRITICAL_SECTION P/Invoke. On macOS/Linux, SkiaSharp uses ReadWriteLock (managed ReaderWriterLockSlim) which has no finalizer and cannot trigger this race condition. The vulnerable code path is conditionally compiled with '#if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)' and further gated by 'PlatformConfiguration.IsWindows'."
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "scope",
+        "upstream": "Classified as os/Windows-Classic only",
+        "corrected": "Confirmed Windows-only — code inspection shows NonAlertableWin32Lock is gated by PlatformConfiguration.IsWindows and uses Kernel32.dll P/Invoke. Cannot affect macOS/Linux at all."
+      }
+    ]
+  }
+}
