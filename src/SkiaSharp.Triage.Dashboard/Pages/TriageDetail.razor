@@ -2,7 +2,7 @@
 @inject DashboardDataService DataService
 @inject NavigationManager Navigation
 
-<PageTitle>@(_issue?.Summary ?? $"Issue #{Number}") - SkiaSharp Dashboard</PageTitle>
+<PageTitle>@(_issueTitle ?? _issue?.Summary ?? $"Issue #{Number}") - SkiaSharp Dashboard</PageTitle>
 
 @if (_loading)
 {
@@ -38,7 +38,17 @@ else
             @if (_issue is not null)
             {
                 <a href="https://github.com/@_issue.Meta.Repo/issues/@_issue.Meta.Number" target="_blank" class="issue-link-lg">#@_issue.Meta.Number</a>
-                <h1>@_issue.Summary</h1>
+                <div class="detail-title-text">
+                    @if (_issueTitle is not null)
+                    {
+                        <h1>@_issueTitle</h1>
+                        <p class="detail-ai-summary">@_issue.Summary</p>
+                    }
+                    else
+                    {
+                        <h1>@_issue.Summary</h1>
+                    }
+                </div>
             }
             else
             {
@@ -1116,6 +1126,7 @@ else
     private TriagedIssue? _issue;
     private ReproResult? _repro;
     private FixResult? _fix;
+    private string? _issueTitle;
     private int? _prevNumber;
     private int? _nextNumber;
     private int _currentIndex;
@@ -1136,6 +1147,7 @@ else
         _issue = triageTask.Result;
         _repro = reproTask.Result;
         _fix = fixTask.Result;
+        _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
         _activeTab = _issue is not null ? "triage" : _repro is not null ? "repro" : "fix";
         LoadNavigation();
         _loading = false;
@@ -1148,6 +1160,7 @@ else
             _issue = await DataService.GetTriageDetailAsync(Number);
             _repro = await DataService.GetReproDetailAsync(Number);
             _fix = await DataService.GetFixDetailAsync(Number);
+            _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
             _activeTab = _issue is not null ? "triage" : _repro is not null ? "repro" : "fix";
             LoadNavigation();
         }

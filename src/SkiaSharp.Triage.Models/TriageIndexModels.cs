@@ -30,6 +30,7 @@ public record TriageIndexSummary(
 public record TriageIndexEntry(
     int Number,
     string Title,
+    string? IssueTitle,
     string? Type,
     string? Area,
     string? Severity,

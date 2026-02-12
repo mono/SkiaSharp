@@ -1348,9 +1348,26 @@ h2.category-danger { color: #dc3545; }
 }
 
 .ai-triage-title {
-    flex: 1;
-    min-width: 200px;
     font-size: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.issue-title-primary {
+    font-weight: 500;
+}
+
+.issue-title-summary {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #6c757d);
+    opacity: 0.8;
+    overflow: hidden;
 }
 
 /* Badges */
@@ -1953,7 +1970,7 @@ h2.category-danger { color: #dc3545; }
 
 .ai-triage-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.5rem;
     padding: 0.6rem 1rem;
     background: #fff;
@@ -1962,7 +1979,7 @@ h2.category-danger { color: #dc3545; }
     text-decoration: none;
     color: inherit;
     cursor: pointer;
-    flex-wrap: wrap;
+    overflow: hidden;
     transition: background 0.1s;
 }
 
@@ -1974,8 +1991,23 @@ h2.category-danger { color: #dc3545; }
 .ai-triage-row.action-keep { border-left-color: #0d6efd; }
 
 .ai-triage-row .ai-triage-title {
+    min-width: 0;
+}
+
+.ai-triage-content {
     flex: 1;
-    min-width: 200px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    overflow: hidden;
+}
+
+.ai-triage-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 .label-sm { font-size: 0.65rem; padding: 0.1rem 0.4rem; }
@@ -2146,15 +2178,27 @@ h2.category-danger { color: #dc3545; }
 
 .detail-title-row {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     gap: 0.75rem;
     margin-bottom: 0.5rem;
+}
+
+.detail-title-text {
+    flex: 1;
+    min-width: 0;
 }
 
 .detail-title-row h1 {
     font-size: 1.4rem;
     margin: 0;
     line-height: 1.3;
+}
+
+.detail-ai-summary {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #6c757d);
+    margin: 0.25rem 0 0 0;
+    line-height: 1.4;
 }
 
 .issue-link-lg {

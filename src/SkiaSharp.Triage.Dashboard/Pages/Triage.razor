@@ -118,39 +118,52 @@ else
         @foreach (var issue in _filtered)
         {
             <a href="@GetDetailUrl(issue.Number)" class="ai-triage-row @GetActionClass(issue.Action)">
-
                 <span class="issue-link">#@issue.Number</span>
-                <span class="ai-triage-title">@issue.Title</span>
-                @if (issue.Type is not null)
-                {
-                    <span class="badge-type badge-@StripPrefix(issue.Type)">@FormatLabel(issue.Type)</span>
-                }
-                @if (issue.Area is not null)
-                {
-                    <span class="label label-sm">@FormatLabel(issue.Area)</span>
-                }
-                @if (issue.Severity is not null)
-                {
-                    <span class="badge-severity badge-sev-@issue.Severity">@FormatLabel(issue.Severity)</span>
-                }
-                @if (issue.Action is not null)
-                {
-                    <span class="badge-action badge-act-@issue.Action">@FormatLabel(issue.Action)</span>
-                }
-                @if (issue.Confidence is not null)
-                {
-                    <span class="confidence-pill" title="Confidence: @issue.Confidence.Value.ToString("P0")">
-                        <span class="confidence-bar @GetConfidenceClass(issue.Confidence.Value)" style="width: @((int)(issue.Confidence.Value * 100))%"></span>
+                <span class="ai-triage-content">
+                    <span class="ai-triage-title">
+                        @if (issue.IssueTitle is not null)
+                        {
+                            <span class="issue-title-primary">@issue.IssueTitle</span>
+                            <span class="issue-title-summary">@issue.Title</span>
+                        }
+                        else
+                        {
+                            @issue.Title
+                        }
                     </span>
-                }
-                @if (issue.IsRegression)
-                {
-                    <span class="badge-regression-sm" title="Regression">⚡</span>
-                }
-                @if (issue.HasRepro)
-                {
-                    <span class="badge-repro badge-repro-@(issue.ReproConclusion ?? "unknown")" title="Reproduction: @FormatLabel(issue.ReproConclusion ?? "unknown")">🧪</span>
-                }
+                    <span class="ai-triage-badges">
+                        @if (issue.Type is not null)
+                        {
+                            <span class="badge-type badge-@StripPrefix(issue.Type)">@FormatLabel(issue.Type)</span>
+                        }
+                        @if (issue.Area is not null)
+                        {
+                            <span class="label label-sm">@FormatLabel(issue.Area)</span>
+                        }
+                        @if (issue.Severity is not null)
+                        {
+                            <span class="badge-severity badge-sev-@issue.Severity">@FormatLabel(issue.Severity)</span>
+                        }
+                        @if (issue.Action is not null)
+                        {
+                            <span class="badge-action badge-act-@issue.Action">@FormatLabel(issue.Action)</span>
+                        }
+                        @if (issue.Confidence is not null)
+                        {
+                            <span class="confidence-pill" title="Confidence: @issue.Confidence.Value.ToString("P0")">
+                                <span class="confidence-bar @GetConfidenceClass(issue.Confidence.Value)" style="width: @((int)(issue.Confidence.Value * 100))%"></span>
+                            </span>
+                        }
+                        @if (issue.IsRegression)
+                        {
+                            <span class="badge-regression-sm" title="Regression">⚡</span>
+                        }
+                        @if (issue.HasRepro)
+                        {
+                            <span class="badge-repro badge-repro-@(issue.ReproConclusion ?? "unknown")" title="Reproduction: @FormatLabel(issue.ReproConclusion ?? "unknown")">🧪</span>
+                        }
+                    </span>
+                </span>
             </a>
         }
     </div>

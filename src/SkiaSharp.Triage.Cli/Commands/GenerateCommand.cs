@@ -827,9 +827,11 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                         issues.Add(issue);
 
                         // Build index entry (repro fields added later if available)
+                        var issueTitle = item?.Title;
                         indexEntries.Add(new TriageIndexEntry(
                             Number: issue.Meta.Number,
                             Title: issue.Summary,
+                            IssueTitle: issueTitle,
                             Type: typeValue,
                             Area: areaValue,
                             Severity: severity?.ToJsonString(),
@@ -908,6 +910,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                             indexEntries.Add(new TriageIndexEntry(
                                 Number: number,
                                 Title: title,
+                                IssueTitle: item?.Title,
                                 Type: null,
                                 Area: null,
                                 Severity: null,
