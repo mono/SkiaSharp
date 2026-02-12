@@ -30,18 +30,15 @@ Investigate security status of SkiaSharp's native dependencies. Produces a repor
 
 ## Workflow
 
-```mermaid
-flowchart LR
-    A[Search issues/PRs] --> B[Get versions from DEPS]
-    B --> C[Web search CVEs]
-    C --> D{CVE found?}
-    D -->|Yes| E[Verify fix commit]
-    E --> F{Fixed?}
-    F -->|No| G[Flag for action]
-    F -->|Yes| H[Mark clean]
-    D -->|No| H
-    G --> I[Generate report]
-    H --> I
+```
+1. Search issues/PRs
+2. Get versions from DEPS
+3. Web search CVEs
+4. Verify fix commits for each CVE
+   ├─ Fixed? → Mark clean
+   └─ Not fixed? → Flag for action
+5. Check false positives
+6. Generate report
 ```
 
 ### Step 1: Search Issues & PRs

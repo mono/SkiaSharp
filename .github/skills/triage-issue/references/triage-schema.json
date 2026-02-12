@@ -1,0 +1,2281 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/triage-schema.json",
+  "title": "SkiaSharp Issue Triage",
+  "description": "Per-issue AI triage v2.1 with grouped sections: meta, classification, evidence, analysis, output. Classification values ARE full GitHub labels (e.g., 'type/bug', 'os/Linux'). Reasoning lives in analysis.fieldRationales (single source of truth). v2.1 adds mandatory codeInvestigation \u2014 source code signals with file:line citations.",
+  "type": "object",
+  "required": [
+    "meta",
+    "summary",
+    "classification",
+    "evidence",
+    "analysis",
+    "output"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0.0-1.0 confidence score. 0.95+=explicit, 0.80-0.94=strong inference, 0.60-0.79=ambiguous, 0.40-0.59=uncertain, <0.40=guessing."
+    },
+    "classifiedField": {
+      "type": "object",
+      "description": "Base pattern for all classified values: value + confidence.",
+      "required": [
+        "value",
+        "confidence"
+      ],
+      "properties": {
+        "value": {},
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "classifiedType": {
+      "description": "Issue type classification. Pick ONE best fit \u2014 trust issue content over title prefix. Values are full GitHub labels.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/classifiedField"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "value",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": [
+            "type/bug",
+            "type/feature-request",
+            "type/enhancement",
+            "type/question",
+            "type/documentation"
+          ],
+          "description": "type/bug=broken/crash. type/feature-request=new capability. type/enhancement=improve existing. type/question=how-to/support. type/documentation=docs/samples gap."
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "classifiedArea": {
+      "description": "Component area. Pick MOST SPECIFIC match. Use area/libSkiaSharp.native for native loading issues. Values are full GitHub labels.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/classifiedField"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "value",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": [
+            "area/SkiaSharp",
+            "area/SkiaSharp.Views",
+            "area/SkiaSharp.Views.Maui",
+            "area/SkiaSharp.Views.Blazor",
+            "area/SkiaSharp.Views.Forms",
+            "area/SkiaSharp.Views.Uno",
+            "area/SkiaSharp.HarfBuzz",
+            "area/HarfBuzzSharp",
+            "area/SkiaSharp.Workbooks",
+            "area/libSkiaSharp.native",
+            "area/libHarfBuzzSharp.native",
+            "area/Build",
+            "area/Docs"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "classifiedBackend": {
+      "description": "Rendering backend. Only include if issue is backend-specific. Values are full GitHub labels.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/classifiedField"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "value",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": [
+            "backend/Direct3D",
+            "backend/Metal",
+            "backend/OpenGL",
+            "backend/Raster",
+            "backend/Vulkan",
+            "backend/PDF",
+            "backend/SVG",
+            "backend/XPS"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "classifiedPlatform": {
+      "description": "Platform/OS. Only include if issue is platform-specific. Values are full GitHub labels.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/classifiedField"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "value",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": [
+            "os/Android",
+            "os/iOS",
+            "os/macOS",
+            "os/Linux",
+            "os/Windows-Classic",
+            "os/Windows-WinUI",
+            "os/Windows-Universal-UWP",
+            "os/Windows-Nano-Server",
+            "os/WASM",
+            "os/Tizen",
+            "os/tvOS",
+            "os/watchOS"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "classifiedTenet": {
+      "description": "Quality tenet classification. Values are full GitHub labels.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/classifiedField"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "value",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": [
+            "tenet/compatibility",
+            "tenet/performance",
+            "tenet/reliability"
+          ],
+          "description": "tenet/compatibility=cross-version. tenet/performance=speed/memory. tenet/reliability=crashes/corruption."
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "classifiedPartner": {
+      "description": "Partner team flag. Only set when issue clearly falls in a partner's domain. Values are full GitHub labels.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/classifiedField"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "value",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "enum": [
+            "partner/maui",
+            "partner/tizen",
+            "partner/unoplatform"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      }
+    },
+    "screenshot": {
+      "type": "object",
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "context": {
+          "type": "string",
+          "description": "What surrounding text says about this image."
+        },
+        "source": {
+          "type": "string",
+          "description": "Where found: 'description', 'comment 5'."
+        }
+      }
+    },
+    "attachment": {
+      "type": "object",
+      "required": [
+        "url",
+        "filename"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "repro-project",
+            "log-file",
+            "config-file",
+            "other"
+          ]
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "repoLink": {
+      "type": "object",
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https?://github\\.com/"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "codeSnippet": {
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        }
+      }
+    },
+    "reproEvidenceObject": {
+      "type": "object",
+      "description": "ALL reproduction material. Preserve every URL. Use null for the parent field if no evidence; never empty.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/screenshot"
+          },
+          "minItems": 1
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attachment"
+          },
+          "minItems": 1
+        },
+        "repoLinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/repoLink"
+          },
+          "minItems": 1
+        },
+        "relatedIssues": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "description": "Issue numbers referenced in the thread (evidence \u2014 not the action to link them)."
+        },
+        "stepsToReproduce": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "Synthesized reproduction steps from ALL comments."
+        },
+        "codeSnippets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/codeSnippet"
+          },
+          "minItems": 1
+        },
+        "environmentDetails": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Consolidated environment info: OS, IDE, .NET version, device, etc."
+        }
+      }
+    },
+    "bugSignalsObject": {
+      "type": "object",
+      "description": "Bug evidence extraction. REQUIRED when classification.type.value is 'bug', must be null for non-bugs.",
+      "required": [
+        "hasCrash",
+        "hasStackTrace",
+        "reproQuality",
+        "severity",
+        "severityReason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "hasCrash": {
+          "type": "boolean",
+          "description": "Does the issue involve an application crash?"
+        },
+        "hasStackTrace": {
+          "type": "boolean",
+          "description": "Is a stack trace provided?"
+        },
+        "reproQuality": {
+          "enum": [
+            "complete",
+            "partial",
+            "steps-only",
+            "none"
+          ],
+          "description": "complete=full repro project. partial=snippets. steps-only=description only. none=no repro."
+        },
+        "hasWorkaround": {
+          "type": "boolean",
+          "description": "Has a workaround been identified?"
+        },
+        "workaroundSummary": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        },
+        "targetFrameworks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Target frameworks mentioned, e.g. ['net8.0-android', 'net48']."
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ],
+          "description": "critical=crash/data-loss/security. high=broken, no workaround. medium=broken, workaround exists. low=cosmetic."
+        },
+        "severityReason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "regressionObject": {
+      "type": "object",
+      "required": [
+        "isRegression",
+        "confidence",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "isRegression": {
+          "type": "boolean"
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "workedInVersion": {
+          "type": "string"
+        },
+        "brokeInVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "fixStatusObject": {
+      "type": "object",
+      "required": [
+        "likelyFixed",
+        "confidence",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "likelyFixed": {
+          "type": "boolean"
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relatedPRs": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 1
+        },
+        "relatedCommits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "fixedInVersion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verificationStatus": {
+          "enum": [
+            "unverified",
+            "verified-fixed",
+            "verified-still-broken",
+            "inconclusive"
+          ]
+        }
+      }
+    },
+    "versionAnalysisObject": {
+      "type": "object",
+      "required": [
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mentionedVersions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "currentRelevance": {
+          "enum": [
+            "likely",
+            "unlikely",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "migrationPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "actionabilityObject": {
+      "type": "object",
+      "description": "Suggested next action for the maintainer.",
+      "required": [
+        "suggestedAction",
+        "confidence",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "suggestedAction": {
+          "enum": [
+            "needs-investigation",
+            "close-as-fixed",
+            "close-with-docs",
+            "close-as-duplicate",
+            "convert-to-discussion",
+            "request-info",
+            "keep-open"
+          ]
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiresHumanReview": {
+          "type": "boolean"
+        },
+        "missingInfo": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "reproduction-steps",
+              "version-number",
+              "platform",
+              "stack-trace",
+              "expected-behavior",
+              "actual-behavior",
+              "sample-project",
+              "device-info"
+            ]
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "keySignal": {
+      "type": "object",
+      "required": [
+        "text",
+        "source",
+        "interpretation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Direct quote or paraphrase."
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where: 'title', 'body', 'comment N', 'labels', 'stack-trace'."
+        },
+        "interpretation": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this means for triage."
+        }
+      }
+    },
+    "fieldRationale": {
+      "type": "object",
+      "required": [
+        "field",
+        "chosen",
+        "expandedReason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1,
+          "description": "e.g. 'type', 'area', 'bugSignals.severity'."
+        },
+        "chosen": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Value chosen."
+        },
+        "expandedReason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "1-4 sentence explanation."
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "value",
+              "whyRejected"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "whyRejected": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "resolutionProposal": {
+      "type": "object",
+      "required": [
+        "title",
+        "description",
+        "confidence",
+        "effort"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "effort": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "category": {
+          "enum": [
+            "workaround",
+            "fix",
+            "alternative",
+            "investigation"
+          ],
+          "description": "workaround=user can apply now. fix=change needed in SkiaSharp. alternative=different approach. investigation=needs more research before acting."
+        },
+        "codeSnippet": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Copy-paste-ready code the user can apply. Typically for workarounds or alternative approaches."
+        },
+        "validated": {
+          "enum": [
+            "yes",
+            "no",
+            "untested"
+          ],
+          "description": "yes=confirmed working. no=known not to work. untested=plausible but unverified."
+        }
+      }
+    },
+    "resolutionObject": {
+      "type": "object",
+      "description": "Researched resolution. For bugs: root cause + fixes. For questions: answers. For features: alternatives. Null only for duplicates or abandoned issues.",
+      "required": [
+        "hypothesis",
+        "proposals",
+        "recommendedProposal",
+        "recommendedReason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "hypothesis": {
+          "type": "string",
+          "minLength": 1,
+          "description": "For bugs: what's wrong. For questions: what user wants. For features: what's missing."
+        },
+        "proposals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resolutionProposal"
+          },
+          "minItems": 1,
+          "description": "Resolution options. Aim for 3 when practical; minimum 1."
+        },
+        "recommendedProposal": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recommendedReason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "validLabel": {
+      "description": "All valid GitHub labels constructed from classification enum values.",
+      "enum": [
+        "type/bug",
+        "type/feature-request",
+        "type/enhancement",
+        "type/question",
+        "type/documentation",
+        "area/SkiaSharp",
+        "area/SkiaSharp.Views",
+        "area/SkiaSharp.Views.Maui",
+        "area/SkiaSharp.Views.Blazor",
+        "area/SkiaSharp.Views.Forms",
+        "area/SkiaSharp.Views.Uno",
+        "area/SkiaSharp.HarfBuzz",
+        "area/HarfBuzzSharp",
+        "area/SkiaSharp.Workbooks",
+        "area/libSkiaSharp.native",
+        "area/libHarfBuzzSharp.native",
+        "area/Build",
+        "area/Docs",
+        "os/Android",
+        "os/iOS",
+        "os/macOS",
+        "os/Linux",
+        "os/Windows-Classic",
+        "os/Windows-WinUI",
+        "os/Windows-Universal-UWP",
+        "os/Windows-Nano-Server",
+        "os/WASM",
+        "os/Tizen",
+        "os/tvOS",
+        "os/watchOS",
+        "tenet/compatibility",
+        "tenet/performance",
+        "tenet/reliability",
+        "partner/maui",
+        "partner/tizen",
+        "partner/unoplatform",
+        "backend/Direct3D",
+        "backend/Metal",
+        "backend/OpenGL",
+        "backend/Raster",
+        "backend/Vulkan",
+        "backend/PDF",
+        "backend/SVG",
+        "backend/XPS"
+      ]
+    },
+    "actionRisk": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "low=reversible/cosmetic. medium=state change. high=irreversible or reputation-sensitive."
+    },
+    "updateLabelsPayload": {
+      "type": "object",
+      "required": [
+        "labelsToAdd",
+        "labelsToRemove"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "labelsToAdd": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validLabel"
+          },
+          "uniqueItems": true,
+          "description": "Labels to add (not already in currentLabels)."
+        },
+        "labelsToRemove": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validLabel"
+          },
+          "uniqueItems": true,
+          "description": "Labels to remove (must be in currentLabels)."
+        }
+      }
+    },
+    "addCommentPayload": {
+      "type": "object",
+      "required": [
+        "commentType",
+        "draftBody",
+        "requiresHumanEdit"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "commentType": {
+          "enum": [
+            "answer",
+            "documentation",
+            "request-info",
+            "close-message",
+            "duplicate-notice",
+            "workaround"
+          ],
+          "description": "answer=direct answer. documentation=docs pointer. request-info=ask for details. close-message=close explanation. duplicate-notice=points to canonical. workaround=actionable workaround with code snippet."
+        },
+        "draftBody": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Markdown draft. NEVER posted automatically. When commentType is 'workaround', MUST include the recommended proposal's codeSnippet in a fenced code block."
+        },
+        "requiresHumanEdit": {
+          "type": "boolean",
+          "description": "True = human must review/edit before posting."
+        },
+        "finalBody": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Human-edited version. Null until human edits."
+        },
+        "dedupeToken": {
+          "type": "string",
+          "pattern": "^triage-[0-9]+-",
+          "description": "Prevents double-posting on retry."
+        }
+      }
+    },
+    "closeIssuePayload": {
+      "type": "object",
+      "required": [
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "enum": [
+            "completed",
+            "not_planned"
+          ],
+          "description": "GitHub close reasons."
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional brief close message."
+        }
+      }
+    },
+    "convertToDiscussionPayload": {
+      "type": "object",
+      "required": [
+        "categorySlug"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "categorySlug": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Discussion category, e.g. 'q-a'."
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional message before converting."
+        }
+      }
+    },
+    "linkRelatedPayload": {
+      "type": "object",
+      "required": [
+        "relatedIssues"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "relatedIssues": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "description": "Issue numbers to cross-reference."
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Cross-reference comment text."
+        }
+      }
+    },
+    "linkDuplicatePayload": {
+      "type": "object",
+      "required": [
+        "duplicateOf"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "duplicateOf": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Canonical issue number."
+        },
+        "comment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "updateProjectPayload": {
+      "type": "object",
+      "required": [
+        "projectId",
+        "fieldUpdates"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "projectId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GitHub project node ID (PVT_kwDO...)."
+        },
+        "fieldUpdates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "fieldName",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "fieldName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "setMilestonePayload": {
+      "type": "object",
+      "required": [
+        "milestoneTitle"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "milestoneTitle": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Milestone name. Automation finds/creates by title."
+        }
+      }
+    },
+    "triageAction": {
+      "type": "object",
+      "description": "A single automatable operation. Each action is independently approvable.",
+      "required": [
+        "id",
+        "type",
+        "risk",
+        "description",
+        "reason",
+        "confidence",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*-[0-9]+$",
+          "description": "Unique within this triage. Convention: shortname-N, e.g. labels-1, comment-1."
+        },
+        "type": {
+          "enum": [
+            "update-labels",
+            "add-comment",
+            "close-issue",
+            "convert-to-discussion",
+            "link-related",
+            "link-duplicate",
+            "update-project",
+            "set-milestone"
+          ]
+        },
+        "risk": {
+          "$ref": "#/$defs/actionRisk"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable summary for approval UI."
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why this action is needed. Traceable to analysis."
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "dependsOn": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ID of prerequisite action, or null."
+        },
+        "payload": {
+          "type": "object",
+          "description": "Type-specific parameters."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "update-labels"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "risk": {
+                "const": "low"
+              },
+              "payload": {
+                "$ref": "#/$defs/updateLabelsPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "add-comment"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "risk": {
+                "const": "high"
+              },
+              "payload": {
+                "$ref": "#/$defs/addCommentPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "close-issue"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "risk": {
+                "const": "medium"
+              },
+              "payload": {
+                "$ref": "#/$defs/closeIssuePayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "convert-to-discussion"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "risk": {
+                "const": "high"
+              },
+              "payload": {
+                "$ref": "#/$defs/convertToDiscussionPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "link-related"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "risk": {
+                "const": "low"
+              },
+              "payload": {
+                "$ref": "#/$defs/linkRelatedPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "link-duplicate"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "risk": {
+                "const": "medium"
+              },
+              "payload": {
+                "$ref": "#/$defs/linkDuplicatePayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "update-project"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "risk": {
+                "const": "low"
+              },
+              "payload": {
+                "$ref": "#/$defs/updateProjectPayload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "set-milestone"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "risk": {
+                "const": "low"
+              },
+              "payload": {
+                "$ref": "#/$defs/setMilestonePayload"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "sourceSignal": {
+      "type": "object",
+      "description": "A source code signal from investigation. Traces a triage claim to actual code.",
+      "required": [
+        "file",
+        "lines",
+        "relevance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative path from repo root, e.g. 'source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs'."
+        },
+        "lines": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Line range examined, e.g. '54-95' or 'full'."
+        },
+        "relevance": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this code shows about the issue, e.g. 'Only handles Began/Moved/Ended/Cancelled \u2014 no Entered/Exited'."
+        }
+      }
+    }
+  },
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Issue identity and context.",
+      "required": [
+        "schemaVersion",
+        "number",
+        "repo",
+        "analyzedAt",
+        "currentLabels"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": "2.1"
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^[^/]+/[^/]+$"
+        },
+        "analyzedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "Z$",
+          "description": "ISO 8601 UTC. Must end with Z."
+        },
+        "currentLabels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "description": "Labels currently on the issue at time of analysis. Used for delta computation."
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "One-line plain English summary of the issue."
+    },
+    "classification": {
+      "type": "object",
+      "description": "All label-mappable categories. Each value maps to a GitHub label via prefix/ + value.",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/classifiedType"
+        },
+        "area": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/classifiedArea"
+            }
+          ]
+        },
+        "backends": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/classifiedBackend"
+              },
+              "minItems": 1
+            }
+          ]
+        },
+        "platforms": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/classifiedPlatform"
+              },
+              "minItems": 1
+            }
+          ]
+        },
+        "tenets": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/classifiedTenet"
+              },
+              "minItems": 1
+            }
+          ]
+        },
+        "partner": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/classifiedPartner"
+            }
+          ]
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Everything extracted from the issue: bug signals, reproduction material, version info.",
+      "additionalProperties": false,
+      "properties": {
+        "bugSignals": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/bugSignalsObject"
+            }
+          ]
+        },
+        "reproEvidence": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/reproEvidenceObject"
+            }
+          ]
+        },
+        "versionAnalysis": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/versionAnalysisObject"
+            }
+          ]
+        },
+        "regression": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/regressionObject"
+            }
+          ]
+        },
+        "fixStatus": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/fixStatusObject"
+            }
+          ]
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "description": "AI reasoning: signals, rationales, docs consulted, uncertainties, and resolution proposals.",
+      "required": [
+        "summary",
+        "keySignals",
+        "fieldRationales",
+        "codeInvestigation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "description": "1-3 sentence overview of classification logic."
+        },
+        "keySignals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/keySignal"
+          },
+          "minItems": 1,
+          "description": "Signals from the issue that drove decisions. Direct quotes preferred. Max ~10."
+        },
+        "fieldRationales": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fieldRationale"
+          },
+          "minItems": 1,
+          "description": "Per-field reasoning for every non-null classified field. SINGLE SOURCE OF TRUTH for classification reasoning."
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "What's unclear and what info would resolve it."
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "Explicit assumptions when evidence was insufficient."
+        },
+        "resolution": {
+          "description": "Researched proposals. Null only for duplicates or abandoned issues.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/resolutionObject"
+            }
+          ]
+        },
+        "codeInvestigation": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceSignal"
+          },
+          "minItems": 1,
+          "description": "Source code signals gathered during mandatory investigation. Like keySignals but from reading actual source files. Every triage must cite at least one source file."
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "Actionable results: what to do and how to do it.",
+      "required": [
+        "actionability",
+        "actions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "actionability": {
+          "$ref": "#/$defs/actionabilityObject"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/triageAction"
+          },
+          "description": "Automatable operations. Can be empty if no actions needed. Each independently approvable."
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "bugSignals REQUIRED when type is bug",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "const": "type/bug"
+                  }
+                },
+                "required": [
+                  "value"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "properties": {
+              "bugSignals": {
+                "$ref": "#/$defs/bugSignalsObject"
+              }
+            },
+            "required": [
+              "bugSignals"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "$comment": "bugSignals must be null for non-bugs",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "not": {
+                      "const": "type/bug"
+                    }
+                  }
+                },
+                "required": [
+                  "value"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "properties": {
+              "bugSignals": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "close-as-duplicate must have a link-duplicate action",
+      "if": {
+        "properties": {
+          "output": {
+            "type": "object",
+            "properties": {
+              "actionability": {
+                "type": "object",
+                "properties": {
+                  "suggestedAction": {
+                    "const": "close-as-duplicate"
+                  }
+                },
+                "required": [
+                  "suggestedAction"
+                ]
+              }
+            },
+            "required": [
+              "actionability"
+            ]
+          }
+        },
+        "required": [
+          "output"
+        ]
+      },
+      "then": {
+        "properties": {
+          "output": {
+            "properties": {
+              "actions": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "link-duplicate"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "convert-to-discussion must have matching action",
+      "if": {
+        "properties": {
+          "output": {
+            "type": "object",
+            "properties": {
+              "actionability": {
+                "type": "object",
+                "properties": {
+                  "suggestedAction": {
+                    "const": "convert-to-discussion"
+                  }
+                },
+                "required": [
+                  "suggestedAction"
+                ]
+              }
+            },
+            "required": [
+              "actionability"
+            ]
+          }
+        },
+        "required": [
+          "output"
+        ]
+      },
+      "then": {
+        "properties": {
+          "output": {
+            "properties": {
+              "actions": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "const": "convert-to-discussion"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'type' when classification.type is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "type"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'area' when classification.area is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "area"
+            ],
+            "properties": {
+              "area": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "area"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'actionability.suggestedAction' when output.actionability is set",
+      "if": {
+        "properties": {
+          "output": {
+            "type": "object",
+            "required": [
+              "actionability"
+            ],
+            "properties": {
+              "actionability": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "output"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "actionability.suggestedAction"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'bugSignals.severity' when evidence.bugSignals is set",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "bugSignals"
+            ],
+            "properties": {
+              "bugSignals": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "bugSignals.severity"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'platforms' when classification.platforms is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "platforms"
+            ],
+            "properties": {
+              "platforms": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "platforms"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'tenets' when classification.tenets is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "tenets"
+            ],
+            "properties": {
+              "tenets": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "tenets"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'backends' when classification.backends is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "backends"
+            ],
+            "properties": {
+              "backends": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "backends"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'partner' when classification.partner is set",
+      "if": {
+        "properties": {
+          "classification": {
+            "type": "object",
+            "required": [
+              "partner"
+            ],
+            "properties": {
+              "partner": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "partner"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'regression.isRegression' when evidence.regression is set",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "regression"
+            ],
+            "properties": {
+              "regression": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "regression.isRegression"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'fixStatus.likelyFixed' when evidence.fixStatus is set",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "fixStatus"
+            ],
+            "properties": {
+              "fixStatus": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "fixStatus.likelyFixed"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "fieldRationale: require 'versionAnalysis.currentRelevance' when evidence.versionAnalysis is set",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "versionAnalysis"
+            ],
+            "properties": {
+              "versionAnalysis": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "fieldRationales": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "const": "versionAnalysis.currentRelevance"
+                    }
+                  },
+                  "required": [
+                    "field"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "close-* actions require at least 2 code investigation signals as evidence",
+      "if": {
+        "properties": {
+          "output": {
+            "type": "object",
+            "required": [
+              "actionability"
+            ],
+            "properties": {
+              "actionability": {
+                "type": "object",
+                "properties": {
+                  "suggestedAction": {
+                    "pattern": "^close-"
+                  }
+                },
+                "required": [
+                  "suggestedAction"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "output"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "codeInvestigation": {
+                "minItems": 2
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "dismissing relevance (unlikely) requires code investigation evidence",
+      "if": {
+        "properties": {
+          "evidence": {
+            "type": "object",
+            "required": [
+              "versionAnalysis"
+            ],
+            "properties": {
+              "versionAnalysis": {
+                "type": "object",
+                "properties": {
+                  "currentRelevance": {
+                    "const": "unlikely"
+                  }
+                },
+                "required": [
+                  "currentRelevance"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "evidence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "analysis": {
+            "properties": {
+              "codeInvestigation": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

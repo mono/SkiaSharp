@@ -1,0 +1,141 @@
+# Conclusion Guide
+
+How to choose the correct `conclusion` value for a bug reproduction attempt.
+
+---
+
+## Decision Flowchart
+
+```
+Did reproduction succeed?
+├─ Yes, observed the bug
+│  ├─ Crash/exception? → reproduced
+│  └─ Wrong visual output? → wrong-output
+├─ No, all steps passed → not-reproduced
+├─ Couldn't run at all
+│  ├─ Missing platform/OS? → needs-platform
+│  ├─ Missing hardware? → needs-hardware
+│  └─ Missing info/assets? → partial or inconclusive
+└─ Some aspects worked, some didn't → partial
+```
+
+---
+
+## Conclusion Values
+
+### `reproduced`
+
+Bug confirmed. The reported behavior was observed.
+
+- **Required evidence:** ≥1 reproduction step with `result: "failure"` or `result: "wrong-output"`
+- **Required:** `primaryError` describing the crash, exception, or incorrect behavior
+- **Use when:** code throws an exception, crashes, returns wrong values, or behaves contrary to documentation
+- **Example:** `"SKMatrix.MapRect returns normalized rect instead of preserving orientation"`
+
+### `not-reproduced`
+
+Bug NOT confirmed. All reproduction steps passed.
+
+- **Required evidence:** ≥1 reproduction step with `result: "success"`
+- **Required:** description of what WAS observed — prove you actually tried
+- **Common reasons:** already fixed in current version, environment difference, missing repro details from reporter
+- **Important:** this does NOT mean the bug doesn't exist. It means it could not be observed in the current environment. Always note what was tested so humans can evaluate whether the reproduction attempt was valid.
+
+### `wrong-output`
+
+Special case of `reproduced` for visual/rendering bugs.
+
+- **Use when:** the process exits successfully (no crash, no exception) but the output is visually incorrect
+- **Required evidence:** description of expected vs actual output
+- **Examples:**
+  - `"Expected blue rectangle, got garbled pixels"`
+  - `"Image decoded but colors are inverted"`
+  - `"Text rendered with wrong font metrics — baseline offset by 4px"`
+- **No automated pixel diff is available.** Describe the visual difference in plain language.
+- **If the output is a file**, note its path so a human can inspect it.
+
+### `needs-platform`
+
+Cannot reproduce because the required platform or OS is not available.
+
+- **Required evidence:** which platform is needed and why
+- **Also use when:** a native rebuild is required (native rebuilds are forbidden during bug reproduction)
+- **Examples:**
+  - `"Bug reported on Windows with DirectX backend, current env is macOS"`
+  - `"Reproducing requires building native libs with a modified C API — not possible in repro mode"`
+  - `"Issue is Linux-specific (fontconfig behavior), current env is macOS"`
+
+### `needs-hardware`
+
+Cannot reproduce because specific hardware is required.
+
+- **Required evidence:** what hardware is needed
+- **Distinct from `needs-platform`:** the platform IS available but specific hardware is not
+- **Examples:**
+  - `"Requires Metal on Apple Silicon GPU — current env has no GPU access"`
+  - `"Bug only manifests on iOS device (not simulator)"`
+  - `"Requires Android device with specific Vulkan driver version"`
+
+### `partial`
+
+Some aspects of the bug were reproduced, others could not be verified.
+
+- **Required evidence:** what WAS reproduced AND what remains unverified
+- **Required:** populate `blockers[]` with specific reasons for incomplete reproduction
+- **Use when:** you confirmed part of the problem but hit a wall on the rest
+- **Example:** `"Crash reproduced on simple case but reporter's specific font file is unavailable for full verification"`
+
+### `inconclusive`
+
+Cannot determine whether the bug exists. Results are ambiguous or information is insufficient.
+
+- **Required evidence:** what was attempted and why results are ambiguous
+- **Common reasons:** issue description too vague, repro code incomplete, behavior is intermittent
+- **Last resort.** Prefer any other conclusion when possible. If you can partially reproduce, use `partial`. If you tried and everything passed, use `not-reproduced`.
+
+---
+
+## Supporting Fields
+
+### `blockers[]`
+
+A list of specific reasons reproduction was incomplete. Each entry should be actionable — a human reading it should know exactly what's missing.
+
+**Good blockers:**
+- `"Requires Windows — current environment is macOS"`
+- `"Reporter's input file (corrupted.png) not attached to issue"`
+- `"Needs native rebuild to test C API change — forbidden in repro mode"`
+- `"Intermittent: passed 10/10 runs but reporter says it fails ~20% of the time"`
+
+**Bad blockers:**
+- `"Couldn't reproduce"` — too vague, not actionable
+- `"Need more info"` — say what info specifically
+
+### `notes`
+
+Free-text summary for humans. Write 1–3 sentences covering:
+1. What you did (the approach)
+2. What you observed (the result)
+3. Any caveats or suggestions for further investigation
+
+**Example:** `"Built a minimal console app using SKBitmap.Decode with the provided JPEG. Decoding succeeded and pixel spot-checks matched expected values. Reporter may be hitting a platform-specific codepath — suggest testing on Windows."`
+
+---
+
+## Confidence and Human Review
+
+Note these situations in the `notes` field — they indicate the reproduction may need human follow-up:
+
+- Conclusion is `partial` or `inconclusive` — always note why
+- Conclusion is `not-reproduced` but the issue has multiple confirmations from other users
+- The reproduction environment differs significantly from the reporter's environment
+- Visual output was produced but correctness is subjective (e.g., font rendering differences)
+- The bug is intermittent and your limited runs may not have triggered it
+
+High-confidence conclusions (less likely to need review):
+
+- `reproduced` or `wrong-output` with clear, unambiguous evidence
+- `needs-platform` or `needs-hardware` with an obvious platform mismatch
+- `not-reproduced` AND you closely matched the reporter's environment
+
+**When in doubt, note the uncertainty.** A cautious conclusion is better than an overconfident one.

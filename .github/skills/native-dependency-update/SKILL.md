@@ -44,6 +44,36 @@ Before starting, confirm you will:
 
 > **🛑 STOP AND ASK** before: Creating PRs, Merging PRs, Force pushing, Any destructive git operations
 
+### 🚫 BRANCH PROTECTION (MANDATORY COMPLIANCE)
+
+> **⛔ POLICY VIOLATION: Direct commits to protected branches are prohibited.**
+
+**This rule applies to BOTH repositories:**
+
+| Repository | Protected Branches | Action Required |
+|------------|-------------------|-----------------|
+| **mono/SkiaSharp** (parent repo) | `main` | Create feature branch first |
+| **mono/skia** (`externals/skia` submodule) | `main`, `skiasharp` | Create feature branch first |
+
+**Before ANY commit in either repository:**
+
+1. **Create a feature branch** — Use naming convention: `dev/issue-NNNN-description` or `dev/update-{dep}`
+2. **Never commit directly** to `main` or `skiasharp` — All changes require a PR
+3. **This is a compliance requirement** — Direct commits bypass review, CI, and audit trails
+
+```bash
+# ✅ CORRECT — Always create feature branch first
+cd externals/skia
+git checkout skiasharp
+git checkout -b dev/update-libpng
+# Now make commits...
+
+# ❌ WRONG — Never do this
+cd externals/skia
+git checkout skiasharp
+git commit -m "Update libpng"  # POLICY VIOLATION
+```
+
 ### ❌ NEVER Do These
 
 | Shortcut | Why It's Wrong |
@@ -175,6 +205,16 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 3. **Update the SkiaSharp submodule** to point to the new squashed commit (not the old branch commit)
 4. **Push the updated submodule reference** to the SkiaSharp PR branch
 5. **Only then merge the SkiaSharp PR**
+
+#### Merge Checklist
+
+Before proceeding past each step, verify:
+
+- [ ] mono/skia PR merged
+- [ ] Fetched `skiasharp` branch to get new SHA
+- [ ] Updated SkiaSharp submodule to new SHA (`cd externals/skia && git checkout {new-sha}`)
+- [ ] Pushed submodule update to SkiaSharp PR branch
+- [ ] SkiaSharp PR merged
 
 > ❌ **NEVER** merge both PRs in quick succession without updating the submodule in between.
 > ❌ **NEVER** assume the submodule reference is correct after squash-merging mono/skia.

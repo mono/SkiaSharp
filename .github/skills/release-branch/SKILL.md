@@ -14,6 +14,17 @@ Create release branches for SkiaSharp versions.
 
 ⚠️ **NO UNDO:** This is step 1 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
 
+## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+
+> **🛑 NEVER commit directly to `main` or `skiasharp` branches. This is a policy violation.**
+
+| Repository | Protected Branches | Required Action |
+|------------|-------------------|-----------------|
+| SkiaSharp (parent) | `main` | Create `release/X.Y.Z` branch, never commit to main |
+| externals/skia (submodule) | `main`, `skiasharp` | Must use feature branch if submodule changes needed |
+
+**Release branches are created FROM main, but never modify main directly.**
+
 ---
 
 ## Step 1: Determine Version
@@ -23,7 +34,8 @@ Create release branches for SkiaSharp versions.
 1. Fetch main and read `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`
 2. List existing branches: `git branch -r | grep "release/{version}-preview"`
 3. Next preview = highest + 1 (or 1 if none)
-4. Confirm with user: "Next release will be `X.Y.Z-preview.N`. Proceed?"
+4. **⚠️ Semver check:** Also verify no bare `release/{version}` branch exists — if it does, the stable release is already cut and you should NOT create another preview. Ask the user to confirm.
+5. Confirm with user: "Next release will be `X.Y.Z-preview.N`. Proceed?"
 
 ### User provides version
 
@@ -33,6 +45,10 @@ Use the provided version directly.
 
 ## Step 2: Determine Release Type
 
+⚠️ **Semver ordering:** A bare version `X.Y.Z` is ALWAYS newer than `X.Y.Z-preview.N`. When listing
+branches to find the latest, remember that `release/3.119.2` > `release/3.119.2-preview.3`.
+Do NOT use alphabetical sorting — it gives wrong results for semver.
+
 | Version Format | Type | Base | PREVIEW_LABEL |
 |----------------|------|------|---------------|
 | `X.Y.Z-preview.N` | Preview | `main` | `preview.N` |
@@ -41,6 +57,10 @@ Use the provided version directly.
 | `X.Y.Z.F` | Hotfix Stable | `release/X.Y.Z.F-preview.{latest}` | `stable` |
 
 For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-preview" | sort -V | tail -1`
+
+**NuGet version format by release type:**
+- **Preview:** `{base}-{PREVIEW_LABEL}.{build}` (e.g., `3.119.2-preview.2.3`) — build number is part of the prerelease tag
+- **Stable:** `{base}` only (e.g., `3.119.2`) — the build number is NEVER appended to stable versions. On the internal feed, stable builds appear as `{base}-stable.{build}` but the published version is just `{base}`.
 
 ---
 

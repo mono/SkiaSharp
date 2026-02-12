@@ -11,13 +11,13 @@ This is a small set of tools that help with generating the p/invoke layer from t
 Regenerate all P/Invoke bindings:
 
 ```pwsh
-./utils/generate.ps1
+pwsh ./utils/generate.ps1
 ```
 
 Regenerate a specific binding:
 
 ```pwsh
-./utils/generate.ps1 -Config libSkiaSharp.json
+pwsh ./utils/generate.ps1 -Config libSkiaSharp.json
 ```
 
 Available configs:

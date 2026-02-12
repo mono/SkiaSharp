@@ -60,6 +60,13 @@ stages:
                 Copy-Item -Path '.\scripts\SignList.xml' -Destination '.\output\nugets\'
               displayName: Prepare the nugets artifact for publishing
             - pwsh: |
+                # Create nuget_preview with only prerelease packages (for easier PR testing)
+                New-Item -Path '.\output\nugets-preview\' -ItemType Directory -Force | Out-Null
+                Get-ChildItem -Path '.\output\nugets\' -Filter '*-*.nupkg' | Copy-Item -Destination '.\output\nugets-preview\'
+                $count = (Get-ChildItem -Path '.\output\nugets-preview\' -Filter '*.nupkg').Count
+                Write-Host "Created nuget_preview artifact with $count prerelease packages"
+              displayName: Prepare the nugets-preview artifact for publishing
+            - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
               displayName: Prepare the nugets-symbols artifact for publishing
             - pwsh: |
@@ -70,6 +77,8 @@ stages:
               path: '.\output\output\'
             - name: nuget
               path: '.\output\nugets'
+            - name: nuget_preview
+              path: '.\output\nugets-preview'
             - name: nuget_symbols
               path: '.\output\nugets-symbols'
       - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts

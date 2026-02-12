@@ -32,6 +32,18 @@ Update the TODO checklist at each phase. When using `read_bash` during long oper
 
 **Feedback:** These are fast enough that a single TODO update per test is sufficient.
 
+### LinuxConsoleTests (Docker)
+
+| Phase | Duration | Output Indicator |
+|-------|----------|------------------|
+| Build test project | 5-10s | "Determining projects to restore..." |
+| Docker image build | 30-90s | "Building Docker image..." |
+| Run in container | 5-10s | "Running in Docker container..." |
+| Complete | - | "Passed! - Failed: 0, Passed: 2" |
+
+**First run is slower** (~90s) due to Docker image layer caching. Subsequent runs use cached layers (~10s).
+Docker tests require `SkiaSharp.NativeAssets.Linux.NoDependencies` which bundles all native deps statically.
+
 ### MAUI Platform Tests (iOS, Android, MacCatalyst)
 
 | Phase | Duration | Output Indicator |

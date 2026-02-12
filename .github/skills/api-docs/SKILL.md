@@ -1,6 +1,11 @@
 ---
 name: api-docs
-description: Write and review XML API documentation for SkiaSharp following .NET guidelines. Use when user asks to document a class, add XML docs, write XML documentation, add triple-slash comments, review documentation quality, check docs for errors, fix doc issues, fill in missing docs, remove "To be added" placeholders, or mentions API documentation.
+description: >
+  Write and review XML API documentation for SkiaSharp following .NET guidelines.
+  
+  Triggers: "document class", "add XML docs", "write XML documentation", "add triple-slash comments",
+  "review documentation quality", "check docs for errors", "fix doc issues", "fill in missing docs",
+  "remove To be added placeholders", API documentation requests.
 ---
 
 # API Documentation

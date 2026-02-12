@@ -28,6 +28,10 @@ With regards to the pre-release versioning, it follows the typical pattern. Howe
 > Although several preview versions are found on [nuget.org](https://nuget.org), many more are also periodically released to the preview feed:  
 > https://aka.ms/skiasharp-eap/index.json
 
+> **Note:** There are two Azure DevOps feeds:
+> - **Preview feed** (`SkiaSharp`): Contains regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for public testing
+> - **CI feed** (`SkiaSharp-CI`): Contains internal build artifacts (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.) used by the release pipeline
+
 Typically, the pre-release labels are:
  - `-alpha` is very early and has not really been tested
  - `-preview` is mostly good and works, but a few more things need to be done (bugs, features, discussions)
@@ -35,9 +39,41 @@ Typically, the pre-release labels are:
 
 ### PR Packages
 
-The exception to the pattern is the PR versions: `-pr.xxxx.yy` These builds are not on NuGet, but on the preview feed. These builds are directly related to a specific PR and contain either a bugfix or untested version of a feature. 
+PR builds (`-pr.xxxx.yy` versions) are **not** published to any NuGet feed. These builds are unsigned and only available as pipeline artifacts from the public Azure DevOps CI.
 
-These are used to release a feature for easy install, and will be soon merged into the main branch. Sometimes these builds are not as up-to-date as the main branch because they were forked. This is not always the case, and often are updated, but not always.
+**Download with a single command (no repo clone needed):**
+
+```bash
+# Bash/Linux/macOS
+curl -fsSL https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/get-skiasharp-pr.sh | bash -s -- 1234
+```
+
+```powershell
+# PowerShell/Windows
+iex "& { $(irm https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/get-skiasharp-pr.ps1) } 1234"
+```
+
+Then add as a NuGet source:
+```bash
+dotnet nuget add source ~/.skiasharp/hives/pr-1234/packages --name skiasharp-pr-1234
+```
+
+Packages are installed to `~/.skiasharp/hives/pr-{number}/packages/`.
+
+**Options:**
+| Bash | PowerShell | Description |
+|------|------------|-------------|
+| `-s, --successful-only` | `-SuccessfulOnly` | Only use successful builds |
+| `-f, --force` | `-Force` | Overwrite existing packages |
+| `-l, --list` | `-List` | Show available artifacts |
+| `-b, --build-id ID` | `-BuildId ID` | Use specific build |
+
+**Manual download via Azure DevOps UI:**
+
+1. Go to: https://dev.azure.com/xamarin/public/_build?definitionId=4
+2. Find the build for your PR
+3. Click "Artifacts" → download the `nuget_preview` (or `nuget`) artifact
+4. Extract and use as a local NuGet source
 
 ## Native API Versions
 

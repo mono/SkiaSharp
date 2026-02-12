@@ -18,6 +18,18 @@ Check the C++ class declaration:
 - Mutable class (Canvas, Paint, Path, Bitmap)? → **Owned**
 - Parameter or getter return? → **Raw (non-owning)**
 
+### Pointer Type Decision Tree
+
+```
+Is it wrapped in sk_sp<T>?
+├─ Yes → Is it SkRefCnt or SkNVRefCnt?
+│        ├─ SkRefCnt → ISKReferenceCounted (virtual ref counting)
+│        └─ SkNVRefCnt<T> → ISKNonVirtualReferenceCounted
+└─ No → Is it a parameter or getter return?
+         ├─ Yes → Raw pointer (owns: false)
+         └─ No → Owned (DisposeNative deletes)
+```
+
 ## Common Types by Category
 
 | Category | Types |

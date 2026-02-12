@@ -2,64 +2,45 @@
 
 SkiaSharp is a cross-platform 2D graphics API for .NET wrapping Google's Skia library.
 
-## Skills
-
-**Always check for applicable skills first.** Before starting work on a request, review available skills in `.github/skills/`. If a skill matches the task, invoke it.
-
-| Skill | When to Use |
-|-------|-------------|
-| `implement-issue` | User provides GitHub issue URL or says "implement #NNNN", "fix #NNNN". Gathers context and creates implementation plans for new APIs, bug fixes, enhancements. |
-| `api-docs` | Writing/reviewing XML documentation. Triggers: "document SKFoo", "add XML docs", "fill in missing docs", "remove To be added placeholders". |
-| `native-dependency-update` | Updating native dependencies. Triggers: "bump libpng", "update zlib", "fix CVE in expat". Updates DEPS, cgmanifest.json, builds locally, creates PRs. |
-| `security-audit` | Security investigation. Triggers: "security audit", "audit CVEs", "CVE status". Searches issues/PRs, scans for CVEs, verifies fixes, produces report. Read-only. |
-| `release-branch` | Creating release branches. Triggers: "release now", "start release X", "create release branch". Auto-detects next preview version, updates PREVIEW_LABEL, bumps main. |
-| `release-testing` | Testing packages before publishing. Triggers: "test the release", "verify packages", "run tests on iPad". Runs integration tests on Console, Blazor, iOS, Android, Mac Catalyst. |
-| `release-publish` | Publishing and finalizing releases. Triggers: "publish X", "push to nuget", "tag the release". Publishes to NuGet.org, creates tag, GitHub release, annotates notes with emojis. |
-
-**If uncertain:** Ask the user: *"I found the [skill-name] skill which handles [description]. Should I use it for this task?"*
+**Architecture:** `C# Wrapper` → `P/Invoke` → `C API` → `C++ Skia`  
+**Principle:** C# validates parameters, C API trusts and passes through.
 
 ---
 
-## Quick Reference
+## Table of Contents
 
-### Architecture
-
-```
-C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c/)  →  C++ Skia
-```
-
-**Key principle:** C# validates parameters, C API trusts and passes through.
-
-### Directory Guide
-
-| Directory | Purpose | Editable? |
-|-----------|---------|-----------|
-| `binding/SkiaSharp/` | C# wrappers | ✅ Yes |
-| `externals/skia/src/c/` | C API implementation | ✅ Yes |
-| `externals/skia/include/c/` | C API headers | ✅ Yes |
-| `externals/skia/**` (other) | Upstream Skia | ❌ No - never modify |
-| `*.generated.cs` | Auto-generated P/Invoke | ❌ No - regenerate with `./utils/generate.ps1` |
-| `docs/` | Auto-generated API docs | ❌ No |
-| `documentation/` | Architecture guides | ✅ Yes |
-
-### Commands
-
-| Task | Command |
-|------|---------|
-| Setup (one-time) | `dotnet cake --target=externals-download` |
-| Build | `dotnet build <project.csproj>` |
-| Test | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
-| Regenerate bindings | `./utils/generate.ps1` |
-
-> **Check if externals exist:** `ls output/native/` - if empty/missing, run the download.
+1. [Critical Rules](#️-critical-rules-read-first) — Non-negotiable constraints
+2. [Commands](#commands) — Build, test, regenerate
+3. [Architecture & Directories](#architecture--directories) — What's where, what's editable
+4. [Writing Code](#writing-code) — Memory, patterns, error handling (merged)
+5. [Testing & Debugging](#testing--debugging) — Verification and troubleshooting
+6. [Skills & Routing](#skills--routing) — When to delegate to specialized workflows
 
 ---
 
-## ⚠️ Critical Rules
+## ⚠️ Critical Rules (Read First)
 
-### 1. ABI Stability (Non-negotiable)
+These rules are **non-negotiable**. Violating them causes broken builds, crashes, or downstream breakage.
 
-SkiaSharp maintains stable ABI across versions. Breaking changes break downstream apps.
+### 1. Bootstrap First
+
+Before any other command works, ensure native binaries exist:
+
+```bash
+# Run if output/native/ is empty
+dotnet cake --target=externals-download
+```
+
+### 2. Never Edit Generated Files
+
+Files matching `*.generated.cs` and `docs/` are auto-generated.
+
+- **❌ NEVER** manually edit these files
+- **✅ ALWAYS** regenerate after C API changes (see [Commands](#commands))
+
+### 3. ABI Stability
+
+SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 
 | ✅ Allowed | ❌ Never |
 |-----------|---------|
@@ -67,135 +48,129 @@ SkiaSharp maintains stable ABI across versions. Breaking changes break downstrea
 | Add new methods | Remove public APIs |
 | Add new classes | Change return types |
 
-### 2. Same-Instance Returns
+### 4. Tests Are Mandatory
 
-Some Skia methods return the **same instance** as an optimization. Always check before disposing:
+**Building alone is NOT sufficient.** Run tests before claiming completion (see [Commands](#commands)).
 
-```csharp
-// ❌ WRONG - crashes if Subset returns same instance
-using var source = FromEncodedData(data);
-var result = source.Subset(subset);
-return result;  // source disposed, but result IS source!
+### 5. Branch Protection (COMPLIANCE REQUIRED)
 
-// ✅ CORRECT
-var source = FromEncodedData(data);
-var result = source.Subset(subset);
-if (result != source)
-    source.Dispose();
-return result;
+**Direct commits to protected branches are a policy violation.**
+
+| Repository | Protected Branches |
+|------------|-------------------|
+| SkiaSharp (parent) | `main` |
+| externals/skia (submodule) | `main`, `skiasharp` |
+
+**Required workflow:**
+
+1. **Create a feature branch FIRST** — Use naming convention: `dev/issue-NNNN-description`
+2. **Make all commits on the feature branch** — Never commit directly to protected branches
+3. **Submit a Pull Request** — Changes must be reviewed before merging
+
+```bash
+# ✅ CORRECT — Always create a feature branch first
+git checkout -b dev/issue-1234-fix-description
+
+# For submodule changes:
+cd externals/skia
+git checkout -b dev/issue-1234-add-c-api
+
+# ❌ NEVER DO THIS — Policy violation
+git checkout main && git commit  # FORBIDDEN
+git checkout skiasharp && git commit  # FORBIDDEN (in skia submodule)
 ```
 
-**Methods that may return same instance:** `Subset()`, `ToRasterImage()`, `ToRasterImage(false)`
-
-### 3. Threading
-
-Skia is **NOT thread-safe**. Canvas/Paint/Path must be thread-local. Only immutable objects (Image/Shader/Data) can be shared across threads.
-
-### 4. Never Edit Generated Files
-
-Files matching `*.generated.cs` are auto-generated from C headers. After C API changes, regenerate with:
-
-```pwsh
-./utils/generate.ps1
-```
+**This applies to BOTH repositories.** The skia submodule has its own protected branches that must be respected.
 
 ---
 
-## Memory Management
+## Commands
 
-### Pointer Type Decision Tree
+Single source of truth for all commands:
+
+| Task | Command |
+|------|---------|
+| **Bootstrap (C#-only work)** | `dotnet cake --target=externals-download` |
+| **Build Native (macOS ARM64)** | `dotnet cake --target=externals-macos --arch=arm64` |
+| **Build Native (macOS Intel)** | `dotnet cake --target=externals-macos --arch=x64` |
+| **Build Native (Windows x64)** | `dotnet cake --target=externals-windows --arch=x64` |
+| **Build Native (Linux x64)** | `dotnet cake --target=externals-linux --arch=x64` |
+| **Build Native (Linux ARM64)** | `dotnet cake --target=externals-linux --arch=arm64` |
+| **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
+| **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
+| **Regenerate** | `pwsh ./utils/generate.ps1` |
+
+### ⚠️ When to Use Which Bootstrap
+
+| What You Changed | Command Required |
+|------------------|------------------|
+| C# code only (`binding/SkiaSharp/*.cs`) | `externals-download` (pre-built natives) |
+| C API (`externals/skia/src/c/`, `externals/skia/include/c/`) | **`externals-{platform}` (MUST rebuild natives)** |
+| Dependencies (`externals/skia/DEPS`) | **`externals-{platform}` (MUST rebuild natives)** |
+
+> **🛑 CRITICAL:** If you modify ANY native code (C API headers/implementations), you MUST rebuild 
+> the native library with `dotnet cake --target=externals-{platform}`. Using `externals-download`
+> after native changes will cause `EntryPointNotFoundException` at runtime because the downloaded
+> binaries don't contain your new functions.
+
+> **Note:** For release verification, see `release-testing` skill for the full platform matrix (iOS, Android, Mac Catalyst, Blazor).
+
+**Recovery Commands:**
+
+| Problem | Command |
+|---------|---------|
+| Clean rebuild | `dotnet cake --target=clean && dotnet cake --target=externals-download` |
+| Reset submodule | `git submodule update --init --recursive` |
+
+---
+
+## Architecture & Directories
+
+### Layer Overview
+
+```
+C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c/)  →  C++ Skia
+```
+
+### Directory Guide
+
+| Directory | Editable? | Notes |
+|-----------|-----------|-------|
+| `binding/SkiaSharp/` | ✅ Yes | C# wrappers |
+| `externals/skia/src/c/` | ✅ Yes | C API implementation (our shim) |
+| `externals/skia/include/c/` | ✅ Yes | C API headers (our shim) |
+| `externals/skia/**` (other) | ❌ No | Upstream Skia — never modify |
+| `*.generated.cs` | ❌ No | Run `pwsh ./utils/generate.ps1` |
+| `docs/` | ❌ No | Auto-generated |
+| `documentation/` | ✅ Yes | Architecture guides |
+
+---
+
+## Writing Code
+
+This section covers memory management, code patterns, and error handling together — they're tightly coupled when writing wrappers.
+
+### Step 1: Identify Pointer Type
 
 ```
 Is it wrapped in sk_sp<T>?
-├─ Yes → Is it SkRefCnt or SkNVRefCnt?
-│        ├─ SkRefCnt → ISKReferenceCounted (virtual ref counting)
-│        └─ SkNVRefCnt<T> → ISKNonVirtualReferenceCounted
-└─ No → Is it a parameter or getter return?
-         ├─ Yes → Raw pointer (owns: false)
-         └─ No → Owned (DisposeNative deletes)
+├─ Yes → SkRefCnt?      → ISKReferenceCounted
+│        SkNVRefCnt<T>? → ISKNonVirtualReferenceCounted
+└─ No  → Parameter?     → owns: false
+         Otherwise      → DisposeNative()
 ```
 
-### Pointer Types
+| Type | C++ | C# | Examples |
+|------|-----|-----|----------|
+| Raw | `T*` param | `owns: false` | Temporary refs |
+| Owned | Manual delete | `DisposeNative()` | Canvas, Paint, Path |
+| Ref-counted | `sk_sp<T>` | `ISKReferenceCounted` | Image, Shader, Surface |
 
-| Type | C++ Pattern | C# Pattern | Examples |
-|------|-------------|------------|----------|
-| **Raw** | `T*` parameter/getter | `owns: false` | Temporary refs |
-| **Owned** | Manual delete | `DisposeNative()` | Canvas, Paint, Path, Bitmap |
-| **Ref-counted (virtual)** | `sk_sp<T>`, inherits `SkRefCnt` | `ISKReferenceCounted` | Image, Shader, Surface, Picture |
-| **Ref-counted (non-virtual)** | `sk_sp<T>`, inherits `SkNVRefCnt<T>` | `ISKNonVirtualReferenceCounted` | Data, TextBlob, Vertices, ColorSpace |
+### Step 2: Choose Pattern
 
-### Error Handling by Layer
-
-| Layer | Pattern | Example |
-|-------|---------|---------|
-| C API | Pass through (bool/null/void) | Return `nullptr` on failure |
-| C# Factory | Return `null` on failure | `SKImage.FromEncodedData()` |
-| C# Constructor | Throw on failure | `new SKBitmap()` |
-
----
-
-## API Design
-
-### Naming Conventions
-
-| Type | Convention | Example |
-|------|------------|---------|
-| Classes/Structs | `SK` + PascalCase | `SKCanvas`, `SKRect` |
-| Enums | `SK` + PascalCase | `SKBlendMode` |
-| Methods | PascalCase verb | `DrawRect()`, `Create()` |
-| Parameters | camelCase | `sourceRect`, `filterMode` |
-| Private fields | camelCase | `handle`, `isDisposed` |
-
-### Factory Method Prefixes
-
-| Prefix | Usage | On Failure |
-|--------|-------|------------|
-| `Create` | New instance | Returns `null` |
-| `From*` | Convert existing | Returns `null` |
-| `Decode` | Parse data | Returns `null` |
-| Constructor | New instance | Throws exception |
-
-### Overloads vs Defaults
-
-**Always use overloads**, not default parameters (ABI stability):
+**Factory method** — return null on failure, validate inputs:
 
 ```csharp
-// ✅ CORRECT - Overload chain
-public static SKData CreateCopy(byte[] bytes) =>
-    CreateCopy(bytes, (ulong)bytes.Length);
-
-public static SKData CreateCopy(byte[] bytes, ulong length)
-{
-    fixed (byte* b = bytes) {
-        return GetObject(SkiaApi.sk_data_new_with_copy(b, (IntPtr)length));
-    }
-}
-
-// ❌ AVOID - Default parameters break ABI
-public static SKData CreateCopy(byte[] bytes, ulong length = 0)
-```
-
-### Deprecation
-
-Never remove APIs. Use `[Obsolete]` with migration guidance:
-
-```csharp
-[Obsolete("Use ToShader(SKShaderTileMode, SKShaderTileMode, SKSamplingOptions) instead.")]
-public SKShader ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy) =>
-    ToShader(tmx, tmy, SKSamplingOptions.Default);
-```
-
----
-
-## Code Patterns
-
-### C# Bindings (`binding/SkiaSharp/*.cs`)
-
-```csharp
-// Naming: SKType (e.g., SKCanvas, SKPaint)
-// Inherit SKObject, add ISKReferenceCounted for ref-counted types
-
-// Factory method - return null on failure
 public static SKImage FromPixels(SKImageInfo info, SKData data, int rowBytes)
 {
     if (data == null)
@@ -203,8 +178,11 @@ public static SKImage FromPixels(SKImageInfo info, SKData data, int rowBytes)
     var cinfo = SKImageInfoNative.FromManaged(ref info);
     return GetObject(SkiaApi.sk_image_new_raster_data(&cinfo, data.Handle, (IntPtr)rowBytes));
 }
+```
 
-// Instance method - validate then call
+**Instance method** — validate then call:
+
+```csharp
 public void DrawRect(SKRect rect, SKPaint paint)
 {
     if (paint == null)
@@ -213,107 +191,207 @@ public void DrawRect(SKRect rect, SKPaint paint)
 }
 ```
 
-### C API Layer (`externals/skia/src/c/*.cpp`)
+**C API** — naming convention `sk_<type>_<action>`:
 
 ```cpp
-// Naming: sk_<type>_<action>, types: sk_<type>_t
-// Use SK_C_API, C types only, no exceptions
-
 sk_image_t* sk_image_new_from_encoded(const sk_data_t* cdata) {
     return ToImage(SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(cdata))).release());
 }
-
-// Conversion macros from sk_types_priv.h:
-// AsCanvas(sk_canvas_t*) → SkCanvas*
-// ToCanvas(SkCanvas*)    → sk_canvas_t*
 ```
+
+### Step 3: Error Handling
+
+| Layer | On Failure |
+|-------|------------|
+| C API | Return `nullptr` or `false` |
+| C# Factory | Return `null` |
+| C# Constructor | Throw |
+
+### Step 4: Same-Instance Returns
+
+Some methods return the **same instance**. Always check before disposing:
+
+```csharp
+// ✅ CORRECT — always use this pattern
+var source = GetImage();
+var result = source.Subset(bounds);
+if (result != source)
+    source.Dispose();
+return result;
+```
+
+**Methods that may return same instance:** `Subset()`, `ToRasterImage()`, `ToRasterImage(false)`
+
+### API Design Rules
+
+- **Overloads, not defaults** — Default parameters break ABI
+- **Deprecate, don't remove** — Use `[Obsolete]` with migration guidance
+- **Naming:** `SK` prefix, PascalCase methods, camelCase parameters
+
+**Adding overloads (ABI-safe):**
+
+```csharp
+// ✅ Existing method (don't modify)
+public void DrawText(string text, float x, float y, SKPaint paint)
+
+// ✅ New overload (safe to add)
+public void DrawText(string text, SKPoint point, SKPaint paint)
+    => DrawText(text, point.X, point.Y, paint);
+```
+
+### Threading Rules
+
+Skia is **NOT thread-safe**.
+
+| ❌ Never share between threads | ✅ Safe to share (immutable) |
+|-------------------------------|------------------------------|
+| `SKCanvas`, `SKPaint`, `SKPath` | `SKImage`, `SKShader`, `SKData` |
+
+```csharp
+// ✅ Thread-safe pattern — each thread gets own Paint
+ThreadLocal<SKPaint> paint = new(() => new SKPaint());
+```
+
+### Anti-Patterns (Never Do This)
+
+| ❌ Anti-Pattern | Why |
+|----------------|-----|
+| `canvas.Dispose()` while using derived objects | Crashes |
+| Sharing `SKPaint` between threads | Race conditions |
+| Modifying method signatures | ABI breaking |
+| Manual edits to `*.generated.cs` | Overwritten on regenerate |
+| Using default parameters in public APIs | ABI breaking |
+| **Skipping failing tests** | **Unacceptable — tests must pass** |
+| **Using `externals-download` after C API changes** | **Causes `EntryPointNotFoundException`** |
 
 ---
 
-## Testing
-
-### Test Projects
-
-| Project | Purpose | When to Use |
-|---------|---------|-------------|
-| `SkiaSharp.Tests.Console` | Core unit tests | **Default** - use for most development |
-| `SkiaSharp.Tests.Devices` | MAUI on-device tests | Platform-specific behavior |
-| `SkiaSharp.Direct3D.Tests.Console` | Direct3D GPU tests | Windows GPU backend |
-| `SkiaSharp.Vulkan.Tests.Console` | Vulkan GPU tests | Cross-platform GPU backend |
+## Testing & Debugging
 
 ### Running Tests
 
 ```bash
-# Run all console tests
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
-
-# Run specific test
-dotnet test --filter "FullyQualifiedName~SKImageTest.FromEncodedDataWorks"
 ```
+
+### ⚠️ Tests MUST Pass
+
+> **🛑 NON-NEGOTIABLE:** Tests must PASS before claiming completion.
+> 
+> - Do NOT skip failing tests
+> - Do NOT claim completion if tests fail
+> - Do NOT use `SkipException` to work around failures
+>
+> **Skipping is ONLY acceptable for hardware limitations:**
+> - No GPU drivers available
+> - No display attached
+> - Platform doesn't support the feature (e.g., Metal on Windows)
 
 ### Writing Tests
 
 ```csharp
-public class SKImageTest : BaseTest
+[SkippableFact]
+public void FeatureWorks()
 {
-    [SkippableFact]
-    public void FeatureWorks()
-    {
-        using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
-        Assert.NotNull(data);
-        
-        using var image = SKImage.FromEncodedData(data);
-        Assert.NotNull(image);
-    }
+    using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+    using var image = SKImage.FromEncodedData(data);
+    Assert.NotNull(image);
 }
 ```
 
-### BaseTest Helpers
+**BaseTest helpers:** `PathToImages`, `PathToFonts`, `IsWindows/Mac/Linux`
 
-| Helper | Description |
-|--------|-------------|
-| `PathToImages` | Path to `tests/Content/images/` |
-| `PathToFonts` | Path to `tests/Content/fonts/` |
-| `IsWindows`, `IsMac`, `IsLinux` | Platform detection |
-| `CollectGarbage()` | Force GC (for memory tests) |
+**Philosophy:** Tests FAIL when wrong, never skip (except missing hardware).
 
-### Test Guidelines
+### Debugging Methodology
 
-- ✅ Always use `using` statements
-- ✅ Use `[SkippableFact]` for all tests
-- ✅ Test null/invalid inputs
-- ✅ Test disposal behavior
-- ❌ Don't leave objects undisposed
+1. **Establish baseline** — What's the known-good state?
+2. **One change at a time** — Verify each change before proceeding
+3. **Track changes in a table** — Log what you changed and the result
+4. **Platform differences are signals** — If X works and Y fails, the difference IS the answer
+5. **Revert if worse** — Don't pile fixes on top of failures
 
-### Test Philosophy
+### Failure Recognition
 
-**Tests must FAIL when something is wrong, never skip.**
+| Error | Likely Cause | Fix |
+|-------|--------------|-----|
+| `error CS0246` (missing type) | Missing binding | Run `pwsh ./utils/generate.ps1` |
+| `LNK2001 unresolved external` | C API signature mismatch | Check C function names match |
+| `AccessViolationException` | Memory management bug | Check disposal patterns |
+| `NullReferenceException` | Factory returned null | Check C API return value |
+| Random crashes | Threading violation | Check Canvas/Paint thread scope |
+| **`EntryPointNotFoundException`** | **Native library not rebuilt after C API change** | **Run `dotnet cake --target=externals-{platform}`** |
 
-- Missing dependencies → FAIL with helpful error
-- Missing reference data → FAIL
-- Environment not set up → FAIL
-
-The **ONLY** acceptable skip is for hardware that physically cannot be present:
-- iOS tests on non-macOS
-- GPU tests on machines without GPU
-
-A green test run means everything works.
+See [documentation/debugging-methodology.md](../documentation/debugging-methodology.md).
 
 ---
 
-## Debugging Complex Issues
+## Skills & Routing
 
-When debugging cross-platform build failures or complex issues:
+Skills are specialized workflows for complex tasks. **Your job is classification and routing** — skills handle the detailed implementation.
 
-1. **Establish baseline first** - What's the known-good state? What changed?
-2. **Track changes and effects** - Log every change and its result in a table
-3. **Trace conditional code completely** - For preprocessor/config logic, evaluate for EACH platform before proposing changes
-4. **Use platform differences as diagnostic signals** - When X works and Y fails, the difference IS the answer
-5. **One change at a time** - Make a change, verify, then proceed. Batch changes obscure causation
-6. **Verify claims with evidence** - Don't state assumptions as facts
-7. **If a fix makes things worse, stop and revert** - Don't pile more fixes on top
+### ⚠️ Skill Invocation Process
 
-For full methodology, see [documentation/debugging-methodology.md](../documentation/debugging-methodology.md).
+When the user mentions a GitHub issue number OR describes a bug/crash/problem:
+
+1. **Fetch issue details** — Get the issue title, body, and labels from GitHub
+2. **Classify** — Based on **ISSUE CONTENT**, not user's words (see table below)
+3. **Invoke skill** — Call the skill tool to load the skill context
+4. **READ SKILL.md FIRST** — **MANDATORY BLOCKING STEP:** Immediately read `.github/skills/{skill-name}/SKILL.md` before ANY other action. Do NOT proceed based on assumptions or general knowledge.
+
+> **🛑 NEVER SKIP READING SKILL.md:** Skills exist because project-specific procedures differ from general patterns. Your assumptions about how to perform a task are likely WRONG. The skill file is the source of truth — read it, follow it exactly.
+
+> **CRITICAL:** Classify based on what the ISSUE describes, not what the USER says.
+> - User says "investigate" but issue says "crash" → It's a bug → invoke `bug-fix`
+> - User says "look at" but issue says "add support for" → It's new API → invoke `add-api`
+>
+> **What's NOT allowed:** Investigating (running Docker, searching code, downloading 
+> attachments) before invoking the skill. The skill handles all of that.
+
+### When to Use Skills
+
+| Task | Skill | Triggers |
+|------|-------|----------|
+| Triage issue | `triage-issue` | "triage #NNNN", "triage issue", "classify issue", "analyze issue" |
+| Reproduce bug | `bug-repro` | "repro #NNNN", "reproduce #NNNN", "reproduce issue", "try to reproduce", "can you reproduce", "create reproduction" |
+| Fix bug | `bug-fix` | "investigate #NNNN", "fix issue", crash, exception, "undefined symbol", incorrect output, wrong behavior, memory leak, "fails", "broken", "doesn't work" |
+| Add new API | `add-api` | "expose", "wrap method", issue requests new functionality |
+| Update dependency | `native-dependency-update` | "bump libpng", "fix CVE in zlib" |
+| Write XML docs | `api-docs` | "document", "fill in missing docs" |
+| Security check | `security-audit` | "audit CVEs", "security overview" (read-only) |
+| Start release | `release-branch` | "release now", "start release X" |
+| Test release | `release-testing` | "test the release", "verify packages" |
+| Publish release | `release-publish` | "push to nuget", "tag release" |
+
+### When NOT to Use Skills
+
+Work directly for:
+- Trivial fixes (typos, whitespace, obvious one-liners)
+- Changes only to `documentation/` (non-generated docs)
+- Build/test-only tasks (no reported bug)
+- Questions about code or architecture
+- Refactoring without a reported problem
+- Performance optimization (unless there's a "slow" bug report)
+
+### Issue Classification (#NNNN)
+
+| If Issue Contains... | Type | Skill |
+|---------------------|------|-------|
+| "triage", "classify", "analyze issue" | Triage | `triage-issue` |
+| "repro", "reproduce", "reproduction", "try to reproduce" | Reproduction | `bug-repro` |
+| "crash", "exception", "wrong", "fails", "broken", "hard crash", "segfault", "undefined symbol", "AccessViolation" | Bug | `bug-fix` |
+| "add", "expose", "missing", "support", "new method", "feature request" | New API | `add-api` |
+| "docs", "documentation", "XML", "comments" | Docs | `api-docs` |
+| CVE, security, vulnerability | Security | `security-audit` then `native-dependency-update` |
+
+**Ambiguous cases:** If unclear, ask: "Does the user report something that doesn't match expected behavior?" If yes → `bug-fix`. If no → work directly or ask for clarification.
+
+### If a Skill Fails
+
+1. Note the error and what step failed
+2. Try the skill again with more specific context
+3. If repeated failure, attempt manual resolution using this document
+4. Report the issue to the user
 
 ---
 
@@ -321,16 +399,10 @@ For full methodology, see [documentation/debugging-methodology.md](../documentat
 
 | Topic | Document |
 |-------|----------|
-| Architecture | [documentation/architecture.md](../documentation/architecture.md) |
-| Memory Management | [documentation/memory-management.md](../documentation/memory-management.md) |
-| Error Handling | [documentation/error-handling.md](../documentation/error-handling.md) |
-| API Design | [documentation/api-design.md](../documentation/api-design.md) |
-| Adding New APIs | [documentation/adding-apis.md](../documentation/adding-apis.md) |
-| Building | [documentation/building.md](../documentation/building.md) |
-| Debugging Methodology | [documentation/debugging-methodology.md](../documentation/debugging-methodology.md) |
-| Releasing | [documentation/releasing.md](../documentation/releasing.md) |
-| Versioning | [documentation/versioning.md](../documentation/versioning.md) |
-
----
-
-**Remember:** Three layers (C# → C API → C++), three pointer types (raw/owned/ref-counted), C# validates, C API trusts.
+| Architecture | `documentation/architecture.md` |
+| Memory Management | `documentation/memory-management.md` |
+| Adding APIs | `documentation/adding-apis.md` |
+| API Design | `documentation/api-design.md` |
+| Error Handling | `documentation/error-handling.md` |
+| Debugging | `documentation/debugging-methodology.md` |
+| NuGet Packages | `documentation/packages.md` |
