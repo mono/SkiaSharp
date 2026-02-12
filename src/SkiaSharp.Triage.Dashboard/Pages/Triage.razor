@@ -28,16 +28,12 @@ else
             <span class="triage-label">Closeable</span>
         </div>
         <div class="triage-card triage-info @(SelectedCard == "quick-wins" ? "selected" : "")" @onclick='() => FilterByCard("quick-wins")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Closeable && !i.HumanReview)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.Closeable)</span>
             <span class="triage-label">Quick Wins</span>
         </div>
         <div class="triage-card triage-danger @(SelectedCard == "regressions" ? "selected" : "")" @onclick='() => FilterByCard("regressions")'>
             <span class="triage-count">@_openIssues.Count(i => i.IsRegression)</span>
             <span class="triage-label">Regressions</span>
-        </div>
-        <div class="triage-card triage-author @(SelectedCard == "human-review" ? "selected" : "")" @onclick='() => FilterByCard("human-review")'>
-            <span class="triage-count">@_openIssues.Count(i => i.HumanReview)</span>
-            <span class="triage-label">Needs Human Review</span>
         </div>
         <div class="triage-card triage-repro @(SelectedCard == "has-repro" ? "selected" : "")" @onclick='() => FilterByCard("has-repro")'>
             <span class="triage-count">@_openIssues.Count(i => i.HasRepro)</span>
@@ -147,10 +143,6 @@ else
                         <span class="confidence-bar @GetConfidenceClass(issue.Confidence.Value)" style="width: @((int)(issue.Confidence.Value * 100))%"></span>
                     </span>
                 }
-                @if (issue.HumanReview)
-                {
-                    <span class="badge-human-review-sm" title="Needs human review">⚠</span>
-                }
                 @if (issue.IsRegression)
                 {
                     <span class="badge-regression-sm" title="Regression">⚡</span>
@@ -240,9 +232,8 @@ else
             {
                 "needs-investigation" => query.Where(i => i.Action == "needs-investigation"),
                 "closeable" => query.Where(i => i.Closeable),
-                "quick-wins" => query.Where(i => i.Closeable && !i.HumanReview),
+                "quick-wins" => query.Where(i => i.Closeable),
                 "regressions" => query.Where(i => i.IsRegression),
-                "human-review" => query.Where(i => i.HumanReview),
                 "has-repro" => query.Where(i => i.HasRepro),
                 _ => query
             };

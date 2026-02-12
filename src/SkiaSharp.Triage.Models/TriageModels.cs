@@ -8,8 +8,7 @@ public record TriagedIssue(
     TriageClassification Classification,
     TriageEvidence Evidence,
     TriageAnalysis Analysis,
-    TriageOutput Output,
-    string? Url = null
+    TriageOutput Output
 );
 
 // ── Meta ─────────────────────────────────────────────────────────
@@ -19,19 +18,18 @@ public record TriageMeta(
     int Number,
     string Repo,
     DateTime AnalyzedAt,
-    List<string>? CurrentLabels = null,
-    string? State = null
+    List<string>? CurrentLabels = null
 );
 
 // ── Classification ───────────────────────────────────────────────
 
 public record TriageClassification(
     ClassifiedField Type,
-    ClassifiedField Area,
-    List<ClassifiedField>? Backends = null,
-    List<ClassifiedField>? Platforms = null,
-    List<ClassifiedField>? Tenets = null,
-    ClassifiedField? Partner = null
+    ClassifiedField? Area = null,
+    List<string>? Platforms = null,
+    List<string>? Backends = null,
+    List<string>? Tenets = null,
+    string? Partner = null
 );
 
 public record ClassifiedField(
@@ -42,44 +40,43 @@ public record ClassifiedField(
 // ── Evidence ─────────────────────────────────────────────────────
 
 public record TriageEvidence(
-    BugSignals? BugSignals = null,
     ReproEvidence? ReproEvidence = null,
+    BugSignals? BugSignals = null,
     VersionAnalysis? VersionAnalysis = null,
     RegressionInfo? Regression = null,
     FixStatusInfo? FixStatus = null
 );
 
 public record BugSignals(
-    bool HasCrash,
-    bool HasStackTrace,
-    ReproQuality ReproQuality,
-    BugSeverity Severity,
-    string SeverityReason,
-    bool? HasWorkaround = null,
-    string? WorkaroundSummary = null,
+    BugSeverity? Severity = null,
+    bool? IsRegression = null,
+    string? ErrorType = null,
+    string? ErrorMessage = null,
+    string? StackTrace = null,
+    ReproQuality? ReproQuality = null,
     List<string>? TargetFrameworks = null
 );
 
 public record ReproEvidence(
+    List<string>? StepsToReproduce = null,
+    List<string>? CodeSnippets = null,
     List<Screenshot>? Screenshots = null,
     List<Attachment>? Attachments = null,
-    List<RepoLink>? RepoLinks = null,
+    string? EnvironmentDetails = null,
     List<int>? RelatedIssues = null,
-    List<string>? StepsToReproduce = null,
-    List<CodeSnippet>? CodeSnippets = null,
-    string? EnvironmentDetails = null
+    List<RepoLink>? RepoLinks = null
 );
 
-public record Screenshot(string Url, string? Context = null, string? Source = null);
-public record Attachment(string Url, string Filename, AttachmentType? Type = null, string? Source = null);
+public record Screenshot(string Url, string? Description = null);
+public record Attachment(string Url, string Filename, string? Description = null);
 public record RepoLink(string Url, string? Description = null);
-public record CodeSnippet(string Code, string? Language = null, string? Context = null);
 
 public record VersionAnalysis(
-    string Reason,
     List<string>? MentionedVersions = null,
+    string? WorkedIn = null,
+    string? BrokeIn = null,
     CurrentRelevance? CurrentRelevance = null,
-    string? MigrationPath = null
+    string? RelevanceReason = null
 );
 
 public record RegressionInfo(
@@ -96,71 +93,70 @@ public record FixStatusInfo(
     string Reason,
     List<int>? RelatedPRs = null,
     List<string>? RelatedCommits = null,
-    string? FixedInVersion = null,
-    VerificationStatus? VerificationStatus = null
+    string? FixedInVersion = null
 );
 
 // ── Analysis ─────────────────────────────────────────────────────
 
 public record TriageAnalysis(
     string Summary,
-    List<KeySignal> KeySignals,
-    List<FieldRationale> FieldRationales,
-    List<string>? Uncertainties = null,
-    List<string>? Assumptions = null,
-    ResolutionAnalysis? Resolution = null,
-    List<CodeInvestigationEntry>? CodeInvestigation = null
+    List<CodeInvestigationEntry> CodeInvestigation,
+    string? Rationale = null,
+    List<KeySignal>? KeySignals = null,
+    string? ErrorFingerprint = null,
+    List<string>? Workarounds = null,
+    List<string>? NextQuestions = null,
+    ResolutionAnalysis? Resolution = null
 );
 
 public record KeySignal(
     string Text,
     string Source,
-    string Interpretation
+    string? Interpretation = null
 );
 
 public record CodeInvestigationEntry(
     string File,
-    string Lines,
-    string Relevance
+    string Finding,
+    CodeRelevance Relevance,
+    string? Lines = null
 );
-
-public record FieldRationale(
-    string Field,
-    string Chosen,
-    string ExpandedReason,
-    List<Alternative>? Alternatives = null
-);
-
-public record Alternative(string Value, string WhyRejected);
 
 public record ResolutionAnalysis(
-    string Hypothesis,
-    List<ResolutionProposal> Proposals,
-    string RecommendedProposal,
-    string RecommendedReason
+    string? Hypothesis = null,
+    List<ResolutionProposal>? Proposals = null,
+    string? RecommendedProposal = null,
+    string? RecommendedReason = null
 );
 
 public record ResolutionProposal(
-    string Title,
     string Description,
-    double Confidence,
-    ProposalEffort Effort,
-    ProposalCategory? Category = null,
+    string? Title = null,
     string? CodeSnippet = null,
-    ProposalValidation? Validated = null
+    double? Confidence = null,
+    ProposalEffort? Effort = null
 );
 
 // ── Output ───────────────────────────────────────────────────────
 
 public record TriageOutput(
     Actionability Actionability,
-    List<TriageAction>? Actions = null
+    List<TriageAction> Actions,
+    List<string>? MissingInfo = null
 );
 
 public record Actionability(
     SuggestedAction SuggestedAction,
     double Confidence,
-    string Reason,
-    bool? RequiresHumanReview = null,
-    List<MissingInfoKind>? MissingInfo = null
+    string Reason
+);
+
+public record TriageAction(
+    ActionType Type,
+    string Description,
+    ActionRisk? Risk = null,
+    double? Confidence = null,
+    List<string>? Labels = null,
+    string? Comment = null,
+    int? LinkedIssue = null
 );

@@ -37,7 +37,7 @@ else
         <div class="detail-title-row">
             @if (_issue is not null)
             {
-                <a href="@_issue.Url" target="_blank" class="issue-link-lg">#@_issue.Meta.Number</a>
+                <a href="https://github.com/@_issue.Meta.Repo/issues/@_issue.Meta.Number" target="_blank" class="issue-link-lg">#@_issue.Meta.Number</a>
                 <h1>@_issue.Summary</h1>
             }
             else
@@ -56,8 +56,8 @@ else
                 </span>
                 @if (_issue.Evidence.BugSignals?.Severity is not null)
                 {
-                    <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.ToJsonString() has-rationale" style="position:relative">
-                        @FormatLabel(_issue.Evidence.BugSignals.Severity.ToJsonString())
+                    <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString() has-rationale" style="position:relative">
+                        @FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())
                         @{ var hdrSevR = GetRationale("bugSignals.severity"); }
                         @if (hdrSevR is not null) { <span class="rationale-tooltip">@hdrSevR</span> }
                     </span>
@@ -71,13 +71,9 @@ else
                     <span class="confidence-bar @GetConfidenceClass(_issue.Output.Actionability.Confidence)" style="width: @((int)(_issue.Output.Actionability.Confidence * 100))%"></span>
                     <span class="confidence-text">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
                 </span>
-                @if (_issue.Output.Actions?.Any(a => a.Type == ActionType.CloseIssue) == true)
+                @if (_issue.Output.Actions.Any(a => a.Type == ActionType.CloseIssue))
                 {
                     <span class="badge-closeable" title="Has a close-issue action — AI believes this can be closed">✓ Closeable</span>
-                }
-                @if (_issue.Output.Actionability.RequiresHumanReview == true)
-                {
-                    <span class="badge-human-review" title="Low confidence or high-risk action — a maintainer should verify before acting">⚠ Needs Human Review</span>
                 }
             }
             @if (_repro is not null)
@@ -148,7 +144,7 @@ else
                             <span class="field-label">Platforms:</span>
                             @foreach (var p in _issue.Classification.Platforms)
                             {
-                                <span class="label label-os">@FormatLabel(p.Value)</span>
+                                <span class="label label-os">@FormatLabel(p)</span>
                             }
                             @{ var platformRationale = GetRationale("platforms"); }
                             @if (platformRationale is not null)
@@ -163,7 +159,7 @@ else
                             <span class="field-label">Backends:</span>
                             @foreach (var b in _issue.Classification.Backends)
                             {
-                                <span class="label label-backend">@FormatLabel(b.Value)</span>
+                                <span class="label label-backend">@FormatLabel(b)</span>
                             }
                             @{ var backendRationale = GetRationale("backends"); }
                             @if (backendRationale is not null)
@@ -178,7 +174,7 @@ else
                             <span class="field-label">Tenets:</span>
                             @foreach (var t in _issue.Classification.Tenets)
                             {
-                                <span class="label label-tenet">@FormatLabel(t.Value)</span>
+                                <span class="label label-tenet">@FormatLabel(t)</span>
                             }
                             @{ var tenetRationale = GetRationale("tenets"); }
                             @if (tenetRationale is not null)
@@ -191,7 +187,7 @@ else
                     {
                         <div class="field-row has-rationale">
                             <span class="field-label">Partner:</span>
-                            <span class="label label-partner">@FormatLabel(_issue.Classification.Partner.Value)</span>
+                            <span class="label label-partner">@FormatLabel(_issue.Classification.Partner)</span>
                             @{ var partnerRationale = GetRationale("partner"); }
                             @if (partnerRationale is not null)
                             {
@@ -215,13 +211,13 @@ else
                         }
                     </div>
                     <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Output.Actionability.Reason)</div>
-                    @if (_issue.Output.Actionability.MissingInfo is { Count: > 0 })
+                    @if (_issue.Output.MissingInfo is { Count: > 0 })
                     {
                         <div class="missing-info">
                             <strong>Missing:</strong>
-                            @foreach (var mi in _issue.Output.Actionability.MissingInfo)
+                            @foreach (var mi in _issue.Output.MissingInfo)
                             {
-                                <span class="label label-missing">@FormatLabel(mi.ToJsonString())</span>
+                                <span class="label label-missing">@FormatLabel(mi)</span>
                             }
                         </div>
                     }
@@ -234,32 +230,38 @@ else
                 <div class="detail-card card-bug-signals">
                     <h3 title="Bug indicators extracted from the issue">Bug Signals</h3>
                     <div class="bug-signals-grid">
-                        <span class="signal @(_issue.Evidence.BugSignals.HasCrash ? "signal-yes" : "signal-no")" title="Whether the issue involves a crash or fatal error">
-                            @(_issue.Evidence.BugSignals.HasCrash ? "💥 Crash" : "No Crash")
-                        </span>
-                        <span class="signal @(_issue.Evidence.BugSignals.HasStackTrace ? "signal-yes" : "signal-no")" title="Whether a stack trace or error log was provided">
-                            @(_issue.Evidence.BugSignals.HasStackTrace ? "📋 Stack Trace" : "No Stack Trace")
-                        </span>
-                        <span class="signal @(_issue.Evidence.BugSignals.HasWorkaround == true ? "signal-yes" : "signal-no")" title="Whether a workaround has been identified">
-                            @(_issue.Evidence.BugSignals.HasWorkaround == true ? "🔧 Workaround" : "No Workaround")
-                        </span>
-                        <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.ToJsonString() has-rationale" style="position:relative">
-                            @FormatLabel(_issue.Evidence.BugSignals.Severity.ToJsonString())
-                            @{ var sevRationale = GetRationale("bugSignals.severity"); }
-                            @if (sevRationale is not null)
-                            {
-                                <span class="rationale-tooltip">@sevRationale</span>
-                            }
-                        </span>
-                        <span class="label" title="@GetReproTooltip(_issue.Evidence.BugSignals.ReproQuality)">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality.ToJsonString())</span>
+                        @if (_issue.Evidence.BugSignals.Severity is not null)
+                        {
+                            <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString()">
+                                @FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())
+                            </span>
+                        }
+                        @if (_issue.Evidence.BugSignals.ReproQuality is not null)
+                        {
+                            <span class="label" title="How complete the reproduction steps are">Repro: @FormatLabel(_issue.Evidence.BugSignals.ReproQuality.Value.ToJsonString())</span>
+                        }
+                        @if (_issue.Evidence.BugSignals.IsRegression == true)
+                        {
+                            <span class="signal signal-yes">🔄 Regression</span>
+                        }
                     </div>
-                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.BugSignals.SeverityReason)</div>
-                    @if (_issue.Evidence.BugSignals.WorkaroundSummary is not null)
+                    @if (_issue.Evidence.BugSignals.ErrorType is not null)
                     {
-                        <div class="workaround-box">
-                            <strong>Workaround:</strong>
-                            <div class="md-content">@MarkdownHelper.ToHtml(_issue.Evidence.BugSignals.WorkaroundSummary)</div>
+                        <div class="field-row" style="margin-top: 0.5rem">
+                            <span class="field-label">Error:</span>
+                            <code>@_issue.Evidence.BugSignals.ErrorType</code>
                         </div>
+                    }
+                    @if (_issue.Evidence.BugSignals.ErrorMessage is not null)
+                    {
+                        <div class="reason-text" style="margin-top: 0.25rem">@_issue.Evidence.BugSignals.ErrorMessage</div>
+                    }
+                    @if (_issue.Evidence.BugSignals.StackTrace is not null)
+                    {
+                        <details style="margin-top: 0.5rem">
+                            <summary>Stack Trace</summary>
+                            <pre class="file-content"><code>@_issue.Evidence.BugSignals.StackTrace</code></pre>
+                        </details>
                     }
                     @if (_issue.Evidence.BugSignals.TargetFrameworks is { Count: > 0 })
                     {
@@ -325,10 +327,6 @@ else
                             {
                                 <p>Fixed in: <strong>@_issue.Evidence.FixStatus.FixedInVersion</strong></p>
                             }
-                            @if (_issue.Evidence.FixStatus.VerificationStatus is not null)
-                            {
-                                <span class="label">@FormatLabel(_issue.Evidence.FixStatus.VerificationStatus.Value.ToJsonString())</span>
-                            }
                         </div>
                     }
                 </div>
@@ -356,14 +354,24 @@ else
                             <span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString()" title="Whether this issue still affects the latest version">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString())</span>
                         </div>
                     }
-                    @if (_issue.Evidence.VersionAnalysis.MigrationPath is not null)
+                    @if (_issue.Evidence.VersionAnalysis.WorkedIn is not null)
                     {
                         <div class="field-row">
-                            <span class="field-label">Migration:</span>
-                            <span class="label">@_issue.Evidence.VersionAnalysis.MigrationPath</span>
+                            <span class="field-label">Worked in:</span>
+                            <span class="label">@_issue.Evidence.VersionAnalysis.WorkedIn</span>
                         </div>
                     }
-                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.VersionAnalysis.Reason)</div>
+                    @if (_issue.Evidence.VersionAnalysis.BrokeIn is not null)
+                    {
+                        <div class="field-row">
+                            <span class="field-label">Broke in:</span>
+                            <span class="label">@_issue.Evidence.VersionAnalysis.BrokeIn</span>
+                        </div>
+                    }
+                    @if (_issue.Evidence.VersionAnalysis.RelevanceReason is not null)
+                    {
+                        <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Evidence.VersionAnalysis.RelevanceReason)</div>
+                    }
                 </div>
             }
 
@@ -388,11 +396,7 @@ else
                         <h4>Code Snippets</h4>
                         @foreach (var snippet in evidence.CodeSnippets)
                         {
-                            @if (snippet.Context is not null)
-                            {
-                                <p class="snippet-context">@snippet.Context</p>
-                            }
-                            <pre class="code-block"><code>@snippet.Code</code></pre>
+                            <pre class="code-block"><code>@snippet</code></pre>
                         }
                     }
                     @if (evidence.Screenshots is { Count: > 0 })
@@ -401,11 +405,7 @@ else
                         @foreach (var ss in evidence.Screenshots)
                         {
                             <div class="screenshot-item">
-                                <a href="@ss.Url" target="_blank" class="screenshot-link">📸 @(ss.Context ?? ss.Url)</a>
-                                @if (ss.Source is not null)
-                                {
-                                    <span class="evidence-source">from @ss.Source</span>
-                                }
+                                <a href="@ss.Url" target="_blank" class="screenshot-link">📸 @(ss.Description ?? ss.Url)</a>
                             </div>
                         }
                     }
@@ -416,9 +416,9 @@ else
                         {
                             <div class="attachment-item">
                                 <a href="@att.Url" target="_blank">📎 @att.Filename</a>
-                                @if (att.Type is not null)
+                                @if (att.Description is not null)
                                 {
-                                    <span class="label">@FormatLabel(att.Type.Value.ToJsonString())</span>
+                                    <span class="evidence-source">@att.Description</span>
                                 }
                             </div>
                         }
@@ -662,6 +662,31 @@ else
                     </div>
                 }
 
+                @if (_repro.Feedback?.TriageCorrections is { Count: > 0 })
+                {
+                    <div class="repro-card">
+                        <h3>Triage Corrections</h3>
+                        @foreach (var correction in _repro.Feedback.TriageCorrections)
+                        {
+                            <div class="correction-item" style="margin-bottom: 0.75rem; padding: 0.5rem; border-left: 3px solid #ffc107; background: rgba(255, 193, 7, 0.05);">
+                                <span class="label">@correction.Topic</span>
+                                <div style="margin-top: 0.25rem;">
+                                    <span style="text-decoration: line-through; opacity: 0.6;">@correction.Upstream</span>
+                                    → <strong>@correction.Corrected</strong>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (_repro.Inputs?.TriageFile is not null)
+                {
+                    <div class="field-row" style="margin-top: 0.5rem; opacity: 0.7;">
+                        <span class="field-label">Triage input:</span>
+                        <code>@_repro.Inputs.TriageFile</code>
+                    </div>
+                }
+
                 <p class="last-updated">Reproduction analyzed: @_repro.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
             </section>
         </div>
@@ -680,123 +705,42 @@ else
                         <div class="action-item" style="margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--border-color, #dee2e6); border-radius: 0.5rem;">
                             <div class="response-header">
                                 <span class="badge-action badge-act-@action.Type.ToJsonString()" title="@GetActionTypeTooltip(action.Type)">@FormatLabel(action.Type.ToJsonString())</span>
-                                <span class="badge-risk badge-risk-@action.Risk.ToJsonString()" style="@GetRiskStyle(action.Risk)" title="@GetRiskTooltip(action.Risk)">@FormatLabel(action.Risk.ToJsonString()) risk</span>
-                                <span class="field-confidence" title="How confident the AI is in this action">@action.Confidence.ToString("P0")</span>
+                                @if (action.Risk is not null)
+                                {
+                                    <span class="badge-risk badge-risk-@action.Risk.Value.ToJsonString()" style="@GetRiskStyle(action.Risk.Value)" title="@GetRiskTooltip(action.Risk.Value)">@FormatLabel(action.Risk.Value.ToJsonString()) risk</span>
+                                }
+                                @if (action.Confidence is not null)
+                                {
+                                    <span class="field-confidence" title="How confident the AI is in this action">@action.Confidence.Value.ToString("P0")</span>
+                                }
                             </div>
                             <div class="reason-text md-content">@MarkdownHelper.ToHtml(action.Description)</div>
-                            @if (!string.IsNullOrEmpty(action.Reason))
-                            {
-                                <div class="reason-text-sm md-content" style="margin-top: 0.25rem; opacity: 0.8;">@MarkdownHelper.ToHtml(action.Reason)</div>
-                            }
 
-                            @if (action.Type == ActionType.AddComment)
+                            @if (action.Labels is { Count: > 0 })
                             {
-                                var commentPayload = action.GetCommentPayload();
-                                @if (commentPayload?.DraftBody is not null)
-                                {
-                                    <div class="response-draft" style="margin-top: 0.5rem;">
-                                        <div class="draft-header">
-                                            <strong>Draft Response</strong>
-                                            @if (commentPayload is not null)
-                                            {
-                                                <span class="label" style="margin-left: 0.5rem;" title="@GetCommentTypeTooltip(commentPayload.CommentType)">@FormatLabel(commentPayload.CommentType.ToJsonString())</span>
-                                            }
-                                            @if (commentPayload!.RequiresHumanEdit == true)
-                                            {
-                                                <span class="badge-human-review" style="margin-left: 0.5rem;" title="AI-drafted text that should be reviewed and edited before posting">✏ Needs Edit</span>
-                                            }
-                                            <button class="btn-copy" @onclick="() => CopyToClipboard(commentPayload.DraftBody)">📋 Copy</button>
-                                        </div>
-                                        <div class="draft-content md-content">
-                                            @MarkdownHelper.ToHtml(commentPayload.DraftBody)
-                                        </div>
+                                <div style="margin-top: 0.5rem;">
+                                    <span class="field-label">Labels:</span>
+                                    @foreach (var lbl in action.Labels)
+                                    {
+                                        <span class="label" style="margin-right: 0.25rem;">@lbl</span>
+                                    }
+                                </div>
+                            }
+                            @if (action.Comment is not null)
+                            {
+                                <div class="response-draft" style="margin-top: 0.5rem;">
+                                    <div class="draft-header">
+                                        <strong>Comment</strong>
+                                        <button class="btn-copy" @onclick="() => CopyToClipboard(action.Comment)">📋 Copy</button>
                                     </div>
-                                }
-                            }
-                            else if (action.Type == ActionType.UpdateLabels)
-                            {
-                                var labelsPayload = action.GetLabelsPayload();
-                                @if (labelsPayload is not null)
-                                {
-                                    <div style="margin-top: 0.5rem;">
-                                        @if (labelsPayload.LabelsToAdd is { Count: > 0 })
-                                        {
-                                            <span class="field-label">Add:</span>
-                                            @foreach (var lbl in labelsPayload.LabelsToAdd)
-                                            {
-                                                <span class="label" style="background: #28a745; color: white; margin-right: 0.25rem;">+ @lbl</span>
-                                            }
-                                        }
-                                        @if (labelsPayload.LabelsToRemove is { Count: > 0 })
-                                        {
-                                            <span class="field-label" style="margin-left: 0.5rem;">Remove:</span>
-                                            @foreach (var lbl in labelsPayload.LabelsToRemove)
-                                            {
-                                                <span class="label" style="background: #dc3545; color: white; margin-right: 0.25rem;">− @lbl</span>
-                                            }
-                                        }
+                                    <div class="draft-content md-content">
+                                        @MarkdownHelper.ToHtml(action.Comment)
                                     </div>
-                                }
+                                </div>
                             }
-                            else if (action.Type == ActionType.CloseIssue)
+                            @if (action.LinkedIssue is not null)
                             {
-                                var closePayload = action.GetClosePayload();
-                                @if (closePayload?.Reason is not null)
-                                {
-                                    <p style="margin-top: 0.5rem;">Close reason: <strong>@closePayload.Reason</strong></p>
-                                }
-                            }
-                            else if (action.Type == ActionType.LinkDuplicate)
-                            {
-                                var dupPayload = action.GetDuplicatePayload();
-                                @if (dupPayload?.DuplicateOf is not null)
-                                {
-                                    <p style="margin-top: 0.5rem;">Duplicate of <a href="https://github.com/@_issue.Meta.Repo/issues/@dupPayload.DuplicateOf" target="_blank">#@dupPayload.DuplicateOf</a></p>
-                                }
-                            }
-                            else if (action.Type == ActionType.LinkRelated)
-                            {
-                                var relPayload = action.GetRelatedPayload();
-                                @if (relPayload?.RelatedIssues is { Count: > 0 })
-                                {
-                                    <div class="related-issues" style="margin-top: 0.5rem;">
-                                        <span class="field-label">Related:</span>
-                                        @foreach (var num in relPayload.RelatedIssues)
-                                        {
-                                            <a href="https://github.com/@_issue.Meta.Repo/issues/@num" target="_blank" class="related-issue-link">#@num</a>
-                                        }
-                                    </div>
-                                }
-                            }
-                            else if (action.Type == ActionType.ConvertToDiscussion)
-                            {
-                                var discPayload = action.GetDiscussionPayload();
-                                @if (discPayload is not null)
-                                {
-                                    <p style="margin-top: 0.5rem;">Convert to discussion: <strong>@discPayload.CategorySlug</strong></p>
-                                }
-                            }
-                            else if (action.Type == ActionType.UpdateProject)
-                            {
-                                var projPayload = action.GetProjectPayload();
-                                @if (projPayload?.FieldUpdates is { Count: > 0 })
-                                {
-                                    <div style="margin-top: 0.5rem;">
-                                        <span class="field-label">Project updates:</span>
-                                        @foreach (var field in projPayload.FieldUpdates)
-                                        {
-                                            <span class="label" style="margin-right: 0.25rem;">@field.FieldName → @field.Value</span>
-                                        }
-                                    </div>
-                                }
-                            }
-                            else if (action.Type == ActionType.SetMilestone)
-                            {
-                                var msPayload = action.GetMilestonePayload();
-                                @if (msPayload is not null)
-                                {
-                                    <p style="margin-top: 0.5rem;">Set milestone: <strong>@msPayload.MilestoneTitle</strong></p>
-                                }
+                                <p style="margin-top: 0.5rem;">Linked issue: <a href="https://github.com/@_issue.Meta.Repo/issues/@action.LinkedIssue" target="_blank">#@action.LinkedIssue</a></p>
                             }
                         </div>
                     }
@@ -813,55 +757,62 @@ else
                 var res = _issue.Analysis.Resolution;
                 <div class="detail-card card-resolution">
                     <h3>Resolution</h3>
-                    <div class="resolution-hypothesis">
-                        <h4>Hypothesis</h4>
-                        <div class="md-content">@MarkdownHelper.ToHtml(res.Hypothesis)</div>
-                    </div>
+                    @if (res.Hypothesis is not null)
+                    {
+                        <div class="resolution-hypothesis">
+                            <h4>Hypothesis</h4>
+                            <div class="md-content">@MarkdownHelper.ToHtml(res.Hypothesis)</div>
+                        </div>
+                    }
 
-                    <div class="proposals-header">
-                        <h4>Proposals</h4>
-                        <span class="carousel-hint">← scroll →</span>
-                    </div>
-                    <div class="proposals-carousel">
-                        @{ var sortedProposals = res.Proposals.OrderByDescending(p => p.Title == res.RecommendedProposal).ToList(); }
-                        @foreach (var proposal in sortedProposals)
-                        {
-                            var isRecommended = proposal.Title == res.RecommendedProposal;
-                            <div class="proposal-card @(isRecommended ? "proposal-recommended" : "")">
-                                @if (isRecommended)
-                                {
-                                    <span class="badge-recommended">★ Recommended</span>
-                                }
-                                <h5>@proposal.Title</h5>
-                                <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
-                                <div class="proposal-meta">
-                                    @if (proposal.Category is not null)
+                    @if (res.Proposals is { Count: > 0 })
+                    {
+                        <div class="proposals-header">
+                            <h4>Proposals</h4>
+                            <span class="carousel-hint">← scroll →</span>
+                        </div>
+                        <div class="proposals-carousel">
+                            @{ var sortedProposals = res.Proposals.OrderByDescending(p => p.Title == res.RecommendedProposal).ToList(); }
+                            @foreach (var proposal in sortedProposals)
+                            {
+                                var isRecommended = proposal.Title == res.RecommendedProposal;
+                                <div class="proposal-card @(isRecommended ? "proposal-recommended" : "")">
+                                    @if (isRecommended)
                                     {
-                                        <span class="label badge-category badge-cat-@proposal.Category.Value.ToJsonString()">@FormatLabel(proposal.Category.Value.ToJsonString())</span>
+                                        <span class="badge-recommended">★ Recommended</span>
                                     }
-                                    <span class="label">Effort: @FormatLabel(proposal.Effort.ToJsonString())</span>
-                                    <span class="field-confidence">@proposal.Confidence.ToString("P0")</span>
-                                    @if (proposal.Validated is not null)
+                                    @if (proposal.Title is not null)
                                     {
-                                        <span class="label badge-validated badge-val-@proposal.Validated.Value.ToJsonString()">@FormatLabel(proposal.Validated.Value.ToJsonString())</span>
+                                        <h5>@proposal.Title</h5>
+                                    }
+                                    <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
+                                    <div class="proposal-meta">
+                                        @if (proposal.Effort is not null)
+                                        {
+                                            <span class="label">Effort: @FormatLabel(proposal.Effort.Value.ToJsonString())</span>
+                                        }
+                                        @if (proposal.Confidence is not null)
+                                        {
+                                            <span class="field-confidence">@proposal.Confidence.Value.ToString("P0")</span>
+                                        }
+                                    </div>
+                                    @if (proposal.CodeSnippet is not null)
+                                    {
+                                        <details class="proposal-code">
+                                            <summary>Code Snippet</summary>
+                                            <pre class="code-block"><code>@proposal.CodeSnippet</code></pre>
+                                        </details>
+                                    }
+                                    @if (isRecommended && res.RecommendedReason is not null)
+                                    {
+                                        <div class="recommended-reason">
+                                            <strong>Why:</strong> @res.RecommendedReason
+                                        </div>
                                     }
                                 </div>
-                                @if (proposal.CodeSnippet is not null)
-                                {
-                                    <details class="proposal-code">
-                                        <summary>Code Snippet</summary>
-                                        <pre class="code-block"><code>@proposal.CodeSnippet</code></pre>
-                                    </details>
-                                }
-                                @if (isRecommended && res.RecommendedReason is not null)
-                                {
-                                    <div class="recommended-reason">
-                                        <strong>Why:</strong> @res.RecommendedReason
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
+                            }
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -908,64 +859,51 @@ else
                                             <span class="code-lines">L@(entry.Lines)</span>
                                         }
                                     </a>
+                                    <span class="label label-relevance-@entry.Relevance.ToJsonString()">@FormatLabel(entry.Relevance.ToJsonString())</span>
                                 </div>
-                                <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Relevance)</div>
+                                <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Finding)</div>
                             </div>
                         }
                     </div>
                 }
 
-                @if (_issue.Analysis.FieldRationales is { Count: > 0 })
+                @if (_issue.Analysis.Rationale is not null)
                 {
                     <div class="sidebar-section sidebar-rationales">
-                        <h4 title="Why each classification field was chosen, with alternatives considered">Field Rationales</h4>
-                        @foreach (var fr in _issue.Analysis.FieldRationales)
-                        {
-                            <div class="rationale-card">
-                                <div class="rationale-header">
-                                    <span class="label label-field">@fr.Field</span>
-                                    <span class="rationale-chosen">→ @fr.Chosen</span>
-                                </div>
-                                <div class="reason-text md-content">@MarkdownHelper.ToHtml(fr.ExpandedReason)</div>
-                                @if (fr.Alternatives is { Count: > 0 })
-                                {
-                                    <details class="alternatives">
-                                        <summary>@fr.Alternatives.Count alternative(s) considered</summary>
-                                        @foreach (var alt in fr.Alternatives)
-                                        {
-                                            <div class="alt-item">
-                                                <span class="alt-value">@alt.Value</span>
-                                                <span class="alt-rejected">— @alt.WhyRejected</span>
-                                            </div>
-                                        }
-                                    </details>
-                                }
-                            </div>
-                        }
+                        <h4 title="Key reasoning behind classification decisions">Rationale</h4>
+                        <div class="reason-text md-content">@MarkdownHelper.ToHtml(_issue.Analysis.Rationale)</div>
                     </div>
                 }
 
-                @if (_issue.Analysis.Uncertainties is { Count: > 0 })
+                @if (_issue.Analysis.ErrorFingerprint is not null)
                 {
-                    <div class="sidebar-section sidebar-uncertainties">
-                        <h4 title="What's unclear — information that would improve the triage if available">Uncertainties</h4>
-                        <ul class="uncertainty-list">
-                            @foreach (var u in _issue.Analysis.Uncertainties)
+                    <div class="field-row" style="margin-top: 0.5rem">
+                        <span class="field-label">Error Fingerprint:</span>
+                        <code>@_issue.Analysis.ErrorFingerprint</code>
+                    </div>
+                }
+
+                @if (_issue.Analysis.Workarounds is { Count: > 0 })
+                {
+                    <div class="sidebar-section">
+                        <h4>Workarounds</h4>
+                        <ul>
+                            @foreach (var w in _issue.Analysis.Workarounds)
                             {
-                                <li>@u</li>
+                                <li class="md-content">@MarkdownHelper.ToHtml(w)</li>
                             }
                         </ul>
                     </div>
                 }
 
-                @if (_issue.Analysis.Assumptions is { Count: > 0 })
+                @if (_issue.Analysis.NextQuestions is { Count: > 0 })
                 {
-                    <div class="sidebar-section sidebar-assumptions">
-                        <h4 title="Explicit assumptions made when evidence was insufficient">Assumptions</h4>
-                        <ul class="assumption-list">
-                            @foreach (var a in _issue.Analysis.Assumptions)
+                    <div class="sidebar-section sidebar-uncertainties">
+                        <h4 title="Open questions for investigation">Next Questions</h4>
+                        <ul class="uncertainty-list">
+                            @foreach (var q in _issue.Analysis.NextQuestions)
                             {
-                                <li>@a</li>
+                                <li>@q</li>
                             }
                         </ul>
                     </div>
@@ -1039,14 +977,8 @@ else
         }
     }
 
-    private string? GetRationale(string fieldName)
-    {
-        if (_issue?.Analysis.FieldRationales is null) return null;
-        var match = _issue.Analysis.FieldRationales.FirstOrDefault(r =>
-            r.Field.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
-            r.Field.StartsWith(fieldName, StringComparison.OrdinalIgnoreCase));
-        return match?.ExpandedReason;
-    }
+    // Rationale is now a single field on Analysis, not per-field
+    private string? GetRationale(string _) => null;
 
     private void LoadNavigation()
     {
@@ -1080,9 +1012,8 @@ else
             {
                 "needs-investigation" => query.Where(i => i.Action == "needs-investigation"),
                 "closeable" => query.Where(i => i.Closeable),
-                "quick-wins" => query.Where(i => i.Closeable && !i.HumanReview),
+                "quick-wins" => query.Where(i => i.Closeable),
                 "regressions" => query.Where(i => i.IsRegression),
-                "human-review" => query.Where(i => i.HumanReview),
                 "has-repro" => query.Where(i => i.HasRepro),
                 _ => query
             };
@@ -1179,7 +1110,6 @@ else
     {
         ReproQuality.Complete => "Full reproducible project provided — easiest to diagnose",
         ReproQuality.Partial => "Code snippets provided — requires assembling into repro",
-        ReproQuality.StepsOnly => "Only reproduction steps described — no code or project",
         ReproQuality.None => "No reproduction material — diagnosis will be difficult",
         _ => "Reproduction quality assessment"
     };
@@ -1203,17 +1133,6 @@ else
         ActionType.UpdateProject => "Update GitHub project fields",
         ActionType.SetMilestone => "Set milestone on the issue",
         _ => $"Action: {type}"
-    };
-
-    private static string GetCommentTypeTooltip(CommentType type) => type switch
-    {
-        CommentType.Answer => "Direct answer to a support question",
-        CommentType.Documentation => "Pointer to relevant docs, samples, or guides",
-        CommentType.RequestInfo => "Ask for missing details before proceeding",
-        CommentType.CloseMessage => "Explanation provided when closing the issue",
-        CommentType.DuplicateNotice => "Reference to the canonical/original issue",
-        CommentType.Workaround => "Actionable workaround with code snippet",
-        _ => $"Comment type: {type}"
     };
 
     private async Task CopyToClipboard(string text)

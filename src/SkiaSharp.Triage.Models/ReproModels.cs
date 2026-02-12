@@ -8,15 +8,15 @@ public record ReproResult(
     string Notes,
     List<ReproStep> ReproductionSteps,
     ReproEnvironment Environment,
+    ReproInputs? Inputs = null,
     string? Assessment = null,
     string? ReproductionTime = null,
-    string? TriageFile = null,
-    string? TriageNotes = null,
     List<ReproVersionResult>? VersionResults = null,
     ReproProject? ReproProject = null,
     List<ReproArtifact>? Artifacts = null,
     ReproErrorMessages? ErrorMessages = null,
-    List<string>? Blockers = null
+    List<string>? Blockers = null,
+    ReproFeedback? Feedback = null
 );
 
 // ── Meta ─────────────────────────────────────────────────────────
@@ -28,6 +28,12 @@ public record ReproMeta(
     DateTime AnalyzedAt
 );
 
+// ── Inputs ───────────────────────────────────────────────────────
+
+public record ReproInputs(
+    string? TriageFile = null
+);
+
 // ── Steps ────────────────────────────────────────────────────────
 
 public record ReproStep(
@@ -35,10 +41,10 @@ public record ReproStep(
     string Description,
     StepLayer Layer,
     string? Command = null,
+    int? ExitCode = null,
     string? Output = null,
     List<ReproFileCreated>? FilesCreated = null,
-    StepResult? Result = null,
-    int? ExitCode = null
+    StepResult? Result = null
 );
 
 public record ReproFileCreated(
@@ -101,4 +107,16 @@ public record ReproErrorMessages(
     string? PrimaryError = null,
     string? StackTrace = null,
     List<string>? AdditionalErrors = null
+);
+
+// ── Feedback ─────────────────────────────────────────────────────
+
+public record ReproFeedback(
+    List<TriageCorrection>? TriageCorrections = null
+);
+
+public record TriageCorrection(
+    string Topic,
+    string Upstream,
+    string Corrected
 );

@@ -86,6 +86,7 @@ public class CacheService
     public string ContributorsPath => Path.Combine(GitHubPath, "contributors.json");
     public string AiTriagePath => Path.Combine(RepoBasePath, "ai-triage");
     public string AiReproPath => Path.Combine(RepoBasePath, "ai-repro");
+    public string AiFixPath => Path.Combine(RepoBasePath, "ai-fix");
 
     public async Task<SyncMeta> LoadGitHubSyncMetaAsync()
     {

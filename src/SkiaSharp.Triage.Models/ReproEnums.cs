@@ -16,6 +16,19 @@ public enum ReproConclusion
     [JsonStringEnumMemberName("inconclusive")] Inconclusive
 }
 
+// ── Assessment ───────────────────────────────────────────────────
+
+[JsonConverter(typeof(JsonStringEnumConverter<ReproAssessment>))]
+public enum ReproAssessment
+{
+    [JsonStringEnumMemberName("unknown")] Unknown,
+    [JsonStringEnumMemberName("likely-bug")] LikelyBug,
+    [JsonStringEnumMemberName("working-as-designed")] WorkingAsDesigned,
+    [JsonStringEnumMemberName("breaking-change")] BreakingChange,
+    [JsonStringEnumMemberName("docs-gap")] DocsGap,
+    [JsonStringEnumMemberName("user-error")] UserError
+}
+
 // ── Step Result ──────────────────────────────────────────────────
 
 [JsonConverter(typeof(JsonStringEnumConverter<StepResult>))]
