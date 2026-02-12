@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3372,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:55:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3372.json"
+  },
+  "conclusion": "inconclusive",
+  "assessment": "working-as-designed",
+  "notes": "Issue #3372 is a feature request (type/feature-request), not a bug report. The reporter asks to replace the Microsoft.WindowsAppSDK metapackage dependency (v1.4.230913002) with the narrower Microsoft.WindowsAppSDK.WinUI sub-package (v1.8) in SkiaSharp.Views.WinUI. The factual claim was verified: both the source csproj and the published NuGet package (3.116.1) reference the full metapackage. Since there is no crash, exception, or wrong output to observe, no reproduction is possible — this is a dependency restructuring request.",
+  "reproductionTime": "~5 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Feature request — no bug behavior to test. Verified nupkg depends on Microsoft.WindowsAppSDK 1.4.230913002 metapackage as reported."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Source csproj still references Microsoft.WindowsAppSDK 1.4.230913002 metapackage — feature not yet implemented."
+    }
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Inspect SkiaSharp.Views.WinUI.csproj in source to verify current dependency on Microsoft.WindowsAppSDK metapackage",
+      "layer": "setup",
+      "command": "grep -n WindowsAppSDK source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SkiaSharp.Views.WinUI.csproj",
+      "exitCode": 0,
+      "output": "17:    <PackageReference Include=\"Microsoft.WindowsAppSDK\" Version=\"1.4.230913002\" />",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Download published SkiaSharp.Views.WinUI 3.116.1 nupkg and inspect nuspec to verify the dependency is also present in the released package",
+      "layer": "deployment",
+      "command": "curl -sLo /tmp/skiasharp-views-winui-stable.nupkg 'https://api.nuget.org/v3-flatcontainer/skiasharp.views.winui/3.116.1/skiasharp.views.winui.3.116.1.nupkg' && unzip -p /tmp/skiasharp-views-winui-stable.nupkg '*.nuspec'",
+      "exitCode": 0,
+      "output": "nuspec confirms dependency: <dependency id=\"Microsoft.WindowsAppSDK\" version=\"1.4.230913002\" /> in both net6.0-windows10.0.19041 and net8.0-windows10.0.19041 target framework groups.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Assess reproducibility — this is a feature request (type/feature-request) with no bug behavior to reproduce. The claim that the metapackage is referenced is factually confirmed, but there is no error, crash, or wrong output to observe.",
+      "layer": "setup",
+      "result": "skip"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "This is a feature request (type/feature-request), not a bug. There is no crash, exception, compiler error, or wrong output to reproduce — the reporter is requesting a dependency change from Microsoft.WindowsAppSDK (metapackage) to Microsoft.WindowsAppSDK.WinUI (sub-package).",
+    "Full verification of the dependency impact would require a Windows environment with WinUI tooling, which is not available on macOS."
+  ]
+}
