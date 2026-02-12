@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 736,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T17:25:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Issue #736 reports that SkiaSharp.Views.Mac namespace is not found when switching a Cocoa project from 'Xamarin.Mac Modern' to 'Xamarin.Mac Full' framework in Visual Studio for Mac. Inspection of SkiaSharp.Views 1.68.0 nupkg confirms the root cause: the package contains lib/Xamarin.Mac20/ (Modern profile) but no lib/Xamarin.Mac45/ (Full profile). When NuGet resolves for Xamarin.Mac Full (which maps to a net45-like TFM), it falls back to lib/net45/ which only contains Desktop/Gtk/WPF views, not Mac views. Reproduction requires Xamarin.Mac SDK (deprecated, not installable on modern systems) and Visual Studio for Mac (discontinued August 2024). The maintainer confirmed this was a NuGet client resolution issue and opened NuGet/NuGet.Client#2572 to fix it. Modern SkiaSharp (v3.x) no longer supports Xamarin.Mac — it uses net8.0-macos via .NET for macOS.",
+  "assessment": "likely-bug",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Inspect SkiaSharp.Views 1.68.0 nupkg to verify TFM contents and confirm the reported namespace resolution issue.",
+      "layer": "deployment",
+      "command": "curl -sLo /tmp/check-views-168.nupkg 'https://api.nuget.org/v3-flatcontainer/skiasharp.views/1.68.0/skiasharp.views.1.68.0.nupkg' && unzip -l /tmp/check-views-168.nupkg | grep 'lib/'",
+      "exitCode": 0,
+      "output": "lib/MonoAndroid/SkiaSharp.Views.Android.dll\nlib/net45/SkiaSharp.Views.Desktop.dll\nlib/net45/SkiaSharp.Views.Gtk.dll\nlib/net45/SkiaSharp.Views.WPF.dll\nlib/tizen40/SkiaSharp.Views.Tizen.dll\nlib/uap10.0/SkiaSharp.Views.UWP.dll\nlib/Xamarin.iOS/SkiaSharp.Views.iOS.dll\nlib/Xamarin.Mac20/SkiaSharp.Views.Mac.dll\nlib/Xamarin.TVOS/SkiaSharp.Views.tvOS.dll\nlib/Xamarin.WatchOS/SkiaSharp.Views.watchOS.dll",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify that SkiaSharp.Views.Mac.dll exists ONLY under Xamarin.Mac20 (Modern profile) and NOT under any Full-profile-compatible TFM. The net45/ folder contains Desktop/Gtk/WPF views but no Mac views, confirming NuGet would resolve to wrong assemblies for Xamarin.Mac Full.",
+      "layer": "deployment",
+      "command": "unzip -l /tmp/check-views-168.nupkg | grep -i 'mac\\|net45'",
+      "exitCode": 0,
+      "output": "lib/net45/SkiaSharp.Views.Desktop.dll\nlib/net45/SkiaSharp.Views.Desktop.xml\nlib/net45/SkiaSharp.Views.Gtk.dll\nlib/net45/SkiaSharp.Views.Gtk.xml\nlib/net45/SkiaSharp.Views.WPF.dll\nlib/net45/SkiaSharp.Views.WPF.xml\nlib/Xamarin.Mac20/SkiaSharp.Views.Mac.dll\nlib/Xamarin.Mac20/SkiaSharp.Views.Mac.xml",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Check if Xamarin.Mac SDK is installed on the current system — required to create a Xamarin.Mac Full project and actually reproduce the namespace resolution failure at build time.",
+      "layer": "setup",
+      "command": "ls /Library/Frameworks/Xamarin.Mac.framework 2>/dev/null && echo 'Xamarin.Mac found' || echo 'Xamarin.Mac not installed'",
+      "exitCode": 0,
+      "output": "Xamarin.Mac not installed",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Confirm Visual Studio for Mac availability — required to switch project between 'Xamarin.Mac Modern' and 'Xamarin.Mac Full' framework profiles via IDE GUI.",
+      "layer": "setup",
+      "command": "ls /Applications/Visual\\ Studio.app 2>/dev/null && echo 'VS for Mac found' || echo 'Visual Studio for Mac not installed (discontinued August 2024)'",
+      "exitCode": 0,
+      "output": "Visual Studio for Mac not installed (discontinued August 2024)",
+      "result": "skip"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "1.68.0",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Package structure confirms the bug (lib/Xamarin.Mac20/ exists but no lib/Xamarin.Mac45/ for Full profile). Cannot run actual build — Xamarin.Mac SDK not available."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Modern SkiaSharp no longer supports Xamarin.Mac. Uses net8.0-macos via .NET for macOS instead. Issue is not applicable to current codebase."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "Xamarin.Mac Full (not available)",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "1.68.0"
+      },
+      {
+        "name": "SkiaSharp.Views",
+        "version": "1.68.0"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "1.68.0",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Requires Xamarin.Mac SDK (deprecated, not installed, no longer installable on modern systems) to create a Xamarin.Mac Full project",
+    "Requires Visual Studio for Mac (discontinued August 2024) to switch between Modern and Full framework profiles via IDE",
+    "Xamarin.Mac framework is fully superseded by .NET for macOS (net8.0-macos TFM) — the bug is specific to a dead platform"
+  ]
+}
