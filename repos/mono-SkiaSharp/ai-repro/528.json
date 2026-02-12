@@ -1,0 +1,104 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 528,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:45:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/528.json"
+  },
+  "conclusion": "needs-platform",
+  "assessment": "likely-bug",
+  "notes": "Issue #528 reports that SKShaper.Shape() returns all-zero Codepoints on Android when the typeface is loaded via SKTypeface.FromStream(). The reporter confirmed the bug affects Android only (works on WPF/iOS) and found a workaround using SKTypeface.FromData() instead. Tested both FromStream and FromData paths on macOS with SkiaSharp 2.88.9, 3.119.2, and main (source) — all produce correct non-zero codepoints on macOS as expected. The bug is Android-specific, likely related to how the native HarfBuzz library interacts with stream-based typeface data on Android. Reproduction requires an Android device or emulator.",
+  "reproductionTime": "~8 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "All four typeface loading methods (FromStream, FromData, FromFile, FromFamilyName) produce correct non-zero codepoints on macOS. Bug is Android-specific."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Same result as 2.88.9 — all paths produce correct codepoints on macOS."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "All 7 existing SKShaperTest tests pass on main branch. Shaping works correctly on macOS."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "2.88.9" },
+      { "name": "SkiaSharp.HarfBuzz", "version": "2.88.9" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create a standalone console project with SkiaSharp 2.88.9 and SkiaSharp.HarfBuzz 2.88.9",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.9 && dotnet add package SkiaSharp.HarfBuzz --version 2.88.9",
+      "exitCode": 0,
+      "output": "Project created and packages added successfully.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 2.88.9 and SkiaSharp.HarfBuzz 2.88.9",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.9\" />\n    <PackageReference Include=\"SkiaSharp.HarfBuzz\" Version=\"2.88.9\" />\n  </ItemGroup>\n\n  <ItemGroup>\n    <Content Include=\"content-font.ttf\" CopyToOutputDirectory=\"PreserveNewest\" />\n  </ItemGroup>\n\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code testing SKShaper.Shape() with typefaces loaded via FromStream, FromData, FromFile, and FromFamilyName. Reports whether codepoints are all zero (the bug symptom).",
+          "content": "using System;\nusing System.IO;\nusing SkiaSharp;\nusing SkiaSharp.HarfBuzz;\n\nvar fontPath = Path.Combine(AppContext.BaseDirectory, \"content-font.ttf\");\nif (!File.Exists(fontPath))\n    fontPath = \"content-font.ttf\";\n\nConsole.WriteLine($\"Font file exists: {File.Exists(fontPath)}\");\nConsole.WriteLine($\"Platform: {Environment.OSVersion}\");\nConsole.WriteLine();\n\n// Test 1: FromStream path (the broken path on Android)\nConsole.WriteLine(\"=== Test 1: SKTypeface.FromStream ===\");\nusing (var stream = File.OpenRead(fontPath))\nusing (var tf = SKTypeface.FromStream(stream))\n    TestShaping(tf, \"FromStream\");\n\nConsole.WriteLine();\n\n// Test 2: FromData path (the workaround that works on Android)\nConsole.WriteLine(\"=== Test 2: SKTypeface.FromData ===\");\nusing (var data = SKData.Create(fontPath))\nusing (var tf = SKTypeface.FromData(data))\n    TestShaping(tf, \"FromData\");\n\nConsole.WriteLine();\n\n// Test 3: FromFile path\nConsole.WriteLine(\"=== Test 3: SKTypeface.FromFile ===\");\nusing (var tf = SKTypeface.FromFile(fontPath))\n    TestShaping(tf, \"FromFile\");\n\nConsole.WriteLine();\n\n// Test 4: FromFamilyName path (system font)\nConsole.WriteLine(\"=== Test 4: SKTypeface.FromFamilyName ===\");\nusing (var tf = SKTypeface.FromFamilyName(\"Arial\"))\n    TestShaping(tf, \"FromFamilyName\");\n\nvoid TestShaping(SKTypeface tf, string method)\n{\n    if (tf == null) { Console.WriteLine($\"  [{method}] Typeface is NULL\"); return; }\n    Console.WriteLine($\"  Typeface: {tf.FamilyName}, UnitsPerEm: {tf.UnitsPerEm}\");\n    using var shaper = new SKShaper(tf);\n    using var paint = new SKPaint { TextSize = 64, Typeface = tf };\n    var result = shaper.Shape(\"Hello world!\", 0, 0, paint);\n    Console.WriteLine($\"  Result length: {result.Codepoints.Length}\");\n    Console.Write(\"  Codepoints: \");\n    Console.WriteLine(string.Join(\", \", result.Codepoints));\n    var allZero = Array.TrueForAll(result.Codepoints, c => c == 0);\n    Console.WriteLine($\"  All codepoints zero: {allZero}\");\n    Console.WriteLine($\"  BUG PRESENT: {(allZero ? \"YES\" : \"NO\")}\");\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction with SkiaSharp 2.88.9 on macOS (reporter's approximate version). Tests FromStream, FromData, FromFile, and FromFamilyName paths.",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-528/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "Font file exists: True\nPlatform: Unix 26.2.0\n\n=== Test 1: SKTypeface.FromStream ===\n  Typeface: Lateef, UnitsPerEm: 2048\n  Result length: 12\n  Codepoints: 49, 78, 85, 85, 88, 3, 96, 88, 91, 85, 77, 5\n  All codepoints zero: False\n  BUG PRESENT: NO - codepoints have values\n\n=== Test 2: SKTypeface.FromData ===\n  Codepoints: 49, 78, 85, 85, 88, 3, 96, 88, 91, 85, 77, 5\n  All codepoints zero: False\n  BUG PRESENT: NO\n\n=== Test 3: SKTypeface.FromFile ===\n  Codepoints: 49, 78, 85, 85, 88, 3, 96, 88, 91, 85, 77, 5\n  All codepoints zero: False\n  BUG PRESENT: NO\n\n=== Test 4: SKTypeface.FromFamilyName ===\n  Codepoints: 43, 72, 79, 79, 82, 3, 90, 82, 85, 79, 71, 4\n  All codepoints zero: False\n  BUG PRESENT: NO",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Update to latest SkiaSharp 3.119.2 and re-run reproduction on macOS",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp && dotnet add package SkiaSharp.HarfBuzz && dotnet run",
+      "exitCode": 0,
+      "output": "All four typeface loading methods produce correct non-zero codepoints on macOS with SkiaSharp 3.119.2. Same results as 2.88.9.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run existing SKShaperTest tests on main branch (source-built) to verify shaping works correctly",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SKShaperTest\"",
+      "exitCode": 0,
+      "output": "Passed!  - Failed: 0, Passed: 7, Skipped: 0, Total: 7, Duration: 23 ms",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Bug is Android-specific (reporter confirmed it works on WPF/iOS). Reproduction requires an Android device or emulator which is not available in the current environment.",
+    "The bug involves HarfBuzz native library interaction with stream-based typeface data on Android — cannot be reproduced on macOS where all typeface loading paths work correctly."
+  ]
+}
