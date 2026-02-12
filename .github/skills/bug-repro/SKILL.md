@@ -172,11 +172,25 @@ For each step, capture:
 | What | How | Limit |
 |------|-----|-------|
 | Command run | Exact command (redact absolute paths) | — |
+| Exit code | Process/command exit code (0=success) | — |
 | Output | stdout/stderr | **2KB** for success, **4KB** for failure/wrong-output |
 | Files created | Filename, description, and **source code content** for repro files | — |
 | Errors | Error message + first 50 lines of stack trace | 5KB |
 | Layer | `setup` / `csharp` / `c-api` / `native` / `deployment` | — |
 | Result | `success` / `failure` / `wrong-output` / `skip` | — |
+
+**⚠️ Step Result = Observed Outcome, Not Expected Outcome**
+
+Step `result` values describe **what actually happened**, not whether it was "supposed to happen":
+
+| You Run | What Happens | Step Result | Why |
+|---------|--------------|-------------|-----|
+| `dotnet build` | Build succeeds, exits 0 | `success` | Command succeeded |
+| `dotnet build` | Build fails with CS0117 | `failure` | Command failed (non-zero exit) |
+| `dotnet build` with old API | Build fails with CS0117 (reporter said it fails) | **`failure`** | **Command still failed — matching the report doesn't make it a success** |
+| Render image | Exits 0 but pixels wrong | `wrong-output` | Process succeeded, output incorrect |
+
+**Anti-pattern**: Marking a build failure as `result: "success"` because "we expected it to fail" or "the reporter said it would fail". The step FAILED — that's `result: "failure"`. The fact that this matches the report goes in the overall **conclusion** (`reproduced`), not the step result.
 
 **Truncation:** If output exceeds limits, keep first and last portions with `[...truncated N lines...]` in the middle.
 
@@ -283,13 +297,26 @@ Record whether the bug exists on main. If fixed on main but not released, note t
 
 ### 1. Choose conclusion
 
-Read [references/conclusion-guide.md](references/conclusion-guide.md) and select the appropriate value:
+Read [references/conclusion-guide.md](references/conclusion-guide.md) and select the appropriate value.
+
+> **⚠️ CRITICAL: Factual vs Editorial (NO JUDGMENT ALLOWED)**
+> Your ONLY job is to determine: **Did the reported symptoms occur?**
+> Do NOT judge if it is "working as designed", a "breaking change", or "user error".
+> - If reporter says "Build fails with error X" and you get error X → `reproduced`
+> - If reporter says "Crash on startup" and you get a crash → `reproduced`
+> - Even if the error is "Working as Designed" or a known breaking change, the fact remains: **it reproduced.**
+>
+> **Do not use `not-reproduced` just because you think the behavior is correct.**
+>
+> **Anti-pattern from real failure (NEVER DO THIS):**
+> - ❌ Reporter: "MakeIdentity() gives CS0117" → You: CS0117 observed → Conclusion: `not-reproduced` + Note: "API was renamed"
+> - ✅ Reporter: "MakeIdentity() gives CS0117" → You: CS0117 observed → Conclusion: `reproduced` + Note: "Confirmed CS0117. This is an intentional API rename in v3.0."
 
 | Conclusion | When |
 |------------|------|
-| `reproduced` | Bug confirmed — crash, exception, or wrong values |
+| `reproduced` | **Reported behavior occurred** — crash, exception, compiler error, or wrong values (even if intentional/by-design) |
 | `wrong-output` | Process succeeds but visual/rendered output is incorrect |
-| `not-reproduced` | All steps passed, reported behavior not observed |
+| `not-reproduced` | Reported behavior **did not occur** — steps passed when reporter said they'd fail |
 | `needs-platform` | Requires unavailable OS/platform or native rebuild |
 | `needs-hardware` | Requires specific hardware (GPU, device) |
 | `partial` | Some aspects reproduced, others unverifiable |
@@ -307,7 +334,7 @@ Before generating JSON:
 Write to `/tmp/repro-{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json)
 
 Required fields:
-- `meta`: schemaVersion `"1.0"`, number, repo (`"mono/SkiaSharp"`), analyzedAt (ISO 8601 UTC)
+- `meta`: schemaVersion `"1.1"`, number, repo (`"mono/SkiaSharp"`), analyzedAt (ISO 8601 UTC)
 - `conclusion`: one of the enum values
 - `notes`: free-text summary (min 10 chars)
 - `reproductionSteps`: array of steps with stepNumber, description, layer
@@ -318,6 +345,9 @@ Conditional requirements:
 - `wrong-output` → ≥1 step with result `wrong-output`
 - `not-reproduced` → ≥1 step with result `success`
 - `needs-platform` / `needs-hardware` / `partial` / `inconclusive` → `blockers` required
+
+Schema v1.1 requirements:
+- For steps that ran a `command` and have `result` of `success` / `failure` / `wrong-output`, include `exitCode` (0 = success, non-zero = failure).
 
 ---
 
@@ -411,6 +441,10 @@ Blockers: none
 
 7. **Building from source first.** ALWAYS start with released NuGet packages in a standalone project. Only build from source in Phase 3C after reproducing with released versions.
 
-8. **Pre-emptive version assumptions.** NEVER assume a NuGet version is incompatible without inspecting the nupkg. All blockers about version compatibility must cite evidence (TFMs found, native assets present/missing, actual error when attempted).
+8. **Editorial judgment in conclusion.** NEVER let "this isn't really a bug" influence the conclusion. If the reported behavior occurred, that's `reproduced`. Your opinion that it's intentional, documented, or working-as-designed goes in `notes`, not `conclusion`. Reproduction is factual observation, not bug triage.
 
-9. **Abandoning on environment issues.** NEVER give up when hitting solvable environment problems (missing workloads, missing tools, `sudo` prompts, SDK version mismatches). These are setup steps, not blockers. Fix them — install the workload, update the SDK, ask the user for elevated permissions. If the error message tells you the fix, do the fix.
+9. **Mismarking step results.** NEVER mark a step `result: "success"` just because the failure was expected. Step `result` describes the TECHNICAL outcome of the command (exit code 0 vs 1). A build that fails with 4 compiler errors is `result: "failure"` even if that confirms the bug.
+
+10. **Pre-emptive version assumptions.** NEVER assume a NuGet version is incompatible without inspecting the nupkg. All blockers about version compatibility must cite evidence (TFMs found, native assets present/missing, actual error when attempted).
+
+11. **Abandoning on environment issues.** NEVER give up when hitting solvable environment problems (missing workloads, missing tools, `sudo` prompts, SDK version mismatches). These are setup steps, not blockers. Fix them — install the workload, update the SDK, ask the user for elevated permissions. If the error message tells you the fix, do the fix.

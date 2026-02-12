@@ -75,6 +75,9 @@ switch ($conclusion) {
         if ($results -notcontains 'success') {
             $errors += "Conclusion is 'not-reproduced' but no step has result 'success'"
         }
+        if ($results -contains 'failure' -or $results -contains 'wrong-output') {
+            $errors += "Conclusion is 'not-reproduced' but step(s) have result 'failure'/'wrong-output' — if the reported behavior was observed, conclusion should be 'reproduced' (put editorial notes in 'notes' field, not conclusion)"
+        }
     }
     { $_ -in 'needs-platform', 'needs-hardware', 'partial', 'inconclusive' } {
         if (-not $repro.blockers -or $repro.blockers.Count -eq 0) {

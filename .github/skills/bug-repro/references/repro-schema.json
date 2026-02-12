@@ -16,7 +16,7 @@
     "stepResult": {
       "type": "string",
       "enum": ["success", "failure", "wrong-output", "skip"],
-      "description": "success=step completed normally, failure=crash/exception/error, wrong-output=process succeeded but output is visually/logically incorrect, skip=step was skipped."
+      "description": "TECHNICAL outcome only — NOT whether it matched expectations. success=command exited 0, build succeeded, code ran. failure=command exited non-zero, build failed, exception thrown (EVEN IF this failure is exactly what the reporter described — a build that fails with CS0117 is result='failure'). DO NOT mark 'success' just because the failure was expected. wrong-output=process ran without error but output is visually/logically incorrect. skip=step was skipped."
     },
     "stepLayer": {
       "type": "string",
@@ -34,7 +34,7 @@
         "partial",
         "inconclusive"
       ],
-      "description": "reproduced=bug confirmed with crash/exception, not-reproduced=all steps passed, wrong-output=process succeeded but output incorrect (visual/rendering bugs), needs-platform=requires unavailable OS/platform or native rebuild, needs-hardware=requires specific hardware (GPU/device), partial=some aspects reproduced but not all, inconclusive=insufficient info or ambiguous results."
+      "description": "FACTUAL observation of whether reported behavior occurred. reproduced=reported behavior was observed (crash/exception/error/wrong value — even if 'working as designed'). not-reproduced=reported behavior was NOT observed (steps passed when reporter said they'd fail). wrong-output=process succeeded but output incorrect (visual/rendering bugs). needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced. inconclusive=insufficient info."
     },
     "artifactSource": {
       "type": "string",
@@ -50,7 +50,8 @@
       "properties": {
         "schemaVersion": {
           "type": "string",
-          "const": "1.0"
+          "enum": ["1.0", "1.1"],
+          "description": "Schema version. Use 1.1 for new reports (adds stronger step outcome validation)."
         },
         "number": {
           "type": "integer",
@@ -76,6 +77,16 @@
       "type": "string",
       "minLength": 10,
       "description": "Free-text summary of reproduction results for humans. Explain what was tried and what happened."
+    },
+    "assessment": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["unknown", "likely-bug", "working-as-designed", "breaking-change", "docs-gap", "user-error"],
+          "description": "EDITORIAL classification only. Use to record 'working as designed' or breaking-change assessments without corrupting the factual 'conclusion'."
+        },
+        { "type": "null" }
+      ]
     },
     "reproductionTime": {
       "oneOf": [
@@ -190,6 +201,12 @@
           "command": {
             "oneOf": [
               { "type": "string", "description": "Shell command executed. Redact absolute paths containing usernames." },
+              { "type": "null" }
+            ]
+          },
+          "exitCode": {
+            "oneOf": [
+              { "type": "integer", "minimum": 0, "description": "Process/command exit code. 0=success. Required for schemaVersion 1.1 when command ran and result is success/failure/wrong-output." },
               { "type": "null" }
             ]
           },
@@ -414,12 +431,26 @@
       "then": {
         "properties": {
           "reproductionSteps": {
-            "contains": {
-              "properties": {
-                "result": { "const": "success" }
+            "allOf": [
+              {
+                "contains": {
+                  "properties": {
+                    "result": { "const": "success" }
+                  },
+                  "required": ["result"]
+                }
               },
-              "required": ["result"]
-            }
+              {
+                "not": {
+                  "contains": {
+                    "properties": {
+                      "result": { "enum": ["failure", "wrong-output"] }
+                    },
+                    "required": ["result"]
+                  }
+                }
+              }
+            ]
           }
         }
       }
@@ -439,6 +470,83 @@
           "environment",
           "blockers"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "meta": {
+            "properties": {
+              "schemaVersion": { "const": "1.1" }
+            },
+            "required": ["schemaVersion"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reproductionSteps": {
+            "items": {
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "command": { "type": "string" },
+                      "result": { "enum": ["success", "failure", "wrong-output"] }
+                    },
+                    "required": ["command", "result"]
+                  },
+                  "then": {
+                    "required": ["exitCode"],
+                    "properties": {
+                      "exitCode": { "type": "integer" }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "command": { "type": "string" },
+                      "result": { "const": "skip" }
+                    },
+                    "required": ["command", "result"]
+                  },
+                  "then": {
+                    "properties": {
+                      "exitCode": { "type": "null" }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "exitCode": { "const": 0 }
+                    },
+                    "required": ["exitCode", "result"]
+                  },
+                  "then": {
+                    "properties": {
+                      "result": { "enum": ["success", "wrong-output"] }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "exitCode": { "type": "integer", "minimum": 1 }
+                    },
+                    "required": ["exitCode", "result"]
+                  },
+                  "then": {
+                    "properties": {
+                      "result": { "const": "failure" }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
       }
     }
   ]

@@ -154,7 +154,7 @@ Rendering bugs rarely throw exceptions. The process succeeds, but the output is 
 
 ## 5. Build / Deployment Bugs
 
-**Identification signals:** NuGet restore failures, TFM incompatibility, MSBuild errors, "project won't build", publish errors, trimming issues, AOT failures.
+**Identification signals:** NuGet restore failures, TFM incompatibility, MSBuild errors, "project won't build", publish errors, trimming issues, AOT failures, compiler errors (CSnnnn).
 
 ### Strategy
 
@@ -166,7 +166,23 @@ Rendering bugs rarely throw exceptions. The process succeeds, but the output is 
    ```
 2. **Match the reporter's configuration.** Copy their `.csproj` settings exactly: TFM, RuntimeIdentifier, PublishTrimmed, PublishAot, SelfContained.
 3. **Reproduce the exact build step that fails** (`dotnet build`, `dotnet publish -r linux-x64`, etc.).
+   - **Crucial:** If `dotnet build` fails with the *same errors* as the reporter, this is a successful reproduction (`reproduced`).
+   - Mark the step as `result: "failure"` (because the command exited with error).
+   - **Do NOT mark it `success` just because "it failed as expected".**
+   - Do NOT mark it `not-reproduced` just because the build error looks correct/intentional.
+   - If it looks like an intentional API rename/breaking change, record that in `notes`, but keep `conclusion: "reproduced"`.
 4. **Check output directory:** `find bin/ -name "libSkiaSharp*" -o -name "libHarfBuzzSharp*" 2>/dev/null`
+
+### Sub-pattern: API migration / version upgrade errors
+
+When the reporter upgrades SkiaSharp (e.g. 2.x → 3.x) and gets compiler errors (CS0117, CS1501, CS0246):
+
+1. **Use the OLD API calls the reporter used** — that's the reproduction. Do NOT substitute the new API names.
+2. If `dotnet build` fails with the same errors → `conclusion: "reproduced"`, step `result: "failure"`.
+3. Put "this is an intentional breaking change / API rename" in `notes`, NOT in `conclusion`.
+4. Optionally add a second step showing the new API works — but that doesn't change the conclusion.
+
+**⚠️ This is the #1 misclassification risk.** The temptation is strong to say "not a bug, so not reproduced." Resist it — reproduction is about whether the reported behavior occurred, not whether it's a defect.
 
 ### Pitfalls
 - `dotnet restore` caches aggressively — use `--no-cache` if the issue involves version confusion.
