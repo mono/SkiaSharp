@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "schemaVersion": "2.0",
+    "number": 2997,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T11:17:11Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/2997.json"
+  },
+  "conclusion": "reproduced",
+  "notes": "SKMatrix.MapRect standardizes (sorts) non-standard rectangles where Left > Right or Top > Bottom. An identity matrix maps SKRect(25, 10, 15, 2) to SKRect(15, 2, 25, 10), swapping Left/Right and Top/Bottom. Reproduced on 2.88.2, 2.88.3, 3.119.2, and main (source). The reporter claimed 2.88.2 was the last known good version, but the bug exists there too — this is not a regression between 2.88.2 and 2.88.3.",
+  "assessment": "likely-bug",
+  "reproductionTime": "~8 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter claimed this was last known good, but bug reproduces here too."
+    },
+    {
+      "version": "2.88.3",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter's version. Bug confirmed."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Latest stable release. Bug still present."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Built from source. Test fails with Assert.Equal() Failure: Expected 25, Actual 15."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.3"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create a new console project and add SkiaSharp 2.88.3 (reporter's version)",
+      "layer": "setup",
+      "command": "mkdir -p /tmp/repro-2997 && cd /tmp/repro-2997 && dotnet new console -n Repro --framework net8.0 --no-restore && cd Repro && dotnet add package SkiaSharp --version 2.88.3",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\ninfo : PackageReference for package 'SkiaSharp' version '2.88.3' added to file 'Repro.csproj'.\nlog  : Restored Repro.csproj (in 131 ms).",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project referencing SkiaSharp 2.88.3",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.3\" />\n  </ItemGroup>\n\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code: creates a non-standard SKRect (Left > Right, Top > Bottom) and maps it through an identity matrix",
+          "content": "using SkiaSharp;\n\n// Issue #2997: SKMatrix.MapRect standardizes the output rectangle\n// When Left > Right or Top > Bottom, MapRect should preserve the orientation.\n\nvar inputRect = new SKRect();\ninputRect.Left = 25;\ninputRect.Right = 15;\ninputRect.Bottom = 2;\ninputRect.Top = 10;\n\nConsole.WriteLine($\"Input:  Left={inputRect.Left}, Top={inputRect.Top}, Right={inputRect.Right}, Bottom={inputRect.Bottom}\");\n\nvar matrix = SKMatrix.CreateIdentity();\nvar resultRect = matrix.MapRect(inputRect);\n\nConsole.WriteLine($\"Output: Left={resultRect.Left}, Top={resultRect.Top}, Right={resultRect.Right}, Bottom={resultRect.Bottom}\");\n\nbool leftMatch = resultRect.Left == inputRect.Left;\nbool rightMatch = resultRect.Right == inputRect.Right;\nbool topMatch = resultRect.Top == inputRect.Top;\nbool bottomMatch = resultRect.Bottom == inputRect.Bottom;\n\nConsole.WriteLine($\"Left match:   {leftMatch} (expected {inputRect.Left}, got {resultRect.Left})\");\nConsole.WriteLine($\"Right match:  {rightMatch} (expected {inputRect.Right}, got {resultRect.Right})\");\nConsole.WriteLine($\"Top match:    {topMatch} (expected {inputRect.Top}, got {resultRect.Top})\");\nConsole.WriteLine($\"Bottom match: {bottomMatch} (expected {inputRect.Bottom}, got {resultRect.Bottom})\");\n\nif (leftMatch && rightMatch && topMatch && bottomMatch)\n{\n    Console.WriteLine(\"PASS: MapRect preserved non-standard rectangle orientation.\");\n    return 0;\n}\nelse\n{\n    Console.WriteLine(\"FAIL: MapRect standardized the rectangle — reported bug confirmed.\");\n    return 1;\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction with SkiaSharp 2.88.3 — identity matrix MapRect on non-standard rectangle",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-2997/Repro && dotnet run",
+      "exitCode": 1,
+      "output": "Input:  Left=25, Top=10, Right=15, Bottom=2\nOutput: Left=15, Top=2, Right=25, Bottom=10\nLeft match:   False (expected 25, got 15)\nRight match:  False (expected 15, got 25)\nTop match:    False (expected 10, got 2)\nBottom match: False (expected 2, got 10)\nFAIL: MapRect standardized the rectangle — reported bug confirmed.",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Test with SkiaSharp 2.88.2 (reporter's claimed last known good version)",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-2997/Repro && dotnet add package SkiaSharp --version 2.88.2 && dotnet run",
+      "exitCode": 1,
+      "output": "Input:  Left=25, Top=10, Right=15, Bottom=2\nOutput: Left=15, Top=2, Right=25, Bottom=10\nLeft match:   False (expected 25, got 15)\nRight match:  False (expected 15, got 25)\nTop match:    False (expected 10, got 2)\nBottom match: False (expected 2, got 10)\nFAIL: MapRect standardized the rectangle — reported bug confirmed.",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Update to latest stable SkiaSharp 3.119.2 and re-run",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-2997/Repro && dotnet add package SkiaSharp && dotnet run",
+      "exitCode": 1,
+      "output": "Input:  Left=25, Top=10, Right=15, Bottom=2\nOutput: Left=15, Top=2, Right=25, Bottom=10\nLeft match:   False (expected 25, got 15)\nRight match:  False (expected 15, got 25)\nTop match:    False (expected 10, got 2)\nBottom match: False (expected 2, got 10)\nFAIL: MapRect standardized the rectangle — reported bug confirmed.",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test on main branch (source build) — added xUnit test to SKMatrixTests.cs and ran via test project",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter \"FullyQualifiedName~MapRectPreservesNonStandardRectOrientation\"",
+      "exitCode": 1,
+      "output": "Failed SkiaSharp.Tests.SKMatrixTest.MapRectPreservesNonStandardRectOrientation [45 ms]\n  Error Message:\n   Assert.Equal() Failure\nExpected: 25\nActual:   15\n  Stack Trace:\n     at SkiaSharp.Tests.SKMatrixTest.MapRectPreservesNonStandardRectOrientation() in $HOME/tests/Tests/SkiaSharp/SKMatrixTests.cs:line 316\n\nFailed!  - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
+      "result": "failure"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKMatrix.MapRect standardizes non-standard rectangles: SKRect(25, 10, 15, 2) becomes SKRect(15, 2, 25, 10) after identity matrix mapping"
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.3",
+    "dockerUsed": false
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "scope",
+        "upstream": "Classified as type/bug with confidence 0.6",
+        "corrected": "Confirmed as a real bug affecting all tested versions (2.88.2, 2.88.3, 3.119.2, main). Not a regression between 2.88.2 and 2.88.3 as reporter suggested — the bug exists in both."
+      }
+    ]
+  }
+}
