@@ -1,0 +1,201 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 648,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T23:49:23Z",
+    "currentLabels": [
+      "type/bug",
+      "status/skia-update-required",
+      "area/libSkiaSharp.native"
+    ]
+  },
+  "summary": "Large images (14034\u00d79921) produce blank output when drawn onto an SKSurface, and SKBitmap allocation fails with 'Unable to allocate pixels' \u2014 root cause is native memory exhaustion for very large pixel buffers",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.88
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": false,
+      "errorType": "wrong-output",
+      "errorMessage": "Unable to allocate pixels for the bitmap",
+      "reproQuality": "complete",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load a large image (>6MB, 14034\u00d79921 pixels) using SKImage.FromEncodedData",
+        "Create an SKSurface with the target resize dimensions",
+        "Draw the image onto the surface using DrawImage",
+        "Snapshot and encode the surface \u2014 the output is blank (white canvas only)",
+        "Alternatively, try SKBitmap.FromImage which throws 'Unable to allocate pixels for the bitmap'"
+      ],
+      "codeSnippets": [
+        "using (SKImage image = SKImage.FromEncodedData(SKData.Create(sourceStream)))\n{\n    var info = new SKImageInfo(newWidth, newHeight);\n    using (SKSurface surface = SKSurface.Create(info))\n    {\n        surface.Canvas.DrawImage(image, rect, paint);\n        // Resulting snapshot is blank\n    }\n}"
+      ],
+      "environmentDetails": "Reported in 2018 (SkiaSharp version not specified). Reproduced by multiple users with various image sizes including 5286\u00d73555 and 4K\u00d74K (multiple bitmaps).",
+      "relatedIssues": [
+        1249
+      ],
+      "repoLinks": [
+        {
+          "url": "https://stackoverflow.com/questions/52206463/large-image-resizing-shows-blank",
+          "description": "StackOverflow question from original reporter"
+        },
+        {
+          "url": "https://groups.google.com/forum/#!topic/skia-discuss/886WuVcQUGo",
+          "description": "Skia discussion confirming upstream limitation"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.2.1"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The core issue is Skia's native memory allocation limits for very large pixel buffers. SkiaSharp still does not use GC.AddMemoryPressure for native allocations, and Skia's raster surface allocation silently fails (returns null or blank surface) when memory is insufficient. Skia has been updated many times since 2018 but the fundamental memory constraint for very large raster images persists."
+    }
+  },
+  "analysis": {
+    "summary": "When drawing a very large encoded image (14034\u00d79921 = ~557MB uncompressed RGBA) onto an SKSurface, Skia silently fails to decode/rasterize the source image, producing a blank canvas. SKBitmap allocation fails explicitly with 'Unable to allocate pixels'. The root cause is native memory exhaustion \u2014 Skia cannot allocate the ~557MB pixel buffer needed to decode the source image for drawing. SkiaSharp does not call GC.AddMemoryPressure, so the .NET GC is unaware of these large native allocations and cannot proactively collect.",
+    "rationale": "This is a bug in the sense that the operation fails silently (blank output instead of an error). The maintainer confirmed it's an upstream Skia limitation and labeled it status/skia-update-required. The area is correctly area/libSkiaSharp.native since the failure is in native memory allocation. Severity is medium: it affects a specific use case (very large images) and has a straightforward workaround (subsample decoding). The lack of GC.AddMemoryPressure is a separate but related SkiaSharp-side issue raised by a commenter.",
+    "keySignals": [
+      {
+        "text": "the image itself doesn't show upon save, only the white background canvas",
+        "source": "issue body",
+        "interpretation": "Silent failure \u2014 DrawImage on the surface produces no error but the source image pixels are never rasterized, likely because decoding the large source image failed internally."
+      },
+      {
+        "text": "Unable to allocate pixels for the bitmap",
+        "source": "issue body",
+        "interpretation": "Explicit failure path when using SKBitmap \u2014 TryAllocPixels returns false for the large pixel buffer (14034\u00d79921\u00d74 = ~557MB)."
+      },
+      {
+        "text": "I belive this issue is actually a skia one",
+        "source": "mattleibow comment",
+        "interpretation": "Maintainer confirmed upstream Skia limitation. SkiaSharp cannot fix until Skia addresses the underlying memory handling."
+      },
+      {
+        "text": "I am not sure if SkiaSharp adds native memory pressure, so the GC knows about it",
+        "source": "ziriax comment",
+        "interpretation": "SkiaSharp does NOT call GC.AddMemoryPressure \u2014 confirmed by searching binding/SkiaSharp/. This means the GC cannot proactively free native memory when large allocations are needed."
+      },
+      {
+        "text": "I realize I am stressing the system quite a bit here: Manage 10 SKBitmap instances in memory. Each SKBitmap is 4Kx4K (~64MB)",
+        "source": "perumaal comment",
+        "interpretation": "Commenter confirmed the issue is practical memory limits, not a code bug. Multiple large bitmaps exhaust available memory."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "52-56",
+        "finding": "SKBitmap constructor calls TryAllocPixels and throws generic Exception('Unable to allocate pixels for the bitmap') on failure. No OutOfMemoryException, no diagnostic detail about how much memory was requested vs available.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/src/core/SkImageInfoPriv.h",
+        "lines": "193-194",
+        "finding": "Skia's max dimension limit is SK_MaxS32 >> 2 = 536870911 pixels. The reporter's 14034px image is well within this limit, so the issue is not a dimension cap but rather practical memory allocation failure.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/src/image/SkImage_RasterFactories.cpp",
+        "lines": "33-46",
+        "finding": "Raster image factory validates dimensions against the same SK_MaxS32>>2 limit and validates rowBytes via SkBitmap.setInfo. The validation passes for the reporter's image size; the failure is at allocation time.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "166-172",
+        "finding": "FromEncodedData creates a deferred/lazy image via sk_image_new_from_encoded \u2014 no pixel buffer is allocated until the image is drawn or rasterized. This explains why FromEncodedData succeeds but DrawImage produces blank output.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "42-47",
+        "finding": "SKCodec.GetScaledDimensions(float desiredScale) exists and can be used to decode at a reduced resolution, avoiding the need to allocate the full pixel buffer. This is the basis for a workaround.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Use SKCodec.GetScaledDimensions() with a fractional scale to decode the image at a smaller resolution before drawing, avoiding the large pixel buffer allocation.",
+      "Pre-resize using SKBitmap.Resize() or SKImage.Subset() on smaller tiles to avoid allocating the full source image in memory at once."
+    ],
+    "nextQuestions": [
+      "Has upstream Skia improved large image handling or added streaming/tiled decode support since the 2018 Skia discussion?",
+      "Should SkiaSharp add GC.AddMemoryPressure calls when allocating large pixel buffers to help the GC manage native memory?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia's raster backend cannot allocate the ~557MB pixel buffer needed to decode a 14034\u00d79921 image for drawing. SKImage.FromEncodedData creates a lazy image, but when DrawImage attempts to rasterize it, the internal decode fails silently. SKBitmap allocation fails explicitly. This is compounded by SkiaSharp not using GC.AddMemoryPressure, preventing the GC from reclaiming native memory proactively.",
+      "proposals": [
+        {
+          "title": "Subsample decode with SKCodec",
+          "description": "Use SKCodec.GetScaledDimensions() to compute a reduced decode size, then decode at that size to avoid the massive pixel buffer. This lets you resize during decode rather than after.",
+          "codeSnippet": "using var codec = SKCodec.Create(stream);\nvar scale = Math.Min((float)maxWidth / codec.Info.Width, (float)maxHeight / codec.Info.Height);\nvar scaledSize = codec.GetScaledDimensions(scale);\nvar info = new SKImageInfo(scaledSize.Width, scaledSize.Height);\nusing var bitmap = new SKBitmap(info);\ncodec.GetPixels(info, bitmap.GetPixels());",
+          "confidence": 0.8,
+          "effort": "small"
+        },
+        {
+          "title": "Add GC.AddMemoryPressure to SkiaSharp",
+          "description": "Add GC.AddMemoryPressure/RemoveMemoryPressure calls in SKBitmap, SKSurface, and other types that allocate large native pixel buffers. This helps the .NET GC make better collection decisions when native memory usage is high.",
+          "confidence": 0.6,
+          "effort": "medium"
+        },
+        {
+          "title": "Throw OutOfMemoryException instead of generic Exception",
+          "description": "When TryAllocPixels fails in the SKBitmap constructor, throw OutOfMemoryException with diagnostic detail (requested size) instead of a generic Exception. This gives callers better error handling options.",
+          "confidence": 0.9,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Subsample decode with SKCodec",
+      "recommendedReason": "This is the most practical workaround for the reporter's immediate problem. It avoids the massive pixel buffer entirely by decoding directly at the target resolution. The other proposals are SkiaSharp-side improvements that help but don't solve the fundamental memory constraint."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "The upstream Skia limitation may have been improved in newer Skia versions. The status/skia-update-required label is still valid \u2014 needs investigation into whether current Skia handles large raster images better. The GC.AddMemoryPressure and error reporting improvements are actionable SkiaSharp-side fixes."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm existing labels are correct \u2014 type/bug and area/libSkiaSharp.native match the issue",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with subsample decode workaround and note about GC memory pressure",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "This issue is still relevant. The root cause is that decoding a 14034\u00d79921 image requires ~557MB of uncompressed pixel data, which can exhaust native memory \u2014 causing either blank output (silent failure in DrawImage) or the explicit 'Unable to allocate pixels' error.\n\nHere's a workaround using subsample decoding to resize during decode rather than after:\n\n```csharp\nusing var stream = new SKMemoryStream(imageData);\nusing var codec = SKCodec.Create(stream);\nvar scale = Math.Min((float)maxWidth / codec.Info.Width, (float)maxHeight / codec.Info.Height);\nvar scaledSize = codec.GetScaledDimensions(scale);\nvar info = new SKImageInfo(scaledSize.Width, scaledSize.Height);\nusing var bitmap = new SKBitmap(info);\ncodec.GetPixels(info, bitmap.GetPixels());\n// bitmap now contains the resized image without needing the full pixel buffer\n```\n\nThis avoids allocating the full-resolution pixel buffer entirely. On the SkiaSharp side, two improvements would help: (1) using `GC.AddMemoryPressure` so the .NET GC is aware of large native allocations, and (2) throwing `OutOfMemoryException` instead of a generic `Exception` when pixel allocation fails."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #1249 which involves similar large image allocation failure",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 1249
+      }
+    ]
+  }
+}
