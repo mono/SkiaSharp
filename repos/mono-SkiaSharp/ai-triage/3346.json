@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3346,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:05:45Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "tenet/reliability"]
+  },
+  "summary": "Published Windows ARM64 app using SkiaSharp 3.116.0 crashes immediately on launch. Works fine in Debug and Release modes, only fails when published. Reporter found that installing the Microsoft Visual C++ Redistributable resolves the crash, suggesting a missing dynamic CRT dependency in the native binaries. Issue was closed after PR #3510 added build-time verification that ANGLE DLLs (libEGL.dll, libGLESv2.dll) and all Windows native binaries are statically linked against the CRT, preventing future regressions.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.82 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "errorType": "crash",
+      "errorMessage": "Application crashes immediately on launch when published for Windows ARM64",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-windows"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a SkiaSharp app targeting Windows ARM64",
+        "Build in Release mode — works fine",
+        "Publish the app for Windows ARM64",
+        "Run the published executable on a fresh ARM64 Windows machine without VC++ Redistributable installed",
+        "App crashes immediately on launch"
+      ],
+      "environmentDetails": "Windows 10 and 11, ARM64, SkiaSharp 3.116.0, Visual Studio (Windows)",
+      "repoLinks": [
+        { "url": "https://github.com/riccardomartins/ArmDemoTryout/tree/main/ArmDemoTryout", "description": "Minimal repro project from reporter" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "PR #3510 added build-time dependency verification for all Windows native DLLs. CI confirms ANGLE, libSkiaSharp, and libHarfBuzzSharp are statically linked and do not depend on VCRUNTIME or MSVCP."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.90,
+      "reason": "PR #3510 merged into main on 2026-02-11. CI confirmed all Windows native binaries (ANGLE, libSkiaSharp, libHarfBuzzSharp) do not dynamically link VCRUNTIME or MSVCP. Build-time CheckWindowsDependencies verification now prevents regressions across all Windows build targets.",
+      "relatedPRs": [3510]
+    }
+  },
+  "analysis": {
+    "summary": "Published Windows ARM64 app crashes on fresh machines without VC++ Redistributable. The root cause was a dynamic CRT dependency in one of the shipped native DLLs, most likely the ANGLE DLLs (libEGL.dll, libGLESv2.dll) used for GPU rendering. Publishing trims the output and runs on machines that may not have the VC++ Redistributable pre-installed, exposing the missing dependency. PR #3510 confirmed via dumpbin that current builds are statically linked and added CI verification across all Windows native build targets.",
+    "rationale": "Classified as type/bug because the app crashes (not a usage question or feature request). Area is libSkiaSharp.native because the crash stems from native DLL dynamic linking, not managed code. Platform is Windows-Classic since the reporter used standard Windows (not WinUI). Severity is high — the crash prevents the app from launching at all in published form. The tenet/reliability label is appropriate for crash-on-launch behavior.",
+    "keySignals": [
+      { "text": "App crashes immediately on launch when published for Windows ARM64", "source": "issue body", "interpretation": "Publish-only crash suggests stripped/self-contained deployment exposes a missing native dependency that the development environment satisfies." },
+      { "text": "Installing Microsoft Visual C++ Redistributable fixes the crash", "source": "comment by riccardomartins (2025-09-03)", "interpretation": "Confirms the root cause is a dynamic VCRUNTIME/MSVCP dependency in shipped native DLLs — fresh ARM64 machines lack the CRT without explicit installation." },
+      { "text": "Were you using the GPU rendering? If so, I am trying to release a fix for that.", "source": "comment by mattleibow (2025-09-06)", "interpretation": "Maintainer suspected ANGLE (GPU) DLLs as the source of the dynamic CRT dependency, directing the investigation." },
+      { "text": "CI on PR #3510 confirms ANGLE DLLs do not depend on VCRUNTIME or MSVCP — already statically linked", "source": "closing comment by mattleibow (2026-02-11)", "interpretation": "Current builds verified clean. PR adds build-time CI gates to catch future regressions." }
+    ],
+    "codeInvestigation": [
+      { "file": "native/winui-angle/build.cake", "lines": "7", "finding": "VERIFY_EXCLUDED array defines ['VCRUNTIME', 'MSVCP'] — CheckWindowsDependencies rejects any ANGLE DLL that dynamically links these CRT libraries.", "relevance": "direct" },
+      { "file": "native/winui-angle/build.cake", "lines": "115-158", "finding": "ANGLE build targets arm64, x64, x86. Uses is_component_build=false (static linking). CheckWindowsDependencies called after each build to verify no CRT dependencies.", "relevance": "direct" },
+      { "file": "native/windows/build.cake", "lines": "14, 87, 109", "finding": "libSkiaSharp.dll and libHarfBuzzSharp.dll also use VERIFY_EXCLUDED = ['VCRUNTIME', 'MSVCP'] with CheckWindowsDependencies verification, added in PR #3510.", "relevance": "related" },
+      { "file": "scripts/cake/native-shared.cake", "lines": "52-86", "finding": "CheckWindowsDependencies uses dumpbin /dependents to enumerate DLL imports, then rejects any matching the excluded list. Shared across all Windows native builds.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Install Microsoft Visual C++ Redistributable on the target ARM64 machine (confirmed by reporter to resolve the crash)",
+      "Use software/raster rendering instead of GPU rendering to avoid ANGLE DLL dependency"
+    ],
+    "nextQuestions": [
+      "Was the reporter's 3.116.0 build actually shipping ANGLE DLLs with dynamic CRT links, or was the crash from a different dependency?",
+      "Which specific DLL was the source of the VCRUNTIME dependency in the 3.116.0 timeframe?"
+    ],
+    "resolution": {
+      "hypothesis": "One or more native Windows DLLs shipped with SkiaSharp 3.116.0 had a dynamic dependency on VCRUNTIME/MSVCP. On fresh ARM64 Windows machines without the VC++ Redistributable, this caused immediate crash on load. The ANGLE DLLs (libEGL.dll, libGLESv2.dll) were the most likely culprits since the maintainer specifically asked about GPU rendering.",
+      "proposals": [
+        { "title": "Install VC++ Redistributable", "description": "Install the Microsoft Visual C++ Redistributable on target machines. This is the reporter's confirmed workaround.", "confidence": 0.95, "effort": "trivial" },
+        { "title": "Build-time dependency verification (PR #3510)", "description": "Add CheckWindowsDependencies CI verification to all Windows native builds, rejecting any DLL that dynamically links VCRUNTIME or MSVCP. Already merged.", "confidence": 0.95, "effort": "small" },
+        { "title": "Disable GPU rendering", "description": "Switch to software/raster rendering to avoid ANGLE DLL loading entirely, sidestepping the CRT dependency.", "confidence": 0.70, "effort": "trivial" }
+      ],
+      "recommendedProposal": "Build-time dependency verification (PR #3510)",
+      "recommendedReason": "Addresses the root cause at the build level with CI regression prevention. Already merged and verified across all 62 native build jobs."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.92,
+      "reason": "PR #3510 merged 2026-02-11 adds build-time verification that all Windows native DLLs are statically linked. Issue already closed by maintainer with explanation."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correct — type/bug, os/Windows-Classic, tenet/reliability all match",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #3510 which adds the build-time dependency verification fix",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3510
+      }
+    ]
+  }
+}
