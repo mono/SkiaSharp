@@ -61,7 +61,7 @@ namespace SkiaSharp
 			return GetObject(SkiaApi.sk_path_effect_create_2d_path(&matrix, path.Handle));
 		}
 
-		public static SKPathEffect CreateDash(float[] intervals, float phase)
+		public static SKPathEffect CreateDash(ReadOnlySpan<float> intervals, float phase)
 		{
 			if (intervals == null)
 				throw new ArgumentNullException(nameof(intervals));

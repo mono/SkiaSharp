@@ -38,6 +38,15 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ValidDataPropertiesWithSpan()
+		{
+			var data = SKData.CreateCopy(new ReadOnlySpan<byte>(OddData));
+
+			Assert.Equal(OddData.Length, data.Size);
+			Assert.Equal(OddData, data.ToArray());
+		}
+
+		[SkippableFact]
 		public void AsStreamReturnsCorrectStreamData()
 		{
 			var data = SKData.CreateCopy(OddData);
