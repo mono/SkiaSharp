@@ -120,7 +120,7 @@
         {
           "title": "Diagnose with SKCodecResult",
           "description": "Use the SKCodec.Create overload that returns an SKCodecResult to determine the specific failure reason. This distinguishes codec initialization failures (bad file, unsupported format) from pixel decoding failures.",
-          "codeSnippet": "using var codec = SKCodec.Create(@\"C:\\Temp\\image1.png\", out var result);\nConsole.WriteLine($\"Result: {result}\"); // e.g., Success, InvalidInput, ErrorInInput\nif (codec != null)\n{\n    var info = codec.Info;\n    Console.WriteLine($\"Size: {info.Width}x{info.Height}, Color: {info.ColorType}, Alpha: {info.AlphaType}\");\n    using var bitmap = SKBitmap.Decode(codec);\n    Console.WriteLine($\"Bitmap: {bitmap != null}\");\n}",
+          "codeSnippet": "using var codec = SKCodec.Create(@\"C:\\Temp\\image1.png\", out SKCodecResult result);\nConsole.WriteLine($\"Codec result: {result}\");\nif (codec != null)\n{\n    var decodeResult = codec.GetPixels(out byte[] pixels);\n    Console.WriteLine($\"GetPixels result: {decodeResult}\");\n    Console.WriteLine($\"Image size: {codec.Info.Width}x{codec.Info.Height}\");\n}",
           "confidence": 0.9,
           "effort": "trivial"
         },
@@ -175,7 +175,8 @@
         "description": "Cross-reference the parent issue #1981 (zlib SSE fix)",
         "risk": "low",
         "confidence": 0.9,
-        "linkedIssue": 1981
+        "linkedIssue": 1981,
+        "comment": "Thanks for following up on this. The fix in #1981 addressed a specific zlib decompression bug \u2014 since you're on 2.88.3+, that fix should already be included, which suggests your PNG may be hitting a different issue.\n\nTo diagnose this, we need two things:\n\n1. **The actual PNG file** \u2014 please attach it in a `.zip` (GitHub reprocesses raw image uploads and may strip the metadata we need to investigate).\n\n2. **The specific codec error** \u2014 this will tell us exactly why Skia is rejecting the file:\n\n```csharp\nusing var codec = SKCodec.Create(@\"C:\\Temp\\image1.png\", out SKCodecResult result);\nConsole.WriteLine($\"Codec result: {result}\");\nif (codec != null)\n{\n    var decodeResult = codec.GetPixels(out byte[] pixels);\n    Console.WriteLine($\"GetPixels result: {decodeResult}\");\n    Console.WriteLine($\"Image size: {codec.Info.Width}x{codec.Info.Height}\");\n}\n```\n\nWe've seen similar reports (#2874) where the PNG had a CRC mismatch in its chunks \u2014 the file opens fine in browsers and OS viewers but Skia's stricter validation rejects it. The diagnostic output above will confirm whether that's the case here."
       }
     ]
   }
