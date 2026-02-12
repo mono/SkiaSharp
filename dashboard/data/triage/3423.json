@@ -1,270 +1,188 @@
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "1.0",
     "number": 3423,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-07-17T18:00:00Z",
+    "analyzedAt": "2026-02-12T16:41:26Z",
     "currentLabels": [
       "type/bug",
       "os/Windows-Classic",
       "area/libSkiaSharp.native",
       "tenet/reliability"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "ClickOnce deployment of .NET Framework 4.7.2 WinForms app fails to include libSkiaSharp.dll, causing DllNotFoundException",
+  "summary": "ClickOnce deployment on .NET Framework 4.7.2 fails to include libSkiaSharp.dll in the published application, causing DllNotFoundException at runtime. The MSIX version of the same app works fine. The NativeAssets.Win32 MSBuild .targets file copies native DLLs to the build output via \u003CNone\u003E items with CopyToOutputDirectory, but ClickOnce does not pick up these files for its application manifest. A community workaround exists: manually add libSkiaSharp.dll as a Content item in the project.",
   "classification": {
     "type": {
       "value": "type/bug",
-      "confidence": 0.92
+      "confidence": 0.9
     },
     "area": {
       "value": "area/libSkiaSharp.native",
       "confidence": 0.95
     },
     "platforms": [
-      {
-        "value": "os/Windows-Classic",
-        "confidence": 0.97
-      }
+      "os/Windows-Classic"
     ],
     "tenets": [
-      {
-        "value": "tenet/reliability",
-        "confidence": 0.9
-      }
+      "tenet/compatibility",
+      "tenet/reliability"
     ]
   },
   "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET Framework 4.7.2 WinForms app",
+        "Add SkiaSharp NuGet package (3.119.1 or 3.116.0)",
+        "Use SKBitmap.Decode() in the app",
+        "Publish with ClickOnce",
+        "Run the ClickOnce-deployed app"
+      ],
+      "codeSnippets": [
+        "var image = SKBitmap.Decode(imageData ?? throw new ArgumentNullException(nameof(imageData)))"
+      ],
+      "environmentDetails": "Windows 10/11, .NET Framework 4.7.2 WinForms, Visual Studio (Windows), ClickOnce deployment",
+      "relatedIssues": [
+        1327
+      ]
+    },
     "bugSignals": {
-      "hasCrash": true,
-      "hasStackTrace": true,
-      "reproQuality": "partial",
-      "severity": "medium",
-      "severityReason": "Hard crash via DllNotFoundException, but a community-confirmed workaround exists and the issue is specific to ClickOnce deployment \u2014 MSIX works correctly.",
-      "hasWorkaround": true,
-      "workaroundSummary": "Manually add libSkiaSharp.dll from the NativeAssets.Win32 NuGet package (runtimes/win-x64/native/) as an existing item in the VS project, set Build Action to Content and Copy to Output Directory to \u0027Copy if newer\u0027, then verify it appears in ClickOnce Application Files as Include/Required.",
+      "severity": "high",
+      "errorType": "DllNotFoundException",
+      "errorMessage": "Unable to load library \u0027libSkiaSharp\u0027",
+      "stackTrace": "System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027.\n   at SkiaSharp.LibraryLoader.LoadLocalLibrary[T](String libraryName)\n   at System.Lazy\u00601.CreateValue()\n   at System.Lazy\u00601.LazyInitValue()\n   at SkiaSharp.SkiaApi.sk_data_new_empty()\n   at SkiaSharp.SKData..cctor()",
+      "reproQuality": "complete",
       "targetFrameworks": [
         "net472"
       ]
     },
-    "reproEvidence": {
-      "stepsToReproduce": [
-        "Create a .NET Framework 4.7.2 WinForms application",
-        "Add SkiaSharp and SkiaSharp.NativeAssets.Win32 NuGet packages",
-        "Use SKBitmap.Decode() or any SkiaSharp API",
-        "Publish the application using ClickOnce deployment from Visual Studio",
-        "Run the published ClickOnce application \u2014 DllNotFoundException occurs"
-      ],
-      "codeSnippets": [
-        {
-          "code": "var image = SKBitmap.Decode(imageData ?? throw new ArgumentNullException(nameof(imageData)))",
-          "language": "csharp",
-          "context": "Code that triggers the DllNotFoundException when run in a ClickOnce-deployed application"
-        }
-      ],
-      "environmentDetails": ".NET Framework 4.7.2, WinForms, Visual Studio 2022 (Windows), SkiaSharp 3.119.1 (description) / 3.116.0 (version dropdown), Windows 10 and Windows 11, Dell workstations, ClickOnce deployment"
-    },
     "versionAnalysis": {
-      "reason": "SkiaSharp 3.x is the current major version. The issue is about ClickOnce deployment not handling the runtimes/ folder structure from NuGet NativeAssets packages, which persists across versions.",
       "mentionedVersions": [
         "3.119.1",
         "3.116.0"
       ],
-      "currentRelevance": "likely"
+      "currentRelevance": "likely",
+      "relevanceReason": "The NativeAssets.Win32 .targets file still uses \u003CNone\u003E items with CopyToOutputDirectory which ClickOnce does not include in its application manifest. This packaging approach has not changed."
     }
   },
   "analysis": {
-    "summary": "ClickOnce deployment of a .NET Framework 4.7.2 WinForms app fails to include the native libSkiaSharp.dll from the NativeAssets.Win32 NuGet package, causing DllNotFoundException at runtime. This is a well-understood ClickOnce limitation with NuGet runtimes/ directory native assets, not a SkiaSharp code defect. A community workaround exists and is confirmed working by both the reporter and another user.",
+    "summary": "ClickOnce deployment ignores native DLLs added by the SkiaSharp.NativeAssets.Win32 .targets file because they use \u003CNone\u003E with CopyToOutputDirectory=PreserveNewest. ClickOnce requires items to be project Content with explicit application manifest inclusion. The build output (bin/Debug) contains the DLLs correctly, so development works, but ClickOnce publish does not include them. This is a long-standing packaging limitation \u2014 issue #1327 reported the identical problem in 2020.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets",
+        "finding": "The .targets file adds native DLLs as \u003CNone\u003E items with CopyToOutputDirectory=PreserveNewest. This copies DLLs to build output but ClickOnce does not include \u003CNone\u003E items in its application manifest \u2014 only \u003CContent\u003E items are published.",
+        "relevance": "direct",
+        "lines": "10-27"
+      },
+      {
+        "file": "binding/Binding.Shared/LibraryLoader.cs",
+        "finding": "LibraryLoader searches assembly location, current directory, AppDomain paths, and architecture subdirectories (x86/x64/arm64). The loading logic itself is correct \u2014 the problem is the DLL never reaches the deployment directory.",
+        "relevance": "related",
+        "lines": "34-86"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Win32/SkiaSharp.NativeAssets.Win32.csproj",
+        "finding": "Project defines NativeAssetPackageFile items for win-x64, win-x86, win-arm64 which are placed in runtimes/ folder. The buildTransitive/net4/ targets handle net462 deployment.",
+        "relevance": "context"
+      }
+    ],
+    "rationale": "Classified as type/bug because the native DLLs should be deployed with the application but are silently omitted during ClickOnce publish, causing a runtime crash. Area is libSkiaSharp.native since the root cause is how the NativeAssets package delivers the native binary for ClickOnce scenarios. Severity is high because the app crashes on first use of any SkiaSharp API. The existing labels are already accurate.",
     "keySignals": [
       {
-        "text": "System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027",
-        "source": "stack-trace",
-        "interpretation": "Native binary not found at runtime \u2014 the DLL was not deployed to the ClickOnce application directory"
+        "text": "DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027",
+        "source": "issue body",
+        "interpretation": "The native DLL is missing from the deployment \u2014 not a loading-order or dependency issue."
       },
       {
-        "text": "Our MSIX version of the app does not however, and I think its because libSkiaSharp.dylib is not being included in the ClickOnce publish",
-        "source": "body",
-        "interpretation": "User correctly identifies that ClickOnce is not including the native binary, while MSIX does. Points to a deployment mechanism issue, not a missing package."
+        "text": "MSIX version of the app does not however [have this problem]",
+        "source": "issue body",
+        "interpretation": "MSIX handles runtimes/ folder content natively; ClickOnce does not. Confirms packaging mechanism difference is the root cause."
       },
       {
-        "text": ".net winforms app (framework 4.7.2)",
-        "source": "body",
-        "interpretation": ".NET Framework 4.7.2 WinForms \u2014 maps to Windows-Classic platform. Old-style project format may compound ClickOnce native asset issues."
+        "text": "libSkiaSharp.dylib is not being included in the ClickOnce publish",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identified the missing file \u2014 though on Windows it\u0027s libSkiaSharp.dll, not .dylib."
       },
       {
-        "text": "manually add libSkiaSharp.dll from NativeAssets.Win32 package as Content with Copy if newer",
-        "source": "comment 2",
-        "interpretation": "Community-confirmed workaround that addresses the deployment gap by forcing the native DLL into the ClickOnce output"
+        "text": "right click on the added dll file, Properties, select Build Action = Content and Copy to Output Directory = Copy if newer",
+        "source": "comment #2 (ERPCG)",
+        "interpretation": "Community-confirmed workaround: manually adding the DLL as Content forces ClickOnce to include it in the application manifest."
       },
       {
-        "text": "That was how if I fixed it too. Had a similar issue with the native DLLs that are supposed to be part of Microsoft.Data.SqlClient",
-        "source": "comment 3",
-        "interpretation": "OP confirms the workaround and notes this is a broader ClickOnce issue affecting multiple NuGet packages with native assets"
+        "text": "That was how I fixed it too",
+        "source": "comment #3 (OP)",
+        "interpretation": "OP confirms the workaround resolves the issue. Two independent confirmations."
       }
     ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "The native binary fails to deploy in ClickOnce, causing a DllNotFoundException crash. While this is arguably a ClickOnce tooling limitation rather than a SkiaSharp code defect, the user\u0027s app breaks when using SkiaSharp with ClickOnce, which qualifies as a bug from the user\u0027s perspective.",
-        "alternatives": [
-          {
-            "value": "type/question",
-            "whyRejected": "Not asking how to do something \u2014 reporting a hard crash in a deployment scenario."
-          },
-          {
-            "value": "type/enhancement",
-            "whyRejected": "Could argue SkiaSharp should add ClickOnce-friendly packaging, but the immediate issue is broken behavior, not a feature gap."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/libSkiaSharp.native",
-        "expandedReason": "DllNotFoundException for the native library. The issue is about native binary deployment, not the managed C# API.",
-        "alternatives": [
-          {
-            "value": "area/SkiaSharp",
-            "whyRejected": "The managed SkiaSharp code works correctly \u2014 the issue is the native binary not being present at runtime."
-          },
-          {
-            "value": "area/Build",
-            "whyRejected": "The build succeeds. The issue is in the ClickOnce publish/deployment step, which is outside SkiaSharp\u0027s build system."
-          }
-        ]
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/Windows-Classic",
-        "expandedReason": ".NET Framework 4.7.2 WinForms is definitively Windows-Classic (Win32 APIs). ClickOnce is a Windows-Classic deployment mechanism."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/reliability",
-        "expandedReason": "The application crashes with an unhandled TypeInitializationException/DllNotFoundException. The app fails to function at all when deployed via ClickOnce."
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "medium",
-        "expandedReason": "Hard crash (DllNotFoundException) but a workaround exists and is confirmed by multiple users. The issue is specific to one deployment method (ClickOnce) while others (MSIX) work.",
-        "alternatives": [
-          {
-            "value": "high",
-            "whyRejected": "Workaround exists and is confirmed by OP. Other deployment methods work."
-          },
-          {
-            "value": "critical",
-            "whyRejected": "Not data loss or security. Deployment-specific with a known workaround."
-          }
-        ]
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "close-with-docs",
-        "expandedReason": "The root cause is a ClickOnce limitation, not a SkiaSharp defect. A confirmed workaround exists. The issue could be closed with the documented workaround. However, human review is recommended because SkiaSharp might want to keep this open to track potential packaging improvements.",
-        "alternatives": [
-          {
-            "value": "keep-open",
-            "whyRejected": "Valid option if the team wants to investigate ClickOnce-friendly packaging. Marked requiresHumanReview for this reason."
-          },
-          {
-            "value": "needs-investigation",
-            "whyRejected": "The root cause and workaround are already known. No further investigation needed."
-          }
-        ]
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "ClickOnce native asset deployment issue persists across SkiaSharp 3.x versions (3.116.0, 3.119.1) due to the runtimes/ folder convention used by NativeAssets packages. The root cause is a ClickOnce tooling limitation, not version-specific."
-      }
+    "errorFingerprint": "DllNotFoundException-libSkiaSharp-ClickOnce-net4",
+    "workarounds": [
+      "Manually add libSkiaSharp.dll to the project as Content (Build Action=Content, Copy if newer). Find the DLL at packages/SkiaSharp.NativeAssets.Win32.{version}/runtimes/win-{arch}/native/libSkiaSharp.dll. Choose win-x64 for x64 or win-x86 for x86/AnyCPU.",
+      "Use MSIX deployment instead of ClickOnce \u2014 MSIX correctly handles the runtimes/ native assets."
     ],
-    "uncertainties": [
-      "Whether SkiaSharp\u0027s NuGet packaging could be improved to better support ClickOnce (e.g., including native DLLs outside the runtimes/ folder for .NET Framework targets)",
-      "Whether the user\u0027s project uses packages.config or PackageReference \u2014 this affects how NuGet native assets are handled",
-      "The user mentions libSkiaSharp.dylib (macOS binary name) in the description but is on Windows \u2014 likely a terminology confusion"
-    ],
-    "assumptions": [
-      "Assumed the user has SkiaSharp.NativeAssets.Win32 correctly referenced, since MSIX deployment works and the issue is ClickOnce-specific",
-      "Assumed .NET Framework project format (not SDK-style) since it\u0027s .NET Framework 4.7.2 WinForms \u2014 this affects NuGet asset handling"
+    "nextQuestions": [
+      "Should the NativeAssets.Win32 .targets file use \u003CContent\u003E instead of \u003CNone\u003E for ClickOnce compatibility, or would that have side effects for other project types?",
+      "Is there a way to conditionally use \u003CContent\u003E only when ClickOnce publishing is detected?"
     ],
     "resolution": {
-      "hypothesis": "ClickOnce deployment does not automatically include native binaries from NuGet packages that use the runtimes/{rid}/native/ directory convention. The SkiaSharp.NativeAssets.Win32 package places libSkiaSharp.dll in runtimes/win-x64/native/ (and win-x86), but ClickOnce\u0027s Application Files mechanism doesn\u0027t discover files in this path structure. MSIX handles this correctly because it processes the full output directory layout.",
+      "hypothesis": "ClickOnce deployment only publishes items with Build Action=Content in the application manifest. The NativeAssets.Win32 .targets file uses \u003CNone\u003E with CopyToOutputDirectory, which works for MSBuild output but not ClickOnce manifests.",
       "proposals": [
         {
-          "title": "Manual DLL inclusion as Content (confirmed workaround)",
-          "description": "Manually add libSkiaSharp.dll from the NativeAssets.Win32 package to the project as Content with \u0027Copy if newer\u0027. This forces ClickOnce to include the native binary. Confirmed working by multiple users, but must be repeated when updating SkiaSharp version.",
+          "description": "Manually add the architecture-specific libSkiaSharp.dll to the project as a Content item. This forces ClickOnce to include it in the application manifest and deploy it. Steps: (1) Copy libSkiaSharp.dll from the NuGet package cache (packages/SkiaSharp.NativeAssets.Win32.{version}/runtimes/win-{arch}/native/), (2) Add to project via \u0027Add Existing Item\u0027, (3) Set Build Action=Content and Copy to Output Directory=Copy if newer, (4) Verify it appears in Publish \u003E Application Files with Action=Include.",
+          "title": "Manual Content inclusion workaround",
           "confidence": 0.95,
-          "effort": "low"
+          "effort": "trivial"
         },
         {
-          "title": "MSBuild targets for ClickOnce-compatible native asset deployment",
-          "description": "Add MSBuild targets to SkiaSharp.NativeAssets.Win32 that detect ClickOnce/.NET Framework projects and copy native DLLs to the output directory as content files, bypassing the runtimes/ directory structure. Permanent fix but requires ClickOnce MSBuild integration work.",
+          "description": "Modify the NativeAssets.Win32 buildTransitive/net4/SkiaSharp.targets to use \u003CContent\u003E instead of \u003CNone\u003E for native DLL items, so ClickOnce includes them in the application manifest. This may need to be conditional to avoid side effects for non-ClickOnce projects.",
+          "title": "Fix .targets to use Content for ClickOnce",
           "confidence": 0.6,
-          "effort": "medium"
+          "effort": "small"
         },
         {
+          "description": "Use MSIX packaging instead of ClickOnce. MSIX correctly handles runtimes/ folder native assets from NuGet packages without manual intervention.",
           "title": "Switch to MSIX deployment",
-          "description": "Migrate the application from ClickOnce to MSIX deployment, which correctly handles the runtimes/ native asset structure. User confirmed MSIX already works, but this is a significant deployment infrastructure change.",
-          "confidence": 0.85,
-          "effort": "high"
+          "confidence": 0.9,
+          "effort": "medium"
         }
       ],
-      "recommendedProposal": "Manual DLL inclusion as Content (confirmed workaround)",
-      "recommendedReason": "Already confirmed working by both the reporter and another community member. Zero risk, low effort, and immediately actionable."
+      "recommendedProposal": "Manual Content inclusion workaround",
+      "recommendedReason": "Already confirmed working by both the community member and the OP. Trivial effort and no risk of side effects to other project types."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "close-with-docs",
-      "confidence": 0.75,
-      "reason": "The root cause is a ClickOnce limitation with NuGet runtimes/ native assets, not a SkiaSharp defect. A community-confirmed workaround exists. However, human review is recommended \u2014 the team may want to keep this open to track packaging improvements.",
-      "requiresHumanReview": true
+      "confidence": 0.8,
+      "reason": "The OP confirmed the workaround resolves the issue. This is a known ClickOnce limitation with NuGet runtimes/ native assets. The workaround is well-documented in the comments. However, a packaging fix in the .targets file could prevent future occurrences."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Add tenet/compatibility label (ClickOnce deployment compatibility issue)",
         "risk": "low",
-        "description": "Labels already match classification \u2014 no changes needed",
-        "reason": "Current labels (type/bug, area/libSkiaSharp.native, os/Windows-Classic, tenet/reliability) already match the triage classification exactly",
-        "confidence": 0.97,
-        "payload": {
-          "labelsToAdd": [],
-          "labelsToRemove": []
-        }
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Windows-Classic",
+          "tenet/compatibility",
+          "tenet/reliability"
+        ]
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Acknowledge the workaround and provide structured guidance",
         "risk": "high",
-        "description": "Post response acknowledging the workaround and explaining root cause",
-        "reason": "The workaround is confirmed by multiple users and root cause is well-understood. A closing comment would document the resolution for future visitors.",
-        "confidence": 0.8,
-        "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "answer",
-          "draftBody": "Thanks for the detailed report and stack trace \u2014 and @ERPCG, thanks for documenting the workaround so thoroughly.\n\nThis is a known limitation of ClickOnce deployment with NuGet packages that use the \u0060runtimes/\u0060 folder convention for native assets. ClickOnce doesn\u0027t automatically pick up files from the \u0060runtimes/{rid}/native/\u0060 directory structure that \u0060SkiaSharp.NativeAssets.Win32\u0060 uses. MSIX handles this correctly because it processes the full NuGet output layout.\n\nThe workaround @ERPCG described is the right approach for ClickOnce:\n1. Locate \u0060libSkiaSharp.dll\u0060 in \u0060packages\\SkiaSharp.NativeAssets.Win32.{version}\\runtimes\\win-x64\\native\\\u0060 (or \u0060win-x86\u0060 for 32-bit)\n2. Add it to your project as an existing item\n3. Set **Build Action = Content** and **Copy to Output = Copy if newer**\n4. Verify it appears in **Project \u2192 Properties \u2192 Publish \u2192 Application Files** as Include/Required\n\nThis isn\u0027t specific to SkiaSharp \u2014 other packages with native assets (like Microsoft.Data.SqlClient, as @ajohnstone-ks noted) hit the same ClickOnce limitation.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-3423-comment-1"
-        }
+        "confidence": 0.85,
+        "comment": "Thanks for reporting this, and thanks @ERPCG for the detailed workaround.\n\nThis is a known limitation with ClickOnce and NuGet packages that deliver native binaries via the \u0060runtimes/\u0060 folder convention. ClickOnce only publishes items with \u0060Build Action = Content\u0060 in its application manifest, but the SkiaSharp NativeAssets package adds the DLLs as \u0060\u003CNone\u003E\u0060 items \u2014 which copies them to build output but not to the ClickOnce deployment.\n\nHere\u0027s the workaround (confirmed working by both reporters):\n\n1. Locate \u0060libSkiaSharp.dll\u0060 in your NuGet cache:\n   \u0060packages\\SkiaSharp.NativeAssets.Win32.{version}\\runtimes\\win-x64\\native\\\u0060 (use \u0060win-x86\u0060 for x86/AnyCPU)\n2. Add it to your project via **Add \u2192 Existing Item**\n3. Set **Build Action = Content** and **Copy to Output Directory = Copy if newer**\n4. Verify it appears in **Publish \u2192 Application Files** with **Action = Include**\n\nAlternatively, MSIX deployment handles native assets correctly without this manual step.\n\nRelated: #1327 (same issue reported in 2020)."
       },
       {
-        "id": "close-1",
-        "type": "close-issue",
-        "risk": "medium",
-        "description": "Close as answered with workaround documented",
-        "reason": "Root cause is a ClickOnce tooling limitation, not a SkiaSharp defect. Workaround confirmed by reporter.",
-        "confidence": 0.7,
-        "dependsOn": "comment-1",
-        "payload": {
-          "reason": "completed",
-          "comment": null
-        }
+        "type": "link-related",
+        "description": "Cross-reference #1327 (identical ClickOnce \u002B libSkiaSharp issue)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 1327
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/3423"
+  }
 }

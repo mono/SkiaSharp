@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-02-12T16:27:03.8753336Z",
-  "totalCount": 27,
+  "generatedAt": "2026-02-12T16:49:35.6140336Z",
+  "totalCount": 39,
   "summary": {
-    "needsInvestigation": 7,
-    "closeable": 7,
-    "quickWins": 7,
-    "regressions": 7,
+    "needsInvestigation": 11,
+    "closeable": 9,
+    "quickWins": 9,
+    "regressions": 8,
     "withRepro": 0,
     "reproduced": 0,
     "notReproduced": 0
@@ -13,15 +13,15 @@
   "byType": [
     {
       "label": "type/bug",
-      "count": 17
+      "count": 25
     },
     {
       "label": "type/question",
-      "count": 3
+      "count": 5
     },
     {
       "label": "type/feature-request",
-      "count": 3
+      "count": 5
     },
     {
       "label": "type/documentation",
@@ -35,15 +35,15 @@
   "byArea": [
     {
       "label": "area/SkiaSharp",
-      "count": 10
+      "count": 15
+    },
+    {
+      "label": "area/libSkiaSharp.native",
+      "count": 9
     },
     {
       "label": "area/SkiaSharp.Views",
       "count": 6
-    },
-    {
-      "label": "area/libSkiaSharp.native",
-      "count": 4
     },
     {
       "label": "area/SkiaSharp.Views.Forms",
@@ -59,25 +59,29 @@
     },
     {
       "label": "area/SkiaSharp.Views.Maui",
+      "count": 2
+    },
+    {
+      "label": "area/SkiaSharp.Views.Blazor",
       "count": 1
     }
   ],
   "byAction": [
     {
       "label": "needs-investigation",
-      "count": 7
+      "count": 11
     },
     {
       "label": "close-with-docs",
-      "count": 6
+      "count": 10
     },
     {
       "label": "keep-open",
-      "count": 6
+      "count": 8
     },
     {
       "label": "close-as-fixed",
-      "count": 4
+      "count": 5
     },
     {
       "label": "close-as-duplicate",
@@ -85,17 +89,17 @@
     },
     {
       "label": "request-info",
-      "count": 1
+      "count": 2
     }
   ],
   "bySeverity": [
     {
       "label": "medium",
-      "count": 9
+      "count": 13
     },
     {
       "label": "high",
-      "count": 4
+      "count": 8
     },
     {
       "label": "low",
@@ -107,6 +111,194 @@
     }
   ],
   "issues": [
+    {
+      "number": 3428,
+      "title": "SKGLView in MAUI on iOS fails with \u0027Failed to bind EAGLDrawable\u0027 on .NET 10, resulting in a white canvas with no rendering. The iOS MAUI handler uses OpenGL ES (GLKView \u002B EAGLContext) which Apple deprecated in iOS 12. The Mac Catalyst handler already uses Metal (SKMetalView), but the iOS handler still relies on the deprecated EAGL/GLKit path. .NET 10 likely tightened or broke GLKit support, surfacing this as a runtime failure. SkiaSharp 3.116.0 on iOS via Mapsui MapControl.",
+      "issueTitle": "[BUG] Failed to bind EAGLDrawable on .NET 10 in MAUI iOS",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Maui",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": true,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:41:26Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3423,
+      "title": "ClickOnce deployment on .NET Framework 4.7.2 fails to include libSkiaSharp.dll in the published application, causing DllNotFoundException at runtime. The MSIX version of the same app works fine. The NativeAssets.Win32 MSBuild .targets file copies native DLLs to the build output via \u003CNone\u003E items with CopyToOutputDirectory, but ClickOnce does not pick up these files for its application manifest. A community workaround exists: manually add libSkiaSharp.dll as a Content item in the project.",
+      "issueTitle": "[BUG] .Net Framework 4.7.2 ClickOnce package -  Unable to load library \u0027libSkiaSharp\u0027",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "high",
+      "action": "close-with-docs",
+      "confidence": 0.8,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:41:26Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3422,
+      "title": "SkiaSharp fails on Blazor WASM with .NET 10: TypeInitializationException for SKImageInfo / DllNotFoundException for libSkiaSharp. Root cause is SkiaSharp does not yet officially target net10.0 \u2014 the Blazor package ships net6.0/net8.0 only, and the pre-built WASM static libraries (.a) may not match .NET 10\u0027s Emscripten version. The wasm-tools workload must also be explicitly installed. PR #3514 tracks adding .NET 10 support.",
+      "issueTitle": "[BUG] Blazor WASM NET10 -",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:41:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3421,
+      "title": "Animation.Create() returns null for .lottie files because .lottie is a ZIP archive (dotLottie format), not raw Lottie JSON",
+      "issueTitle": "[BUG] Loading .lottie file results in null SkiaSharp.Skottie.Animation",
+      "type": "type/question",
+      "area": "area/SkiaSharp",
+      "action": "close-with-docs",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:35:28Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3420,
+      "title": "Android 16 KB page size support for libSkiaSharp.so \u2014 already fixed in SkiaSharp 3.116.1\u002B via PR #3096 (NDK r27c \u002B max-page-size=16384 linker flag). Reporter used v2.88.6 which will not receive the fix. Duplicate of #3419.",
+      "issueTitle": "[BUG] Android 16 KB page size support for libSkiaSharp.so",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "medium",
+      "action": "close-as-fixed",
+      "confidence": 0.95,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:36:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3402,
+      "title": "Feature request: support drawing to/from compressed indexed color bitmaps (1bpp, 2bpp, 4bpp) for retro game graphics in Avalonia UI",
+      "issueTitle": "[FEATURE] Drawing to and from compressed indexed color bitmaps",
+      "type": "type/feature-request",
+      "area": "area/SkiaSharp",
+      "action": "keep-open",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:36:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3400,
+      "title": "SKDocument.CreateXps() renders embedded SVG \u003Cimage\u003E elements at incorrect (smaller) dimensions, while CreatePdf() renders them correctly \u2014 upstream Skia XPS backend bug in SkXPSDevice image handling",
+      "issueTitle": "[BUG] SKDocument.CreateXps() incorrectly scales \u003Cimage\u003E elements from SVG, while CreatePdf() renders correctly",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:30:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3398,
+      "title": "Intermittent native crash in sk_canvas_draw_path when Mapsui calls GetMapInfo during PointerMoved events on Avalonia desktop",
+      "issueTitle": "[BUG] crash when avalonia desktop run.",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "request-info",
+      "confidence": 0.75,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:30:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3396,
+      "title": "User cannot get SkiaSharp to work on Unity WebGL. They get DllNotFoundException for libSkiaSharp in the browser console. They have tried the NativeAssets.WebAssembly NuGet package and multiple Unity versions (2021.2, 2022.3). SkiaSharp\u0027s WASM support uses static linking via MSBuild NativeFileReference, which only works with .NET SDK builds (Blazor, Uno). Unity WebGL uses its own Emscripten-based build pipeline that doesn\u0027t go through MSBuild, so the NativeAssets.WebAssembly package\u0027s build targets never fire. Unity is not an officially supported platform.",
+      "issueTitle": "[FEATURE] \u003Ctitle\u003ECan\u0027t get it to work on Unity WebGL",
+      "type": "type/question",
+      "area": "area/libSkiaSharp.native",
+      "action": "close-with-docs",
+      "confidence": 0.75,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:28:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3393,
+      "title": "SkiaSharp\u0027s P/Invoke wrapper methods do not call GC.KeepAlive() on managed parameters after native calls, allowing the .NET GC to prematurely collect objects whose IntPtr handles are still in use by native Skia code. This is a systemic issue affecting ~910 P/Invoke call sites across 50\u002B files in binding/SkiaSharp/, with only 14 existing GC.KeepAlive calls. Under GC pressure (especially on mobile/Android), this race condition can cause crashes, data corruption, or AccessViolationExceptions. Version 3.116.0 is reported, but this has existed since the library\u0027s inception.",
+      "issueTitle": "[BUG] P/Invokes should protect parameters across invocations",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:23:33Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3386,
+      "title": "DllNotFoundException deploying SkiaSharp with NativeAssets.Linux.NoDependencies via .NET Aspire to Azure Container Apps \u2014 wrong native binary deployed",
+      "issueTitle": "[BUG] Unable to load on Azure Container app with Aspire",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "medium",
+      "action": "close-with-docs",
+      "confidence": 0.7,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:25:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3385,
+      "title": "Request for SKColorType.Gray16 to support 16-bit grayscale PNGs \u2014 blocked by upstream Skia which lacks kGray_16_SkColorType and explicitly strips 16-bit gray to 8-bit in its PNG decoder.",
+      "issueTitle": "[FEATURE] Gray16 support",
+      "type": "type/feature-request",
+      "area": "area/SkiaSharp",
+      "action": "keep-open",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:23:34Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
     {
       "number": 3379,
       "title": "SkiaSharp.Views.WPF references OpenTK.GLWpfControl 3.3.0 for .NET Framework targets, which is not strong-named. This causes FileLoadException in applications that enable strong-name signing (SignAssembly), since all dependencies must also be strong-named. OpenTK.GLWpfControl 3.3.1 added strong-name signing, so bumping the version from 3.3.0 to 3.3.1 resolves the issue. A community PR #3380 already proposes this fix.",
