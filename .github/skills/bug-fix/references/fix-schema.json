@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/fix-schema.json",
+  "title": "SkiaSharp Bug Fix",
+  "description": "Per-issue AI bug fix output v1.0. Captures root cause analysis, code changes, test results, verification, and upstream corrections. Complements ai-triage (classification) and ai-repro (reproduction) — records only what the fix step discovers.",
+  "type": "object",
+  "required": ["meta", "status", "summary", "rootCause", "changes", "tests", "verification"],
+  "additionalProperties": false,
+  "$defs": {
+    "rootCauseCategory": {
+      "type": "string",
+      "enum": [
+        "logic-error",
+        "memory-safety",
+        "threading",
+        "api-misuse",
+        "dependency",
+        "upstream-skia",
+        "missing-feature",
+        "other"
+      ],
+      "description": "What kind of bug. logic-error=wrong logic/calculation. memory-safety=use-after-free/buffer overrun/disposal. threading=race condition/deadlock. api-misuse=incorrect Skia API usage in C shim. dependency=third-party library issue. upstream-skia=bug in Google's Skia. missing-feature=feature not yet exposed. other=none of the above."
+    },
+    "rootCauseArea": {
+      "type": "string",
+      "enum": ["managed", "binding", "native", "build", "packaging", "tests", "docs"],
+      "description": "Which layer of the stack. managed=C# wrapper code. binding=P/Invoke declarations. native=C API shim or Skia C++. build=build scripts/cake. packaging=NuGet/runtime packaging. tests=test infrastructure. docs=documentation only."
+    },
+    "changeType": {
+      "type": "string",
+      "enum": ["added", "modified", "removed"],
+      "description": "How the file was changed."
+    },
+    "riskLevel": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "low=isolated change, no ABI impact. medium=touches public API or multiple files. high=ABI change, breaking change, or broad impact."
+    },
+    "testResult": {
+      "type": "string",
+      "enum": ["pass", "fail", "not-run"],
+      "description": "pass=all tests passed. fail=test(s) failed. not-run=tests were not executed."
+    },
+    "reproScenarioResult": {
+      "type": "string",
+      "enum": ["passed", "failed", "not-run", "not-applicable"],
+      "description": "passed=repro scenario no longer reproduces after fix. failed=still reproduces. not-run=repro not executed. not-applicable=no repro exists."
+    },
+    "prStatus": {
+      "type": "string",
+      "enum": ["draft", "open", "merged", "closed"],
+      "description": "Current PR state."
+    },
+    "fixStatus": {
+      "type": "string",
+      "enum": ["in-progress", "fixed", "cannot-fix", "needs-info", "duplicate"],
+      "description": "in-progress=still working. fixed=fix verified and PR ready/merged. cannot-fix=requires upstream change or infeasible. needs-info=blocked on missing information. duplicate=duplicate of another issue."
+    },
+    "correctionSource": {
+      "type": "string",
+      "enum": ["triage", "repro"],
+      "description": "Which upstream step is being corrected."
+    }
+  },
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["schemaVersion", "number", "repo", "analyzedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "1.0"
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "GitHub issue number."
+        },
+        "repo": {
+          "type": "string",
+          "description": "Repository in owner/name format.",
+          "pattern": "^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$"
+        },
+        "analyzedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp of when fix analysis was performed."
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "triageFile": {
+          "type": "string",
+          "description": "Relative path to ai-triage JSON if consumed, e.g. 'ai-triage/2997.json'."
+        },
+        "reproFile": {
+          "type": "string",
+          "description": "Relative path to ai-repro JSON if consumed, e.g. 'ai-repro/2997.json'."
+        }
+      }
+    },
+    "status": {
+      "$ref": "#/$defs/fixStatus"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 10,
+      "description": "One-line summary of what was fixed and how."
+    },
+    "rootCause": {
+      "type": "object",
+      "required": ["category", "area", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/rootCauseCategory"
+        },
+        "area": {
+          "$ref": "#/$defs/rootCauseArea"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 20,
+          "description": "What was wrong and why. Include the specific code path and the logic error."
+        },
+        "affectedFiles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Source files involved in the root cause (not necessarily all changed files)."
+        }
+      }
+    },
+    "changes": {
+      "type": "object",
+      "required": ["files", "breakingChange", "risk"],
+      "additionalProperties": false,
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "changeType", "summary"],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Relative file path from repo root."
+              },
+              "changeType": {
+                "$ref": "#/$defs/changeType"
+              },
+              "summary": {
+                "type": "string",
+                "description": "What changed in this file and why."
+              }
+            }
+          }
+        },
+        "breakingChange": {
+          "type": "boolean",
+          "description": "Whether the fix changes public API behavior or ABI."
+        },
+        "risk": {
+          "$ref": "#/$defs/riskLevel"
+        }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "required": ["regressionTestAdded", "result"],
+      "additionalProperties": false,
+      "properties": {
+        "regressionTestAdded": {
+          "type": "boolean",
+          "description": "Whether a regression test was added for this fix."
+        },
+        "testsAdded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file", "name"],
+            "additionalProperties": false,
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Test file path relative to repo root."
+              },
+              "name": {
+                "type": "string",
+                "description": "Test method name."
+              }
+            }
+          }
+        },
+        "command": {
+          "type": "string",
+          "description": "Test command that was run."
+        },
+        "result": {
+          "$ref": "#/$defs/testResult"
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": ["reproScenario"],
+      "additionalProperties": false,
+      "properties": {
+        "reproScenario": {
+          "$ref": "#/$defs/reproScenarioResult"
+        },
+        "notes": {
+          "type": "string",
+          "description": "How verification went — what was tested and what the outcome was."
+        }
+      }
+    },
+    "pr": {
+      "type": "object",
+      "required": ["url", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "type": "integer",
+          "description": "PR number."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "PR URL."
+        },
+        "status": {
+          "$ref": "#/$defs/prStatus"
+        }
+      }
+    },
+    "feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "corrections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source", "topic", "upstream", "corrected"],
+            "additionalProperties": false,
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/correctionSource"
+              },
+              "topic": {
+                "type": "string",
+                "description": "What category of finding was corrected, e.g. 'classification', 'scope', 'root-cause', 'affected-platforms'."
+              },
+              "upstream": {
+                "type": "string",
+                "description": "What the upstream step (triage or repro) said or concluded."
+              },
+              "corrected": {
+                "type": "string",
+                "description": "What the fix step actually found to be true."
+              }
+            }
+          },
+          "description": "Corrections to findings from triage or repro steps."
+        }
+      },
+      "description": "Feedback on upstream pipeline steps."
+    },
+    "relatedIssues": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "description": "Other GitHub issue numbers related to or fixed by the same PR."
+    }
+  }
+}

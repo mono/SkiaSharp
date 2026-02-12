@@ -24,8 +24,9 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
   "conclusion": "reproduced",
   "notes": "Confirmed: SKMatrix.MapRect normalizes the output rect by sorting its coordinates. When a matrix contains a negative X-scale (e.g. ScaleX = -1), the mapped rect has Left/Right swapped back to ascending order, losing the sign of the scale. Reproduced on both 2.88.9 (reporter's version) and latest 3.116.1. The bug persists across all tested versions.",
   "reproductionTime": "~10 minutes",
-  "triageFile": "ai-triage/2997.json",
-  "triageNotes": "Triage correctly identified this as a C# wrapper issue in SKMatrix. The suggested area (binding/SkiaSharp/SKMatrix.cs) was accurate.",
+  "inputs": {
+    "triageFile": "ai-triage/2997.json"
+  },
   "versionResults": [
     {
       "version": "2.88.9",
@@ -66,8 +67,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
           "description": "Console app that creates SKMatrix.CreateScale(-2, 1), calls MapRect on unit rect, prints Left/Top/Right/Bottom values.",
           "content": "using SkiaSharp;\n\nvar matrix = SKMatrix.CreateScale(-2, 1);\nvar source = new SKRect(0, 0, 1, 1);\nvar mapped = matrix.MapRect(source);\n\nConsole.WriteLine($\"Matrix: ScaleX={matrix.ScaleX}, ScaleY={matrix.ScaleY}\");\nConsole.WriteLine($\"Input:  SKRect({source.Left}, {source.Top}, {source.Right}, {source.Bottom})\");\nConsole.WriteLine($\"Output: SKRect({mapped.Left}, {mapped.Top}, {mapped.Right}, {mapped.Bottom})\");\nConsole.WriteLine($\"Expected Left=-2, Right=0\");\nConsole.WriteLine(mapped.Left == -2 ? \"PASS\" : \"BUG: MapRect normalized the rect\");"
         }
-      ],
-      "result": null
+      ]
     },
     {
       "stepNumber": 3,
@@ -86,11 +86,8 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
       "result": "failure"
     }
   ],
-  "artifacts": null,
   "errorMessages": {
-    "primaryError": "MapRect normalizes output rect, losing negative scale orientation",
-    "stackTrace": null,
-    "additionalErrors": null
+    "primaryError": "MapRect normalizes output rect, losing negative scale orientation"
   },
   "environment": {
     "os": "macOS 15.3",
@@ -98,8 +95,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
     "dotnetVersion": "10.0.100",
     "skiaSharpVersion": "2.88.9 (reporter), 3.116.1 (latest)",
     "dockerUsed": false
-  },
-  "blockers": null
+  }
 }
 ```
 
@@ -130,8 +126,7 @@ colors are wrong.
   "conclusion": "wrong-output",
   "notes": "Reproduced color inversion when decoding the reporter's test image (srgb-palette.png). The decoded bitmap has R and B channels swapped compared to the source. Saved the decoded output as decoded-output.png for comparison. This affects only palette-based PNGs with an embedded sRGB profile; JPEG and non-palette PNG decode correctly.",
   "reproductionTime": "~12 minutes",
-  "triageFile": null,
-  "triageNotes": null,
+  
   "versionResults": [
     {
       "version": "3.119.0-preview.2",
@@ -165,8 +160,7 @@ colors are wrong.
           "filename": "Program.cs",
           "description": "Console app that loads srgb-palette.png with SKBitmap.Decode, then encodes to PNG and saves as decoded-output.png."
         }
-      ],
-      "result": null
+      ]
     },
     {
       "stepNumber": 3,
@@ -197,11 +191,9 @@ colors are wrong.
       "filename": "decoded-output.png",
       "description": "Output produced by the reproduction program showing inverted colors.",
       "source": "generated",
-      "url": null,
       "available": true
     }
   ],
-  "errorMessages": null,
   "environment": {
     "os": "macOS 15.3",
     "arch": "arm64",
@@ -212,8 +204,7 @@ colors are wrong.
       "backend": "CPU",
       "available": false
     }
-  },
-  "blockers": null
+  }
 }
 ```
 
@@ -244,8 +235,7 @@ is macOS only — Linux is unavailable.
   "conclusion": "partial",
   "notes": "Tested on macOS arm64 — the font loads and renders successfully with no crash. The reporter's crash occurs only on Linux x64 (Ubuntu 22.04). Docker is not available in this environment so the Linux reproduction path could not be attempted. The font file itself is valid (FreeType and macOS CoreText both parse it), suggesting the crash may be related to Linux-specific font backend behavior in Skia.",
   "reproductionTime": "~15 minutes",
-  "triageFile": null,
-  "triageNotes": null,
+  
   "versionResults": [
     {
       "version": "3.116.1",
@@ -279,8 +269,7 @@ is macOS only — Linux is unavailable.
           "filename": "Program.cs",
           "description": "Console app that loads CustomSerif.otf with SKTypeface.FromFile, draws 'Hello World' to a bitmap, and saves as output.png."
         }
-      ],
-      "result": null
+      ]
     },
     {
       "stepNumber": 3,
@@ -308,7 +297,6 @@ is macOS only — Linux is unavailable.
       "available": false
     }
   ],
-  "errorMessages": null,
   "environment": {
     "os": "macOS 15.3",
     "arch": "arm64",

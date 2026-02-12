@@ -2,26 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mono/SkiaSharp/repro-schema.json",
   "title": "SkiaSharp Bug Reproduction",
-  "description": "Per-issue AI bug reproduction v1.0. Captures systematic reproduction attempts with step-by-step results, environment details, and binary artifact references. Output limits: 2KB per step (4KB for failure steps), 50 lines for stack traces. Absolute paths containing usernames must be redacted.",
+  "description": "Per-issue AI bug reproduction v2.0. Captures systematic reproduction attempts with step-by-step results, environment details, and binary artifact references. Output limits: 2KB per step (4KB for failure steps), 50 lines for stack traces. Absolute paths containing usernames must be redacted.",
   "type": "object",
-  "required": [
-    "meta",
-    "conclusion",
-    "notes",
-    "reproductionSteps",
-    "environment"
-  ],
+  "required": ["meta", "conclusion", "notes", "reproductionSteps", "environment"],
   "additionalProperties": false,
   "$defs": {
     "stepResult": {
       "type": "string",
       "enum": ["success", "failure", "wrong-output", "skip"],
-      "description": "TECHNICAL outcome only — NOT whether it matched expectations. success=command exited 0, build succeeded, code ran. failure=command exited non-zero, build failed, exception thrown (EVEN IF this failure is exactly what the reporter described — a build that fails with CS0117 is result='failure'). DO NOT mark 'success' just because the failure was expected. wrong-output=process ran without error but output is visually/logically incorrect. skip=step was skipped."
+      "description": "TECHNICAL outcome only — NOT whether it matched expectations. success=command exited 0. failure=command exited non-zero or exception thrown (EVEN IF this confirms the bug). wrong-output=process ran without error but output is incorrect. skip=step was skipped."
     },
     "stepLayer": {
       "type": "string",
       "enum": ["csharp", "c-api", "native", "deployment", "setup"],
-      "description": "Which layer of the SkiaSharp stack this step exercises. setup=project creation/restore, csharp=C# wrapper, c-api=C shim layer, native=Skia C++, deployment=packaging/runtime loading."
+      "description": "Which layer of the SkiaSharp stack this step exercises."
     },
     "conclusionValue": {
       "type": "string",
@@ -34,12 +28,12 @@
         "partial",
         "inconclusive"
       ],
-      "description": "FACTUAL observation of whether reported behavior occurred. reproduced=reported behavior was observed (crash/exception/error/wrong value — even if 'working as designed'). not-reproduced=reported behavior was NOT observed (steps passed when reporter said they'd fail). wrong-output=process succeeded but output incorrect (visual/rendering bugs). needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced. inconclusive=insufficient info."
+      "description": "FACTUAL observation of whether reported behavior occurred. reproduced=reported behavior was observed (even if 'working as designed'). not-reproduced=reported behavior was NOT observed. wrong-output=process succeeded but output incorrect. needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced. inconclusive=insufficient info."
     },
     "artifactSource": {
       "type": "string",
       "enum": ["issue-attachment", "test-data", "generated", "external"],
-      "description": "Where the binary artifact comes from. issue-attachment=from the GitHub issue, test-data=from tests/SkiaSharp.Tests.Console/ (PathToImages/PathToFonts), generated=created during reproduction, external=from an external URL."
+      "description": "Where the binary artifact comes from."
     }
   },
   "properties": {
@@ -50,8 +44,8 @@
       "properties": {
         "schemaVersion": {
           "type": "string",
-          "enum": ["1.0", "1.1"],
-          "description": "Schema version. Use 1.1 for new reports (adds stronger step outcome validation)."
+          "const": "1.0",
+          "description": "Schema version."
         },
         "number": {
           "type": "integer",
@@ -70,112 +64,91 @@
         }
       }
     },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "triageFile": {
+          "type": "string",
+          "description": "Relative path to ai-triage JSON if consumed, e.g. 'ai-triage/2997.json'."
+        }
+      },
+      "description": "Upstream pipeline files consumed by this step."
+    },
     "conclusion": {
       "$ref": "#/$defs/conclusionValue"
     },
     "notes": {
       "type": "string",
       "minLength": 10,
-      "description": "Free-text summary of reproduction results for humans. Explain what was tried and what happened."
+      "description": "Free-text summary of reproduction results for humans."
     },
     "assessment": {
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": ["unknown", "likely-bug", "working-as-designed", "breaking-change", "docs-gap", "user-error"],
-          "description": "EDITORIAL classification only. Use to record 'working as designed' or breaking-change assessments without corrupting the factual 'conclusion'."
-        },
-        { "type": "null" }
-      ]
+      "type": "string",
+      "enum": ["unknown", "likely-bug", "working-as-designed", "breaking-change", "docs-gap", "user-error"],
+      "description": "EDITORIAL classification only. Use to record opinions without corrupting the factual 'conclusion'."
     },
     "reproductionTime": {
-      "oneOf": [
-        { "type": "string", "description": "Approximate time spent reproducing, e.g. '~10 minutes'." },
-        { "type": "null" }
-      ]
-    },
-    "triageFile": {
-      "oneOf": [
-        { "type": "string", "description": "Relative path to ai-triage JSON if consumed, e.g. 'ai-triage/2997.json'." },
-        { "type": "null" }
-      ]
-    },
-    "triageNotes": {
-      "oneOf": [
-        { "type": "string", "description": "Brief note on what triage data was useful or contradicted by reproduction." },
-        { "type": "null" }
-      ]
+      "type": "string",
+      "description": "Approximate time spent reproducing, e.g. '~10 minutes'."
     },
     "versionResults": {
-      "oneOf": [
-        {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "required": ["version", "source", "result"],
-            "additionalProperties": false,
-            "properties": {
-              "version": {
-                "type": "string",
-                "description": "SkiaSharp version tested, e.g. '2.88.9', '3.116.1', 'main (source)'."
-              },
-              "source": {
-                "type": "string",
-                "enum": ["nuget", "source"],
-                "description": "nuget=released NuGet package, source=built from source code."
-              },
-              "result": {
-                "type": "string",
-                "enum": ["reproduced", "not-reproduced", "wrong-output", "error", "not-tested"],
-                "description": "What happened with this version."
-              },
-              "notes": {
-                "oneOf": [
-                  { "type": "string", "description": "Brief note about result on this version." },
-                  { "type": "null" }
-                ]
-              }
-            }
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["version", "source", "result"],
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "SkiaSharp version tested, e.g. '2.88.9', '3.116.1', 'main (source)'."
           },
-          "description": "Results of testing across different SkiaSharp versions. First entry should be the reporter's version. Subsequent entries test latest release and optionally main branch."
-        },
-        { "type": "null" }
-      ]
+          "source": {
+            "type": "string",
+            "enum": ["nuget", "source"],
+            "description": "nuget=released NuGet package, source=built from source code."
+          },
+          "result": {
+            "type": "string",
+            "enum": ["reproduced", "not-reproduced", "wrong-output", "error", "not-tested"],
+            "description": "What happened with this version."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Brief note about result on this version."
+          }
+        }
+      },
+      "description": "Results of testing across different SkiaSharp versions."
     },
     "reproProject": {
-      "oneOf": [
-        {
-          "type": "object",
-          "required": ["type", "tfm", "packages"],
-          "additionalProperties": false,
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": ["console", "test", "existing"],
-              "description": "console=new console app, test=xUnit test project, existing=used existing test infrastructure."
-            },
-            "tfm": {
-              "type": "string",
-              "description": "Target framework moniker, e.g. 'net10.0'."
-            },
-            "packages": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": ["name", "version"],
-                "additionalProperties": false,
-                "properties": {
-                  "name": { "type": "string" },
-                  "version": { "type": "string" }
-                }
-              },
-              "description": "NuGet packages used in reproduction project."
+      "type": "object",
+      "required": ["type", "tfm", "packages"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["console", "test", "existing"],
+          "description": "console=new console app, test=xUnit test project, existing=used existing test infrastructure."
+        },
+        "tfm": {
+          "type": "string",
+          "description": "Target framework moniker, e.g. 'net10.0'."
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "version"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "version": { "type": "string" }
             }
           }
-        },
-        { "type": "null" }
-      ]
+        }
+      }
     },
     "reproductionSteps": {
       "type": "array",
@@ -199,125 +172,98 @@
             "$ref": "#/$defs/stepLayer"
           },
           "command": {
-            "oneOf": [
-              { "type": "string", "description": "Shell command executed. Redact absolute paths containing usernames." },
-              { "type": "null" }
-            ]
+            "type": "string",
+            "description": "Shell command executed. Redact absolute paths containing usernames."
           },
           "exitCode": {
-            "oneOf": [
-              { "type": "integer", "minimum": 0, "description": "Process/command exit code. 0=success. Required for schemaVersion 1.1 when command ran and result is success/failure/wrong-output." },
-              { "type": "null" }
-            ]
+            "type": "integer",
+            "minimum": 0,
+            "description": "Process exit code. 0=success. Required when command ran and result is success/failure/wrong-output."
           },
           "output": {
-            "oneOf": [
-              { "type": "string", "maxLength": 4096, "description": "Command output. Max 2KB for success steps, 4KB for failure/wrong-output steps. Truncate with [...truncated...] if needed." },
-              { "type": "null" }
-            ]
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Command output. Max 2KB for success steps, 4KB for failure steps. Truncate with [...truncated...] if needed."
           },
           "filesCreated": {
-            "oneOf": [
-              {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "required": ["filename", "description"],
-                  "additionalProperties": false,
-                  "properties": {
-                    "filename": { "type": "string", "description": "Filename (no path) or relative path from project root." },
-                    "description": { "type": "string", "description": "What this file contains and why it was created." },
-                    "content": {
-                      "oneOf": [
-                        { "type": "string", "description": "Full source code content. Include for source files (Program.cs, .csproj) that form the reproduction. Omit for generated/binary files." },
-                        { "type": "null" }
-                      ]
-                    }
-                  }
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["filename", "description"],
+              "additionalProperties": false,
+              "properties": {
+                "filename": {
+                  "type": "string",
+                  "description": "Filename or relative path from project root."
                 },
-                "description": "Files created in this step. Include content for source files that form the reproduction."
-              },
-              { "type": "null" }
-            ]
+                "description": {
+                  "type": "string",
+                  "description": "What this file contains and why it was created."
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Full source code content. Include for source files (Program.cs, .csproj) that form the reproduction."
+                }
+              }
+            },
+            "description": "Files created in this step. Include content for source files that form the reproduction."
           },
           "result": {
-            "oneOf": [
-              { "$ref": "#/$defs/stepResult" },
-              { "type": "null" }
-            ]
+            "$ref": "#/$defs/stepResult"
           }
         }
       }
     },
     "artifacts": {
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["filename", "description", "source", "available"],
-            "additionalProperties": false,
-            "properties": {
-              "filename": {
-                "type": "string",
-                "description": "Filename of the binary asset."
-              },
-              "description": {
-                "type": "string",
-                "description": "What this file is and why it's needed for reproduction."
-              },
-              "source": {
-                "$ref": "#/$defs/artifactSource"
-              },
-              "url": {
-                "oneOf": [
-                  { "type": "string", "format": "uri", "description": "URL to the asset (e.g. GitHub issue attachment URL)." },
-                  { "type": "null" }
-                ]
-              },
-              "available": {
-                "type": "boolean",
-                "description": "Whether the file could be obtained for reproduction."
-              }
-            }
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["filename", "description", "source", "available"],
+        "additionalProperties": false,
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Filename of the binary asset."
           },
-          "description": "Binary files needed for reproduction (images, fonts, ICC profiles, etc). Reference by URL/filename, never inline binary content."
-        },
-        { "type": "null" }
-      ]
+          "description": {
+            "type": "string",
+            "description": "What this file is and why it's needed."
+          },
+          "source": {
+            "$ref": "#/$defs/artifactSource"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the asset."
+          },
+          "available": {
+            "type": "boolean",
+            "description": "Whether the file could be obtained for reproduction."
+          }
+        }
+      },
+      "description": "Binary files needed for reproduction. Reference by URL/filename, never inline binary content."
     },
     "errorMessages": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "primaryError": {
-              "oneOf": [
-                { "type": "string", "description": "Main error message or exception type." },
-                { "type": "null" }
-              ]
-            },
-            "stackTrace": {
-              "oneOf": [
-                { "type": "string", "maxLength": 5000, "description": "Stack trace, max 50 lines. Redact absolute paths." },
-                { "type": "null" }
-              ]
-            },
-            "additionalErrors": {
-              "oneOf": [
-                {
-                  "type": "array",
-                  "items": { "type": "string" },
-                  "description": "Other error messages observed during reproduction."
-                },
-                { "type": "null" }
-              ]
-            }
-          }
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primaryError": {
+          "type": "string",
+          "description": "Main error message or exception type."
         },
-        { "type": "null" }
-      ]
+        "stackTrace": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Stack trace, max 50 lines. Redact absolute paths."
+        },
+        "additionalErrors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Other error messages observed."
+        }
+      }
     },
     "environment": {
       "type": "object",
@@ -326,7 +272,7 @@
       "properties": {
         "os": {
           "type": "string",
-          "description": "Operating system, e.g. 'macOS 15.3', 'Ubuntu 24.04', 'Windows 11'."
+          "description": "Operating system, e.g. 'macOS 15.3', 'Ubuntu 24.04'."
         },
         "arch": {
           "type": "string",
@@ -338,65 +284,77 @@
         },
         "skiaSharpVersion": {
           "type": "string",
-          "description": "SkiaSharp version used, e.g. '3.119.0-preview.2' or 'source (main branch)'."
+          "description": "Primary SkiaSharp version used."
         },
         "dockerUsed": {
           "type": "boolean",
           "description": "Whether Docker was used for reproduction."
         },
         "gpu": {
-          "oneOf": [
-            {
-              "type": "object",
-              "required": ["available"],
-              "additionalProperties": false,
-              "properties": {
-                "backend": {
-                  "oneOf": [
-                    { "type": "string", "description": "GPU backend, e.g. 'Metal', 'OpenGL', 'Vulkan', 'DirectX', 'CPU'." },
-                    { "type": "null" }
-                  ]
-                },
-                "available": {
-                  "type": "boolean",
-                  "description": "Whether GPU acceleration was available."
-                }
-              },
-              "description": "GPU details. Include for rendering/wrong-output bugs."
+          "type": "object",
+          "required": ["available"],
+          "additionalProperties": false,
+          "properties": {
+            "backend": {
+              "type": "string",
+              "description": "GPU backend, e.g. 'Metal', 'OpenGL', 'Vulkan'."
             },
-            { "type": "null" }
-          ]
+            "available": {
+              "type": "boolean",
+              "description": "Whether GPU acceleration was available."
+            }
+          },
+          "description": "GPU details. Include for rendering bugs."
         }
       }
     },
     "blockers": {
-      "oneOf": [
-        {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Specific reasons reproduction was incomplete. Required when conclusion is partial, needs-platform, needs-hardware, or inconclusive."
+    },
+    "feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "triageCorrections": {
           "type": "array",
-          "items": { "type": "string" },
-          "minItems": 1,
-          "description": "Specific reasons reproduction was incomplete. Required when conclusion is partial, needs-platform, needs-hardware, or inconclusive."
-        },
-        { "type": "null" }
-      ]
+          "items": {
+            "type": "object",
+            "required": ["topic", "upstream", "corrected"],
+            "additionalProperties": false,
+            "properties": {
+              "topic": {
+                "type": "string",
+                "description": "What category of finding was corrected, e.g. 'classification', 'scope', 'affected-platforms', 'expected-behavior'."
+              },
+              "upstream": {
+                "type": "string",
+                "description": "What the triage step said or concluded."
+              },
+              "corrected": {
+                "type": "string",
+                "description": "What reproduction actually found to be true."
+              }
+            }
+          },
+          "description": "Corrections to triage findings discovered during reproduction."
+        }
+      },
+      "description": "Feedback on upstream pipeline steps. Record corrections when reproduction contradicts triage."
     }
   },
   "allOf": [
     {
       "if": {
-        "properties": {
-          "conclusion": { "const": "reproduced" }
-        }
+        "properties": { "conclusion": { "const": "reproduced" } }
       },
       "then": {
         "properties": {
           "reproductionSteps": {
             "contains": {
-              "properties": {
-                "result": {
-                  "enum": ["failure", "wrong-output"]
-                }
-              },
+              "properties": { "result": { "enum": ["failure", "wrong-output"] } },
               "required": ["result"]
             }
           }
@@ -405,28 +363,7 @@
     },
     {
       "if": {
-        "properties": {
-          "conclusion": { "const": "wrong-output" }
-        }
-      },
-      "then": {
-        "properties": {
-          "reproductionSteps": {
-            "contains": {
-              "properties": {
-                "result": { "const": "wrong-output" }
-              },
-              "required": ["result"]
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "conclusion": { "const": "not-reproduced" }
-        }
+        "properties": { "conclusion": { "const": "not-reproduced" } }
       },
       "then": {
         "properties": {
@@ -434,18 +371,14 @@
             "allOf": [
               {
                 "contains": {
-                  "properties": {
-                    "result": { "const": "success" }
-                  },
+                  "properties": { "result": { "const": "success" } },
                   "required": ["result"]
                 }
               },
               {
                 "not": {
                   "contains": {
-                    "properties": {
-                      "result": { "enum": ["failure", "wrong-output"] }
-                    },
+                    "properties": { "result": { "enum": ["failure", "wrong-output"] } },
                     "required": ["result"]
                   }
                 }
@@ -462,91 +395,7 @@
         }
       },
       "then": {
-        "required": [
-          "meta",
-          "conclusion",
-          "notes",
-          "reproductionSteps",
-          "environment",
-          "blockers"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "meta": {
-            "properties": {
-              "schemaVersion": { "const": "1.1" }
-            },
-            "required": ["schemaVersion"]
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "reproductionSteps": {
-            "items": {
-              "allOf": [
-                {
-                  "if": {
-                    "properties": {
-                      "command": { "type": "string" },
-                      "result": { "enum": ["success", "failure", "wrong-output"] }
-                    },
-                    "required": ["command", "result"]
-                  },
-                  "then": {
-                    "required": ["exitCode"],
-                    "properties": {
-                      "exitCode": { "type": "integer" }
-                    }
-                  }
-                },
-                {
-                  "if": {
-                    "properties": {
-                      "command": { "type": "string" },
-                      "result": { "const": "skip" }
-                    },
-                    "required": ["command", "result"]
-                  },
-                  "then": {
-                    "properties": {
-                      "exitCode": { "type": "null" }
-                    }
-                  }
-                },
-                {
-                  "if": {
-                    "properties": {
-                      "exitCode": { "const": 0 }
-                    },
-                    "required": ["exitCode", "result"]
-                  },
-                  "then": {
-                    "properties": {
-                      "result": { "enum": ["success", "wrong-output"] }
-                    }
-                  }
-                },
-                {
-                  "if": {
-                    "properties": {
-                      "exitCode": { "type": "integer", "minimum": 1 }
-                    },
-                    "required": ["exitCode", "result"]
-                  },
-                  "then": {
-                    "properties": {
-                      "result": { "const": "failure" }
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
+        "required": ["meta", "conclusion", "notes", "reproductionSteps", "environment", "blockers"]
       }
     }
   ]

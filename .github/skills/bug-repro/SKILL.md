@@ -10,6 +10,8 @@ description: >-
 
 # Bug Reproduction
 
+**Bug pipeline: Step 2 of 3 (Repro).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+
 Systematically reproduce a SkiaSharp bug and produce structured, schema-validated reproduction JSON.
 
 ```
@@ -66,7 +68,7 @@ If triage exists:
 - Read the JSON and extract useful hints: `codeInvestigation`, `bugSignals`, `classification`, `resolution.proposals`
 - Use these as **hints only** — reproduction must verify independently
 - If `classification.type.value` is NOT `type/bug`: log a warning and auto-proceed (do NOT prompt the user)
-- Record the triage file path in output JSON (`triageFile` field)
+- Record the triage file path in output JSON (`inputs.triageFile` field)
 
 If triage does NOT exist: proceed from issue data alone — no blocking.
 
@@ -160,6 +162,7 @@ dotnet add package SkiaSharp --version {reporter_version}
 - **Use the reporter's code** if provided in the issue — copy it as closely as possible
 - If no code provided: create minimal code from the issue description
 - The code should **clearly demonstrate** the bug (print values, save images, assert conditions)
+- **Handoff requirement (for bug-fix):** when you create/edit repro files (`Program.cs`, `.csproj`, helper `.cs` files), capture their full text in JSON via `reproductionSteps[].filesCreated[].content` (text only; omit binaries)
 
 #### 3. Run and capture
 
@@ -310,7 +313,7 @@ Read [references/conclusion-guide.md](references/conclusion-guide.md) and select
 >
 > **Anti-pattern from real failure (NEVER DO THIS):**
 > - ❌ Reporter: "MakeIdentity() gives CS0117" → You: CS0117 observed → Conclusion: `not-reproduced` + Note: "API was renamed"
-> - ✅ Reporter: "MakeIdentity() gives CS0117" → You: CS0117 observed → Conclusion: `reproduced` + Note: "Confirmed CS0117. This is an intentional API rename in v3.0."
+> - ✅ Reporter: "MakeIdentity() gives CS0117" → You: CS0117 observed → Conclusion: `reproduced` + Note: "Confirmed CS0117. This is an intentional API rename in SkiaSharp 3.x."
 
 | Conclusion | When |
 |------------|------|
@@ -333,12 +336,24 @@ Before generating JSON:
 
 Write to `/tmp/repro-{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json)
 
+> **⚠️ Schema rules:**
+> - `meta.schemaVersion` must be `"1.0"`
+> - **Optional fields: OMIT them entirely** — do NOT set them to `null`. If a field is not applicable, leave it out of the JSON.
+> - `inputs.triageFile` replaces the old root-level `triageFile`/`triageNotes` fields (those no longer exist)
+> - `additionalProperties: false` — no extra fields allowed at any level
+
 Required fields:
-- `meta`: schemaVersion `"1.1"`, number, repo (`"mono/SkiaSharp"`), analyzedAt (ISO 8601 UTC)
+- `meta`: schemaVersion `"1.0"`, number, repo (`"mono/SkiaSharp"`), analyzedAt (ISO 8601 UTC)
 - `conclusion`: one of the enum values
 - `notes`: free-text summary (min 10 chars)
 - `reproductionSteps`: array of steps with stepNumber, description, layer
 - `environment`: os, arch, dotnetVersion, skiaSharpVersion, dockerUsed
+
+Optional (recommended) — include only when applicable, otherwise omit entirely:
+- `inputs`: `{ triageFile }` if triage data was consumed
+- `assessment`: editorial classification (e.g., `"breaking-change"`) without corrupting factual `conclusion`
+- `versionResults`, `reproProject`, `artifacts`, `errorMessages`
+- `feedback`: corrections to triage findings (see below)
 
 Conditional requirements:
 - `reproduced` → ≥1 step with result `failure` or `wrong-output`
@@ -346,8 +361,29 @@ Conditional requirements:
 - `not-reproduced` → ≥1 step with result `success`
 - `needs-platform` / `needs-hardware` / `partial` / `inconclusive` → `blockers` required
 
-Schema v1.1 requirements:
-- For steps that ran a `command` and have `result` of `success` / `failure` / `wrong-output`, include `exitCode` (0 = success, non-zero = failure).
+For steps that ran a `command` and have `result` of `success` / `failure` / `wrong-output`, include `exitCode` (0 = success, non-zero = failure).
+
+### 4. Feedback (when triage was consumed)
+
+If triage data was consumed (`inputs.triageFile` is set) and reproduction contradicts any triage finding, record the correction in the `feedback.triageCorrections` array:
+
+```json
+"feedback": {
+  "triageCorrections": [
+    {
+      "topic": "classification",
+      "upstream": "Classified as type/question with confidence 0.7",
+      "corrected": "Confirmed crash with AccessViolationException — this is a real bug"
+    }
+  ]
+}
+```
+
+Common correction scenarios:
+- Triage classified as "question" but repro confirmed a real crash → correct classification
+- Triage said "platform/Windows" but repro shows it affects all platforms → correct scope
+- Triage missed evidence that repro discovered → add to corrections
+- Triage's codeInvestigation pointed to wrong files → note the correct location
 
 ---
 
@@ -414,7 +450,7 @@ Blockers: none
 | `reproductionSteps[].output` (success) | 2KB | Head/tail with `[...truncated...]` |
 | `reproductionSteps[].output` (failure) | 4KB | Head/tail with `[...truncated...]` |
 | `errorMessages.stackTrace` | 5KB / 50 lines | First 50 lines |
-| File content | Never inline | Filename + description only |
+| File content (text) | Inline OK for small repro source files | Include `Program.cs`, `.csproj`, etc. via `filesCreated[].content` (redact paths); omit binaries |
 | Binary assets | Never inline | URL/filename reference in `artifacts` |
 
 **Redaction rules:**
