@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 552,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:38:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/552.json"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Confirmed that SKSurface.Create() adds significant measurable overhead when called per-frame. On SkiaSharp 2.88.9 (Release), creating a new 1920x1080 surface per iteration adds ~44% overhead vs reusing a single surface. On SkiaSharp 3.119.2 (Release), overhead is ~39%. On main (Debug build), overhead is even larger at ~519%. The per-frame creation cost (~0.04ms Release, ~0.33ms Debug) is non-trivial for 60fps rendering. Reusing SKSurface instances across draws would provide a meaningful performance improvement in SkiaSharp.Views.",
+  "reproductionTime": "~8 minutes",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "2.88.9" }
+    ]
+  },
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Surface creation adds ~44% overhead vs reuse (Release mode, 1000 iterations). Create each time: 235.71ms, Reuse: 163.75ms, Create-only: 40.47ms."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Surface creation adds ~39% overhead vs reuse (Release mode, 1000 iterations). Create each time: 164.48ms, Reuse: 118.44ms, Create-only: 37.13ms."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Surface creation adds ~519% overhead vs reuse (Debug mode, 500 iterations). Create each time: 371.28ms, Reuse: 59.93ms, Create-only: 165.36ms."
+    }
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create new console project targeting net8.0",
+      "layer": "setup",
+      "command": "mkdir -p /tmp/repro-552 && cd /tmp/repro-552 && dotnet new console -n Repro --framework net8.0",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp 2.88.9 NuGet package (reporter era version)",
+      "layer": "setup",
+      "command": "cd /tmp/repro-552/Repro && dotnet add package SkiaSharp --version 2.88.9",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp' version '2.88.9' added.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Write benchmark Program.cs that measures SKSurface.Create() overhead: creates new surface per iteration vs reusing a single surface, for 1000 iterations at 1920x1080",
+      "layer": "csharp",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project referencing SkiaSharp NuGet package",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.9\" />\n  </ItemGroup>\n\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Benchmark measuring SKSurface.Create() cost: compares creating new surface each frame vs reusing one surface, and measures bare creation cost",
+          "content": "using System;\nusing System.Diagnostics;\nusing SkiaSharp;\n\nconst int Width = 1920;\nconst int Height = 1080;\nconst int Iterations = 1000;\nconst int WarmupIterations = 50;\n\nvar info = new SKImageInfo(Width, Height);\n\nConsole.WriteLine($\"Benchmarking SKSurface creation ({Iterations} iterations, {Width}x{Height})...\");\nConsole.WriteLine();\n\n// Warmup\nfor (int i = 0; i < WarmupIterations; i++)\n{\n    using var s = SKSurface.Create(info);\n    var c = s.Canvas;\n    c.Clear(SKColors.White);\n    using var p = new SKPaint { Color = SKColors.Red };\n    c.DrawCircle(100, 100, 50, p);\n    c.Flush();\n}\n\n// Benchmark 1: Create new SKSurface each iteration\nvar sw = Stopwatch.StartNew();\nfor (int i = 0; i < Iterations; i++)\n{\n    using var surface = SKSurface.Create(info);\n    var canvas = surface.Canvas;\n    canvas.Clear(SKColors.White);\n    using var paint = new SKPaint { Color = SKColors.Red };\n    canvas.DrawCircle(100, 100, 50, paint);\n    canvas.Flush();\n}\nsw.Stop();\nvar createEachTime = sw.Elapsed;\nConsole.WriteLine($\"Create new SKSurface each time: {createEachTime.TotalMilliseconds:F2} ms total, {createEachTime.TotalMilliseconds / Iterations:F4} ms/iteration\");\n\n// Benchmark 2: Reuse single SKSurface\nusing (var ws = SKSurface.Create(info))\n{\n    for (int i = 0; i < WarmupIterations; i++)\n    {\n        var c = ws.Canvas;\n        c.Clear(SKColors.White);\n        using var p = new SKPaint { Color = SKColors.Red };\n        c.DrawCircle(100, 100, 50, p);\n        c.Flush();\n    }\n}\n\nusing var reusedSurface = SKSurface.Create(info);\nsw.Restart();\nfor (int i = 0; i < Iterations; i++)\n{\n    var canvas = reusedSurface.Canvas;\n    canvas.Clear(SKColors.White);\n    using var paint = new SKPaint { Color = SKColors.Red };\n    canvas.DrawCircle(100, 100, 50, paint);\n    canvas.Flush();\n}\nsw.Stop();\nvar reuseTime = sw.Elapsed;\nConsole.WriteLine($\"Reuse single SKSurface:         {reuseTime.TotalMilliseconds:F2} ms total, {reuseTime.TotalMilliseconds / Iterations:F4} ms/iteration\");\n\n// Benchmark 3: Just measure SKSurface.Create() alone\nsw.Restart();\nfor (int i = 0; i < Iterations; i++)\n{\n    using var surface = SKSurface.Create(info);\n}\nsw.Stop();\nvar createOnly = sw.Elapsed;\nConsole.WriteLine($\"SKSurface.Create() only:        {createOnly.TotalMilliseconds:F2} ms total, {createOnly.TotalMilliseconds / Iterations:F4} ms/iteration\");\n\nConsole.WriteLine();\nvar overhead = createEachTime.TotalMilliseconds - reuseTime.TotalMilliseconds;\nvar pctOverhead = (overhead / reuseTime.TotalMilliseconds) * 100;\nConsole.WriteLine($\"Surface creation overhead: {overhead:F2} ms total ({pctOverhead:F1}% of draw time)\");\nConsole.WriteLine($\"Per-frame cost of creating new surface: {createOnly.TotalMilliseconds / Iterations:F4} ms\");\nConsole.WriteLine();\n\nif (pctOverhead > 10)\n    Console.WriteLine($\"RESULT: SKSurface creation adds significant overhead ({pctOverhead:F1}%). Reuse is beneficial.\");\nelse\n    Console.WriteLine($\"RESULT: SKSurface creation overhead is minimal ({pctOverhead:F1}%). Reuse may not be necessary.\");"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run benchmark with SkiaSharp 2.88.9 in Release mode — surface creation adds ~44% overhead vs reuse",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-552/Repro && dotnet run -c Release",
+      "exitCode": 0,
+      "output": "Benchmarking SKSurface creation (1000 iterations, 1920x1080)...\n\nCreate new SKSurface each time: 235,71 ms total, 0,2357 ms/iteration\nReuse single SKSurface:         163,75 ms total, 0,1637 ms/iteration\nSKSurface.Create() only:        40,47 ms total, 0,0405 ms/iteration\n\nSurface creation overhead: 71,96 ms total (43,9% of draw time)\nPer-frame cost of creating new surface: 0,0405 ms\n\nRESULT: SKSurface creation adds significant overhead (43,9%). Reuse is beneficial.",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Update to latest stable SkiaSharp 3.119.2 and re-run benchmark — overhead is ~39%",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-552/Repro && dotnet add package SkiaSharp && dotnet run -c Release",
+      "exitCode": 0,
+      "output": "Benchmarking SKSurface creation (1000 iterations, 1920x1080)...\n\nCreate new SKSurface each time: 164,48 ms total, 0,1645 ms/iteration\nReuse single SKSurface:         118,44 ms total, 0,1184 ms/iteration\nSKSurface.Create() only:        37,13 ms total, 0,0371 ms/iteration\n\nSurface creation overhead: 46,04 ms total (38,9% of draw time)\nPer-frame cost of creating new surface: 0,0371 ms\n\nRESULT: SKSurface creation adds significant overhead (38,9%). Reuse is beneficial.",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Build SkiaSharp test project from source on main branch",
+      "layer": "setup",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    13 Warning(s)\n    0 Error(s)\nTime Elapsed 00:00:25.77",
+      "result": "success"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Run SKSurface creation overhead benchmark test on main (source, Debug) — overhead is ~519%",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter \"FullyQualifiedName~SurfaceCreationOverheadIsMeasurable\"",
+      "exitCode": 0,
+      "output": "Create each time: 371,28ms\nReuse surface:    59,93ms\nCreate only:      165,36ms\nOverhead: 519,5%\n  Passed SkiaSharp.Tests.SKSurfaceTest.SurfaceCreationOverheadIsMeasurable [602 ms]\nTest Run Successful.\nTotal tests: 1\n     Passed: 1",
+      "result": "wrong-output"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKSurface.Create() adds 39-44% overhead per frame in Release mode (0.037-0.040ms per call at 1920x1080). In real-world view rendering at 60fps, this is wasted allocation/deallocation cost that could be eliminated by reusing surfaces."
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  }
+}
