@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3402,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:36:00Z",
+    "currentLabels": [
+      "type/feature-request"
+    ]
+  },
+  "summary": "Feature request: support drawing to/from compressed indexed color bitmaps (1bpp, 2bpp, 4bpp) for retro game graphics in Avalonia UI",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Avalonia UI, wants NES/SNES graphics system",
+      "relatedIssues": [
+        568,
+        363,
+        2383
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Skia removed indexed color (Index8/ColorTable) support in M61 (2017). The upstream library fundamentally does not support sub-byte-per-pixel indexed color types. This is not something SkiaSharp can add without forking Skia's pixel pipeline."
+    }
+  },
+  "analysis": {
+    "summary": "User requests native support for 1bpp, 2bpp, and 4bpp indexed color bitmaps with palette-based drawing, motivated by building a NES/SNES tile graphics editor in Avalonia UI. They want pixel operations on packed formats without expanding to 32bpp, and storage efficiency for large tile sets (8\u00d78 tiles \u00d7 65536 pages).",
+    "rationale": "Classified as feature-request because the user explicitly asks for new pixel format support that has never existed in SkiaSharp. Area is core SkiaSharp since it involves SKColorType and the pixel pipeline. Skia upstream removed its last indexed format (Index8) in M61 circa 2017 (tracked in #568). The current SKColorType enum has no sub-8bpp or indexed types. Adding 1/2/4bpp indexed color would require either a custom pixel pipeline outside Skia or upstream Skia changes \u2014 neither is feasible for SkiaSharp to take on. The user's real need is compact storage and palette-based rendering for retro game tiles, which can be achieved with application-level indirection using existing SkiaSharp APIs.",
+    "keySignals": [
+      {
+        "text": "Please support drawing to and from compressed 1bpp 2bpp and 4bpp indexed color graphics",
+        "source": "issue body",
+        "interpretation": "Requests pixel formats that do not exist in Skia or SkiaSharp \u2014 these are sub-byte packed indexed formats."
+      },
+      {
+        "text": "Pixel operations should work on multiple pixels at a time with these formats without expanding them in memory",
+        "source": "issue body - additional context",
+        "interpretation": "Asks for native bitwise pixel operations on packed formats \u2014 this would require a custom blitter in the rendering pipeline, well beyond SkiaSharp's wrapping scope."
+      },
+      {
+        "text": "8 * 8 * 32 * 30 * 65536 pixels which in 4bpp color would be 1.87 GiB",
+        "source": "issue body",
+        "interpretation": "Use case is massive tile-based retro game graphics. Storage concern is legitimate but solvable at the application layer with indexed lookup tables."
+      },
+      {
+        "text": "Color Tables and Index8: removed in Skia M61",
+        "source": "#568",
+        "interpretation": "Skia upstream intentionally removed indexed color support years ago. SkiaSharp cannot re-add it without forking the pixel pipeline."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "externals/skia/include/core/SkColorType.h",
+        "lines": "19-66",
+        "finding": "SkColorType enum has no indexed, palette-based, or sub-8bpp formats. The minimum pixel size is 8 bits (Alpha8, Gray8). No 1bpp/2bpp/4bpp types exist upstream.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "lines": "36-63",
+        "finding": "SKColorType mirrors Skia's enum exactly: smallest type is Alpha8 (1 byte). No indexed color types. GetBytesPerPixel() has no sub-byte entries.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "16",
+        "finding": "Legacy string constant 'UnsupportedColorTypeMessage' references Index8 \u2014 a vestige from when Skia had indexed color. The actual Index8 type no longer exists in the enum.",
+        "relevance": "context"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "104-118",
+        "finding": "BitsPerPixel is computed as BytesPerPixel * 8, meaning the minimum is 8 bits. The architecture assumes whole-byte pixels throughout \u2014 sub-byte formats would require pervasive changes.",
+        "relevance": "direct"
+      }
+    ],
+    "nextQuestions": [
+      "Would the user accept an application-level palette lookup approach using SKBitmap with Alpha8 (for 8-bit indices) and SKColorFilter or manual pixel expansion?",
+      "Is the primary concern storage size on disk, or in-memory rendering performance?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia intentionally removed indexed color support in 2017. Sub-byte pixel formats (1/2/4bpp) are not part of Skia's pixel model and would require forking the rendering pipeline. The user's retro game tile use case can be achieved with application-level palette indirection: store indices in compact byte arrays, expand to RGBA only when rendering to SKBitmap.",
+      "proposals": [
+        {
+          "title": "Application-level palette lookup with Alpha8",
+          "description": "Store tile indices as byte arrays (one index per byte using Alpha8 color type for 256-color palettes). When rendering, expand indices to RGBA using a lookup table and write into an SKBitmap via GetPixels()/InstallPixels(). This gives compact in-memory storage (1 byte per pixel vs 4) while using standard SkiaSharp APIs.",
+          "codeSnippet": "// Store palette (up to 256 colors)\nvar palette = new SKColor[256];\npalette[0] = SKColors.Black;\npalette[1] = SKColors.Red;\n// ... fill palette\n\n// Tile indices stored compactly (1 byte per pixel)\nbyte[] tileIndices = new byte[8 * 8]; // 8x8 tile\n\n// Expand to RGBA when rendering\nvar info = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);\nusing var bitmap = new SKBitmap(info);\nunsafe\n{\n    var ptr = (uint*)bitmap.GetPixels();\n    for (int i = 0; i < tileIndices.Length; i++)\n        ptr[i] = (uint)palette[tileIndices[i]];\n}\nbitmap.NotifyPixelsChanged();\n// Draw tile to canvas\ncanvas.DrawBitmap(bitmap, x, y);",
+          "confidence": 0.85,
+          "effort": "medium"
+        },
+        {
+          "title": "Bit-packed storage with on-demand expansion",
+          "description": "For 1/2/4bpp storage efficiency, pack indices into byte arrays at the application level (e.g., 2 pixels per byte for 4bpp). Only expand to full SKBitmap pixels when a tile needs to be rendered. This achieves the reporter's storage goal without requiring Skia-level changes.",
+          "confidence": 0.8,
+          "effort": "medium"
+        },
+        {
+          "title": "Use SKImage.FromPixels with pre-expanded buffer",
+          "description": "Maintain a shared render buffer and re-expand only changed tiles. Create SKImage from the buffer for efficient GPU upload. Reduces per-frame expansion cost for large tile maps.",
+          "confidence": 0.75,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Application-level palette lookup with Alpha8",
+      "recommendedReason": "Achieves 4:1 memory reduction (1 byte vs 4 bytes per pixel) while using standard, well-tested SkiaSharp APIs. The expansion step is simple and fast for 8\u00d78 tiles. For sub-byte packing (4bpp/2bpp/1bpp), the application can add bit-packing on top of this pattern."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Feature request for indexed color support that Skia upstream intentionally removed. Workaround exists using application-level palette lookup. Keeping open for maintainer to decide whether to close as won't-fix or leave as a tracked request."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm existing feature-request label and add area",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain that indexed color is not supported in Skia upstream and provide a workaround using palette lookup at the application level",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed explanation of your use case.\n\nSkia (the underlying C++ library) removed indexed/palette-based color types (Index8) back in 2017, and has no support for sub-byte pixel formats like 1bpp, 2bpp, or 4bpp. All pixel formats in Skia use at least 8 bits per pixel. Since SkiaSharp wraps Skia, adding these formats would require changes to Skia's core rendering pipeline \u2014 which is outside our scope.\n\nThat said, you can achieve compact palette-based tile rendering at the application level:\n\n```csharp\n// Store your palette\nvar palette = new SKColor[16]; // 4bpp = 16 colors\npalette[0] = SKColors.Black;\npalette[1] = SKColors.Red;\n// ...\n\n// Store tile indices compactly (1 byte per pixel, or bit-pack for 4bpp)\nbyte[] tileIndices = new byte[8 * 8]; // 8x8 NES tile\n\n// Expand to RGBA only when rendering\nvar info = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);\nusing var bitmap = new SKBitmap(info);\nunsafe\n{\n    var ptr = (uint*)bitmap.GetPixels();\n    for (int i = 0; i < tileIndices.Length; i++)\n        ptr[i] = (uint)palette[tileIndices[i]];\n}\nbitmap.NotifyPixelsChanged();\ncanvas.DrawBitmap(bitmap, destX, destY);\n```\n\nFor sub-byte packing (4bpp/2bpp), you can pack multiple indices per byte in your storage format and unpack only when expanding to the render buffer. This keeps your binary storage compact while using SkiaSharp's standard rendering path.\n\nFor a NES/SNES-style tile system with 65K+ tiles, consider maintaining a small render buffer and only expanding the visible tiles each frame \u2014 the expansion cost for 8\u00d78 tiles is negligible.\n\nSee also #568 (the Skia M61 update that removed Index8) and #2383 (similar discussion about non-standard pixel formats)."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the Skia M61 update issue that removed Index8",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 568
+      }
+    ]
+  }
+}
