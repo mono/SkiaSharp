@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 736,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T23:49:23Z",
+    "currentLabels": ["type/bug", "type/enhancement", "os/macOS", "area/SkiaSharp.Views", "area/Build", "status/blocked"]
+  },
+  "summary": "When switching a Cocoa app from 'Xamarin.Mac Modern' to 'Xamarin.Mac Full' target framework in Visual Studio for Mac, NuGet fails to resolve the SkiaSharp.Views.Mac namespace. The root cause was a NuGet Client limitation that treated Xamarin.Mac Full apps as .NET Framework apps, preventing correct resolution of platform-specific assemblies. Reported against SkiaSharp v1.68 on macOS 10.14.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.90 },
+    "platforms": ["os/macOS"],
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "build-error",
+      "errorMessage": "SkiaSharp.Views.Mac namespace does not exist",
+      "reproQuality": "complete",
+      "targetFrameworks": ["Xamarin.Mac Full"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a fresh Cocoa project in Visual Studio for Mac",
+        "Add SkiaSharp and SkiaSharp.Views NuGet packages (works with default 'Xamarin.Mac Modern')",
+        "Edit the project, change General > Target Framework from 'Xamarin.Mac Modern' to 'Xamarin.Mac Full'",
+        "Observe that SkiaSharp.Views.Mac namespace can no longer be found"
+      ],
+      "codeSnippets": [
+        "using SkiaSharp.Views.Mac;"
+      ],
+      "screenshots": [
+        { "url": "https://user-images.githubusercontent.com/756446/50108227-01e7c700-0235-11e9-9014-11f4837b2ab4.png", "description": "Project settings showing Xamarin.Mac Modern framework" },
+        { "url": "https://user-images.githubusercontent.com/756446/50108043-8b4ac980-0234-11e9-833b-9cc401787fee.png", "description": "Build error showing namespace not found after switching to Xamarin.Mac Full" }
+      ],
+      "environmentDetails": "Visual Studio for Mac, macOS 10.14, SkiaSharp v1.68, Xamarin.Mac Full framework",
+      "relatedIssues": [913]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["1.68"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Xamarin.Mac was deprecated in May 2024. Modern SkiaSharp (v3.x) targets net8.0-macos/net9.0-macos via .NET for macOS and no longer uses Xamarin.Mac TFMs. The 'Xamarin.Mac Full' vs 'Modern' distinction no longer exists."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.92,
+      "reason": "The Xamarin.Mac platform has been deprecated and replaced by .NET for macOS. SkiaSharp no longer ships Xamarin.Mac-specific assemblies — the csproj now targets net8.0-macos/net9.0-macos, which resolves the SkiaSharp.Views.Mac namespace correctly. Additionally, the NuGet Client PR (NuGet/NuGet.Client#2572) and the MigrateToNewXMIdentifier workaround addressed this for users still on Xamarin."
+    }
+  },
+  "analysis": {
+    "summary": "This was a NuGet Client packaging limitation where switching to 'Xamarin.Mac Full' caused NuGet to misidentify the app as a plain .NET Framework app, preventing resolution of Xamarin.Mac-specific assemblies. The maintainer diagnosed this in Dec 2018 and filed NuGet/NuGet.Client#2572 to fix it upstream. A workaround using MigrateToNewXMIdentifier was later identified. The entire issue class is now moot because Xamarin.Mac was deprecated in 2024 and SkiaSharp has migrated to modern .NET TFMs.",
+    "rationale": "Classified as type/bug because the namespace resolution failure was broken behavior triggered by a valid project configuration change, not a usage question. Area is SkiaSharp.Views because the symptom was the Views.Mac namespace not resolving (though root cause was in NuGet's framework resolution). tenet/compatibility applies because this was a cross-framework compatibility issue. Severity is medium — the build broke but workarounds existed. The issue is no longer relevant due to Xamarin deprecation.",
+    "keySignals": [
+      { "text": "When you select the full framework option, the app actually 'transitions' from a 'mac app' to a '.net framework app' and NuGet does not know that this particular app is actually both", "source": "comment #1 (mattleibow)", "interpretation": "Root cause diagnosed by maintainer — NuGet framework identification bug, not a SkiaSharp defect." },
+      { "text": "Created a new PR that hopefully gets this in: NuGet/NuGet.Client#2572", "source": "comment #1 (mattleibow)", "interpretation": "Fix was pursued upstream in NuGet, not in SkiaSharp itself." },
+      { "text": "You can add <MigrateToNewXMIdentifier>true</MigrateToNewXMIdentifier> in your project", "source": "comment #2 (mattleibow)", "interpretation": "A project-level workaround was eventually found via NuGet improvements." },
+      { "text": "SkiaSharp.Views.csproj targets net8.0-macos with RootNamespace SkiaSharp.Views.Mac", "source": "code search", "interpretation": "Modern SkiaSharp resolves this namespace correctly using .NET TFMs, making the Xamarin-era issue moot." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj", "lines": "16-19", "finding": "macOS configuration uses Condition=\"$(TargetFramework.Contains('-macos'))\" to set RootNamespace=SkiaSharp.Views.Mac and AssemblyName=SkiaSharp.Views.Mac. No Xamarin.Mac TFMs remain — modern .NET resolves correctly.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKCanvasView.cs", "lines": "1-9", "finding": "SKCanvasView is in namespace SkiaSharp.Views.Mac and inherits from AppKit.NSView. The code itself was never broken — only NuGet's assembly resolution for Xamarin.Mac Full failed.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Build.props", "finding": "PlatformTargetFrameworks are defined using modern .NET TFMs (net8.0-macos, net9.0-macos). No Xamarin.Mac TFMs exist anywhere in the build system.", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Use packages.config and change the HintPath to the Xamarin.Mac version of the assembly",
+      "Don't reference the SkiaSharp.Views package; manually add a reference to SkiaSharp.Views.Mac.dll",
+      "Add <MigrateToNewXMIdentifier>true</MigrateToNewXMIdentifier> to the project file"
+    ],
+    "resolution": {
+      "hypothesis": "NuGet's framework identification treated Xamarin.Mac Full apps as .NET Framework apps, so platform-specific assemblies (like SkiaSharp.Views.Mac) were not resolved. This was an upstream NuGet limitation, not a SkiaSharp code defect.",
+      "proposals": [
+        { "title": "Close as resolved by platform migration", "description": "Xamarin.Mac has been deprecated since May 2024. Modern SkiaSharp (v3.x) uses .NET for macOS TFMs which resolve correctly. Users should migrate to .NET 8+ for macOS.", "confidence": 0.92, "effort": "trivial" },
+        { "title": "MigrateToNewXMIdentifier workaround", "description": "For users still on legacy Xamarin.Mac, adding <MigrateToNewXMIdentifier>true</MigrateToNewXMIdentifier> to the csproj causes NuGet to correctly identify the project as a macOS app.", "codeSnippet": "<MigrateToNewXMIdentifier>true</MigrateToNewXMIdentifier>", "confidence": 0.80, "effort": "trivial" }
+      ],
+      "recommendedProposal": "Close as resolved by platform migration",
+      "recommendedReason": "Xamarin.Mac is deprecated and the root cause no longer exists in modern .NET. The MigrateToNewXMIdentifier workaround serves anyone still stuck on legacy Xamarin."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.90,
+      "reason": "The root cause (NuGet misidentifying Xamarin.Mac Full apps) is no longer relevant — Xamarin.Mac is deprecated and SkiaSharp now targets modern .NET TFMs. Workarounds were provided by the maintainer for legacy users."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct labels to single type and area",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/macOS", "tenet/compatibility"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with #913 (same NuGet/Xamarin.Mac Full root cause for core SkiaSharp)",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 913
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain resolution and close",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "This issue was caused by a NuGet Client limitation in resolving platform-specific assemblies for Xamarin.Mac Full projects. Since then, Xamarin.Mac has been deprecated (May 2024), and SkiaSharp v3.x targets modern .NET for macOS (`net8.0-macos` / `net9.0-macos`), where this namespace resolution works correctly.\n\nFor anyone still on legacy Xamarin.Mac, the workarounds from the earlier comments remain valid:\n- Add `<MigrateToNewXMIdentifier>true</MigrateToNewXMIdentifier>` to your project file\n- Or manually reference `SkiaSharp.Views.Mac.dll`\n\nClosing as resolved by the platform migration to .NET for macOS."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as resolved — root cause eliminated by Xamarin deprecation and .NET migration",
+        "risk": "medium",
+        "confidence": 0.88
+      }
+    ]
+  }
+}
