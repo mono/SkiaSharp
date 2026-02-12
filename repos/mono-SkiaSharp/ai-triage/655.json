@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 655,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T23:49:23Z",
+    "currentLabels": ["type/bug", "status/skia-update-required", "area/libSkiaSharp.native"]
+  },
+  "summary": "SKPath.Op(other, SKPathOp.Intersect) returns a path with 0 points for specific float-encoded coordinates on SkiaSharp 1.60.3. The same operation produces correct results in Skia's C++ fiddle, indicating a bug in the older Skia pathops engine bundled with that version. The reporter provides a complete C# console repro with SkBits2Float-encoded path data and a working C++ fiddle link for comparison.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.98 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.95 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "wrong-output",
+      "errorMessage": "Path intersection returns 0 points instead of expected intersection geometry",
+      "reproQuality": "complete",
+      "targetFrameworks": ["netcoreapp2.1"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create two SKPath objects with specific float-encoded coordinates (SkBits2Float hex values)",
+        "Set path_a fill type to Winding and path_b fill type to EvenOdd",
+        "Call path_a.Op(path_b, SKPathOp.Intersect)",
+        "Check path_r.PointCount — returns 0 instead of expected intersection points"
+      ],
+      "codeSnippets": [
+        "SKPath path_r = path_a.Op(path_b, SKPathOp.Intersect);\nif (path_r != null) {\n    Console.WriteLine(path_r.PointCount); // prints 0\n}"
+      ],
+      "environmentDetails": "SkiaSharp 1.60.3, Visual Studio 2017 15.8.7, .NET Core 2.1, Windows 10",
+      "repoLinks": [
+        { "url": "https://fiddle.skia.org/c/cde611c02e7cfb956670649610eb40d3", "description": "C++ Skia fiddle showing correct intersection result (green path)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["1.60.3"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "SkiaSharp 1.60.3 used a 2018-era Skia. Current SkiaSharp 3.x uses a much newer Skia fork with 437+ commits to pathops since then. Skia's pathops engine has received extensive bug fixes and rewrites."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.80,
+      "reason": "The bug is in Skia's native pathops engine, not in SkiaSharp's C# or C API wrappers. Since 2018, Skia's pathops directory has received 437+ commits including bug fixes, root-finding rewrites, and structural improvements. The issue's own label 'status/skia-update-required' confirms it was understood to need a Skia update, which has since occurred multiple times."
+    }
+  },
+  "analysis": {
+    "summary": "SKPath.Op() is a thin C# wrapper over Skia's native Op() function. The SkiaSharp C API (sk_pathop_op) directly calls Skia's Op() with no transformation. The bug is entirely in Skia's pathops engine for specific coordinate values. The reporter confirmed the same operation works in C++ Skia fiddle, meaning the fiddle ran a newer Skia version that already had the fix.",
+    "rationale": "Classified as type/bug because the code produces incorrect output (0 intersection points) for valid overlapping paths. Area is libSkiaSharp.native because the bug is in the upstream Skia pathops engine, not in the SkiaSharp C# or C API layer. Severity is medium — wrong output but not a crash. The skia-update-required label was already correctly applied.",
+    "keySignals": [
+      { "text": "path_r.PointCount returns 0", "source": "issue body", "interpretation": "Intersection operation produces empty result for paths that visibly overlap — incorrect output from Skia's pathops engine." },
+      { "text": "Same example in C++ is working well", "source": "issue body", "interpretation": "The C++ Skia fiddle uses a newer Skia version that handles these coordinates correctly, confirming the bug is version-dependent in Skia's native code." },
+      { "text": "SkBits2Float encoded coordinates with very small/negative values", "source": "issue body", "interpretation": "The coordinates include near-zero float values (0xB6D27CA9 ≈ -6.27e-6, 0x36CCD0F6 ≈ 6.13e-6) which are edge cases for pathops numerical stability." },
+      { "text": "skia-discuss thread on pathop issues", "source": "comment by yisibl (2025-06-17)", "interpretation": "Community-referenced discussion confirming pathops bugs are a known class of issues in older Skia versions." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKPath.cs", "lines": "417-436", "finding": "Op() is a thin wrapper: validates null arguments, calls SkiaApi.sk_pathop_op, returns null if native call returns false. No coordinate transformation or modification — passes handles directly to native code.", "relevance": "direct" },
+      { "file": "externals/skia/src/c/sk_path.cpp", "lines": "252-254", "finding": "sk_pathop_op() directly calls Skia's Op(*AsPath(one), *AsPath(two), (SkPathOp)op, AsPath(result)) with no additional logic. The bug is entirely in Skia's upstream Op() implementation.", "relevance": "direct" },
+      { "file": "externals/skia/include/pathops/SkPathOps.h", "lines": "22-46", "finding": "Skia's Op() declaration and SkPathOp enum. kIntersect_SkPathOp is the operation used. The function signature has not changed, confirming ABI compatibility with current SkiaSharp.", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Upgrade to latest SkiaSharp 3.x which bundles a much newer Skia with extensive pathops fixes"
+    ],
+    "nextQuestions": [
+      "Has anyone verified this specific reproduction case passes on current SkiaSharp 3.x?",
+      "Are there other pathops edge cases that still fail with near-zero float values?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia's pathops engine in the version bundled with SkiaSharp 1.60.3 had numerical precision issues with near-zero float coordinate values, causing intersection calculations to fail. This has been fixed in newer Skia versions.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 3.x",
+          "description": "Upgrade to latest SkiaSharp 3.x which uses a much newer Skia version with extensive pathops bug fixes. The pathops directory has received 437+ commits since the version used in 1.60.3.",
+          "confidence": 0.80,
+          "effort": "small"
+        },
+        {
+          "title": "Close as fixed by Skia update",
+          "description": "Close the issue as fixed, since multiple major Skia updates have been incorporated into SkiaSharp since 1.60.3. If anyone can reproduce on current SkiaSharp 3.x, they should open a new issue.",
+          "confidence": 0.75,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Close as fixed by Skia update",
+      "recommendedReason": "The issue is 7+ years old, filed against SkiaSharp 1.60.3 with a very old Skia. Hundreds of pathops fixes have been upstreamed since. The 'status/skia-update-required' label confirms the team already understood the fix required a Skia update, which has occurred."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.80,
+      "reason": "Bug was in Skia's native pathops engine. SkiaSharp has since upgraded Skia multiple times, incorporating hundreds of pathops fixes. The issue's own label confirms this was waiting for a Skia update."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm existing labels are correct",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/libSkiaSharp.native", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation that this is likely fixed by Skia updates in SkiaSharp 3.x",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "This bug was in Skia's native pathops engine, which SkiaSharp wraps directly without modification. Since version 1.60.3, SkiaSharp has upgraded the bundled Skia multiple times — the pathops module alone has received over 400 commits of bug fixes and improvements.\n\nIf you're still encountering incorrect path intersection results on the latest SkiaSharp 3.x, please open a new issue with a reproduction case and we'll investigate further."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related SKPath boolean operation issue",
+        "risk": "low",
+        "confidence": 0.70,
+        "linkedIssue": 2325
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed by Skia updates incorporated in newer SkiaSharp versions",
+        "risk": "medium",
+        "confidence": 0.80
+      }
+    ]
+  }
+}
