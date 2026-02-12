@@ -1,263 +1,227 @@
 {
   "meta": {
-    "schemaVersion": "2.1",
+    "schemaVersion": "1.0",
     "number": 3188,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T22:25:00Z",
+    "analyzedAt": "2026-02-12T16:05:45Z",
     "currentLabels": [
       "type/bug"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "DrawVertices outputs black triangle instead of colored gradient in SkiaSharp 3.x \u2014 upstream Skia behavior change requires a shader on the paint when using vertex colors with SKBlendMode.Modulate",
+  "summary": "DrawVertices outputs black triangle instead of colored gradient in v3 due to upstream Skia behavior change \u2014 default paint color (black) is now modulated with vertex colors",
   "classification": {
     "type": {
       "value": "type/bug",
-      "confidence": 0.75
+      "confidence": 0.85
     },
     "area": {
       "value": "area/SkiaSharp",
       "confidence": 0.95
     },
     "platforms": [
-      {
-        "value": "os/Windows-Classic",
-        "confidence": 0.95
-      }
+      "os/Windows-Classic"
     ],
     "tenets": [
-      {
-        "value": "tenet/compatibility",
-        "confidence": 0.88
-      }
+      "tenet/compatibility"
     ]
   },
   "evidence": {
-    "bugSignals": {
-      "hasCrash": false,
-      "hasStackTrace": false,
-      "reproQuality": "complete",
-      "severity": "medium",
-      "severityReason": "No crash but produces visually wrong output (black instead of colored vertices). Simple workaround exists. The SkiaSharp sample itself has the same issue, suggesting documentation/migration guidance is needed.",
-      "hasWorkaround": true,
-      "workaroundSummary": "Set a white shader on the paint: \u0060paint.Shader = SKShader.CreateColor(SKColors.White)\u0060. This gives the same visual result as SkiaSharp 2.x without a shader."
-    },
     "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKSurface with RGBA8888 color type",
+        "Clear the canvas to white",
+        "Create an SKPaint with IsAntialias = true (default color is black)",
+        "Call DrawVertices with SKVertexMode.Triangles, 3 vertices, and RGB colors (Red, Green, Blue)",
+        "Snapshot and encode to PNG",
+        "Observe output is a solid black triangle instead of a gradient"
+      ],
+      "codeSnippets": [
+        "surface.Canvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);"
+      ],
       "screenshots": [
         {
           "url": "https://github.com/user-attachments/assets/afa656d4-1966-496c-be0f-50d3d325f554",
-          "context": "Expected: gradient triangle (v2.88.9)"
+          "description": "Expected: gradient triangle (v2.88.9)"
         },
         {
           "url": "https://github.com/user-attachments/assets/5a9f1421-92d4-49f6-8f65-e7fb990cb82f",
-          "context": "Actual: black triangle (v3.116.1)"
+          "description": "Actual: black triangle (v3.116.1)"
         }
       ],
+      "environmentDetails": "Windows 11, .NET 8, Visual Studio, SkiaSharp 3.116.1",
       "relatedIssues": [
-        351,
-        1687,
         3319
-      ],
-      "codeSnippets": [
-        {
-          "code": "var paint = new SKPaint { IsAntialias = true };\nvar vertices = new[] { new SKPoint(110, 20), new SKPoint(160, 200), new SKPoint(10, 200) };\nvar colors = new[] { SKColors.Red, SKColors.Green, SKColors.Blue };\nsurface.Canvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);",
-          "language": "csharp",
-          "context": "Minimal reproduction from reporter \u2014 identical to DrawVerticesSample.cs in SkiaSharp samples"
-        }
-      ],
-      "environmentDetails": "Windows 11, .NET 8, Visual Studio, SkiaSharp 3.116.1"
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": true,
+      "errorType": "wrong-output",
+      "errorMessage": "DrawVertices produces a solid black triangle instead of a gradient triangle with vertex colors",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
     },
     "versionAnalysis": {
-      "reason": "The behavior change is in upstream Skia, not SkiaSharp C# code. SKCanvas.DrawVertices uses SKBlendMode.Modulate by default, which multiplies vertex colors by the paint color/shader. Without a shader, the paint\u0027s default black color causes all vertex colors to be black. This was different in the Skia version used by SkiaSharp 2.88.x.",
       "mentionedVersions": [
         "3.116.1",
+        "3.116.0",
         "2.88.9"
       ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
       "currentRelevance": "likely",
-      "migrationPath": "Set paint.Shader = SKShader.CreateColor(SKColors.White) before calling DrawVertices to restore v2 behavior."
+      "relevanceReason": "The DrawVertices overloads still hardcode SKBlendMode.Modulate, and Skia\u0027s behavior for drawVertices with opaque paint color has not changed back."
     },
     "regression": {
       "isRegression": true,
-      "confidence": 0.82,
-      "reason": "The behavior changed between SkiaSharp 2.88.9 (Skia m88) and 3.116.x (newer Skia milestone). In the older Skia, drawVertices with vertex colors and no shader produced the expected gradient. In the newer Skia, the blend mode strictly applies the paint color (black by default) against vertex colors via Modulate, producing black. This is an upstream Skia behavioral change, not a SkiaSharp wrapper bug.",
+      "confidence": 0.9,
+      "reason": "Upstream Skia changed how drawVertices interacts with the paint color. In newer Skia (used by SkiaSharp v3), drawVertices blends the paint\u0027s opaque color (src) with vertex colors (dst) using the blend mode. Since SkPaint defaults to opaque black and the blend mode is Modulate (src \u00D7 dst), black \u00D7 anything = black. Older Skia (used by v2.88) handled vertex colors differently.",
       "workedInVersion": "2.88.9",
       "brokeInVersion": "3.116.0"
     }
   },
   "analysis": {
-    "summary": "This is an upstream Skia behavioral change exposed in SkiaSharp 3.x. The DrawVertices overloads in SKCanvas.cs use SKBlendMode.Modulate by default (line 915). In Modulate mode, vertex colors are multiplied by the paint\u0027s source \u2014 either a shader or the opaque paint color. Without a shader, the default paint color is black (0,0,0), so Modulate produces black regardless of vertex colors. A community member already provided the correct workaround: set a white shader on the paint.",
-    "keySignals": [
-      {
-        "text": "Passing in a color array works fine in v2.88.9 but after updating to 3.116.1 the output is simply black",
-        "source": "body",
-        "interpretation": "Classic v2\u2192v3 behavioral regression. The code didn\u0027t change \u2014 the underlying Skia engine changed how it handles vertex colors without a shader."
-      },
-      {
-        "text": "Code copied from Samples",
-        "source": "body",
-        "interpretation": "The reporter is using the exact same code as DrawVerticesSample.cs \u2014 the sample itself is broken in v3, confirming this is a SkiaSharp-side issue (at minimum a docs/sample problem)."
-      },
-      {
-        "text": "paint.Shader = SKShader.CreateColor(SKColors.White)",
-        "source": "comment-1",
-        "interpretation": "Community workaround by molesmoke. Setting a white shader means Modulate multiplies vertex colors by white (1,1,1), preserving the original vertex colors."
-      },
-      {
-        "text": "https://api.skia.org/classSkCanvas.html",
-        "source": "comment-1",
-        "interpretation": "Community member linked upstream Skia docs confirming the behavior is intentional in newer Skia \u2014 vertex colors blend with shader or \u0027opaque paint color\u0027."
-      }
-    ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "While this is technically an upstream Skia behavioral change, it manifests as a breaking change in SkiaSharp 3.x that produces incorrect visual output from code that worked in 2.x. The SkiaSharp sample itself is broken. This warrants bug classification because: (1) existing code silently produces wrong output, (2) no migration guidance was provided, (3) the SkiaSharp convenience overloads hardcode SKBlendMode.Modulate without documentation of the shader requirement.",
-        "alternatives": [
-          {
-            "value": "type/enhancement",
-            "whyRejected": "Could argue this is \u0027expected behavior\u0027 per upstream Skia, but the silent breakage of existing code without migration guidance makes it a bug from the user\u0027s perspective."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp",
-        "expandedReason": "The DrawVertices methods and their default blend mode are in core SkiaSharp (SKCanvas.cs). The upstream Skia behavior change surfaces through SkiaSharp\u0027s convenience overloads."
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "medium",
-        "expandedReason": "Visual output is wrong (black instead of gradient), but no crash or data loss. Workaround is simple (one line) and already provided by a community member. The severity is elevated slightly because the breakage is silent \u2014 no error or warning, just wrong output."
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/Windows-Classic",
-        "expandedReason": "Reporter tested on Windows 11. The issue is platform-independent (it\u0027s in the blend mode logic), but only Windows was explicitly tested."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/compatibility",
-        "expandedReason": "This is a v2\u2192v3 compatibility break. Existing code produces different (wrong) output after upgrading, with no compile-time or runtime warning."
-      },
-      {
-        "field": "regression.isRegression",
-        "chosen": "true",
-        "expandedReason": "Working v2 code produces black output in v3. The regression is in upstream Skia\u0027s handling of drawVertices blend mode with no shader, exposed through SkiaSharp\u0027s unchanged wrapper code."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "The behavior is inherent to the Skia version in SkiaSharp 3.x and will persist. Workaround or convenience API change needed."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "keep-open",
-        "expandedReason": "The SkiaSharp sample itself is broken and the convenience overloads may need updating (e.g., default to SKBlendMode.Dst when colors are provided and no shader exists, or document the shader requirement). Workaround exists but the API should be improved or documented."
-      }
-    ],
-    "uncertainties": [
-      "Whether SkiaSharp should change the default blend mode in the convenience overloads (e.g., use Dst instead of Modulate when no shader is present) or just document the requirement",
-      "Whether this affects all platforms or just CPU raster surfaces (reporter only tested on Windows)",
-      "Whether SkiaSharp 3.x migration guide already mentions this change (none found)"
-    ],
-    "assumptions": [
-      "Assumed the upstream Skia behavior change is intentional based on the Skia API docs and community member\u0027s analysis",
-      "Assumed the default SKPaint color is black (0xFF000000) based on Skia\u0027s default initialization"
-    ],
-    "resolution": {
-      "hypothesis": "Upstream Skia changed how drawVertices blends vertex colors with the paint source. Without a shader, the paint\u0027s default black color is used as the blend source with Modulate mode, producing black output. Setting a white shader restores the v2 behavior.",
-      "proposals": [
-        {
-          "title": "Set a white shader on the paint (workaround)",
-          "description": "Add \u0060paint.Shader = SKShader.CreateColor(SKColors.White)\u0060 before calling DrawVertices. This makes the Modulate blend multiply vertex colors by white (1,1,1), preserving them. This is the workaround suggested by community member molesmoke.",
-          "confidence": 0.92,
-          "effort": "low",
-          "category": "workaround",
-          "codeSnippet": "var paint = new SKPaint\n{\n    IsAntialias = true,\n    Shader = SKShader.CreateColor(SKColors.White)\n};\n\nvar vertices = new[] { new SKPoint(110, 20), new SKPoint(160, 200), new SKPoint(10, 200) };\nvar colors = new[] { SKColors.Red, SKColors.Green, SKColors.Blue };\n\ncanvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);",
-          "validated": "yes"
-        },
-        {
-          "title": "Update convenience overloads to use SKBlendMode.Dst",
-          "description": "Change the default blend mode in the convenience DrawVertices overloads from Modulate to Dst when vertex colors are provided. Dst uses only the destination (vertex colors) and ignores the paint color. This would restore v2 visual behavior without requiring users to change their code.",
-          "confidence": 0.55,
-          "effort": "low",
-          "category": "fix"
-        },
-        {
-          "title": "Update sample and add migration docs",
-          "description": "Fix DrawVerticesSample.cs to include a shader on the paint, and add a note to SkiaSharp 3.x migration guide about the DrawVertices behavior change.",
-          "confidence": 0.85,
-          "effort": "low",
-          "category": "fix"
-        }
-      ],
-      "recommendedProposal": "Set a white shader on the paint (workaround)",
-      "recommendedReason": "Immediate fix for users. The convenience overload change needs design discussion. The sample/docs fix should also happen regardless."
-    },
+    "summary": "DrawVertices produces black output in SkiaSharp v3 because all convenience overloads hardcode SKBlendMode.Modulate, and Skia now modulates the paint\u0027s opaque color (default = black) with vertex colors. Black \u00D7 any color = black.",
     "codeInvestigation": [
       {
         "file": "binding/SkiaSharp/SKCanvas.cs",
-        "lines": "912-916",
-        "relevance": "DrawVertices(SKVertexMode, SKPoint[], SKColor[], SKPaint) creates SKVertices.CreateCopy then calls DrawVertices with SKBlendMode.Modulate. The Modulate blend mode multiplies vertex colors by paint source. Without a shader, paint source = paint color (black by default), so result is black."
+        "finding": "All 3 convenience DrawVertices overloads hardcode SKBlendMode.Modulate. The 4th overload (line 930) accepts a blend mode parameter. The core method (line 936) passes vertices, mode, and paint directly to the C API.",
+        "relevance": "direct",
+        "lines": "912-942"
       },
       {
-        "file": "binding/SkiaSharp/SKCanvas.cs",
-        "lines": "936-943",
-        "relevance": "The core DrawVertices overload passes blend mode directly to sk_canvas_draw_vertices. No SkiaSharp-level transformation of colors \u2014 the behavior change is purely in native Skia\u0027s handling of the blend."
-      },
-      {
-        "file": "samples/Gallery/Shared/Samples/DrawVerticesSample.cs",
-        "lines": "19-31",
-        "relevance": "The official SkiaSharp sample uses identical code to the reporter \u2014 no shader set on paint. This sample is broken in v3 and needs updating, confirming this is a known gap."
+        "file": "externals/skia/src/core/SkPaint.cpp",
+        "finding": "SkPaint default constructor initializes fColor4f to {0,0,0,1} (opaque black). This is the src color for Modulate blending in drawVertices.",
+        "relevance": "direct",
+        "lines": "38-39"
       },
       {
         "file": "externals/skia/include/core/SkCanvas.h",
-        "lines": "1953-1975",
-        "relevance": "Upstream Skia docs state: mode \u0027combines vertices colors with SkShader if present or SkPaint opaque color if not\u0027. This clarifies the new behavior \u2014 without a shader, the paint\u0027s opaque color (default black) is used in the blend."
+        "finding": "Skia docs specify: drawVertices combines \u0027the opaque SkPaint color\u0027 (when no shader) as src with \u0027interpolated vertex colors\u0027 as dst using the blend mode. Modulate = src \u00D7 dst.",
+        "relevance": "direct",
+        "lines": "1938-1955"
+      },
+      {
+        "file": "externals/skia/src/c/sk_canvas.cpp",
+        "finding": "C API passes through to Skia\u0027s drawVertices without modification: AsCanvas(ccanvas)-\u003EdrawVertices(AsVertices(vertices), (SkBlendMode)mode, *AsPaint(paint))",
+        "relevance": "context",
+        "lines": "244-246"
+      },
+      {
+        "file": "binding/SkiaSharp/SKVertices.cs",
+        "finding": "SKVertices.CreateCopy correctly passes vertex colors to Skia. No color transformation or loss occurs in the C# wrapper.",
+        "relevance": "context",
+        "lines": "25-54"
       }
-    ]
+    ],
+    "rationale": "This is a real regression from v2 to v3 caused by an upstream Skia behavior change in how drawVertices blends paint color with vertex colors. The SkiaSharp wrapper code itself hasn\u0027t changed \u2014 it still passes Modulate as the blend mode \u2014 but Skia now uses the paint\u0027s opaque color as the blend source. Since SKPaint defaults to opaque black {0,0,0,1}, and Modulate = src \u00D7 dst, the result is always black. The area is core SkiaSharp (SKCanvas.DrawVertices), not views or native. Severity is medium because there\u0027s a straightforward workaround (set paint color to white), but it\u0027s a breaking change that affects all DrawVertices users who relied on v2 behavior.",
+    "keySignals": [
+      {
+        "text": "Passing in a color array works fine in v2.88.9 but after updating to 3.116.1 the output is simply black",
+        "source": "issue body",
+        "interpretation": "Confirms regression \u2014 same code, different results between v2 and v3."
+      },
+      {
+        "text": "SkPaint::SkPaint() : fColor4f{0, 0, 0, 1}  // opaque black",
+        "source": "externals/skia/src/core/SkPaint.cpp:38-39",
+        "interpretation": "Default paint color is opaque black \u2014 this is the root cause when modulated with vertex colors."
+      },
+      {
+        "text": "the opaque SkPaint color if SkPaint does not contain SkShader as the src of the blend and the interpolated vertex colors as the dst",
+        "source": "externals/skia/include/core/SkCanvas.h:1943-1944",
+        "interpretation": "Skia documentation confirms paint color is used as blend source for drawVertices when no shader is set."
+      },
+      {
+        "text": "DrawVertices(vert, SKBlendMode.Modulate, paint)",
+        "source": "binding/SkiaSharp/SKCanvas.cs:915",
+        "interpretation": "All convenience overloads hardcode Modulate blend mode \u2014 no way to override without using the lower-level overload."
+      },
+      {
+        "text": "This will give you the result you were after: Shader = SKShader.CreateColor(SKColors.White)",
+        "source": "comment by @molesmoke",
+        "interpretation": "Community-provided workaround confirmed \u2014 setting a white shader makes modulate preserve vertex colors."
+      }
+    ],
+    "workarounds": [
+      "Set paint.Color = SKColors.White before calling DrawVertices \u2014 white (1,1,1,1) modulated with vertex colors preserves the original colors",
+      "Set paint.Shader = SKShader.CreateColor(SKColors.White) to achieve the same result via a shader",
+      "Use the overload DrawVertices(SKVertexMode, SKPoint[], SKPoint[], SKColor[], SKBlendMode, UInt16[], SKPaint) with SKBlendMode.Dst to ignore paint color entirely"
+    ],
+    "nextQuestions": [
+      "Should SkiaSharp add a compatibility shim in the convenience overloads to default paint color to white when only vertex colors are provided?",
+      "Is this a deliberate upstream Skia change or an unintended side effect of Skia refactoring?",
+      "Should the SkiaSharp v3 migration guide document this behavior change?"
+    ],
+    "resolution": {
+      "hypothesis": "Upstream Skia changed drawVertices blending semantics. The paint\u0027s opaque color is now used as the src in blend mode, and default SKPaint color is black. Modulate(black, vertex_color) = black.",
+      "proposals": [
+        {
+          "description": "The simplest workaround: set paint.Color = SKColors.White before calling DrawVertices. Since Modulate = src \u00D7 dst, white (1,1,1,1) \u00D7 vertex_color = vertex_color, preserving the original gradient.",
+          "title": "Set paint color to white",
+          "codeSnippet": "var paint = new SKPaint\n{\n    IsAntialias = true,\n    Color = SKColors.White\n};",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "description": "Set paint.Shader = SKShader.CreateColor(SKColors.White) to provide a white shader that gets modulated with vertex colors. Functionally equivalent to setting Color to white.",
+          "title": "Use white shader on paint",
+          "codeSnippet": "var paint = new SKPaint\n{\n    IsAntialias = true,\n    Shader = SKShader.CreateColor(SKColors.White)\n};",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "description": "Use the lower-level DrawVertices overload with SKBlendMode.Dst to ignore the paint color entirely and render only vertex colors.",
+          "title": "Use Dst blend mode",
+          "codeSnippet": "var vert = SKVertices.CreateCopy(SKVertexMode.Triangles, vertices, colors);\ncanvas.DrawVertices(vert, SKBlendMode.Dst, paint);",
+          "confidence": 0.8,
+          "effort": "trivial"
+        },
+        {
+          "description": "Add this behavior change to the v3 migration guide. DrawVertices now requires paint color or shader to be set appropriately since Skia blends it with vertex colors via the blend mode.",
+          "title": "Document as v3 breaking change",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Set paint color to white",
+      "recommendedReason": "Simplest fix \u2014 one property change. Directly addresses the root cause (black paint color being modulated) without requiring API changes or overload switching."
+    }
   },
   "output": {
     "actionability": {
-      "suggestedAction": "keep-open",
+      "suggestedAction": "close-with-docs",
       "confidence": 0.8,
-      "reason": "Real behavioral regression with a simple workaround. Keep open to track the sample fix and potential convenience API improvement. The workaround is already provided by a community member."
+      "reason": "Root cause identified as upstream Skia behavior change. Workaround is trivial (set paint.Color = SKColors.White). Community comment already provided a working solution. Could alternatively keep open to track as a breaking change for documentation."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Confirm type/bug and add compatibility tenet and Windows platform labels",
         "risk": "low",
-        "description": "Apply area, platform, and compatibility labels",
-        "reason": "Matches classification \u2014 core SkiaSharp behavioral change on Windows, v2\u2192v3 compatibility issue",
-        "confidence": 0.92,
-        "payload": {
-          "labelsToAdd": [
-            "area/SkiaSharp",
-            "os/Windows-Classic",
-            "tenet/compatibility"
-          ],
-          "labelsToRemove": []
-        }
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows",
+          "tenet/compatibility"
+        ]
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Confirm root cause, provide workaround with paint.Color = White, and acknowledge as v3 behavior change",
         "risk": "high",
-        "description": "Acknowledge the regression, confirm the workaround, and explain the upstream Skia change",
-        "reason": "Reporter needs confirmation and context for the behavior change",
-        "confidence": 0.85,
-        "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "workaround",
-          "draftBody": "Thanks for the clear reproduction \u2014 and thanks to @molesmoke for the workaround.\n\nThis is a behavioral change in the upstream Skia engine that SkiaSharp 3.x is built on. In the newer Skia, \u0060drawVertices\u0060 with \u0060Modulate\u0060 blend mode strictly blends vertex colors with the paint\u0027s source \u2014 either a shader, or the paint\u0027s opaque color. Without a shader, the default paint color is black, so \u0060Modulate\u0060 (multiply) produces black regardless of vertex colors.\n\nThe workaround @molesmoke posted is correct \u2014 setting a white shader makes the multiply a no-op on the vertex colors:\n\n\u0060\u0060\u0060csharp\nvar paint = new SKPaint\n{\n    IsAntialias = true,\n    Shader = SKShader.CreateColor(SKColors.White)\n};\n\u0060\u0060\u0060\n\nOur own \u0060DrawVerticesSample.cs\u0060 has the same issue, so we\u0027ll need to update that too. We\u0027ll also look at whether the convenience overloads should default to a different blend mode when no shader is set.\n\nAs a best practice, wrap \u0060SKPaint\u0060 in a \u0060using\u0060 statement to ensure proper disposal.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-3188-comment-1"
-        }
+        "confidence": 0.9,
+        "comment": "Thanks for the clear repro \u2014 this is a behavior change in the upstream Skia library used by SkiaSharp v3.\n\nIn v3, \u0060drawVertices\u0060 blends the paint\u0027s color (src) with vertex colors (dst) using the blend mode. The convenience \u0060DrawVertices\u0060 overloads use \u0060SKBlendMode.Modulate\u0060 (src \u00D7 dst), and since \u0060SKPaint\u0060 defaults to opaque black, the result is \u0060black \u00D7 vertex_color = black\u0060.\n\nHere\u0027s a workaround \u2014 set the paint color to white so modulate preserves vertex colors:\n\n\u0060\u0060\u0060csharp\nvar paint = new SKPaint\n{\n    IsAntialias = true,\n    Color = SKColors.White\n};\n\u0060\u0060\u0060\n\nAlternatively, as @molesmoke noted, you can use \u0060Shader = SKShader.CreateColor(SKColors.White)\u0060 which achieves the same result.\n\nThis is documented in the [Skia \u0060drawVertices\u0060 API](https://api.skia.org/classSkCanvas.html): \u0022the opaque SkPaint color if SkPaint does not contain SkShader as the src of the blend.\u0022"
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #3319 which addresses DrawVertices disposal of temporary vertices",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 3319
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/3188"
+  }
 }

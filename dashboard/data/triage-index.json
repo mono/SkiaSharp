@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-02-12T15:38:24.6868621Z",
-  "totalCount": 8,
+  "generatedAt": "2026-02-12T16:13:03.46162Z",
+  "totalCount": 21,
   "summary": {
-    "needsInvestigation": 4,
-    "closeable": 1,
-    "quickWins": 1,
-    "regressions": 1,
+    "needsInvestigation": 5,
+    "closeable": 6,
+    "quickWins": 6,
+    "regressions": 4,
     "withRepro": 0,
     "reproduced": 0,
     "notReproduced": 0
@@ -13,7 +13,11 @@
   "byType": [
     {
       "label": "type/bug",
-      "count": 5
+      "count": 13
+    },
+    {
+      "label": "type/question",
+      "count": 3
     },
     {
       "label": "type/enhancement",
@@ -21,53 +25,81 @@
     },
     {
       "label": "type/feature-request",
+      "count": 2
+    },
+    {
+      "label": "type/documentation",
       "count": 1
     }
   ],
   "byArea": [
+    {
+      "label": "area/SkiaSharp",
+      "count": 9
+    },
     {
       "label": "area/SkiaSharp.Views",
       "count": 4
     },
     {
       "label": "area/libSkiaSharp.native",
-      "count": 1
+      "count": 3
+    },
+    {
+      "label": "area/SkiaSharp.Views.Forms",
+      "count": 2
     },
     {
       "label": "area/SkiaSharp.HarfBuzz",
       "count": 1
     },
     {
-      "label": "area/SkiaSharp.Views.Forms",
+      "label": "area/SkiaSharp.Views.Maui",
       "count": 1
     },
     {
-      "label": "area/SkiaSharp",
+      "label": "area/Docs",
       "count": 1
     }
   ],
   "byAction": [
     {
+      "label": "close-with-docs",
+      "count": 6
+    },
+    {
       "label": "needs-investigation",
-      "count": 4
+      "count": 5
     },
     {
       "label": "keep-open",
-      "count": 3
+      "count": 4
     },
     {
       "label": "close-as-fixed",
+      "count": 3
+    },
+    {
+      "label": "close-as-duplicate",
+      "count": 2
+    },
+    {
+      "label": "request-info",
       "count": 1
     }
   ],
   "bySeverity": [
     {
       "label": "medium",
-      "count": 3
+      "count": 7
     },
     {
       "label": "low",
-      "count": 2
+      "count": 3
+    },
+    {
+      "label": "high",
+      "count": 3
     },
     {
       "label": "critical",
@@ -76,8 +108,212 @@
   ],
   "issues": [
     {
+      "number": 3346,
+      "title": "Published Windows ARM64 app using SkiaSharp 3.116.0 crashes immediately on launch. Works fine in Debug and Release modes, only fails when published. Reporter found that installing the Microsoft Visual C\u002B\u002B Redistributable resolves the crash, suggesting a missing dynamic CRT dependency in the native binaries. Issue was closed after PR #3510 added build-time verification that ANGLE DLLs (libEGL.dll, libGLESv2.dll) and all Windows native binaries are statically linked against the CRT, preventing future regressions.",
+      "issueTitle": "[BUG] Crash on windows arm64 in a publish version",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "high",
+      "action": "close-as-fixed",
+      "confidence": 0.92,
+      "isRegression": false,
+      "closeable": false,
+      "state": "closed",
+      "analyzedAt": "2026-02-12T16:05:45Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3188,
+      "title": "DrawVertices outputs black triangle instead of colored gradient in v3 due to upstream Skia behavior change \u2014 default paint color (black) is now modulated with vertex colors",
+      "issueTitle": "[BUG] Canvas.DrawVertices Outputs Black Image After Update to v3",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "close-with-docs",
+      "confidence": 0.8,
+      "isRegression": true,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:05:45Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3175,
+      "title": "SKBitmap.Decode reads only a single chunk from chunked/network streams (Azure Blob), producing truncated images for large PNG/BMP files \u2014 duplicate of #1962",
+      "issueTitle": "[BUG] Not full stream reading for bmp/png images",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "high",
+      "action": "close-as-duplicate",
+      "confidence": 0.9,
+      "isRegression": true,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:05:45Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2997,
+      "title": "SKMatrix.MapRect normalizes (sorts) the output rectangle \u2014 this is upstream Skia behavior, not a SkiaSharp bug",
+      "issueTitle": "[BUG] SKMatrix.MapRect method standardizes the output rectangle.",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "low",
+      "action": "close-with-docs",
+      "confidence": 0.8,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T15:58:59Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2759,
+      "title": "Reporter claims SKBitmap.Decode returns null when decoding a PNG file on SkiaSharp 2.88.3 (also mentions 2.88.6). Filed as a follow-up to #933, which was closed as a duplicate of #1981. The #1981 fix (zlib update for SSE decompression bugs) shipped in v2.88.1. No sample image, stack trace, or reproduction project is provided, making it impossible to verify whether this is the same zlib issue or a different PNG decoding problem.",
+      "issueTitle": "SKBitmap.Decode returns null when decode PNG image.",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "request-info",
+      "confidence": 0.9,
+      "isRegression": true,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2511,
+      "title": "AccessViolationException in NonAlertableWin32Lock.EnterCriticalSection during finalizer-driven handle deregistration on WinForms app close \u2014 duplicate of #2194, fixed in v2.88.1 by #2195",
+      "issueTitle": "[BUG] ",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "close-as-duplicate",
+      "confidence": 0.92,
+      "isRegression": false,
+      "closeable": true,
+      "state": "closed",
+      "analyzedAt": "2026-02-12T16:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2421,
+      "title": "DllNotFoundException for libSkiaSharp.framework on real iOS device \u2014 works on simulator and Android. Likely iOS managed linker stripping the native framework or Hot Restart limitation.",
+      "issueTitle": ".NET MAUI iOS SKPaint crash",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "high",
+      "action": "close-with-docs",
+      "confidence": 0.78,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T15:53:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2383,
+      "title": "Question: Does SkiaSharp support a 24-bit RGB color type (Format24bppRgb equivalent from System.Drawing)?",
+      "issueTitle": "Does skia supports a 24-bit color type like System.Drawing.Imaging.PixelFormat.Format24bppRgb",
+      "type": "type/question",
+      "area": "area/SkiaSharp",
+      "action": "close-with-docs",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-12T15:53:16Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 1898,
+      "title": "Reporter observes that SkiaSharp.Views.Forms 2.88.0-preview.179 has an empty netcoreapp3.1 directory in NuGet Package Explorer. The directory actually contains _._placeholder files, which is a standard NuGet convention for declaring TFM support without dedicated assemblies \u2014 the netstandard2.0 assembly is used at runtime. Both netcoreapp3.1 (EOL Dec 2022) and Xamarin.Forms (superseded by MAUI) are obsolete, and SkiaSharp 3.x removed Views.Forms entirely.",
+      "issueTitle": "[BUG] Netcore 3.1 missing support",
+      "type": "type/question",
+      "area": "area/SkiaSharp.Views.Forms",
+      "action": "close-with-docs",
+      "confidence": 0.88,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-12T15:53:16Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 1773,
+      "title": "Accidental/test issue with no technical content \u2014 self-closed immediately by reporter",
+      "issueTitle": "TO DELETE PLEASE",
+      "type": "type/question",
+      "area": "area/SkiaSharp",
+      "action": "close-as-fixed",
+      "confidence": 0.99,
+      "isRegression": false,
+      "closeable": false,
+      "state": "closed",
+      "analyzedAt": "2026-02-12T15:47:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 911,
+      "title": "Feature request to add a \u0027Getting Started\u0027 section to README.md with curated links to introductory tutorials, platform-specific guides (Xamarin Forms, WPF, etc.), and API documentation to help new users find resources quickly.",
+      "issueTitle": "[FEATURE] Add Getting Started to Readme.md",
+      "type": "type/documentation",
+      "area": "area/Docs",
+      "action": "keep-open",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T15:46:26Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 607,
+      "title": "SKTouchAction.Entered and SKTouchAction.Exited events are not fired on iOS and Android \u2014 only implemented on Windows and Tizen",
+      "issueTitle": "Feature Request: Implement entered and exited on iOS / Android",
+      "type": "type/feature-request",
+      "area": "area/SkiaSharp.Views.Maui",
+      "action": "needs-investigation",
+      "confidence": 0.75,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T15:46:27Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 576,
+      "title": "GPU-backed SKSurface memory leak on Intel HD Graphics 520 caused by not disposing SKImage instances returned by Snapshot() before overwriting references. The reporter creates a GPU surface with GRContext/OpenGL, calls Snapshot() to capture the rendered content, and stores the resulting SKImage \u2014 but overwrites the previous SKImage reference without disposing it first, causing 30-40MB memory step-ups per iteration until crash.",
+      "issueTitle": "GPU Accelerated SKSurface Memory Leaks on Integrated HD Graphics",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "close-with-docs",
+      "confidence": 0.8,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-12T15:38:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
       "number": 552,
       "title": "Maintainer-filed enhancement to investigate reusing SKSurface instances across draw calls in all SkiaSharp view implementations. Constructing SKSurface each frame is reported as expensive, and related issue #534 identified slow GTK rendering from this pattern. Currently, most views (WPF, WinForms, WinUI, Blazor, Android, Apple) create a new SKSurface per frame even though they reuse the underlying backing buffer. Only the GTK3 SKDrawingArea actually caches and reuses the SKSurface object itself.",
+      "issueTitle": "Investigate where to reuse SKSurface in the views",
       "type": "type/enhancement",
       "area": "area/SkiaSharp.Views",
       "action": "keep-open",
@@ -92,6 +328,7 @@
     {
       "number": 533,
       "title": "Android SKGLView renders at uncapped framerate (300\u002B FPS) after switch from GLSurfaceView to GLTextureView in v1.60.1. The custom GLTextureView does not call eglSwapInterval, so VSync is not enforced, causing excessive CPU/GPU/battery drain when HasRenderLoop is enabled.",
+      "issueTitle": "[Android] Uncapped framerates (300fps) on SKGLView.PaintSurface after updating package",
       "type": "type/enhancement",
       "area": "area/SkiaSharp.Views",
       "severity": "medium",
@@ -107,6 +344,7 @@
     {
       "number": 528,
       "title": "SKShaper.Shape() returns all-zero Codepoints on Android when the typeface is loaded via SKTypeface.FromStream(). The issue is Android-specific \u2014 WPF and iOS work correctly with the same code. The reporter discovered that switching to SKTypeface.FromData(SKData.Create(stream)) resolves the problem, suggesting a bug in how stream-based typefaces interact with HarfBuzz\u0027s font table reading on Android.",
+      "issueTitle": "SkiaSharp.HarfBuzz on Android - result from Shape() - SKShaper.Result.Codepoints are all 0 ",
       "type": "type/bug",
       "area": "area/SkiaSharp.HarfBuzz",
       "severity": "medium",
@@ -122,6 +360,7 @@
     {
       "number": 425,
       "title": "SKCodecOrigin (now SKEncodedOrigin) returns TopLeft for DNG and CR2 RAW files instead of their actual EXIF orientation",
+      "issueTitle": "Incorrect SKCodecOrigin from dng files",
       "type": "type/bug",
       "area": "area/libSkiaSharp.native",
       "severity": "low",
@@ -137,6 +376,7 @@
     {
       "number": 315,
       "title": "Pinch and pan gestures conflict with SkiaSharp touch events on Android in Xamarin.Forms",
+      "issueTitle": "Pinch and Pan Gesture with touch effect not works for android version, project developed in xamarin.forms",
       "type": "type/bug",
       "area": "area/SkiaSharp.Views.Forms",
       "severity": "low",
@@ -152,6 +392,7 @@
     {
       "number": 310,
       "title": "Re-entrant OnPaint in WinForms SKControl causes ExternalException in Bitmap.UnlockBits. When the user resizes the SKControl from within the PaintSurface event handler, a parent container (DevExpress XtraScrollableControl) can trigger a nested OnPaint call. The re-entrant call disposes and recreates the GDI\u002B bitmap via CreateBitmap(), so when the outer OnPaint tries to call UnlockBits on the now-disposed bitmap, GDI\u002B throws. The code still has no re-entrancy guard.",
+      "issueTitle": "Resizing the view while painting: A generic error occurred in GDI\u002B",
       "type": "type/bug",
       "area": "area/SkiaSharp.Views",
       "severity": "medium",
@@ -167,6 +408,7 @@
     {
       "number": 243,
       "title": "Feature request to bundle ANGLE (OpenGL ES over DirectX) with SkiaSharp for Windows desktop runtimes (WPF/WinForms). Originally filed for Win7 with DX9 support, the discussion evolved into how SkiaSharp could ship GPU-accelerated views for classic Windows desktop by packaging ANGLE as a separate NuGet dependency. SkiaSharp already has ANGLE interop code (GRGlInterface.CreateAngle, AngleSwapChainPanel for WinUI) and a Direct3D backend (GRContext.CreateDirect3D), but no GPU-accelerated views ship for WPF/WinForms.",
+      "issueTitle": "Include ANGLE for win7-* runtimes",
       "type": "type/feature-request",
       "area": "area/SkiaSharp.Views",
       "action": "keep-open",
@@ -181,6 +423,7 @@
     {
       "number": 209,
       "title": "Concurrent calls to SKBitmap.Decode from multiple threads cause AccessViolationException crashes. Reported across IIS, ASP.NET Core, Azure Functions, and .NET console apps. The underlying Skia C\u002B\u002B codec is not thread-safe, and simultaneous decode operations on separate SKBitmap instances still crash. Multiple reporters confirm a SemaphoreSlim(1,1) workaround eliminates the crash but serializes decoding. The issue has persisted across SkiaSharp versions from 1.x through 2.88.5, with reports spanning 2016\u20132024.",
+      "issueTitle": "Thread Safety in SKBitmap.Decode?",
       "type": "type/bug",
       "area": "area/SkiaSharp",
       "severity": "critical",

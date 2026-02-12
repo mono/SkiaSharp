@@ -1,258 +1,200 @@
 {
   "meta": {
-    "schemaVersion": "2.1",
+    "schemaVersion": "1.0",
     "number": 2421,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T23:45:00Z",
-    "currentLabels": [],
-    "state": "open"
+    "analyzedAt": "2026-02-12T15:53:00Z",
+    "currentLabels": []
   },
-  "summary": "DllNotFoundException on iOS physical device \u2014 @rpath/libSkiaSharp.framework/libSkiaSharp not found when creating SKPaint in .NET MAUI app",
+  "summary": "DllNotFoundException for libSkiaSharp.framework on real iOS device \u2014 works on simulator and Android. Likely iOS managed linker stripping the native framework or Hot Restart limitation.",
   "classification": {
     "type": {
       "value": "type/bug",
-      "confidence": 0.8
+      "confidence": 0.85
     },
     "area": {
       "value": "area/libSkiaSharp.native",
-      "confidence": 0.9
+      "confidence": 0.92
     },
     "platforms": [
-      {
-        "value": "os/iOS",
-        "confidence": 0.95
-      }
+      "os/iOS"
     ],
     "tenets": [
-      {
-        "value": "tenet/compatibility",
-        "confidence": 0.85
-      }
+      "tenet/compatibility"
     ],
-    "partner": {
-      "value": "partner/maui",
-      "confidence": 0.9
-    }
+    "partner": "partner/maui"
   },
   "evidence": {
-    "bugSignals": {
-      "hasCrash": true,
-      "hasStackTrace": true,
-      "reproQuality": "partial",
-      "severity": "medium",
-      "severityReason": "Crash with workarounds available. Primarily affects Windows Hot Restart deployment to physical iOS devices. Simulator and Android work fine.",
-      "hasWorkaround": true,
-      "workaroundSummary": "Deploy via Mac-connected device (not Windows Hot Restart). Alternatively, set \u003CMtouchLink\u003ENone\u003C/MtouchLink\u003E to prevent linker from stripping the native framework.",
-      "targetFrameworks": [
-        "net6.0-ios",
-        "net7.0-ios"
-      ]
-    },
     "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET MAUI app using OxyPlot.Maui.Skia (or any SkiaSharp consumer)",
+        "Add SkiaSharp.Views.Maui.Controls 2.88.3 and SkiaSharp.HarfBuzz 2.88.3",
+        "Deploy to iOS simulator \u2014 works",
+        "Deploy to real iOS device \u2014 crashes with DllNotFoundException"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, .NET MAUI, iOS real device (specific device/version unknown)",
+      "relatedIssues": [
+        2437,
+        1129,
+        1264,
+        1770
+      ],
       "repoLinks": [
         {
           "url": "https://github.com/iniceice88/OxyPlot.Maui.Skia",
-          "description": "Third-party library using SkiaSharp where the crash occurs"
+          "description": "Third-party OxyPlot MAUI library using SkiaSharp"
         }
-      ],
-      "relatedIssues": [
-        1129,
-        1264,
-        2410,
-        2437
+      ]
+    },
+    "bugSignals": {
+      "severity": "high",
+      "errorType": "crash",
+      "errorMessage": "@rpath/libSkiaSharp.framework/libSkiaSharp",
+      "stackTrace": "at SkiaSharp.SKPaint..ctor() \u2192 OxyPlot.Maui.Skia.SkiaRenderContext..ctor()",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net7.0-ios"
       ]
     },
     "versionAnalysis": {
-      "reason": "SkiaSharp 2.88.3 was the latest stable at filing time (March 2023). The current version is 3.x which has significant packaging changes including revamped native asset packaging for iOS. The specific deployment issue may have been resolved.",
       "mentionedVersions": [
         "2.88.3"
       ],
       "currentRelevance": "unlikely",
-      "migrationPath": "Upgrade to SkiaSharp 3.x (latest stable) which has revamped native asset packaging for .NET MAUI iOS."
-    },
-    "fixStatus": {
-      "likelyFixed": false,
-      "confidence": 0.5,
-      "reason": "SkiaSharp 3.x has overhauled native packaging. The specific Hot Restart / linker interaction may still be an issue as it\u0027s partly a MAUI/Xamarin tooling concern, not purely a SkiaSharp issue. Cannot confirm without testing on 3.x with Hot Restart."
+      "relevanceReason": "SkiaSharp 2.88.x is superseded by 3.x which has improved MAUI integration and iOS packaging. The underlying cause (linker stripping or Hot Restart) may still affect 3.x in certain configurations, but the version is very outdated."
     }
   },
   "analysis": {
-    "summary": "Reporter experiences DllNotFoundException with message \u0027@rpath/libSkiaSharp.framework/libSkiaSharp\u0027 when creating SKPaint on a physical iOS device in .NET MAUI. Works on iOS simulator and Android. This is a well-known iOS native framework deployment issue \u2014 the libSkiaSharp.framework is not being deployed to the device, typically caused by Windows Hot Restart or iOS linker stripping the native framework. Multiple duplicate/related issues exist (#1129, #1264, #2410, #2437).",
-    "keySignals": [
-      {
-        "text": "@rpath/libSkiaSharp.framework/libSkiaSharp",
-        "source": "stack-trace",
-        "interpretation": "iOS P/Invoke path for libSkiaSharp. The native .framework bundle is not present on the device at the expected rpath location."
-      },
-      {
-        "text": "works in the emulator but not on a real device",
-        "source": "body",
-        "interpretation": "Classic Hot Restart or deployment issue \u2014 simulator uses local build artifacts differently than device deployment."
-      },
-      {
-        "text": "The same for the example project",
-        "source": "body",
-        "interpretation": "Not specific to reporter\u0027s code \u2014 systematic deployment issue."
-      },
-      {
-        "text": "I have built a release build since I saw one post claiming you need to build it in release mode for the DLL to show up",
-        "source": "body",
-        "interpretation": "Reporter tried release mode as workaround \u2014 suggests they\u0027re aware this is a deployment/packaging issue."
-      },
-      {
-        "text": "SkiaSharp.Views.Maui.Controls version 2.88.3",
-        "source": "body",
-        "interpretation": "Using 2.88.3 which is known to have iOS deployment issues on certain configurations."
-      }
-    ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "The native framework fails to load on physical iOS devices. While it may be caused by tooling (Hot Restart, linker), SkiaSharp should work out of the box on iOS physical devices. This is a deployment/packaging bug, not a user error.",
-        "alternatives": [
-          {
-            "value": "type/question",
-            "whyRejected": "Reporter is not asking how to do something \u2014 they report a crash that prevents any SkiaSharp usage on iOS devices."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/libSkiaSharp.native",
-        "expandedReason": "The issue is about the native libSkiaSharp.framework not being deployed to the iOS device. This is a native asset packaging issue, not a C# binding problem.",
-        "alternatives": [
-          {
-            "value": "area/SkiaSharp.Views.Maui",
-            "whyRejected": "Although MAUI is involved, the crash is in the core native library loading, not in the Views layer."
-          }
-        ]
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "medium",
-        "expandedReason": "Complete failure to use SkiaSharp on iOS physical devices is severe, but workarounds exist (deploy via Mac, disable linker, upgrade SkiaSharp version). Simulator works fine for development."
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/iOS",
-        "expandedReason": "Crash is iOS-specific. Reporter explicitly states Android and iOS simulator work fine."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/compatibility",
-        "expandedReason": "This is a compatibility issue between SkiaSharp\u0027s iOS native packaging and certain deployment configurations (Hot Restart, Enterprise certificates, linker settings)."
-      },
-      {
-        "field": "partner",
-        "chosen": "partner/maui",
-        "expandedReason": "Reporter is using .NET MAUI with SkiaSharp.Views.Maui.Controls. The issue is related to MAUI iOS deployment tooling."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "close-as-duplicate",
-        "expandedReason": "This is a known issue with multiple existing reports. #2410 is the primary open issue tracking the same problem (same version, same error, same scenario). Reporter cwilde123 even commented on #2410 before opening #2421, confirming they\u0027re the same issue."
-      },
-      {
-        "field": "fixStatus.likelyFixed",
-        "chosen": "false",
-        "expandedReason": "Cannot confirm without testing on SkiaSharp 3.x with Hot Restart. The root cause is partly in MAUI tooling, not purely SkiaSharp."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "unlikely",
-        "expandedReason": "SkiaSharp 3.x has revamped native asset packaging. The 2.88.3-specific packaging has been replaced entirely, making this specific issue unlikely to reproduce on current versions."
-      }
-    ],
-    "uncertainties": [
-      "Whether reporter is using Windows Hot Restart (most likely cause) or deploying via Mac",
-      "Whether upgrading to SkiaSharp 3.x resolves the issue for this specific configuration",
-      "Whether the linker is stripping the framework or it\u0027s never being included in the first place"
-    ],
-    "assumptions": [
-      "Assumed reporter is likely using Windows Hot Restart based on the pattern matching other reports",
-      "Reporter\u0027s mention of \u0027release build\u0027 suggests they tried multiple build configurations"
-    ],
+    "summary": "DllNotFoundException on real iOS device but not simulator. The native framework libSkiaSharp.framework is not being loaded at runtime. Three known causes match: (1) iOS managed linker stripping the native framework, (2) Windows Hot Restart not supporting native frameworks, (3) third-party library not propagating NativeAssets correctly.",
     "codeInvestigation": [
       {
         "file": "binding/SkiaSharp/SkiaApi.cs",
-        "lines": "9-11",
-        "relevance": "On iOS/tvOS, the P/Invoke path is hardcoded to \u0027@rpath/libSkiaSharp.framework/libSkiaSharp\u0027. If the framework bundle is missing from the app package, this P/Invoke will fail with DllNotFoundException. This is expected behavior \u2014 the issue is in deployment, not in the binding code."
+        "finding": "iOS uses \u0060@rpath/libSkiaSharp.framework/libSkiaSharp\u0060 as the P/Invoke library name. This requires the .framework bundle to be embedded in the app\u0027s Frameworks/ directory with correct rpath.",
+        "relevance": "direct",
+        "lines": "9-13"
       },
       {
-        "file": "binding/SkiaSharp/SKPaint.cs",
-        "lines": "48-54",
-        "relevance": "SKPaint constructor calls SkiaApi.sk_compatpaint_new() which triggers the P/Invoke into libSkiaSharp. This is the first native call in the reporter\u0027s code path, so it\u0027s where the DllNotFoundException surfaces."
+        "file": "binding/SkiaSharp.NativeAssets.iOS/SkiaSharp.NativeAssets.iOS.csproj",
+        "finding": "Package includes framework bundles for both \u0060runtimes/ios/native/\u0060 and \u0060runtimes/iossimulator/native/\u0060. The packaging is correct \u2014 the issue is downstream (linker or deployment tool).",
+        "relevance": "direct",
+        "lines": "8-10"
+      },
+      {
+        "file": "binding/IncludeNativeAssets.SkiaSharp.targets",
+        "finding": "iOS framework is included via NativeReference with Kind=\u0027Framework\u0027, conditioned on RuntimeIdentifier. For non-simulator (real device), uses \u0060ios/libSkiaSharp.framework\u0060. This is the standard approach for iOS native framework bundling.",
+        "relevance": "context",
+        "lines": "28-31"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.iOS/buildTransitive/SkiaSharp.targets",
+        "finding": "The buildTransitive targets file is empty \u2014 no additional MSBuild logic for ensuring the framework survives linker passes. This may contribute to the linker stripping issue.",
+        "relevance": "related"
       }
-    ]
+    ],
+    "rationale": "Classified as type/bug because the reporter describes a crash (DllNotFoundException) that prevents SkiaSharp from functioning on real iOS devices. Area is libSkiaSharp.native because the root cause is native library deployment/loading, not the managed wrapper. The \u0027works on simulator, fails on device\u0027 pattern is a strong signal for linker stripping \u2014 the simulator uses a different code signing and linking pipeline. Issue #2437 (identical error, same SkiaSharp version, filed 3 weeks later) was resolved by community identifying two root causes: MtouchLink stripping the framework, and Windows Hot Restart not supporting native frameworks. Severity is high because the app is completely non-functional on physical iOS devices.",
+    "keySignals": [
+      {
+        "text": "\u0027@rpath/libSkiaSharp.framework/libSkiaSharp\u0027",
+        "source": "issue body (stack trace)",
+        "interpretation": "The iOS-specific P/Invoke path for libSkiaSharp. DllNotFoundException here means the .framework bundle is not in the app bundle at runtime."
+      },
+      {
+        "text": "it works in the emulator but not on a real device",
+        "source": "issue body",
+        "interpretation": "Classic signal for iOS linker stripping native frameworks. The simulator uses a different build pipeline (no signing, different linking) that preserves the framework."
+      },
+      {
+        "text": "it works good on android and iOS simulator but not on a real IOS device",
+        "source": "issue body",
+        "interpretation": "Cross-platform confirmation rules out a SkiaSharp code bug. The managed code is correct \u2014 the native binary isn\u0027t being deployed."
+      },
+      {
+        "text": "I have built a release build since I saw one post claiming you need to build it in release mode for the DLL to show up",
+        "source": "issue body",
+        "interpretation": "Reporter tried release mode, still fails. This rules out debug-only configuration issues but not linker behavior (which is typically more aggressive in release)."
+      }
+    ],
+    "errorFingerprint": "DllNotFoundException:@rpath/libSkiaSharp.framework/libSkiaSharp:ios-device",
+    "workarounds": [
+      "Add \u003CMtouchLink\u003ENone\u003C/MtouchLink\u003E to the iOS .csproj to disable the managed linker (prevents framework stripping)",
+      "For release builds, use \u003CMtouchLink\u003ESdkOnly\u003C/MtouchLink\u003E instead of full linking to preserve the native framework",
+      "Ensure you are NOT using Windows Hot Restart for iOS deployment \u2014 it doesn\u0027t support native framework embedding. Deploy from a Mac.",
+      "Add SkiaSharp.Views.Maui.Controls as a direct PackageReference in the application project (not just in the library) to ensure NativeAssets flow correctly",
+      "Upgrade to SkiaSharp 3.x which has improved .NET MAUI integration"
+    ],
+    "nextQuestions": [
+      "Is the reporter using Windows Hot Restart or deploying from a Mac?",
+      "What specific iOS device and iOS version is being used?",
+      "Does adding \u003CMtouchLink\u003ENone\u003C/MtouchLink\u003E resolve the issue?",
+      "Is the NativeAssets.iOS package present in the build output?"
+    ],
+    "resolution": {
+      "hypothesis": "The iOS managed linker strips the libSkiaSharp.framework from the app bundle during the build for real devices. The simulator build pipeline doesn\u0027t perform the same linking, which is why it works there. Alternatively, deploying via Windows Hot Restart doesn\u0027t embed native frameworks at all.",
+      "proposals": [
+        {
+          "description": "Add \u003CMtouchLink\u003ENone\u003C/MtouchLink\u003E to the .csproj for the iOS target. This prevents the managed linker from stripping the native framework. For release builds, use \u003CMtouchLink\u003ESdkOnly\u003C/MtouchLink\u003E instead.",
+          "title": "Disable iOS linker",
+          "codeSnippet": "\u003CPropertyGroup Condition=\u0022$(TargetFramework.Contains(\u0027-ios\u0027))\u0022\u003E\n  \u003CMtouchLink\u003ENone\u003C/MtouchLink\u003E\n\u003C/PropertyGroup\u003E",
+          "confidence": 0.7,
+          "effort": "trivial"
+        },
+        {
+          "description": "If using Visual Studio on Windows with Hot Restart, switch to deploying from a Mac. Hot Restart does not support embedding native frameworks.",
+          "title": "Deploy from Mac instead of Hot Restart",
+          "confidence": 0.6,
+          "effort": "trivial"
+        },
+        {
+          "description": "Add SkiaSharp and SkiaSharp.Views.Maui.Controls as direct PackageReference in the executable MAUI project, not just via the OxyPlot.Maui.Skia transitive reference. This ensures NativeAssets.iOS is properly resolved.",
+          "title": "Direct PackageReference in app project",
+          "codeSnippet": "\u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00222.88.3\u0022 /\u003E",
+          "confidence": 0.65,
+          "effort": "trivial"
+        },
+        {
+          "description": "SkiaSharp 3.x includes improved MAUI integration and iOS packaging. Upgrading may resolve the deployment issue.",
+          "title": "Upgrade to SkiaSharp 3.x",
+          "confidence": 0.55,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Disable iOS linker",
+      "recommendedReason": "This was confirmed as working by a community member in #2437. Simplest change with immediate effect. For production, can be refined to SdkOnly linking."
+    }
   },
   "output": {
     "actionability": {
-      "suggestedAction": "close-as-duplicate",
-      "confidence": 0.88,
-      "reason": "This is a well-documented issue tracked in #2410 (same MAUI version, same error, same iOS-only crash pattern). Reporter cwilde123 also commented on #2410 confirming the same problem."
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.78,
+      "reason": "This is a well-understood iOS deployment issue with multiple workarounds identified in #2437. The issue is 3 years old with no comments, using outdated SkiaSharp 2.88.3. The same issue was already reported and resolved in #2437."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Apply bug, native, iOS, MAUI labels",
         "risk": "low",
-        "description": "Apply bug, native, iOS, compatibility, and MAUI partner labels",
-        "reason": "Matches classification \u2014 iOS native loading failure in MAUI context",
         "confidence": 0.92,
-        "payload": {
-          "labelsToAdd": [
-            "type/bug",
-            "area/libSkiaSharp.native",
-            "os/iOS",
-            "tenet/compatibility",
-            "partner/maui"
-          ],
-          "labelsToRemove": []
-        }
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/iOS",
+          "partner/maui"
+        ]
       },
       {
-        "id": "dup-1",
-        "type": "link-duplicate",
-        "risk": "medium",
-        "description": "Mark as duplicate of #2410",
-        "reason": "Same error (@rpath/libSkiaSharp.framework/libSkiaSharp), same version (2.88.3), same scenario (MAUI iOS physical device crash). Reporter cwilde123 also commented on #2410.",
-        "confidence": 0.88,
-        "payload": {
-          "duplicateOf": 2410,
-          "comment": null
-        }
+        "type": "link-related",
+        "description": "Cross-reference #2437 (identical error, has community workarounds)",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 2437
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Post diagnosis with workarounds from #2437",
         "risk": "high",
-        "description": "Notify reporter of duplicate and provide workarounds",
-        "reason": "Give reporter actionable workarounds while directing them to the tracked issue",
-        "confidence": 0.85,
-        "dependsOn": "dup-1",
-        "payload": {
-          "commentType": "duplicate-notice",
-          "draftBody": "Thanks for the report. This appears to be the same iOS native framework deployment issue tracked in #2410.\n\nThe \u0060@rpath/libSkiaSharp.framework/libSkiaSharp\u0060 error means the native framework bundle isn\u0027t being included in the app package on physical iOS devices. A few things to try:\n\n1. **Deploy via Mac** \u2014 If you\u0027re using Windows Hot Restart, try connecting the iOS device directly to a Mac and deploying from there. Hot Restart has known issues with native framework deployment.\n2. **Disable linker** \u2014 Add \u0060\u003CMtouchLink\u003ENone\u003C/MtouchLink\u003E\u0060 to your iOS \u0060.csproj\u0060 to prevent the linker from stripping the native framework. For release builds, configure linker exceptions instead.\n3. **Upgrade SkiaSharp** \u2014 Consider upgrading to the latest SkiaSharp version, which has revamped native asset packaging.\n\nClosing as a duplicate of #2410 \u2014 any updates will be posted there.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-2421-comment-1"
-        }
-      },
-      {
-        "id": "close-1",
-        "type": "close-issue",
-        "risk": "medium",
-        "description": "Close as duplicate of #2410",
-        "reason": "Duplicate of #2410 with identical symptoms and root cause",
-        "confidence": 0.88,
-        "dependsOn": "comment-1",
-        "payload": {
-          "reason": "not_planned",
-          "comment": null
-        }
+        "confidence": 0.8,
+        "comment": "Thanks for the report. This is a known issue with the iOS managed linker stripping the native \u0060libSkiaSharp.framework\u0060 from the app bundle when deploying to real devices. The simulator uses a different build pipeline that doesn\u0027t have this problem.\n\nHere are workarounds you can try:\n\n1. **Disable the iOS linker** \u2014 add this to your \u0060.csproj\u0060:\n\n\u0060\u0060\u0060xml\n\u003CPropertyGroup Condition=\u0022$(TargetFramework.Contains(\u0027-ios\u0027))\u0022\u003E\n  \u003CMtouchLink\u003ENone\u003C/MtouchLink\u003E\n\u003C/PropertyGroup\u003E\n\u0060\u0060\u0060\n\nFor release builds, use \u0060\u003CMtouchLink\u003ESdkOnly\u003C/MtouchLink\u003E\u0060 instead.\n\n2. **If deploying from Windows with Hot Restart** \u2014 switch to deploying from a Mac. Hot Restart doesn\u0027t support embedding native frameworks.\n\n3. **Add a direct PackageReference** to \u0060SkiaSharp.Views.Maui.Controls\u0060 in your application project (not just via OxyPlot.Maui.Skia).\n\nSee also #2437 which has the same error and additional discussion. Additionally, upgrading to SkiaSharp 3.x may help as it has improved MAUI packaging."
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/2421"
+  }
 }

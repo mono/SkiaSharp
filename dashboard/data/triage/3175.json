@@ -1,15 +1,14 @@
 {
   "meta": {
-    "schemaVersion": "2.1",
+    "schemaVersion": "1.0",
     "number": 3175,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-11T22:12:00Z",
+    "analyzedAt": "2026-02-12T16:05:45Z",
     "currentLabels": [
       "type/bug"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "SKBitmap.Decode returns incomplete/corrupt image when reading from Azure Blob stream due to single-call Stream.Read in SKManagedStream \u2014 duplicate of #1962",
+  "summary": "SKBitmap.Decode reads only a single chunk from chunked/network streams (Azure Blob), producing truncated images for large PNG/BMP files \u2014 duplicate of #1962",
   "classification": {
     "type": {
       "value": "type/bug",
@@ -20,244 +19,174 @@
       "confidence": 0.95
     },
     "platforms": [
-      {
-        "value": "os/Linux",
-        "confidence": 0.9
-      },
-      {
-        "value": "os/Windows-Classic",
-        "confidence": 0.9
-      }
-    ],
-    "tenets": [
-      {
-        "value": "tenet/reliability",
-        "confidence": 0.92
-      }
+      "os/Linux",
+      "os/Windows-Classic"
     ]
   },
   "evidence": {
-    "bugSignals": {
-      "hasCrash": false,
-      "hasStackTrace": false,
-      "reproQuality": "partial",
-      "severity": "medium",
-      "severityReason": "Image decoding produces corrupt/incomplete output but doesn\u0027t crash. The reporter has a working workaround (MemoryStream copy). Affects network/chunked streams only.",
-      "hasWorkaround": true,
-      "workaroundSummary": "Copy the Azure Blob stream to a MemoryStream before calling SKBitmap.Decode. The reporter already discovered this workaround independently."
-    },
     "reproEvidence": {
-      "relatedIssues": [
-        1962,
-        2514,
-        2249,
-        1985,
-        335
+      "stepsToReproduce": [
+        "Download a PNG/BMP image larger than 4MB from Azure Blob Storage (default chunk size is 4MB)",
+        "Pass the blob stream directly to SKBitmap.Decode(stream)",
+        "Observe that only the first ~4MB of image data is decoded \u2014 the image dimensions are correct but pixel data is truncated",
+        "Workaround: copy the blob stream to a MemoryStream first, then decode from the MemoryStream"
       ],
-      "codeSnippets": [
-        {
-          "code": "await using var image = await blobStorage.GetBlob(blobName, cancellationToken);\nawait using MemoryStream memoryStream = new();\nawait image.CopyToAsync(memoryStream, cancellationToken);\nmemoryStream.Seek(0, SeekOrigin.Begin);\nusing var originalImage = SKBitmap.Decode(memoryStream);",
-          "language": "csharp",
-          "context": "body"
-        }
-      ],
-      "environmentDetails": "Azure Blob Storage stream with 4MB default chunk size. Visual Studio on Windows. Targets Linux and Windows."
+      "environmentDetails": "SkiaSharp 3.116.0, Azure Blob Storage stream, Linux and Windows"
+    },
+    "bugSignals": {
+      "severity": "high",
+      "isRegression": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Only specific data length downloads into image for png/bmp \u2014 image created from first chunk only, but image size is correct",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
     },
     "versionAnalysis": {
-      "reason": "The root cause \u2014 a single stream.Read() call in SKManagedStream.OnReadManagedStream that doesn\u0027t loop to fill the buffer \u2014 has been present since PR #1510 (SkiaSharp 2.80.3) and remains unfixed in 3.116.x. The reporter\u0027s claim that 2.88.9 was \u0027last known good\u0027 is likely inaccurate; the regression was introduced in 2.80.3 per #1962.",
       "mentionedVersions": [
         "3.116.0",
         "2.88.9"
       ],
-      "currentRelevance": "likely"
+      "workedIn": "2.88.9",
+      "brokeIn": "2.80.3",
+      "currentRelevance": "likely",
+      "relevanceReason": "The incomplete stream reading bug in SKManagedStream.OnReadManagedStream was introduced in PR #1510 (v2.80.3) and has not been fixed. The reporter claims 2.88.9 worked, which may indicate they used a different code path or MemoryStream in the older version."
     },
     "regression": {
       "isRegression": true,
-      "confidence": 0.9,
-      "reason": "PR #1510 (commit 61b71d6e4893) replaced BinaryReader.ReadBytes() \u2014 which loops internally until all requested bytes are read or EOF \u2014 with a single stream.Read() call that may return fewer bytes than requested per the .NET Stream contract.",
-      "workedInVersion": "2.80.2",
+      "confidence": 0.85,
+      "reason": "The root cause was introduced in PR #1510 (commit 61b71d6e4893) which changed from BinaryReader.ReadBytes() (loops until all bytes read) to a single stream.Read() call that can return partial data. Reporter states 2.88.9 worked but bug was introduced in 2.80.3.",
       "brokeInVersion": "2.80.3"
-    },
-    "fixStatus": {
-      "likelyFixed": false,
-      "confidence": 0.95,
-      "reason": "Inspected SKManagedStream.OnReadManagedStream at line 99 of binding/SkiaSharp/SKManagedStream.cs \u2014 still uses a single stream.Read() call without a read loop. The bug remains in current main branch."
     }
   },
   "analysis": {
-    "summary": "This is a duplicate of #1962 (and related to #2514, #2249, #1985, #335). The root cause is in SKManagedStream.OnReadManagedStream which calls stream.Read() once without looping. Per the .NET Stream.Read contract, a single call may return fewer bytes than requested even when more data is available (e.g., Azure Blob streams deliver data in chunks). Skia\u0027s native code interprets the short read as a signal that no more data is available, causing incomplete image decoding. The reporter\u0027s workaround of copying to MemoryStream first is correct \u2014 MemoryStream.Read always returns the full requested amount when data is available.",
-    "keySignals": [
-      {
-        "text": "When png is larger than 4mb it looks like image creates only for first 4mb, but image size is correct",
-        "source": "body",
-        "interpretation": "Azure Blob default chunk size is 4MB. stream.Read returns one chunk, Skia treats short read as EOF, so only the first 4MB of pixel data is decoded."
-      },
-      {
-        "text": "When I\u0027m copying blob stream into memory stream it works correctly",
-        "source": "body",
-        "interpretation": "MemoryStream.Read returns all requested bytes from its internal buffer, so the single-read issue doesn\u0027t manifest \u2014 confirms root cause is partial stream reads."
-      },
-      {
-        "text": "Even if I change default size of stream chunk for example into 50mb png/bmp images belove 50mb downloads correctly",
-        "source": "body",
-        "interpretation": "Increasing Azure Blob stream buffer size makes a single Read return all bytes, further confirming the single-call Read as root cause."
-      },
-      {
-        "text": "Last Known Good Version: 2.88.9",
-        "source": "body",
-        "interpretation": "Likely inaccurate \u2014 regression was introduced in 2.80.3 per #1962. Reporter may not have tested with chunked streams on earlier versions."
-      }
-    ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "The reporter describes incorrect behavior \u2014 images decoded from Azure Blob streams are incomplete/corrupt while the same images decode correctly from MemoryStream. This is caused by a known code defect in SKManagedStream.",
-        "alternatives": [
-          {
-            "value": "type/question",
-            "whyRejected": "Not asking how to do something. Reporting a reproducible defect with clear root cause."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp",
-        "expandedReason": "The bug is in SKManagedStream.OnReadManagedStream in the core SkiaSharp binding. Not in Views or any other sub-package."
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "medium",
-        "expandedReason": "Produces corrupt output but doesn\u0027t crash. The workaround (MemoryStream copy) is simple and the reporter already found it. However, it\u0027s a correctness bug that affects many users with network/cloud streams."
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/Linux, os/Windows-Classic",
-        "expandedReason": "Reporter lists both Linux and Windows as affected. The bug is platform-independent (it\u0027s in managed C# code), but these are the platforms the reporter tested on."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/reliability",
-        "expandedReason": "Decoding produces silently corrupt images from certain stream types \u2014 a reliability concern."
-      },
-      {
-        "field": "regression.isRegression",
-        "chosen": "true",
-        "expandedReason": "PR #1510 changed from BinaryReader.ReadBytes (which loops internally) to stream.Read (which doesn\u0027t guarantee full reads). This was documented in detail by #1962."
-      },
-      {
-        "field": "fixStatus.likelyFixed",
-        "chosen": "false",
-        "expandedReason": "Verified in current source: SKManagedStream.cs line 99 still uses a single stream.Read() call without a loop."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "The buggy code path is unchanged in the current main branch. The issue remains relevant."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "close-as-duplicate",
-        "expandedReason": "This is the same bug as #1962, which has a detailed root cause analysis and is still open. Closing as duplicate consolidates tracking."
-      }
-    ],
-    "uncertainties": [
-      "Reporter claims 2.88.9 was the last known good version, but #1962 documents the regression at 2.80.3 \u2014 the reporter may not have tested chunked streams on the older version",
-      "Whether the reporter is using SKBitmap.Decode(Stream) directly on the blob stream or through another path \u2014 the code shown uses MemoryStream (the workaround)"
-    ],
-    "assumptions": [
-      "Assumed the reporter tried SKBitmap.Decode directly with the blob stream before discovering the MemoryStream workaround, even though the code shown already uses the workaround",
-      "Assumed Azure Blob stream is seekable (CanSeek=true) based on the default Azure SDK behavior, routing it through SKManagedStream rather than SKFrontBufferedManagedStream"
-    ],
+    "summary": "SKManagedStream.OnReadManagedStream performs a single stream.Read() call which can return fewer bytes than requested per the .NET Stream contract. Chunked streams (Azure Blob, network streams) commonly return partial reads. This causes Skia\u0027s codec to receive truncated data, producing images with correct dimensions but incomplete pixel data.",
     "codeInvestigation": [
       {
         "file": "binding/SkiaSharp/SKManagedStream.cs",
-        "lines": "89-112",
-        "relevance": "OnReadManagedStream calls stream.Read() once at line 99 without looping. Per .NET docs, Stream.Read may return fewer bytes than requested even when more data is available \u2014 this is the root cause. Azure Blob streams return data in chunks (default 4MB), so a single Read returns at most one chunk."
+        "finding": "OnReadManagedStream performs a single stream.Read() call at line 99. Per the .NET Stream contract, Read() may return fewer bytes than requested even when more data is available. Network and chunked streams commonly do this. The method should loop until all bytes are read or the stream ends.",
+        "relevance": "direct",
+        "lines": "89-111"
       },
       {
         "file": "binding/SkiaSharp/SKCodec.cs",
-        "lines": "278-290",
-        "relevance": "WrapManagedStream decides the stream wrapper: seekable streams get SKManagedStream (the buggy path), non-seekable get SKFrontBufferedManagedStream. Azure Blob streams are seekable, so they hit the buggy SKManagedStream path."
+        "finding": "WrapManagedStream wraps seekable streams with SKManagedStream directly, and non-seekable streams with SKFrontBufferedManagedStream (which itself wraps SKManagedStream). Both paths are affected since the underlying Read is in SKManagedStream.",
+        "relevance": "direct",
+        "lines": "278-290"
       },
       {
         "file": "binding/SkiaSharp/SKBitmap.cs",
-        "lines": "461-471",
-        "relevance": "SKBitmap.Decode(Stream) creates an SKCodec from the stream, which wraps it in SKManagedStream. The codec then reads through SKManagedStream during decoding, hitting the partial-read bug."
+        "finding": "SKBitmap.Decode(Stream) creates an SKCodec from the stream, which goes through WrapManagedStream \u2192 SKManagedStream \u2192 single stream.Read() call.",
+        "relevance": "context",
+        "lines": "461-472"
       },
       {
         "file": "binding/SkiaSharp/SKFrontBufferedManagedStream.cs",
-        "lines": "64-124",
-        "relevance": "The non-seekable stream path also doesn\u0027t loop reads (line 91, 111), but passes through to SKManagedStream which has the same bug. Related issue #2514 reports partial reads on non-seekable streams too."
+        "finding": "SKFrontBufferedManagedStream.OnRead also calls stream.Read() without looping (lines 91, 111) though this wraps an SKStream not a .NET Stream, so the inner SKManagedStream is the actual issue.",
+        "relevance": "related",
+        "lines": "64-124"
       }
-    ]
+    ],
+    "rationale": "This is clearly a bug \u2014 Stream.Read() returning fewer bytes than requested is normal .NET behavior, and the caller must loop to read the full amount. The issue exactly matches #1962 (incomplete stream reading in SKManagedStream introduced in 2.80.3) and #2514 (partial reads from non-seekable streams). Classification as type/bug in area/SkiaSharp core is straightforward since the defect is in SKManagedStream, not in any view or platform layer.",
+    "keySignals": [
+      {
+        "text": "Default stream downloading chunk size is 4mb. When png is larger than 4mb it looks like image creates only for first 4mb",
+        "source": "issue body",
+        "interpretation": "Azure Blob stream returns data in chunks; stream.Read() returns only the first chunk without looping for the rest."
+      },
+      {
+        "text": "When I\u0027m copying blob stream into memory stream it works correctly",
+        "source": "issue body",
+        "interpretation": "MemoryStream.Read() returns all requested bytes since data is already in memory \u2014 confirms the issue is in how SkiaSharp reads from the stream, not in decoding."
+      },
+      {
+        "text": "Even if I change default size of stream chunk for example into 50mb png/bmp images below 50mb downloads correctly",
+        "source": "issue body",
+        "interpretation": "Increasing chunk size makes the single read.Read() call return all data in one shot, bypassing the missing loop. This confirms the root cause."
+      },
+      {
+        "text": "var len = stream.Read(managedBuffer.Array, 0, managedBuffer.Length);",
+        "source": "SKManagedStream.cs:99",
+        "interpretation": "Single Read() call without retry loop \u2014 violates Stream contract which allows partial reads."
+      }
+    ],
+    "workarounds": [
+      "Copy the source stream to a MemoryStream before decoding: await stream.CopyToAsync(memoryStream); memoryStream.Seek(0, SeekOrigin.Begin); SKBitmap.Decode(memoryStream);",
+      "Use SKBitmap.Decode(SKData) instead: read all bytes first with await BinaryData.FromStreamAsync(stream), then decode from the byte array or SKData."
+    ],
+    "nextQuestions": [
+      "Should the fix be a read loop in OnReadManagedStream, or should WrapManagedStream always copy non-seekable streams to memory first?",
+      "Does the same issue affect SKImage.FromEncodedData(Stream)?",
+      "Should SKFrontBufferedManagedStream also be fixed to loop on reads from the underlying stream?"
+    ],
+    "resolution": {
+      "hypothesis": "SKManagedStream.OnReadManagedStream performs a single stream.Read() instead of looping until the requested number of bytes is read or the stream ends. This causes chunked/network streams to produce truncated data.",
+      "proposals": [
+        {
+          "description": "Copy the source stream to a MemoryStream before passing to SKBitmap.Decode. This is what the reporter already discovered.",
+          "title": "Copy to MemoryStream first (workaround)",
+          "codeSnippet": "await using var memoryStream = new MemoryStream();\nawait blobStream.CopyToAsync(memoryStream, cancellationToken);\nmemoryStream.Seek(0, SeekOrigin.Begin);\nusing var bitmap = SKBitmap.Decode(memoryStream);",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "description": "Read all bytes into memory first, then use SKBitmap.Decode(byte[]) or SKBitmap.Decode(SKData) to avoid the stream reading issue entirely.",
+          "title": "Use SKData.Create from byte array (workaround)",
+          "codeSnippet": "using var memoryStream = new MemoryStream();\nawait blobStream.CopyToAsync(memoryStream, cancellationToken);\nusing var bitmap = SKBitmap.Decode(memoryStream.ToArray());",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "description": "Replace the single stream.Read() call in SKManagedStream.OnReadManagedStream with a loop that reads until all requested bytes are obtained or the stream truly ends. This is the proper fix matching the old BinaryReader.ReadBytes() behavior.",
+          "title": "Add read loop in OnReadManagedStream (fix)",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Copy to MemoryStream first (workaround)",
+      "recommendedReason": "The reporter already found this workaround. It\u0027s reliable and trivial to implement. The proper fix requires a code change in SKManagedStream that should be done as part of addressing #1962."
+    }
   },
   "output": {
     "actionability": {
       "suggestedAction": "close-as-duplicate",
-      "confidence": 0.92,
-      "reason": "This is the same root cause as #1962 \u2014 SKManagedStream.OnReadManagedStream uses a single stream.Read() call that doesn\u0027t loop to fill the buffer. Multiple other issues (#2514, #2249, #1985, #335) report the same problem with network/cloud streams."
+      "confidence": 0.9,
+      "reason": "This is a duplicate of #1962 (incomplete stream reading in SKManagedStream introduced in 2.80.3). The same root cause \u2014 single stream.Read() instead of a loop \u2014 and the same workaround (copy to MemoryStream). Also related to #2514 and #2249."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Apply bug and platform labels",
         "risk": "low",
-        "description": "Apply area, platform, and tenet labels",
-        "reason": "Matches classification \u2014 core SkiaSharp bug affecting Linux and Windows, reliability tenet",
         "confidence": 0.95,
-        "payload": {
-          "labelsToAdd": [
-            "area/SkiaSharp",
-            "os/Linux",
-            "os/Windows-Classic",
-            "tenet/reliability"
-          ],
-          "labelsToRemove": []
-        }
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Linux",
+          "os/Windows-Classic"
+        ]
       },
       {
-        "id": "dup-1",
-        "type": "link-duplicate",
-        "risk": "medium",
-        "description": "Mark as duplicate of #1962",
-        "reason": "Identical root cause: SKManagedStream.OnReadManagedStream single-call Stream.Read bug. #1962 has detailed analysis and is the canonical tracking issue.",
-        "confidence": 0.92,
-        "payload": {
-          "duplicateOf": 1962,
-          "comment": null
-        }
-      },
-      {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Acknowledge the bug, confirm it\u0027s a known issue, provide workaround context",
         "risk": "high",
-        "description": "Acknowledge the bug, confirm workaround, and link to the canonical issue",
-        "reason": "Reporter needs confirmation their workaround is correct and a pointer to the tracked issue",
-        "confidence": 0.88,
-        "dependsOn": "dup-1",
-        "payload": {
-          "commentType": "duplicate-notice",
-          "draftBody": "Thanks for the report \u2014 you\u0027ve identified a real bug, and your workaround of copying to a \u0060MemoryStream\u0060 first is the right approach.\n\nThe root cause is in \u0060SKManagedStream.OnReadManagedStream\u0060, which calls \u0060stream.Read()\u0060 once without looping. Per the .NET \u0060Stream.Read\u0060 contract, a single call can return fewer bytes than requested even when more data is available \u2014 which is exactly what happens with Azure Blob streams that deliver data in chunks.\n\nThis is tracked in #1962 (and also reported in #2514, #2249). Closing as a duplicate so discussion stays consolidated there.\n\nIn the meantime, the \u0060MemoryStream\u0060 copy workaround you\u0027re already using is the most reliable path:\n\n\u0060\u0060\u0060csharp\nawait using var blobStream = await blobStorage.GetBlob(blobName, cancellationToken);\nawait using var memoryStream = new MemoryStream();\nawait blobStream.CopyToAsync(memoryStream, cancellationToken);\nmemoryStream.Seek(0, SeekOrigin.Begin);\nusing var bitmap = SKBitmap.Decode(memoryStream);\n\u0060\u0060\u0060\n\nNote: \u0060SKBitmap.Decode()\u0060 can return \u0060null\u0060 if the codec fails to parse the image, so you may want to add a null check before using the result.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-3175-comment-1"
-        }
+        "confidence": 0.9,
+        "comment": "Thanks for the report. This is a known issue with how SkiaSharp reads from chunked or network streams \u2014 \u0060SKManagedStream.OnReadManagedStream\u0060 performs a single \u0060stream.Read()\u0060 call instead of looping until all requested bytes are read. Azure Blob streams return data in chunks, so only the first chunk gets decoded.\n\nYou\u0027ve already found the correct workaround: copy to a \u0060MemoryStream\u0060 first. Alternatively, you can read all bytes and use \u0060SKBitmap.Decode(byte[])\u0060 to avoid the stream path entirely.\n\nThis is a duplicate of #1962, which tracks the root cause (introduced in v2.80.3 when \u0060BinaryReader.ReadBytes()\u0060 was replaced with a single \u0060stream.Read()\u0060 call). See also #2514 for the same issue with non-seekable streams."
       },
       {
-        "id": "close-1",
-        "type": "close-issue",
+        "type": "link-duplicate",
+        "description": "Mark as duplicate of #1962 (incomplete stream reading in SKManagedStream)",
         "risk": "medium",
+        "confidence": 0.9,
+        "linkedIssue": 1962
+      },
+      {
+        "type": "close-issue",
         "description": "Close as duplicate of #1962",
-        "reason": "Same root cause, same code path, canonical issue is #1962",
-        "confidence": 0.92,
-        "dependsOn": "comment-1",
-        "payload": {
-          "reason": "not_planned",
-          "comment": null
-        }
+        "risk": "medium",
+        "confidence": 0.88
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/3175"
+  }
 }

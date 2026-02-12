@@ -1,17 +1,16 @@
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "1.0",
     "number": 3346,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-09-08T00:00:00Z",
+    "analyzedAt": "2026-02-12T16:05:45Z",
     "currentLabels": [
       "type/bug",
       "os/Windows-Classic",
       "tenet/reliability"
-    ],
-    "state": "closed"
+    ]
   },
-  "summary": "MAUI app crashes on Windows ARM64 when published as MSIX; installing VC\u002B\u002B Redistributable resolves it",
+  "summary": "Published Windows ARM64 app using SkiaSharp 3.116.0 crashes immediately on launch. Works fine in Debug and Release modes, only fails when published. Reporter found that installing the Microsoft Visual C\u002B\u002B Redistributable resolves the crash, suggesting a missing dynamic CRT dependency in the native binaries. Issue was closed after PR #3510 added build-time verification that ANGLE DLLs (libEGL.dll, libGLESv2.dll) and all Windows native binaries are statically linked against the CRT, preventing future regressions.",
   "classification": {
     "type": {
       "value": "type/bug",
@@ -19,289 +18,167 @@
     },
     "area": {
       "value": "area/libSkiaSharp.native",
-      "confidence": 0.85
+      "confidence": 0.82
     },
     "platforms": [
-      {
-        "value": "os/Windows-Classic",
-        "confidence": 0.95
-      }
+      "os/Windows-Classic"
     ],
     "tenets": [
-      {
-        "value": "tenet/reliability",
-        "confidence": 0.95
-      }
-    ],
-    "partner": {
-      "value": "partner/maui",
-      "confidence": 0.75
-    }
+      "tenet/reliability"
+    ]
   },
   "evidence": {
-    "bugSignals": {
-      "hasCrash": true,
-      "hasStackTrace": false,
-      "reproQuality": "complete",
-      "severity": "medium",
-      "severityReason": "Crash on published builds is severe (app won\u0027t start), but a workaround exists (install VC\u002B\u002B Redistributable) and the affected audience is narrow (ARM64 Windows published deployments only).",
-      "hasWorkaround": true,
-      "workaroundSummary": "Install Microsoft Visual C\u002B\u002B Redistributable on the target ARM64 Windows machine before running the published app.",
-      "targetFrameworks": [
-        "net9.0-windows10.0.19041.0"
-      ]
-    },
     "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a SkiaSharp app targeting Windows ARM64",
+        "Build in Release mode \u2014 works fine",
+        "Publish the app for Windows ARM64",
+        "Run the published executable on a fresh ARM64 Windows machine without VC\u002B\u002B Redistributable installed",
+        "App crashes immediately on launch"
+      ],
+      "environmentDetails": "Windows 10 and 11, ARM64, SkiaSharp 3.116.0, Visual Studio (Windows)",
       "repoLinks": [
         {
-          "url": "https://github.com/riccardomartins/ArmDemoTryout",
-          "description": ".NET MAUI app demonstrating the ARM64 Windows crash. Uses SkiaSharp.Views.Maui.Controls 3.119.0 and Svg.Skia 3.0.6 with MSIX packaging."
+          "url": "https://github.com/riccardomartins/ArmDemoTryout/tree/main/ArmDemoTryout",
+          "description": "Minimal repro project from reporter"
         }
-      ],
-      "relatedIssues": [
-        3155,
-        136
-      ],
-      "stepsToReproduce": [
-        "Clone https://github.com/riccardomartins/ArmDemoTryout",
-        "Open in Visual Studio on a Windows ARM64 machine",
-        "Build and run in Debug or Release mode \u2014 works fine",
-        "Publish the app as MSIX for Windows ARM64",
-        "Run the published executable on a fresh ARM64 Windows machine without VC\u002B\u002B Redistributable installed",
-        "App starts and crashes immediately"
-      ],
-      "codeSnippets": [
-        {
-          "code": "\u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00223.119.0\u0022 /\u003E\n\u003CPackageReference Include=\u0022Svg.Skia\u0022 Version=\u00223.0.6\u0022 /\u003E",
-          "language": "xml",
-          "context": "Project dependencies from the repro csproj. Uses MAUI with MSIX packaging (WindowsPackageType=MSIX)."
-        }
-      ],
-      "environmentDetails": "Windows 10 and 11 ARM64, Visual Studio (Windows), SkiaSharp 3.116.0 (reported) / 3.119.0 (in repro csproj), .NET 9, MSIX packaging"
+      ]
+    },
+    "bugSignals": {
+      "severity": "high",
+      "errorType": "crash",
+      "errorMessage": "Application crashes immediately on launch when published for Windows ARM64",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0-windows"
+      ]
     },
     "versionAnalysis": {
-      "reason": "Issue reported against 3.116.0 but repro project references 3.119.0, indicating it persists across recent versions. The VC\u002B\u002B Redistributable dependency on ARM64 is a build configuration issue that likely still exists.",
       "mentionedVersions": [
-        "3.116.0",
-        "3.119.0"
+        "3.116.0"
       ],
-      "currentRelevance": "likely"
+      "currentRelevance": "unlikely",
+      "relevanceReason": "PR #3510 added build-time dependency verification for all Windows native DLLs. CI confirms ANGLE, libSkiaSharp, and libHarfBuzzSharp are statically linked and do not depend on VCRUNTIME or MSVCP."
     },
     "fixStatus": {
-      "likelyFixed": false,
-      "confidence": 0.55,
-      "reason": "Maintainer mattleibow asked if GPU rendering was being used, noting \u0027I am trying to release a fix for that\u0027. However, the repro uses SKCanvasView (CPU rendering), so the GPU fix may not fully address this issue. The VC\u002B\u002B Redistributable dependency suggests a native build configuration issue that may require separate attention."
+      "likelyFixed": true,
+      "confidence": 0.9,
+      "reason": "PR #3510 merged into main on 2026-02-11. CI confirmed all Windows native binaries (ANGLE, libSkiaSharp, libHarfBuzzSharp) do not dynamically link VCRUNTIME or MSVCP. Build-time CheckWindowsDependencies verification now prevents regressions across all Windows build targets.",
+      "relatedPRs": [
+        3510
+      ]
     }
   },
   "analysis": {
-    "summary": "A .NET MAUI app using SkiaSharp crashes on Windows ARM64 when published as MSIX, but works in Debug/Release modes. The reporter discovered that installing VC\u002B\u002B Redistributable resolves the crash, indicating the native binaries have a dynamic C\u002B\u002B runtime dependency not satisfied on fresh ARM64 deployments. The repro uses CPU rendering (SKCanvasView), so the maintainer\u0027s in-progress GPU fix may not fully address this.",
-    "keySignals": [
+    "summary": "Published Windows ARM64 app crashes on fresh machines without VC\u002B\u002B Redistributable. The root cause was a dynamic CRT dependency in one of the shipped native DLLs, most likely the ANGLE DLLs (libEGL.dll, libGLESv2.dll) used for GPU rendering. Publishing trims the output and runs on machines that may not have the VC\u002B\u002B Redistributable pre-installed, exposing the missing dependency. PR #3510 confirmed via dumpbin that current builds are statically linked and added CI verification across all Windows native build targets.",
+    "codeInvestigation": [
       {
-        "text": "installing Microsoft Visual C\u002B\u002B Redistributable that app works correctly in a fresh arm64 windows",
-        "source": "comment 2",
-        "interpretation": "The native binary (libSkiaSharp.dll or ANGLE libraries) dynamically links to the C\u002B\u002B runtime rather than statically linking it. This is the root cause of the crash on fresh ARM64 systems."
+        "file": "native/winui-angle/build.cake",
+        "finding": "VERIFY_EXCLUDED array defines [\u0027VCRUNTIME\u0027, \u0027MSVCP\u0027] \u2014 CheckWindowsDependencies rejects any ANGLE DLL that dynamically links these CRT libraries.",
+        "relevance": "direct",
+        "lines": "7"
       },
       {
-        "text": "runs correctly in Debug and Release modes on Windows ARM64, but when creating a Publish build for Windows ARM64, the app starts but crashes immediately",
-        "source": "body",
-        "interpretation": "Debug/Release work because Visual Studio installs VC\u002B\u002B runtime. Published MSIX on a fresh system lacks it. The difference is deployment context, not code."
+        "file": "native/winui-angle/build.cake",
+        "finding": "ANGLE build targets arm64, x64, x86. Uses is_component_build=false (static linking). CheckWindowsDependencies called after each build to verify no CRT dependencies.",
+        "relevance": "direct",
+        "lines": "115-158"
+      },
+      {
+        "file": "native/windows/build.cake",
+        "finding": "libSkiaSharp.dll and libHarfBuzzSharp.dll also use VERIFY_EXCLUDED = [\u0027VCRUNTIME\u0027, \u0027MSVCP\u0027] with CheckWindowsDependencies verification, added in PR #3510.",
+        "relevance": "related",
+        "lines": "14, 87, 109"
+      },
+      {
+        "file": "scripts/cake/native-shared.cake",
+        "finding": "CheckWindowsDependencies uses dumpbin /dependents to enumerate DLL imports, then rejects any matching the excluded list. Shared across all Windows native builds.",
+        "relevance": "related",
+        "lines": "52-86"
+      }
+    ],
+    "rationale": "Classified as type/bug because the app crashes (not a usage question or feature request). Area is libSkiaSharp.native because the crash stems from native DLL dynamic linking, not managed code. Platform is Windows-Classic since the reporter used standard Windows (not WinUI). Severity is high \u2014 the crash prevents the app from launching at all in published form. The tenet/reliability label is appropriate for crash-on-launch behavior.",
+    "keySignals": [
+      {
+        "text": "App crashes immediately on launch when published for Windows ARM64",
+        "source": "issue body",
+        "interpretation": "Publish-only crash suggests stripped/self-contained deployment exposes a missing native dependency that the development environment satisfies."
+      },
+      {
+        "text": "Installing Microsoft Visual C\u002B\u002B Redistributable fixes the crash",
+        "source": "comment by riccardomartins (2025-09-03)",
+        "interpretation": "Confirms the root cause is a dynamic VCRUNTIME/MSVCP dependency in shipped native DLLs \u2014 fresh ARM64 machines lack the CRT without explicit installation."
       },
       {
         "text": "Were you using the GPU rendering? If so, I am trying to release a fix for that.",
-        "source": "comment 3",
-        "interpretation": "Maintainer is aware of a related ARM64 GPU issue and has a fix in progress. However, the repro uses SKCanvasView (CPU), so the GPU fix may not fully resolve this."
+        "source": "comment by mattleibow (2025-09-06)",
+        "interpretation": "Maintainer suspected ANGLE (GPU) DLLs as the source of the dynamic CRT dependency, directing the investigation."
+      },
+      {
+        "text": "CI on PR #3510 confirms ANGLE DLLs do not depend on VCRUNTIME or MSVCP \u2014 already statically linked",
+        "source": "closing comment by mattleibow (2026-02-11)",
+        "interpretation": "Current builds verified clean. PR adds build-time CI gates to catch future regressions."
       }
     ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "Reporter describes an app crash on published ARM64 builds. This is clearly broken behavior \u2014 a published app should not crash on a supported platform. Debug/Release builds work fine, confirming it\u0027s a deployment issue, not user error.",
-        "alternatives": [
-          {
-            "value": "type/question",
-            "whyRejected": "Not asking how to do something \u2014 reporting a crash with clear expected vs actual behavior and a repro project."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/libSkiaSharp.native",
-        "expandedReason": "The crash is resolved by installing VC\u002B\u002B Redistributable, which points to the native binary build configuration. Either libSkiaSharp.dll ARM64 or the ANGLE libraries from NativeAssets.WinUI are dynamically linking the C\u002B\u002B runtime instead of statically linking it. The skia-patterns.md reference confirms this as a known pattern.",
-        "alternatives": [
-          {
-            "value": "area/SkiaSharp.Views.Maui",
-            "whyRejected": "While the repro uses MAUI, the root cause is in the native binary packaging, not the managed MAUI view layer."
-          },
-          {
-            "value": "area/Build",
-            "whyRejected": "Build area would suggest a build system issue, but this is specifically about native library linking configuration for ARM64."
-          }
-        ]
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "medium",
-        "expandedReason": "Hard crash preventing the app from starting is severe, but a straightforward workaround exists (install VC\u002B\u002B Redistributable) and the affected audience is narrow (ARM64 Windows published deployments only).",
-        "alternatives": [
-          {
-            "value": "high",
-            "whyRejected": "A workaround exists (VC\u002B\u002B Redistributable installation), which lowers severity from high to medium."
-          },
-          {
-            "value": "low",
-            "whyRejected": "An app crash preventing all functionality is more than cosmetic/minor, even with a workaround."
-          }
-        ]
-      },
-      {
-        "field": "partner",
-        "chosen": "partner/maui",
-        "expandedReason": "The repro is a MAUI app with MSIX packaging. The ANGLE libraries from NativeAssets.WinUI are part of the MAUI/WinUI rendering pipeline and may contribute to the VC\u002B\u002B dependency."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "needs-investigation",
-        "expandedReason": "The VC\u002B\u002B Redistributable dependency on ARM64 needs investigation. Is it libSkiaSharp.dll or the ANGLE libraries? Was static linking intentionally omitted for ARM64? Static CRT linking was fixed for x86/x64 in issue #136 but may not cover ARM64.",
-        "alternatives": [
-          {
-            "value": "request-info",
-            "whyRejected": "The reporter provided a full repro project and identified the root cause (VC\u002B\u002B Redistributable). There\u0027s enough info to investigate without additional reporter input."
-          },
-          {
-            "value": "close-as-fixed",
-            "whyRejected": "No fix has been released. The maintainer mentioned a fix in progress but hasn\u0027t confirmed it addresses this specific issue."
-          }
-        ]
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/Windows-Classic",
-        "expandedReason": "The crash occurs on Windows ARM64 when deploying a MAUI app as MSIX. The label reflects the Windows desktop deployment target where the VC\u002B\u002B runtime dependency manifests.",
-        "alternatives": [
-          {
-            "value": "os/Windows-WinUI",
-            "whyRejected": "While MAUI uses WinUI under the hood, the deployment issue is about the native binary on Windows desktop ARM64, not WinUI-specific behavior."
-          }
-        ]
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/reliability",
-        "expandedReason": "The app crashes immediately on launch when published to ARM64 Windows without VC\u002B\u002B Redistributable. A hard crash preventing any app functionality is a core reliability issue.",
-        "alternatives": [
-          {
-            "value": "tenet/compatibility",
-            "whyRejected": "While there is a platform-specific aspect (ARM64 vs x64), the primary concern is that the published app crashes rather than a cross-version compatibility gap."
-          }
-        ]
-      },
-      {
-        "field": "fixStatus.likelyFixed",
-        "chosen": "false",
-        "expandedReason": "The maintainer mentioned an in-progress GPU fix, but the repro uses CPU rendering (SKCanvasView). The VC\u002B\u002B dependency suggests a native build config issue requiring separate attention."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "Reported on 3.116.0 and reproduced with 3.119.0, indicating the ARM64 VC\u002B\u002B runtime dependency persists across recent versions and likely remains unfixed.",
-        "alternatives": [
-          {
-            "value": "unlikely",
-            "whyRejected": "No evidence the static CRT linking was applied to ARM64 builds, so the issue likely persists in current releases."
-          }
-        ]
-      }
+    "workarounds": [
+      "Install Microsoft Visual C\u002B\u002B Redistributable on the target ARM64 machine (confirmed by reporter to resolve the crash)",
+      "Use software/raster rendering instead of GPU rendering to avoid ANGLE DLL dependency"
     ],
-    "uncertainties": [
-      "Whether the crash is in libSkiaSharp.dll or the ANGLE libraries (libEGL.dll/libGLESv2.dll) from NativeAssets.WinUI \u2014 both could require VC\u002B\u002B runtime",
-      "Whether the maintainer\u0027s in-progress GPU fix also addresses the VC\u002B\u002B runtime linking for CPU rendering scenarios",
-      "The reporter says version 3.116.0 but the repro csproj shows 3.119.0 \u2014 unclear if the version discrepancy matters"
-    ],
-    "assumptions": [
-      "Assumed the SKCanvasView usage in the repro code represents the reporter\u0027s actual usage pattern, making this a CPU rendering issue not a GPU one",
-      "Assumed the ARM64 native build configuration is the root cause since the same app works in Debug/Release (where VC\u002B\u002B runtime is available from VS)"
+    "nextQuestions": [
+      "Was the reporter\u0027s 3.116.0 build actually shipping ANGLE DLLs with dynamic CRT links, or was the crash from a different dependency?",
+      "Which specific DLL was the source of the VCRUNTIME dependency in the 3.116.0 timeframe?"
     ],
     "resolution": {
-      "hypothesis": "The ARM64 Windows build of libSkiaSharp.dll (or the ANGLE libraries from NativeAssets.WinUI) dynamically links the C\u002B\u002B runtime instead of statically linking it. When deployed via MSIX to a fresh ARM64 system, the C\u002B\u002B runtime isn\u0027t present, causing an immediate crash. Debug/Release from VS works because VS installs the VC\u002B\u002B runtime.",
+      "hypothesis": "One or more native Windows DLLs shipped with SkiaSharp 3.116.0 had a dynamic dependency on VCRUNTIME/MSVCP. On fresh ARM64 Windows machines without the VC\u002B\u002B Redistributable, this caused immediate crash on load. The ANGLE DLLs (libEGL.dll, libGLESv2.dll) were the most likely culprits since the maintainer specifically asked about GPU rendering.",
       "proposals": [
         {
-          "title": "Statically link C\u002B\u002B runtime for ARM64 Windows builds",
-          "description": "Update the native build configuration to statically link the C\u002B\u002B runtime (/MT instead of /MD) for the ARM64 Windows target, matching what was done for x86/x64 in issue #136 (v1.68.0). This eliminates the dependency for all users.",
-          "confidence": 0.8,
-          "effort": "medium"
+          "description": "Install the Microsoft Visual C\u002B\u002B Redistributable on target machines. This is the reporter\u0027s confirmed workaround.",
+          "title": "Install VC\u002B\u002B Redistributable",
+          "confidence": 0.95,
+          "effort": "trivial"
         },
         {
-          "title": "Include VC\u002B\u002B Redistributable in MSIX package",
-          "description": "Configure the MSIX packaging to include the VC\u002B\u002B Redistributable merge modules or declare a dependency on the VC\u002B\u002B runtime framework package. Doesn\u0027t require rebuilding native libraries but pushes the fix to app developers.",
-          "confidence": 0.6,
-          "effort": "low"
+          "description": "Add CheckWindowsDependencies CI verification to all Windows native builds, rejecting any DLL that dynamically links VCRUNTIME or MSVCP. Already merged.",
+          "title": "Build-time dependency verification (PR #3510)",
+          "confidence": 0.95,
+          "effort": "small"
         },
         {
-          "title": "Document VC\u002B\u002B Redistributable requirement for ARM64",
-          "description": "Document that ARM64 Windows deployments require the VC\u002B\u002B Redistributable, and recommend including it in deployment scripts or installation prerequisites. Immediate workaround for affected users.",
-          "confidence": 0.9,
-          "effort": "low"
+          "description": "Switch to software/raster rendering to avoid ANGLE DLL loading entirely, sidestepping the CRT dependency.",
+          "title": "Disable GPU rendering",
+          "confidence": 0.7,
+          "effort": "trivial"
         }
       ],
-      "recommendedProposal": "Statically link C\u002B\u002B runtime for ARM64 Windows builds",
-      "recommendedReason": "This is the proper fix that eliminates the dependency for all users. It\u0027s consistent with how x86/x64 builds were fixed in issue #136 and ensures ARM64 published apps work without additional prerequisites."
+      "recommendedProposal": "Build-time dependency verification (PR #3510)",
+      "recommendedReason": "Addresses the root cause at the build level with CI regression prevention. Already merged and verified across all 62 native build jobs."
     }
   },
   "output": {
     "actionability": {
-      "suggestedAction": "needs-investigation",
-      "confidence": 0.85,
-      "reason": "The VC\u002B\u002B Redistributable dependency on ARM64 Windows suggests the native library is not statically linking the C\u002B\u002B runtime for ARM64 builds. This was fixed for x86/x64 in issue #136 but may not have been applied to ARM64. The repro uses CPU rendering, so the maintainer\u0027s GPU fix may not fully address this."
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.92,
+      "reason": "PR #3510 merged 2026-02-11 adds build-time verification that all Windows native DLLs are statically linked. Issue already closed by maintainer with explanation."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Labels are already correct \u2014 type/bug, os/Windows-Classic, tenet/reliability all match",
         "risk": "low",
-        "description": "Add area/libSkiaSharp.native and partner/maui labels",
-        "reason": "Crash caused by missing VC\u002B\u002B Redistributable is a native library deployment issue. Repro is a MAUI app with MSIX packaging.",
-        "confidence": 0.85,
-        "payload": {
-          "labelsToAdd": [
-            "area/libSkiaSharp.native",
-            "partner/maui"
-          ],
-          "labelsToRemove": []
-        }
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "tenet/reliability"
+        ]
       },
       {
-        "id": "related-1",
         "type": "link-related",
+        "description": "Link to PR #3510 which adds the build-time dependency verification fix",
         "risk": "low",
-        "description": "Cross-reference related ARM64 and CRT linking issues",
-        "reason": "Issue #3155 is a related ARM64 Windows GPU issue. Issue #136 is where static CRT linking was implemented for x86/x64 \u2014 the same fix may need to be applied for ARM64.",
-        "confidence": 0.8,
-        "payload": {
-          "relatedIssues": [
-            3155,
-            136
-          ],
-          "comment": null
-        }
-      },
-      {
-        "id": "comment-1",
-        "type": "add-comment",
-        "risk": "high",
-        "description": "Acknowledge workaround and explain the ARM64 VC\u002B\u002B dependency",
-        "reason": "Reporter found a workaround but asked if it\u0027s expected. The maintainer\u0027s GPU question is also unanswered. A response would clarify the situation and provide context.",
-        "confidence": 0.75,
-        "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "answer",
-          "draftBody": "Thanks for tracking that down \u2014 the VC\u002B\u002B Redistributable dependency is a really useful finding.\n\nTo answer your question: ideally, no, you shouldn\u0027t need to install the VC\u002B\u002B Redistributable separately. The native libraries should either statically link the C\u002B\u002B runtime or the MSIX package should include it.\n\nThis looks like it could be specific to the ARM64 build of the native libraries \u2014 the x64 builds have had static C\u002B\u002B runtime linking since v1.68.0, but the ARM64 build may not have the same configuration.\n\nLooking at your repro code, it appears you\u0027re using \u0060SKCanvasView\u0060 (CPU rendering). Would you be able to confirm? That would help clarify whether the GPU rendering fix @mattleibow mentioned would also cover this scenario.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-3346-comment-1"
-        }
+        "confidence": 0.95,
+        "linkedIssue": 3510
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/3346"
+  }
 }

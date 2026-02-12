@@ -1,105 +1,62 @@
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "1.0",
     "number": 1773,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-22T12:00:00Z",
-    "currentLabels": [],
-    "state": "closed"
+    "analyzedAt": "2026-02-12T15:47:00Z",
+    "currentLabels": []
   },
-  "summary": "Empty issue with no content \u2014 accidental creation, immediately closed by author",
+  "summary": "Accidental/test issue with no technical content \u2014 self-closed immediately by reporter",
   "classification": {
     "type": {
       "value": "type/question",
-      "confidence": 0.55
+      "confidence": 0.4
     },
     "area": {
       "value": "area/SkiaSharp",
-      "confidence": 0.4
+      "confidence": 0.3
     }
   },
-  "evidence": {},
+  "evidence": {
+    "versionAnalysis": {
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Issue has no technical content \u2014 title is \u0027TO DELETE PLEASE\u0027 with an empty body. Reporter self-closed within 26 minutes."
+    }
+  },
   "analysis": {
-    "summary": "Issue has no body, no comments, and a title of \u0027TO DELETE PLEASE\u0027. It was opened and closed within minutes on the same day. This is an accidental or test issue creation with zero actionable content.",
+    "summary": "Empty issue opened accidentally or as a test. Title is \u0027TO DELETE PLEASE\u0027, body is empty, no comments. Reporter (vd3d) closed it themselves within 26 minutes. Issue is now locked with reason \u0027resolved\u0027.",
+    "codeInvestigation": [
+      {
+        "file": "N/A",
+        "finding": "No code investigation possible \u2014 issue contains no technical content, no types, no methods, no error messages, and no description of any behavior.",
+        "relevance": "context"
+      }
+    ],
+    "rationale": "Classified as type/question with low confidence because no type label fits an empty/accidental issue. Area defaults to area/SkiaSharp since no component is mentioned. No investigation is possible \u2014 there is zero technical content to analyze.",
     "keySignals": [
       {
         "text": "TO DELETE PLEASE",
-        "source": "title",
-        "interpretation": "Author explicitly requests deletion \u2014 accidental issue creation"
+        "source": "issue title",
+        "interpretation": "Reporter explicitly indicates this issue was created in error and should be removed."
       },
       {
-        "text": "Empty body",
-        "source": "body",
-        "interpretation": "No description, no repro, no question \u2014 nothing to act on"
+        "text": "Body is empty string",
+        "source": "issue body",
+        "interpretation": "No bug report, question, or feature request was ever filed."
       },
       {
-        "text": "Closed same day (2021-08-16)",
-        "source": "body",
-        "interpretation": "Author self-closed immediately, confirming this was unintentional"
+        "text": "Closed by same user (vd3d) within 26 minutes",
+        "source": "issue metadata",
+        "interpretation": "Self-closed \u2014 reporter recognized the mistake immediately."
       }
-    ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/question",
-        "expandedReason": "No bug, feature, enhancement, or documentation request is described. The issue is empty. \u0027type/question\u0027 is the least-wrong classification for an issue with no actionable content. Low confidence reflects that none of the types truly fit.",
-        "alternatives": [
-          {
-            "value": "type/bug",
-            "whyRejected": "No broken behavior described \u2014 no body at all."
-          },
-          {
-            "value": "type/feature-request",
-            "whyRejected": "No feature requested."
-          }
-        ]
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "close-as-fixed",
-        "expandedReason": "Issue is already closed with no content. No action is needed. \u0027close-as-fixed\u0027 reflects that the issue lifecycle is complete \u2014 there is nothing to investigate, answer, or fix."
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp",
-        "expandedReason": "The issue has no content so no specific area can be determined. Defaulting to the core SkiaSharp area as the catch-all for unclassifiable issues.",
-        "alternatives": [
-          {
-            "value": "area/SkiaSharp.Views",
-            "whyRejected": "No evidence of UI/view-related content \u2014 the issue body is empty."
-          }
-        ]
-      }
-    ],
-    "uncertainties": [
-      "Whether the author intended to file a real issue and accidentally submitted early"
-    ],
-    "assumptions": [
-      "Assumed accidental creation since the issue was self-closed within minutes with no follow-up"
     ]
   },
   "output": {
     "actionability": {
       "suggestedAction": "close-as-fixed",
-      "confidence": 0.95,
-      "reason": "Issue is already closed with no content \u2014 no action needed"
+      "confidence": 0.99,
+      "reason": "Issue is already closed and locked. It was an accidental creation with no technical content \u2014 no further action needed."
     },
-    "actions": [
-      {
-        "id": "labels-1",
-        "type": "update-labels",
-        "risk": "low",
-        "description": "Apply question label to empty issue",
-        "reason": "Matches classification \u2014 no better type fits an empty issue",
-        "confidence": 0.55,
-        "payload": {
-          "labelsToAdd": [
-            "type/question"
-          ],
-          "labelsToRemove": []
-        }
-      }
-    ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/1773"
+    "actions": []
+  }
 }

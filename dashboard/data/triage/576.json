@@ -1,221 +1,210 @@
 {
   "meta": {
-    "schemaVersion": "2.1",
+    "schemaVersion": "1.0",
     "number": 576,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-24T12:00:00Z",
+    "analyzedAt": "2026-02-12T15:38:00Z",
     "currentLabels": [
       "type/bug",
       "area/SkiaSharp",
       "backend/OpenGL"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "User reports GPU memory leaks with SKSurface.Snapshot() on Intel HD Graphics \u2014 resolved as user error (not disposing SKImage before overwriting reference)",
+  "summary": "GPU-backed SKSurface memory leak on Intel HD Graphics 520 caused by not disposing SKImage instances returned by Snapshot() before overwriting references. The reporter creates a GPU surface with GRContext/OpenGL, calls Snapshot() to capture the rendered content, and stores the resulting SKImage \u2014 but overwrites the previous SKImage reference without disposing it first, causing 30-40MB memory step-ups per iteration until crash.",
   "classification": {
     "type": {
-      "value": "type/question",
-      "confidence": 0.85
+      "value": "type/bug",
+      "confidence": 0.65
     },
     "area": {
       "value": "area/SkiaSharp",
       "confidence": 0.95
     },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
     "backends": [
-      {
-        "value": "backend/OpenGL",
-        "confidence": 0.85
-      }
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/reliability"
     ]
   },
   "evidence": {
     "reproEvidence": {
+      "stepsToReproduce": [
+        "Create GPU-backed SKSurface with GRContext (OpenGL) and SKImageInfo",
+        "Draw to the surface\u0027s Canvas",
+        "Call surface.Snapshot() and store the resulting SKImage in a collection",
+        "Dispose the surface but NOT the previous SKImage at the same dictionary key",
+        "Repeat \u2014 observe 30-40MB memory growth per iteration"
+      ],
+      "codeSnippets": [
+        "var surface = SKSurface.Create(_skiaGlControl.GRContext, false, new SKImageInfo(Width, Height));\n//var surface = SKSurface.Create(new SKImageInfo(Width, Height));\n_skiaMain.Compose(surface.Canvas, plane);\nsurface.Canvas.Flush();\n_skiaMain.DisplayImages[plane] = surface.Snapshot();\nsurface.Dispose();\n_skiaMain.DisplayPlaneRecompose[plane] = false;"
+      ],
       "screenshots": [
         {
           "url": "https://user-images.githubusercontent.com/41022806/42469527-fdefdc92-8385-11e8-96d5-cfa8b693ae34.png",
-          "context": "Visual Studio memory usage showing 30-40MB step-ups",
-          "source": "description"
+          "description": "Visual Studio memory usage showing escalating memory consumption"
         }
       ],
-      "stepsToReproduce": [
-        "Create a GPU-backed SKSurface using GRContext with OpenGL (Intel HD Graphics 520)",
-        "Call surface.Snapshot() in a loop and store result in an array/dictionary",
-        "Overwrite previous SKImage reference without calling Dispose() first",
-        "Observe 30-40MB memory step-ups per iteration until crash"
-      ],
-      "codeSnippets": [
-        {
-          "code": "var surface = SKSurface.Create(_skiaGlControl.GRContext, false, new SKImageInfo(Width, Height));\n_skiaMain.Compose(surface.Canvas, plane);\nsurface.Canvas.Flush();\n_skiaMain.DisplayImages[plane] = surface.Snapshot();\nsurface.Dispose();\n_skiaMain.DisplayPlaneRecompose[plane] = false;",
-          "language": "csharp",
-          "context": "Code that leaks GPU memory \u2014 Snapshot() creates new SKImage each iteration without disposing the previous DisplayImages[plane] reference"
-        }
-      ],
-      "environmentDetails": "Intel HD Graphics 520, Visual Studio, Windows (implied from VS usage)"
+      "environmentDetails": "Intel HD Graphics 520, Windows, OpenGL backend",
+      "relatedIssues": [
+        705,
+        1244,
+        3388
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "memory-leak",
+      "errorMessage": "30-40MB step ups in memory usage until eventually it crashes",
+      "reproQuality": "partial"
     },
     "versionAnalysis": {
-      "reason": "No specific SkiaSharp version mentioned. Issue is from 2018 and relates to fundamental GPU resource management patterns that are unchanged.",
-      "currentRelevance": "likely"
+      "currentRelevance": "likely",
+      "relevanceReason": "The Snapshot() method still returns a new SKImage that the caller must dispose. The fundamental pattern of GPU-backed SKImage requiring explicit disposal hasn\u0027t changed. However, the root cause was user code not disposing \u2014 SkiaSharp itself does not leak."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.85,
+      "reason": "This is not a SkiaSharp bug \u2014 it\u0027s a usage issue. The reporter confirmed the leak was caused by overwriting SKImage references without disposing the previous image. The \u0027fix\u0027 is in user code, not in SkiaSharp. No code change is needed."
     }
   },
   "analysis": {
-    "summary": "Reporter observed GPU memory leaks when repeatedly calling SKSurface.Snapshot() in a render loop. The root cause, confirmed by the reporter in comment 2, was overwriting the stored SKImage reference without disposing the previous one. Since SKImage is ISKReferenceCounted and GPU-backed, the finalizer alone cannot reliably reclaim GPU memory in a timely manner. This is expected behavior requiring explicit disposal, not a SkiaSharp bug.",
-    "keySignals": [
-      {
-        "text": "Every time I run through this section of code visual studios shows 30-40MB step ups in memory usage until eventually it crashes",
-        "source": "body",
-        "interpretation": "Each Snapshot() creates a new GPU-backed SKImage (~30MB). Without disposing the old one, GPU memory grows unbounded."
-      },
-      {
-        "text": "_skiaMain.DisplayImages[plane] = surface.Snapshot();",
-        "source": "body",
-        "interpretation": "Overwrites the previous SKImage reference without Dispose() \u2014 the GPU texture backing the old SKImage is leaked."
-      },
-      {
-        "text": "The issue actually was appearing based on the snapshot() because when I would overwrite the SkImage without disposing first then the ref was getting lost",
-        "source": "comment 2",
-        "interpretation": "Reporter confirmed root cause is user error \u2014 not disposing SKImage before overwriting the reference."
-      },
-      {
-        "text": "when it was getting lost in the GPU memory GC.Collect was not cleaning up the lost reference",
-        "source": "comment 2",
-        "interpretation": "GC finalizer cannot reliably release GPU resources on Intel integrated graphics. Explicit Dispose() is required."
-      }
-    ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/question",
-        "expandedReason": "Reporter initially believed this was a SkiaSharp bug, but comment 2 confirms the root cause is user error \u2014 not disposing SKImage before overwriting the reference. The maintainer\u0027s guidance resolved the issue. This is a usage/understanding question about GPU resource management, not broken behavior in SkiaSharp.",
-        "alternatives": [
-          {
-            "value": "type/bug",
-            "whyRejected": "Reporter confirmed in comment 2 that the leak was caused by their own code not disposing SKImage. SkiaSharp\u0027s Snapshot() API works as designed \u2014 it returns a new reference-counted image that the caller must dispose."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp",
-        "expandedReason": "The issue involves core SkiaSharp types SKSurface and SKImage, not view-layer components."
-      },
-      {
-        "field": "backends",
-        "chosen": "backend/OpenGL",
-        "expandedReason": "The issue is specific to GPU-backed surfaces created with a GRContext (OpenGL). The commented-out line in the code shows the user tried CPU surfaces without the leak, confirming the GPU-specific nature."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "The underlying pattern \u2014 needing to explicitly dispose GPU-backed SKImage objects \u2014 remains true in current SkiaSharp. This is fundamental to how reference-counted GPU resources work."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "close-with-docs",
-        "expandedReason": "The reporter confirmed the solution in comment 2. The maintainer provided correct diagnosis. The issue is resolved \u2014 the user needed to dispose SKImage before overwriting references. Can be closed as answered."
-      }
-    ],
-    "uncertainties": [
-      "Whether the issue was specific to Intel HD Graphics 520 or affects all GPU backends equally (likely all, since the root cause is missing Dispose())"
-    ],
-    "assumptions": [
-      "Assumed Windows platform based on Visual Studio usage and Intel HD Graphics reference"
-    ],
-    "resolution": {
-      "hypothesis": "The user was creating GPU-backed SKImage objects via Snapshot() in a loop and overwriting the stored reference without disposing the previous SKImage. GPU texture memory is not reclaimed by the GC finalizer in a timely manner, requiring explicit Dispose() calls.",
-      "proposals": [
-        {
-          "title": "Dispose previous SKImage before overwriting",
-          "description": "Dispose the existing SKImage in DisplayImages[plane] before assigning the new Snapshot() result. This is the correct pattern for managing GPU-backed resources.",
-          "confidence": 0.95,
-          "effort": "low",
-          "category": "workaround",
-          "codeSnippet": "var surface = SKSurface.Create(_skiaGlControl.GRContext, false, new SKImageInfo(Width, Height));\n_skiaMain.Compose(surface.Canvas, plane);\nsurface.Canvas.Flush();\n\n// Dispose old image before overwriting\n_skiaMain.DisplayImages[plane]?.Dispose();\n_skiaMain.DisplayImages[plane] = surface.Snapshot();\n\nsurface.Dispose();",
-          "validated": "untested"
-        },
-        {
-          "title": "Use using statement with temporary variable",
-          "description": "Swap with a temporary variable and dispose old reference using a using pattern for safety.",
-          "confidence": 0.9,
-          "effort": "low",
-          "category": "alternative",
-          "codeSnippet": "using var surface = SKSurface.Create(_skiaGlControl.GRContext, false, new SKImageInfo(Width, Height));\n_skiaMain.Compose(surface.Canvas, plane);\nsurface.Canvas.Flush();\n\nvar newImage = surface.Snapshot();\nvar oldImage = _skiaMain.DisplayImages[plane];\n_skiaMain.DisplayImages[plane] = newImage;\noldImage?.Dispose();",
-          "validated": "untested"
-        }
-      ],
-      "recommendedProposal": "Dispose previous SKImage before overwriting",
-      "recommendedReason": "Simplest fix \u2014 one line addition. Directly addresses the confirmed root cause."
-    },
+    "summary": "The memory leak is caused by the reporter\u0027s code overwriting SKImage references (from Snapshot()) without first disposing the previous image. Each GPU-backed SKImage holds a GPU texture that is only released when Dispose is called (or the finalizer runs, which is non-deterministic and insufficient for GPU resources). The maintainer correctly identified the cause, and the reporter confirmed it.",
     "codeInvestigation": [
       {
         "file": "binding/SkiaSharp/SKSurface.cs",
-        "lines": "274-275",
-        "relevance": "Snapshot() creates a new SKImage via sk_surface_new_image_snapshot. Each call returns a new reference-counted object \u2014 caller is responsible for disposal."
+        "finding": "Snapshot() creates a new SKImage via sk_surface_new_image_snapshot. Returns a new owned object \u2014 caller is responsible for disposal. No caching or reuse of previous snapshot.",
+        "relevance": "direct",
+        "lines": "274-278"
       },
       {
         "file": "binding/SkiaSharp/SKImage.cs",
-        "lines": "16-24",
-        "relevance": "SKImage implements ISKReferenceCounted and has a finalizer via SKNativeObject. However, GPU-backed images hold texture references that need timely release via explicit Dispose()."
+        "finding": "SKImage implements ISKReferenceCounted. Dispose calls SafeUnRef to decrement the Skia refcount. Finalizer will eventually release, but GC timing is non-deterministic \u2014 especially insufficient for GPU textures that consume VRAM.",
+        "relevance": "direct",
+        "lines": "16-24"
       },
       {
         "file": "binding/SkiaSharp/SKObject.cs",
-        "lines": "94-98",
-        "relevance": "DisposeNative() calls SafeUnRef() for ISKReferenceCounted objects. The finalizer (~SKNativeObject) at line 229 eventually calls this, but GC scheduling is non-deterministic \u2014 GPU resources may not be freed promptly."
+        "finding": "DisposeNative for ISKReferenceCounted objects calls SafeUnRef. This is the mechanism that releases the underlying GPU resource when Dispose is called.",
+        "relevance": "related",
+        "lines": "94-98"
+      },
+      {
+        "file": "binding/SkiaSharp/GRContext.cs",
+        "finding": "GRContext exposes PurgeResources(), PurgeUnusedResources(), and PurgeUnlockedResources() \u2014 these can be used as additional mitigation to force GPU resource cleanup.",
+        "relevance": "related",
+        "lines": "159-169"
       }
-    ]
+    ],
+    "rationale": "Classified as type/bug with reduced confidence (0.65) because the root cause is user code not following proper disposal patterns, not a defect in SkiaSharp. The area is area/SkiaSharp since the core SKSurface/SKImage APIs are involved. The backend is OpenGL since the reporter explicitly mentions GPU rendering via GRContext. The issue was reopened (state_reason: reopened) despite being resolved in comments, suggesting it may need a formal close with explanation. The severity is medium because while memory exhaustion and crash occur, the fix is straightforward user-side disposal.",
+    "keySignals": [
+      {
+        "text": "_skiaMain.DisplayImages[plane] = surface.Snapshot();",
+        "source": "issue body",
+        "interpretation": "Overwrites dictionary entry without disposing previous SKImage \u2014 classic leak of IDisposable GPU resource."
+      },
+      {
+        "text": "when I would overwrite the SkImage without disposing first then the ref was getting lost and when it was getting lost in the GPU memory GC.Collect was not cleaning up the lost reference",
+        "source": "comment by mclose90 (reporter)",
+        "interpretation": "Reporter confirmed root cause is not disposing SKImage before overwriting. GC finalizer alone is insufficient for timely GPU resource release."
+      },
+      {
+        "text": "This line: _skiaMain.DisplayImages[plane] = surface.Snapshot(); may be the cause. What is happening here is that you are making a copy of the surface, and storing it in memory.",
+        "source": "comment by mattleibow (maintainer)",
+        "interpretation": "Maintainer correctly diagnosed the issue as user-side disposal problem."
+      },
+      {
+        "text": "The the issue only occurs when my laptop is attempting to run my application using Intels HD Graphics 520 to render.",
+        "source": "issue body",
+        "interpretation": "Intel integrated GPU may have tighter memory constraints making the leak more visible, but the fundamental cause is disposal, not driver-specific."
+      }
+    ],
+    "errorFingerprint": "memory-leak-SKImage-Snapshot-GPU-OpenGL",
+    "workarounds": [
+      "Dispose the previous SKImage before overwriting the reference: if (_skiaMain.DisplayImages.TryGetValue(plane, out var old)) old?.Dispose();",
+      "Call GRContext.PurgeUnusedResources() periodically to reclaim GPU memory from unreferenced resources",
+      "Use \u0027using\u0027 statements or try/finally blocks to ensure SKImage disposal"
+    ],
+    "nextQuestions": [
+      "Is the issue still open because the reporter has a remaining leak even after fixing disposal, or was it reopened automatically?",
+      "Should SkiaSharp warn or document the pattern of disposing previous Snapshot results more prominently?"
+    ],
+    "resolution": {
+      "hypothesis": "The user\u0027s code overwrites SKImage references returned by Snapshot() without disposing the previous instance, leaking GPU texture memory. On Intel integrated GPUs with limited VRAM, this manifests as rapid 30-40MB growth until crash. The GC finalizer eventually decrements the Skia refcount, but not fast enough to prevent VRAM exhaustion.",
+      "proposals": [
+        {
+          "description": "Before assigning a new Snapshot to the dictionary, dispose the existing image at that key. This is the direct fix for the leak.",
+          "title": "Dispose previous SKImage before overwriting",
+          "codeSnippet": "// Before: _skiaMain.DisplayImages[plane] = surface.Snapshot();\n// After:\nif (_skiaMain.DisplayImages.TryGetValue(plane, out var previousImage))\n    previousImage?.Dispose();\n_skiaMain.DisplayImages[plane] = surface.Snapshot();",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "description": "Call GRContext.Flush() followed by PurgeUnusedResources() periodically as a supplemental safety net. This is NOT a substitute for explicit disposal \u2014 use in addition to Proposal 1.",
+          "title": "Periodic GPU resource purge",
+          "codeSnippet": "// Supplemental \u2014 use in addition to explicit disposal:\n_skiaGlControl.GRContext.Flush();\n_skiaGlControl.GRContext.PurgeUnusedResources(5000);",
+          "confidence": 0.6,
+          "effort": "trivial"
+        },
+        {
+          "description": "Restructure the code to use \u0027using\u0027 statements or try/finally to ensure deterministic cleanup of both surfaces and images.",
+          "title": "Use using pattern for surface and snapshot",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Dispose previous SKImage before overwriting",
+      "recommendedReason": "Directly addresses the confirmed root cause. The reporter themselves confirmed this was the issue. Trivial code change with near-certain fix."
+    }
   },
   "output": {
     "actionability": {
       "suggestedAction": "close-with-docs",
-      "confidence": 0.88,
-      "reason": "Reporter confirmed the root cause and solution in comment 2. Maintainer provided correct diagnosis. The issue is fully resolved as a usage question."
+      "confidence": 0.8,
+      "reason": "Root cause was confirmed by both maintainer and reporter as user-side disposal issue. The fix is to dispose SKImage before overwriting. No SkiaSharp code change needed. Issue was reopened but the resolution in comments is complete."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp, backend/OpenGL all match",
         "risk": "low",
-        "description": "Reclassify from type/bug to type/question \u2014 reporter confirmed user error",
-        "reason": "Issue was filed as bug but reporter confirmed in comment 2 that the leak was caused by not disposing SKImage before overwriting reference. This is a usage question, not a SkiaSharp defect.",
-        "confidence": 0.85,
-        "payload": {
-          "labelsToAdd": [
-            "type/question"
-          ],
-          "labelsToRemove": [
-            "type/bug"
-          ]
-        }
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "backend/OpenGL"
+        ]
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Post closing comment summarizing the confirmed root cause and workaround",
         "risk": "high",
-        "description": "Post closing comment summarizing the resolution",
-        "reason": "Issue has been idle since 2018 with the resolution confirmed. A closing comment documents the solution for future searchers.",
-        "confidence": 0.85,
-        "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "close-message",
-          "draftBody": "Thanks for following up with the root cause.\n\nFor anyone landing here: GPU-backed \u0060SKImage\u0060 objects returned by \u0060SKSurface.Snapshot()\u0060 hold texture references that must be explicitly disposed. If you overwrite a stored \u0060SKImage\u0060 reference without calling \u0060Dispose()\u0060 first, the GPU memory won\u0027t be reclaimed promptly (the GC finalizer is non-deterministic for GPU resources).\n\n\u0060\u0060\u0060csharp\n// Dispose the old image before overwriting\n_skiaMain.DisplayImages[plane]?.Dispose();\n_skiaMain.DisplayImages[plane] = surface.Snapshot();\n\u0060\u0060\u0060\n\nClosing as resolved \u2014 the reporter confirmed this was the fix.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-576-comment-1"
-        }
+        "confidence": 0.8,
+        "comment": "This issue was diagnosed in the original discussion \u2014 the memory leak occurs because \u0060SKImage\u0060 instances returned by \u0060Snapshot()\u0060 are overwritten in the dictionary without disposing the previous image first.\n\nHere\u0027s the fix:\n\n\u0060\u0060\u0060csharp\nif (_skiaMain.DisplayImages.TryGetValue(plane, out var previousImage))\n    previousImage?.Dispose();\n_skiaMain.DisplayImages[plane] = surface.Snapshot();\n\u0060\u0060\u0060\n\nGPU-backed \u0060SKImage\u0060 objects hold GPU texture memory that is only released when \u0060Dispose()\u0060 is called. The GC finalizer will eventually run, but not fast enough to prevent VRAM exhaustion \u2014 especially on integrated GPUs with limited memory like Intel HD Graphics 520.\n\nAs a supplemental safety measure, you can periodically flush and purge unused GPU resources (this is not a substitute for explicit disposal):\n\n\u0060\u0060\u0060csharp\ngrContext.Flush();\ngrContext.PurgeUnusedResources(5000);\n\u0060\u0060\u0060\n\n**Note:** If you access \u0060DisplayImages\u0060 from multiple threads, protect dictionary access with a lock to prevent race conditions.\n\nClosing as the root cause was confirmed by the original reporter."
       },
       {
-        "id": "close-1",
         "type": "close-issue",
+        "description": "Close as resolved \u2014 root cause identified and confirmed by reporter",
         "risk": "medium",
-        "description": "Close as resolved \u2014 reporter confirmed the fix",
-        "reason": "Reporter confirmed in comment 2 that disposing SKImage before overwriting resolved the memory leak. Issue has been idle since July 2018.",
-        "confidence": 0.85,
-        "dependsOn": "comment-1",
-        "payload": {
-          "reason": "completed",
-          "comment": null
-        }
+        "confidence": 0.8
+      },
+      {
+        "type": "link-related",
+        "description": "Related GPU memory management issue in SKGLView",
+        "risk": "low",
+        "confidence": 0.65,
+        "linkedIssue": 705
+      },
+      {
+        "type": "link-related",
+        "description": "Related GPU memory leak report with AccessViolationException",
+        "risk": "low",
+        "confidence": 0.6,
+        "linkedIssue": 1244
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/576"
+  }
 }
