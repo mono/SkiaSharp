@@ -24,8 +24,8 @@ public class PlaceholderTest
 	[Fact]
 	public void CheckHarfBuzz()
 	{
-		const int LATIN = 1281455214;
-		const int LTR = 4;
+		const uint LATIN = 1281455214;
+		const uint LTR = 4;
 
 		var dir = hb_script_get_horizontal_direction(LATIN);
 
@@ -56,5 +56,5 @@ public class PlaceholderTest
 	static extern int sk_version_get_increment();
 
 	[DllImport(HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-	static extern int hb_script_get_horizontal_direction(int script);
+	static extern uint hb_script_get_horizontal_direction(uint script);
 }

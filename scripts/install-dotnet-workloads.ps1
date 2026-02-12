@@ -52,8 +52,7 @@ Write-Host "Installing .NET workloads: $($Workloads -join ', ')..."
 & dotnet workload install `
   @Workloads `
   --source https://api.nuget.org/v3/index.json `
-  --skip-sign-check `
-  --skip-manifest-update
+  --skip-sign-check
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Verify Tizen is still visible after official workload install
