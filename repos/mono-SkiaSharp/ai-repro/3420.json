@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3420,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:14:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3420.json"
+  },
+  "conclusion": "reproduced",
+  "notes": "Confirmed: libSkiaSharp.so in SkiaSharp.NativeAssets.Android 2.88.6 and 2.88.9 uses 4 KB page alignment, incompatible with Android 16+ requirement for 16 KB. The fix was implemented in PR #3096 (commit db01ee168) by adding the '-Wl,-z,max-page-size=16384' linker flag and upgrading to Android NDK r27c. The fix shipped in SkiaSharp 3.116.1 and is present in all subsequent releases including 3.119.2 (latest stable) and main branch. Both libSkiaSharp.so and libHarfBuzzSharp.so now use 16 KB alignment across all Android architectures (arm64-v8a, armeabi-v7a, x86, x86_64). The reporter is on the unsupported 2.x series which will not receive this fix.",
+  "assessment": "working-as-designed",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Download SkiaSharp.NativeAssets.Android 2.88.6 NuGet package",
+      "layer": "setup",
+      "command": "curl -sLo skiasharp-2.88.6.nupkg https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.android/2.88.6/skiasharp.nativeassets.android.2.88.6.nupkg",
+      "exitCode": 0,
+      "result": "skip",
+      "output": "Package downloaded successfully (15.1 MB)"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Extract NuGet package and check libSkiaSharp.so page alignment for arm64-v8a",
+      "layer": "native",
+      "command": "unzip -q skiasharp-2.88.6.nupkg -d v2.88.6 && python3 check-page-size.py v2.88.6/runtimes/android-arm64/native/libSkiaSharp.so",
+      "exitCode": 0,
+      "result": "wrong-output",
+      "output": "Max page alignment: 4096 bytes (4 KB)",
+      "filesCreated": [
+        {
+          "filename": "check-page-size.py",
+          "description": "Python script to parse ELF program headers and extract page alignment from LOAD segments",
+          "content": "#!/usr/bin/env python3\nimport struct\nimport sys\n\ndef check_elf_alignment(filename):\n    with open(filename, 'rb') as f:\n        # Read ELF header\n        elf_header = f.read(64)\n        \n        # Check if it's an ELF file\n        if elf_header[:4] != b'\\x7fELF':\n            print(f\"Not an ELF file\")\n            return\n        \n        # Check if it's 64-bit\n        is_64bit = elf_header[4] == 2\n        is_little_endian = elf_header[5] == 1\n        \n        if not is_64bit:\n            print(\"32-bit ELF not supported\")\n            return\n        \n        endian = '<' if is_little_endian else '>'\n        \n        # Parse 64-bit ELF header\n        e_phoff = struct.unpack(f'{endian}Q', elf_header[32:40])[0]\n        e_phentsize = struct.unpack(f'{endian}H', elf_header[54:56])[0]\n        e_phnum = struct.unpack(f'{endian}H', elf_header[56:58])[0]\n        \n        # Read program headers\n        f.seek(e_phoff)\n        max_align = 0\n        \n        for i in range(e_phnum):\n            ph = f.read(e_phentsize)\n            p_type = struct.unpack(f'{endian}I', ph[0:4])[0]\n            p_align = struct.unpack(f'{endian}Q', ph[48:56])[0]\n            \n            # PT_LOAD = 1\n            if p_type == 1:\n                max_align = max(max_align, p_align)\n        \n        print(f\"Max page alignment: {max_align} bytes ({max_align // 1024} KB)\")\n\nif __name__ == '__main__':\n    if len(sys.argv) < 2:\n        print(\"Usage: check-page-size.py <elf-file>\")\n        sys.exit(1)\n    \n    check_elf_alignment(sys.argv[1])"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Check x86_64 architecture for completeness",
+      "layer": "native",
+      "command": "python3 check-page-size.py v2.88.6/runtimes/android-x64/native/libSkiaSharp.so",
+      "exitCode": 0,
+      "result": "wrong-output",
+      "output": "Max page alignment: 4096 bytes (4 KB)"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Download and check SkiaSharp.NativeAssets.Android 3.116.1 (first fixed release)",
+      "layer": "native",
+      "command": "curl -sLo skiasharp-3.116.1.nupkg https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.android/3.116.1/skiasharp.nativeassets.android.3.116.1.nupkg && unzip -q skiasharp-3.116.1.nupkg -d v3.116.1 && python3 check-page-size.py v3.116.1/runtimes/android-arm64/native/libSkiaSharp.so",
+      "exitCode": 0,
+      "result": "skip",
+      "output": "Max page alignment: 16384 bytes (16 KB)"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Check latest stable release 3.119.2",
+      "layer": "native",
+      "command": "curl -sLo skiasharp-3.119.2.nupkg https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.android/3.119.2/skiasharp.nativeassets.android.3.119.2.nupkg && unzip -q skiasharp-3.119.2.nupkg -d v3.119.2 && python3 check-page-size.py v3.119.2/runtimes/android-arm64/native/libSkiaSharp.so",
+      "exitCode": 0,
+      "result": "skip",
+      "output": "Max page alignment: 16384 bytes (16 KB)"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Verify fix exists in main branch source code (build.cake)",
+      "layer": "c-api",
+      "command": "grep -n 'max-page-size' native/android/build.cake",
+      "exitCode": 0,
+      "result": "skip",
+      "output": "43:            $\"extra_ldflags=[ '-Wl,-z,max-page-size=16384' ] \" +"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Verify fix exists in HarfBuzzSharp native makefile",
+      "layer": "c-api",
+      "command": "grep -n 'max-page-size' native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk",
+      "exitCode": 0,
+      "result": "skip",
+      "output": "11:LOCAL_LDFLAGS          := -Wl,--gc-sections -Wl,-z,max-page-size=16384"
+    },
+    {
+      "stepNumber": 8,
+      "description": "Check main branch built libraries (arm64-v8a)",
+      "layer": "native",
+      "command": "python3 check-page-size.py $REPO/output/native/android/arm64-v8a/libSkiaSharp.so",
+      "exitCode": 0,
+      "result": "skip",
+      "output": "Max page alignment: 16384 bytes (16 KB)"
+    },
+    {
+      "stepNumber": 9,
+      "description": "Verify HarfBuzzSharp also has 16 KB alignment",
+      "layer": "native",
+      "command": "python3 check-page-size.py $REPO/output/native/android/arm64-v8a/libHarfBuzzSharp.so",
+      "exitCode": 0,
+      "result": "skip",
+      "output": "Max page alignment: 16384 bytes (16 KB)"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.6 (reporter)",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Confirmed 4 KB page alignment on both arm64-v8a and x86_64 architectures. Incompatible with Android 16+."
+    },
+    {
+      "version": "2.88.9 (last known good claimed)",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Also has 4 KB page alignment. The reporter's claim this was 'last known good' is incorrect - the entire 2.x series has this issue."
+    },
+    {
+      "version": "3.116.1 (first fix)",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "First release with 16 KB page alignment. Fix from PR #3096 (commit db01ee168)."
+    },
+    {
+      "version": "3.119.2 (latest stable)",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Latest stable release confirmed to have 16 KB alignment."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Source code confirmed to have linker flags in both build.cake and HarfBuzzSharp.mk. Built libraries verified with 16 KB alignment for both libSkiaSharp.so and libHarfBuzzSharp.so."
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "libSkiaSharp.so has 4 KB page alignment instead of required 16 KB",
+    "stackTrace": "PT_LOAD segments in v2.88.6 runtimes/android-arm64/native/libSkiaSharp.so show p_align = 0x1000 (4096 bytes)"
+  },
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.6, 2.88.9, 3.116.1, 3.119.2, main",
+    "dockerUsed": false
+  },
+  "artifacts": [
+    {
+      "filename": "libSkiaSharp.so",
+      "description": "Android native library (arm64-v8a, x86_64, armeabi-v7a, x86)",
+      "source": "external",
+      "available": true
+    }
+  ],
+  "reproProject": {
+    "type": "existing",
+    "tfm": "net8.0",
+    "packages": []
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "coverage",
+        "upstream": "Triage identified the fix exists but did not verify the actual binary page alignment in released packages",
+        "corrected": "Reproduction confirmed actual page alignment in released binaries: 2.88.6/2.88.9 have 4KB (bug present), 3.116.1+ have 16KB (bug fixed). Also verified both libSkiaSharp.so and libHarfBuzzSharp.so across multiple architectures."
+      }
+    ]
+  }
+}
