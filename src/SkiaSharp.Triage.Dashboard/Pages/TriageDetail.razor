@@ -1,4 +1,6 @@
 @page "/triage/{Number:int}"
+@using SkiaSharp.Triage.Dashboard.Helpers
+@using static SkiaSharp.Triage.Dashboard.Helpers.TriageFormatHelper
 @inject DashboardDataService DataService
 @inject NavigationManager Navigation
 
@@ -1215,72 +1217,7 @@ else
         return parts.Count > 0 ? $"triage/{number}?{string.Join('&', parts)}" : $"triage/{number}";
     }
 
-    private static int SeverityOrder(string? severity) => severity switch
-    {
-        "critical" => 4, "high" => 3, "medium" => 2, "low" => 1, _ => 0
-    };
-
-    private static string FormatLabel(string value) =>
-        string.Join(' ', StripPrefix(value).Split('-').Select(w =>
-            w.Length > 0 ? char.ToUpper(w[0]) + w[1..] : w));
-
-    private static string StripPrefix(string value)
-    {
-        var slashIndex = value.IndexOf('/');
-        return slashIndex >= 0 ? value[(slashIndex + 1)..] : value;
-    }
-
-    private static string GetConfidenceClass(double c) => c switch
-    {
-        >= 0.85 => "confidence-high",
-        >= 0.70 => "confidence-medium",
-        _ => "confidence-low"
-    };
-
-    private static string GetRiskStyle(ActionRisk risk) => risk switch
-    {
-        ActionRisk.Low => "background: #28a745; color: white;",
-        ActionRisk.Medium => "background: #ffc107; color: #212529;",
-        ActionRisk.High => "background: #dc3545; color: white;",
-        _ => ""
-    };
-
-    private static string GetRiskStyle(RiskLevel risk) => risk switch
-    {
-        RiskLevel.Low => "background: #28a745; color: white;",
-        RiskLevel.Medium => "background: #ffc107; color: #212529;",
-        RiskLevel.High => "background: #dc3545; color: white;",
-        _ => ""
-    };
-
-    private static string GetReproTooltip(ReproQuality quality) => quality switch
-    {
-        ReproQuality.Complete => "Full reproducible project provided — easiest to diagnose",
-        ReproQuality.Partial => "Code snippets provided — requires assembling into repro",
-        ReproQuality.None => "No reproduction material — diagnosis will be difficult",
-        _ => "Reproduction quality assessment"
-    };
-
-    private static string GetRiskTooltip(ActionRisk risk) => risk switch
-    {
-        ActionRisk.Low => "Reversible action, cosmetic change — safe to auto-apply",
-        ActionRisk.Medium => "State change that requires moderate caution",
-        ActionRisk.High => "Irreversible or reputation-sensitive — needs human review",
-        _ => "Action risk level"
-    };
-
-    private static string GetActionTypeTooltip(ActionType type) => type switch
-    {
-        ActionType.UpdateLabels => "Add or remove GitHub labels on the issue",
-        ActionType.AddComment => "Post a comment on the issue thread",
-        ActionType.CloseIssue => "Close the issue with a reason",
-        ActionType.LinkDuplicate => "Mark as duplicate of another issue",
-        ActionType.LinkRelated => "Cross-reference related issues",
-        ActionType.ConvertToDiscussion => "Convert issue to a GitHub Discussion",
-        ActionType.UpdateProject => "Update GitHub project fields",
-        ActionType.SetMilestone => "Set milestone on the issue",
-        _ => $"Action: {type}"
-    };
+    private static int SeverityOrder(string? severity) => TriageFormatHelper.SeverityOrder(severity);
 
     private async Task CopyToClipboard(string text)
     {
@@ -1291,23 +1228,8 @@ else
         catch { }
     }
 
-    private string GetFileUrl(CodeInvestigationEntry entry)
-    {
-        var repo = _issue?.Meta.Repo ?? "mono/SkiaSharp";
-        var file = entry.File.TrimEnd('/');
-        var url = $"https://github.com/{repo}/blob/main/{file}";
-        if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A" && entry.Lines.Contains('-'))
-        {
-            var parts = entry.Lines.Split('-');
-            if (parts.Length == 2)
-                url += $"#L{parts[0]}-L{parts[1]}";
-        }
-        else if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
-        {
-            url += $"#L{entry.Lines}";
-        }
-        return url;
-    }
+    private string GetFileUrl(CodeInvestigationEntry entry) =>
+        TriageFormatHelper.GetFileUrl(_issue?.Meta.Repo ?? "mono/SkiaSharp", entry);
 
     [Inject] private Microsoft.JSInterop.IJSRuntime JSRuntime { get; set; } = default!;
 }
