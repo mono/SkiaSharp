@@ -61,8 +61,22 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
 
     private static void CleanDirectory(string path)
     {
-        if (Directory.Exists(path))
-            Directory.Delete(path, true);
+        try
+        {
+            if (Directory.Exists(path))
+                Directory.Delete(path, true);
+        }
+        catch (IOException ex)
+        {
+            AnsiConsole.MarkupLine($"[red]Cannot clean directory '{path}': {ex.Message}[/]");
+            AnsiConsole.MarkupLine("[yellow]Please close any open files in that directory and try again.[/]");
+            throw;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            AnsiConsole.MarkupLine($"[red]Access denied to directory '{path}': {ex.Message}[/]");
+            throw;
+        }
         Directory.CreateDirectory(path);
     }
 
