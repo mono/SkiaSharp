@@ -59,6 +59,13 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         return config.Repos.FirstOrDefault(r => r.Key == repoKey);
     }
 
+    private static void CleanDirectory(string path)
+    {
+        if (Directory.Exists(path))
+            Directory.Delete(path, true);
+        Directory.CreateDirectory(path);
+    }
+
     private async Task GenerateGitHubStatsAsync(CacheService rootCache, DashboardConfig config, List<string> repoKeys, GenerateSettings settings)
     {
         if (!settings.Quiet)
@@ -759,9 +766,9 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         var triageOutputDir = Path.Combine(settings.OutputDir, "triage");
         var reproOutputDir = Path.Combine(settings.OutputDir, "repro");
         var fixOutputDir = Path.Combine(settings.OutputDir, "fix");
-        Directory.CreateDirectory(triageOutputDir);
-        Directory.CreateDirectory(reproOutputDir);
-        Directory.CreateDirectory(fixOutputDir);
+        CleanDirectory(triageOutputDir);
+        CleanDirectory(reproOutputDir);
+        CleanDirectory(fixOutputDir);
 
         foreach (var repoKey in repoKeys)
         {
