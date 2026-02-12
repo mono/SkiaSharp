@@ -6,7 +6,7 @@
     "analyzedAt": "2026-02-11T22:50:00Z"
   },
   "conclusion": "reproduced",
-  "notes": "TIFF decoding confirmed to fail: all SKImage.FromEncodedData and SKBitmap.Decode overloads return null or throw ArgumentNullException for the reporter\u0027s TIFF file. This is expected behavior \u2014 Skia does not include a TIFF codec. The SKEncodedImageFormat enum has no TIFF entry, and SKCodec.Create returns null for TIFF data. The file itself is a valid TIFF (magic bytes 49-49-2A-00, 988x664 uncompressed RGB). Reproduced on both 2.88.3 and 3.119.2. The bug report is valid in that decode fails, but TIFF support was never part of Skia\u0027s codec set.",
+  "notes": "TIFF decoding confirmed to fail: all SKImage.FromEncodedData and SKBitmap.Decode overloads return null or throw ArgumentNullException for the reporter\u0027s TIFF file. This is expected behavior \u2014 Skia does not include a TIFF codec. The SKEncodedImageFormat enum has no TIFF entry, and SKCodec.Create returns null for TIFF data. The file itself is a valid TIFF (magic bytes 49-49-2A-00, 988x664 uncompressed RGB). Reproduced on 2.88.3, 3.119.2, and main (source). The bug report is valid in that decode fails, but TIFF support was never part of Skia\u0027s codec set.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
@@ -63,6 +63,14 @@
       "command": "dotnet run",
       "output": "TIFF first 4 bytes: 49-49-2A-00\nExpected TIFF LE magic: 49-49-2A-00\nControl test (PNG roundtrip): OK\n\nSKEncodedImageFormat values:\n  Bmp = 0, Gif = 1, Ico = 2, Jpeg = 3, Png = 4, Wbmp = 5, Webp = 6, Pkm = 7, Ktx = 8, Astc = 9, Dng = 10, Heif = 11, Avif = 12, Jpegxl = 13\n\nTIFF is NOT listed \u2014 Skia does not include a TIFF codec.",
       "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Build SkiaSharp from source (main branch) and test TIFF decode against source-built binaries",
+      "layer": "csharp",
+      "command": "dotnet build binding/SkiaSharp/SkiaSharp.csproj \u0026\u0026 dotnet run --no-build (standalone project referencing source-built DLL with native libs from output/native/osx/)",
+      "output": "SkiaSharp Version: 3.119.0.0 (source/main)\nArch: Arm64\n\nFile: C 7 142 18-0002.tif (3977720 bytes)\n\nTest 1 - SKImage.FromEncodedData(path): RETURNED NULL\nTest 2 - SKBitmap.Decode(path): RETURNED NULL\nTest 3 - SKCodec.Create(path): RETURNED NULL (format not supported)\nControl (PNG roundtrip): OK",
+      "result": "failure"
     }
   ],
   "environment": {
@@ -85,6 +93,12 @@
       "source": "nuget",
       "result": "reproduced",
       "notes": "Same behavior as 2.88.3 \u2014 all decode methods return null, SKBitmap.Decode(byte[]) throws ArgumentNullException."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Built from main branch (commit 6acdf29ea). Same behavior \u2014 all decode methods return null, SKCodec.Create returns null. TIFF codec not present in Skia."
     }
   ],
   "reproProject": {
