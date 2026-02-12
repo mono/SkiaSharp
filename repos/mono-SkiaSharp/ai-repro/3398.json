@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3398,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:10:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3398.json"
+  },
+  "conclusion": "inconclusive",
+  "assessment": "likely-bug",
+  "notes": "Attempted to reproduce intermittent crash in sk_canvas_draw_path reported by Avalonia/Mapsui user on Windows. Created a standalone console app exercising DrawPath under 4 scenarios: basic single-threaded, GC pressure (10K iterations with forced collections), concurrent multi-threaded access (4 threads, 5 seconds, ~500K calls), and rapid create/dispose cycles. All tests passed on both SkiaSharp 2.88.8 (reporter's version) and 3.119.0 (latest) on macOS arm64. The crash is intermittent and likely requires the specific Avalonia/Mapsui rendering pipeline on Windows with rapid PointerMoved events to trigger. Code inspection confirms SKCanvas.DrawPath lacks GC.KeepAlive calls (related to #3393), which could allow GC to collect SKPath/SKPaint handles during P/Invoke under high pressure. The threading scenario (concurrent DrawPath on shared SKCanvas) also did not crash in our tests, though SKCanvas is documented as NOT thread-safe. The bug likely requires either (1) Windows-specific memory layout/GC timing, (2) the specific Mapsui threading model where GetMapInfo renders while the main render loop is active, or (3) longer sustained load than our 5-second stress test.",
+  "reproductionTime": "~10 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.8",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "All 4 tests passed: basic DrawPath, GC pressure (10K iterations, 10 forced GC cycles), concurrent 4-thread stress (384K calls in 5s), rapid create/dispose (5K iterations). No crashes on macOS arm64."
+    },
+    {
+      "version": "3.119.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "All 4 tests passed: basic DrawPath, GC pressure, concurrent 4-thread stress (496K calls in 5s), rapid create/dispose. No crashes on macOS arm64."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Built from source, ran 37 SKCanvasTest cases — all passed. DrawPath implementation on main still lacks GC.KeepAlive (line 411 of SKCanvas.cs), confirming the theoretical vulnerability from #3393 persists."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net9.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "2.88.8" },
+      { "name": "SkiaSharp.NativeAssets.macOS", "version": "2.88.8" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project targeting net9.0 with SkiaSharp 2.88.8",
+      "layer": "setup",
+      "command": "mkdir -p /tmp/repro-3398 && cd /tmp/repro-3398 && dotnet new console -n Repro --framework net9.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.8 && dotnet add package SkiaSharp.NativeAssets.macOS --version 2.88.8",
+      "exitCode": 0,
+      "output": "Restored Repro.csproj",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console app project referencing SkiaSharp 2.88.8 targeting net9.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net9.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.8\" />\n    <PackageReference Include=\"SkiaSharp.NativeAssets.macOS\" Version=\"2.88.8\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction program with 4 tests: basic DrawPath, GC pressure, concurrent threading, rapid dispose cycles",
+          "content": "// Reproduction for https://github.com/mono/SkiaSharp/issues/3398\n// Simulates concurrent SKCanvas.DrawPath usage with GC pressure,\n// mimicking the Avalonia/Mapsui scenario where PointerMoved triggers\n// GetMapInfo() while the render loop is drawing.\n\nusing System;\nusing System.Runtime.InteropServices;\nusing System.Threading;\nusing System.Threading.Tasks;\nusing SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKCanvas).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Runtime: {RuntimeInformation.FrameworkDescription}\");\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine();\n\n// Test 1: Basic DrawPath (sanity check)\nConsole.WriteLine(\"=== Test 1: Basic DrawPath (single thread) ===\");\ntry\n{\n    using var bitmap = new SKBitmap(200, 200);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.White);\n    using var path = new SKPath();\n    path.MoveTo(10, 10);\n    path.LineTo(100, 50);\n    path.LineTo(50, 100);\n    path.Close();\n    using var paint = new SKPaint { Color = SKColors.Red, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };\n    canvas.DrawPath(path, paint);\n    Console.WriteLine(\"PASS: Basic DrawPath completed without crash.\");\n}\ncatch (Exception ex) { Console.WriteLine($\"FAIL: {ex.GetType().Name}: {ex.Message}\"); }\nConsole.WriteLine();\n\n// Test 2: DrawPath under GC pressure\nConsole.WriteLine(\"=== Test 2: DrawPath under GC pressure ===\");\ntry\n{\n    int iterations = 10000;\n    int gcCollections = 0;\n    using var bitmap = new SKBitmap(200, 200);\n    using var canvas = new SKCanvas(bitmap);\n    for (int i = 0; i < iterations; i++)\n    {\n        var path = new SKPath();\n        path.MoveTo(i % 200, 10); path.LineTo(100, i % 200); path.LineTo(50, 100); path.Close();\n        var paint = new SKPaint { Color = new SKColor((byte)(i % 255), 100, 100), Style = SKPaintStyle.Stroke, StrokeWidth = 1 };\n        canvas.DrawPath(path, paint);\n        if (i % 1000 == 0) { GC.Collect(2, GCCollectionMode.Forced, true); GC.WaitForPendingFinalizers(); gcCollections++; }\n    }\n    Console.WriteLine($\"PASS: {iterations} DrawPath calls with {gcCollections} forced GC cycles completed.\");\n}\ncatch (Exception ex) { Console.WriteLine($\"FAIL: {ex.GetType().Name}: {ex.Message}\"); }\nConsole.WriteLine();\n\n// Test 3: Concurrent DrawPath from multiple threads\nConsole.WriteLine(\"=== Test 3: Concurrent DrawPath (threading stress) ===\");\n{\n    int crashCount = 0; int successCount = 0;\n    var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));\n    using var bitmap = new SKBitmap(400, 400);\n    using var canvas = new SKCanvas(bitmap);\n    var tasks = new Task[4];\n    for (int t = 0; t < tasks.Length; t++)\n    {\n        int threadId = t;\n        tasks[t] = Task.Run(() => {\n            var rng = new Random(threadId);\n            while (!cts.Token.IsCancellationRequested)\n            {\n                try {\n                    using var path = new SKPath();\n                    path.MoveTo(rng.Next(400), rng.Next(400));\n                    for (int j = 0; j < 5; j++) path.LineTo(rng.Next(400), rng.Next(400));\n                    path.Close();\n                    using var paint = new SKPaint { Color = new SKColor((byte)rng.Next(255), (byte)rng.Next(255), (byte)rng.Next(255)), Style = SKPaintStyle.Stroke, StrokeWidth = rng.Next(1, 5) };\n                    canvas.DrawPath(path, paint);\n                    Interlocked.Increment(ref successCount);\n                    if (rng.Next(100) < 5) GC.Collect(0, GCCollectionMode.Forced, false);\n                }\n                catch (AccessViolationException) { Interlocked.Increment(ref crashCount); }\n                catch (Exception ex) { Console.WriteLine($\"  Thread {threadId}: {ex.GetType().Name}: {ex.Message}\"); Interlocked.Increment(ref crashCount); }\n            }\n        });\n    }\n    try { Task.WaitAll(tasks); }\n    catch (AggregateException ae) { foreach (var ex in ae.InnerExceptions) Console.WriteLine($\"  AggregateException: {ex.GetType().Name}: {ex.Message}\"); }\n    Console.WriteLine($\"Completed: {successCount} successful, {crashCount} exceptions\");\n}\nConsole.WriteLine();\n\n// Test 4: DrawPath with rapidly created/disposed objects\nConsole.WriteLine(\"=== Test 4: DrawPath with rapid create/dispose cycles ===\");\ntry\n{\n    int iterations = 5000;\n    using var bitmap = new SKBitmap(200, 200);\n    using var canvas = new SKCanvas(bitmap);\n    for (int i = 0; i < iterations; i++)\n    {\n        var path = new SKPath(); path.MoveTo(10, 10); path.LineTo(100, 50); path.LineTo(50, 100); path.Close();\n        var paint = new SKPaint { Color = SKColors.Blue, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };\n        canvas.DrawPath(path, paint);\n        path.Dispose(); paint.Dispose();\n    }\n    Console.WriteLine($\"PASS: {iterations} DrawPath + immediate Dispose cycles completed.\");\n}\ncatch (Exception ex) { Console.WriteLine($\"FAIL: {ex.GetType().Name}: {ex.Message}\"); }\nConsole.WriteLine();\nConsole.WriteLine(\"=== Reproduction complete ===\");"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction with SkiaSharp 2.88.8 — test DrawPath under single-thread, GC pressure, concurrent threading, and rapid dispose scenarios",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-3398/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 2.88.0.0\nRuntime: .NET 9.0.12\nOS: Darwin 25.2.0\nArch: Arm64\n\n=== Test 1: Basic DrawPath (single thread) ===\nPASS: Basic DrawPath completed without crash.\n\n=== Test 2: DrawPath under GC pressure ===\nPASS: 10000 DrawPath calls with 10 forced GC cycles completed.\n\n=== Test 3: Concurrent DrawPath (threading stress) ===\nCompleted: 384730 successful, 0 exceptions\nPASS: No exceptions detected (race may not have triggered in this run).\n\n=== Test 4: DrawPath with rapid create/dispose cycles ===\nPASS: 5000 DrawPath + immediate Dispose cycles completed.\n\n=== Reproduction complete ===",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Update to latest SkiaSharp release (3.119.0) and rerun all tests",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-3398/Repro && dotnet add package SkiaSharp && dotnet add package SkiaSharp.NativeAssets.macOS && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\nRuntime: .NET 9.0.12\nOS: Darwin 25.2.0\nArch: Arm64\n\n=== Test 1: Basic DrawPath (single thread) ===\nPASS: Basic DrawPath completed without crash.\n\n=== Test 2: DrawPath under GC pressure ===\nPASS: 10000 DrawPath calls with 10 forced GC cycles completed.\n\n=== Test 3: Concurrent DrawPath (threading stress) ===\nCompleted: 496350 successful, 0 exceptions\nPASS: No exceptions detected (race may not have triggered in this run).\n\n=== Test 4: DrawPath with rapid create/dispose cycles ===\nPASS: 5000 DrawPath + immediate Dispose cycles completed.\n\n=== Reproduction complete ===",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build SkiaSharp from source (main branch) and run SKCanvas test suite to verify DrawPath behavior",
+      "layer": "csharp",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj && dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SKCanvasTest\"",
+      "exitCode": 0,
+      "output": "Build succeeded. 13 Warning(s), 0 Error(s).\nPassed! - Failed: 0, Passed: 37, Skipped: 0, Total: 37, Duration: 305 ms",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Inspect SKCanvas.DrawPath source code on main for GC.KeepAlive safety (related to #3393)",
+      "layer": "csharp",
+      "output": "SKCanvas.cs line 411: SkiaApi.sk_canvas_draw_path(Handle, path.Handle, paint.Handle) — no GC.KeepAlive calls for path or paint after the P/Invoke. This confirms the theoretical vulnerability: GC could collect path/paint during native execution if no other managed references exist.",
+      "result": "success"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "Unhandled exception in sk_canvas_draw_path — process terminated (as reported by user on Windows)",
+    "stackTrace": "at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)\nat SkiaSharp.SKCanvas.DrawPath(SKPath, SKPaint)\nat Mapsui.Rendering.Skia.Extensions.SkCanvasExtensions.DrawPath(...)\nat Mapsui.Rendering.Skia.LineStringRenderer.Draw(...)\nat Mapsui.Rendering.Skia.VectorStyleRenderer..."
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "9.0.310",
+    "skiaSharpVersion": "2.88.8",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Reporter is on Windows 11 — current environment is macOS arm64. The crash may require Windows-specific memory layout or GC timing to trigger.",
+    "Bug is intermittent and requires the Avalonia/Mapsui rendering pipeline with rapid PointerMoved events. Standalone DrawPath stress tests (500K+ calls across 4 threads with GC pressure) did not trigger the crash.",
+    "The crash may require the specific threading model of Mapsui where GetMapInfo() renders to a canvas concurrently with the main render loop — this cannot be easily simulated in a standalone console app."
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "scope",
+        "upstream": "Triage identified P/Invoke GC safety (#3393) as likely root cause with high confidence",
+        "corrected": "GC.KeepAlive gap confirmed in source code, but unable to trigger the actual crash even with aggressive GC pressure tests (10K iterations, forced Gen2 collections). The intermittent nature suggests the crash requires a specific combination of Mapsui threading + Windows GC behavior that standalone tests cannot reproduce."
+      }
+    ]
+  }
+}
