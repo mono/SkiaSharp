@@ -1,0 +1,213 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 754,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T23:54:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKBitmap.Decode with SKColorType.Gray8 returns null because SKImageInfo constructor defaults AlphaType to Premul \u2014 Gray8 requires Opaque",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    }
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": true,
+      "errorType": "wrong-output",
+      "errorMessage": "SKBitmap.Decode returns null when decoding Gray8 PNG with SKColorType.Gray8",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "netcoreapp3.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load a grayscale 8-bit PNG into a MemoryStream",
+        "Create an SKCodec from the stream",
+        "Create SKImageInfo with SKColorType.Gray8 (using 3-param constructor: width, height, colorType)",
+        "Call SKBitmap.Decode(codec, imageInfo)",
+        "bitmap is null"
+      ],
+      "environmentDetails": "SkiaSharp 1.68.0 originally, confirmed still present in 3.119.1",
+      "screenshots": [
+        {
+          "url": "https://user-images.githubusercontent.com/5593825/51076794-aecf2b80-169d-11e9-9b9b-1c01eeb20467.png",
+          "description": "Test grayscale 8-bit PNG image"
+        }
+      ],
+      "relatedIssues": [
+        694,
+        2787,
+        806,
+        3385
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.60.3",
+        "1.68.0",
+        "3.119.1"
+      ],
+      "workedIn": "1.60.3",
+      "brokeIn": "1.68.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKImageInfo constructor still defaults AlphaType to Premul in the 3-param overload, and SKBitmap.Decode does not correct the alpha type for Gray8. The code path is unchanged."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter states Gray8 decoding worked in 1.60.3 (BytesPerPixel == 1) but broke in 1.68.0. Skia's codec behavior changed to validate alpha type more strictly \u2014 the SkiaSharp wrapper didn't adapt.",
+      "workedInVersion": "1.60.3",
+      "brokeInVersion": "1.68.0"
+    }
+  },
+  "analysis": {
+    "summary": "SKBitmap.Decode returns null for Gray8 images because the SKImageInfo 3-param constructor defaults AlphaType to Premul, which is invalid for Gray8. Skia's SkColorTypeValidateAlphaType requires Gray8 to use Opaque. The codec's getPixels rejects the Premul+Gray8 combination and returns an error, causing SkiaSharp to dispose the bitmap and return null.",
+    "rationale": "This is a clear bug: the user follows the documented pattern (create codec, create imageInfo with desired color type, decode), but SKImageInfo doesn't validate the alpha type against the color type. The 3-param constructor always sets Premul, which is correct for RGBA types but invalid for Gray8, Rgb565, and other opaque-only formats. Skia validates this constraint natively and fails silently. The existing GetAlphaType() method already contains the correct validation logic but isn't called by the constructor or Decode methods.",
+    "keySignals": [
+      {
+        "text": "bitmap == null",
+        "source": "issue body",
+        "interpretation": "SKBitmap.Decode returns null \u2014 the decode itself fails, not just a wrong format."
+      },
+      {
+        "text": "In SkiaSharp 1.60.3 loading an 8bit png would result in a bitmap with BytesPerPixel == 1. In 1.68.0, BytesPerPixel == 4",
+        "source": "issue body",
+        "interpretation": "Regression introduced when Skia dropped Index8 support and tightened codec validation around 1.68."
+      },
+      {
+        "text": "now we need to pass in the codec when decoding to tell Skia it is an 8 bit image",
+        "source": "issue body",
+        "interpretation": "User followed advice from #694 to use codec+imageInfo pattern, but the alpha type mismatch causes failure."
+      },
+      {
+        "text": "This issue still persists in version 3.119.1",
+        "source": "comment by liu7923032",
+        "interpretation": "Bug confirmed present in latest version \u2014 the fundamental code path hasn't changed."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "77-84",
+        "finding": "SKImageInfo(int, int, SKColorType) constructor always sets AlphaType = SKAlphaType.Premul, regardless of color type. This is invalid for Gray8 which requires Opaque.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "lines": "155-198",
+        "finding": "GetAlphaType() extension method correctly maps Gray8 \u2192 Opaque (line 187-197), but this validation is NOT called by SKImageInfo constructors or SKBitmap.Decode.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "446-459",
+        "finding": "Decode(codec, bitmapInfo) calls codec.GetPixels(bitmapInfo, pixels). When getPixels returns non-Success (due to invalid Premul+Gray8 combo), bitmap is disposed and null returned. No alpha type correction.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "lines": "434-444",
+        "finding": "Decode(codec) only corrects Unpremul\u2192Premul but never checks if the color type requires Opaque alpha. Would still fail for Gray8 default path.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "lines": "119-137",
+        "finding": "GetPixels passes SKImageInfo directly to native sk_codec_get_pixels with no alpha type fixup. Native Skia rejects Gray8+Premul.",
+        "relevance": "related"
+      },
+      {
+        "file": "externals/skia/src/c/sk_codec.cpp",
+        "lines": "54-55",
+        "finding": "sk_codec_get_pixels is a thin wrapper over SkCodec::getPixels \u2014 no validation is added at the C layer.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Use the 4-param SKImageInfo constructor with SKAlphaType.Opaque: new SKImageInfo(width, height, SKColorType.Gray8, SKAlphaType.Opaque)"
+    ],
+    "nextQuestions": [
+      "Should SKImageInfo constructors auto-correct alpha type based on color type using GetAlphaType()?",
+      "Should SKBitmap.Decode validate/fix alpha type before passing to codec, similar to how it fixes Unpremul\u2192Premul?",
+      "Are other opaque-only color types (Rgb565, Rgb888x, etc.) affected by the same issue?"
+    ],
+    "resolution": {
+      "hypothesis": "SKImageInfo defaults AlphaType to Premul for all color types. Gray8 requires Opaque per Skia's SkColorTypeValidateAlphaType. The mismatch causes codec.getPixels to fail, returning null.",
+      "proposals": [
+        {
+          "title": "Workaround: explicit Opaque alpha",
+          "description": "Use the 4-parameter SKImageInfo constructor to explicitly set SKAlphaType.Opaque when decoding Gray8 images.",
+          "codeSnippet": "using var stream = new MemoryStream(bytes);\nusing var codec = SKCodec.Create(stream);\nif (codec == null) return;\nvar imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Gray8, SKAlphaType.Opaque);\nusing var bitmap = SKBitmap.Decode(codec, imageInfo);",
+          "confidence": 0.9,
+          "effort": "trivial"
+        },
+        {
+          "title": "Fix: auto-correct alpha in SKBitmap.Decode",
+          "description": "In SKBitmap.Decode(codec, bitmapInfo), call bitmapInfo.ColorType.GetAlphaType(bitmapInfo.AlphaType) to validate and correct the alpha type before passing to the codec. This matches the pattern already used for Unpremul\u2192Premul correction.",
+          "codeSnippet": "// In SKBitmap.Decode(SKCodec codec, SKImageInfo bitmapInfo):\nbitmapInfo.AlphaType = bitmapInfo.ColorType.GetAlphaType(bitmapInfo.AlphaType);",
+          "confidence": 0.8,
+          "effort": "small"
+        },
+        {
+          "title": "Fix: validate alpha in SKImageInfo constructors",
+          "description": "Have the SKImageInfo constructors call GetAlphaType() to auto-correct invalid alpha types based on the color type. This is a broader fix that prevents the issue at the source.",
+          "confidence": 0.65,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Workaround: explicit Opaque alpha",
+      "recommendedReason": "Immediate fix the reporter can apply now. The proper code fix should also be pursued, but the workaround is trivially correct and validated."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Real bug with clear root cause. Workaround available. A proper fix should validate alpha types in SKBitmap.Decode or SKImageInfo constructors."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Existing type/bug label is correct. Add area label.",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post workaround with explanation of root cause",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the report \u2014 this is still a valid issue in current versions.\n\nThe root cause is that `new SKImageInfo(width, height, SKColorType.Gray8)` defaults `AlphaType` to `Premul`, but Gray8 requires `Opaque`. Skia's codec rejects the Premul+Gray8 combination and returns an error, which surfaces as `null` from `SKBitmap.Decode`.\n\nHere's a workaround you can use now \u2014 explicitly specify `SKAlphaType.Opaque`:\n\n```csharp\nusing var stream = new MemoryStream(bytes);\nusing var codec = SKCodec.Create(stream);\nif (codec == null) return;\nvar imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Gray8, SKAlphaType.Opaque);\nusing var bitmap = SKBitmap.Decode(codec, imageInfo);\n```\n\nWe should fix this properly by having `SKBitmap.Decode` validate the alpha type against the color type before passing to the codec."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related Gray8 issues",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 2787
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference Gray8 pixel copy issue",
+        "risk": "low",
+        "confidence": 0.8,
+        "linkedIssue": 806
+      }
+    ]
+  }
+}
