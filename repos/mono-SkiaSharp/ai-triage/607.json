@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 607,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T15:46:27Z",
+    "currentLabels": [
+      "type/enhancement",
+      "os/iOS",
+      "os/Android",
+      "area/SkiaSharp.Views",
+      "type/feature-request"
+    ]
+  },
+  "summary": "SKTouchAction.Entered and SKTouchAction.Exited events are not fired on iOS and Android \u2014 only implemented on Windows and Tizen",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.88
+    },
+    "platforms": [
+      "os/iOS",
+      "os/Android"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Subscribe to Touch event on SKCanvasView on iOS or Android",
+        "Observe that SKTouchAction.Entered and SKTouchAction.Exited are never raised when touch enters/exits the view bounds",
+        "Same code works on Windows where PointerEntered/PointerExited are wired up"
+      ],
+      "environmentDetails": "Originally filed against Xamarin.Forms (2018). Still applies to MAUI as of current main branch.",
+      "relatedIssues": [
+        2106,
+        2722,
+        2493,
+        309
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.x (Xamarin.Forms era, 2018)"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The MAUI-era Android and Apple SKTouchHandler classes still do not fire Entered/Exited events. The gap has persisted through the Xamarin.Forms to MAUI migration."
+    }
+  },
+  "analysis": {
+    "summary": "The SKTouchAction enum defines Entered and Exited values, but the iOS (Apple) and Android platform touch handlers never produce these actions. Windows fully implements them via PointerEntered/PointerExited, and Tizen partially implements Exited via PointStateType.Leave. This creates an inconsistent cross-platform API surface where developers write code expecting Entered/Exited on all platforms but it silently never fires on mobile.",
+    "rationale": "This is a feature request, not a bug \u2014 the enum values exist by design but were never wired up on iOS and Android. The reporter correctly identifies the inconsistency: UWP/Windows fires these events, but iOS/Android silently don't. The original Xamarin.Forms issue from 2018 still applies to MAUI because the same gap exists in the current platform touch handlers. Area is SkiaSharp.Views.Maui (not the older Forms package) since MAUI is the current implementation. The tenet/compatibility label applies because this is a cross-platform consistency gap.",
+    "keySignals": [
+      {
+        "text": "Currently iOS is implemented only on UWP (because it is connected as a passthrough)",
+        "source": "issue body",
+        "interpretation": "Reporter identified that Entered/Exited only works on UWP, not iOS/Android."
+      },
+      {
+        "text": "their absence isn't noted and is a bit confusing",
+        "source": "issue body",
+        "interpretation": "The API surface implies cross-platform support (enum values exist) but behavior differs silently."
+      },
+      {
+        "text": "I spent a few hours fixing the behavior... then discovering that entered/exited wouldn't fire",
+        "source": "comment #2",
+        "interpretation": "Silent failure causes significant debugging time for developers who assume cross-platform parity."
+      },
+      {
+        "text": "This is something that we will be looking at in the future.",
+        "source": "comment #4 (mattleibow, maintainer)",
+        "interpretation": "Maintainer acknowledged the request in Dec 2018 but it remains unimplemented."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+        "lines": "60-69",
+        "finding": "SKTouchAction enum defines Entered (line 62) and Exited (line 67) as valid values, establishing the API contract.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+        "lines": "59-66",
+        "finding": "Windows handler wires up PointerEntered to SKTouchAction.Entered and PointerExited to SKTouchAction.Exited. Full implementation.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
+        "lines": "63-108",
+        "finding": "Android handler only maps MotionEventActions Down/PointerDown/Move/Up/PointerUp/Cancel. No Entered/Exited handling. Would need to track touch position relative to view bounds during Move events.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+        "lines": "54-95",
+        "finding": "Apple handler only maps TouchesBegan/TouchesMoved/TouchesEnded/TouchesCancelled. UIKit has no native entered/exited gesture \u2014 would need manual hit-testing during TouchesMoved.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs",
+        "lines": "65-73",
+        "finding": "Tizen partially implements: PointStateType.Leave maps to SKTouchAction.Exited, but no Entered equivalent.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Track touch position relative to canvas size during SKTouchAction.Moved events and synthesize Entered/Exited logic in application code (as reporter demonstrates in comment #3)"
+    ],
+    "nextQuestions": [
+      "Should the implementation use the reporter's approach (track bounds during Move events) or platform-specific hover/pointer APIs?",
+      "Should Entered/Exited also work for mouse hover (not just touch) on platforms that support it?",
+      "Does SKGLView need the same treatment?"
+    ],
+    "resolution": {
+      "hypothesis": "iOS and Android native touch APIs don't have direct Entered/Exited equivalents. Implementation requires manual hit-testing during move events to detect when the touch crosses view bounds.",
+      "proposals": [
+        {
+          "title": "Synthesize Entered/Exited during Move events",
+          "description": "In the Android and Apple SKTouchHandler classes, track whether the touch is inside the view bounds. During Move events, compare current position to view bounds and fire SKTouchAction.Entered or SKTouchAction.Exited when the inside/outside state changes. This matches the reporter's pseudocode and the approach they used as a workaround.",
+          "confidence": 0.75,
+          "effort": "small"
+        },
+        {
+          "title": "Application-level workaround",
+          "description": "Developers can track entered/exited state themselves in their Touch event handler by comparing touch coordinates to canvas bounds during Moved events, as demonstrated by the reporter in comment #3. Use CanvasSize from OnPaintSurface for accurate bounds that account for DPI scaling.",
+          "codeSnippet": "// Store canvas size from OnPaintSurface:\nSKSize _canvasSize;\nvoid OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\n{\n    _canvasSize = e.Info.Size;\n    // ... drawing code\n}\n\n// Track entered/exited in Touch handler:\nbool _wasInside = true;\nvoid OnTouch(object sender, SKTouchEventArgs e)\n{\n    if (e.ActionType == SKTouchAction.Moved)\n    {\n        var inside = e.Location.X >= 0 && e.Location.Y >= 0\n            && e.Location.X < _canvasSize.Width\n            && e.Location.Y < _canvasSize.Height;\n        if (inside != _wasInside)\n        {\n            _wasInside = inside;\n            // Handle entered/exited logic here\n        }\n    }\n    e.Handled = true;\n}",
+          "confidence": 0.75,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Application-level workaround",
+      "recommendedReason": "Immediate solution reporters can use today. The framework-level fix requires changes to platform handlers and should be a separate PR."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "Well-understood gap with clear implementation path. Needs design decision on hover vs touch-only semantics before implementation."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update labels to reflect current MAUI area and add compatibility tenet",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp.Views.Maui",
+          "os/iOS",
+          "os/Android",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the gap persists in MAUI, provide workaround with canvas-size-based bounds, note related issues",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "Thanks for reporting this \u2014 the gap still exists in the MAUI-era codebase. The Windows handler wires up `PointerEntered`/`PointerExited` to `SKTouchAction.Entered`/`Exited`, but the Android and iOS handlers don't synthesize these during move events.\n\nAs a workaround, you can track entered/exited state in your Touch handler by comparing the touch location to canvas bounds during `Moved` events. Use `CanvasSize` from `OnPaintSurface` for accurate bounds that respect DPI scaling:\n\n```csharp\nSKSize _canvasSize;\nbool _wasInside = true;\n\nvoid OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\n{\n    _canvasSize = e.Info.Size;\n    // ... drawing code\n}\n\nvoid OnTouch(object sender, SKTouchEventArgs e)\n{\n    if (e.ActionType == SKTouchAction.Moved)\n    {\n        var inside = e.Location.X >= 0 && e.Location.Y >= 0\n            && e.Location.X < _canvasSize.Width\n            && e.Location.Y < _canvasSize.Height;\n        if (inside != _wasInside)\n        {\n            _wasInside = inside;\n            // Handle entered/exited logic here\n        }\n    }\n    e.Handled = true;\n}\n```\n\nNote: this only detects entry/exit during active touch-move gestures \u2014 it won't fire if the touch is released outside without a preceding move. For full coverage, also check bounds on `Pressed` and `Released`.\n\nRelated: #2106, #2722, #2493."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference pointer events issue on iOS/Android",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 2106
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference Touch not firing all events on iOS",
+        "risk": "low",
+        "confidence": 0.8,
+        "linkedIssue": 2722
+      }
+    ]
+  }
+}
