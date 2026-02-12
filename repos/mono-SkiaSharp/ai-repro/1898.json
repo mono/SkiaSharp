@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1898,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:45:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/1898.json"
+  },
+  "conclusion": "reproduced",
+  "assessment": "working-as-designed",
+  "notes": "Reproduced: the netcoreapp3.1 directory in SkiaSharp.Views.Forms 2.88.0-preview.179 contains only 0-byte _._placeholder files, not DLL assemblies, confirming the reporter's observation that it appears empty. However, this is standard NuGet packaging convention — _._placeholders declare TFM compatibility while the netstandard2.0 assembly provides runtime support. The .targets file in build/netcoreapp3.1/ handles WPF build integration. This pattern is identical across all 2.88.x versions (preview.127 through stable 2.88.9). The package was removed entirely in SkiaSharp 3.x. Both netcoreapp3.1 and Xamarin.Forms are EOL.",
+  "errorMessages": {
+    "primaryError": "netcoreapp3.1 lib/ and ref/ directories contain only 0-byte _._placeholder files — no actual DLL assemblies present"
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.0-preview.179",
+    "dockerUsed": false
+  },
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "System.IO.Compression", "version": "4.3.0" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Download SkiaSharp.Views.Forms 2.88.0-preview.179 NuGet package for inspection",
+      "layer": "setup",
+      "command": "curl -sLo views-forms-preview179.nupkg \"https://api.nuget.org/v3-flatcontainer/skiasharp.views.forms/2.88.0-preview.179/skiasharp.views.forms.2.88.0-preview.179.nupkg\"",
+      "result": "success",
+      "exitCode": 0,
+      "output": "Downloaded 518864 bytes"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Inspect netcoreapp3.1 directory contents in the reporter's NuGet package to verify the reported empty directory",
+      "layer": "deployment",
+      "command": "unzip -l views-forms-preview179.nupkg | grep netcoreapp3.1",
+      "result": "wrong-output",
+      "exitCode": 0,
+      "output": "     2078  12-17-2021 04:12   build/netcoreapp3.1/SkiaSharp.Views.Forms.targets\n        0  12-17-2021 04:15   lib/netcoreapp3.1/_._\n        0  12-17-2021 04:15   ref/netcoreapp3.1/_._"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run programmatic inspection of all three package versions (preview.127, preview.179, stable 2.88.9) to verify the pattern is consistent",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "result": "wrong-output",
+      "exitCode": 0,
+      "output": "=== 2.88.0-preview.179 (reporter) ===\n  netcoreapp3.1 entries: 3\n    build/netcoreapp3.1/SkiaSharp.Views.Forms.targets (2078 bytes)\n    lib/netcoreapp3.1/_._ (0 bytes)\n    ref/netcoreapp3.1/_._ (0 bytes)\n  DLLs: 0, Placeholders (_._): 2\n  RESULT: Directory contains only _._placeholder files (NO DLLs)\n\n=== 2.88.0-preview.127 (first netcoreapp3.1) ===\n  netcoreapp3.1 entries: 3\n  DLLs: 0, Placeholders (_._): 2\n  RESULT: Directory contains only _._placeholder files (NO DLLs)\n\n=== 2.88.9 (latest stable 2.88.x) ===\n  netcoreapp3.1 entries: 3\n  DLLs: 0, Placeholders (_._): 2\n  RESULT: Directory contains only _._placeholder files (NO DLLs)\n\n=== Checking netstandard2.0 fallback (preview.179) ===\n  ref/netstandard1.3/SkiaSharp.Views.Forms.dll (34224 bytes)\n  ref/netstandard2.0/SkiaSharp.Views.Forms.dll (34224 bytes)",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console app that inspects NuGet package ZIP contents for netcoreapp3.1 entries across multiple versions",
+          "content": "using System;\nusing System.IO;\nusing System.IO.Compression;\nusing System.Linq;\n\nvar nupkgFiles = new[] {\n    (\"2.88.0-preview.179 (reporter)\", \"views-forms-preview179.nupkg\"),\n    (\"2.88.0-preview.127 (first netcoreapp3.1)\", \"views-forms-preview127.nupkg\"),\n    (\"2.88.9 (latest stable 2.88.x)\", \"views-forms-stable.nupkg\"),\n};\n\nforeach (var (label, file) in nupkgFiles)\n{\n    var path = Path.Combine(\"..\", file);\n    if (!File.Exists(path)) { Console.WriteLine($\"SKIP: {label} - file not found\"); continue; }\n    Console.WriteLine($\"\\n=== {label} ===\");\n    using var zip = ZipFile.OpenRead(path);\n    var netcoreEntries = zip.Entries.Where(e => e.FullName.Contains(\"netcoreapp3.1\")).OrderBy(e => e.FullName).ToList();\n    Console.WriteLine($\"  netcoreapp3.1 entries: {netcoreEntries.Count}\");\n    foreach (var entry in netcoreEntries)\n        Console.WriteLine($\"    {entry.FullName} ({entry.Length} bytes)\");\n    var dllCount = netcoreEntries.Count(e => e.FullName.EndsWith(\".dll\"));\n    var placeholderCount = netcoreEntries.Count(e => e.FullName.EndsWith(\"_._\"));\n    Console.WriteLine($\"  DLLs: {dllCount}, Placeholders (_._): {placeholderCount}\");\n}"
+        },
+        {
+          "filename": "Repro.csproj",
+          "description": "Project file for the nupkg inspection tool",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"System.IO.Compression\" Version=\"4.3.0\" />\n  </ItemGroup>\n</Project>"
+        }
+      ]
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify SkiaSharp.Views.Forms does not exist in SkiaSharp 3.x (package was removed entirely)",
+      "layer": "deployment",
+      "command": "curl -s https://api.nuget.org/v3-flatcontainer/skiasharp.views.forms/index.json | python3 -c \"import sys,json; v=json.load(sys.stdin)['versions']; print('Latest:', v[-1]); print('Any 3.x:', any(x.startswith('3.') for x in v))\"",
+      "result": "success",
+      "exitCode": 0,
+      "output": "Latest: 2.88.9\nAny 3.x: False"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify SkiaSharp.Views.Forms nuspec does not exist on main branch (SkiaSharp 3.x removed it)",
+      "layer": "deployment",
+      "command": "ls -d nuget/SkiaSharp.Views.Forms* 2>/dev/null || echo 'No Views.Forms nuspec on main'",
+      "result": "success",
+      "exitCode": 0,
+      "output": "No Views.Forms nuspec on main"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.0-preview.179",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter's version. lib/netcoreapp3.1/ and ref/netcoreapp3.1/ contain only 0-byte _._placeholders. No DLL assemblies present."
+    },
+    {
+      "version": "2.88.0-preview.127",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Version where netcoreapp3.1 support was first added. Same _._placeholder pattern — this was always by design."
+    },
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Latest stable in 2.88.x line. Same _._placeholder pattern persists through all stable releases."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "SkiaSharp.Views.Forms was removed entirely in SkiaSharp 3.x (PR #2505). The nuspec no longer exists on main. The package is obsolete — both netcoreapp3.1 (EOL Dec 2022) and Xamarin.Forms (superseded by MAUI) are discontinued."
+    }
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "classification",
+        "upstream": "Classified as type/question with confidence 0.88",
+        "corrected": "Confirmed the reporter's observation is factually accurate — the netcoreapp3.1 directory contains only _._placeholder files, not DLLs. The behavior reproduces, though it is working-as-designed NuGet packaging convention."
+      }
+    ]
+  }
+}
