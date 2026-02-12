@@ -1,0 +1,115 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3375,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:55:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3375.json"
+  },
+  "conclusion": "needs-platform",
+  "assessment": "likely-bug",
+  "notes": "The bug requires Windows x86 to reproduce. On x86 Windows, LibraryImport defaults to StdCall while the native C API uses Cdecl, causing stack corruption and stack overflow on every P/Invoke call. On x64 and arm64 (including this macOS arm64 environment), there is only one calling convention, so the mismatch is invisible and all tests pass. Code investigation confirms the root cause: all 878 [LibraryImport] declarations in SkiaApi.generated.cs lack [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })], while the [DllImport] fallback correctly specifies CallingConvention.Cdecl. The generator (Generator.cs line 546) emits LibraryImport without Cdecl. A second reporter confirmed the same stack overflow at sk_bitmap_get_pixel_color on x86 + .NET 8.",
+  "reproductionTime": "~8 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Cannot trigger x86 crash on macOS arm64 — runs without error. Bug is invisible on non-x86 platforms."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Cannot trigger x86 crash on macOS arm64 — runs without error. Code inspection confirms LibraryImport still lacks Cdecl."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Source code at Generator.cs line 546 still emits [LibraryImport] without Cdecl. Build and tests pass on macOS arm64 but cannot verify x86 behavior. All 878 LibraryImport declarations lack the calling convention attribute."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project with SkiaSharp 3.116.0 targeting net8.0",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.116.0' added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 3.116.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that calls SKBitmap.GetPixel (the API that crashes on x86 per second reporter's stack trace)",
+          "content": "using System;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine($\"Framework: {RuntimeInformation.FrameworkDescription}\");\n\ntry\n{\n    using var bitmap = new SKBitmap(100, 100);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.Blue);\n    \n    var pixel = bitmap.GetPixel(50, 50);\n    Console.WriteLine($\"Pixel at (50,50): {pixel}\");\n    Console.WriteLine($\"Expected: Color [A=255, R=0, G=0, B=255]\");\n    Console.WriteLine($\"Match: {pixel == SKColors.Blue}\");\n    \n    Console.WriteLine(\"SUCCESS: No crash occurred.\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"CRASH: {ex.GetType().Name}: {ex.Message}\");\n    Console.WriteLine(ex.StackTrace);\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction on macOS arm64 with SkiaSharp 3.116.0 — bug only triggers on Windows x86",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.116.0.0\nOS: Darwin 25.2.0 Darwin Kernel Version 25.2.0\nArch: Arm64\nFramework: .NET 8.0.23\nPixel at (50,50): #ff0000ff\nExpected: Color [A=255, R=0, G=0, B=255]\nMatch: True\nSUCCESS: No crash occurred.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Update to latest SkiaSharp 3.119.2 and re-run — still works on macOS arm64 as expected",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\nOS: Darwin 25.2.0 Darwin Kernel Version 25.2.0\nArch: Arm64\nFramework: .NET 8.0.23\nPixel at (50,50): #ff0000ff\nMatch: True\nSUCCESS: No crash occurred.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify code-level root cause: inspect generated P/Invoke declarations in SkiaApi.generated.cs for missing Cdecl on LibraryImport",
+      "layer": "csharp",
+      "command": "grep -c '[LibraryImport' binding/SkiaSharp/SkiaApi.generated.cs && grep -B1 'LibraryImport' binding/SkiaSharp/SkiaApi.generated.cs | grep -c 'UnmanagedCallConv'",
+      "exitCode": 0,
+      "output": "878 LibraryImport declarations found.\n0 have UnmanagedCallConv attribute.\nDllImport fallback correctly specifies CallingConvention.Cdecl.\nGenerator.cs line 546 emits [LibraryImport] without calling convention.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Build and run test project from main branch source on macOS arm64 — passes but cannot verify x86 behavior",
+      "layer": "csharp",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj",
+      "exitCode": 0,
+      "output": "Build succeeded. 13 Warning(s), 0 Error(s). Time Elapsed 00:00:15.92",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Requires Windows x86 (.NET 8/9 targeting win-x86) to trigger the calling convention mismatch crash. On arm64 and x64 there is only one calling convention, making the bug invisible.",
+    "Docker on macOS cannot simulate Windows x86 — Windows containers require a Windows host."
+  ]
+}
