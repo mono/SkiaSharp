@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 315,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:40:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/315.json"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Cannot reproduce: this issue requires Xamarin.Forms with an Android device/emulator to test gesture recognizer conflicts with SkiaSharp touch events. Xamarin.Forms is end-of-life, its templates are not available in modern .NET SDKs, and SkiaSharp.Views.Forms has been completely removed from the codebase (last published version 2.88.9 targets monoandroid1.0/xamarinios1.0 only). The package contains no netstandard or net8.0 TFMs, so it cannot be used in current .NET projects. Even if the package could be referenced, reproducing the gesture conflict requires an Android device with touch input — macOS cannot simulate this.",
+  "assessment": "likely-bug",
+  "reproductionTime": "~5 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Last version of SkiaSharp.Views.Forms. Cannot test — package targets monoandroid1.0/xamarinios1.0 only, Xamarin.Forms tooling not available in .NET 8 SDK."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "SkiaSharp.Views.Forms has been completely removed from the codebase. Replaced by SkiaSharp.Views.Maui with rewritten touch handler."
+    }
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Check if Xamarin.Forms templates are available in current .NET SDK",
+      "layer": "setup",
+      "command": "dotnet new list | grep -i xamarin",
+      "exitCode": 1,
+      "output": "No Xamarin templates found. .NET 8.0.417 SDK only includes MAUI templates.",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Inspect SkiaSharp.Views.Forms 2.88.9 NuGet package to check TFM compatibility",
+      "layer": "setup",
+      "command": "curl -sLo /tmp/check-forms.nupkg https://api.nuget.org/v3-flatcontainer/skiasharp.views.forms/2.88.9/skiasharp.views.forms.2.88.9.nupkg && unzip -l /tmp/check-forms.nupkg | grep lib/",
+      "exitCode": 0,
+      "output": "lib/monoandroid1.0/SkiaSharp.Views.Forms.dll\nlib/xamarinios1.0/SkiaSharp.Views.Forms.dll\nlib/uap10.0/SkiaSharp.Views.Forms.dll\nlib/xamarinmac2.0/SkiaSharp.Views.Forms.dll\nlib/net462/_._\nlib/netcoreapp3.1/_._\n\nNo netstandard2.0, net6.0, or net8.0 TFM present — package is Xamarin-only.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify SkiaSharp.Views.Forms source code has been removed from the codebase",
+      "layer": "setup",
+      "command": "find source/ binding/ -name '*Views.Forms*' -not -name '*WindowsForms*' -type f",
+      "exitCode": 0,
+      "output": "No results. SkiaSharp.Views.Forms source has been completely removed. Only SkiaSharp.Views.WindowsForms (unrelated WinForms package) exists.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify MAUI replacement exists with rewritten Android touch handler",
+      "layer": "setup",
+      "command": "ls source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "File exists. MAUI has a rewritten SKTouchHandler for Android that replaces the Xamarin.Forms implementation.",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Xamarin.Forms is end-of-life — templates and tooling are not available in .NET 8 SDK",
+    "SkiaSharp.Views.Forms 2.88.9 targets monoandroid1.0/xamarinios1.0 only — no netstandard or modern .NET TFMs",
+    "Reproducing gesture conflicts requires an Android device or emulator with touch input",
+    "SkiaSharp.Views.Forms source code has been completely removed from the codebase — no code to test against on main"
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "actionability",
+        "upstream": "Recommended closing as stale with Xamarin.Forms EOL",
+        "corrected": "Confirmed: SkiaSharp.Views.Forms source is fully removed and the package (2.88.9) has no modern TFMs. Closing as stale is appropriate. The underlying gesture conflict architecture (e.Handled mutual exclusion) may still affect MAUI's SKTouchHandler on Android — that would be a separate issue."
+      }
+    ]
+  }
+}
