@@ -38,17 +38,7 @@ else
             @if (_issue is not null)
             {
                 <a href="https://github.com/@_issue.Meta.Repo/issues/@_issue.Meta.Number" target="_blank" class="issue-link-lg">#@_issue.Meta.Number</a>
-                <div class="detail-title-text">
-                    @if (_issueTitle is not null)
-                    {
-                        <h1>@_issueTitle</h1>
-                        <p class="detail-ai-summary">@_issue.Summary</p>
-                    }
-                    else
-                    {
-                        <h1>@_issue.Summary</h1>
-                    }
-                </div>
+                <h1>@(_issueTitle ?? _issue.Summary)</h1>
             }
             else
             {
@@ -134,6 +124,12 @@ else
     @if (_issue is not null)
     {
         <div class="tab-panel @(_activeTab == "triage" ? "active" : "")">
+            <!-- AI Summary -->
+            <div class="detail-card card-summary">
+                <h3>Summary</h3>
+                <p>@_issue.Summary</p>
+            </div>
+
             <!-- Classification & Action (side by side) -->
             <div class="detail-section-grid">
                 <div class="detail-card card-classification">
