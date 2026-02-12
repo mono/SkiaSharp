@@ -1,259 +1,199 @@
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "1.0",
     "number": 3375,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-08T15:00:00Z",
+    "analyzedAt": "2026-02-12T16:20:00Z",
     "currentLabels": [
       "type/bug",
       "os/Windows-Classic",
       "area/SkiaSharp",
       "tenet/reliability"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "SkiaSharp 3.116\u002B crashes on Windows x86 (.NET 8/9) with stack overflow at P/Invoke boundary; works on x64 and on older v2.88.9",
+  "summary": "Stack overflow crash on Windows x86 with .NET 8/9 due to missing Cdecl calling convention on LibraryImport P/Invoke declarations",
   "classification": {
     "type": {
       "value": "type/bug",
-      "confidence": 0.97
+      "confidence": 0.98
     },
     "area": {
-      "value": "area/libSkiaSharp.native",
-      "confidence": 0.85
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
     },
     "platforms": [
-      {
-        "value": "os/Windows-Classic",
-        "confidence": 0.95
-      }
+      "os/Windows-Classic"
     ],
     "tenets": [
-      {
-        "value": "tenet/reliability",
-        "confidence": 0.95
-      },
-      {
-        "value": "tenet/compatibility",
-        "confidence": 0.85
-      }
+      "tenet/reliability",
+      "tenet/compatibility"
     ]
   },
   "evidence": {
-    "bugSignals": {
-      "hasCrash": true,
-      "hasStackTrace": true,
-      "reproQuality": "steps-only",
-      "severity": "high",
-      "severityReason": "Hard crash (stack overflow) on x86 with no clean fix. Workarounds exist but require architecture change or version downgrade, which may not be viable for all users.",
-      "hasWorkaround": true,
-      "workaroundSummary": "Use x64 instead of x86, copy native DLLs to application root directory, or downgrade to SkiaSharp 2.88.9",
-      "targetFrameworks": [
-        "net9.0",
-        "net8.0",
-        "netstandard2.0"
-      ]
-    },
     "reproEvidence": {
       "stepsToReproduce": [
-        "Create a .NET 8 or 9 application referencing SkiaSharp 3.116\u002B (or 3.119.1)",
-        "Compile and publish for x86 (win-x86)",
-        "Run the application on Windows and invoke any SkiaSharp API (e.g., sk_bitmap_get_pixel_color)",
+        "Create a .NET 8 or .NET 9 project referencing SkiaSharp 3.116\u002B",
+        "Target x86 (win-x86) platform",
+        "Call any SkiaSharp API that P/Invokes into the native library (e.g., SKBitmap.GetPixel)",
         "Observe stack overflow crash"
       ],
-      "environmentDetails": "Windows 11 Pro (ARM CPU) 23H2 build 22631; also reproduced on standard x86 Windows with .NET 8.0"
+      "environmentDetails": "Windows 11, .NET 8.0/9.0, x86 target, SkiaSharp 3.116\u002B / 3.119.1",
+      "relatedIssues": []
+    },
+    "bugSignals": {
+      "severity": "critical",
+      "isRegression": true,
+      "errorType": "crash",
+      "errorMessage": "Stack overflow at SkiaSharp.SkiaApi.sk_bitmap_get_pixel_color(IntPtr, Int32, Int32)",
+      "stackTrace": "at SkiaSharp.SkiaApi.sk_bitmap_get_pixel_color(IntPtr, Int32, Int32)",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0",
+        "net9.0"
+      ]
     },
     "versionAnalysis": {
-      "reason": "Issue reported against 3.116.0 and confirmed still present in 3.119.1. No indication of a fix in later versions.",
       "mentionedVersions": [
         "3.116.0",
         "3.119.1",
         "2.88.9"
       ],
-      "currentRelevance": "likely"
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The code generator (Generator.cs line 546) still emits [LibraryImport] without Cdecl calling convention. The generated file SkiaApi.generated.cs still lacks the necessary [UnmanagedCallConv] attribute. The bug is present on the main branch."
     },
     "regression": {
       "isRegression": true,
-      "confidence": 0.9,
-      "reason": "Original reporter states 2.88.9 works correctly with x86. Second commenter confirms x86 works with net472 (implying older SkiaSharp or same v3 but different runtime). The v2-to-v3 transition changed native library structure significantly.",
+      "confidence": 0.95,
+      "reason": "SkiaSharp 2.88.x used DllImport with CallingConvention.Cdecl exclusively. SkiaSharp 3.x introduced LibraryImport for .NET 7\u002B but omitted the Cdecl calling convention. On x64 this is invisible (one calling convention), on x86 it causes stack corruption.",
       "workedInVersion": "2.88.9",
       "brokeInVersion": "3.116.0"
     }
   },
   "analysis": {
-    "summary": "Two independent reporters confirm SkiaSharp 3.x crashes on x86 Windows with .NET 8/9. The second reporter\u0027s stack trace shows a stack overflow originating at the P/Invoke boundary (sk_bitmap_get_pixel_color), which strongly suggests a calling convention mismatch in the x86 native binary or P/Invoke declarations. The issue does not affect x64, and the second reporter confirms x86 works under .NET Framework 4.7.2, pointing to an interaction between the new .NET runtime\u0027s x86 marshalling and SkiaSharp 3.x\u0027s native layer.",
+    "summary": "The P/Invoke code generator emits [LibraryImport(SKIA)] without specifying a calling convention. On .NET 7\u002B x86 Windows, LibraryImport defaults to CallingConvention.Winapi which resolves to StdCall. The native C API functions use Cdecl (the C default). This calling convention mismatch causes stack corruption on x86, manifesting as a stack overflow. On x64, there is only one calling convention, so the mismatch is invisible.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "[LibraryImport(SKIA)] at line 1647 does not specify calling convention. The [DllImport] fallback at line 1650 correctly specifies CallingConvention.Cdecl. This pattern repeats for ALL P/Invoke declarations in the file.",
+        "relevance": "direct",
+        "lines": "1644-1660"
+      },
+      {
+        "file": "utils/SkiaSharpGenerator/Generate/Generator.cs",
+        "finding": "Line 546 emits \u0060[LibraryImport ({config.DllName})]\u0060 without calling convention. Line 552 emits \u0060[DllImport ({config.DllName}, CallingConvention = CallingConvention.Cdecl)]\u0060. The LibraryImport path should also specify Cdecl via [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })].",
+        "relevance": "direct",
+        "lines": "545-555"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "finding": "USE_DELEGATES is defined for net4x (Framework), USE_LIBRARY_IMPORT for net7.0\u002B. This confirms .NET Framework uses correct Cdecl delegates while .NET 7\u002B uses the broken LibraryImport path.",
+        "relevance": "direct",
+        "lines": "12-17"
+      },
+      {
+        "file": "externals/skia/include/c/sk_types.h",
+        "finding": "SK_C_API macro only specifies dllexport/dllimport visibility, NOT a calling convention. Native functions default to __cdecl (C default on Windows).",
+        "relevance": "direct",
+        "lines": "25-38"
+      },
+      {
+        "file": "externals/skia/src/c/sk_bitmap.cpp",
+        "finding": "sk_bitmap_get_pixel_color is a plain C function with no explicit calling convention \u2014 uses default __cdecl.",
+        "relevance": "context",
+        "lines": "87-89"
+      }
+    ],
+    "rationale": "Both reporters describe x86-only crashes with .NET 8/9 that work fine on x64. The second reporter provides a clear stack overflow trace at sk_bitmap_get_pixel_color. Code investigation confirms the generated [LibraryImport] declarations lack Cdecl specification while the [DllImport] fallback correctly specifies it. The native SK_C_API macro contains no calling convention specifier, defaulting to Cdecl. This is clearly a code-generation bug, not a usage issue. Severity is critical because ALL P/Invoke calls on x86 .NET 7\u002B are affected \u2014 the library is fundamentally broken on this platform.",
     "keySignals": [
       {
-        "text": "when we compile the application for x86 then we are getting app crash (no event log, no dump)",
-        "source": "body",
-        "interpretation": "Silent crash on x86 suggests native-level failure before managed exception handling can capture it"
+        "text": "x86 crash, x64 works",
+        "source": "issue body \u002B comment 2",
+        "interpretation": "Classic calling convention mismatch symptom \u2014 only matters on x86 where StdCall and Cdecl differ."
       },
       {
         "text": "Stack overflow at SkiaSharp.SkiaApi.sk_bitmap_get_pixel_color",
-        "source": "comment 2",
-        "interpretation": "Stack overflow at P/Invoke boundary is a classic symptom of calling convention mismatch on x86 (cdecl vs stdcall stack cleanup disagreement)"
+        "source": "comment 2 (TomPMoleman)",
+        "interpretation": "Stack corruption from calling convention mismatch causes stack overflow at the P/Invoke boundary."
       },
       {
-        "text": "x86 \u002B net472: working / x86 \u002B Net8.0: ISSUE",
-        "source": "comment 2",
-        "interpretation": ".NET 8 changed default P/Invoke behavior; combined with x86 calling convention, this may trigger the mismatch"
+        "text": "x86 \u002B net472: working, x86 \u002B Net8.0: ISSUE",
+        "source": "comment 2 (TomPMoleman)",
+        "interpretation": ".NET Framework uses USE_DELEGATES path with correct Cdecl convention; .NET 8 uses USE_LIBRARY_IMPORT path missing Cdecl."
       },
       {
-        "text": "when we copy the DLLs from subdirectory to application root directory then the app crash is gone",
-        "source": "body",
-        "interpretation": "DLL loading path affects which native binary is loaded; a different binary in root may have correct calling convention or architecture"
+        "text": "Rollback to 2.88.9 fixes it",
+        "source": "issue body",
+        "interpretation": "SkiaSharp 2.88.x didn\u0027t have LibraryImport \u2014 used DllImport with CallingConvention.Cdecl only."
       },
       {
-        "text": "When we rollback the SkiaSharp nuget to version 2.88.9 then DLLs loading from subdirectory also work as expected",
-        "source": "body",
-        "interpretation": "Confirms regression \u2014 v2 native binaries work on x86, v3 do not"
+        "text": "[LibraryImport(SKIA)] without calling convention in generated code",
+        "source": "SkiaApi.generated.cs:1647-1648, Generator.cs:546",
+        "interpretation": "Root cause \u2014 generator emits LibraryImport without Cdecl, defaulting to StdCall on x86 Windows."
       }
     ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "Application crashes with stack overflow when using SkiaSharp on x86. This is clearly broken behavior \u2014 a hard crash, not a usage question or feature request.",
-        "alternatives": [
-          {
-            "value": "type/question",
-            "whyRejected": "Reporter is not asking how to do something; they are reporting a crash that blocks their x86 builds."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/libSkiaSharp.native",
-        "expandedReason": "The crash occurs at the P/Invoke boundary to the native library. The stack overflow at sk_bitmap_get_pixel_color indicates the native binary or its calling convention is the root cause, not the managed C# wrapper. The DLL loading path workaround also points to native binary issues.",
-        "alternatives": [
-          {
-            "value": "area/SkiaSharp",
-            "whyRejected": "While the P/Invoke declarations are in SkiaSharp, the root cause is more likely in the native binary\u0027s x86 compilation (calling convention or architecture mismatch)."
-          }
-        ]
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "high",
-        "expandedReason": "Hard crash (stack overflow) with no clean workaround \u2014 all workarounds require significant changes (switch architecture, restructure DLL deployment, or downgrade to v2). Two independent reporters confirm the issue."
-      },
-      {
-        "field": "regression",
-        "chosen": "true",
-        "expandedReason": "Explicitly stated: v2.88.9 works on x86, v3.116.0\u002B does not. The v2-to-v3 native library restructuring is the likely point where x86 support broke."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "needs-investigation",
-        "expandedReason": "Two reporters confirm the x86 crash with stack trace evidence, but root cause (calling convention mismatch vs native build issue) needs code inspection of P/Invoke declarations and native build config.",
-        "alternatives": [
-          {
-            "value": "close-wontfix",
-            "whyRejected": "This is a confirmed crash affecting x86 users with no clean workaround, not something to dismiss."
-          }
-        ]
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/Windows-Classic",
-        "expandedReason": "Both reporters are on Windows, and the crash is specific to x86 P/Invoke calling conventions on Windows. No other platforms mentioned or affected."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/reliability, tenet/compatibility",
-        "expandedReason": "Reliability: hard crash (stack overflow) with no managed exception handling. Compatibility: regression from v2.88.9 to v3.116.0\u002B breaking existing x86 deployments."
-      },
-      {
-        "field": "regression.isRegression",
-        "chosen": "true",
-        "expandedReason": "Reporter explicitly states v2.88.9 works on x86 while v3.116.0\u002B crashes. Second reporter confirms x86 works under .NET Framework 4.7.2, pointing to a v2-to-v3 regression in native library structure."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "Issue reported against 3.116.0 and confirmed still present in 3.119.1, with no indication of a fix in subsequent releases."
-      }
+    "errorFingerprint": "stack-overflow::sk_*::x86::net7\u002B::libraryimport-missing-cdecl",
+    "workarounds": [
+      "Target x64 instead of x86 (x64 has a single calling convention, so the bug is invisible)",
+      "Downgrade to SkiaSharp 2.88.x which uses DllImport with correct Cdecl convention"
     ],
-    "uncertainties": [
-      "Whether the root cause is a calling convention mismatch in P/Invoke declarations or in the native binary compilation",
-      "Whether the issue is specific to Windows on ARM (original reporter) or affects all Windows x86 scenarios",
-      "Whether the DLL-copy workaround from the first reporter applies to the second reporter\u0027s scenario (they say it doesn\u0027t help)",
-      "Whether this affects all SkiaSharp APIs or only specific P/Invoke calls"
-    ],
-    "assumptions": [
-      "Assumed the stack overflow in comment 2 is the same underlying issue as the silent crash in the original report, given both are x86-specific with SkiaSharp 3.x",
-      "Assumed no fix has been released since 3.119.1 based on no follow-up comments indicating resolution"
+    "nextQuestions": [
+      "Confirm that adding [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })] to the generator output fixes x86 .NET 8/9",
+      "Check if HarfBuzzSharp has the same LibraryImport calling convention issue"
     ],
     "resolution": {
-      "hypothesis": "SkiaSharp 3.x native binaries or P/Invoke declarations have a calling convention mismatch on x86. On x86 Windows, cdecl and stdcall differ in stack cleanup responsibility. If the native library uses cdecl but the P/Invoke declaration defaults to stdcall (or vice versa), each call leaks stack space, leading to stack overflow. .NET 8\u002B may have changed default marshalling behavior that surfaces this issue where .NET Framework 4.7.2 tolerated it.",
+      "hypothesis": "LibraryImport without Cdecl calling convention defaults to StdCall on x86 Windows, causing stack corruption on every P/Invoke call into the native Cdecl library.",
       "proposals": [
         {
-          "title": "Audit and fix x86 calling conventions in P/Invoke declarations",
-          "description": "Review all DllImport/LibraryImport declarations in SkiaSharp for explicit CallingConvention specification. Ensure they match the native library\u0027s actual calling convention (likely cdecl). On x86, mismatched conventions cause stack corruption on every call.",
-          "confidence": 0.7,
-          "effort": "medium"
+          "description": "Update Generator.cs line 546 to also emit [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })] after the [LibraryImport] attribute. Then regenerate SkiaApi.generated.cs with \u0060pwsh ./utils/generate.ps1\u0060.",
+          "title": "Fix code generator to emit Cdecl for LibraryImport",
+          "confidence": 0.95,
+          "effort": "small"
         },
         {
-          "title": "Verify x86 native binary compilation flags",
-          "description": "Check the build configuration for win-x86 native binaries to ensure correct calling convention (__cdecl vs __stdcall) is specified consistently. The v2-to-v3 build system change may have altered defaults.",
-          "confidence": 0.65,
-          "effort": "medium"
+          "description": "As a workaround, compile for x64 or AnyCPU (prefer 64-bit) instead of x86. On x64 Windows there is only one calling convention, so the mismatch is invisible.",
+          "title": "Target x64 instead of x86",
+          "confidence": 0.95,
+          "effort": "trivial"
         },
         {
-          "title": "Test with explicit NativeLibrary.SetDllImportResolver",
-          "description": "As a diagnostic step, use NativeLibrary.SetDllImportResolver to control exactly which native binary is loaded on x86. This would help isolate whether the issue is DLL resolution (wrong binary loaded) or a genuine calling convention problem.",
-          "confidence": 0.5,
-          "effort": "low"
+          "description": "Downgrade to SkiaSharp 2.88.9 which uses DllImport with CallingConvention.Cdecl exclusively. This avoids the LibraryImport path entirely.",
+          "title": "Downgrade to SkiaSharp 2.88.x",
+          "confidence": 0.9,
+          "effort": "trivial"
         }
       ],
-      "recommendedProposal": "Audit and fix x86 calling conventions in P/Invoke declarations",
-      "recommendedReason": "Stack overflow at P/Invoke boundary is the strongest signal. Calling convention audit is the most direct path to root cause and fix."
+      "recommendedProposal": "Fix code generator to emit Cdecl for LibraryImport",
+      "recommendedReason": "This is a straightforward code generator fix. The DllImport path already has the correct pattern. Adding the equivalent attribute for LibraryImport is a small, low-risk change that fixes the platform entirely."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
-      "confidence": 0.85,
-      "reason": "Real bug confirmed by two reporters with stack trace evidence. Root cause hypothesis is strong but needs verification through code inspection of P/Invoke declarations and native build configuration for x86.",
-      "missingInfo": [
-        "sample-project"
-      ]
+      "confidence": 0.9,
+      "reason": "Root cause identified with high confidence (calling convention mismatch in generated code). Needs a fix in the code generator and regeneration of bindings. Should be verified on x86 .NET 8/9 before shipping."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability are all accurate",
         "risk": "low",
-        "description": "Update area label to libSkiaSharp.native and add compatibility tenet",
-        "reason": "Crash is in native layer at P/Invoke boundary, and this is a v2\u2192v3 regression affecting compatibility",
-        "confidence": 0.85,
-        "payload": {
-          "labelsToAdd": [
-            "area/libSkiaSharp.native",
-            "tenet/compatibility"
-          ],
-          "labelsToRemove": [
-            "area/SkiaSharp"
-          ]
-        }
+        "confidence": 0.98,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/reliability"
+        ]
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Post analysis confirming root cause and providing workaround",
         "risk": "high",
-        "description": "Post analysis acknowledging the bug and asking for a minimal repro project",
-        "reason": "Two reporters confirm the issue but neither provides a minimal reproduction. A repro project would accelerate investigation of the x86 calling convention hypothesis.",
-        "confidence": 0.8,
-        "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "request-info",
-          "draftBody": "Thanks for the report and for the additional confirmation from @TomPMoleman \u2014 the stack trace showing a stack overflow at \u0060sk_bitmap_get_pixel_color\u0060 is very helpful.\n\nThe pattern here (x86 \u002B .NET 8/9 = crash, while x64 and .NET Framework 4.7.2 work fine) suggests a possible calling convention mismatch at the P/Invoke boundary that only manifests on x86.\n\nWould either of you be able to share a minimal reproduction project? Even a small console app that references SkiaSharp and calls a single API when built for x86 would be enough to narrow this down.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-3375-comment-1"
-        }
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed stack trace \u2014 that confirmed this.\n\nThe root cause is a calling convention mismatch in the P/Invoke bindings. SkiaSharp 3.x uses \u0060[LibraryImport]\u0060 for .NET 7\u002B, but the generated declarations don\u0027t specify \u0060Cdecl\u0060 calling convention. On x86 Windows, \u0060LibraryImport\u0060 defaults to \u0060StdCall\u0060, while the native C API uses \u0060Cdecl\u0060. This stack corruption manifests as a stack overflow. On x64 there\u0027s only one calling convention, which is why it works there. On .NET Framework, SkiaSharp uses a different code path (\u0060DllImport\u0060) that correctly specifies \u0060Cdecl\u0060.\n\nWorkaround: target x64 instead of x86 if possible \u2014 the calling convention mismatch is invisible on x64.\n\nThe fix is to update the code generator to emit \u0060[UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]\u0060 alongside the \u0060[LibraryImport]\u0060 attribute."
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/3375"
+  }
 }

@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-02-12T16:20:12.3907133Z",
-  "totalCount": 24,
+  "generatedAt": "2026-02-12T16:27:03.8753336Z",
+  "totalCount": 27,
   "summary": {
-    "needsInvestigation": 6,
+    "needsInvestigation": 7,
     "closeable": 7,
     "quickWins": 7,
-    "regressions": 5,
+    "regressions": 7,
     "withRepro": 0,
     "reproduced": 0,
     "notReproduced": 0
@@ -13,7 +13,7 @@
   "byType": [
     {
       "label": "type/bug",
-      "count": 14
+      "count": 17
     },
     {
       "label": "type/question",
@@ -35,11 +35,11 @@
   "byArea": [
     {
       "label": "area/SkiaSharp",
-      "count": 9
+      "count": 10
     },
     {
       "label": "area/SkiaSharp.Views",
-      "count": 5
+      "count": 6
     },
     {
       "label": "area/libSkiaSharp.native",
@@ -50,12 +50,12 @@
       "count": 2
     },
     {
-      "label": "area/Docs",
+      "label": "area/SkiaSharp.HarfBuzz",
       "count": 2
     },
     {
-      "label": "area/SkiaSharp.HarfBuzz",
-      "count": 1
+      "label": "area/Docs",
+      "count": 2
     },
     {
       "label": "area/SkiaSharp.Views.Maui",
@@ -64,20 +64,20 @@
   ],
   "byAction": [
     {
+      "label": "needs-investigation",
+      "count": 7
+    },
+    {
       "label": "close-with-docs",
       "count": 6
     },
     {
-      "label": "needs-investigation",
+      "label": "keep-open",
       "count": 6
     },
     {
-      "label": "keep-open",
-      "count": 5
-    },
-    {
       "label": "close-as-fixed",
-      "count": 3
+      "count": 4
     },
     {
       "label": "close-as-duplicate",
@@ -91,7 +91,7 @@
   "bySeverity": [
     {
       "label": "medium",
-      "count": 7
+      "count": 9
     },
     {
       "label": "high",
@@ -103,10 +103,58 @@
     },
     {
       "label": "critical",
-      "count": 1
+      "count": 2
     }
   ],
   "issues": [
+    {
+      "number": 3379,
+      "title": "SkiaSharp.Views.WPF references OpenTK.GLWpfControl 3.3.0 for .NET Framework targets, which is not strong-named. This causes FileLoadException in applications that enable strong-name signing (SignAssembly), since all dependencies must also be strong-named. OpenTK.GLWpfControl 3.3.1 added strong-name signing, so bumping the version from 3.3.0 to 3.3.1 resolves the issue. A community PR #3380 already proposes this fix.",
+      "issueTitle": "[BUG] Strong-naming support lost due to OpenTK.GLWpfControl reference",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views",
+      "severity": "medium",
+      "action": "close-as-fixed",
+      "confidence": 0.9,
+      "isRegression": true,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:18:05Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3378,
+      "title": "Memory leak in ToHarfBuzzBlob() extension method: when SKStreamAsset.GetMemoryBase() returns IntPtr.Zero, the stream data is copied to unmanaged memory but the SKStreamAsset itself is never disposed. In the other code path (memoryBase != IntPtr.Zero), the asset IS disposed via the Blob\u0027s release callback, creating inconsistent ownership semantics. The reporter\u0027s code creates SKShaper instances (which internally call ToHarfBuzzBlob), and even with proper disposal of SKShaper, the underlying SKStreamAsset leaks. First observed on Android with SkiaSharp 3.116.0, also reproducible on Windows.",
+      "issueTitle": "[BUG] SKShader doesn\u0027t release all memory on Dispose()",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.HarfBuzz",
+      "severity": "medium",
+      "action": "keep-open",
+      "confidence": 0.92,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:18:05Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3375,
+      "title": "Stack overflow crash on Windows x86 with .NET 8/9 due to missing Cdecl calling convention on LibraryImport P/Invoke declarations",
+      "issueTitle": "[BUG] Windows App Crash - only on x86 - v3.116 or newer",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "critical",
+      "action": "needs-investigation",
+      "confidence": 0.9,
+      "isRegression": true,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-12T16:20:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
     {
       "number": 3372,
       "title": "Replace Microsoft.WindowsAppSDK metapackage with Microsoft.WindowsAppSDK.WinUI sub-package (v1.8) to avoid forcing full metapackage on downstream consumers",

@@ -1,18 +1,17 @@
 {
   "meta": {
-    "schemaVersion": "2.0",
+    "schemaVersion": "1.0",
     "number": 3379,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-25T12:00:00Z",
+    "analyzedAt": "2026-02-12T16:18:05Z",
     "currentLabels": [
       "type/bug",
       "os/Windows-Classic",
       "area/SkiaSharp.Views",
       "tenet/compatibility"
-    ],
-    "state": "open"
+    ]
   },
-  "summary": "SkiaSharp.Views.WPF references OpenTK.GLWpfControl 3.3.0 which lacks strong-naming, breaking strong-named .NET Framework applications with FileLoadException",
+  "summary": "SkiaSharp.Views.WPF references OpenTK.GLWpfControl 3.3.0 for .NET Framework targets, which is not strong-named. This causes FileLoadException in applications that enable strong-name signing (SignAssembly), since all dependencies must also be strong-named. OpenTK.GLWpfControl 3.3.1 added strong-name signing, so bumping the version from 3.3.0 to 3.3.1 resolves the issue. A community PR #3380 already proposes this fix.",
   "classification": {
     "type": {
       "value": "type/bug",
@@ -20,249 +19,188 @@
     },
     "area": {
       "value": "area/SkiaSharp.Views",
-      "confidence": 0.95
+      "confidence": 0.98
     },
-    "backends": [
-      {
-        "value": "backend/OpenGL",
-        "confidence": 0.8
-      }
-    ],
     "platforms": [
-      {
-        "value": "os/Windows-Classic",
-        "confidence": 0.95
-      }
+      "os/Windows-Classic"
     ],
     "tenets": [
-      {
-        "value": "tenet/compatibility",
-        "confidence": 0.95
-      }
+      "tenet/compatibility"
     ]
   },
   "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET Framework 4.8 WPF project with strong-name signing enabled (SignAssembly=true)",
+        "Add a PackageReference to SkiaSharp.Views.WPF 3.119.1",
+        "Build and run the application",
+        "Observe FileLoadException for GLWpfControl assembly"
+      ],
+      "codeSnippets": [
+        "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EWinExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet48\u003C/TargetFramework\u003E\n    \u003CSignAssembly\u003Etrue\u003C/SignAssembly\u003E\n    \u003CAssemblyOriginatorKeyFile\u003EMyStrongNameKey.snk\u003C/AssemblyOriginatorKeyFile\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.WPF\u0022 Version=\u00223.119.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+      ],
+      "environmentDetails": "Windows, .NET Framework 4.8, Visual Studio (Windows), strong-name signing enabled",
+      "relatedIssues": [
+        1767
+      ]
+    },
     "bugSignals": {
-      "hasCrash": false,
-      "hasStackTrace": true,
-      "reproQuality": "partial",
       "severity": "medium",
-      "severityReason": "Runtime FileLoadException blocks usage entirely for strong-named apps, but workaround exists by downgrading to 2.88.x or not strong-naming.",
-      "hasWorkaround": true,
-      "workaroundSummary": "Downgrade to SkiaSharp 2.88.x which did not have the OpenTK.GLWpfControl dependency, or avoid strong-naming the consuming application.",
+      "isRegression": true,
+      "errorType": "FileLoadException",
+      "errorMessage": "Could not load file or assembly \u0027GLWpfControl, Version=3.3.0.0, Culture=neutral, PublicKeyToken=null\u0027 or one of its dependencies. A strongly-named assembly is required. (Exception from HRESULT: 0x80131044)",
+      "reproQuality": "complete",
       "targetFrameworks": [
         "net48"
       ]
     },
-    "reproEvidence": {
-      "repoLinks": [
-        {
-          "url": "https://github.com/mono/SkiaSharp/blob/c38c6820b05fb2538afdd5a2f6662c5aff1d07e0/source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj#L15",
-          "description": "Line in csproj referencing OpenTK.GLWpfControl 3.3.0 for net4x"
-        }
-      ],
-      "stepsToReproduce": [
-        "Create a .NET Framework 4.8 WPF application",
-        "Enable strong-naming with SignAssembly and an .snk key file",
-        "Add PackageReference to SkiaSharp.Views.WPF 3.119.1",
-        "Build and run \u2014 FileLoadException on GLWpfControl assembly"
-      ],
-      "codeSnippets": [
-        {
-          "code": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EWinExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet48\u003C/TargetFramework\u003E\n    \u003CSignAssembly\u003Etrue\u003C/SignAssembly\u003E\n    \u003CAssemblyOriginatorKeyFile\u003EMyStrongNameKey.snk\u003C/AssemblyOriginatorKeyFile\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.WPF\u0022 Version=\u00223.119.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E",
-          "language": "xml",
-          "context": "Minimal csproj demonstrating strong-named WPF app with SkiaSharp.Views.WPF"
-        }
-      ],
-      "environmentDetails": "Windows, Visual Studio, .NET Framework 4.8, SkiaSharp 3.116.0\u002B"
-    },
     "versionAnalysis": {
-      "reason": "The csproj on main still references OpenTK.GLWpfControl 3.3.0 for net4x targets. Issue is present in all SkiaSharp 3.x releases.",
       "mentionedVersions": [
         "3.116.0",
         "3.119.1",
         "2.88.9"
       ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
       "currentRelevance": "likely",
-      "migrationPath": "Bump OpenTK.GLWpfControl from 3.3.0 to 3.3.1 in SkiaSharp.Views.WPF.csproj"
+      "relevanceReason": "The csproj on main still references OpenTK.GLWpfControl 3.3.0 for .NET Framework targets. The issue persists in all 3.x releases."
     },
     "regression": {
       "isRegression": true,
-      "confidence": 0.85,
-      "reason": "User reports last known good version was 2.88.9 which did not have the OpenTK.GLWpfControl dependency. The SkiaSharp 3.x series introduced this dependency, and version 3.3.0 lacks strong-naming.",
+      "confidence": 0.75,
+      "reason": "Reporter says 2.88.9 worked. The SKGLElement class (and its dependency on OpenTK.GLWpfControl) was introduced in SkiaSharp 3.0 via PR #2317, so the strong-naming incompatibility started with the 3.x line. In 2.88.x, the WPF view didn\u0027t depend on GLWpfControl.",
       "workedInVersion": "2.88.9",
       "brokeInVersion": "3.116.0"
     },
     "fixStatus": {
       "likelyFixed": false,
-      "confidence": 0.9,
-      "reason": "PR #3380 is open and proposes bumping OpenTK.GLWpfControl from 3.3.0 to 3.3.1. The fix has not been merged yet.",
+      "confidence": 0.95,
+      "reason": "The csproj on main still shows OpenTK.GLWpfControl 3.3.0. PR #3380 proposes the fix but has not been merged.",
       "relatedPRs": [
         3380
-      ],
-      "verificationStatus": "unverified"
+      ]
     }
   },
   "analysis": {
-    "summary": "SkiaSharp.Views.WPF packages OpenTK.GLWpfControl 3.3.0 for .NET Framework targets. That version is not strong-named, so any strong-named consuming application gets a FileLoadException at runtime. The fix is a one-line version bump to 3.3.1 where strong-naming was added upstream.",
+    "summary": "SkiaSharp.Views.WPF depends on OpenTK.GLWpfControl 3.3.0 for .NET Framework targets (net4*). That version lacks strong-name signing. When the consuming application enables SignAssembly, the CLR refuses to load the unsigned GLWpfControl assembly, throwing FileLoadException. The upstream OpenTK project added strong-naming in GLWpfControl 3.3.1. The fix is a one-line version bump in the csproj.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+        "finding": "For net4* targets, references OpenTK 3.3.1 (strong-named) and OpenTK.GLWpfControl 3.3.0 (NOT strong-named). The GLWpfControl version is the problem.",
+        "relevance": "direct",
+        "lines": "13-16"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+        "finding": "SignAssembly is explicitly disabled for non-net4 targets but remains enabled for net4*. This means the WPF assembly itself is strong-named for .NET Framework, requiring all dependencies to also be strong-named.",
+        "relevance": "direct",
+        "lines": "10"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+        "finding": "For modern .NET targets, OpenTK.GLWpfControl is at 4.2.3 \u2014 a different major version line not affected by this issue.",
+        "relevance": "context",
+        "lines": "17-20"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+        "finding": "SKGLElement inherits from GLWpfControl, making it a direct dependency that cannot be avoided.",
+        "relevance": "related",
+        "lines": "29"
+      },
+      {
+        "file": "scripts/VERSIONS.txt",
+        "finding": "VERSIONS.txt lists OpenTK.GLWpfControl at 4.3.4, which is the modern .NET version. The net4* 3.x line version is not tracked here.",
+        "relevance": "context",
+        "lines": "27"
+      }
+    ],
+    "rationale": "This is clearly a bug \u2014 a dependency version choice that breaks strong-named applications. It\u0027s area/SkiaSharp.Views because the issue is in the WPF views package dependency, not core SkiaSharp. Windows-Classic because it only affects .NET Framework WPF. tenet/compatibility because strong-naming is a .NET compatibility requirement. Severity is medium \u2014 the app won\u0027t load the GL control at all, but only affects the subset of users who strong-name their .NET Framework apps.",
     "keySignals": [
       {
-        "text": "OpenTK.GLWpfControl version 3.3.0 for .NET Framework... the GLWpfControl assembly is not strong-named",
-        "source": "body",
-        "interpretation": "Root cause identified by reporter \u2014 upstream dependency lacks strong name"
+        "text": "PackageReference Include=\u0022OpenTK.GLWpfControl\u0022 Version=\u00223.3.0\u0022",
+        "source": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj:15",
+        "interpretation": "Root cause \u2014 version 3.3.0 is not strong-named; 3.3.1 is."
+      },
+      {
+        "text": "SignAssembly Condition=\u0022!$(TargetFramework.StartsWith(\u0027net4\u0027))\u0022\u003Efalse\u003C/SignAssembly\u003E",
+        "source": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj:10",
+        "interpretation": "SkiaSharp.Views.WPF itself IS strong-named for net4* targets, creating a mismatch with unsigned GLWpfControl."
+      },
+      {
+        "text": "FileLoadException: A strongly-named assembly is required (0x80131044)",
+        "source": "issue body",
+        "interpretation": "CLR enforces that strong-named assemblies can only reference other strong-named assemblies."
       },
       {
         "text": "Strong-naming was added in OpenTK.GLWpfControl 3.3.1",
-        "source": "body",
-        "interpretation": "Reporter has already identified the fix version"
-      },
-      {
-        "text": "FileLoadException: Could not load file or assembly \u0027GLWpfControl, Version=3.3.0.0... A strongly-named assembly is required (0x80131044)\u0027",
-        "source": "body",
-        "interpretation": "Runtime error confirming strong-name enforcement failure"
-      },
-      {
-        "text": "Last Known Good Version: 2.88.9",
-        "source": "body",
-        "interpretation": "Regression from SkiaSharp 2.x to 3.x which introduced the OpenTK.GLWpfControl dependency"
+        "source": "issue body \u002B opentk/GLWpfControl#164",
+        "interpretation": "Upstream already fixed this; SkiaSharp just needs to bump the dependency version."
       }
     ],
-    "fieldRationales": [
-      {
-        "field": "type",
-        "chosen": "type/bug",
-        "expandedReason": "This is a runtime failure \u2014 FileLoadException prevents the application from running. The dependency on a non-strong-named assembly is a defect in the package configuration, not a feature request or question.",
-        "alternatives": [
-          {
-            "value": "type/enhancement",
-            "whyRejected": "Not an improvement request \u2014 the application fails to load entirely."
-          }
-        ]
-      },
-      {
-        "field": "area",
-        "chosen": "area/SkiaSharp.Views",
-        "expandedReason": "The issue is in the SkiaSharp.Views.WPF csproj which references OpenTK.GLWpfControl. This is the Views package, specifically the WPF variant.",
-        "alternatives": [
-          {
-            "value": "area/SkiaSharp",
-            "whyRejected": "Core SkiaSharp is unaffected \u2014 only the WPF views package has this dependency."
-          }
-        ]
-      },
-      {
-        "field": "backends",
-        "chosen": "backend/OpenGL",
-        "expandedReason": "GLWpfControl is the OpenGL rendering control for WPF. The issue is specific to this OpenGL integration dependency."
-      },
-      {
-        "field": "bugSignals.severity",
-        "chosen": "medium",
-        "expandedReason": "The error completely blocks strong-named applications from using SkiaSharp.Views.WPF 3.x. However, a workaround exists (downgrade to 2.88.x or remove strong-naming), and the fix is a trivial version bump with an open PR."
-      },
-      {
-        "field": "actionability.suggestedAction",
-        "chosen": "keep-open",
-        "expandedReason": "PR #3380 is already open with the fix (version bump to 3.3.1). The issue should remain open until the PR is merged and released."
-      },
-      {
-        "field": "platforms",
-        "chosen": "os/Windows-Classic",
-        "expandedReason": "The issue is specific to WPF on Windows with .NET Framework 4.8. Strong-naming enforcement and the OpenTK.GLWpfControl dependency only apply to Windows Classic desktop scenarios."
-      },
-      {
-        "field": "tenets",
-        "chosen": "tenet/compatibility",
-        "expandedReason": "Strong-named applications cannot load non-strong-named assemblies, breaking backward compatibility for .NET Framework WPF consumers who upgraded from SkiaSharp 2.88.x to 3.x."
-      },
-      {
-        "field": "regression.isRegression",
-        "chosen": "true",
-        "expandedReason": "SkiaSharp 2.88.9 did not have the OpenTK.GLWpfControl dependency. The 3.x series introduced it at version 3.3.0 which lacks strong-naming, breaking strong-named apps that previously worked."
-      },
-      {
-        "field": "fixStatus.likelyFixed",
-        "chosen": "false",
-        "expandedReason": "PR #3380 is open proposing bumping OpenTK.GLWpfControl from 3.3.0 to 3.3.1, but it has not been merged yet so the fix is not available in any release."
-      },
-      {
-        "field": "versionAnalysis.currentRelevance",
-        "chosen": "likely",
-        "expandedReason": "The csproj on main still references OpenTK.GLWpfControl 3.3.0 for net4x targets, so the issue is present in all SkiaSharp 3.x releases including the latest."
-      }
+    "errorFingerprint": "FileLoadException-GLWpfControl-StrongName-net4",
+    "workarounds": [
+      "Use a binding redirect in app.config to force-load the unsigned assembly (may not work in all strong-naming scenarios)",
+      "Target modern .NET (net6.0-windows\u002B) instead of .NET Framework, which uses OpenTK.GLWpfControl 4.x and doesn\u0027t require strong-naming"
     ],
-    "uncertainties": [
-      "Whether bumping OpenTK.GLWpfControl from 3.3.0 to 3.3.1 introduces any behavioral changes beyond the strong-naming fix",
-      "Whether the net4x OpenTK dependency (also at 3.3.1) is similarly affected by strong-naming requirements"
-    ],
-    "assumptions": [
-      "Assumed the reporter is using .NET Framework 4.8 based on the csproj TargetFramework of net48",
-      "Assumed the issue only affects net4x targets since the non-net4x ItemGroup uses OpenTK.GLWpfControl 4.2.3 which may already be strong-named"
+    "nextQuestions": [
+      "Should VERSIONS.txt also be updated to track the net4* version of OpenTK.GLWpfControl separately?",
+      "Are there any breaking API changes between OpenTK.GLWpfControl 3.3.0 and 3.3.1 that could affect SKGLElement?"
     ],
     "resolution": {
-      "hypothesis": "The SkiaSharp.Views.WPF.csproj pins OpenTK.GLWpfControl to 3.3.0 for net4x targets. That version is not strong-named, which breaks the CLR\u0027s strong-name validation chain when the consuming app is strong-named. Version 3.3.1 added strong-naming.",
+      "hypothesis": "OpenTK.GLWpfControl 3.3.0 is not strong-named, but SkiaSharp.Views.WPF IS strong-named for .NET Framework targets. The CLR enforces that strong-named assemblies can only reference other strong-named assemblies, causing FileLoadException at runtime.",
       "proposals": [
         {
-          "title": "Bump OpenTK.GLWpfControl to 3.3.1",
-          "description": "Change the PackageReference version from 3.3.0 to 3.3.1 in SkiaSharp.Views.WPF.csproj for the net4x condition. This is the minimal change \u2014 3.3.1 added strong-naming with no other breaking changes. PR #3380 already implements this.",
-          "confidence": 0.95,
-          "effort": "low"
+          "description": "Change the PackageReference from OpenTK.GLWpfControl 3.3.0 to 3.3.1 in the net4* ItemGroup. Version 3.3.1 is strong-named. Community PR #3380 already implements this exact change.",
+          "title": "Bump GLWpfControl to 3.3.1",
+          "codeSnippet": "\u003CPackageReference Include=\u0022OpenTK.GLWpfControl\u0022 Version=\u00223.3.1\u0022 NoWarn=\u0022NU1701\u0022 /\u003E",
+          "confidence": 0.98,
+          "effort": "trivial"
         },
         {
-          "title": "Bump OpenTK.GLWpfControl to latest 3.x",
-          "description": "Update to the latest 3.x release rather than just 3.3.1. This would pick up any additional bug fixes since 3.3.1, but carries slightly more risk of behavioral changes.",
-          "confidence": 0.8,
-          "effort": "low"
-        },
-        {
-          "title": "Disable SignAssembly for net4x WPF targets",
-          "description": "Set SignAssembly to false for net4x targets in the SkiaSharp.Views.WPF csproj, matching the non-net4x behavior. However this would break SkiaSharp\u0027s own strong-naming contract for .NET Framework consumers.",
-          "confidence": 0.3,
-          "effort": "low"
+          "description": "Users can work around the issue by targeting net6.0-windows or later instead of net48, which uses the OpenTK 4.x line (already strong-name compatible).",
+          "title": "Migrate to modern .NET",
+          "confidence": 0.9,
+          "effort": "medium"
         }
       ],
-      "recommendedProposal": "Bump OpenTK.GLWpfControl to 3.3.1",
-      "recommendedReason": "Minimal, targeted fix that resolves the strong-naming gap. PR #3380 already implements exactly this change. No behavioral changes expected."
+      "recommendedProposal": "Bump GLWpfControl to 3.3.1",
+      "recommendedReason": "Trivial one-line version bump with zero risk. The upstream already fixed strong-naming in 3.3.1. PR #3380 from the reporter implements this exact change and should be reviewed and merged."
     }
   },
   "output": {
     "actionability": {
-      "suggestedAction": "keep-open",
+      "suggestedAction": "close-as-fixed",
       "confidence": 0.9,
-      "reason": "PR #3380 is open with the fix. Issue should remain open until merged and released."
+      "reason": "The fix is trivial (one-line version bump) and a community PR #3380 already implements it. Review and merge the PR to resolve this."
     },
     "actions": [
       {
-        "id": "labels-1",
         "type": "update-labels",
+        "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp.Views, os/Windows-Classic, tenet/compatibility",
         "risk": "low",
-        "description": "Add OpenGL backend label to existing correct labels",
-        "reason": "The issue involves the OpenGL WPF control dependency. Current labels are correct but missing the backend classification.",
-        "confidence": 0.8,
-        "payload": {
-          "labelsToAdd": [
-            "backend/OpenGL"
-          ],
-          "labelsToRemove": []
-        }
+        "confidence": 0.98,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/Windows-Classic",
+          "tenet/compatibility"
+        ]
       },
       {
-        "id": "comment-1",
         "type": "add-comment",
+        "description": "Acknowledge the issue and point to PR #3380 as the fix",
         "risk": "high",
-        "description": "Acknowledge the issue and note the existing PR",
-        "reason": "Reporter should know their diagnosis is correct and a fix PR exists",
-        "confidence": 0.85,
-        "dependsOn": "labels-1",
-        "payload": {
-          "commentType": "answer",
-          "draftBody": "Thanks for the clear write-up and for pinpointing the exact version where strong-naming was added.\n\nYou\u0027re right \u2014 the net4x target in SkiaSharp.Views.WPF pins OpenTK.GLWpfControl to 3.3.0, which isn\u0027t strong-named. PR #3380 bumps this to 3.3.1 to resolve the issue.\n\nIn the meantime, if you need a workaround, you could try adding a binding redirect in your app.config to force-load the 3.3.1 package manually, though ideally this will be resolved once the PR is merged.",
-          "requiresHumanEdit": true,
-          "finalBody": null,
-          "dedupeToken": "triage-3379-comment-1"
-        }
+        "confidence": 0.92,
+        "comment": "Thanks for the detailed report and the fix in #3380.\n\nYou\u0027re right \u2014 \u0060OpenTK.GLWpfControl\u0060 3.3.0 isn\u0027t strong-named, and since \u0060SkiaSharp.Views.WPF\u0060 is strong-named for .NET Framework targets, the CLR rejects the unsigned dependency at load time. Bumping to 3.3.1 (which added strong-naming) is the correct fix.\n\nIn the meantime, if you need a workaround: targeting \u0060net6.0-windows\u0060 or later avoids this entirely, since the modern .NET path uses OpenTK.GLWpfControl 4.x which doesn\u0027t have this issue."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to community PR #3380 which implements the fix",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3380
       }
     ]
-  },
-  "url": "https://github.com/mono/SkiaSharp/issues/3379"
+  }
 }

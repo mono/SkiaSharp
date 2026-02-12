@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-02-12T16:20:12.3976597Z",
-  "totalCount": 24,
+  "generatedAt": "2026-02-12T16:27:03.8844237Z",
+  "totalCount": 27,
   "summary": {
-    "needsInvestigation": 6,
+    "needsInvestigation": 7,
     "closeable": 7,
     "quickWins": 7,
-    "regressions": 5
+    "regressions": 7
   },
   "byType": [
     {
       "label": "type/bug",
-      "count": 14
+      "count": 17
     },
     {
       "label": "type/question",
@@ -32,11 +32,11 @@
   "byArea": [
     {
       "label": "area/SkiaSharp",
-      "count": 9
+      "count": 10
     },
     {
       "label": "area/SkiaSharp.Views",
-      "count": 5
+      "count": 6
     },
     {
       "label": "area/libSkiaSharp.native",
@@ -47,12 +47,12 @@
       "count": 2
     },
     {
-      "label": "area/Docs",
+      "label": "area/SkiaSharp.HarfBuzz",
       "count": 2
     },
     {
-      "label": "area/SkiaSharp.HarfBuzz",
-      "count": 1
+      "label": "area/Docs",
+      "count": 2
     },
     {
       "label": "area/SkiaSharp.Views.Maui",
@@ -61,20 +61,20 @@
   ],
   "byAction": [
     {
+      "label": "needs-investigation",
+      "count": 7
+    },
+    {
       "label": "close-with-docs",
       "count": 6
     },
     {
-      "label": "needs-investigation",
+      "label": "keep-open",
       "count": 6
     },
     {
-      "label": "keep-open",
-      "count": 5
-    },
-    {
       "label": "close-as-fixed",
-      "count": 3
+      "count": 4
     },
     {
       "label": "close-as-duplicate",
@@ -88,7 +88,7 @@
   "bySeverity": [
     {
       "label": "medium",
-      "count": 7
+      "count": 9
     },
     {
       "label": "high",
@@ -100,10 +100,588 @@
     },
     {
       "label": "critical",
-      "count": 1
+      "count": 2
     }
   ],
   "issues": [
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3379,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:18:05Z",
+        "currentLabels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "area/SkiaSharp.Views",
+          "tenet/compatibility"
+        ]
+      },
+      "summary": "SkiaSharp.Views.WPF references OpenTK.GLWpfControl 3.3.0 for .NET Framework targets, which is not strong-named. This causes FileLoadException in applications that enable strong-name signing (SignAssembly), since all dependencies must also be strong-named. OpenTK.GLWpfControl 3.3.1 added strong-name signing, so bumping the version from 3.3.0 to 3.3.1 resolves the issue. A community PR #3380 already proposes this fix.",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.95
+        },
+        "area": {
+          "value": "area/SkiaSharp.Views",
+          "confidence": 0.98
+        },
+        "platforms": [
+          "os/Windows-Classic"
+        ],
+        "tenets": [
+          "tenet/compatibility"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [
+            "Create a .NET Framework 4.8 WPF project with strong-name signing enabled (SignAssembly=true)",
+            "Add a PackageReference to SkiaSharp.Views.WPF 3.119.1",
+            "Build and run the application",
+            "Observe FileLoadException for GLWpfControl assembly"
+          ],
+          "codeSnippets": [
+            "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EWinExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet48\u003C/TargetFramework\u003E\n    \u003CSignAssembly\u003Etrue\u003C/SignAssembly\u003E\n    \u003CAssemblyOriginatorKeyFile\u003EMyStrongNameKey.snk\u003C/AssemblyOriginatorKeyFile\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.WPF\u0022 Version=\u00223.119.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+          ],
+          "environmentDetails": "Windows, .NET Framework 4.8, Visual Studio (Windows), strong-name signing enabled",
+          "relatedIssues": [
+            1767
+          ]
+        },
+        "bugSignals": {
+          "severity": "medium",
+          "isRegression": true,
+          "errorType": "FileLoadException",
+          "errorMessage": "Could not load file or assembly \u0027GLWpfControl, Version=3.3.0.0, Culture=neutral, PublicKeyToken=null\u0027 or one of its dependencies. A strongly-named assembly is required. (Exception from HRESULT: 0x80131044)",
+          "reproQuality": "complete",
+          "targetFrameworks": [
+            "net48"
+          ]
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.0",
+            "3.119.1",
+            "2.88.9"
+          ],
+          "workedIn": "2.88.9",
+          "brokeIn": "3.116.0",
+          "currentRelevance": "likely",
+          "relevanceReason": "The csproj on main still references OpenTK.GLWpfControl 3.3.0 for .NET Framework targets. The issue persists in all 3.x releases."
+        },
+        "regression": {
+          "isRegression": true,
+          "confidence": 0.75,
+          "reason": "Reporter says 2.88.9 worked. The SKGLElement class (and its dependency on OpenTK.GLWpfControl) was introduced in SkiaSharp 3.0 via PR #2317, so the strong-naming incompatibility started with the 3.x line. In 2.88.x, the WPF view didn\u0027t depend on GLWpfControl.",
+          "workedInVersion": "2.88.9",
+          "brokeInVersion": "3.116.0"
+        },
+        "fixStatus": {
+          "likelyFixed": false,
+          "confidence": 0.95,
+          "reason": "The csproj on main still shows OpenTK.GLWpfControl 3.3.0. PR #3380 proposes the fix but has not been merged.",
+          "relatedPRs": [
+            3380
+          ]
+        }
+      },
+      "analysis": {
+        "summary": "SkiaSharp.Views.WPF depends on OpenTK.GLWpfControl 3.3.0 for .NET Framework targets (net4*). That version lacks strong-name signing. When the consuming application enables SignAssembly, the CLR refuses to load the unsigned GLWpfControl assembly, throwing FileLoadException. The upstream OpenTK project added strong-naming in GLWpfControl 3.3.1. The fix is a one-line version bump in the csproj.",
+        "codeInvestigation": [
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+            "finding": "For net4* targets, references OpenTK 3.3.1 (strong-named) and OpenTK.GLWpfControl 3.3.0 (NOT strong-named). The GLWpfControl version is the problem.",
+            "relevance": "direct",
+            "lines": "13-16"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+            "finding": "SignAssembly is explicitly disabled for non-net4 targets but remains enabled for net4*. This means the WPF assembly itself is strong-named for .NET Framework, requiring all dependencies to also be strong-named.",
+            "relevance": "direct",
+            "lines": "10"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+            "finding": "For modern .NET targets, OpenTK.GLWpfControl is at 4.2.3 \u2014 a different major version line not affected by this issue.",
+            "relevance": "context",
+            "lines": "17-20"
+          },
+          {
+            "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+            "finding": "SKGLElement inherits from GLWpfControl, making it a direct dependency that cannot be avoided.",
+            "relevance": "related",
+            "lines": "29"
+          },
+          {
+            "file": "scripts/VERSIONS.txt",
+            "finding": "VERSIONS.txt lists OpenTK.GLWpfControl at 4.3.4, which is the modern .NET version. The net4* 3.x line version is not tracked here.",
+            "relevance": "context",
+            "lines": "27"
+          }
+        ],
+        "rationale": "This is clearly a bug \u2014 a dependency version choice that breaks strong-named applications. It\u0027s area/SkiaSharp.Views because the issue is in the WPF views package dependency, not core SkiaSharp. Windows-Classic because it only affects .NET Framework WPF. tenet/compatibility because strong-naming is a .NET compatibility requirement. Severity is medium \u2014 the app won\u0027t load the GL control at all, but only affects the subset of users who strong-name their .NET Framework apps.",
+        "keySignals": [
+          {
+            "text": "PackageReference Include=\u0022OpenTK.GLWpfControl\u0022 Version=\u00223.3.0\u0022",
+            "source": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj:15",
+            "interpretation": "Root cause \u2014 version 3.3.0 is not strong-named; 3.3.1 is."
+          },
+          {
+            "text": "SignAssembly Condition=\u0022!$(TargetFramework.StartsWith(\u0027net4\u0027))\u0022\u003Efalse\u003C/SignAssembly\u003E",
+            "source": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj:10",
+            "interpretation": "SkiaSharp.Views.WPF itself IS strong-named for net4* targets, creating a mismatch with unsigned GLWpfControl."
+          },
+          {
+            "text": "FileLoadException: A strongly-named assembly is required (0x80131044)",
+            "source": "issue body",
+            "interpretation": "CLR enforces that strong-named assemblies can only reference other strong-named assemblies."
+          },
+          {
+            "text": "Strong-naming was added in OpenTK.GLWpfControl 3.3.1",
+            "source": "issue body \u002B opentk/GLWpfControl#164",
+            "interpretation": "Upstream already fixed this; SkiaSharp just needs to bump the dependency version."
+          }
+        ],
+        "errorFingerprint": "FileLoadException-GLWpfControl-StrongName-net4",
+        "workarounds": [
+          "Use a binding redirect in app.config to force-load the unsigned assembly (may not work in all strong-naming scenarios)",
+          "Target modern .NET (net6.0-windows\u002B) instead of .NET Framework, which uses OpenTK.GLWpfControl 4.x and doesn\u0027t require strong-naming"
+        ],
+        "nextQuestions": [
+          "Should VERSIONS.txt also be updated to track the net4* version of OpenTK.GLWpfControl separately?",
+          "Are there any breaking API changes between OpenTK.GLWpfControl 3.3.0 and 3.3.1 that could affect SKGLElement?"
+        ],
+        "resolution": {
+          "hypothesis": "OpenTK.GLWpfControl 3.3.0 is not strong-named, but SkiaSharp.Views.WPF IS strong-named for .NET Framework targets. The CLR enforces that strong-named assemblies can only reference other strong-named assemblies, causing FileLoadException at runtime.",
+          "proposals": [
+            {
+              "description": "Change the PackageReference from OpenTK.GLWpfControl 3.3.0 to 3.3.1 in the net4* ItemGroup. Version 3.3.1 is strong-named. Community PR #3380 already implements this exact change.",
+              "title": "Bump GLWpfControl to 3.3.1",
+              "codeSnippet": "\u003CPackageReference Include=\u0022OpenTK.GLWpfControl\u0022 Version=\u00223.3.1\u0022 NoWarn=\u0022NU1701\u0022 /\u003E",
+              "confidence": 0.98,
+              "effort": "trivial"
+            },
+            {
+              "description": "Users can work around the issue by targeting net6.0-windows or later instead of net48, which uses the OpenTK 4.x line (already strong-name compatible).",
+              "title": "Migrate to modern .NET",
+              "confidence": 0.9,
+              "effort": "medium"
+            }
+          ],
+          "recommendedProposal": "Bump GLWpfControl to 3.3.1",
+          "recommendedReason": "Trivial one-line version bump with zero risk. The upstream already fixed strong-naming in 3.3.1. PR #3380 from the reporter implements this exact change and should be reviewed and merged."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "close-as-fixed",
+          "confidence": 0.9,
+          "reason": "The fix is trivial (one-line version bump) and a community PR #3380 already implements it. Review and merge the PR to resolve this."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp.Views, os/Windows-Classic, tenet/compatibility",
+            "risk": "low",
+            "confidence": 0.98,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp.Views",
+              "os/Windows-Classic",
+              "tenet/compatibility"
+            ]
+          },
+          {
+            "type": "add-comment",
+            "description": "Acknowledge the issue and point to PR #3380 as the fix",
+            "risk": "high",
+            "confidence": 0.92,
+            "comment": "Thanks for the detailed report and the fix in #3380.\n\nYou\u0027re right \u2014 \u0060OpenTK.GLWpfControl\u0060 3.3.0 isn\u0027t strong-named, and since \u0060SkiaSharp.Views.WPF\u0060 is strong-named for .NET Framework targets, the CLR rejects the unsigned dependency at load time. Bumping to 3.3.1 (which added strong-naming) is the correct fix.\n\nIn the meantime, if you need a workaround: targeting \u0060net6.0-windows\u0060 or later avoids this entirely, since the modern .NET path uses OpenTK.GLWpfControl 4.x which doesn\u0027t have this issue."
+          },
+          {
+            "type": "link-related",
+            "description": "Link to community PR #3380 which implements the fix",
+            "risk": "low",
+            "confidence": 0.98,
+            "linkedIssue": 3380
+          }
+        ]
+      }
+    },
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3378,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:18:05Z",
+        "currentLabels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "os/Android",
+          "area/SkiaSharp",
+          "backend/Metal",
+          "tenet/reliability"
+        ]
+      },
+      "summary": "Memory leak in ToHarfBuzzBlob() extension method: when SKStreamAsset.GetMemoryBase() returns IntPtr.Zero, the stream data is copied to unmanaged memory but the SKStreamAsset itself is never disposed. In the other code path (memoryBase != IntPtr.Zero), the asset IS disposed via the Blob\u0027s release callback, creating inconsistent ownership semantics. The reporter\u0027s code creates SKShaper instances (which internally call ToHarfBuzzBlob), and even with proper disposal of SKShaper, the underlying SKStreamAsset leaks. First observed on Android with SkiaSharp 3.116.0, also reproducible on Windows.",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.97
+        },
+        "area": {
+          "value": "area/SkiaSharp.HarfBuzz",
+          "confidence": 0.98
+        },
+        "tenets": [
+          "tenet/reliability"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "codeSnippets": [
+            "class TextSegmentShaper : IDisposable\n{\n    public SKPaint Paint { get; set; }\n    public SKShaper Shaper { get; set; }\n    ...\n    protected virtual void Dispose(bool disposing)\n    {\n        if (!disposedValue)\n        {\n            Paint?.Dispose();\n            Shaper?.Dispose();\n            Paint = null;\n            Shaper = null;\n            disposedValue = true;\n        }\n    }\n}"
+          ],
+          "environmentDetails": "SkiaSharp 3.116.0, Visual Studio (Windows), first observed on Android, also on Windows",
+          "relatedIssues": [
+            3376,
+            3466,
+            3467
+          ]
+        },
+        "bugSignals": {
+          "severity": "medium",
+          "errorType": "memory-leak",
+          "reproQuality": "partial"
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.0"
+          ],
+          "currentRelevance": "likely",
+          "relevanceReason": "The ToHarfBuzzBlob code has not changed since 3.116.0. The leak still exists on main. PR #3466 proposes a fix but is not yet merged."
+        },
+        "fixStatus": {
+          "likelyFixed": false,
+          "confidence": 0.9,
+          "reason": "Two open PRs address this: #3376 (reporter\u0027s fix, adds dispose in else path) and #3466 (preferred fix, removes dispose from both paths and fixes SKShaper caller). Neither is merged yet.",
+          "relatedPRs": [
+            3376,
+            3466,
+            3467
+          ]
+        }
+      },
+      "analysis": {
+        "summary": "ToHarfBuzzBlob() has two code paths: when GetMemoryBase() returns a valid pointer, the Blob\u0027s release callback disposes the SKStreamAsset; when it returns IntPtr.Zero, data is copied but the SKStreamAsset is never disposed. The SKShaper constructor calls Typeface.OpenStream().ToHarfBuzzBlob() in a using block for the blob only \u2014 the intermediate SKStreamAsset is never assigned to a variable and leaks in the else path. The agreed fix direction (per maintainer mattleibow) is PR #3466: remove dispose from both paths in ToHarfBuzzBlob (it shouldn\u0027t take ownership), and fix SKShaper to explicitly dispose the stream.",
+        "codeInvestigation": [
+          {
+            "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/BlobExtensions.cs",
+            "finding": "ToHarfBuzzBlob has two paths: line 24 disposes asset via blob callback when memoryBase is valid; line 30 copies data but NEVER disposes asset when memoryBase is IntPtr.Zero. This is the root cause of the leak.",
+            "relevance": "direct",
+            "lines": "10-36"
+          },
+          {
+            "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs",
+            "finding": "SKShaper constructor calls Typeface.OpenStream(out index).ToHarfBuzzBlob() in a using block for the blob only. The SKStreamAsset returned by OpenStream() is not stored or disposed separately \u2014 it relies entirely on ToHarfBuzzBlob to handle it.",
+            "relevance": "direct",
+            "lines": "19-22"
+          },
+          {
+            "file": "binding/SkiaSharp/SKTypeface.cs",
+            "finding": "OpenStream() returns a new SKStreamAsset wrapping native memory via SkiaApi.sk_typeface_open_stream. This is the object that leaks when ToHarfBuzzBlob\u0027s else path is hit.",
+            "relevance": "related",
+            "lines": "295-300"
+          }
+        ],
+        "rationale": "Classified as type/bug because this is confirmed broken behavior \u2014 a native resource leak in a well-defined code path. Area is SkiaSharp.HarfBuzz (not SkiaSharp) because the bug is in BlobExtensions.cs and SKShaper.cs, both in the SkiaSharp.HarfBuzz package. The title says \u0027SKShader\u0027 but the report is about SKShaper/ToHarfBuzzBlob. Not platform-specific \u2014 it\u0027s a managed code logic error affecting all platforms equally. Current labels incorrectly include backend/Metal (no rendering backend is involved) and area/SkiaSharp (should be area/SkiaSharp.HarfBuzz). Severity is medium: it\u0027s a gradual memory leak, not a crash, but can degrade long-running apps.",
+        "keySignals": [
+          {
+            "text": "I think the bug is in ToHarfBuzzBlob() extension - it doesn\u0027t dispose SKStreamAsset in all paths",
+            "source": "issue body",
+            "interpretation": "Reporter correctly identified the root cause \u2014 the else branch in BlobExtensions.cs line 30 copies data but never disposes the asset."
+          },
+          {
+            "text": "First observed bug on Android, but seems to be a problem also on Windows",
+            "source": "issue body",
+            "interpretation": "Cross-platform issue \u2014 managed code bug, not platform-specific. Current os/ and backend/ labels are overly specific."
+          },
+          {
+            "text": "The extension method copies the data and does not own or keep a reference to the asset. Would it be better to maybe fix the caller?",
+            "source": "PR #3376 comment by mattleibow",
+            "interpretation": "Maintainer confirms the bug and prefers the caller (SKShaper) to handle disposal, not the extension method."
+          },
+          {
+            "text": "I\u0027ve put an alternate PR here to remove the stream disposal on the other path and fix the SKShaper constructor",
+            "source": "PR #3376 comment by jeremy-visionaid",
+            "interpretation": "PR #3466 is the preferred fix direction: consistent non-ownership in ToHarfBuzzBlob, explicit disposal in SKShaper."
+          }
+        ],
+        "errorFingerprint": "memory-leak-ToHarfBuzzBlob-SKStreamAsset-undisposed",
+        "workarounds": [
+          "No user-level workaround \u2014 the leak is internal to SKShaper\u0027s constructor. Users cannot access the intermediate SKStreamAsset."
+        ],
+        "nextQuestions": [
+          "Does GetMemoryBase() typically return IntPtr.Zero for most typefaces, or only certain ones? This determines how frequently the leak path is hit.",
+          "Are there other callers of ToHarfBuzzBlob outside of SKShaper that might also leak?"
+        ],
+        "resolution": {
+          "hypothesis": "ToHarfBuzzBlob has inconsistent ownership: one path disposes the asset, the other doesn\u0027t. The SKShaper constructor doesn\u0027t compensate because it assumes the blob handles it. Fix: make ToHarfBuzzBlob never take ownership, and have the caller (SKShaper) explicitly dispose the stream.",
+          "proposals": [
+            {
+              "description": "Remove dispose from both paths in ToHarfBuzzBlob (it copies data, shouldn\u0027t own the asset). Fix SKShaper to wrap OpenStream() result in a using statement. This is the maintainer-approved approach.",
+              "title": "Merge PR #3466",
+              "codeSnippet": "// SKShaper.cs constructor fix:\nusing (var stream = Typeface.OpenStream(out index))\nusing (var blob = stream.ToHarfBuzzBlob())\nusing (var face = new Face(blob, index))\n{ ... }",
+              "confidence": 0.92,
+              "effort": "small"
+            },
+            {
+              "description": "Reporter\u0027s original fix: add asset.Dispose() after reading in the else path. Simpler but maintains inconsistent ownership \u2014 one path disposes via callback, one disposes inline.",
+              "title": "Add dispose in else path (PR #3376)",
+              "confidence": 0.7,
+              "effort": "trivial"
+            }
+          ],
+          "recommendedProposal": "Merge PR #3466",
+          "recommendedReason": "Cleaner ownership semantics: ToHarfBuzzBlob never takes ownership, caller is always responsible. Maintainer mattleibow explicitly approved this direction."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "keep-open",
+          "confidence": 0.92,
+          "reason": "Confirmed bug with an open PR (#3466) that has maintainer approval in principle. Issue should stay open until the PR is merged."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Fix labels: change area from SkiaSharp to SkiaSharp.HarfBuzz, remove incorrect backend/Metal, remove platform labels since this is cross-platform managed code",
+            "risk": "low",
+            "confidence": 0.95,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp.HarfBuzz",
+              "tenet/reliability"
+            ]
+          },
+          {
+            "type": "link-related",
+            "description": "Cross-reference PR #3466 which contains the maintainer-approved fix",
+            "risk": "low",
+            "confidence": 0.95,
+            "linkedIssue": 3466
+          },
+          {
+            "type": "add-comment",
+            "description": "Acknowledge confirmed bug, note the preferred fix direction",
+            "risk": "high",
+            "confidence": 0.85,
+            "comment": "Thanks for identifying this \u2014 the analysis is spot on. The leak is in \u0060ToHarfBuzzBlob()\u0060 (BlobExtensions.cs): when \u0060GetMemoryBase()\u0060 returns \u0060IntPtr.Zero\u0060, the \u0060SKStreamAsset\u0060 is read but never disposed.\n\nPR #3466 takes the cleaner approach here: remove the dispose responsibility from \u0060ToHarfBuzzBlob\u0060 entirely (it copies data and shouldn\u0027t own the asset), and fix the \u0060SKShaper\u0060 constructor to explicitly dispose the stream:\n\n\u0060\u0060\u0060csharp\nusing (var stream = Typeface.OpenStream(out index))\nusing (var blob = stream.ToHarfBuzzBlob())\nusing (var face = new Face(blob, index))\n{\n    // ...\n}\n\u0060\u0060\u0060\n\nThere\u0027s no user-level workaround since the leak is internal to \u0060SKShaper\u0060\u0027s constructor. The fix in #3466 is the path forward."
+          }
+        ]
+      }
+    },
+    {
+      "meta": {
+        "schemaVersion": "1.0",
+        "number": 3375,
+        "repo": "mono/SkiaSharp",
+        "analyzedAt": "2026-02-12T16:20:00Z",
+        "currentLabels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      "summary": "Stack overflow crash on Windows x86 with .NET 8/9 due to missing Cdecl calling convention on LibraryImport P/Invoke declarations",
+      "classification": {
+        "type": {
+          "value": "type/bug",
+          "confidence": 0.98
+        },
+        "area": {
+          "value": "area/SkiaSharp",
+          "confidence": 0.95
+        },
+        "platforms": [
+          "os/Windows-Classic"
+        ],
+        "tenets": [
+          "tenet/reliability",
+          "tenet/compatibility"
+        ]
+      },
+      "evidence": {
+        "reproEvidence": {
+          "stepsToReproduce": [
+            "Create a .NET 8 or .NET 9 project referencing SkiaSharp 3.116\u002B",
+            "Target x86 (win-x86) platform",
+            "Call any SkiaSharp API that P/Invokes into the native library (e.g., SKBitmap.GetPixel)",
+            "Observe stack overflow crash"
+          ],
+          "environmentDetails": "Windows 11, .NET 8.0/9.0, x86 target, SkiaSharp 3.116\u002B / 3.119.1",
+          "relatedIssues": []
+        },
+        "bugSignals": {
+          "severity": "critical",
+          "isRegression": true,
+          "errorType": "crash",
+          "errorMessage": "Stack overflow at SkiaSharp.SkiaApi.sk_bitmap_get_pixel_color(IntPtr, Int32, Int32)",
+          "stackTrace": "at SkiaSharp.SkiaApi.sk_bitmap_get_pixel_color(IntPtr, Int32, Int32)",
+          "reproQuality": "partial",
+          "targetFrameworks": [
+            "net8.0",
+            "net9.0"
+          ]
+        },
+        "versionAnalysis": {
+          "mentionedVersions": [
+            "3.116.0",
+            "3.119.1",
+            "2.88.9"
+          ],
+          "workedIn": "2.88.9",
+          "brokeIn": "3.116.0",
+          "currentRelevance": "likely",
+          "relevanceReason": "The code generator (Generator.cs line 546) still emits [LibraryImport] without Cdecl calling convention. The generated file SkiaApi.generated.cs still lacks the necessary [UnmanagedCallConv] attribute. The bug is present on the main branch."
+        },
+        "regression": {
+          "isRegression": true,
+          "confidence": 0.95,
+          "reason": "SkiaSharp 2.88.x used DllImport with CallingConvention.Cdecl exclusively. SkiaSharp 3.x introduced LibraryImport for .NET 7\u002B but omitted the Cdecl calling convention. On x64 this is invisible (one calling convention), on x86 it causes stack corruption.",
+          "workedInVersion": "2.88.9",
+          "brokeInVersion": "3.116.0"
+        }
+      },
+      "analysis": {
+        "summary": "The P/Invoke code generator emits [LibraryImport(SKIA)] without specifying a calling convention. On .NET 7\u002B x86 Windows, LibraryImport defaults to CallingConvention.Winapi which resolves to StdCall. The native C API functions use Cdecl (the C default). This calling convention mismatch causes stack corruption on x86, manifesting as a stack overflow. On x64, there is only one calling convention, so the mismatch is invisible.",
+        "codeInvestigation": [
+          {
+            "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+            "finding": "[LibraryImport(SKIA)] at line 1647 does not specify calling convention. The [DllImport] fallback at line 1650 correctly specifies CallingConvention.Cdecl. This pattern repeats for ALL P/Invoke declarations in the file.",
+            "relevance": "direct",
+            "lines": "1644-1660"
+          },
+          {
+            "file": "utils/SkiaSharpGenerator/Generate/Generator.cs",
+            "finding": "Line 546 emits \u0060[LibraryImport ({config.DllName})]\u0060 without calling convention. Line 552 emits \u0060[DllImport ({config.DllName}, CallingConvention = CallingConvention.Cdecl)]\u0060. The LibraryImport path should also specify Cdecl via [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })].",
+            "relevance": "direct",
+            "lines": "545-555"
+          },
+          {
+            "file": "binding/SkiaSharp/SkiaSharp.csproj",
+            "finding": "USE_DELEGATES is defined for net4x (Framework), USE_LIBRARY_IMPORT for net7.0\u002B. This confirms .NET Framework uses correct Cdecl delegates while .NET 7\u002B uses the broken LibraryImport path.",
+            "relevance": "direct",
+            "lines": "12-17"
+          },
+          {
+            "file": "externals/skia/include/c/sk_types.h",
+            "finding": "SK_C_API macro only specifies dllexport/dllimport visibility, NOT a calling convention. Native functions default to __cdecl (C default on Windows).",
+            "relevance": "direct",
+            "lines": "25-38"
+          },
+          {
+            "file": "externals/skia/src/c/sk_bitmap.cpp",
+            "finding": "sk_bitmap_get_pixel_color is a plain C function with no explicit calling convention \u2014 uses default __cdecl.",
+            "relevance": "context",
+            "lines": "87-89"
+          }
+        ],
+        "rationale": "Both reporters describe x86-only crashes with .NET 8/9 that work fine on x64. The second reporter provides a clear stack overflow trace at sk_bitmap_get_pixel_color. Code investigation confirms the generated [LibraryImport] declarations lack Cdecl specification while the [DllImport] fallback correctly specifies it. The native SK_C_API macro contains no calling convention specifier, defaulting to Cdecl. This is clearly a code-generation bug, not a usage issue. Severity is critical because ALL P/Invoke calls on x86 .NET 7\u002B are affected \u2014 the library is fundamentally broken on this platform.",
+        "keySignals": [
+          {
+            "text": "x86 crash, x64 works",
+            "source": "issue body \u002B comment 2",
+            "interpretation": "Classic calling convention mismatch symptom \u2014 only matters on x86 where StdCall and Cdecl differ."
+          },
+          {
+            "text": "Stack overflow at SkiaSharp.SkiaApi.sk_bitmap_get_pixel_color",
+            "source": "comment 2 (TomPMoleman)",
+            "interpretation": "Stack corruption from calling convention mismatch causes stack overflow at the P/Invoke boundary."
+          },
+          {
+            "text": "x86 \u002B net472: working, x86 \u002B Net8.0: ISSUE",
+            "source": "comment 2 (TomPMoleman)",
+            "interpretation": ".NET Framework uses USE_DELEGATES path with correct Cdecl convention; .NET 8 uses USE_LIBRARY_IMPORT path missing Cdecl."
+          },
+          {
+            "text": "Rollback to 2.88.9 fixes it",
+            "source": "issue body",
+            "interpretation": "SkiaSharp 2.88.x didn\u0027t have LibraryImport \u2014 used DllImport with CallingConvention.Cdecl only."
+          },
+          {
+            "text": "[LibraryImport(SKIA)] without calling convention in generated code",
+            "source": "SkiaApi.generated.cs:1647-1648, Generator.cs:546",
+            "interpretation": "Root cause \u2014 generator emits LibraryImport without Cdecl, defaulting to StdCall on x86 Windows."
+          }
+        ],
+        "errorFingerprint": "stack-overflow::sk_*::x86::net7\u002B::libraryimport-missing-cdecl",
+        "workarounds": [
+          "Target x64 instead of x86 (x64 has a single calling convention, so the bug is invisible)",
+          "Downgrade to SkiaSharp 2.88.x which uses DllImport with correct Cdecl convention"
+        ],
+        "nextQuestions": [
+          "Confirm that adding [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })] to the generator output fixes x86 .NET 8/9",
+          "Check if HarfBuzzSharp has the same LibraryImport calling convention issue"
+        ],
+        "resolution": {
+          "hypothesis": "LibraryImport without Cdecl calling convention defaults to StdCall on x86 Windows, causing stack corruption on every P/Invoke call into the native Cdecl library.",
+          "proposals": [
+            {
+              "description": "Update Generator.cs line 546 to also emit [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })] after the [LibraryImport] attribute. Then regenerate SkiaApi.generated.cs with \u0060pwsh ./utils/generate.ps1\u0060.",
+              "title": "Fix code generator to emit Cdecl for LibraryImport",
+              "confidence": 0.95,
+              "effort": "small"
+            },
+            {
+              "description": "As a workaround, compile for x64 or AnyCPU (prefer 64-bit) instead of x86. On x64 Windows there is only one calling convention, so the mismatch is invisible.",
+              "title": "Target x64 instead of x86",
+              "confidence": 0.95,
+              "effort": "trivial"
+            },
+            {
+              "description": "Downgrade to SkiaSharp 2.88.9 which uses DllImport with CallingConvention.Cdecl exclusively. This avoids the LibraryImport path entirely.",
+              "title": "Downgrade to SkiaSharp 2.88.x",
+              "confidence": 0.9,
+              "effort": "trivial"
+            }
+          ],
+          "recommendedProposal": "Fix code generator to emit Cdecl for LibraryImport",
+          "recommendedReason": "This is a straightforward code generator fix. The DllImport path already has the correct pattern. Adding the equivalent attribute for LibraryImport is a small, low-risk change that fixes the platform entirely."
+        }
+      },
+      "output": {
+        "actionability": {
+          "suggestedAction": "needs-investigation",
+          "confidence": 0.9,
+          "reason": "Root cause identified with high confidence (calling convention mismatch in generated code). Needs a fix in the code generator and regeneration of bindings. Should be verified on x86 .NET 8/9 before shipping."
+        },
+        "actions": [
+          {
+            "type": "update-labels",
+            "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability are all accurate",
+            "risk": "low",
+            "confidence": 0.98,
+            "labels": [
+              "type/bug",
+              "area/SkiaSharp",
+              "os/Windows-Classic",
+              "tenet/reliability"
+            ]
+          },
+          {
+            "type": "add-comment",
+            "description": "Post analysis confirming root cause and providing workaround",
+            "risk": "high",
+            "confidence": 0.9,
+            "comment": "Thanks for the detailed stack trace \u2014 that confirmed this.\n\nThe root cause is a calling convention mismatch in the P/Invoke bindings. SkiaSharp 3.x uses \u0060[LibraryImport]\u0060 for .NET 7\u002B, but the generated declarations don\u0027t specify \u0060Cdecl\u0060 calling convention. On x86 Windows, \u0060LibraryImport\u0060 defaults to \u0060StdCall\u0060, while the native C API uses \u0060Cdecl\u0060. This stack corruption manifests as a stack overflow. On x64 there\u0027s only one calling convention, which is why it works there. On .NET Framework, SkiaSharp uses a different code path (\u0060DllImport\u0060) that correctly specifies \u0060Cdecl\u0060.\n\nWorkaround: target x64 instead of x86 if possible \u2014 the calling convention mismatch is invisible on x64.\n\nThe fix is to update the code generator to emit \u0060[UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]\u0060 alongside the \u0060[LibraryImport]\u0060 attribute."
+          }
+        ]
+      }
+    },
     {
       "meta": {
         "schemaVersion": "1.0",
