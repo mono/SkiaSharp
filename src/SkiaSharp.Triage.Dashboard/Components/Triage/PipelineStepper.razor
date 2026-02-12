@@ -1,0 +1,13 @@
+<div class="pipeline-stepper">
+    <span class="pipeline-step @(HasTriage ? "step-done" : "step-missing")">Triage</span>
+    <span class="pipeline-arrow">→</span>
+    <span class="pipeline-step @(HasRepro ? "step-done" : "step-missing")">Repro</span>
+    <span class="pipeline-arrow">→</span>
+    <span class="pipeline-step @(HasFix ? "step-done" : "step-missing")">Fix</span>
+</div>
+
+@code {
+    [Parameter] public bool HasTriage { get; set; }
+    [Parameter] public bool HasRepro { get; set; }
+    [Parameter] public bool HasFix { get; set; }
+}

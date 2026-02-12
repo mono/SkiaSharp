@@ -87,13 +87,7 @@ else
     </div>
 
     <!-- Pipeline Stepper -->
-    <div class="pipeline-stepper">
-        <span class="pipeline-step @(_issue is not null ? "step-done" : "step-missing")">Triage</span>
-        <span class="pipeline-arrow">→</span>
-        <span class="pipeline-step @(_repro is not null ? "step-done" : "step-missing")">Repro</span>
-        <span class="pipeline-arrow">→</span>
-        <span class="pipeline-step @(_fix is not null ? "step-done" : "step-missing")">Fix</span>
-    </div>
+    <PipelineStepper HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" HasFix="@(_fix is not null)" />
 
     <!-- Tabs -->
     <div class="detail-tabs">
