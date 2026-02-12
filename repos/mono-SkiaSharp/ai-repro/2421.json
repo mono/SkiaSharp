@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2421,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T17:45:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/2421.json"
+  },
+  "conclusion": "needs-hardware",
+  "notes": "Issue #2421 reports a DllNotFoundException for @rpath/libSkiaSharp.framework/libSkiaSharp when creating SKPaint on a real iOS device via .NET MAUI (SkiaSharp 2.88.3). The reporter confirms it works on the iOS simulator and Android. Created a MAUI app with SkiaSharp 3.119.2 on .NET 10 — the device build (ios-arm64) includes libSkiaSharp.framework in the app bundle, and the simulator build runs successfully. However, the bug specifically requires a physical iOS device to reproduce (simulator uses a different build/linking pipeline). Without a connected iOS device, the runtime crash cannot be verified. The triage identified iOS managed linker stripping or Windows Hot Restart as likely root causes. All 60 SKPaint tests pass on main branch source.",
+  "assessment": "likely-bug",
+  "reproductionTime": "~12 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.3",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Reporter's version targets net6.0-ios only; no .NET 6 SDK available in current environment."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Built successfully for ios-arm64. libSkiaSharp.framework present in app bundle. App runs on iOS simulator without crash. Cannot test on real device — no physical iOS device connected."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "All 60 SKPaint tests pass (1 skipped for GPU). Cannot verify iOS device-specific deployment behavior from desktop test runner."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0-ios",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Maui.Controls",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create a .NET 10 MAUI project and add SkiaSharp.Views.Maui.Controls 3.119.2",
+      "layer": "setup",
+      "command": "dotnet new maui -n Repro && dotnet add package SkiaSharp.Views.Maui.Controls",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp.Views.Maui.Controls' version '3.119.2' added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "MAUI project file targeting net10.0-ios with SkiaSharp 3.119.2",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>\n    <OutputType>Exe</OutputType>\n    <UseMaui>true</UseMaui>\n    <SingleProject>true</SingleProject>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.Maui.Controls\" Version=\"$(MauiVersion)\" />\n    <PackageReference Include=\"SkiaSharp.Views.Maui.Controls\" Version=\"3.119.2\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "MainPage.xaml.cs",
+          "description": "Reproduction code that creates an SKPaint object — the exact operation that crashes on real iOS devices",
+          "content": "using SkiaSharp;\n\nnamespace Repro;\n\npublic partial class MainPage : ContentPage\n{\n    public MainPage()\n    {\n        InitializeComponent();\n        try\n        {\n            using var paint = new SKPaint();\n            paint.Color = SKColors.Red;\n            paint.IsAntialias = true;\n            System.Diagnostics.Debug.WriteLine($\"SKPaint created successfully: Color={paint.Color}\");\n        }\n        catch (Exception ex)\n        {\n            System.Diagnostics.Debug.WriteLine($\"SKPaint FAILED: {ex.GetType().Name}: {ex.Message}\");\n        }\n    }\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build for iOS device target (ios-arm64) and verify native framework is in app bundle",
+      "layer": "deployment",
+      "command": "dotnet build -f net10.0-ios -p:RuntimeIdentifier=ios-arm64",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s), 0 Error(s). Repro.app/Frameworks/libSkiaSharp.framework/libSkiaSharp is present in the build output.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build for iOS simulator target (iossimulator-arm64) and verify native framework is in app bundle",
+      "layer": "deployment",
+      "command": "dotnet build -f net10.0-ios -p:RuntimeIdentifier=iossimulator-arm64",
+      "exitCode": 0,
+      "output": "Build succeeded. Repro.app/Frameworks/libSkiaSharp.framework/libSkiaSharp is present in the build output.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Install and launch app on iOS simulator (iPhone 14 Pro, iOS 16.2) to verify SKPaint works",
+      "layer": "csharp",
+      "command": "xcrun simctl boot <sim-id> && xcrun simctl install <sim-id> Repro.app && xcrun simctl launch --console <sim-id> com.companyname.repro",
+      "exitCode": 0,
+      "output": "App installed and launched successfully on simulator. No DllNotFoundException or crash observed.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Attempt to deploy and run on real iOS device to reproduce the DllNotFoundException",
+      "layer": "deployment",
+      "result": "skip"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Requires physical iOS device — reporter states the bug only occurs on real iOS devices, not on the simulator. No physical iOS device is connected to this machine.",
+    "Cannot test reporter's exact version (SkiaSharp 2.88.3) — it only targets net6.0-ios and no .NET 6 SDK is available."
+  ]
+}
