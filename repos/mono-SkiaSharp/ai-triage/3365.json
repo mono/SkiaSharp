@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3365,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:15:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "area/libSkiaSharp.native",
+      "tenet/reliability"
+    ]
+  },
+  "summary": "Duplicate of #3267 \u2014 libSkiaSharp.dll has hard link-time dependency on d3d12.dll, crashing on Windows systems without DX12",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility",
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "isRegression": true,
+      "errorType": "crash",
+      "errorMessage": "Hard crash on load \u2014 d3d12.dll not found on systems without DX12 support",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0-windows"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET app referencing SkiaSharp 3.116.0+",
+        "Deploy to a Windows 10 machine that lacks DX12 support (unpatched or older hardware)",
+        "Run the app \u2014 crash on load because libSkiaSharp.dll imports d3d12.dll which is missing"
+      ],
+      "environmentDetails": "Windows 10 without DX12 (approx 0.1% of 1M installations). Also reproduced on Windows 7 (#3267) and Windows Server 2012 R2 (#3300).",
+      "relatedIssues": [
+        3267,
+        3300,
+        2305,
+        2235
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The native Windows build still sets skia_use_direct3d=true by default, which links d3d12.lib at compile time. No /DELAYLOAD is configured. The dependency is still present in the current build."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.95,
+      "reason": "SkiaSharp 2.88.x did not link d3d12.lib. The Direct3D backend was added in the 3.x series, introducing a hard import dependency on d3d12.dll.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "The Windows native build (native/windows/build.cake) passes skia_use_direct3d=true to GN, which causes Skia's BUILD.gn to link d3d12.lib, dxgi.lib, and d3dcompiler.lib directly. This creates a hard import-table dependency on d3d12.dll in the resulting libSkiaSharp.dll. On Windows systems without DX12 (older Win10, Win7, Server 2012 R2), the DLL loader fails immediately \u2014 before any SkiaSharp code runs \u2014 because d3d12.dll is missing.",
+    "rationale": "This is clearly a bug (type/bug) \u2014 the crash happens at DLL load time, not during any D3D12 API call. SkiaSharp defaults to CPU/raster rendering, so the D3D12 dependency should never be required for basic usage. The area is libSkiaSharp.native since the issue is in the native build configuration, not the C# bindings. Severity is high: it affects real production deployments (0.1% of 1M installs) with no user-side workaround except downgrading. This is a duplicate of #3267 which reports the identical root cause but on Win7 \u2014 the underlying problem (link-time d3d12.lib) is the same regardless of Windows version.",
+    "keySignals": [
+      {
+        "text": "out of a sample of 1 million installations around 0.1% are crashing because their systems don't have DX12",
+        "source": "issue body",
+        "interpretation": "Real production impact \u2014 approximately 1000 users affected. Not theoretical."
+      },
+      {
+        "text": "This should be a runtime dependency that is dynamically loaded",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identifies the root cause: link-time vs runtime dependency."
+      },
+      {
+        "text": "Last Known Good Version: 2.88.9",
+        "source": "issue body",
+        "interpretation": "Confirms regression \u2014 D3D12 backend was not present in 2.88.x series."
+      },
+      {
+        "text": "While this is in reference to Windows 7, all of our crashes occur on Windows 10",
+        "source": "comment #3",
+        "interpretation": "Same root cause as #3267 but broader impact \u2014 not just Win7, also unpatched Win10."
+      },
+      {
+        "text": "the common theme is that they're on systems that don't support DX12",
+        "source": "comment #4 (molesmoke)",
+        "interpretation": "Community correctly identifies this as a duplicate of #3267 with the same resolution path."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "native/windows/build.cake",
+        "lines": "11-12",
+        "finding": "SUPPORT_DIRECT3D defaults to true. Line 76 passes skia_use_direct3d=true to GN args. This is the root configuration that enables the d3d12.lib linkage.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/BUILD.gn",
+        "lines": "1037-1049",
+        "finding": "When skia_use_direct3d is true, BUILD.gn adds libs += ['d3d12.lib', 'dxgi.lib', 'd3dcompiler.lib']. These are static import libs \u2014 the resulting DLL will fail to load if d3d12.dll is not present on the system.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/BUILD.gn",
+        "lines": "917-922",
+        "finding": "There is also a dawn_enable_d3d12 code path that links the same libs, but this is only active when skia_use_dawn=true (currently false by default).",
+        "relevance": "related"
+      },
+      {
+        "file": "scripts/cake/native-shared.cake",
+        "lines": "52-86",
+        "finding": "CheckWindowsDependencies verifies DLL imports post-build but only excludes VCRUNTIME/MSVCP. d3d12.dll is not flagged. No /DELAYLOAD is configured anywhere in the build.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "Would adding /DELAYLOAD:d3d12.dll to extra_ldflags be a safe fix? This would defer loading until D3D12 APIs are actually called.",
+      "Alternatively, should SUPPORT_DIRECT3D default to false, requiring opt-in?",
+      "Does Skia internally handle the case where d3d12.dll is delay-loaded but unavailable at runtime?"
+    ],
+    "resolution": {
+      "hypothesis": "libSkiaSharp.dll statically imports d3d12.dll via link-time dependency. On systems without DX12, the Windows loader fails before any code executes. The fix is to either delay-load d3d12.dll or disable D3D12 by default.",
+      "proposals": [
+        {
+          "title": "Add /DELAYLOAD for d3d12.dll",
+          "description": "Add /DELAYLOAD:d3d12.dll, /DELAYLOAD:dxgi.dll, and /DELAYLOAD:d3dcompiler.dll to extra_ldflags in native/windows/build.cake and add delayimp.lib to the link. This defers loading until D3D12 functions are actually called, allowing SkiaSharp to work on systems without DX12 as long as D3D12 features are not used.",
+          "confidence": 0.8,
+          "effort": "small"
+        },
+        {
+          "title": "Disable Direct3D by default",
+          "description": "Change SUPPORT_DIRECT3D default from 'true' to 'false' in native/windows/build.cake. Users who need D3D12 rendering would opt in via build argument. This eliminates the dependency entirely for the default build.",
+          "confidence": 0.7,
+          "effort": "trivial"
+        },
+        {
+          "title": "Downgrade to SkiaSharp 2.88.x",
+          "description": "As an immediate workaround, downgrade to SkiaSharp 2.88.9 which does not have the D3D12 dependency. This is the version the reporter confirmed as working.",
+          "confidence": 0.95,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Add /DELAYLOAD for d3d12.dll",
+      "recommendedReason": "Delay loading preserves D3D12 capability for users who need it while eliminating the hard dependency. This is the standard Windows pattern for optional system DLLs. The downgrade workaround is viable immediately but loses all 3.x improvements."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-duplicate",
+      "confidence": 0.9,
+      "reason": "Same root cause as #3267 (d3d12.dll hard dependency). The only difference is the reporter's Windows version (Win10 vs Win7), but the fix is identical. Community commenter also confirms this is a duplicate."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Current labels are already correct \u2014 type/bug, area/libSkiaSharp.native, os/Windows-Classic, tenet/reliability. Add tenet/compatibility.",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Windows-Classic",
+          "tenet/reliability",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report, confirm duplicate status, and note the production impact data as valuable evidence for #3267",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed production data \u2014 knowing this affects ~0.1% of 1M installations is valuable evidence.\n\nThis is the same root cause as #3267: `libSkiaSharp.dll` statically imports `d3d12.dll` because the Windows native build links `d3d12.lib` at compile time (via `skia_use_direct3d=true`). On any system without DX12 support, the Windows loader fails before SkiaSharp code runs.\n\nThe fix is the same regardless of Windows version \u2014 either delay-load the D3D12 DLLs or make D3D12 opt-in. I'm closing this as a duplicate; your production impact data has been noted in #3267's tracking.\n\nAs an immediate workaround, downgrading to SkiaSharp 2.88.9 avoids the dependency entirely (as you've confirmed)."
+      },
+      {
+        "type": "link-duplicate",
+        "description": "Mark as duplicate of #3267",
+        "risk": "medium",
+        "confidence": 0.9,
+        "linkedIssue": 3267
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as duplicate of #3267",
+        "risk": "medium",
+        "confidence": 0.9
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #3300 (same issue on Windows Server 2012 R2)",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3300
+      }
+    ]
+  }
+}
