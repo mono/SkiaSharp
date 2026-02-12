@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3372,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:15:00Z",
+    "currentLabels": ["area/SkiaSharp.Views", "type/feature-request", "os/Windows-WinUI"]
+  },
+  "summary": "Replace Microsoft.WindowsAppSDK metapackage with Microsoft.WindowsAppSDK.WinUI sub-package (v1.8) to avoid forcing full metapackage on downstream consumers",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.98 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
+    "platforms": ["os/Windows-WinUI"],
+    "tenets": ["tenet/compatibility"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Windows, WinAppSDK 1.8+, .NET MAUI",
+      "relatedIssues": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["1.4.230913002", "1.8"],
+      "currentRelevance": "likely",
+      "relevanceReason": "SkiaSharp still references Microsoft.WindowsAppSDK 1.4.230913002 metapackage. The WinAppSDK 1.8 package split has shipped, making this request actionable."
+    }
+  },
+  "analysis": {
+    "summary": "SkiaSharp.Views.WinUI currently references the Microsoft.WindowsAppSDK metapackage at v1.4, which forces all downstream consumers (including MAUI) to pull in the entire WinAppSDK. Since WinAppSDK 1.8 split the packages, SkiaSharp could reference only Microsoft.WindowsAppSDK.WinUI — the only component it actually uses. This would unblock downstream projects from reducing their dependency footprint.",
+    "rationale": "This is clearly a feature request (package dependency restructuring, not a bug). The area is SkiaSharp.Views because the change targets SkiaSharp.Views.WinUI.csproj and its native counterpart. The MAUI partner label applies because dotMorten explicitly discusses MAUI RC2 being unable to properly reduce dependencies without this change. The compatibility tenet applies because bumping from WinAppSDK 1.4 to 1.8 may force consumers to upgrade their WinAppSDK version.",
+    "keySignals": [
+      {
+        "text": "Please upgrade the WinUI package to reference Microsoft.WindowsAppSDK.WinUI 1.8, so that it no longer relies on the Microsoft.WindowsAppSDK metapackage",
+        "source": "issue body",
+        "interpretation": "Clear request to swap metapackage for sub-package to reduce dependency footprint."
+      },
+      {
+        "text": "It's a bit on all us 3rd party library developers to fix the low level dependencies first so higher-level projects can reap the benefits",
+        "source": "comment #3 (dotMorten)",
+        "interpretation": "Ecosystem argument — SkiaSharp is a foundational library that blocks MAUI and others from adopting the split packages."
+      },
+      {
+        "text": "1.8 upgrade is planned for RC2, but it can't be done right without this",
+        "source": "comment #5 (dotMorten)",
+        "interpretation": "MAUI RC2 is blocked on this change for proper WinAppSDK dependency reduction."
+      },
+      {
+        "text": "1.8 breaks some maui features with net10-rc1+WebView2",
+        "source": "comment #4 (jeromelaban)",
+        "interpretation": "Version bump carries risk — WinAppSDK 1.8 has known compatibility issues with .NET 10 RC1 and WebView2 in MAUI."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SkiaSharp.Views.WinUI.csproj",
+        "lines": "17",
+        "finding": "References Microsoft.WindowsAppSDK v1.4.230913002 (the full metapackage). This is the primary reference that needs to change to Microsoft.WindowsAppSDK.WinUI.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/*.cs",
+        "finding": "Only uses Microsoft.UI.Dispatching, Microsoft.UI.Xaml.* namespaces — all WinUI XAML types. No usage of other WinAppSDK components (notifications, lifecycle, etc.). Confirms the metapackage is unnecessarily broad.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.vcxproj",
+        "lines": "3, 181, 192-193",
+        "finding": "The native C++ project also references Microsoft.WindowsAppSDK 1.4.230913002 via NuGet packages.config. This would also need updating if the managed package changes.",
+        "relevance": "direct"
+      },
+      {
+        "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/packages.config",
+        "finding": "Lists Microsoft.WindowsAppSDK 1.4.230913002 as a native NuGet dependency. Must be updated in tandem with the managed project.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SkiaSharp.Views.Maui.Core.csproj",
+        "lines": "23",
+        "finding": "MAUI project references SkiaSharp.Views.WinUI via ProjectReference. The WindowsAppSDK metapackage flows transitively to MAUI consumers through this chain.",
+        "relevance": "related"
+      },
+      {
+        "file": "samples/Basic/WinUI/SkiaSharpSample/SkiaSharpSample.csproj",
+        "lines": "16",
+        "finding": "Sample project references Microsoft.WindowsAppSDK v1.4.231219000 (slightly newer than the library). Sample should also be updated for consistency.",
+        "relevance": "related"
+      }
+    ],
+    "nextQuestions": [
+      "Does Microsoft.WindowsAppSDK.WinUI 1.8 include native C++ build props/targets equivalent to the metapackage, or does the native project need a different sub-package?",
+      "What is the minimum WinAppSDK version that supports the split packages — is 1.8 the first, or can a lower version be used?",
+      "Will bumping from 1.4 to 1.8 cause TargetPlatformMinVersion or API compatibility issues for existing consumers?"
+    ],
+    "resolution": {
+      "hypothesis": "SkiaSharp.Views.WinUI only uses WinUI XAML types, so the Microsoft.WindowsAppSDK metapackage can be replaced with the Microsoft.WindowsAppSDK.WinUI sub-package at version 1.8+. This requires updating both the managed .csproj and the native .vcxproj + packages.config.",
+      "proposals": [
+        {
+          "title": "Replace metapackage with WinUI sub-package",
+          "description": "Change PackageReference in SkiaSharp.Views.WinUI.csproj from Microsoft.WindowsAppSDK to Microsoft.WindowsAppSDK.WinUI at version 1.8.x. Also update the native C++ project (vcxproj + packages.config) to use the equivalent native WinUI sub-package. Update the sample project for consistency.",
+          "confidence": 0.80,
+          "effort": "small"
+        },
+        {
+          "title": "Bump metapackage version only",
+          "description": "As a less disruptive alternative, bump Microsoft.WindowsAppSDK from 1.4 to 1.8 without switching to the sub-package. This doesn't solve the metapackage bloat but modernizes the version. Lower risk but doesn't address the core request.",
+          "confidence": 0.60,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Replace metapackage with WinUI sub-package",
+      "recommendedReason": "Directly addresses the request and unblocks downstream MAUI dependency reduction. The code investigation confirms only WinUI types are used, so no other WinAppSDK components are needed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "Valid feature request with clear ecosystem benefit. Needs investigation into whether the WinUI sub-package provides equivalent native C++ build support and whether the version bump introduces compatibility issues."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correct — type/feature-request, area/SkiaSharp.Views, os/Windows-WinUI. Add partner/maui since MAUI is directly impacted.",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/feature-request", "area/SkiaSharp.Views", "os/Windows-WinUI", "partner/maui"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request, confirm code investigation findings, and note that only WinUI types are used.",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for filing this. We've confirmed that SkiaSharp.Views.WinUI only uses `Microsoft.UI.Xaml.*` and `Microsoft.UI.Dispatching` — no other WinAppSDK components — so switching from the metapackage to `Microsoft.WindowsAppSDK.WinUI` is viable.\n\nThe change involves both the managed project (`SkiaSharp.Views.WinUI.csproj`) and the native C++ project (`SkiaSharp.Views.WinUI.Native.vcxproj` + `packages.config`), which also reference the metapackage at 1.4. We'll need to verify the native sub-package provides equivalent build props/targets before making the switch.\n\nThe version bump from 1.4 to 1.8 is the main compatibility concern — it raises the minimum WinAppSDK version for consumers."
+      }
+    ]
+  }
+}
