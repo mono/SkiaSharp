@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2383,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:45:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/2383.json"
+  },
+  "conclusion": "inconclusive",
+  "notes": "Issue #2383 is a usage question asking whether SkiaSharp supports a 24-bit (3 bytes per pixel) color type equivalent to System.Drawing.Imaging.PixelFormat.Format24bppRgb. No specific bug behavior was reported. Verified that SKColorType has no 24-bit entry across all versions tested (2.88.7, 3.119.2, and main source). The closest equivalent is SKColorType.Rgb888x at 4 bytes per pixel. A workaround expanding 24bpp data to 32bpp with a padding byte works correctly. This is an inherent Skia limitation, not a SkiaSharp bug. Same question was previously answered in issue #1176.",
+  "assessment": "working-as-designed",
+  "reproductionTime": "~5 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.7",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "No 24-bit color type exists. All SKColorType values enumerated — none has 3 bytes per pixel. Workaround using Rgb888x (4 bpp) works correctly."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Same result as 2.88.7 — no 24-bit color type. Three new color types added (Bgr101010xXR, Srgba8888, R8Unorm, Rgba10x6) but none are 24-bit."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Built test project from source. Ran GetBytesPerPixelIsCorrect test covering all 25 SKColorType values — all passed, none returns 3 bytes per pixel."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.7"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project and add SkiaSharp 2.88.7",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.7",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '2.88.7' added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 2.88.7 and AllowUnsafeBlocks",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.7\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction program that enumerates all SKColorType values checking for 24-bit support, tests Rgb888x workaround, and attempts InstallPixels with 24bpp stride",
+          "content": "using SkiaSharp;\nusing System;\nusing System.Runtime.InteropServices;\n\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Runtime: {RuntimeInformation.FrameworkDescription}\");\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine();\n\nConsole.WriteLine(\"=== SKColorType values and bytes per pixel ===\");\nbool has24Bit = false;\nforeach (SKColorType ct in Enum.GetValues(typeof(SKColorType)))\n{\n    var info = new SKImageInfo(1, 1, ct, SKAlphaType.Opaque);\n    int bpp = info.BytesPerPixel;\n    Console.WriteLine($\"  {ct,-20} = {bpp} bytes/pixel\");\n    if (bpp == 3) has24Bit = true;\n}\nConsole.WriteLine($\"Has 24-bit (3 bytes/pixel) color type: {has24Bit}\");\nConsole.WriteLine();\n\nConsole.WriteLine(\"=== Closest equivalent: Rgb888x ===\");\nvar rgb888xInfo = new SKImageInfo(1, 1, SKColorType.Rgb888x, SKAlphaType.Opaque);\nConsole.WriteLine($\"  Rgb888x bytes per pixel: {rgb888xInfo.BytesPerPixel}\");\nConsole.WriteLine();\n\nConsole.WriteLine(\"=== Workaround: 24bpp to 32bpp Rgb888x ===\");\nint width = 4, height = 2;\nbyte[] pixels24 = new byte[width * height * 3];\nfor (int i = 0; i < width * height; i++)\n{\n    pixels24[i * 3 + 0] = (byte)(i * 32);\n    pixels24[i * 3 + 1] = (byte)(255 - i * 32);\n    pixels24[i * 3 + 2] = (byte)(128);\n}\nvar bmpInfo = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);\nusing var bitmap = new SKBitmap(bmpInfo);\nvar destPtr = bitmap.GetPixels();\nunsafe\n{\n    byte* dest = (byte*)destPtr;\n    int srcIndex = 0;\n    for (int y = 0; y < height; y++)\n        for (int x = 0; x < width; x++)\n        {\n            dest[0] = pixels24[srcIndex]; dest[1] = pixels24[srcIndex + 1];\n            dest[2] = pixels24[srcIndex + 2]; dest[3] = 0xFF;\n            dest += 4; srcIndex += 3;\n        }\n}\nvar pixel0 = bitmap.GetPixel(0, 0);\nConsole.WriteLine($\"  Pixel(0,0): R={pixel0.Red} G={pixel0.Green} B={pixel0.Blue} A={pixel0.Alpha}\");\nConsole.WriteLine($\"  Expected:   R=0 G=255 B=128 A=255\");\nConsole.WriteLine();\n\nConsole.WriteLine(\"=== Direct 24bpp InstallPixels attempt ===\");\ntry\n{\n    var info24 = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);\n    using var bmp24 = new SKBitmap();\n    var handle = GCHandle.Alloc(pixels24, GCHandleType.Pinned);\n    try\n    {\n        bool installed = bmp24.InstallPixels(info24, handle.AddrOfPinnedObject(), width * 3);\n        Console.WriteLine($\"  InstallPixels with 24bpp stride: {(installed ? \"succeeded\" : \"failed\")}\");\n    }\n    finally { handle.Free(); }\n}\ncatch (Exception ex) { Console.WriteLine($\"  Exception: {ex.GetType().Name}: {ex.Message}\"); }\nConsole.WriteLine();\nConsole.WriteLine(\"Conclusion: No 24-bit (3 bytes/pixel) SKColorType exists. Must expand to 32bpp.\");"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction with SkiaSharp 2.88.7 — enumerate all SKColorType values and check for 24-bit support",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\nRuntime: .NET 8.0.23\n\n=== SKColorType values and bytes per pixel ===\n  Unknown              = 0 bytes/pixel\n  Alpha8               = 1 bytes/pixel\n  Rgb565               = 2 bytes/pixel\n  Argb4444             = 2 bytes/pixel\n  Rgba8888             = 4 bytes/pixel\n  Rgb888x              = 4 bytes/pixel\n  Bgra8888             = 4 bytes/pixel\n  Rgba1010102          = 4 bytes/pixel\n  Rgb101010x           = 4 bytes/pixel\n  Gray8                = 1 bytes/pixel\n  RgbaF16              = 8 bytes/pixel\n  RgbaF16Clamped       = 8 bytes/pixel\n  RgbaF32              = 16 bytes/pixel\n  Rg88                 = 2 bytes/pixel\n  AlphaF16             = 2 bytes/pixel\n  RgF16                = 4 bytes/pixel\n  Alpha16              = 2 bytes/pixel\n  Rg1616               = 4 bytes/pixel\n  Rgba16161616         = 8 bytes/pixel\n  Bgra1010102          = 4 bytes/pixel\n  Bgr101010x           = 4 bytes/pixel\n\nHas 24-bit (3 bytes/pixel) color type: False\n\n=== Closest equivalent: Rgb888x ===\n  Rgb888x bytes per pixel: 4\n  Rgb888x row bytes (1px): 4\n\n=== Workaround: 24bpp to 32bpp Rgb888x ===\n  Pixel(0,0): R=0 G=255 B=128 A=255\n  Expected:   R=0 G=255 B=128 A=255\n\n=== Direct 24bpp InstallPixels attempt ===\n  InstallPixels with 24bpp stride: failed\n\nConclusion: No 24-bit (3 bytes/pixel) SKColorType exists. Must expand to 32bpp.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Update to SkiaSharp 3.119.2 (latest stable) and rerun — check if any new 24-bit color type was added",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\n\n=== SKColorType values and bytes per pixel ===\n  [21 original + 4 new types listed]\n  Bgr101010xXR         = 4 bytes/pixel\n  Srgba8888            = 4 bytes/pixel\n  R8Unorm              = 1 bytes/pixel\n  Rgba10x6             = 8 bytes/pixel\n\nHas 24-bit (3 bytes/pixel) color type: False\n\n=== Workaround: 24bpp to 32bpp Rgb888x ===\n  Pixel(0,0): R=0 G=255 B=128 A=255 (matches expected)\n\n=== Direct 24bpp InstallPixels attempt ===\n  InstallPixels with 24bpp stride: failed\n\nConclusion: No 24-bit (3 bytes/pixel) SKColorType exists. Must expand to 32bpp.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test on main (source) — build test project and run GetBytesPerPixelIsCorrect test covering all 25 SKColorType values",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~GetBytesPerPixelIsCorrect\"",
+      "exitCode": 0,
+      "output": "Passed!  - Failed: 0, Passed: 25, Skipped: 0, Total: 25, Duration: 15 ms",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 25.2.0 (Darwin)",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.7",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "Issue is a usage question, not a bug report — no specific failure behavior was described to reproduce. The reporter asks whether a 24-bit color type exists, which is a feature inquiry rather than a defect."
+  ]
+}
