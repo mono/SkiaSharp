@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3423,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:12:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3423.json"
+  },
+  "conclusion": "needs-platform",
+  "assessment": "working-as-designed",
+  "notes": "ClickOnce deployment on .NET Framework 4.7.2 requires Windows to reproduce. Root cause confirmed: NativeAssets.Win32 .targets file uses <None> items instead of <Content>, causing ClickOnce to omit libSkiaSharp.dll from the application manifest. Workaround confirmed by community and OP: manually add libSkiaSharp.dll as Content. This issue was reported in #1327 (2020), claimed fixed in PR #1342, but the .targets file still uses <None>.",
+  "reproductionTime": "~15 minutes",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Verify environment limitations - macOS cannot run ClickOnce deployment",
+      "layer": "setup",
+      "command": "uname -s && uname -m && dotnet --version",
+      "exitCode": 0,
+      "output": "Darwin\narm64\n8.0.417",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Investigate NativeAssets.Win32 targets file structure to confirm root cause",
+      "layer": "deployment",
+      "command": "cat binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets",
+      "exitCode": 0,
+      "output": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Project xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n[...truncated 8 lines...]\n    <ItemGroup Condition=\" '$(ShouldIncludeNativeSkiaSharp)' != 'False' \">\n        <_NativeSkiaSharpFile Include=\"$(MSBuildThisFileDirectory)...\\runtimes\\win-x86\\native\\libSkiaSharp*.dll\">\n[...truncated 6 lines...]\n        <!-- include everything -->\n        <None Include=\"@(_NativeSkiaSharpFile)\">\n            <Link>%(Dir)%(Filename)%(Extension)</Link>\n            <Visible>False</Visible>\n            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>\n        </None>\n    </ItemGroup>\n</Project>",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify related issue #1327 history and fix status",
+      "layer": "deployment",
+      "command": "gh issue view 1327 --repo mono/SkiaSharp --json title,state,comments",
+      "exitCode": 0,
+      "output": "Issue #1327: [QUESTION] How to add and deploy (lib)SkiaSharp to WPF .NET Framework project\nState: CLOSED\nComment by mattleibow: I bet it has to do with the fact that we include it as `None` and not `Content`.\nComment by mattleibow: Fixed in #1342 and on the preview feed as v2.80.0-preview.20",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter confirms DllNotFoundException on ClickOnce deployment. Cannot test directly on macOS."
+    },
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter tested both versions with same result."
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "ClickOnce deployment is Windows-only and requires .NET Framework project system in Visual Studio. Cannot reproduce ClickOnce publish on macOS.",
+    ".NET Framework 4.7.2 WinForms project requires Windows SDK and tooling not available on macOS."
+  ],
+  "errorMessages": {
+    "primaryError": "System.DllNotFoundException: Unable to load library 'libSkiaSharp'",
+    "stackTrace": "System.TypeInitializationException: The type initializer for 'SkiaSharp.SKData' threw an exception. ---> System.DllNotFoundException: Unable to load library 'libSkiaSharp'.\n   at SkiaSharp.LibraryLoader.LoadLocalLibrary[T](String libraryName)\n   at System.Lazy`1.CreateValue()\n   at System.Lazy`1.LazyInitValue()\n   at SkiaSharp.SkiaApi.sk_data_new_empty()\n   at SkiaSharp.SKData..cctor()\n   --- End of inner exception stack trace ---\n   at SkiaSharp.SKData.Create(IntPtr address, Int32 length)\n   at SkiaSharp.SKBitmap.Decode(ReadOnlySpan`1 buffer)\n   at SkiaSharp.SKBitmap.Decode(Byte[] buffer)"
+  },
+  "artifacts": [
+    {
+      "filename": "SkiaSharp.targets",
+      "description": "MSBuild targets file that adds native DLLs as <None> items (line 23). This is the root cause — ClickOnce only includes <Content> items in application manifests, not <None> items.",
+      "source": "external",
+      "url": "https://github.com/mono/SkiaSharp/blob/main/binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets",
+      "available": true
+    }
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "fix-status",
+        "upstream": "Triage references #1327 as a related issue that was closed in 2020 with PR #1342 claiming the fix was in v2.80.0-preview.20",
+        "corrected": "Issue #1327 claimed to be fixed but the problem persists in SkiaSharp 3.119.1. The .targets file still uses <None> instead of <Content> on line 23. Either the fix was incomplete, only addressed runtime loading (not deployment manifest), or regressed during the 3.0 repository modernization (commit bc5020b9e)."
+      }
+    ]
+  }
+}
