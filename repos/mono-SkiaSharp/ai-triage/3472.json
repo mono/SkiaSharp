@@ -1,0 +1,135 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3472,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:52:04Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "tenet/reliability"]
+  },
+  "summary": "HarfBuzzSharp.Blob.FromStream uses a fixed block that only pins the managed byte array during constructor call — after it exits, GC can move or collect the array while native HarfBuzz still holds the raw pointer, causing crashes or data corruption",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.99 },
+    "area": { "value": "area/HarfBuzzSharp", "confidence": 0.99 },
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "isRegression": false,
+      "errorType": "crash",
+      "errorMessage": "AccessViolationException or corrupted glyph data (codepoints become 0)",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net8.0", "net9.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blob from a Stream using Blob.FromStream()",
+        "Use the Blob (e.g., create a Face and shape text)",
+        "GC.Collect() or wait for GC compaction",
+        "Access the Blob data — crash or corrupted data"
+      ],
+      "environmentDetails": "All platforms, all .NET versions. Confirmed by multiple reporters.",
+      "relatedIssues": [2323, 3393, 3394, 2821, 3473],
+      "repoLinks": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The buggy code in Blob.FromStream has not changed since it was first introduced (commit c1549d923). Bug exists in all versions of HarfBuzzSharp that include FromStream."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "PR #3473 has been submitted by the reporter with a correct fix using Marshal.AllocCoTaskMem, but it has not been merged yet.",
+      "relatedPRs": [3473]
+    }
+  },
+  "analysis": {
+    "summary": "Blob.FromStream creates a managed byte[] via MemoryStream.ToArray(), pins it with a fixed block, passes the pointer to hb_blob_create with MemoryMode.ReadOnly, then the fixed block exits. HarfBuzz holds the raw pointer but the GC can now relocate or collect the array. This is a use-after-move/use-after-free bug.",
+    "rationale": "This is clearly a bug, not a usage issue. The fixed block only pins the byte[] for the duration of the Blob constructor call. After the fixed block exits, the managed array is unpinned and may be relocated by GC compaction. Since MemoryMode.ReadOnly tells HarfBuzz not to copy the data, HarfBuzz directly uses the now-stale pointer. The area is area/HarfBuzzSharp (not area/SkiaSharp) since the bug is in the HarfBuzzSharp.Blob class. Severity is high because it causes crashes or silent data corruption. The os/Windows-Classic label is incorrect — this affects all platforms. Issue #2323 reported the same bug ~3 years earlier and was confirmed by user TJYSunset who experienced AccessViolationException and zeroed-out glyph codepoints.",
+    "keySignals": [
+      { "text": "fixed (byte* dataPtr = data) { return new Blob((IntPtr)dataPtr, ...) }", "source": "binding/HarfBuzzSharp/Blob.cs:79-81", "interpretation": "The fixed block only pins 'data' during the Blob constructor. After the block exits, dataPtr is stale." },
+      { "text": "MemoryMode.ReadOnly", "source": "binding/HarfBuzzSharp/Blob.cs:80", "interpretation": "ReadOnly tells HarfBuzz NOT to copy the data — it uses the provided pointer directly. The pointer must remain valid for the blob's lifetime." },
+      { "text": "releaseDelegate: () => ms.Dispose()", "source": "binding/HarfBuzzSharp/Blob.cs:80", "interpretation": "The release delegate disposes the MemoryStream, but ms.ToArray() returns an independent copy. The byte[] 'data' has no GC root after the method returns." },
+      { "text": "At best all codepoints in Buffer.GlyphInfos becomes 0, at worst AccessViolationException", "source": "#2323 comment by TJYSunset", "interpretation": "Confirmed real-world impact — silent data corruption and hard crashes." },
+      { "text": "#2323 opened 2023 reporting identical issue", "source": "#2323", "interpretation": "This bug was reported ~3 years ago as a question and confirmed by a user, but never fixed." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/HarfBuzzSharp/Blob.cs", "lines": "71-82", "finding": "FromStream uses fixed block that only pins the byte array during the Blob constructor call. After the fixed block exits at line 81, the managed byte[] 'data' is unpinned. HarfBuzz's hb_blob_create stores the raw pointer and uses it for the blob's lifetime, but the GC can relocate or collect the array at any time.", "relevance": "direct" },
+      { "file": "binding/HarfBuzzSharp/Blob.cs", "lines": "84-89", "finding": "The private Create method passes the pointer to hb_blob_create with MemoryMode.ReadOnly, which tells HarfBuzz to use the pointer directly without copying. The pointer must remain valid for the blob's lifetime, but the fixed block ensures validity only during the constructor.", "relevance": "direct" },
+      { "file": "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs", "lines": "7295-7304", "finding": "MemoryMode enum: ReadOnly=1 means HarfBuzz does not copy data. Duplicate=0 would make HarfBuzz copy (and be safe), but ReadOnly is explicitly specified.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKData.cs", "lines": "68-73", "finding": "SKData.CreateCopy uses fixed blocks correctly — the native function (sk_data_new_with_copy) copies the data within the fixed block, so the pointer doesn't need to outlive it. This is the correct pattern for when you want to pass managed data to native code.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Allocate unmanaged memory with Marshal.AllocHGlobal, copy stream data into it, and construct the Blob with a release delegate that frees the unmanaged memory.",
+      "Use Blob.FromFile() instead of Blob.FromStream() when loading from a file path."
+    ],
+    "nextQuestions": [
+      "Should this use MemoryMode.Duplicate instead to let HarfBuzz copy the data, avoiding unmanaged allocation entirely?",
+      "PR #3473 needs review — does the edge case handling (non-seekable streams, empty streams) match expectations?"
+    ],
+    "resolution": {
+      "hypothesis": "The fixed block in FromStream only pins the managed byte array during the Blob constructor call. After the method returns, nothing roots or pins the array, so HarfBuzz holds a dangling pointer.",
+      "proposals": [
+        {
+          "title": "Merge PR #3473 (AllocCoTaskMem)",
+          "description": "PR #3473 replaces the managed byte array with unmanaged memory via Marshal.AllocCoTaskMem. The release delegate calls Marshal.FreeCoTaskMem. This is the correct fix — the pointer remains valid for the blob's lifetime and is freed when HarfBuzz destroys the blob.",
+          "confidence": 0.92,
+          "effort": "small"
+        },
+        {
+          "title": "Use MemoryMode.Duplicate",
+          "description": "Change MemoryMode.ReadOnly to MemoryMode.Duplicate so HarfBuzz copies the data internally. Simpler change but incurs an extra copy. The fixed block would be sufficient since hb_blob_create would copy during the constructor call.",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "title": "Workaround: manual unmanaged allocation",
+          "description": "Users can work around by allocating unmanaged memory and creating the Blob manually instead of using FromStream.",
+          "codeSnippet": "var length = (int)(stream.Length - stream.Position);\nvar dataPtr = Marshal.AllocHGlobal(length);\ntry {\n    using var ums = new UnmanagedMemoryStream((byte*)dataPtr, length, length, FileAccess.ReadWrite);\n    stream.CopyTo(ums);\n    var blob = new Blob(dataPtr, length, MemoryMode.ReadOnly, () => Marshal.FreeHGlobal(dataPtr));\n} catch {\n    Marshal.FreeHGlobal(dataPtr);\n    throw;\n}",
+          "confidence": 0.90,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Merge PR #3473 (AllocCoTaskMem)",
+      "recommendedReason": "The reporter already submitted a well-structured PR with tests. It correctly handles non-seekable streams, empty streams, and exception cleanup. Review and merge is the fastest path to resolution."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.95,
+      "reason": "A fix PR (#3473) already exists from the reporter. The bug is confirmed, the fix is correct in approach. Needs code review and merge."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Fix area label from area/SkiaSharp to area/HarfBuzzSharp, remove os/Windows-Classic (affects all platforms)",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": ["type/bug", "area/HarfBuzzSharp", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2323 (same bug reported as a question ~3 years ago)",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 2323
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #3393 (broader GC safety initiative for P/Invokes)",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3393
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, confirm it's a known GC safety issue, note that PR #3473 is ready for review",
+        "risk": "high",
+        "confidence": 0.90,
+        "comment": "Thanks for the detailed analysis and the fix in #3473 — this is a real GC safety bug.\n\nThe `fixed` block in `FromStream` only pins the managed `byte[]` during the `Blob` constructor call. After it exits, HarfBuzz holds a dangling pointer since `MemoryMode.ReadOnly` tells it not to copy. This was also reported in #2323 and confirmed to cause `AccessViolationException` and corrupted glyph data in production.\n\nYour fix using `Marshal.AllocCoTaskMem` is the right approach — it keeps the pointer stable for the blob's lifetime. We'll review #3473."
+      }
+    ]
+  }
+}
