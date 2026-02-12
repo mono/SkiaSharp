@@ -263,6 +263,20 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKRuntimeEffectUniforms (SKRuntimeEffectUniforms effectUniforms)
+		{
+			names = effectUniforms.names.ToArray ();
+			uniforms = effectUniforms.uniforms.ToDictionary (e => e.Key, e => e.Value);
+
+			var dataSize = effectUniforms.data.Size;
+			if (dataSize > 0) {
+				data = SKData.CreateCopy (effectUniforms.data.Data, effectUniforms.data.Size);
+			} else {
+				data = SKData.Empty;
+			}
+			
+		}
+
 		public IReadOnlyList<string> Names =>
 			names;
 
@@ -373,6 +387,12 @@ namespace SkiaSharp
 
 			names = effect.Children.ToArray ();
 			children = new SKObject[names.Length];
+		}
+
+		public SKRuntimeEffectChildren (SKRuntimeEffectChildren effectChildren)
+		{
+			names = effectChildren.names.ToArray ();
+			children = effectChildren.children.ToArray ();
 		}
 
 		public IReadOnlyList<string> Names =>
@@ -640,6 +660,14 @@ namespace SkiaSharp
 			Children = new SKRuntimeEffectChildren (effect);
 		}
 
+		public SKRuntimeEffectBuilder (SKRuntimeEffectBuilder builder)
+		{
+			Effect = builder.Effect;
+
+			Uniforms = new SKRuntimeEffectUniforms (builder.Uniforms);
+			Children = new SKRuntimeEffectChildren (builder.Children);
+		}
+
 		public SKRuntimeEffect Effect { get; }
 
 		public SKRuntimeEffectUniforms Uniforms { get; }
@@ -658,6 +686,11 @@ namespace SkiaSharp
 	{
 		public SKRuntimeShaderBuilder (SKRuntimeEffect effect)
 			: base (effect)
+		{
+		}
+
+		public SKRuntimeShaderBuilder (SKRuntimeShaderBuilder builder)
+			: base (builder)
 		{
 		}
 
