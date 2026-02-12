@@ -1,0 +1,100 @@
+@using SkiaSharp.Triage.Dashboard.Helpers
+@using static SkiaSharp.Triage.Dashboard.Helpers.TriageFormatHelper
+
+        <div class="tab-panel @(ActiveTab == "analysis" ? "active" : "")">
+            <!-- Analysis -->
+            <section class="triage-section analysis-section">
+                <h3>🔬 Analysis</h3>
+                <div class="analysis-summary md-content">
+                    @MarkdownHelper.ToHtml(Issue.Analysis.Summary)
+                </div>
+
+                @if (Issue.Analysis.KeySignals is { Count: > 0 })
+                {
+                    <div class="sidebar-section sidebar-signals">
+                        <h4 title="Direct quotes from the issue that drove triage decisions">Key Signals</h4>
+                        @foreach (var signal in Issue.Analysis.KeySignals)
+                        {
+                            <div class="signal-card">
+                                <blockquote class="signal-quote">"@signal.Text"</blockquote>
+                                <span class="evidence-source">— @signal.Source</span>
+                                <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (Issue.Analysis.CodeInvestigation is { Count: > 0 })
+                {
+                    <div class="sidebar-section sidebar-code-investigation">
+                        <h4 title="Source code files examined during investigation">Code Investigation</h4>
+                        @foreach (var entry in Issue.Analysis.CodeInvestigation)
+                        {
+                            <div class="code-investigation-card">
+                                <div class="code-file-ref">
+                                    <a href="@GetFileUrl(entry)" target="_blank" rel="noopener" title="View on GitHub">
+                                        <code>@entry.File</code>
+                                        @if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
+                                        {
+                                            <span class="code-lines">L@(entry.Lines)</span>
+                                        }
+                                    </a>
+                                    <span class="label label-relevance-@entry.Relevance.ToJsonString()">@FormatLabel(entry.Relevance.ToJsonString())</span>
+                                </div>
+                                <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Finding)</div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (Issue.Analysis.Rationale is not null)
+                {
+                    <div class="sidebar-section sidebar-rationales">
+                        <h4 title="Key reasoning behind classification decisions">Rationale</h4>
+                        <div class="reason-text md-content">@MarkdownHelper.ToHtml(Issue.Analysis.Rationale)</div>
+                    </div>
+                }
+
+                @if (Issue.Analysis.ErrorFingerprint is not null)
+                {
+                    <div class="field-row" style="margin-top: 0.5rem">
+                        <span class="field-label">Error Fingerprint:</span>
+                        <code>@Issue.Analysis.ErrorFingerprint</code>
+                    </div>
+                }
+
+                @if (Issue.Analysis.Workarounds is { Count: > 0 })
+                {
+                    <div class="sidebar-section">
+                        <h4>Workarounds</h4>
+                        <ul>
+                            @foreach (var w in Issue.Analysis.Workarounds)
+                            {
+                                <li class="md-content">@MarkdownHelper.ToHtml(w)</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                @if (Issue.Analysis.NextQuestions is { Count: > 0 })
+                {
+                    <div class="sidebar-section sidebar-uncertainties">
+                        <h4 title="Open questions for investigation">Next Questions</h4>
+                        <ul class="uncertainty-list">
+                            @foreach (var q in Issue.Analysis.NextQuestions)
+                            {
+                                <li>@q</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </section>
+        </div>
+
+@code {
+    [Parameter, EditorRequired] public TriagedIssue Issue { get; set; } = default!;
+    [Parameter] public string ActiveTab { get; set; } = "analysis";
+
+    private string GetFileUrl(CodeInvestigationEntry entry) =>
+        TriageFormatHelper.GetFileUrl(Issue.Meta.Repo, entry);
+}
