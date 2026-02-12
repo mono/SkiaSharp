@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3509,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:31:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3509.json"
+  },
+  "conclusion": "inconclusive",
+  "assessment": "user-error",
+  "notes": "The issue provides no code, no reproduction steps, and no specific error messages — only 'images not appearing'. Created comprehensive tests covering basic image drawing scenarios (DrawBitmap, DrawImage, FromEncodedData, pixel verification). All tests passed on SkiaSharp 2.88.9, 3.116.0, 3.119.2, and main branch, showing images render correctly. Without actual reproduction code from the reporter, cannot determine if there's a real bug or a usage error. Recommend requesting complete reproduction from reporter including actual code, expected vs actual behavior, and platform details.",
+  "blockers": [
+    "No reproduction code provided in issue — only template placeholders",
+    "No specific error messages or symptoms beyond 'images not appearing'",
+    "Cannot verify reporter's exact scenario without their code"
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "All image drawing tests passed. Basic bitmap drawing, image loading from encoded data, and pixel verification all worked correctly."
+    },
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Reporter's version. All tests passed identically to 2.88.9. Images rendered correctly, pixel data verified."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Latest stable release. All tests passed. No rendering issues detected."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Built and tested main branch. SKImageTest suite passed all 51 tests. Image operations work correctly."
+    }
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console app with SkiaSharp 3.116.0 (reporter's version)",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "result": "success",
+      "exitCode": 0,
+      "output": "Console app created, SkiaSharp 3.116.0 package added",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Project file with SkiaSharp reference",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Comprehensive image drawing tests covering DrawBitmap, DrawImage, FromEncodedData, and pixel verification"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run comprehensive image drawing tests with SkiaSharp 3.116.0",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "result": "success",
+      "exitCode": 0,
+      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n✓ Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n✓ Background is white as expected\n\n=== All tests complete ==="
+    },
+    {
+      "stepNumber": 3,
+      "description": "Test with SkiaSharp 2.88.9 (reporter's 'last known good' version)",
+      "layer": "csharp",
+      "command": "dotnet remove package SkiaSharp && dotnet add package SkiaSharp --version 2.88.9 && dotnet run",
+      "result": "success",
+      "exitCode": 0,
+      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n✓ Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n✓ Background is white as expected\n\n=== All tests complete ==="
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with latest stable SkiaSharp release (3.119.2)",
+      "layer": "csharp",
+      "command": "dotnet remove package SkiaSharp && dotnet add package SkiaSharp && dotnet run",
+      "result": "success",
+      "exitCode": 0,
+      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n✓ Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n✓ Background is white as expected\n\n=== All tests complete ==="
+    },
+    {
+      "stepNumber": 5,
+      "description": "Build SkiaSharp test project from main branch source",
+      "layer": "csharp",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj",
+      "result": "success",
+      "exitCode": 0,
+      "output": "Build succeeded with 13 warnings. Test project compiled successfully."
+    },
+    {
+      "stepNumber": 6,
+      "description": "Run SKImageTest suite on main branch (51 tests covering image operations)",
+      "layer": "csharp",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SKImageTest\"",
+      "result": "success",
+      "exitCode": 0,
+      "output": "Passed!  - Failed:     0, Passed:    51, Skipped:     0, Total:    51, Duration: 952 ms"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.0, 2.88.9, 3.119.2, main",
+    "dockerUsed": false
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "reproQuality",
+        "upstream": "Triage marked reproQuality as 'none' and suggested request-info",
+        "corrected": "Confirmed: no reproduction code exists. Created own comprehensive tests — all passed. Issue cannot be verified without reporter's actual code. Triage assessment was correct."
+      }
+    ]
+  }
+}
