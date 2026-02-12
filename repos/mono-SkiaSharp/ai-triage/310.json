@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 310,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T15:00:19Z",
+    "currentLabels": ["type/enhancement", "status/low-priority", "os/Windows-Classic", "area/SkiaSharp.Views"]
+  },
+  "summary": "Re-entrant OnPaint in WinForms SKControl causes ExternalException in Bitmap.UnlockBits. When the user resizes the SKControl from within the PaintSurface event handler, a parent container (DevExpress XtraScrollableControl) can trigger a nested OnPaint call. The re-entrant call disposes and recreates the GDI+ bitmap via CreateBitmap(), so when the outer OnPaint tries to call UnlockBits on the now-disposed bitmap, GDI+ throws. The code still has no re-entrancy guard.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.88 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.98 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "ExternalException",
+      "errorMessage": "A generic error occurred in GDI+.",
+      "stackTrace": "System.Runtime.InteropServices.ExternalException (0x80004005): A generic error occurred in GDI+.\n   at System.Drawing.Bitmap.UnlockBits(BitmapData bitmapdata)\n   at SkiaSharp.Views.Desktop.SKControl.OnPaint(PaintEventArgs e)\n   at System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer)\n   at System.Windows.Forms.Control.WmPaint(Message& m)\n   at System.Windows.Forms.Control.WndProc(Message& m)\n   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)",
+      "reproQuality": "partial"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Place an SKControl inside a scrollable container (e.g., DevExpress XtraScrollableControl)",
+        "Resize the SKControl.Height from within the PaintSurface event handler",
+        "Scroll the container so the SKControl is partially or fully offscreen",
+        "Trigger a content change that causes the height resize during paint"
+      ],
+      "environmentDetails": "Windows, WinForms, .NET Framework (2017-era report)"
+    },
+    "versionAnalysis": {
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKControl.OnPaint code path has not changed since the issue was filed. No re-entrancy guard has been added. The bitmap LockBits/UnlockBits pattern is still identical."
+    }
+  },
+  "analysis": {
+    "summary": "The WinForms SKControl.OnPaint locks a GDI+ bitmap, fires the user's PaintSurface event, then unlocks the bitmap. If the user's PaintSurface handler triggers a re-entrant OnPaint (e.g. by resizing the control, causing a parent container to synchronously repaint), the re-entrant call disposes and recreates the bitmap, and the outer call crashes on UnlockBits. The reporter investigated this thoroughly and confirmed the re-entrancy as the root cause. A simple boolean re-entrancy guard would prevent the crash.",
+    "rationale": "Classified as type/bug (not enhancement) because the control crashes due to lack of defensive coding — re-entrant OnPaint should be handled gracefully, not crash. The current type/enhancement label is incorrect. The area is clearly SkiaSharp.Views (WinForms SKControl). Severity is medium: it's a crash, but only triggered by modifying the control during paint, which is an unusual (though not invalid) pattern. The WPF SKElement has the same Lock/Unlock pattern and could be similarly vulnerable.",
+    "keySignals": [
+      { "text": "OnPaint event is being called from within the OnPaint event (due to my height resize code)", "source": "comment #2", "interpretation": "Re-entrant OnPaint is the root cause. The bitmap is locked in the outer call and disposed/recreated in the inner call." },
+      { "text": "I am changing the SKControl.Height value from within the PaintSurface event, which is inside the bitmap lock/unlock", "source": "comment #1", "interpretation": "The user is resizing during paint, which causes the parent container to trigger a synchronous repaint." },
+      { "text": "It would be easy enough to handle this situation in the SKControl itself so it doesn't crash", "source": "comment #2", "interpretation": "Reporter suggests a defensive fix in SKControl. A re-entrancy guard is straightforward." },
+      { "text": "This issue serves to act as a note for further investigation", "source": "comment #5 (mattleibow)", "interpretation": "Maintainer acknowledged the issue and kept it open for investigation. No fix has been applied since." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs", "lines": "30-57", "finding": "OnPaint calls LockBits (line 43), then OnPaintSurface (line 49), then UnlockBits (line 55). No re-entrancy guard exists. If OnPaintSurface triggers a nested OnPaint, CreateBitmap() (line 38) disposes the locked bitmap and creates a new one, causing UnlockBits to fail on the disposed bitmap.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs", "lines": "72-85", "finding": "CreateBitmap() calls FreeBitmap() which disposes the existing bitmap when size changes. During re-entrant OnPaint after a resize, this disposes the bitmap that is still locked by the outer OnPaint call.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs", "lines": "45-88", "finding": "WPF SKElement uses the same Lock/OnPaintSurface/Unlock pattern with WriteableBitmap. Could be similarly vulnerable to re-entrancy, though WPF's rendering pipeline makes synchronous re-entrant OnRender less likely.", "relevance": "related" }
+    ],
+    "errorFingerprint": "ExternalException-GDI-UnlockBits-SKControl-OnPaint-reentrant",
+    "workarounds": [
+      "Do not resize the SKControl from within the PaintSurface event handler. Calculate layout dimensions separately and apply the resize outside of the paint event.",
+      "Reset the parent scrollable container's scroll position before resizing the SKControl to avoid the parent triggering a synchronous repaint."
+    ],
+    "nextQuestions": [
+      "Should a re-entrancy guard be added to SKControl.OnPaint (e.g. a bool _painting field that causes early return on re-entry)?",
+      "Is the WPF SKElement vulnerable to the same re-entrancy issue?",
+      "Should the bitmap be captured in a local variable before LockBits so UnlockBits always uses the same reference?"
+    ],
+    "resolution": {
+      "hypothesis": "Re-entrant OnPaint disposes the locked bitmap. The outer OnPaint then calls UnlockBits on a disposed bitmap, causing the GDI+ ExternalException.",
+      "proposals": [
+        {
+          "title": "Add re-entrancy guard",
+          "description": "Add a boolean field (_painting) that is set to true at the start of OnPaint and cleared at the end. If OnPaint is called while _painting is true, return immediately. This prevents the nested call from disposing the bitmap.",
+          "codeSnippet": "private bool _painting;\n\nprotected override void OnPaint(PaintEventArgs e)\n{\n    if (designMode || _painting)\n        return;\n    _painting = true;\n    try\n    {\n        // existing OnPaint body\n    }\n    finally\n    {\n        _painting = false;\n    }\n}",
+          "confidence": 0.90,
+          "effort": "trivial"
+        },
+        {
+          "title": "Capture bitmap reference locally",
+          "description": "Store the bitmap reference in a local variable after LockBits. Use the local variable for UnlockBits and DrawImage so that even if CreateBitmap disposes the field, the locked reference remains valid for the outer call to unlock.",
+          "confidence": 0.65,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Add re-entrancy guard",
+      "recommendedReason": "Simplest and most defensive fix. Prevents all re-entrancy issues, not just the bitmap disposal race. Trivial to implement and low risk."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "The root cause is well-understood and the fix is straightforward, but the code hasn't changed since 2017. Needs a developer to add the re-entrancy guard and verify the WPF SKElement isn't similarly affected."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct type from enhancement to bug and add reliability tenet",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug is still present and describe the proposed fix",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the thorough investigation back in 2017, @Craig-TSS — your diagnosis was spot-on.\n\nThe `SKControl.OnPaint` code path still has no re-entrancy guard. The `LockBits` → `OnPaintSurface` → `UnlockBits` sequence is vulnerable whenever a nested `OnPaint` is triggered during the paint event (e.g., by resizing the control from within `PaintSurface`).\n\nHere's a workaround you can use: avoid resizing the control from within the `PaintSurface` handler. Calculate layout dimensions separately and apply resizes outside the paint event.\n\nThe fix on the SkiaSharp side would be a simple re-entrancy guard — a `bool _painting` field that causes `OnPaint` to return immediately if it's already executing. We'll also check whether the WPF `SKElement` has the same vulnerability."
+      }
+    ]
+  }
+}
