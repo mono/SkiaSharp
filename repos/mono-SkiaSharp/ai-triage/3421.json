@@ -3,7 +3,7 @@
     "schemaVersion": "1.0",
     "number": 3421,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-25T12:00:00Z",
+    "analyzedAt": "2025-07-24T20:00:00Z",
     "currentLabels": [
       "type/bug",
       "os/Windows-Classic",
@@ -11,7 +11,7 @@
       "tenet/reliability"
     ]
   },
-  "summary": "User reports that loading a .lottie file via SkiaSharp.Skottie.Animation.Create() returns null silently. The .lottie format (dotLottie) is a ZIP archive containing Lottie JSON and associated assets, while Skottie's parser expects raw Lottie JSON data. The null return is expected behavior — the JSON parser fails because the input is a ZIP binary, not JSON text. The user needs to extract the Lottie JSON from the .lottie archive before passing it to the Skottie API.",
+  "summary": "User reports that calling SkiaSharp.Skottie.Animation.Create() with a .lottie file path returns null silently. The .lottie format is a ZIP-based container (dotLottie), not raw Lottie JSON. Skottie's parser expects JSON input, so a ZIP file fails to parse and returns null by design. The user needs to either download the .json format from LottieFiles or extract the JSON from the .lottie ZIP archive before passing it to the API.",
   "classification": {
     "type": {
       "value": "type/question",
@@ -23,14 +23,17 @@
     },
     "platforms": [
       "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/reliability"
     ]
   },
   "evidence": {
     "reproEvidence": {
       "stepsToReproduce": [
-        "Download a .lottie file from LottieFiles",
+        "Download a .lottie file from LottieFiles (ZIP-based dotLottie format)",
         "Call SkiaSharp.Skottie.Animation.Create(sourceFileAbsolute) with the .lottie file path",
-        "Observe that the returned Animation is null"
+        "Observe that the returned animation is null"
       ],
       "codeSnippets": [
         "var animation = SkiaSharp.Skottie.Animation.Create(sourceFileAbsolute);"
@@ -42,112 +45,147 @@
         },
         {
           "url": "https://github.com/user-attachments/assets/0fe1691c-82ee-462a-a110-f53b0682833f",
-          "description": "Debugger showing Animation.Create returns null"
+          "description": "Debug output showing null animation result"
         }
       ],
       "environmentDetails": "Windows 11 Desktop, Visual Studio (Windows), SkiaSharp 3.116.0"
     },
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": false,
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
     "versionAnalysis": {
       "mentionedVersions": [
         "3.116.0"
-      ]
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The issue is about the .lottie (dotLottie ZIP) format not being supported by Skottie's JSON parser. This is a format limitation, not a version-specific bug, so it applies to all versions including current."
     }
   },
   "analysis": {
-    "summary": "The .lottie file format (dotLottie) is a ZIP archive that packages Lottie JSON animations along with embedded assets (images, fonts). Skottie's Animation.Create() reads the file bytes and passes them directly to the C++ JSON parser (skjson::DOM), which expectsraw JSON text. When given ZIP binary data, the JSON parser fails and returns nullptr, which surfaces as a null Animation in C#. This is working as designed — Skottie supports Lottie JSON format (.json), not the dotLottie container format (.lottie). The user needs to extract the Lottie JSON from the .lottie ZIP archive before loading.",
-    "rationale": "Classified as type/question rather than type/bug because the API is working correctly — it returns null for unparseable input, which is the documented factory-method failure pattern. The .lottie format is a different container format that Skottie does not support, similar to how SKImage.FromEncodedData returns null for unsupported formats. Area is area/skottie since the issue is entirely within the Skottie animation parsing layer. Platform is Windows but the behavior is cross-platform — the .lottie format would fail identically on all platforms.",
+    "summary": "The root cause is a file format mismatch. The .lottie file format (dotLottie) is a ZIP archive containing a Lottie JSON animation and optional assets. Skia's Skottie parser (skottie::Animation::Make) expects raw JSON data. When a ZIP file is passed, the parser fails and returns nullptr, which SkiaSharp surfaces as null. This is not a bug in SkiaSharp — the API is working as designed. The user needs to use the .json format instead of .lottie, or extract the JSON from the ZIP archive.",
+    "rationale": "Classified as type/question rather than type/bug because Animation.Create() is functioning correctly — it parses Lottie JSON, and .lottie (dotLottie) is a different ZIP-based format that requires extraction before parsing. The area is area/SkiaSharp as this involves the Skottie C# binding. The tenet/reliability label is retained because silent null returns without error messaging are a usability concern worth tracking.",
+    "keySignals": [
+      {
+        "text": "Loading a .lottie file results in null Animation",
+        "source": "issue title",
+        "interpretation": "The .lottie extension is critical — this is a dotLottie ZIP container, not a Lottie JSON file. The parser correctly rejects non-JSON input."
+      },
+      {
+        "text": "var animation = SkiaSharp.Skottie.Animation.Create(sourceFileAbsolute);",
+        "source": "issue body code snippet",
+        "interpretation": "The string path overload reads raw bytes and passes to skottie::Animation::Make which expects JSON. No format detection or ZIP extraction occurs."
+      },
+      {
+        "text": "No exception is thrown, so it fails silently",
+        "source": "issue body description",
+        "interpretation": "This is by design — factory methods return null on failure per SkiaSharp conventions. However, silent failure on format mismatch is a usability gap."
+      },
+      {
+        "text": "https://app.lottiefiles.com/animation/5b206184-3c40-4a29-a6c4-0f62df06e4a8",
+        "source": "issue body",
+        "interpretation": "LottieFiles offers both .json (Lottie JSON) and .lottie (dotLottie ZIP) download formats. User downloaded the .lottie variant."
+      }
+    ],
     "codeInvestigation": [
       {
         "file": "binding/SkiaSharp.Skottie/Animation.cs",
         "lines": "91-102",
-        "finding": "Animation.Create(string path) loads the file via SKData.Create(path) and delegates to TryCreate(SKData), which passes raw bytes to skottie_animation_make_from_data. No format detection or decompression is performed — the bytes are sent directly to the JSON parser.",
+        "finding": "Animation.Create(string path) reads file via SKData.Create(path) then calls TryCreate(SKData) which passes raw bytes to skottie_animation_make_from_data. No file extension checking or format detection is performed.",
         "relevance": "direct"
       },
       {
         "file": "binding/SkiaSharp.Skottie/Animation.cs",
         "lines": "77-89",
-        "finding": "TryCreate(SKData) strips any UTF BOM preamble then passes raw bytes to the native skottie_animation_make_from_data function. If the native call returns IntPtr.Zero (nullptr), the method returns null. This is the factory-null-on-failure pattern documented in SkiaSharp conventions.",
+        "finding": "TryCreate(SKData) strips BOM preamble then passes raw bytes to the native parser. A ZIP file (PK header 0x504B) would not match any BOM pattern and would be passed as-is to Skia's JSON parser, which would fail.",
         "relevance": "direct"
       },
       {
-        "file": "externals/skia/modules/skottie/src/Skottie.cpp",
-        "lines": "349-370",
-        "finding": "The C++ Builder::make() function creates a skjson::DOM from the raw data. If the JSON parse fails or the root is not an object, it logs 'Failed to parse JSON input' and returns nullptr. ZIP binary data would fail at this JSON parse step.",
+        "file": "externals/skia/src/c/skottie_animation.cpp",
+        "lines": "24-26",
+        "finding": "skottie_animation_make_from_data calls skottie::Animation::Make(data, length) which parses JSON. Returns nullptr if parsing fails — no exception, no error message.",
         "relevance": "direct"
       },
       {
-        "file": "externals/skia/modules/skottie/src/Skottie.cpp",
-        "lines": "433-438",
-        "finding": "makeFromFile reads the entire file into an SkData then calls make() with raw bytes. No file extension checking or format detection — purely JSON-based parsing.",
+        "file": "binding/SkiaSharp/Util.cs",
+        "lines": "17-34",
+        "finding": "GetPreambleSize handles UTF-8 BOM (0xEF 0xBB 0xBF) and other BOMs. A ZIP file starts with PK (0x50 0x4B) which returns preamble=0, so the full ZIP binary is passed to the JSON parser.",
         "relevance": "related"
       },
       {
         "file": "tests/Tests/Skottie/AnimationTest.cs",
         "lines": "11-16",
-        "finding": "All test files are .json format (LottieLogo1.json, LottieLogo1_bom.json). No .lottie format test files exist, confirming that dotLottie is not a supported format.",
-        "relevance": "context"
+        "finding": "Tests only cover .json Lottie files (LottieLogo1.json and LottieLogo1_bom.json). No .lottie (dotLottie/ZIP) test files exist, confirming the format is not supported.",
+        "relevance": "related"
       }
     ],
+    "errorFingerprint": "Skottie-Animation-null-dotlottie-zip-format",
     "workarounds": [
-      "Extract the Lottie JSON from the .lottie ZIP archive using System.IO.Compression.ZipArchive, then pass the JSON string to Animation.Parse() or the extracted stream to Animation.Create(Stream).",
-      "Download the Lottie JSON format (.json) directly from LottieFiles instead of the .lottie (dotLottie) format — LottieFiles offers both formats on their download panel."
+      "Download the Lottie JSON (.json) format from LottieFiles instead of the .lottie (dotLottie) format. LottieFiles offers both options on its download page.",
+      "Extract the JSON from the .lottie ZIP archive: use System.IO.Compression.ZipArchive to open the .lottie file, read the animations/*.json entry, then pass the extracted JSON string to Animation.Parse()."
     ],
     "nextQuestions": [
-      "Should SkiaSharp add built-in dotLottie (.lottie ZIP) support with automatic extraction?",
-      "Would a clearer error message (instead of silent null) be valuable when non-JSON data is passed to Skottie?"
+      "Should SkiaSharp add native dotLottie (.lottie ZIP) format detection and automatic extraction?",
+      "Should Animation.Create throw a more descriptive exception or log a warning when the input data doesn't look like JSON?"
     ],
     "resolution": {
-      "hypothesis": "The .lottie file is a ZIP archive, not raw JSON. Skottie's parser expects JSON and correctly returns null for non-JSON input. The user needs to either extract the JSON from the archive or download the JSON format directly.",
+      "hypothesis": "The .lottie file is a ZIP archive (dotLottie format), not raw Lottie JSON. Skottie's parser expects JSON and correctly returns null when given non-JSON binary data.",
       "proposals": [
         {
-          "description": "Extract the Lottie JSON from the .lottie ZIP archive programmatically using System.IO.Compression.ZipArchive. The JSON animation file is typically at 'animations/<id>.json' inside the archive. Pass the extracted JSON to Animation.Parse() or Animation.Create(Stream).",
+          "title": "Use .json format instead of .lottie",
+          "description": "Download the Lottie JSON (.json) format from LottieFiles instead of the .lottie (dotLottie) format. The LottieFiles download page offers both formats. The .json file contains raw Lottie JSON that Animation.Create() can parse directly.",
           "confidence": 0.95,
           "effort": "trivial"
         },
         {
-          "description": "Download the Lottie JSON format directly from LottieFiles instead of the .lottie format. The LottieFiles download panel offers both .json and .lottie options.",
-          "confidence": 0.95,
-          "effort": "trivial"
+          "title": "Extract JSON from .lottie ZIP",
+          "description": "If you must use .lottie files, extract the JSON from the ZIP archive before passing it to Skottie. The dotLottie format stores the animation JSON inside the ZIP at a known path.",
+          "codeSnippet": "using System.IO.Compression;\n\nstring ExtractLottieJson(string dotLottiePath)\n{\n    using var archive = ZipFile.OpenRead(dotLottiePath);\n    var entry = archive.Entries.FirstOrDefault(e =>\n        e.FullName.EndsWith(\".json\", StringComparison.OrdinalIgnoreCase)\n        && e.FullName.StartsWith(\"animations/\", StringComparison.OrdinalIgnoreCase));\n    if (entry == null)\n        throw new InvalidOperationException(\"No animation JSON found in .lottie file\");\n    using var stream = entry.Open();\n    using var reader = new StreamReader(stream);\n    return reader.ReadToEnd();\n}\n\n// Usage:\nvar json = ExtractLottieJson(sourceFileAbsolute);\nvar animation = SkiaSharp.Skottie.Animation.Parse(json);",
+          "confidence": 0.85,
+          "effort": "small"
         },
         {
-          "description": "Add dotLottie (.lottie) support to SkiaSharp.Skottie by detecting ZIP magic bytes and auto-extracting the JSON before parsing. This would be a feature enhancement for future versions.",
-          "confidence": 0.6,
+          "title": "Enhancement: Add dotLottie format detection",
+          "description": "SkiaSharp could detect the ZIP/PK magic bytes in Animation.Create and either auto-extract the JSON or throw a descriptive exception like 'The file appears to be a dotLottie (.lottie) ZIP archive. Use a .json Lottie file or extract the JSON first.' This would be a new enhancement, not a bug fix.",
+          "confidence": 0.7,
           "effort": "medium"
         }
-      ]
+      ],
+      "recommendedProposal": "Use .json format instead of .lottie",
+      "recommendedReason": "This is the simplest solution — no code changes required. LottieFiles provides a .json download option alongside .lottie. The .json format is what Skottie was designed to parse."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "close-with-docs",
-      "confidence": 0.85,
-      "reason": "The API is working as designed. The .lottie format is a ZIP container not supported by Skottie, which expects raw Lottie JSON. A clear workaround exists (extract JSON from ZIP or download JSON format directly)."
+      "confidence": 0.82,
+      "reason": "This is a file format misunderstanding, not a bug. The .lottie (dotLottie) format is a ZIP container, and Skottie expects raw Lottie JSON. The user should download the .json format from LottieFiles. A comment explaining the format difference with a workaround would fully resolve the issue."
     },
     "actions": [
       {
         "type": "update-labels",
-        "description": "Reclassify as question about .lottie format support, add skottie area label",
+        "description": "Reclassify from type/bug to type/question — the API is working as designed; the user is using an unsupported file format.",
         "risk": "low",
         "confidence": 0.85,
         "labels": [
-          "type/question",
-          "area/SkiaSharp",
-          "os/Windows-Classic"
+          "type/question"
         ]
       },
       {
         "type": "add-comment",
-        "description": "Explain .lottie vs .json format difference and provide extraction workaround",
+        "description": "Explain the .lottie vs .json format difference and provide a workaround.",
         "risk": "high",
-        "confidence": 0.85,
-        "comment": "Thanks for the report.\n\nThe `.lottie` file format (also called dotLottie) is a ZIP archive that packages the Lottie JSON animation along with embedded assets. SkiaSharp's Skottie module expects raw Lottie JSON data, so passing a `.lottie` file directly will return `null` because the JSON parser can't read ZIP binary data.\n\nHere's a workaround — extract the JSON from the `.lottie` archive before loading:\n\n```csharp\nusing System.IO.Compression;\n\nusing var zip = ZipFile.OpenRead(\"animation.lottie\");\nvar entry = zip.Entries.FirstOrDefault(e => e.FullName.EndsWith(\".json\") && e.FullName.StartsWith(\"animations/\"));\nif (entry != null)\n{\n    using var stream = entry.Open();\n    var animation = SkiaSharp.Skottie.Animation.Create(stream);\n}\n```\n\nAlternatively, LottieFiles offers a direct JSON download option — choosing the `.json` format instead of `.lottie` on their download panel will give you a file that works directly with `Animation.Create()`.\n\nNote that embedded assets (images referenced by the animation) may not load when using the extracted JSON alone — you may need to set up a `ResourceProvider` via `AnimationBuilder` to resolve those."
+        "confidence": 0.9,
+        "comment": "Thanks for the report.\n\nThe `.lottie` file format (dotLottie) is actually a ZIP archive that contains a Lottie JSON animation inside it — it's not raw JSON. SkiaSharp's Skottie parser expects raw Lottie JSON data, so passing a `.lottie` file directly to `Animation.Create()` will return `null` because the ZIP binary isn't valid JSON.\n\nHere's a workaround you can use: on the LottieFiles download page, choose the **Lottie JSON** (`.json`) format instead of the `.lottie` format. The `.json` file will work directly with `Animation.Create()`.\n\nIf you need to work with `.lottie` files specifically, you can extract the JSON from the ZIP archive first:\n\n```csharp\nusing System.IO.Compression;\n\nusing var archive = ZipFile.OpenRead(dotLottiePath);\nvar entry = archive.Entries.FirstOrDefault(e =>\n    e.FullName.EndsWith(\".json\", StringComparison.OrdinalIgnoreCase)\n    && e.FullName.StartsWith(\"animations/\", StringComparison.OrdinalIgnoreCase));\n\nusing var stream = entry.Open();\nusing var reader = new StreamReader(stream);\nvar json = reader.ReadToEnd();\n\nvar animation = SkiaSharp.Skottie.Animation.Parse(json);\n```\n\nWe may consider adding dotLottie format detection in the future to provide a more helpful error message."
       },
       {
         "type": "link-related",
-        "description": "Cross-reference #3242 which is a related but different Skottie rendering issue",
+        "description": "Link to issue #2166 which also dealt with Skottie returning null due to data format issues (BOM).",
         "risk": "low",
         "confidence": 0.7,
-        "linkedIssue": 3242
+        "linkedIssue": 2166
       }
     ]
   }
