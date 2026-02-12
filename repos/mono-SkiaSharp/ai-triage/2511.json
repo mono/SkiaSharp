@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2511,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:00:00Z",
+    "currentLabels": []
+  },
+  "summary": "AccessViolationException in NonAlertableWin32Lock.EnterCriticalSection during finalizer-driven handle deregistration on WinForms app close \u2014 duplicate of #2194, fixed in v2.88.1 by #2195",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": false,
+      "errorType": "crash",
+      "errorMessage": "System.AccessViolationException: An attempt was made to read or write protected memory.",
+      "stackTrace": "at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterCriticalSection(IntPtr lpCriticalSection)\n   at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterWriteLock()\n   at SkiaSharp.HandleDictionary.DeregisterHandle(IntPtr handle, SKObject instance)\n   at SkiaSharp.SKObject.DeregisterHandle(IntPtr handle, SKObject instance)\n   at SkiaSharp.SKObject.set_Handle(IntPtr value)\n   at SkiaSharp.SKNativeObject.Dispose(Boolean disposing)\n   at SkiaSharp.SKNativeObject.Finalize()",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run a WinForms application that uses SkiaSharp",
+        "Close the application",
+        "Observe AccessViolationException in the finalizer thread"
+      ],
+      "environmentDetails": "Windows, WinForms application",
+      "relatedIssues": [
+        2194,
+        2195,
+        1383,
+        1817
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Fixed in v2.88.1 by PR #2195. The current code in PlatformLock.cs includes null-checks before entering/leaving the critical section. Reporter did not mention a version, but the stack trace exactly matches the known bug #2194 that was fixed."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.92,
+      "reason": "PR #2195 (commit dc54fa5cd) added null-checks for _cs before calling EnterCriticalSection/LeaveCriticalSection, preventing the crash when the NonAlertableWin32Lock finalizer runs before SKObject finalizers during app shutdown. The fix was included in v2.88.1.",
+      "relatedPRs": [
+        2195
+      ],
+      "fixedInVersion": "2.88.1"
+    }
+  },
+  "analysis": {
+    "summary": "Classic finalizer ordering bug on Windows. During WinForms app shutdown, the GC finalizes both SKObject instances and the static NonAlertableWin32Lock. If the lock's finalizer runs first (deleting the CRITICAL_SECTION native memory), subsequent SKObject finalizers crash when trying to enter the already-freed critical section during handle deregistration. This exact bug was reported as #2194 and fixed by #2195 in v2.88.1.",
+    "rationale": "The stack trace is identical to #2194: Finalize \u2192 Dispose(false) \u2192 set_Handle(Zero) \u2192 DeregisterHandle \u2192 EnterWriteLock \u2192 EnterCriticalSection. This is a known finalizer ordering race condition specific to the Win32 CRITICAL_SECTION lock used on Windows (introduced to fix #1383's STA re-entrancy issue). The reporter does not mention a SkiaSharp version, but since the fix shipped in v2.88.1 (August 2022) and this was reported June 2023, they were likely on v2.88.0 or earlier. The current code has the null-check guard from #2195. Classified as type/bug, area/SkiaSharp (HandleDictionary/PlatformLock is core infrastructure), Windows-Classic (WinForms), medium severity (crash on exit, not during normal operation).",
+    "keySignals": [
+      {
+        "text": "at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterCriticalSection(IntPtr lpCriticalSection)",
+        "source": "issue body",
+        "interpretation": "Crash in the Win32 CRITICAL_SECTION P/Invoke \u2014 the native memory backing the critical section has been freed by the NonAlertableWin32Lock finalizer before this SKObject's finalizer ran."
+      },
+      {
+        "text": "at SkiaSharp.SKNativeObject.Finalize()",
+        "source": "issue body",
+        "interpretation": "Crash occurs during GC finalization, not during normal operation. This is a finalizer ordering problem during app shutdown."
+      },
+      {
+        "text": "When I close my winform program, this error will be reported",
+        "source": "issue body",
+        "interpretation": "Trigger is app close \u2014 AppDomain unload causes non-deterministic finalizer ordering, explaining the race condition."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/PlatformLock.cs",
+        "lines": "99-174",
+        "finding": "NonAlertableWin32Lock allocates a CRITICAL_SECTION via Marshal.AllocHGlobal in the constructor and frees it in the finalizer (~NonAlertableWin32Lock). The Enter() method (line 122) now has a null-check 'if (_cs != IntPtr.Zero)' before calling EnterCriticalSection \u2014 this is the fix from PR #2195. Without this check (pre-v2.88.1), the freed pointer would be passed directly to EnterCriticalSection, causing the exact AccessViolationException in the reporter's stack trace.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/HandleDictionary.cs",
+        "lines": "176-227",
+        "finding": "DeregisterHandle calls instancesLock.EnterWriteLock() (line 184). The instancesLock is a static readonly field (line 27) created by PlatformLock.Create(). During AppDomain unload, the static NonAlertableWin32Lock instance can be finalized before all SKObject instances that reference it through the static dictionary.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "59-70",
+        "finding": "SKObject.Handle setter: when set to IntPtr.Zero (during disposal), it first calls DeregisterHandle(Handle, this) which triggers the lock acquisition. This is the entry point from the Dispose path into the lock that crashes.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "229-234",
+        "finding": "SKNativeObject finalizer sets fromFinalizer=true then calls Dispose(false), which sets Handle=IntPtr.Zero, triggering DeregisterHandle. This confirms the crash path originates from GC finalization.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Upgrade to SkiaSharp v2.88.1 or later, which includes the fix from PR #2195",
+      "Explicitly dispose all SkiaSharp objects before the application exits to avoid finalizer-based cleanup"
+    ],
+    "nextQuestions": [
+      "What SkiaSharp version was the reporter using? If v2.88.1+ then the TOCTOU race in the null-check is still theoretically possible."
+    ],
+    "resolution": {
+      "hypothesis": "The reporter was using a SkiaSharp version prior to v2.88.1 which lacked the null-check guard in NonAlertableWin32Lock.Enter(). During WinForms app shutdown, non-deterministic finalizer ordering caused the CRITICAL_SECTION to be freed before all SKObjects were finalized.",
+      "proposals": [
+        {
+          "title": "Upgrade SkiaSharp to v2.88.1+",
+          "description": "Upgrade to SkiaSharp v2.88.1 or later which includes the null-check fix from PR #2195. This prevents the AccessViolationException by skipping the critical section entry when the lock has already been finalized.",
+          "confidence": 0.92,
+          "effort": "trivial"
+        },
+        {
+          "title": "Explicit disposal before exit",
+          "description": "Dispose all SkiaSharp objects explicitly (via using statements or Dispose() calls) before the application exits. This avoids relying on the GC finalizer, which has non-deterministic ordering during AppDomain unload.",
+          "confidence": 0.8,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Upgrade SkiaSharp to v2.88.1+",
+      "recommendedReason": "The fix is trivial (NuGet version bump) and directly addresses the root cause. The fix has been shipping since August 2022."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-duplicate",
+      "confidence": 0.92,
+      "reason": "Identical stack trace and root cause as #2194, fixed by PR #2195 in v2.88.1. Reporter provided no version info but the crash signature matches exactly. Issue was already closed with no comments."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core area, and Windows labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "link-duplicate",
+        "description": "Mark as duplicate of #2194 \u2014 same AccessViolationException in NonAlertableWin32Lock finalizer race",
+        "risk": "medium",
+        "confidence": 0.92,
+        "linkedIssue": 2194
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation of the known issue and the fix version",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for reporting this. This is a known finalizer ordering issue on Windows where the native CRITICAL_SECTION used by SkiaSharp's handle dictionary can be freed before all SkiaSharp objects are finalized during app shutdown.\n\nThis was fixed in SkiaSharp v2.88.1 (PR #2195). If you're on an earlier version, upgrading should resolve the crash. As a general best practice, explicitly disposing SkiaSharp objects (via `using` statements) before your application exits will also prevent finalizer-related issues.\n\nClosing as duplicate of #2194."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as duplicate of #2194",
+        "risk": "medium",
+        "confidence": 0.9
+      }
+    ]
+  }
+}
