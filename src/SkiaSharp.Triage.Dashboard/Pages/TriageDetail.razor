@@ -19,20 +19,8 @@ else if (_issue is null && _repro is null && _fix is null)
 else
 {
     <!-- Navigation Bar -->
-    <div class="triage-detail-nav">
-        <a href="@BackUrl" class="btn-back">← Back to list</a>
-        <div class="nav-position">
-            @if (_prevNumber is not null)
-            {
-                <a href="@DetailUrl(_prevNumber.Value)" class="btn-prev">← #@_prevNumber</a>
-            }
-            <span class="nav-counter">@(_currentIndex + 1) of @_totalCount</span>
-            @if (_nextNumber is not null)
-            {
-                <a href="@DetailUrl(_nextNumber.Value)" class="btn-next">#@_nextNumber →</a>
-            }
-        </div>
-    </div>
+    <TriageDetailNav BackUrl="@BackUrl" PrevNumber="@_prevNumber" NextNumber="@_nextNumber" 
+                     CurrentIndex="@_currentIndex" TotalCount="@_totalCount" DetailUrl="@DetailUrl" />
 
     <!-- Header -->
     <div class="triage-detail-header">
@@ -1044,20 +1032,8 @@ else
     }
 
     <!-- Bottom Navigation -->
-    <div class="triage-detail-nav bottom-nav">
-        <a href="@BackUrl" class="btn-back">← Back to list</a>
-        <div class="nav-position">
-            @if (_prevNumber is not null)
-            {
-                <a href="@DetailUrl(_prevNumber.Value)" class="btn-prev">← #@_prevNumber</a>
-            }
-            <span class="nav-counter">@(_currentIndex + 1) of @_totalCount</span>
-            @if (_nextNumber is not null)
-            {
-                <a href="@DetailUrl(_nextNumber.Value)" class="btn-next">#@_nextNumber →</a>
-            }
-        </div>
-    </div>
+    <TriageDetailNav BackUrl="@BackUrl" PrevNumber="@_prevNumber" NextNumber="@_nextNumber" 
+                     CurrentIndex="@_currentIndex" TotalCount="@_totalCount" DetailUrl="@DetailUrl" IsBottom="true" />
 }
 
 @code {

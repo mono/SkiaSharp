@@ -1,0 +1,24 @@
+<div class="triage-detail-nav @(IsBottom ? "bottom-nav" : "")">
+    <a href="@BackUrl" class="btn-back">← Back to list</a>
+    <div class="nav-position">
+        @if (PrevNumber is not null)
+        {
+            <a href="@DetailUrl(PrevNumber.Value)" class="btn-prev">← #@PrevNumber</a>
+        }
+        <span class="nav-counter">@(CurrentIndex + 1) of @TotalCount</span>
+        @if (NextNumber is not null)
+        {
+            <a href="@DetailUrl(NextNumber.Value)" class="btn-next">#@NextNumber →</a>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string BackUrl { get; set; } = "triage";
+    [Parameter] public int? PrevNumber { get; set; }
+    [Parameter] public int? NextNumber { get; set; }
+    [Parameter] public int CurrentIndex { get; set; }
+    [Parameter] public int TotalCount { get; set; }
+    [Parameter] public Func<int, string> DetailUrl { get; set; } = n => $"triage/{n}";
+    [Parameter] public bool IsBottom { get; set; }
+}
