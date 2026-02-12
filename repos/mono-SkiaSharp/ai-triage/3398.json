@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3398,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T16:30:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "tenet/reliability"]
+  },
+  "summary": "Intermittent native crash in sk_canvas_draw_path when Mapsui calls GetMapInfo during PointerMoved events on Avalonia desktop",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.65 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.75 },
+    "platforms": ["os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": false,
+      "errorType": "crash",
+      "errorMessage": "Unhandled exception in sk_canvas_draw_path — process terminated",
+      "stackTrace": "at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)\nat SkiaSharp.SKCanvas.DrawPath(SKPath, SKPaint)\nat Mapsui.Rendering.Skia.Extensions.SkCanvasExtensions.DrawPath(...)\nat Mapsui.Rendering.Skia.LineStringRenderer.Draw(...)\nat Mapsui.Rendering.Skia.MapRenderer.GetMapInfo(...)\nat Mapsui.UI.Avalonia.MapControl.GetMapInfo(...)\nat FlightControlViewModel.MapControl_PointerMoved(...)",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net9.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create Avalonia desktop app using Mapsui with SkiaSharp rendering",
+        "Call GetMapInfo() from PointerMoved event handler",
+        "Move pointer rapidly over map — crash occurs intermittently"
+      ],
+      "environmentDetails": ".NET 9.0.7 (CoreCLR 9.0.725.31616), Windows 11, Avalonia 11.3.7",
+      "screenshots": [
+        { "url": "https://github.com/user-attachments/assets/cf361924-61d3-4773-9689-b4c36b927b71", "description": "Error dialog showing crash" },
+        { "url": "https://github.com/user-attachments/assets/40e7de45-62b9-42bf-9c05-7073203d9258", "description": "Application crash details" }
+      ],
+      "relatedIssues": [3393, 3394, 1168, 1180]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.8", "2.88.9"],
+      "workedIn": "2.88.9",
+      "currentRelevance": "likely",
+      "relevanceReason": "Reporter selected 3.116.0 in template but Comment 2 says 'SkiaSharp.dll version is 2.88.8.0'. Mapsui may be pinned to 2.88.x. The P/Invoke GC safety issue (#3393) affects all versions."
+    }
+  },
+  "analysis": {
+    "summary": "Intermittent native crash in sk_canvas_draw_path during high-frequency PointerMoved events. Two likely root causes: (1) SkiaSharp's known missing GC.KeepAlive calls in P/Invoke wrappers (#3393), where GC can collect SKPath/SKPaint during the native call; (2) Mapsui threading issues — GetMapInfo renders to a canvas concurrently with the main render loop. The intermittent nature and high-frequency event trigger strongly suggest GC pressure causing premature collection.",
+    "rationale": "Classified as type/bug with moderate confidence because #3393 documents a real SkiaSharp P/Invoke safety gap that directly affects this code path (DrawPath extracts Handle IntPtrs without GC.KeepAlive). However, the crash may also be caused by Mapsui's own threading model — calling GetMapInfo from PointerMoved while the render loop is active could share SKCanvas/SKPath/SKPaint across threads. Area is core SkiaSharp since the crash is in the P/Invoke layer, not in a views package. Severity is medium: the crash is intermittent and requires specific Mapsui usage patterns to trigger.",
+    "keySignals": [
+      { "text": "always collapse when drawing graphics, Occasionally, it does not necessarily appear, but it appears frequently", "source": "issue body", "interpretation": "Intermittent crash — classic symptom of race condition or GC timing issue, not a deterministic bug." },
+      { "text": "at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)", "source": "comment 3 stack trace", "interpretation": "Crash in native P/Invoke — the managed IntPtr handles may point to freed memory if GC collected the source objects." },
+      { "text": "the SkiaSharp.dll version is 2.88.8.0", "source": "comment 2", "interpretation": "Contradicts the 3.116.0 selection in template. Reporter may be using an older SkiaSharp via Mapsui's dependency." },
+      { "text": "The crash indeed occurred during the process of using MapInfo's query GetMapInfo(). It was retrieving MapInfo in the PointerMoved event.", "source": "issue body", "interpretation": "High-frequency event causing concurrent rendering — GetMapInfo draws features to a canvas to hit-test, potentially racing with the main render loop." },
+      { "text": "Looks more like a Mapsui issue? There's doesn't look like there's anything here that suggests that SkiaSharp is at fault...", "source": "comment 4 (molesmoke)", "interpretation": "Community agrees this may be a Mapsui usage issue, not a SkiaSharp defect." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "405-412", "finding": "DrawPath checks for null path/paint but does NOT call GC.KeepAlive after P/Invoke. Once Handle IntPtrs are extracted, the GC can collect the managed objects and finalize them, freeing native memory mid-call.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKObject.cs", "lines": "229-276", "finding": "SKNativeObject has a ~finalizer that calls Dispose(false), which sets Handle to IntPtr.Zero and calls DisposeNative(). If GC finalizes during P/Invoke, native handle is freed.", "relevance": "direct" },
+      { "file": "externals/skia/src/c/sk_canvas.cpp", "lines": "180-182", "finding": "sk_canvas_draw_path dereferences all three pointers (canvas, path, paint) without null checks — passing freed/zeroed handles causes undefined behavior (crash).", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Throttle or debounce GetMapInfo calls in PointerMoved to reduce GC pressure and concurrent access",
+      "Add lock/synchronization around Mapsui canvas operations to prevent concurrent draw calls",
+      "Report issue to Mapsui — their rendering code should use GC.KeepAlive or hold references during P/Invoke-heavy operations"
+    ],
+    "nextQuestions": [
+      "Is the actual SkiaSharp version 2.88.8 or 3.116.0? The reporter contradicts themselves.",
+      "Does Mapsui's GetMapInfo share canvas/path/paint objects with the main render loop?",
+      "Would the GC.KeepAlive fix in PR #3394 prevent this crash?"
+    ],
+    "errorFingerprint": "sk_canvas_draw_path:intermittent:PointerMoved:Mapsui",
+    "resolution": {
+      "hypothesis": "The GC collects SKPath or SKPaint during the sk_canvas_draw_path P/Invoke call because no GC.KeepAlive holds them alive after Handle extraction. Under GC pressure from rapid PointerMoved events, the finalizer frees native memory mid-call, causing the crash. Alternatively, Mapsui may be sharing SkiaSharp objects across threads without synchronization.",
+      "proposals": [
+        {
+          "title": "Throttle GetMapInfo in PointerMoved",
+          "description": "Reduce call frequency to lower GC pressure and avoid concurrent canvas access. Add a simple throttle or debounce to the PointerMoved handler.",
+          "codeSnippet": "private DateTime _lastMapInfo = DateTime.MinValue;\nprivate void MapControl_PointerMoved(object sender, PointerEventArgs e)\n{\n    if ((DateTime.UtcNow - _lastMapInfo).TotalMilliseconds < 100)\n        return;\n    _lastMapInfo = DateTime.UtcNow;\n    var mapInfo = MapControl.GetMapInfo(screenPosition);\n}",
+          "confidence": 0.60,
+          "effort": "trivial"
+        },
+        {
+          "title": "Report to Mapsui for thread-safety review",
+          "description": "Mapsui's GetMapInfo renders features to a canvas from the PointerMoved event while the main render loop may also be drawing. SKCanvas/SKPath/SKPaint are NOT thread-safe. Mapsui should synchronize access or use separate objects per thread.",
+          "confidence": 0.70,
+          "effort": "medium"
+        },
+        {
+          "title": "SkiaSharp GC.KeepAlive fix (PR #3394)",
+          "description": "PR #3394 adds GC.KeepAlive calls after P/Invoke methods to prevent premature GC collection. This would protect DrawPath and similar calls from the race between GC finalization and native execution.",
+          "confidence": 0.55,
+          "effort": "large"
+        }
+      ],
+      "recommendedProposal": "Throttle GetMapInfo in PointerMoved",
+      "recommendedReason": "Simplest immediate fix the reporter can apply. Reduces both GC pressure and concurrent access risk. The deeper fixes (Mapsui thread-safety, SkiaSharp GC.KeepAlive) require upstream changes."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.75,
+      "reason": "Version confusion (2.88.8 vs 3.116.0) needs clarification. The crash is likely caused by Mapsui's threading model and/or SkiaSharp's P/Invoke GC safety gap, but we need the actual version and whether Mapsui synchronizes canvas access."
+    },
+    "missingInfo": [
+      "Exact SkiaSharp version in use — the reporter says both 3.116.0 and 2.88.8.0",
+      "Whether Mapsui's GetMapInfo and main render loop share SKCanvas/SKPath/SKPaint objects",
+      "Whether the issue reproduces without GetMapInfo in PointerMoved"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels already correct — type/bug, os/Windows-Classic, tenet/reliability are applied",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis explaining likely causes and workaround",
+        "risk": "high",
+        "confidence": 0.70,
+        "comment": "Thanks for the stack trace — that helps narrow things down.\n\nThe crash in `sk_canvas_draw_path` during `PointerMoved` → `GetMapInfo` suggests one of two issues:\n\n1. **Threading**: Mapsui's `GetMapInfo` draws features to a canvas to hit-test. If the main render loop is also drawing at the same time, `SKCanvas`, `SKPath`, and `SKPaint` are being shared across threads — these types are [not thread-safe](https://learn.microsoft.com/en-us/dotnet/api/skiasharp.skcanvas). The intermittent nature is consistent with a race condition.\n\n2. **GC collection during P/Invoke**: Under GC pressure (rapid PointerMoved calls), the .NET GC can collect managed SkiaSharp objects while their native handles are still in use (#3393). PR #3394 addresses this.\n\nA quick thing to try: **throttle your `GetMapInfo` calls** in the `PointerMoved` handler to reduce both GC pressure and the chance of concurrent canvas access:\n\n```csharp\nprivate DateTime _lastMapInfo = DateTime.MinValue;\nprivate void MapControl_PointerMoved(object sender, PointerEventArgs e)\n{\n    if ((DateTime.UtcNow - _lastMapInfo).TotalMilliseconds < 100)\n        return;\n    _lastMapInfo = DateTime.UtcNow;\n    // your GetMapInfo call here\n}\n```\n\nAlso — could you clarify which SkiaSharp version you're actually using? You selected 3.116.0 in the template, but Comment 2 mentions `SkiaSharp.dll version is 2.88.8.0`. If Mapsui is pinning to 2.88.x, that's important to know.\n\nThis may also be worth reporting to the Mapsui project, as the rendering path in their `GetMapInfo` may need synchronization."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the P/Invoke GC safety issue",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 3393
+      }
+    ]
+  }
+}
