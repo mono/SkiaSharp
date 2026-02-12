@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 243,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T14:56:44Z",
+    "currentLabels": ["os/Windows-Classic", "area/Build", "type/feature-request"]
+  },
+  "summary": "Feature request to bundle ANGLE (OpenGL ES over DirectX) with SkiaSharp for Windows desktop runtimes (WPF/WinForms). Originally filed for Win7 with DX9 support, the discussion evolved into how SkiaSharp could ship GPU-accelerated views for classic Windows desktop by packaging ANGLE as a separate NuGet dependency. SkiaSharp already has ANGLE interop code (GRGlInterface.CreateAngle, AngleSwapChainPanel for WinUI) and a Direct3D backend (GRContext.CreateDirect3D), but no GPU-accelerated views ship for WPF/WinForms.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.80 },
+    "platforms": ["os/Windows-Classic"],
+    "backends": ["backend/OpenGL", "backend/Direct3D"],
+    "tenets": ["tenet/performance"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "screenshots": [
+        { "url": "https://i.imgur.com/DZWkJdg.png", "description": "ANGLE DX9 rendering support diagram" }
+      ],
+      "relatedIssues": [2817, 2996, 2104, 2968]
+    },
+    "versionAnalysis": {
+      "currentRelevance": "likely",
+      "relevanceReason": "SkiaSharp still has no GPU-accelerated views for WPF/WinForms. The ANGLE interop exists in WinUI views only. While Win7 is EOL, the broader need for GPU rendering on classic Windows desktop remains. The D3D backend exists but isn't surfaced in views."
+    }
+  },
+  "analysis": {
+    "summary": "This is a long-standing feature request to ship ANGLE with SkiaSharp for Windows desktop. SkiaSharp already has significant ANGLE infrastructure (GRGlInterface.CreateAngle, AngleSwapChainPanel, GlesContext/Egl interop) but only for WinUI/UWP. WPF/WinForms views use raster-only rendering. Since filing, Skia gained a native Direct3D backend (GRContext.CreateDirect3D), which could be an alternative to ANGLE for GPU-accelerated desktop views. The maintainer discussed packaging ANGLE as a separate NuGet but noted DLL conflict concerns with AMD's system-wide libEGL.dll.",
+    "rationale": "Classified as feature-request because no current SkiaSharp API or packaging is broken — the request is for new capability (GPU views for WPF/WinForms). Area is SkiaSharp.Views rather than Build because the core deliverable is GPU-accelerated view controls, not just packaging ANGLE. The existing label area/Build reflects the original framing but the discussion shows this is really about shipping new view infrastructure. Windows-Classic platform and OpenGL+Direct3D backends reflect the target surface area.",
+    "keySignals": [
+      { "text": "Angle has support even for DX9-based rendering which is preinstalled on Win7", "source": "issue body", "interpretation": "Original motivation was Win7 GPU support via ANGLE's DX9 backend." },
+      { "text": "Packaging ANGLE as a separate package and referencing it from WPF/Winforms views should work", "source": "comment by kekekeks (2020-04-25)", "interpretation": "Avalonia maintainer confirms the packaging approach is viable." },
+      { "text": "AMD ships their own libEGL.dll in system32. Including ANGLE with Skia will break users who are using AMD EGL implementation", "source": "comment by kekekeks (2020-04-25)", "interpretation": "DLL naming conflicts are a real deployment risk that needs design work." },
+      { "text": "Maybe skia will get a DX backend - I see some work on that now", "source": "comment by mattleibow (2020-04-25)", "interpretation": "Skia's native D3D backend has since materialized (GRContext.CreateDirect3D exists), providing an alternative path." },
+      { "text": "GRGlInterface.Create() falls back to CreateAngle() on Windows", "source": "code search: binding/SkiaSharp/GRGlInterface.cs:28", "interpretation": "ANGLE GL interface creation is already built into SkiaSharp's API surface — the gap is packaging and view controls." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/GRGlInterface.cs", "lines": "27-48", "finding": "GRGlInterface.Create() already falls back to CreateAngle() on Windows. CreateAngle() loads ANGLE's libEGL/libGLESv2 via AngleLoader. The API exists but requires the ANGLE DLLs to be present at runtime.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs", "lines": "1-307", "finding": "Full ANGLE SwapChainPanel implementation exists for WinUI — creates GlesContext, manages render loop, handles composition scale. This is the model for what a WPF/WinForms equivalent would look like.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/Egl.cs", "lines": "60-80", "finding": "Complete EGL interop with ANGLE-specific constants (D3D9, D3D11, WARP device types). Infrastructure for ANGLE is mature.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/GRContext.cs", "lines": "66-79", "finding": "GRContext.CreateDirect3D exists with GRD3DBackendContext. This provides a native D3D12 path that could bypass ANGLE entirely for GPU rendering on Windows.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/GRD3DBackendContext.cs", "lines": "1-37", "finding": "D3D backend context wraps IDXGIAdapter, ID3D12Device, and ID3D12CommandQueue — full D3D12 interop is available.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs", "lines": "1-50", "finding": "WinForms SKControl uses System.Drawing.Bitmap (raster only) — no GPU path exists. This is the gap the feature request targets.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Use GRGlInterface.CreateAngle() with manually-supplied ANGLE DLLs (libEGL.dll, libGLESv2.dll) in the output directory",
+      "Use GRContext.CreateDirect3D() with a manually-created D3D12 device for GPU-accelerated rendering without ANGLE",
+      "Use Avalonia.Angle.Windows.Natives NuGet package to supply ANGLE binaries (as referenced in the discussion)"
+    ],
+    "nextQuestions": [
+      "Should the solution use ANGLE (OpenGL ES over DX) or Skia's native Direct3D12 backend?",
+      "Should ANGLE be a separate NuGet package or bundled with views?",
+      "How to handle DLL naming conflicts with AMD's system libEGL.dll?",
+      "Is a cross-platform GPU view (#2104) the right umbrella for this work?"
+    ],
+    "resolution": {
+      "hypothesis": "SkiaSharp needs GPU-accelerated view controls for WPF/WinForms. Two viable paths exist: (1) package ANGLE as a separate NuGet and create ANGLE-based views mirroring AngleSwapChainPanel, or (2) use Skia's native D3D12 backend via GRContext.CreateDirect3D to build D3D-native views without ANGLE.",
+      "proposals": [
+        {
+          "title": "Native D3D12 backend views",
+          "description": "Build GPU-accelerated WPF/WinForms views using GRContext.CreateDirect3D (already in SkiaSharp API). This avoids ANGLE entirely and uses Skia's native D3D12 support. Requires creating D3D12 device/queue in the view and managing swap chains via DXGI.",
+          "confidence": 0.65,
+          "effort": "large"
+        },
+        {
+          "title": "Separate ANGLE NuGet package",
+          "description": "Package ANGLE binaries as SkiaSharp.NativeAssets.ANGLE NuGet, referenced by WPF/WinForms view packages. Mirror the AngleSwapChainPanel pattern for WPF/WinForms hosting. Address DLL conflicts by loading from app-local directory.",
+          "confidence": 0.60,
+          "effort": "large"
+        },
+        {
+          "title": "Use third-party ANGLE package",
+          "description": "Document using Avalonia.Angle.Windows.Natives or similar third-party ANGLE NuGet with GRGlInterface.CreateAngle() for GPU rendering in WPF/WinForms. Low effort workaround users can apply today.",
+          "confidence": 0.50,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Native D3D12 backend views",
+      "recommendedReason": "Skia's native D3D12 backend avoids the ANGLE dependency, DLL conflict issues, and the maintenance burden of shipping ANGLE. It's the modern path forward for GPU rendering on Windows, aligned with #2817 and #2104."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Legitimate feature gap — no GPU-accelerated views for WPF/WinForms. The underlying infrastructure (ANGLE interop, D3D backend) exists but isn't surfaced in view controls. Related to #2104 (cross-platform GPU views) which is the likely umbrella for this work."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update area label from Build to Views — the feature is about GPU view controls, not build packaging",
+        "risk": "low",
+        "confidence": 0.80,
+        "labels": ["type/feature-request", "area/SkiaSharp.Views", "os/Windows-Classic", "backend/OpenGL", "backend/Direct3D", "tenet/performance"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with #2104 (cross-platform GPU backend views) — this is a subset of that work",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 2104
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with #2817 (Direct3D support) — D3D backend is an alternative approach",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 2817
+      }
+    ]
+  }
+}
