@@ -1,0 +1,119 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 425,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T15:09:01Z",
+    "currentLabels": ["type/bug", "status/skia-update-required"]
+  },
+  "summary": "SKCodecOrigin (now SKEncodedOrigin) returns TopLeft for DNG and CR2 RAW files instead of their actual EXIF orientation",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.90 }
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "wrong-output",
+      "errorMessage": "SKCodecOrigin reports TopLeft for DNG/CR2 files that have non-TopLeft EXIF orientation",
+      "reproQuality": "complete",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open a DNG or CR2 file with SKCodec.Create()",
+        "Read codec.EncodedOrigin (formerly codec.Origin)",
+        "Observe it returns TopLeft regardless of actual EXIF orientation",
+        "Compare with Chrome browser which correctly auto-orients these files"
+      ],
+      "environmentDetails": "Cross-platform, all SkiaSharp versions",
+      "attachments": [
+        { "url": "https://github.com/mono/SkiaSharp/files/1616452/APC_0316.zip", "filename": "APC_0316.zip", "description": "DNG sample with incorrect orientation" },
+        { "url": "https://github.com/mono/SkiaSharp/files/1616453/APC_0193.zip", "filename": "APC_0193.zip", "description": "DNG sample with incorrect orientation" },
+        { "url": "https://github.com/mono/SkiaSharp/files/1645431/IMG_1361.zip", "filename": "IMG_1361.zip", "description": "CR2 sample reported as TopLeft but should be LeftBottom" }
+      ],
+      "relatedIssues": [836]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SkRawCodec constructor still does not pass EXIF orientation to the base SkCodec class. The default kTopLeft_SkEncodedOrigin is hardcoded in the SkCodec base constructor signature."
+    }
+  },
+  "analysis": {
+    "summary": "Skia's SkRawCodec constructor does not extract or pass EXIF orientation data from DNG/CR2 files. The base SkCodec constructor defaults the origin parameter to kTopLeft_SkEncodedOrigin when not provided. Only JPEG and WebP codecs parse and pass EXIF orientation.",
+    "rationale": "This is confirmed as a bug by the maintainer. The reporter provides sample DNG and CR2 files and demonstrates that SKCodecOrigin always returns TopLeft. The root cause is in upstream Skia's SkRawCodec, not in SkiaSharp's C# bindings — the C# wrapper correctly exposes whatever value Skia returns. The existing label status/skia-update-required is accurate. Severity is low because RAW file orientation is a niche use case and workarounds exist (read EXIF manually).",
+    "keySignals": [
+      { "text": "The following sample code results in SKCodecOrigin.TopLeft, which is incorrect", "source": "issue body", "interpretation": "Reporter confirms the origin value is wrong for DNG files." },
+      { "text": "not limited to just dng. Here's a sample cr2 that is also affected. It is reported as TopLeft but it should be LeftBottom", "source": "comment 1 by OP", "interpretation": "Bug affects multiple RAW formats, not just DNG. Confirms expected value (LeftBottom vs TopLeft)." },
+      { "text": "the DNG codec ignores this. The only ones that appear to respect this are jpeg and webp", "source": "comment 2 by mattleibow", "interpretation": "Maintainer confirms this is an upstream Skia limitation in the RAW codec." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKCodec.cs", "lines": "36-37", "finding": "SKCodec.EncodedOrigin directly wraps sk_codec_get_origin(). The C# binding is correct — it faithfully returns whatever Skia reports.", "relevance": "context" },
+      { "file": "externals/skia/src/codec/SkRawCodec.cpp", "lines": "826-831", "finding": "SkRawCodec constructor calls INHERITED(SkEncodedInfo::Make(...), skcms_PixelFormat_RGBA_8888, nullptr) — only 3 args. The 4th param (SkEncodedOrigin) defaults to kTopLeft_SkEncodedOrigin. This is the root cause.", "relevance": "direct" },
+      { "file": "externals/skia/include/codec/SkCodec.h", "lines": "765-768", "finding": "SkCodec constructor has default parameter SkEncodedOrigin = kTopLeft_SkEncodedOrigin, confirming RAW codec never provides orientation.", "relevance": "direct" },
+      { "file": "externals/skia/src/codec/SkJpegCodec.cpp", "lines": "245-250", "finding": "SkJpegCodec correctly parses EXIF orientation via SkParseEncodedOrigin and passes it to the base SkCodec constructor. This is the model for how RAW should work.", "relevance": "related" },
+      { "file": "externals/skia/src/codec/SkRawCodec.cpp", "lines": "456-642", "finding": "SkDngImage class has access to dng_negative (fNegative) which contains EXIF metadata after SynchronizeMetadata(). The orientation could potentially be extracted from fNegative but is not implemented.", "relevance": "direct" },
+      { "file": "externals/skia/src/codec/SkRawCodec.cpp", "lines": "649-715", "finding": "MakeFromStream has a PIEX fast path that returns SkJpegCodec for JPEG-compressed previews (which WOULD have correct orientation). The bug only manifests when the full DNG decode path is used (line 714).", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Use a separate EXIF library (e.g., MetadataExtractor for .NET) to read orientation from DNG/CR2 files, then apply the rotation transform manually using SKCanvas",
+      "For DNG files with embedded JPEG previews, extract the preview JPEG and decode that instead — it will report correct orientation via the JPEG codec path"
+    ],
+    "nextQuestions": [
+      "Does the DNG SDK expose orientation metadata via dng_negative that could be passed to the SkCodec base constructor?",
+      "Would an upstream Skia patch be accepted to extract orientation in SkRawCodec?",
+      "Does the PIEX fast path (returning SkJpegCodec) correctly handle orientation for the reporter's specific files?"
+    ],
+    "resolution": {
+      "hypothesis": "SkRawCodec in Skia does not extract EXIF orientation from DNG/CR2 metadata and does not pass it to the base SkCodec constructor, causing it to default to TopLeft for all RAW files.",
+      "proposals": [
+        {
+          "title": "Use MetadataExtractor to read EXIF orientation",
+          "description": "Install the MetadataExtractor NuGet package to read EXIF orientation from RAW files independently, then use the orientation value to transform the decoded image.",
+          "codeSnippet": "// NuGet: MetadataExtractor\nusing MetadataExtractor;\nusing MetadataExtractor.Formats.Exif;\n\nvar directories = ImageMetadataReader.ReadMetadata(path);\nvar ifd0 = directories.OfType<ExifIfd0Directory>().FirstOrDefault();\nif (ifd0 != null && ifd0.TryGetUInt16(ExifDirectoryBase.TagOrientation, out var orientation))\n{\n    var origin = (SKEncodedOrigin)orientation;\n    // Use origin to apply the correct rotation transform\n}",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Upstream Skia fix to SkRawCodec",
+          "description": "Modify SkRawCodec to extract EXIF orientation from the DNG SDK's dng_negative metadata after SynchronizeMetadata(), then pass it to the SkCodec base constructor. This matches the pattern used by SkJpegCodec.",
+          "confidence": 0.70,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Use MetadataExtractor to read EXIF orientation",
+      "recommendedReason": "This workaround is independent of the upstream Skia fix and gives the reporter a solution today. The upstream fix requires changes to Skia's SkRawCodec which is outside SkiaSharp's direct control."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.90,
+      "reason": "Confirmed bug in Skia's SkRawCodec — the orientation is never extracted from DNG/CR2 EXIF metadata. Requires changes in upstream Skia code. The existing status/skia-update-required label is already correct."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/libSkiaSharp.native to existing labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/libSkiaSharp.native", "status/skia-update-required"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workaround using MetadataExtractor for EXIF orientation",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the detailed report and sample files.\n\nThis is a limitation in Skia's RAW codec (`SkRawCodec`). The codec does not extract EXIF orientation from DNG or CR2 metadata — it always defaults to `TopLeft`. By contrast, the JPEG and WebP codecs do parse EXIF orientation correctly.\n\nAs a workaround, you can use a .NET EXIF library like [MetadataExtractor](https://www.nuget.org/packages/MetadataExtractor) to read the orientation independently:\n\n```csharp\nusing MetadataExtractor;\nusing MetadataExtractor.Formats.Exif;\n\nvar directories = ImageMetadataReader.ReadMetadata(path);\nvar ifd0 = directories.OfType<ExifIfd0Directory>().FirstOrDefault();\nif (ifd0 != null && ifd0.TryGetUInt16(ExifDirectoryBase.TagOrientation, out var orientation))\n{\n    var origin = (SKEncodedOrigin)orientation;\n    // Use origin to apply the correct rotation transform\n}\n```\n\nA proper fix would require changes to Skia's `SkRawCodec` to extract orientation from the DNG SDK metadata and pass it to the base codec constructor."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #836 (Image auto orientation method) — related feature request for auto-orient",
+        "risk": "low",
+        "confidence": 0.70,
+        "linkedIssue": 836
+      }
+    ]
+  }
+}
