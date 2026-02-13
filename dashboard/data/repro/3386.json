@@ -3,150 +3,182 @@
     "schemaVersion": "1.0",
     "number": 3386,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T19:01:50Z"
+    "analyzedAt": "2026-02-13T16:20:00Z"
   },
   "conclusion": "reproduced",
-  "notes": "Reproduced the fontconfig dependency error when both NativeAssets.Linux and NativeAssets.Linux.NoDependencies packages are present. The .NET publish process selects the standard Linux binary (8.6M, requires fontconfig) instead of the NoDependencies binary (8.5M, zero dependencies). In Azure Container Apps deployed via .NET Aspire, the standard binary is loaded but fontconfig is missing, causing DllNotFoundException. Version 3.119.2\u002B handles the missing fontconfig more gracefully (shows warning but continues) vs 3.116.0 which crashes.",
+  "notes": "Reproduced the DllNotFoundException with libfontconfig.so.1 error. Root cause: when both SkiaSharp.NativeAssets.Linux and SkiaSharp.NativeAssets.Linux.NoDependencies are referenced (directly or transitively), both packages deploy to the same runtimes/linux-x64/native/libSkiaSharp.so path. NuGet/MSBuild conflict resolution picks the standard (fontconfig-dependent) binary over the NoDependencies variant. MD5 verification confirmed the deployed binary matches the standard package, not NoDependencies. When only NoDependencies is referenced, the correct binary is deployed and works without fontconfig. The reporter\u0027s .NET Aspire deployment likely pulls in NativeAssets.Linux transitively, triggering the conflict. Issue persists on latest 3.119.2. Phase 3C skipped \u2014 this is a NuGet packaging conflict, not a runtime code bug; building from source doesn\u0027t test package binary resolution.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create standalone console app with reporter\u0027s version (3.116.0) and NoDependencies package only",
+      "description": "Create console project with SkiaSharp \u002B NoDependencies ONLY (no NativeAssets.Linux) and run in Docker without fontconfig \u2014 baseline test",
       "layer": "setup",
-      "command": "dotnet new console -n Repro --framework net9.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.116.0 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux.NoDependencies --version 3.116.0",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:9.0 bash -c \u0027dotnet new console -n Repro --framework net9.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.116.0 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux.NoDependencies --version 3.116.0 \u0026\u0026 dotnet publish -c Release -o /tmp/pub \u0026\u0026 cd /tmp/pub \u0026\u0026 dotnet Repro.dll\u0027",
       "exitCode": 0,
-      "output": "Created console project, added SkiaSharp 3.116.0 and NativeAssets.Linux.NoDependencies 3.116.0",
+      "output": "Arch: X64\nOS: Debian GNU/Linux 12 (bookworm)\nBitmap: 100x100\nSUCCESS: NoDependencies-only publish works",
       "filesCreated": [
         {
           "filename": "Repro.csproj",
-          "description": "Project file with NoDependencies package reference",
-          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet9.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.0\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00223.116.0\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+          "description": "Console project with SkiaSharp \u002B NoDependencies only",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet9.0\u003C/TargetFramework\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.0\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00223.116.0\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
         },
         {
           "filename": "Program.cs",
-          "description": "Test code that creates a bitmap to trigger native library loading",
-          "content": "using SkiaSharp;\n\nConsole.WriteLine(\u0022Testing SkiaSharp with NativeAssets.Linux.NoDependencies\u0022);\nConsole.WriteLine($\u0022SkiaSharp Version: {typeof(SKBitmap).Assembly.GetName().Version}\u0022);\n\ntry\n{\n    using var bitmap = new SKBitmap(100, 100);\n    using var canvas = new SKCanvas(bitmap);\n    using var paint = new SKPaint { Color = SKColors.Red };\n    canvas.DrawRect(new SKRect(0, 0, 100, 100), paint);\n    Console.WriteLine(\u0022SUCCESS: Created and drew on bitmap\u0022);\n    Console.WriteLine($\u0022Bitmap size: {bitmap.Width}x{bitmap.Height}\u0022);\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022FAILURE: {ex.GetType().Name}: {ex.Message}\u0022);\n    if (ex.InnerException != null)\n    {\n        Console.WriteLine($\u0022Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\u0022);\n    }\n    return 1;\n}\nreturn 0;"
+          "description": "Minimal SkiaSharp usage to test native loading",
+          "content": "using System;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\u0022Arch: {RuntimeInformation.ProcessArchitecture}\u0022);\nConsole.WriteLine($\u0022OS: {RuntimeInformation.OSDescription}\u0022);\n\ntry\n{\n    using var bitmap = new SKBitmap(100, 100);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.Red);\n    Console.WriteLine($\u0022Bitmap: {bitmap.Width}x{bitmap.Height}\u0022);\n    Console.WriteLine(\u0022SUCCESS: SkiaSharp loaded and drew successfully\u0022);\n}\ncatch (Exception ex)\n{\n    Console.Error.WriteLine($\u0022FAILED: {ex.GetType().Name}: {ex.Message}\u0022);\n    if (ex.InnerException != null)\n        Console.Error.WriteLine($\u0022Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\u0022);\n    Environment.Exit(1);\n}"
         }
       ],
-      "result": "skip"
-    },
-    {
-      "stepNumber": 2,
-      "description": "Test with NoDependencies only (baseline - should work)",
-      "layer": "deployment",
-      "command": "docker build -t repro-3386:nodeps . \u0026\u0026 docker run --rm repro-3386:nodeps",
-      "exitCode": 0,
-      "output": "Testing SkiaSharp with NativeAssets.Linux.NoDependencies\nSkiaSharp Version: 3.116.0.0\nSUCCESS: Created and drew on bitmap\nBitmap size: 100x100",
       "result": "success"
     },
     {
-      "stepNumber": 3,
-      "description": "Create conflict scenario - add BOTH NativeAssets.Linux.NoDependencies AND NativeAssets.Linux",
-      "layer": "setup",
-      "command": "dotnet add package SkiaSharp.NativeAssets.Linux --version 3.116.0",
-      "exitCode": 0,
-      "output": "Added SkiaSharp.NativeAssets.Linux 3.116.0 to project",
-      "result": "skip"
-    },
-    {
-      "stepNumber": 4,
-      "description": "Publish with both packages and verify which binary wins",
+      "stepNumber": 2,
+      "description": "Create console project with BOTH NativeAssets.Linux AND NoDependencies (simulating transitive conflict), publish, and run in Docker without fontconfig",
       "layer": "deployment",
-      "command": "dotnet publish -c Release -r linux-x64 --self-contained false -o publish \u0026\u0026 ls -lh publish/libSkiaSharp.so",
-      "exitCode": 0,
-      "output": "-rwxr--r--  1 matthew  wheel   8.6M Dec  2  2024 publish/libSkiaSharp.so",
-      "result": "wrong-output"
-    },
-    {
-      "stepNumber": 5,
-      "description": "Run in Linux container (conflict scenario - reproduces the bug)",
-      "layer": "deployment",
-      "command": "docker build -t repro-3386:conflict . \u0026\u0026 docker run --rm repro-3386:conflict",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:9.0 bash -c \u0027dotnet new console -n Repro --framework net9.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.116.0 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux --version 3.116.0 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux.NoDependencies --version 3.116.0 \u0026\u0026 dotnet publish -c Release -o /tmp/pub \u0026\u0026 cd /tmp/pub \u0026\u0026 dotnet Repro.dll\u0027",
       "exitCode": 1,
-      "output": "Testing SkiaSharp with NativeAssets.Linux.NoDependencies\nSkiaSharp Version: 3.116.0.0\nFAILURE: TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\nInner: DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider using a tool like strace. If you\u0027re using glibc, consider setting the LD_DEBUG environment variable: \nlibfontconfig.so.1: cannot open shared object file: No such file or directory",
+      "output": "FAILED: TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\nInner: DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider using a tool like strace. If you\u0027re using glibc, consider setting the LD_DEBUG environment variable: \nlibfontconfig.so.1: cannot open shared object file: No such file or directory\n/usr/share/dotnet/shared/Microsoft.NETCore.App/9.0.12/libSkiaSharp.so: cannot open shared object file: No such file or directory\n/tmp/pub2/libSkiaSharp.so: cannot open shared object file: No such file or directory",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project with BOTH NativeAssets.Linux and NoDependencies (conflict scenario)",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet9.0\u003C/TargetFramework\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.0\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00223.116.0\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00223.116.0\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        }
+      ],
       "result": "failure"
     },
     {
-      "stepNumber": 6,
-      "description": "Update to latest stable (3.119.2) and retest conflict scenario",
-      "layer": "csharp",
-      "command": "dotnet add package SkiaSharp \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux.NoDependencies \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux \u0026\u0026 docker build -t repro-3386:latest . \u0026\u0026 docker run --rm repro-3386:latest",
+      "stepNumber": 3,
+      "description": "Verify which binary was deployed by comparing MD5 hashes of deployed vs package binaries",
+      "layer": "deployment",
+      "command": "md5sum comparison of deployed libSkiaSharp.so vs NuGet cache copies",
       "exitCode": 0,
-      "output": "Testing SkiaSharp with NativeAssets.Linux.NoDependencies\nSkiaSharp Version: 3.119.0.0\nFontconfig error: Cannot load default config file\nSUCCESS: Created and drew on bitmap\nBitmap size: 100x100",
-      "result": "wrong-output"
+      "output": "Deployed:       683aadb006ab0e899c38437e8c91a2db (matches Standard)\nNoDependencies: cfa254a44a2674ad456704264f6a422f\nStandard:       683aadb006ab0e899c38437e8c91a2db\nRESULT: Standard (fontconfig-dependent) binary WINS\n\nFile sizes:\n  NoDependencies: 8,956,592 bytes (no fontconfig dep)\n  Standard:       8,977,424 bytes (depends on fontconfig)\n\nldd output: libfontconfig.so.1 =\u003E not found",
+      "result": "success"
     },
     {
-      "stepNumber": 7,
-      "description": "Build and test SkiaSharp from main branch",
-      "layer": "native",
-      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \u0026\u0026 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \u0022FullyQualifiedName~SKBitmapTest.ReleaseBitmapPixelsWasInvoked\u0022",
+      "stepNumber": 4,
+      "description": "Phase 3B: Test same conflict scenario with latest SkiaSharp 3.119.2",
+      "layer": "deployment",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:9.0 bash -c \u0027... dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux --version 3.119.2 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux.NoDependencies --version 3.119.2 \u0026\u0026 dotnet publish -c Release -o /tmp/pub \u0026\u0026 cd /tmp/pub \u0026\u0026 dotnet Repro.dll\u0027",
+      "exitCode": 1,
+      "output": "FAILED: TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\nInner: DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies.\nlibfontconfig.so.1: cannot open shared object file: No such file or directory\n\nMD5 verification: Standard binary wins over NoDependencies on 3.119.2 as well.",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify no transitive NativeAssets.Linux from SkiaSharp alone \u2014 confirm the conflict requires external package or Aspire to bring it in",
+      "layer": "deployment",
+      "command": "dotnet list package --include-transitive (with SkiaSharp \u002B NoDependencies only)",
       "exitCode": 0,
-      "output": "Build succeeded.\nPassed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1",
+      "output": "Top-level:\n  SkiaSharp 3.116.0\n  SkiaSharp.NativeAssets.Linux.NoDependencies 3.116.0\nTransitive:\n  SkiaSharp.NativeAssets.macOS 3.116.0\n  SkiaSharp.NativeAssets.Win32 3.116.0\n\nNo transitive NativeAssets.Linux \u2014 conflict must come from another source (Aspire or another package).",
       "result": "success"
     }
   ],
   "environment": {
-    "os": "macOS (Darwin arm64) - testing via Docker linux/amd64 containers",
-    "arch": "arm64 host, amd64 containers",
-    "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "3.116.0, 3.119.2, main",
-    "dockerUsed": true
+    "os": "Linux (Docker, Debian 12 bookworm)",
+    "arch": "x64",
+    "dotnetVersion": "9.0.12",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": true,
+    "dotnetSdkVersion": "9.0.310"
   },
   "inputs": {
     "triageFile": "ai-triage/3386.json"
   },
   "assessment": "likely-bug",
-  "reproductionTime": "~45 minutes",
+  "scope": "platform-specific/linux",
+  "reproductionTime": "~20 minutes",
   "versionResults": [
     {
       "version": "3.116.0",
       "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "NoDependencies-only: works without fontconfig. Correct binary deployed.",
+      "platform": "docker-linux-x64"
+    },
+    {
+      "version": "3.116.0",
+      "source": "nuget",
       "result": "reproduced",
-      "notes": "Crashes with DllNotFoundException when standard Linux binary is deployed without fontconfig"
+      "notes": "Both NativeAssets.Linux \u002B NoDependencies: standard binary wins, fails without fontconfig. MD5 confirmed wrong binary deployed.",
+      "platform": "docker-linux-x64"
     },
     {
       "version": "3.119.2",
       "source": "nuget",
-      "result": "wrong-output",
-      "notes": "Shows \u0027Fontconfig error\u0027 warning but continues. Binary selection issue persists but runtime is more resilient."
-    },
-    {
-      "version": "main (source)",
-      "source": "source",
-      "result": "not-tested",
-      "notes": "Packaging behavior unchanged on main - this is a deployment/MSBuild RID resolution issue, not a code defect. The conflict pattern would persist in any version when both native asset packages are present."
+      "result": "reproduced",
+      "notes": "Same conflict on latest version. Standard binary still wins over NoDependencies.",
+      "platform": "docker-linux-x64"
     }
   ],
   "reproProject": {
-    "type": "console",
+    "type": "docker",
     "tfm": "net9.0",
     "packages": [
       {
         "name": "SkiaSharp",
-        "version": "3.116.0 / 3.119.2"
-      },
-      {
-        "name": "SkiaSharp.NativeAssets.Linux.NoDependencies",
-        "version": "3.116.0 / 3.119.2"
+        "version": "3.116.0"
       },
       {
         "name": "SkiaSharp.NativeAssets.Linux",
-        "version": "3.116.0 / 3.119.2"
+        "version": "3.116.0"
+      },
+      {
+        "name": "SkiaSharp.NativeAssets.Linux.NoDependencies",
+        "version": "3.116.0"
       }
     ]
   },
   "errorMessages": {
-    "primaryError": "DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies - libfontconfig.so.1: cannot open shared object file: No such file or directory",
-    "stackTrace": "System.DllNotFoundException: libfontconfig.so.1: cannot open shared object file: No such file or directory\n  at SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates procs)\n  at SkiaSharp.SKAbstractManagedStream..cctor()",
+    "primaryError": "DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. libfontconfig.so.1: cannot open shared object file: No such file or directory",
+    "stackTrace": "System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\n ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies.\nlibfontconfig.so.1: cannot open shared object file: No such file or directory",
     "additionalErrors": [
-      "Fontconfig error: Cannot load default config file (v3.119.2\u002B warning)"
+      "When both NativeAssets.Linux and NoDependencies are referenced, NuGet deploys the standard (fontconfig-dependent) binary at runtimes/linux-x64/native/libSkiaSharp.so, overwriting the NoDependencies variant"
     ]
   },
   "feedback": {
     "triageCorrections": [
       {
-        "topic": "resolution",
-        "upstream": "Triage suggests closing with documentation or investigating Aspire",
-        "corrected": "Confirmed as packaging conflict that affects any deployment where both NativeAssets.Linux and NoDependencies are in the dependency graph. The issue is that MSBuild/NuGet RID resolution prefers the standard package over NoDependencies when both target the same runtime path. This is not specific to Aspire - it affects any publish scenario with both packages present."
+        "topic": "classification",
+        "upstream": "Triage classified as isRegression: false",
+        "corrected": "Confirmed not a regression \u2014 this is a NuGet binary conflict resolution issue when both NativeAssets.Linux and NoDependencies target the same runtimes/ path."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for the detailed report and workaround!\n\nWe\u0027ve confirmed the underlying issue. When both \u0060SkiaSharp.NativeAssets.Linux\u0060 and \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 are present in the dependency graph (even transitively), both packages deploy to the same \u0060runtimes/linux-x64/native/libSkiaSharp.so\u0060 path. NuGet/MSBuild conflict resolution picks the standard (fontconfig-dependent) binary over the NoDependencies variant.\n\n**Evidence:**\n- MD5 hash of the deployed binary matches the standard \u0060NativeAssets.Linux\u0060 package, NOT the \u0060NoDependencies\u0060 package\n- \u0060ldd\u0060 confirms the deployed binary requires \u0060libfontconfig.so.1\u0060\n- When only \u0060NoDependencies\u0060 is referenced (no \u0060NativeAssets.Linux\u0060), the correct binary IS deployed and works without fontconfig\n\n**Tested versions:**\n\n| Version | NoDependencies Only | Both Packages |\n|---------|-------------------|---------------|\n| 3.116.0 | \u2705 Works | \u274C Wrong binary deployed |\n| 3.119.2 | \u2705 Works | \u274C Wrong binary deployed |\n\nThe .NET Aspire deployment likely introduces \u0060NativeAssets.Linux\u0060 as a transitive dependency, triggering this conflict.\n\n**Workarounds:**\n1. Switch to \u0060SkiaSharp.NativeAssets.Linux\u0060 \u002B install fontconfig in the container (\u0060apt-get install -y libfontconfig1\u0060)\n2. Use a custom base image: \u0060ghcr.io/avantipoint/aspnet-skia:9.0\u0060\n3. Exclude the conflicting package: \u0060\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 ExcludeAssets=\u0022all\u0022 /\u003E\u0060",
+      "summary": "Reproduced: NuGet binary conflict when both NativeAssets.Linux and NoDependencies are referenced"
+    },
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Reproduced on both 3.116.0 and 3.119.2 (latest). The binary conflict when both NativeAssets.Linux and NoDependencies are referenced is a packaging issue in SkiaSharp \u2014 both packages deploy to the same runtimes/linux-x64/native/ path and MSBuild picks the standard binary. While the reporter\u0027s direct references don\u0027t cause a conflict, .NET Aspire or transitive dependencies may introduce NativeAssets.Linux. SkiaSharp should investigate making the packages mutually exclusive or ensuring NoDependencies wins in conflict."
+    },
+    "workarounds": [
+      "Use SkiaSharp.NativeAssets.Linux (not NoDependencies) and install fontconfig in the container: apt-get install -y libfontconfig1",
+      "Use a custom base image with native deps pre-installed: ghcr.io/avantipoint/aspnet-skia:9.0",
+      "Exclude NativeAssets.Linux if it\u0027s a transitive dependency: \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 ExcludeAssets=\u0022all\u0022 /\u003E"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correct \u2014 type/bug, os/Linux, area/libSkiaSharp.native, tenet/compatibility",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "os/Linux",
+          "area/libSkiaSharp.native",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference similar container/binary deployment issue #2438",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 2438
       }
     ]
   }
