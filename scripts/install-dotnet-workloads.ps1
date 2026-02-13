@@ -20,38 +20,22 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # which must run before official workloads change the workload state.
 Write-Host "Installing Tizen workloads..."
 New-Item -ItemType Directory -Force './output/tmp' | Out-Null
-$tizenInstallFailed = $false
-$tizenErrorOutput = ""
 if ($IsLinux -or $IsMacOS) {
   Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile './output/tmp/workload-install.sh'
-  $tizenOutput = bash output/tmp/workload-install.sh --version "$Tizen" 2>&1
-  $tizenExitCode = $LASTEXITCODE
-  Write-Host $tizenOutput
-  # Check for failure indicators in output (Samsung script may not set exit code properly)
-  if ($tizenOutput -match "failed|error|not found" -and $tizenOutput -notmatch "0 Error") {
-    $tizenInstallFailed = $true
-    $tizenErrorOutput = $tizenOutput
+  bash output/tmp/workload-install.sh --version "$Tizen"
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "##[error]Tizen workload installation failed with exit code $LASTEXITCODE"
+    exit $LASTEXITCODE
   }
 } else {
   Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile './output/tmp/workload-install.ps1'
-  try {
-    ./output/tmp/workload-install.ps1 -Version "$Tizen"
-  } catch {
-    $tizenInstallFailed = $true
-    $tizenErrorOutput = $_.Exception.Message
+  ./output/tmp/workload-install.ps1 -Version "$Tizen"
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host "##[error]Tizen workload installation failed with exit code $LASTEXITCODE"
+    exit $LASTEXITCODE
   }
-  $tizenExitCode = $LASTEXITCODE
 }
 Write-Host "Done installing Tizen workload $Tizen"
-
-if ($tizenExitCode -ne 0) {
-  Write-Host "##[error]Tizen workload installation failed with exit code $tizenExitCode"
-  exit $tizenExitCode
-}
-if ($tizenInstallFailed) {
-  Write-Host "##[error]Tizen workload installation failed: $tizenErrorOutput"
-  exit 1
-}
 
 # Diagnostic: show manifest directory for debugging
 $dotnetRoot = (Get-Command dotnet).Source | Split-Path
