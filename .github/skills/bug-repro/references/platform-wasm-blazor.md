@@ -161,10 +161,6 @@ Then verify with Playwright (same as Phase 3A Run & Verify):
 2. Check browser console for errors or `SUCCESS` markers
 3. Take screenshot if visual verification needed
 
-**⚠️ Do NOT use console tests for WASM bugs.** A console test passing tells you nothing about
-WASM native binary initialization, browser-side rendering, or Blazor component integration.
-The Blazor sample tests the actual WASM pipeline from source.
-
 If you need to test the reporter's specific code, temporarily modify
 `samples/Basic/BlazorWebAssembly/SkiaSharpSample/Pages/Raster.razor`, then revert with
 `git checkout` after recording the result.

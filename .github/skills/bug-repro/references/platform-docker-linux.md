@@ -43,7 +43,7 @@ dotnet run --runtime linux-x64 --no-self-contained 2>&1
 - `net6.0` → `sdk:6.0`
 - `net8.0` → `sdk:8.0`
 - `net9.0` → `sdk:9.0`
-- `net10.0` → `sdk:10.0` (or `sdk:10.0-preview` if not yet GA)
+- `net10.0` → `sdk:10.0`
 
 ## Required Dependencies
 
