@@ -3,84 +3,105 @@
     "schemaVersion": "1.0",
     "number": 3430,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T19:24:30Z"
+    "analyzedAt": "2026-02-13T15:40:00Z"
   },
   "inputs": {
     "triageFile": "ai-triage/3430.json"
   },
-  "conclusion": "reproduced",
+  "conclusion": "needs-platform",
+  "notes": "Code analysis confirms the design flaw in SKXamlCanvas.Skia.cs: FreeBitmap() at line 118 couples two independent resource lifecycles by unconditionally nulling both pixels and bitmap when pixels != null. This means any call to FreeBitmap() for pixel buffer cleanup also destroys the bitmap. While the simple sequential resize path doesn't trigger the NRE (because the second FreeBitmap at line 106 is a no-op when pixels was already nulled by the first at line 87), the NRE likely manifests through Uno Platform's runtime behavior — re-entrant DoInvalidate during the Background property setter at line 101, or async WriteableBitmap initialization on the Skia backend. Runtime reproduction requires an Uno Platform app on a Skia backend (WASM, Desktop), which is not available in the current environment. PR #3431 by the same reporter correctly fixes this by separating FreePixels() from FreeBitmap().",
   "assessment": "likely-bug",
-  "notes": "Bug confirmed via code inspection and PR #3431 review. The FreeBitmap() method at lines 118-126 couples two independent resource lifecycles (GCHandle-pinned pixel buffer and WriteableBitmap). In CreateBitmap(), when canvas resizes, line 87 calls FreeBitmap() for bitmap size mismatch, then line 91 creates a new bitmap, then line 106 calls FreeBitmap() for pixel size mismatch. The second call is intended to free pixels, but because FreeBitmap() unconditionally nulls BOTH pixels and bitmap (line 124), the bitmap may be destroyed. PR #3431 correctly fixes this by splitting into FreePixels() and FreeBitmap() and reordering the checks (pixels first, then bitmap).",
+  "scope": "unknown",
   "reproductionTime": "~15 minutes",
-  "environment": {
-    "os": "Darwin",
-    "arch": "arm64",
-    "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "main",
-    "dockerUsed": false
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-tested",
+      "platform": "host-macos-arm64",
+      "notes": "Reporter's version. Cannot test without Uno Platform runtime."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "platform": "host-macos-arm64",
+      "notes": "Code on main is identical to 3.116.0 — the bug has not been fixed (PR #3431 is unmerged)."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0",
+    "packages": []
   },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Examine source code SKXamlCanvas.Skia.cs to identify the bug",
+      "description": "Analyze SKXamlCanvas.Skia.cs source code to verify the reported resource coupling flaw in FreeBitmap()",
       "layer": "csharp",
-      "command": "view source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs:68-126",
-      "result": "failure",
-      "output": "CODE INSPECTION RESULT: Bug confirmed at lines 118-126.\n\nFreeBitmap() implementation:\n```csharp\nprivate void FreeBitmap()\n{\n    if (pixels != null)\n    {\n        pixelsHandle.Free();\n        pixels = null;\n        bitmap = null;  // ⚠️ BUG: Unconditionally nulls bitmap when freeing pixels\n    }\n}\n```\n\nCreateBitmap() calls FreeBitmap() twice (lines 87 and 106):\n1. Line 86-87: bitmap size mismatch → FreeBitmap()\n2. Line 91: Create new bitmap\n3. Line 104-106: pixel size mismatch → FreeBitmap() AGAIN\n\nThe second call couples two independent lifecycles (pixels and bitmap), potentially nulling the bitmap created at line 91. This causes NullReferenceException at line 72 when DoInvalidate() accesses bitmap.PixelBuffer.AsStream().",
-      "filesCreated": []
+      "filesCreated": [
+        {
+          "filename": "SKXamlCanvas.Skia.cs (source analysis)",
+          "description": "The FreeBitmap() method at line 118-126 nulls both pixels and bitmap when pixels != null. CreateBitmap() calls FreeBitmap() at line 87 (bitmap size check) and again at line 106 (pixel size check). The second call can destroy a bitmap that was just created at lines 89-102."
+        }
+      ],
+      "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Examine PR #3431 fix submitted by issue reporter",
-      "layer": "csharp",
-      "command": "gh pr diff 3431 --repo mono/SkiaSharp",
-      "result": "success",
+      "description": "Create console simulation of the exact CreateBitmap/FreeBitmap logic to test if the NRE triggers in simple sequential execution",
+      "layer": "setup",
+      "command": "cd /tmp/repro-3430 && dotnet new console -n Repro --framework net10.0",
       "exitCode": 0,
-      "output": "PR #3431 by MartinZikmund (issue reporter) provides the correct fix:\n\n1. Splits FreeBitmap() into two methods:\n   - FreePixels(): frees pixelsHandle and nulls pixels only\n   - FreeBitmap(): nulls bitmap only\n\n2. Reorders CreateBitmap() to handle pixels first (lines 89-98), then bitmap (lines 100-117)\n\n3. Updates DoUnloaded() to call both FreePixels() and FreeBitmap()\n\nThis decouples the two resource lifecycles and prevents the coupled-disposal bug. The fix is minimal, surgical, and follows the WinUI pattern where pixels are obtained from bitmap.GetPixels() (single lifecycle), while Uno Skia uses GCHandle-pinned byte array (independent lifecycle).",
-      "filesCreated": []
-    }
-  ],
-  "versionResults": [
-    {
-      "version": "main (source)",
-      "source": "source",
-      "result": "reproduced",
-      "notes": "Bug exists in current main branch at source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs lines 118-126. FreeBitmap() method couples pixels and bitmap lifecycles, causing potential NRE when canvas resizes."
+      "output": "The template \"Console App\" was created successfully.\nRestore succeeded.",
+      "result": "success"
     },
     {
-      "version": "3.116.0",
-      "source": "nuget",
-      "result": "reproduced",
-      "notes": "Reporter confirmed bug exists in SkiaSharp 3.116.0 (version specified in issue). Code inspection confirms the buggy FreeBitmap() implementation is present."
-    }
-  ],
-  "reproProject": {
-    "type": "existing",
-    "tfm": "net8.0",
-    "packages": []
-  },
-  "artifacts": [
-    {
-      "filename": "SKXamlCanvas.Skia.cs",
-      "description": "Source file containing the bug at lines 118-126",
-      "source": "generated",
-      "url": "https://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
-      "available": true
+      "stepNumber": 3,
+      "description": "Write and run simulation reproducing exact field state transitions from CreateBitmap/FreeBitmap. Tests: initial render (100x100), re-render (100x100), resize (200x200).",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-3430/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "DoInvalidate(100x100): bitmap=True, pixels=True → OK\nDoInvalidate(100x100): bitmap=True, pixels=True → OK\nDoInvalidate(200x200): bitmap=True, pixels=True → OK\n\nIn simple sequential execution, the second FreeBitmap() at line 106 is a no-op because pixels was already nulled by the first FreeBitmap() at line 87. The NRE requires Uno Platform runtime behavior (re-entrancy or async initialization).",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console simulation of the exact fields and methods from SKXamlCanvas.Skia.cs. Simulates FreeBitmap() with its resource coupling flaw and CreateBitmap() with its double-FreeBitmap call pattern. Tests initial render, re-render, and resize scenarios.",
+          "content": "// See $HOME/repro-3430/Repro/Program.cs for full source\n// Simulation shows: in simple sequential execution, the NRE does not trigger\n// because the second FreeBitmap is a no-op (pixels already null from first call).\n// The NRE requires Uno Platform's re-entrant DoInvalidate or async bitmap init."
+        }
+      ],
+      "result": "success"
     },
     {
-      "filename": "PR-3431.patch",
-      "description": "Fix submitted by issue reporter splitting FreeBitmap() into FreePixels() and FreeBitmap()",
-      "source": "external",
-      "url": "https://github.com/mono/SkiaSharp/pull/3431",
-      "available": true
+      "stepNumber": 4,
+      "description": "Verify bug still present on main branch — check if PR #3431 has been merged",
+      "layer": "csharp",
+      "command": "grep -n 'bitmap = null' source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
+      "exitCode": 0,
+      "output": "124: bitmap = null;\n\nThe FreeBitmap() method still nulls bitmap inside the pixels cleanup block. PR #3431 (open, unmerged) would fix this by separating FreePixels() from FreeBitmap().",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Attempt to set up Uno Platform for runtime reproduction — check if templates are installed",
+      "layer": "setup",
+      "command": "dotnet new unoapp --help",
+      "exitCode": 1,
+      "output": "No templates or subcommands found matching: 'unoapp'.\nUno Platform templates not installed. Runtime reproduction requires an Uno Platform app with SKXamlCanvas on a Skia backend.",
+      "result": "skip"
     }
   ],
-  "errorMessages": {
-    "primaryError": "NullReferenceException",
-    "stackTrace": "Occurs at line 72 in DoInvalidate():\n  using (var data = bitmap.PixelBuffer.AsStream())\n\nRoot cause: FreeBitmap() at line 106 nulls the bitmap that was created at line 91, because FreeBitmap() unconditionally sets both pixels=null and bitmap=null together (line 123-124).",
-    "additionalErrors": ["Couples two independent resource lifecycles", "Second FreeBitmap() call destroys bitmap created between first and second calls"]
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.2",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
   },
-  "feedback": {
-    "triageCorrections": []
-  }
+  "blockers": [
+    "Uno Platform Skia backend is required to trigger the NRE at runtime — the bug manifests through platform-specific behavior (re-entrant DoInvalidate during Background property setter or async WriteableBitmap initialization)",
+    "Uno Platform templates not installed (dotnet new unoapp not available) and installing them requires additional SDK components",
+    "SKXamlCanvas extends Canvas (a WinUI control) which cannot be instantiated outside the Uno/WinUI framework"
+  ]
 }
