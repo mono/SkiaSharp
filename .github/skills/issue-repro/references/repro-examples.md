@@ -1,6 +1,6 @@
 # Bug Reproduction — Example Outputs
 
-Reference examples showing valid `bug-repro` JSON output for different conclusion types.
+Reference examples showing valid `issue-repro` JSON output for different conclusion types.
 Each example conforms to [`repro-schema.json`](repro-schema.json).
 
 ## Contents

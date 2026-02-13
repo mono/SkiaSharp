@@ -1,5 +1,5 @@
 ---
-name: bug-repro
+name: issue-repro
 description: >-
   Reproduce a SkiaSharp bug systematically and capture structured reproduction
   results. Produces schema-validated JSON with step-by-step commands, outputs,
@@ -81,7 +81,7 @@ Output a brief plan before executing (1-2 sentences: what platform, what version
 
 Read [references/anti-patterns.md](references/anti-patterns.md) for the full 19-rule list. Critical rules:
 
-1. **Source code investigation.** Stop at "did it reproduce." Root cause is the `bug-fix` skill's job.
+1. **Source code investigation.** Stop at "did it reproduce." Root cause is the `issue-fix` skill's job.
 2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design.
 3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.
 4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions.
@@ -192,7 +192,7 @@ If reproduction contradicts triage, record in `feedback.triageCorrections[]`:
 
 ```bash
 # Validate
-pwsh .github/skills/bug-repro/scripts/validate-repro.ps1 /tmp/repro-{number}.json
+pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/repro-{number}.json
 # Exit 0=valid, 1=fix+retry, 2=fatal
 
 # Persist

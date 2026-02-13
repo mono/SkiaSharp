@@ -10,7 +10,7 @@ older SkiaSharp versions that lack host-platform native assets.
 4. [Common Issues](#common-issues) — [Conclusion Mapping](#conclusion-mapping)
 5. [Main Source Testing (Phase 3C)](#main-source-testing-phase-3c)
 
-See also: the bug-fix skill's `docker-testing.md` for full
+See also: the issue-fix skill's `docker-testing.md` for full
 dependency matrix and troubleshooting.
 
 ## Signals

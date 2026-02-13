@@ -15,7 +15,7 @@ The 7 critical rules are in SKILL.md. This file has the complete list with examp
 
 1. **Inline binary content.** Use `artifacts` array with URLs, not inline data.
 2. **Unlimited output.** Truncate: 2KB success, 4KB failure, 50 lines stack trace.
-3. **Source code investigation.** Stop at "did it reproduce." Fixes are `bug-fix`'s job.
+3. **Source code investigation.** Stop at "did it reproduce." Fixes are `issue-fix`'s job.
 4. **Prompting the user.** Auto-proceed with logged warning. Skill must be non-interactive.
 5. **Absolute paths in output.** Redact `/Users/{name}/` → `$HOME/`.
 6. **Giving up too early.** Try multiple approaches, versions, platforms before `not-reproduced`.
