@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3343,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:30:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp.Views.Maui", "tenet/reliability"]
+  },
+  "summary": "Telerik MAUI app crashes on Windows after upgrading to SkiaSharp 3.116.1 — likely same root cause as #3136 (WinUI native DLL dynamically links VC++ runtime instead of static)",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.75 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.70 },
+    "platforms": ["os/Windows-WinUI"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "errorType": "crash",
+      "reproQuality": "none",
+      "targetFrameworks": ["net9.0-windows"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use Telerik MAUI 11.0.0 controls (which reference SkiaSharp 3.116.1)",
+        "Run the app on Windows (10, 11, or Server 2019/2022/2025)",
+        "App crashes (no further details provided)"
+      ],
+      "environmentDetails": "Windows 10/11/Server 2019/2022/2025, .NET 9, Visual Studio (Windows), Telerik MAUI 11.0.0",
+      "relatedIssues": [3136, 3019],
+      "screenshots": [
+        { "url": "https://github.com/user-attachments/assets/42cc4a83-7e5d-465d-9e49-d64ede04da96", "description": "Screenshot of DLLs posted by reporter (image not viewable)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.1", "3.116.0", "2.88.9"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.1",
+      "currentRelevance": "likely",
+      "relevanceReason": "The WinUI native DLL dynamic linking issue identified in #3136 has not yet been fixed in any released version. Maintainer acknowledged the root cause on 2025-08-31."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.65,
+      "reason": "Reporter claims 2.88.9 worked. However, the WinUI native interop component was rewritten for SkiaSharp 3.x, so the VC++ runtime dependency is new in 3.x. The regression is real but caused by the 3.x architecture change, not a point regression.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.1"
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.80,
+      "reason": "Maintainer @mattleibow acknowledged in #3136 on 2025-08-31 that the WinUI interop was built without statically linking the runtime. He stated 'I am hoping to fix this soon. Just fixing some signing issues in the pipelines.' No PR has been submitted yet."
+    }
+  },
+  "analysis": {
+    "summary": "Vague crash report from Telerik MAUI user on Windows. No stack trace, error message, or code provided. Commenter @Inrego linked #3136 and confirmed the VCRedist workaround fixes it, strongly suggesting the same root cause: SkiaSharp.Views.WinUI.Native.dll dynamically links to VC++ runtime instead of static linking.",
+    "rationale": "Classified as type/bug because a crash is reported (even without evidence). Area is SkiaSharp.Views.Maui because the crash occurs through Telerik MAUI controls which use SkiaSharp's MAUI views. Platform changed from os/Windows-Classic to os/Windows-WinUI because MAUI on Windows uses WinUI, not Win32. Severity is high because it's a crash affecting production apps, but confidence is lower due to the complete absence of diagnostic information. The link to #3136 is the strongest signal — same symptoms, same platform, confirmed workaround.",
+    "keySignals": [
+      { "text": "I believe this is related: https://github.com/mono/SkiaSharp/issues/3136 ... Fix to crash, run this on machine: winget install Microsoft.VCRedist.2015+.x64", "source": "comment by @Inrego", "interpretation": "Direct confirmation from another affected user that this is the same issue as #3136 and VCRedist fixes it." },
+      { "text": "I think that I was building the interop and not statically linking the runtime. Try installing the msvc runtime.", "source": "#3136 comment by @mattleibow (maintainer)", "interpretation": "Maintainer confirmed root cause: WinUI native DLL dynamically links VC++ runtime instead of static linking." },
+      { "text": "The behavior start occurring when Telerik MAUI controls were updated to 3.116.1 in Telerik Maui 11.0.0 version", "source": "issue body", "interpretation": "Reporter doesn't use SkiaSharp directly — uses it through Telerik MAUI. Telerik bumped their SkiaSharp dependency to 3.x." },
+      { "text": "Windows 10 11 and server 2019,2022,2025", "source": "issue body", "interpretation": "Windows Server editions may not have VC++ Redistributable installed by default, matching the #3136 pattern." }
+    ],
+    "codeInvestigation": [
+      { "file": "native/winui/build.cake", "lines": "4", "finding": "VERIFY_EXCLUDED includes VCRUNTIME and MSVCP — build system is supposed to verify these are NOT dependencies of the output DLL. If the built DLL still requires them, the verification may have been bypassed or failed.", "relevance": "direct" },
+      { "file": "native/winui/build.cake", "lines": "47-48", "finding": "CheckDeps() is called on both SkiaSharp.Views.WinUI.Native.dll and Projection.dll after build, confirming the intent to exclude VC++ runtime deps.", "relevance": "direct" },
+      { "file": "binding/Binding.Shared/LibraryLoader.cs", "lines": "132-148", "finding": "Windows native library loading uses Win32 LoadLibrary — standard P/Invoke path. If the loaded DLL has unsatisfied dependencies (VC++ runtime), LoadLibrary will fail with a hard crash.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/UWPExtensions.cs", "lines": "104", "finding": "Uses BufferExtensions.GetByteBuffer(buffer) from WinUI.Native namespace — this is the exact code path that crashed in #3136 with REGDB_E_CLASSNOTREG.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Install VC++ Redistributable on affected machines: winget install Microsoft.VCRedist.2015+.x64",
+      "Pin SkiaSharp to 2.88.x if Telerik supports it (reporter's last known good version)"
+    ],
+    "nextQuestions": [
+      "What is the actual crash exception/stack trace? The report has zero diagnostic information.",
+      "Does installing VCRedist resolve the crash for this reporter specifically?",
+      "Is the crash on all Windows editions or only Server editions (which may lack VCRedist)?"
+    ],
+    "resolution": {
+      "hypothesis": "The crash is caused by SkiaSharp.Views.WinUI.Native.dll dynamically linking to VC++ runtime (vcruntime140.dll/msvcp140.dll). On Windows editions without VCRedist pre-installed (Server, IoT, some stripped builds), this causes a hard crash when the DLL is loaded.",
+      "proposals": [
+        {
+          "title": "Install VC++ Redistributable (workaround)",
+          "description": "Install the Visual C++ Redistributable on affected machines. This is the same workaround confirmed by @Inrego in both #3343 and #3136. Run: winget install Microsoft.VCRedist.2015+.x64",
+          "codeSnippet": "winget install Microsoft.VCRedist.2015+.x64",
+          "confidence": 0.75,
+          "effort": "trivial"
+        },
+        {
+          "title": "Static link VC++ runtime in WinUI native build",
+          "description": "Fix the WinUI native project to statically link the VC++ runtime (/MT instead of /MD). Maintainer acknowledged this as the proper fix in #3136.",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Pin to SkiaSharp 2.88.x",
+          "description": "If Telerik MAUI supports older SkiaSharp, pin to 2.88.9 which the reporter says worked. This avoids the WinUI native DLL entirely (different rendering path in 2.x).",
+          "confidence": 0.50,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Install VC++ Redistributable (workaround)",
+      "recommendedReason": "Confirmed to fix the crash by @Inrego. Immediate relief while waiting for the static linking fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.80,
+      "reason": "The report has zero diagnostic information — no stack trace, no error message, no code. While it's likely the same issue as #3136 (confirmed by commenter), we can't be certain without a stack trace. The reporter should confirm the VCRedist workaround and provide crash details."
+    },
+    "missingInfo": [
+      "Stack trace or crash dump from the crash",
+      "Exact error message or exception type",
+      "Whether installing VC++ Redistributable resolves the crash",
+      "Whether the crash occurs on all mentioned Windows editions or specific ones"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Fix platform label: MAUI on Windows uses WinUI, not Win32. Keep other labels.",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Windows-WinUI", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #3136 — same root cause (WinUI native VC++ runtime dependency), confirmed by commenter",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3136
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge crash, link to #3136, provide VCRedist workaround, ask for stack trace to confirm",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "Thanks for the report. This looks related to #3136, where the `SkiaSharp.Views.WinUI.Native` DLL was built with a dynamic VC++ runtime dependency instead of static linking. On Windows editions that don't ship with the Visual C++ Redistributable pre-installed (Server, IoT), this causes a crash.\n\nAs a workaround while we work on a fix, you can install the VC++ Redistributable on affected machines:\n\n```\nwinget install Microsoft.VCRedist.2015+.x64\n```\n\nTo help us confirm this is the same issue, would you be able to share the crash stack trace or exception details? That will let us verify whether your crash matches #3136 or is a different problem."
+      }
+    ]
+  }
+}
