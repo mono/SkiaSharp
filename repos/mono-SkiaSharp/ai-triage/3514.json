@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3514,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:14:31Z",
+    "currentLabels": []
+  },
+  "summary": "PR from mattleibow to update SkiaSharp from .NET 8 SDK (8.0.304) to .NET 10 SDK (10.0.103), restructuring the TFM system from Previous=net6.0/Current=net8.0 to Base=net6.0/Previous=net9.0/Current=net10.0, modernizing workload management via global.json workload sets instead of custom install-dotnet-workloads.ps1, removing the MAUI TPV workaround (dotnet/maui#24263), updating pipeline tool versions (Xcode 16.2, Emscripten 3.1.56), and adding a documentation checklist for future .NET version upgrades across 48 files.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.95 },
+    "area": { "value": "area/Build", "confidence": 0.95 },
+    "tenets": ["tenet/compatibility"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [3422, 3428]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.4"],
+      "currentRelevance": "likely",
+      "relevanceReason": "This PR targets the main branch and updates the entire build infrastructure for .NET 10. It will affect all future releases."
+    }
+  },
+  "analysis": {
+    "summary": "Major build system modernization PR from the maintainer. Shifts the TFM chain forward two generations (net6→net8 becomes net6→net9→net10), replaces custom workload install scripts with built-in dotnet workload restore, removes a MAUI TPV workaround that's fixed upstream, updates CI pipeline tool versions, and fixes a latent bug where PlatformTargetFrameworksPrevious was referenced but never defined. Also adds a new documentation/updating-dotnet-version.md checklist to streamline future upgrades.",
+    "rationale": "This is clearly an enhancement (not a bug fix or feature request) — it improves the existing build system rather than adding user-facing functionality. It's area/Build since all 48 changed files are build props, pipeline YAML, csproj TFM updates, and workload scripts. The tenet/compatibility label applies because TFM changes directly affect which .NET versions consumers can target. It directly addresses .NET 10 support gaps reported in #3422 (Blazor WASM) and #3428 (MAUI iOS).",
+    "keySignals": [
+      { "text": "Pin SDK to 10.0.103 with workload sets (workloadVersion)", "source": "PR body", "interpretation": "Moves from custom workload install scripts to the modern global.json workload pinning approach introduced in .NET 8+." },
+      { "text": "TFMBase=net6.0, TFMPrevious=net9.0, TFMCurrent=net10.0, Removed TFMNext entirely", "source": "PR body", "interpretation": "Restructures from 2-tier (Previous+Current) to 3-tier (Base+Previous+Current) TFM system, dropping the preview TFMNext slot." },
+      { "text": "Remove MAUI TPV workaround (dotnet/maui#24263 fixed in .NET 9+)", "source": "PR body", "interpretation": "Lines 132-139 and 159-166 in SkiaSharp.Build.props clear and restore TPV values — this workaround can be removed since the fix shipped in .NET 9." },
+      { "text": "Add full PlatformTargetFrameworksPrevious block (was referenced but never defined)", "source": "PR body", "interpretation": "Line 114 of SkiaSharp.Build.props references $(PlatformTargetFrameworksPrevious) but no PropertyGroup defines it — a latent bug that was harmless because Previous=net6.0 had no platform TFMs, but becomes critical when Previous=net9.0." },
+      { "text": "Replace install-dotnet-workloads.ps1 with dotnet workload restore", "source": "PR body", "interpretation": "Eliminates 50+ lines of custom PowerShell that manually managed NuGet feeds and workload lists in favor of the SDK's built-in mechanism." },
+      { "text": "DOTNET_VERSION: 8.0.304 → 10.0.103, XCODE_VERSION: 15.4 → 16.2, EMSCRIPTEN_VERSION: 3.1.34 → 3.1.56", "source": "PR body", "interpretation": "Pipeline tool versions updated to match .NET 10 era requirements." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Build.props", "lines": "62-66", "finding": "Current TFM definitions: TFMPrevious=net6.0, TFMCurrent=net8.0, TFMNext=empty. The PR restructures this to Base=net6.0, Previous=net9.0, Current=net10.0.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Build.props", "lines": "114", "finding": "PlatformTargetFrameworks references $(PlatformTargetFrameworksPrevious) but it is never defined — confirmed latent bug. Currently harmless because net6.0 has no platform TFMs, but would break when Previous becomes net9.0 with platform support.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Build.props", "lines": "132-166", "finding": "MAUI TPV workaround: lines 132-139 clear TPV values, lines 159-166 restore them. This works around dotnet/maui#24263 which shipped a fix in .NET 9, making this workaround removable.", "relevance": "direct" },
+      { "file": "global.json", "lines": "1-7", "finding": "SDK pinned to 8.0.100 with rollForward:latestMinor, no workload settings. PR adds workloadVersion for modern workload set management.", "relevance": "direct" },
+      { "file": "scripts/azure-templates-variables.yml", "lines": "15-26", "finding": "DOTNET_VERSION=8.0.304, XCODE_VERSION=15.4, EMSCRIPTEN_VERSION=3.1.34, DOTNET_VERSION_PREVIEW=empty. All need updating for .NET 10.", "relevance": "direct" },
+      { "file": "scripts/install-dotnet-workloads.ps1", "lines": "1-30", "finding": "Custom workload management with manual NuGet feed configuration and per-platform workload lists. PR replaces this with dotnet workload restore.", "relevance": "direct" },
+      { "file": "build.cake", "lines": "285-397", "finding": "Hardcoded net8.0-android, net8.0-ios, net8.0-maccatalyst TFMs in Cake build scripts — these will need updating to net10.0.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp.NativeAssets.Android/SkiaSharp.NativeAssets.Android.csproj", "lines": "3-4", "finding": "NativeAssets csproj uses $(TFMCurrent)-android$(TPVAndroidCurrent) with conditional TFMNext. PR changes 14 such files to use TFMPrevious;TFMCurrent pattern.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "Are all TPVs verified against the actual .NET 10 workload manifests?",
+      "Do the gallery samples (net6/7 era Uno) need separate handling or can they remain on older TFMs?",
+      "Has CI been validated with the new Emscripten 3.1.56 version for WASM builds?",
+      "Does dropping TFMNext mean preview testing shifts to a different mechanism?"
+    ],
+    "resolution": {
+      "hypothesis": "The PR implements a well-structured .NET SDK version bump with proper TFM chain management. The key design decision is the 3-tier Base/Previous/Current system which maintains backward compatibility while dropping the preview slot.",
+      "proposals": [
+        { "title": "Merge as-is after CI passes", "description": "The PR is comprehensive and addresses all build system touchpoints. Review the 48 files for consistency, verify CI passes on all platforms, and merge.", "confidence": 0.85, "effort": "small" },
+        { "title": "Verify TPVs against workload manifests", "description": "After SDK install, run 'dotnet workload list' and verify that the TPV values in the PR match the actual workload manifest versions for .NET 10.", "confidence": 0.90, "effort": "trivial" }
+      ],
+      "recommendedProposal": "Merge as-is after CI passes",
+      "recommendedReason": "Maintainer-authored PR with detailed changelog covering all 48 files. The TFM restructuring pattern is clean and the removal of the MAUI workaround is correctly gated on the upstream fix shipping in .NET 9."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.90,
+      "reason": "Maintainer-authored PR awaiting CI validation. No external action needed — review and merge when CI passes."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and build labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/Build", "tenet/compatibility"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to .NET 10 Blazor WASM issue this PR addresses",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3422
+      },
+      {
+        "type": "link-related",
+        "description": "Link to .NET 10 MAUI iOS issue this PR addresses",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3428
+      }
+    ]
+  }
+}
