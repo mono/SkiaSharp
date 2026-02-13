@@ -23,14 +23,16 @@ New-Item -ItemType Directory -Force './output/tmp' | Out-Null
 if ($IsLinux -or $IsMacOS) {
   Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile './output/tmp/workload-install.sh'
   # Use bash -e to ensure script exits on first error (Samsung script's shebang may be ignored)
-  bash -e output/tmp/workload-install.sh --version "$Tizen"
+  # Pass explicit version band for .NET 10 since Samsung's LatestVersionMap doesn't include 10.0.100 yet
+  bash -e output/tmp/workload-install.sh --version "$Tizen" --dotnet-target-version-band "10.0.100"
   if ($LASTEXITCODE -ne 0) {
     Write-Host "##[error]Tizen workload installation failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
   }
 } else {
   Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile './output/tmp/workload-install.ps1'
-  ./output/tmp/workload-install.ps1 -Version "$Tizen"
+  # Pass explicit version band for .NET 10 since Samsung's LatestVersionMap doesn't include 10.0.100 yet
+  ./output/tmp/workload-install.ps1 -Version "$Tizen" -DotnetTargetVersionBand "10.0.100"
   if ($LASTEXITCODE -ne 0) {
     Write-Host "##[error]Tizen workload installation failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
