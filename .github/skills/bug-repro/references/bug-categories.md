@@ -240,27 +240,9 @@ When the reporter upgrades SkiaSharp (e.g. 2.x → 3.x) and gets compiler errors
 
 ---
 
-## General Reproduction Workflow
-
-1. **Parse the issue** — extract: SkiaSharp version, platform, .NET version, code snippet, error message, expected vs actual.
-2. **Classify** — pick primary category above. Start with the more specific one if spanning categories.
-3. **Check feasibility** — can you reproduce on available platforms? If not, note in `blockers`.
-4. **Bootstrap** — run `dotnet cake --target=externals-download` if `output/native/` is empty.
-5. **Write minimal reproduction** — smallest possible code in a standalone console project using released NuGet packages.
-6. **Run and capture** — save output, errors, and generated files.
-7. **Conclude** — one of: `reproduced`, `not-reproduced`, `wrong-output`, `needs-platform`, `needs-hardware`, `partial`, `inconclusive`.
-
-### Test Helpers
-
-| Helper | Purpose |
-|--------|---------|
-| `PathToImages` | Path to test image assets (baboon.jpg, etc.) |
-| `PathToFonts` | Path to test font files |
-| `[SkippableFact]` | xUnit test skippable for hardware limitations |
-| `IsWindows` / `IsMac` / `IsLinux` | Platform detection in tests |
-
-### Output Guidelines
+## General Tips
 
 - Print only what's needed to confirm or deny the bug.
-- Always include SkiaSharp version and runtime info.
+- Always include SkiaSharp version and runtime info in output.
 - Save artifacts (PNGs, crash logs) to files — reference by filename, don't inline.
+- Test helpers available in repo: `PathToImages`, `PathToFonts`, `IsWindows`/`IsMac`/`IsLinux`.
