@@ -1,0 +1,195 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3328,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:37:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKFont.GetTextPath returns an empty path (zero bounds) for emoji characters because upstream Skia's SkTextUtils::GetPath silently skips glyphs that lack vector outlines (color emoji use COLR/CBDT/sbix bitmap formats instead).",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": false,
+      "errorType": "wrong-output",
+      "errorMessage": "SKFont.GetTextPath returns empty path (0 width and 0 height bounds) for emoji characters",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create SKTypeface for 'Segoe UI Emoji' via SKTypeface.FromFamilyName",
+        "Create SKFont with that typeface at size 48",
+        "Call font.GetTextPath(\"😊\", new SKPoint(0, 0))",
+        "Inspect path.Bounds — Width and Height are both 0"
+      ],
+      "environmentDetails": "SkiaSharp 3.119.0, Windows 11, Visual Studio",
+      "relatedIssues": [
+        3244,
+        1275,
+        3484
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.0",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.119.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The upstream SkTextUtils::GetPath code on main still uses the same callback pattern that skips nullptr paths — the issue is unfixed."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.65,
+      "reason": "Reporter states 2.88.9 worked, but color emoji glyphs have never had vector outlines in Skia. The older Skia version bundled with 2.88.x may have had different getPaths fallback behavior or the font resolved differently. The behavior change is more likely a side effect of the Skia engine upgrade than a SkiaSharp code regression."
+    }
+  },
+  "analysis": {
+    "summary": "GetTextPath delegates to SkTextUtils::GetPath which calls SkFont::getPaths(). The callback (SkTextUtils.cpp:50-58) checks `if (src)` and skips glyphs where src is nullptr. Color emoji fonts (Segoe UI Emoji, Noto Color Emoji) store glyphs as bitmaps/COLR data without vector outlines, so getPaths returns nullptr for these glyphs, resulting in an empty path.",
+    "rationale": "This is a real behavioral defect — GetTextPath returns an empty path for valid, renderable glyphs. Classified as type/bug because the API silently fails rather than returning useful data. Area is area/SkiaSharp (core font API, not views). Severity is medium: the workaround (use DrawText or MeasureText for bounds) exists, but the behavior is surprising and breaks text-to-path workflows that include emoji. Not classified as regression because the underlying Skia limitation has always existed for color emoji — the 2.88.x behavior was likely coincidental.",
+    "keySignals": [
+      {
+        "text": "path.Bounds.ToString() shows 0 width and 0 height",
+        "source": "issue body",
+        "interpretation": "GetTextPath returns a valid but empty SKPath object — the emoji glyph is silently dropped."
+      },
+      {
+        "text": "Last Known Good Version: 2.88.9",
+        "source": "issue body",
+        "interpretation": "Reporter claims regression from 2.88.x. However, color emoji lack vector outlines in all Skia versions — the old version may have resolved to a different font or had different getPaths fallback."
+      },
+      {
+        "text": "if (src) { ... rec->fDst->addPath(*src, m); }",
+        "source": "SkTextUtils.cpp:52-56",
+        "interpretation": "Root cause: Skia only adds glyph path when src is non-null. Color emoji glyphs return nullptr from getPaths, so they are silently skipped."
+      },
+      {
+        "text": "PR #3484 attempts to fix by adding bounding-box rectangles as fallback",
+        "source": "PR #3484 body",
+        "interpretation": "A fix has been proposed (adding rect fallback in SkTextUtils.cpp) but not merged. The approach modifies upstream Skia code rather than the C API shim."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "externals/skia/src/utils/SkTextUtils.cpp",
+        "lines": "38-59",
+        "finding": "GetPath() calls font.getPaths() with a callback that checks `if (src)` — nullptr paths (color emoji) are silently skipped, producing an empty result path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/src/c/sk_font.cpp",
+        "lines": "191-193",
+        "finding": "C API shim sk_text_utils_get_path() is a thin wrapper calling SkTextUtils::GetPath — no additional logic or fallback for missing paths.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "lines": "748-756",
+        "finding": "C# GetTextPath creates a new SKPath and passes it to sk_text_utils_get_path. Returns the path regardless of content — no empty-check or warning.",
+        "relevance": "context"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "lines": "269-310",
+        "finding": "MeasureText with out SKRect bounds parameter provides glyph bounds including for color emoji — viable workaround for measurement/layout.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKCanvas.DrawText or DrawShapedText to render emoji directly to a surface instead of converting to a path first.",
+      "Use SKFont.MeasureText(text, out SKRect bounds) to get accurate bounds for emoji text (works for layout/hit-testing).",
+      "Use SKFont.GetGlyphWidths(text, out SKRect[] bounds) to get per-glyph bounding rectangles for measurement."
+    ],
+    "nextQuestions": [
+      "Exactly what behavior did 2.88.9 produce? Did it actually return vector outline paths for emoji, or did the user's workflow happen to not hit this code path?",
+      "Should GetTextPath return bounding-box rectangles for non-outline glyphs (as PR #3484 proposes), or should it remain outline-only with better documentation?",
+      "Does this affect all color emoji fonts or only specific formats (COLR vs CBDT vs sbix)?"
+    ],
+    "resolution": {
+      "hypothesis": "Color emoji glyphs use bitmap/COLR formats without vector outlines. Skia's SkFont::getPaths() returns nullptr for these, and SkTextUtils::GetPath silently skips them. The fix requires either modifying the path retrieval to provide a fallback (e.g., bounding box rectangles) or documenting the limitation.",
+      "proposals": [
+        {
+          "title": "Use DrawText for emoji rendering (workaround)",
+          "description": "Instead of converting emoji to paths, render them directly to an SKCanvas using DrawText or DrawShapedText. These methods handle color emoji correctly via Skia's text rendering pipeline. For layout, use MeasureText with bounds.",
+          "codeSnippet": "// Instead of GetTextPath, render emoji directly:\nusing var surface = SKSurface.Create(new SKImageInfo(200, 100));\nvar typeface = SKTypeface.FromFamilyName(\"Segoe UI Emoji\");\nif (typeface == null)\n    typeface = SKTypeface.Default; // fallback if font not found\nusing var font = new SKFont(typeface, 48);\nusing var paint = new SKPaint { Color = SKColors.Black };\nsurface.Canvas.DrawText(\"😊\", 10, 60, SKTextAlign.Left, font, paint);\n\n// For bounds/measurement:\nfloat width = font.MeasureText(\"😊\", out SKRect bounds);",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "title": "Add bounding-box fallback in C API shim",
+          "description": "In sk_font.cpp, wrap the SkTextUtils::GetPath call with pre-computed glyph bounds via SkFont::getBounds(). When getPaths returns nullptr for a glyph, add the bounds rectangle to the path instead. This keeps the fix in the SkiaSharp shim layer (not upstream Skia), reducing merge-conflict risk compared to PR #3484's approach.",
+          "confidence": 0.7,
+          "effort": "medium"
+        },
+        {
+          "title": "Accept PR #3484 with modifications",
+          "description": "PR #3484 modifies upstream SkTextUtils.cpp to add bounds-rectangle fallback. The approach works but modifies upstream Skia code, creating merge-conflict risk. If accepted, it should be cleaned up (remove FIX_SUMMARY.md, TESTING_NOTES.md) and the fix should be moved to the C API shim layer instead.",
+          "confidence": 0.6,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Use DrawText for emoji rendering (workaround)",
+      "recommendedReason": "Provides an immediate solution the reporter can use today. Color emoji are inherently bitmap-based and don't have vector outlines — DrawText is the correct API for rendering them. The path-based fix proposals change GetTextPath's semantic contract and need design discussion."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.8,
+      "reason": "Real bug with complete repro. The root cause is understood (Skia getPaths returns nullptr for color emoji), but the fix approach needs design discussion: should GetTextPath return bounding-box rectangles or remain outline-only?"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm type/bug, add area and platform labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and provide DrawText workaround",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the clear repro.\n\nThis happens because color emoji fonts (Segoe UI Emoji, Noto Color Emoji, etc.) store their glyphs as bitmaps or COLR/CPAL data rather than vector outlines. Skia's underlying `getPaths()` returns null for these glyphs, so `GetTextPath` produces an empty path.\n\nHere's a workaround — render emoji directly to a canvas instead of converting to a path:\n\n```csharp\n// Render emoji directly (handles color emoji correctly)\nvar typeface = SKTypeface.FromFamilyName(\"Segoe UI Emoji\");\nif (typeface == null)\n    typeface = SKTypeface.Default; // fallback if font not found\nusing var font = new SKFont(typeface, 48);\nusing var paint = new SKPaint { Color = SKColors.Black };\ncanvas.DrawText(\"😊\", 10, 60, SKTextAlign.Left, font, paint);\n\n// For measurement/layout:\nfloat width = font.MeasureText(\"😊\", out SKRect bounds);\n```\n\n`DrawText` and `DrawShapedText` go through Skia's full text rendering pipeline which handles color emoji correctly. `MeasureText` returns accurate bounds for layout and hit-testing.\n\nNote: `FromFamilyName` can return null if the font isn't installed, so a null check is good practice.\n\nWe're aware of PR #3484 which proposes adding bounding-box fallback rectangles for non-outline glyphs — we'll evaluate the best approach for a proper fix."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related emoji rendering issue",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3244
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference existing fix PR",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 3484
+      }
+    ]
+  }
+}
