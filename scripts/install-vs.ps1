@@ -1,6 +1,6 @@
 Param(
     [string] $Version,
-    [string] $TestPath = "2022\Preview",
+    [string] $TestPath = "2026\Preview",
     [boolean] $RemoveExisting = $false
 )
 
