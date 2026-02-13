@@ -21,6 +21,19 @@ namespace HarfBuzzSharp
 		{
 		}
 
+		/// <summary>
+		/// Creates a new buffer with the same Unicode functions, content type, flags,
+		/// cluster level, direction, language, and script as the source buffer.
+		/// </summary>
+		/// <param name="source">The source buffer to copy settings from</param>
+		/// <returns>A new buffer with the same settings</returns>
+		public static Buffer CreateSimilar (Buffer source)
+		{
+			if (source == null)
+				throw new ArgumentNullException (nameof (source));
+			return new Buffer (HarfBuzzApi.hb_buffer_create_similar (source.Handle));
+		}
+
 		public ContentType ContentType {
 			get => HarfBuzzApi.hb_buffer_get_content_type (Handle);
 			set => HarfBuzzApi.hb_buffer_set_content_type (Handle, value);

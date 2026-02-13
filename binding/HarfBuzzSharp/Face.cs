@@ -85,6 +85,177 @@ namespace HarfBuzzSharp
 
 		public void MakeImmutable () => HarfBuzzApi.hb_face_make_immutable (Handle);
 
+		/// <summary>
+		/// Gets the name string from the face's OpenType 'name' table.
+		/// </summary>
+		/// <param name="nameId">The name ID to retrieve.</param>
+		/// <returns>The name string, or an empty string if not found.</returns>
+		public string GetName (OpenTypeNameId nameId) =>
+			GetName (nameId, Language.Default);
+
+		/// <summary>
+		/// Gets the name string from the face's OpenType 'name' table.
+		/// </summary>
+		/// <param name="nameId">The name ID to retrieve.</param>
+		/// <param name="language">The language for the name.</param>
+		/// <returns>The name string, or an empty string if not found.</returns>
+		public string GetName (OpenTypeNameId nameId, Language language)
+		{
+			if (language == null)
+				throw new ArgumentNullException (nameof (language));
+
+			// First call to get the length
+			uint length = 0;
+			HarfBuzzApi.hb_ot_name_get_utf16 (Handle, nameId, language.Handle, &length, null);
+
+			if (length == 0)
+				return string.Empty;
+
+			// Allocate buffer and get the string
+			length++; // Add space for null terminator
+			var buffer = stackalloc ushort[(int)length];
+			HarfBuzzApi.hb_ot_name_get_utf16 (Handle, nameId, language.Handle, &length, buffer);
+
+			return new string ((char*)buffer, 0, (int)length);
+		}
+
+		/// <summary>
+		/// Tries to get the name string from the face's OpenType 'name' table.
+		/// </summary>
+		/// <param name="nameId">The name ID to retrieve.</param>
+		/// <param name="name">The name string, or null if not found.</param>
+		/// <returns>True if the name was found, false otherwise.</returns>
+		public bool TryGetName (OpenTypeNameId nameId, out string name) =>
+			TryGetName (nameId, Language.Default, out name);
+
+		/// <summary>
+		/// Tries to get the name string from the face's OpenType 'name' table.
+		/// </summary>
+		/// <param name="nameId">The name ID to retrieve.</param>
+		/// <param name="language">The language for the name.</param>
+		/// <param name="name">The name string, or null if not found.</param>
+		/// <returns>True if the name was found, false otherwise.</returns>
+		public bool TryGetName (OpenTypeNameId nameId, Language language, out string name)
+		{
+			if (language == null)
+				throw new ArgumentNullException (nameof (language));
+
+			// First call to get the length
+			uint length = 0;
+			HarfBuzzApi.hb_ot_name_get_utf16 (Handle, nameId, language.Handle, &length, null);
+
+			if (length == 0) {
+				name = null;
+				return false;
+			}
+
+			// Allocate buffer and get the string
+			length++; // Add space for null terminator
+			var buffer = stackalloc ushort[(int)length];
+			HarfBuzzApi.hb_ot_name_get_utf16 (Handle, nameId, language.Handle, &length, buffer);
+
+			name = new string ((char*)buffer, 0, (int)length);
+			return true;
+		}
+
+		/// <summary>
+		/// Gets all name entries from the face's OpenType 'name' table.
+		/// </summary>
+		/// <returns>An array of name entries.</returns>
+		public OpenTypeNameEntry[] GetAllNameEntries ()
+		{
+			uint count = 0;
+			var entries = HarfBuzzApi.hb_ot_name_list_names (Handle, &count);
+
+			if (count == 0 || entries == null)
+				return Array.Empty<OpenTypeNameEntry> ();
+
+			var result = new OpenTypeNameEntry[count];
+			for (int i = 0; i < count; i++)
+				result[i] = entries[i];
+
+			return result;
+		}
+
+		/// <summary>
+		/// Gets all script tags supported by the specified OpenType layout table.
+		/// </summary>
+		/// <param name="tableTag">The layout table to query (GSUB or GPOS).</param>
+		/// <returns>An array of script tags.</returns>
+		public Tag[] GetOpenTypeLayoutScriptTags (OpenTypeLayoutTableTag tableTag)
+		{
+			// First call to get the count
+			uint count = 0;
+			var total = HarfBuzzApi.hb_ot_layout_table_get_script_tags (Handle, (uint)tableTag, 0, &count, null);
+
+			if (total == 0)
+				return Array.Empty<Tag> ();
+
+			// Allocate and get all tags
+			var buffer = new Tag[total];
+			count = total;
+			fixed (Tag* ptr = buffer) {
+				HarfBuzzApi.hb_ot_layout_table_get_script_tags (Handle, (uint)tableTag, 0, &count, (uint*)ptr);
+			}
+
+			return buffer;
+		}
+
+		/// <summary>
+		/// Gets all feature tags supported by the specified OpenType layout table.
+		/// </summary>
+		/// <param name="tableTag">The layout table to query (GSUB or GPOS).</param>
+		/// <returns>An array of feature tags.</returns>
+		public Tag[] GetOpenTypeLayoutFeatureTags (OpenTypeLayoutTableTag tableTag)
+		{
+			// First call to get the count
+			uint count = 0;
+			var total = HarfBuzzApi.hb_ot_layout_table_get_feature_tags (Handle, (uint)tableTag, 0, &count, null);
+
+			if (total == 0)
+				return Array.Empty<Tag> ();
+
+			// Allocate and get all tags
+			var buffer = new Tag[total];
+			count = total;
+			fixed (Tag* ptr = buffer) {
+				HarfBuzzApi.hb_ot_layout_table_get_feature_tags (Handle, (uint)tableTag, 0, &count, (uint*)ptr);
+			}
+
+			return buffer;
+		}
+
+		/// <summary>
+		/// Tries to get the name IDs for an OpenType layout feature.
+		/// </summary>
+		/// <param name="tableTag">The layout table (GSUB or GPOS).</param>
+		/// <param name="featureIndex">The index of the feature in the table.</param>
+		/// <param name="nameIds">The name IDs for the feature if found.</param>
+		/// <returns>True if the feature has name IDs, false otherwise.</returns>
+		public bool TryGetOpenTypeLayoutFeatureNameIds (OpenTypeLayoutTableTag tableTag, int featureIndex, out OpenTypeFeatureNameIds nameIds)
+		{
+			OpenTypeNameId labelId, tooltipId, sampleId, firstParamId;
+			uint numParams;
+
+			var result = HarfBuzzApi.hb_ot_layout_feature_get_name_ids (
+				Handle, (uint)tableTag, (uint)featureIndex,
+				&labelId, &tooltipId, &sampleId, &numParams, &firstParamId);
+
+			if (!result) {
+				nameIds = default;
+				return false;
+			}
+
+			nameIds = new OpenTypeFeatureNameIds {
+				LabelId = labelId,
+				TooltipId = tooltipId,
+				SampleId = sampleId,
+				NumNamedParameters = (int)numParams,
+				FirstParamId = firstParamId
+			};
+			return true;
+		}
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 

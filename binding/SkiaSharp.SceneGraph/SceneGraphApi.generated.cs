@@ -117,7 +117,7 @@ namespace SkiaSharp
 	{
 		#region sksg_invalidation_controller.h
 
-		// void sksg_invalidation_controller_begin(sksg_invalidation_controller_t* instance)
+		// void sksg_invalidation_controller_begin(sksg_invalidation_controller_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -136,7 +136,7 @@ namespace SkiaSharp
 			(sksg_invalidation_controller_begin_delegate ??= GetSymbol<Delegates.sksg_invalidation_controller_begin> ("sksg_invalidation_controller_begin")).Invoke (instance);
 		#endif
 
-		// void sksg_invalidation_controller_delete(sksg_invalidation_controller_t* instance)
+		// void sksg_invalidation_controller_delete(sksg_invalidation_controller_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -155,7 +155,7 @@ namespace SkiaSharp
 			(sksg_invalidation_controller_delete_delegate ??= GetSymbol<Delegates.sksg_invalidation_controller_delete> ("sksg_invalidation_controller_delete")).Invoke (instance);
 		#endif
 
-		// void sksg_invalidation_controller_end(sksg_invalidation_controller_t* instance)
+		// void sksg_invalidation_controller_end(sksg_invalidation_controller_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -174,7 +174,7 @@ namespace SkiaSharp
 			(sksg_invalidation_controller_end_delegate ??= GetSymbol<Delegates.sksg_invalidation_controller_end> ("sksg_invalidation_controller_end")).Invoke (instance);
 		#endif
 
-		// void sksg_invalidation_controller_get_bounds(sksg_invalidation_controller_t* instance, sk_rect_t* bounds)
+		// void sksg_invalidation_controller_get_bounds(sksg_invalidation_controller_t * instance, sk_rect_t * bounds)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -193,7 +193,7 @@ namespace SkiaSharp
 			(sksg_invalidation_controller_get_bounds_delegate ??= GetSymbol<Delegates.sksg_invalidation_controller_get_bounds> ("sksg_invalidation_controller_get_bounds")).Invoke (instance, bounds);
 		#endif
 
-		// void sksg_invalidation_controller_inval(sksg_invalidation_controller_t* instance, sk_rect_t* rect, sk_matrix_t* matrix)
+		// void sksg_invalidation_controller_inval(sksg_invalidation_controller_t * instance, sk_rect_t * rect, sk_matrix_t * matrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -212,7 +212,7 @@ namespace SkiaSharp
 			(sksg_invalidation_controller_inval_delegate ??= GetSymbol<Delegates.sksg_invalidation_controller_inval> ("sksg_invalidation_controller_inval")).Invoke (instance, rect, matrix);
 		#endif
 
-		// sksg_invalidation_controller_t* sksg_invalidation_controller_new()
+		// sksg_invalidation_controller_t * sksg_invalidation_controller_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -231,7 +231,7 @@ namespace SkiaSharp
 			(sksg_invalidation_controller_new_delegate ??= GetSymbol<Delegates.sksg_invalidation_controller_new> ("sksg_invalidation_controller_new")).Invoke ();
 		#endif
 
-		// void sksg_invalidation_controller_reset(sksg_invalidation_controller_t* instance)
+		// void sksg_invalidation_controller_reset(sksg_invalidation_controller_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
