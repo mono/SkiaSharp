@@ -15,7 +15,7 @@ description: >-
 Systematically reproduce a SkiaSharp bug and produce structured, schema-validated reproduction JSON.
 
 ```
-Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON) → Phase 5 (Validate & Persist)
+Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON + Output) → Phase 5 (Validate & Persist)
 ```
 
 ---
@@ -185,6 +185,82 @@ If reproduction contradicts triage, record in `feedback.triageCorrections[]`:
 ```json
 { "topic": "classification", "upstream": "...", "corrected": "..." }
 ```
+
+### 4. Generate output (required for definitive conclusions)
+
+When conclusion is `reproduced`, `not-reproduced`, or `wrong-output`, generate the `output` object with actionability, actions, and a proposed response. Skip for blocked conclusions (`needs-platform`, `needs-hardware`, `partial`, `inconclusive`).
+
+#### Choosing suggestedAction
+
+| Scenario | suggestedAction | Confidence |
+|----------|----------------|------------|
+| Reproduced on all versions including latest/main | `needs-investigation` | 0.90+ |
+| Reproduced on reporter's version, fixed on latest | `close-as-fixed` | 0.85+ |
+| Reproduced on reporter's version, fixed on main (unreleased) | `keep-open` | 0.80+ |
+| Not reproduced — likely environment/config issue | `request-info` | 0.70+ |
+| Not reproduced — works on all tested versions | `close-as-fixed` | 0.75+ |
+| Wrong output confirmed | `needs-investigation` | 0.85+ |
+| Reproduced but appears working-as-designed | `close-with-docs` | 0.70+ |
+
+#### Writing proposedResponse
+
+The `proposedResponse.body` is a Markdown GitHub comment. Follow these guidelines:
+
+- **Tone:** Professional, helpful, empathetic. Thank the reporter.
+- **Evidence:** Cite specific versions tested, platforms, and error messages observed.
+- **Workarounds:** If discovered, include them prominently.
+- **Status:** Use `"ready"` only when confidence ≥ 0.85. Use `"needs-human-edit"` for lower confidence or sensitive situations. Use `"do-not-post"` for internal-only findings.
+
+**Templates by conclusion:**
+
+**Reproduced (fixed on latest):**
+```markdown
+Thanks for reporting this! We were able to reproduce the issue with SkiaSharp {reporter_version}.
+
+The good news is that this appears to be fixed in {fixed_version}. Could you try upgrading?
+
+**Tested versions:**
+| Version | Result |
+|---------|--------|
+| {reporter_version} | ❌ Reproduced |
+| {fixed_version} | ✅ Fixed |
+
+{workaround_section_if_any}
+```
+
+**Not reproduced:**
+```markdown
+Thanks for the report. We attempted to reproduce this on {environment} with SkiaSharp {reporter_version} but were unable to observe the reported behavior.
+
+Could you share the following to help us investigate further?
+{missing_info_list}
+```
+
+**Reproduced universally:**
+```markdown
+We've confirmed this issue. The reported behavior reproduces on {platforms} with SkiaSharp {reporter_version}.
+
+We're tracking this for a fix. {workaround_section_if_any}
+```
+
+#### Workarounds
+
+If reproduction testing reveals a workaround (version upgrade, config change, workload install, API alternative), add to `output.workarounds[]` as simple strings and include in the proposed response body.
+
+#### Missing info
+
+When conclusion is `not-reproduced` or the response asks for more details, populate `output.missingInfo[]` with specific items needed (e.g., "Exact .NET SDK version", "Full exception stack trace", "Minimal reproduction project"). Reference these in `proposedResponse.body`.
+
+#### Actions
+
+Use the same action types as triage. Common repro actions:
+
+| Action | When | Risk |
+|--------|------|------|
+| `update-labels` | Add platform labels confirmed by repro, remove incorrect ones | low |
+| `close-issue` | Bug fixed in latest + reporter can upgrade | medium |
+| `set-milestone` | Bug confirmed, target a release | low |
+| `link-related` | Discovered related issue during repro | low |
 
 ---
 
