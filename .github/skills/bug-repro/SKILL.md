@@ -125,8 +125,27 @@ Check:
 
 ### 3. Environment check
 
-- What platform are we on? (macOS/Linux/Windows)
-- Docker available? (`docker --version` — if yes, can test Linux x64/arm64)
+**⚠️ Run `dotnet --info` in the TEST directory** (e.g., `/tmp/repro-{number}/`), NOT in the
+SkiaSharp repo (which has a `global.json` pinning to SDK 8.0). The test directory has no
+`global.json`, so it uses the highest installed SDK — which may be different.
+
+```bash
+mkdir -p /tmp/repro-{number} && cd /tmp/repro-{number}
+dotnet --info
+```
+
+Record the FULL output — it captures SDK version, workload versions, and runtime info in
+one command. This is critical for reproducing discrepancies: different SDK versions ship
+different wasm-tools, different native compilation behavior, and different runtime behavior.
+
+**Save to environment:**
+- SDK version (e.g., `10.0.102`)
+- wasm-tools manifest version (e.g., `10.0.102/10.0.100`)
+- Runtime version (e.g., `10.0.2`)
+- Whether a `global.json` is in effect
+
+**Check available capabilities:**
+- Docker available? (`docker --version`)
 - Playwright available? (for WASM/Blazor bugs — check MCP browser tools)
 - GPU available? (for rendering bugs)
 - **.NET workloads installed?** Phase 3C requires building from source, which needs platform workloads:
@@ -394,7 +413,7 @@ Required fields:
 - `conclusion`: one of the enum values
 - `notes`: free-text summary (min 10 chars)
 - `reproductionSteps`: array of steps with stepNumber, description, layer
-- `environment`: os, arch, dotnetVersion, skiaSharpVersion, dockerUsed
+- `environment`: os, arch, dotnetVersion, dotnetSdkVersion, skiaSharpVersion, dockerUsed. **`dotnetSdkVersion` must be the exact SDK version from `dotnet --info`** (e.g., `"10.0.102"`), not just the runtime version. Also include `wasmToolsVersion` for WASM bugs.
 
 Optional (recommended) — include only when applicable, otherwise omit entirely:
 - `inputs`: `{ triageFile }` if triage data was consumed
