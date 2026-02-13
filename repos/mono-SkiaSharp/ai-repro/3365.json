@@ -3,146 +3,161 @@
     "schemaVersion": "1.0",
     "number": 3365,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T18:52:00Z"
+    "analyzedAt": "2026-02-13T16:09:03Z"
   },
   "inputs": {
     "triageFile": "ai-triage/3365.json"
   },
   "conclusion": "reproduced",
   "assessment": "likely-bug",
-  "notes": "Confirmed via PE import table analysis: libSkiaSharp.dll in SkiaSharp 3.119.0+ has a hard link-time import on d3d12.dll and D3DCOMPILER_47.dll. This means the Windows PE loader will fail immediately on systems without DX12 — before any SkiaSharp code runs. The reporter stated version 3.116.0 but that version does NOT have the d3d12 import; the dependency was introduced in 3.119.0 (confirmed by inspecting 3.116.0, 3.116.1, 3.119.0, 3.119.2, and 3.119.3-preview.1.1). The build config on main still passes skia_use_direct3d=true with no /DELAYLOAD linker flag, so the issue persists. All three Windows architectures (x86, x64, arm64) are affected. DLL size jumped from 9.2 MB (3.116.0) to 10.9 MB (3.119.0), consistent with Direct3D backend code being compiled in. The fix would be adding /DELAYLOAD:d3d12.dll and /DELAYLOAD:D3DCOMPILER_47.dll to extra_ldflags in native/windows/build.cake, or dynamically loading these DLLs at runtime.",
-  "reproductionTime": "~8 minutes",
+  "scope": "platform-specific/windows",
+  "reproductionTime": "~15 minutes",
+  "notes": "Confirmed: libSkiaSharp.dll has a hard link-time import of d3d12.dll and D3DCOMPILER_47.dll starting from SkiaSharp 3.119.0. No delay-load is configured. On Windows systems without DX12 support, the DLL loader will fail before any SkiaSharp code executes. Version discrepancy: the reporter stated 3.116.0, but PE import analysis shows 3.116.0 does NOT have the d3d12 dependency \u2014 it was introduced in 3.119.0. The bug is real and affects the latest stable release (3.119.2) and main branch. The build config (native/windows/build.cake) defaults SUPPORT_DIRECT3D to true, and CheckWindowsDependencies only excludes VCRUNTIME/MSVCP, so d3d12 is not flagged.",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.NativeAssets.Win32",
+        "version": "3.119.2"
+      }
+    ]
+  },
   "versionResults": [
     {
       "version": "2.88.9",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "No d3d12.dll in import table. Only imports: FONTSUB.dll, KERNEL32.dll, USER32.dll, ole32.dll."
+      "notes": "PE import table has no d3d12.dll or D3DCOMPILER_47.dll dependency. Safe on systems without DX12.",
+      "platform": "pe-analysis-macos-arm64"
     },
     {
       "version": "3.116.0",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Reporter's stated version. No d3d12.dll in import table — reporter likely using 3.119.x when they filed. Imports: FONTSUB.dll, KERNEL32.dll, USER32.dll, ole32.dll."
+      "notes": "Reporter's stated version. PE import table has no d3d12.dll dependency \u2014 reporter may have been on a different version or experienced a different issue.",
+      "platform": "pe-analysis-macos-arm64"
     },
     {
       "version": "3.116.1",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "No d3d12.dll in import table. Last version without the dependency."
+      "notes": "No d3d12.dll in import table.",
+      "platform": "pe-analysis-macos-arm64"
+    },
+    {
+      "version": "3.118.0-preview.2.3",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "No d3d12.dll in import table. Last version without the dependency.",
+      "platform": "pe-analysis-macos-arm64"
     },
     {
       "version": "3.119.0",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "First version with d3d12.dll and D3DCOMPILER_47.dll in import table. Hard link-time dependency confirmed across all architectures."
+      "notes": "d3d12.dll and D3DCOMPILER_47.dll appear as hard imports in PE import table. First version with the dependency. No delay-load configured.",
+      "platform": "pe-analysis-macos-arm64"
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "d3d12.dll and D3DCOMPILER_47.dll still in import table. All 3 archs (x86, x64, arm64) affected."
-    },
-    {
-      "version": "3.119.3-preview.1.1",
-      "source": "nuget",
-      "result": "reproduced",
-      "notes": "Latest preview still has d3d12.dll and D3DCOMPILER_47.dll hard imports."
+      "notes": "Latest stable release. d3d12.dll and D3DCOMPILER_47.dll still present as hard imports. No delay-load.",
+      "platform": "pe-analysis-macos-arm64"
     },
     {
       "version": "main (source)",
       "source": "source",
-      "result": "not-tested",
-      "notes": "Cannot build Windows native on macOS. However, native/windows/build.cake confirms skia_use_direct3d defaults to true and extra_ldflags does not include /DELAYLOAD — the issue persists in source."
+      "result": "reproduced",
+      "notes": "Windows x64 native binary from main branch output/native/ has d3d12.dll hard import. Build config still defaults SUPPORT_DIRECT3D=true with no /DELAYLOAD.",
+      "platform": "pe-analysis-macos-arm64"
     }
   ],
-  "reproProject": {
-    "type": "console",
-    "tfm": "net8.0",
-    "packages": [
-      {"name": "SkiaSharp.NativeAssets.Win32", "version": "3.119.0"},
-      {"name": "SkiaSharp.NativeAssets.Win32", "version": "3.119.2"},
-      {"name": "SkiaSharp.NativeAssets.Win32", "version": "3.116.0"},
-      {"name": "SkiaSharp.NativeAssets.Win32", "version": "2.88.9"}
-    ]
-  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Download NuGet packages for SkiaSharp.NativeAssets.Win32 versions 2.88.9, 3.116.0, 3.119.0, and 3.119.2 and extract the Windows native DLLs",
+      "description": "Download SkiaSharp.NativeAssets.Win32 NuGet packages for versions 2.88.9, 3.116.0, 3.119.0, and 3.119.2 to inspect their Windows native DLLs",
       "layer": "setup",
-      "command": "curl -sLo pkg.nupkg https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.win32/{version}/skiasharp.nativeassets.win32.{version}.nupkg && unzip -q -o pkg.nupkg -d extracted",
+      "command": "curl -sL https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.win32/{version}/skiasharp.nativeassets.win32.{version}.nupkg -o nupkg-{version}/pkg.zip && unzip -o pkg.zip -d nupkg-{version}/ 'runtimes/win-x64/native/*'",
       "exitCode": 0,
-      "output": "Downloaded and extracted 4 NuGet packages. Each contains runtimes/win-{x86,x64,arm64}/native/libSkiaSharp.dll.",
+      "output": "Downloaded and extracted win-x64 native DLLs for all versions.",
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Inspect PE import table of libSkiaSharp.dll from SkiaSharp 2.88.9 (last known good) for d3d12.dll dependency",
+      "description": "Inspect PE import table of libSkiaSharp.dll from SkiaSharp 3.116.0 (reporter's stated version) for d3d12.dll dependency",
       "layer": "native",
-      "command": "python3 -c \"import pefile; pe=pefile.PE('nupkg-2.88.9/extracted/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
+      "command": "python3 -c \"import pefile; pe=pefile.PE('nupkg-3116/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
       "exitCode": 0,
-      "output": "FONTSUB.dll\nKERNEL32.dll\nUSER32.dll\nole32.dll\n\nNo d3d12.dll or D3DCOMPILER_47.dll found in import table.",
+      "output": "FONTSUB.dll\nKERNEL32.dll\nUSER32.dll\nole32.dll\n\nNo d3d12.dll or D3DCOMPILER_47.dll in import table.",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Inspect PE import table of libSkiaSharp.dll from SkiaSharp 3.116.0 (reporter's stated version) for d3d12.dll dependency",
+      "description": "Inspect PE import table of libSkiaSharp.dll from SkiaSharp 2.88.9 (last known good version) for d3d12.dll dependency",
       "layer": "native",
-      "command": "python3 -c \"import pefile; pe=pefile.PE('nupkg-3.116.0/extracted/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
+      "command": "python3 -c \"import pefile; pe=pefile.PE('nupkg-2889/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
       "exitCode": 0,
-      "output": "FONTSUB.dll\nKERNEL32.dll\nUSER32.dll\nole32.dll\n\nNo d3d12.dll — reporter's stated version does NOT have the dependency. Reporter may have been using 3.119.x.",
+      "output": "FONTSUB.dll\nKERNEL32.dll\nUSER32.dll\nole32.dll\n\nNo d3d12.dll \u2014 confirmed safe.",
       "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Inspect PE import table of libSkiaSharp.dll from SkiaSharp 3.119.0 for d3d12.dll dependency — first version after 3.116.x",
+      "description": "Inspect PE import table of libSkiaSharp.dll from SkiaSharp 3.119.0 for d3d12.dll dependency \u2014 this is the version referenced by related issue #3267",
       "layer": "native",
-      "command": "python3 -c \"import pefile; pe=pefile.PE('nupkg-3.119.0/extracted/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
+      "command": "python3 -c \"import pefile; pe=pefile.PE('nupkg-3119/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
       "exitCode": 0,
-      "output": "ole32.dll\nFONTSUB.dll\nUSER32.dll\nd3d12.dll\nD3DCOMPILER_47.dll\nKERNEL32.dll\n\nHard import dependency on d3d12.dll and D3DCOMPILER_47.dll CONFIRMED.",
+      "output": "ole32.dll\nFONTSUB.dll\nUSER32.dll\nd3d12.dll\nD3DCOMPILER_47.dll\nKERNEL32.dll\n\nd3d12.dll and D3DCOMPILER_47.dll FOUND in import table \u2014 hard link-time dependency confirmed.",
+      "filesCreated": [
+        {
+          "filename": "pe_analysis.py",
+          "description": "Python script using pefile to parse PE import tables of libSkiaSharp.dll across versions",
+          "content": "import pefile\n\nfor ver, path in [(\"2.88.9\", \"nupkg-2889/runtimes/win-x64/native/libSkiaSharp.dll\"),\n                  (\"3.116.0\", \"nupkg-3116/runtimes/win-x64/native/libSkiaSharp.dll\"),\n                  (\"3.119.0\", \"nupkg-3119/runtimes/win-x64/native/libSkiaSharp.dll\"),\n                  (\"3.119.2\", \"nupkg-31192/runtimes/win-x64/native/libSkiaSharp.dll\")]:\n    pe = pefile.PE(path)\n    d3d = [e.dll.decode() for e in pe.DIRECTORY_ENTRY_IMPORT if 'd3d' in e.dll.decode().lower()]\n    print(f\"{ver}: {d3d if d3d else 'No D3D imports'}\")\n    pe.close()"
+        }
+      ],
       "result": "wrong-output"
     },
     {
       "stepNumber": 5,
-      "description": "Inspect PE import table of libSkiaSharp.dll from SkiaSharp 3.119.2 (latest stable) across all architectures",
+      "description": "Inspect PE import table of libSkiaSharp.dll from SkiaSharp 3.119.2 (latest stable) \u2014 confirm d3d12.dll dependency persists",
       "layer": "native",
-      "command": "python3 -c \"import pefile; [print(arch, [e.dll.decode() for e in pefile.PE(f'nupkg-3.119.2/extracted/runtimes/{arch}/native/libSkiaSharp.dll').DIRECTORY_ENTRY_IMPORT if b'd3d12' in e.dll.lower() or b'd3dcompiler' in e.dll.lower()]) for arch in ['win-x86','win-x64','win-arm64']]\"",
+      "command": "python3 -c \"import pefile; pe=pefile.PE('nupkg-31192/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
       "exitCode": 0,
-      "output": "win-x86: d3d12.dll, D3DCOMPILER_47.dll\nwin-x64: d3d12.dll, D3DCOMPILER_47.dll\nwin-arm64: d3d12.dll, D3DCOMPILER_47.dll\n\nAll three architectures have hard DX12 dependency.",
+      "output": "ole32.dll\nFONTSUB.dll\nUSER32.dll\nd3d12.dll\nD3DCOMPILER_47.dll\nKERNEL32.dll\n\nd3d12.dll still present in latest stable release.",
       "result": "wrong-output"
     },
     {
       "stepNumber": 6,
-      "description": "Verify delay-load imports are NOT used — checked DIRECTORY_ENTRY_DELAY_IMPORT for all versions",
+      "description": "Check main branch Windows native binary for d3d12.dll dependency and verify no delay-load configuration exists",
       "layer": "native",
-      "command": "python3 -c \"import pefile; pe=pefile.PE('nupkg-3.119.2/extracted/runtimes/win-x64/native/libSkiaSharp.dll'); print(hasattr(pe, 'DIRECTORY_ENTRY_DELAY_IMPORT'))\"",
+      "command": "python3 -c \"import pefile; pe=pefile.PE('output/native/windows/x64/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]; print('Delay-load:', hasattr(pe, 'DIRECTORY_ENTRY_DELAY_IMPORT'))\"",
       "exitCode": 0,
-      "output": "False\n\nNo delay-load imports configured. d3d12.dll is a hard import, not delay-loaded. Windows PE loader will fail on DLL load if d3d12.dll is absent.",
+      "output": "ole32.dll\nFONTSUB.dll\nUSER32.dll\nd3d12.dll\nD3DCOMPILER_47.dll\nKERNEL32.dll\nDelay-load: False\n\nd3d12.dll still present on main branch. No delay-load configured.",
       "result": "wrong-output"
     },
     {
       "stepNumber": 7,
-      "description": "Inspect native/windows/build.cake on main branch — check for DELAYLOAD or d3d12 mitigation",
+      "description": "Verify build configuration in native/windows/build.cake \u2014 confirm SUPPORT_DIRECT3D defaults to true and no /DELAYLOAD in extra_ldflags",
       "layer": "native",
-      "command": "grep -n 'DELAYLOAD\\|d3d12\\|extra_ldflags' native/windows/build.cake",
+      "command": "grep -n 'SUPPORT_DIRECT3D\\|DELAYLOAD\\|delayimp\\|VERIFY_EXCLUDED' native/windows/build.cake",
       "exitCode": 0,
-      "output": "extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}' ]\n\nNo /DELAYLOAD flag present. skia_use_direct3d defaults to true. Issue persists on main.",
+      "output": "10:string SUPPORT_DIRECT3D_VAR = Argument (\"supportDirect3D\", EnvironmentVariable (\"SUPPORT_DIRECT3D\") ?? \"true\");\n11:bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == \"1\" || SUPPORT_DIRECT3D_VAR.ToLower () == \"true\";\n13:var VERIFY_EXCLUDED = new[] { \"VCRUNTIME\", \"MSVCP\" };\n\nSUPPORT_DIRECT3D defaults to true. VERIFY_EXCLUDED only checks VCRUNTIME/MSVCP. No /DELAYLOAD or delayimp.lib configured.",
       "result": "wrong-output"
     }
   ],
   "errorMessages": {
-    "primaryError": "libSkiaSharp.dll (3.119.0+) has hard PE import-table dependency on d3d12.dll and D3DCOMPILER_47.dll — Windows PE loader will fail on systems without DX12, causing application crash at DLL load time before any SkiaSharp code executes",
+    "primaryError": "libSkiaSharp.dll has hard PE import table entries for d3d12.dll and D3DCOMPILER_47.dll \u2014 Windows DLL loader fails on systems without DX12 before any SkiaSharp code executes",
     "additionalErrors": [
-      "All three Windows architectures (x86, x64, arm64) are affected",
-      "Dependency introduced between 3.116.1 and 3.119.0 (via skia_use_direct3d=true build flag)",
-      "No /DELAYLOAD mitigation configured in build scripts"
+      "No /DELAYLOAD configured in build \u2014 d3d12.dll is loaded at DLL load time, not at first use",
+      "CheckWindowsDependencies in build only excludes VCRUNTIME/MSVCP \u2014 d3d12 is not flagged as problematic"
     ]
   },
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
-    "dotnetVersion": "8.0.417",
+    "dotnetVersion": "10.0.2",
+    "dotnetSdkVersion": "10.0.102",
     "skiaSharpVersion": "3.119.2",
     "dockerUsed": false
   },
@@ -150,8 +165,53 @@
     "triageCorrections": [
       {
         "topic": "affected-versions",
-        "upstream": "Triage listed 3.116.0 as the broken version based on reporter's claim",
-        "corrected": "Binary analysis shows 3.116.0 and 3.116.1 do NOT have d3d12 import. The dependency was introduced in 3.119.0. Reporter likely was using 3.119.x or the version field was filled incorrectly."
+        "upstream": "Triage stated 3.116.0 as the affected version based on reporter's claim",
+        "corrected": "PE import analysis shows 3.116.0 does NOT have d3d12.dll dependency. The dependency was introduced in 3.119.0. Reporter may have been on a different version or experienced a different root cause."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "d3d12.dll hard import confirmed in 3.119.0, 3.119.2 (latest), and main branch. No fix exists \u2014 build still defaults SUPPORT_DIRECT3D=true with no delay-load. Affects any Windows system without DX12 support."
+    },
+    "workarounds": [
+      "Downgrade to SkiaSharp 3.116.1 or earlier which does not have the d3d12.dll dependency",
+      "Build SkiaSharp from source with SUPPORT_DIRECT3D=false to eliminate the dependency entirely"
+    ],
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "summary": "Confirmed d3d12.dll hard dependency in 3.119.0+; not present in 3.116.0 as reported",
+      "body": "Thanks for reporting this! We've confirmed the core issue \u2014 `libSkiaSharp.dll` has a hard link-time import dependency on `d3d12.dll` and `D3DCOMPILER_47.dll` that causes the Windows DLL loader to fail on systems without DX12 support.\n\n**PE import table analysis across versions:**\n\n| Version | d3d12.dll import | D3DCOMPILER_47.dll import |\n|---------|:---:|:---:|\n| 2.88.9 | \u274c | \u274c |\n| 3.116.0 | \u274c | \u274c |\n| 3.116.1 | \u274c | \u274c |\n| 3.118.0-preview.2.3 | \u274c | \u274c |\n| 3.119.0 | \u2705 | \u2705 |\n| 3.119.2 (latest) | \u2705 | \u2705 |\n| main (source) | \u2705 | \u2705 |\n\n**Note:** The dependency was introduced in **3.119.0**, not 3.116.0. The build configuration (`native/windows/build.cake`) defaults `SUPPORT_DIRECT3D` to `true` and links `d3d12.lib` directly without `/DELAYLOAD`. The post-build `CheckWindowsDependencies` only flags `VCRUNTIME`/`MSVCP` as prohibited imports.\n\n**Root cause:** `skia_use_direct3d=true` in the GN build args causes Skia's `BUILD.gn` to link `d3d12.lib` and `d3dcompiler.lib` statically, creating hard PE import entries.\n\n**Workarounds:**\n- Downgrade to SkiaSharp 3.116.1 or earlier (no d3d12 dependency)\n- Build from source with `SUPPORT_DIRECT3D=false`\n\nThis is the same root cause as #3267."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add tenet/compatibility label \u2014 this is a compatibility regression affecting systems without DX12",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Windows-Classic",
+          "tenet/reliability",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-duplicate",
+        "description": "Mark as duplicate of #3267 \u2014 same root cause (d3d12.dll hard dependency)",
+        "risk": "medium",
+        "confidence": 0.9,
+        "linkedIssue": 3267
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #3300 \u2014 same issue on Windows Server 2012 R2",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3300
       }
     ]
   }
