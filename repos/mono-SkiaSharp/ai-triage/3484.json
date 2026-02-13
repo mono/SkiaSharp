@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3484,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:20:00Z",
+    "currentLabels": []
+  },
+  "summary": "Copilot-authored PR fixing SKFont.GetTextPath returning empty paths for emoji glyphs by modifying upstream SkTextUtils.cpp to substitute bounding-box rectangles when font.getPaths() yields nullptr",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 }
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": true,
+      "errorType": "wrong-output",
+      "errorMessage": "SKFont.GetTextPath returns empty path (0 width/height bounds) for emoji characters",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create SKTypeface for an emoji-capable font (e.g., 'Segoe UI Emoji' or via MatchCharacter)",
+        "Create SKFont with that typeface at size 48",
+        "Call font.GetTextPath(\"😊\", SKPoint.Empty)",
+        "Inspect path.Bounds — Width and Height are both 0"
+      ],
+      "environmentDetails": "SkiaSharp 3.119.0, Windows 11, Visual Studio",
+      "relatedIssues": [3328, 1275, 3244]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.0", "2.88.9"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.119.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The upstream SkTextUtils::GetPath code on main still uses the same callback pattern that skips nullptr paths — the fix in this PR has not been merged."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.70,
+      "reason": "Reporter of #3328 states it worked in 2.88.9. However, color emoji glyphs have never had vector outlines in Skia — the regression may be due to Skia version bump changing getPaths behavior rather than a SkiaSharp code change.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.119.0"
+    }
+  },
+  "analysis": {
+    "summary": "PR #3484 (by Copilot bot) attempts to fix #3328 by modifying upstream Skia code (SkTextUtils.cpp) to precompute glyph bounds and add bounding-box rectangles when font.getPaths() returns nullptr for color emoji glyphs. The fix changes the semantic contract of GetTextPath — previously it returned only vector outlines (empty for emoji), now it returns rectangles for non-outline glyphs. The PR modifies upstream Skia utility code rather than the SkiaSharp C API shim, which creates merge-conflict risk when updating Skia versions. It also adds non-standard FIX_SUMMARY.md and TESTING_NOTES.md files at the repo root.",
+    "rationale": "Classified as type/bug because the underlying issue (#3328) is a clear behavioral defect — GetTextPath returns empty paths for emoji, breaking layout and measurement. Area is area/SkiaSharp because the API surface is SKFont.GetTextPath in core SkiaSharp, and the native fix touches SkTextUtils which backs the C API. Severity is medium — it affects emoji-only text paths, not all text rendering.",
+    "keySignals": [
+      { "text": "Modifies externals/skia/src/utils/SkTextUtils.cpp — upstream Skia code, not the C API shim (src/c/)", "source": "PR diff", "interpretation": "Architecture policy states only externals/skia/src/c/ and include/c/ are editable. Modifying upstream Skia utility code creates maintenance burden and merge conflicts on Skia version bumps." },
+      { "text": "font.getPaths() returns nullptr for color emoji glyphs (COLR/CPAL, bitmap)", "source": "PR description + SkTextUtils.cpp:54-57", "interpretation": "Root cause is correct — color emoji don't have vector path outlines, so getPaths yields nullptr which the existing callback silently skips." },
+      { "text": "Returns bounding-box rectangles instead of actual paths for emoji", "source": "PR description", "interpretation": "Behavioral change: GetTextPath's contract shifts from 'vector outlines only' to 'vector outlines or bounding rectangles'. Callers expecting path shapes for clipping/stroking/animation would get rectangles." },
+      { "text": "FIX_SUMMARY.md and TESTING_NOTES.md added at repo root", "source": "PR file list", "interpretation": "Non-standard files that don't belong in the repository. Copilot bot artifact — should be removed." },
+      { "text": "PR checklist: 'Merged related skia PRs' is unchecked", "source": "PR body", "interpretation": "The submodule changes need a corresponding skia PR on the skiasharp branch, which doesn't appear to exist." },
+      { "text": "No CI workflow runs found", "source": "GitHub Actions API", "interpretation": "The PR has never been built or tested in CI." }
+    ],
+    "codeInvestigation": [
+      { "file": "externals/skia/src/utils/SkTextUtils.cpp", "lines": "41-62", "finding": "GetPath callback checks 'if (src)' before adding path — glyphs without vector outlines (like color emoji) are silently skipped, yielding empty output path. This is the root cause of #3328.", "relevance": "direct" },
+      { "file": "externals/skia/src/c/sk_font.cpp", "lines": "191-197", "finding": "C API shim delegates directly to SkTextUtils::GetPath/GetPosPath with no SkiaSharp-specific logic. The fix could alternatively be placed here by wrapping the call with bounds-fallback logic at the C API layer, avoiding upstream Skia modifications.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKFont.cs", "lines": "748-756", "finding": "C# wrapper calls sk_text_utils_get_path via P/Invoke. No validation or post-processing on the returned path — it trusts the native layer completely.", "relevance": "context" },
+      { "file": "tests/Tests/SkiaSharp/SKFontTest.cs", "lines": "318-326", "finding": "Existing test GetTextPathSucceedsForEmptyString validates empty string returns 0 PointCount. The new emoji test at line 328+ follows similar patterns and uses appropriate SkippableFact + MatchCharacter.", "relevance": "context" }
+    ],
+    "nextQuestions": [
+      "Should the fix be at the C API shim layer (externals/skia/src/c/sk_font.cpp) instead of upstream SkTextUtils.cpp to avoid maintenance burden?",
+      "Is returning bounding-box rectangles the correct semantic for GetTextPath, or should a separate API be used for emoji measurement?",
+      "Has the regression been confirmed by checking whether Skia's getPaths behavior changed between the 2.88.x and 3.x Skia versions?",
+      "Should this behavioral change be opt-in rather than default, to avoid surprising callers who depend on GetTextPath returning only vector outlines?"
+    ],
+    "resolution": {
+      "hypothesis": "Color emoji glyphs lack vector outlines, causing Skia's getPaths callback to skip them and produce empty output. The PR's approach of substituting bounding-box rectangles is technically functional but modifies the wrong layer and changes the API's semantic contract.",
+      "proposals": [
+        {
+          "title": "Move fix to C API shim layer",
+          "description": "Instead of modifying upstream SkTextUtils.cpp, implement the bounds-fallback logic in externals/skia/src/c/sk_font.cpp. After calling SkTextUtils::GetPath, check if the output path is empty while glyphs were present, then use font.getBounds() and add rectangles. This avoids modifying upstream code and confines the behavioral change to SkiaSharp's own layer.",
+          "confidence": 0.65,
+          "effort": "medium"
+        },
+        {
+          "title": "Upstream the fix to Skia",
+          "description": "If the behavior change (rectangles for non-outline glyphs) is considered correct for all Skia users, propose the change upstream to Google's Skia project. This is the cleanest long-term approach but has uncertain timeline.",
+          "confidence": 0.40,
+          "effort": "large"
+        },
+        {
+          "title": "Accept PR with cleanup",
+          "description": "Accept the current approach but remove FIX_SUMMARY.md and TESTING_NOTES.md, ensure the submodule commit is on the skiasharp branch, and verify CI passes. Acknowledge the upstream-modification risk.",
+          "confidence": 0.50,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Move fix to C API shim layer",
+      "recommendedReason": "Avoids modifying upstream Skia code (which creates merge conflict risk on version bumps) while still fixing the bug. Keeps the behavioral change contained within SkiaSharp's own C API layer where it can be more easily maintained."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "The PR addresses a real bug (#3328) but the implementation approach modifies upstream Skia code and changes GetTextPath's semantic contract. Needs maintainer review of whether the fix belongs at the C API shim layer instead, and whether bounding-box rectangles are the correct fallback."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug label to match the underlying issue",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to the underlying bug report #3328",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3328
+      },
+      {
+        "type": "link-related",
+        "description": "Link to older related emoji path issue #1275",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 1275
+      },
+      {
+        "type": "add-comment",
+        "description": "Post review feedback on the PR's approach and required cleanup",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for working on this — this addresses a real bug reported in #3328.\n\nA few concerns before this can move forward:\n\n1. **Upstream Skia modification.** The fix modifies `externals/skia/src/utils/SkTextUtils.cpp`, which is upstream Skia code. SkiaSharp's convention is to only modify `externals/skia/src/c/` and `include/c/` (our C API shim). Modifying upstream Skia code creates merge conflicts when bumping Skia versions. Consider moving the bounds-fallback logic into `externals/skia/src/c/sk_font.cpp` instead — after calling `SkTextUtils::GetPath`, check if the output path is empty while input had glyphs, then fall back to bounding-box rectangles there.\n\n2. **Semantic contract change.** `GetTextPath` has historically returned only vector path outlines. Returning rectangles for color emoji changes the API's contract. Callers using paths for clipping, stroking, or animation may get unexpected results. This should be documented clearly.\n\n3. **Cleanup needed.** Please remove `FIX_SUMMARY.md` and `TESTING_NOTES.md` from the repo root — these aren't standard SkiaSharp files.\n\n4. **CI status.** No CI runs have been triggered for this PR yet. The native changes require a full native build (`dotnet cake --target=externals-{platform}`) to validate.\n\n5. **Submodule branch.** The submodule commit needs to be on the `skiasharp` branch with a proper PR in the skia fork."
+      }
+    ]
+  }
+}
