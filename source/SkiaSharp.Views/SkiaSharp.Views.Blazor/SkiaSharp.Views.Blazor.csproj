@@ -10,6 +10,9 @@
     <Title>SkiaSharp for ASP.NET Blazor</Title>
     <PackageDescription>SkiaSharp for ASP.NET Blazor is a set of views that can be used to draw on the screen.</PackageDescription>
     <PackageTags>aspnet;blazor;web</PackageTags>
+    <!-- Block TypeScript compilation during MSBuild to avoid race with .NET 10 static web assets compression.
+         The JS files in wwwroot are pre-compiled and checked into git. Run tsc manually when changing .ts files. -->
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
 
   <PropertyGroup>
