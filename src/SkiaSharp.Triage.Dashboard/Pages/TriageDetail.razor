@@ -27,12 +27,12 @@ else
         <div class="detail-title-row">
             @if (_issue is not null)
             {
-                <a href="https://github.com/@_issue.Meta.Repo/issues/@_issue.Meta.Number" target="_blank" class="issue-link-lg">#@_issue.Meta.Number</a>
+                <a href="https://github.com/@_issue.Meta.Repo/issues/@_issue.Meta.Number" target="_blank" rel="noopener noreferrer" class="issue-link-lg">#@_issue.Meta.Number</a>
                 <h1>@(_issueTitle ?? _issue.Summary)</h1>
             }
             else
             {
-                <a href="https://github.com/@(_repro?.Meta.Repo ?? "mono/SkiaSharp")/issues/@Number" target="_blank" class="issue-link-lg">#@Number</a>
+                <a href="https://github.com/@(_repro?.Meta.Repo ?? "mono/SkiaSharp")/issues/@Number" target="_blank" rel="noopener noreferrer" class="issue-link-lg">#@Number</a>
                 <h1>Issue #@Number</h1>
             }
         </div>
@@ -50,7 +50,7 @@ else
                 }
                 <span class="detail-meta-text">
                     Analyzed: @_issue.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
-                    · <a href="https://github.com/@_issue.Meta.Repo" target="_blank">@_issue.Meta.Repo</a>
+                    · <a href="https://github.com/@_issue.Meta.Repo" target="_blank" rel="noopener noreferrer">@_issue.Meta.Repo</a>
                 </span>
             </div>
         }
@@ -235,18 +235,4 @@ else
     }
 
     private static int SeverityOrder(string? severity) => TriageFormatHelper.SeverityOrder(severity);
-
-    private async Task CopyToClipboard(string text)
-    {
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
-        }
-        catch { }
-    }
-
-    private string GetFileUrl(CodeInvestigationEntry entry) =>
-        TriageFormatHelper.GetFileUrl(_issue?.Meta.Repo ?? "mono/SkiaSharp", entry);
-
-    [Inject] private Microsoft.JSInterop.IJSRuntime JSRuntime { get; set; } = default!;
 }
