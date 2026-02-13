@@ -43,3 +43,206 @@
 .collapsible-body {
     padding: 1rem;
 }
+
+/* ── Details panel: evidence, signals, code investigation, proposals ── */
+
+.screenshot-item, .attachment-item, .repo-link-item {
+    padding: 0.25rem 0;
+    font-size: 0.85rem;
+}
+
+.evidence-source {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-left: 0.5rem;
+}
+
+.related-issues {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.related-issue-link {
+    font-weight: 600;
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.signal-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.signal-quote {
+    font-style: italic;
+    color: #495057;
+    border-left: 3px solid #0d6efd;
+    padding-left: 0.75rem;
+    margin: 0 0 0.25rem 0;
+    font-size: 0.85rem;
+}
+
+.signal-interp {
+    font-size: 0.8rem;
+    color: #495057;
+    margin: 0.25rem 0 0 0;
+}
+
+.code-investigation-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.code-file-ref a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.code-file-ref a:hover {
+    color: #0d6efd;
+}
+
+.code-file-ref code {
+    font-size: 0.82rem;
+    color: #0d6efd;
+    background: #e7f1ff;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    word-break: break-all;
+}
+
+.code-file-ref a:hover code {
+    background: #cfe2ff;
+}
+
+.code-lines {
+    font-size: 0.72rem;
+    color: #6c757d;
+    background: #f0f0f0;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-family: var(--bs-font-monospace);
+    white-space: nowrap;
+}
+
+.code-relevance {
+    font-size: 0.8rem;
+    color: #495057;
+    margin: 0.4rem 0 0 0;
+}
+
+.uncertainty-list {
+    font-size: 0.85rem;
+    padding-left: 1.5rem;
+}
+.uncertainty-list li { color: #dc3545; margin-bottom: 0.25rem; }
+
+.resolution-hypothesis {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+.resolution-hypothesis h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.proposals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.proposals-header h4 {
+    margin: 0;
+}
+
+.carousel-hint {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.proposals-carousel {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 1rem;
+    padding-bottom: 0.75rem;
+    margin: 0 -1.25rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+.proposals-carousel::-webkit-scrollbar {
+    height: 6px;
+}
+
+.proposals-carousel::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.proposals-carousel::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.proposals-carousel > .proposal-card {
+    flex: 0 0 calc(100% - 3rem);
+    max-width: calc(100% - 3rem);
+    scroll-snap-align: center;
+}
+
+.proposal-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    position: relative;
+    background: #fff;
+}
+
+.proposal-card.proposal-recommended {
+    border-color: #ffc107;
+    background: #fffbeb;
+}
+
+.proposal-card h5 {
+    font-size: 0.95rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.proposal-meta {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.proposal-card details { font-size: 0.85rem; }
+.proposal-card details summary { cursor: pointer; color: #6c757d; }
+
+.recommended-reason {
+    background: #fef3c7;
+    border-top: 1px dashed #f59e0b;
+    border-radius: 0;
+    padding: 0.75rem 0;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: #92400e;
+}
