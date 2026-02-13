@@ -2,6 +2,12 @@
 
 Reproduce bugs in iOS, Android, or .NET MAUI applications using SkiaSharp.
 
+## Contents
+1. [Signals](#signals) — [Prerequisites](#prerequisites)
+2. [Strategy When Devices Are Unavailable](#strategy-when-devices-are-unavailable)
+3. [Create Project](#create-project-when-deviceemulator-available) — [Build & Run](#build--run)
+4. [Conclusion Mapping](#conclusion-mapping) — [Main Source Testing (Phase 3C)](#main-source-testing-phase-3c)
+
 **⚠️ Requires device or emulator.** If unavailable, try the console fallback first —
 many mobile-reported bugs are actually core SkiaSharp bugs reproducible anywhere.
 

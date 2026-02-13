@@ -2,6 +2,12 @@
 
 The default reproduction strategy. Use for any bug without platform-specific signals.
 
+## Contents
+1. [Signals](#signals) — [Prerequisites](#prerequisites) — [Create Project](#create-project)
+2. [Add Repro Code](#add-repro-code) — [Build](#build) — [Run & Verify](#run--verify)
+3. [Iterate](#iterate) — [Conclusion Mapping](#conclusion-mapping)
+4. [Main Source Testing (Phase 3C)](#main-source-testing-phase-3c)
+
 ## Signals
 
 No platform-specific keywords, or explicitly: console app, command line, library-only,

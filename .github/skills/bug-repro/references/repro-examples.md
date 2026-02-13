@@ -3,6 +3,10 @@
 Reference examples showing valid `bug-repro` JSON output for different conclusion types.
 Each example conforms to [`repro-schema.json`](repro-schema.json).
 
+## Contents
+1. [Example 1: C# API Bug — `reproduced`](#example-1-c-api-bug--reproduced)
+2. [Example 2: WASM/Blazor Bug — `reproduced` with cross-platform verification](#example-2-wasmblazor-bug--reproduced-with-cross-platform-verification)
+
 ---
 
 ## Example 1: C# API Bug — `reproduced`

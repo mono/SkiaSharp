@@ -3,6 +3,13 @@
 Reproduce bugs on Linux using Docker. Use when the host is macOS/Windows, or to test
 older SkiaSharp versions that lack host-platform native assets.
 
+## Contents
+1. [Signals](#signals) — [Prerequisites](#prerequisites) — [Quick Repro Pattern](#quick-repro-pattern)
+2. [Required Dependencies](#required-dependencies) — [Platform Variants](#platform-variants)
+3. [Run & Verify](#run--verify) — [Recording in JSON](#recording-in-json)
+4. [Common Issues](#common-issues) — [Conclusion Mapping](#conclusion-mapping)
+5. [Main Source Testing (Phase 3C)](#main-source-testing-phase-3c)
+
 See also: the bug-fix skill's `docker-testing.md` for full
 dependency matrix and troubleshooting.
 

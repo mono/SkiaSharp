@@ -22,17 +22,15 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON) 
 
 ## Phase 1 — Fetch Issue
 
-1. **Set up data cache** (run once per session):
+1. **Read the issue** (preferred):
    ```bash
-   pwsh --version    # Requires 7.5+
+   CACHE=".data-cache/repos/mono-SkiaSharp"
    [ -d ".data-cache" ] || git worktree add .data-cache docs-data-cache
    git -C .data-cache pull --rebase origin docs-data-cache
-   CACHE=".data-cache/repos/mono-SkiaSharp"
+   cat $CACHE/github/items/{number}.json
    ```
-2. **Read the issue:** `cat $CACHE/github/items/{number}.json`
-   - Fallback: `gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author`
-3. **Convert** (optional): `pwsh .github/skills/triage-issue/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/issue-{number}.md`
-4. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, and `resolution.proposals` as **hints** (verify independently). Record path in `inputs.triageFile`.
+   **Fallback:** `gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author`
+2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]` and `evidence.bugSignals` as **hints** (verify independently).
 
 ---
 
@@ -69,11 +67,28 @@ Also check: Docker (`docker --version`), Playwright MCP tools, GPU availability,
 
 All platform files fall back to `platform-console.md` for core SkiaSharp bugs.
 
+**Tie-breaking:** If multiple platform signals (e.g., "WASM + WPF"), use the highest priority. If reporter says "works on X, fails on Y", reproduce on Y first, test X in Phase 3D.
+
 **Read the selected platform file.** Follow its Create → Build → Run → Verify steps, substituting `{reporter_version}`, `{reporter_tfm}`, and `{reporter_code}`.
 
 ### 5. Plan
 
 Output a brief plan before executing (1-2 sentences: what platform, what version, what approach).
+
+---
+
+## Key Rules (read before Phase 3)
+
+Read [references/anti-patterns.md](references/anti-patterns.md) for the full 19-rule list. Critical rules:
+
+1. **Source code investigation.** Stop at "did it reproduce." Root cause is the `bug-fix` skill's job.
+2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design.
+3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.
+4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions.
+
+**Intermittent bugs:** If results are inconsistent, run 3–5 times. Reproduced ≥1 time → `reproduced` with note "Intermittent: X/Y runs". Never reproduced after 5 → `not-reproduced`.
+
+**Effort budget:** Phases 1–2: ~5 min. Phase 3A: ~15–20 min. Phases 3B–3D: ~10–15 min. Total: ~30–50 min. If stuck after 3+ substantially different approaches, conclude with what you have.
 
 ---
 
@@ -144,7 +159,7 @@ Test reporter's version only. Derive `scope`: reproduced on ≥2 platforms → `
 
 ### 1. Choose conclusion
 
-Read [references/conclusion-guide.md](references/conclusion-guide.md). The conclusion is **factual only** — did the reported behavior occur? Never let editorial judgment affect the conclusion.
+Read [references/conclusion-guide.md](references/conclusion-guide.md). Key question: did the reported behavior occur?
 
 | Conclusion | When |
 |------------|------|
@@ -203,13 +218,3 @@ Version results:
   SkiaSharp 3.116.1 (latest):  ❌ REPRODUCED
   main (source):               ✅ not-reproduced
 ```
-
----
-
-## Anti-Patterns
-
-Read [references/anti-patterns.md](references/anti-patterns.md) — 19 rules addressing non-obvious failure modes. Top 3:
-
-1. **Source code investigation.** Stop at "did it reproduce." Root cause is the `bug-fix` skill's job.
-2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design.
-3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.

@@ -2,6 +2,12 @@
 
 Reproduce bugs in SkiaSharp's Blazor WASM integration using Playwright browser tools.
 
+## Contents
+1. [Signals](#signals) — [Prerequisites](#prerequisites) — [Create Project](#create-project)
+2. [Configure](#configure) — [Add Repro Code](#add-repro-code) — [Build](#build)
+3. [Run & Verify](#run--verify-critical) — [Conclusion Mapping](#conclusion-mapping)
+4. [Common Issues](#common-issues) — [Main Source Testing (Phase 3C)](#main-source-testing-phase-3c)
+
 **⚠️ Build success ≠ runtime success.** WASM bugs often manifest ONLY at runtime in the
 browser. You MUST serve the app and check browser console — never stop at `dotnet build`.
 
