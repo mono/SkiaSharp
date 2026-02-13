@@ -480,9 +480,15 @@ Task ("samples")
             slnPlatform = slnPlatform.ToLower ();
         }
 
+        // Uno Platform samples require nuget.org which is not available in CI
+        var isUno = platform == "unoplatform" || sln.FullPath.Contains ("UnoPlatform");
+
         if (dryrun) {
-            Information ($"    BUILD       {sln}");
-        } else {
+            if (isUno)
+                Information ($"    SKIP  (UNO) {sln} (requires nuget.org)");
+            else
+                Information ($"    BUILD       {sln}");
+        } else if (!isUno) {
             Information ($"Building sample {sln} ({platform})...");
             RunDotNetBuild (sln);
         }
