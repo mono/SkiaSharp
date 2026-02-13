@@ -78,7 +78,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
       "description": "Run the reproduction. Expected Left=-2 but got Left=0, confirming the normalization bug.",
       "layer": "csharp",
       "command": "dotnet run --project Repro2997",
-      "output": "Matrix: ScaleX=-2, ScaleY=1\nInput:  SKRect(0, 0, 1, 1)\nOutput: SKRect(0, 0, -2, 1) → normalized to SKRect(-2, 0, 0, 1)\nExpected Left=-2, Right=0 but got Left=-2, Right=0\nBUG: MapRect returns sorted rect, losing negative scale orientation",
+      "output": "Matrix: ScaleX=-2, ScaleY=1\nInput:  SKRect(0, 0, 1, 1)\nOutput: SKRect(-2, 0, 0, 1)\nExpected Left=0, Right=-2 (preserve flip) but got Left=-2, Right=0 (normalized)\nBUG: MapRect returns sorted rect, losing negative scale orientation",
       "result": "failure"
     },
     {
@@ -163,7 +163,7 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
   "reproProject": {
     "type": "blazorwasm",
     "tfm": "net10.0",
-    "packages": ["SkiaSharp.Views.Blazor"]
+    "packages": [{ "name": "SkiaSharp.Views.Blazor", "version": "3.119.2-preview.1" }]
   },
   "reproductionSteps": [
     {

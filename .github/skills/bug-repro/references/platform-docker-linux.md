@@ -42,7 +42,8 @@ dotnet add package SkiaSharp.NativeAssets.Linux --version {reporter_version} --n
 cat > Program.cs << "ENDOFFILE"
 {reporter_code}
 ENDOFFILE
-dotnet run --runtime linux-x64 --no-self-contained 2>&1
+dotnet restore 2>&1 | tail -1
+dotnet run 2>&1
 '
 ```
 

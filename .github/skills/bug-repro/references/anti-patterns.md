@@ -35,6 +35,8 @@ The 7 critical rules are in SKILL.md. This file has the complete list with examp
 
 ## Output Limits
 
+See SKILL.md for the authoritative output limits table.
+
 | Field | Max Size |
 |-------|----------|
 | `reproductionSteps[].output` (success) | 2KB |
