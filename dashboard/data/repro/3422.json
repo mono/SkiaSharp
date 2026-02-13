@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3422,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T04:15:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "notes": "Tested SkiaSharp 3.119.1 and 3.119.2-preview.1 on Blazor WASM targeting net10.0 with .NET SDK 10.0.102 (GA) and wasm-tools 10.0.102/10.0.100 on macOS arm64. The reporter\u0027s TypeInitializationException for SKImageInfo did not occur \u2014 both versions built successfully with native WASM compilation and rendered correctly at runtime (\u0027SUCCESS: rendered 1600x1200\u0027 in browser console, zero errors). Separately tested 2.88.9 which fails with a DIFFERENT error (TypeLoadException: IJSUnmarshalledObjectReference removed in .NET 10) \u2014 this is expected since 2.88.x Views.Blazor references deprecated JSInterop APIs. The original issue was likely caused by early .NET 10 preview SDK / wasm-tools workload mismatch. Multiple commenters confirm \u0027dotnet workload restore\u0027 fixed it, though others on macOS still saw the issue. This suggests environment-specific wasm-tools workload version incompatibility with .NET 10 preview SDKs that is resolved on .NET 10 GA. Note: the issue has 3\u002B confirmations from other users as recently as Feb 2026 \u2014 human follow-up recommended to verify whether those users are on GA SDK.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Check .NET SDK and wasm-tools workload availability outside repo (in /tmp/)",
+      "layer": "setup",
+      "command": "cd /tmp \u0026\u0026 dotnet --info | head -30 \u0026\u0026 dotnet workload list",
+      "exitCode": 0,
+      "output": ".NET SDK: Version 10.0.102, Workload version: 10.0.102. wasm-tools 10.0.102/10.0.100 installed. OS: macOS 26.2, RID: osx-arm64.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Create Blazor WASM project with SkiaSharp 3.119.1 (reporter\u0027s stable version) and WasmBuildNative=true",
+      "layer": "setup",
+      "command": "mkdir -p /tmp/repro-3422 \u0026\u0026 cd /tmp/repro-3422 \u0026\u0026 dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.119.1",
+      "exitCode": 0,
+      "output": "Template \u0027Blazor WebAssembly Standalone App\u0027 created successfully. PackageReference for package \u0027SkiaSharp.Views.Blazor\u0027 version \u00273.119.1\u0027 added. Restore succeeded.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Blazor WASM project file with SkiaSharp.Views.Blazor and WasmBuildNative",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet10.0\u003C/TargetFramework\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003COverrideHtmlAssetPlaceholders\u003Etrue\u003C/OverrideHtmlAssetPlaceholders\u003E\n    \u003CWasmBuildNative\u003Etrue\u003C/WasmBuildNative\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly\u0022 Version=\u002210.0.2\u0022 /\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0022 Version=\u002210.0.2\u0022 PrivateAssets=\u0022all\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.119.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Reporter\u0027s SKCanvasView reproduction code with success marker",
+          "content": "@page \u0022/\u0022\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 style=\u0022width:800px;height:600px;\u0022 /\u003E\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs args)\n    {\n        var canvas = args.Surface.Canvas;\n        canvas.Clear(SkiaSharp.SKColors.White);\n        using var paint = new SkiaSharp.SKPaint\n        {\n            Color = SkiaSharp.SKColors.Black,\n            IsAntialias = true,\n            Style = SkiaSharp.SKPaintStyle.Fill\n        };\n        using var font = new SkiaSharp.SKFont { Size = 24 };\n        var coord = new SkiaSharp.SKPoint(args.Info.Width / 2, (args.Info.Height \u002B font.Size) / 2);\n        canvas.DrawText(\u0022SkiaSharp\u0022, coord, font, paint);\n        Console.WriteLine($\u0022SUCCESS: rendered {args.Info.Width}x{args.Info.Height}\u0022);\n    }\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build Blazor WASM project with native WASM compilation (SkiaSharp 3.119.1)",
+      "layer": "deployment",
+      "command": "cd /tmp/repro-3422/Repro \u0026\u0026 dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s), 0 Error(s). Time Elapsed 00:00:07.4. Native WASM link completed via wasm-ld with libSkiaSharp.a from NativeAssets.WebAssembly 3.119.1.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Serve Blazor WASM app and verify in browser with Playwright \u2014 check for TypeInitializationException for SKImageInfo",
+      "layer": "deployment",
+      "command": "dotnet run --urls http://localhost:5111 --no-build \u0026\u0026 playwright navigate http://localhost:5111 \u0026\u0026 playwright console_messages error",
+      "exitCode": 0,
+      "output": "Server listening on http://localhost:5111. Browser navigated to http://localhost:5111. Page loaded with nav (Home, Counter, Weather) and article content. Console log: \u0027SUCCESS: rendered 1600x1200\u0027. Console errors: 0. No TypeInitializationException, no DllNotFoundException. SKCanvasView rendered successfully.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test reporter\u0027s exact preview version (3.119.2-preview.1) in fresh project directory to rule out version-specific issue",
+      "layer": "deployment",
+      "command": "rm -rf /tmp/repro-3422-preview \u0026\u0026 mkdir -p /tmp/repro-3422-preview \u0026\u0026 cd /tmp/repro-3422-preview \u0026\u0026 dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.119.2-preview.1 \u0026\u0026 dotnet build \u0026\u0026 dotnet run --urls http://localhost:5113 --no-build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 errors. Server started. Browser: \u0027SUCCESS: rendered 1600x1200\u0027. Console errors: 0. No TypeInitializationException.",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.2",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false,
+    "dotnetSdkVersion": "10.0.102",
+    "wasmToolsVersion": "10.0.102/10.0.100"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3422.json"
+  },
+  "assessment": "likely-bug",
+  "scope": "unknown",
+  "reproductionTime": "~15 minutes",
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Build succeeded, runtime rendered successfully. Console: SUCCESS: rendered 1600x1200. Zero errors.",
+      "platform": "wasm-blazor"
+    },
+    {
+      "version": "3.119.2-preview.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Build succeeded, runtime rendered successfully. Console: SUCCESS: rendered 1600x1200. Zero errors.",
+      "platform": "wasm-blazor"
+    },
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "error",
+      "notes": "Build succeeded but runtime failed with TypeLoadException: IJSUnmarshalledObjectReference removed in .NET 10. DIFFERENT error from reporter\u0027s TypeInitializationException for SKImageInfo.",
+      "platform": "wasm-blazor"
+    }
+  ],
+  "reproProject": {
+    "type": "blazorwasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.119.1"
+      }
+    ]
+  },
+  "errorMessages": {
+    "primaryError": "TypeInitializationException for SKImageInfo did not occur with SkiaSharp 3.119.1 or 3.119.2-preview.1 on .NET SDK 10.0.102 GA with wasm-tools workload",
+    "additionalErrors": [
+      "SkiaSharp 2.88.9 on .NET 10: TypeLoadException: Could not resolve type \u0027Microsoft.JSInterop.IJSUnmarshalledObjectReference\u0027 \u2014 different error, .NET 10 removed this API"
+    ]
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "classification",
+        "upstream": "SkiaSharp does not yet officially target net10.0 \u2014 the Blazor package ships net6.0/net8.0 only, and the pre-built WASM static libraries (.a) may not match .NET 10\u0027s Emscripten version",
+        "corrected": "SkiaSharp 3.119.1 and 3.119.2-preview.1 work correctly on .NET 10 GA (SDK 10.0.102) with wasm-tools workload. The WASM native build links libSkiaSharp.a successfully via Emscripten 3.1.56 and renders at runtime. The issue was likely caused by early .NET 10 preview SDK / wasm-tools version mismatch, not SkiaSharp\u0027s TFM support."
+      }
+    ]
+  }
+}

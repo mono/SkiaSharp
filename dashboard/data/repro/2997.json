@@ -77,25 +77,29 @@
     "triageFile": "ai-triage/2997.json"
   },
   "assessment": "working-as-designed",
+  "scope": "unknown",
   "reproductionTime": "~5 minutes",
   "versionResults": [
     {
       "version": "2.88.3",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Identity MapRect normalizes non-standard rect. Left=15 (expected 25), Right=25 (expected 15), Top=2 (expected 10), Bottom=10 (expected 2)."
+      "notes": "Identity MapRect normalizes non-standard rect. Left=15 (expected 25), Right=25 (expected 15), Top=2 (expected 10), Bottom=10 (expected 2).",
+      "platform": "host-macos-arm64"
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Same normalization behavior on latest stable release."
+      "notes": "Same normalization behavior on latest stable release.",
+      "platform": "host-macos-arm64"
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "reproduced",
-      "notes": "xUnit test fails: Assert.Equal() Expected: 25, Actual: 15. Bug present on main."
+      "notes": "xUnit test fails: Assert.Equal() Expected: 25, Actual: 15. Bug present on main.",
+      "platform": "host-macos-arm64"
     }
   ],
   "reproProject": {
