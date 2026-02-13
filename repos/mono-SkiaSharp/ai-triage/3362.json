@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3362,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:30:00Z",
+    "currentLabels": []
+  },
+  "summary": "Copilot bot PR to migrate docs from Xamarin.Forms to .NET MAUI — already completed on docs branch",
+  "classification": {
+    "type": { "value": "type/documentation", "confidence": 0.98 },
+    "area": { "value": "area/Docs", "confidence": 0.98 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "PR created by Copilot bot, targets docs branch, 54 files, 296+/296- (1:1 replacements)"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The docs branch was independently migrated to MAUI via commits 38d5cac69..b1bf5612c on 2026-01-29. Zero Xamarin references remain. This PR's changes are entirely redundant."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.99,
+      "reason": "The exact same migration (Xamarin.Forms → .NET MAUI) was completed on the docs branch in commits 38d5cac69 ('Remove all Xamarin references from docs and root files') and b1bf5612c ('Remove all remaining Xamarin references') on 2026-01-29. grep confirms zero Xamarin references remain on the docs branch.",
+      "relatedCommits": ["38d5cac69", "10027c66e", "939d37b2c", "b1bf5612c"]
+    }
+  },
+  "analysis": {
+    "summary": "PR #3362 is a Copilot-bot-generated PR from 2025-09-05 that mechanically replaces Xamarin.Forms references with .NET MAUI across 54 documentation files on the docs branch. The same migration was independently completed on the docs branch on 2026-01-29 via 4 commits. The PR now has merge conflicts and is fully redundant.",
+    "rationale": "This is clearly a documentation PR — all 54 files are in docs/ and contain only text/metadata changes. The area is area/Docs since it modifies the documentation website content on the docs branch. The PR is superseded because the target branch already contains the identical migration, confirmed by grep showing zero remaining Xamarin references. mattleibow approved in Sept 2025 but it was never merged; the work was done independently later.",
+    "keySignals": [
+      { "text": "mergeable_state: dirty", "source": "GitHub API", "interpretation": "PR has merge conflicts because the same changes were applied independently on the target branch." },
+      { "text": "Zero Xamarin.Forms references remain on docs branch", "source": "grep -rl 'Xamarin.Forms|SkiaSharp.Views.Forms' .docs/docs/ returned 0 results", "interpretation": "The migration this PR attempts is already 100% complete on the target branch." },
+      { "text": "Commits 38d5cac69..b1bf5612c on 2026-01-29", "source": "git log on docs branch", "interpretation": "Four commits completed the full Xamarin→MAUI migration 5 months after this PR was opened." },
+      { "text": "PR author: Copilot bot, draft: true", "source": "GitHub API", "interpretation": "Auto-generated PR that was never finalized or merged." }
+    ],
+    "codeInvestigation": [
+      { "file": ".docs/docs/docs/basics/integration.md", "finding": "Already references '.NET MAUI', uses ms.service: dotnet-maui, zero Xamarin references — confirms migration is complete", "relevance": "direct" },
+      { "file": ".docs/docs/docs/basics/animation.md", "finding": "Zero Xamarin.Forms references (grep count: 0) — PR's proposed changes already present", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SkiaSharp.Views.Maui.Controls.csproj", "finding": "Confirms SkiaSharp.Views.Maui.Controls is the correct package name used in the PR's replacement text", "relevance": "context" }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.97,
+      "reason": "The migration this PR implements was independently completed on the docs branch on 2026-01-29. The PR has merge conflicts and is fully redundant."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply documentation and docs area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/documentation", "area/Docs"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the PR is superseded and close",
+        "risk": "high",
+        "confidence": 0.95,
+        "comment": "Thanks for the contribution. This migration was independently completed on the `docs` branch in January 2026 (commits 38d5cac69..b1bf5612c), so this PR is now fully superseded. Closing as the target branch already contains all these changes."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as superseded — migration already complete on target branch",
+        "risk": "medium",
+        "confidence": 0.97
+      }
+    ]
+  }
+}
