@@ -19,24 +19,42 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # 'dotnet workload install tizen --skip-manifest-update' internally,
 # which must run before official workloads change the workload state.
 Write-Host "Installing Tizen workloads..."
-New-Item -ItemType Directory -Force './output/tmp' | Out-Null
+
+# Download and extract the Tizen manifest directly instead of using Samsung's script.
+# Samsung's script hardcodes nuget.org URLs which are blocked in CI.
+$dotnetPath = (Get-Command dotnet).Source
+# Resolve symlinks to get the actual dotnet root
 if ($IsLinux -or $IsMacOS) {
-  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile './output/tmp/workload-install.sh'
-  # Use bash -e to ensure script exits on first error (Samsung script's shebang may be ignored)
-  # Pass explicit version band for .NET 10 since Samsung's LatestVersionMap doesn't include 10.0.100 yet
-  bash -e output/tmp/workload-install.sh --version "$Tizen" --dotnet-target-version-band "10.0.100"
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host "##[error]Tizen workload installation failed with exit code $LASTEXITCODE"
-    exit $LASTEXITCODE
-  }
+  $dotnetRoot = & readlink -f $dotnetPath | Split-Path
 } else {
-  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile './output/tmp/workload-install.ps1'
-  # Pass explicit version band for .NET 10 since Samsung's LatestVersionMap doesn't include 10.0.100 yet
-  ./output/tmp/workload-install.ps1 -Version "$Tizen" -DotnetTargetVersionBand "10.0.100"
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host "##[error]Tizen workload installation failed with exit code $LASTEXITCODE"
-    exit $LASTEXITCODE
-  }
+  $dotnetRoot = Split-Path $dotnetPath
+}
+$sdkVersion = & dotnet --version
+$versionBand = "10.0.100"
+$manifestDir = Join-Path $dotnetRoot "sdk-manifests" $versionBand "samsung.net.sdk.tizen"
+$manifestName = "samsung.net.sdk.tizen.manifest-$versionBand"
+$manifestUrl = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/$($manifestName.ToLower())/$Tizen/$($manifestName.ToLower()).$Tizen.nupkg"
+
+Write-Host "Downloading Tizen manifest from $manifestUrl..."
+New-Item -ItemType Directory -Force './output/tmp' | Out-Null
+$nupkgPath = "./output/tmp/tizen-manifest.nupkg"
+Invoke-WebRequest $manifestUrl -OutFile $nupkgPath
+
+Write-Host "Extracting manifest to $manifestDir..."
+New-Item -ItemType Directory -Force $manifestDir | Out-Null
+if ($IsLinux -or $IsMacOS) {
+  unzip -o -qq $nupkgPath -d ./output/tmp/tizen-manifest
+  Copy-Item -Force ./output/tmp/tizen-manifest/data/* $manifestDir/
+} else {
+  Expand-Archive -Path $nupkgPath -DestinationPath ./output/tmp/tizen-manifest -Force
+  Copy-Item -Force ./output/tmp/tizen-manifest/data/* $manifestDir/
+}
+
+Write-Host "Installing Tizen workload..."
+& dotnet workload install tizen --skip-manifest-update --skip-sign-check
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "##[error]Tizen workload installation failed with exit code $LASTEXITCODE"
+  exit $LASTEXITCODE
 }
 Write-Host "Done installing Tizen workload $Tizen"
 
