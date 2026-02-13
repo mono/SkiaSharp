@@ -3,12 +3,15 @@
     "schemaVersion": "1.0",
     "number": 3279,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T17:55:00Z"
+    "analyzedAt": "2026-02-13T00:07:25Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3279.json"
   },
   "conclusion": "reproduced",
   "assessment": "breaking-change",
-  "notes": "Reproduced all 5 compiler errors (4x CS0117, 1x CS1501) as reported. The old SKMatrix APIs (MakeIdentity, MakeTranslation, MakeScale, MakeRotation, static PostConcat with ref) were deprecated in v2.88.x with [Obsolete] attributes pointing to replacements (CreateIdentity, CreateTranslation, CreateScale, CreateRotation, instance PostConcat), and removed entirely in v3.x. This is an intentional breaking change — the v2.88.9 build succeeds with obsolete warnings showing the migration path. Suggest closing as by-design with a pointer to the new API names.",
-  "reproductionTime": "~8 minutes",
+  "notes": "Reproduced all 5 compiler errors (4x CS0117, 1x CS1501) as reported. SKMatrix.MakeIdentity(), MakeTranslation(), MakeScale(), MakeRotation() were marked [Obsolete] in v2.88.9 and fully removed in v3.0.0, replaced by CreateIdentity(), CreateTranslation(), CreateScale(), CreateRotation(). PostConcat changed from static 2-arg (ref SKMatrix, SKMatrix) to instance method returning new SKMatrix. This is a documented intentional breaking change in SkiaSharp 3.x — see changelogs/SkiaSharp/3.0.0/SkiaSharp.breaking.md.",
+  "reproductionTime": "~5 minutes",
   "reproProject": {
     "type": "console",
     "tfm": "net8.0",
@@ -21,93 +24,89 @@
       "version": "2.88.9",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Builds successfully with 5 CS0618 obsolete warnings showing renamed APIs: MakeIdentity->CreateIdentity, MakeTranslation->CreateTranslation, MakeScale->CreateScale, MakeRotation->CreateRotation, PostConcat(ref,matrix)->PostConcat(matrix)."
+      "notes": "All Make* and PostConcat(ref, matrix) APIs exist and compile successfully. 8 CS0618 obsolete warnings emitted pointing users to Create* replacements."
     },
     {
       "version": "3.119.0",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Build fails with 4 CS0117 errors (MakeIdentity, MakeTranslation, MakeScale, MakeRotation). PostConcat CS1501 also confirmed separately."
+      "notes": "5 compiler errors: CS0117 for MakeIdentity, MakeTranslation, MakeScale, MakeRotation; CS1501 for PostConcat with 2 arguments."
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Same 4 CS0117 errors as 3.119.0. Old APIs remain removed in latest stable."
+      "notes": "Same 5 compiler errors as 3.119.0. APIs remain removed in latest stable."
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "reproduced",
-      "notes": "Old Make* APIs do not exist in source. New Create* APIs confirmed present. All 20 SKMatrixTest tests pass with new APIs."
+      "notes": "Confirmed Make* methods do not exist in SKMatrix.cs on main. Only Create* methods present. All 20 existing SKMatrixTest tests pass using the Create* API."
     }
   ],
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create standalone console project with SkiaSharp 3.119.0 and write reproduction code using the old v2.88.9 SKMatrix APIs from the issue.",
+      "description": "Create standalone console project and add SkiaSharp 3.119.0",
       "layer": "setup",
       "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.0",
       "exitCode": 0,
-      "result": "success",
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.119.0' added.",
       "filesCreated": [
         {
           "filename": "Program.cs",
-          "description": "Reproduction code using all 5 old SKMatrix APIs reported in the issue.",
-          "content": "// Reproduction of issue #3279 - SKMatrix APIs from v2.88.9 used in v3.x\nusing SkiaSharp;\n\n// Error 5: CS0117 - 'SKMatrix' does not contain a definition for 'MakeIdentity'\nSKMatrix Matrix = SKMatrix.MakeIdentity();\n\n// Error 2: CS0117 - 'SKMatrix' does not contain a definition for 'MakeTranslation'\nvar translation = SKMatrix.MakeTranslation(100f, 200f);\n\n// Error 3: CS0117 - 'SKMatrix' does not contain a definition for 'MakeScale'\nvar scale = SKMatrix.MakeScale(2.0f, 2.0f, 50f, 50f);\n\n// Error 4: CS0117 - 'SKMatrix' does not contain a definition for 'MakeRotation'\nvar rotation = SKMatrix.MakeRotation(1.57f, 50f, 50f);\n\n// Error 1: CS1501 - No overload for method 'PostConcat' takes 2 arguments\nSKMatrix.PostConcat(ref Matrix, translation);\n\nConsole.WriteLine($\"Matrix: {Matrix}\");"
+          "description": "Reproduction code using all 5 SKMatrix APIs from the reporter's issue: MakeIdentity, MakeTranslation, MakeScale, MakeRotation, and PostConcat(ref, matrix).",
+          "content": "using SkiaSharp;\n\n// Reproduction of issue #3279: SKMatrix APIs from v2.88.9 that fail in v3.x\n// All 5 compiler errors the reporter mentioned\n\nvar Center = new SKPoint(100, 100);\nfloat GfxScale = 2.0f;\nfloat zAngle = 0.5f;\nfloat displayWidth = 800f;\nfloat displayHeight = 600f;\n\n// Error 5: CS0117 - MakeIdentity\nSKMatrix Matrix = SKMatrix.MakeIdentity();\n\n// Error 2: CS0117 - MakeTranslation (via PostConcat)\nSKMatrix.PostConcat(ref Matrix, SKMatrix.MakeTranslation(displayWidth / 2.0f, displayHeight / 2.0f));\n\n// Error 3: CS0117 - MakeScale (via PostConcat)\nSKMatrix.PostConcat(ref Matrix, SKMatrix.MakeScale(GfxScale, GfxScale, Center.X, Center.Y));\n\n// Error 4: CS0117 - MakeRotation (via PostConcat)\nSKMatrix.PostConcat(ref Matrix, SKMatrix.MakeRotation(zAngle, Center.X, Center.Y));\n\n// Error 1: CS1501 - PostConcat with 2 args (ref + matrix)\nvar extraMatrix = new SKMatrix();\nSKMatrix.PostConcat(ref Matrix, extraMatrix);\n\nConsole.WriteLine($\"Final matrix: {Matrix}\");\nConsole.WriteLine(\"All operations completed successfully.\");"
+        },
+        {
+          "filename": "Repro.csproj",
+          "description": "Project file targeting net8.0 with SkiaSharp 3.119.0 package reference.",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.119.0\" />\n  </ItemGroup>\n\n</Project>"
         }
-      ]
+      ],
+      "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Build with SkiaSharp 3.119.0 — expect CS0117 and CS1501 compiler errors for removed APIs.",
-      "layer": "deployment",
+      "description": "Build with SkiaSharp 3.119.0 — expect 5 compiler errors matching reporter's issue",
+      "layer": "csharp",
       "command": "dotnet build",
       "exitCode": 1,
-      "output": "Repro net8.0 failed with 4 error(s)\n  Program.cs(5,28): error CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity'\n  Program.cs(8,28): error CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'\n  Program.cs(11,22): error CS0117: 'SKMatrix' does not contain a definition for 'MakeScale'\n  Program.cs(14,25): error CS0117: 'SKMatrix' does not contain a definition for 'MakeRotation'\n\nBuild failed with 4 error(s) in 0.9s",
+      "output": "Repro net8.0 failed with 5 error(s) (0,2s)\n  Program.cs(13,28): error CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity'\n  Program.cs(16,42): error CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'\n  Program.cs(19,42): error CS0117: 'SKMatrix' does not contain a definition for 'MakeScale'\n  Program.cs(22,42): error CS0117: 'SKMatrix' does not contain a definition for 'MakeRotation'\n  Program.cs(26,10): error CS1501: No overload for method 'PostConcat' takes 2 arguments\n\nBuild failed with 5 error(s) in 0,6s",
       "result": "failure"
     },
     {
       "stepNumber": 3,
-      "description": "Test PostConcat CS1501 separately (previous step's variable errors prevented reaching the PostConcat line).",
-      "layer": "deployment",
-      "command": "dotnet build",
-      "exitCode": 1,
-      "output": "Repro net8.0 failed with 1 error(s)\n  Program.cs(9,10): error CS1501: No overload for method 'PostConcat' takes 2 arguments\n\nBuild failed with 1 error(s) in 0.6s",
-      "result": "failure"
-    },
-    {
-      "stepNumber": 4,
-      "description": "Test with SkiaSharp 2.88.9 (last known good) to confirm old APIs existed with deprecation warnings.",
-      "layer": "deployment",
-      "command": "dotnet add package SkiaSharp --version 2.88.9 && dotnet build",
+      "description": "Verify APIs exist and compile on SkiaSharp 2.88.9 (reporter's last known good version)",
+      "layer": "csharp",
+      "command": "dotnet remove package SkiaSharp && dotnet add package SkiaSharp --version 2.88.9 && dotnet build",
       "exitCode": 0,
-      "output": "Repro net8.0 succeeded with 5 warning(s)\n  Program.cs(5,19): warning CS0618: 'SKMatrix.MakeIdentity()' is obsolete: 'Use CreateIdentity() instead.'\n  Program.cs(8,19): warning CS0618: 'SKMatrix.MakeTranslation(float, float)' is obsolete: 'Use CreateTranslation(float, float) instead.'\n  Program.cs(11,13): warning CS0618: 'SKMatrix.MakeScale(float, float, float, float)' is obsolete: 'Use CreateScale(float, float, float, float) instead.'\n  Program.cs(14,16): warning CS0618: 'SKMatrix.MakeRotation(float, float, float)' is obsolete: 'Use CreateRotation(float, float, float) instead.'\n  Program.cs(17,1): warning CS0618: 'SKMatrix.PostConcat(ref SKMatrix, SKMatrix)' is obsolete: 'Use PostConcat(SKMatrix) instead.'\n\nBuild succeeded with 5 warning(s) in 5.1s",
+      "output": "Repro net8.0 succeeded with 8 warning(s) (0,2s)\n  Program.cs(13,19): warning CS0618: 'SKMatrix.MakeIdentity()' is obsolete: 'Use CreateIdentity() instead.'\n  Program.cs(16,33): warning CS0618: 'SKMatrix.MakeTranslation(float, float)' is obsolete: 'Use CreateTranslation(float, float) instead.'\n  Program.cs(16,1): warning CS0618: 'SKMatrix.PostConcat(ref SKMatrix, SKMatrix)' is obsolete: 'Use PostConcat(SKMatrix) instead.'\n  Program.cs(19,33): warning CS0618: 'SKMatrix.MakeScale(float, float, float, float)' is obsolete: 'Use CreateScale(float, float, float, float) instead.'\n  Program.cs(19,1): warning CS0618: 'SKMatrix.PostConcat(ref SKMatrix, SKMatrix)' is obsolete: 'Use PostConcat(SKMatrix) instead.'\n  Program.cs(22,33): warning CS0618: 'SKMatrix.MakeRotation(float, float, float)' is obsolete: 'Use CreateRotation(float, float, float) instead.'\n  Program.cs(22,1): warning CS0618: 'SKMatrix.PostConcat(ref SKMatrix, SKMatrix)' is obsolete: 'Use PostConcat(SKMatrix) instead.'\n  Program.cs(26,1): warning CS0618: 'SKMatrix.PostConcat(ref SKMatrix, SKMatrix)' is obsolete: 'Use PostConcat(SKMatrix) instead.'\n\nBuild succeeded with 8 warning(s) in 0,6s",
       "result": "success"
     },
     {
-      "stepNumber": 5,
-      "description": "Test with SkiaSharp 3.119.2 (latest stable) to confirm old APIs remain removed.",
-      "layer": "deployment",
-      "command": "dotnet add package SkiaSharp --version 3.119.2 && dotnet build",
+      "stepNumber": 4,
+      "description": "Build with latest SkiaSharp (3.119.2) to verify not fixed in latest stable",
+      "layer": "csharp",
+      "command": "dotnet remove package SkiaSharp && dotnet add package SkiaSharp && dotnet build",
       "exitCode": 1,
-      "output": "Program.cs(5,28): error CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity'\nProgram.cs(8,28): error CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'\nProgram.cs(11,22): error CS0117: 'SKMatrix' does not contain a definition for 'MakeScale'\nProgram.cs(14,25): error CS0117: 'SKMatrix' does not contain a definition for 'MakeRotation'\nBuild FAILED.",
+      "output": "Repro net8.0 failed with 5 error(s) (0,1s)\n  Program.cs(13,28): error CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity'\n  Program.cs(16,42): error CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'\n  Program.cs(19,42): error CS0117: 'SKMatrix' does not contain a definition for 'MakeScale'\n  Program.cs(22,42): error CS0117: 'SKMatrix' does not contain a definition for 'MakeRotation'\n  Program.cs(26,10): error CS1501: No overload for method 'PostConcat' takes 2 arguments\n\nBuild failed with 5 error(s) in 0,6s",
       "result": "failure"
     },
     {
-      "stepNumber": 6,
-      "description": "Test on main (source) — confirm old APIs not present in source and all 20 SKMatrix tests pass with new APIs.",
+      "stepNumber": 5,
+      "description": "Verify on main (source): Make* methods absent, Create* present, all 20 SKMatrixTest tests pass",
       "layer": "csharp",
       "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SKMatrixTest\"",
       "exitCode": 0,
-      "output": "Passed! - Failed: 0, Passed: 20, Skipped: 0, Total: 20, Duration: 19 ms",
+      "output": "Passed!  - Failed: 0, Passed: 20, Skipped: 0, Total: 20, Duration: 31 ms",
       "result": "success"
     }
   ],
   "errorMessages": {
-    "primaryError": "CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity' / 'MakeTranslation' / 'MakeScale' / 'MakeRotation'; CS1501: No overload for method 'PostConcat' takes 2 arguments",
+    "primaryError": "CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity' (and 3 more CS0117 for MakeTranslation, MakeScale, MakeRotation) plus CS1501: No overload for method 'PostConcat' takes 2 arguments",
     "additionalErrors": [
-      "CS0117: 'SKMatrix' does not contain a definition for 'MakeIdentity'",
       "CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'",
       "CS0117: 'SKMatrix' does not contain a definition for 'MakeScale'",
       "CS0117: 'SKMatrix' does not contain a definition for 'MakeRotation'",
@@ -120,5 +119,14 @@
     "dotnetVersion": "8.0.417",
     "skiaSharpVersion": "3.119.0",
     "dockerUsed": false
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "classification",
+        "upstream": "Classified as type/question with confidence 0.95",
+        "corrected": "Confirmed all 5 compiler errors reproduce exactly as reported. While this is an intentional breaking change, the reported behavior factually occurs — conclusion is 'reproduced' per reproduction rules."
+      }
+    ]
   }
 }
