@@ -3,13 +3,16 @@
 
         <div class="tab-panel @(ActiveTab == "repro" ? "active" : "")">
             <section class="repro-section">
-                <!-- Conclusion Badge -->
-                <div class="repro-conclusion">
-                    <span class="badge-repro-conclusion badge-repro-@Repro.Conclusion.ToJsonString()">@FormatLabel(Repro.Conclusion.ToJsonString())</span>
-                    @if (!string.IsNullOrEmpty(Repro.Assessment))
-                    {
-                        <span class="badge-assessment">@FormatLabel(Repro.Assessment)</span>
-                    }
+                <!-- Conclusion Card -->
+                <div class="detail-card card-conclusion">
+                    <h3>Conclusion</h3>
+                    <div class="repro-conclusion-content">
+                        <span class="badge-repro-conclusion badge-repro-@Repro.Conclusion.ToJsonString()">@FormatLabel(Repro.Conclusion.ToJsonString())</span>
+                        @if (!string.IsNullOrEmpty(Repro.Assessment))
+                        {
+                            <span class="badge-assessment">@FormatLabel(Repro.Assessment)</span>
+                        }
+                    </div>
                     @if (!string.IsNullOrEmpty(Repro.Notes))
                     {
                         <p class="repro-notes">@Repro.Notes</p>
