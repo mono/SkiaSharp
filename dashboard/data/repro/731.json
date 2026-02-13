@@ -3,96 +3,74 @@
     "schemaVersion": "1.0",
     "number": 731,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-13T01:13:00Z"
+    "analyzedAt": "2026-02-13T15:55:00Z"
   },
   "conclusion": "reproduced",
-  "notes": "Reproduced the radial gradient performance regression in SkiaSharp 1.68.0. On Docker Linux/amd64, radial gradient rendering is ~127x slower than linear gradient (5097ms vs 40ms for 100 iterations of 1000x1000 canvas). The issue is fixed in SkiaSharp 3.119.2 (ratio 1.15x) and on main (ratio 1.01x). The regression was in the upstream Skia engine\u0027s SkGradientShader::MakeRadial code path, not in the SkiaSharp C# or C API layers. Could not test 1.60.3 baseline as no Linux native assets exist for that version.",
+  "notes": "Confirmed: SKShader.CreateRadialGradient is ~181x slower than CreateLinearGradient in SkiaSharp 1.68.0 (22.1ms vs 0.12ms avg per 500x500 fill). Interestingly, CreateSweepGradient is equally slow (~22.7ms), contradicting the reporter\u0027s claim that only radial was affected. The regression is in the upstream Skia native layer. Fixed in SkiaSharp 3.119.2 where all gradient types perform similarly (~1.5-1.8ms avg). Upgrading to any modern SkiaSharp version resolves the issue.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create console project and add SkiaSharp 1.68.0 with Linux native assets for Docker testing",
+      "description": "Create console project with SkiaSharp 1.68.0 in Docker linux/amd64 (1.68.0 lacks macOS ARM64 natives)",
       "layer": "setup",
-      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 dotnet add package SkiaSharp --version 1.68.0 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux --version 1.68.0",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c \u0027apt-get update -qq \u0026\u0026 apt-get install -y -qq libfontconfig1 \u0026\u0026 mkdir -p /tmp/repro \u0026\u0026 cd /tmp/repro \u0026\u0026 dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 1.68.0 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.Linux --version 1.68.0\u0027",
       "exitCode": 0,
-      "output": "The template \u0022Console App\u0022 was created successfully.",
+      "output": "Restored /tmp/repro/Repro/Repro.csproj (in 21.08 sec).",
       "filesCreated": [
         {
-          "filename": "Repro.csproj",
-          "description": "Console project targeting net8.0 with SkiaSharp 1.68.0",
-          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00221.68.0\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00221.68.0\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\n\u003C/Project\u003E"
-        },
-        {
           "filename": "Program.cs",
-          "description": "Benchmark comparing radial vs linear gradient performance with 100 iterations on 1000x1000 canvas",
-          "content": "using System;\nusing System.Diagnostics;\nusing SkiaSharp;\n\nconst int Width = 1000;\nconst int Height = 1000;\nconst int Iterations = 100;\n\nusing var bitmap = new SKBitmap(Width, Height);\nusing var canvas = new SKCanvas(bitmap);\nvar rect = new SKRect(0, 0, Width, Height);\n\n// Warmup\nusing (var warmupPaint = new SKPaint())\n{\n    warmupPaint.Shader = SKShader.CreateRadialGradient(\n        new SKPoint(50, 50), 100,\n        new SKColor[] { SKColors.Black, SKColors.White },\n        null, SKShaderTileMode.Clamp);\n    canvas.DrawRect(rect, warmupPaint);\n}\n\nvar sw = Stopwatch.StartNew();\nfor (int i = 0; i \u003C Iterations; i\u002B\u002B)\n{\n    using var paint = new SKPaint();\n    paint.Shader = SKShader.CreateRadialGradient(\n        new SKPoint(50, 50), 100,\n        new SKColor[] { SKColors.Black, SKColors.White },\n        null, SKShaderTileMode.Clamp);\n    canvas.DrawRect(rect, paint);\n}\nsw.Stop();\nvar radialMs = sw.ElapsedMilliseconds;\nConsole.WriteLine($\u0022Radial gradient: {Iterations} iterations in {radialMs}ms ({radialMs / (double)Iterations:F2}ms/iter)\u0022);\n\nsw.Restart();\nfor (int i = 0; i \u003C Iterations; i\u002B\u002B)\n{\n    using var paint = new SKPaint();\n    paint.Shader = SKShader.CreateLinearGradient(\n        new SKPoint(0, 0), new SKPoint(Width, Height),\n        new SKColor[] { SKColors.Black, SKColors.White },\n        null, SKShaderTileMode.Clamp);\n    canvas.DrawRect(rect, paint);\n}\nsw.Stop();\nvar linearMs = sw.ElapsedMilliseconds;\nConsole.WriteLine($\u0022Linear gradient: {Iterations} iterations in {linearMs}ms ({linearMs / (double)Iterations:F2}ms/iter)\u0022);\n\nConsole.WriteLine();\nConsole.WriteLine($\u0022Radial/Linear ratio: {radialMs / (double)linearMs:F2}x\u0022);\n\nif (radialMs \u003E linearMs * 3)\n    Console.WriteLine(\u0022*** PERFORMANCE REGRESSION: Radial gradient is significantly slower than linear ***\u0022);\nelse\n    Console.WriteLine(\u0022No significant performance difference detected between gradient types.\u0022);"
+          "description": "Benchmark comparing radial, linear, sweep gradients and solid color baseline on 500x500 canvas with 100 iterations",
+          "content": "using System;\nusing System.Diagnostics;\nusing SkiaSharp;\n\nconst int WIDTH = 500;\nconst int HEIGHT = 500;\nconst int WARMUP = 5;\nconst int ITERATIONS = 100;\n\nConsole.WriteLine($\u0022SkiaSharp Version: {typeof(SKBitmap).Assembly.GetName().Version}\u0022);\nConsole.WriteLine($\u0022Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}\u0022);\nConsole.WriteLine($\u0022OS: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\u0022);\nConsole.WriteLine($\u0022Arch: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}\u0022);\nConsole.WriteLine();\n\nusing var bitmap = new SKBitmap(WIDTH, HEIGHT);\nusing var canvas = new SKCanvas(bitmap);\nvar rect = new SKRect(0, 0, WIDTH, HEIGHT);\nvar colors = new SKColor[] { SKColors.Black, SKColors.White };\n\nusing var radialShader = SKShader.CreateRadialGradient(\n    new SKPoint(WIDTH / 2f, HEIGHT / 2f),\n    WIDTH / 2f,\n    colors, null, SKShaderTileMode.Clamp);\n\nusing var linearShader = SKShader.CreateLinearGradient(\n    new SKPoint(0, 0), new SKPoint(WIDTH, HEIGHT),\n    colors, null, SKShaderTileMode.Clamp);\n\nusing var sweepShader = SKShader.CreateSweepGradient(\n    new SKPoint(WIDTH / 2f, HEIGHT / 2f),\n    colors, null);\n\nvoid Benchmark(string name, SKShader shader)\n{\n    using var paint = new SKPaint();\n    paint.Shader = shader;\n    for (int i = 0; i \u003C WARMUP; i\u002B\u002B)\n    {\n        canvas.Clear(SKColors.Transparent);\n        canvas.DrawRect(rect, paint);\n    }\n    var sw = Stopwatch.StartNew();\n    for (int i = 0; i \u003C ITERATIONS; i\u002B\u002B)\n    {\n        canvas.Clear(SKColors.Transparent);\n        canvas.DrawRect(rect, paint);\n    }\n    sw.Stop();\n    double avgMs = sw.Elapsed.TotalMilliseconds / ITERATIONS;\n    Console.WriteLine($\u0022{name,-25} {ITERATIONS} iters: {sw.Elapsed.TotalMilliseconds:F1}ms total, {avgMs:F3}ms avg\u0022);\n}\n\nConsole.WriteLine($\u0022Canvas: {WIDTH}x{HEIGHT}, Warmup: {WARMUP}, Iterations: {ITERATIONS}\u0022);\nConsole.WriteLine(new string(\u0027-\u0027, 70));\n\nBenchmark(\u0022RadialGradient\u0022, radialShader);\nBenchmark(\u0022LinearGradient\u0022, linearShader);\nBenchmark(\u0022SweepGradient\u0022, sweepShader);\n\nusing (var solidPaint = new SKPaint { Color = SKColors.Blue })\n{\n    var sw2 = Stopwatch.StartNew();\n    for (int i = 0; i \u003C ITERATIONS; i\u002B\u002B)\n    {\n        canvas.Clear(SKColors.Transparent);\n        canvas.DrawRect(rect, solidPaint);\n    }\n    sw2.Stop();\n    Console.WriteLine($\u0022{\u0022SolidColor (baseline)\u0022,-25} {ITERATIONS} iters: {sw2.Elapsed.TotalMilliseconds:F1}ms total, {sw2.Elapsed.TotalMilliseconds / ITERATIONS:F3}ms avg\u0022);\n}\n\nConsole.WriteLine();\nConsole.WriteLine(\u0022SUCCESS: benchmark completed\u0022);"
         }
       ],
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Run benchmark with SkiaSharp 1.68.0 in Docker linux/amd64 to reproduce the reported radial gradient slowdown",
+      "description": "Run gradient performance benchmark with SkiaSharp 1.68.0 \u2014 radial gradient is ~181x slower than linear",
       "layer": "csharp",
-      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c \u0027... dotnet run --runtime linux-x64 --no-self-contained\u0027",
+      "command": "dotnet run -c Release",
       "exitCode": 0,
-      "output": "Radial gradient: 100 iterations in 5097ms (50.97ms/iter)\nLinear gradient: 100 iterations in 40ms (0.40ms/iter)\n\nRadial/Linear ratio: 127.42x\n*** PERFORMANCE REGRESSION: Radial gradient is significantly slower than linear ***",
+      "output": "SkiaSharp Version: 1.68.0.0\nRuntime: .NET 8.0.24\nOS: Debian GNU/Linux 12 (bookworm)\nArch: X64\n\nCanvas: 500x500, Warmup: 5, Iterations: 100\n----------------------------------------------------------------------\nRadialGradient            100 iters: 2208.7ms total, 22.087ms avg\nLinearGradient            100 iters: 12.2ms total, 0.122ms avg\nSweepGradient             100 iters: 2273.4ms total, 22.734ms avg\nSolidColor (baseline)     100 iters: 4.6ms total, 0.046ms avg\n\nSUCCESS: benchmark completed",
       "result": "wrong-output"
     },
     {
       "stepNumber": 3,
-      "description": "Test with latest SkiaSharp 3.119.2 on macOS arm64 to check if regression is fixed",
+      "description": "Run same benchmark with SkiaSharp 3.119.2 (latest stable) \u2014 all gradient types perform similarly, regression is fixed",
       "layer": "csharp",
-      "command": "dotnet run (with SkiaSharp 3.119.2 on macOS arm64)",
+      "command": "dotnet run -c Release (with SkiaSharp 3.119.2)",
       "exitCode": 0,
-      "output": "Radial gradient: 100 iterations in 118ms (1.18ms/iter)\nLinear gradient: 100 iterations in 103ms (1.03ms/iter)\nSweep gradient:  100 iterations in 183ms (1.83ms/iter)\n\nRadial/Linear ratio: 1.15x\nRadial/Sweep ratio:  0.64x\nNo significant performance difference detected between gradient types.",
-      "result": "success"
-    },
-    {
-      "stepNumber": 4,
-      "description": "Test on main branch source using xUnit test infrastructure to confirm fix on current development code",
-      "layer": "csharp",
-      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter RadialGradient",
-      "exitCode": 0,
-      "output": "Radial: 137ms, Linear: 136ms, Ratio: 1.01x\nPassed SkiaSharp.Tests.SKShaderTest.RadialGradientPerformanceIsComparableToLinear [334 ms]\nTest Run Successful. Total tests: 1, Passed: 1",
+      "output": "SkiaSharp Version: 3.119.0.0\nRuntime: .NET 8.0.24\nOS: Debian GNU/Linux 12 (bookworm)\nArch: X64\n\nCanvas: 500x500, Warmup: 5, Iterations: 100\n----------------------------------------------------------------------\nRadialGradient            100 iters: 175.5ms total, 1.755ms avg\nLinearGradient            100 iters: 145.5ms total, 1.455ms avg\nSweepGradient             100 iters: 169.2ms total, 1.692ms avg\nSolidColor (baseline)     100 iters: 9.6ms total, 0.096ms avg\n\nSUCCESS: benchmark completed",
       "result": "success"
     }
   ],
   "environment": {
-    "os": "macOS 26.2",
-    "arch": "arm64",
-    "dotnetVersion": "8.0.417",
+    "os": "Linux (Docker on macOS 26.2)",
+    "arch": "x64",
+    "dotnetVersion": "8.0.24",
     "skiaSharpVersion": "1.68.0",
-    "dockerUsed": true
+    "dockerUsed": true,
+    "dotnetSdkVersion": "8.0.418"
   },
   "inputs": {
     "triageFile": "ai-triage/731.json"
   },
   "assessment": "likely-bug",
-  "reproductionTime": "~8 minutes",
+  "scope": "unknown",
+  "reproductionTime": "~15 minutes",
   "versionResults": [
     {
       "version": "1.68.0",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Radial gradient 127x slower than linear (5097ms vs 40ms for 100 iterations on 1000x1000 canvas). Tested via Docker linux/amd64."
-    },
-    {
-      "version": "1.60.3",
-      "source": "nuget",
-      "result": "not-tested",
-      "notes": "No SkiaSharp.NativeAssets.Linux exists for 1.60.x and macOS arm64 cannot run x64-only native libraries. Cannot verify baseline performance."
+      "notes": "Radial gradient 22.1ms avg vs linear 0.12ms avg (181x slower). Sweep gradient equally slow at 22.7ms.",
+      "platform": "docker-linux-x64"
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Radial/linear ratio is 1.15x (118ms vs 103ms for 100 iterations). Performance regression is fully resolved."
-    },
-    {
-      "version": "main (source)",
-      "source": "source",
-      "result": "not-reproduced",
-      "notes": "Radial/linear ratio is 1.01x (137ms vs 136ms for 100 iterations). xUnit test passed \u2014 no regression on main."
+      "notes": "All gradients perform similarly: radial 1.76ms, linear 1.46ms, sweep 1.69ms. Performance regression is fixed.",
+      "platform": "docker-linux-x64"
     }
   ],
   "reproProject": {
@@ -110,6 +88,58 @@
     ]
   },
   "errorMessages": {
-    "primaryError": "Radial gradient rendering ~127x slower than linear gradient in SkiaSharp 1.68.0 (5097ms vs 40ms for 100 iterations on 1000x1000 raster canvas)"
+    "primaryError": "SKShader.CreateRadialGradient performance regression: 22.1ms avg per 500x500 fill vs 0.12ms for LinearGradient (181x slower) in SkiaSharp 1.68.0"
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "affected-gradients",
+        "upstream": "Triage implied only radial gradient affected based on reporter\u0027s statement",
+        "corrected": "Both radial AND sweep gradients are equally affected (~22ms avg). Reporter claimed sweep was not slow, but benchmark shows it is 186x slower than linear, same as radial."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "ready",
+      "body": "Thanks for reporting this! We confirmed the performance regression with \u0060SKShader.CreateRadialGradient\u0060 in SkiaSharp 1.68.0.\n\n**Benchmark results (500\u00D7500 canvas, 100 iterations, raster backend):**\n\n| Gradient Type | SkiaSharp 1.68.0 | SkiaSharp 3.119.2 |\n|--------------|-----------------|------------------|\n| RadialGradient | 22.1ms avg \u274C | 1.8ms avg \u2705 |\n| LinearGradient | 0.1ms avg | 1.5ms avg |\n| SweepGradient | 22.7ms avg \u274C | 1.7ms avg |\n| SolidColor | 0.05ms avg | 0.1ms avg |\n\nIn 1.68.0, radial (and sweep) gradients were **~181\u00D7 slower** than linear. This was a regression in the upstream Skia raster gradient code path.\n\nThe good news is this is **fully resolved** in current SkiaSharp (3.x) where all gradient types perform similarly. Upgrading to the latest SkiaSharp should fix this.\n\nIf upgrading isn\u0027t feasible on 1.68.0, you can work around it by pre-rendering the gradient to a cached \u0060SKImage\u0060:\n\n\u0060\u0060\u0060csharp\nusing var surface = SKSurface.Create(new SKImageInfo(width, height));\nusing var paint = new SKPaint();\npaint.Shader = SKShader.CreateRadialGradient(\n    new SKPoint(50, 50), 100,\n    new SKColor[] { SKColors.Black, SKColors.White },\n    null, SKShaderTileMode.Clamp);\nsurface.Canvas.DrawRect(new SKRect(0, 0, width, height), paint);\nusing var cached = surface.Snapshot();\n// Draw cached image instead of using shader directly\n\u0060\u0060\u0060",
+      "summary": "Radial gradient performance regression confirmed in 1.68.0, fixed in latest 3.x"
+    },
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.92,
+      "reason": "Performance regression confirmed in 1.68.0 (radial gradient 181x slower than linear). Definitively fixed in 3.119.2 where all gradient types perform within 1.2x of each other. Issue is from 2018 and upgrading resolves it."
+    },
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.x \u2014 the radial/sweep gradient performance regression is fully resolved",
+      "On 1.68.0: pre-render the gradient to an SKImage/SKBitmap once and reuse the cached result instead of applying the shader each frame"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add performance tenet label",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "os/Windows-Classic",
+          "backend/Raster",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related shader performance issue #543",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 543
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in SkiaSharp 3.x \u2014 performance regression no longer exists",
+        "risk": "medium",
+        "confidence": 0.9
+      }
+    ]
   }
 }

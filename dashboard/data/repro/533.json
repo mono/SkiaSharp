@@ -3,109 +3,97 @@
     "schemaVersion": "1.0",
     "number": 533,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T17:12:00Z"
+    "analyzedAt": "2026-02-13T15:55:00Z"
   },
-  "conclusion": "reproduced",
-  "notes": "Reproduced on Android emulator (API 33) with SkiaSharp 3.119.2. SKGLTextureView with RenderMode.Continuously produces 240-490 average FPS with spikes to 1849 FPS, far exceeding the display refresh rate (~60 Hz). Root cause confirmed: GLTextureView.cs calls EglSwapBuffers but never eglSwapInterval, so VSync is not enforced and the render loop runs uncapped. No Choreographer integration exists either. The code is unchanged on main \u2014 same behavior expected. This is a regression from v1.59.3 which used GLSurfaceView (which internally enforced eglSwapInterval(1)).",
+  "conclusion": "needs-platform",
+  "notes": "Issue #533 reports uncapped framerates (300-1200\u002B FPS) on Android SKGLView when HasRenderLoop is enabled, caused by the switch from GLSurfaceView (which internally uses eglSwapInterval for VSync) to GLTextureView (which does not) in SkiaSharp 1.60.1. This is a runtime behavior observable only on Android with OpenGL rendering. A MAUI project with SKGLView and FPS measurement code was created and successfully built for net10.0-android, but cannot be run \u2014 no Android emulator or physical device is available in the current environment. The maintainer confirmed the root cause in issue comments and noted seeing 1.2K FPS in emulators. Multiple community members confirmed the issue on various devices (140 FPS on Moto g6, 230 FPS on Galaxy Note 3). The GLTextureView code remains in the current codebase and still does not call eglSwapInterval, so the bug is almost certainly still present.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create Android project and add SkiaSharp.Views package",
+      "description": "Create MAUI project for Android FPS reproduction test",
       "layer": "setup",
-      "command": "dotnet new android -n Repro \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views",
+      "command": "dotnet new maui -n Repro \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Maui.Controls --version 3.119.0-preview.1.2",
       "exitCode": 0,
-      "output": "The template \u0022Android Application\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp.Views\u0027 version \u00273.119.2\u0027 added.",
+      "output": "Restore succeeded.\nPackageReference for package \u0027SkiaSharp.Views.Maui.Controls\u0027 version \u00273.119.0-preview.1.2\u0027 added.",
       "filesCreated": [
         {
-          "filename": "Repro.csproj",
-          "description": "Android project targeting net10.0-android with SkiaSharp.Views 3.119.2",
-          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet10.0-android\u003C/TargetFramework\u003E\n    \u003CSupportedOSPlatformVersion\u003E24\u003C/SupportedOSPlatformVersion\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CApplicationId\u003Ecom.companyname.Repro\u003C/ApplicationId\u003E\n    \u003CApplicationVersion\u003E1\u003C/ApplicationVersion\u003E\n    \u003CApplicationDisplayVersion\u003E1.0\u003C/ApplicationDisplayVersion\u003E\n    \u003CTrimMode\u003Efull\u003C/TrimMode\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00223.119.2\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+          "filename": "MainPage.xaml",
+          "description": "XAML page with SKGLView configured with HasRenderLoop=True to test uncapped framerate behavior",
+          "content": "\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\n\u003CContentPage xmlns=\u0022http://schemas.microsoft.com/dotnet/2021/maui\u0022\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\n             xmlns:skia=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\n             x:Class=\u0022Repro.MainPage\u0022\u003E\n    \u003CVerticalStackLayout\u003E\n        \u003CLabel x:Name=\u0022FpsLabel\u0022 Text=\u0022FPS: --\u0022 FontSize=\u002224\u0022 HorizontalOptions=\u0022Center\u0022 /\u003E\n        \u003Cskia:SKGLView x:Name=\u0022GlView\u0022 \n                       HasRenderLoop=\u0022True\u0022\n                       PaintSurface=\u0022OnPaintSurface\u0022\n                       HeightRequest=\u0022400\u0022 /\u003E\n    \u003C/VerticalStackLayout\u003E\n\u003C/ContentPage\u003E"
+        },
+        {
+          "filename": "MainPage.xaml.cs",
+          "description": "FPS measurement code using Stopwatch to measure time between PaintSurface events, matching the approach from the maintainer\u0027s comment",
+          "content": "using System.Diagnostics;\nusing SkiaSharp;\nusing SkiaSharp.Views.Maui;\n\nnamespace Repro;\n\npublic partial class MainPage : ContentPage\n{\n    private readonly Stopwatch _sw = Stopwatch.StartNew();\n    private TimeSpan _last;\n    private int _frameCount;\n    private double _fpsAccum;\n\n    public MainPage()\n    {\n        InitializeComponent();\n        _last = _sw.Elapsed;\n    }\n\n    private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n    {\n        var now = _sw.Elapsed;\n        var delta = (now - _last).TotalSeconds;\n        _last = now;\n\n        if (delta \u003E 0)\n        {\n            var fps = 1.0 / delta;\n            _fpsAccum \u002B= fps;\n            _frameCount\u002B\u002B;\n\n            if (_frameCount % 30 == 0)\n            {\n                var avgFps = _fpsAccum / 30;\n                _fpsAccum = 0;\n                MainThread.BeginInvokeOnMainThread(() =\u003E\n                {\n                    FpsLabel.Text = $\u0022FPS: {avgFps:F1} (frame {_frameCount})\u0022;\n                });\n                Debug.WriteLine($\u0022[FPS] {avgFps:F1}\u0022);\n            }\n        }\n\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var paint = new SKPaint { Color = SKColors.White };\n        using var font = new SKFont { Size = 48 };\n        canvas.DrawText($\u0022Frame {_frameCount}\u0022, 50, 100, SKTextAlign.Left, font, paint);\n    }\n}"
         }
       ],
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Write FPS measurement code using SKGLTextureView with RenderMode.Continuously",
-      "layer": "csharp",
-      "filesCreated": [
-        {
-          "filename": "MainActivity.cs",
-          "description": "Android activity that creates SKGLTextureView with continuous rendering and logs FPS every 60 frames via Android.Util.Log",
-          "content": "using System.Diagnostics;\nusing Android.Opengl;\nusing Android.Util;\nusing SkiaSharp;\nusing SkiaSharp.Views.Android;\n\nnamespace Repro;\n\n[Activity(Label = \u0022FPS Test\u0022, MainLauncher = true)]\npublic class MainActivity : Android.App.Activity\n{\n    private SKGLTextureView? glView;\n    private readonly Stopwatch sw = Stopwatch.StartNew();\n    private TimeSpan lastFrame;\n    private int frameCount;\n    private double fpsSum;\n\n    protected override void OnCreate(Bundle? savedInstanceState)\n    {\n        base.OnCreate(savedInstanceState);\n\n        glView = new SKGLTextureView(this);\n        glView.RenderMode = Rendermode.Continuously;\n        glView.PaintSurface \u002B= OnPaintSurface;\n        SetContentView(glView);\n    }\n\n    private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)\n    {\n        var now = sw.Elapsed;\n        var delta = now - lastFrame;\n        lastFrame = now;\n\n        if (delta.TotalSeconds \u003E 0)\n        {\n            var fps = 1.0 / delta.TotalSeconds;\n            frameCount\u002B\u002B;\n            fpsSum \u002B= fps;\n\n            if (frameCount % 60 == 0)\n            {\n                var avgFps = fpsSum / 60.0;\n                Log.Debug(\u0022FPS_REPRO\u0022, $\u0022Frame {frameCount}: Avg FPS = {avgFps:F1}, Last FPS = {fps:F1}\u0022);\n                fpsSum = 0;\n            }\n        }\n\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var paint = new SKPaint { Color = SKColors.White, TextSize = 48 };\n        canvas.DrawText($\u0022Frame: {frameCount}\u0022, 50, 100, paint);\n    }\n\n    protected override void OnResume()\n    {\n        base.OnResume();\n        glView?.OnResume();\n    }\n\n    protected override void OnPause()\n    {\n        glView?.OnPause();\n        base.OnPause();\n    }\n}"
-        }
-      ],
+      "description": "Register SkiaSharp in MauiProgram.cs with UseSkiaSharp()",
+      "layer": "setup",
+      "command": "sed -i \u0027\u0027 \u0027s/.UseMauiApp\u003CApp\u003E()/.UseMauiApp\u003CApp\u003E().UseSkiaSharp()/\u0027 MauiProgram.cs",
+      "exitCode": 0,
+      "output": "Added using SkiaSharp.Views.Maui.Controls.Hosting and .UseSkiaSharp() call.",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Build and deploy to Android emulator (API 33)",
+      "description": "Build MAUI project targeting Android to verify the repro code compiles",
       "layer": "deployment",
-      "command": "dotnet build -c Debug -t:Install",
+      "command": "dotnet build -f net10.0-android",
       "exitCode": 0,
-      "output": "Repro -\u003E $HOME/repro-533/Repro/bin/Debug/net10.0-android/Repro.dll\nBuild succeeded. 0 Error(s)",
+      "output": "Build succeeded.\n2 Warning(s) (obsolete SKPaint.TextSize and SKCanvas.DrawText overload)\n0 Error(s)\nTime Elapsed 00:00:41.56",
       "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Launch app and capture FPS measurements via logcat for ~2 minutes",
-      "layer": "csharp",
-      "command": "adb shell am start -n com.companyname.Repro/crc649a882e85802e0011.MainActivity \u0026\u0026 sleep 120 \u0026\u0026 adb logcat -d -s FPS_REPRO",
-      "exitCode": 0,
-      "output": "Frame 60: Avg FPS = 198.0, Last FPS = 1045.7\nFrame 120: Avg FPS = 222.2, Last FPS = 264.0\nFrame 180: Avg FPS = 243.6, Last FPS = 53.5\nFrame 300: Avg FPS = 297.6, Last FPS = 1089.1\nFrame 420: Avg FPS = 344.7, Last FPS = 92.4\nFrame 540: Avg FPS = 292.5, Last FPS = 1849.1\nFrame 600: Avg FPS = 381.0, Last FPS = 310.0\nFrame 1200: Avg FPS = 439.3, Last FPS = 242.2\n[...truncated ~80 lines...]\nFrame 5400: Avg FPS = 262.5, Last FPS = 108.5\nFrame 5580: Avg FPS = 179.2, Last FPS = 72.4\nFrame 5700: Avg FPS = 325.5, Last FPS = 231.3",
-      "result": "wrong-output"
-    },
-    {
-      "stepNumber": 5,
-      "description": "Verify GLTextureView.cs on main branch has no eglSwapInterval or Choreographer (code analysis for main source result)",
-      "layer": "csharp",
-      "command": "grep -c \u0027eglSwapInterval\\|Choreographer\u0027 source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs",
-      "exitCode": 1,
-      "output": "0 matches. No eglSwapInterval or Choreographer calls found in GLTextureView.cs on main. Last change to file was SkiaSharp 3.0 modernization (commit bc5020b9e).",
-      "result": "wrong-output"
+      "description": "Attempt to run the Android app to measure framerate \u2014 blocked by missing Android emulator",
+      "layer": "deployment",
+      "result": "skip"
     }
   ],
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
-    "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "3.119.2",
+    "dotnetVersion": "10.0.0",
+    "skiaSharpVersion": "3.119.0-preview.1.2",
     "dockerUsed": false,
+    "dotnetSdkVersion": "10.0.102",
     "gpu": {
-      "available": true,
-      "backend": "OpenGL ES (Android emulator swiftshader)"
+      "available": false,
+      "backend": "OpenGL"
     }
   },
   "inputs": {
     "triageFile": "ai-triage/533.json"
   },
   "assessment": "likely-bug",
-  "reproductionTime": "~12 minutes",
+  "scope": "platform-specific/android",
+  "reproductionTime": "~8 minutes",
   "versionResults": [
     {
-      "version": "3.119.2",
+      "version": "3.119.0-preview.1.2",
       "source": "nuget",
-      "result": "reproduced",
-      "notes": "Avg FPS 240-490 with spikes to 1849 on emulator API 33. Clearly uncapped."
-    },
-    {
-      "version": "main (source)",
-      "source": "source",
-      "result": "reproduced",
-      "notes": "Code analysis: GLTextureView.cs on main has zero occurrences of eglSwapInterval or Choreographer. No fix has been applied since 3.119.2. Last change to GLTextureView.cs was the SkiaSharp 3.0 modernization commit."
+      "result": "not-tested",
+      "notes": "MAUI project with SKGLView built successfully for net10.0-android but could not be run \u2014 no Android emulator or device available.",
+      "platform": "host-macos-arm64"
     }
   ],
   "reproProject": {
-    "type": "console",
+    "type": "maui",
     "tfm": "net10.0-android",
     "packages": [
       {
-        "name": "SkiaSharp.Views",
-        "version": "3.119.2"
+        "name": "SkiaSharp.Views.Maui.Controls",
+        "version": "3.119.0-preview.1.2"
       }
     ]
   },
-  "errorMessages": {
-    "primaryError": "SKGLTextureView renders at 240-490 average FPS (spikes to 1849 FPS) instead of display-capped ~60 FPS when RenderMode is Continuously. GLTextureView never calls eglSwapInterval so VSync is not enforced."
-  }
+  "blockers": [
+    "Requires Android device or emulator to observe runtime framerate behavior \u2014 no Android emulator (ADB) is installed in the current environment",
+    "Bug is in the Android GL view layer (SKGLTextureView / GLTextureView) which only executes on Android runtime \u2014 cannot be simulated in console, Docker, or any non-Android platform",
+    "Console fallback is not applicable \u2014 the bug is about the rendering loop frame pacing in the OpenGL view, not a core SkiaSharp API issue"
+  ]
 }
