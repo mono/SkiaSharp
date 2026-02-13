@@ -80,6 +80,12 @@ Record exit code, warnings, errors. Build failure may itself be the reproduction
 
 **Do NOT stop here if build succeeds.** Proceed to Run & Verify.
 
+> **⚠️ Clean builds between versions:** When testing multiple SkiaSharp versions (Phase 3B),
+> NEVER just change the package version and rebuild. WASM native compilation caches linked
+> `.wasm` files, `dotnet.native.*.js`, and `_framework/` output from previous versions.
+> Either create a fresh project directory per version (`/tmp/repro-{number}-v{version}/`)
+> or run `rm -rf bin/ obj/` before building each version.
+
 ## Run & Verify (CRITICAL)
 
 ### 1. Start dev server
@@ -132,3 +138,33 @@ Kill the background process.
 - **Port conflicts:** If 5111 is taken, try 5112, 5113, etc.
 - **`global.json` interference:** If the repo has a `global.json` pinning SDK version,
   create the repro project OUTSIDE the repo tree (in `/tmp/`).
+
+## Main Source Testing (Phase 3C)
+
+When Phase 3C requires testing against the main branch source, use the Blazor WASM sample
+in the repo — it has project references to the local SkiaSharp + Views.Blazor source:
+
+```bash
+# Back in the SkiaSharp repo
+cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+
+# Build the Blazor WASM sample (uses project references to local source)
+dotnet build samples/Basic/BlazorWebAssembly/SkiaSharpSample/SkiaSharpSample.csproj
+
+# Serve it (note: sample uses <base href="/app/"> so --pathbase=/app is required)
+dotnet run --project samples/Basic/BlazorWebAssembly/SkiaSharpSample/SkiaSharpSample.csproj --urls http://localhost:5199 --no-build -- --pathbase=/app
+```
+
+Then verify with Playwright (same as Phase 3A Run & Verify):
+1. Navigate to `http://localhost:5199/app/raster` (the Raster page has `SKCanvasView` + text drawing)
+2. Check browser console for errors or `SUCCESS` markers
+3. Take screenshot if visual verification needed
+
+**⚠️ Do NOT use console tests for WASM bugs.** A console test passing tells you nothing about
+WASM native binary initialization, browser-side rendering, or Blazor component integration.
+The Blazor sample tests the actual WASM pipeline from source.
+
+If you need to test the reporter's specific code, temporarily modify
+`samples/Basic/BlazorWebAssembly/SkiaSharpSample/Pages/Raster.razor`, then revert with
+`git checkout` after recording the result.

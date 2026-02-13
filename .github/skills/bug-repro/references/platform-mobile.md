@@ -72,3 +72,35 @@ dotnet build -f net8.0-ios -t:Run
 | Bug requires device/emulator | `needs-platform` (if unavailable) |
 | Build failure matching report | `reproduced` |
 | Bug reproduced on device | `reproduced` |
+
+## Main Source Testing (Phase 3C)
+
+For mobile bugs, Phase 3C uses the repo's platform-specific sample:
+
+```bash
+# Back in the SkiaSharp repo
+cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+
+# iOS sample (macOS host required)
+dotnet build samples/Basic/iOS/SkiaSharpSample/SkiaSharpSample.csproj
+
+# Android sample (any host with Android SDK)
+dotnet build samples/Basic/Android/SkiaSharpSample/SkiaSharpSample.csproj
+
+# Mac Catalyst sample
+dotnet build samples/Basic/MacCatalyst/SkiaSharpSample/SkiaSharpSample.csproj
+
+# MAUI multi-platform sample
+dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f net8.0-ios
+dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f net8.0-android
+```
+
+Build success alone is a useful data point. If a simulator/emulator is available, also run:
+```bash
+dotnet build -f net8.0-ios -t:Run samples/Basic/iOS/SkiaSharpSample/SkiaSharpSample.csproj
+dotnet build -f net8.0-android -t:Run samples/Basic/Android/SkiaSharpSample/SkiaSharpSample.csproj
+```
+
+Temporarily modify the sample's drawing code to match the reporter's repro, then revert
+with `git checkout` after recording the result.

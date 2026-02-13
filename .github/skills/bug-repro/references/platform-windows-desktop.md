@@ -65,3 +65,28 @@ WPF/WinForms apps open a window — visual inspection or programmatic assertions
 | Bug reproduced on console (no Windows needed) | `reproduced` (platform-console) |
 | Bug requires Windows UI layer | `needs-platform` (if host is not Windows) |
 | Bug reproduced on Windows host | `reproduced` |
+
+## Main Source Testing (Phase 3C)
+
+For Windows desktop bugs, Phase 3C uses the repo's WPF or WinUI sample:
+
+```bash
+# Back in the SkiaSharp repo
+cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+
+# WPF sample (project references local SkiaSharp + Views.WPF source)
+dotnet build samples/Basic/WPF/SkiaSharpSample/SkiaSharpSample.csproj
+dotnet run --project samples/Basic/WPF/SkiaSharpSample/SkiaSharpSample.csproj
+
+# WinUI sample
+dotnet build samples/Basic/WinUI/SkiaSharpSample/SkiaSharpSample.csproj
+dotnet run --project samples/Basic/WinUI/SkiaSharpSample/SkiaSharpSample.csproj
+```
+
+**If host is not Windows:** You can still BUILD these samples (to verify compilation). Run
+requires Windows — record `result: "not-tested"` for runtime if no Windows host available,
+but record `result: "success"` / `"failure"` for the build step.
+
+Temporarily modify the sample's drawing code to match the reporter's repro, then revert
+with `git checkout` after recording the result.

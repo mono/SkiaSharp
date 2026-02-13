@@ -243,12 +243,27 @@ Step `result` values describe **what actually happened**, not whether it was "su
 ### 3B. Test on latest release (if reproduced)
 
 If the bug reproduced with the reporter's version, test whether it's **already fixed**.
-Use the **same platform strategy** from Phase 3A — just change the version:
+
+> **⚠️ Clean build required.** When changing SkiaSharp version, you MUST start clean:
+> - **Best:** Create a fresh project directory per version (`/tmp/repro-{number}-v{version}/`)
+> - **Acceptable:** `rm -rf bin/ obj/` before building (WASM: also delete any `_framework/` output)
+> - **❌ Never:** Just `sed` the version and rebuild — incremental builds may keep stale native binaries
+>
+> This is especially critical for WASM: the linked `.wasm` file, `dotnet.native.*.js`, and
+> `_framework/` cache are version-specific. Reusing them produces unreliable results.
+
+Create a fresh project directory or clean, then use the **same platform strategy** from Phase 3A:
 
 ```bash
+# Option A: Fresh project (recommended)
+mkdir -p /tmp/repro-{number}-latest && cd /tmp/repro-{number}-latest
+# Follow platform file: Create → Add Repro Code → Build → Run & Verify
+# but use latest stable version: dotnet add package SkiaSharp (no --version)
+
+# Option B: Clean existing (acceptable)
 cd /tmp/repro-{number}/Repro
-# Update to latest stable release (omit --version to get latest stable)
-dotnet add package SkiaSharp
+rm -rf bin/ obj/
+dotnet add package SkiaSharp  # Updates to latest stable
 ```
 
 Then re-run using the same platform file's Run & Verify steps.
@@ -263,16 +278,34 @@ Record the result. If the bug is gone on latest, this is valuable — note it in
 
 If still reproduced on latest release, test against source on main:
 
-#### Step 1 — Build
+#### Step 1 — Bootstrap native binaries
 
 ```bash
 # Back in the SkiaSharp repo working directory
 [ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
-dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
-> Build the **test project** (not just SkiaSharp.csproj) — it transitively builds all dependencies
-> and sets up the native library loading that tests need.
+#### Step 2 — Build & run the platform-appropriate sample
+
+> **⚠️ Use the matching sample under `samples/Basic/<platform>/`, NOT console tests.**
+> A console test passing tells you nothing about WASM, mobile, or desktop bugs. Each platform
+> file has a "Main Source Testing (Phase 3C)" section — read it and follow its instructions.
+
+| Bug platform | Sample to build & run | Verification method |
+|-------------|----------------------|---------------------|
+| Console | `samples/Basic/Console/` | `dotnet run` — check stdout |
+| Blazor WASM | `samples/Basic/BlazorWebAssembly/` | `dotnet run` + Playwright browser check |
+| Docker/Linux | `samples/Basic/Console/` in Docker | Docker `dotnet run` |
+| macOS | `samples/Basic/macOS/` | Build + launch |
+| Mac Catalyst | `samples/Basic/MacCatalyst/` | Build + launch |
+| iOS | `samples/Basic/iOS/` | Build (+ simulator if available) |
+| Android | `samples/Basic/Android/` | Build (+ emulator if available) |
+| MAUI | `samples/Basic/Maui/` | Build for target platform |
+| WPF | `samples/Basic/WPF/` | Build (+ run on Windows) |
+| WinUI | `samples/Basic/WinUI/` | Build (+ run on Windows) |
+
+These samples use **project references** to the local SkiaSharp source — they test the
+actual main branch code through the real platform pipeline, not just core APIs via console.
 
 **If the build fails** (e.g., missing workloads, SDK errors):
 1. Read the error message — it usually tells you exactly what to do
@@ -280,33 +313,14 @@ dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 3. If fixing requires `sudo` or user input, ask the user — do NOT give up
 4. Only record `not-tested` after genuinely exhausting all options
 
-#### Step 2 — Test
-
-**If an existing test covers the bug** (search with `grep -r "MethodName\|BugKeyword" tests/`):
+**Supplementary: existing unit tests** — If a relevant xUnit test exists, you may ALSO run it as extra signal:
 
 ```bash
+grep -r "MethodName\|BugKeyword" tests/
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter "FullyQualifiedName~RelevantTestName"
 ```
 
-**If no existing test covers the bug** (most reproduction scenarios), use `dotnet test` with the test project infrastructure. Write a one-off test or reuse the reproduction approach from Phase 3A:
-
-```bash
-# Copy any needed test assets into the test content directory
-cp /tmp/repro-{number}/test-file.xyz tests/Content/images/
-
-# Run the full test suite (or a relevant subset) to verify the infrastructure works
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter "FullyQualifiedName~SKCodecTest"
-```
-
-Then write a targeted xUnit test in the existing test files and run it:
-
-```bash
-# Add a test method to the appropriate test file (e.g., tests/Tests/SkiaSharp/SKCodecTest.cs)
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~YourNewTestName"
-```
-
-> **Do NOT** create standalone `/tmp` projects that reference source-built DLLs and manually copy
-> native libraries. The test project already handles native library resolution. Use it.
+But unit tests are supplementary — the platform sample is the primary Phase 3C test.
 
 #### Step 3 — Record
 
@@ -314,9 +328,8 @@ Record whether the bug exists on main. If fixed on main but not released, note t
 
 **versionResults:** The output JSON MUST always include an entry for `main (source)` in `versionResults`. This is true even if you used `result: "not-tested"` — in that case, explain why in `notes`.
 
-> **Clean up:** Remove any test assets you copied into `tests/Content/` and any test methods you
-> added. These are throwaway reproduction artifacts, not permanent additions. Use `git checkout`
-> to revert test file changes.
+> **Clean up:** Revert any changes you made to sample files. Use `git checkout` to restore them.
+> These are throwaway reproduction modifications, not permanent additions.
 
 ### 3D. Cross-platform verification (conditional)
 
@@ -566,3 +579,5 @@ Blockers: none
 17. **Testing WASM for every bug.** WASM is a specialized runtime (AOT, single-threaded, no filesystem). Only test it when issue signals suggest browser/web. Testing WASM for an `SKMatrix` calculation bug is noise that produces false positives.
 
 18. **Silently skipping cross-platform verification.** If you skip Phase 3D, you MUST record why in `notes` and set `scope` to `"unknown"`. Never leave the downstream fix skill guessing about scope.
+
+19. **Reusing build artifacts across SkiaSharp version changes.** When testing multiple versions (reporter → latest → main), NEVER just change the package version and rebuild incrementally. Stale native binaries, cached `.wasm` files, and `_framework/` output from the previous version may persist, producing unreliable results. Always create a fresh project directory per version or `rm -rf bin/ obj/` between changes. This is especially critical for WASM where the linked native binary is version-specific.

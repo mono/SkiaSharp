@@ -113,3 +113,27 @@ Tag `versionResults` entries with `"platform": "docker-linux-x64"` (or `docker-l
 | Code runs correctly | `not-reproduced` |
 | Docker not available | blocker (not `needs-platform`) |
 | Need specific kernel feature Docker can't provide | `needs-platform` (rare) |
+
+## Main Source Testing (Phase 3C)
+
+For Docker/Linux bugs, Phase 3C tests the main branch console sample inside Docker:
+
+```bash
+# Back in the SkiaSharp repo — ensure native binaries exist
+cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+
+# Build the console sample from source
+dotnet build samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj
+
+# Run in Docker with the source-built binary
+dotnet publish samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj -r linux-x64 --no-self-contained -o /tmp/repro-publish/
+docker run --rm --platform linux/amd64 -v /tmp/repro-publish:/app mcr.microsoft.com/dotnet/runtime:8.0 bash -c '
+apt-get update -qq && apt-get install -y -qq libfontconfig1 2>&1 | tail -1
+cd /app && dotnet SkiaSharpSample.dll 2>&1
+'
+```
+
+Alternatively, if the sample doesn't cover the specific bug, temporarily modify
+`samples/Basic/Console/SkiaSharpSample/Program.cs` with the repro code, rebuild, and
+run in Docker. Revert with `git checkout` after recording the result.

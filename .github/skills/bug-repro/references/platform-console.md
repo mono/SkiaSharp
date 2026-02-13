@@ -81,3 +81,22 @@ If the first attempt doesn't clearly reproduce:
 | Wrong output values matching report | `wrong-output` |
 | Code runs correctly, no errors | `not-reproduced` |
 | Build error matching report | `reproduced` |
+
+## Main Source Testing (Phase 3C)
+
+When Phase 3C requires testing against the main branch source:
+
+```bash
+# Back in the SkiaSharp repo
+cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+
+# Build and run the console sample (uses project references to local source)
+dotnet build samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj
+dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj
+```
+
+The console sample draws text to an `SKBitmap` and saves a PNG — it exercises the same
+core SkiaSharp APIs. If you need to test the reporter's specific code, temporarily modify
+`samples/Basic/Console/SkiaSharpSample/Program.cs` with the repro code, then revert with
+`git checkout` after recording the result.
