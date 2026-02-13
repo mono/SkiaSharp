@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3394,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:24:40Z",
+    "currentLabels": []
+  },
+  "summary": "Draft PR #3394 by Copilot adds GC.KeepAlive() calls to ~40 methods across 5 files (SKCanvas, SKPaint, SKImage, SKBitmap, SKPath) to prevent premature GC collection of managed objects during P/Invoke calls. This is a partial fix for #3393 (and duplicate #2821), covering ~20% of the ~910 affected call sites. The PR could not build due to CI firewall issues, and maintainer jonpryor's review raises a deeper concern: property setters and struct-to-native conversions (e.g. SKCanvasSaveLayerRec.ToNative()) also extract handles without KeepAlive protection. Types using GetObject() without HandleDictionary registration (SKPaint, SKPath, SKCodec, SKTextBlob, etc.) are additionally vulnerable.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.98 },
+    "tenets": ["tenet/reliability"],
+    "partner": "partner/unoplatform"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "errorType": "race condition",
+      "errorMessage": "Premature GC collection of managed objects during P/Invoke calls causes crashes, AccessViolationException, or data corruption",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-android"]
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        "var canvas = ...\nvar picture = ...\ncanvas.DrawPicture(picture);\n// `picture` is not referenced after this point, so GC can collect it\n// But native code may still be using picture.Handle!"
+      ],
+      "relatedIssues": [3393, 2821, 1258, 1244],
+      "repoLinks": [
+        { "url": "https://github.com/unoplatform/uno/pull/21660", "description": "Uno Platform PR demonstrating real-world GC race condition with SkiaSharp" },
+        { "url": "https://github.com/dotnet/java-interop/issues/719", "description": "Same class of bug in dotnet/java-interop" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Only 14 GC.KeepAlive calls exist in the current codebase across 6 files. The vast majority of ~910 P/Invoke call sites remain unprotected. This PR has not been merged."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "PR #3394 is a draft, not merged, could not build in CI, and covers only ~20% of affected call sites. The review from jonpryor identifies additional unaddressed patterns (property setters, struct-to-native). Issue #1258 added a handful of GC.KeepAlive calls historically but the systemic problem remains.",
+      "relatedPRs": [3394, 1258]
+    }
+  },
+  "analysis": {
+    "summary": "This draft PR partially addresses a systemic GC safety issue in SkiaSharp's P/Invoke layer. When a managed wrapper object's handle is extracted and passed to native code, the GC can collect and finalize the wrapper before the native call completes, causing use-after-free. The PR adds GC.KeepAlive() after P/Invoke calls in ~40 methods, but the scope is incomplete: 67 P/Invoke calls in SKCanvas alone have zero GC.KeepAlive, and the broader codebase has ~910 unprotected call sites. Maintainer jonpryor's review raises a critical additional concern about types that use GetObject() without HandleDictionary registration (SKPaint, SKPath, SKCodec, SKFontStyle, SKTextBlob, SKVertices, SKDocument, etc.) — these have no static root keeping them alive, making them especially vulnerable in property-setter and struct-conversion scenarios.",
+    "rationale": "Classified as type/bug because this PR fixes a genuine race condition that causes crashes and data corruption. Area is area/SkiaSharp because it affects the core binding layer's P/Invoke wrappers, not views or platform-specific code. Severity is high (not critical) because the race window is narrow and typically manifests under GC pressure on mobile devices. The tenet/reliability and partner/unoplatform labels match the parent issue #3393 since Uno Platform reported a real-world instance.",
+    "keySignals": [
+      { "text": "SKCanvas.cs has 67 P/Invoke calls and 0 GC.KeepAlive calls", "source": "code search", "interpretation": "The most critical drawing class has zero protection against premature GC collection." },
+      { "text": "Only 14 GC.KeepAlive calls exist across 6 files (SKData, SKImage, SKFontStyleSet, SKTextBlob, SKSurface, SKBitmap)", "source": "code search", "interpretation": "Historical fixes (PR #1258) added some protections but the vast majority of call sites remain unprotected." },
+      { "text": "jonpryor review: 'I am thus rather concerned about the behavior of properties in general. If the property type uses HandleDictionary, things should be fine. If they don't...'", "source": "PR review comment", "interpretation": "The scope is broader than method parameters — property setters and struct-to-native conversions also extract handles. Types with GetObject() that bypass HandleDictionary are especially vulnerable." },
+      { "text": "SKPaint.GetObject just news up a value: 'handle == IntPtr.Zero ? null : new SKPaint(handle, true)'", "source": "binding/SkiaSharp/SKPaint.cs:831-832", "interpretation": "SKPaint instances have no static root in HandleDictionary, making them vulnerable to collection when their handle is extracted for P/Invoke." },
+      { "text": "Draft PR, not merged, CI firewall blocked build", "source": "PR metadata", "interpretation": "The PR has not been validated — it couldn't build in CI due to firewall rules blocking NuGet downloads." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "533-538", "finding": "DrawPicture calls SkiaApi.sk_canvas_draw_picture with picture.Handle and paint.Handle but has no GC.KeepAlive — exactly the pattern described in the bug report and Chris Brumme's blog post", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "68-72", "finding": "SaveLayer(in SKCanvasSaveLayerRec rec) calls rec.ToNative() which extracts handles from Paint and Backdrop, then passes the native struct to sk_canvas_save_layer_rec — neither rec.Paint nor rec.Backdrop is kept alive", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "1100-1109", "finding": "SKCanvasSaveLayerRec.ToNative() extracts Paint?.Handle and Backdrop?.Handle into a native struct — after this point, Paint and Backdrop have no managed references and are eligible for GC", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKPaint.cs", "lines": "831-832", "finding": "SKPaint.GetObject creates new instances without HandleDictionary registration — no static root keeps these alive, confirming jonpryor's concern about types that bypass GetOrAddObject", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKShader.cs", "lines": "458-459", "finding": "SKShader.GetObject uses GetOrAddObject which registers in HandleDictionary — these instances ARE rooted and less vulnerable to premature collection", "relevance": "context" },
+      { "file": "binding/SkiaSharp/SKObject.cs", "lines": "14-32", "finding": "SKObject has ownedObjects and keepAliveObjects ConcurrentDictionaries, and RegisterHandle for HandleDictionary — this is the mechanism that protects some types but not others", "relevance": "context" },
+      { "file": "binding/SkiaSharp/SKData.cs", "lines": "167-191", "finding": "SKData has 5 existing GC.KeepAlive(stream) calls in stream-reading methods — this is the established pattern for the fix", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Callers can add GC.KeepAlive() after their own SkiaSharp API calls to keep objects alive across native boundaries",
+      "Hold explicit references to all SkiaSharp objects (e.g. assign to a field or local variable that outlives the API call scope)"
+    ],
+    "nextQuestions": [
+      "Should the fix be applied via the code generator (utils/generate.ps1) rather than manual edits to avoid maintenance burden?",
+      "How should property setters be handled — should the setter keep a managed reference to the assigned value?",
+      "Should types that bypass HandleDictionary (SKPaint, SKPath, etc.) be migrated to use GetOrAddObject?",
+      "Is GC.KeepAlive(this) needed for instance methods, or is it sufficient to rely on callers to keep the receiver alive?"
+    ],
+    "resolution": {
+      "hypothesis": "The .NET GC can collect managed wrapper objects after their IntPtr handles are extracted for P/Invoke calls, causing native code to operate on freed handles. The fix requires systematic GC.KeepAlive() calls after all P/Invoke invocations, plus addressing the deeper HandleDictionary registration gap for some types.",
+      "proposals": [
+        {
+          "title": "Complete the manual GC.KeepAlive audit",
+          "description": "Expand PR #3394's approach to cover all ~910 P/Invoke call sites. Add GC.KeepAlive for every reference-type parameter (including 'this' via Handle) after each native call. This is the approach started in the PR but needs to cover the remaining ~80% of methods.",
+          "confidence": 0.70,
+          "effort": "large"
+        },
+        {
+          "title": "Generator-based GC.KeepAlive emission",
+          "description": "Modify utils/generate.ps1 to automatically emit GC.KeepAlive calls in generated P/Invoke wrappers. This would handle generated methods automatically and reduce maintenance burden. Manual methods would still need hand-editing.",
+          "confidence": 0.65,
+          "effort": "medium"
+        },
+        {
+          "title": "Address HandleDictionary registration gap",
+          "description": "Migrate types that use plain GetObject() (SKPaint, SKPath, SKCodec, SKDocument, SKFontStyle, SKTextBlob, SKVertices) to use GetOrAddObject with HandleDictionary registration. This provides a static root that prevents premature collection for property-assigned objects, as jonpryor's review identified.",
+          "confidence": 0.60,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Complete the manual GC.KeepAlive audit",
+      "recommendedReason": "This is the most direct and proven fix pattern (already used in 14 places). Generator-based emission is ideal long-term but the generator doesn't cover all methods. HandleDictionary migration is a separate concern that should be addressed alongside but not instead of GC.KeepAlive."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "The PR is a valid partial fix for a real systemic bug, but it's incomplete (~20% coverage), couldn't build in CI, and jonpryor's review identifies additional unaddressed patterns. The PR needs substantial rework to address review feedback and expand scope before it can be merged."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, reliability labels to match parent issue #3393",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference parent issue #3393",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3393
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference duplicate issue #2821 (same bug reported independently)",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 2821
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge PR, note incomplete scope, and flag jonpryor's review concerns",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the initial work on this. The GC.KeepAlive pattern is correct and matches the existing usage in SKData and SKImage.\n\nA few things to address before this can move forward:\n\n1. **Scope**: This covers ~40 methods but the issue affects ~910 call sites. We should decide whether to do this incrementally or find a generator-based approach.\n2. **Review feedback**: @jonpryor raises a valid concern about property setters and struct-to-native conversions (e.g. `SKCanvasSaveLayerRec.ToNative()`). Types that bypass `HandleDictionary` registration (`SKPaint`, `SKPath`, `SKCodec`, etc.) are especially vulnerable in these patterns.\n3. **Build**: The CI build failed due to firewall issues — this needs a successful build and test run.\n\nRelated: #3393 (parent issue), #2821 (duplicate report), #1258 (historical partial fix)."
+      }
+    ]
+  }
+}
