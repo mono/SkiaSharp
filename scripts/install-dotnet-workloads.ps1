@@ -48,11 +48,7 @@ if ($TizenBand -and $TizenVersion) {
   
   Write-Host "  Extracting to $manifestDir"
   New-Item -ItemType Directory -Force $manifestDir | Out-Null
-  if ($IsLinux -or $IsMacOS) {
-    unzip -o -qq './output/tmp/tizen-manifest.nupkg' -d './output/tmp/tizen-manifest'
-  } else {
-    Expand-Archive -Path './output/tmp/tizen-manifest.nupkg' -DestinationPath './output/tmp/tizen-manifest' -Force
-  }
+  Expand-Archive -Path './output/tmp/tizen-manifest.nupkg' -DestinationPath './output/tmp/tizen-manifest' -Force
   Copy-Item -Force './output/tmp/tizen-manifest/data/*' $manifestDir/
 }
 
