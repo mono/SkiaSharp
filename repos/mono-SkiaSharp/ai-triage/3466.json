@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3466,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:19:39Z",
+    "currentLabels": ["community ✨"]
+  },
+  "summary": "PR fixing incorrect disposal ownership in ToHarfBuzzBlob extension method. Currently, when SKStreamAsset.GetMemoryBase() returns non-zero, the Blob's release callback disposes the stream — taking ownership away from the caller. When GetMemoryBase() is zero, data is copied but the stream is never disposed, causing a memory leak. This PR removes dispose ownership from both paths so callers manage stream lifetime, and fixes SKShaper to properly dispose the stream it creates via OpenStream().",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.HarfBuzz", "confidence": 0.98 },
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "memory-leak",
+      "errorMessage": "SKStreamAsset leaked when ToHarfBuzzBlob takes the else (copy) path; caller loses ownership when memoryBase path is taken",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "relatedIssues": [3378, 3319, 3467]
+    },
+    "versionAnalysis": {
+      "currentRelevance": "likely",
+      "relevanceReason": "The buggy code in BlobExtensions.cs and SKShaper.cs is unchanged on main. ToHarfBuzzBlob still disposes the asset in the memoryBase path and leaks in the copy path."
+    }
+  },
+  "analysis": {
+    "summary": "ToHarfBuzzBlob has two code paths with inconsistent ownership semantics. The memoryBase path (line 24) passes `() => asset.Dispose()` as the Blob release callback, stealing ownership from the caller. The else path (line 28-30) copies data to CoTaskMem but never disposes the stream, causing a memory leak. SKShaper.cs compounds this by chaining `OpenStream().ToHarfBuzzBlob()` without storing a reference to the stream, making it impossible to dispose deterministically. The PR correctly fixes both: removes dispose from both paths in ToHarfBuzzBlob and wraps the stream in a `using` in SKShaper. The memoryBase path now requires the caller to keep the stream alive as long as the blob (correct, since the blob references the stream's memory).",
+    "rationale": "Classified as type/bug because the current code has a clear defect: inconsistent disposal ownership and a confirmed memory leak in the else path. Area is SkiaSharp.HarfBuzz since both affected files (BlobExtensions.cs, SKShaper.cs) are in that project. Reliability tenet applies due to memory leak. No platform specificity — this is pure managed C# logic. The PR approach is the correct fix: the method that creates a resource should own its lifetime.",
+    "keySignals": [
+      {
+        "text": "blob = new Blob(memoryBase, size, MemoryMode.ReadOnly, () => asset.Dispose())",
+        "source": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/BlobExtensions.cs:24",
+        "interpretation": "ToHarfBuzzBlob takes ownership of the stream via the release callback — callers lose control of stream lifetime."
+      },
+      {
+        "text": "In the else path, asset.Read copies data but stream is never disposed",
+        "source": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/BlobExtensions.cs:28-30",
+        "interpretation": "Memory leak: when GetMemoryBase() returns IntPtr.Zero, the stream is orphaned with no disposal path."
+      },
+      {
+        "text": "using (var blob = Typeface.OpenStream(out index).ToHarfBuzzBlob())",
+        "source": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs:20",
+        "interpretation": "The stream returned by OpenStream() is not stored — only disposed if ToHarfBuzzBlob happens to take the memoryBase path."
+      },
+      {
+        "text": "mattleibow: This looks much better. I asked copilot to write some tests",
+        "source": "comment #1",
+        "interpretation": "Maintainer has reviewed and expressed approval in principle. Requested tests."
+      },
+      {
+        "text": "OP added targeted tests: regression test for unwanted disposal and test ensuring managed stream ref not required by blob",
+        "source": "comment #3",
+        "interpretation": "PR now includes tests. OP considers copilot-generated tests off-topic and provided better-scoped alternatives."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/BlobExtensions.cs",
+        "lines": "10-36",
+        "finding": "ToHarfBuzzBlob has two paths: memoryBase path disposes the stream via release callback (line 24), else path copies to CoTaskMem and never disposes stream (line 28-30). Inconsistent ownership semantics — memoryBase path steals ownership, else path leaks.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs",
+        "lines": "19-21",
+        "finding": "SKShaper constructor chains OpenStream().ToHarfBuzzBlob() without storing stream reference. Stream only disposed if memoryBase path is taken; otherwise leaked.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "292-300",
+        "finding": "SKTypeface.OpenStream() creates a new SKStreamAsset via P/Invoke. Returns a new object that the caller is responsible for disposing.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "lines": "242",
+        "finding": "IsDisposed property exists on SKObject base class — the PR's test correctly uses this to verify stream is not disposed after blob creation.",
+        "relevance": "context"
+      }
+    ],
+    "nextQuestions": [
+      "Does the memoryBase path's blob remain valid after the stream is disposed? The blob holds a raw pointer to the stream's memory — need to verify HarfBuzz Blob copies the data when MakeImmutable() is called, or that callers always keep stream alive longer than blob.",
+      "Are there other callers of ToHarfBuzzBlob besides SKShaper that might rely on the old disposal behavior?"
+    ],
+    "resolution": {
+      "hypothesis": "ToHarfBuzzBlob incorrectly took ownership of the stream in the memoryBase path and failed to dispose it in the else path. The fix is to never take ownership (caller manages stream lifetime) and fix SKShaper to use a `using` statement.",
+      "proposals": [
+        {
+          "title": "Merge PR #3466",
+          "description": "The PR correctly removes dispose ownership from both paths in ToHarfBuzzBlob and fixes SKShaper to properly dispose the stream. Also adds try/catch for CoTaskMem allocation safety and includes a targeted regression test.",
+          "confidence": 0.90,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Merge PR #3466",
+      "recommendedReason": "Maintainer has approved the approach. PR includes targeted tests. The fix correctly aligns ownership semantics: the creator of the stream manages its lifetime."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.92,
+      "reason": "PR has maintainer approval in principle and includes tests. Ready for final review and merge. Related issue #3378 should also be closed once this merges."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.HarfBuzz", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference bug report #3378 which describes the same memory leak",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3378
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related disposal PR #3319 (dispose temporary vertices) by same contributor",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 3319
+      }
+    ]
+  }
+}
