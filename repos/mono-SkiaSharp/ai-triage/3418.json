@@ -1,0 +1,204 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3418,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:25:00Z",
+    "currentLabels": []
+  },
+  "summary": "Draft PR investigating significant rendering performance gap between native C++ Skia (~120fps) and SkiaSharp C# (<10fps) using MotionMark benchmark, with partial improvements to ~40fps via OpenGL configuration changes",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/macOS"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run the MotionMark benchmark from https://github.com/wieslawsoltes/FastSkiaSharp (C++ native)",
+        "Compare FPS with the equivalent SkiaSharp C# implementation in the macOS sample",
+        "Observe ~120fps in C++ vs <10fps in SkiaSharp"
+      ],
+      "environmentDetails": "macOS, OpenGL backend, SkiaSharp current version, net9.0-macos",
+      "repoLinks": [
+        {
+          "url": "https://github.com/wieslawsoltes/FastSkiaSharp",
+          "description": "Original C++ MotionMark benchmark showing 120fps"
+        },
+        {
+          "url": "https://github.com/mattleibow/FastSkiaSharp",
+          "description": "Maintainer fork with downgraded Skia (111-119fps)"
+        }
+      ],
+      "screenshots": [
+        {
+          "url": "https://github.com/user-attachments/assets/b4a89a55-21b4-40e6-8222-b7731b43f3d0",
+          "description": "Performance comparison showing C++ vs SkiaSharp FPS"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "current (Skia m119 equivalent)"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The performance gap is structural \u2014 it exists across Skia versions (newer Skia only marginally faster: 120fps vs 111-119fps). The C++ to C# overhead is the core issue."
+    }
+  },
+  "analysis": {
+    "summary": "Maintainer-authored draft PR investigating a 10x+ rendering performance gap between native C++ Skia and SkiaSharp. The PR identifies multiple contributing factors: VSync locking, suboptimal OpenGL pixel format (multisample 4x), display queue overhead, and potentially P/Invoke marshaling cost. Partial fixes achieve ~40fps but a significant gap remains.",
+    "rationale": "This is an enhancement PR, not a bug \u2014 SkiaSharp renders correctly, just slowly. Classified as area/SkiaSharp.Views because the primary changes target SKGLView's OpenGL initialization and render loop on macOS. The performance tenet applies directly. The PR is a draft investigation by the maintainer (mattleibow), including a MotionMark benchmark scene, OpenGL configuration changes, a new GRContext.Flush(SKSurface) API, and a tight render loop bypassing NSRunLoop.",
+    "keySignals": [
+      {
+        "text": "The native code is 120fps, but skiasharp is sub 10fps",
+        "source": "PR description",
+        "interpretation": "10x+ performance gap indicates structural overhead, not a simple configuration issue."
+      },
+      {
+        "text": "I got to 40fps by using the new opengl flags in the SKGLView",
+        "source": "PR description",
+        "interpretation": "OpenGL pixel format changes (removing multisample, adding VSync disable) provide ~4x improvement, but 3x gap remains."
+      },
+      {
+        "text": "My fork which downgrades skia to the same version in skiasharp is a tiny bit slower, 111-119 fps",
+        "source": "PR description",
+        "interpretation": "Newer Skia version is only marginally faster \u2014 the perf gap is NOT caused by Skia version differences."
+      },
+      {
+        "text": "This all appears to be inside the skia code, which appears to be using similar compiler args",
+        "source": "PR description",
+        "interpretation": "Compiler optimizations are similar; the gap is likely in the C#\u2192C interop layer, render loop architecture, or GPU synchronization patterns."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "lines": "62-81",
+        "finding": "Current production code uses multisample 4x (SampleBuffers=1, Samples=4), 32-bit color, 24-bit depth, and no explicit OpenGL profile. The PR changes to: no multisample (SampleBuffers=0), OpenGL 3.2 Core profile, 24-bit color + 8-bit alpha, 0-bit depth \u2014 matching C++ sk_app pixel format exactly.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "lines": "88-95",
+        "finding": "Current code does not set SwapInterval. The PR adds SwapInterval=0 (VSync disabled) in PrepareOpenGL, matching C++ behavior. VSync at 60Hz would cap fps to 60, but the sub-10fps baseline suggests VSync alone doesn't explain the gap.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "lines": "108-176",
+        "finding": "DrawRect creates surface only when null, but PR restructures to RenderDirect() bypassing the NSView display queue. The PR also changes flush pattern from canvas.Flush()+context.Flush() to the new gr_direct_context_flush_surface API.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/GRContext.cs",
+        "lines": "153-158",
+        "finding": "PR adds new Flush(SKSurface) method wrapping gr_direct_context_flush_surface \u2014 a combined surface+context flush matching C++ pattern. This is a new API addition.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/src/c/gr_context.cpp",
+        "lines": "146",
+        "finding": "gr_direct_context_flush_surface implementation exists in the C API layer, calling through to Skia's surface flush + context submit pattern.",
+        "relevance": "direct"
+      },
+      {
+        "file": "samples/Basic/macOS/SkiaSharpSample/MotionMarkScene.cs",
+        "finding": "New benchmark scene using paths (lines, quads, cubics) with configurable complexity (1K-120K elements). Uses CollectionsMarshal.AsSpan for zero-copy iteration \u2014 well-optimized C# code.",
+        "relevance": "context"
+      },
+      {
+        "file": "samples/Basic/macOS/SkiaSharpSample/Main.cs",
+        "finding": "PR replaces NSApplication.Main(args) with a manual tight render loop: process pending events \u2192 RenderFrame \u2192 repeat. This matches the C++ sk_app pattern and bypasses macOS display queue latency.",
+        "relevance": "direct"
+      }
+    ],
+    "nextQuestions": [
+      "What proportion of the remaining gap (40fps vs 120fps) is P/Invoke overhead vs GPU synchronization differences?",
+      "Would the newer interop primitives from Epic #2615 (source generators, LibraryImport) reduce the P/Invoke overhead measurably?",
+      "Is the gap similar on other platforms (Android, iOS) or specific to macOS OpenGL?",
+      "Does the #3393 GC.KeepAlive issue contribute to performance (GC pressure from unprotected P/Invoke sites)?",
+      "How does Metal backend compare \u2014 macOS OpenGL is deprecated and may have driver overhead"
+    ],
+    "resolution": {
+      "hypothesis": "The performance gap has multiple contributing factors: (1) VSync and multisample overhead in OpenGL config (~4x improvement when fixed), (2) NSView display queue adds latency vs tight render loop, (3) remaining gap likely from P/Invoke marshaling overhead on hot render paths and GRContext flush pattern differences.",
+      "proposals": [
+        {
+          "title": "OpenGL configuration optimization",
+          "description": "Apply the pixel format changes from this PR: disable multisample, use OpenGL 3.2 Core, disable VSync, match C++ sk_app pixel format. This alone achieved ~4x improvement (sub-10fps \u2192 ~40fps).",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Surface flush API",
+          "description": "The new GRContext.Flush(SKSurface) API combines surface and context flush in a single P/Invoke call, reducing interop overhead on the hot path.",
+          "confidence": 0.7,
+          "effort": "small"
+        },
+        {
+          "title": "Modernize P/Invoke layer",
+          "description": "Related to Epic #2615 \u2014 use LibraryImport source generators and newer interop primitives to reduce marshaling overhead on hot rendering paths.",
+          "confidence": 0.5,
+          "effort": "large"
+        },
+        {
+          "title": "Investigate Metal backend",
+          "description": "macOS OpenGL is deprecated since Mojave. Metal backend may have less driver overhead and better performance characteristics. Worth benchmarking.",
+          "confidence": 0.4,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "OpenGL configuration optimization",
+      "recommendedReason": "Already proven to deliver ~4x improvement with minimal code changes. Should be merged independently of ongoing investigation."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "This is an active investigation by the maintainer. The PR identifies partial fixes but the root cause of the remaining 3x gap (40fps vs 120fps) is still under investigation. The OpenGL config changes and new flush API could be extracted and merged independently."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, views, macOS, OpenGL, and performance labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "os/macOS",
+          "backend/OpenGL",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Respond to community question about perf findings and status",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "Thanks for the interest. This is still an active investigation.\n\nSo far we've identified several factors contributing to the performance gap:\n\n1. **OpenGL configuration** \u2014 The default SKGLView pixel format used 4x multisample and didn't disable VSync. Matching the C++ sk_app configuration (no multisample, VSync off, OpenGL 3.2 Core profile) improved from sub-10fps to ~40fps.\n\n2. **Render loop architecture** \u2014 The standard NSView display queue adds latency. A tight render loop matching the C++ pattern helps.\n\n3. **Remaining gap** \u2014 Even with these optimizations, there's still a ~3x gap (40fps vs 120fps) that needs further investigation. Potential factors include P/Invoke marshaling overhead on hot paths and GPU flush pattern differences.\n\nThe investigation is ongoing. Some of the configuration improvements (pixel format, VSync) could be shipped independently."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference P/Invoke modernization epic",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 2615
+      }
+    ]
+  }
+}
