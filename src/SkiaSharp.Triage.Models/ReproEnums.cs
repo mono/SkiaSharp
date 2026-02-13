@@ -81,6 +81,13 @@ public enum VersionTestResult
 public enum ReproProjectType
 {
     [JsonStringEnumMemberName("console")] Console,
+    [JsonStringEnumMemberName("blazorwasm")] BlazorWasm,
+    [JsonStringEnumMemberName("docker")] Docker,
+    [JsonStringEnumMemberName("mobile")] Mobile,
+    [JsonStringEnumMemberName("wpf")] Wpf,
+    [JsonStringEnumMemberName("winforms")] WinForms,
+    [JsonStringEnumMemberName("winui")] WinUI,
+    [JsonStringEnumMemberName("maui")] Maui,
     [JsonStringEnumMemberName("test")] Test,
     [JsonStringEnumMemberName("existing")] Existing
 }

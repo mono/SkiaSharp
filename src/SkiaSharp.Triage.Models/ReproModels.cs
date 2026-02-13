@@ -10,6 +10,7 @@ public record ReproResult(
     ReproEnvironment Environment,
     ReproInputs? Inputs = null,
     string? Assessment = null,
+    string? Scope = null,
     string? ReproductionTime = null,
     List<ReproVersionResult>? VersionResults = null,
     ReproProject? ReproProject = null,
@@ -59,7 +60,8 @@ public record ReproVersionResult(
     string Version,
     VersionSource Source,
     VersionTestResult Result,
-    string? Notes = null
+    string? Notes = null,
+    string? Platform = null
 );
 
 // ── Environment ──────────────────────────────────────────────────
@@ -70,6 +72,8 @@ public record ReproEnvironment(
     string DotnetVersion,
     string SkiaSharpVersion,
     bool DockerUsed,
+    string? DotnetSdkVersion = null,
+    string? WasmToolsVersion = null,
     ReproGpu? Gpu = null
 );
 
