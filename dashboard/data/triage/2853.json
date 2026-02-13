@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2853,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T23:55:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "TIFF decoding returns null / throws \u2014 TIFF is not a supported format in Skia. Duplicate of #433, related to feature request #2993.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.4
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Attempt to load a .tif file using SKImage.FromEncodedData() or SKBitmap.Decode()",
+        "Observe null return from SKImage.FromEncodedData() or ArgumentNullException from SKBitmap.Decode()"
+      ],
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/15253367/C.7.142.18-0002.zip",
+          "filename": "C.7.142.18-0002.zip",
+          "description": "Sample TIFF file that fails to decode"
+        }
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, Windows 10/11, Visual Studio",
+      "relatedIssues": [
+        433,
+        2993,
+        1950
+      ]
+    },
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "wrong-output",
+      "errorMessage": "Value cannot be null. (Parameter \u0027codec\u0027) at SkiaSharp.SKBitmap.Decode(SKCodec codec)",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0-windows"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "TIFF has never been supported by Skia\u0027s codec system. No TIFF codec exists in any version of Skia or SkiaSharp."
+    }
+  },
+  "analysis": {
+    "summary": "Reporter attempts to decode TIFF files using SkiaSharp. TIFF is not and has never been a supported image format in Skia. The SKEncodedImageFormat enum does not include TIFF, and there is no SkTiffCodec in the Skia codec directory. SKCodec.Create() returns null for unrecognized formats, causing SKImage.FromEncodedData() to return null and SKBitmap.Decode(SKCodec) to throw ArgumentNullException when passed the null codec.",
+    "codeInvestigation": [
+      {
+        "file": "externals/skia/src/codec/",
+        "finding": "No SkTiffCodec.cpp or SkTiffCodec.h exists. The only TIFF reference is in SkRawCodec.cpp which checks for TIFF headers as part of DNG (raw photo) format detection, not general TIFF decoding.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/include/codec/SkEncodedImageFormat.h",
+        "finding": "Supported formats: BMP, GIF, ICO, JPEG, PNG, WBMP, WEBP, PKM, KTX, ASTC, DNG, HEIF, AVIF, JPEGXL. TIFF is not listed.",
+        "relevance": "direct",
+        "lines": "17-30"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "SKBitmap.Decode(Stream) calls SKCodec.Create(stream) which returns null for unsupported formats, then returns null. But SKBitmap.Decode(SKCodec) at line 436-437 throws ArgumentNullException if codec is null \u2014 this is the crash path when user manually creates a null codec.",
+        "relevance": "direct",
+        "lines": "461-471"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "finding": "SKImage.FromEncodedData(SKData) calls sk_image_new_from_encoded which returns IntPtr.Zero for unsupported formats, causing GetObject to return null. This is the expected factory-returns-null pattern.",
+        "relevance": "direct",
+        "lines": "166-173"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "finding": "SKCodec.Create() delegates to sk_codec_new_from_stream/sk_codec_new_from_data. Returns null when Skia cannot identify the format, which is the case for TIFF.",
+        "relevance": "direct",
+        "lines": "229-264"
+      }
+    ],
+    "rationale": "This is not a bug in SkiaSharp \u2014 it is expected behavior for an unsupported image format. The type is classified as type/bug with low confidence because the reporter filed it as a bug, but it is actually a known limitation / feature request. The area is area/SkiaSharp (core codec). Issue #433 was closed in 2018 with the maintainer explicitly stating TIFF is not supported, and #2993 is an open feature request for TIFF support. The ArgumentNullException path through SKBitmap.Decode(byte[]) \u2192 SKCodec.Create() returning null \u2192 SKBitmap.Decode(SKCodec) receiving null is the standard unsupported-format behavior.",
+    "keySignals": [
+      {
+        "text": "I tried to load large .tif files, but they all fail",
+        "source": "issue body",
+        "interpretation": "Reporter expects TIFF to be a supported format. It is not."
+      },
+      {
+        "text": "ArgumentNullException: Value cannot be null. (Parameter \u0027codec\u0027)",
+        "source": "issue body",
+        "interpretation": "SKCodec.Create() returns null for unrecognized formats. When passed directly to SKBitmap.Decode(SKCodec), it throws. The stream/byte[]/string overloads of Decode null-check the codec and return null gracefully."
+      },
+      {
+        "text": "Unfortunately, TIFF files are not supported by skia, and thus SkiaSharp.",
+        "source": "#433 comment by mattleibow",
+        "interpretation": "Maintainer explicitly confirmed this in 2018. No TIFF codec has been added since."
+      }
+    ],
+    "workarounds": [
+      "Use BitMiracle.LibTiff.NET to decode TIFF files to raw pixel data, then create an SKBitmap from the pixels.",
+      "Use ImageSharp or System.Drawing to convert TIFF to PNG/JPEG first, then load with SkiaSharp.",
+      "Use Magick.NET to convert TIFF to a supported format before passing to SkiaSharp."
+    ],
+    "nextQuestions": [
+      "Should this be closed as duplicate of #433, or linked to the feature request #2993?"
+    ],
+    "resolution": {
+      "hypothesis": "TIFF is not a supported codec in Skia. This is by design, not a bug. The reporter needs to use an external library to decode TIFF.",
+      "proposals": [
+        {
+          "description": "Decode TIFF files with BitMiracle.LibTiff.NET, extract raw pixel data, and create an SKBitmap from the pixels. This is the workaround recommended by the maintainer in #433.",
+          "title": "Use LibTiff.NET for TIFF decoding",
+          "codeSnippet": "// Install: dotnet add package BitMiracle.LibTiff.NET\nusing BitMiracle.LibTiff;\nusing SkiaSharp;\n\nusing var tiff = Tiff.Open(\u0022image.tif\u0022, \u0022r\u0022);\nint width = tiff.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();\nint height = tiff.GetField(TiffTag.IMAGELENGTH)[0].ToInt();\nvar raster = new int[width * height];\ntiff.ReadRGBAImageOriented(width, height, raster, Orientation.TOPLEFT);\n\nvar info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul);\nusing var bitmap = new SKBitmap(info);\nvar ptr = bitmap.GetPixels();\nSystem.Runtime.InteropServices.Marshal.Copy(raster, 0, ptr, raster.Length);\nbitmap.NotifyPixelsChanged();",
+          "confidence": 0.65,
+          "effort": "small"
+        },
+        {
+          "description": "Use SixLabors.ImageSharp to load the TIFF and save as PNG to a MemoryStream, then load the PNG with SkiaSharp.",
+          "title": "Convert TIFF to PNG with ImageSharp",
+          "codeSnippet": "// Install: dotnet add package SixLabors.ImageSharp\nusing SixLabors.ImageSharp;\nusing SixLabors.ImageSharp.Formats.Png;\nusing SkiaSharp;\n\nusing var image = Image.Load(\u0022image.tif\u0022);\nusing var ms = new MemoryStream();\nimage.Save(ms, new PngEncoder());\nms.Position = 0;\nusing var skImage = SKImage.FromEncodedData(ms);",
+          "confidence": 0.75,
+          "effort": "small"
+        },
+        {
+          "description": "Track feature request #2993 for native TIFF codec support in Skia/SkiaSharp. This would require upstream Skia changes.",
+          "title": "TIFF support in SkiaSharp",
+          "confidence": 0.3,
+          "effort": "large"
+        }
+      ],
+      "recommendedProposal": "Convert TIFF to PNG with ImageSharp",
+      "recommendedReason": "ImageSharp has robust TIFF support and the conversion approach is simpler and more reliable than manual pixel extraction with LibTiff.NET."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-duplicate",
+      "confidence": 0.85,
+      "reason": "This is the same issue as #433 (TIFF not supported). The feature request is tracked separately in #2993."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Relabel as feature request since TIFF non-support is by design, not a bug",
+        "risk": "low",
+        "confidence": 0.8,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain TIFF is unsupported and provide workaround",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the report. TIFF is not a supported image format in Skia (the underlying C\u002B\u002B library), and so SkiaSharp cannot decode it \u2014 \u0060SKCodec.Create()\u0060 returns null for unrecognized formats, which is why \u0060FromEncodedData\u0060 returns null and \u0060Decode\u0060 throws.\n\nHere\u0027s a workaround you can use: convert the TIFF to PNG with a library like ImageSharp, then load the PNG with SkiaSharp:\n\n\u0060\u0060\u0060csharp\n// dotnet add package SixLabors.ImageSharp\nusing SixLabors.ImageSharp;\nusing SixLabors.ImageSharp.Formats.Png;\n\nusing var image = Image.Load(\u0022image.tif\u0022);\nusing var ms = new MemoryStream();\nimage.Save(ms, new PngEncoder());\nms.Position = 0;\nusing var skImage = SKImage.FromEncodedData(ms);\n// skImage may be null if encoding failed\n\u0060\u0060\u0060\n\nAlternatively, BitMiracle.LibTiff.NET can decode TIFF to raw pixels which you can pass directly to \u0060SKBitmap\u0060.\n\nNative TIFF support is tracked in #2993. Closing this as a duplicate of #433."
+      },
+      {
+        "type": "link-duplicate",
+        "description": "Mark as duplicate of #433 (TIFF not supported)",
+        "risk": "medium",
+        "confidence": 0.85,
+        "linkedIssue": 433
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference feature request #2993 for TIFF support",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 2993
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as duplicate of #433",
+        "risk": "medium",
+        "confidence": 0.85
+      }
+    ]
+  }
+}

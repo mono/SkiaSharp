@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3423,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:12:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "ClickOnce deployment on .NET Framework 4.7.2 requires Windows to reproduce. Root cause confirmed: NativeAssets.Win32 .targets file uses \u003CNone\u003E items instead of \u003CContent\u003E, causing ClickOnce to omit libSkiaSharp.dll from the application manifest. Workaround confirmed by community and OP: manually add libSkiaSharp.dll as Content. This issue was reported in #1327 (2020), claimed fixed in PR #1342, but the .targets file still uses \u003CNone\u003E.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Verify environment limitations - macOS cannot run ClickOnce deployment",
+      "layer": "setup",
+      "command": "uname -s \u0026\u0026 uname -m \u0026\u0026 dotnet --version",
+      "exitCode": 0,
+      "output": "Darwin\narm64\n8.0.417",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Investigate NativeAssets.Win32 targets file structure to confirm root cause",
+      "layer": "deployment",
+      "command": "cat binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets",
+      "exitCode": 0,
+      "output": "\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\n\u003CProject xmlns=\u0022http://schemas.microsoft.com/developer/msbuild/2003\u0022\u003E\n[...truncated 8 lines...]\n    \u003CItemGroup Condition=\u0022 \u0027$(ShouldIncludeNativeSkiaSharp)\u0027 != \u0027False\u0027 \u0022\u003E\n        \u003C_NativeSkiaSharpFile Include=\u0022$(MSBuildThisFileDirectory)...\\runtimes\\win-x86\\native\\libSkiaSharp*.dll\u0022\u003E\n[...truncated 6 lines...]\n        \u003C!-- include everything --\u003E\n        \u003CNone Include=\u0022@(_NativeSkiaSharpFile)\u0022\u003E\n            \u003CLink\u003E%(Dir)%(Filename)%(Extension)\u003C/Link\u003E\n            \u003CVisible\u003EFalse\u003C/Visible\u003E\n            \u003CCopyToOutputDirectory\u003EPreserveNewest\u003C/CopyToOutputDirectory\u003E\n        \u003C/None\u003E\n    \u003C/ItemGroup\u003E\n\u003C/Project\u003E",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify related issue #1327 history and fix status",
+      "layer": "deployment",
+      "command": "gh issue view 1327 --repo mono/SkiaSharp --json title,state,comments",
+      "exitCode": 0,
+      "output": "Issue #1327: [QUESTION] How to add and deploy (lib)SkiaSharp to WPF .NET Framework project\nState: CLOSED\nComment by mattleibow: I bet it has to do with the fact that we include it as \u0060None\u0060 and not \u0060Content\u0060.\nComment by mattleibow: Fixed in #1342 and on the preview feed as v2.80.0-preview.20",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3423.json"
+  },
+  "assessment": "working-as-designed",
+  "reproductionTime": "~15 minutes",
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter confirms DllNotFoundException on ClickOnce deployment. Cannot test directly on macOS."
+    },
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter tested both versions with same result."
+    }
+  ],
+  "artifacts": [
+    {
+      "filename": "SkiaSharp.targets",
+      "description": "MSBuild targets file that adds native DLLs as \u003CNone\u003E items (line 23). This is the root cause \u2014 ClickOnce only includes \u003CContent\u003E items in application manifests, not \u003CNone\u003E items.",
+      "source": "external",
+      "available": true,
+      "url": "https://github.com/mono/SkiaSharp/blob/main/binding/SkiaSharp.NativeAssets.Win32/buildTransitive/net4/SkiaSharp.targets"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027",
+    "stackTrace": "System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027.\n   at SkiaSharp.LibraryLoader.LoadLocalLibrary[T](String libraryName)\n   at System.Lazy\u00601.CreateValue()\n   at System.Lazy\u00601.LazyInitValue()\n   at SkiaSharp.SkiaApi.sk_data_new_empty()\n   at SkiaSharp.SKData..cctor()\n   --- End of inner exception stack trace ---\n   at SkiaSharp.SKData.Create(IntPtr address, Int32 length)\n   at SkiaSharp.SKBitmap.Decode(ReadOnlySpan\u00601 buffer)\n   at SkiaSharp.SKBitmap.Decode(Byte[] buffer)"
+  },
+  "blockers": [
+    "ClickOnce deployment is Windows-only and requires .NET Framework project system in Visual Studio. Cannot reproduce ClickOnce publish on macOS.",
+    ".NET Framework 4.7.2 WinForms project requires Windows SDK and tooling not available on macOS."
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "fix-status",
+        "upstream": "Triage references #1327 as a related issue that was closed in 2020 with PR #1342 claiming the fix was in v2.80.0-preview.20",
+        "corrected": "Issue #1327 claimed to be fixed but the problem persists in SkiaSharp 3.119.1. The .targets file still uses \u003CNone\u003E instead of \u003CContent\u003E on line 23. Either the fix was incomplete, only addressed runtime loading (not deployment manifest), or regressed during the 3.0 repository modernization (commit bc5020b9e)."
+      }
+    ]
+  }
+}

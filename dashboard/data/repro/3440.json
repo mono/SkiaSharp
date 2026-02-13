@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3440,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:24:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Cannot fully reproduce on macOS. The reported issue is a Windows-specific WinRT activation failure in SkiaSharp.Views.WinUI.Native.PropertySetExtensions. The crash occurs in the ANGLE/OpenGL rendering path when GlesContext.CreateSurface() tries to invoke PropertySetExtensions.AddSingle(). Triage analysis points to a deployment/WinRT registration issue similar to #2948 (resolved externally). SkiaSharp core library loads successfully on macOS, confirming the issue is WinUI-specific. Reproduction requires Windows with WinUI runtime to test the native C\u002B\u002B/WinRT component activation.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project to test SkiaSharp 3.119.1 core library loading on macOS",
+      "layer": "setup",
+      "command": "mkdir -p /tmp/repro-3440 \u0026\u0026 cd /tmp/repro-3440 \u0026\u0026 dotnet new console -n Repro --framework net8.0",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp 3.119.1 package reference",
+      "layer": "setup",
+      "command": "cd /tmp/repro-3440/Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.119.1",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Write test code to verify SkiaSharp core library loading and basic rendering",
+      "layer": "setup",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that tests SkiaSharp core library loading (non-WinUI)",
+          "content": "using System;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine(\u0022=== SkiaSharp 3.119.1 Native Load Test ===\u0022);\nConsole.WriteLine($\u0022OS: {RuntimeInformation.OSDescription}\u0022);\nConsole.WriteLine($\u0022Architecture: {RuntimeInformation.ProcessArchitecture}\u0022);\nConsole.WriteLine($\u0022.NET: {RuntimeInformation.FrameworkDescription}\u0022);\nConsole.WriteLine();\n\ntry\n{\n    // Test basic SkiaSharp loading (non-WinUI)\n    using var bitmap = new SKBitmap(100, 100);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.White);\n    canvas.DrawRect(10, 10, 80, 80, new SKPaint { Color = SKColors.Blue });\n    \n    using var image = SKImage.FromBitmap(bitmap);\n    using var data = image.Encode(SKEncodedImageFormat.Png, 100);\n    \n    Console.WriteLine(\u0022\u2705 SkiaSharp core library loaded successfully\u0022);\n    Console.WriteLine($\u0022   Created 100x100 bitmap and rendered blue rectangle\u0022);\n    Console.WriteLine($\u0022   Encoded to PNG: {data.Size} bytes\u0022);\n    Console.WriteLine();\n    \n    // Save to verify rendering\n    using var stream = File.OpenWrite(\u0022/tmp/repro-3440-test.png\u0022);\n    data.SaveTo(stream);\n    Console.WriteLine($\u0022\u2705 Saved test image to /tmp/repro-3440-test.png\u0022);\n    Console.WriteLine();\n    \n    Console.WriteLine(\u0022Note: This test verifies SkiaSharp core functionality on macOS.\u0022);\n    Console.WriteLine(\u0022The reported issue is specific to WinUI native components on Windows,\u0022);\n    Console.WriteLine(\u0022which cannot be tested on this platform.\u0022);\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022\u274C Error: {ex.GetType().Name}: {ex.Message}\u0022);\n    Console.WriteLine(ex.StackTrace);\n    return 1;\n}\n\nreturn 0;"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run test to verify SkiaSharp core library loads successfully",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-3440/Repro \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "=== SkiaSharp 3.119.1 Native Load Test ===\nOS: Darwin 25.2.0 Darwin Kernel Version 25.2.0\nArchitecture: Arm64\n.NET: .NET 8.0.23\n\n\u2705 SkiaSharp core library loaded successfully\n   Created 100x100 bitmap and rendered blue rectangle\n   Encoded to PNG: 352 bytes\n\n\u2705 Saved test image to /tmp/repro-3440-test.png\n\nNote: This test verifies SkiaSharp core functionality on macOS.\nThe reported issue is specific to WinUI native components on Windows,\nwhich cannot be tested on this platform.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Inspect WinUI PropertySetExtensions code to understand the issue",
+      "layer": "csharp",
+      "output": "Examined source files:\n- source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs: Lines 98-104 call PropertySetExtensions.AddSize() and AddSingle() during EGL surface creation\n- native/winui/.../PropertySetExtensions.idl: WinRT component definition\n- native/winui/.../PropertySetExtensions.cpp: C\u002B\u002B/WinRT implementation (straightforward wrapper)\n\nThe crash location matches reporter\u0027s stack trace exactly. PropertySetExtensions is a native C\u002B\u002B/WinRT component used only in the ANGLE/OpenGL rendering path (SKSwapChainPanel), not in CPU rendering (SKXamlCanvas).\n\nThe COMException \u0027Element not found\u0027 during BaseActivationFactory indicates WinRT runtime cannot locate the component registration. Similar to issue #2948 (resolved externally by Microsoft Store environment fix).",
+      "result": "skip"
+    }
+  ],
+  "environment": {
+    "os": "macOS 15.3 (Darwin 25.2.0)",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3440.json"
+  },
+  "assessment": "likely-bug",
+  "reproductionTime": "~15 minutes",
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "SkiaSharp core library loaded successfully on macOS, but WinUI-specific components cannot be tested on this platform"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.1"
+      }
+    ]
+  },
+  "errorMessages": {
+    "primaryError": "System.Runtime.InteropServices.COMException: Element not found",
+    "stackTrace": "System.Runtime.InteropServices.COMException: Element not found.\n  at void Marshal.ThrowExceptionForHR(int errorCode)() in Marshal.cs:line 856\n  at new BaseActivationFactory(string typeNamespace, string typeFullName)()\n  at static PropertySetExtensions()()\n\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.Views.WinUI.Native.PropertySetExtensions\u0027 threw an exception.\n  at IObjectReference PropertySetExtensions.get__objRef_global__SkiaSharp_Views_WinUI_Native_IPropertySetExtensionsStatics()()\n  at void PropertySetExtensions.AddSingle(PropertySet propertySet, string key, float value)()\n  at void GlesContext.CreateSurface(SwapChainPanel panel, Size? renderSurfaceSize, float? resolutionScale)()\n  at void AngleSwapChainPanel.EnsureRenderSurface()()\n  at void AngleSwapChainPanel.OnLoaded(object sender, RoutedEventArgs e)()\n  at int RoutedEventHandler.Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e)()"
+  },
+  "blockers": [
+    "Requires Windows OS with WinUI runtime to test native C\u002B\u002B/WinRT component activation",
+    "The PropertySetExtensions WinRT component is Windows-specific and cannot be loaded on macOS",
+    "ANGLE/OpenGL rendering path (SKSwapChainPanel \u2192 GlesContext) only functions on Windows",
+    "Cannot verify WinRT deployment/registration behavior on non-Windows platforms"
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3491,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:14:31Z",
+    "currentLabels": [
+      "copilot"
+    ]
+  },
+  "summary": "PR adds SKSamplingOptions overloads to SKSurface.Draw and SKCanvas.DrawSurface, fixing #3344 \u2014 sampling options were not exposed on surface draw after Skia 2.x\u21923.x migration",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.75
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.98
+    },
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call SKSurface.Draw or SKCanvas.DrawSurface",
+        "Observe there is no overload accepting SKSamplingOptions",
+        "In Skia 2.x, SkPaint carried filter quality; in 3.x it doesn\u0027t \u2014 so there\u0027s no way to specify sampling"
+      ],
+      "relatedIssues": [
+        3344
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0"
+      ],
+      "workedIn": "2.88.9",
+      "currentRelevance": "likely",
+      "relevanceReason": "The sampling overloads don\u0027t exist on main \u2014 this PR adds them. Issue is still relevant without this PR."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.9,
+      "reason": "PR #3491 adds the missing overloads. CI passes. Follows same pattern as existing DrawImage sampling overloads.",
+      "relatedPRs": [
+        3491
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "PR by Copilot bot adds sk_surface_draw_with_sampling() C API and 4 C# overloads for SKSurface.Draw/SKCanvas.DrawSurface with SKSamplingOptions. This addresses #3344 where sampling options could not be specified when drawing surfaces. The approach mirrors the existing DrawImage\u002Bsampling pattern exactly.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "finding": "Existing Draw(SKCanvas, float, float, SKPaint) calls sk_surface_draw without sampling. PR adds parallel Draw overload with SKSamplingOptions that calls sk_surface_draw_with_sampling.",
+        "relevance": "direct",
+        "lines": "280-285"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "Existing DrawSurface delegates to SKSurface.Draw. PR adds matching DrawSurface overloads with SKSamplingOptions that delegate to the new SKSurface.Draw overload.",
+        "relevance": "direct",
+        "lines": "591-601"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "DrawImage already has SKSamplingOptions overloads following the exact same pattern (point overload \u002B float x/y overload). PR mirrors this established pattern.",
+        "relevance": "related",
+        "lines": "462-474"
+      },
+      {
+        "file": "externals/skia/include/core/SkSurface.h",
+        "finding": "C\u002B\u002B SkSurface::draw(canvas, x, y, sampling, paint) is the primary method. The no-sampling version is a convenience wrapper passing SkSamplingOptions(). Confirms C# should expose both.",
+        "relevance": "direct",
+        "lines": "346-351"
+      },
+      {
+        "file": "externals/skia/src/c/sk_surface.cpp",
+        "finding": "Existing sk_surface_draw calls AsSurface-\u003Edraw(canvas, x, y, paint) \u2014 the old no-sampling C\u002B\u002B overload. PR\u0027s submodule commit adds sk_surface_draw_with_sampling that calls the sampling version.",
+        "relevance": "direct",
+        "lines": "84-86"
+      }
+    ],
+    "rationale": "Classified as feature-request rather than bug because the old behavior was via SkPaint filter quality which was a Skia-wide API change, not a SkiaSharp regression. The missing overload is a gap in the C# wrapper, not broken functionality. Area is core SkiaSharp since changes are in SKSurface.cs and SKCanvas.cs. The tenet/compatibility label from #3344 is appropriate since this was working behavior in 2.88.x via paint filter quality.",
+    "keySignals": [
+      {
+        "text": "There is no way to draw surface with sampling. SkPaint legacy field is not working also",
+        "source": "#3344 body",
+        "interpretation": "User lost capability going from 2.88.x to 3.x \u2014 sampling options were removed from SkPaint but not added as explicit parameters on DrawSurface."
+      },
+      {
+        "text": "void draw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkSamplingOptions\u0026 sampling, const SkPaint* paint)",
+        "source": "externals/skia/include/core/SkSurface.h:346",
+        "interpretation": "Skia C\u002B\u002B already has the sampling parameter \u2014 the gap is only in the C shim and C# wrapper."
+      },
+      {
+        "text": "CI status: success, build #3.119.2-pr.3491.2 succeeded",
+        "source": "PR status checks",
+        "interpretation": "PR builds and passes CI, confirming the C API/binding/test chain works end-to-end."
+      },
+      {
+        "text": "4 review comments from copilot-pull-request-reviewer, all resolved",
+        "source": "PR review threads",
+        "interpretation": "Automated review caught minor issues (unused variable, comment clarity) which were addressed."
+      }
+    ],
+    "resolution": {
+      "hypothesis": "The Skia C\u002B\u002B API has sampling-aware draw on SkSurface, but the C shim and C# wrapper only exposed the no-sampling version. Adding the missing overloads restores the capability lost when filter quality was removed from SkPaint.",
+      "proposals": [
+        {
+          "description": "PR adds the C API function, generated bindings, C# overloads, and tests. CI passes. Follows established DrawImage\u002Bsampling pattern. Main review concern: ensure generated file was produced by generator, not hand-edited.",
+          "title": "Merge PR #3491",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "description": "If SkiaApi.generated.cs was hand-edited rather than regenerated via pwsh ./utils/generate.ps1, the maintainer should run the generator to confirm the output matches. The PR\u0027s generated code looks correct but should be verified.",
+          "title": "Regenerate bindings",
+          "confidence": 0.7,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Merge PR #3491",
+      "recommendedReason": "Implementation is clean, mirrors existing patterns, CI passes, and addresses a real capability gap. The only concern is verifying the generated file was properly generated."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.9,
+      "reason": "PR is ready for human code review. CI passes, approach is correct, follows existing patterns. Maintainer should verify generated file and check submodule commit landed on correct branch."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add type and area labels to PR",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with original issue #3344",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3344
+      }
+    ]
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3396,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:01:50Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Unity WebGL is not an officially supported platform for SkiaSharp. The NativeAssets.WebAssembly package requires .NET SDK MSBuild integration (UsingMicrosoftNETSdkBlazorWebAssembly or UsingMicrosoftNETSdkWebAssembly properties) to trigger static linking of libSkiaSharp.a via NativeFileReference items. Unity WebGL uses its own IL2CPP/Mono-based WASM build pipeline that does not process MSBuild NativeFileReference targets. Cannot reproduce the DllNotFoundException without Unity Editor installation (5GB\u002B download, license required), but verified the root cause by inspecting package structure and MSBuild targets.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WebAssembly project to verify SkiaSharp WASM works with .NET SDK (supported platform)",
+      "layer": "setup",
+      "command": "dotnet new blazorwasm -n BlazorWasmTest --framework net8.0",
+      "exitCode": 0,
+      "output": "The template \u0022Blazor WebAssembly Standalone App\u0022 was created successfully.\n\nProcessing post-creation actions...\nRestoring $HOME/tmp/repro-3396/BlazorWasmTest/BlazorWasmTest.csproj:\n  Determining projects to restore...\n  Restored $HOME/tmp/repro-3396/BlazorWasmTest/BlazorWasmTest.csproj (in 11.2 sec).\nRestore succeeded.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp packages including NativeAssets.WebAssembly",
+      "layer": "setup",
+      "command": "dotnet add package SkiaSharp --version 3.116.1 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.WebAssembly --version 3.116.1 \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.116.1",
+      "exitCode": 0,
+      "output": "info : PackageReference for package \u0027SkiaSharp\u0027 version \u00273.116.1\u0027 added to file \u0027$HOME/tmp/repro-3396/BlazorWasmTest/BlazorWasmTest.csproj\u0027.\ninfo : PackageReference for package \u0027SkiaSharp.NativeAssets.WebAssembly\u0027 version \u00273.116.1\u0027 added to file \u0027$HOME/tmp/repro-3396/BlazorWasmTest/BlazorWasmTest.csproj\u0027.\ninfo : PackageReference for package \u0027SkiaSharp.Views.Blazor\u0027 version \u00273.116.1\u0027 added to file \u0027$HOME/tmp/repro-3396/BlazorWasmTest/BlazorWasmTest.csproj\u0027.\nlog  : Restored $HOME/tmp/repro-3396/BlazorWasmTest/BlazorWasmTest.csproj (in 1.29 sec).",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Modified Program.cs to test SkiaSharp initialization at startup",
+          "content": "using Microsoft.AspNetCore.Components.Web;\nusing Microsoft.AspNetCore.Components.WebAssembly.Hosting;\nusing BlazorWasmTest;\nusing SkiaSharp;\n\nvar builder = WebAssemblyHostBuilder.CreateDefault(args);\nbuilder.RootComponents.Add\u003CApp\u003E(\u0022#app\u0022);\nbuilder.RootComponents.Add\u003CHeadOutlet\u003E(\u0022head::after\u0022);\n\nbuilder.Services.AddScoped(sp =\u003E new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });\n\n// Test SkiaSharp availability\ntry\n{\n    var info = new SKImageInfo(100, 100);\n    using var surface = SKSurface.Create(info);\n    using var canvas = surface.Canvas;\n    canvas.Clear(SKColors.White);\n    using var paint = new SKPaint { Color = SKColors.Blue };\n    canvas.DrawCircle(50, 50, 40, paint);\n    Console.WriteLine(\u0022\u2713 SkiaSharp initialized successfully\u0022);\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\u0022\u2717 SkiaSharp failed: {ex.GetType().Name}: {ex.Message}\u0022);\n}\n\nawait builder.Build().RunAsync();"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build Blazor WASM project - expected warning about native linking not enabled",
+      "layer": "csharp",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "  Determining projects to restore...\n  All projects are up-to-date for restore.\n  BlazorWasmTest -\u003E $HOME/tmp/repro-3396/BlazorWasmTest/bin/Debug/net8.0/BlazorWasmTest.dll\n  BlazorWasmTest (Blazor output) -\u003E $HOME/tmp/repro-3396/BlazorWasmTest/bin/Debug/net8.0/wwwroot\nWorkloadManifest.targets(124,5): warning : @(NativeFileReference) is not empty, but the native references won\u0027t be linked in, because neither $(WasmBuildNative), nor $(RunAOTCompilation) are \u0027true\u0027. NativeFileReference=$HOME/.nuget/packages/skiasharp.nativeassets.webassembly/3.116.1/buildTransitive/netstandard1.0/libSkiaSharp.a/3.1.34/st/libSkiaSharp.a\n\nBuild succeeded.\n\n    1 Warning(s)\n    0 Error(s)\n\nTime Elapsed 00:00:09.06",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Enable WasmBuildNative to trigger native linking (requires wasm-tools workload)",
+      "layer": "setup",
+      "command": "dotnet build",
+      "exitCode": 1,
+      "output": "  Determining projects to restore...\nerror NETSDK1147: To build this project, the following workloads must be installed: wasm-tools-net8\nerror NETSDK1147: To install these workloads, run the following command: dotnet workload restore\n\nBuild FAILED.\n\n    0 Warning(s)\n    1 Error(s)\n\nTime Elapsed 00:00:00.35",
+      "filesCreated": [
+        {
+          "filename": "BlazorWasmTest.csproj",
+          "description": "Project file with WasmBuildNative enabled",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\n\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CWasmBuildNative\u003Etrue\u003C/WasmBuildNative\u003E\n  \u003C/PropertyGroup\u003E\n\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly\u0022 Version=\u00228.0.23\u0022 /\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0022 Version=\u00228.0.23\u0022 PrivateAssets=\u0022all\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.1\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00223.116.1\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.116.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\n\u003C/Project\u003E"
+        }
+      ],
+      "result": "failure"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Inspect SkiaSharp.NativeAssets.WebAssembly package to verify Unity is unsupported",
+      "layer": "setup",
+      "command": "cat $HOME/.nuget/packages/skiasharp.nativeassets.webassembly/3.116.1/buildTransitive/netstandard1.0/SkiaSharp.NativeAssets.WebAssembly.targets",
+      "exitCode": 0,
+      "output": "MSBuild targets show explicit checks for .NET SDK WASM properties:\n\n\u003CPropertyGroup Condition=\u0022(\u0027$(UsingMicrosoftNETSdkBlazorWebAssembly)\u0027 == \u0027true\u0027 or \u0027$(UsingMicrosoftNETSdkWebAssembly)\u0027 == \u0027true\u0027) and \u0027$(ShouldIncludeNativeSkiaSharp)\u0027 == \u0027True\u0027\u0022\u003E\n\nAlso includes Uno Platform support (lines 9-19) but NO Unity support. Unity WebGL uses its own Emscripten pipeline that does not set these MSBuild properties, so the .a files are never passed to the linker.",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS (Darwin)",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3396.json"
+  },
+  "assessment": "docs-gap",
+  "reproductionTime": "~20 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Unity WebGL unavailable - would require Unity Editor installation and WebGL build module"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.1"
+      },
+      {
+        "name": "SkiaSharp.NativeAssets.WebAssembly",
+        "version": "3.116.1"
+      },
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.116.1"
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "filename": "libSkiaSharp.a",
+      "description": "Static library for Emscripten 3.1.34 (single-threaded, no SIMD) - user manually tried placing this in Unity project",
+      "source": "external",
+      "available": true,
+      "url": "https://www.nuget.org/packages/SkiaSharp.NativeAssets.WebAssembly/3.116.1"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "DllNotFoundException: libSkiaSharp",
+    "additionalErrors": [
+      "NETSDK1147: wasm-tools-net8 workload required for native linking (requires elevated permissions)"
+    ]
+  },
+  "blockers": [
+    "Unity Editor not installed (5GB\u002B download required)",
+    "Unity WebGL build module not installed",
+    "Unity license required for WebGL builds",
+    "wasm-tools-net8 workload requires elevated permissions (sudo) to install",
+    "Cannot verify actual DllNotFoundException without Unity runtime environment"
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "classification",
+        "upstream": "Classified as type/question with confidence 0.70",
+        "corrected": "This is a legitimate bug report (DllNotFoundException) for an unsupported platform. Should be type/feature-request or type/enhancement to add Unity WebGL support, not type/question. The user is reporting a real error, not asking how to use the API."
+      }
+    ]
+  }
+}

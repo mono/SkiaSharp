@@ -1,0 +1,200 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3433,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:19:39Z",
+    "currentLabels": [
+      "community \u2728"
+    ]
+  },
+  "summary": "Community PR updating Microsoft.Windows.CsWinRT from 2.0.4 to 2.2.0 in SkiaSharp.Views.WinUI.Native.Projection to resolve trimming/AOT warnings (IL2026, IL2104) reported in #3327. Also adds CsWinRTWindowsMetadata property to work around a CsWinRT 2.2.0 code-generation bug (microsoft/CsWinRT#2214) where generated code references a non-existent IBufferMethods.IID when using .NET SDK 8.0.100\u0027s bundled Windows metadata. Build has not been verified by CI; the contributor confirmed it builds locally for externals-winui but has backward-compatibility concerns about pinning metadata version.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-WinUI"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SkiaSharp.Views.WinUI 3.119.0 in a WinUI3 app with PublishAot=true",
+        "Build in Release mode",
+        "Observe IL2104/IL2026 trimming warnings from SkiaSharp.Views.WinUI.Native.Projection.dll"
+      ],
+      "environmentDetails": "Windows, Visual Studio, SkiaSharp 3.119.0, .NET 8, WinUI3",
+      "relatedIssues": [
+        3327
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "build-warning",
+      "errorMessage": "Assembly \u0027SkiaSharp.Views.WinUI.Native.Projection\u0027 produced trim warnings (IL2104); IL2026: WinRT.WinrtModule.GetActivationFactory uses RequiresUnreferencedCode member",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0-windows10.0.19041.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Projection csproj on main still uses CsWinRT 2.0.4, which has the trim-unsafe WinRT interop code. The bug persists."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "This PR is the proposed fix but has not been merged. CsWinRT 2.0.4 is still on main. CI has not run on this PR.",
+      "relatedPRs": [
+        3433
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "PR #3433 addresses trimming warnings in SkiaSharp.Views.WinUI.Native.Projection by upgrading CsWinRT from 2.0.4 to 2.2.0 (which adds trimming/AOT safety). CsWinRT 2.2.0 has a code-generation change that references IBufferMethods.IID \u2014 a property that only exists in newer Windows SDK projections. The fix adds CsWinRTWindowsMetadata=10.0.17763.57 to force the correct metadata version. This is a valid workaround confirmed by CsWinRT maintainers in microsoft/CsWinRT#2214. However, there\u0027s an open concern: whether pinning CsWinRTWindowsMetadata affects end-users consuming the built NuGet package, and whether WindowsSdkPackageVersion would be a more appropriate approach.",
+    "codeInvestigation": [
+      {
+        "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native.Projection/SkiaSharp.Views.WinUI.Native.Projection.csproj",
+        "finding": "Currently uses Microsoft.Windows.CsWinRT 2.0.4. CsWinRTIncludes is set to SkiaSharp.Views.WinUI.Native. No CsWinRTWindowsMetadata or WindowsSdkPackageVersion is set. TargetFramework is $(WindowsTargetFrameworksPrevious) \u2014 net8.0-windows10.0.19041.0.",
+        "relevance": "direct",
+        "lines": "19"
+      },
+      {
+        "file": "native/winui/SkiaSharp.Views.WinUI.Native/SkiaSharp.Views.WinUI.Native/BufferExtensions.h",
+        "finding": "The native WinUI component exposes BufferExtensions with GetByteBuffer(IBuffer), which is the IBuffer interface that triggers the CsWinRT codegen issue with IBufferMethods.IID.",
+        "relevance": "direct",
+        "lines": "1-23"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/UWPExtensions.cs",
+        "finding": "C# code calls BufferExtensions.GetByteBuffer(buffer) \u2014 this is the consumer of the generated projection code that triggers the trim-unsafe paths.",
+        "relevance": "related",
+        "lines": "179-180"
+      },
+      {
+        "file": "global.json",
+        "finding": "SDK pinned to 8.0.100 with rollForward: latestMinor. This SDK bundles older Windows metadata that lacks IBufferMethods.IID, which is why CsWinRTWindowsMetadata is needed.",
+        "relevance": "context"
+      },
+      {
+        "file": "source/SkiaSharp.Build.targets",
+        "finding": "Build targets reference CsWinRTReplaceForPatchedRuntime for assembly signing when CsWinRTIncludes is set \u2014 confirms CsWinRT is integrated into the broader build pipeline.",
+        "relevance": "context",
+        "lines": "164-165"
+      }
+    ],
+    "rationale": "Classified as type/bug because #3327 reports trimming warnings that may cause runtime crashes under NativeAOT \u2014 this is broken behavior, not a feature request. Area is SkiaSharp.Views because the affected file is the WinUI native projection used by SkiaSharp.Views.WinUI. Platform is WinUI-specific. Tenet is compatibility since trimming/AOT support is a compatibility concern.",
+    "keySignals": [
+      {
+        "text": "CsWinRT version 2.0.4 \u2192 2.2.0 in SkiaSharp.Views.WinUI.Native.Projection.csproj",
+        "source": "PR diff",
+        "interpretation": "Core change \u2014 CsWinRT 2.2.0 is the latest stable and adds trimming/AOT safety for WinRT interop."
+      },
+      {
+        "text": "error CS0117: \u0027IBufferMethods\u0027 does not contain a definition for \u0027IID\u0027",
+        "source": "comment #2 (mattleibow)",
+        "interpretation": "Build error from internal CI. CsWinRT 2.2.0 codegen references IBufferMethods.IID which doesn\u0027t exist in SDK 8.0.100\u0027s bundled Windows metadata."
+      },
+      {
+        "text": "CsWinRTWindowsMetadata=10.0.17763.57 added to fix build",
+        "source": "PR diff \u002B comment #4 (wangfys)",
+        "interpretation": "Forces a specific Windows metadata version so CsWinRT 2.2.0\u0027s codegen finds the IID property. Confirmed by CsWinRT maintainers as the correct approach."
+      },
+      {
+        "text": "concerned about what if users of SkiaSharp use an old version",
+        "source": "comment #4 (wangfys)",
+        "interpretation": "Open question about backward compatibility. The CsWinRTWindowsMetadata property affects build-time codegen, not runtime \u2014 but needs maintainer review."
+      },
+      {
+        "text": "In your case though, this means you\u0027re using an outdated version of the Windows SDK projections",
+        "source": "CsWinRT issue #2214 comment (dongle-the-gadget)",
+        "interpretation": "CsWinRT maintainer confirms the root cause is outdated SDK projections, and suggests WindowsSdkPackageVersion as the proper fix."
+      }
+    ],
+    "nextQuestions": [
+      "Should WindowsSdkPackageVersion be used instead of CsWinRTWindowsMetadata for broader SDK compatibility?",
+      "Does CsWinRTWindowsMetadata=10.0.17763.57 affect the runtime behavior of the built NuGet package for end-users on different Windows SDK versions?",
+      "Should the PR also update global.json or SDK pinning to a newer .NET SDK that bundles compatible Windows metadata?",
+      "Has the PR been rebased on main? The PR checklist shows \u0027Rebased on top of main\u0027 is unchecked.",
+      "CI has not run \u2014 needs internal build trigger to verify the fix works end-to-end."
+    ],
+    "resolution": {
+      "hypothesis": "CsWinRT 2.0.4 generates trim-unsafe WinRT interop code. Upgrading to 2.2.0 fixes the trimming warnings but requires pinning CsWinRTWindowsMetadata to provide compatible Windows SDK metadata for code generation.",
+      "proposals": [
+        {
+          "description": "Accept the PR as-is after CI passes. The CsWinRTWindowsMetadata property is a build-time-only setting that doesn\u0027t affect runtime. CsWinRT maintainers confirmed this approach in microsoft/CsWinRT#2214.",
+          "title": "Merge PR with CsWinRTWindowsMetadata",
+          "confidence": 0.75,
+          "effort": "trivial"
+        },
+        {
+          "description": "Replace CsWinRTWindowsMetadata with WindowsSdkPackageVersion, which is the more standard MSBuild approach for pinning Windows SDK projection packages. This may be more forward-compatible.",
+          "title": "Use WindowsSdkPackageVersion instead",
+          "codeSnippet": "\u003CWindowsSdkPackageVersion\u003E10.0.17763.57\u003C/WindowsSdkPackageVersion\u003E",
+          "confidence": 0.7,
+          "effort": "trivial"
+        },
+        {
+          "description": "Update global.json to a .NET SDK version that bundles Windows metadata compatible with CsWinRT 2.2.0, eliminating the need for CsWinRTWindowsMetadata entirely. More invasive but cleaner long-term.",
+          "title": "Bump .NET SDK to include newer metadata",
+          "confidence": 0.6,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Merge PR with CsWinRTWindowsMetadata",
+      "recommendedReason": "The PR\u0027s approach is confirmed correct by CsWinRT maintainers. CsWinRTWindowsMetadata is build-time only and doesn\u0027t impact end-users. Low risk, directly fixes #3327."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "PR looks correct based on CsWinRT maintainer guidance, but CI has not run. Needs build verification and maintainer review of backward-compatibility concern before merge."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, WinUI, and compatibility labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/Windows-WinUI",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the bug this PR fixes",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3327
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge PR, provide technical review feedback on the approach and next steps",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the fix and for tracking down the CsWinRT codegen issue \u2014 the analysis of microsoft/CsWinRT#2214 is helpful.\n\nThe approach looks sound: CsWinRT 2.2.0 adds trimming/AOT safety, and \u0060CsWinRTWindowsMetadata\u0060 pins the Windows metadata version for build-time codegen. A few items to resolve before merge:\n\n1. **CI verification** \u2014 We\u0027ll need to run the internal build to confirm this passes end-to-end.\n2. **\u0060WindowsSdkPackageVersion\u0060 vs \u0060CsWinRTWindowsMetadata\u0060** \u2014 The CsWinRT maintainer suggested \u0060WindowsSdkPackageVersion\u0060 as the standard approach. Worth confirming whether \u0060CsWinRTWindowsMetadata\u0060 is equivalent or if \u0060WindowsSdkPackageVersion\u0060 is preferred.\n3. **Rebase** \u2014 Would you be able to rebase on top of the current \u0060main\u0060 branch?\n\nRegarding your backward-compatibility concern: \u0060CsWinRTWindowsMetadata\u0060 is a build-time property that controls code generation \u2014 it shouldn\u0027t affect consumers of the resulting NuGet package at runtime."
+      }
+    ],
+    "missingInfo": [
+      "CI build results \u2014 build has not been triggered",
+      "Confirmation that CsWinRTWindowsMetadata doesn\u0027t affect end-user NuGet package behavior",
+      "Whether WindowsSdkPackageVersion is preferred over CsWinRTWindowsMetadata"
+    ]
+  }
+}

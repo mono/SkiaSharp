@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3344,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:30:00Z",
+    "currentLabels": [
+      "type/bug",
+      "area/SkiaSharp",
+      "tenet/compatibility"
+    ]
+  },
+  "summary": "SKSurface.Draw and SKCanvas.DrawSurface lack SKSamplingOptions parameter \u2014 upstream Skia supports it but C API and C# wrapper never exposed it",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.75
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call SKCanvas.DrawSurface(surface, x, y, paint) \u2014 no SKSamplingOptions parameter available",
+        "Call SKSurface.Draw(canvas, x, y, paint) \u2014 no SKSamplingOptions parameter available",
+        "Attempt to use SKPaint.FilterQuality to control sampling \u2014 value is obsolete and not forwarded to native layer for surface drawing"
+      ],
+      "environmentDetails": "Windows, Visual Studio, SkiaSharp 3.116.0",
+      "relatedIssues": [
+        2663
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "currentRelevance": "likely",
+      "relevanceReason": "The C API sk_surface_draw still lacks a sampling options parameter. The upstream Skia C\u002B\u002B API SkSurface::draw supports SkSamplingOptions but the C shim was never updated."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.85,
+      "reason": "PR #3491 adds sk_surface_draw_with_sampling to the C API and new C# overloads with SKSamplingOptions. PR is open, CI passes, assigned to mattleibow for review.",
+      "relatedPRs": [
+        3491
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The upstream Skia C\u002B\u002B SkSurface::draw method accepts SkSamplingOptions, but the SkiaSharp C API (sk_surface_draw) was never updated to forward this parameter. The C# methods SKSurface.Draw and SKCanvas.DrawSurface therefore have no way to specify sampling. Unlike DrawImage (which was updated with sampling overloads), DrawSurface was missed during the 2.x\u21923.x migration.",
+    "codeInvestigation": [
+      {
+        "file": "externals/skia/include/core/SkSurface.h",
+        "finding": "Upstream SkSurface::draw has two overloads: one with SkSamplingOptions (line 346) and a convenience overload without it that defaults to SkSamplingOptions() (line 349-350). The sampling-aware overload is the primary one.",
+        "relevance": "direct",
+        "lines": "346-351"
+      },
+      {
+        "file": "externals/skia/src/c/sk_surface.cpp",
+        "finding": "C API sk_surface_draw calls AsSurface(surface)-\u003Edraw(canvas, x, y, AsPaint(paint)) \u2014 the convenience overload without sampling. No sk_surface_draw_with_sampling function exists.",
+        "relevance": "direct",
+        "lines": "84-86"
+      },
+      {
+        "file": "externals/skia/include/c/sk_surface.h",
+        "finding": "C header declares sk_surface_draw without sampling parameter. No sampling variant declared.",
+        "relevance": "direct",
+        "lines": "34"
+      },
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "finding": "SKSurface.Draw(SKCanvas, float, float, SKPaint) calls sk_surface_draw \u2014 no sampling parameter forwarded. Unlike DrawImage, no FilterQuality-to-sampling conversion either.",
+        "relevance": "direct",
+        "lines": "280-286"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "SKCanvas.DrawSurface delegates to surface.Draw(this, x, y, paint) \u2014 just a convenience wrapper, inherits the same limitation.",
+        "relevance": "direct",
+        "lines": "589-602"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "DrawImage methods show the correct pattern: legacy overloads extract paint?.FilterQuality.ToSamplingOptions(), and new overloads accept SKSamplingOptions directly. DrawSurface should follow this same pattern.",
+        "relevance": "related",
+        "lines": "455-478"
+      }
+    ],
+    "rationale": "Classified as feature-request rather than bug because the API never had an explicit SKSamplingOptions parameter \u2014 the gap is a missing overload, not broken behavior. However, the reporter notes FilterQuality on SKPaint no longer works for surface drawing, which is a compatibility regression from the 2.88.x\u21923.x migration where FilterQuality was removed from SkPaint upstream. The tenet/compatibility label is appropriate. Area is core SkiaSharp since this is in the canvas/surface drawing layer, not views or platform-specific code.",
+    "keySignals": [
+      {
+        "text": "There is no way to draw surface with sampling. SkPaint legacy field is not working also",
+        "source": "issue body",
+        "interpretation": "Both the new SKSamplingOptions path and the legacy FilterQuality path are missing for surface drawing."
+      },
+      {
+        "text": "Last Known Good Version: 2.88.9",
+        "source": "issue body",
+        "interpretation": "In 2.88.x, SkPaint.FilterQuality was consumed natively by Skia for all draw operations. After the Skia migration, FilterQuality became a compat shim that DrawImage forwards but DrawSurface does not."
+      },
+      {
+        "text": "void draw(SkCanvas*, SkScalar, SkScalar, const SkSamplingOptions\u0026, const SkPaint*)",
+        "source": "externals/skia/include/core/SkSurface.h:346",
+        "interpretation": "Upstream C\u002B\u002B API supports sampling options \u2014 the capability exists, just not exposed through the C shim."
+      }
+    ],
+    "workarounds": [
+      "Use surface.Snapshot() to get an SKImage, then call canvas.DrawImage(image, x, y, sampling, paint) which does accept SKSamplingOptions"
+    ],
+    "nextQuestions": [
+      "Should the existing DrawSurface overloads forward FilterQuality from SKPaint (like DrawImage does) for backward compatibility?",
+      "Should the C API function be named sk_surface_draw_with_sampling or should the existing sk_surface_draw signature be updated?"
+    ],
+    "resolution": {
+      "hypothesis": "The C API sk_surface_draw needs a new variant that accepts sk_sampling_options_t, and the C# SKSurface.Draw and SKCanvas.DrawSurface need new overloads accepting SKSamplingOptions, following the same pattern as DrawImage.",
+      "proposals": [
+        {
+          "description": "Use SKSurface.Snapshot() to capture the surface as an SKImage, then draw with SKCanvas.DrawImage which supports SKSamplingOptions. This avoids the gap without waiting for the API fix.",
+          "title": "Snapshot workaround",
+          "codeSnippet": "using var image = surface.Snapshot();\nif (image is null)\n    return; // or handle error\nvar sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\ncanvas.DrawImage(image, x, y, sampling, paint);",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "description": "PR #3491 adds sk_surface_draw_with_sampling to the C API and new C# overloads with SKSamplingOptions on both SKSurface.Draw and SKCanvas.DrawSurface. The PR is open, CI passes, and follows the same pattern as DrawImage.",
+          "title": "Merge PR #3491",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Snapshot workaround",
+      "recommendedReason": "Provides an immediate workaround the reporter can use today. The proper fix via PR #3491 is already in review."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.9,
+      "reason": "PR #3491 is open and addresses this issue. Keep open until the PR is merged."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Reclassify as feature-request (missing API overload, not broken behavior)",
+        "risk": "low",
+        "confidence": 0.75,
+        "labels": [
+          "type/feature-request",
+          "area/SkiaSharp",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post workaround using Snapshot \u002B DrawImage, note that PR #3491 is in review",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the report. You\u0027re right that \u0060SKSurface.Draw\u0060 and \u0060SKCanvas.DrawSurface\u0060 don\u0027t accept \u0060SKSamplingOptions\u0060 \u2014 the upstream Skia C\u002B\u002B API supports it, but the SkiaSharp C shim was never updated during the 2.x\u21923.x migration.\n\nHere\u0027s a workaround you can use while we work on the proper fix: snapshot the surface to an \u0060SKImage\u0060 and use \u0060DrawImage\u0060, which does support sampling options:\n\n\u0060\u0060\u0060csharp\nusing var image = surface.Snapshot();\nif (image is null)\n    return; // handle error as appropriate\nvar sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\ncanvas.DrawImage(image, x, y, sampling, paint);\n\u0060\u0060\u0060\n\nNote that \u0060Snapshot()\u0060 can return null if the surface is invalid, so always null-check before use.\n\nPR #3491 adds the missing \u0060SKSamplingOptions\u0060 overloads to both \u0060SKSurface.Draw\u0060 and \u0060SKCanvas.DrawSurface\u0060 and is currently in review."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference PR #3491 which fixes this issue",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 3491
+      }
+    ]
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3378,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:05:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced memory leak in ToHarfBuzzBlob() when GetMemoryBase() returns IntPtr.Zero (the else path). When a typeface is loaded from a managed stream (SKManagedStream), OpenStream().GetMemoryBase() returns zero, causing the else path to copy data via Marshal.AllocCoTaskMem but never dispose the SKStreamAsset. The leak is cumulative: 736-832 KB after 5000 iterations with 3.116.0/3.119.2, and 8624 KB after 2000 iterations on main. When GetMemoryBase() is non-zero (default/file/data-loaded typefaces), the blob\u0027s release callback disposes the asset correctly. The fix should ensure SKStreamAsset is always disposed \u2014 either by the caller (SKShaper) or consistently in both paths of ToHarfBuzzBlob. PR #3466 proposes the maintainer-approved fix direction.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create standalone console project with SkiaSharp and SkiaSharp.HarfBuzz 3.116.0",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.116.0 \u0026\u0026 dotnet add package SkiaSharp.HarfBuzz --version 3.116.0",
+      "exitCode": 0,
+      "output": "Project created and packages added successfully.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project referencing SkiaSharp and SkiaSharp.HarfBuzz 3.116.0",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.0\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.HarfBuzz\u0022 Version=\u00223.116.0\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code testing memory leak across different typeface loading methods to exercise both code paths in ToHarfBuzzBlob",
+          "content": "using System;\nusing System.Diagnostics;\nusing System.IO;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\nusing SkiaSharp.HarfBuzz;\n\nConsole.WriteLine($\u0022SkiaSharp version: {typeof(SKPaint).Assembly.GetName().Version}\u0022);\nConsole.WriteLine($\u0022Runtime: {RuntimeInformation.FrameworkDescription}\u0022);\nConsole.WriteLine($\u0022OS: {RuntimeInformation.OSDescription}\u0022);\nConsole.WriteLine($\u0022Arch: {RuntimeInformation.ProcessArchitecture}\u0022);\nConsole.WriteLine();\n\nusing var defaultTypeface = SKTypeface.Default;\nConsole.WriteLine($\u0022=== Test 1: Default typeface ({defaultTypeface.FamilyName}) ===\u0022);\nTestLeakWithTypeface(defaultTypeface, \u0022default\u0022);\n\nvar fontPath = \u0022CourierNew.ttf\u0022;\nConsole.WriteLine($\u0022\\n=== Test 2: File-loaded typeface ===\u0022);\nusing var fileTypeface = SKTypeface.FromFile(fontPath);\nif (fileTypeface != null) TestLeakWithTypeface(fileTypeface, \u0022file\u0022);\n\nConsole.WriteLine($\u0022\\n=== Test 3: Data-loaded typeface ===\u0022);\nvar fontBytes = File.ReadAllBytes(fontPath);\nusing var fontData = SKData.CreateCopy(fontBytes);\nusing var dataTypeface = SKTypeface.FromData(fontData);\nif (dataTypeface != null) TestLeakWithTypeface(dataTypeface, \u0022data\u0022);\n\nConsole.WriteLine($\u0022\\n=== Test 4: Stream-loaded typeface ===\u0022);\nusing var memStream = new MemoryStream(fontBytes);\nusing var skStream = new SKManagedStream(memStream);\nusing var streamTypeface = SKTypeface.FromStream(skStream);\nif (streamTypeface != null) TestLeakWithTypeface(streamTypeface, \u0022stream\u0022);\n\nvoid TestLeakWithTypeface(SKTypeface tf, string label)\n{\n    using (var stream = tf.OpenStream(out var idx))\n    {\n        var memBase = stream.GetMemoryBase();\n        Console.WriteLine($\u0022  Stream length: {stream.Length} bytes\u0022);\n        Console.WriteLine($\u0022  GetMemoryBase: 0x{memBase:X} ({(memBase != IntPtr.Zero ? \u0022non-zero\u0022 : \u0022ZERO - leak path\u0022)})\u0022);\n    }\n    for (int i = 0; i \u003C 100; i\u002B\u002B) { var s = new SKShaper(tf); s.Dispose(); }\n    GC.Collect(2, GCCollectionMode.Aggressive, true, true);\n    GC.WaitForPendingFinalizers();\n    GC.Collect(2, GCCollectionMode.Aggressive, true, true);\n    Process.GetCurrentProcess().Refresh();\n    var baseWS = Process.GetCurrentProcess().WorkingSet64;\n    const int iterations = 5000;\n    Console.WriteLine($\u0022  Running {iterations} create/dispose cycles...\u0022);\n    for (int i = 0; i \u003C iterations; i\u002B\u002B) { var s = new SKShaper(tf); s.Dispose(); }\n    GC.Collect(2, GCCollectionMode.Aggressive, true, true);\n    GC.WaitForPendingFinalizers();\n    GC.Collect(2, GCCollectionMode.Aggressive, true, true);\n    Process.GetCurrentProcess().Refresh();\n    var afterWS = Process.GetCurrentProcess().WorkingSet64;\n    var increase = afterWS - baseWS;\n    Console.WriteLine($\u0022  Working set increase: {increase / 1024} KB\u0022);\n    if (increase \u003E 500 * 1024)\n        Console.WriteLine($\u0022  LEAK: ~{increase / 1024} KB leaked\u0022);\n    else\n        Console.WriteLine($\u0022  No significant leak in this path\u0022);\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run reproduction with SkiaSharp 3.116.0 \u2014 tests 4 typeface loading methods to exercise both code paths in ToHarfBuzzBlob",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.116.0.0\nRuntime: .NET 8.0.23\nOS: Darwin 25.2.0\nArch: Arm64\n\n=== Test 1: Default typeface (Helvetica) ===\n  Stream length: 421692 bytes\n  GetMemoryBase: non-zero\n  Running 5000 create/dispose cycles...\n  Working set increase: 2640 KB (includes JIT warmup)\n\n=== Test 2: File-loaded typeface (CourierNew.ttf) ===\n  Stream length: 806504 bytes\n  GetMemoryBase: non-zero\n  Working set increase: 16 KB\n  No significant leak in this path\n\n=== Test 3: Data-loaded typeface (from byte array) ===\n  Stream length: 806504 bytes\n  GetMemoryBase: non-zero\n  Working set increase: 0 KB\n  No significant leak in this path\n\n=== Test 4: Stream-loaded typeface ===\n  Stream length: 806504 bytes\n  GetMemoryBase: 0x0 (ZERO - leak path)\n  Working set increase: 832 KB\n  LEAK: ~832 KB leaked",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Update to latest release (3.119.2) and re-run to check if fixed",
+      "layer": "csharp",
+      "command": "dotnet add package SkiaSharp \u0026\u0026 dotnet add package SkiaSharp.HarfBuzz \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\n\n=== Test 4: Stream-loaded typeface ===\n  Stream length: 806504 bytes\n  GetMemoryBase: 0x0 (ZERO - leak path)\n  Working set increase: 736 KB\n  LEAK: ~736 KB leaked\n\nTests 2 and 3 (non-zero memorybase path): No leak. Test 4 (zero memorybase path): Still leaking.",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build test project from source (main branch) and run targeted leak test using xUnit infrastructure",
+      "layer": "csharp",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \u0026\u0026 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \u0022FullyQualifiedName~SKShaperLeakTest_3378\u0022",
+      "exitCode": 1,
+      "output": "Failed SkiaSharp.HarfBuzz.Tests.SKShaperLeakTest_3378.ToHarfBuzzBlobDisposesStreamInElsePath [624 ms]\nError Message:\n  Memory leak detected: working set increased by 8624 KB after 2000 iterations. SKStreamAsset is not being disposed in ToHarfBuzzBlob\u0027s else path (GetMemoryBase == IntPtr.Zero).\nExpected: True\nActual:   False\n\nFailed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
+      "result": "failure"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3378.json"
+  },
+  "assessment": "likely-bug",
+  "reproductionTime": "~10 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "832 KB working set increase after 5000 create/dispose cycles with stream-loaded typeface (GetMemoryBase=0 path)"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "736 KB working set increase after 5000 create/dispose cycles with stream-loaded typeface"
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Test failed with 8624 KB leak after 2000 iterations. Bug still present on main \u2014 PR #3466 not yet merged."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      },
+      {
+        "name": "SkiaSharp.HarfBuzz",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "errorMessages": {
+    "primaryError": "Native memory leak: SKStreamAsset not disposed in BlobExtensions.ToHarfBuzzBlob() when GetMemoryBase() returns IntPtr.Zero",
+    "additionalErrors": [
+      "Working set increase of 832 KB after 5000 iterations (3.116.0, stream-loaded typeface)",
+      "Working set increase of 736 KB after 5000 iterations (3.119.2, stream-loaded typeface)",
+      "Working set increase of 8624 KB after 2000 iterations (main, stream-loaded typeface)"
+    ]
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "scope",
+        "upstream": "Triage labels included backend/Metal and os/Windows-Classic, os/Android suggesting platform-specific issue",
+        "corrected": "Bug is cross-platform managed code logic error in BlobExtensions.cs \u2014 reproduced on macOS arm64. Not related to any rendering backend or specific OS."
+      }
+    ]
+  }
+}

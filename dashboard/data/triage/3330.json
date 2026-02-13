@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3330,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:36:36Z",
+    "currentLabels": [
+      "community \u2728"
+    ]
+  },
+  "summary": "Community PR from Progress (Telerik) to change the access modifier of WindowsExtensions.GetPixels(WriteableBitmap) from internal to public in SkiaSharp.Views.WinUI. The method returns an IntPtr to the WriteableBitmap\u0027s pixel buffer via WinRT BufferExtensions. The author needs this to build a custom SKXamlCanvas implementation. The change is a single-line visibility change with no behavioral modifications.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-WinUI"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "codeSnippets": [
+        "internal static IntPtr GetPixels(this WriteableBitmap bitmap) =\u003E public static IntPtr GetPixels(this WriteableBitmap bitmap)"
+      ]
+    },
+    "versionAnalysis": {
+      "currentRelevance": "likely",
+      "relevanceReason": "The GetPixels method is still internal on main. The PR has not been merged."
+    }
+  },
+  "analysis": {
+    "summary": "This PR makes the internal GetPixels extension method on WriteableBitmap public in the WinUI views package. The method wraps WinRT BufferExtensions.GetByteBuffer to get a raw IntPtr to the WriteableBitmap\u0027s pixel buffer. This is used internally by SKXamlCanvas for rendering, and Progress wants it public to build their own custom canvas. The change is minimal (1 line) with no behavioral impact, but makes a raw-pointer API part of the public surface.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/UWPExtensions.cs",
+        "finding": "GetPixels is an internal extension method on WriteableBitmap that returns IntPtr via bitmap.PixelBuffer.GetByteBuffer(). The PR changes only the access modifier from internal to public.",
+        "relevance": "direct",
+        "lines": "176-177"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/UWPExtensions.cs",
+        "finding": "GetByteBuffer is a companion internal extension method on IBuffer that calls BufferExtensions.GetByteBuffer(buffer). This stays internal in the PR, which is correct \u2014 it\u0027s an implementation detail.",
+        "relevance": "related",
+        "lines": "179-180"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
+        "finding": "SKXamlCanvas already calls bitmap.GetPixels() internally to render \u2014 this confirms the method works and is battle-tested for this purpose.",
+        "relevance": "related",
+        "lines": "240"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/UWPExtensions.cs",
+        "finding": "Other WriteableBitmap extension methods (ToWriteableBitmap, ToSKBitmap, ToSKImage, ToSKPixmap) are already public. GetPixels is the only WriteableBitmap extension that remains internal.",
+        "relevance": "context",
+        "lines": "86-127"
+      }
+    ],
+    "rationale": "Classified as enhancement because it improves the existing API by exposing internal functionality \u2014 no new code is added. Area is SkiaSharp.Views because the change is in the Views.WinUI project (UWPExtensions.cs). Platform is WinUI because WriteableBitmap and BufferExtensions are WinUI/UWP APIs. The companion internal method GetByteBuffer stays internal, which is appropriate since GetPixels is the meaningful public abstraction.",
+    "keySignals": [
+      {
+        "text": "We would like to use the GetPixels() method in our custom SKXamlCanvas",
+        "source": "PR body",
+        "interpretation": "Progress needs pixel buffer access to build custom WinUI canvas \u2014 legitimate use case for a UI component vendor."
+      },
+      {
+        "text": "@dotnet-policy-service agree company=\u0022Progress\u0022",
+        "source": "comment by eli-popova",
+        "interpretation": "CLA signed under Progress \u2014 this is a corporate contribution from Telerik/Progress."
+      },
+      {
+        "text": "internal static IntPtr GetPixels(this WriteableBitmap bitmap)",
+        "source": "code search",
+        "interpretation": "Currently internal. The method is a thin wrapper around WinRT BufferExtensions \u2014 making it public has minimal risk but commits to the API surface."
+      }
+    ],
+    "nextQuestions": [
+      "Should GetPixels be documented with XML docs before making it public?",
+      "Is a raw IntPtr return appropriate for the public API, or should a safer wrapper (e.g., Span\u003Cbyte\u003E) be provided?",
+      "Are there other internal methods in WindowsExtensions that should be made public at the same time?"
+    ],
+    "resolution": {
+      "hypothesis": "The GetPixels method was kept internal because it returns a raw IntPtr, but it\u0027s needed by downstream consumers building custom WinUI canvas controls. Making it public is low-risk since the method is already well-tested internally.",
+      "proposals": [
+        {
+          "description": "Merge the 1-line visibility change. The method is already battle-tested internally in SKXamlCanvas and returns a straightforward IntPtr to the pixel buffer. All other WriteableBitmap extensions in the class are already public.",
+          "title": "Accept as-is",
+          "confidence": 0.75,
+          "effort": "trivial"
+        },
+        {
+          "description": "Accept the change but request XML documentation (triple-slash comments) on the newly public GetPixels method, describing what the returned IntPtr points to, its lifetime/validity, and that the caller must not use it after WriteableBitmap is invalidated or disposed.",
+          "title": "Accept with XML documentation",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "description": "Ask the author about their specific use case to determine if a higher-level API (e.g., a CreateSKSurface extension on WriteableBitmap) would serve them better than raw pixel access. This would provide a safer, more discoverable API surface.",
+          "title": "Request broader API review",
+          "confidence": 0.5,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Accept with XML documentation",
+      "recommendedReason": "The change is minimal and well-motivated, but newly public APIs should have documentation. Requiring XML docs is low-friction and ensures consumers understand the IntPtr semantics."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Valid enhancement PR from a corporate contributor (Progress). Needs maintainer review for API surface commitment \u2014 making internal APIs public is a permanent decision. The change itself is trivial and low-risk."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and views labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views",
+          "os/Windows-WinUI"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge PR, note API surface consideration, request documentation",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the PR. Making \u0060GetPixels\u0060 public is reasonable \u2014 it\u0027s the only \u0060WriteableBitmap\u0060 extension in this class that\u0027s still internal, and the use case (custom canvas implementations) is legitimate.\n\nBefore merging, would you be able to add XML documentation to the method? Since it returns a raw \u0060IntPtr\u0060, it would help consumers to know what the pointer refers to and when it\u0027s valid. Something like:\n\n\u0060\u0060\u0060csharp\n/// \u003Csummary\u003E\n/// Gets a pointer to the pixel buffer of the \u003Csee cref=\u0022WriteableBitmap\u0022/\u003E.\n/// \u003C/summary\u003E\n/// \u003Cparam name=\u0022bitmap\u0022\u003EThe bitmap to get the pixels from.\u003C/param\u003E\n/// \u003Creturns\u003EA pointer to the pixel buffer.\u003C/returns\u003E\npublic static IntPtr GetPixels(this WriteableBitmap bitmap) =\u003E\n    bitmap.PixelBuffer.GetByteBuffer();\n\u0060\u0060\u0060\n\nAlso, the PR checklist mentions no tests \u2014 could you confirm whether the existing \u0060SKXamlCanvas\u0060 tests cover this code path, or if a new test is needed?"
+      }
+    ]
+  }
+}

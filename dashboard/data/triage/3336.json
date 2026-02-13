@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3336,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:35:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE constant has wrong value (0x33AA instead of 0x33A9) in Egl.cs, making it identical to EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-WinUI"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/Egl.cs",
+        "Observe line 62: EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE = 0x33AA",
+        "Observe line 63: EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE = 0x33AA",
+        "Compare against ANGLE extension spec: FAST should be 0x33A9, COPY is 0x33AA"
+      ],
+      "environmentDetails": "SkiaSharp 3.x, WinUI, ANGLE D3D11 backend"
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": false,
+      "errorType": "wrong-value",
+      "errorMessage": "EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE = 0x33AA should be 0x33A9",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0-windows10.0.19041.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.0.119",
+        "2.88.9"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The constants in Egl.cs are unchanged since the file was introduced. The wrong value persists on the main branch."
+    }
+  },
+  "analysis": {
+    "summary": "The EGL constant EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE is defined as 0x33AA in Egl.cs, but the official ANGLE extension spec defines it as 0x33A9. The COPY constant (0x33AA) is correct. Both constants currently share the same value, which means GlesContext.cs always requests the COPY present path instead of the intended FAST path. This affects ANGLE display initialization for all three fallback paths (D3D11, D3D11 FL9.3, and D3D WARP).",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/Egl.cs",
+        "finding": "EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE (0x33AA) and EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE (0x33AA) share the same value. Per the official ANGLE extension, FAST should be 0x33A9 and COPY should be 0x33AA.",
+        "relevance": "direct",
+        "lines": "61-63"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs",
+        "finding": "Three display attribute arrays (defaultDisplayAttributes, fl9_3DisplayAttributes, warpDisplayAttributes) all pass EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE to ANGLE. Due to the wrong constant value, all three request the COPY path instead of FAST.",
+        "relevance": "direct",
+        "lines": "160-198"
+      }
+    ],
+    "rationale": "This is clearly a type/bug \u2014 a constant has a verifiably incorrect value compared to the official ANGLE extension specification. Area is area/SkiaSharp.Views because Egl.cs is part of the WinUI views GLES interop layer. Severity is medium: the code silently requests the COPY present path instead of the FAST path, which may degrade performance but doesn\u0027t cause crashes. The commenter molesmoke notes the fast path produces vertically flipped surfaces (non-conformant), so there may be behavioral implications beyond performance.",
+    "keySignals": [
+      {
+        "text": "EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE = 0x33AA",
+        "source": "Egl.cs:62",
+        "interpretation": "Incorrect value \u2014 should be 0x33A9 per ANGLE spec. Currently identical to COPY constant on line 63."
+      },
+      {
+        "text": "EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE = 0x33AA",
+        "source": "Egl.cs:63",
+        "interpretation": "Correct value. But having both constants equal means GlesContext always uses COPY path regardless of which constant is referenced."
+      },
+      {
+        "text": "Egl.EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE, Egl.EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE",
+        "source": "GlesContext.cs:168,184,195",
+        "interpretation": "All three display attribute arrays (D3D11, FL9.3, WARP) use FAST_ANGLE, but actually get COPY behavior due to wrong constant."
+      },
+      {
+        "text": "part of the perf improvement is that it\u0027s not conformant (the surfaces are vertically flipped)",
+        "source": "comment #1 (molesmoke)",
+        "interpretation": "FAST path is non-conformant with flipped surfaces. Enabling it correctly could be a breaking change for users creating surfaces from SKSwapChainPanel.GRContext."
+      },
+      {
+        "text": "SKSwapChainPanel seems to still render the right way up for its paint event",
+        "source": "comment #1 (molesmoke)",
+        "interpretation": "SKSwapChainPanel itself handles orientation correctly, so the fallout from fixing the constant may be limited to direct GRContext users."
+      }
+    ],
+    "nextQuestions": [
+      "Should the fix change to the correct FAST value (0x33A9), or should the code explicitly use the COPY path? The commenter raises a valid concern about vertically flipped surfaces.",
+      "Are there downstream users of SKSwapChainPanel.GRContext who create their own surfaces that would be affected by flipped surface origin?",
+      "Should the fix include documentation about the surface origin change for direct GRContext users?"
+    ],
+    "resolution": {
+      "hypothesis": "The FAST constant was mistyped when the EGL interop was first created. Fixing it to 0x33A9 would enable the actual fast present path, improving performance but introducing non-conformant (vertically flipped) surfaces.",
+      "proposals": [
+        {
+          "description": "Change EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE from 0x33AA to 0x33A9. This enables the actual fast present path, which may improve ANGLE/D3D performance. However, surfaces will be vertically flipped (non-conformant), which could affect users who create surfaces from SKSwapChainPanel.GRContext directly.",
+          "title": "Fix FAST constant to correct value",
+          "codeSnippet": "public const int EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE = 0x33A9;",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "description": "Change the GlesContext.cs usages to explicitly reference EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE instead of FAST. This preserves current behavior intentionally and fixes the misleading constant while avoiding any breaking change.",
+          "title": "Switch to explicit COPY path",
+          "confidence": 0.7,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Fix FAST constant to correct value",
+      "recommendedReason": "The original code intended to use the fast path (comments say \u0027optimization that can have large performance benefits\u0027). Fixing the constant restores the intended behavior. The commenter confirms SKSwapChainPanel handles orientation correctly, limiting the breaking change surface."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "The constant is verifiably wrong and the fix is trivial, but the maintainer needs to decide between fixing the FAST value (potentially breaking change) or explicitly switching to COPY (preserving current behavior). The commenter specifically asked mattleibow for a decision."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, WinUI, and OpenGL labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/Windows-WinUI",
+          "backend/OpenGL"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report and summarize the two fix options",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for catching this \u2014 confirmed. Both \u0060EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE\u0060 and \u0060EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE\u0060 are set to \u00600x33AA\u0060 in \u0060Egl.cs\u0060, but the ANGLE spec defines FAST as \u00600x33A9\u0060. All three display attribute arrays in \u0060GlesContext.cs\u0060 reference the FAST constant, so the code has always been using the COPY present path.\n\nTwo options:\n1. **Fix the constant to \u00600x33A9\u0060** \u2014 restores the intended fast present path (perf improvement), but surfaces become non-conformant (vertically flipped). As @molesmoke noted, \u0060SKSwapChainPanel\u0060 itself handles this correctly, but direct \u0060GRContext\u0060 users would need to set \u0060GRSurfaceOrigin.TopLeft\u0060.\n2. **Switch usages to \u0060EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE\u0060** \u2014 preserves current behavior explicitly, no breaking change.\n\nLeaning toward option 1 since the original code comments describe it as an optimization, but this needs a decision on the breaking change."
+      }
+    ]
+  }
+}

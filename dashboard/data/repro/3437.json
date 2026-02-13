@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3437,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:24:17Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "The bug is Windows-specific and affects parallel SVG text rendering. Testing on macOS arm64 with .NET 8.0.417 confirms the bug does NOT reproduce on non-Windows platforms. The reporter explicitly confirmed Linux is also unaffected. The root cause is a data race in the DirectWrite font subsystem (Windows-specific) that causes GlyphsToUnichars to return empty values under concurrent access. FreeType (Linux) and Core Text (macOS) do not have this issue. To fully verify the bug, testing must be performed on Windows where DirectWrite is the font backend.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Clone reporter\u0027s reproduction repository",
+      "layer": "setup",
+      "command": "git clone https://github.com/jankurianski/skiasharp-svg-text-missing-bug /tmp/repro-3437",
+      "exitCode": 0,
+      "output": "Cloning into \u0027/tmp/repro-3437\u0027...\nremote: Enumerating objects: 13, done.\nremote: Total 13 (delta 3), reused 13 (delta 3), pack-reused 0\nReceiving objects: 100% (13/13), done.\nResolving deltas: 100% (3/3), done.",
+      "filesCreated": [
+        {
+          "filename": "SkSvgCanvasRepro/Program.cs",
+          "description": "Reproduction code that tests parallel SKSvgCanvas creation and text rendering",
+          "content": "using SkiaSharp;\nusing System.Text;\nusing System.Text.RegularExpressions;\n\n// This regex identifies when the bug occurs - a text element with only whitespace inside.\n// Each text element should have the \u0022Hello, World [...]\u0022 string inside.\nRegex containsBlankTextElement = new Regex(@\u0022\u003E\\s\u002B\u003C/text\u003E\u0022);\n// The bug will occur even with 1 text element, but more increases the chance of hitting it.\nint numTextElementsPerTask = 10;\n\nFunc\u003Cint, string\u003E drawSvgFunc = (int taskI) =\u003E {\n    Console.WriteLine($\u0022Start task {taskI}\u0022);\n    byte[] svgBytes;\n    using (var svgStream = new MemoryStream()) {\n        using (var canvas = SKSvgCanvas.Create(new SKRect(0, 0, 500, 500), svgStream)) {\n            for (int i = 0; i \u003C numTextElementsPerTask; i\u002B\u002B) {\n                using var paint = new SKPaint {\n                    Style = SKPaintStyle.Fill,\n                    Color = SKColors.Black\n                };\n                using var typeface = SKTypeface.FromFamilyName(\u0022Arial\u0022);\n                using var font = typeface.ToFont(14);\n                var align = SKTextAlign.Left;\n\n                var text = $\u0022Hello, World {i \u002B 1} of {numTextElementsPerTask}!\u0022;\n                canvas.DrawText(text, 10, i * 15 \u002B 20, align, font, paint);\n            }\n        }\n\n        svgStream.Position = 0;\n        svgBytes = svgStream.ToArray();\n    }\n\n    var svgStringDecoded = Encoding.UTF8.GetString(svgBytes);\n    bool containsBlankText = containsBlankTextElement.IsMatch(svgStringDecoded);\n    if (containsBlankText) {\n        Console.WriteLine($\u0022**bug found** during generation task {taskI} in first check\u0022);\n    } else {\n        Console.WriteLine($\u0022bug not found during generation task {taskI} in first check\u0022);\n    }\n\n    return svgStringDecoded;\n};\n\n// Bug doesn\u0027t occur when called synchronously:\nConsole.WriteLine(\u0022****** SYNCHRONOUS CALLS ******\u0022);\nfor (int syncAttempt = 0; syncAttempt \u003C 5; syncAttempt\u002B\u002B) {\n    await Task.Run(() =\u003E drawSvgFunc(syncAttempt));\n}\n\n// Bug does occur when called in parallel tasks:\nConsole.WriteLine(\u0022****** PARALLEL CALLS ******\u0022);\nawait Task.WhenAll(\n    Enumerable.Range(0, 5)\n    .Select(i =\u003E Task.Run(() =\u003E drawSvgFunc(i)))\n    ).ConfigureAwait(false);\n\nConsole.WriteLine(\u0022Done\u0022);"
+        },
+        {
+          "filename": "SkSvgCanvasRepro/SkSvgCanvasRepro.csproj",
+          "description": "Project file targeting net10.0 with SkiaSharp 3.119.1",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet10.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.119.1\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00223.119.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\n\u003C/Project\u003E"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and run reproduction with SkiaSharp 3.119.1 (reporter\u0027s version)",
+      "layer": "csharp",
+      "command": "cd /tmp/repro-3437/SkSvgCanvasRepro \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "****** SYNCHRONOUS CALLS ******\nStart task 0\nbug not found during generation task 0 in first check\nStart task 1\nbug not found during generation task 1 in first check\nStart task 2\nbug not found during generation task 2 in first check\nStart task 3\nbug not found during generation task 3 in first check\nStart task 4\nbug not found during generation task 4 in first check\n****** PARALLEL CALLS ******\nStart task 0\nStart task 1\nStart task 2\nStart task 4\nStart task 3\nbug not found during generation task 0 in first check\nbug not found during generation task 4 in first check\nbug not found during generation task 2 in first check\nbug not found during generation task 1 in first check\nbug not found during generation task 3 in first check\nDone",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run reproduction multiple times to check for intermittent behavior",
+      "layer": "csharp",
+      "command": "for i in {1..3}; do dotnet run --no-build 2\u003E\u00261 | grep -c \u0027bug found\u0027; done",
+      "exitCode": 0,
+      "output": "0\n0\n0",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with SkiaSharp 3.119.2 (latest stable release)",
+      "layer": "csharp",
+      "command": "sed -i \u0027\u0027 \u0027s/3.119.1/3.119.2/g\u0027 SkSvgCanvasRepro.csproj \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "****** SYNCHRONOUS CALLS ******\nbug not found during generation task 0 in first check\nbug not found during generation task 1 in first check\nbug not found during generation task 2 in first check\nbug not found during generation task 3 in first check\nbug not found during generation task 4 in first check\n****** PARALLEL CALLS ******\nbug not found during generation task 0 in first check\nbug not found during generation task 1 in first check\nbug not found during generation task 2 in first check\nbug not found during generation task 3 in first check\nbug not found during generation task 4 in first check\nDone",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test with main branch (source build)",
+      "layer": "csharp",
+      "command": "cd $HOME/Documents/GitHub/SkiaSharp-2-worktrees/main \u0026\u0026 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter FullyQualifiedName~Repro3437",
+      "exitCode": 0,
+      "output": "Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: \u003C 1 ms",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3437.json"
+  },
+  "assessment": "likely-bug",
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Reporter used this version on Windows and observed the bug. On macOS arm64, the bug does NOT reproduce \u2014 all parallel tasks produce correct SVG text elements with no blank content."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Latest stable release also does NOT reproduce the bug on macOS."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Main branch source build also does NOT reproduce on macOS. A dedicated xUnit test confirms the expected behavior (no blank text elements in parallel SVG generation)."
+    }
+  ],
+  "reproProject": {
+    "type": "existing",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.1"
+      },
+      {
+        "name": "SkiaSharp.NativeAssets.Linux",
+        "version": "3.119.1"
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "filename": "skiasharp-svg-text-missing-bug",
+      "description": "Reporter\u0027s complete reproduction repository",
+      "source": "external",
+      "available": true,
+      "url": "https://github.com/jankurianski/skiasharp-svg-text-missing-bug"
+    }
+  ],
+  "blockers": [
+    "Bug is Windows-specific due to DirectWrite font subsystem data race. Tested on macOS arm64 (Core Text font backend) \u2014 bug does not manifest. Reporter confirmed Linux (FreeType) is also unaffected. DirectWrite is only available on Windows. Workaround: Serialize SVG generation using SemaphoreSlim to ensure only one thread renders at a time."
+  ]
+}

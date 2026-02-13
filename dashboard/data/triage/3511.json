@@ -1,0 +1,166 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3511,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:14:31Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "External-Dependency-Info.txt still lists libmicrohttpd after PR #3463 removed the dependency from Skia DEPS",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/Docs",
+      "confidence": 0.9
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open External-Dependency-Info.txt in the repository",
+        "Search for \u0027libmicrohttpd\u0027",
+        "Observe it is still listed at lines 1475-1988 despite being removed from Skia DEPS in PR #3463"
+      ],
+      "screenshots": [
+        {
+          "url": "https://github.com/user-attachments/assets/6816f7fd-e4e8-463c-a326-055032874ece",
+          "description": "Screenshot showing libmicrohttpd entry in External-Dependency-Info.txt"
+        }
+      ],
+      "environmentDetails": "Any version after PR #3463 merged (2026-01-27)",
+      "relatedIssues": [
+        3463
+      ]
+    },
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "incorrect-output",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "3.119.3-preview.1"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The libmicrohttpd entry remains in External-Dependency-Info.txt on main branch as of today."
+    }
+  },
+  "analysis": {
+    "summary": "PR #3463 commented out microhttpd in Skia DEPS and documented its removal, but did not update External-Dependency-Info.txt (lines 1475-1988) or scripts/guardian/CredScanSuppressions.json (6 entries referencing microhttpd files). The microhttpd source directory no longer exists. This is a straightforward cleanup oversight.",
+    "codeInvestigation": [
+      {
+        "file": "External-Dependency-Info.txt",
+        "finding": "libmicrohttpd LGPL license text still present \u2014 514 lines of stale content",
+        "relevance": "direct",
+        "lines": "1475-1988"
+      },
+      {
+        "file": "externals/skia/DEPS",
+        "finding": "microhttpd entry is commented out with # prefix, confirming PR #3463 removed it",
+        "relevance": "direct",
+        "lines": "52"
+      },
+      {
+        "file": "scripts/guardian/CredScanSuppressions.json",
+        "finding": "6 suppression entries reference externals/skia/third_party/externals/microhttpd/ files that no longer exist",
+        "relevance": "related",
+        "lines": "5-26"
+      },
+      {
+        "file": "externals/skia/third_party/libmicrohttpd/BUILD.gn",
+        "finding": "BUILD.gn for libmicrohttpd still exists in the skia submodule but references source files that are no longer downloaded",
+        "relevance": "related",
+        "lines": "1-22"
+      },
+      {
+        "file": "cgmanifest.json",
+        "finding": "No microhttpd entries \u2014 already clean",
+        "relevance": "context"
+      }
+    ],
+    "rationale": "This is a valid bug \u2014 stale metadata left over from an incomplete cleanup in PR #3463. Classified as area/Docs because it affects documentation/metadata files, not functional code. Low severity because there is zero runtime or build impact \u2014 only the license listing file and credential scan suppressions are stale.",
+    "keySignals": [
+      {
+        "text": "microhttpd entry commented out in DEPS",
+        "source": "externals/skia/DEPS line 52",
+        "interpretation": "Confirms dependency was intentionally removed in PR #3463."
+      },
+      {
+        "text": "libmicrohttpd section spans lines 1475-1988 in External-Dependency-Info.txt",
+        "source": "External-Dependency-Info.txt",
+        "interpretation": "514 lines of LGPL license text remain for a dependency that is no longer used."
+      },
+      {
+        "text": "externals/skia/third_party/externals/microhttpd directory does not exist",
+        "source": "filesystem check",
+        "interpretation": "Source files are gone since DEPS no longer downloads them, confirming the dependency is fully removed."
+      },
+      {
+        "text": "CredScanSuppressions.json has 6 entries for microhttpd files",
+        "source": "scripts/guardian/CredScanSuppressions.json lines 5-26",
+        "interpretation": "Suppression entries reference files that no longer exist on disk."
+      }
+    ],
+    "resolution": {
+      "hypothesis": "PR #3463 removed the microhttpd dependency from Skia DEPS but did not clean up the corresponding entries in External-Dependency-Info.txt and CredScanSuppressions.json.",
+      "proposals": [
+        {
+          "description": "Delete lines 1472-1990 (the libmicrohttpd section including header/footer markers) from External-Dependency-Info.txt.",
+          "title": "Remove libmicrohttpd from External-Dependency-Info.txt",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "description": "Remove the 6 microhttpd file suppression entries from scripts/guardian/CredScanSuppressions.json since those files no longer exist.",
+          "title": "Clean up CredScanSuppressions.json",
+          "confidence": 0.95,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Remove libmicrohttpd from External-Dependency-Info.txt",
+      "recommendedReason": "This is the specific file the reporter identified. Both proposals should be done together as a single cleanup PR."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "Straightforward cleanup \u2014 remove stale entries from two files. No investigation needed."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply documentation area label",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/Docs"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report and confirm it will be cleaned up",
+        "risk": "high",
+        "confidence": 0.9,
+        "comment": "Thanks for catching this. You\u0027re right \u2014 PR #3463 removed microhttpd from Skia\u0027s DEPS but missed updating \u0060External-Dependency-Info.txt\u0060. The \u0060scripts/guardian/CredScanSuppressions.json\u0060 file also has 6 stale entries referencing microhttpd files that no longer exist.\n\nWe\u0027ll get both files cleaned up."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #3463 which caused the oversight",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3463
+      }
+    ]
+  }
+}

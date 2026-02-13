@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 607,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:50:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Issue #607 requests SKTouchAction.Entered and SKTouchAction.Exited event support on iOS and Android. Source code inspection confirms the implementation gap: the Windows SKTouchHandler wires PointerEntered/PointerExited to SKTouchAction.Entered/Exited, and Tizen partially maps PointStateType.Leave to Exited, but the Apple (iOS/macOS) and Android SKTouchHandler classes only fire Pressed, Moved, Released, and Cancelled \u2014 they never emit Entered or Exited. Runtime verification of touch event behavior requires actual iOS and Android devices or emulators, which are not available in this environment.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Inspect Apple (iOS/macOS) SKTouchHandler source code for Entered/Exited event support",
+      "layer": "csharp",
+      "command": "grep -n \u0027Entered\\|Exited\u0027 source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+      "exitCode": 1,
+      "output": "No matches found. The Apple touch handler only fires Pressed (TouchesBegan), Moved (TouchesMoved), Released (TouchesEnded), and Cancelled (TouchesCancelled). No Entered or Exited events are emitted.",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Inspect Android SKTouchHandler source code for Entered/Exited event support",
+      "layer": "csharp",
+      "command": "grep -n \u0027Entered\\|Exited\u0027 source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
+      "exitCode": 1,
+      "output": "No matches found. The Android touch handler maps MotionEventActions Down/PointerDown to Pressed, Move to Moved, Up/PointerUp to Released, and Cancel to Cancelled. No Entered or Exited events are emitted.",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify Windows SKTouchHandler implements Entered/Exited as a reference",
+      "layer": "csharp",
+      "command": "grep -n \u0027Entered\\|Exited\u0027 source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "29: view.PointerEntered -= OnPointerEntered;\n30: view.PointerExited -= OnPointerExited;\n38: view.PointerEntered \u002B= OnPointerEntered;\n39: view.PointerExited \u002B= OnPointerExited;\n59: private void OnPointerEntered(...)\n61: args.Handled = CommonHandler(sender, SKTouchAction.Entered, args);\n64: private void OnPointerExited(...)\n66: args.Handled = CommonHandler(sender, SKTouchAction.Exited, args);",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "main (source)",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/607.json"
+  },
+  "assessment": "working-as-designed",
+  "reproductionTime": "~5 minutes",
+  "versionResults": [
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Source code inspection confirms the gap: Apple SKTouchHandler (TouchesBegan/Moved/Ended/Cancelled) and Android SKTouchHandler (Down/Move/Up/Cancel) never emit Entered or Exited. Runtime verification requires iOS/Android devices."
+    }
+  ],
+  "blockers": [
+    "Runtime verification of SKTouchAction.Entered/Exited requires iOS and Android devices or emulators to test touch event firing \u2014 these are not available in the current macOS development environment",
+    "This is a feature request (type/feature-request) for missing functionality rather than a bug with existing functionality \u2014 the Entered/Exited enum values exist but were never wired up on iOS/Android platforms"
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3489,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:14:31Z",
+    "currentLabels": [
+      "community \u2728"
+    ]
+  },
+  "summary": "Community PR optimizing SKBitmap.CopyTo with direct memory copy instead of canvas/shader pipeline when source and destination share the same SKColorType \u2014 has critical bugs (swapped src/dst in row copy, missing pixel allocation, missing alpha/colorspace handling) and no tests",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Review the diff in binding/SkiaSharp/SKBitmap.cs",
+        "Note the fast-path optimization for same-ColorType CopyTo",
+        "Observe swapped variable names in row-by-row copy block",
+        "Observe no destination pixel allocation before writing"
+      ],
+      "relatedIssues": [
+        2915,
+        3317
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3317",
+          "description": "Related PR by jeremy-visionaid fixing shader disposal leak in CopyTo (also targets #2915)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "CopyTo implementation on main still uses the canvas/shader pipeline. The optimization intent is valid \u2014 the method allocates SKCanvas, SKPaint, and SKShader for a simple pixel copy when color types match."
+    }
+  },
+  "analysis": {
+    "summary": "Community PR to optimize SKBitmap.CopyTo by using direct memory copy (Span\u003Cbyte\u003E.TryCopyTo) when source and destination have the same SKColorType, avoiding the expensive canvas/shader allocation pipeline. The optimization concept is sound and addresses real performance/memory issues (#2915), but the implementation has critical bugs: swapped source/destination in the row-by-row copy path, no destination pixel allocation, missing alpha type and color space conversion, and no tests.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "Current CopyTo allocates temp SKBitmap, calls TryAllocPixels, creates SKCanvas and SKPaint with SKShader, draws, then swaps. This is correct but expensive for same-colortype copies. The shader created at line 203 is not disposed (the bug #3317 fixes).",
+        "relevance": "direct",
+        "lines": "183-212"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "ExtractSubset calls sk_bitmap_extract_subset which shares underlying pixel memory \u2014 subset bitmaps have RowBytes larger than Width*BytesPerPixel. The PR\u0027s contiguity check (Width*Height*BytesPerPixel == ByteCount) correctly identifies non-subset bitmaps, but the row-by-row fallback has swapped src/dst.",
+        "relevance": "direct",
+        "lines": "216-222"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "GetPixelSpan() returns a span over the ENTIRE pixel buffer (including padding for subsets). GetPixelSpan(x,y) offsets into it. The PR uses GetPixelSpan() for the contiguous fast path, which is correct when ByteCount matches Width*Height*BytesPerPixel.",
+        "relevance": "related",
+        "lines": "297-304"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "GetAddress(x,y) calls sk_bitmap_get_addr \u2014 a P/Invoke per call. The row-by-row path calls this 2*(Height\u002B1) times, which is the performance concern jeremy-visionaid raised.",
+        "relevance": "related",
+        "lines": "119-122"
+      }
+    ],
+    "rationale": "This is an enhancement PR, not a bug fix \u2014 it improves performance of an existing method. Area is core SkiaSharp (SKBitmap). The performance tenet applies because the stated goal is eliminating unnecessary allocations. The PR overlaps with #3317 (shader disposal fix) and relates to #2915 (memory leak). Despite the valid optimization concept, the implementation has several correctness bugs that must be fixed before merge.",
+    "keySignals": [
+      {
+        "text": "Use direct memory copy instead of creating SKCanvas and DrawBitmap when source and destination Bitmap have the same SKColorType and Width",
+        "source": "PR description",
+        "interpretation": "Valid optimization \u2014 current CopyTo allocates SKCanvas, SKPaint, SKShader, and a temp SKBitmap just to copy pixels of the same color type."
+      },
+      {
+        "text": "var des = new Span\u003Cbyte\u003E(srcAddress.ToPointer(), rowBytes); var src = new Span\u003Cbyte\u003E(desAddress.ToPointer(), rowBytes); src.TryCopyTo(des);",
+        "source": "PR diff, row-by-row copy block",
+        "interpretation": "Critical bug: variable names are swapped \u2014 \u0027des\u0027 points to srcAddress and \u0027src\u0027 points to desAddress. This copies destination pixels into source, which is backwards and corrupts data."
+      },
+      {
+        "text": "I also have a memory copy approach since CopyTo is both slow and leaky as is (#2915). Unfortunately, this one doesn\u0027t handle that the bitmap might be a subset of another",
+        "source": "comment by jeremy-visionaid",
+        "interpretation": "Experienced community member identified the subset gap. OP later added row-by-row code to handle subsets, but introduced the src/dst swap bug in the process."
+      },
+      {
+        "text": "I just find my project use up 1gb memories for no reason but a copyto",
+        "source": "comment by OP",
+        "interpretation": "Confirms the real-world performance impact \u2014 CopyTo\u0027s canvas/shader approach leaks memory per #2915, motivating this optimization."
+      },
+      {
+        "text": "there\u0027s 3 P/Invokes per row (Height \u002B 2 * GetAddress). Not the end of the world, but you can do it with 0",
+        "source": "review comment by jeremy-visionaid",
+        "interpretation": "Row-by-row copy can be optimized further \u2014 compute stride once from RowBytes instead of calling GetAddress per row."
+      }
+    ],
+    "nextQuestions": [
+      "Should the optimization also handle different alpha types with same color type (e.g., Premul vs Unpremul)?",
+      "Should CopyTo\u0027s behavior with mismatched dimensions be documented or changed (current code always resizes destination to match source)?",
+      "How should this PR coordinate with #3317 (shader disposal fix) \u2014 merge #3317 first then rebase?",
+      "Should benchmarks be added to validate the performance improvement claim?"
+    ],
+    "resolution": {
+      "hypothesis": "The optimization concept is valid \u2014 direct memory copy for same-colortype bitmaps avoids unnecessary canvas/shader allocations. But the implementation needs several fixes before it\u0027s merge-ready.",
+      "proposals": [
+        {
+          "description": "In the row-by-row copy block, variable names \u0027des\u0027 and \u0027src\u0027 are swapped. \u0027des\u0027 is constructed from srcAddress and \u0027src\u0027 from desAddress. This means TryCopyTo copies destination\u2192source (backwards). Swap the variable names or swap the pointer assignments.",
+          "title": "Fix swapped src/dst in row-by-row copy",
+          "confidence": 0.99,
+          "effort": "trivial"
+        },
+        {
+          "description": "The fast path writes directly into destination pixels without ensuring they\u0027re allocated. The existing code path allocates a temp bitmap with TryAllocPixels and swaps. The optimization must either: (a) check destination already has allocated pixels of matching dimensions, or (b) allocate destination pixels first (via TryAllocPixels) if they don\u0027t match.",
+          "title": "Add destination pixel allocation",
+          "confidence": 0.9,
+          "effort": "small"
+        },
+        {
+          "description": "Matching ColorType alone is insufficient \u2014 bitmaps with the same SKColorType but different SKAlphaType (Premul vs Unpremul) or different SKColorSpace need conversion. The fast path should also verify AlphaType and ColorSpace match, or fall through to the canvas path.",
+          "title": "Handle alpha type and color space differences",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "description": "The PR checklist shows \u0027Has tests\u0027 is unchecked. Tests needed: same-colortype contiguous copy, subset bitmap copy, different-dimension copy, different-colortype fallback to canvas path. Also add a regression test for the #2915 memory leak scenario.",
+          "title": "Add unit tests for CopyTo fast path",
+          "confidence": 0.95,
+          "effort": "medium"
+        },
+        {
+          "description": "As jeremy-visionaid noted, the row-by-row path does 3 P/Invokes per row. Could compute stride once from RowBytes and use a single GetPixels() call, then iterate with pointer arithmetic.",
+          "title": "Optimize row-by-row copy to avoid per-row P/Invokes",
+          "confidence": 0.8,
+          "effort": "small"
+        },
+        {
+          "description": "Both PRs modify CopyTo. #3317 fixes the shader disposal leak (the root cause of #2915). Recommend merging #3317 first for the correctness fix, then rebasing this PR. The optimization makes the shader fix less critical for same-colortype copies but the canvas fallback path still needs it.",
+          "title": "Coordinate with PR #3317",
+          "confidence": 0.85,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Fix swapped src/dst in row-by-row copy",
+      "recommendedReason": "This is the most critical bug \u2014 it causes data corruption by copying in the wrong direction. Must be fixed before any other improvements."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Valid optimization concept with real-world motivation (#2915 memory leak, 1GB usage reports), but implementation has critical bugs (swapped src/dst, missing allocation, missing alpha/colorspace checks) and no tests. Needs code review feedback and fixes before merge."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, SkiaSharp, and performance labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2915 (root memory leak issue)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 2915
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #3317 (competing CopyTo fix for shader disposal)",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3317
+      },
+      {
+        "type": "add-comment",
+        "description": "Provide code review feedback on the critical bugs and coordination with #3317",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the optimization \u2014 the idea of using direct memory copy for same-ColorType bitmaps is solid, and the motivation is real (the current canvas/shader pipeline is expensive for what should be a simple copy).\n\nA few issues to address before this can be merged:\n\n1. **Swapped source/destination in row-by-row copy.** The \u0060des\u0060 span is constructed from \u0060srcAddress\u0060 and \u0060src\u0060 from \u0060desAddress\u0060 \u2014 this copies backwards. Swap the pointer assignments.\n\n2. **Destination pixel allocation.** The fast path writes into the destination\u0027s existing pixel buffer, but the current \u0060CopyTo\u0060 contract allocates fresh pixels on the destination (via temp \u002B Swap). If the destination is an empty \u0060new SKBitmap()\u0060, the fast path will fail or corrupt memory.\n\n3. **Alpha type and color space.** Matching \u0060ColorType\u0060 alone isn\u0027t sufficient \u2014 two bitmaps with the same \u0060SKColorType\u0060 but different \u0060SKAlphaType\u0060 (Premul vs Unpremul) or \u0060SKColorSpace\u0060 would produce incorrect colors with a raw memory copy. The fast path should verify these match too, or fall through to the canvas path.\n\n4. **Tests are needed.** The checklist shows tests unchecked \u2014 we\u0027d need coverage for: contiguous same-type copy, subset bitmap copy, mismatched dimensions, and the canvas fallback path.\n\n5. **Coordination with #3317.** That PR fixes the shader disposal leak in the same method. Recommend merging #3317 first for the correctness fix, then rebasing this PR on top.\n\nThe per-row P/Invoke concern jeremy-visionaid raised is also worth addressing \u2014 you can compute the stride once from \u0060RowBytes\u0060 and use \u0060GetPixels()\u0060 \u002B pointer arithmetic instead of \u0060GetAddress()\u0060 per row."
+      }
+    ]
+  }
+}

@@ -3,18 +3,18 @@
     "schemaVersion": "1.0",
     "number": 2997,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T17:45:00Z"
+    "analyzedAt": "2026-02-13T02:55:00Z"
   },
   "conclusion": "reproduced",
-  "notes": "Reproduced on all tested versions (2.88.2, 2.88.3, 3.119.2, and main source). SKMatrix.MapRect normalizes the output rectangle, swapping Left/Right and Top/Bottom when the input rect is non-standard (Left \u003E Right or Top \u003E Bottom). The reporter\u0027s claim that 2.88.2 was a \u0027last known good\u0027 version is incorrect \u2014 the bug exists there too. The underlying cause is that Skia\u0027s SkMatrix::mapRect (called via sk_matrix_map_rect) always returns a sorted/normalized rect. This is a genuine bug since an identity matrix transform should preserve all rect properties.",
+  "notes": "Reproduced on SkiaSharp 2.88.3, 3.119.2, and main (source). SKMatrix.MapRect with an identity matrix normalizes a non-standard rect (Left\u003ERight, Top\u003EBottom) \u2014 output has Left/Right and Top/Bottom swapped. This is upstream Skia behavior: SkMatrix::mapRect calls sort_as_rect() which enforces left\u003C=right, top\u003C=bottom. Cross-platform verification skipped: pure API/logic bug with no platform signals.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create standalone console project with SkiaSharp 2.88.3",
+      "description": "Create console project and add SkiaSharp 2.88.3",
       "layer": "setup",
       "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.3",
       "exitCode": 0,
-      "output": "The template \u0022Console App\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp\u0027 version \u00272.88.3\u0027 added.",
+      "output": "Restore succeeded.",
       "filesCreated": [
         {
           "filename": "Repro.csproj",
@@ -23,51 +23,51 @@
         },
         {
           "filename": "Program.cs",
-          "description": "Reproduction code that creates a non-standard SKRect (Left\u003ERight, Top\u003EBottom) and maps it with an identity matrix",
-          "content": "using SkiaSharp;\n\nvar inputRect = new SKRect();\ninputRect.Left = 25;\ninputRect.Right = 15;\ninputRect.Bottom = 2;\ninputRect.Top = 10;\n\nConsole.WriteLine($\u0022Input:  Left={inputRect.Left}, Top={inputRect.Top}, Right={inputRect.Right}, Bottom={inputRect.Bottom}\u0022);\n\nvar resultRect = SKMatrix.CreateIdentity().MapRect(inputRect);\n\nConsole.WriteLine($\u0022Result: Left={resultRect.Left}, Top={resultRect.Top}, Right={resultRect.Right}, Bottom={resultRect.Bottom}\u0022);\n\nbool leftMatch = resultRect.Left == inputRect.Left;\nbool rightMatch = resultRect.Right == inputRect.Right;\nbool topMatch = resultRect.Top == inputRect.Top;\nbool bottomMatch = resultRect.Bottom == inputRect.Bottom;\n\nConsole.WriteLine($\u0022Left match:   {leftMatch} (expected {inputRect.Left}, got {resultRect.Left})\u0022);\nConsole.WriteLine($\u0022Right match:  {rightMatch} (expected {inputRect.Right}, got {resultRect.Right})\u0022);\nConsole.WriteLine($\u0022Top match:    {topMatch} (expected {inputRect.Top}, got {resultRect.Top})\u0022);\nConsole.WriteLine($\u0022Bottom match: {bottomMatch} (expected {inputRect.Bottom}, got {resultRect.Bottom})\u0022);\n\nif (leftMatch \u0026\u0026 rightMatch \u0026\u0026 topMatch \u0026\u0026 bottomMatch)\n{\n    Console.WriteLine(\u0022PASS: MapRect preserved non-standard rect\u0022);\n    return 0;\n}\nelse\n{\n    Console.WriteLine(\u0022FAIL: MapRect normalized the rect (swapped values)\u0022);\n    return 1;\n}"
+          "description": "Reproduction code from issue #2997 \u2014 tests SKMatrix.MapRect with a non-standard rect",
+          "content": "using SkiaSharp;\n\nConsole.WriteLine($\u0022SkiaSharp version: {typeof(SKMatrix).Assembly.GetName().Version}\u0022);\nConsole.WriteLine($\u0022Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}\u0022);\nConsole.WriteLine($\u0022OS: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\u0022);\nConsole.WriteLine();\n\nvar inputRect = new SKRect();\ninputRect.Left = 25;\ninputRect.Right = 15;\ninputRect.Bottom = 2;\ninputRect.Top = 10;\n\nConsole.WriteLine($\u0022Input rect:  Left={inputRect.Left}, Top={inputRect.Top}, Right={inputRect.Right}, Bottom={inputRect.Bottom}\u0022);\n\nvar resultRect = SKMatrix.CreateIdentity().MapRect(inputRect);\n\nConsole.WriteLine($\u0022Result rect: Left={resultRect.Left}, Top={resultRect.Top}, Right={resultRect.Right}, Bottom={resultRect.Bottom}\u0022);\nConsole.WriteLine();\n\nbool leftMatch = resultRect.Left == inputRect.Left;\nbool rightMatch = resultRect.Right == inputRect.Right;\nbool topMatch = resultRect.Top == inputRect.Top;\nbool bottomMatch = resultRect.Bottom == inputRect.Bottom;\n\nConsole.WriteLine($\u0022Left   matches: {leftMatch} (expected={inputRect.Left}, got={resultRect.Left})\u0022);\nConsole.WriteLine($\u0022Right  matches: {rightMatch} (expected={inputRect.Right}, got={resultRect.Right})\u0022);\nConsole.WriteLine($\u0022Top    matches: {topMatch} (expected={inputRect.Top}, got={resultRect.Top})\u0022);\nConsole.WriteLine($\u0022Bottom matches: {bottomMatch} (expected={inputRect.Bottom}, got={resultRect.Bottom})\u0022);\nConsole.WriteLine();\n\nif (leftMatch \u0026\u0026 rightMatch \u0026\u0026 topMatch \u0026\u0026 bottomMatch)\n    Console.WriteLine(\u0022SUCCESS: MapRect preserved rect coordinates (bug NOT present)\u0022);\nelse\n{\n    Console.WriteLine(\u0022BUG CONFIRMED: MapRect normalized/standardized the rect coordinates\u0022);\n    Console.WriteLine($\u0022  Left/Right swapped: {resultRect.Left == inputRect.Right \u0026\u0026 resultRect.Right == inputRect.Left}\u0022);\n    Console.WriteLine($\u0022  Top/Bottom swapped: {resultRect.Top == inputRect.Bottom \u0026\u0026 resultRect.Bottom == inputRect.Top}\u0022);\n}"
         }
       ],
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Run reproduction with SkiaSharp 2.88.3 (reporter\u0027s version)",
-      "layer": "csharp",
-      "command": "dotnet run",
-      "exitCode": 1,
-      "output": "Input:  Left=25, Top=10, Right=15, Bottom=2\nResult: Left=15, Top=2, Right=25, Bottom=10\nLeft match:   False (expected 25, got 15)\nRight match:  False (expected 15, got 25)\nTop match:    False (expected 10, got 2)\nBottom match: False (expected 2, got 10)\nFAIL: MapRect normalized the rect (swapped values)",
-      "result": "failure"
+      "description": "Build the repro project with SkiaSharp 2.88.3",
+      "layer": "setup",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Error(s)",
+      "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Test with SkiaSharp 2.88.2 (reporter\u0027s claimed last known good version)",
+      "description": "Run repro with SkiaSharp 2.88.3 \u2014 test SKMatrix.MapRect with non-standard rect (Left\u003ERight, Top\u003EBottom)",
       "layer": "csharp",
-      "command": "dotnet add package SkiaSharp --version 2.88.2 \u0026\u0026 dotnet run",
-      "exitCode": 1,
-      "output": "Input:  Left=25, Top=10, Right=15, Bottom=2\nResult: Left=15, Top=2, Right=25, Bottom=10\nLeft match:   False (expected 25, got 15)\nRight match:  False (expected 15, got 25)\nTop match:    False (expected 10, got 2)\nBottom match: False (expected 2, got 10)\nFAIL: MapRect normalized the rect (swapped values)",
-      "result": "failure"
+      "command": "dotnet run --no-build",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\nRuntime: .NET 8.0.23\nOS: Darwin 25.2.0\n\nInput rect:  Left=25, Top=10, Right=15, Bottom=2\nResult rect: Left=15, Top=2, Right=25, Bottom=10\n\nLeft   matches: False (expected=25, got=15)\nRight  matches: False (expected=15, got=25)\nTop    matches: False (expected=10, got=2)\nBottom matches: False (expected=2, got=10)\n\nBUG CONFIRMED: MapRect normalized/standardized the rect coordinates\n  Left/Right swapped: True\n  Top/Bottom swapped: True",
+      "result": "wrong-output"
     },
     {
       "stepNumber": 4,
-      "description": "Test with SkiaSharp 3.119.2 (latest stable release)",
+      "description": "Update to latest stable (3.119.2) and re-run to check if fixed",
       "layer": "csharp",
       "command": "dotnet add package SkiaSharp \u0026\u0026 dotnet run",
-      "exitCode": 1,
-      "output": "Input:  Left=25, Top=10, Right=15, Bottom=2\nResult: Left=15, Top=2, Right=25, Bottom=10\nLeft match:   False (expected 25, got 15)\nRight match:  False (expected 15, got 25)\nTop match:    False (expected 10, got 2)\nBottom match: False (expected 2, got 10)\nFAIL: MapRect normalized the rect (swapped values)",
-      "result": "failure"
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nRuntime: .NET 8.0.23\nOS: Darwin 25.2.0\n\nInput rect:  Left=25, Top=10, Right=15, Bottom=2\nResult rect: Left=15, Top=2, Right=25, Bottom=10\n\nLeft   matches: False (expected=25, got=15)\nRight  matches: False (expected=15, got=25)\nTop    matches: False (expected=10, got=2)\nBottom matches: False (expected=2, got=10)\n\nBUG CONFIRMED: MapRect normalized/standardized the rect coordinates\n  Left/Right swapped: True\n  Top/Bottom swapped: True",
+      "result": "wrong-output"
     },
     {
       "stepNumber": 5,
-      "description": "Build SkiaSharp test project from main branch source and run targeted xUnit test",
+      "description": "Test on main (source) \u2014 add targeted xUnit test for issue #2997 to existing test infrastructure",
       "layer": "csharp",
-      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \u0026\u0026 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \u0022FullyQualifiedName~MapRectDoesNotNormalize\u0022",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter \u0022FullyQualifiedName~Issue2997\u0022",
       "exitCode": 1,
-      "output": "Failed SkiaSharp.Tests.SKMatrixTest.MapRectDoesNotNormalizeNonStandardRect [5 ms]\nError Message:\n Assert.Equal() Failure\nExpected: 25\nActual:   15\nStack Trace:\n at SkiaSharp.Tests.SKMatrixTest.MapRectDoesNotNormalizeNonStandardRect() in $HOME/tests/Tests/SkiaSharp/SKMatrixTests.cs:line 136\n\nFailed!  - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
+      "output": "Failed SkiaSharp.Tests.SKMatrixTest.MapRectNormalizesNonStandardRect_Issue2997 [8 ms]\n  Error Message:\n   Assert.Equal() Failure\nExpected: 25\nActual:   15\n  Stack Trace:\n     at SkiaSharp.Tests.SKMatrixTest.MapRectNormalizesNonStandardRect_Issue2997()\n\nFailed!  - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
       "result": "failure"
     }
   ],
   "environment": {
-    "os": "macOS 26.2",
+    "os": "macOS 26.2 (Darwin 25.2.0)",
     "arch": "arm64",
     "dotnetVersion": "8.0.417",
     "skiaSharpVersion": "2.88.3",
@@ -76,32 +76,26 @@
   "inputs": {
     "triageFile": "ai-triage/2997.json"
   },
-  "assessment": "likely-bug",
-  "reproductionTime": "~8 minutes",
+  "assessment": "working-as-designed",
+  "reproductionTime": "~5 minutes",
   "versionResults": [
-    {
-      "version": "2.88.2",
-      "source": "nuget",
-      "result": "reproduced",
-      "notes": "Reporter claimed this was last known good, but bug exists here too. Left/Right and Top/Bottom swapped."
-    },
     {
       "version": "2.88.3",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Reporter\u0027s version. MapRect normalizes the non-standard rect as reported."
+      "notes": "Identity MapRect normalizes non-standard rect. Left=15 (expected 25), Right=25 (expected 15), Top=2 (expected 10), Bottom=10 (expected 2)."
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Latest stable release. Same normalization behavior."
+      "notes": "Same normalization behavior on latest stable release."
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "reproduced",
-      "notes": "Built from source and ran xUnit test. Assert.Equal(25, resultRect.Left) failed with Actual: 15. Bug still present on main."
+      "notes": "xUnit test fails: Assert.Equal() Expected: 25, Actual: 15. Bug present on main."
     }
   ],
   "reproProject": {
@@ -115,17 +109,14 @@
     ]
   },
   "errorMessages": {
-    "primaryError": "SKMatrix.MapRect normalizes non-standard rectangles: input Left=25, Right=15, Top=10, Bottom=2 becomes Left=15, Right=25, Top=2, Bottom=10",
-    "additionalErrors": [
-      "The normalization occurs because Skia\u0027s underlying SkMatrix::mapRect internally sorts the mapped rect via SkRect::makeSorted()"
-    ]
+    "primaryError": "SKMatrix.MapRect returns normalized rect: input (Left=25, Top=10, Right=15, Bottom=2) becomes (Left=15, Top=2, Right=25, Bottom=10) \u2014 coordinates are sorted so Left\u003CRight and Top\u003CBottom"
   },
   "feedback": {
     "triageCorrections": [
       {
-        "topic": "scope",
-        "upstream": "Reporter claimed 2.88.2 was last known good version",
-        "corrected": "Bug also reproduces on 2.88.2. The normalization behavior exists across all tested versions (2.88.2, 2.88.3, 3.119.2, main)."
+        "topic": "classification",
+        "upstream": "Classified as type/bug with confidence 0.35, suggesting this is upstream Skia behavior not a SkiaSharp bug",
+        "corrected": "Confirmed the behavior reproduces as reported \u2014 MapRect normalizes non-standard rects. Whether this is a SkiaSharp bug or upstream Skia behavior is editorial; the factual reproduction confirms the reported symptoms."
       }
     ]
   }

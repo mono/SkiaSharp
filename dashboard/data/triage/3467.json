@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3467,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:20:00Z",
+    "currentLabels": []
+  },
+  "summary": "Copilot-authored test-only PR adding 6 tests to SKShaperTest.cs validating that ToHarfBuzzBlob no longer disposes the caller\u0027s SKStreamAsset \u2014 tests are designed to fail before #3466 and pass after",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.HarfBuzz",
+      "confidence": 0.98
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Merge PR #3466 (behavioral change to ToHarfBuzzBlob)",
+        "Apply PR #3467 tests to tests/Tests/SkiaSharp/SKShaperTest.cs",
+        "Run: dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter SKShaperTest"
+      ],
+      "environmentDetails": "SkiaSharp main branch, .NET 8\u002B, any OS",
+      "relatedIssues": [
+        3466,
+        3472,
+        2263
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "ToHarfBuzzBlob on main still disposes the stream via the destroy callback (line 24 of BlobExtensions.cs). Tests verify the behavioral change in PR #3466 which has not yet been merged."
+    }
+  },
+  "analysis": {
+    "summary": "PR #3467 is a Copilot-authored test-only PR that adds 6 test methods to SKShaperTest.cs. The tests validate the behavioral change proposed in PR #3466, where ToHarfBuzzBlob stops taking disposal ownership of SKStreamAsset. The current code (BlobExtensions.cs:24) passes \u0060() =\u003E asset.Dispose()\u0060 as the destroy callback to the Blob constructor, which incorrectly disposes the caller\u0027s stream when the blob is destroyed. PR #3466 removes this callback. PR #3467 tests that the stream survives blob creation/disposal.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/BlobExtensions.cs",
+        "finding": "ToHarfBuzzBlob has two code paths: (1) memory-mapped: passes \u0060() =\u003E asset.Dispose()\u0060 as destroy callback, incorrectly disposing the caller\u0027s stream; (2) non-memory-mapped: allocates CoTaskMem, reads data, passes \u0060FreeCoTaskMem\u0060 as callback. PR #3466 removes the asset.Dispose() call in path 1 and adds try/catch for path 2.",
+        "relevance": "direct",
+        "lines": "10-37"
+      },
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs",
+        "finding": "SKShaper constructor chains OpenStream().ToHarfBuzzBlob() in a single using statement. Since ToHarfBuzzBlob currently disposes the stream, the stream gets disposed twice (once by blob callback, once by using). PR #3466 splits these into separate using statements.",
+        "relevance": "direct",
+        "lines": "19-21"
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKShaperTest.cs",
+        "finding": "Existing SKShaperTest has 5 tests covering shaping text with different alignment options and the DrawShapedText extension method. PR #3467 adds 6 disposal-focused tests after line 150.",
+        "relevance": "context",
+        "lines": "10-150"
+      }
+    ],
+    "rationale": "Classified as enhancement because this is a test-only PR that improves test coverage for an existing behavioral fix (PR #3466). It is not a bug fix itself. Area is SkiaSharp.HarfBuzz because all tests exercise BlobExtensions.ToHarfBuzzBlob and SKShaper, both in the SkiaSharp.HarfBuzz package. No platform or backend specificity \u2014 disposal behavior is cross-platform.",
+    "keySignals": [
+      {
+        "text": "Add test coverage for PR #3466\u0027s behavioral change",
+        "source": "PR description",
+        "interpretation": "Explicit dependency on PR #3466 \u2014 tests will FAIL on current main without that fix."
+      },
+      {
+        "text": "blob = new Blob(memoryBase, size, MemoryMode.ReadOnly, () =\u003E asset.Dispose())",
+        "source": "BlobExtensions.cs:24 (main branch)",
+        "interpretation": "Current code disposes the caller\u0027s stream when the blob is destroyed \u2014 the bug that #3466 fixes and #3467 tests."
+      },
+      {
+        "text": "ToHarfBuzzBlobDoesNotDisposeStream",
+        "source": "PR #3467 diff \u002B PR #3466 diff",
+        "interpretation": "Both PRs add a test with this exact name \u2014 #3466 in BlobExtensionsTest.cs, #3467 in SKShaperTest.cs. Merge conflict on test name."
+      },
+      {
+        "text": "Firewall rules blocked me from connecting",
+        "source": "PR #3467 description",
+        "interpretation": "Copilot agent could not build or run the tests due to network restrictions in the sandbox environment."
+      },
+      {
+        "text": "using (var blob = Typeface.OpenStream(out index).ToHarfBuzzBlob())",
+        "source": "SKShaper.cs:20 (main branch)",
+        "interpretation": "SKShaper currently chains OpenStream().ToHarfBuzzBlob() without keeping a reference to the stream. PR #3466 splits this into separate using statements so the stream is properly disposed by the caller."
+      }
+    ],
+    "nextQuestions": [
+      "Should tests live in SKShaperTest.cs or in a new BlobExtensionsTest.cs (as PR #3466 does)?",
+      "How to resolve the duplicate test name ToHarfBuzzBlobDoesNotDisposeStream between PR #3466 and #3467?",
+      "Should PR #3467 be merged into #3466 instead of being a separate PR?",
+      "Were the tests actually validated (Copilot agent couldn\u0027t build due to firewall)?"
+    ],
+    "resolution": {
+      "hypothesis": "PR #3467 provides useful test coverage but has organizational issues \u2014 duplicate test names with #3466, tests in the wrong class, and unverified execution.",
+      "proposals": [
+        {
+          "description": "Move the additional tests from PR #3467 into PR #3466\u0027s BlobExtensionsTest.cs (or a separate test class), resolve the duplicate test name, and close #3467. This avoids merge ordering issues and keeps all related changes together.",
+          "title": "Consolidate into PR #3466",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "description": "Merge PR #3466 first, then rebase #3467 and resolve the duplicate test name. This preserves the separate PR but requires coordination.",
+          "title": "Merge #3466 first then rebase #3467",
+          "confidence": 0.7,
+          "effort": "small"
+        },
+        {
+          "description": "The ToHarfBuzzBlob tests are about BlobExtensions, not SKShaper. Move them from SKShaperTest.cs to BlobExtensionsTest.cs (the file #3466 creates) for better test organization. Keep SKShaperConstructorSucceeds in SKShaperTest.cs.",
+          "title": "Move tests to BlobExtensionsTest",
+          "confidence": 0.8,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Consolidate into PR #3466",
+      "recommendedReason": "Avoids merge ordering complexity, resolves the duplicate test name in one place, and ensures all disposal-related changes (fix \u002B tests) are reviewed together. The Copilot-authored tests provide good additional coverage that complements #3466\u0027s single test."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Tests depend on unmerged PR #3466 and have organizational issues (duplicate test name, wrong test class). The fix PR (#3466) should be reviewed first, then decide whether to consolidate these tests into it or keep them separate."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and HarfBuzz area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.HarfBuzz"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Provide review feedback on test organization and dependency on #3466",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the additional test coverage.\n\nA few observations:\n\n1. **Dependency on #3466:** These tests are designed to fail on current \u0060main\u0060 and will only pass after #3466 is merged. Merging this first would introduce known-failing tests.\n\n2. **Duplicate test name:** Both this PR and #3466 add a test named \u0060ToHarfBuzzBlobDoesNotDisposeStream\u0060 \u2014 this PR puts it in \u0060SKShaperTest\u0060, while #3466 puts it in \u0060BlobExtensionsTest\u0060. These would conflict.\n\n3. **Test organization:** The \u0060ToHarfBuzzBlob*\u0060 tests exercise \u0060BlobExtensions\u0060, not \u0060SKShaper\u0060. It might be cleaner to move them into \u0060BlobExtensionsTest.cs\u0060 (the file #3466 creates) and keep only \u0060SKShaperConstructorSucceeds\u0060 in \u0060SKShaperTest\u0060.\n\nWould it make sense to fold these additional tests into #3466 directly? That way the behavioral change and its full test suite ship together."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference parent PR #3466",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3466
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related GC safety issue #3472 by same author",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 3472
+      }
+    ]
+  }
+}

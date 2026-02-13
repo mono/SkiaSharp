@@ -1,0 +1,167 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3473,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:19:39Z",
+    "currentLabels": [
+      "community \u2728"
+    ]
+  },
+  "summary": "Community PR fixing GC-unsafe pointer escape in HarfBuzzSharp Blob.FromStream \u2014 fixes #3472",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/HarfBuzzSharp",
+      "confidence": 0.99
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call Blob.FromStream with any stream",
+        "GC runs after the fixed block exits but before Skia finishes with the pointer",
+        "Managed byte array is relocated \u2014 native pointer is now dangling"
+      ],
+      "environmentDetails": "All platforms \u2014 GC behavior is runtime-level, not platform-specific",
+      "relatedIssues": [
+        3472
+      ]
+    },
+    "bugSignals": {
+      "severity": "high",
+      "isRegression": false,
+      "errorType": "crash",
+      "errorMessage": "Potential crash from GC moving managed array after fixed block exits",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The vulnerable code path exists on main \u2014 Blob.FromStream has not been changed since the bug was introduced."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "This PR is the proposed fix. It has not been merged yet. The bug still exists on main.",
+      "relatedPRs": [
+        3473
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "PR replaces GC-unsafe fixed/pinned byte array with Marshal.AllocCoTaskMem unmanaged allocation in HarfBuzzSharp Blob.FromStream. The current code pins a managed array with \u0027fixed\u0027, but the pointer escapes the fixed scope via the Blob constructor \u2014 after the method returns, GC can relocate the array making the pointer dangling. The fix allocates unmanaged memory directly, copies stream data there, and passes Marshal.FreeCoTaskMem as the release callback.",
+    "codeInvestigation": [
+      {
+        "file": "binding/HarfBuzzSharp/Blob.cs",
+        "finding": "Current FromStream uses fixed(byte* dataPtr = data) but returns the pointer inside a Blob object that outlives the fixed scope. After the method returns, GC can move the byte[] array, making the pointer dangling. The release delegate only disposes the MemoryStream, not the byte array \u2014 the array has no GC root keeping it alive after the method returns.",
+        "relevance": "direct",
+        "lines": "71-82"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/Blob.cs",
+        "finding": "The Create method passes the data pointer to hb_blob_create which stores it in native HarfBuzz memory. This pointer must remain valid for the lifetime of the blob \u2014 confirming the GC safety issue.",
+        "relevance": "direct",
+        "lines": "84-89"
+      },
+      {
+        "file": "tests/Tests/HarfBuzzSharp/HBBlobTest.cs",
+        "finding": "Existing test ShouldCreateFromStream only checks blob length, not content validity after GC. The PR adds CreateFromStreamIsGCSafe which forces GC and verifies content integrity.",
+        "relevance": "related",
+        "lines": "20-25"
+      }
+    ],
+    "rationale": "This is clearly a bug (pointer escapes fixed scope = undefined behavior). The area is HarfBuzzSharp since the affected file is binding/HarfBuzzSharp/Blob.cs. Severity is high because it\u0027s a potential crash, though it\u0027s non-deterministic (depends on GC timing). The tenet/reliability label applies because this is a crash/corruption risk.",
+    "keySignals": [
+      {
+        "text": "fixed (byte* dataPtr = data) { return new Blob((IntPtr)dataPtr, ...) }",
+        "source": "binding/HarfBuzzSharp/Blob.cs:79-81",
+        "interpretation": "Pointer from fixed block escapes scope \u2014 classic GC-unsafe pattern. The Blob stores this pointer long-term via hb_blob_create, but the managed array is unpinned after the fixed block exits."
+      },
+      {
+        "text": "// TODO: check to see if we can avoid the second copy (the ToArray)",
+        "source": "binding/HarfBuzzSharp/Blob.cs:73",
+        "interpretation": "Original code already acknowledged the double-copy issue. The PR fixes both the GC safety bug AND the performance concern by copying directly to unmanaged memory."
+      },
+      {
+        "text": "Avoids a potential crash from memory being moved by GC",
+        "source": "PR description",
+        "interpretation": "Author correctly identifies the root cause \u2014 GC relocation of pinned-then-unpinned managed array."
+      },
+      {
+        "text": "This should also improve performance since it removes the redundant copy",
+        "source": "issue #3472 comment by jeremy-visionaid",
+        "interpretation": "Secondary benefit \u2014 eliminates MemoryStream.ToArray() copy, going directly from stream to unmanaged memory."
+      }
+    ],
+    "nextQuestions": [
+      "Should similar GC-safety patterns be audited across the codebase (e.g., other uses of fixed with escaping pointers)?",
+      "Should non-seekable stream handling be tested explicitly?",
+      "Is the int cast of stream.Length safe for very large streams (\u003E2GB)?"
+    ],
+    "resolution": {
+      "hypothesis": "The fixed block pins the managed array only during the block scope, but the pointer is captured in the Blob and used long after. Replacing with Marshal.AllocCoTaskMem ensures the memory stays valid.",
+      "proposals": [
+        {
+          "description": "The PR correctly replaces managed pinning with unmanaged allocation. It handles edge cases (null stream, non-seekable streams, empty streams, exception cleanup). All 6 copilot review comments were addressed. Tests verify both functionality and GC safety.",
+          "title": "Merge PR as-is",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "description": "The cast (int)(stream.Length - stream.Position) can overflow for streams \u003E2GB. Consider adding a bounds check as suggested in a resolved review comment. This is a minor improvement, not a blocker.",
+          "title": "Add overflow check for large streams",
+          "codeSnippet": "long remaining = stream.Length - stream.Position;\nif (remaining \u003E int.MaxValue)\n    throw new ArgumentOutOfRangeException(nameof(stream), \u0022Stream too large.\u0022);",
+          "confidence": 0.7,
+          "effort": "trivial"
+        },
+        {
+          "description": "Other uses of fixed with byte* exist in HarfBuzzSharp (Font.cs, Buffer.cs). These appear safe (pointers don\u0027t escape the fixed scope), but a brief audit would confirm no similar bugs.",
+          "title": "Audit similar patterns",
+          "confidence": 0.6,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Merge PR as-is",
+      "recommendedReason": "The fix is correct, well-tested, and addresses the identified GC safety bug. The review comments were all resolved. The int overflow edge case is extremely unlikely for font/blob data and can be addressed separately."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Community PR with correct fix for a real GC safety bug. Needs maintainer code review and merge decision. All automated review comments addressed."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, HarfBuzzSharp, and reliability labels to the PR",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": [
+          "type/bug",
+          "area/HarfBuzzSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with issue #3472 (already linked via \u0027Fixes #3472\u0027)",
+        "risk": "low",
+        "confidence": 0.99,
+        "linkedIssue": 3472
+      }
+    ]
+  }
+}

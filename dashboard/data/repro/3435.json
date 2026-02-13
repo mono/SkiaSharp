@@ -1,0 +1,184 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3435,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T19:24:17Z"
+  },
+  "conclusion": "partial",
+  "notes": "Confirmed root cause: SkiaSharp.Views.Blazor does not target net10.0 (ships only net8.0;net6.0). Builds succeed because .NET falls back to net8.0, but reporter indicates runtime DllNotFoundException in browser. TFM gap definitively confirmed in 3.116.1, 3.119.2-preview.1, and main branch source. Unable to verify browser runtime error without GUI testing.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project targeting .NET 10",
+      "layer": "setup",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0",
+      "exitCode": 0,
+      "output": "Template created successfully. Restore succeeded.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Blazor WASM project file targeting net10.0",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet10.0\u003C/TargetFramework\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly\u0022 Version=\u002210.0.2\u0022 /\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0022 Version=\u002210.0.2\u0022 PrivateAssets=\u0022all\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp 3.116.1 packages (reporter\u0027s version)",
+      "layer": "setup",
+      "command": "dotnet add package SkiaSharp --version 3.116.1 \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.116.1",
+      "exitCode": 0,
+      "output": "PackageReference added for SkiaSharp 3.116.1 and SkiaSharp.Views.Blazor 3.116.1. Restore succeeded.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify SkiaSharp.Views.Blazor package TFMs",
+      "layer": "deployment",
+      "command": "curl -sLo /tmp/pkg.nupkg https://api.nuget.org/.../3.116.1.nupkg \u0026\u0026 unzip -l /tmp/pkg.nupkg | grep lib/",
+      "exitCode": 0,
+      "output": "lib/net8.0/SkiaSharp.Views.Blazor.dll\nlib/net6.0/SkiaSharp.Views.Blazor.dll",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Add SkiaSharp usage code to Home.razor",
+      "layer": "csharp",
+      "filesCreated": [
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Blazor page with SKCanvasView component",
+          "content": "@page \u0022/\u0022\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n\u003CPageTitle\u003EHome\u003C/PageTitle\u003E\n\u003Ch1\u003EHello, world!\u003C/h1\u003E\n\u003Cp\u003ETesting SkiaSharp on Blazor WASM with .NET 10:\u003C/p\u003E\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 style=\u0022width: 400px; height: 400px;\u0022 /\u003E\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.White);\n        using var paint = new SKPaint { Color = SKColors.Blue, IsAntialias = true, StrokeWidth = 10, Style = SKPaintStyle.Stroke };\n        canvas.DrawCircle(200, 200, 100, paint);\n    }\n}"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Build Blazor WASM project with SkiaSharp 3.116.1 on .NET 10",
+      "layer": "deployment",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded in 9.6s\nLinked libSkiaSharp.a successfully from $HOME/.nuget/packages/skiasharp.nativeassets.webassembly/3.116.1/...\nEmscripten wasm-ld completed without errors",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test with SkiaSharp 3.119.2-preview.1 (latest preview)",
+      "layer": "setup",
+      "command": "dotnet add package SkiaSharp --version 3.119.2-preview.1 \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.119.2-preview.1",
+      "exitCode": 0,
+      "output": "Packages added and restored successfully",
+      "result": "success"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Verify 3.119.2-preview.1 TFMs",
+      "layer": "deployment",
+      "command": "curl -sLo /tmp/pkg-preview.nupkg https://api.nuget.org/.../3.119.2-preview.1.nupkg \u0026\u0026 unzip -l /tmp/pkg-preview.nupkg | grep lib/",
+      "exitCode": 0,
+      "output": "lib/net8.0/SkiaSharp.Views.Blazor.dll\nlib/net6.0/SkiaSharp.Views.Blazor.dll",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 8,
+      "description": "Build with latest preview",
+      "layer": "deployment",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded in 9.98s. Linked libSkiaSharp.a from 3.119.2-preview.1. WASM compilation completed.",
+      "result": "success"
+    },
+    {
+      "stepNumber": 9,
+      "description": "Check main branch source TFM configuration",
+      "layer": "csharp",
+      "command": "grep TFMCurrent source/SkiaSharp.Build.props",
+      "exitCode": 0,
+      "output": "\u003CTFMPrevious\u003Enet6.0\u003C/TFMPrevious\u003E\n\u003CTFMCurrent\u003Enet8.0\u003C/TFMCurrent\u003E\n\u003CTFMNext\u003E\u003C/TFMNext\u003E",
+      "result": "wrong-output"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417 / 10.0.102",
+    "skiaSharpVersion": "3.116.1, 3.119.2-preview.1",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": ".data-cache/repos/mono-SkiaSharp/ai-triage/3435.json"
+  },
+  "assessment": "breaking-change",
+  "reproductionTime": "~15 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Package lacks net10.0 TFM. Build succeeds (fallback to net8.0) but reporter indicates runtime DllNotFoundException in browser. Root cause confirmed: missing TFM."
+    },
+    {
+      "version": "3.119.2-preview.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same issue - no net10.0 TFM in package. Exhibits same behavior as 3.116.1."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Source build confirms TFMCurrent=net8.0, TFMNext empty. Cannot produce package with net10.0 until PR #3514 merges. Issue is architectural (missing TFM), not code defect."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.1"
+      },
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.116.1"
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "filename": "skiasharp.views.blazor.3.116.1.nupkg",
+      "description": "SkiaSharp.Views.Blazor 3.116.1 - inspected for TFM verification",
+      "source": "external",
+      "available": true,
+      "url": "https://api.nuget.org/v3-flatcontainer/skiasharp.views.blazor/3.116.1/skiasharp.views.blazor.3.116.1.nupkg"
+    },
+    {
+      "filename": "skiasharp.views.blazor.3.119.2-preview.1.nupkg",
+      "description": "SkiaSharp.Views.Blazor 3.119.2-preview.1 - inspected for TFM verification",
+      "source": "external",
+      "available": true,
+      "url": "https://api.nuget.org/v3-flatcontainer/skiasharp.views.blazor/3.119.2-preview.1/skiasharp.views.blazor.3.119.2-preview.1.nupkg"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "System.DllNotFoundException: libSkiaSharp",
+    "additionalErrors": [
+      "Reported by user - browser runtime error"
+    ]
+  },
+  "blockers": [
+    "Browser GUI required to fully observe runtime DllNotFoundException - confirmed TFM gap through package inspection instead"
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "labels",
+        "upstream": "Labeled as os/Windows-Classic and area/libSkiaSharp.native",
+        "corrected": "Should be os/WASM and area/SkiaSharp.Views.Blazor - WASM static linking and TFM issue, not Windows-specific or native loading problem"
+      }
+    ]
+  }
+}

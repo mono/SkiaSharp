@@ -3,75 +3,64 @@
     "schemaVersion": "1.0",
     "number": 754,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T17:35:00Z"
+    "analyzedAt": "2026-02-13T00:07:25Z"
   },
   "conclusion": "reproduced",
-  "notes": "Reproduced: SKBitmap.Decode(codec, imageInfo) returns null when requesting SKColorType.Gray8 for a palette-based (8-bit colormap) PNG. The codec reports the image as Rgba8888 (palette expanded), and Skia\u0027s internal conversion from Rgba8888 to Gray8 fails with InvalidConversion. A genuine grayscale PNG decodes as Gray8 successfully. Bug persists across SkiaSharp 2.88.9, 3.119.2 (latest), and main (source). The reporter\u0027s original observation was that in 1.60.3, 8-bit PNGs decoded with BytesPerPixel==1 automatically, but 1.68.0\u002B decode them as Rgba8888 (4 bytes). The workaround of passing Gray8 via codec also fails.",
+  "notes": "Reproduced: SKBitmap.Decode(codec, imageInfo) returns null when requesting SKColorType.Gray8 for an indexed (palette) PNG, even with explicit SKAlphaType.Opaque. The codec reports ColorType=Rgba8888 for indexed PNGs, and Skia\u0027s codec cannot convert Rgba8888 to Gray8 during decode. True grayscale PNGs (ColorType=Gray8 natively) decode correctly. Bug confirmed on SkiaSharp 3.119.2 (latest stable) and main (source). The triage analysis correctly identified the alpha type issue, but the deeper cause is that Skia\u0027s codec path rejects the Rgba8888 to Gray8 color conversion entirely \u2014 specifying Opaque alpha alone does not fix it.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Download reporter\u0027s test image (8-bit colormap PNG, 960x960)",
-      "layer": "setup",
-      "command": "curl -sLo /tmp/gray8-test.png \u0027https://user-images.githubusercontent.com/5593825/51076794-aecf2b80-169d-11e9-9b9b-1c01eeb20467.png\u0027",
-      "exitCode": 0,
-      "output": "PNG image data, 960 x 960, 8-bit colormap, non-interlaced (375023 bytes)",
-      "result": "success"
-    },
-    {
-      "stepNumber": 2,
       "description": "Create standalone console project with SkiaSharp 3.119.2",
       "layer": "setup",
       "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.119.2",
       "exitCode": 0,
-      "output": "The template \u0022Console App\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp\u0027 version \u00273.119.2\u0027 added.",
       "filesCreated": [
         {
           "filename": "Repro.csproj",
           "description": "Console project referencing SkiaSharp 3.119.2",
           "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.119.2\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\n\u003C/Project\u003E"
-        },
-        {
-          "filename": "Program.cs",
-          "description": "Reproduction code testing SKBitmap.Decode with Gray8 color type on palette-based PNG",
-          "content": "using SkiaSharp;\n\nvar imagePath = args.Length \u003E 0 ? args[0] : \u0022/tmp/gray8-test.png\u0022;\nConsole.WriteLine($\u0022SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\u0022);\n\nvar bytes = File.ReadAllBytes(imagePath);\nusing var stream1 = new MemoryStream(bytes);\nusing var codec = SKCodec.Create(stream1);\nif (codec == null) { Console.WriteLine(\u0022ERROR: SKCodec.Create returned null\u0022); return 1; }\n\nConsole.WriteLine($\u0022Codec info: {codec.Info.Width}x{codec.Info.Height}, ColorType={codec.Info.ColorType}, BytesPerPixel={codec.Info.BytesPerPixel}\u0022);\n\n// Reporter\u0027s approach: decode with Gray8\nvar imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Gray8);\nvar bitmap = SKBitmap.Decode(codec, imageInfo);\nConsole.WriteLine($\u0022Result (Gray8 decode): bitmap is {(bitmap == null ? \u0022NULL \u003C- BUG\u0022 : \u0022not null\u0022)}\u0022);\nif (bitmap != null) { Console.WriteLine($\u0022  ColorType: {bitmap.ColorType}, BytesPerPixel: {bitmap.BytesPerPixel}\u0022); bitmap.Dispose(); }\n\n// Default decode (should work)\nusing var stream2 = new MemoryStream(bytes);\nusing var codec2 = SKCodec.Create(stream2);\nvar bitmapDefault = SKBitmap.Decode(codec2!);\nConsole.WriteLine($\u0022Result (default decode): bitmap is {(bitmapDefault == null ? \u0022NULL\u0022 : \u0022not null\u0022)}\u0022);\nif (bitmapDefault != null) { Console.WriteLine($\u0022  ColorType: {bitmapDefault.ColorType}, BytesPerPixel: {bitmapDefault.BytesPerPixel}\u0022); bitmapDefault.Dispose(); }\n\n// Manual GetPixels with Gray8\nusing var stream4 = new MemoryStream(bytes);\nusing var codec4 = SKCodec.Create(stream4);\nvar bitmapManual = new SKBitmap(codec4!.Info.Width, codec4.Info.Height, SKColorType.Gray8, SKAlphaType.Opaque);\nvar result = codec4.GetPixels(bitmapManual.Info, bitmapManual.GetPixels());\nConsole.WriteLine($\u0022Result (manual GetPixels with Gray8): {result}\u0022);\nbitmapManual.Dispose();\n\nreturn 0;"
         }
       ],
       "result": "success"
     },
     {
-      "stepNumber": 3,
-      "description": "Run reproduction with reporter\u0027s palette-based PNG and SkiaSharp 3.119.2 (latest stable)",
-      "layer": "csharp",
-      "command": "cd /tmp/repro-754/Repro \u0026\u0026 dotnet run",
+      "stepNumber": 2,
+      "description": "Download reporter\u0027s test image (8-bit indexed/colormap PNG) and create a true 8-bit grayscale PNG for comparison",
+      "layer": "setup",
+      "command": "curl -sLo gray8-test.png \u0027https://user-images.githubusercontent.com/5593825/51076794-aecf2b80-169d-11e9-9b9b-1c01eeb20467.png\u0027",
       "exitCode": 0,
-      "output": "SkiaSharp version: 3.119.0.0\nImage path: /tmp/gray8-test.png\nFile exists: True\nFile size: 375023 bytes\n\nCodec info:\n  Size: 960x960\n  ColorType: Rgba8888\n  AlphaType: Opaque\n  BytesPerPixel: 4\n\nRequested decode info: 960x960, ColorType=Gray8\n\nResult (Gray8 decode): bitmap is NULL \u2190 BUG\n\nResult (default decode): bitmap is not null\n  Size: 960x960\n  ColorType: Rgba8888\n  BytesPerPixel: 4\n\nResult (Alpha8 decode): bitmap is NULL\n\nResult (manual GetPixels with Gray8): InvalidConversion",
-      "result": "wrong-output"
-    },
-    {
-      "stepNumber": 4,
-      "description": "Verify genuine grayscale PNG decodes correctly with Gray8 (control test)",
-      "layer": "csharp",
-      "command": "cd /tmp/repro-754/Repro \u0026\u0026 dotnet run -- /tmp/gray8-genuine.png",
-      "exitCode": 0,
-      "output": "SkiaSharp version: 3.119.0.0\nImage path: /tmp/gray8-genuine.png\nFile exists: True\nFile size: 86 bytes\n\nCodec info:\n  Size: 4x4\n  ColorType: Gray8\n  AlphaType: Opaque\n  BytesPerPixel: 1\n\nRequested decode info: 4x4, ColorType=Gray8\n\nResult (Gray8 decode): bitmap is not null\n  Size: 4x4\n  ColorType: Gray8\n  BytesPerPixel: 1\n\nResult (default decode): bitmap is not null\n  Size: 4x4\n  ColorType: Gray8\n  BytesPerPixel: 1\n\nResult (manual GetPixels with Gray8): Success",
+      "output": "gray8-test.png: PNG image data, 960 x 960, 8-bit colormap, non-interlaced\ntrue-gray8.png: PNG image data, 4 x 4, 8-bit grayscale, non-interlaced",
       "result": "success"
     },
     {
-      "stepNumber": 5,
-      "description": "Test with SkiaSharp 2.88.9 to check if bug exists in 2.x line",
+      "stepNumber": 3,
+      "description": "Write reproduction program testing Gray8 decode with both indexed PNG and true grayscale PNG",
       "layer": "csharp",
-      "command": "cd /tmp/repro-754/Repro-2889 \u0026\u0026 dotnet run -- /tmp/gray8-test.png",
-      "exitCode": 0,
-      "output": "SkiaSharp version: 2.88.0.0\nCodec info:\n  Size: 960x960\n  ColorType: Rgba8888\n  BytesPerPixel: 4\n\nResult (Gray8 decode): bitmap is NULL \u2190 BUG\nResult (default decode): bitmap is not null\n  ColorType: Rgba8888, BytesPerPixel: 4\nResult (manual GetPixels with Gray8): InvalidConversion",
-      "result": "wrong-output"
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code testing SKBitmap.Decode with Gray8 on indexed and grayscale PNGs",
+          "content": "using SkiaSharp;\n\nint failures = 0;\n\nvoid TestDecode(string label, string filename)\n{\n    Console.WriteLine($\u0022\\n=== {label} ({filename}) ===\u0022);\n    var bytes = File.ReadAllBytes(filename);\n\n    var stream1 = new MemoryStream(bytes);\n    var codec1 = SKCodec.Create(stream1);\n    if (codec1 == null) { Console.WriteLine(\u0022ERROR: codec is null\u0022); return; }\n    Console.WriteLine($\u0022Codec: {codec1.Info.Width}x{codec1.Info.Height}, ColorType={codec1.Info.ColorType}, AlphaType={codec1.Info.AlphaType}\u0022);\n\n    Console.WriteLine(\u0022\\n  Test 1: Gray8 \u002B default alpha (3-param SKImageInfo)\u0022);\n    var info1 = new SKImageInfo(codec1.Info.Width, codec1.Info.Height, SKColorType.Gray8);\n    Console.WriteLine($\u0022  -\u003E ImageInfo: ColorType={info1.ColorType}, AlphaType={info1.AlphaType}\u0022);\n    var s1 = new MemoryStream(bytes);\n    var c1 = SKCodec.Create(s1);\n    var bmp1 = SKBitmap.Decode(c1, info1);\n    Console.WriteLine($\u0022  -\u003E bitmap is null: {bmp1 == null}\u0022);\n    if (bmp1 != null) { Console.WriteLine($\u0022  -\u003E {bmp1.Width}x{bmp1.Height}, BytesPerPixel={bmp1.BytesPerPixel}\u0022); bmp1.Dispose(); }\n    else { failures\u002B\u002B; }\n\n    Console.WriteLine(\u0022\\n  Test 2: Gray8 \u002B explicit Opaque\u0022);\n    var info2 = new SKImageInfo(codec1.Info.Width, codec1.Info.Height, SKColorType.Gray8, SKAlphaType.Opaque);\n    Console.WriteLine($\u0022  -\u003E ImageInfo: ColorType={info2.ColorType}, AlphaType={info2.AlphaType}\u0022);\n    var s2 = new MemoryStream(bytes);\n    var c2 = SKCodec.Create(s2);\n    var bmp2 = SKBitmap.Decode(c2, info2);\n    Console.WriteLine($\u0022  -\u003E bitmap is null: {bmp2 == null}\u0022);\n    if (bmp2 != null) { Console.WriteLine($\u0022  -\u003E {bmp2.Width}x{bmp2.Height}, BytesPerPixel={bmp2.BytesPerPixel}\u0022); bmp2.Dispose(); }\n    else { failures\u002B\u002B; }\n\n    Console.WriteLine(\u0022\\n  Test 3: Default decode (no imageInfo override)\u0022);\n    var s3 = new MemoryStream(bytes);\n    var c3 = SKCodec.Create(s3);\n    var bmp3 = SKBitmap.Decode(c3);\n    Console.WriteLine($\u0022  -\u003E bitmap is null: {bmp3 == null}\u0022);\n    if (bmp3 != null) { Console.WriteLine($\u0022  -\u003E {bmp3.Width}x{bmp3.Height}, BytesPerPixel={bmp3.BytesPerPixel}, ColorType={bmp3.ColorType}, AlphaType={bmp3.AlphaType}\u0022); bmp3.Dispose(); }\n\n    codec1.Dispose();\n}\n\nTestDecode(\u0022Indexed PNG from issue (8-bit colormap)\u0022, \u0022gray8-test.png\u0022);\nTestDecode(\u0022True Grayscale PNG (8-bit grayscale)\u0022, \u0022true-gray8.png\u0022);\n\nConsole.WriteLine($\u0022\\n{\u0027=\u0027,-60}\u0022);\nif (failures \u003E 0)\n    Console.WriteLine($\u0022*** BUG CONFIRMED: {failures} decode(s) returned null with Gray8 ***\u0022);\nelse\n    Console.WriteLine(\u0022All decodes succeeded -- bug NOT reproduced\u0022);\n\nreturn failures \u003E 0 ? 1 : 0;"
+        }
+      ],
+      "result": "success"
     },
     {
-      "stepNumber": 6,
-      "description": "Test on main (source) by adding a test to SKCodecTest that decodes palette-based index8.png as Gray8",
+      "stepNumber": 4,
+      "description": "Run reproduction with SkiaSharp 3.119.2 \u2014 indexed PNG fails to decode as Gray8 even with explicit Opaque alpha",
       "layer": "csharp",
-      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \u0027FullyQualifiedName~DecodePaletteImageAsGray8\u0027",
+      "command": "cd /tmp/repro-754/Repro \u0026\u0026 dotnet run",
       "exitCode": 1,
-      "output": "Failed SkiaSharp.Tests.SKCodecTest.DecodePaletteImageAsGray8ReturnsNonNull [69 ms]\n  Error Message:\n   Assert.NotNull() Failure\n  Stack Trace:\n     at SkiaSharp.Tests.SKCodecTest.DecodePaletteImageAsGray8ReturnsNonNull() in tests/Tests/SkiaSharp/SKCodecTest.cs:line 506\n\nFailed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
+      "output": "=== Indexed PNG from issue (8-bit colormap) (gray8-test.png) ===\nCodec: 960x960, ColorType=Rgba8888, AlphaType=Opaque\n\n  Test 1: Gray8 \u002B default alpha (3-param SKImageInfo)\n  -\u003E ImageInfo: ColorType=Gray8, AlphaType=Premul\n  -\u003E bitmap is null: True\n\n  Test 2: Gray8 \u002B explicit Opaque\n  -\u003E ImageInfo: ColorType=Gray8, AlphaType=Opaque\n  -\u003E bitmap is null: True\n\n  Test 3: Default decode (no imageInfo override)\n  -\u003E bitmap is null: False\n  -\u003E 960x960, BytesPerPixel=4, ColorType=Rgba8888, AlphaType=Opaque\n\n=== True Grayscale PNG (8-bit grayscale) (true-gray8.png) ===\nCodec: 4x4, ColorType=Gray8, AlphaType=Opaque\n\n  Test 1: Gray8 \u002B default alpha (3-param SKImageInfo)\n  -\u003E ImageInfo: ColorType=Gray8, AlphaType=Premul\n  -\u003E bitmap is null: False\n  -\u003E 4x4, BytesPerPixel=1\n\n  Test 2: Gray8 \u002B explicit Opaque\n  -\u003E ImageInfo: ColorType=Gray8, AlphaType=Opaque\n  -\u003E bitmap is null: False\n  -\u003E 4x4, BytesPerPixel=1\n\n  Test 3: Default decode (no imageInfo override)\n  -\u003E bitmap is null: False\n  -\u003E 4x4, BytesPerPixel=1, ColorType=Gray8, AlphaType=Opaque\n\n*** BUG CONFIRMED: 2 decode(s) returned null with Gray8 ***",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Build SkiaSharp from source (main branch) and run targeted xUnit test for Gray8 decode of indexed PNG",
+      "layer": "csharp",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \u0026\u0026 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter DecodeIndexedPngAsGray8",
+      "exitCode": 1,
+      "output": "Failed SkiaSharp.Tests.SKBitmapTest.DecodeIndexedPngAsGray8ReturnsNonNull [49 ms]\nError Message:\n Assert.NotNull() Failure\nStack Trace:\n  at SkiaSharp.Tests.SKBitmapTest.DecodeIndexedPngAsGray8ReturnsNonNull() in tests/Tests/SkiaSharp/SKBitmapTest.cs:line 695\n\nFailed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1",
       "result": "failure"
     }
   ],
@@ -82,26 +71,23 @@
     "skiaSharpVersion": "3.119.2",
     "dockerUsed": false
   },
+  "inputs": {
+    "triageFile": "ai-triage/754.json"
+  },
   "assessment": "likely-bug",
   "reproductionTime": "~8 minutes",
   "versionResults": [
     {
-      "version": "2.88.9",
-      "source": "nuget",
-      "result": "reproduced",
-      "notes": "SKBitmap.Decode returns null with Gray8. GetPixels returns InvalidConversion."
-    },
-    {
       "version": "3.119.2",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Same behavior as 2.88.9 \u2014 Gray8 decode returns null for palette-based PNG."
+      "notes": "SKBitmap.Decode returns null for indexed PNG with Gray8\u002BPremul and Gray8\u002BOpaque. True grayscale PNG works fine."
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "reproduced",
-      "notes": "Test using index8.png (8-bit colormap) with Gray8 fails \u2014 Assert.NotNull() failure on the decode result."
+      "notes": "xUnit test Assert.NotNull() failed \u2014 SKBitmap.Decode(codec, info) returns null for index8.png with Gray8\u002BOpaque."
     }
   ],
   "reproProject": {
@@ -117,23 +103,26 @@
   "artifacts": [
     {
       "filename": "gray8-test.png",
-      "description": "Reporter\u0027s 8-bit colormap PNG (960x960, palette-based, non-interlaced)",
+      "description": "Reporter\u0027s test image \u2014 960x960 8-bit indexed (colormap) PNG that cannot be decoded as Gray8",
       "source": "issue-attachment",
       "available": true,
       "url": "https://user-images.githubusercontent.com/5593825/51076794-aecf2b80-169d-11e9-9b9b-1c01eeb20467.png"
-    },
-    {
-      "filename": "index8.png",
-      "description": "Existing test asset \u2014 8-bit colormap PNG (1024x1218) used for main branch test",
-      "source": "test-data",
-      "available": true
     }
   ],
   "errorMessages": {
-    "primaryError": "SKBitmap.Decode(codec, imageInfo) returns null when imageInfo requests SKColorType.Gray8 for a palette-based (indexed color) PNG. The underlying SKCodec.GetPixels returns InvalidConversion.",
+    "primaryError": "SKBitmap.Decode(codec, imageInfo) returns null when requesting SKColorType.Gray8 for an indexed (palette) PNG. Skia\u0027s codec cannot convert Rgba8888 to Gray8.",
     "additionalErrors": [
-      "SKCodec.GetPixels with Gray8 SKImageInfo returns SKCodecResult.InvalidConversion",
-      "Same behavior with SKColorType.Alpha8 \u2014 also returns null"
+      "The 3-param SKImageInfo constructor defaults AlphaType to Premul, which is invalid for Gray8 \u2014 but fixing alpha alone does NOT resolve the issue for indexed PNGs",
+      "True grayscale PNGs (native ColorType=Gray8) decode correctly with both Premul and Opaque alpha types"
+    ]
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "root-cause",
+        "upstream": "Triage identified the 3-param SKImageInfo constructor defaulting AlphaType to Premul as the root cause, with GetAlphaType() containing the fix",
+        "corrected": "The alpha type default is a contributing factor but NOT the root cause. Even with explicit SKAlphaType.Opaque, indexed PNGs fail to decode as Gray8. The real issue is Skia\u0027s codec path rejects the Rgba8888 to Gray8 color type conversion entirely. True grayscale PNGs work fine with either alpha type."
+      }
     ]
   }
 }

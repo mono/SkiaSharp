@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3379,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:57:22Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Verified the root cause through NuGet package inspection on macOS. SkiaSharp.Views.WPF (net462) is strong-named (CLI Flags=0x09, StrongNameSignature present) but depends on OpenTK.GLWpfControl 3.3.0, which is NOT strong-named (CLI Flags=0x01, no StrongNameSignature). GLWpfControl 3.3.1 IS strong-named (Flags=0x09). This mismatch causes FileLoadException at runtime when the consuming application enables SignAssembly. The runtime FileLoadException cannot be triggered on macOS because .NET Framework 4.8 and WPF are Windows-only. The csproj on main still references GLWpfControl 3.3.0, so the bug persists. PR #3380 proposes the fix (bumping to 3.3.1) but has not been merged.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Download and inspect SkiaSharp.Views.WPF 3.116.0 NuGet package to verify GLWpfControl dependency version for net462 target",
+      "layer": "deployment",
+      "command": "curl -sLo skiasharp-views-wpf.nupkg \u0027https://api.nuget.org/v3-flatcontainer/skiasharp.views.wpf/3.116.0/skiasharp.views.wpf.3.116.0.nupkg\u0027 \u0026\u0026 unzip -o skiasharp-views-wpf.nupkg \u0027*.nuspec\u0027 \u0026\u0026 grep -A2 \u0027GLWpfControl\u0027 *.nuspec",
+      "exitCode": 0,
+      "output": "\u003Cdependency id=\u0022OpenTK.GLWpfControl\u0022 version=\u00223.3.0\u0022 exclude=\u0022Build,Analyzers\u0022 /\u003E",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify SkiaSharp.Views.WPF.dll (net462) IS strong-named by inspecting PE/CLI header flags",
+      "layer": "deployment",
+      "command": "unzip -o skiasharp-views-wpf.nupkg \u0027lib/net462/*\u0027 \u0026\u0026 python3 check_strong_name.py wpf-dll/lib/net462/SkiaSharp.Views.WPF.dll",
+      "exitCode": 0,
+      "output": "SkiaSharp.Views.WPF.dll: Flags=0x00000009, StrongNamed=YES, SN_Size=128",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Download GLWpfControl 3.3.0 and verify it is NOT strong-named (root cause of the bug)",
+      "layer": "deployment",
+      "command": "curl -sLo glwpf-3.3.0.nupkg \u0027https://api.nuget.org/v3-flatcontainer/opentk.glwpfcontrol/3.3.0/opentk.glwpfcontrol.3.3.0.nupkg\u0027 \u0026\u0026 unzip -o glwpf-3.3.0.nupkg \u0027lib/net452/*\u0027 \u0026\u0026 python3 check_strong_name.py lib/net452/GLWpfControl.dll",
+      "exitCode": 0,
+      "output": "GLWpfControl.dll (3.3.0): Flags=0x00000001, COMIMAGE_FLAGS_STRONGNAMESIGNED=NO, StrongNameSignature RVA=0x00000000, Size=0",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Download GLWpfControl 3.3.1 and verify it IS strong-named (confirming the fix is a version bump)",
+      "layer": "deployment",
+      "command": "curl -sLo glwpf-3.3.1.nupkg \u0027https://api.nuget.org/v3-flatcontainer/opentk.glwpfcontrol/3.3.1/opentk.glwpfcontrol.3.3.1.nupkg\u0027 \u0026\u0026 unzip -o glwpf-3.3.1.nupkg \u0027lib/net452/*\u0027 \u0026\u0026 python3 check_strong_name.py lib/net452/GLWpfControl.dll",
+      "exitCode": 0,
+      "output": "GLWpfControl.dll (3.3.1): Flags=0x00000009, COMIMAGE_FLAGS_STRONGNAMESIGNED=YES, StrongNameSignature RVA=0x0000763C, Size=128",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Attempt to create a net48 WPF project on macOS to trigger the FileLoadException at runtime",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net48 --force",
+      "exitCode": 127,
+      "output": "\u0027net48\u0027 is not a valid value for --framework. The possible values are: net10.0, net8.0, net9.0",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Verify SkiaSharp.Views.WPF 3.119.1 (latest release) still depends on GLWpfControl 3.3.0",
+      "layer": "deployment",
+      "command": "curl -sLo latest.nupkg \u0027https://api.nuget.org/v3-flatcontainer/skiasharp.views.wpf/3.119.1/skiasharp.views.wpf.3.119.1.nupkg\u0027 \u0026\u0026 unzip -o latest.nupkg \u0027*.nuspec\u0027 \u0026\u0026 grep \u0027GLWpfControl\u0027 *.nuspec",
+      "exitCode": 0,
+      "output": "\u003Cdependency id=\u0022OpenTK.GLWpfControl\u0022 version=\u00223.3.0\u0022 exclude=\u0022Build,Analyzers\u0022 /\u003E (net462 group)\n\u003Cdependency id=\u0022OpenTK.GLWpfControl\u0022 version=\u00224.2.3\u0022 exclude=\u0022Build,Analyzers\u0022 /\u003E (net6.0/net8.0 groups)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Verify main branch csproj still references GLWpfControl 3.3.0 for net4* targets",
+      "layer": "deployment",
+      "command": "grep \u0027GLWpfControl\u0027 source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+      "exitCode": 0,
+      "output": "\u003CPackageReference Include=\u0022OpenTK.GLWpfControl\u0022 Version=\u00223.3.0\u0022 NoWarn=\u0022NU1701\u0022 /\u003E\n\u003CPackageReference Include=\u0022OpenTK.GLWpfControl\u0022 Version=\u00224.2.3\u0022 /\u003E",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3379.json"
+  },
+  "assessment": "likely-bug",
+  "reproductionTime": "~5 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "NuGet package confirmed to depend on GLWpfControl 3.3.0 for net462. Cannot trigger runtime FileLoadException on macOS (requires Windows \u002B .NET Framework 4.8 \u002B WPF)."
+    },
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Latest release nuspec still lists GLWpfControl 3.3.0 dependency for net462. Bug persists in latest release."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "The csproj on main still references OpenTK.GLWpfControl 3.3.0 for net4* targets. Bug not fixed on main."
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "FileLoadException: Could not load file or assembly \u0027GLWpfControl, Version=3.3.0.0, Culture=neutral, PublicKeyToken=null\u0027 or one of its dependencies. A strongly-named assembly is required. (Exception from HRESULT: 0x80131044)",
+    "additionalErrors": [
+      "Root cause: SkiaSharp.Views.WPF.dll (net462) is strong-named but depends on GLWpfControl 3.3.0 which is NOT strong-named. CLR enforces that strong-named assemblies can only load other strong-named assemblies."
+    ]
+  },
+  "blockers": [
+    "Requires Windows with .NET Framework 4.8 and WPF support \u2014 current environment is macOS arm64 which cannot target net48 or run WPF applications",
+    "The runtime FileLoadException only occurs when a strong-named application loads the unsigned GLWpfControl assembly, which requires the .NET Framework CLR (not .NET Core/5\u002B)"
+  ]
+}

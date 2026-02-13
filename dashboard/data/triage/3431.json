@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3431,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:24:40Z",
+    "currentLabels": [
+      "community \u2728"
+    ]
+  },
+  "summary": "PR fixes NullReferenceException in Uno Platform SKXamlCanvas by separating pixel buffer and bitmap disposal \u2014 fixes #3430",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Uno",
+      "confidence": 0.99
+    },
+    "platforms": [
+      "os/Windows-WinUI",
+      "os/WASM",
+      "os/Linux",
+      "os/macOS"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ],
+    "partner": "partner/unoplatform"
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SKXamlCanvas in an Uno Platform Skia-based app",
+        "Resize the canvas so that bitmap dimensions change but pixel dimensions also change",
+        "FreeBitmap() at line 106 nulls the bitmap that was just recreated at line 91",
+        "bitmap.PixelBuffer access at line 72 throws NullReferenceException"
+      ],
+      "environmentDetails": "Uno Platform Skia backend (Desktop/WASM), SkiaSharp 3.116.0\u002B",
+      "relatedIssues": [
+        3430
+      ]
+    },
+    "bugSignals": {
+      "severity": "high",
+      "isRegression": true,
+      "errorType": "crash",
+      "errorMessage": "NullReferenceException when canvas resizes \u2014 bitmap field nulled by FreeBitmap() called from pixel reallocation path",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The bug still exists in main \u2014 CreateBitmap() still has the coupled FreeBitmap() calls that null both pixels and bitmap together."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter states 2.88.9 was the last known good version. The Uno Skia canvas was rewritten for the v3 line with separate pixel/bitmap management but coupled disposal.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "PR #3431 correctly fixes the root cause of #3430 by decoupling pixel buffer (GCHandle-pinned byte[]) and WriteableBitmap lifecycle management. The original FreeBitmap() method freed both resources together, but CreateBitmap() has two independent conditions that each called it \u2014 bitmap size mismatch and pixel size mismatch \u2014 causing cross-contamination on resize.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
+        "finding": "CreateBitmap() calls FreeBitmap() at two points: line 87 (bitmap size mismatch) and line 106 (pixel size mismatch). FreeBitmap() nulls BOTH pixels and bitmap. On resize, the second call destroys the bitmap that was just recreated between lines 89-101, causing NRE at line 72 (bitmap.PixelBuffer).",
+        "relevance": "direct",
+        "lines": "83-127"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
+        "finding": "DoUnloaded() only calls FreeBitmap() which frees pixels via GCHandle.Free() and nulls bitmap, but if pixels is already null (e.g. never allocated), the GCHandle isn\u0027t freed. Also, the PR correctly adds FreePixels() call.",
+        "relevance": "direct",
+        "lines": "34-35"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs",
+        "finding": "WinUI version gets pixels from bitmap.GetPixels() \u2014 single lifecycle. FreeBitmap() just nulls bitmap/brush/pixels pointer. No GCHandle, no separate allocation. This is why the bug doesn\u0027t exist on WinUI.",
+        "relevance": "related",
+        "lines": "230-277"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Wasm/SKXamlCanvas.Wasm.cs",
+        "finding": "Wasm version has no bitmap field \u2014 only manages pixels/pixelsHandle. FreeBitmap() frees the GCHandle and clears the HTML canvas. No coupled disposal issue.",
+        "relevance": "related",
+        "lines": "73-100"
+      }
+    ],
+    "rationale": "This is a community PR fixing a confirmed type/bug in area/SkiaSharp.Views.Uno. The Skia backend of Uno\u0027s SKXamlCanvas uses a separate GCHandle-pinned byte array (unlike WinUI which gets pixels directly from bitmap.GetPixels()), so pixel and bitmap lifetimes must be independent. The fix is minimal and correct: split FreeBitmap() into FreePixels() and FreeBitmap(), reorder allocation so pixels are allocated first, and update DoUnloaded() to free both. CI is currently failing.",
+    "keySignals": [
+      {
+        "text": "FreeBitmap() nulls both pixels and bitmap, but called from two independent conditions",
+        "source": "SKXamlCanvas.Skia.cs lines 87 and 106",
+        "interpretation": "Root cause: coupled disposal in a split-condition method causes cross-resource destruction on resize."
+      },
+      {
+        "text": "WinUI version uses bitmap.GetPixels() \u2014 single lifecycle, no separate pixel buffer",
+        "source": "SKXamlCanvas.cs (WinUI) line 240",
+        "interpretation": "Explains why WinUI doesn\u0027t have this bug \u2014 pixels are owned by the bitmap."
+      },
+      {
+        "text": "DoUnloaded() only called FreeBitmap() \u2014 leaked GCHandle-pinned pixel buffer",
+        "source": "SKXamlCanvas.Skia.cs line 34-35",
+        "interpretation": "Secondary bug: unloading leaked pinned memory. PR fixes this by calling both FreeBitmap() and FreePixels()."
+      },
+      {
+        "text": "CI status: failure \u2014 #3.119.2-pr.3431.1 failed",
+        "source": "Azure Pipelines status check",
+        "interpretation": "PR needs CI investigation before merge. May be flaky or unrelated failure."
+      },
+      {
+        "text": "Wasm variant has only pixels (no bitmap field) \u2014 not affected by this specific bug",
+        "source": "SKXamlCanvas.Wasm.cs lines 26-29, 78-86",
+        "interpretation": "Wasm canvas correctly manages only pixel buffers. The bug is specific to the Skia backend which has both bitmap and pixels."
+      }
+    ],
+    "nextQuestions": [
+      "Why is CI failing? Is it a test failure related to this change or a pre-existing/flaky issue?",
+      "Should the PR include a unit test that verifies resize doesn\u0027t throw?",
+      "Does SKSwapChainPanel.Skia have a similar coupled-disposal pattern?"
+    ],
+    "resolution": {
+      "hypothesis": "The Uno Skia SKXamlCanvas manages pixels (GCHandle-pinned byte[]) and bitmap (WriteableBitmap) independently, but FreeBitmap() freed both together. CreateBitmap() has two separate conditions calling FreeBitmap() \u2014 one for bitmap size mismatch and one for pixel size mismatch. On resize, the pixel-reallocation path destroys the just-recreated bitmap.",
+      "proposals": [
+        {
+          "description": "The PR correctly splits FreeBitmap() into FreePixels() and FreeBitmap(), reorders allocation (pixels first, then bitmap), and updates DoUnloaded() to call both. Fix is minimal and surgical.",
+          "title": "Merge PR #3431",
+          "confidence": 0.9,
+          "effort": "trivial"
+        },
+        {
+          "description": "Add a unit test that creates an SKXamlCanvas, triggers a size change, and verifies no NRE. Currently no test coverage for Uno Skia canvas resize.",
+          "title": "Add resize test",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Merge PR #3431",
+      "recommendedReason": "The fix is correct, minimal, and matches the analysis from the #3430 triage. It also fixes a secondary GCHandle leak in DoUnloaded(). CI failure needs investigation first."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.92,
+      "reason": "PR is a correct fix for #3430. CI failure needs investigation before merge. The code change is reviewed and looks correct."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Uno views area, platform, reliability, and partner labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Uno",
+          "os/Windows-WinUI",
+          "os/WASM",
+          "os/Linux",
+          "os/macOS",
+          "tenet/reliability",
+          "partner/unoplatform"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the bug this PR fixes",
+        "risk": "low",
+        "confidence": 0.99,
+        "linkedIssue": 3430
+      }
+    ]
+  }
+}

@@ -1,0 +1,192 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 731,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T23:49:23Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "backend/Raster"
+    ]
+  },
+  "summary": "Performance regression in SKShader.CreateRadialGradient between SkiaSharp 1.60.3 and 1.68.0 on raster backend",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/Raster"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a WinForms .NET Framework 4.6.1 app with SkiaSharp",
+        "Use SKShader.CreateRadialGradient with center (50,50), radius 100, Black-to-White colors, Clamp mode",
+        "Assign shader to paint.Shader and call canvas.DrawRect(info.Rect, paint)",
+        "Compare rendering time between SkiaSharp 1.60.3 and 1.68.0"
+      ],
+      "environmentDetails": "Windows, .NET Framework 4.6.1, WinForms, CPU/raster rendering, SkiaSharp 1.68.0",
+      "relatedIssues": [
+        543
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": true,
+      "errorType": "performance",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net461"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "1.68.0",
+        "1.68.0-preview28",
+        "1.60.3"
+      ],
+      "workedIn": "1.60.3",
+      "brokeIn": "1.68.0",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Filed in 2018 for SkiaSharp 1.68.0. Current SkiaSharp is 3.x with a completely different Skia engine. Issue #543 (related shader performance regression) was confirmed fixed in v1.69.0. The upstream Skia radial gradient code has been extensively rewritten since then."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.9,
+      "reason": "Reporter explicitly states v1.60.3 was fast and v1.68.0 is slow for the same code. Only radial gradient affected \u2014 linear and sweep gradients are not slow.",
+      "workedInVersion": "1.60.3",
+      "brokeInVersion": "1.68.0"
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.8,
+      "reason": "Issue #543 reported a similar shader performance regression (sweep gradient in v1.60/1.61) and mattleibow confirmed it was fixed in v1.69.0. The radial gradient uses the same SkGradientShader code path in upstream Skia. Current SkiaSharp 3.x ships Skia m128\u002B which has had extensive gradient performance improvements.",
+      "relatedPRs": [],
+      "relatedCommits": []
+    }
+  },
+  "analysis": {
+    "summary": "Performance regression in radial gradient rendering between SkiaSharp 1.60.3 and 1.68.0 on raster backend. The C# wrapper and C API are thin pass-throughs \u2014 the issue is in upstream Skia\u0027s SkGradientShader::MakeRadial code path. A related shader performance issue (#543) was fixed in v1.69.0.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKShader.cs",
+        "finding": "CreateRadialGradient is a thin wrapper: validates parameters then calls SkiaApi.sk_shader_new_radial_gradient. No SkiaSharp-specific logic that could affect performance.",
+        "relevance": "direct",
+        "lines": "189-199"
+      },
+      {
+        "file": "externals/skia/src/c/sk_shader.cpp",
+        "finding": "sk_shader_new_radial_gradient directly calls SkGradientShader::MakeRadial with the same parameters. The performance regression is in upstream Skia, not in the C API shim.",
+        "relevance": "direct",
+        "lines": "77-82"
+      },
+      {
+        "file": "externals/skia/include/c/sk_shader.h",
+        "finding": "C header declares both sk_shader_new_radial_gradient and sk_shader_new_radial_gradient_color4f \u2014 the 4f variant is an alternative if color precision matters.",
+        "relevance": "context",
+        "lines": "36-37"
+      }
+    ],
+    "rationale": "Classified as type/bug because the reporter describes degraded performance of existing functionality between versions \u2014 a clear regression, not a feature request or question. Area is area/SkiaSharp since the affected API (SKShader.CreateRadialGradient) is in the core library. Severity is medium: the app still works but is noticeably slow. The regression is upstream in Skia, not in the SkiaSharp C# or C API layers, which are trivial pass-throughs (SKShader.cs:189-199 \u2192 sk_shader.cpp:77-82 \u2192 SkGradientShader::MakeRadial). Very likely fixed in current versions given the v1.69.0 fix for #543 and the massive Skia engine updates since then.",
+    "keySignals": [
+      {
+        "text": "using the SKShader.CreateRadialGradient in paint.Shader leads to very slow work, which was not observed in the version 1.60.3",
+        "source": "issue body",
+        "interpretation": "Clear performance regression between specific versions. Only radial gradient affected, not linear or sweep."
+      },
+      {
+        "text": "I tested the SKShader.CreateSweepGradient and SKShader.CreateLinearGradient using them does not slow down",
+        "source": "issue body",
+        "interpretation": "Isolates the problem to radial gradient specifically. Different gradient types take different Skia code paths."
+      },
+      {
+        "text": "I believe this was fixed in v1.69.0",
+        "source": "issue #543 comment by mattleibow",
+        "interpretation": "Maintainer confirmed a related shader performance regression was fixed in the next version (1.69.0). The radial gradient issue at 1.68.0 may be the same root cause or a closely related one."
+      }
+    ],
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.x \u2014 the underlying Skia engine has been updated many times since 1.68.0 and performance regressions in gradient rendering have been fixed",
+      "As an interim measure on 1.68.0, pre-render the gradient to an SKImage/SKBitmap and reuse the cached result instead of recreating the shader each frame"
+    ],
+    "nextQuestions": [
+      "Can the reporter confirm if upgrading to SkiaSharp 2.x or 3.x resolves the performance issue?",
+      "What are the canvas dimensions? A large canvas with a small gradient radius could amplify the performance difference."
+    ],
+    "resolution": {
+      "hypothesis": "The Skia engine version bundled with SkiaSharp 1.68.0 introduced a performance regression in the radial gradient raster code path (SkGradientShader::MakeRadial). This was likely addressed by the same Skia update that fixed #543 in v1.69.0, and certainly by the many Skia updates since then.",
+      "proposals": [
+        {
+          "description": "Upgrade from SkiaSharp 1.68.0 to the latest 3.x release. The underlying Skia engine has been updated extensively and the shader performance regression is very likely resolved.",
+          "title": "Upgrade to latest SkiaSharp",
+          "confidence": 0.8,
+          "effort": "medium"
+        },
+        {
+          "description": "Pre-render the radial gradient to an SKBitmap/SKImage once, then draw the cached image instead of applying the shader on every paint call. This avoids the slow shader evaluation entirely.",
+          "title": "Cache gradient as bitmap",
+          "codeSnippet": "// Render gradient once to a bitmap\nusing var surface = SKSurface.Create(new SKImageInfo(width, height));\nvar tempCanvas = surface.Canvas;\nusing var paint = new SKPaint();\npaint.Shader = SKShader.CreateRadialGradient(\n    new SKPoint(50, 50), 100,\n    new SKColor[] { SKColors.Black, SKColors.White },\n    null, SKShaderTileMode.Clamp);\ntempCanvas.DrawRect(new SKRect(0, 0, width, height), paint);\nusing var cachedImage = surface.Snapshot();\n// Then draw cachedImage instead of using the shader directly",
+          "confidence": 0.7,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Upgrade to latest SkiaSharp",
+      "recommendedReason": "The issue is in the upstream Skia engine and was likely fixed in v1.69.0 or later. Upgrading resolves the root cause rather than working around it."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.75,
+      "reason": "Very old issue (2018) for SkiaSharp 1.68.0. A related shader performance regression (#543) was confirmed fixed in v1.69.0. Current SkiaSharp 3.x uses a much newer Skia. Issue is almost certainly resolved by upgrading. No reporter activity since 2019."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add performance tenet label to existing labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "backend/Raster",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis noting the issue is likely fixed in newer versions and suggest upgrading",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "Thanks for reporting this. The performance regression you observed in radial gradient rendering was in the upstream Skia engine bundled with SkiaSharp 1.68.0, not in the SkiaSharp wrapper itself.\n\nA related shader performance regression (#543) was confirmed fixed in v1.69.0, and the Skia engine has been extensively updated since then. Upgrading to the latest SkiaSharp (currently 3.x) should resolve this.\n\nIf upgrading isn\u0027t feasible and you\u0027re still on 1.68.0, you can work around the issue by pre-rendering the gradient to an \u0060SKImage\u0060 and reusing the cached result:\n\n\u0060\u0060\u0060csharp\nusing var surface = SKSurface.Create(new SKImageInfo(width, height));\nusing var paint = new SKPaint();\npaint.Shader = SKShader.CreateRadialGradient(\n    new SKPoint(50, 50), 100,\n    new SKColor[] { SKColors.Black, SKColors.White },\n    null, SKShaderTileMode.Clamp);\nsurface.Canvas.DrawRect(new SKRect(0, 0, width, height), paint);\nusing var cached = surface.Snapshot();\n// Draw cached image instead of using shader directly\n\u0060\u0060\u0060\n\nClosing as this is likely resolved in current versions. If you\u0027re still seeing this on a recent SkiaSharp release, please reopen with updated details."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related shader performance issue",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 543
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as likely fixed in newer versions",
+        "risk": "medium",
+        "confidence": 0.7
+      }
+    ]
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3346,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-12T18:47:00Z"
+  },
+  "conclusion": "partial",
+  "notes": "Confirmed root cause via static analysis of NuGet package contents. SkiaSharp.Views.WinUI.Native.dll in SkiaSharp.NativeAssets.WinUI 3.116.0 (win-arm64) dynamically links MSVCP140.dll and VCRUNTIME140.dll, which are absent on fresh Windows ARM64 machines without VC\u002B\u002B Redistributable. This dependency is removed in 3.119.2 \u2014 objdump confirms only KERNEL32.dll and OLEAUT32.dll imports remain. Build-time CheckWindowsDependencies verification (PR #3510) exists on main to prevent regression. Could not observe the actual runtime crash because reproduction requires Windows ARM64.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Download SkiaSharp.NativeAssets.WinUI 3.116.0 nupkg to inspect native DLLs for Windows ARM64",
+      "layer": "native",
+      "command": "curl -sLo skiasharp.nativeassets.winui-3.116.0.nupkg \u0027https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.winui/3.116.0/skiasharp.nativeassets.winui.3.116.0.nupkg\u0027",
+      "exitCode": 0,
+      "output": "Downloaded 5.1MB package containing runtimes/win-arm64/native/libEGL.dll, libGLESv2.dll, SkiaSharp.Views.WinUI.Native.dll",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Extract and analyze PE imports of SkiaSharp.Views.WinUI.Native.dll (win-arm64) from 3.116.0",
+      "layer": "native",
+      "command": "unzip -o skiasharp.nativeassets.winui-3.116.0.nupkg \u0027runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.dll\u0027 \u0026\u0026 objdump -p runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.dll | grep \u0027DLL Name\u0027",
+      "exitCode": 0,
+      "output": "    DLL Name: MSVCP140.dll\n    DLL Name: VCRUNTIME140.dll\n    DLL Name: api-ms-win-crt-runtime-l1-1-0.dll\n    DLL Name: api-ms-win-crt-string-l1-1-0.dll\n    DLL Name: api-ms-win-crt-heap-l1-1-0.dll\n    DLL Name: KERNEL32.dll\n    DLL Name: OLEAUT32.dll\n    DLL Name: api-ms-win-core-com-l1-1-0.dll",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify ANGLE DLLs (libEGL.dll, libGLESv2.dll) from 3.116.0 are clean \u2014 no CRT dependency",
+      "layer": "native",
+      "command": "objdump -p runtimes/win-arm64/native/libEGL.dll | grep \u0027DLL Name\u0027 \u0026\u0026 objdump -p runtimes/win-arm64/native/libGLESv2.dll | grep \u0027DLL Name\u0027",
+      "exitCode": 0,
+      "output": "libEGL.dll: DLL Name: KERNEL32.dll\nlibGLESv2.dll: DLL Name: KERNEL32.dll, ole32.dll, dxgi.dll, d3d11.dll, api-ms-win-core-winrt-l1-1-0.dll, api-ms-win-core-winrt-string-l1-1-0.dll, CoreMessaging.dll, D3DCOMPILER_47.dll",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify libSkiaSharp.dll (win-arm64) from SkiaSharp.NativeAssets.Win32 3.116.0 is also clean",
+      "layer": "native",
+      "command": "objdump -p runtimes/win-arm64/native/libSkiaSharp.dll | grep \u0027DLL Name\u0027",
+      "exitCode": 0,
+      "output": "    DLL Name: ole32.dll\n    DLL Name: FONTSUB.dll\n    DLL Name: USER32.dll\n    DLL Name: KERNEL32.dll",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Download SkiaSharp.NativeAssets.WinUI 3.119.2 and verify SkiaSharp.Views.WinUI.Native.dll no longer has CRT dependency",
+      "layer": "native",
+      "command": "curl -sLo skiasharp.nativeassets.winui-3.119.2.nupkg \u0027https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.winui/3.119.2/skiasharp.nativeassets.winui.3.119.2.nupkg\u0027 \u0026\u0026 unzip -o skiasharp.nativeassets.winui-3.119.2.nupkg \u0027runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.dll\u0027 \u0026\u0026 objdump -p runtimes/win-arm64/native/SkiaSharp.Views.WinUI.Native.dll | grep \u0027DLL Name\u0027",
+      "exitCode": 0,
+      "output": "    DLL Name: KERNEL32.dll\n    DLL Name: OLEAUT32.dll\n    DLL Name: api-ms-win-core-com-l1-1-0.dll",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Verify CheckWindowsDependencies build-time verification exists on main branch for all Windows native targets",
+      "layer": "deployment",
+      "command": "grep -l \u0027CheckWindowsDependencies\u0027 native/winui/build.cake native/windows/build.cake native/winui-angle/build.cake scripts/cake/native-shared.cake",
+      "exitCode": 0,
+      "output": "native/winui/build.cake\nnative/windows/build.cake\nnative/winui-angle/build.cake\nscripts/cake/native-shared.cake",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3346.json"
+  },
+  "assessment": "likely-bug",
+  "reproductionTime": "~12 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "SkiaSharp.Views.WinUI.Native.dll imports MSVCP140.dll and VCRUNTIME140.dll \u2014 confirmed via objdump PE import analysis of nupkg contents. This causes crash on fresh Windows ARM64 without VC\u002B\u002B Redistributable."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "SkiaSharp.Views.WinUI.Native.dll no longer imports MSVCP140.dll or VCRUNTIME140.dll \u2014 only KERNEL32.dll, OLEAUT32.dll, api-ms-win-core-com-l1-1-0.dll remain."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Cannot build Windows native DLLs on macOS. Verified that CheckWindowsDependencies with VERIFY_EXCLUDED=[\u0027VCRUNTIME\u0027,\u0027MSVCP\u0027] exists in native/winui/build.cake, native/windows/build.cake, and native/winui-angle/build.cake on main branch."
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SkiaSharp.Views.WinUI.Native.dll (win-arm64) in SkiaSharp.NativeAssets.WinUI 3.116.0 dynamically links MSVCP140.dll and VCRUNTIME140.dll, causing crash on fresh Windows ARM64 machines without VC\u002B\u002B Redistributable installed."
+  },
+  "blockers": [
+    "Requires Windows ARM64 to observe actual runtime crash \u2014 current environment is macOS ARM64. Static analysis of PE imports confirmed the CRT dependency but cannot trigger the DLL load failure.",
+    "Cannot build Windows native DLLs on macOS to test main branch fix at runtime."
+  ],
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "root-cause-dll",
+        "upstream": "Triage identified ANGLE DLLs (libEGL.dll, libGLESv2.dll) as the most likely source of the VCRUNTIME dependency based on maintainer\u0027s comment about GPU rendering.",
+        "corrected": "PE import analysis shows ANGLE DLLs are clean (only KERNEL32.dll system deps). The actual culprit is SkiaSharp.Views.WinUI.Native.dll which imports MSVCP140.dll and VCRUNTIME140.dll in 3.116.0."
+      }
+    ]
+  }
+}
