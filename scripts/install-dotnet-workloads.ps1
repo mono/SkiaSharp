@@ -22,7 +22,8 @@ Write-Host "Installing Tizen workloads..."
 New-Item -ItemType Directory -Force './output/tmp' | Out-Null
 if ($IsLinux -or $IsMacOS) {
   Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile './output/tmp/workload-install.sh'
-  bash output/tmp/workload-install.sh --version "$Tizen"
+  # Use bash -e to ensure script exits on first error (Samsung script's shebang may be ignored)
+  bash -e output/tmp/workload-install.sh --version "$Tizen"
   if ($LASTEXITCODE -ne 0) {
     Write-Host "##[error]Tizen workload installation failed with exit code $LASTEXITCODE"
     exit $LASTEXITCODE
