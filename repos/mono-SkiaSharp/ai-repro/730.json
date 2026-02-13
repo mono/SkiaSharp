@@ -3,35 +3,39 @@
     "schemaVersion": "1.0",
     "number": 730,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T17:25:00Z"
+    "analyzedAt": "2026-02-13T00:01:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/730.json"
   },
   "conclusion": "needs-platform",
-  "notes": "Issue #730 reports a crash in SKGLView when ViewExtensions.RotateYTo is called on a parent Grid in a Xamarin.Forms UWP app. The crash occurs in GlesContext.CreateSurface via AngleSwapChainPanel.EnsureRenderSurface, triggered by the CompositionScaleChanged event during the Y rotation animation. This bug requires a Windows UWP environment with ANGLE/EGL (DirectX-backed OpenGL ES) and Xamarin.Forms, none of which are available on the current macOS arm64 environment. The crash path still exists in the WinUI successor code at source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs and GlesInterop/GlesContext.cs — the OnCompositionChanged handler calls EnsureRenderSurface() which calls glesContext.CreateSurface(), and during rapid composition changes from RotateYTo animation, ANGLE surface creation can fail. A related issue #1573 was also filed by another user experiencing the same EGL surface creation failure during navigation.",
+  "notes": "Cannot reproduce: bug requires Windows UWP with Xamarin.Forms and ANGLE/EGL OpenGL backend (SKGLView + AngleSwapChainPanel). Current environment is macOS arm64 which cannot run UWP apps. The NuGet package (1.68.0-preview28) was verified to exist with uap10.0 TFM and ANGLE native binaries (libEGL.dll, libGLESv2.dll) for win10-x64/x86/arm. Triage indicates PR #1642 (merged 2021-03-30) likely addressed the root cause by making the EGL display static with initialize-once semantics and adding composition scale change deduplication. UWP and Xamarin.Forms are now deprecated platforms.",
   "assessment": "likely-bug",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Assess platform requirements for issue #730. The bug involves SKGLView (ANGLE/EGL on UWP), Xamarin.Forms ViewExtensions.RotateYTo, and Windows-specific SwapChainPanel composition. Current environment is macOS arm64.",
+      "description": "Verify reporter's NuGet package exists and inspect platform support",
       "layer": "setup",
-      "result": "skip"
+      "command": "curl -sI 'https://api.nuget.org/v3-flatcontainer/skiasharp/1.68.0-preview28/skiasharp.1.68.0-preview28.nupkg'",
+      "exitCode": 0,
+      "output": "HTTP/1.1 200 OK — Package exists (58MB). Contains lib/uap10.0/, runtimes/win10-x64/nativeassets/uap10.0/ with libEGL.dll, libGLESv2.dll, libSkiaSharp.dll. Also has netstandard1.3 and osx/native. No arm64 macOS native.",
+      "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Verify the reporter's NuGet version (1.68.0-preview28) exists. Confirmed available on nuget.org. However, the package and associated SkiaSharp.Views.UWP package require a UWP project which can only be built and run on Windows.",
+      "description": "Verify SkiaSharp.Views.Forms 1.68.0-preview28 exists with UWP support",
       "layer": "setup",
-      "command": "curl -s 'https://api.nuget.org/v3-flatcontainer/skiasharp/index.json' | python3 -c \"import sys,json; versions=json.load(sys.stdin)['versions']; [print(v) for v in versions if v.startswith('1.68')]\"",
+      "command": "curl -sLo /tmp/views730.nupkg 'https://api.nuget.org/v3-flatcontainer/skiasharp.views.forms/1.68.0-preview28/skiasharp.views.forms.1.68.0-preview28.nupkg' && unzip -l /tmp/views730.nupkg | grep lib/",
       "exitCode": 0,
-      "output": "1.68.0-preview28\n1.68.0\n1.68.1\n[...14 more versions...]",
+      "output": "Package exists with lib/uap10.0/SkiaSharp.Views.Forms.dll (36KB), lib/netstandard1.3/, lib/MonoAndroid/, lib/Xamarin.iOS/, lib/Xamarin.Mac20/, lib/tizen40/.",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Inspect the crash path in the current codebase. AngleSwapChainPanel.OnCompositionChanged calls EnsureRenderSurface() which calls glesContext.CreateSurface(). During RotateYTo animation, rapid composition changes trigger this path. The code at GlesContext.CreateSurface calls ANGLE EGL APIs to create a surface from a SwapChainPanel — this is entirely Windows/DirectX-specific and cannot execute on macOS.",
-      "layer": "csharp",
-      "command": "grep -n 'EnsureRenderSurface\\|OnCompositionChanged\\|CreateSurface' source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
-      "exitCode": 0,
-      "output": "65:CompositionScaleChanged += OnCompositionChanged;\n132:EnsureRenderSurface();\n163:private void OnCompositionChanged(SwapChainPanel sender, object args)\n179:EnsureRenderSurface();\n191:private void EnsureRenderSurface()\n199:CompositionScaleChanged -= OnCompositionChanged;\n201:glesContext.CreateSurface(this, null, CompositionScaleX);\n204:CompositionScaleChanged += OnCompositionChanged;",
-      "result": "success"
+      "description": "Assess platform feasibility — UWP requires Windows SDK and runtime, not available on macOS",
+      "layer": "setup",
+      "output": "Current environment: macOS 26.2 arm64. UWP (Universal Windows Platform) apps require: (1) Windows 10/11 OS, (2) Windows SDK, (3) Visual Studio with UWP workload. The bug involves AngleSwapChainPanel (a UWP XAML control), GlesContext.CreateSurface (ANGLE EGL on DirectX), and ViewExtensions.RotateYTo (Xamarin.Forms 3D transform). None of these components can run on macOS. Docker cannot help — UWP requires the Windows desktop compositor, not just a Windows container.",
+      "result": "skip"
     }
   ],
   "environment": {
@@ -42,27 +46,21 @@
     "dockerUsed": false,
     "gpu": {
       "available": false,
-      "backend": "ANGLE/EGL (requires Windows)"
+      "backend": "OpenGL"
     }
   },
   "blockers": [
-    "Requires Windows UWP runtime — the crash is in ANGLE EGL surface creation (GlesContext.CreateSurface) which uses DirectX-backed OpenGL ES, only available on Windows",
-    "Requires Xamarin.Forms UWP project — deprecated framework that cannot be built or run on macOS",
-    "GUI-dependent reproduction — ViewExtensions.RotateYTo manipulates visual tree transforms which trigger CompositionScaleChanged events, requiring a running UWP GUI application",
-    "Cannot use Docker — UWP XAML applications with GPU/ANGLE cannot run in Docker containers"
+    "Requires Windows 10/11 with UWP SDK — current environment is macOS arm64 which cannot run UWP apps",
+    "Bug is in AngleSwapChainPanel (ANGLE/EGL on DirectX) — a Windows-only component that cannot be tested on macOS or in Docker",
+    "Requires Xamarin.Forms UWP renderer and ViewExtensions.RotateYTo which triggers SwapChainPanel.CompositionScaleChanged — this is the Windows desktop compositor, not available outside Windows"
   ],
-  "versionResults": [
-    {
-      "version": "1.68.0-preview28",
-      "source": "nuget",
-      "result": "not-tested",
-      "notes": "Reporter's version exists on NuGet but requires Windows UWP environment to test"
-    },
-    {
-      "version": "main (source)",
-      "source": "source",
-      "result": "not-tested",
-      "notes": "Crash path still exists in WinUI successor code (AngleSwapChainPanel.cs, GlesContext.cs) but cannot be exercised on macOS"
-    }
-  ]
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "fix-confidence",
+        "upstream": "Triage rated fix confidence at 0.8, noting PR #1642 was a partial fix with deliberately weakened GRContext cleanup",
+        "corrected": "Cannot verify fix status from macOS. The partial nature of the fix (author explicitly noted it was incomplete) means confidence should remain at 0.8 or lower until verified on Windows UWP."
+      }
+    ]
+  }
 }
