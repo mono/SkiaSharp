@@ -7,11 +7,24 @@
 
 | | |
 |---|---|
-| **Phase** | AI Triage Dashboard — UI reorganization complete |
-| **Status** | 4-tab layout (Overview, Reproduction, Response, Analysis) deployed |
+| **Phase** | AI Triage Dashboard — UI Design |
+| **Status** | Design specification created |
 | **Branch** | `docs-dashboard` |
 
 ## Recent Changes
+
+### 2026-02-13 — Triage Detail Page Design
+
+Created `docs/design/issue-detail-layout.md` specifying a 3-tab layout for issue details:
+
+1. **⚡ Triage & Action** (Default) — Summary, Repro Status, Draft Response, Action Buttons
+2. **🔍 Investigation** — Repro Steps, Evidence, Version Matrix, Deep Analysis
+3. **📄 Source** — Original Issue Content
+
+**Key Design Features:**
+- **Hero Header**: Status badges, AI Verdict Banner (Confirmed/Needs Info/Resolved)
+- **Correction Alert**: High-visibility warning when Repro contradicts Triage
+- **Unified Action**: Draft response and action buttons in the primary tab
 
 ### 2026-02-13 — UI Reorganization
 

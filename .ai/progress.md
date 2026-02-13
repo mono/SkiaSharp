@@ -12,6 +12,7 @@
 | Triage CLI | ✅ Complete | .NET CLI at `src/SkiaSharp.Triage.Cli/` |
 | Triage Models | ✅ Complete | Shared library at `src/SkiaSharp.Triage.Models/` |
 | Schema v1.0 | ✅ Complete | Triage, Repro, Fix — strong types, no legacy |
+| Detail Page Design | ✅ Complete | Specification in `docs/design/issue-detail-layout.md` |
 | UI Reorg | ✅ Complete | 4 tabs: Overview, Reproduction, Response, Analysis |
 | Multi-Repo | ✅ Complete | SkiaSharp + Extended, parallel sync |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
