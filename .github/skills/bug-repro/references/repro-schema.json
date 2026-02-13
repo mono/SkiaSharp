@@ -88,6 +88,11 @@
       "enum": ["unknown", "likely-bug", "working-as-designed", "breaking-change", "docs-gap", "user-error"],
       "description": "EDITORIAL classification only. Use to record opinions without corrupting the factual 'conclusion'."
     },
+    "scope": {
+      "type": "string",
+      "description": "Cross-platform scope derived from Phase 3D verification. 'universal'=reproduced on ≥2 platforms, 'platform-specific/{platform}'=reproduced only on one platform, 'unknown'=only tested one platform.",
+      "pattern": "^(universal|unknown|platform-specific/.+)$"
+    },
     "reproductionTime": {
       "type": "string",
       "description": "Approximate time spent reproducing, e.g. '~10 minutes'."
@@ -117,6 +122,10 @@
           "notes": {
             "type": "string",
             "description": "Brief note about result on this version."
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform/environment where this version was tested, e.g. 'host-macos-arm64', 'docker-linux-x64', 'wasm-blazor'."
           }
         }
       },

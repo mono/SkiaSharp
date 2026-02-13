@@ -51,6 +51,8 @@ Does *not* own:
 Owns (exclusive):
 - **Factual reproduction** (no judgment): did the reported symptoms occur?
 - **Version matrix**: reporter → latest stable → `main (source)` when feasible
+- **Platform dispatch**: select platform-specific playbook (`references/platform-*.md`) based on issue signals and triage data
+- **Cross-platform verification**: test on alternative platform to determine scope (universal vs platform-specific)
 - **Minimal repro source**: capture text source files via `reproductionSteps[].filesCreated[].content` (Program.cs, .csproj, etc.)
 
 Does *not* own:
@@ -72,8 +74,9 @@ Does *not* own:
 ## Handoff contract (fields consumers should rely on)
 
 ### triage → repro
-Repro may use triage as hints only:
-- `classification.*` (type/area/platforms/backends)
+Repro consumes triage for platform selection and hints:
+- `classification.platforms[]` → **informs platform file selection** (e.g., `["os/Linux"]` → Docker)
+- `classification.*` (type/area/backends)
 - `evidence.reproEvidence.*` (steps/snippets/attachments)
 - `evidence.bugSignals.*` (severity, errorType, errorMessage, stackTrace)
 - `analysis.codeInvestigation[]` (entry points / suspected code paths)

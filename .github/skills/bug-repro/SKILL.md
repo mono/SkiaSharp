@@ -55,7 +55,7 @@ If using cached JSON:
 pwsh .github/skills/triage-issue/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/issue-{number}.md
 ```
 
-### 4. Triage boost (optional)
+### 4. Triage boost (optional but valuable)
 
 Check for existing triage data to bootstrap context:
 
@@ -66,6 +66,8 @@ TRIAGE="$CACHE/ai-triage/{number}.json"
 
 If triage exists:
 - Read the JSON and extract useful hints: `codeInvestigation`, `bugSignals`, `classification`, `resolution.proposals`
+- **Read `classification.platforms[]`** — use to inform platform selection in Phase 2.4
+- **Read `evidence.bugSignals.errorType`** — helps guide platform file choice (e.g., `DllNotFoundException` + Linux → Docker)
 - Use these as **hints only** — reproduction must verify independently
 - If `classification.type.value` is NOT `type/bug`: log a warning and auto-proceed (do NOT prompt the user)
 - Record the triage file path in output JSON (`inputs.triageFile` field)
@@ -78,7 +80,7 @@ If triage does NOT exist: proceed from issue data alone — no blocking.
 
 ### 1. Classify bug category
 
-Read [references/repro-strategies.md](references/repro-strategies.md) and classify:
+Read [references/bug-categories.md](references/bug-categories.md) and classify:
 
 | Category | Signals |
 |----------|---------|
@@ -89,14 +91,20 @@ Read [references/repro-strategies.md](references/repro-strategies.md) and classi
 | Build/deployment | NuGet restore, TFM issues, project setup |
 | Memory/disposal | AccessViolationException, use-after-dispose, crash on GC |
 
-### 2. Identify reporter's version
+### 2. Extract reporter's version & TFM
 
 Extract from the issue:
-- Which **SkiaSharp NuGet version** was the reporter using? (e.g., `2.88.9`, `3.116.1`)
-- Which **.NET TFM** were they targeting? (e.g., `net8.0`, `net9.0`)
-- Which **platform/OS** were they on?
+- `{reporter_version}`: exact SkiaSharp NuGet version (e.g., `2.88.9`, `3.116.1`)
+- `{reporter_tfm}`: target framework (e.g., `net8.0`, `net10.0`, `net8.0-browser`)
+- `{reporter_code}`: reproduction code from the issue body
+- Platform/OS the reporter was on
 
 If not stated, use the latest stable release as the default.
+
+**⚠️ .NET Forward Compatibility:** A library targeting `net8.0` is compatible with `net10.0`,
+`net11.0`, etc. NuGet TFM fallback is a FEATURE, not a bug. NEVER say "doesn't support
+.NET X" when the library targets an older TFM. NEVER suggest "downgrade to .NET 8" as a
+workaround. If the reporter says `net10.0`, test with `net10.0`.
 
 ### 2b. Verify "last known good" version feasibility
 
@@ -119,6 +127,7 @@ Check:
 
 - What platform are we on? (macOS/Linux/Windows)
 - Docker available? (`docker --version` — if yes, can test Linux x64/arm64)
+- Playwright available? (for WASM/Blazor bugs — check MCP browser tools)
 - GPU available? (for rendering bugs)
 - **.NET workloads installed?** Phase 3C requires building from source, which needs platform workloads:
   ```bash
@@ -130,10 +139,30 @@ Check:
   ```
   If this requires `sudo` or elevated permissions, ask the user for help. Do **NOT** skip, look for workarounds, or treat this as a blocker. Missing workloads are a solvable setup problem.
 
-### 4. Plan
+### 4. Determine reproduction platform
+
+Scan the issue (and triage data if available) for platform signals and select the primary platform file:
+
+| Priority | Signals | Platform file | Fallback |
+|----------|---------|---------------|----------|
+| 1 | Blazor, WASM, WebAssembly, SKHtmlCanvas, browser console error | [platform-wasm-blazor.md](references/platform-wasm-blazor.md) | [platform-console.md](references/platform-console.md) |
+| 2 | WPF, WinForms, WinUI, UWP, XPS, GDI+ | [platform-windows-desktop.md](references/platform-windows-desktop.md) | [platform-console.md](references/platform-console.md) |
+| 3 | iOS, Android, MAUI, Xamarin, mobile | [platform-mobile.md](references/platform-mobile.md) | [platform-console.md](references/platform-console.md) |
+| 4 | Linux, Docker, container, NativeAssets.Linux | [platform-docker-linux.md](references/platform-docker-linux.md) | N/A |
+| 5 | (none of above) | [platform-console.md](references/platform-console.md) | N/A |
+
+**Sources for platform signals** (in priority order):
+1. Issue text (keywords, error messages, project type)
+2. Triage `classification.platforms[]` (if triage exists)
+3. Triage `evidence.bugSignals.errorType` (e.g., `DllNotFoundException` + Linux → Docker)
+
+**Read the selected platform file.** Follow its Create → Build → Run → Verify steps,
+substituting `{reporter_version}`, `{reporter_tfm}`, and `{reporter_code}`.
+
+### 5. Plan
 
 Output a brief plan before executing. Example:
-> "C# API bug about SKMatrix.MapRect. Reporter used SkiaSharp 2.88.9 on .NET 8. Will create a standalone console app with that version first, then test with latest release and source (main)."
+> "WASM/Blazor bug about TypeInitializationException. Reporter used SkiaSharp 3.119.2-preview.1 on .NET 10. Will create a Blazor WASM app (platform-wasm-blazor.md), test in browser with Playwright, then test with latest stable and main source."
 
 ---
 
@@ -145,30 +174,15 @@ that uses published NuGet packages.
 
 ### 3A. Reproduce with reporter's version (primary)
 
-#### 1. Create a standalone project
+**Read the platform file** selected in Phase 2.4. Follow its steps:
 
-Create a new project in `/tmp/repro-{number}/`:
+1. **Create** a project in `/tmp/repro-{number}/` using the platform file's template
+2. **Add repro code** — use the reporter's code if provided, otherwise create minimal code
+3. **Build** — record exit code, warnings, errors
+4. **Run & Verify** — platform-specific (console output, browser console, Docker stdout)
+5. **Iterate** if not clearly reproduced (different data, different approach, different version)
 
-```bash
-mkdir -p /tmp/repro-{number} && cd /tmp/repro-{number}
-dotnet new console -n Repro --framework {reporter_tfm}
-cd Repro
-dotnet add package SkiaSharp --version {reporter_version}
-# Add other packages the reporter mentioned
-```
-
-#### 2. Write reproduction code
-
-- **Use the reporter's code** if provided in the issue — copy it as closely as possible
-- If no code provided: create minimal code from the issue description
-- The code should **clearly demonstrate** the bug (print values, save images, assert conditions)
-- **Handoff requirement (for bug-fix):** when you create/edit repro files (`Program.cs`, `.csproj`, helper `.cs` files), capture their full text in JSON via `reproductionSteps[].filesCreated[].content` (text only; omit binaries)
-
-#### 3. Run and capture
-
-```bash
-dotnet run
-```
+**Handoff requirement (for bug-fix):** when you create/edit repro files (`Program.cs`, `.csproj`, helper `.cs` files), capture their full text in JSON via `reproductionSteps[].filesCreated[].content` (text only; omit binaries).
 
 For each step, capture:
 
@@ -203,62 +217,22 @@ Step `result` values describe **what actually happened**, not whether it was "su
 - Record in `artifacts` array with `available: true/false`
 - If unavailable, **keep trying** — adapt the repro to use available test data if possible
 
-#### 4. Iterate — try hard
-
-If the first attempt doesn't clearly reproduce, **keep going**:
-
-1. Try different input data (different images, fonts, matrix values)
-2. Try a different API approach (the reporter may have simplified — try the full scenario)
-3. Try a different NuGet version (nearby versions — maybe reporter was slightly off)
-4. **Try Docker Linux** if the bug is platform-specific or host can't run the version (see step 5)
-5. Simplify the reproduction — strip it to the absolute minimum
-
-#### 5. Docker Linux testing
-
-Use Docker to test on Linux when the host is macOS/Windows, or to test older versions that lack host-platform natives. See [docker-testing.md](../bug-fix/references/docker-testing.md) for full details.
-
-**When to use Docker:**
-- Bug is Linux-specific or platform-independent (test a second platform)
-- SkiaSharp 1.68.x on Apple Silicon (no arm64 native exists — must use `--platform linux/amd64`)
-- Bug involves `NativeAssets.Linux`, fontconfig, or container deployment
-- Host repro was inconclusive and a second environment might clarify
-
-**Quick Docker repro pattern:**
-
-```bash
-docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
-apt-get update -qq && apt-get install -y -qq libfontconfig1 2>&1 | tail -1
-mkdir -p /tmp/repro && cd /tmp/repro
-dotnet new console -n Repro --framework net8.0 --no-restore 2>&1 | tail -1
-cd Repro
-dotnet add package SkiaSharp --version VERSION --no-restore 2>&1 | tail -1
-dotnet add package SkiaSharp.NativeAssets.Linux --version VERSION --no-restore 2>&1 | tail -1
-cat > Program.cs << "EOF"
-// Paste reproduction code here
-EOF
-dotnet run --runtime linux-x64 --no-self-contained 2>&1
-'
-```
-
-**Required:** `apt-get install libfontconfig1` — without it you get `DllNotFoundException`.
-
-**Record in JSON:** Set `environment.dockerUsed: true` and add a `versionResults` entry with `source: "nuget"` noting the Docker platform.
-
 > **🔥 Push hard.** Don't bail early. The value of this skill is in persistent, creative
 > attempts to reproduce. Only conclude `not-reproduced` after genuinely exhausting approaches.
 > Only conclude `needs-platform` / `needs-hardware` when there is truly no workaround.
 
 ### 3B. Test on latest release (if reproduced)
 
-If the bug reproduced with the reporter's version, test whether it's **already fixed**:
+If the bug reproduced with the reporter's version, test whether it's **already fixed**.
+Use the **same platform strategy** from Phase 3A — just change the version:
 
 ```bash
 cd /tmp/repro-{number}/Repro
 # Update to latest stable release (omit --version to get latest stable)
 dotnet add package SkiaSharp
-dotnet run
 ```
 
+Then re-run using the same platform file's Run & Verify steps.
 Record the result. If the bug is gone on latest, this is valuable — note it in `fixedInVersion`.
 
 ### 3C. Test on main branch (required, if reproduced)
@@ -325,6 +299,48 @@ Record whether the bug exists on main. If fixed on main but not released, note t
 > added. These are throwaway reproduction artifacts, not permanent additions. Use `git checkout`
 > to revert test file changes.
 
+### 3D. Cross-platform verification (conditional)
+
+After primary reproduction, test on an alternative platform to determine bug scope.
+
+**When to run:**
+
+| Primary result | Condition | Run 3D? |
+|----------------|-----------|---------|
+| `reproduced` | Any (except pure API/logic bug with no platform signals) | **Yes** |
+| `not-reproduced` | Reporter on different platform than host | **Yes** |
+| `not-reproduced` | Reporter on same platform as host | No |
+| `needs-platform` | Any | **Yes** — try console fallback + Docker |
+| `partial` / `inconclusive` | Any | **Yes** |
+| `reproduced` | Pure API/logic bug, no platform signals | **Skip** — note "cross-platform skipped: pure API bug" |
+
+**Time cap:** 5 minutes max for Phase 3D. If setup would exceed this, skip and record why.
+
+**Which alternative platform (orthogonality rule):**
+
+| Primary platform | Best alternative | Why |
+|-----------------|-----------------|-----|
+| Console on macOS | Docker Linux x64 | Different OS, catches font/case/native diffs |
+| WASM/Blazor | Console on host | Isolate: WASM-specific or core? |
+| Docker Linux | Console on host | Different OS perspective |
+| Windows (reported, host is Mac) | Console on Mac, then Docker Linux | Linux is "neutral arbiter" |
+| iOS/Android (no device) | Console, then Docker Linux | Core bugs often repro without mobile |
+
+**Default:** Docker Linux x64 is the best default alternative when no better signal exists.
+
+**Test reporter's version only** (not the full version matrix — cost vs value tradeoff).
+
+**Record results** in `versionResults` with `platform` field:
+```json
+{ "version": "3.116.1", "source": "nuget", "result": "not-reproduced",
+  "notes": "Works on Docker Linux x64", "platform": "docker-linux-x64" }
+```
+
+**Derive `scope`** from comparison:
+- Reproduced on ≥2 platforms → `"universal"`
+- Reproduced on primary only → `"platform-specific/{platform}"`
+- Only tested one platform (3D skipped) → `"unknown"`
+
 ---
 
 ## Phase 4 — Generate JSON
@@ -382,8 +398,10 @@ Required fields:
 
 Optional (recommended) — include only when applicable, otherwise omit entirely:
 - `inputs`: `{ triageFile }` if triage data was consumed
+- `scope`: cross-platform scope derived from Phase 3D — `"universal"`, `"platform-specific/{platform}"`, or `"unknown"` (if 3D was skipped)
 - `assessment`: editorial classification (e.g., `"breaking-change"`) without corrupting factual `conclusion`
-- `versionResults`, `reproProject`, `artifacts`, `errorMessages`
+- `versionResults`: include `platform` field on each entry (e.g., `"host-macos-arm64"`, `"docker-linux-x64"`)
+- `reproProject`, `artifacts`, `errorMessages`
 - `feedback`: corrections to triage findings (see below)
 
 Conditional requirements:
@@ -517,3 +535,15 @@ Blockers: none
 11. **Abandoning on environment issues.** NEVER give up when hitting solvable environment problems (missing workloads, missing tools, `sudo` prompts, SDK version mismatches). These are setup steps, not blockers. Fix them — install the workload, update the SDK, ask the user for elevated permissions. If the error message tells you the fix, do the fix.
 
 12. **Skipping Docker for Linux bugs.** NEVER conclude `needs-platform` for Linux-related issues without trying Docker first. Docker Desktop supports linux/amd64 and linux/arm64 from macOS. The only valid `needs-platform` for Linux is when the bug requires a specific kernel feature or hardware that Docker can't provide.
+
+13. **Assuming TFM incompatibility.** NEVER say "SkiaSharp doesn't support .NET X" when X is newer than the library's TFM. .NET is forward-compatible by design — a `net8.0` library works on `net10.0` apps. NuGet TFM fallback is a feature, not a bug. The only exception is platform-specific TFMs (e.g., `net8.0-ios`) where platform assets are needed. NEVER suggest "downgrade to .NET 8" as a workaround.
+
+14. **Stopping at build success for browser/WASM bugs.** NEVER conclude `not-reproduced` because `dotnet build` succeeded for a Blazor/WASM issue. WASM bugs manifest at RUNTIME in the browser. You MUST serve the app and check browser console with Playwright. Build success ≠ runtime success.
+
+15. **Retrying the same platform without changing variables.** If it failed on macOS, running the same code on macOS again won't produce new signal. Change the platform, version, or approach — not the retry count.
+
+16. **Misinterpreting setup failures as "not reproduced."** Docker pull timeout, missing Playwright, or `wasm-tools` install failure are SETUP blockers, not reproduction results. Record as blocker, not `not-reproduced`.
+
+17. **Testing WASM for every bug.** WASM is a specialized runtime (AOT, single-threaded, no filesystem). Only test it when issue signals suggest browser/web. Testing WASM for an `SKMatrix` calculation bug is noise that produces false positives.
+
+18. **Silently skipping cross-platform verification.** If you skip Phase 3D, you MUST record why in `notes` and set `scope` to `"unknown"`. Never leave the downstream fix skill guessing about scope.

@@ -319,3 +319,116 @@ is macOS only — Linux is unavailable.
   the specific reasons reproduction was incomplete.
 - Step 4 uses `result: "skip"` to indicate the Linux path was attempted but could not run.
 - The font artifact has `available: false` because the attachment link had expired.
+
+---
+
+## Example 4: WASM/Blazor Bug — `reproduced` with cross-platform verification
+
+**Scenario:** SkiaSharp 3.119.2-preview.1 crashes at runtime in Blazor WASM with
+`TypeInitializationException` on .NET 10. Build succeeds — the bug only manifests in
+the browser. Cross-platform verification shows it's WASM-specific (console works fine).
+
+Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3422,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-06-15T14:30:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3422.json"
+  },
+  "conclusion": "reproduced",
+  "scope": "platform-specific/wasm",
+  "notes": "TypeInitializationException in browser console when using SkiaSharp 3.119.2-preview.1 on .NET 10 Blazor WASM. Build succeeds but runtime crashes. 3.116.1 (stable) works perfectly — this is a regression in 3.118+ preview WASM native binaries. Cross-platform verification: console app works fine, confirming WASM-specific issue.",
+  "assessment": "likely-bug",
+  "reproductionTime": "~12 minutes",
+  "versionResults": [
+    {
+      "version": "3.119.2-preview.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "platform": "wasm-blazor",
+      "notes": "TypeInitializationException in browser console"
+    },
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "platform": "wasm-blazor",
+      "notes": "Canvas renders correctly, SUCCESS in console"
+    },
+    {
+      "version": "3.119.2-preview.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Cross-platform: console app works fine with same version"
+    }
+  ],
+  "reproProject": {
+    "type": "blazorwasm",
+    "tfm": "net10.0",
+    "packages": ["SkiaSharp.Views.Blazor"]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor",
+      "layer": "setup",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.2-preview.1",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build with WasmBuildNative",
+      "layer": "deployment",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Serve and check browser console with Playwright",
+      "layer": "csharp",
+      "command": "dotnet run --urls http://localhost:5111",
+      "output": "Error: [TypeInitialization_Type, SKObject]",
+      "result": "failure"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "TypeInitialization_Type, SKObject",
+    "additionalErrors": ["crit: Microsoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100]"]
+  },
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.100",
+    "skiaSharpVersion": "3.119.2-preview.1",
+    "dockerUsed": false
+  },
+  "feedback": {
+    "triageCorrections": [
+      {
+        "topic": "root-cause",
+        "upstream": "Triage concluded: SkiaSharp doesn't officially support .NET 10",
+        "corrected": "net8.0 libraries are forward-compatible with net10.0 via TFM fallback. 3.116.1 works on net10.0. The real bug is a regression in 3.118+ preview WASM native binaries."
+      }
+    ]
+  }
+}
+```
+
+### Why this is a good WASM reproduction
+
+- **Did not stop at build success** — build passed but the bug is runtime-only in browser.
+- **Used Playwright** to navigate, read browser console errors, and verify.
+- **Tested multiple versions** — found 3.116.1 works, proving it's a 3.118+ regression.
+- **Cross-platform verification** — console app works fine → `scope: "platform-specific/wasm"`.
+- **Corrected triage** — triage wrongly blamed missing net10.0 TFM; repro proved forward-compat works.
+- **`scope` field** gives the fix skill an immediate signal: look at WASM native binaries, not TFM support.

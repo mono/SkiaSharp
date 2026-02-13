@@ -262,6 +262,8 @@ cd ..
 
 5. **Batch shortcuts.** When triaging multiple issues, each gets FULL investigation. Parallel investigation is fine; parallel conclusions are not.
 
+6. **.NET Forward Compatibility.** NEVER conclude "doesn't support .NET X" when the library targets a lower TFM. .NET is forward-compatible by design — a `net8.0` library works on `net10.0` apps via NuGet TFM fallback. NEVER suggest "downgrade to .NET 8" as a workaround for TFM fallback. The only exception is platform-specific TFMs (e.g., `net8.0-ios`) where platform-specific native assets are required.
+
 ---
 
 ## Scripts

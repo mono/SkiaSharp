@@ -204,3 +204,22 @@ High-confidence conclusions (less likely to need review):
 - `not-reproduced` AND you closely matched the reporter's environment
 
 **When in doubt, note the uncertainty.** A cautious conclusion is better than an overconfident one.
+
+---
+
+## Scope Derivation (from Phase 3D cross-platform verification)
+
+After cross-platform verification, set the `scope` field in the output JSON:
+
+| Cross-platform results | `scope` value |
+|----------------------|--------------|
+| Reproduced on ≥2 platforms | `"universal"` |
+| Reproduced on primary only, not on alternative | `"platform-specific/{platform}"` (e.g., `"platform-specific/wasm"`) |
+| Not reproduced on primary, reproduced on alternative | `"platform-specific/{alt-platform}"` |
+| Phase 3D skipped (pure API bug, timeout, etc.) | `"unknown"` |
+| Only tested one platform (no 3D) | `"unknown"` |
+
+**Platform names for scope:** `macos`, `linux`, `windows`, `wasm`, `ios`, `android`
+
+The `scope` field gives the downstream fix skill an immediate signal about where to look.
+Always record the reason if scope is `"unknown"` — in the `notes` field.

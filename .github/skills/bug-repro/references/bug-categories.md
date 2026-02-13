@@ -1,12 +1,13 @@
-# Reproduction Strategies by Bug Category
+# Bug Categories
 
-Actionable strategies for systematically reproducing SkiaSharp bugs. Organized by bug category with identification signals, step-by-step approaches, pitfalls, and bail-out criteria.
+Identification signals and reproduction strategies by bug category. For platform-specific
+instructions (how to create/build/run), see the `platform-*.md` files in this directory.
 
 **Constraints applying to ALL categories:**
 - No native rebuilds — use `dotnet cake --target=externals-download` only
 - Output limits: 2KB per step, 4KB for failure steps
 - Binary assets: reference by URL or filename, never inline
-- Docker is available for Linux testing — use `--platform linux/amd64` for x64 or `linux/arm64` for arm64. See [docker-testing.md](../../bug-fix/references/docker-testing.md)
+- For platform-specific setup: see `platform-console.md`, `platform-docker-linux.md`, `platform-wasm-blazor.md`, etc.
 
 ---
 
