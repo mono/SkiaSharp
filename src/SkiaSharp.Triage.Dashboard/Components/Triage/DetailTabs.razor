@@ -1,19 +1,11 @@
 <div class="detail-tabs">
     @if (HasTriage)
     {
-        <span class="detail-tab @(ActiveTab == "triage" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("triage")'>Overview</span>
+        <button type="button" class="detail-tab @(ActiveTab == "details" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("details")'>Details</button>
     }
     @if (HasRepro)
     {
-        <span class="detail-tab @(ActiveTab == "repro" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("repro")'>Reproduction<span class="tab-badge">🧪</span></span>
-    }
-    @if (HasTriage || HasRepro)
-    {
-        <span class="detail-tab @(ActiveTab == "response" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("response")'>Response<span class="tab-badge">⚡</span></span>
-        @if (HasTriage)
-        {
-            <span class="detail-tab @(ActiveTab == "analysis" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("analysis")'>Analysis<span class="tab-badge">🔬</span>@if (HasFix){<span class="tab-badge">🔧</span>}</span>
-        }
+        <button type="button" class="detail-tab @(ActiveTab == "repro" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("repro")'>Repro Log<span class="tab-badge">🧪</span></button>
     }
 </div>
 
@@ -21,6 +13,6 @@
     [Parameter] public bool HasTriage { get; set; }
     [Parameter] public bool HasRepro { get; set; }
     [Parameter] public bool HasFix { get; set; }
-    [Parameter] public string ActiveTab { get; set; } = "triage";
+    [Parameter] public string ActiveTab { get; set; } = "details";
     [Parameter] public EventCallback<string> OnTabChanged { get; set; }
 }

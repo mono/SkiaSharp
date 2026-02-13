@@ -66,28 +66,16 @@ else
     <DetailTabs HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" HasFix="@(_fix is not null)" 
                 ActiveTab="@_activeTab" OnTabChanged="@(tab => _activeTab = tab)" />
 
-    @* ═══ Tab 1: Triage ═══ *@
+    @* ═══ Tab 1: Details ═══ *@
     @if (_issue is not null)
     {
-        <TriageTabPanel Issue="@_issue" ActiveTab="@_activeTab" />
+        <DetailsTabPanel Issue="@_issue" Fix="@_fix" ActiveTab="@_activeTab" />
     }
 
-    @* ═══ Tab 2: Reproduction ═══ *@
+    @* ═══ Tab 2: Repro Log ═══ *@
     @if (_repro is not null)
     {
         <ReproTabPanel Repro="@_repro" ActiveTab="@_activeTab" />
-    }
-
-    @* ═══ Tab 3: Response ═══ *@
-    @if (_issue is not null || _repro is not null)
-    {
-        <ResponseTabPanel Issue="@_issue" Repro="@_repro" ActiveTab="@_activeTab" />
-    }
-
-    @* ═══ Tab 4: Analysis (includes Fix) ═══ *@
-    @if (_issue is not null)
-    {
-        <AnalysisTabPanel Issue="@_issue" Fix="@_fix" ActiveTab="@_activeTab" />
     }
 
     <!-- Bottom Navigation -->

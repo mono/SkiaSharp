@@ -1,0 +1,45 @@
+/* Collapsible sections */
+.collapsible-section {
+    border: 1px solid #e1e4e8;
+    border-radius: 0.375rem;
+    margin-bottom: 0.75rem;
+    background: #fafbfc;
+}
+
+.collapsible-section > summary {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    list-style: none;
+    user-select: none;
+}
+
+.collapsible-section > summary::-webkit-details-marker {
+    display: none;
+}
+
+.collapsible-section > summary h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+    display: inline;
+}
+
+.collapsible-section[open] > summary {
+    border-bottom: 1px solid #e1e4e8;
+    background: #f6f8fa;
+}
+
+.collapsible-section[open] > summary h3::before {
+    content: '▼ ';
+}
+
+/* Replace the ▶ with ▼ when open — the ▶ is in the text so we just hide it */
+.collapsible-section[open] > summary h3 {
+    /* The ▶ is embedded in the h3 text, CSS can't change it.
+       The visual cue comes from the open/closed state of <details>. */
+}
+
+.collapsible-body {
+    padding: 1rem;
+}

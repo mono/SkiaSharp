@@ -1,0 +1,580 @@
+@using SkiaSharp.Triage.Dashboard.Helpers
+@using static SkiaSharp.Triage.Dashboard.Helpers.TriageFormatHelper
+
+<div class="tab-panel @(ActiveTab == "details" ? "active" : "")">
+
+    @* ═══ Open Sections ═══════════════════════════════════════ *@
+
+    <!-- Classification + Missing Info -->
+    <div class="detail-section-grid">
+        <div class="detail-card card-classification">
+            <h3>Classification</h3>
+            <div class="field-row">
+                <span class="field-label">Type:</span>
+                <span class="badge-type badge-@StripPrefix(Issue.Classification.Type.Value)">@FormatLabel(Issue.Classification.Type.Value)</span>
+                <span class="field-confidence">@Issue.Classification.Type.Confidence.ToString("P0")</span>
+            </div>
+            @if (Issue.Classification.Area is not null)
+            {
+                <div class="field-row">
+                    <span class="field-label">Area:</span>
+                    <span class="label label-area">@FormatLabel(Issue.Classification.Area.Value)</span>
+                    <span class="field-confidence">@Issue.Classification.Area.Confidence.ToString("P0")</span>
+                </div>
+            }
+            @if (Issue.Classification.Platforms is { Count: > 0 })
+            {
+                <div class="field-row">
+                    <span class="field-label">Platforms:</span>
+                    @foreach (var p in Issue.Classification.Platforms)
+                    {
+                        <span class="label label-os">@FormatLabel(p)</span>
+                    }
+                </div>
+            }
+            @if (Issue.Classification.Backends is { Count: > 0 })
+            {
+                <div class="field-row">
+                    <span class="field-label">Backends:</span>
+                    @foreach (var b in Issue.Classification.Backends)
+                    {
+                        <span class="label label-backend">@FormatLabel(b)</span>
+                    }
+                </div>
+            }
+            @if (Issue.Classification.Tenets is { Count: > 0 })
+            {
+                <div class="field-row">
+                    <span class="field-label">Tenets:</span>
+                    @foreach (var t in Issue.Classification.Tenets)
+                    {
+                        <span class="label label-tenet">@FormatLabel(t)</span>
+                    }
+                </div>
+            }
+            @if (Issue.Classification.Partner is not null)
+            {
+                <div class="field-row">
+                    <span class="field-label">Partner:</span>
+                    <span class="label label-partner">@FormatLabel(Issue.Classification.Partner)</span>
+                </div>
+            }
+        </div>
+
+        @if (Issue.Output.MissingInfo is { Count: > 0 })
+        {
+            <div class="detail-card card-missing-info">
+                <h3>Missing Information</h3>
+                <ul>
+                    @foreach (var info in Issue.Output.MissingInfo)
+                    {
+                        <li>@info</li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+
+    <!-- Bug Signals -->
+    @if (Issue.Evidence.BugSignals is not null)
+    {
+        <div class="detail-card card-bug-signals">
+            <h3>Bug Signals</h3>
+            <div class="bug-signals-grid">
+                @if (Issue.Evidence.BugSignals.Severity is not null)
+                {
+                    <span class="badge-severity badge-sev-@Issue.Evidence.BugSignals.Severity.Value.ToJsonString()">
+                        @FormatLabel(Issue.Evidence.BugSignals.Severity.Value.ToJsonString())
+                    </span>
+                }
+                @if (Issue.Evidence.BugSignals.ReproQuality is not null)
+                {
+                    <span class="label" title="How complete the reproduction steps are">Repro: @FormatLabel(Issue.Evidence.BugSignals.ReproQuality.Value.ToJsonString())</span>
+                }
+                @if (Issue.Evidence.BugSignals.IsRegression == true)
+                {
+                    <span class="signal signal-yes">🔄 Regression</span>
+                }
+            </div>
+            @if (Issue.Evidence.BugSignals.ErrorType is not null)
+            {
+                <div class="field-row" style="margin-top: 0.5rem">
+                    <span class="field-label">Error:</span>
+                    <code>@Issue.Evidence.BugSignals.ErrorType</code>
+                </div>
+            }
+            @if (Issue.Evidence.BugSignals.ErrorMessage is not null)
+            {
+                <div class="reason-text" style="margin-top: 0.25rem">@Issue.Evidence.BugSignals.ErrorMessage</div>
+            }
+            @if (Issue.Evidence.BugSignals.StackTrace is not null)
+            {
+                <details style="margin-top: 0.5rem">
+                    <summary>Stack Trace</summary>
+                    <pre class="file-content"><code>@Issue.Evidence.BugSignals.StackTrace</code></pre>
+                </details>
+            }
+            @if (Issue.Evidence.BugSignals.TargetFrameworks is { Count: > 0 })
+            {
+                <div class="field-row" style="margin-top: 0.5rem">
+                    <span class="field-label">Frameworks:</span>
+                    @foreach (var fw in Issue.Evidence.BugSignals.TargetFrameworks)
+                    {
+                        <span class="label">@fw</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Regression & Fix Status -->
+    @if (Issue.Evidence.Regression is not null || Issue.Evidence.FixStatus is not null)
+    {
+        <div class="detail-section-grid">
+            @if (Issue.Evidence.Regression is not null)
+            {
+                <div class="detail-card card-regression">
+                    <h3>Regression</h3>
+                    @if (Issue.Evidence.Regression.IsRegression)
+                    {
+                        <span class="badge-regression">⚡ Regression</span>
+                        <span class="field-confidence">@Issue.Evidence.Regression.Confidence.ToString("P0")</span>
+                        @if (Issue.Evidence.Regression.WorkedInVersion is not null)
+                        {
+                            <div class="field-row"><span class="field-label">Worked in:</span><strong>@Issue.Evidence.Regression.WorkedInVersion</strong></div>
+                        }
+                        @if (Issue.Evidence.Regression.BrokeInVersion is not null)
+                        {
+                            <div class="field-row"><span class="field-label">Broke in:</span><strong>@Issue.Evidence.Regression.BrokeInVersion</strong></div>
+                        }
+                    }
+                    else
+                    {
+                        <span>Not a regression</span>
+                    }
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(Issue.Evidence.Regression.Reason)</div>
+                </div>
+            }
+            @if (Issue.Evidence.FixStatus is not null)
+            {
+                <div class="detail-card card-fix-status">
+                    <h3>Fix Status</h3>
+                    <span class="@(Issue.Evidence.FixStatus.LikelyFixed ? "badge-fixed" : "badge-unfixed")">
+                        @(Issue.Evidence.FixStatus.LikelyFixed ? "✓ Likely Fixed" : "✗ Not Fixed")
+                    </span>
+                    <span class="field-confidence">@Issue.Evidence.FixStatus.Confidence.ToString("P0")</span>
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(Issue.Evidence.FixStatus.Reason)</div>
+                    @if (Issue.Evidence.FixStatus.FixedInVersion is not null)
+                    {
+                        <p>Fixed in: <strong>@Issue.Evidence.FixStatus.FixedInVersion</strong></p>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Version Analysis -->
+    @if (Issue.Evidence.VersionAnalysis is not null)
+    {
+        <div class="detail-card card-version">
+            <h3>Version Analysis</h3>
+            @if (Issue.Evidence.VersionAnalysis.MentionedVersions is { Count: > 0 })
+            {
+                <div class="field-row">
+                    <span class="field-label">Versions:</span>
+                    @foreach (var v in Issue.Evidence.VersionAnalysis.MentionedVersions)
+                    {
+                        <span class="label">@v</span>
+                    }
+                </div>
+            }
+            @if (Issue.Evidence.VersionAnalysis.CurrentRelevance is not null)
+            {
+                <div class="field-row">
+                    <span class="field-label">Still relevant:</span>
+                    <span class="label label-relevance-@Issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString()">@FormatLabel(Issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString())</span>
+                </div>
+            }
+            @if (Issue.Evidence.VersionAnalysis.WorkedIn is not null)
+            {
+                <div class="field-row"><span class="field-label">Worked in:</span><span class="label">@Issue.Evidence.VersionAnalysis.WorkedIn</span></div>
+            }
+            @if (Issue.Evidence.VersionAnalysis.BrokeIn is not null)
+            {
+                <div class="field-row"><span class="field-label">Broke in:</span><span class="label">@Issue.Evidence.VersionAnalysis.BrokeIn</span></div>
+            }
+            @if (Issue.Evidence.VersionAnalysis.RelevanceReason is not null)
+            {
+                <div class="reason-text md-content">@MarkdownHelper.ToHtml(Issue.Evidence.VersionAnalysis.RelevanceReason)</div>
+            }
+        </div>
+    }
+
+    @* ═══ Collapsible Sections ════════════════════════════════ *@
+
+    <!-- Resolution Proposals -->
+    @if (Issue.Analysis?.Resolution is not null)
+    {
+        var res = Issue.Analysis.Resolution;
+        <details class="collapsible-section">
+            <summary><h3>▶ Resolution Proposals</h3></summary>
+            <div class="collapsible-body">
+                @if (res.Hypothesis is not null)
+                {
+                    <div class="resolution-hypothesis">
+                        <h4>Hypothesis</h4>
+                        <div class="md-content">@MarkdownHelper.ToHtml(res.Hypothesis)</div>
+                    </div>
+                }
+                @if (res.Proposals is { Count: > 0 })
+                {
+                    <div class="proposals-header">
+                        <h4>Proposals</h4>
+                        <span class="carousel-hint">← scroll →</span>
+                    </div>
+                    <div class="proposals-carousel">
+                        @{ var sortedProposals = res.Proposals.OrderByDescending(p => p.Title == res.RecommendedProposal).ToList(); }
+                        @foreach (var proposal in sortedProposals)
+                        {
+                            var isRecommended = proposal.Title == res.RecommendedProposal;
+                            <div class="proposal-card @(isRecommended ? "proposal-recommended" : "")">
+                                @if (isRecommended)
+                                {
+                                    <span class="badge-recommended">★ Recommended</span>
+                                }
+                                @if (proposal.Title is not null)
+                                {
+                                    <h5>@proposal.Title</h5>
+                                }
+                                <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
+                                <div class="proposal-meta">
+                                    @if (proposal.Effort is not null)
+                                    {
+                                        <span class="label">Effort: @FormatLabel(proposal.Effort.Value.ToJsonString())</span>
+                                    }
+                                    @if (proposal.Confidence is not null)
+                                    {
+                                        <span class="field-confidence">@proposal.Confidence.Value.ToString("P0")</span>
+                                    }
+                                </div>
+                                @if (proposal.CodeSnippet is not null)
+                                {
+                                    <details class="proposal-code">
+                                        <summary>Code Snippet</summary>
+                                        <pre class="code-block"><code>@proposal.CodeSnippet</code></pre>
+                                    </details>
+                                }
+                                @if (isRecommended && res.RecommendedReason is not null)
+                                {
+                                    <div class="recommended-reason"><strong>Why:</strong> @res.RecommendedReason</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </details>
+    }
+
+    <!-- Key Signals -->
+    @if (Issue.Analysis?.KeySignals is { Count: > 0 })
+    {
+        <details class="collapsible-section">
+            <summary><h3>▶ Key Signals</h3></summary>
+            <div class="collapsible-body">
+                @foreach (var signal in Issue.Analysis.KeySignals)
+                {
+                    <div class="signal-card">
+                        <blockquote class="signal-quote">"@signal.Text"</blockquote>
+                        <span class="evidence-source">— @signal.Source</span>
+                        <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
+                    </div>
+                }
+            </div>
+        </details>
+    }
+
+    <!-- Code Investigation -->
+    @if (Issue.Analysis?.CodeInvestigation is { Count: > 0 })
+    {
+        <details class="collapsible-section">
+            <summary><h3>▶ Code Investigation</h3></summary>
+            <div class="collapsible-body">
+                @foreach (var entry in Issue.Analysis.CodeInvestigation)
+                {
+                    <div class="code-investigation-card">
+                        <div class="code-file-ref">
+                            <a href="@GetFileUrl(entry)" target="_blank" rel="noopener noreferrer">
+                                <code>@entry.File</code>
+                                @if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
+                                {
+                                    <span class="code-lines">L@(entry.Lines)</span>
+                                }
+                            </a>
+                            <span class="label label-relevance-@entry.Relevance.ToJsonString()">@FormatLabel(entry.Relevance.ToJsonString())</span>
+                        </div>
+                        <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Finding)</div>
+                    </div>
+                }
+            </div>
+        </details>
+    }
+
+    <!-- Workarounds + Next Questions -->
+    @if (Issue.Analysis?.Workarounds is { Count: > 0 } || Issue.Analysis?.NextQuestions is { Count: > 0 })
+    {
+        <details class="collapsible-section">
+            <summary><h3>▶ Workarounds & Next Questions</h3></summary>
+            <div class="collapsible-body">
+                @if (Issue.Analysis?.Workarounds is { Count: > 0 })
+                {
+                    <h4>Workarounds</h4>
+                    <ul>
+                        @foreach (var w in Issue.Analysis.Workarounds)
+                        {
+                            <li class="md-content">@MarkdownHelper.ToHtml(w)</li>
+                        }
+                    </ul>
+                }
+                @if (Issue.Analysis?.NextQuestions is { Count: > 0 })
+                {
+                    <h4>Next Questions</h4>
+                    <ul class="uncertainty-list">
+                        @foreach (var q in Issue.Analysis.NextQuestions)
+                        {
+                            <li>@q</li>
+                        }
+                    </ul>
+                }
+            </div>
+        </details>
+    }
+
+    <!-- Evidence (Repro Evidence from Issue) -->
+    @if (Issue.Evidence.ReproEvidence is not null)
+    {
+        var evidence = Issue.Evidence.ReproEvidence;
+        <details class="collapsible-section">
+            <summary><h3>▶ Evidence</h3></summary>
+            <div class="collapsible-body">
+                @if (evidence.StepsToReproduce is { Count: > 0 })
+                {
+                    <h4>Steps to Reproduce</h4>
+                    <ol class="repro-steps">
+                        @foreach (var step in evidence.StepsToReproduce)
+                        {
+                            <li>@step</li>
+                        }
+                    </ol>
+                }
+                @if (evidence.CodeSnippets is { Count: > 0 })
+                {
+                    <h4>Code Snippets</h4>
+                    @foreach (var snippet in evidence.CodeSnippets)
+                    {
+                        <pre class="code-block"><code>@snippet</code></pre>
+                    }
+                }
+                @if (evidence.Screenshots is { Count: > 0 })
+                {
+                    <h4>Screenshots (@evidence.Screenshots.Count)</h4>
+                    @foreach (var ss in evidence.Screenshots)
+                    {
+                        <div class="screenshot-item">
+                            <a href="@ss.Url" target="_blank" rel="noopener noreferrer">📸 @(ss.Description ?? ss.Url)</a>
+                        </div>
+                    }
+                }
+                @if (evidence.Attachments is { Count: > 0 })
+                {
+                    <h4>Attachments</h4>
+                    @foreach (var att in evidence.Attachments)
+                    {
+                        <div class="attachment-item">
+                            <a href="@att.Url" target="_blank" rel="noopener noreferrer">📎 @att.Filename</a>
+                            @if (att.Description is not null)
+                            {
+                                <span class="evidence-source">@att.Description</span>
+                            }
+                        </div>
+                    }
+                }
+                @if (evidence.RepoLinks is { Count: > 0 })
+                {
+                    <h4>Repository Links</h4>
+                    @foreach (var link in evidence.RepoLinks)
+                    {
+                        <div class="repo-link-item">
+                            <a href="@link.Url" target="_blank" rel="noopener noreferrer">🔗 @(link.Description ?? link.Url)</a>
+                        </div>
+                    }
+                }
+                @if (evidence.RelatedIssues is { Count: > 0 })
+                {
+                    <h4>Related Issues</h4>
+                    <div class="related-issues">
+                        @foreach (var num in evidence.RelatedIssues)
+                        {
+                            <a href="https://github.com/@Issue.Meta.Repo/issues/@num" target="_blank" rel="noopener noreferrer" class="related-issue-link">#@num</a>
+                        }
+                    </div>
+                }
+                @if (evidence.EnvironmentDetails is not null)
+                {
+                    <h4>Environment</h4>
+                    <p>@evidence.EnvironmentDetails</p>
+                }
+            </div>
+        </details>
+    }
+
+    <!-- Rationale -->
+    @if (Issue.Analysis?.Rationale is not null || Issue.Analysis?.ErrorFingerprint is not null)
+    {
+        <details class="collapsible-section">
+            <summary><h3>▶ Rationale</h3></summary>
+            <div class="collapsible-body">
+                @if (Issue.Analysis?.Rationale is not null)
+                {
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(Issue.Analysis.Rationale)</div>
+                }
+                @if (Issue.Analysis?.ErrorFingerprint is not null)
+                {
+                    <div class="field-row" style="margin-top: 0.5rem">
+                        <span class="field-label">Error Fingerprint:</span>
+                        <code>@Issue.Analysis.ErrorFingerprint</code>
+                    </div>
+                }
+            </div>
+        </details>
+    }
+
+    @* ═══ Fix Section (collapsible, when available) ═══════════ *@
+    @if (Fix is not null)
+    {
+        <details class="collapsible-section">
+            <summary><h3>▶ 🔧 Fix</h3></summary>
+            <div class="collapsible-body">
+                <div class="fix-header">
+                    <span class="badge-fix-status badge-fix-@Fix.Status.ToJsonString()">@FormatLabel(Fix.Status.ToJsonString())</span>
+                    <p class="fix-summary">@Fix.Summary</p>
+                </div>
+
+                <div class="detail-card">
+                    <h4>Root Cause</h4>
+                    <div class="field-row">
+                        <span class="label">@FormatLabel(Fix.RootCause.Category.ToJsonString())</span>
+                        <span class="label">@FormatLabel(Fix.RootCause.Area.ToJsonString())</span>
+                    </div>
+                    <div class="reason-text md-content" style="margin-top: 0.5rem">@MarkdownHelper.ToHtml(Fix.RootCause.Description)</div>
+                    @if (Fix.RootCause.AffectedFiles is { Count: > 0 })
+                    {
+                        <div class="field-row" style="margin-top: 0.5rem">
+                            <span class="field-label">Affected:</span>
+                            @foreach (var f in Fix.RootCause.AffectedFiles)
+                            {
+                                <code style="margin-right: 0.25rem;">@f</code>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="detail-card">
+                    <h4>Changes</h4>
+                    <div class="field-row">
+                        <span class="badge-risk badge-risk-@Fix.Changes.Risk.ToJsonString()">@FormatLabel(Fix.Changes.Risk.ToJsonString()) risk</span>
+                        @if (Fix.Changes.BreakingChange)
+                        {
+                            <span class="label" style="background: #dc3545; color: white;">⚠ Breaking Change</span>
+                        }
+                    </div>
+                    @if (Fix.Changes.Files is { Count: > 0 })
+                    {
+                        <table class="repro-version-table" style="margin-top: 0.5rem">
+                            <thead><tr><th>File</th><th>Change</th><th>Summary</th></tr></thead>
+                            <tbody>
+                                @foreach (var fc in Fix.Changes.Files)
+                                {
+                                    <tr>
+                                        <td><code>@fc.Path</code></td>
+                                        <td><span class="label">@FormatLabel(fc.ChangeType.ToJsonString())</span></td>
+                                        <td>@fc.Summary</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+                <div class="detail-card">
+                    <h4>Tests</h4>
+                    <div class="field-row">
+                        <span class="label">Result: @FormatLabel(Fix.Tests.Result.ToJsonString())</span>
+                        <span class="signal @(Fix.Tests.RegressionTestAdded ? "signal-yes" : "signal-no")">
+                            @(Fix.Tests.RegressionTestAdded ? "✓ Regression test added" : "✗ No regression test")
+                        </span>
+                    </div>
+                    @if (Fix.Tests.TestsAdded is { Count: > 0 })
+                    {
+                        <ul style="margin-top: 0.5rem">
+                            @foreach (var t in Fix.Tests.TestsAdded)
+                            {
+                                <li><code>@t.File</code> — @t.Name</li>
+                            }
+                        </ul>
+                    }
+                    @if (Fix.Tests.Command is not null)
+                    {
+                        <pre class="file-content" style="margin-top: 0.5rem"><code>@Fix.Tests.Command</code></pre>
+                    }
+                </div>
+
+                <div class="detail-card">
+                    <h4>Verification</h4>
+                    <div class="field-row">
+                        <span class="label">Repro scenario: @FormatLabel(Fix.Verification.ReproScenario.ToJsonString())</span>
+                    </div>
+                    @if (Fix.Verification.Notes is not null)
+                    {
+                        <div class="reason-text md-content" style="margin-top: 0.5rem">@MarkdownHelper.ToHtml(Fix.Verification.Notes)</div>
+                    }
+                </div>
+
+                @if (Fix.Pr is not null)
+                {
+                    <div class="detail-card">
+                        <h4>Pull Request</h4>
+                        <div class="field-row">
+                            <a href="@Fix.Pr.Url" target="_blank" rel="noopener noreferrer">
+                                @if (Fix.Pr.Number is not null) { <span>PR #@Fix.Pr.Number</span> } else { <span>@Fix.Pr.Url</span> }
+                            </a>
+                            <span class="label">@FormatLabel(Fix.Pr.Status.ToJsonString())</span>
+                        </div>
+                    </div>
+                }
+
+                @if (Fix.RelatedIssues is { Count: > 0 })
+                {
+                    <div class="field-row" style="margin-top: 0.5rem">
+                        <span class="field-label">Related issues:</span>
+                        @foreach (var num in Fix.RelatedIssues)
+                        {
+                            <a href="triage/@num" class="related-issue-link">#@num</a>
+                        }
+                    </div>
+                }
+
+                <p class="last-updated">Fix analyzed: @Fix.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+            </div>
+        </details>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public TriagedIssue Issue { get; set; } = default!;
+    [Parameter] public FixResult? Fix { get; set; }
+    [Parameter] public string ActiveTab { get; set; } = "details";
+
+    private string GetFileUrl(CodeInvestigationEntry entry) =>
+        TriageFormatHelper.GetFileUrl(Issue.Meta.Repo, entry);
+}
