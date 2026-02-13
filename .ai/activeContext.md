@@ -13,6 +13,26 @@
 
 ## Recent Changes
 
+### 2026-02-13 — Scoped CSS Migration Complete
+
+Migrated ~1,870 lines of component-specific CSS from monolithic `dashboard.css` (2,670 lines) into 13 per-component scoped `.razor.css` files. Dashboard.css reduced to ~800 lines of shared/global styles only.
+
+**8 commits pushed:**
+1. Dead CSS removal (204 lines)
+2. Home.razor.css (196 lines)
+3. Issues.razor.css + PrTriage.razor.css (298 lines)
+4. NuGet.razor.css + Community.razor.css (329 lines)
+5. Triage.razor.css + fix wrongly-deleted styles
+6. TriageDetail + DetailTabs + PipelineStepper + TriageDetailNav (4 files)
+7. ReproTabPanel.razor.css + DetailsTabPanel.razor.css extension
+8. Final audit: 135 more dead lines removed, single-use classes scoped
+
+**Key decisions:**
+- No `::deep` needed anywhere — all styled elements are direct HTML
+- Dynamic badge classes (badge-act-*, badge-sev-*, etc.) stay global
+- Shared classes used in 2+ components stay global
+- Playwright visual verification after each commit
+
 ### 2026-02-13 — Triage Detail Page Design
 
 Created `docs/design/issue-detail-layout.md` specifying a 3-tab layout for issue details:
