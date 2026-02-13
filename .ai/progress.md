@@ -4,7 +4,7 @@
 
 ## Current Status
 
-**Overall**: ✅ Schema v1.0 rewrite complete — all 3 AI skills (triage, repro, fix) supported
+**Overall**: ✅ UI reorganization complete — 4-tab layout with Response tab
 
 | Area | Status | Notes |
 |------|--------|-------|
@@ -12,7 +12,7 @@
 | Triage CLI | ✅ Complete | .NET CLI at `src/SkiaSharp.Triage.Cli/` |
 | Triage Models | ✅ Complete | Shared library at `src/SkiaSharp.Triage.Models/` |
 | Schema v1.0 | ✅ Complete | Triage, Repro, Fix — strong types, no legacy |
-| Fix Support | ✅ Complete | Fix tab, fix file generation, pipeline stepper |
+| UI Reorg | ✅ Complete | 4 tabs: Overview, Reproduction, Response, Analysis |
 | Multi-Repo | ✅ Complete | SkiaSharp + Extended, parallel sync |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
 

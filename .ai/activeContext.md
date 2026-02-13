@@ -7,13 +7,33 @@
 
 | | |
 |---|---|
-| **Phase** | AI Triage Dashboard — Schema v1.0 rewrite complete |
-| **Status** | All 3 schemas (triage, repro, fix) rewritten, pipeline stepper, fix tab added |
+| **Phase** | AI Triage Dashboard — UI reorganization complete |
+| **Status** | 4-tab layout (Overview, Reproduction, Response, Analysis) deployed |
 | **Branch** | `docs-dashboard` |
 
 ## Recent Changes
 
-### 2026-02-12 — Schema v1.0 Rewrite (Clean Cut)
+### 2026-02-13 — UI Reorganization
+
+Reorganized detail page tabs per consensus from 4 AI models:
+
+| Change | Detail |
+|--------|--------|
+| Triage → Overview | Renamed tab for clarity |
+| Fix merged into Analysis | AnalysisTabPanel now accepts `Fix?` parameter; shows 🔧 badge when fix data exists |
+| Response tab (NEW) | Proposed GitHub comment, unified triage+repro actions, resolution analysis with proposals |
+| FixTabPanel deleted | Content absorbed into AnalysisTabPanel |
+| ActionsTabPanel deleted | Actions unified in ResponseTabPanel |
+| MissingInfo in Repro | ReproTabPanel shows `output.missingInfo` list |
+| ReproOutput models | Added ReproOutput, ReproProposedResponse, ResponseStatus enum |
+
+**Tab structure (4 tabs, was 5):**
+1. **Overview** — Summary, classification, suggested action, bug signals, versions, evidence
+2. **Reproduction** 🧪 — Conclusion, version tests, environment, steps, blockers, missing info
+3. **Response** ⚡ — Proposed comment (copy button), unified actions, resolution analysis
+4. **Analysis** 🔬 — Key signals, code investigation, rationale, workarounds, next questions + Fix section when available
+
+### 2026-02-12 — Issue Titles, Tooltips, Schema Updates
 
 Complete rewrite for new v1.0 schemas across all 3 AI skills (triage, repro, fix):
 
