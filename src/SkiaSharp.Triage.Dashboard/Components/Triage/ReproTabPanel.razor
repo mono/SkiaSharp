@@ -3,22 +3,6 @@
 
         <div class="tab-panel @(ActiveTab == "repro" ? "active" : "")">
             <section class="repro-section">
-                <!-- Conclusion Card -->
-                <div class="detail-card card-conclusion">
-                    <h3>Conclusion</h3>
-                    <div class="repro-conclusion-content">
-                        <span class="badge-repro-conclusion badge-repro-@Repro.Conclusion.ToJsonString()">@FormatLabel(Repro.Conclusion.ToJsonString())</span>
-                        @if (!string.IsNullOrEmpty(Repro.Assessment))
-                        {
-                            <span class="badge-assessment">@FormatLabel(Repro.Assessment)</span>
-                        }
-                    </div>
-                    @if (!string.IsNullOrEmpty(Repro.Notes))
-                    {
-                        <p class="repro-notes">@Repro.Notes</p>
-                    }
-                </div>
-
                 <!-- Missing Info -->
                 @if (Repro.Output?.MissingInfo is { Count: > 0 })
                 {
@@ -235,23 +219,6 @@
                                 </div>
                             }
                         </div>
-                    </div>
-                }
-
-                @if (Repro.Feedback?.TriageCorrections is { Count: > 0 })
-                {
-                    <div class="repro-card">
-                        <h3>Triage Corrections</h3>
-                        @foreach (var correction in Repro.Feedback.TriageCorrections)
-                        {
-                            <div class="correction-item" style="margin-bottom: 0.75rem; padding: 0.5rem; border-left: 3px solid #ffc107; background: rgba(255, 193, 7, 0.05);">
-                                <span class="label">@correction.Topic</span>
-                                <div style="margin-top: 0.25rem;">
-                                    <span style="text-decoration: line-through; opacity: 0.6;">@correction.Upstream</span>
-                                    → <strong>@correction.Corrected</strong>
-                                </div>
-                            </div>
-                        }
                     </div>
                 }
 
