@@ -1,0 +1,175 @@
+@using SkiaSharp.Triage.Dashboard.Helpers
+@using static SkiaSharp.Triage.Dashboard.Helpers.TriageFormatHelper
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime
+
+<div class="tab-panel @(ActiveTab == "response" ? "active" : "")">
+    
+    @* ── Proposed Response (Hero) ──────────────────────────────── *@
+    @if (Repro?.Output?.ProposedResponse is not null)
+    {
+        var response = Repro.Output.ProposedResponse;
+        <div class="detail-card card-response-hero @(response.Status == ResponseStatus.Ready ? "response-ready" : "response-draft")">
+            <div class="card-header-row">
+                <h3>Proposed Response</h3>
+                <span class="badge-response-status badge-rs-@response.Status.ToJsonString()">@FormatLabel(response.Status.ToJsonString())</span>
+            </div>
+            
+            <div class="response-summary">
+                <strong>Summary:</strong> @response.Summary
+            </div>
+
+            <div class="response-body-container">
+                <div class="response-toolbar">
+                    <span class="toolbar-label">Preview</span>
+                    <div class="toolbar-actions">
+                        <button class="btn-copy" @onclick="() => CopyToClipboard(response.Body)">📋 Copy Markdown</button>
+                        <a href="https://github.com/@(Issue?.Meta.Repo ?? Repro.Meta.Repo)/issues/@(Issue?.Meta.Number ?? Repro.Meta.Number)" target="_blank" class="btn-action">Go to Issue ↗</a>
+                    </div>
+                </div>
+                <div class="response-content md-content">
+                    @MarkdownHelper.ToHtml(response.Body)
+                </div>
+            </div>
+        </div>
+    }
+
+    @* ── Combined Actions ──────────────────────────────────────── *@
+    @{
+        var actions = new List<TriageAction>();
+        if (Issue?.Output?.Actions is not null) actions.AddRange(Issue.Output.Actions);
+        if (Repro?.Output?.Actions is not null) actions.AddRange(Repro.Output.Actions);
+    }
+
+    @if (actions.Count > 0)
+    {
+        <div class="detail-card card-actions">
+            <h3 title="Proposed actions the AI recommends — each has a risk level and confidence">Actions</h3>
+            @foreach (var action in actions)
+            {
+                <div class="action-item">
+                    <div class="response-header">
+                        <span class="badge-action badge-act-@action.Type.ToJsonString()" title="@GetActionTypeTooltip(action.Type)">@FormatLabel(action.Type.ToJsonString())</span>
+                        @if (action.Risk is not null)
+                        {
+                            <span class="badge-risk badge-risk-@action.Risk.Value.ToJsonString()" style="@GetRiskStyle(action.Risk.Value)" title="@GetRiskTooltip(action.Risk.Value)">@FormatLabel(action.Risk.Value.ToJsonString()) risk</span>
+                        }
+                        @if (action.Confidence is not null)
+                        {
+                            <span class="field-confidence" title="How confident the AI is in this action">@action.Confidence.Value.ToString("P0")</span>
+                        }
+                    </div>
+                    <div class="reason-text md-content">@MarkdownHelper.ToHtml(action.Description)</div>
+
+                    @if (action.Labels is { Count: > 0 })
+                    {
+                        <div style="margin-top: 0.5rem;">
+                            <span class="field-label">Labels:</span>
+                            @foreach (var lbl in action.Labels)
+                            {
+                                <span class="label" style="margin-right: 0.25rem;">@lbl</span>
+                            }
+                        </div>
+                    }
+                    @if (action.Comment is not null)
+                    {
+                        <div class="response-draft" style="margin-top: 0.5rem;">
+                            <div class="draft-header">
+                                <strong>Comment</strong>
+                                <button class="btn-copy" @onclick="() => CopyToClipboard(action.Comment)">📋 Copy</button>
+                            </div>
+                            <div class="draft-content md-content">
+                                @MarkdownHelper.ToHtml(action.Comment)
+                            </div>
+                        </div>
+                    }
+                    @if (action.LinkedIssue is not null)
+                    {
+                        <p style="margin-top: 0.5rem;">Linked issue: <a href="https://github.com/@(Issue?.Meta.Repo ?? Repro?.Meta.Repo)/issues/@action.LinkedIssue" target="_blank">#@action.LinkedIssue</a></p>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else if (Repro?.Output?.ProposedResponse is null)
+    {
+        <p><em>No actions or response suggested for this issue.</em></p>
+    }
+
+    @* ── Resolution (Context) ──────────────────────────────────── *@
+    @if (Issue?.Analysis?.Resolution is not null)
+    {
+        var res = Issue.Analysis.Resolution;
+        <div class="detail-card card-resolution">
+            <h3>Resolution Analysis</h3>
+            @if (res.Hypothesis is not null)
+            {
+                <div class="resolution-hypothesis">
+                    <h4>Hypothesis</h4>
+                    <div class="md-content">@MarkdownHelper.ToHtml(res.Hypothesis)</div>
+                </div>
+            }
+
+            @if (res.Proposals is { Count: > 0 })
+            {
+                <div class="proposals-header">
+                    <h4>Proposals</h4>
+                    <span class="carousel-hint">← scroll →</span>
+                </div>
+                <div class="proposals-carousel">
+                    @{ var sortedProposals = res.Proposals.OrderByDescending(p => p.Title == res.RecommendedProposal).ToList(); }
+                    @foreach (var proposal in sortedProposals)
+                    {
+                        var isRecommended = proposal.Title == res.RecommendedProposal;
+                        <div class="proposal-card @(isRecommended ? "proposal-recommended" : "")">
+                            @if (isRecommended)
+                            {
+                                <span class="badge-recommended">★ Recommended</span>
+                            }
+                            @if (proposal.Title is not null)
+                            {
+                                <h5>@proposal.Title</h5>
+                            }
+                            <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
+                            <div class="proposal-meta">
+                                @if (proposal.Effort is not null)
+                                {
+                                    <span class="label">Effort: @FormatLabel(proposal.Effort.Value.ToJsonString())</span>
+                                }
+                                @if (proposal.Confidence is not null)
+                                {
+                                    <span class="field-confidence">@proposal.Confidence.Value.ToString("P0")</span>
+                                }
+                            </div>
+                            @if (proposal.CodeSnippet is not null)
+                            {
+                                <details class="proposal-code">
+                                    <summary>Code Snippet</summary>
+                                    <pre class="code-block"><code>@proposal.CodeSnippet</code></pre>
+                                </details>
+                            }
+                            @if (isRecommended && res.RecommendedReason is not null)
+                            {
+                                <div class="recommended-reason">
+                                    <strong>Why:</strong> @res.RecommendedReason
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public TriagedIssue? Issue { get; set; }
+    [Parameter] public ReproResult? Repro { get; set; }
+    [Parameter] public string ActiveTab { get; set; } = "response";
+
+    private async Task CopyToClipboard(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        try { await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text); }
+        catch { }
+    }
+}

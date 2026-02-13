@@ -19,6 +19,34 @@
                     }
                 </div>
 
+                <!-- Missing Info -->
+                @if (Repro.Output?.MissingInfo is { Count: > 0 })
+                {
+                     <div class="detail-card card-missing-info" style="border-left: 4px solid #dc3545; background: rgba(220, 53, 69, 0.05);">
+                        <h3 style="color: #dc3545;">Missing Information</h3>
+                        <ul>
+                            @foreach (var info in Repro.Output.MissingInfo)
+                            {
+                                <li>@info</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <!-- Workarounds -->
+                @if (Repro.Output?.Workarounds is { Count: > 0 })
+                {
+                    <div class="detail-card card-workarounds" style="border-left: 4px solid #198754; background: rgba(25, 135, 84, 0.05);">
+                        <h3 style="color: #198754;">Workarounds Available</h3>
+                        <ul style="margin-bottom: 0;">
+                            @foreach (var workaround in Repro.Output.Workarounds)
+                            {
+                                <li>@workaround</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
                 <!-- Version Results -->
                 @if (Repro.VersionResults is { Count: > 0 })
                 {

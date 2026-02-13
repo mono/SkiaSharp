@@ -100,3 +100,13 @@ public enum VersionSource
     [JsonStringEnumMemberName("nuget")] NuGet,
     [JsonStringEnumMemberName("source")] Source
 }
+
+// ── Response Status ──────────────────────────────────────────────
+
+[JsonConverter(typeof(JsonStringEnumConverter<ResponseStatus>))]
+public enum ResponseStatus
+{
+    [JsonStringEnumMemberName("ready")] Ready,
+    [JsonStringEnumMemberName("needs-human-edit")] NeedsHumanEdit,
+    [JsonStringEnumMemberName("do-not-post")] DoNotPost
+}

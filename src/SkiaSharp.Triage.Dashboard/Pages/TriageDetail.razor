@@ -93,22 +93,16 @@ else
         <ReproTabPanel Repro="@_repro" ActiveTab="@_activeTab" />
     }
 
-    @* ═══ Tab 3: Actions ═══ *@
-    @if (_issue is not null)
+    @* ═══ Tab 3: Response ═══ *@
+    @if (_issue is not null || _repro is not null)
     {
-        <ActionsTabPanel Issue="@_issue" ActiveTab="@_activeTab" />
+        <ResponseTabPanel Issue="@_issue" Repro="@_repro" ActiveTab="@_activeTab" />
     }
 
-    @* ═══ Tab 4: Analysis ═══ *@
+    @* ═══ Tab 4: Analysis (includes Fix) ═══ *@
     @if (_issue is not null)
     {
-        <AnalysisTabPanel Issue="@_issue" ActiveTab="@_activeTab" />
-    }
-
-    @* ═══ Tab 5: Fix ═══ *@
-    @if (_fix is not null)
-    {
-        <FixTabPanel Fix="@_fix" ActiveTab="@_activeTab" />
+        <AnalysisTabPanel Issue="@_issue" Fix="@_fix" ActiveTab="@_activeTab" />
     }
 
     <!-- Bottom Navigation -->

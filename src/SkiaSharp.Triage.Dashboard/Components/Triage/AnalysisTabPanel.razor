@@ -89,10 +89,129 @@
                     </div>
                 }
             </section>
+
+            @* ── Fix Section (merged) ─────────────────────────────── *@
+            @if (Fix is not null)
+            {
+                <section class="triage-section fix-section">
+                    <h3>🔧 Fix</h3>
+                    <div class="fix-header">
+                        <span class="badge-fix-status badge-fix-@Fix.Status.ToJsonString()">@FormatLabel(Fix.Status.ToJsonString())</span>
+                        <p class="fix-summary">@Fix.Summary</p>
+                    </div>
+
+                    <div class="detail-card">
+                        <h4>Root Cause</h4>
+                        <div class="field-row">
+                            <span class="label">@FormatLabel(Fix.RootCause.Category.ToJsonString())</span>
+                            <span class="label">@FormatLabel(Fix.RootCause.Area.ToJsonString())</span>
+                        </div>
+                        <div class="reason-text md-content" style="margin-top: 0.5rem">@MarkdownHelper.ToHtml(Fix.RootCause.Description)</div>
+                        @if (Fix.RootCause.AffectedFiles is { Count: > 0 })
+                        {
+                            <div class="field-row" style="margin-top: 0.5rem">
+                                <span class="field-label">Affected:</span>
+                                @foreach (var f in Fix.RootCause.AffectedFiles)
+                                {
+                                    <code style="margin-right: 0.25rem;">@f</code>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="detail-card">
+                        <h4>Changes</h4>
+                        <div class="field-row">
+                            <span class="badge-risk badge-risk-@Fix.Changes.Risk.ToJsonString()" style="@GetRiskStyle(Fix.Changes.Risk)">@FormatLabel(Fix.Changes.Risk.ToJsonString()) risk</span>
+                            @if (Fix.Changes.BreakingChange)
+                            {
+                                <span class="label" style="background: #dc3545; color: white;">⚠ Breaking Change</span>
+                            }
+                        </div>
+                        @if (Fix.Changes.Files is { Count: > 0 })
+                        {
+                            <table class="repro-version-table" style="margin-top: 0.5rem">
+                                <thead><tr><th>File</th><th>Change</th><th>Summary</th></tr></thead>
+                                <tbody>
+                                    @foreach (var fc in Fix.Changes.Files)
+                                    {
+                                        <tr>
+                                            <td><code>@fc.Path</code></td>
+                                            <td><span class="label">@FormatLabel(fc.ChangeType.ToJsonString())</span></td>
+                                            <td>@fc.Summary</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+
+                    <div class="detail-card">
+                        <h4>Tests</h4>
+                        <div class="field-row">
+                            <span class="label">Result: @FormatLabel(Fix.Tests.Result.ToJsonString())</span>
+                            <span class="signal @(Fix.Tests.RegressionTestAdded ? "signal-yes" : "signal-no")">
+                                @(Fix.Tests.RegressionTestAdded ? "✓ Regression test added" : "✗ No regression test")
+                            </span>
+                        </div>
+                        @if (Fix.Tests.TestsAdded is { Count: > 0 })
+                        {
+                            <ul style="margin-top: 0.5rem">
+                                @foreach (var t in Fix.Tests.TestsAdded)
+                                {
+                                    <li><code>@t.File</code> — @t.Name</li>
+                                }
+                            </ul>
+                        }
+                        @if (Fix.Tests.Command is not null)
+                        {
+                            <pre class="file-content" style="margin-top: 0.5rem"><code>@Fix.Tests.Command</code></pre>
+                        }
+                    </div>
+
+                    <div class="detail-card">
+                        <h4>Verification</h4>
+                        <div class="field-row">
+                            <span class="label">Repro scenario: @FormatLabel(Fix.Verification.ReproScenario.ToJsonString())</span>
+                        </div>
+                        @if (Fix.Verification.Notes is not null)
+                        {
+                            <div class="reason-text md-content" style="margin-top: 0.5rem">@MarkdownHelper.ToHtml(Fix.Verification.Notes)</div>
+                        }
+                    </div>
+
+                    @if (Fix.Pr is not null)
+                    {
+                        <div class="detail-card">
+                            <h4>Pull Request</h4>
+                            <div class="field-row">
+                                <a href="@Fix.Pr.Url" target="_blank">
+                                    @if (Fix.Pr.Number is not null) { <span>PR #@Fix.Pr.Number</span> } else { <span>@Fix.Pr.Url</span> }
+                                </a>
+                                <span class="label">@FormatLabel(Fix.Pr.Status.ToJsonString())</span>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Fix.RelatedIssues is { Count: > 0 })
+                    {
+                        <div class="field-row" style="margin-top: 0.5rem">
+                            <span class="field-label">Related issues:</span>
+                            @foreach (var num in Fix.RelatedIssues)
+                            {
+                                <a href="triage/@num" class="related-issue-link">#@num</a>
+                            }
+                        </div>
+                    }
+
+                    <p class="last-updated">Fix analyzed: @Fix.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+                </section>
+            }
         </div>
 
 @code {
     [Parameter, EditorRequired] public TriagedIssue Issue { get; set; } = default!;
+    [Parameter] public FixResult? Fix { get; set; }
     [Parameter] public string ActiveTab { get; set; } = "analysis";
 
     private string GetFileUrl(CodeInvestigationEntry entry) =>

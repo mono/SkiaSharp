@@ -1,20 +1,19 @@
 <div class="detail-tabs">
     @if (HasTriage)
     {
-        <span class="detail-tab @(ActiveTab == "triage" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("triage")'>Triage</span>
+        <span class="detail-tab @(ActiveTab == "triage" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("triage")'>Overview</span>
     }
     @if (HasRepro)
     {
         <span class="detail-tab @(ActiveTab == "repro" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("repro")'>Reproduction<span class="tab-badge">🧪</span></span>
     }
-    @if (HasFix)
+    @if (HasTriage || HasRepro)
     {
-        <span class="detail-tab @(ActiveTab == "fix" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("fix")'>Fix<span class="tab-badge">🔧</span></span>
-    }
-    @if (HasTriage)
-    {
-        <span class="detail-tab @(ActiveTab == "actions" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("actions")'>Actions<span class="tab-badge">⚡</span></span>
-        <span class="detail-tab @(ActiveTab == "analysis" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("analysis")'>Analysis<span class="tab-badge">🔬</span></span>
+        <span class="detail-tab @(ActiveTab == "response" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("response")'>Response<span class="tab-badge">⚡</span></span>
+        @if (HasTriage)
+        {
+            <span class="detail-tab @(ActiveTab == "analysis" ? "active" : "")" @onclick='() => OnTabChanged.InvokeAsync("analysis")'>Analysis<span class="tab-badge">🔬</span>@if (HasFix){<span class="tab-badge">🔧</span>}</span>
+        }
     }
 </div>
 

@@ -17,7 +17,24 @@ public record ReproResult(
     List<ReproArtifact>? Artifacts = null,
     ReproErrorMessages? ErrorMessages = null,
     List<string>? Blockers = null,
-    ReproFeedback? Feedback = null
+    ReproFeedback? Feedback = null,
+    ReproOutput? Output = null
+);
+
+// ── Output ───────────────────────────────────────────────────────
+
+public record ReproOutput(
+    ReproProposedResponse ProposedResponse,
+    Actionability Actionability,
+    List<string>? Workarounds = null,
+    List<TriageAction>? Actions = null,
+    List<string>? MissingInfo = null
+);
+
+public record ReproProposedResponse(
+    ResponseStatus Status,
+    string Body,
+    string? Summary = null
 );
 
 // ── Meta ─────────────────────────────────────────────────────────
