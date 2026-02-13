@@ -1,5 +1,5 @@
 ---
-name: bug-fix
+name: issue-fix
 description: >
   Fix bugs in SkiaSharp C# bindings. Structured workflow for investigating, fixing,
   and testing bug reports.
@@ -212,7 +212,7 @@ If `ai-repro/NNNN.json` exists and `conclusion` is `reproduced`/`wrong-output`:
 - Prefer this NuGet-based repro as the baseline; use Docker only if the host cannot exercise the target platform.
 
 If no `ai-repro` exists:
-- Reproduce using the **same approach as bug-repro** (standalone NuGet project first; Docker only when needed).
+- Reproduce using the **same approach as issue-repro** (standalone NuGet project first; Docker only when needed).
 
 ### 4.1 Target Platform Requirements
 
@@ -448,7 +448,7 @@ If the fix discovered that triage or repro got something wrong, record it:
 ### 3. Validate
 
 ```bash
-pwsh .github/skills/bug-fix/scripts/validate-fix.ps1 /tmp/fix-{number}.json
+pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/fix-{number}.json
 ```
 
 ### 4. Persist

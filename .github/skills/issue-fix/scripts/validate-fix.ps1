@@ -1,5 +1,5 @@
 <#
-.SYNOPSIS Validate a bug-fix JSON file against fix-schema.json (v1.0).
+.SYNOPSIS Validate an issue-fix JSON file against fix-schema.json (v1.0).
 .EXAMPLE  pwsh scripts/validate-fix.ps1 ai-fix/2997.json
 .NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.5+.
 #>

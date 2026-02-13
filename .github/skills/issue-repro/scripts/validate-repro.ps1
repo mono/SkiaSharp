@@ -1,5 +1,5 @@
 <#
-.SYNOPSIS Validate a bug-repro JSON file against repro-schema.json.
+.SYNOPSIS Validate an issue-repro JSON file against repro-schema.json.
 .EXAMPLE  pwsh scripts/validate-repro.ps1 ai-repro/2997.json
 .NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.5+.
 #>

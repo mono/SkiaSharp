@@ -1,11 +1,11 @@
 ---
-name: triage-issue
+name: issue-triage
 description: >-
   Triage a SkiaSharp GitHub issue or PR into structured JSON with classification
   (type, area, platform, severity), suggested response, and automatable actions.
   Triggers: "triage #123", "triage issue", "classify issue", "analyze issue",
   "what's this issue about". Also triggered when an issue number is given after
-  the triage-issue skill is already mentioned.
+  the issue-triage skill is already mentioned.
 ---
 
 # Triage Issue
@@ -65,7 +65,7 @@ gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,s
 If using cached JSON:
 
 ```bash
-pwsh .github/skills/triage-issue/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/issue-{number}.md
+pwsh .github/skills/issue-triage/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/issue-{number}.md
 ```
 
 If fetched via API, work directly from the `gh` output (skip the script).
@@ -201,7 +201,7 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `draftBody` conta
 ## Phase 4 — Validate
 
 ```bash
-pwsh .github/skills/triage-issue/scripts/validate-triage.ps1 /tmp/triage-{number}.json
+pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/triage-{number}.json
 ```
 
 - Exit 0 = valid → Phase 5
@@ -233,8 +233,8 @@ Actions:
 ```
 
 **Pipeline hint:**
-- If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **bug-repro** (`ai-repro/{number}.json`).
-- If repro already exists and reproduces: next step is **bug-fix** (consume both JSONs).
+- If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **issue-repro** (`ai-repro/{number}.json`).
+- If repro already exists and reproduces: next step is **issue-fix** (consume both JSONs).
 
 If `add-comment` exists, show `draftBody` in a copy-paste block. **⚠️ NEVER post via GitHub API.**
 
@@ -261,6 +261,8 @@ cd ..
 4. **Assertion without citation.** NEVER write "the code does X" without a `{file, lines}` entry in `codeInvestigation`. No file:line = no claim.
 
 5. **Batch shortcuts.** When triaging multiple issues, each gets FULL investigation. Parallel investigation is fine; parallel conclusions are not.
+
+6. **.NET Forward Compatibility.** NEVER conclude "doesn't support .NET X" when the library targets a lower TFM. .NET is forward-compatible by design — a `net8.0` library works on `net10.0` apps via NuGet TFM fallback. NEVER suggest "downgrade to .NET 8" as a workaround for TFM fallback. The only exception is platform-specific TFMs (e.g., `net8.0-ios`) where platform-specific native assets are required.
 
 ---
 

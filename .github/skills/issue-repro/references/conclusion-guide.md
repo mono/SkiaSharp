@@ -2,6 +2,14 @@
 
 How to choose the correct `conclusion` value for a bug reproduction attempt.
 
+## Contents
+1. [Factual vs Editorial](#️-critical-principle-factual-vs-editorial)
+2. [Decision Flowchart](#decision-flowchart)
+3. [Conclusion Values](#conclusion-values) — reproduced, not-reproduced, wrong-output, needs-platform, needs-hardware, partial, inconclusive
+4. [Supporting Fields](#supporting-fields) — notes, assessment, blockers
+5. [Confidence and Human Review](#confidence-and-human-review)
+6. [Scope Derivation](#scope-derivation-from-phase-3d-cross-platform-verification)
+
 ---
 
 ## ⚠️ Critical Principle: Factual vs Editorial
@@ -87,11 +95,12 @@ Special case of `reproduced` for visual/rendering bugs.
 Cannot reproduce because the required platform or OS is not available.
 
 - **Required evidence:** which platform is needed and why
+- **Before concluding:** If the issue is Linux-specific, **try Docker first** (`--platform linux/amd64` or `linux/arm64`). Only conclude `needs-platform` if Docker can't help (e.g., the issue needs Windows GUI, iOS device, or Android).
 - **Also use when:** a native rebuild is required (native rebuilds are forbidden during bug reproduction)
 - **Examples:**
-  - `"Bug reported on Windows with DirectX backend, current env is macOS"`
+  - `"Bug reported on Windows with WPF/DirectX backend — Docker cannot run Windows GUI apps"`
   - `"Reproducing requires building native libs with a modified C API — not possible in repro mode"`
-  - `"Issue is Linux-specific (fontconfig behavior), current env is macOS"`
+  - `"Issue requires iOS device for Metal rendering — Docker cannot simulate iOS"`
 
 ### `needs-hardware`
 
@@ -203,3 +212,22 @@ High-confidence conclusions (less likely to need review):
 - `not-reproduced` AND you closely matched the reporter's environment
 
 **When in doubt, note the uncertainty.** A cautious conclusion is better than an overconfident one.
+
+---
+
+## Scope Derivation (from Phase 3D cross-platform verification)
+
+After cross-platform verification, set the `scope` field in the output JSON:
+
+| Cross-platform results | `scope` value |
+|----------------------|--------------|
+| Reproduced on ≥2 platforms | `"universal"` |
+| Reproduced on primary only, not on alternative | `"platform-specific/{platform}"` (e.g., `"platform-specific/wasm"`) |
+| Not reproduced on primary, reproduced on alternative | `"platform-specific/{alt-platform}"` |
+| Phase 3D skipped (pure API bug, timeout, etc.) | `"unknown"` |
+| Only tested one platform (no 3D) | `"unknown"` |
+
+**Platform names for scope:** `macos`, `linux`, `windows`, `wasm`, `ios`, `android`
+
+The `scope` field gives the downstream fix skill an immediate signal about where to look.
+Always record the reason if scope is `"unknown"` — in the `notes` field.

@@ -1,12 +1,22 @@
-# Reproduction Strategies by Bug Category
+# Bug Categories
 
-Actionable strategies for systematically reproducing SkiaSharp bugs. Organized by bug category with identification signals, step-by-step approaches, pitfalls, and bail-out criteria.
+Identification signals and reproduction strategies by bug category. For platform-specific
+instructions (how to create/build/run), see the `platform-*.md` files in this directory.
+
+## Contents
+1. [C# API Bugs](#1-c-api-bugs)
+2. [Native Loading / P/Invoke](#2-native-loading--pinvoke)
+3. [Rendering / Visual Bugs](#3-rendering--visual-bugs)
+4. [Platform-Specific Bugs](#4-platform-specific-bugs)
+5. [Build / Deployment Bugs](#5-build--deployment-bugs)
+6. [Memory / Disposal Bugs](#6-memory--disposal-bugs)
+7. [General Tips](#general-tips)
 
 **Constraints applying to ALL categories:**
 - No native rebuilds — use `dotnet cake --target=externals-download` only
 - Output limits: 2KB per step, 4KB for failure steps
 - Binary assets: reference by URL or filename, never inline
-- Docker is unreliable on macOS — treat as optional, not required
+- For platform-specific setup: see `platform-console.md`, `platform-docker-linux.md`, `platform-wasm-blazor.md`, etc.
 
 ---
 
@@ -76,11 +86,11 @@ public void MapRectShouldNotNormalize()
    ```
 2. **Verify NativeAssets package.** Check the issue's `.csproj` for correct `PackageReference`. Common mistakes: wrong `NativeAssets.Linux` vs `NoDependencies` variant, missing NativeAssets entirely, version mismatch between managed and native packages.
 3. **Check deployed library paths:** `find . -name "libSkiaSharp*" -o -name "SkiaSharp.dll" 2>/dev/null`
-4. **Docker for Linux (if available).** See [docker-testing.md](../../bug-fix/references/docker-testing.md).
+4. **Docker for Linux (if available).** See [platform-docker-linux.md](platform-docker-linux.md).
 
 ### Pitfalls
 - Only the **first** error line in a `DllNotFoundException` stack matters. Subsequent "file not found" lines are fallback noise.
-- `NoDependencies` has zero external deps. Any dependency error (e.g., `libfontconfig`) proves the wrong binary was loaded. See [skia-patterns.md](../../triage-issue/references/skia-patterns.md#wrong-binary-pattern).
+- `NoDependencies` has zero external deps. Any dependency error (e.g., `libfontconfig`) proves the wrong binary was loaded.
 - `EntryPointNotFoundException` means the binary exists but is the wrong version — not a loading failure.
 
 ### Only bail when
@@ -134,8 +144,9 @@ Rendering bugs rarely throw exceptions. The process succeeds, but the output is 
 ### Strategy
 
 1. **Test on current platform first.** Document the result even if it works — "works on macOS ARM64" is useful data.
-2. **Docker for Linux variants.** See [docker-testing.md](../../bug-fix/references/docker-testing.md). Use `--platform linux/amd64` or `linux/arm64`. For Alpine, use `sdk:8.0-alpine`.
-3. **Record platform matrix:**
+2. **Docker for Linux variants.** See [platform-docker-linux.md](platform-docker-linux.md). Use `--platform linux/amd64` or `linux/arm64`. For Alpine, use `sdk:8.0-alpine` with `sh` (not `bash`). **Always install `libfontconfig1`** (Debian) or `fontconfig` (Alpine) first.
+3. **SkiaSharp 1.68.x on Apple Silicon?** Use `--platform linux/amd64` — there are no arm64 natives for 1.x.
+4. **Record platform matrix:**
    | Platform | Result | Notes |
    |----------|--------|-------|
    | macOS ARM64 | ✅ Pass | Host machine |
@@ -238,27 +249,9 @@ When the reporter upgrades SkiaSharp (e.g. 2.x → 3.x) and gets compiler errors
 
 ---
 
-## General Reproduction Workflow
-
-1. **Parse the issue** — extract: SkiaSharp version, platform, .NET version, code snippet, error message, expected vs actual.
-2. **Classify** — pick primary category above. Start with the more specific one if spanning categories.
-3. **Check feasibility** — can you reproduce on available platforms? If not, note in `blockers`.
-4. **Bootstrap** — run `dotnet cake --target=externals-download` if `output/native/` is empty.
-5. **Write minimal reproduction** — smallest possible code in a standalone console project using released NuGet packages.
-6. **Run and capture** — save output, errors, and generated files.
-7. **Conclude** — one of: `reproduced`, `not-reproduced`, `wrong-output`, `needs-platform`, `needs-hardware`, `partial`, `inconclusive`.
-
-### Test Helpers
-
-| Helper | Purpose |
-|--------|---------|
-| `PathToImages` | Path to test image assets (baboon.jpg, etc.) |
-| `PathToFonts` | Path to test font files |
-| `[SkippableFact]` | xUnit test skippable for hardware limitations |
-| `IsWindows` / `IsMac` / `IsLinux` | Platform detection in tests |
-
-### Output Guidelines
+## General Tips
 
 - Print only what's needed to confirm or deny the bug.
-- Always include SkiaSharp version and runtime info.
+- Always include SkiaSharp version and runtime info in output.
 - Save artifacts (PNGs, crash logs) to files — reference by filename, don't inline.
+- Test helpers available in repo: `PathToImages`, `PathToFonts`, `IsWindows`/`IsMac`/`IsLinux`.

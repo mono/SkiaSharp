@@ -1,0 +1,296 @@
+---
+name: issue-repro
+description: >-
+  Reproduce a SkiaSharp bug systematically and capture structured reproduction
+  results. Produces schema-validated JSON with step-by-step commands, outputs,
+  environment details, and conclusion.
+  Triggers: "repro #123", "reproduce #123", "reproduce issue", "try to reproduce",
+  "can you reproduce", "repro this bug", "create reproduction".
+---
+
+# Bug Reproduction
+
+**Bug pipeline: Step 2 of 3 (Repro).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+
+Systematically reproduce a SkiaSharp bug and produce structured, schema-validated reproduction JSON.
+
+```
+Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON + Output) → Phase 5 (Validate & Persist)
+```
+
+---
+
+## Phase 1 — Fetch Issue
+
+1. **Read the issue** (preferred):
+   ```bash
+   CACHE=".data-cache/repos/mono-SkiaSharp"
+   [ -d ".data-cache" ] || git worktree add .data-cache docs-data-cache
+   git -C .data-cache pull --rebase origin docs-data-cache
+   cat $CACHE/github/items/{number}.json
+   ```
+   **Fallback:** `gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author`
+2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]` and `evidence.bugSignals` as **hints** (verify independently).
+
+---
+
+## Phase 2 — Assess & Plan
+
+### 1. Classify
+
+Read [references/bug-categories.md](references/bug-categories.md) to classify the bug type.
+
+### 2. Extract reporter's version & TFM
+
+- `{reporter_version}`: exact SkiaSharp NuGet version
+- `{reporter_tfm}`: target framework (e.g., `net10.0`)
+- `{reporter_code}`: reproduction code from the issue
+- Reporter's platform/OS
+
+If not stated, use the latest stable release. **.NET is forward-compatible** — `net8.0` libraries work on `net10.0` apps. Never say "doesn't support .NET X" for newer TFMs.
+
+### 3. Environment check
+
+**⚠️ Run `dotnet --info` in `/tmp/repro-{number}/`** (NOT the SkiaSharp repo, which has `global.json` pinning SDK 8.0). Record SDK version, workload versions, and runtime version.
+
+Also check: Docker (`docker --version`), Playwright MCP tools, GPU availability, .NET workloads (`dotnet workload list`). Install missing workloads now — don't wait.
+
+### 4. Determine reproduction platform
+
+| Priority | Signals | Platform file |
+|----------|---------|---------------|
+| 1 | Blazor, WASM, WebAssembly, SKHtmlCanvas, browser error | [platform-wasm-blazor.md](references/platform-wasm-blazor.md) |
+| 2 | WPF, WinForms, WinUI, UWP | [platform-windows-desktop.md](references/platform-windows-desktop.md) |
+| 3 | iOS, Android, MAUI, Xamarin | [platform-mobile.md](references/platform-mobile.md) |
+| 4 | Linux, Docker, container, NativeAssets.Linux | [platform-docker-linux.md](references/platform-docker-linux.md) |
+| 5 | (none) | [platform-console.md](references/platform-console.md) |
+
+All platform files fall back to `platform-console.md` for core SkiaSharp bugs.
+
+**Tie-breaking:** If multiple platform signals (e.g., "WASM + WPF"), use the highest priority. If reporter says "works on X, fails on Y", reproduce on Y first, test X in Phase 3D.
+
+**Read the selected platform file.** Follow its Create → Build → Run → Verify steps, substituting `{reporter_version}`, `{reporter_tfm}`, and `{reporter_code}`.
+
+### 5. Plan
+
+Output a brief plan before executing (1-2 sentences: what platform, what version, what approach).
+
+---
+
+## Key Rules (read before Phase 3)
+
+Read [references/anti-patterns.md](references/anti-patterns.md) for the full 19-rule list. Critical rules:
+
+1. **Source code investigation.** Stop at "did it reproduce." Root cause is the `issue-fix` skill's job.
+2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design.
+3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.
+4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions.
+
+**Intermittent bugs:** If results are inconsistent, run 3–5 times. Reproduced ≥1 time → `reproduced` with note "Intermittent: X/Y runs". Never reproduced after 5 → `not-reproduced`.
+
+**Effort budget:** Phases 1–2: ~5 min. Phase 3A: ~15–20 min. Phases 3B–3D: ~10–15 min. Total: ~30–50 min. If stuck after 3+ substantially different approaches, conclude with what you have.
+
+---
+
+## Phase 3 — Reproduce
+
+> **Overview — you will test up to 4 configurations:**
+> - **3A:** Reporter's version on primary platform *(always)*
+> - **3B:** Latest stable release *(if 3A reproduced)*
+> - **3C:** Main branch source *(MANDATORY if 3B still reproduced)*
+> - **3D:** Cross-platform verification *(conditional — see table below)*
+
+### 3A. Reproduce with reporter's version
+
+Follow the platform file from Phase 2.4. For each step, capture:
+
+| Field | Limit |
+|-------|-------|
+| `command` | Exact command (redact paths) |
+| `exitCode` | 0=success, non-zero=failure |
+| `output` | 2KB success, 4KB failure |
+| `filesCreated` | Filename + source code content for repro files |
+| `layer` | `setup` / `csharp` / `c-api` / `native` / `deployment` |
+| `result` | `success` / `failure` / `wrong-output` / `skip` |
+
+**Step `result` = what actually happened** (technical outcome), not whether it was expected. A build that fails is `result: "failure"` even if that confirms the bug. See [references/anti-patterns.md](references/anti-patterns.md) for details.
+
+**Push hard.** Don't bail early. Only conclude `not-reproduced` after genuinely exhausting approaches.
+
+### 3B. Test on latest release (if reproduced)
+
+> **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/repro-{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results. See [references/anti-patterns.md](references/anti-patterns.md) #7.
+
+Use the same platform strategy from 3A with the latest stable SkiaSharp. Record in `versionResults`.
+
+### 3C. Test on main branch (if reproduced on latest)
+
+> **🛑 Do NOT skip when reproduced on latest.** If the bug reproduces on the latest stable release, testing main is MANDATORY — it tells us whether a fix exists but hasn't been released.
+
+1. Bootstrap: `[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download`
+2. **Build & run the platform-appropriate sample** under `samples/Basic/<platform>/`. Each platform file has a "Main Source Testing (Phase 3C)" section — follow it.
+3. Record result. If fixed on main but not released, note the version gap.
+
+> **Clean up:** Revert sample file changes with `git checkout -- samples/`.
+
+### 3D. Cross-platform verification (conditional)
+
+| Primary result | Run 3D? |
+|----------------|---------|
+| `reproduced` (platform-specific) | **Yes** — test alternative platform |
+| `not-reproduced` + reporter on different platform | **Yes** |
+| `reproduced` (pure API bug, no platform signals) | **Skip** — note why |
+| `not-reproduced` + same platform as reporter | No |
+
+**Time cap:** 5 minutes. **Default alternative:** Docker Linux x64.
+
+| Primary | Best alternative |
+|---------|-----------------|
+| Console macOS | Docker Linux x64 |
+| WASM/Blazor | Console on host |
+| Docker Linux | Console on host |
+| Windows (reported) | Console + Docker Linux |
+
+Test reporter's version only. Derive `scope`: reproduced on ≥2 platforms → `"universal"`, primary only → `"platform-specific/{platform}"`, skipped → `"unknown"`.
+
+---
+
+## Phase 4 — Generate JSON
+
+### 1. Choose conclusion
+
+Read [references/conclusion-guide.md](references/conclusion-guide.md). Key question: did the reported behavior occur?
+
+| Conclusion | When |
+|------------|------|
+| `reproduced` | Reported behavior occurred (even if by-design) |
+| `wrong-output` | Process succeeds but output incorrect |
+| `not-reproduced` | Reported behavior did not occur |
+| `needs-platform` / `needs-hardware` | Requires unavailable platform/hardware |
+| `partial` / `inconclusive` | Partial or ambiguous results |
+
+### 2. Generate JSON
+
+Write to `/tmp/repro-{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json). See [references/repro-examples.md](references/repro-examples.md) for full worked examples.
+
+**Key rules** (schema enforces the rest):
+- **Optional fields: OMIT entirely** — do NOT set to `null`
+- `environment.dotnetSdkVersion`: exact SDK from `dotnet --info`. Include `wasmToolsVersion` for WASM.
+- `versionResults`: include `platform` field (e.g., `"host-macos-arm64"`, `"docker-linux-x64"`)
+- Redact paths (`/Users/{name}/` → `$HOME/`), tokens, credentials.
+
+### 3. Feedback (when triage was consumed)
+
+If reproduction contradicts triage, record in `feedback.triageCorrections[]`:
+```json
+{ "topic": "classification", "upstream": "...", "corrected": "..." }
+```
+
+### 4. Generate output (required for definitive conclusions)
+
+When conclusion is `reproduced`, `not-reproduced`, or `wrong-output`, generate the `output` object with actionability, actions, and a proposed response. Skip for blocked conclusions (`needs-platform`, `needs-hardware`, `partial`, `inconclusive`).
+
+#### Choosing suggestedAction
+
+| Scenario | suggestedAction | Confidence |
+|----------|----------------|------------|
+| Reproduced on all versions including latest/main | `needs-investigation` | 0.90+ |
+| Reproduced on reporter's version, fixed on latest | `close-as-fixed` | 0.85+ |
+| Reproduced on reporter's version, fixed on main (unreleased) | `keep-open` | 0.80+ |
+| Not reproduced — likely environment/config issue | `request-info` | 0.70+ |
+| Not reproduced — works on all tested versions | `close-as-fixed` | 0.75+ |
+| Wrong output confirmed | `needs-investigation` | 0.85+ |
+| Reproduced but appears working-as-designed | `close-with-docs` | 0.70+ |
+
+#### Writing proposedResponse
+
+The `proposedResponse.body` is a Markdown GitHub comment. Follow these guidelines:
+
+- **Tone:** Professional, helpful, empathetic. Thank the reporter.
+- **Evidence:** Cite specific versions tested, platforms, and error messages observed.
+- **Workarounds:** If discovered, include them prominently.
+- **Status:** Use `"ready"` only when confidence ≥ 0.85. Use `"needs-human-edit"` for lower confidence or sensitive situations. Use `"do-not-post"` for internal-only findings.
+
+**Templates by conclusion:**
+
+**Reproduced (fixed on latest):**
+```markdown
+Thanks for reporting this! We were able to reproduce the issue with SkiaSharp {reporter_version}.
+
+The good news is that this appears to be fixed in {fixed_version}. Could you try upgrading?
+
+**Tested versions:**
+| Version | Result |
+|---------|--------|
+| {reporter_version} | ❌ Reproduced |
+| {fixed_version} | ✅ Fixed |
+
+{workaround_section_if_any}
+```
+
+**Not reproduced:**
+```markdown
+Thanks for the report. We attempted to reproduce this on {environment} with SkiaSharp {reporter_version} but were unable to observe the reported behavior.
+
+Could you share the following to help us investigate further?
+{missing_info_list}
+```
+
+**Reproduced universally:**
+```markdown
+We've confirmed this issue. The reported behavior reproduces on {platforms} with SkiaSharp {reporter_version}.
+
+We're tracking this for a fix. {workaround_section_if_any}
+```
+
+#### Workarounds
+
+If reproduction testing reveals a workaround (version upgrade, config change, workload install, API alternative), add to `output.workarounds[]` as simple strings and include in the proposed response body.
+
+#### Missing info
+
+When conclusion is `not-reproduced` or the response asks for more details, populate `output.missingInfo[]` with specific items needed (e.g., "Exact .NET SDK version", "Full exception stack trace", "Minimal reproduction project"). Reference these in `proposedResponse.body`.
+
+#### Actions
+
+Use the same action types as triage. Common repro actions:
+
+| Action | When | Risk |
+|--------|------|------|
+| `update-labels` | Add platform labels confirmed by repro, remove incorrect ones | low |
+| `close-issue` | Bug fixed in latest + reporter can upgrade | medium |
+| `set-milestone` | Bug confirmed, target a release | low |
+| `link-related` | Discovered related issue during repro | low |
+
+---
+
+## Phase 5 — Validate & Persist
+
+```bash
+# Validate
+pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/repro-{number}.json
+# Exit 0=valid, 1=fix+retry, 2=fatal
+
+# Persist
+cp /tmp/repro-{number}.json $CACHE/ai-repro/{number}.json
+cd .data-cache
+git add repos/mono-SkiaSharp/ai-repro/{number}.json
+git commit -m "ai-repro: reproduce #{number}"
+git push  # Rebase up to 3x on conflict
+cd ..
+```
+
+### Present summary
+
+```
+✅ Reproduction: ai-repro/{number}.json
+
+Conclusion:  reproduced
+Steps:       5 (3 success, 1 failure, 1 skip)
+Environment: macOS arm64, SDK 10.0.102
+
+Version results:
+  SkiaSharp 2.88.9 (reporter): ❌ REPRODUCED
+  SkiaSharp 3.116.1 (latest):  ❌ REPRODUCED
+  main (source):               ✅ not-reproduced
+```

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mono/SkiaSharp/repro-schema.json",
   "title": "SkiaSharp Bug Reproduction",
-  "description": "Per-issue AI bug reproduction v2.0. Captures systematic reproduction attempts with step-by-step results, environment details, and binary artifact references. Output limits: 2KB per step (4KB for failure steps), 50 lines for stack traces. Absolute paths containing usernames must be redacted.",
+  "description": "Per-issue AI bug reproduction v2.0. Captures systematic reproduction attempts with step-by-step results, environment details, binary artifact references, and actionable output (proposed response, actions, workarounds). Output limits: 2KB per step (4KB for failure steps), 50 lines for stack traces. Absolute paths containing usernames must be redacted.",
   "type": "object",
   "required": ["meta", "conclusion", "notes", "reproductionSteps", "environment"],
   "additionalProperties": false,
@@ -34,6 +34,44 @@
       "type": "string",
       "enum": ["issue-attachment", "test-data", "generated", "external"],
       "description": "Where the binary artifact comes from."
+    },
+    "suggestedAction": {
+      "type": "string",
+      "enum": [
+        "needs-investigation",
+        "close-as-fixed",
+        "close-with-docs",
+        "close-as-duplicate",
+        "convert-to-discussion",
+        "request-info",
+        "keep-open"
+      ],
+      "description": "Recommended next action for the maintainer."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0.0-1.0 confidence score. 0.95+=explicit, 0.80-0.94=strong inference, 0.60-0.79=ambiguous, <0.60=uncertain."
+    },
+    "actionType": {
+      "type": "string",
+      "enum": [
+        "update-labels",
+        "add-comment",
+        "close-issue",
+        "convert-to-discussion",
+        "link-related",
+        "link-duplicate",
+        "update-project",
+        "set-milestone"
+      ],
+      "description": "Type of automatable operation."
+    },
+    "actionRisk": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "low=reversible/cosmetic. medium=state change. high=irreversible or reputation-sensitive."
     }
   },
   "properties": {
@@ -88,6 +126,11 @@
       "enum": ["unknown", "likely-bug", "working-as-designed", "breaking-change", "docs-gap", "user-error"],
       "description": "EDITORIAL classification only. Use to record opinions without corrupting the factual 'conclusion'."
     },
+    "scope": {
+      "type": "string",
+      "description": "Cross-platform scope derived from Phase 3D verification. 'universal'=reproduced on ≥2 platforms, 'platform-specific/{platform}'=reproduced only on one platform, 'unknown'=only tested one platform.",
+      "pattern": "^(universal|unknown|platform-specific/(macos|linux|windows|wasm|ios|android))$"
+    },
     "reproductionTime": {
       "type": "string",
       "description": "Approximate time spent reproducing, e.g. '~10 minutes'."
@@ -117,6 +160,10 @@
           "notes": {
             "type": "string",
             "description": "Brief note about result on this version."
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform/environment where this version was tested, e.g. 'host-macos-arm64', 'docker-linux-x64', 'wasm-blazor'."
           }
         }
       },
@@ -129,8 +176,8 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["console", "test", "existing"],
-          "description": "console=new console app, test=xUnit test project, existing=used existing test infrastructure."
+          "enum": ["console", "blazorwasm", "docker", "mobile", "wpf", "winforms", "winui", "maui", "test", "existing"],
+          "description": "Project type used for reproduction. Must match the platform file used."
         },
         "tfm": {
           "type": "string",
@@ -280,7 +327,15 @@
         },
         "dotnetVersion": {
           "type": "string",
-          "description": ".NET SDK version, e.g. '10.0.100'."
+          "description": ".NET runtime version, e.g. '10.0.2'."
+        },
+        "dotnetSdkVersion": {
+          "type": "string",
+          "description": "Exact .NET SDK version from 'dotnet --info', e.g. '10.0.102'. CRITICAL: run dotnet --info in the TEST directory (/tmp/), NOT the SkiaSharp repo (which has global.json pinning to SDK 8)."
+        },
+        "wasmToolsVersion": {
+          "type": "string",
+          "description": "wasm-tools workload manifest version from 'dotnet --info', e.g. '10.0.102/10.0.100'. Required for WASM/Blazor reproductions."
         },
         "skiaSharpVersion": {
           "type": "string",
@@ -343,6 +398,96 @@
         }
       },
       "description": "Feedback on upstream pipeline steps. Record corrections when reproduction contradicts triage."
+    },
+    "output": {
+      "type": "object",
+      "required": ["actionability", "actions", "proposedResponse"],
+      "additionalProperties": false,
+      "description": "Actionable output: recommended disposition, automatable operations, and proposed response. Required when conclusion is reproduced, not-reproduced, or wrong-output.",
+      "properties": {
+        "actionability": {
+          "type": "object",
+          "required": ["suggestedAction", "confidence", "reason"],
+          "additionalProperties": false,
+          "description": "Recommended high-level disposition. Structure matches triage schema.",
+          "properties": {
+            "suggestedAction": {
+              "$ref": "#/$defs/suggestedAction"
+            },
+            "confidence": {
+              "$ref": "#/$defs/confidence"
+            },
+            "reason": {
+              "type": "string",
+              "description": "Why this action is suggested, citing reproduction evidence."
+            }
+          }
+        },
+        "workarounds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Verified workarounds discovered during reproduction, e.g. 'Upgrade to 3.116.1', 'Run dotnet workload restore'."
+        },
+        "proposedResponse": {
+          "type": "object",
+          "required": ["status", "body"],
+          "additionalProperties": false,
+          "description": "Draft GitHub comment to post on the issue. Separate from actions[] add-comment because it has status metadata and is the primary user-facing deliverable.",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["ready", "needs-human-edit", "do-not-post"],
+              "description": "ready=can post as-is. needs-human-edit=draft needs maintainer review. do-not-post=internal notes only."
+            },
+            "summary": {
+              "type": "string",
+              "description": "One-line summary of what the response says."
+            },
+            "body": {
+              "type": "string",
+              "description": "Full Markdown comment body for the GitHub issue."
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "description"],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "$ref": "#/$defs/actionType"
+              },
+              "description": {
+                "type": "string",
+                "description": "What this action does."
+              },
+              "risk": {
+                "$ref": "#/$defs/actionRisk"
+              },
+              "confidence": {
+                "$ref": "#/$defs/confidence"
+              },
+              "labels": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Labels to add/remove (for update-labels actions)."
+              },
+              "linkedIssue": {
+                "type": "integer",
+                "description": "Issue number to link (for link-related/link-duplicate actions)."
+              }
+            }
+          },
+          "description": "Automatable operations. Same format as triage schema actions."
+        },
+        "missingInfo": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Information needed from the reporter when conclusion is not-reproduced or partial. E.g. 'Exact .NET SDK version', 'Full exception stack trace', 'Minimal reproduction project'."
+        }
+      }
     }
   },
   "allOf": [
@@ -396,6 +541,16 @@
       },
       "then": {
         "required": ["meta", "conclusion", "notes", "reproductionSteps", "environment", "blockers"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conclusion": { "enum": ["reproduced", "not-reproduced", "wrong-output"] }
+        }
+      },
+      "then": {
+        "required": ["meta", "conclusion", "notes", "reproductionSteps", "environment", "output"]
       }
     }
   ]

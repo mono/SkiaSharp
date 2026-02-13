@@ -10,9 +10,9 @@ The skills are meant to be run in order (often by different people / at differen
 
 | Step | Skill | Output | Primary job |
 |------|-------|--------|-------------|
-| 1 | `triage-issue` | `ai-triage/{n}.json` | Classification, code investigation, workaround search, suggested action |
-| 2 | `bug-repro` | `ai-repro/{n}.json` | Standalone repro + version results (reporter → latest → main) |
-| 3 | `bug-fix` | `ai-fix/{n}.json` + PR | Root cause, fix, regression test; consumes triage/repro artifacts |
+| 1 | `issue-triage` | `ai-triage/{n}.json` | Classification, code investigation, workaround search, suggested action |
+| 2 | `issue-repro` | `ai-repro/{n}.json` | Standalone repro + version results (reporter → latest → main) |
+| 3 | `issue-fix` | `ai-fix/{n}.json` + PR | Root cause, fix, regression test; consumes triage/repro artifacts |
 
 ---
 
@@ -35,7 +35,7 @@ Expected artifact locations:
 
 ## Role boundaries (what each skill owns)
 
-### triage-issue (Step 1 of 3)
+### issue-triage (Step 1 of 3)
 Owns (exclusive):
 - **Classification**: `type`, `area`, platform labels, severity, actionability
 - **Evidence extraction**: steps, snippets, attachments, environment info
@@ -45,19 +45,21 @@ Owns (exclusive):
 
 Does *not* own:
 - Building/running code to confirm (that’s repro)
-- Root-cause debugging/fixes (that’s bug-fix)
+- Root-cause debugging/fixes (that’s issue-fix)
 
-### bug-repro (Step 2 of 3)
+### issue-repro (Step 2 of 3)
 Owns (exclusive):
 - **Factual reproduction** (no judgment): did the reported symptoms occur?
 - **Version matrix**: reporter → latest stable → `main (source)` when feasible
+- **Platform dispatch**: select platform-specific playbook (`references/platform-*.md`) based on issue signals and triage data
+- **Cross-platform verification**: test on alternative platform to determine scope (universal vs platform-specific)
 - **Minimal repro source**: capture text source files via `reproductionSteps[].filesCreated[].content` (Program.cs, .csproj, etc.)
 
 Does *not* own:
 - Root-cause analysis or proposing fixes
 - Deciding labels/closure (triage owns that)
 
-### bug-fix (Step 3 of 3)
+### issue-fix (Step 3 of 3)
 Owns (exclusive):
 - Root-cause analysis and minimal code change
 - Regression tests and verifying the fix
@@ -72,8 +74,9 @@ Does *not* own:
 ## Handoff contract (fields consumers should rely on)
 
 ### triage → repro
-Repro may use triage as hints only:
-- `classification.*` (type/area/platforms/backends)
+Repro consumes triage for platform selection and hints:
+- `classification.platforms[]` → **informs platform file selection** (e.g., `["os/Linux"]` → Docker)
+- `classification.*` (type/area/backends)
 - `evidence.reproEvidence.*` (steps/snippets/attachments)
 - `evidence.bugSignals.*` (severity, errorType, errorMessage, stackTrace)
 - `analysis.codeInvestigation[]` (entry points / suspected code paths)
@@ -97,7 +100,7 @@ Fix should treat repro JSON as the baseline execution record:
 
 - **Default**: reproduce using a standalone NuGet-based console/test project.
 - **Docker**: use only when the reported platform is unavailable on the host (or when the repro explicitly requires Linux/Android/etc.).
-- **bug-fix should start from ai-repro**:
+- **issue-fix should start from ai-repro**:
   - Rehydrate the repro project from `ai-repro` source files.
   - Re-run after applying the fix to verify it is resolved.
   - Only run a separate Docker-based repro if the issue is platform-only and cannot be exercised otherwise.
@@ -107,14 +110,14 @@ Fix should treat repro JSON as the baseline execution record:
 ## Pipeline gates (when to run the next step)
 
 - If triage suggests `request-info` or `close-*`: do **not** run repro/fix unless a human overrides.
-- If repro concludes `not-reproduced` / `inconclusive`: bug-fix generally should **not** start; instead update triage actions (request more info / close / document).
-- If repro concludes `reproduced` or `wrong-output`: proceed to bug-fix.
+- If repro concludes `not-reproduced` / `inconclusive`: issue-fix generally should **not** start; instead update triage actions (request more info / close / document).
+- If repro concludes `reproduced` or `wrong-output`: proceed to issue-fix.
 
 ---
 
-## PR integration (bug-fix)
+## PR integration (issue-fix)
 
-When `ai-triage`/`ai-repro` exist, the bug-fix PR should copy in:
+When `ai-triage`/`ai-repro` exist, the issue-fix PR should copy in:
 - A short triage summary (type/area/platform/severity + key codeInvestigation entries)
 - Reproduction matrix from `versionResults[]`
 - The minimal repro commands (from `reproductionSteps[].command`) and any required artifacts
