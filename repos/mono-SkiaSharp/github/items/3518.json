@@ -1,0 +1,28 @@
+{
+  "number": 3518,
+  "type": "pr",
+  "state": "open",
+  "title": "bug-repro: platform-aware reproduction with cross-platform verification",
+  "body": "## Summary\n\nRedesign the bug-repro skill to dispatch to platform-specific playbooks instead of hard-coding console app patterns. Adds cross-platform verification to determine bug scope.\n\n## Problem\n\nThe skill failed badly on WASM/Blazor issues (#3422, #3435):\n- Zero mentions of Blazor, WASM, browser, or Playwright\n- Phase 3 was 180 lines of hard-coded \u0060dotnet new console\u0060 patterns\n- Stopped at build success for WASM bugs (runtime errors only manifest in browser)\n- AI concluded \u0022SkiaSharp doesn\u0027t support .NET 10\u0022 \u2014 wrong (.NET is forward-compatible)\n\n## Changes\n\n### New platform files (\u0060references/platform-*.md\u0060)\n| File | Purpose |\n|------|---------|\n| \u0060platform-console.md\u0060 | Default: dotnet new console \u002B dotnet run (extracted from SKILL.md) |\n| \u0060platform-wasm-blazor.md\u0060 | Blazor WASM \u002B Playwright browser testing |\n| \u0060platform-docker-linux.md\u0060 | Linux in Docker (Debian/Alpine/arm64) |\n| \u0060platform-windows-desktop.md\u0060 | WPF/WinForms/WinUI stub |\n| \u0060platform-mobile.md\u0060 | iOS/Android/MAUI stub |\n\n### SKILL.md restructure\n- **Phase 2.4**: Platform dispatch table \u2014 selects platform file based on issue signals \u002B triage data\n- **Phase 2.5**: .NET forward-compatibility rule (net8.0 works on net10.0)\n- **Phase 3A**: Delegates to platform file instead of inline code\n- **Phase 3D** (NEW): Cross-platform verification \u2014 tests alternative platform to determine scope\n- **Phase 4**: New \u0060scope\u0060 field (\u0060universal\u0060/\u0060platform-specific/{platform}\u0060/\u0060unknown\u0060)\n- **Anti-patterns #13-18**: TFM compat, build\u2260runtime, cross-platform verification rules\n\n### Other files\n- \u0060repro-strategies.md\u0060 \u2192 \u0060bug-categories.md\u0060 (renamed)\n- \u0060repro-schema.json\u0060: \u0060platform\u0060 field on versionResults, \u0060scope\u0060 at root\n- \u0060repro-examples.md\u0060: WASM example (#3422) showing cross-platform verification\n- \u0060conclusion-guide.md\u0060: Scope derivation rules\n- \u0060triage-issue/SKILL.md\u0060: .NET forward-compat anti-pattern\n- \u0060bug-pipeline.md\u0060: Updated repro ownership\n\n### Design decisions (Gemini \u002B GPT Codex consensus)\n- Cross-platform verification is **conditional** \u2014 skip for pure API/logic bugs\n- Docker Linux x64 is the default alternative platform\n- WASM only tested when issue signals suggest browser/web\n- 5-minute time cap on Phase 3D\n- \u0060scope\u0060 field gives fix skill immediate scope signal\n\n## Validation\n\nTested with \u0060copilot -p\u0060:\n- **#2997** (console): reproduced \u2705 \u2014 used platform-console.md, set \u0060platform: host-macos-arm64\u0060, \u0060scope: unknown\u0060 (pure API bug)\n- **#3422** (WASM): not-reproduced \u2705 \u2014 used platform-wasm-blazor.md \u002B Playwright, cross-platform verified with console app, corrected triage",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-13T03:04:13",
+  "updatedAt": "2026-02-13T04:07:58",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "dev/docker-linux-repro-testing",
+  "additions": 1027,
+  "deletions": 613,
+  "changedFiles": 14,
+  "commits": 9,
+  "reviews": []
+}
