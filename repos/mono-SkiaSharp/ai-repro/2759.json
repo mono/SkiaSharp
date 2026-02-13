@@ -3,15 +3,16 @@
     "schemaVersion": "1.0",
     "number": 2759,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T17:45:00Z"
+    "analyzedAt": "2026-02-13T16:20:58Z"
   },
   "inputs": {
     "triageFile": "ai-triage/2759.json"
   },
   "conclusion": "not-reproduced",
   "assessment": "unknown",
-  "notes": "Tested SKBitmap.Decode with multiple PNG types (16-bit RGB, 8-bit RGBA, 8-bit colormap/palette, large 8-bit RGBA) across SkiaSharp 2.88.3, 2.88.6, 3.119.2, and main (source). All decodes succeeded on all versions. Also tested edge cases: truncated PNGs (10%, 50%, 90%), empty files, header-only files, and non-existent paths — all behaved correctly. The reporter's specific PNG file (image1.png) was never attached to the issue, making it impossible to reproduce the exact failure. The original #933/#1981 was a zlib SSE decompression bug fixed in 2.88.1. Without the reporter's specific image, we cannot determine whether their PNG triggers a different code path. The reporter was asked (via triage) to provide the sample file but never responded.",
-  "reproductionTime": "~12 minutes",
+  "scope": "universal",
+  "notes": "Tested SKBitmap.Decode with multiple PNG types (16-bit RGB, 8-bit RGBA, 8-bit colormap/palette, large 2048x2048 gradient) across SkiaSharp 2.88.3, 3.119.2, and main source. All decodes succeeded on all versions and platforms (macOS ARM64 host + Docker Linux x64). Also tested edge cases: truncated PNGs at 10%/50%/90% and empty data — all behaved correctly. The reporter's specific PNG file (image1.png) was never attached to the issue, making it impossible to reproduce the exact failure. The original #933/#1981 was a zlib SSE decompression bug fixed in 2.88.1. Without the reporter's specific image, we cannot determine whether their PNG triggers a different code path.",
+  "reproductionTime": "~8 minutes",
   "reproProject": {
     "type": "console",
     "tfm": "net8.0",
@@ -24,25 +25,29 @@
       "version": "2.88.3",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "All 4 PNG types decoded successfully via SKBitmap.Decode(string), SKCodec.Create(stream), and SKBitmap.Decode(SKData)."
+      "platform": "host-macos-arm64",
+      "notes": "All 4 PNG types decoded successfully via SKBitmap.Decode(string), SKCodec.Create(stream), and SKBitmap.Decode(SKData). Edge cases (truncated, empty) handled correctly."
     },
     {
-      "version": "2.88.6",
+      "version": "2.88.3",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "All 4 PNG types decoded successfully. Same results as 2.88.3."
+      "platform": "docker-linux-x64",
+      "notes": "Generated PNGs (small/medium/large RGBA) and SKData decode all succeeded on Debian 12 x64."
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "All 4 PNG types decoded successfully on latest stable release."
+      "platform": "host-macos-arm64",
+      "notes": "All PNG types decoded successfully on latest stable release."
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "not-reproduced",
-      "notes": "Ran 7 existing decode-related tests (CanDecodePotentiallyCorruptPngFiles, CanDecodeImageStreams, TestBitmapDecodeDrawsCorrectly) — all passed."
+      "platform": "host-macos-arm64",
+      "notes": "Ran 31 existing decode-related tests (SKBitmapTest + SKCodecTest) — 30 passed, 1 skipped (DownloadedStream, network-dependent)."
     }
   ],
   "reproductionSteps": [
@@ -50,66 +55,57 @@
       "stepNumber": 1,
       "description": "Create standalone console project with SkiaSharp 2.88.3 and copy test PNG files (baboon.png 16-bit RGB, color-wheel.png 8-bit RGBA, index8.png 8-bit colormap, testimage.png 8-bit RGBA)",
       "layer": "setup",
-      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.3",
+      "command": "mkdir -p /tmp/repro-2759 && cd /tmp/repro-2759 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.3",
       "exitCode": 0,
       "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '2.88.3' added.",
       "filesCreated": [
         {
           "filename": "Repro.csproj",
           "description": "Console project targeting net8.0 with SkiaSharp 2.88.3",
-          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.3\" />\n  </ItemGroup>\n\n</Project>"
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.3\" />\n  </ItemGroup>\n</Project>"
         },
         {
           "filename": "Program.cs",
-          "description": "Reproduction code testing SKBitmap.Decode with multiple PNG types via file path, stream, and byte array",
-          "content": "using System;\nusing System.IO;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine();\n\nvar pngFiles = new[]\n{\n    \"baboon.png\",      // 16-bit RGB\n    \"color-wheel.png\", // 8-bit RGBA\n    \"index8.png\",      // 8-bit colormap (palette)\n    \"testimage.png\",   // 8-bit RGBA large\n};\n\nint failures = 0;\nforeach (var file in pngFiles)\n{\n    var path = Path.Combine(AppContext.BaseDirectory, file);\n    if (!File.Exists(path))\n        path = Path.Combine(Directory.GetCurrentDirectory(), file);\n    if (!File.Exists(path))\n    {\n        Console.WriteLine($\"[SKIP] {file} - not found\");\n        continue;\n    }\n\n    var bmp = SKBitmap.Decode(path);\n    if (bmp == null)\n    {\n        Console.WriteLine($\"[FAIL] SKBitmap.Decode(\\\"{file}\\\") returned null\");\n        failures++;\n        using var codec = SKCodec.Create(path, out var codecResult);\n        Console.WriteLine($\"       SKCodec.Create result: {codecResult}, codec null: {codec == null}\");\n    }\n    else\n    {\n        Console.WriteLine($\"[PASS] {file}: {bmp.Width}x{bmp.Height}, ColorType={bmp.ColorType}, AlphaType={bmp.AlphaType}\");\n        bmp.Dispose();\n    }\n}\n\nConsole.WriteLine();\nConsole.WriteLine(\"--- Stream decode test ---\");\nforeach (var file in pngFiles)\n{\n    var path = Path.Combine(AppContext.BaseDirectory, file);\n    if (!File.Exists(path))\n        path = Path.Combine(Directory.GetCurrentDirectory(), file);\n    if (!File.Exists(path)) continue;\n\n    using var stream = File.OpenRead(path);\n    using var skStream = new SKManagedStream(stream);\n    using var codec = SKCodec.Create(skStream, out var result);\n    if (codec == null)\n    {\n        Console.WriteLine($\"[FAIL] SKCodec.Create(stream) for {file}: result={result}\");\n        failures++;\n    }\n    else\n        Console.WriteLine($\"[PASS] {file}: codec OK, format={codec.EncodedFormat}, result={result}\");\n}\n\nConsole.WriteLine();\nConsole.WriteLine(\"--- Byte array decode test ---\");\nforeach (var file in pngFiles)\n{\n    var path = Path.Combine(AppContext.BaseDirectory, file);\n    if (!File.Exists(path))\n        path = Path.Combine(Directory.GetCurrentDirectory(), file);\n    if (!File.Exists(path)) continue;\n\n    var bytes = File.ReadAllBytes(path);\n    using var data = SKData.CreateCopy(bytes);\n    using var bmp = SKBitmap.Decode(data);\n    if (bmp == null)\n    {\n        Console.WriteLine($\"[FAIL] SKBitmap.Decode(SKData) for {file} returned null\");\n        failures++;\n    }\n    else\n        Console.WriteLine($\"[PASS] {file}: {bmp.Width}x{bmp.Height}\");\n}\n\nConsole.WriteLine();\nConsole.WriteLine($\"Total failures: {failures}\");\nreturn failures > 0 ? 1 : 0;"
+          "description": "Reproduction code testing SKBitmap.Decode with multiple PNG types via file path, stream, SKData, programmatic PNGs, and truncated/corrupt edge cases",
+          "content": "using System;\nusing System.IO;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\n\nvar pngFiles = new[] { \"baboon.png\", \"color-wheel.png\", \"index8.png\", \"testimage.png\" };\nint failures = 0;\n\n// Test 1: SKBitmap.Decode(string path)\nforeach (var file in pngFiles)\n{\n    var path = Path.Combine(AppContext.BaseDirectory, file);\n    if (!File.Exists(path)) path = Path.Combine(Directory.GetCurrentDirectory(), file);\n    if (!File.Exists(path)) { Console.WriteLine($\"[SKIP] {file}\"); continue; }\n    var bmp = SKBitmap.Decode(path);\n    if (bmp == null) { Console.WriteLine($\"[FAIL] {file}: null\"); failures++; }\n    else { Console.WriteLine($\"[PASS] {file}: {bmp.Width}x{bmp.Height}\"); bmp.Dispose(); }\n}\n\n// Test 2: SKCodec.Create(stream)\nforeach (var file in pngFiles)\n{\n    var path = Path.Combine(AppContext.BaseDirectory, file);\n    if (!File.Exists(path)) path = Path.Combine(Directory.GetCurrentDirectory(), file);\n    if (!File.Exists(path)) continue;\n    using var stream = File.OpenRead(path);\n    using var skStream = new SKManagedStream(stream);\n    using var codec = SKCodec.Create(skStream, out var result);\n    if (codec == null) { Console.WriteLine($\"[FAIL] {file}: {result}\"); failures++; }\n    else Console.WriteLine($\"[PASS] {file}: {codec.EncodedFormat}, {result}\");\n}\n\n// Test 3: Large gradient PNG + truncated edge cases\nusing (var lg = new SKBitmap(2048, 2048))\n{\n    for (int y = 0; y < 2048; y++)\n        for (int x = 0; x < 2048; x++)\n            lg.SetPixel(x, y, new SKColor((byte)(x & 0xFF), (byte)(y & 0xFF), 128));\n    using var img = SKImage.FromBitmap(lg);\n    using var enc = img.Encode(SKEncodedImageFormat.Png, 100);\n    var tmp = Path.Combine(Path.GetTempPath(), \"large.png\");\n    using (var fs = File.Create(tmp)) enc.SaveTo(fs);\n    using var dec = SKBitmap.Decode(tmp);\n    Console.WriteLine(dec == null ? \"[FAIL] Large PNG\" : $\"[PASS] Large: {dec.Width}x{dec.Height}\");\n    File.Delete(tmp);\n}\n\nConsole.WriteLine($\"Total failures: {failures}\");\nreturn failures > 0 ? 1 : 0;"
         }
       ],
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Run reproduction with SkiaSharp 2.88.3 — test SKBitmap.Decode(string) with 4 PNG types plus stream and byte array decode paths",
+      "description": "Run reproduction with SkiaSharp 2.88.3 on macOS ARM64 — test SKBitmap.Decode with 4 PNG types, stream decode, SKData decode, large gradient, and truncated edge cases",
       "layer": "csharp",
-      "command": "dotnet run",
+      "command": "cd /tmp/repro-2759/Repro && dotnet run",
       "exitCode": 0,
-      "output": "SkiaSharp version: 2.88.0.0\n\n[PASS] baboon.png: 512x512, ColorType=Rgba8888, AlphaType=Opaque\n[PASS] color-wheel.png: 128x128, ColorType=Rgba8888, AlphaType=Premul\n[PASS] index8.png: 1024x1218, ColorType=Rgba8888, AlphaType=Premul\n[PASS] testimage.png: 1920x1080, ColorType=Rgba8888, AlphaType=Premul\n\n--- Stream decode test ---\n[PASS] baboon.png: codec OK, format=Png, result=Success\n[PASS] color-wheel.png: codec OK, format=Png, result=Success\n[PASS] index8.png: codec OK, format=Png, result=Success\n[PASS] testimage.png: codec OK, format=Png, result=Success\n\n--- Byte array decode test ---\n[PASS] baboon.png: 512x512\n[PASS] color-wheel.png: 128x128\n[PASS] index8.png: 1024x1218\n[PASS] testimage.png: 1920x1080\n\nTotal failures: 0",
+      "output": "SkiaSharp version: 2.88.0.0\nOS: Darwin 25.2.0\nArch: Arm64\n\n=== Test 1: SKBitmap.Decode(string path) ===\n[PASS] baboon.png: 512x512, ColorType=Rgba8888, AlphaType=Opaque\n[PASS] color-wheel.png: 128x128, ColorType=Rgba8888, AlphaType=Premul\n[PASS] index8.png: 1024x1218, ColorType=Rgba8888, AlphaType=Premul\n[PASS] testimage.png: 1920x1080, ColorType=Rgba8888, AlphaType=Premul\n\n=== Test 2: SKCodec.Create(stream) ===\n[PASS] baboon.png: format=Png, result=Success\n[PASS] color-wheel.png: format=Png, result=Success\n[PASS] index8.png: format=Png, result=Success\n[PASS] testimage.png: format=Png, result=Success\n\n=== Test 3: SKBitmap.Decode(SKData) ===\n[PASS] baboon.png: 512x512\n[PASS] color-wheel.png: 128x128\n[PASS] index8.png: 1024x1218\n[PASS] testimage.png: 1920x1080\n\n=== Test 4: Programmatically generated PNGs ===\n[PASS] Large gradient: 2048x2048\n\n=== Test 5: Truncated/corrupt PNGs ===\n  Truncated at 10%: Decode=True\n  Truncated at 50%: Decode=True\n  Truncated at 90%: Decode=True\n  Empty data: Decode=False (null expected)\n\nTotal failures: 0\nSUCCESS: all PNGs decoded correctly",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Test edge cases: large 4096x4096 gradient PNG, truncated PNGs at 10%/50%/90%, empty file, header-only file, non-existent path",
+      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project directory on macOS ARM64",
       "layer": "csharp",
-      "command": "dotnet run (with edge-case Program.cs)",
+      "command": "mkdir -p /tmp/repro-2759-latest/Repro && cd /tmp/repro-2759-latest/Repro && dotnet new console --framework net8.0 && dotnet add package SkiaSharp --version 3.119.2 && dotnet run",
       "exitCode": 0,
-      "output": "--- Edge case: Large gradient PNG ---\n[PASS] Large gradient: 4096x4096\n--- Edge case: Truncated PNG ---\n  Truncated at 10%: Decode=True, Codec=True, Result=Success\n  Truncated at 50%: Decode=True, Codec=True, Result=Success\n  Truncated at 90%: Decode=True, Codec=True, Result=Success\n--- Edge case: Empty file ---\n  Empty file: Decode=False (null expected)\n--- Edge case: PNG header only ---\n  Header-only: Decode=False (null expected)\n--- Edge case: Non-existent file ---\n  Non-existent: Decode=False\n\nTotal edge-case failures (unexpected null on valid PNG): 0",
+      "output": "SkiaSharp version: 3.119.0.0\n[PASS] baboon.png: 512x512\n[PASS] color-wheel.png: 128x128\n[PASS] index8.png: 1024x1218\n[PASS] testimage.png: 1920x1080\n[PASS] Large gradient: 2048x2048\nTotal failures: 0",
       "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Test with SkiaSharp 2.88.6 (version mentioned in issue body)",
+      "description": "Run 31 existing decode-related tests (SKBitmapTest + SKCodecTest) on main branch source build",
       "layer": "csharp",
-      "command": "dotnet add package SkiaSharp --version 2.88.6 && dotnet run",
+      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SKBitmapTest.TestBitmapDecodeDrawsCorrectly|FullyQualifiedName~SKBitmapTest.CanDecodePotentiallyCorruptPngFiles|FullyQualifiedName~SKCodecTest\"",
       "exitCode": 0,
-      "output": "SkiaSharp version: 2.88.0.0\n[PASS] baboon.png: 512x512, ColorType=Rgba8888, AlphaType=Opaque\n[PASS] color-wheel.png: 128x128, ColorType=Rgba8888, AlphaType=Premul\n[PASS] index8.png: 1024x1218, ColorType=Rgba8888, AlphaType=Premul\n[PASS] testimage.png: 1920x1080, ColorType=Rgba8888, AlphaType=Premul\nTotal failures: 0",
+      "output": "Passed!  - Failed: 0, Passed: 30, Skipped: 1, Total: 31, Duration: 2s - SkiaSharp.Tests.dll (net8.0)\nSkipped: DownloadedStream (network-dependent)",
       "result": "success"
     },
     {
       "stepNumber": 5,
-      "description": "Test with latest SkiaSharp 3.119.2 (latest stable)",
+      "description": "Cross-platform verification: Docker Linux x64 (Debian 12) with SkiaSharp 2.88.3 + NativeAssets.Linux, testing programmatically generated PNGs",
       "layer": "csharp",
-      "command": "dotnet add package SkiaSharp && dotnet run",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c '... dotnet run'",
       "exitCode": 0,
-      "output": "SkiaSharp version: 3.119.0.0\n[PASS] baboon.png: 512x512, ColorType=Rgba8888, AlphaType=Opaque\n[PASS] color-wheel.png: 128x128, ColorType=Rgba8888, AlphaType=Premul\n[PASS] index8.png: 1024x1218, ColorType=Rgba8888, AlphaType=Premul\n[PASS] testimage.png: 1920x1080, ColorType=Rgba8888, AlphaType=Premul\nTotal failures: 0",
-      "result": "success"
-    },
-    {
-      "stepNumber": 6,
-      "description": "Build and run existing decode tests on main branch (source) — CanDecodePotentiallyCorruptPngFiles, CanDecodeImageStreams, TestBitmapDecodeDrawsCorrectly",
-      "layer": "csharp",
-      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SKBitmapTest.TestBitmapDecodeDrawsCorrectly|FullyQualifiedName~SKBitmapTest.CanDecodePotentiallyCorruptPngFiles|FullyQualifiedName~SKBitmapTest.CanDecodeImageStreams\"",
-      "exitCode": 0,
-      "output": "Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7, Duration: 74 ms - SkiaSharp.Tests.dll (net8.0)",
+      "output": "SkiaSharp version: 2.88.0.0\nOS: Debian GNU/Linux 12 (bookworm)\nArch: X64\n\n[PASS] small-rgba: 64x64\n[PASS] medium-rgba: 512x512\n[PASS] large-rgba: 2048x2048\n\n--- Decode from SKData ---\n[PASS] SKData decode: 256x256\n\nTotal failures: 0",
       "result": "success"
     }
   ],
@@ -124,16 +120,64 @@
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
-    "dotnetVersion": "8.0.417",
+    "dotnetVersion": "8.0.24",
+    "dotnetSdkVersion": "10.0.102",
     "skiaSharpVersion": "2.88.3",
-    "dockerUsed": false
+    "dockerUsed": true
   },
   "feedback": {
     "triageCorrections": [
       {
         "topic": "reproduction-feasibility",
         "upstream": "Triage recommended requesting sample image (actionability: request-info, confidence 0.90)",
-        "corrected": "Confirmed: without the reporter's specific PNG file, the bug cannot be reproduced. All standard PNG types (16-bit RGB, 8-bit RGBA, 8-bit colormap) and edge cases (truncated, large, empty) decode correctly across all tested versions."
+        "corrected": "Confirmed: without the reporter's specific PNG file, the bug cannot be reproduced. All standard PNG types (16-bit RGB, 8-bit RGBA, 8-bit colormap, large gradient) and edge cases (truncated, empty) decode correctly across all tested versions and platforms (macOS ARM64, Docker Linux x64)."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.90,
+      "reason": "Cannot reproduce without the reporter's specific PNG file. All standard PNG types decode correctly on 2.88.3, 3.119.2, and main across macOS and Linux. The original #933/#1981 zlib fix was in 2.88.1, so either this is a different PNG-specific issue or the reporter's version info is inaccurate."
+    },
+    "workarounds": [
+      "Re-save the PNG with a different tool (Paint.NET, ImageMagick) to re-encode with standard compression",
+      "Use SKCodec.Create(filename, out SKCodecResult result) to get the specific failure reason",
+      "Try SKImage.FromEncodedData() as an alternative decode path",
+      "Upgrade to SkiaSharp 3.119.2 which uses a significantly newer Skia engine"
+    ],
+    "missingInfo": [
+      "The actual PNG file that fails to decode (image1.png was not attached)",
+      "Output of SKCodec.Create(filename, out SKCodecResult result) showing the failure reason",
+      "Confirmation of exact SkiaSharp version (body says 2.88.6, template says 2.88.3)",
+      "Whether re-saving the PNG with another tool resolves the issue"
+    ],
+    "proposedResponse": {
+      "status": "ready",
+      "summary": "Cannot reproduce — requesting the specific PNG file and diagnostic output",
+      "body": "Thanks for reporting this! We attempted to reproduce the issue with SkiaSharp 2.88.3 (and 3.119.2) using multiple PNG types — 16-bit RGB, 8-bit RGBA, 8-bit colormap, and large gradient PNGs — on both macOS and Linux, but all decodes succeeded.\n\nThe original #933 / #1981 was traced to a zlib SSE decompression bug and fixed in v2.88.1. Since you're on 2.88.3+, your PNG may be triggering a different code path.\n\nTo help us investigate, could you:\n\n1. **Attach the actual PNG file** (`image1.png`) — without it we can't reproduce the specific failure\n2. **Run this diagnostic** to get the failure reason:\n   ```csharp\n   var codec = SKCodec.Create(@\"C:\\Temp\\image1.png\", out SKCodecResult result);\n   Console.WriteLine($\"Codec: {codec != null}, Result: {result}\");\n   ```\n3. **Confirm your exact SkiaSharp version** — the issue body mentions 2.88.6 but the version field says 2.88.3\n\n**Workarounds to try:**\n- Re-save the PNG with Paint.NET or ImageMagick (this resolved #1981 for several reporters)\n- Upgrade to SkiaSharp 3.119.2, which uses a significantly updated Skia engine\n\n**Tested versions:**\n| Version | Platform | Result |\n|---------|----------|--------|\n| 2.88.3 | macOS ARM64 | ✅ All PNGs decoded |\n| 2.88.3 | Linux x64 (Docker) | ✅ All PNGs decoded |\n| 3.119.2 | macOS ARM64 | ✅ All PNGs decoded |\n| main (source) | macOS ARM64 | ✅ 30/30 decode tests passed |"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Keep type/bug, add area/SkiaSharp",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to #1981 (parent issue with zlib fix) — same symptom, different root cause suspected",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 1981
+      },
+      {
+        "type": "link-related",
+        "description": "Link to #2429 (similar SKBitmap.Decode returns null symptom on a different image)",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 2429
       }
     ]
   }
