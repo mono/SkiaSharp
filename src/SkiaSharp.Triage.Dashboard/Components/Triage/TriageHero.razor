@@ -1,0 +1,253 @@
+@using SkiaSharp.Triage.Dashboard.Helpers
+@using static SkiaSharp.Triage.Dashboard.Helpers.TriageFormatHelper
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime
+
+@* ── Corrections Alert (above grid, full-width) ───────── *@
+@if (Repro?.Feedback?.TriageCorrections is { Count: > 0 })
+{
+    <div class="hero-alert alert-corrections">
+        <h4>⚠️ Repro Corrected Triage</h4>
+        <ul class="corrections-list">
+            @foreach (var c in Repro.Feedback.TriageCorrections)
+            {
+                <li>
+                    <span class="correction-topic">@c.Topic</span>
+                    <div class="correction-detail">
+                        <span class="correction-upstream">@c.Upstream</span>
+                        <span class="correction-arrow">→</span>
+                        <strong class="correction-corrected">@c.Corrected</strong>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+@* ── 3-Column Hero Grid ───────────────────────────────── *@
+<div class="hero-section">
+    <div class="hero-grid @_gridClass">
+
+        @* ── Col 1: Summary + Verdict ─────────────────── *@
+        <div class="hero-col hero-col-summary">
+            <div class="hero-card card-summary">
+                <h3>Summary</h3>
+                <p class="summary-text">@_summaryText</p>
+                @if (_reproNotes is not null)
+                {
+                    <p class="repro-notes" style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid #e1e4e8;">🧪 @_reproNotes</p>
+                }
+            </div>
+
+            @if (Issue is not null)
+            {
+                <div class="hero-card card-verdict">
+                    <h3>Verdict</h3>
+                    <div class="verdict-content">
+                        <span class="badge-action badge-act-@_verdictAction">@FormatLabel(_verdictAction)</span>
+                        <span class="field-confidence">@_verdictConfidence.ToString("P0")</span>
+                    </div>
+                    @if (_verdictReason is not null)
+                    {
+                        <p class="verdict-reason">@_verdictReason</p>
+                    }
+                    @if (_actionsDiffer)
+                    {
+                        <div class="verdict-diff">
+                            <span class="verdict-diff-label">Triage:</span>
+                            <span class="badge-action badge-act-@Issue!.Output!.Actionability!.SuggestedAction.ToJsonString()">
+                                @FormatLabel(Issue.Output!.Actionability!.SuggestedAction.ToJsonString())
+                            </span>
+                            <span class="verdict-diff-arrow">→</span>
+                            <span class="verdict-diff-label">Repro:</span>
+                            <span class="badge-action badge-act-@Repro!.Output!.Actionability!.SuggestedAction.ToJsonString()">
+                                @FormatLabel(Repro.Output!.Actionability!.SuggestedAction.ToJsonString())
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        @* ── Col 2: Repro Result ──────────────────────── *@
+        @if (Repro is not null)
+        {
+            <div class="hero-col hero-col-repro">
+                <div class="hero-card card-repro-result">
+                    <h3>Reproduction</h3>
+                    <div class="repro-result-badges">
+                        <span class="badge-repro-conclusion badge-repro-@Repro.Conclusion.ToJsonString()">
+                            @FormatLabel(Repro.Conclusion.ToJsonString())
+                        </span>
+                        @if (!string.IsNullOrEmpty(Repro.Assessment))
+                        {
+                            <span class="badge-assessment">@FormatLabel(Repro.Assessment)</span>
+                        }
+                    </div>
+                    <div class="repro-result-meta">
+                        @if (Repro.ReproductionSteps is { Count: > 0 })
+                        {
+                            <span>@Repro.ReproductionSteps.Count steps</span>
+                        }
+                        @if (Repro.Environment?.Os is not null)
+                        {
+                            <span>@Repro.Environment.Os @Repro.Environment?.Arch</span>
+                        }
+                    </div>
+                    @if (Repro.Output?.MissingInfo is { Count: > 0 })
+                    {
+                        <div class="repro-missing-indicator">
+                            ⚠ Missing info (@Repro.Output.MissingInfo.Count)
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @* ── Col 3: Draft Response ────────────────────── *@
+        @if (Repro?.Output?.ProposedResponse is not null)
+        {
+            var response = Repro.Output.ProposedResponse;
+            <div class="hero-col hero-col-response">
+                <div class="hero-card card-draft-response">
+                    <div class="draft-card-header">
+                        <h3>Draft Response</h3>
+                        <span class="badge-rs badge-rs-@response.Status.ToJsonString()">
+                            @FormatLabel(response.Status.ToJsonString())
+                        </span>
+                    </div>
+                    @if (response.Summary is not null)
+                    {
+                        <p class="draft-summary">@response.Summary</p>
+                    }
+                    <div class="draft-preview">
+                        <div class="draft-body md-content @(_responseExpanded ? "" : "draft-collapsed")">
+                            @MarkdownHelper.ToHtml(response.Body)
+                        </div>
+                        @if (!_responseExpanded)
+                        {
+                            <button type="button" class="btn-expand" @onclick="() => _responseExpanded = true">▼ Show full response</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn-expand" @onclick="() => _responseExpanded = false">▲ Collapse</button>
+                        }
+                    </div>
+                    <div class="draft-actions">
+                        <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(response.Body)" title="Copy markdown to clipboard">
+                            📋 Copy Markdown
+                        </button>
+                        <a href="https://github.com/@(Issue?.Meta.Repo ?? Repro.Meta.Repo)/issues/@(Issue?.Meta.Number ?? Repro.Meta.Number)"
+                           target="_blank" rel="noopener noreferrer" class="btn-goto">
+                            Go to Issue ↗
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@* ── Actions Row ──────────────────────────────────────── *@
+@if (_allActions.Count > 0)
+{
+    <div class="hero-actions-row">
+        @foreach (var action in _allActions)
+        {
+            <div class="action-chip @(_expandedAction == action ? "expanded" : "")">
+                <div class="action-chip-header" @onclick="() => ToggleAction(action)">
+                    <span class="badge-action badge-act-@action.Type.ToJsonString()" title="@GetActionTypeTooltip(action.Type)">
+                        @FormatLabel(action.Type.ToJsonString())
+                    </span>
+                    @if (action.Risk is not null)
+                    {
+                        <span class="badge-risk-sm badge-risk-@action.Risk.Value.ToJsonString()">
+                            @FormatLabel(action.Risk.Value.ToJsonString())
+                        </span>
+                    }
+                    <span class="action-chip-chevron">@(_expandedAction == action ? "▲" : "▼")</span>
+                </div>
+                @if (_expandedAction == action)
+                {
+                    <div class="action-chip-body">
+                        <div class="md-content">@MarkdownHelper.ToHtml(action.Description)</div>
+                        @if (action.Labels is { Count: > 0 })
+                        {
+                            <div class="action-chip-labels">
+                                @foreach (var lbl in action.Labels)
+                                {
+                                    <span class="label">@lbl</span>
+                                }
+                            </div>
+                        }
+                        @if (action.Comment is not null)
+                        {
+                            <div class="action-chip-comment">
+                                <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(action.Comment)">📋 Copy</button>
+                                <div class="md-content draft-content">@MarkdownHelper.ToHtml(action.Comment)</div>
+                            </div>
+                        }
+                        @if (action.LinkedIssue is not null)
+                        {
+                            <p>Linked: <a href="https://github.com/@(Issue?.Meta.Repo ?? Repro?.Meta.Repo)/issues/@action.LinkedIssue"
+                                         target="_blank" rel="noopener noreferrer">#@action.LinkedIssue</a></p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public TriagedIssue? Issue { get; set; }
+    [Parameter] public ReproResult? Repro { get; set; }
+
+    private bool _responseExpanded;
+    private TriageAction? _expandedAction;
+    private List<TriageAction> _allActions = [];
+
+    private string _summaryText => Issue?.Summary ?? Repro?.Notes ?? "";
+    private string? _reproNotes => Repro?.Notes is not null && Issue?.Summary is not null ? Repro.Notes : null;
+    private string _verdictAction => (Repro?.Output?.Actionability?.SuggestedAction is not null
+            ? Repro.Output.Actionability.SuggestedAction.ToJsonString()
+            : Issue?.Output?.Actionability?.SuggestedAction.ToJsonString()) ?? "unknown";
+    private double _verdictConfidence => Repro?.Output?.Actionability?.Confidence
+            ?? Issue?.Output?.Actionability?.Confidence ?? 0;
+    private string? _verdictReason => Repro?.Output?.Actionability?.Reason
+            ?? Issue?.Output?.Actionability?.Reason;
+    private bool _actionsDiffer => Repro?.Output?.Actionability is not null && Issue?.Output?.Actionability is not null
+            && Repro.Output.Actionability.SuggestedAction != Issue.Output.Actionability.SuggestedAction;
+
+    private string _gridClass
+    {
+        get
+        {
+            var hasRepro = Repro is not null;
+            var hasResponse = Repro?.Output?.ProposedResponse is not null;
+            return (hasRepro, hasResponse) switch
+            {
+                (true, true) => "hero-grid-3",
+                (true, false) => "hero-grid-2",
+                (false, true) => "hero-grid-2",
+                _ => "hero-grid-1"
+            };
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        _allActions = [];
+        if (Issue?.Output?.Actions is not null) _allActions.AddRange(Issue.Output.Actions);
+        if (Repro?.Output?.Actions is not null) _allActions.AddRange(Repro.Output.Actions);
+    }
+
+    private void ToggleAction(TriageAction action) =>
+        _expandedAction = _expandedAction == action ? null : action;
+
+    private async Task CopyToClipboard(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        try { await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text); }
+        catch { }
+    }
+}

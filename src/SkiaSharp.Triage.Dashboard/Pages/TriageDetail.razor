@@ -22,8 +22,8 @@ else
     <TriageDetailNav BackUrl="@BackUrl" PrevNumber="@_prevNumber" NextNumber="@_nextNumber" 
                      CurrentIndex="@_currentIndex" TotalCount="@_totalCount" DetailUrl="@DetailUrl" />
 
-    <!-- Header -->
-    <div class="triage-detail-header">
+    <!-- Minimal Header -->
+    <div class="triage-detail-header triage-detail-header-minimal">
         <div class="detail-title-row">
             @if (_issue is not null)
             {
@@ -32,13 +32,13 @@ else
             }
             else
             {
-                <a href="https://github.com/@_repro!.Meta.Repo/issues/@Number" target="_blank" class="issue-link-lg">#@Number</a>
+                <a href="https://github.com/@(_repro?.Meta.Repo ?? "mono/SkiaSharp")/issues/@Number" target="_blank" class="issue-link-lg">#@Number</a>
                 <h1>Issue #@Number</h1>
             }
         </div>
-        <div class="detail-badges">
-            @if (_issue is not null)
-            {
+        @if (_issue is not null)
+        {
+            <div class="detail-header-meta">
                 <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">
                     @FormatLabel(_issue.Classification.Type.Value)
                 </span>
@@ -48,31 +48,16 @@ else
                         @FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())
                     </span>
                 }
-                <span class="badge-action badge-act-@_issue.Output.Actionability.SuggestedAction.ToJsonString()">
-                    @FormatLabel(_issue.Output.Actionability.SuggestedAction.ToJsonString())
+                <span class="detail-meta-text">
+                    Analyzed: @_issue.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
+                    · <a href="https://github.com/@_issue.Meta.Repo" target="_blank">@_issue.Meta.Repo</a>
                 </span>
-                <span class="confidence-pill-lg" title="Overall confidence in the suggested action. 95%+ = explicit evidence, 80-94% = strong inference, 60-79% = ambiguous">
-                    <span class="confidence-bar @GetConfidenceClass(_issue.Output.Actionability.Confidence)" style="width: @((int)(_issue.Output.Actionability.Confidence * 100))%"></span>
-                    <span class="confidence-text">@_issue.Output.Actionability.Confidence.ToString("P0")</span>
-                </span>
-                @if (_issue.Output.Actions.Any(a => a.Type == ActionType.CloseIssue))
-                {
-                    <span class="badge-closeable" title="Has a close-issue action — AI believes this can be closed">✓ Closeable</span>
-                }
-            }
-            @if (_repro is not null)
-            {
-                <span class="badge-repro-conclusion badge-repro-@_repro.Conclusion.ToJsonString()">🧪 @FormatLabel(_repro.Conclusion.ToJsonString())</span>
-            }
-        </div>
-        @if (_issue is not null)
-        {
-            <p class="detail-meta">
-                Analyzed: @_issue.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
-                · Repo: <a href="https://github.com/@_issue.Meta.Repo" target="_blank">@_issue.Meta.Repo</a>
-            </p>
+            </div>
         }
     </div>
+
+    <!-- Hero Section -->
+    <TriageHero Issue="@_issue" Repro="@_repro" />
 
     <!-- Pipeline Stepper -->
     <PipelineStepper HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" HasFix="@(_fix is not null)" />
@@ -131,7 +116,7 @@ else
     private int _currentIndex;
     private int _totalCount;
     private bool _loading = true;
-    private string _activeTab = "triage";
+    private string _activeTab = "details";
 
     protected override async Task OnInitializedAsync()
     {
@@ -147,7 +132,7 @@ else
         _repro = reproTask.Result;
         _fix = fixTask.Result;
         _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
-        _activeTab = _issue is not null ? "triage" : _repro is not null ? "repro" : "fix";
+        _activeTab = "details";
         LoadNavigation();
         _loading = false;
     }
@@ -160,7 +145,7 @@ else
             _repro = await DataService.GetReproDetailAsync(Number);
             _fix = await DataService.GetFixDetailAsync(Number);
             _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
-            _activeTab = _issue is not null ? "triage" : _repro is not null ? "repro" : "fix";
+            _activeTab = "details";
             LoadNavigation();
         }
     }
