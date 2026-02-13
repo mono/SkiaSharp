@@ -118,7 +118,7 @@ Check:
 ### 3. Environment check
 
 - What platform are we on? (macOS/Linux/Windows)
-- Docker available? (unreliable on macOS — treat as optional)
+- Docker available? (`docker --version` — if yes, can test Linux x64/arm64)
 - GPU available? (for rendering bugs)
 - **.NET workloads installed?** Phase 3C requires building from source, which needs platform workloads:
   ```bash
@@ -210,8 +210,39 @@ If the first attempt doesn't clearly reproduce, **keep going**:
 1. Try different input data (different images, fonts, matrix values)
 2. Try a different API approach (the reporter may have simplified — try the full scenario)
 3. Try a different NuGet version (nearby versions — maybe reporter was slightly off)
-4. Try Docker for cross-platform if the bug is platform-specific
+4. **Try Docker Linux** if the bug is platform-specific or host can't run the version (see step 5)
 5. Simplify the reproduction — strip it to the absolute minimum
+
+#### 5. Docker Linux testing
+
+Use Docker to test on Linux when the host is macOS/Windows, or to test older versions that lack host-platform natives. See [docker-testing.md](../bug-fix/references/docker-testing.md) for full details.
+
+**When to use Docker:**
+- Bug is Linux-specific or platform-independent (test a second platform)
+- SkiaSharp 1.68.x on Apple Silicon (no arm64 native exists — must use `--platform linux/amd64`)
+- Bug involves `NativeAssets.Linux`, fontconfig, or container deployment
+- Host repro was inconclusive and a second environment might clarify
+
+**Quick Docker repro pattern:**
+
+```bash
+docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
+apt-get update -qq && apt-get install -y -qq libfontconfig1 2>&1 | tail -1
+mkdir -p /tmp/repro && cd /tmp/repro
+dotnet new console -n Repro --framework net8.0 --no-restore 2>&1 | tail -1
+cd Repro
+dotnet add package SkiaSharp --version VERSION --no-restore 2>&1 | tail -1
+dotnet add package SkiaSharp.NativeAssets.Linux --version VERSION --no-restore 2>&1 | tail -1
+cat > Program.cs << "EOF"
+// Paste reproduction code here
+EOF
+dotnet run --runtime linux-x64 --no-self-contained 2>&1
+'
+```
+
+**Required:** `apt-get install libfontconfig1` — without it you get `DllNotFoundException`.
+
+**Record in JSON:** Set `environment.dockerUsed: true` and add a `versionResults` entry with `source: "nuget"` noting the Docker platform.
 
 > **🔥 Push hard.** Don't bail early. The value of this skill is in persistent, creative
 > attempts to reproduce. Only conclude `not-reproduced` after genuinely exhausting approaches.
@@ -484,3 +515,5 @@ Blockers: none
 10. **Pre-emptive version assumptions.** NEVER assume a NuGet version is incompatible without inspecting the nupkg. All blockers about version compatibility must cite evidence (TFMs found, native assets present/missing, actual error when attempted).
 
 11. **Abandoning on environment issues.** NEVER give up when hitting solvable environment problems (missing workloads, missing tools, `sudo` prompts, SDK version mismatches). These are setup steps, not blockers. Fix them — install the workload, update the SDK, ask the user for elevated permissions. If the error message tells you the fix, do the fix.
+
+12. **Skipping Docker for Linux bugs.** NEVER conclude `needs-platform` for Linux-related issues without trying Docker first. Docker Desktop supports linux/amd64 and linux/arm64 from macOS. The only valid `needs-platform` for Linux is when the bug requires a specific kernel feature or hardware that Docker can't provide.

@@ -87,11 +87,12 @@ Special case of `reproduced` for visual/rendering bugs.
 Cannot reproduce because the required platform or OS is not available.
 
 - **Required evidence:** which platform is needed and why
+- **Before concluding:** If the issue is Linux-specific, **try Docker first** (`--platform linux/amd64` or `linux/arm64`). Only conclude `needs-platform` if Docker can't help (e.g., the issue needs Windows GUI, iOS device, or Android).
 - **Also use when:** a native rebuild is required (native rebuilds are forbidden during bug reproduction)
 - **Examples:**
-  - `"Bug reported on Windows with DirectX backend, current env is macOS"`
+  - `"Bug reported on Windows with WPF/DirectX backend — Docker cannot run Windows GUI apps"`
   - `"Reproducing requires building native libs with a modified C API — not possible in repro mode"`
-  - `"Issue is Linux-specific (fontconfig behavior), current env is macOS"`
+  - `"Issue requires iOS device for Metal rendering — Docker cannot simulate iOS"`
 
 ### `needs-hardware`
 

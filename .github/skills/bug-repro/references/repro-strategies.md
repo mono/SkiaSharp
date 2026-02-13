@@ -6,7 +6,7 @@ Actionable strategies for systematically reproducing SkiaSharp bugs. Organized b
 - No native rebuilds — use `dotnet cake --target=externals-download` only
 - Output limits: 2KB per step, 4KB for failure steps
 - Binary assets: reference by URL or filename, never inline
-- Docker is unreliable on macOS — treat as optional, not required
+- Docker is available for Linux testing — use `--platform linux/amd64` for x64 or `linux/arm64` for arm64. See [docker-testing.md](../../bug-fix/references/docker-testing.md)
 
 ---
 
@@ -134,8 +134,9 @@ Rendering bugs rarely throw exceptions. The process succeeds, but the output is 
 ### Strategy
 
 1. **Test on current platform first.** Document the result even if it works — "works on macOS ARM64" is useful data.
-2. **Docker for Linux variants.** See [docker-testing.md](../../bug-fix/references/docker-testing.md). Use `--platform linux/amd64` or `linux/arm64`. For Alpine, use `sdk:8.0-alpine`.
-3. **Record platform matrix:**
+2. **Docker for Linux variants.** See [docker-testing.md](../../bug-fix/references/docker-testing.md). Use `--platform linux/amd64` or `linux/arm64`. For Alpine, use `sdk:8.0-alpine` with `sh` (not `bash`). **Always install `libfontconfig1`** (Debian) or `fontconfig` (Alpine) first.
+3. **SkiaSharp 1.68.x on Apple Silicon?** Use `--platform linux/amd64` — there are no arm64 natives for 1.x.
+4. **Record platform matrix:**
    | Platform | Result | Notes |
    |----------|--------|-------|
    | macOS ARM64 | ✅ Pass | Host machine |
