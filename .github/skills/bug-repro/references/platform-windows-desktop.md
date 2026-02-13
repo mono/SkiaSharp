@@ -71,8 +71,8 @@ WPF/WinForms apps open a window — visual inspection or programmatic assertions
 For Windows desktop bugs, Phase 3C uses the repo's WPF or WinUI sample:
 
 ```bash
-# Back in the SkiaSharp repo
-cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+# Return to the SkiaSharp repo root
+cd "$(git rev-parse --show-toplevel)"
 [ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
 
 # WPF sample (project references local SkiaSharp + Views.WPF source)

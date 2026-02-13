@@ -78,8 +78,8 @@ dotnet build -f net8.0-ios -t:Run
 For mobile bugs, Phase 3C uses the repo's platform-specific sample:
 
 ```bash
-# Back in the SkiaSharp repo
-cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+# Return to the SkiaSharp repo root
+cd "$(git rev-parse --show-toplevel)"
 [ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
 
 # iOS sample (macOS host required)

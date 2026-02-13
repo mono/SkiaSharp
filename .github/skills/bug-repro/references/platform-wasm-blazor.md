@@ -145,8 +145,8 @@ When Phase 3C requires testing against the main branch source, use the Blazor WA
 in the repo — it has project references to the local SkiaSharp + Views.Blazor source:
 
 ```bash
-# Back in the SkiaSharp repo
-cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+# Return to the SkiaSharp repo root
+cd "$(git rev-parse --show-toplevel)"
 [ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
 
 # Build the Blazor WASM sample (uses project references to local source)

@@ -3,7 +3,7 @@
 Reproduce bugs on Linux using Docker. Use when the host is macOS/Windows, or to test
 older SkiaSharp versions that lack host-platform native assets.
 
-See also: [docker-testing.md](../../bug-fix/references/docker-testing.md) for full
+See also: the bug-fix skill's `docker-testing.md` for full
 dependency matrix and troubleshooting.
 
 ## Signals
@@ -119,8 +119,8 @@ Tag `versionResults` entries with `"platform": "docker-linux-x64"` (or `docker-l
 For Docker/Linux bugs, Phase 3C tests the main branch console sample inside Docker:
 
 ```bash
-# Back in the SkiaSharp repo — ensure native binaries exist
-cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+# Return to the SkiaSharp repo root — ensure native binaries exist
+cd "$(git rev-parse --show-toplevel)"
 [ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
 
 # Build the console sample from source

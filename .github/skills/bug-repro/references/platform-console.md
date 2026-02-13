@@ -87,8 +87,8 @@ If the first attempt doesn't clearly reproduce:
 When Phase 3C requires testing against the main branch source:
 
 ```bash
-# Back in the SkiaSharp repo
-cd /Users/matthew/Documents/GitHub/SkiaSharp-2-worktrees/main
+# Return to the SkiaSharp repo root
+cd "$(git rev-parse --show-toplevel)"
 [ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
 
 # Build and run the console sample (uses project references to local source)

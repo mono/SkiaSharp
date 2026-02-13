@@ -2,6 +2,14 @@
 
 How to choose the correct `conclusion` value for a bug reproduction attempt.
 
+## Contents
+1. [Factual vs Editorial](#️-critical-principle-factual-vs-editorial)
+2. [Decision Flowchart](#decision-flowchart)
+3. [Conclusion Values](#conclusion-values) — reproduced, not-reproduced, wrong-output, needs-platform, needs-hardware, partial, inconclusive
+4. [Supporting Fields](#supporting-fields) — notes, assessment, blockers
+5. [Confidence and Human Review](#confidence-and-human-review)
+6. [Scope Derivation](#scope-derivation-from-phase-3d-cross-platform-verification)
+
 ---
 
 ## ⚠️ Critical Principle: Factual vs Editorial

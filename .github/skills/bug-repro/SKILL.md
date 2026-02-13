@@ -53,7 +53,7 @@ If not stated, use the latest stable release. **.NET is forward-compatible** —
 
 ### 3. Environment check
 
-**⚠️ Run `dotnet --info` in `/tmp/repro-{number}/`** (NOT the SkiaSharp repo, which has `global.json` pinning SDK 8.0). Record SDK version, wasm-tools version, and runtime version.
+**⚠️ Run `dotnet --info` in `/tmp/repro-{number}/`** (NOT the SkiaSharp repo, which has `global.json` pinning SDK 8.0). Record SDK version, workload versions, and runtime version.
 
 Also check: Docker (`docker --version`), Playwright MCP tools, GPU availability, .NET workloads (`dotnet workload list`). Install missing workloads now — don't wait.
 
@@ -108,15 +108,15 @@ Follow the platform file from Phase 2.4. For each step, capture:
 
 Use the same platform strategy from 3A with the latest stable SkiaSharp. Record in `versionResults`.
 
-### 3C. Test on main branch (MANDATORY if reproduced on latest)
+### 3C. Test on main branch (if reproduced on latest)
 
-> **🛑 Do NOT skip.** Every repro JSON MUST have a `main (source)` entry in `versionResults`.
+> **🛑 Do NOT skip when reproduced on latest.** If the bug reproduces on the latest stable release, testing main is MANDATORY — it tells us whether a fix exists but hasn't been released.
 
 1. Bootstrap: `[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download`
 2. **Build & run the platform-appropriate sample** under `samples/Basic/<platform>/`. Each platform file has a "Main Source Testing (Phase 3C)" section — follow it.
 3. Record result. If fixed on main but not released, note the version gap.
 
-> **Clean up:** Revert sample file changes with `git checkout`.
+> **Clean up:** Revert sample file changes with `git checkout -- samples/`.
 
 ### 3D. Cross-platform verification (conditional)
 
@@ -156,18 +156,13 @@ Read [references/conclusion-guide.md](references/conclusion-guide.md). The concl
 
 ### 2. Generate JSON
 
-Write to `/tmp/repro-{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json)
+Write to `/tmp/repro-{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json). See [references/repro-examples.md](references/repro-examples.md) for full worked examples.
 
-**Schema rules:**
-- `meta.schemaVersion`: `"1.0"`, number, repo (`"mono/SkiaSharp"`), analyzedAt (ISO 8601 UTC)
+**Key rules** (schema enforces the rest):
 - **Optional fields: OMIT entirely** — do NOT set to `null`
-- `additionalProperties: false`
-- `environment.dotnetSdkVersion`: exact SDK from `dotnet --info` (e.g., `"10.0.102"`). Include `wasmToolsVersion` for WASM bugs.
+- `environment.dotnetSdkVersion`: exact SDK from `dotnet --info`. Include `wasmToolsVersion` for WASM.
 - `versionResults`: include `platform` field (e.g., `"host-macos-arm64"`, `"docker-linux-x64"`)
-
-Conditional: `reproduced` → ≥1 step with `failure`/`wrong-output`. `not-reproduced` → ≥1 `success`. `needs-platform`/`partial`/`inconclusive` → `blockers` required.
-
-Redact paths (`/Users/{name}/` → `$HOME/`), tokens, credentials.
+- Redact paths (`/Users/{name}/` → `$HOME/`), tokens, credentials.
 
 ### 3. Feedback (when triage was consumed)
 
@@ -211,14 +206,10 @@ Version results:
 
 ---
 
-## Anti-Patterns (Critical Rules)
+## Anti-Patterns
 
-These 7 rules address **non-obvious failure modes** discovered through real skill usage. For the full list with examples, see [references/anti-patterns.md](references/anti-patterns.md).
+Read [references/anti-patterns.md](references/anti-patterns.md) — 19 rules addressing non-obvious failure modes. Top 3:
 
-1. **Source code investigation.** Stop at "did it reproduce." Root cause and fixes are the `bug-fix` skill's job.
-2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design. Editorial opinion goes in `notes`, not `conclusion`.
-3. **Giving up too early.** Never conclude `not-reproduced` after one attempt. Try different versions, data, platforms. Persistence is this skill's core value.
-4. **Mismarking step results.** Step `result` = technical outcome. A build failure is `failure` even if it confirms the bug. See [references/anti-patterns.md](references/anti-patterns.md) for the decision table.
-5. **Stopping at build success for WASM.** WASM bugs manifest at RUNTIME in the browser. Serve the app and check browser console with Playwright. Build ≠ runtime.
-6. **Assuming TFM incompatibility.** .NET is forward-compatible. `net8.0` works on `net10.0` apps. Never say "doesn't support .NET X" without evidence.
-7. **Reusing build artifacts across versions.** Always use fresh project directories or `rm -rf bin/ obj/` between version changes. Stale WASM native binaries cause false results.
+1. **Source code investigation.** Stop at "did it reproduce." Root cause is the `bug-fix` skill's job.
+2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design.
+3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.
