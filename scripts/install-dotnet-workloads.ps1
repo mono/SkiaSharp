@@ -20,14 +20,38 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # which must run before official workloads change the workload state.
 Write-Host "Installing Tizen workloads..."
 New-Item -ItemType Directory -Force './output/tmp' | Out-Null
+$tizenInstallFailed = $false
+$tizenErrorOutput = ""
 if ($IsLinux -or $IsMacOS) {
   Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile './output/tmp/workload-install.sh'
-  bash output/tmp/workload-install.sh --version "$Tizen"
+  $tizenOutput = bash output/tmp/workload-install.sh --version "$Tizen" 2>&1
+  $tizenExitCode = $LASTEXITCODE
+  Write-Host $tizenOutput
+  # Check for failure indicators in output (Samsung script may not set exit code properly)
+  if ($tizenOutput -match "failed|error|not found" -and $tizenOutput -notmatch "0 Error") {
+    $tizenInstallFailed = $true
+    $tizenErrorOutput = $tizenOutput
+  }
 } else {
   Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile './output/tmp/workload-install.ps1'
-  ./output/tmp/workload-install.ps1 -Version "$Tizen"
+  try {
+    ./output/tmp/workload-install.ps1 -Version "$Tizen"
+  } catch {
+    $tizenInstallFailed = $true
+    $tizenErrorOutput = $_.Exception.Message
+  }
+  $tizenExitCode = $LASTEXITCODE
 }
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+Write-Host "Done installing Tizen workload $Tizen"
+
+if ($tizenExitCode -ne 0) {
+  Write-Host "##[error]Tizen workload installation failed with exit code $tizenExitCode"
+  exit $tizenExitCode
+}
+if ($tizenInstallFailed) {
+  Write-Host "##[error]Tizen workload installation failed: $tizenErrorOutput"
+  exit 1
+}
 
 # Diagnostic: show manifest directory for debugging
 $dotnetRoot = (Get-Command dotnet).Source | Split-Path
@@ -51,7 +75,6 @@ Write-Host "Installing .NET workloads: $($Workloads -join ', ')..."
 
 & dotnet workload install `
   @Workloads `
-  --source https://api.nuget.org/v3/index.json `
   --skip-sign-check
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
