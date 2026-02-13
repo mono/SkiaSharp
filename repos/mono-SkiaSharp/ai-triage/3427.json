@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3427,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:25:00Z",
+    "currentLabels": ["community ✨"]
+  },
+  "summary": "Community PR that fixes a Blazor disposal race condition (#3322). When SKCanvasView is disposed in Blazor, DOM elements may already have been removed before Dispose() runs, causing ResizeObserver.unobserve() to throw TypeError ('parameter 1 is not of type Element'). The fix adds null-guard early returns in SizeWatcher.observe(), SizeWatcher.unobserve(), and removes a misleading console.error in SKHtmlCanvas.init() — all in JavaScript. This is a well-known Blazor lifecycle issue (dotnet/aspnetcore#45777).",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.98 },
+    "platforms": ["os/WASM"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "isRegression": false,
+      "errorType": "JSException (TypeError)",
+      "errorMessage": "TypeError: Failed to execute 'unobserve' on 'ResizeObserver': parameter 1 is not of type 'Element'.",
+      "stackTrace": "Microsoft.JSInterop.JSException: TypeError: Failed to execute 'unobserve' on 'ResizeObserver': parameter 1 is not of type 'Element'.\n   at Microsoft.JSInterop.WebAssembly.WebAssemblyJSRuntime.InvokeJS(...)\n   at SkiaSharp.Views.Blazor.Internal.JSModuleInterop.Invoke(...)\n   at SkiaSharp.Views.Blazor.Internal.SizeWatcherInterop.Stop()\n   at SkiaSharp.Views.Blazor.Internal.SizeWatcherInterop.OnDisposingModule()\n   at SkiaSharp.Views.Blazor.Internal.JSModuleInterop.Dispose()\n   at SkiaSharp.Views.Blazor.SKCanvasView.Dispose()",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-browser"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM application with multiple SKCanvasView components",
+        "Rapidly show and hide (add/remove from DOM) multiple SKCanvasView instances via conditional rendering",
+        "Observe unhandled exception from Dispose() when the component is removed"
+      ],
+      "screenshots": [
+        { "url": "https://github.com/user-attachments/assets/59b9940f-dd7e-4763-bd78-a45bf2b73f99", "description": "Console error message during disposal" }
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, .NET 8.0 Blazor WASM, Visual Studio 2022 on Windows",
+      "relatedIssues": [3322, 2441]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SizeWatcher.ts unobserve() method still lacks null guards in the current main branch. Issue #2441 reported the same class of bug in 2.88.3, and #3322 reports it in 3.116.0 — the root cause has never been fixed."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "The current SizeWatcher.ts and SizeWatcher.js on main still lack null guards in both observe() and unobserve(). This PR provides the fix but has not been merged.",
+      "relatedPRs": [3427]
+    }
+  },
+  "analysis": {
+    "summary": "Blazor components can have their DOM elements removed before Dispose() is invoked — a well-documented Blazor lifecycle limitation (dotnet/aspnetcore#45777). When SKCanvasView.Dispose() is called, it triggers SizeWatcherInterop.Stop() which calls SizeWatcher.unobserve() in JavaScript. If the element has already been removed from the DOM, the elements Map returns undefined, and ResizeObserver.unobserve(undefined) throws TypeError. Similarly, SizeWatcher.observe() can fail if the element was removed between the async ImportAsync and the Start() call. The PR correctly adds null guards at the JS level and removes a misleading console.error in SKHtmlCanvas.init() that logged 'No canvas element was provided' for this normal disposal scenario.",
+    "rationale": "This is clearly a bug — an unhandled exception thrown during normal component disposal. It's in the Blazor views package (area/SkiaSharp.Views.Blazor) and only affects WASM. Severity is medium: the exception is unhandled and logged as critical by Blazor's renderer, but it doesn't crash the application or lose data. It's not a regression in the traditional sense — the code never handled this Blazor lifecycle edge case. The PR's approach (JS-side null guards) is the correct fix pattern for this class of Blazor disposal issue.",
+    "keySignals": [
+      { "text": "TypeError: Failed to execute 'unobserve' on 'ResizeObserver': parameter 1 is not of type 'Element'", "source": "issue #3322 body", "interpretation": "ResizeObserver.unobserve() was called with undefined — the element was already removed from the DOM before disposal." },
+      { "text": "In Blazor, elements can be removed from the DOM before a component's Dispose() method is invoked", "source": "PR #3427 body", "interpretation": "This is a known Blazor platform limitation documented at dotnet/aspnetcore#45777. The fix must be defensive null-checking in JS." },
+      { "text": "#2441 — same Blazor disposal exception from v2.88.3", "source": "similar-issues-ai bot on #3322", "interpretation": "This is a long-standing bug reported at least twice. The root cause was never addressed." },
+      { "text": "SizeWatcher.unobserve() calls observer.unobserve(element) without null-checking the Map.get() result", "source": "code search: SizeWatcher.ts:44-45", "interpretation": "Direct cause — Map.get() returns undefined for removed elements, causing the TypeError." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SizeWatcher.ts", "lines": "37-45", "finding": "SizeWatcher.unobserve() calls this.elements.get(elementId) and passes result directly to ResizeObserver.unobserve() without null check. If element was removed from DOM and the map entry is missing/undefined, this throws TypeError.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SizeWatcher.ts", "lines": "16-34", "finding": "SizeWatcher.observe() resolves element via querySelector but doesn't null-check the result before casting to SizeWatcherElement and setting properties on it. Would throw if element is already gone.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts", "lines": "47-53", "finding": "SKHtmlCanvas.init() logs console.error('No canvas element was provided.') when element is null and returns null. The error log is misleading during normal Blazor disposal — the element was provided but already removed from DOM.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SizeWatcherInterop.cs", "lines": "47-48", "finding": "OnDisposingModule() calls Stop(), which calls the JS unobserve. The C# side correctly uses ?. null-conditional on callbackReference but the JS side lacks equivalent guards.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs", "lines": "37-41", "finding": "Dispose() calls OnDisposingModule() then Module.Dispose(). If OnDisposingModule throws (due to JS TypeError), Module.Dispose() is never called — potential resource leak.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "171-178", "finding": "SKCanvasView.Dispose() uses ?. null-conditional operators for sizeWatcher/interop/dpiWatcher, which handles the case where OnAfterRenderAsync never completed. This is correct defensive coding on the C# side.", "relevance": "context" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs", "lines": "190-195", "finding": "SKGLView.Dispose() does NOT use ?. null-conditional — it would throw NullReferenceException if OnAfterRenderAsync never completed. This is a separate but related bug.", "relevance": "related" }
+    ],
+    "errorFingerprint": "JSException-TypeError-ResizeObserver-unobserve-Blazor",
+    "workarounds": [
+      "Wrap SKCanvasView usage in a try-catch in the parent component's Dispose method to suppress the exception",
+      "Avoid rapidly showing/hiding multiple SKCanvasView instances — use CSS visibility instead of conditional rendering to keep elements in the DOM"
+    ],
+    "nextQuestions": [
+      "Should SKGLView.Dispose() also use ?. null-conditional operators like SKCanvasView does (potential NullReferenceException)?",
+      "Should JSModuleInterop.Dispose() wrap OnDisposingModule() in try-catch to ensure Module.Dispose() always runs?",
+      "Are there similar null-guard issues in DpiWatcher.js?"
+    ],
+    "resolution": {
+      "hypothesis": "Blazor's component lifecycle allows DOM elements to be removed before Dispose() is called. The SizeWatcher JS code assumes elements are still in the DOM during unobserve(), causing TypeError when they're not. The PR's null-guard approach is the standard fix for this Blazor lifecycle issue.",
+      "proposals": [
+        { "title": "Merge PR #3427 with review", "description": "The PR adds correct null guards in SizeWatcher.observe(), SizeWatcher.unobserve(), and removes the misleading console.error in SKHtmlCanvas.init(). Changes are minimal, JS-only, and follow the standard pattern for handling Blazor disposal races. The PR modifies both .ts (source) and .js (compiled) files consistently. Needs rebase on main and review of the unchecked PR checklist items.", "confidence": 0.85, "effort": "trivial" },
+        { "title": "Additional hardening in JSModuleInterop.Dispose()", "description": "Wrap OnDisposingModule() call in try-catch within JSModuleInterop.Dispose() to ensure Module.Dispose() always runs even if the JS interop call fails. This provides defense-in-depth for any future JS disposal errors.", "codeSnippet": "public void Dispose()\n{\n    try { OnDisposingModule(); } catch { }\n    Module.Dispose();\n}", "confidence": 0.70, "effort": "trivial" },
+        { "title": "Fix SKGLView.Dispose() null-conditional operators", "description": "SKGLView.Dispose() calls dpiWatcher.Unsubscribe(), sizeWatcher.Dispose(), interop.Dispose() without ?. null-conditional operators, unlike SKCanvasView.Dispose(). This would throw NullReferenceException if OnAfterRenderAsync never completed. Should be fixed as part of this PR or a follow-up.", "codeSnippet": "public void Dispose()\n{\n    dpiWatcher?.Unsubscribe(OnDpiChanged);\n    sizeWatcher?.Dispose();\n    interop?.Dispose();\n}", "confidence": 0.80, "effort": "trivial" }
+      ],
+      "recommendedProposal": "Merge PR #3427 with review",
+      "recommendedReason": "The PR directly fixes the reported bug with minimal, correct changes. The additional hardening proposals can be follow-up items or requested as part of the PR review."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Community PR with correct approach. Needs code review, rebase on main, and consideration of additional hardening (SKGLView null-safety, JSModuleInterop try-catch). The fix is sound but the PR checklist shows 'Rebased on top of main' is unchecked."
+    },
+    "missingInfo": [
+      "PR needs rebase on top of current main branch",
+      "PR checklist item 'Updated documentation' is unchecked — confirm if docs changes are needed"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor views, WASM, and reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with original bug report #3322",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3322
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with older duplicate #2441 (same class of Blazor disposal bug)",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 2441
+      },
+      {
+        "type": "add-comment",
+        "description": "Post review feedback acknowledging the fix and suggesting additional hardening",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the fix — this is a well-known Blazor lifecycle issue and your approach of adding null guards in the JS layer is the right pattern.\n\nThe changes in `SizeWatcher.ts`/`SizeWatcher.js` and `SKHtmlCanvas.ts`/`SKHtmlCanvas.js` look correct. A couple of observations for consideration:\n\n1. `SKGLView.razor.cs` has the same disposal vulnerability — it calls `dpiWatcher.Unsubscribe()`, `sizeWatcher.Dispose()`, and `interop.Dispose()` without `?.` null-conditional operators (unlike `SKCanvasView.razor.cs` which already uses them). Would you be able to add that fix to this PR as well?\n\n2. `JSModuleInterop.Dispose()` could benefit from a try-catch around `OnDisposingModule()` to ensure `Module.Dispose()` always runs even if the JS interop call throws.\n\nWould you be able to rebase on top of the current `main` branch?"
+      }
+    ]
+  }
+}
