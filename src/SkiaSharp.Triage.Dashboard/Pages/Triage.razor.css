@@ -1,0 +1,84 @@
+/* =========================== */
+/* AI Triage Page              */
+/* =========================== */
+
+.ai-triage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.ai-triage-title {
+    font-size: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.issue-title-primary {
+    font-weight: 500;
+}
+
+.issue-title-summary {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #6c757d);
+    opacity: 0.8;
+    overflow: hidden;
+}
+
+/* =========================== */
+/* Triage List - Compact Rows  */
+/* =========================== */
+
+.ai-triage-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #fff;
+    border-radius: 8px;
+    border-left: 4px solid #6c757d;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background 0.1s;
+}
+
+.ai-triage-row:hover { background: #f0f4ff; }
+.ai-triage-row.action-investigate { border-left-color: #ffc107; }
+.ai-triage-row.action-close { border-left-color: #198754; }
+.ai-triage-row.action-discuss { border-left-color: #0dcaf0; }
+.ai-triage-row.action-info { border-left-color: #6c757d; }
+.ai-triage-row.action-keep { border-left-color: #0d6efd; }
+
+.ai-triage-row .ai-triage-title {
+    min-width: 0;
+}
+
+.ai-triage-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    overflow: hidden;
+}
+
+.ai-triage-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.label-sm { font-size: 0.65rem; padding: 0.1rem 0.4rem; }
+
+/* Repro card on triage list */
+.triage-repro { background: #ede9fe; color: #5b21b6; }
