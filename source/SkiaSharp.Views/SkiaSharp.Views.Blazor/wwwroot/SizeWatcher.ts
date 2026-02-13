@@ -22,6 +22,8 @@ export class SizeWatcher {
 		SizeWatcher.init();
 
 		element = element || document.querySelector('[' + elementId + ']');
+		if (!element)
+			return;
 
 		const watcherElement = element as SizeWatcherElement;
 		watcherElement.SizeWatcher = {
@@ -41,6 +43,9 @@ export class SizeWatcher {
 		//console.info('Removing size watcher observation...');
 
 		const element = SizeWatcher.elements.get(elementId);
+		if (!element)
+			return;
+
 		const removed = SizeWatcher.elements.delete(elementId);
 		SizeWatcher.observer.unobserve(element);
 	}

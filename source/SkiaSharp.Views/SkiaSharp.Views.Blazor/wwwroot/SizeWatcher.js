@@ -5,6 +5,8 @@ export class SizeWatcher {
         //console.info(`Adding size watcher observation with callback ${callback._id}...`);
         SizeWatcher.init();
         element = element || document.querySelector('[' + elementId + ']');
+        if (!element)
+            return;
         const watcherElement = element;
         watcherElement.SizeWatcher = {
             callback: callback
@@ -18,6 +20,8 @@ export class SizeWatcher {
             return;
         //console.info('Removing size watcher observation...');
         const element = SizeWatcher.elements.get(elementId);
+        if (!element)
+            return;
         const removed = SizeWatcher.elements.delete(elementId);
         SizeWatcher.observer.unobserve(element);
     }
