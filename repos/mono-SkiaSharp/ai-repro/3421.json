@@ -3,106 +3,127 @@
     "schemaVersion": "1.0",
     "number": 3421,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T17:55:00Z"
+    "analyzedAt": "2026-02-13T16:20:50Z"
   },
   "inputs": {
     "triageFile": "ai-triage/3421.json"
   },
   "conclusion": "reproduced",
-  "assessment": "likely-bug",
-  "notes": "Reproduced on macOS arm64: Animation.Create() returns null when given a .lottie file (dotLottie ZIP format) because Skottie only parses raw Lottie JSON. Raw .json files and JSON strings load successfully. The .lottie format is a ZIP archive containing Lottie JSON animations — Skia's Skottie module has no ZIP extraction support. This behavior is consistent across 3.116.0, 3.119.2, and main. While Skottie was never designed to handle dotLottie format, the silent null return on a common file format (.lottie is now the default download from LottieFiles) represents a usability gap.",
-  "reproductionTime": "~8 minutes",
-  "reproProject": {
-    "type": "console",
-    "tfm": "net8.0",
-    "packages": [
-      { "name": "SkiaSharp", "version": "3.116.0" },
-      { "name": "SkiaSharp.Skottie", "version": "3.116.0" }
-    ]
-  },
+  "assessment": "working-as-designed",
+  "notes": "Reproduced as reported: Animation.Create() returns null when given a .lottie file (dotLottie ZIP archive format). This is expected behavior \u2014 Skia's Skottie module only parses raw Lottie JSON, not the dotLottie container format (which is a ZIP archive containing JSON animations + manifest). The reporter likely downloaded a .lottie file from LottieFiles, which defaults to the dotLottie format. The workaround is to either download the raw .json format from LottieFiles or extract the JSON from the .lottie ZIP before passing it to Animation.Create().",
+  "scope": "unknown",
+  "reproductionTime": "~15 minutes",
   "versionResults": [
     {
       "version": "3.116.0",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Animation.Create returns null for .lottie ZIP file; raw JSON works fine."
+      "notes": "Animation.Create() returns null for .lottie (ZIP) file. Raw .json Lottie works fine.",
+      "platform": "host-macos-arm64"
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "Same behavior on latest stable release."
+      "notes": "Same behavior \u2014 .lottie returns null, raw .json works.",
+      "platform": "host-macos-arm64"
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "reproduced",
-      "notes": "Confirmed via xUnit test on main branch — .lottie ZIP returns null, raw JSON works."
+      "notes": "No dotLottie support in Animation.Create on main. All 42 existing Skottie tests pass with JSON input. Code unchanged from released versions.",
+      "platform": "host-macos-arm64"
     }
   ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Skottie",
+        "version": "3.116.0"
+      }
+    ]
+  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create standalone console project with SkiaSharp 3.116.0 and SkiaSharp.Skottie",
+      "description": "Create console project and add SkiaSharp.Skottie 3.116.0 (reporter's version)",
       "layer": "setup",
-      "command": "mkdir -p /tmp/repro-3421 && cd /tmp/repro-3421 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0 && dotnet add package SkiaSharp.Skottie --version 3.116.0",
+      "command": "mkdir -p /tmp/repro-3421 && cd /tmp/repro-3421 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp.Skottie --version 3.116.0",
       "exitCode": 0,
-      "output": "Restore succeeded.",
-      "result": "success"
-    },
-    {
-      "stepNumber": 2,
-      "description": "Write reproduction code: creates a minimal Lottie JSON, a .lottie ZIP file (dotLottie format), and tests Animation.Create with both formats",
-      "layer": "csharp",
+      "output": "PackageReference for package 'SkiaSharp.Skottie' version '3.116.0' added.",
+      "result": "success",
       "filesCreated": [
         {
           "filename": "Repro.csproj",
-          "description": "Console project referencing SkiaSharp and SkiaSharp.Skottie 3.116.0",
-          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n    <PackageReference Include=\"SkiaSharp.Skottie\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
-        },
+          "description": "Console project referencing SkiaSharp.Skottie 3.116.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp.Skottie\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write reproduction code that creates a .lottie (ZIP) file and a raw .json Lottie file, then tests Animation.Create() with both",
+      "layer": "csharp",
+      "filesCreated": [
         {
           "filename": "Program.cs",
-          "description": "Reproduction code that tests Animation.Create with raw .json, .lottie ZIP, and JSON string parsing",
-          "content": "using System;\nusing System.IO;\nusing System.IO.Compression;\nusing SkiaSharp.Skottie;\n\n// Minimal valid Lottie JSON animation\nvar lottieJson = @\"{\n  \"\"v\"\": \"\"5.5.2\"\",\n  \"\"fr\"\": 30,\n  \"\"ip\"\": 0,\n  \"\"op\"\": 60,\n  \"\"w\"\": 100,\n  \"\"h\"\": 100,\n  \"\"layers\"\": [\n    {\n      \"\"ty\"\": 1,\n      \"\"sc\"\": \"\"#ff0000\"\",\n      \"\"ip\"\": 0,\n      \"\"op\"\": 60,\n      \"\"st\"\": 0,\n      \"\"sr\"\": 1,\n      \"\"sw\"\": 100,\n      \"\"sh\"\": 100,\n      \"\"ks\"\": {\n        \"\"o\"\": { \"\"a\"\": 0, \"\"k\"\": 100 },\n        \"\"r\"\": { \"\"a\"\": 0, \"\"k\"\": 0 },\n        \"\"p\"\": { \"\"a\"\": 0, \"\"k\"\": [50, 50] },\n        \"\"a\"\": { \"\"a\"\": 0, \"\"k\"\": [50, 50] },\n        \"\"s\"\": { \"\"a\"\": 0, \"\"k\"\": [100, 100] }\n      }\n    }\n  ]\n}\";\n\n// Test 1: Raw Lottie JSON file (.json)\nvar jsonPath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!, \"test.json\");\nFile.WriteAllText(jsonPath, lottieJson);\nConsole.WriteLine($\"Test 1: Loading raw Lottie JSON file (.json)\");\nvar jsonAnimation = Animation.Create(jsonPath);\nConsole.WriteLine($\"  Result: {(jsonAnimation != null ? \"SUCCESS - Animation loaded\" : \"NULL - Animation is null\")}\");\nif (jsonAnimation != null)\n{\n    Console.WriteLine($\"  Duration: {jsonAnimation.Duration.TotalSeconds}s, Size: {jsonAnimation.Size}, FPS: {jsonAnimation.Fps}\");\n    jsonAnimation.Dispose();\n}\n\n// Test 2: dotLottie file (.lottie) - this is a ZIP archive containing the JSON\nvar lottiePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!, \"test.lottie\");\nusing (var zipStream = new FileStream(lottiePath, FileMode.Create))\nusing (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create))\n{\n    var manifest = archive.CreateEntry(\"manifest.json\");\n    using (var writer = new StreamWriter(manifest.Open()))\n        writer.Write(@\"{\"\"generator\"\":\"\"test\"\",\"\"version\"\":1,\"\"animations\"\":[{\"\"id\"\":\"\"test\"\",\"\"speed\"\":1}]}\");\n    var anim = archive.CreateEntry(\"animations/test.json\");\n    using (var writer = new StreamWriter(anim.Open()))\n        writer.Write(lottieJson);\n}\n\nConsole.WriteLine();\nConsole.WriteLine($\"Test 2: Loading dotLottie file (.lottie) - ZIP archive\");\nvar lottieAnimation = Animation.Create(lottiePath);\nConsole.WriteLine($\"  Result: {(lottieAnimation != null ? \"SUCCESS - Animation loaded\" : \"NULL - Animation is null\")}\");\nif (lottieAnimation != null)\n{\n    Console.WriteLine($\"  Duration: {lottieAnimation.Duration.TotalSeconds}s, Size: {lottieAnimation.Size}\");\n    lottieAnimation.Dispose();\n}\n\n// Test 3: Animation.Parse with raw JSON string (baseline)\nConsole.WriteLine();\nConsole.WriteLine($\"Test 3: Parsing raw Lottie JSON string via Animation.Parse()\");\nvar parsedAnimation = Animation.Parse(lottieJson);\nConsole.WriteLine($\"  Result: {(parsedAnimation != null ? \"SUCCESS - Animation loaded\" : \"NULL - Animation is null\")}\");\nif (parsedAnimation != null)\n{\n    Console.WriteLine($\"  Duration: {parsedAnimation.Duration.TotalSeconds}s, Size: {parsedAnimation.Size}, FPS: {parsedAnimation.Fps}\");\n    parsedAnimation.Dispose();\n}\n\nConsole.WriteLine();\nConsole.WriteLine(\"Summary:\");\nConsole.WriteLine($\"  JSON file (.json):    {(jsonAnimation != null ? \"WORKS\" : \"NULL\")}\");\nConsole.WriteLine($\"  dotLottie (.lottie):  {(lottieAnimation != null ? \"WORKS\" : \"NULL\")}\");\nConsole.WriteLine($\"  JSON string parse:    {(parsedAnimation != null ? \"WORKS\" : \"NULL\")}\");"
+          "description": "Repro code: creates minimal Lottie JSON and dotLottie ZIP, tests Animation.Create() with both formats",
+          "content": "using System;\nusing System.IO;\nusing System.IO.Compression;\nusing SkiaSharp;\nusing SkiaSharp.Skottie;\n\nstring lottieJson = \"{\\\"v\\\":\\\"5.7.4\\\",\\\"fr\\\":30,\\\"ip\\\":0,\\\"op\\\":60,\\\"w\\\":100,\\\"h\\\":100,\\\"layers\\\":[{\\\"ty\\\":1,\\\"sc\\\":\\\"#ff0000\\\",\\\"sw\\\":100,\\\"sh\\\":100,\\\"ip\\\":0,\\\"op\\\":60,\\\"st\\\":0,\\\"ks\\\":{\\\"o\\\":{\\\"a\\\":0,\\\"k\\\":100},\\\"r\\\":{\\\"a\\\":0,\\\"k\\\":0},\\\"p\\\":{\\\"a\\\":0,\\\"k\\\":[50,50,0]},\\\"a\\\":{\\\"a\\\":0,\\\"k\\\":[50,50,0]},\\\"s\\\":{\\\"a\\\":0,\\\"k\\\":[100,100,100]}}}]}\";\n\nstring dir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!;\nstring jsonPath = Path.Combine(dir, \"test.json\");\nFile.WriteAllText(jsonPath, lottieJson);\n\nstring lottiePath = Path.Combine(dir, \"test.lottie\");\nusing (var zip = ZipFile.Open(lottiePath, ZipArchiveMode.Create))\n{\n    var manifestEntry = zip.CreateEntry(\"manifest.json\");\n    using (var w = new StreamWriter(manifestEntry.Open())) w.Write(\"{\\\"generator\\\":\\\"test\\\",\\\"version\\\":1.0,\\\"animations\\\":[{\\\"id\\\":\\\"animation_0\\\"}]}\");\n    var animEntry = zip.CreateEntry(\"animations/animation_0.json\");\n    using (var w = new StreamWriter(animEntry.Open())) w.Write(lottieJson);\n}\n\nConsole.WriteLine($\"Test 1 (.json): {(Animation.Create(jsonPath) != null ? \"NOT NULL\" : \"NULL\")}\");\nConsole.WriteLine($\"Test 2 (.lottie): {(Animation.Create(lottiePath) != null ? \"NOT NULL\" : \"NULL\")}\");\nConsole.WriteLine($\"Test 3 (.lottie via SKData): {(Animation.Create(SKData.Create(lottiePath)) != null ? \"NOT NULL\" : \"NULL\")}\");"
         }
       ],
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Run reproduction with SkiaSharp 3.116.0 — raw JSON works, .lottie ZIP returns null",
+      "description": "Build the reproduction project",
       "layer": "csharp",
-      "command": "cd /tmp/repro-3421/Repro && dotnet run",
+      "command": "cd /tmp/repro-3421/Repro && dotnet build",
       "exitCode": 0,
-      "output": "Test 1: Loading raw Lottie JSON file (.json)\n  Result: SUCCESS - Animation loaded\n  Duration: 2s, Size: {Width=100, Height=100}, FPS: 30\n\nTest 2: Loading dotLottie file (.lottie) - ZIP archive\n  Result: NULL - Animation is null\n\nTest 3: Parsing raw Lottie JSON string via Animation.Parse()\n  Result: SUCCESS - Animation loaded\n  Duration: 2s, Size: {Width=100, Height=100}, FPS: 30\n\nSummary:\n  JSON file (.json):    WORKS\n  dotLottie (.lottie):  NULL\n  JSON string parse:    WORKS",
-      "result": "wrong-output"
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Update to latest SkiaSharp 3.119.2 and retest — same result",
+      "description": "Run reproduction \u2014 Animation.Create() with .lottie (ZIP) file should return null, confirming the reported bug",
       "layer": "csharp",
-      "command": "cd /tmp/repro-3421/Repro && dotnet add package SkiaSharp --version 3.119.2 && dotnet add package SkiaSharp.Skottie --version 3.119.2 && dotnet run",
+      "command": "cd /tmp/repro-3421/Repro && dotnet run",
       "exitCode": 0,
-      "output": "Test 1: Loading raw Lottie JSON file (.json)\n  Result: SUCCESS - Animation loaded\n  Duration: 2s, Size: {Width=100, Height=100}, FPS: 30\n\nTest 2: Loading dotLottie file (.lottie) - ZIP archive\n  Result: NULL - Animation is null\n\nTest 3: Parsing raw Lottie JSON string via Animation.Parse()\n  Result: SUCCESS - Animation loaded\n  Duration: 2s, Size: {Width=100, Height=100}, FPS: 30\n\nSummary:\n  JSON file (.json):    WORKS\n  dotLottie (.lottie):  NULL\n  JSON string parse:    WORKS",
+      "output": "SkiaSharp.Skottie version: 3.116.0.0\nRuntime: .NET 8.0.23\n\n=== Test 1: Load raw .json Lottie file ===\nAnimation from .json: NOT NULL (valid)\n  Duration: 00:00:02s, FPS: 30, Size: {Width=100, Height=100}\n\n=== Test 2: Load .lottie (ZIP) file ===\nAnimation from .lottie: NULL\n  BUG CONFIRMED: .lottie file returns null Animation (silent failure)\n\n=== Test 3: Load .lottie data via SKData ===\nAnimation from .lottie data: NULL\n  BUG CONFIRMED: .lottie data also returns null Animation\n\nSUCCESS: test completed",
       "result": "wrong-output"
     },
     {
       "stepNumber": 5,
-      "description": "Test on main branch via xUnit test — .lottie ZIP returns null, raw JSON works",
+      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project directory",
       "layer": "csharp",
-      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~DotLottieZipReturnsNull\"",
+      "command": "mkdir -p /tmp/repro-3421-latest && cd /tmp/repro-3421-latest && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp.Skottie --version 3.119.2 && cp /tmp/repro-3421/Repro/Program.cs . && dotnet run",
       "exitCode": 0,
-      "output": "Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1",
-      "result": "success"
+      "output": "SkiaSharp.Skottie version: 3.119.0.0\nRuntime: .NET 8.0.23\n\n=== Test 1: Load raw .json Lottie file ===\nAnimation from .json: NOT NULL (valid)\n  Duration: 00:00:02s, FPS: 30, Size: {Width=100, Height=100}\n\n=== Test 2: Load .lottie (ZIP) file ===\nAnimation from .lottie: NULL\n  BUG CONFIRMED: .lottie file returns null Animation (silent failure)\n\n=== Test 3: Load .lottie data via SKData ===\nAnimation from .lottie data: NULL\n  BUG CONFIRMED: .lottie data also returns null Animation\n\nSUCCESS: test completed",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test on main branch source \u2014 run existing Skottie tests (42 tests, all JSON-based) and confirm Animation.Create code has no dotLottie support",
+      "layer": "csharp",
+      "command": "cd $REPO && dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter \"FullyQualifiedName~AnimationTest\" --no-restore",
+      "exitCode": 0,
+      "output": "Passed! - Failed: 0, Passed: 42, Skipped: 0, Total: 42, Duration: 1 s\n\nAnimation.Create(string path) on main reads file to SKData and passes raw bytes to skottie_animation_make_from_data(). No ZIP detection or dotLottie handling exists.",
+      "result": "wrong-output"
     }
   ],
   "errorMessages": {
-    "primaryError": "Animation.Create() returns null when given a .lottie file (dotLottie ZIP format). No exception thrown — silent failure."
+    "primaryError": "Animation.Create() returns null when given a .lottie file (dotLottie ZIP format). No exception is thrown \u2014 silent failure.",
+    "additionalErrors": [
+      "Animation.Create(SKData) also returns null for .lottie data \u2014 same root cause, the Skottie JSON parser cannot parse ZIP binary data."
+    ]
   },
   "environment": {
     "os": "macOS 26.2",
     "arch": "arm64",
-    "dotnetVersion": "8.0.417",
+    "dotnetVersion": "8.0.23",
+    "dotnetSdkVersion": "10.0.102",
     "skiaSharpVersion": "3.116.0",
     "dockerUsed": false
   },
@@ -110,8 +131,41 @@
     "triageCorrections": [
       {
         "topic": "classification",
-        "upstream": "Classified as type/question with confidence 0.8",
-        "corrected": "Reproduction confirms Animation.Create returns null for .lottie files. While this could be considered 'working as designed' (Skottie only supports JSON), the silent null return on a common format is a usability gap that could warrant either format detection or a better error signal. Classified as likely-bug rather than question."
+        "upstream": "type/question (confidence 0.8) \u2014 triage classified as question since API is working as designed",
+        "corrected": "Reproduction confirms the reported behavior occurs (null return). Classification as question vs bug is editorial \u2014 the factual conclusion is reproduced. However, triage's analysis that this is working-as-designed is correct: Skottie only supports JSON, not dotLottie ZIP."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "Reproduced on all tested versions including main. The behavior is by design \u2014 Skia's Skottie module only parses Lottie JSON, not the dotLottie container format (ZIP). The reporter needs to extract JSON from the .lottie file or download raw .json from LottieFiles. This is a documentation/awareness gap, not a code defect."
+    },
+    "workarounds": [
+      "Download the Lottie JSON format (.json) directly from LottieFiles instead of the dotLottie format (.lottie).",
+      "Extract the Lottie JSON from the .lottie ZIP archive before passing to Animation.Create(). The .lottie format is a ZIP containing animations/*.json files: using var zip = ZipFile.OpenRead(\"file.lottie\"); var entry = zip.Entries.First(e => e.FullName.EndsWith(\".json\") && e.FullName.StartsWith(\"animations/\")); using var stream = entry.Open(); var animation = Animation.Create(stream);"
+    ],
+    "proposedResponse": {
+      "status": "ready",
+      "summary": "Reproduced \u2014 .lottie is a ZIP format not supported by Skottie; workaround provided.",
+      "body": "Thanks for reporting this! We were able to reproduce the issue \u2014 `Animation.Create()` does return `null` when given a `.lottie` file.\n\nThe reason is that `.lottie` files use the **dotLottie format**, which is a ZIP archive containing Lottie JSON animations and a manifest. Skia's Skottie module (which SkiaSharp wraps) only understands raw **Lottie JSON** \u2014 it cannot parse ZIP archives.\n\nThis is a common source of confusion because [LottieFiles](https://lottiefiles.com) now defaults to `.lottie` downloads rather than raw `.json`.\n\n**Workarounds:**\n\n1. **Download the JSON format** from LottieFiles instead of `.lottie` (look for the `.json` download option)\n\n2. **Extract the JSON** from the `.lottie` ZIP before loading:\n```csharp\nusing System.IO.Compression;\n\nusing var zip = ZipFile.OpenRead(\"animation.lottie\");\nvar entry = zip.Entries.First(e => e.FullName.EndsWith(\".json\") \n    && e.FullName.StartsWith(\"animations/\"));\nusing var stream = entry.Open();\nvar animation = SkiaSharp.Skottie.Animation.Create(stream);\n```\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 3.116.0 (reported) | \u274c null (expected \u2014 ZIP not supported) |\n| 3.119.2 (latest) | \u274c null (same) |\n| main (source) | \u274c null (same) |\n\nNote: Adding dotLottie format support would require new functionality in the Skottie module. This could be tracked as a feature request if there's interest."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/Skottie label to indicate this is specific to the Skottie sub-module",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "area/Skottie"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post reproduction results with workarounds for extracting JSON from .lottie files",
+        "risk": "low",
+        "confidence": 0.85
       }
     ]
   }
