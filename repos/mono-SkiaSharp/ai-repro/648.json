@@ -3,95 +3,98 @@
     "schemaVersion": "1.0",
     "number": 648,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T17:25:00Z"
+    "analyzedAt": "2026-02-13T00:15:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/648.json"
   },
   "conclusion": "not-reproduced",
-  "notes": "Tested large image (14034x9921, ~530MB uncompressed) resize workflow on macOS arm64 with ample RAM. Bitmap allocation succeeds, resize produces correct non-blank output, and SKBitmap.FromImage works on all versions tested (2.88.9, 3.119.2, main source). The original issue from 2018 was likely due to Skia library limitations at the time (confirmed by maintainer comment linking to Skia discussion group) and/or constrained memory environments. Cannot reproduce on modern 64-bit hardware with current Skia versions.",
+  "notes": "Large image resize (14034x9921, 139M pixels, ~531MB RGBA) works correctly on macOS arm64 with both SkiaSharp 2.88.9 and 3.116.1 and main (source). All outputs contain expected pixel data with no blank images. SKBitmap allocation, SKSurface.Create, SKCodec.GetPixels, and the full encode-decode-resize flow all succeed at reporter's dimensions. Allocation failure ('Unable to allocate pixels') only occurs at much larger sizes (~30000x20000, ~2.3GB RGBA). The original issue from 2018 was likely caused by 32-bit process memory constraints or older Skia limits that have since been lifted. The maintainer noted this was an upstream Skia issue (labeled status/skia-update-required).",
   "assessment": "likely-bug",
-  "reproductionTime": "~8 minutes",
+  "reproductionTime": "~12 minutes",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.116.1" }
+    ]
+  },
   "versionResults": [
     {
       "version": "2.88.9",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "14034x9921 bitmap allocates fine, resize to 1527x1080 produces correct output with 100% non-white pixels sampled."
+      "notes": "14034x9921 allocation, surface creation, encode/decode/resize all succeed with correct non-blank output."
     },
     {
-      "version": "3.119.2",
+      "version": "3.116.1",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Same result as 2.88.9. Adapted code for 3.x API (SKSamplingOptions instead of SKFilterQuality)."
+      "notes": "All operations succeed up to 24000x18000. Reporter's 14034x9921 works perfectly. Allocation failure only at 28000x20000+."
     },
     {
       "version": "main (source)",
       "source": "source",
       "result": "not-reproduced",
-      "notes": "xUnit test LargeImageResizeDoesNotProduceBlankOutput passed — bitmap allocation and resize both succeed."
+      "notes": "Test LargeImageResizeProducesNonBlankOutput passed: 14034x9921 encode-decode-resize produces non-blank output."
     }
   ],
-  "reproProject": {
-    "type": "console",
-    "tfm": "net8.0",
-    "packages": [
-      { "name": "SkiaSharp", "version": "2.88.9" },
-      { "name": "SkiaSharp.NativeAssets.macOS", "version": "2.88.9" }
-    ]
-  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create standalone console project with SkiaSharp 2.88.9",
+      "description": "Create console project with SkiaSharp 3.116.1",
       "layer": "setup",
-      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.9 && dotnet add package SkiaSharp.NativeAssets.macOS --version 2.88.9",
+      "command": "dotnet new console -n Repro --framework net8.0 && dotnet add package SkiaSharp --version 3.116.1",
       "exitCode": 0,
-      "output": "The template \"Console App\" was created successfully.\nRestored /tmp/repro-648/Repro/Repro.csproj",
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.116.1' added.",
       "filesCreated": [
         {
           "filename": "Repro.csproj",
-          "description": "Console project targeting net8.0 with SkiaSharp 2.88.9",
-          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.9\" />\n    <PackageReference Include=\"SkiaSharp.NativeAssets.macOS\" Version=\"2.88.9\" />\n  </ItemGroup>\n</Project>"
+          "description": "Console project targeting net8.0 with SkiaSharp 3.116.1",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.1\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that tests large image allocation, surface creation, encode/decode/resize flow, and pixel verification at reporter's dimensions and larger sizes",
+          "content": "using SkiaSharp;\n\nConsole.WriteLine(\"Testing blank-output-after-resize (Issue #648)\");\nConsole.WriteLine($\"Platform: {Environment.OSVersion}, 64-bit={Environment.Is64BitProcess}\");\n\nvoid TestEncodedResize(int w, int h, string label)\n{\n    Console.WriteLine($\"\\n=== {label}: {w}x{h} ===\");\n    Console.Write(\"  Creating source surface... \");\n    using var srcSurface = SKSurface.Create(new SKImageInfo(w, h));\n    if (srcSurface == null)\n    {\n        Console.WriteLine(\"FAIL (null surface - too large to allocate)\");\n        return;\n    }\n    srcSurface.Canvas.Clear(SKColors.Blue);\n    using var paint = new SKPaint { Color = SKColors.Red };\n    srcSurface.Canvas.DrawCircle(w / 2f, h / 2f, Math.Min(w, h) / 3f, paint);\n    srcSurface.Canvas.Flush();\n    using var srcSnap = srcSurface.Snapshot();\n    using var encodedData = srcSnap.Encode(SKEncodedImageFormat.Jpeg, 80);\n    Console.WriteLine($\"OK, encoded={encodedData.Size / 1024} KB\");\n\n    Console.Write(\"  Decoding... \");\n    using var decoded = SKImage.FromEncodedData(encodedData);\n    if (decoded == null) { Console.WriteLine(\"FAIL\"); return; }\n    Console.WriteLine($\"OK ({decoded.Width}x{decoded.Height})\");\n\n    Console.Write(\"  SKCodec... \");\n    using var codecData = SKData.CreateCopy(encodedData.ToArray());\n    using var codec = SKCodec.Create(codecData);\n    if (codec == null) { Console.WriteLine(\"FAIL\"); }\n    else\n    {\n        Console.WriteLine($\"OK (info={codec.Info.Width}x{codec.Info.Height})\");\n        using var bmpFromCodec = new SKBitmap(codec.Info);\n        var codecResult = codec.GetPixels(bmpFromCodec.Info, bmpFromCodec.GetPixels());\n        Console.WriteLine($\"  Codec.GetPixels: {codecResult}\");\n    }\n\n    int maxWidth = 1024, maxHeight = 768;\n    double scale = Math.Min((double)maxWidth / decoded.Width, (double)maxHeight / decoded.Height);\n    int newW = (int)(decoded.Width * scale);\n    int newH = (int)(decoded.Height * scale);\n    Console.Write($\"  Resizing to {newW}x{newH}... \");\n    using var dstSurface = SKSurface.Create(new SKImageInfo(newW, newH));\n    if (dstSurface == null) { Console.WriteLine(\"FAIL\"); return; }\n    dstSurface.Canvas.Clear(SKColors.White);\n    dstSurface.Canvas.DrawImage(decoded, new SKRect(0, 0, newW, newH));\n    dstSurface.Canvas.Flush();\n    using var result = dstSurface.Snapshot();\n    using var resultData = result.Encode(SKEncodedImageFormat.Jpeg, 85);\n    if (resultData == null || resultData.Size == 0) { Console.WriteLine(\"FAIL\"); return; }\n    using var checkBmp = SKBitmap.Decode(resultData);\n    int nonWhite = 0;\n    var rng = new Random(42);\n    for (int i = 0; i < 100; i++)\n    {\n        var px = checkBmp.GetPixel(rng.Next(checkBmp.Width), rng.Next(checkBmp.Height));\n        if (px.Red < 240 || px.Green < 240 || px.Blue < 240) nonWhite++;\n    }\n    bool isBlank = nonWhite < 5;\n    Console.WriteLine($\"{resultData.Size} bytes, nonWhite={nonWhite}/100, BLANK={isBlank}\");\n}\n\nTestEncodedResize(14034, 9921, \"Reporter (14034x9921)\");\nTestEncodedResize(16000, 12000, \"16Kx12K\");\nTestEncodedResize(20000, 15000, \"20Kx15K\");\nTestEncodedResize(24000, 18000, \"24Kx18K\");\nTestEncodedResize(28000, 20000, \"28Kx20K\");\nConsole.WriteLine(\"\\nDone.\");"
         }
       ],
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Write reproduction code: allocate 14034x9921 bitmap, encode to JPEG, resize using reporter's pattern, verify output is not blank",
+      "description": "Run reproduction at reporter's dimensions (14034x9921) with SkiaSharp 3.116.1 — test full encode-decode-resize flow",
       "layer": "csharp",
-      "filesCreated": [
-        {
-          "filename": "Program.cs",
-          "description": "Reproduction code testing 4 aspects: bitmap allocation at reporter's dimensions, JPEG encoding of large bitmap, resize workflow matching reporter's code pattern, and SKBitmap.FromImage with large data",
-          "content": "using System;\nusing System.IO;\nusing SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}\");\nConsole.WriteLine($\"OS: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine();\n\nint sourceWidth = 14034;\nint sourceHeight = 9921;\nlong pixelBytes = (long)sourceWidth * sourceHeight * 4;\nConsole.WriteLine($\"=== Test 1: Allocate SKBitmap at {sourceWidth}x{sourceHeight} ({pixelBytes / 1024 / 1024}MB) ===\");\n\nSKBitmap? largeBitmap = null;\ntry\n{\n    largeBitmap = new SKBitmap(sourceWidth, sourceHeight);\n    if (largeBitmap.GetPixels() == IntPtr.Zero)\n        Console.WriteLine(\"ERROR: SKBitmap created but GetPixels() returned IntPtr.Zero\");\n    else\n        Console.WriteLine($\"SUCCESS: SKBitmap allocated ({largeBitmap.Width}x{largeBitmap.Height})\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"EXCEPTION: {ex.GetType().Name}: {ex.Message}\");\n}\n\n// Generate large JPEG, resize using reporter's pattern, verify output\nif (largeBitmap != null && largeBitmap.GetPixels() != IntPtr.Zero)\n{\n    using var canvas = new SKCanvas(largeBitmap);\n    canvas.Clear(SKColors.Blue);\n    using var paint = new SKPaint { Color = SKColors.Red };\n    canvas.DrawRect(0, 0, sourceWidth / 2f, sourceHeight / 2f, paint);\n    canvas.Flush();\n\n    using var img = SKImage.FromBitmap(largeBitmap);\n    using var encoded = img.Encode(SKEncodedImageFormat.Jpeg, 80);\n    var imageData = encoded.ToArray();\n\n    using var sourceStream = new SKMemoryStream(imageData);\n    using var codec = SKCodec.Create(sourceStream);\n    sourceStream.Seek(0);\n    using var image = SKImage.FromEncodedData(SKData.Create(sourceStream));\n\n    int newW = 1527, newH = 1080;\n    var info = new SKImageInfo(newW, newH);\n    using var surface = SKSurface.Create(info);\n    using var rpaint = new SKPaint { IsAntialias = true, FilterQuality = SKFilterQuality.High };\n    surface.Canvas.Clear(SKColors.White);\n    surface.Canvas.DrawImage(image, new SKRect(0, 0, newW, newH), rpaint);\n    surface.Canvas.Flush();\n\n    using var newImage = surface.Snapshot();\n    using var newImageData = newImage.Encode(SKEncodedImageFormat.Jpeg, 85);\n    // Verify output is not blank by sampling pixels\n    using var outputBitmap = SKBitmap.FromImage(SKImage.FromEncodedData(newImageData));\n    int nonWhite = 0, total = 0;\n    for (int y = 0; y < outputBitmap.Height; y += 50)\n        for (int x = 0; x < outputBitmap.Width; x += 50)\n        {\n            total++;\n            if (outputBitmap.GetPixel(x, y) != SKColors.White) nonWhite++;\n        }\n    Console.WriteLine($\"Pixel check: {nonWhite}/{total} non-white\");\n    if (nonWhite == 0) Console.WriteLine(\"BUG: Output is blank\");\n    else Console.WriteLine(\"Output has content — not blank\");\n    largeBitmap.Dispose();\n}"
-        }
-      ],
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "Reporter (14034x9921): SKBitmap OK, SKSurface OK, SKCodec OK, Codec.GetPixels: Success, Resize: 13516 bytes, nonWhite=100/100, BLANK=False\n16Kx12K: OK, BLANK=False\n20Kx15K: OK, BLANK=False\n24Kx18K: OK, BLANK=False\n28Kx20K: FAIL (null surface - too large to allocate)",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Run reproduction with SkiaSharp 2.88.9 — test large bitmap allocation and resize",
+      "description": "Re-test with SkiaSharp 2.88.9 (last 2.x release) at reporter's dimensions",
       "layer": "csharp",
-      "command": "cd /tmp/repro-648/Repro && dotnet run",
+      "command": "dotnet remove package SkiaSharp && dotnet add package SkiaSharp --version 2.88.9 && dotnet run",
       "exitCode": 0,
-      "output": "SkiaSharp Version: 2.88.0.0\nRuntime: .NET 8.0.23\nOS: Darwin 25.2.0 ...\nArch: Arm64\n\n=== Test 1: Allocate SKBitmap at 14034x9921 (531MB) ===\nSUCCESS: SKBitmap allocated (14034x9921)\n\n=== Test 2: Generate large image and resize ===\nEncoding large bitmap to JPEG...\nEncoded JPEG size: 821KB\n\n=== Test 3: Resize 14034x9921 image using reporter's pattern ===\nCodec: 14034x9921, Format=Jpeg\nImage: 14034x9921\nTarget size: 1527x1080\nOutput saved: output.jpg (12KB)\nPixel check: 315/315 non-white pixels sampled\nRESULT: Output has content (100% non-white) — appears correct\n\n=== Test 4: SKBitmap.FromImage with large image data ===\nImage loaded: 14034x9921\nSUCCESS: SKBitmap created (14034x9921, 531MB)\n\n=== Done ===",
+      "output": "All operations succeed identically: 14034x9921 surface created, encoded/decoded/resized, center pixel=#fffe0000, blank=False. Same results through 24000x18000.",
       "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Run reproduction with SkiaSharp 3.119.2 (latest stable) — adapted for 3.x API (SKSamplingOptions instead of SKFilterQuality)",
+      "description": "Test allocation failure boundary — SKBitmap and SKSurface at 30000x20000",
       "layer": "csharp",
-      "command": "cd /tmp/repro-648/Repro3 && dotnet run",
+      "command": "dotnet run (with 30000x20000 test)",
       "exitCode": 0,
-      "output": "SkiaSharp Version: 3.119.0.0\nRuntime: .NET 8.0.23\nOS: Darwin 25.2.0 ...\nArch: Arm64\n\n=== Test 1: Allocate SKBitmap at 14034x9921 (531MB) ===\nSUCCESS: SKBitmap allocated (14034x9921)\n\n=== Test 2: Generate large image and resize ===\nEncoding large bitmap to JPEG...\nEncoded JPEG size: 821KB\n\n=== Test 3: Resize using adapted reporter's pattern (3.x API) ===\nCodec: 14034x9921, Format=Jpeg\nImage: 14034x9921\nTarget size: 1527x1080\nOutput saved: output.jpg (12KB)\nPixel check: 315/315 non-white pixels sampled\nRESULT: Output has content (100% non-white) — correct\n\n=== Test 4: SKBitmap.FromImage with large image data ===\nImage loaded: 14034x9921\nSUCCESS: SKBitmap created (14034x9921, 531MB)\n\n=== Done ===",
+      "output": "30000x20000: SKBitmap: Exception: Unable to allocate pixels for the bitmap.\nSKSurface.Create: returned null\nSKImage.Create: returned null",
       "result": "success"
     },
     {
       "stepNumber": 5,
-      "description": "Run xUnit test against main branch source build — LargeImageResizeDoesNotProduceBlankOutput test",
+      "description": "Build and run targeted test on main (source) — LargeImageResizeProducesNonBlankOutput",
       "layer": "csharp",
-      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~LargeImageResize\"",
+      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj && dotnet test --no-build --filter LargeImageResize",
       "exitCode": 0,
-      "output": "Passed!  - Failed: 0, Passed: 1, Skipped: 0, Total: 1, Duration: < 1 ms",
+      "output": "Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1",
       "result": "success"
     }
   ],
@@ -99,7 +102,7 @@
     "os": "macOS 26.2",
     "arch": "arm64",
     "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "2.88.9",
+    "skiaSharpVersion": "3.116.1",
     "dockerUsed": false
   }
 }
