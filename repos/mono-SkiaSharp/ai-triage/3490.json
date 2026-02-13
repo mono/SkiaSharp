@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3490,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:14:31Z",
+    "currentLabels": ["copilot"]
+  },
+  "summary": "Draft PR by maintainer (mattleibow) that adds new HarfBuzzSharp C# binding APIs for OpenType font features, variable font manipulation, language matching, and buffer cloning. Updates the binding generator (CppAst 0.24.0 upgrade with compatibility fixes), regenerates HarfBuzzApi.generated.cs (+89 new extern functions, -28 removed), adds 586 lines of tests across 4 test files, and includes 5 new documentation files covering migration planning and binding generation. The CI build is currently failing.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.95 },
+    "area": { "value": "area/HarfBuzzSharp", "confidence": 0.98 }
+  },
+  "evidence": {
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.2-pr.3490.1"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Active draft PR targeting main. Adds new API surface not yet available."
+    }
+  },
+  "analysis": {
+    "summary": "This is a large enhancement PR that modernizes the HarfBuzzSharp binding. It progresses through incremental HarfBuzz header versions (2.9.1 → 3.4.0 → 4.4.1 → 5.3.1 → 7.3.0 → 8.3.0) in separate commits, adds manual C# wrappers for Face/Font/Buffer/Language, upgrades the CppAst parser to 0.24.0 with compatibility fixes (space-around-pointers normalization, suffix-const removal, signed/unsigned long long mappings, cross-platform SDK include paths), and excludes new hb_paint_/hb_color_line_ namespaces from generation. The CI build (#3.119.2-pr.3490.1) is failing. The nuget.config change adding nuget.org as an explicit source may be unintentional or could conflict with the existing dotnet-public feed.",
+    "rationale": "Classified as type/enhancement because it adds substantial new API surface (OpenType layout queries, variable font controls, language matching) to an existing component. Not a feature-request (it's a PR with code). Area is area/HarfBuzzSharp since all new C# wrappers are in binding/HarfBuzzSharp/ and all new C API functions are HarfBuzz functions. No platform specificity — these are cross-platform APIs.",
+    "keySignals": [
+      { "text": "19 commits progressing through HarfBuzz header versions 2.9.1 → 8.3.0", "source": "git log", "interpretation": "Methodical incremental binding update, not a one-shot change. Each commit regenerates bindings for a specific HarfBuzz version." },
+      { "text": "Draft PR with failing CI build (#3.119.2-pr.3490.1)", "source": "GitHub PR status", "interpretation": "Work in progress. The build failure needs investigation before this can be reviewed for merge." },
+      { "text": "+89 new extern functions, -28 removed in HarfBuzzApi.generated.cs", "source": "diff analysis", "interpretation": "Significant API surface change. Removed functions may indicate renamed/refactored HarfBuzz C API entries across versions." },
+      { "text": "CppAst upgraded from older version to 0.24.0 with space-around-pointer normalization", "source": "utils/SkiaSharpGenerator/BaseTool.cs diff", "interpretation": "Generator compatibility fix — CppAst 0.24.0 changes type display names, requiring normalization of pointer syntax." },
+      { "text": "hb_paint_ and hb_color_line_ namespaces excluded from generation", "source": "binding/libHarfBuzzSharp.json diff", "interpretation": "Paint/color-line APIs intentionally deferred — complex callback-heavy APIs not yet ready for binding." },
+      { "text": "586 lines of new tests across 4 files", "source": "diff stat", "interpretation": "Good test coverage for new APIs. Tests cover Buffer.CreateSimilar, Language.Matches, Face OpenType queries, Font variable/synthetic properties." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/HarfBuzzSharp/Face.cs", "finding": "New methods: GetName, TryGetName (with language overloads), GetAllNameEntries, GetOpenTypeLayoutScriptTags, GetOpenTypeLayoutFeatureTags, TryGetOpenTypeLayoutFeatureNameIds. All follow correct patterns: ArgumentNullException for null params, stackalloc for buffer allocation, two-pass pattern (get length then get data) for string retrieval.", "relevance": "direct" },
+      { "file": "binding/HarfBuzzSharp/Font.cs", "finding": "New APIs: GetPpem/SetPpem, Ptem property, SyntheticSlant property, SetSyntheticBold/GetSyntheticBold, SetVariation (uint and string tag overloads), SetVariations (array and ReadOnlySpan overloads), NamedInstance property. String tag overload validates length == 4. All use Handle correctly via P/Invoke.", "relevance": "direct" },
+      { "file": "binding/HarfBuzzSharp/Buffer.cs", "finding": "New static method CreateSimilar(Buffer source) — validates null, delegates to hb_buffer_create_similar. Returns new Buffer wrapping the native handle. Follows factory method pattern.", "relevance": "direct" },
+      { "file": "binding/HarfBuzzSharp/Language.cs", "finding": "New Matches(Language specific) method — validates null, delegates to hb_language_matches. Returns bool. Correct pattern.", "relevance": "direct" },
+      { "file": "binding/HarfBuzzSharp/Definitions.cs", "finding": "New OpenTypeLayoutTableTag enum (Gsub, Gpos) with correct HarfBuzz tag encoding using bit shifts. New OpenTypeFeatureNameIds struct with 5 properties matching hb_ot_layout_feature_get_name_ids output parameters.", "relevance": "direct" },
+      { "file": "utils/SkiaSharpGenerator/BaseTool.cs", "finding": "Three categories of changes: (1) Cross-platform SDK include path resolution for CppAst parsing (macOS, Linux, Windows). (2) Type mapping fixes: unsigned char→Byte, signed char→SByte, added signed/unsigned long long variants. (3) Type name normalization: remove suffix 'const', normalize 'type *' to 'type*' for CppAst 0.24.0 compatibility.", "relevance": "related" },
+      { "file": "binding/libHarfBuzzSharp.json", "finding": "Excludes hb_paint_ and hb_color_line_ namespaces. Adds hb-paint.h to excluded headers. Adds 20+ paint/color_line types to excluded types. Adds hb_style_tag_t enum config. Adds generateProxy:false for 15+ callback function types (draw, paint).", "relevance": "related" },
+      { "file": "nuget.config", "finding": "Adds explicit nuget.org source before the existing dotnet-public Azure DevOps feed. This may have been needed for the CppAst 0.24.0 NuGet package during development.", "relevance": "context" }
+    ],
+    "nextQuestions": [
+      "What is the CI build failure? Need to check Azure DevOps build logs for #3.119.2-pr.3490.1.",
+      "Are the 28 removed extern functions expected removals (API renames across HarfBuzz versions) or accidental losses?",
+      "Is the nuget.config change intentional for the final PR or a development artifact?",
+      "The SkiaApi.generated.cs shows 990 lines changed — are those just comment/formatting changes from the CppAst upgrade or actual signature changes?",
+      "Should the hb_paint_/hb_color_line_ APIs be tracked as a follow-up issue?"
+    ],
+    "resolution": {
+      "hypothesis": "This is a well-structured enhancement PR that methodically updates HarfBuzzSharp bindings. The CI failure is the primary blocker. The generator changes (CppAst 0.24.0) affect both HarfBuzzSharp and SkiaSharp generated files.",
+      "proposals": [
+        { "title": "Fix CI build failure", "description": "Investigate the Azure DevOps build failure for #3.119.2-pr.3490.1. This is the primary blocker for the PR.", "confidence": 0.90, "effort": "small" },
+        { "title": "Verify removed extern functions", "description": "Audit the 28 removed extern functions in HarfBuzzApi.generated.cs to confirm they are expected API renames/removals across HarfBuzz versions and not accidental losses.", "confidence": 0.70, "effort": "small" },
+        { "title": "Review nuget.config change", "description": "Determine if the nuget.org source addition is needed for the final PR or should be reverted as a development artifact.", "confidence": 0.60, "effort": "trivial" },
+        { "title": "Track deferred paint APIs", "description": "Create a follow-up issue to track the intentionally excluded hb_paint_ and hb_color_line_ APIs for future binding work.", "confidence": 0.50, "effort": "trivial" }
+      ],
+      "recommendedProposal": "Fix CI build failure",
+      "recommendedReason": "The build failure is the only hard blocker. All other items are review observations that can be addressed during code review."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Draft PR with failing CI. Needs build failure diagnosis before it can proceed to review."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and HarfBuzzSharp labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/HarfBuzzSharp"]
+      }
+    ]
+  }
+}
