@@ -911,25 +911,25 @@ namespace SkiaSharp
 
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKColor[] colors, SKPaint paint)
 		{
-			var vert = SKVertices.CreateCopy (vmode, vertices, colors);
+			using var vert = SKVertices.CreateCopy (vmode, vertices, colors);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKPaint paint)
 		{
-			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors);
+			using var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, UInt16[] indices, SKPaint paint)
 		{
-			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
+			using var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
 			DrawVertices (vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKBlendMode mode, UInt16[] indices, SKPaint paint)
 		{
-			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
+			using var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
 			DrawVertices (vert, mode, paint);
 		}
 
