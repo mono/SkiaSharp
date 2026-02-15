@@ -218,7 +218,9 @@ namespace SkiaSharp
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
-			return SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, &subset);
+			var result = SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, &subset);
+			GC.KeepAlive (destination);
+			return result;
 		}
 
 		// ExtractAlpha
