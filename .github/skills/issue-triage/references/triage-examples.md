@@ -132,8 +132,8 @@ Question with resolution proposals, no bugSignals, close-with-docs action:
     "resolution": {
       "hypothesis": "User wants to render text with a custom .ttf font on Linux.",
       "proposals": [
-        { "description": "Use SKTypeface.FromFile() to load font from path. Simplest approach.", "confidence": 0.90, "effort": "trivial" },
-        { "description": "Embed font as resource and use SKTypeface.FromData() for portability.", "confidence": 0.90, "effort": "small" }
+        { "title": "Load font from file", "description": "Use SKTypeface.FromFile() to load font from path. Simplest approach.", "confidence": 0.90, "effort": "trivial" },
+        { "title": "Embed font as resource", "description": "Embed font as resource and use SKTypeface.FromData() for portability.", "confidence": 0.90, "effort": "small" }
       ]
     }
   },

@@ -63,19 +63,20 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
     },
     {
       "stepNumber": 2,
-      "description": "Write a program that creates an SKMatrix with negative X-scale (-2, 1), maps SKRect(0, 0, 1, 1), and prints the resulting rect. If the bug exists, Left will be 0 instead of -2.",
+      "description": "Write a program that creates an SKMatrix with negative X-scale (-2, 1), maps SKRect(0, 0, 1, 1), and prints the resulting rect. If the bug exists, the output rect will be normalized (Left=-2, Right=0) instead of preserving the flip (Left=0, Right=-2).",
       "layer": "csharp",
       "filesCreated": [
         {
           "filename": "Program.cs",
           "description": "Console app that creates SKMatrix.CreateScale(-2, 1), calls MapRect on unit rect, prints Left/Top/Right/Bottom values.",
-          "content": "using SkiaSharp;\n\nvar matrix = SKMatrix.CreateScale(-2, 1);\nvar source = new SKRect(0, 0, 1, 1);\nvar mapped = matrix.MapRect(source);\n\nConsole.WriteLine($\"Matrix: ScaleX={matrix.ScaleX}, ScaleY={matrix.ScaleY}\");\nConsole.WriteLine($\"Input:  SKRect({source.Left}, {source.Top}, {source.Right}, {source.Bottom})\");\nConsole.WriteLine($\"Output: SKRect({mapped.Left}, {mapped.Top}, {mapped.Right}, {mapped.Bottom})\");\nConsole.WriteLine($\"Expected Left=-2, Right=0\");\nConsole.WriteLine(mapped.Left == -2 ? \"PASS\" : \"BUG: MapRect normalized the rect\");"
+          "content": "using SkiaSharp;\n\nvar matrix = SKMatrix.CreateScale(-2, 1);\nvar source = new SKRect(0, 0, 1, 1);\nvar mapped = matrix.MapRect(source);\n\nConsole.WriteLine($\"Matrix: ScaleX={matrix.ScaleX}, ScaleY={matrix.ScaleY}\");\nConsole.WriteLine($\"Input:  SKRect({source.Left}, {source.Top}, {source.Right}, {source.Bottom})\");\nConsole.WriteLine($\"Output: SKRect({mapped.Left}, {mapped.Top}, {mapped.Right}, {mapped.Bottom})\");\nConsole.WriteLine($\"Expected Left=0, Right=-2 (preserve flip)\");\nConsole.WriteLine(mapped.Left == 0 && mapped.Right == -2 ? \"PASS\" : \"BUG: MapRect normalized the rect\");"
         }
-      ]
+      ],
+      "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Run the reproduction. Expected Left=-2 but got Left=0, confirming the normalization bug.",
+      "description": "Run the reproduction. Expected Left=0 and Right=-2 but got Left=-2 and Right=0, confirming the normalization bug.",
       "layer": "csharp",
       "command": "dotnet run --project Repro2997",
       "output": "Matrix: ScaleX=-2, ScaleY=1\nInput:  SKRect(0, 0, 1, 1)\nOutput: SKRect(-2, 0, 0, 1)\nExpected Left=0, Right=-2 (preserve flip) but got Left=-2, Right=0 (normalized)\nBUG: MapRect returns sorted rect, losing negative scale orientation",
@@ -93,6 +94,27 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
   "errorMessages": {
     "primaryError": "MapRect normalizes output rect, losing negative scale orientation"
   },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Reproduced on both the reporter's version and latest stable; MapRect returns a normalized rect that loses flip orientation (Left/Right ordering)."
+    },
+    "actions": [
+      {
+        "type": "add-comment",
+        "description": "Post reproduction findings and version matrix",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Reproduced on 2.88.9 and 3.116.1 with a minimal console app. With `SKMatrix.CreateScale(-2, 1)` mapping `SKRect(0,0,1,1)`, the mapped rect is normalized (Left=-2, Right=0) instead of preserving the flip (Left=0, Right=-2)."
+      }
+    ],
+    "proposedResponse": {
+      "status": "ready",
+      "summary": "Reproduced SKMatrix.MapRect normalization behavior on 2.88.9 and 3.116.1.",
+      "body": "I was able to reproduce this on both 2.88.9 and 3.116.1 with a minimal console app. With `SKMatrix.CreateScale(-2, 1)` mapping `SKRect(0,0,1,1)`, the mapped rect is normalized (Left=-2, Right=0) instead of preserving the flip (Left=0, Right=-2).\n\nVersions tested:\n- 2.88.9: reproduced\n- 3.116.1: reproduced"
+    }
+  },
   "environment": {
     "os": "macOS 15.3",
     "arch": "arm64",
@@ -107,9 +129,9 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
 
 - The conclusion is `reproduced` because the bug manifests as a **numerically wrong return
   value** from a C# API call (the rect coordinates are incorrect).
-- Step 2 has `result: "failure"` — the assertion fails, satisfying the schema constraint
+- Step 3 has `result: "failure"` — the assertion fails, satisfying the schema constraint
   that `reproduced` requires at least one step with `failure` or `wrong-output`.
-- Step 3 narrows the bug to the C# layer by showing the C API returns correct values.
+- The reproduction is isolated to a minimal C# console app calling `SKMatrix.MapRect`, making it easy to debug in the fix step.
 
 ---
 
@@ -203,9 +225,31 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
     "skiaSharpVersion": "3.119.2-preview.1",
     "dockerUsed": false
   },
-  "feedback": {
-    "triageCorrections": [
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Reproduced in Blazor WASM runtime (browser console) on 3.119.2-preview.1, while 3.116.1 is not reproduced; likely WASM-specific regression."
+    },
+    "actions": [
       {
+        "type": "add-comment",
+        "description": "Post reproduction findings and version/platform matrix",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Reproduced on Blazor WASM with 3.119.2-preview.1: runtime TypeInitializationException appears in the browser console (build succeeds). 3.116.1 stable does not reproduce. A console app on macOS with 3.119.2-preview.1 also does not reproduce, suggesting a WASM-specific regression."
+      }
+    ],
+    "proposedResponse": {
+      "status": "ready",
+      "summary": "Reproduced WASM-only runtime crash on 3.119.2-preview.1; 3.116.1 is OK.",
+      "body": "I was able to reproduce this in a Blazor WASM app on 3.119.2-preview.1: the project builds, but at runtime the browser console shows a `TypeInitializationException` (`TypeInitialization_Type, SKObject`).\n\nVersion/platform matrix:\n- 3.119.2-preview.1 (wasm-blazor): reproduced\n- 3.116.1 (wasm-blazor): not reproduced\n- 3.119.2-preview.1 (host macOS console): not reproduced\n\nThis looks like a WASM-specific regression introduced in the preview builds (3.118+)."
+    }
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
         "topic": "root-cause",
         "upstream": "Triage concluded: SkiaSharp doesn't officially support .NET 10",
         "corrected": "net8.0 libraries are forward-compatible with net10.0 via TFM fallback. 3.116.1 works on net10.0. The real bug is a regression in 3.118+ preview WASM native binaries."
