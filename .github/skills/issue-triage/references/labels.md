@@ -40,3 +40,4 @@ Pick the most specific match. SKCanvasView in MAUI → `area/SkiaSharp.Views.Mau
 - Trust content over title prefixes: `[BUG]` title but actually a question → `type/question`
 - `enhancement` improves what exists; `feature-request` adds something new
 - `question` asks "how?"; `documentation` says "we need docs for X"
+- When behavior is correct but easy to misuse (disposal ordering, threading, etc.), keep `type/bug` and suggest `close-as-by-design` with a workaround. The `status/by-design` label communicates that the behavior is intentional.

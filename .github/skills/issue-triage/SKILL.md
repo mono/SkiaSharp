@@ -111,7 +111,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 > - **Optional fields: OMIT them entirely** — do NOT set them to `null`. If a field is not applicable, leave it out of the JSON.
 > - `classification.platforms`, `classification.backends`, and `classification.tenets` are simple string arrays (no confidence wrapper)
 > - `classification.partner` is a single string (no confidence wrapper)
-> - `evidence.bugSignals` includes: `severity`, `isRegression`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality`, `targetFrameworks`
+> - `evidence.bugSignals` includes: `severity`, `regressionClaimed`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality`, `targetFrameworks`
 > - `evidence.regression` and `evidence.fixStatus` are optional objects — include when signals exist
 > - `analysis.keySignals[]` captures structured evidence quotes `{text, source, interpretation?}`
 > - `analysis.resolution.proposals[]` include `title`, `codeSnippet` when applicable
@@ -138,7 +138,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 
 #### evidence
 
-- `bugSignals`: Strongly recommended for bugs — `severity`, `isRegression`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality` (complete/partial/none), `targetFrameworks` (TFM strings)
+- `bugSignals`: Strongly recommended for bugs — `severity`, `regressionClaimed`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality` (complete/partial/none), `targetFrameworks` (TFM strings)
 - `reproEvidence`: extract ALL screenshots, attachments, code snippets, steps — preserve every URL. Include `relatedIssues` (issue numbers) and `repoLinks` (external repro repos) when found.
 - `versionAnalysis`: `mentionedVersions`, `workedIn`, `brokeIn`, `currentRelevance` (likely/unlikely/unknown), `relevanceReason`
 - `regression`: Include when regression signals exist — `{isRegression, confidence, reason, workedInVersion, brokeInVersion}`

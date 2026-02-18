@@ -105,13 +105,14 @@
       "enum": [
         "needs-investigation",
         "close-as-fixed",
+        "close-as-by-design",
         "close-with-docs",
         "close-as-duplicate",
         "convert-to-discussion",
         "request-info",
         "keep-open"
       ],
-      "description": "Recommended next action for the maintainer."
+      "description": "Recommended next action for the maintainer. close-as-by-design=behavior is intentional but may warrant docs/workaround."
     },
     "actionType": {
       "type": "string",
@@ -390,7 +391,7 @@
               ],
               "description": "Impact severity. critical=crash/data loss. high=feature broken. medium=degraded. low=cosmetic."
             },
-            "isRegression": {
+            "regressionClaimed": {
               "type": "boolean",
               "description": "Quick flag: whether the reporter said this worked in a previous version. See evidence.regression for detailed analysis."
             },
@@ -469,7 +470,7 @@
           "properties": {
             "isRegression": {
               "type": "boolean",
-              "description": "Analytical conclusion: whether this is a regression based on evidence review. See bugSignals.isRegression for the reporter claim."
+              "description": "Analytical conclusion: whether this is a regression based on evidence review. See bugSignals.regressionClaimed for the reporter claim."
             },
             "confidence": {
               "$ref": "#/$defs/confidence",

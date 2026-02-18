@@ -24,7 +24,7 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
   "evidence": {
     "bugSignals": {
       "severity": "high",
-      "isRegression": true,
+      "regressionClaimed": true,
       "errorType": "crash",
       "errorMessage": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow",
       "reproQuality": "complete",
