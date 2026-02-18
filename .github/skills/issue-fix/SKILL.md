@@ -22,7 +22,7 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 > **🛑 PHASES MUST BE EXECUTED IN STRICT ORDER. NO PARALLELIZATION. NO REORDERING.**
 >
 > ```
-> Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8
+> Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9
 > ```
 >
 > **STOP** at each phase gate. Do not proceed until gate criteria are met.

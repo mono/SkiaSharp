@@ -36,12 +36,14 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
       "version": "2.88.9",
       "source": "nuget",
       "result": "reproduced",
+      "platform": "host-macos-arm64",
       "notes": "Reporter's version. Bug confirmed."
     },
     {
       "version": "3.116.1",
       "source": "nuget",
       "result": "reproduced",
+      "platform": "host-macos-arm64",
       "notes": "Latest stable. Bug still present."
     }
   ],
@@ -59,6 +61,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
       "layer": "setup",
       "command": "dotnet new console -n Repro2997 && cd Repro2997 && dotnet add package SkiaSharp --version 2.88.9",
       "output": "The template \"Console App\" was created successfully.\n  Determining projects to restore...\n  Restored Repro2997.csproj.",
+      "exitCode": 0,
       "result": "success"
     },
     {
@@ -72,6 +75,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
           "content": "using SkiaSharp;\n\nvar matrix = SKMatrix.CreateScale(-2, 1);\nvar source = new SKRect(0, 0, 1, 1);\nvar mapped = matrix.MapRect(source);\n\nConsole.WriteLine($\"Matrix: ScaleX={matrix.ScaleX}, ScaleY={matrix.ScaleY}\");\nConsole.WriteLine($\"Input:  SKRect({source.Left}, {source.Top}, {source.Right}, {source.Bottom})\");\nConsole.WriteLine($\"Output: SKRect({mapped.Left}, {mapped.Top}, {mapped.Right}, {mapped.Bottom})\");\nConsole.WriteLine($\"Expected Left=0, Right=-2 (preserve flip)\");\nConsole.WriteLine(mapped.Left == 0 && mapped.Right == -2 ? \"PASS\" : \"BUG: MapRect normalized the rect\");"
         }
       ],
+      "exitCode": 0,
       "result": "success"
     },
     {
@@ -80,6 +84,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
       "layer": "csharp",
       "command": "dotnet run --project Repro2997",
       "output": "Matrix: ScaleX=-2, ScaleY=1\nInput:  SKRect(0, 0, 1, 1)\nOutput: SKRect(-2, 0, 0, 1)\nExpected Left=0, Right=-2 (preserve flip) but got Left=-2, Right=0 (normalized)\nBUG: MapRect returns sorted rect, losing negative scale orientation",
+      "exitCode": 1,
       "result": "failure"
     },
     {
@@ -88,6 +93,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
       "layer": "setup",
       "command": "cd .. && dotnet new console -n Repro2997-latest && cd Repro2997-latest && dotnet add package SkiaSharp --version 3.116.1 && cp ../Repro2997/Program.cs . && dotnet run",
       "output": "Same result on 3.116.1 — MapRect still normalizes output rect.",
+      "exitCode": 1,
       "result": "failure"
     }
   ],

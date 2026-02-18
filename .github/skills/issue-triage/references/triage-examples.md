@@ -15,7 +15,7 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
     "analyzedAt": "2026-02-08T15:00:00Z",
     "currentLabels": ["type/feature-request"]
   },
-  "summary": "Crash on Android when disposing SKCanvasView",
+  "summary": "Reporter describes a crash (ObjectDisposedException) when navigating away from a page containing SKCanvasView on Android 14 with net8.0-android and SkiaSharp 3.116.1. The crash occurs in OnDetachedFromWindow and does not happen on iOS.",
   "classification": {
     "type": { "value": "type/bug", "confidence": 0.92 },
     "area": { "value": "area/SkiaSharp.Views", "confidence": 0.85 },
@@ -24,6 +24,7 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
   "evidence": {
     "bugSignals": {
       "severity": "high",
+      "isRegression": true,
       "errorType": "crash",
       "errorMessage": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow",
       "reproQuality": "complete",
@@ -132,8 +133,8 @@ Question with resolution proposals, no bugSignals, close-with-docs action:
     "resolution": {
       "hypothesis": "User wants to render text with a custom .ttf font on Linux.",
       "proposals": [
-        { "title": "Load font from file", "description": "Use SKTypeface.FromFile() to load font from path. Simplest approach.", "confidence": 0.90, "effort": "trivial" },
-        { "title": "Embed font as resource", "description": "Embed font as resource and use SKTypeface.FromData() for portability.", "confidence": 0.90, "effort": "small" }
+        { "title": "Load font from file", "description": "Use SKTypeface.FromFile() to load font from path. Simplest approach.", "category": "fix", "confidence": 0.90, "effort": "trivial" },
+        { "title": "Embed font as resource", "description": "Embed font as resource and use SKTypeface.FromData() for portability.", "category": "alternative", "confidence": 0.90, "effort": "small" }
       ]
     }
   },

@@ -113,7 +113,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 > - `classification.partner` is a single string (no confidence wrapper)
 > - `evidence.bugSignals` includes: `severity`, `isRegression`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality`, `targetFrameworks`
 > - `evidence.regression` and `evidence.fixStatus` are optional objects — include when signals exist
-> - `analysis.keySignals[]` captures structured evidence quotes `{text, source, interpretation}`
+> - `analysis.keySignals[]` captures structured evidence quotes `{text, source, interpretation?}`
 > - `analysis.resolution.proposals[]` include `title`, `codeSnippet` when applicable
 > - `analysis.resolution.recommendedProposal` names the best proposal to try first
 > - `analysis.rationale` is a single summary string (not per-field)
@@ -148,7 +148,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 
 - **`summary`**: Analytical summary of what's going on and the likely cause. Required.
 - **`codeInvestigation`**: Source code signals from mandatory investigation — `{file, finding, relevance}` with optional `lines` for each file examined. `relevance` is one of `direct`, `related`, `context`. At least one required for bugs; close-* actions require at least two.
-- **`keySignals`**: Structured evidence quotes — `{text, source, interpretation?}` for each signal that drove triage decisions. Enables downstream querying and audit.
+- **`keySignals`**: Structured evidence quotes — `{text, source, interpretation?}` for each signal that drove triage decisions. `interpretation` is optional but recommended for non-obvious signals. Enables downstream querying and audit.
 - **`rationale`**: Single paragraph explaining key classification decisions (type, area, severity). Replace the former per-field rationales with one concise explanation.
 - **`workarounds`**: Array of workaround strings found during triage.
 - **`nextQuestions`**: Open questions that repro or fix should investigate.
