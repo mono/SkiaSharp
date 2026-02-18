@@ -118,7 +118,8 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
   "environment": {
     "os": "macOS 15.3",
     "arch": "arm64",
-    "dotnetVersion": "10.0.100",
+    "dotnetVersion": "10.0.2",
+    "dotnetSdkVersion": "10.0.100",
     "skiaSharpVersion": "2.88.9 (reporter), 3.116.1 (latest)",
     "dockerUsed": false
   }
@@ -221,7 +222,8 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
   "environment": {
     "os": "macOS",
     "arch": "arm64",
-    "dotnetVersion": "10.0.100",
+    "dotnetVersion": "10.0.2",
+    "dotnetSdkVersion": "10.0.100",
     "skiaSharpVersion": "3.119.2-preview.1",
     "dockerUsed": false
   },
