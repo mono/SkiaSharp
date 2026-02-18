@@ -460,30 +460,12 @@ If the fix discovered that triage or repro got something wrong, record it:
 ### 3. Validate
 
 ```bash
-pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/fix-{number}.json
+# Try pwsh first, fall back to python3
+pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/fix-{number}.json \
+  || python3 .github/skills/issue-fix/scripts/validate-fix.py /tmp/fix-{number}.json
 ```
 
-If `pwsh` is unavailable, validate with Python against the actual schema file:
-
-```bash
-python3 -c "
-import json
-from jsonschema import Draft202012Validator
-with open('.github/skills/issue-fix/references/fix-schema.json') as f:
-    schema = json.load(f)
-with open('/tmp/fix-{number}.json') as f:
-    data = json.load(f)
-errors = list(Draft202012Validator(schema).iter_errors(data))
-if errors:
-    for e in errors:
-        path = '.'.join(str(p) for p in e.absolute_path) or '(root)'
-        print(f'ERROR {path}: {e.message}')
-    exit(1)
-print('VALID')
-"
-```
-
-> **⚠️ NEVER use hand-rolled validation.** Always validate against the schema file.
+> **⚠️ NEVER use hand-rolled validation.** Always use the scripts above.
 
 ### 4. Persist
 
