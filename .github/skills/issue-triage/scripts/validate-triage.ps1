@@ -24,10 +24,10 @@ if (-not ($json | Test-Json -SchemaFile $schemaPath -ErrorVariable schemaErrors 
 
 # --- Extra checks beyond schema ---
 
-# codeInvestigation should have entries for bugs (warning only — mechanical conversions may lack this)
+# codeInvestigation is mandatory for bugs — error if missing
 if ($triage.classification.type.value -eq 'type/bug' -and
     (-not $triage.analysis.codeInvestigation -or $triage.analysis.codeInvestigation.Count -eq 0)) {
-    Write-Host "⚠️  Warning: Bug issue has no codeInvestigation entries (recommended for bugs)"
+    $errors += "Bug issue has no codeInvestigation entries (mandatory for type/bug)"
 }
 
 # bugSignals should exist for bugs (warning only)

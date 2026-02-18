@@ -84,9 +84,9 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
     },
     {
       "stepNumber": 4,
-      "description": "Update to latest stable (3.116.1) and re-run to check if fixed.",
+      "description": "Create a fresh project with latest stable (3.116.1) and run to check if fixed.",
       "layer": "setup",
-      "command": "dotnet add Repro2997 package SkiaSharp --version 3.116.1 && dotnet run --project Repro2997",
+      "command": "cd .. && dotnet new console -n Repro2997-latest && cd Repro2997-latest && dotnet add package SkiaSharp --version 3.116.1 && cp ../Repro2997/Program.cs . && dotnet run",
       "output": "Same result on 3.116.1 — MapRect still normalizes output rect.",
       "result": "failure"
     }
@@ -269,3 +269,9 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
 - **Cross-platform verification** — console app works fine → `scope: "platform-specific/wasm"`.
 - **Corrected triage** — triage wrongly blamed missing net10.0 TFM; repro proved forward-compat works.
 - **`scope` field** gives the fix skill an immediate signal: look at WASM native binaries, not TFM support.
+
+---
+
+> **Note:** Both examples omit a Phase 3C step (testing against the `main` branch) for brevity.
+> In real reproductions, always include a main-branch test step when a locally-built SkiaSharp
+> is available. See the SKILL.md Phase 3C instructions.

@@ -412,6 +412,7 @@ Mark PR as ready for review (remove draft status).
 ## Phase 9: Generate Fix JSON
 
 Generate structured output for the pipeline. Schema: [references/fix-schema.json](references/fix-schema.json)
+Examples: [references/fix-examples.md](references/fix-examples.md)
 
 ### 1. Generate JSON
 
