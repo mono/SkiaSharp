@@ -397,7 +397,18 @@
             },
             "errorType": {
               "type": "string",
-              "description": "Exception or error type, e.g. 'DllNotFoundException', 'AccessViolationException'."
+              "enum": [
+                "crash",
+                "exception",
+                "wrong-output",
+                "missing-output",
+                "performance",
+                "build-error",
+                "memory-leak",
+                "platform-specific",
+                "other"
+              ],
+              "description": "Category of error behavior. crash=segfault/SIGABRT/hard crash. exception=managed .NET exception thrown. wrong-output=produces incorrect results. missing-output=produces no output or empty. performance=works but too slow. build-error=compile/link/restore failure. memory-leak=growing memory or handles. platform-specific=works on some platforms but not others. other=none of the above."
             },
             "errorMessage": {
               "type": "string",

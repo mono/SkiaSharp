@@ -72,6 +72,8 @@ If fetched via API, work directly from the `gh` output (skip the script).
 
 ### 3. Code Investigation (MANDATORY)
 
+> **Scope: READ code, don't WRITE code.** Grep, read files, trace call chains. Never create files, compile, or execute.
+
 **Before ANY classification**, search the source code for the types, methods, APIs, or behaviors mentioned in the issue. Read the relevant files. Record every finding in `analysis.codeInvestigation` as `{file, finding, relevance}` (with optional `lines`).
 
 **Do NOT classify until you have examined source code.** For bugs, include at least one `codeInvestigation` entry. Close-* actions should include at least two.
@@ -270,6 +272,8 @@ cd ..
 5. **Batch shortcuts.** When triaging multiple issues, each gets FULL investigation. Parallel investigation is fine; parallel conclusions are not.
 
 6. **.NET Forward Compatibility.** NEVER conclude "doesn't support .NET X" when the library targets a lower TFM. .NET is forward-compatible by design — a `net8.0` library works on `net10.0` apps via NuGet TFM fallback. NEVER suggest "downgrade to .NET 8" as a workaround for TFM fallback. The only exception is platform-specific TFMs (e.g., `net8.0-ios`) where platform-specific native assets are required.
+
+7. **Writing code or running builds.** Triage is READ-ONLY analysis. NEVER create `.cs`/`.csproj` files, write reproduction code, run `dotnet build/test/cake`, or execute the reporter's code. If reproduction is needed, output `needs-investigation` and move on — that's the `issue-repro` skill's job.
 
 ---
 
