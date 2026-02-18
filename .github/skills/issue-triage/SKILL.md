@@ -207,6 +207,28 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contain
 pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/triage-{number}.json
 ```
 
+If `pwsh` is unavailable, validate with Python against the actual schema file:
+
+```bash
+python3 -c "
+import json
+from jsonschema import Draft202012Validator
+with open('.github/skills/issue-triage/references/triage-schema.json') as f:
+    schema = json.load(f)
+with open('/tmp/triage-{number}.json') as f:
+    data = json.load(f)
+errors = list(Draft202012Validator(schema).iter_errors(data))
+if errors:
+    for e in errors:
+        path = '.'.join(str(p) for p in e.absolute_path) or '(root)'
+        print(f'ERROR {path}: {e.message}')
+    exit(1)
+print('VALID')
+"
+```
+
+> **⚠️ NEVER use hand-rolled validation.** Always validate against the schema file — it catches structural errors (wrong types, missing required fields) that spot-checks miss.
+
 - Exit 0 = valid → Phase 5
 - Exit 1 = fix and retry (max 3)
 - Exit 2 = stop and report

@@ -270,7 +270,31 @@ Use the same action types as triage. Common repro actions:
 # Validate
 pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/repro-{number}.json
 # Exit 0=valid, 1=fix+retry, 2=fatal
+```
 
+If `pwsh` is unavailable, validate with Python against the actual schema file:
+
+```bash
+python3 -c "
+import json
+from jsonschema import Draft202012Validator
+with open('.github/skills/issue-repro/references/repro-schema.json') as f:
+    schema = json.load(f)
+with open('/tmp/repro-{number}.json') as f:
+    data = json.load(f)
+errors = list(Draft202012Validator(schema).iter_errors(data))
+if errors:
+    for e in errors:
+        path = '.'.join(str(p) for p in e.absolute_path) or '(root)'
+        print(f'ERROR {path}: {e.message}')
+    exit(1)
+print('VALID')
+"
+```
+
+> **⚠️ NEVER use hand-rolled validation.** Always validate against the schema file.
+
+```bash
 # Persist
 cp /tmp/repro-{number}.json $CACHE/ai-repro/{number}.json
 cd .data-cache
