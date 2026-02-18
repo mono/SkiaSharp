@@ -6,14 +6,14 @@ Multi-agent validation for code workarounds in triage responses. Prevents publis
 
 **Trigger when BOTH true:**
 1. `resolution.proposals[]` exists (non-empty)
-2. Any proposal `description` or `add-comment` `draftBody` contains fenced code (`` ``` ``) or inline `SK*` API calls
+2. Any proposal `description` or `add-comment` `comment` contains fenced code (`` ``` ``) or inline `SK*` API calls
 
 **Skip when:** prose-only proposals, diagnostic commands only (`ldd`, `dotnet --info`), or `close-as-duplicate`.
 
 ## Architecture
 
 ```
-Phase 3 (Analyze) → resolution + draftBody
+Phase 3 (Analyze) → resolution + comment
         │
         ▼
   ┌─ Code gate ─┐
@@ -99,13 +99,13 @@ Return JSON: { "verdict": "pass|fail|warn", "issues": [{ "platform", "problem",
 
 ## Input Extraction
 
-Before spawning agents, extract from the triage JSON: (1) all fenced code blocks from `resolution.proposals[].description` and `add-comment` `draftBody`, concatenated with `---` separators; (2) issue metadata — title, type, summary, hypothesis, platforms, environment clues. If no code blocks found, skip validation entirely.
+Before spawning agents, extract from the triage JSON: (1) all fenced code blocks from `resolution.proposals[].description` and `add-comment` `comment`, concatenated with `---` separators; (2) issue metadata — title, type, summary, hypothesis, platforms, environment clues. If no code blocks found, skip validation entirely.
 
 ## Agent Invocation
 
 After Phase 3 generates the triage JSON:
 
-1. Extract code blocks from proposals + draftBody
+1. Extract code blocks from proposals + `comment`
 2. No code → skip to Phase 4
 3. Code found → launch 3 parallel `task(agent_type="explore")` calls
 4. Collect 3 JSON results → synthesize → apply fixes → continue to Phase 4
@@ -130,10 +130,10 @@ warnings = all severity=="warning" from 3 agents
 
 if any verdict == "fail":
     if errors have "fix" suggestions → auto-apply, re-run failing agent(s) (max 1 retry)
-    else → strip code from draftBody, confidence=0.40, requiresHumanReview=true
+    else → strip code from `comment`, confidence=0.40, set proposal `validated: "no"`
 
 elif warnings:
-    append as caveats to draftBody
+    append as caveats to `comment`
     reduce confidence by 0.05/warning (floor 0.50)
 ```
 
@@ -148,12 +148,12 @@ elif warnings:
 
 ## Integration Point in SKILL.md
 
-Insert as **Phase 3.5** between Analyze and Validate:
+Insert as **Phase 3.7** between Workaround Search and Validate:
 
 ```markdown
-### Phase 3.5 — Workaround Validation (conditional)
+### Phase 3.7 — Workaround Validation (conditional)
 
-If triage JSON contains code in proposals or draftBody:
+If triage JSON contains code in proposals or `comment`:
 1. Extract code blocks (fenced or inline SK* calls)
 2. Launch 3 parallel validation agents per references/workaround-validation.md
 3. Synthesize results — apply fixes, caveats, or downgrades
@@ -169,4 +169,4 @@ If no code → proceed to Phase 4.
 - Agent 2 (Behavior): `warn` — SKBitmap not in `using`, SKCodec.Create not null-checked
 - Agent 3 (Platform): `pass`
 
-**Synthesis:** Accept with caveats. Append to draftBody: *"Wrap bitmap in `using` and null-check `SKCodec.Create`."* Confidence: 0.90 → 0.80 (−0.05 × 2 warnings).
+**Synthesis:** Accept with caveats. Append to `comment`: *"Wrap bitmap in `using` and null-check `SKCodec.Create`."* Confidence: 0.90 → 0.80 (−0.05 × 2 warnings).

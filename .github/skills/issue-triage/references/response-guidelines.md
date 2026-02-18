@@ -1,6 +1,6 @@
 # Response Guidelines
 
-Tone and structure for `add-comment` action `payload.draftBody` content. Max 2000 chars, inline markdown. Always set `requiresHumanEdit: true`.
+Tone and structure for `add-comment` action `comment` content. Max 2000 chars, inline markdown. Use action `risk: "high"` for comments requiring human review.
 
 ## Structure: Acknowledge → Workaround → Context
 

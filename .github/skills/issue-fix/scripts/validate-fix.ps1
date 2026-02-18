@@ -25,12 +25,12 @@ if (-not ($json | Test-Json -SchemaFile $schemaPath -ErrorVariable schemaErrors 
 # --- Extra checks beyond schema ---
 
 # If status is 'fixed', verification should be passed or not-applicable
-if ($fix.status -eq 'fixed') {
+if ($fix.status.value -eq 'fixed') {
     if ($fix.verification.reproScenario -eq 'failed') {
         $errors += "Status is 'fixed' but verification.reproScenario is 'failed'"
     }
-    if ($fix.tests.result -eq 'fail') {
-        $errors += "Status is 'fixed' but tests.result is 'fail'"
+    if ($fix.tests.result -eq 'failed') {
+        $errors += "Status is 'fixed' but tests.result is 'failed'"
     }
 }
 
@@ -40,7 +40,7 @@ if ($fix.tests.regressionTestAdded -and (-not $fix.tests.testsAdded -or $fix.tes
 }
 
 # changes.files should have entries when status is 'fixed'
-if ($fix.status -eq 'fixed' -and (-not $fix.changes.files -or $fix.changes.files.Count -eq 0)) {
+if ($fix.status.value -eq 'fixed' -and (-not $fix.changes.files -or $fix.changes.files.Count -eq 0)) {
     $errors += "Status is 'fixed' but changes.files is empty"
 }
 
@@ -56,7 +56,7 @@ if ($fix.changes.files) {
 
 if ($errors.Count -eq 0) {
     $number = $fix.meta.number ?? '?'
-    Write-Host "✅ $(Split-Path $Path -Leaf) is valid (issue #$number, status: $($fix.status))"
+    Write-Host "✅ $(Split-Path $Path -Leaf) is valid (issue #$number, status: $($fix.status.value))"
     exit 0
 }
 Write-Host "❌ $($errors.Count) validation error(s) in $(Split-Path $Path -Leaf):`n"

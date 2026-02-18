@@ -161,7 +161,7 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
     }
   ],
   "reproProject": {
-    "type": "blazorwasm",
+    "type": "blazor-wasm",
     "tfm": "net10.0",
     "packages": [{ "name": "SkiaSharp.Views.Blazor", "version": "3.119.2-preview.1" }]
   },

@@ -43,6 +43,7 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 6. Fix          → Minimal change
 7. Test         → Regression test + existing tests
 8. Finalize     → Rewrite PR description, link all fixed issues
+9. Fix JSON     → Generate, validate, and persist ai-fix/{n}.json
 ```
 
 ---
@@ -418,15 +419,25 @@ Write to `/tmp/fix-{number}.json`:
 
 - `meta`: schemaVersion `"1.0"`, number, repo, analyzedAt (ISO 8601 UTC)
 - `inputs`: `{ triageFile, reproFile }` — paths to upstream files consumed (if any)
-- `status`: one of `in-progress`, `fixed`, `cannot-fix`, `needs-info`, `duplicate`
-- `summary`: one-line description of what was fixed and how
-- `rootCause`: `{ category, area, description, affectedFiles? }` — what was wrong and why
+- `status`: `{ value, reason }` — `value` is one of `in-progress`, `fixed`, `cannot-fix`, `needs-info`, `duplicate`. `reason` is a required one-sentence explanation.
+- `summary`: one-paragraph description of what was fixed and how (include root cause, fix approach, and verification outcome; minLength 20)
+- `rootCause`: `{ category, area, description, confidence?, affectedFiles? }` — what was wrong and why
+  - `category`: one of `logic-error`, `memory-safety`, `threading`, `api-misuse`, `dependency`, `upstream-skia`, `missing-feature`, `other`
+  - `area`: one of `managed`, `binding`, `native`, `build`, `packaging`, `tests`, `docs`
+  - `confidence`: 0.0–1.0 (0.95+=verified, 0.80+=strong evidence, <0.80=hypothesis)
 - `changes`: `{ files: [{ path, changeType, summary }], breakingChange, risk }`
+  - `changeType`: one of `added`, `modified`, `removed`
+  - `risk`: one of `low`, `medium`, `high`
 - `tests`: `{ regressionTestAdded, testsAdded?, command?, result }`
-- `verification`: `{ reproScenario, notes? }` — did the repro scenario pass after the fix?
-- `pr`: `{ number?, url, status }` (optional)
+  - `result`: one of `passed`, `failed`, `not-run`
+  - `testsAdded`: `[{ file, name, description? }]`
+- `verification`: `{ reproScenario, method, notes? }` — did the repro scenario pass after the fix?
+  - `reproScenario`: one of `passed`, `failed`, `not-run`, `not-applicable`
+  - `method`: one of `automated-test`, `manual-repro`, `visual-inspection`, `code-review` (required)
+- `blockers`: string array — required when `status.value` is `cannot-fix` or `needs-info`. Each item is one actionable blocker.
+- `pr`: `{ number?, url, status }` — required when `status.value` is `fixed`
 - `feedback`: corrections to triage/repro findings (optional, see below)
-- `relatedIssues`: other issue numbers fixed or related (optional)
+- `relatedIssues`: other issue numbers fixed or related — required (minItems 1) when `status.value` is `duplicate`
 
 ### 2. Record upstream corrections
 

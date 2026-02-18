@@ -12,7 +12,7 @@ Search in this order. Stop as soon as you find a viable workaround, but always c
 
 | Priority | Source | Why first | When to skip |
 |----------|--------|-----------|-------------|
-| 1 | Existing triages (`$CACHE/ai-triage/`) | Already analyzed, has `workaroundSummary` | Never — always check |
+| 1 | Existing triages (`$CACHE/ai-triage/`) | Already analyzed, has `analysis.workarounds` and `analysis.resolution.proposals` | Never — always check |
 | 2 | Closed issues with comments (`$CACHE/github/items/`) | Reporters post "I solved it by..." | Never — always check |
 | 3 | Known patterns (`references/skia-patterns.md`, `documentation/packages.md`) | Curated heuristics for common traps | Never — always check |
 | 4 | SkiaSharp source code (`binding/SkiaSharp/*.cs`) | Alternative APIs visible in the class | Skip if issue is deployment/packaging |
@@ -40,7 +40,7 @@ Use both C# names (`SKImage`) and C API names (`sk_image`) since issues may refe
 
 ```bash
 # Find triages with workarounds
-grep -rl '"hasWorkaround": true' $CACHE/ai-triage/
+grep -rl '"workarounds"' $CACHE/ai-triage/
 
 # Keyword search across triage files
 grep -li "SKImage\|FromEncoded\|DllNotFound" $CACHE/ai-triage/*.json
@@ -54,18 +54,19 @@ for f in glob.glob('$CACHE/ai-triage/*.json'):
     blob = json.dumps(d).lower()
     if not any(kw in blob for kw in ['KEYWORD1', 'KEYWORD2']):
         continue
-    bs = d.get('evidence',{}).get('bugSignals') or {}
-    res = d.get('analysis',{}).get('resolution') or {}
+    analysis = d.get('analysis', {})
+    workarounds = analysis.get('workarounds', [])
+    res = analysis.get('resolution') or {}
     print(f'#{d[\"meta\"][\"number\"]}: {d.get(\"summary\",\"\")}')
-    if bs.get('workaroundSummary'):
-        print(f'  Workaround: {bs[\"workaroundSummary\"]}')
+    for w in workarounds:
+        print(f'  Workaround: {w}')
     for p in (res.get('proposals') or []):
-        print(f'  Proposal: {p[\"title\"]} - {p[\"description\"][:120]}')
+        print(f'  Proposal: {p.get(\"title\", \"(untitled)\")} - {p[\"description\"][:120]}')
     print()
 "
 ```
 
-**Key JSON paths:** `evidence.bugSignals.hasWorkaround` (bool), `evidence.bugSignals.workaroundSummary` (text), `analysis.resolution.proposals[]` (solutions), `analysis.resolution.recommendedProposal` (suggested pick).
+**Key JSON paths:** `analysis.workarounds[]` (string array of known workarounds), `analysis.resolution.proposals[]` (structured proposals with `title`, `description`, `category`, `codeSnippet`), `analysis.resolution.recommendedProposal` (suggested pick).
 
 ---
 

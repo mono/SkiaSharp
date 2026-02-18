@@ -72,9 +72,9 @@ If fetched via API, work directly from the `gh` output (skip the script).
 
 ### 3. Code Investigation (MANDATORY)
 
-**Before ANY classification**, search the source code for the types, methods, APIs, or behaviors mentioned in the issue. Read the relevant files. Record every finding in `analysis.codeInvestigation` as `{file, lines, relevance}`.
+**Before ANY classification**, search the source code for the types, methods, APIs, or behaviors mentioned in the issue. Read the relevant files. Record every finding in `analysis.codeInvestigation` as `{file, finding, relevance}` (with optional `lines`).
 
-**Do NOT classify until you have examined source code.** The schema requires at least one `codeInvestigation` entry. Close-* actions require at least two.
+**Do NOT classify until you have examined source code.** For bugs, include at least one `codeInvestigation` entry. Close-* actions should include at least two.
 
 **Steps:**
 1. Grep for the types/methods/APIs mentioned in the issue
@@ -123,8 +123,10 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 #### meta + summary
 
 - `schemaVersion`: `"1.0"`
+- `number`: GitHub issue number
+- `repo`: `"mono/SkiaSharp"`
 - `analyzedAt`: ISO 8601 UTC
-- `currentLabels`: labels currently on the issue
+- `currentLabels`: labels currently on the issue (optional)
 
 #### classification
 
@@ -136,7 +138,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 
 #### evidence
 
-- `bugSignals`: REQUIRED for bugs — `severity`, `isRegression`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality` (complete/partial/none), `targetFrameworks` (TFM strings)
+- `bugSignals`: Strongly recommended for bugs — `severity`, `isRegression`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality` (complete/partial/none), `targetFrameworks` (TFM strings)
 - `reproEvidence`: extract ALL screenshots, attachments, code snippets, steps — preserve every URL. Include `relatedIssues` (issue numbers) and `repoLinks` (external repro repos) when found.
 - `versionAnalysis`: `mentionedVersions`, `workedIn`, `brokeIn`, `currentRelevance` (likely/unlikely/unknown), `relevanceReason`
 - `regression`: Include when regression signals exist — `{isRegression, confidence, reason, workedInVersion, brokeInVersion}`
@@ -144,13 +146,14 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 
 #### analysis
 
-- **`codeInvestigation`**: Source code signals from mandatory investigation — `{file, lines?, finding, relevance}` for each file examined. At least one required for bugs; close-* actions require at least two.
-- **`keySignals`**: Structured evidence quotes — `{text, source, interpretation}` for each signal that drove triage decisions. Enables downstream querying and audit.
+- **`summary`**: Analytical summary of what's going on and the likely cause. Required.
+- **`codeInvestigation`**: Source code signals from mandatory investigation — `{file, finding, relevance}` with optional `lines` for each file examined. `relevance` is one of `direct`, `related`, `context`. At least one required for bugs; close-* actions require at least two.
+- **`keySignals`**: Structured evidence quotes — `{text, source, interpretation?}` for each signal that drove triage decisions. Enables downstream querying and audit.
 - **`rationale`**: Single paragraph explaining key classification decisions (type, area, severity). Replace the former per-field rationales with one concise explanation.
 - **`workarounds`**: Array of workaround strings found during triage.
 - **`nextQuestions`**: Open questions that repro or fix should investigate.
 - **`errorFingerprint`**: Normalized fingerprint of the error for cross-issue dedup (optional).
-- **`resolution`**: Proposals with `{title?, description, codeSnippet?, confidence?, effort?}`. Include `recommendedProposal` (title of best proposal) and `recommendedReason`. Null only for duplicates/abandoned.
+- **`resolution`**: Proposals with `{title, description, category?, codeSnippet?, validated?, confidence?, effort?}`. `category` is one of `workaround`, `fix`, `alternative`, `investigation`. `validated` starts as `untested` (upgraded in Phase 3.7). Include `recommendedProposal` (title of best proposal) and `recommendedReason`. Omit for duplicates/abandoned.
 
 #### output
 
@@ -179,13 +182,13 @@ For bugs, questions, and feature requests: **actively search for workarounds** t
 - Include `codeSnippet` on any proposal with copy-paste-ready code
 - Set `validated` to `"untested"` initially (upgraded in Phase 3.7)
 
-Skip this phase for duplicates and abandoned issues (resolution is null).
+Skip this phase for duplicates and abandoned issues (omit `analysis.resolution`).
 
 ---
 
 ## Phase 3.7 — Workaround Validation (conditional)
 
-If any proposal `description`, `codeSnippet`, or `add-comment` `draftBody` contains fenced code blocks or `SK*` API calls: validate with 3 parallel agents per [references/workaround-validation.md](references/workaround-validation.md).
+If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contains fenced code blocks or `SK*` API calls: validate with 3 parallel agents per [references/workaround-validation.md](references/workaround-validation.md).
 
 **Gate:** No code blocks → skip (set `validated: "untested"`). ~60% of triages skip this step.
 
@@ -194,7 +197,7 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `draftBody` conta
 2. **Behavioral correctness** — disposal, null-checks, threading, does it solve the problem?
 3. **Platform safety** — will it work on the reporter's platform?
 
-**Synthesis:** All pass → `validated: "yes"`. Any warn → add caveats to draftBody, reduce confidence. Any fail → fix or strip code, set `validated: "no"`.
+**Synthesis:** All pass → `validated: "yes"`. Any warn → add caveats to `comment`, reduce confidence. Any fail → fix or strip code, set `validated: "no"`.
 
 ---
 
@@ -236,7 +239,7 @@ Actions:
 - If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **issue-repro** (`ai-repro/{number}.json`).
 - If repro already exists and reproduces: next step is **issue-fix** (consume both JSONs).
 
-If `add-comment` exists, show `draftBody` in a copy-paste block. **⚠️ NEVER post via GitHub API.**
+If `add-comment` exists, show `comment` in a copy-paste block. **⚠️ NEVER post via GitHub API.**
 
 ### 3. Push
 

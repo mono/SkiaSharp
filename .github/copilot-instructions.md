@@ -354,7 +354,7 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 |------|-------|----------|
 | Triage issue | `issue-triage` | "triage #NNNN", "triage issue", "classify issue", "analyze issue" |
 | Reproduce bug | `issue-repro` | "repro #NNNN", "reproduce #NNNN", "reproduce issue", "try to reproduce", "can you reproduce", "create reproduction" |
-| Fix bug | `issue-fix` | "investigate #NNNN", "fix issue", crash, exception, "undefined symbol", incorrect output, wrong behavior, memory leak, "fails", "broken", "doesn't work" |
+| Fix bug | `issue-fix` | "investigate #NNNN", "fix issue", crash, exception, hard crash, segfault, "undefined symbol", AccessViolationException, incorrect output, wrong behavior, memory leak, disposal issues, "fails", "broken", "doesn't work" |
 | Add new API | `add-api` | "expose", "wrap method", issue requests new functionality |
 | Update dependency | `native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `api-docs` | "document", "fill in missing docs" |

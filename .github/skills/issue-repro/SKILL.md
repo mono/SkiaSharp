@@ -30,7 +30,7 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
    cat $CACHE/github/items/{number}.json
    ```
    **Fallback:** `gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author`
-2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]` and `evidence.bugSignals` as **hints** (verify independently).
+2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, and `analysis.nextQuestions[]` as **hints** (verify independently).
 
 ---
 
@@ -181,9 +181,9 @@ Write to `/tmp/repro-{number}.json`. Schema: [references/repro-schema.json](refe
 
 ### 3. Feedback (when triage was consumed)
 
-If reproduction contradicts triage, record in `feedback.triageCorrections[]`:
+If reproduction contradicts triage, record in `feedback.corrections[]`:
 ```json
-{ "topic": "classification", "upstream": "...", "corrected": "..." }
+{ "source": "triage", "topic": "classification", "upstream": "...", "corrected": "..." }
 ```
 
 ### 4. Generate output (required for definitive conclusions)

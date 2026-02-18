@@ -30,6 +30,7 @@ Expected artifact locations:
 
 - `"$CACHE/ai-triage/{n}.json"`
 - `"$CACHE/ai-repro/{n}.json"`
+- `"$CACHE/ai-fix/{n}.json"`
 
 ---
 
@@ -57,7 +58,7 @@ Owns (exclusive):
 
 Does *not* own:
 - Root-cause analysis or proposing fixes
-- Deciding labels/closure (triage owns that)
+- Primary label/closure decisions (triage owns initial classification, but repro may update labels when reproduction confirms or contradicts platform scope)
 
 ### issue-fix (Step 3 of 3)
 Owns (exclusive):
@@ -90,9 +91,9 @@ Fix should treat repro JSON as the baseline execution record:
 - `versionResults[]` (especially whether `main (source)` reproduces)
 - `reproProject` (packages + tfm)
 - `reproductionSteps[]` including **source file content** in `filesCreated[].content`
-- `environment` (os/arch/dotnetVersion/dockerUsed)
+- `environment` (os/arch/dotnetVersion/skiaSharpVersion/dockerUsed)
 - `artifacts[]` (binary inputs and where to get them)
-- `feedback.triageCorrections[]` (where repro corrected triage)
+- `feedback.corrections[]` (where repro corrected triage)
 
 ---
 
@@ -130,13 +131,14 @@ Each step records corrections to upstream findings **in its OWN JSON** — never
 
 | Step | Field | Corrects |
 |------|-------|----------|
-| Repro | `feedback.triageCorrections[]` | Triage findings that reproduction contradicts |
+| Repro | `feedback.corrections[]` | Triage findings that reproduction contradicts |
 | Fix | `feedback.corrections[]` | Both triage and repro findings that the fix contradicts |
 
 Each correction has:
 - `topic` — what category (classification, scope, root-cause, affected-platforms, etc.)
 - `upstream` — what the upstream step said
 - `corrected` — what this step actually found
+- `source` — which upstream step is being corrected (`"triage"` or `"repro"` for fix; always `"triage"` for repro)
 
 **Rules:**
 - Corrections are additive — never edit upstream JSON files
@@ -164,5 +166,5 @@ CACHE=".data-cache/repos/mono-SkiaSharp"
 N=1234
 [ -f "$CACHE/ai-triage/$N.json" ] && echo "✅ Triaged"
 [ -f "$CACHE/ai-repro/$N.json" ] && echo "✅ Reproduced" && python3 -c "import json; print('  conclusion:', json.load(open('$CACHE/ai-repro/$N.json'))['conclusion'])"
-[ -f "$CACHE/ai-fix/$N.json" ] && echo "✅ Fix" && python3 -c "import json; print('  status:', json.load(open('$CACHE/ai-fix/$N.json'))['status'])"
+[ -f "$CACHE/ai-fix/$N.json" ] && echo "✅ Fix" && python3 -c "import json; print('  status:', json.load(open('$CACHE/ai-fix/$N.json'))['status']['value'])"
 ```
