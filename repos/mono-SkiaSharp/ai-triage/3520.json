@@ -1,0 +1,207 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3520,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-18T17:12:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Reporter creates SVG via SKSvgCanvas with SKManagedWStream wrapping a MemoryStream, but the output is missing the closing </svg> tag. The root cause is disposal ordering: the user reads managedStream.ToArray() before the canvas is disposed, but the SVG closing tag is written by Skia's SkSVGDevice destructor which only runs when the canvas is destroyed.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "backends": [
+      "backend/SVG"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Missing closing </svg> tag in SVG output",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0-ios",
+        "net8.0-browser"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MemoryStream, wrap in SKManagedWStream, create SKSvgCanvas",
+        "Draw on the canvas",
+        "Call managedStream.ToArray() while canvas is still alive (using var pattern)",
+        "Observe missing </svg> closing tag in output"
+      ],
+      "environmentDetails": "SkiaSharp 3.119.0, Blazor + iOS via Rider",
+      "screenshots": [
+        {
+          "url": "https://github.com/user-attachments/assets/49365826-c66f-4d51-94ab-60a5f08fb759",
+          "description": "SVG rendered without closing tag - appears cut off"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/dd481d4b-9bc3-439e-bccb-ce4aaf876fb3",
+          "description": "IDE showing SVG output missing closing tag"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/8768004e-97f7-4b3d-9607-45b7fbe4d180",
+          "description": "SVG renders correctly when closing tag is manually added"
+        }
+      ],
+      "relatedIssues": [
+        3259
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.0",
+        "3.116.0",
+        "2.88.9"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The disposal behavior is by design in all SkiaSharp versions. The reporter likely had different disposal ordering in their 2.x code."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.85,
+      "reason": "The SVG closing tag has always been written during canvas destruction. This is Skia's design. The reporter likely restructured their code when migrating to 3.x and introduced the 'using var' pattern that delays disposal."
+    }
+  },
+  "analysis": {
+    "summary": "The closing </svg> tag is written by Skia's SkSVGDevice destructor, which runs when the SKCanvas is destroyed via sk_canvas_destroy. The reporter's 'using var' declarations keep the canvas alive until end-of-scope, but they read managedStream.ToArray() before that point. The existing test SvgCanvasSavesFile demonstrates the correct pattern: a using block that disposes the canvas before reading the stream.",
+    "rationale": "Classified as type/bug because the behavior is correct but easy to misuse (disposal ordering trap per labels.md). Area is core SkiaSharp since SKSvgCanvas and disposal are in the core binding, not views. Severity medium because it produces incorrect output but has a straightforward workaround. Suggested action is close-as-by-design with a workaround explaining the disposal ordering requirement.",
+    "keySignals": [
+      {
+        "text": "using var managedStream = new MemoryStream(); using var stream = new SKManagedWStream(managedStream); using var canvas = SKSvgCanvas.Create(bounds, stream); ... result.Data = managedStream.ToArray();",
+        "source": "issue body",
+        "interpretation": "'using var' declarations dispose at end of scope so ToArray() is called while the canvas is still alive, before </svg> is written."
+      },
+      {
+        "text": "SKFileWStream seems to output a correct SVG with close tags",
+        "source": "comment #1 by IainS1986",
+        "interpretation": "SKFileWStream works because the user reads the file after all objects are disposed, not because it behaves differently."
+      },
+      {
+        "text": "using (var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), stream)) { ... } stream.Position = 0;",
+        "source": "tests/Tests/SkiaSharp/SKCanvasTest.cs:429-443",
+        "interpretation": "The existing test uses a using block, ensuring canvas disposal before stream read. This is the correct pattern."
+      },
+      {
+        "text": "The root svg tag gets closed by the destructor",
+        "source": "externals/skia/src/core/SkSVGDevice.cpp:750",
+        "interpretation": "Skia explicitly documents that SVG closing is done in the destructor, so disposal ordering is by design."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKSVG.cs",
+        "lines": "17-33",
+        "finding": "SKSvgCanvas.Create has two overloads: one taking Stream (creates internal SKManagedWStream), one taking SKWStream. Both return an SKCanvas whose disposal triggers the SVG close tag.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "32-33",
+        "finding": "DisposeNative() calls sk_canvas_destroy(Handle), which triggers the Skia SVG canvas destructor that writes </svg>.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/src/c/sk_svg.cpp",
+        "lines": "16-18",
+        "finding": "sk_svgcanvas_create_with_stream calls SkSVGCanvas::Make which creates a canvas with an SkSVGDevice. The device destructor writes the closing tag.",
+        "relevance": "direct"
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKCanvasTest.cs",
+        "lines": "429-465",
+        "finding": "SvgCanvasSavesFile test uses scoped 'using' block, disposes canvas before reading stream, and successfully parses valid SVG XML including closing tag.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKManagedWStream.cs",
+        "lines": "10-65",
+        "finding": "SKManagedWStream proxies writes to a managed Stream. No public Flush/Close methods beyond Dispose. OnFlush() is called internally by the native layer.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Dispose the SKCanvas (from SKSvgCanvas.Create) before reading from the stream. Use a 'using' block instead of 'using var', or call canvas.Dispose() explicitly before managedStream.ToArray()."
+    ],
+    "nextQuestions": [
+      "Did the reporter's 2.88.x code use a different disposal pattern (using blocks vs using var declarations)?"
+    ],
+    "resolution": {
+      "hypothesis": "The SVG closing tag is written during canvas destruction (by design in Skia). The reporter reads the stream before the canvas is disposed because 'using var' declarations delay disposal to end-of-scope.",
+      "proposals": [
+        {
+          "title": "Use scoped using block for canvas",
+          "description": "Wrap the SKSvgCanvas in a 'using' block (not 'using var') so it is disposed before reading from the stream. This ensures the </svg> closing tag is written before ToArray() is called.",
+          "category": "workaround",
+          "codeSnippet": "using var managedStream = new MemoryStream();\n\n// Use a scoped using block so canvas is disposed before reading\nusing (var stream = new SKManagedWStream(managedStream))\nusing (var canvas = SKSvgCanvas.Create(bounds, stream))\n{\n    // ... draw operations ...\n    canvas.DrawMeasurement(skiaRenderer, filename, file, CanvasSize, CanvasSize);\n}\n\n// Canvas is now disposed - </svg> tag has been written\nresult.Data = managedStream.ToArray();",
+          "validated": "yes",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "title": "Use Stream overload directly",
+          "description": "Use the SKSvgCanvas.Create(SKRect, Stream) overload which takes a Stream directly, avoiding the need to manually create an SKManagedWStream. The canvas owns the internal stream wrapper.",
+          "category": "alternative",
+          "codeSnippet": "using var managedStream = new MemoryStream();\n\nusing (var canvas = SKSvgCanvas.Create(bounds, managedStream))\n{\n    // ... draw operations ...\n}\n\nresult.Data = managedStream.ToArray();",
+          "validated": "yes",
+          "confidence": 0.95,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Use scoped using block for canvas",
+      "recommendedReason": "Minimal change from the reporter's current code. Just replace 'using var' with a scoped 'using' block. Matches the pattern used in SkiaSharp's own test suite."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.85,
+      "reason": "The SVG closing tag is written during canvas destruction by Skia's design. The reporter needs to dispose the canvas before reading the stream."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm bug label, add SVG backend label",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "backend/SVG"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain disposal ordering and provide workaround with code",
+        "risk": "high",
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed report and SVG output.\n\nThis is a disposal ordering issue. The `</svg>` closing tag is written by Skia when the SVG canvas is destroyed \u2014 so you need to dispose the canvas **before** reading from the stream. With `using var` declarations, disposal happens at the end of the enclosing scope, which means `managedStream.ToArray()` runs while the canvas is still alive.\n\nHere\u2019s a workaround you can use right away \u2014 switch from `using var` to scoped `using` blocks:\n\n```csharp\nusing var managedStream = new MemoryStream();\n\nusing (var stream = new SKManagedWStream(managedStream))\nusing (var canvas = SKSvgCanvas.Create(bounds, stream))\n{\n    canvas.DrawMeasurement(skiaRenderer, filename, file, CanvasSize, CanvasSize);\n}\n\n// Canvas is now disposed \u2014 </svg> tag has been written\nresult.Data = managedStream.ToArray();\n```\n\nYou can also simplify by using the `Stream` overload directly, which avoids creating `SKManagedWStream` manually:\n\n```csharp\nusing var managedStream = new MemoryStream();\n\nusing (var canvas = SKSvgCanvas.Create(bounds, managedStream))\n{\n    canvas.DrawMeasurement(skiaRenderer, filename, file, CanvasSize, CanvasSize);\n}\n\nresult.Data = managedStream.ToArray();\n```\n\nThis likely worked in your 2.88.x code because the disposal ordering happened to be different there. `SKFileWStream` works because you read the file after everything is disposed."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #3259 (SKSvgCanvas + SKManagedWStream null exception on error path)",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 3259
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design \u2014 disposal ordering is correct behavior",
+        "risk": "medium",
+        "confidence": 0.8
+      }
+    ]
+  }
+}
