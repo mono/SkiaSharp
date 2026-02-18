@@ -67,7 +67,7 @@ Capture:
 **Verification:**
 - Exit code 0 + expected output → `success`
 - Non-zero exit code or crash → `failure`
-- Exit code 0 but wrong values/output → `wrong-output`
+- Exit code 0 but wrong values/output → step result `wrong-output`, conclusion `reproduced`
 
 ## Iterate
 
@@ -84,7 +84,7 @@ If the first attempt doesn't clearly reproduce:
 | Observation | Conclusion |
 |------------|------------|
 | Crash/exception matching report | `reproduced` |
-| Wrong output values matching report | `wrong-output` |
+| Wrong output values matching report | `reproduced` (step result: `wrong-output`) |
 | Code runs correctly, no errors | `not-reproduced` |
 | Build error matching report | `reproduced` |
 

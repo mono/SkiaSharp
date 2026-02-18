@@ -39,13 +39,12 @@
       "enum": [
         "reproduced",
         "not-reproduced",
-        "wrong-output",
         "needs-platform",
         "needs-hardware",
         "partial",
         "inconclusive"
       ],
-      "description": "FACTUAL observation of whether reported behavior occurred. reproduced=reported behavior was observed (even if 'working as designed'). not-reproduced=reported behavior was NOT observed. wrong-output=process succeeded but output incorrect. needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced. inconclusive=insufficient info."
+      "description": "FACTUAL observation of whether reported behavior occurred. reproduced=reported behavior was observed INCLUDING wrong/incomplete output cases (even if 'working as designed'). not-reproduced=reported behavior was NOT observed. needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced. inconclusive=insufficient info."
     },
     "artifactSource": {
       "type": "string",
@@ -205,11 +204,10 @@
             "enum": [
               "reproduced",
               "not-reproduced",
-              "wrong-output",
               "error",
               "not-tested"
             ],
-            "description": "What happened with this version."
+            "description": "What happened with this version. reproduced=reported behavior observed (including wrong/incomplete output). error=build or setup failed."
           },
           "notes": {
             "type": "string",
@@ -536,7 +534,7 @@
         "proposedResponse"
       ],
       "additionalProperties": false,
-      "description": "Actionable output: recommended disposition, automatable operations, and proposed response. Required when conclusion is reproduced, not-reproduced, or wrong-output.",
+      "description": "Actionable output: recommended disposition, automatable operations, and proposed response. Required when conclusion is reproduced or not-reproduced.",
       "properties": {
         "actionability": {
           "type": "object",
@@ -762,8 +760,7 @@
           "conclusion": {
             "enum": [
               "reproduced",
-              "not-reproduced",
-              "wrong-output"
+              "not-reproduced"
             ]
           }
         }
@@ -784,10 +781,7 @@
       "if": {
         "properties": {
           "conclusion": {
-            "enum": [
-              "reproduced",
-              "wrong-output"
-            ]
+            "const": "reproduced"
           }
         }
       },
@@ -801,31 +795,6 @@
           "output",
           "reproProject"
         ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "conclusion": {
-            "const": "wrong-output"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "reproductionSteps": {
-            "contains": {
-              "properties": {
-                "result": {
-                  "const": "wrong-output"
-                }
-              },
-              "required": [
-                "result"
-              ]
-            }
-          }
-        }
       }
     }
   ]

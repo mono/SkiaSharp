@@ -134,7 +134,7 @@ Kill the background process.
 | Canvas renders, SUCCESS in console, no errors | `not-reproduced` |
 | Build fails matching report | `reproduced` |
 | `wasm-tools` not installable (no sudo) | blocker (not `needs-platform`) |
-| Page loads but canvas is blank (no errors) | `wrong-output` |
+| Page loads but canvas is blank (no errors) | `reproduced` (step result: `wrong-output`) |
 
 ## Common Issues
 

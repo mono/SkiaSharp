@@ -81,9 +81,6 @@ results = [s.get("result") for s in steps if s.get("result")]
 if conclusion == "reproduced":
     if "failure" not in results and "wrong-output" not in results:
         errors.append("Conclusion is 'reproduced' but no step has result 'failure' or 'wrong-output'")
-elif conclusion == "wrong-output":
-    if "wrong-output" not in results:
-        errors.append("Conclusion is 'wrong-output' but no step has result 'wrong-output'")
 elif conclusion == "not-reproduced":
     if "success" not in results:
         errors.append("Conclusion is 'not-reproduced' but no step has result 'success'")

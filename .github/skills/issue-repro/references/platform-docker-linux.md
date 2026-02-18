@@ -85,7 +85,7 @@ All output comes through Docker stdout/stderr. Capture the full output of the `d
 
 - Exit code 0 + expected output → `success`
 - Non-zero exit code or crash → `failure`
-- Exit code 0 but wrong values → `wrong-output`
+- Exit code 0 but wrong values → step result `wrong-output`, conclusion `reproduced`
 
 ## Recording in JSON
 

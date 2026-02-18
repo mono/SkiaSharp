@@ -123,7 +123,7 @@ Docker on macOS uses a VM, which introduces differences from bare-metal Linux. N
 3. **Test with known-good inputs.** Use test assets from `PathToImages` or `PathToFonts` as baselines.
 
 ### Key: Process may exit 0 but output is wrong
-Rendering bugs rarely throw exceptions. The process succeeds, but the output is incorrect. Always inspect the saved image. Use conclusion `wrong-output` (not `crash` or `error`) when the rendering is incorrect.
+Rendering bugs rarely throw exceptions. The process succeeds, but the output is incorrect. Always inspect the saved image. Use conclusion `reproduced` with step result `wrong-output` when the rendering is incorrect.
 
 ### Pitfalls
 - Color space matters. `SKColorType.Rgba8888` vs `Bgra8888` will swap red/blue channels.

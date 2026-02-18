@@ -163,8 +163,7 @@ Read [references/conclusion-guide.md](references/conclusion-guide.md). Key quest
 
 | Conclusion | When |
 |------------|------|
-| `reproduced` | Reported behavior occurred (even if by-design) |
-| `wrong-output` | Process succeeds but output incorrect |
+| `reproduced` | Reported behavior occurred, including wrong/incomplete output (even if by-design) |
 | `not-reproduced` | Reported behavior did not occur |
 | `needs-platform` / `needs-hardware` | Requires unavailable platform/hardware |
 | `partial` / `inconclusive` | Partial or ambiguous results |
@@ -188,7 +187,7 @@ If reproduction contradicts triage, record in `feedback.corrections[]`:
 
 ### 4. Generate output (required for definitive conclusions)
 
-When conclusion is `reproduced`, `not-reproduced`, or `wrong-output`, generate the `output` object with actionability, actions, and a proposed response. Skip for blocked conclusions (`needs-platform`, `needs-hardware`, `partial`, `inconclusive`).
+When conclusion is `reproduced` or `not-reproduced`, generate the `output` object with actionability, actions, and a proposed response. Skip for blocked conclusions (`needs-platform`, `needs-hardware`, `partial`, `inconclusive`).
 
 #### Choosing suggestedAction
 

@@ -5,7 +5,7 @@ How to choose the correct `conclusion` value for a bug reproduction attempt.
 ## Contents
 1. [Factual vs Editorial](#️-critical-principle-factual-vs-editorial)
 2. [Decision Flowchart](#decision-flowchart)
-3. [Conclusion Values](#conclusion-values) — reproduced, not-reproduced, wrong-output, needs-platform, needs-hardware, partial, inconclusive
+3. [Conclusion Values](#conclusion-values) — reproduced, not-reproduced, needs-platform, needs-hardware, partial, inconclusive
 4. [Supporting Fields](#supporting-fields) — notes, assessment, blockers
 5. [Confidence and Human Review](#confidence-and-human-review)
 6. [Scope Derivation](#scope-derivation-from-phase-3d-cross-platform-verification)
@@ -32,9 +32,8 @@ How to choose the correct `conclusion` value for a bug reproduction attempt.
 
 ```
 Did the REPORTED BEHAVIOR occur?
-├─ Yes, observed what reporter described
-│  ├─ Crash/exception/error? → reproduced
-│  └─ Wrong visual output? → wrong-output
+├─ Yes, observed what reporter described → reproduced
+│  (crash, exception, wrong output, missing output — all are "reproduced")
 ├─ No, behavior differs from report → not-reproduced
 ├─ Couldn't run at all
 │  ├─ Missing platform/OS? → needs-platform
@@ -49,13 +48,14 @@ Did the REPORTED BEHAVIOR occur?
 
 ### `reproduced`
 
-**The reported behavior was observed.** This is a factual statement, not a judgment.
+**The reported behavior was observed.** This is a factual statement, not a judgment. Covers ALL manifestations: crashes, exceptions, wrong/incomplete output, visual rendering errors, performance regressions — if you saw what the reporter described, this is the correct conclusion.
 
 - **Required evidence:** ≥1 reproduction step with `result: "failure"` or `result: "wrong-output"`
-- **Required:** `primaryError` describing what was observed (error message, exception, incorrect value)
-- **Use when:** the behavior the reporter described actually occurred — crash, exception, compiler error, wrong return value, etc.
+- **Required:** `primaryError` describing what was observed (error message, exception, incorrect value, visual defect)
+- **Use when:** the behavior the reporter described actually occurred — crash, exception, compiler error, wrong return value, garbled output, missing output, visual defect, etc.
 - **Example:** `"SKMatrix.MapRect returns normalized rect instead of preserving orientation"`
 - **Example (Breaking Change):** `"Build fails with CS0117 as reported (intentional breaking change in v3.0)"`
+- **Example (Wrong Output):** `"Image decoded but colors are inverted — process exits 0 but pixels are incorrect"`
 
 **⚠️ CRITICAL: "Working as Designed" is still `reproduced`.**
 If the user reports a breaking change error (e.g., CS0117), and you verify they are correct (it does fail with CS0117), the conclusion is `reproduced`. Do NOT downgrade to `not-reproduced`. Use `notes` to explain it is intentional.
@@ -76,19 +76,6 @@ If the user reports a breaking change error (e.g., CS0117), and you verify they 
 - **Important:** this does NOT mean the bug doesn't exist. It means it could not be observed in the current environment. Always note what was tested so humans can evaluate whether the reproduction attempt was valid.
 
 **⚠️ This is NOT for "it's not a bug":** If the reported behavior occurred (you saw the same error/crash/output), use `reproduced` even if you believe the behavior is intentional. `not-reproduced` means the behavior literally didn't happen.
-
-### `wrong-output`
-
-Special case of `reproduced` for visual/rendering bugs.
-
-- **Use when:** the process exits successfully (no crash, no exception) but the output is visually incorrect
-- **Required evidence:** description of expected vs actual output
-- **Examples:**
-  - `"Expected blue rectangle, got garbled pixels"`
-  - `"Image decoded but colors are inverted"`
-  - `"Text rendered with wrong font metrics — baseline offset by 4px"`
-- **No automated pixel diff is available.** Describe the visual difference in plain language.
-- **If the output is a file**, note its path so a human can inspect it.
 
 ### `needs-platform`
 
@@ -207,7 +194,7 @@ Note these situations in the `notes` field — they indicate the reproduction ma
 
 High-confidence conclusions (less likely to need review):
 
-- `reproduced` or `wrong-output` with clear, unambiguous evidence
+- `reproduced` with clear, unambiguous evidence
 - `needs-platform` or `needs-hardware` with an obvious platform mismatch
 - `not-reproduced` AND you closely matched the reporter's environment
 

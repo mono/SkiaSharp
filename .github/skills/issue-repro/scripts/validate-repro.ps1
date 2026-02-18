@@ -70,11 +70,6 @@ switch ($conclusion) {
             $errors += "Conclusion is 'reproduced' but no step has result 'failure' or 'wrong-output'"
         }
     }
-    'wrong-output' {
-        if ($results -notcontains 'wrong-output') {
-            $errors += "Conclusion is 'wrong-output' but no step has result 'wrong-output'"
-        }
-    }
     'not-reproduced' {
         if ($results -notcontains 'success') {
             $errors += "Conclusion is 'not-reproduced' but no step has result 'success'"
