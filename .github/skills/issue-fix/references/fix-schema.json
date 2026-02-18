@@ -2,11 +2,25 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mono/SkiaSharp/fix-schema.json",
   "title": "SkiaSharp Bug Fix",
-  "description": "Per-issue AI bug fix output v1.0. Captures root cause analysis, code changes, test results, verification, and upstream corrections. Complements ai-triage (classification) and ai-repro (reproduction) — records only what the fix step discovers.",
+  "description": "Per-issue AI bug fix output v1.0. Captures root cause analysis, code changes, test results, verification, and upstream corrections. Complements ai-triage (classification) and ai-repro (reproduction) \u2014 records only what the fix step discovers.",
   "type": "object",
-  "required": ["meta", "status", "summary", "rootCause", "changes", "tests", "verification"],
+  "required": [
+    "meta",
+    "status",
+    "summary",
+    "rootCause",
+    "changes",
+    "tests",
+    "verification"
+  ],
   "additionalProperties": false,
   "$defs": {
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0.0-1.0 confidence score. 0.95+=explicit, 0.80-0.94=strong inference, 0.60-0.79=ambiguous, <0.60=uncertain."
+    },
     "rootCauseCategory": {
       "type": "string",
       "enum": [
@@ -23,54 +37,110 @@
     },
     "rootCauseArea": {
       "type": "string",
-      "enum": ["managed", "binding", "native", "build", "packaging", "tests", "docs"],
+      "enum": [
+        "managed",
+        "binding",
+        "native",
+        "build",
+        "packaging",
+        "tests",
+        "docs"
+      ],
       "description": "Which layer of the stack. managed=C# wrapper code. binding=P/Invoke declarations. native=C API shim or Skia C++. build=build scripts/cake. packaging=NuGet/runtime packaging. tests=test infrastructure. docs=documentation only."
     },
     "changeType": {
       "type": "string",
-      "enum": ["added", "modified", "removed"],
+      "enum": [
+        "added",
+        "modified",
+        "removed"
+      ],
       "description": "How the file was changed."
     },
     "riskLevel": {
       "type": "string",
-      "enum": ["low", "medium", "high"],
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
       "description": "low=isolated change, no ABI impact. medium=touches public API or multiple files. high=ABI change, breaking change, or broad impact."
     },
     "testResult": {
       "type": "string",
-      "enum": ["pass", "fail", "not-run"],
-      "description": "pass=all tests passed. fail=test(s) failed. not-run=tests were not executed."
+      "enum": [
+        "passed",
+        "failed",
+        "not-run"
+      ],
+      "description": "passed=all tests passed. failed=test(s) failed. not-run=tests were not executed."
     },
     "reproScenarioResult": {
       "type": "string",
-      "enum": ["passed", "failed", "not-run", "not-applicable"],
+      "enum": [
+        "passed",
+        "failed",
+        "not-run",
+        "not-applicable"
+      ],
       "description": "passed=repro scenario no longer reproduces after fix. failed=still reproduces. not-run=repro not executed. not-applicable=no repro exists."
+    },
+    "verificationMethod": {
+      "type": "string",
+      "enum": [
+        "automated-test",
+        "manual-repro",
+        "visual-inspection",
+        "code-review"
+      ],
+      "description": "How the fix was verified. automated-test=ran automated test suite. manual-repro=manually re-ran the reproduction scenario. visual-inspection=visually compared output. code-review=verified by reading the code change."
     },
     "prStatus": {
       "type": "string",
-      "enum": ["draft", "open", "merged", "closed"],
+      "enum": [
+        "draft",
+        "open",
+        "merged",
+        "closed"
+      ],
       "description": "Current PR state."
     },
     "fixStatus": {
       "type": "string",
-      "enum": ["in-progress", "fixed", "cannot-fix", "needs-info", "duplicate"],
+      "enum": [
+        "in-progress",
+        "fixed",
+        "cannot-fix",
+        "needs-info",
+        "duplicate"
+      ],
       "description": "in-progress=still working. fixed=fix verified and PR ready/merged. cannot-fix=requires upstream change or infeasible. needs-info=blocked on missing information. duplicate=duplicate of another issue."
     },
     "correctionSource": {
       "type": "string",
-      "enum": ["triage", "repro"],
+      "enum": [
+        "triage",
+        "repro"
+      ],
       "description": "Which upstream step is being corrected."
     }
   },
   "properties": {
     "meta": {
       "type": "object",
-      "required": ["schemaVersion", "number", "repo", "analyzedAt"],
+      "description": "Metadata about this fix analysis.",
+      "required": [
+        "schemaVersion",
+        "number",
+        "repo",
+        "analyzedAt"
+      ],
       "additionalProperties": false,
       "properties": {
         "schemaVersion": {
           "type": "string",
-          "const": "1.0"
+          "const": "1.0",
+          "description": "Schema version."
         },
         "number": {
           "type": "integer",
@@ -91,6 +161,7 @@
     },
     "inputs": {
       "type": "object",
+      "description": "Upstream pipeline files consumed by this step.",
       "additionalProperties": false,
       "properties": {
         "triageFile": {
@@ -104,46 +175,86 @@
       }
     },
     "status": {
-      "$ref": "#/$defs/fixStatus"
+      "type": "object",
+      "description": "Current status of the fix attempt.",
+      "required": [
+        "value",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/fixStatus",
+          "description": "Fix status value."
+        },
+        "reason": {
+          "type": "string",
+          "description": "One-sentence explanation of why the fix has this status. Always provided regardless of status value."
+        }
+      }
     },
     "summary": {
       "type": "string",
-      "minLength": 10,
-      "description": "One-line summary of what was fixed and how."
+      "minLength": 20,
+      "description": "One-paragraph summary of what was fixed and how. Include the root cause, the fix approach, and verification outcome."
     },
     "rootCause": {
       "type": "object",
-      "required": ["category", "area", "description"],
+      "description": "Root cause analysis \u2014 what was wrong and why.",
+      "required": [
+        "category",
+        "area",
+        "description"
+      ],
       "additionalProperties": false,
       "properties": {
         "category": {
-          "$ref": "#/$defs/rootCauseCategory"
+          "$ref": "#/$defs/rootCauseCategory",
+          "description": "Classification of the bug type."
         },
         "area": {
-          "$ref": "#/$defs/rootCauseArea"
+          "$ref": "#/$defs/rootCauseArea",
+          "description": "Which layer of the stack the root cause is in."
         },
         "description": {
           "type": "string",
           "minLength": 20,
           "description": "What was wrong and why. Include the specific code path and the logic error."
         },
+        "confidence": {
+          "$ref": "#/$defs/confidence",
+          "description": "Confidence in the root cause analysis. 0.95+=verified via debugging/test. 0.80-0.94=strong evidence. <0.80=hypothesis."
+        },
         "affectedFiles": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string",
+            "description": "A source file path."
+          },
           "description": "Source files involved in the root cause (not necessarily all changed files)."
         }
       }
     },
     "changes": {
       "type": "object",
-      "required": ["files", "breakingChange", "risk"],
+      "description": "Code changes made to fix the issue.",
+      "required": [
+        "files",
+        "breakingChange",
+        "risk"
+      ],
       "additionalProperties": false,
       "properties": {
         "files": {
           "type": "array",
+          "description": "List of files modified, added, or removed.",
           "items": {
             "type": "object",
-            "required": ["path", "changeType", "summary"],
+            "required": [
+              "path",
+              "changeType",
+              "summary"
+            ],
             "additionalProperties": false,
             "properties": {
               "path": {
@@ -151,13 +262,15 @@
                 "description": "Relative file path from repo root."
               },
               "changeType": {
-                "$ref": "#/$defs/changeType"
+                "$ref": "#/$defs/changeType",
+                "description": "How the file was changed."
               },
               "summary": {
                 "type": "string",
                 "description": "What changed in this file and why."
               }
-            }
+            },
+            "description": "A single file change."
           }
         },
         "breakingChange": {
@@ -165,13 +278,18 @@
           "description": "Whether the fix changes public API behavior or ABI."
         },
         "risk": {
-          "$ref": "#/$defs/riskLevel"
+          "$ref": "#/$defs/riskLevel",
+          "description": "Risk level of the change."
         }
       }
     },
     "tests": {
       "type": "object",
-      "required": ["regressionTestAdded", "result"],
+      "description": "Test execution results.",
+      "required": [
+        "regressionTestAdded",
+        "result"
+      ],
       "additionalProperties": false,
       "properties": {
         "regressionTestAdded": {
@@ -180,9 +298,13 @@
         },
         "testsAdded": {
           "type": "array",
+          "description": "New test methods added as part of this fix.",
           "items": {
             "type": "object",
-            "required": ["file", "name"],
+            "required": [
+              "file",
+              "name"
+            ],
             "additionalProperties": false,
             "properties": {
               "file": {
@@ -192,8 +314,13 @@
               "name": {
                 "type": "string",
                 "description": "Test method name."
+              },
+              "description": {
+                "type": "string",
+                "description": "What behavior this test validates."
               }
-            }
+            },
+            "description": "A test method added as part of the fix."
           }
         },
         "command": {
@@ -201,31 +328,55 @@
           "description": "Test command that was run."
         },
         "result": {
-          "$ref": "#/$defs/testResult"
+          "$ref": "#/$defs/testResult",
+          "description": "Overall test suite result."
         }
       }
     },
     "verification": {
       "type": "object",
-      "required": ["reproScenario"],
+      "description": "Verification that the fix resolves the original issue.",
+      "required": [
+        "reproScenario",
+        "method"
+      ],
       "additionalProperties": false,
       "properties": {
         "reproScenario": {
-          "$ref": "#/$defs/reproScenarioResult"
+          "$ref": "#/$defs/reproScenarioResult",
+          "description": "Whether the original repro scenario still reproduces after the fix."
+        },
+        "method": {
+          "$ref": "#/$defs/verificationMethod",
+          "description": "How the fix was verified."
         },
         "notes": {
           "type": "string",
-          "description": "How verification went — what was tested and what the outcome was."
+          "description": "How verification went \u2014 what was tested and what the outcome was."
         }
       }
     },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "A specific reason the fix is blocked."
+      },
+      "minItems": 1,
+      "description": "Specific reasons the fix is blocked. Required when status is cannot-fix or needs-info. Each item is one actionable blocker."
+    },
     "pr": {
       "type": "object",
-      "required": ["url", "status"],
+      "description": "Pull request created for this fix.",
+      "required": [
+        "url",
+        "status"
+      ],
       "additionalProperties": false,
       "properties": {
         "number": {
           "type": "integer",
+          "minimum": 1,
           "description": "PR number."
         },
         "url": {
@@ -234,23 +385,31 @@
           "description": "PR URL."
         },
         "status": {
-          "$ref": "#/$defs/prStatus"
+          "$ref": "#/$defs/prStatus",
+          "description": "Current PR state."
         }
       }
     },
     "feedback": {
       "type": "object",
+      "description": "Feedback on upstream pipeline steps.",
       "additionalProperties": false,
       "properties": {
         "corrections": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["source", "topic", "upstream", "corrected"],
+            "required": [
+              "source",
+              "topic",
+              "upstream",
+              "corrected"
+            ],
             "additionalProperties": false,
             "properties": {
               "source": {
-                "$ref": "#/$defs/correctionSource"
+                "$ref": "#/$defs/correctionSource",
+                "description": "Which upstream step is being corrected."
               },
               "topic": {
                 "type": "string",
@@ -264,17 +423,115 @@
                 "type": "string",
                 "description": "What the fix step actually found to be true."
               }
-            }
+            },
+            "description": "A single correction to an upstream finding."
           },
           "description": "Corrections to findings from triage or repro steps."
         }
-      },
-      "description": "Feedback on upstream pipeline steps."
+      }
     },
     "relatedIssues": {
       "type": "array",
-      "items": { "type": "integer" },
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "A GitHub issue number."
+      },
       "description": "Other GitHub issue numbers related to or fixed by the same PR."
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "properties": {
+              "value": {
+                "enum": [
+                  "cannot-fix",
+                  "needs-info"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "meta",
+          "status",
+          "summary",
+          "rootCause",
+          "changes",
+          "tests",
+          "verification",
+          "blockers"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "properties": {
+              "value": {
+                "const": "fixed"
+              }
+            }
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "meta",
+          "status",
+          "summary",
+          "rootCause",
+          "changes",
+          "tests",
+          "verification",
+          "pr"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "properties": {
+              "value": {
+                "const": "duplicate"
+              }
+            }
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "meta",
+          "status",
+          "summary",
+          "rootCause",
+          "changes",
+          "tests",
+          "verification",
+          "relatedIssues"
+        ],
+        "properties": {
+          "relatedIssues": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
 }
