@@ -3,136 +3,101 @@
     "schemaVersion": "1.0",
     "number": 3509,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T19:31:00Z"
+    "analyzedAt": "2026-02-19T23:15:00Z"
   },
-  "inputs": {
-    "triageFile": "ai-triage/3509.json"
-  },
-  "conclusion": "inconclusive",
-  "assessment": "user-error",
-  "notes": "The issue provides no code, no reproduction steps, and no specific error messages — only 'images not appearing'. Created comprehensive tests covering basic image drawing scenarios (DrawBitmap, DrawImage, FromEncodedData, pixel verification). All tests passed on SkiaSharp 2.88.9, 3.116.0, 3.119.2, and main branch, showing images render correctly. Without actual reproduction code from the reporter, cannot determine if there's a real bug or a usage error. Recommend requesting complete reproduction from reporter including actual code, expected vs actual behavior, and platform details.",
-  "blockers": [
-    "No reproduction code provided in issue — only template placeholders",
-    "No specific error messages or symptoms beyond 'images not appearing'",
-    "Cannot verify reporter's exact scenario without their code"
-  ],
-  "reproProject": {
-    "type": "console",
-    "tfm": "net8.0",
-    "packages": [
-      {
-        "name": "SkiaSharp",
-        "version": "3.116.0"
-      }
-    ]
-  },
-  "versionResults": [
-    {
-      "version": "2.88.9",
-      "source": "nuget",
-      "result": "not-reproduced",
-      "notes": "All image drawing tests passed. Basic bitmap drawing, image loading from encoded data, and pixel verification all worked correctly."
-    },
-    {
-      "version": "3.116.0",
-      "source": "nuget",
-      "result": "not-reproduced",
-      "notes": "Reporter's version. All tests passed identically to 2.88.9. Images rendered correctly, pixel data verified."
-    },
-    {
-      "version": "3.119.2",
-      "source": "nuget",
-      "result": "not-reproduced",
-      "notes": "Latest stable release. All tests passed. No rendering issues detected."
-    },
-    {
-      "version": "main (source)",
-      "source": "source",
-      "result": "not-reproduced",
-      "notes": "Built and tested main branch. SKImageTest suite passed all 51 tests. Image operations work correctly."
+  "conclusion": "not-reproduced",
+  "notes": "Attempted to reproduce the issue using a console application on macOS ARM64. Tested basic drawing operations (DrawImage, DrawBitmap) and simulated the internal SKCGSurfaceFactory logic used by SKCanvasView. All operations succeeded and produced expected output. Without a minimal reproduction project or more details about the usage scenario (e.g., SKCanvasView vs SKGLView, specific hardware), the issue cannot be reproduced.",
+  "environment": {
+    "os": "macOS 26.2 (Darwin Kernel Version 26.2.0)",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.23",
+    "dotnetSdkVersion": "8.0.417",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false,
+    "gpu": {
+      "available": false
     }
-  ],
+  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create console app with SkiaSharp 3.116.0 (reporter's version)",
-      "layer": "setup",
-      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
-      "result": "success",
+      "description": "Create a new console project",
+      "command": "mkdir -p repro_3509 && cd repro_3509 && dotnet new console",
       "exitCode": 0,
-      "output": "Console app created, SkiaSharp 3.116.0 package added",
-      "filesCreated": [
-        {
-          "filename": "Repro.csproj",
-          "description": "Project file with SkiaSharp reference",
-          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
-        },
-        {
-          "filename": "Program.cs",
-          "description": "Comprehensive image drawing tests covering DrawBitmap, DrawImage, FromEncodedData, and pixel verification"
-        }
-      ]
+      "layer": "setup",
+      "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Run comprehensive image drawing tests with SkiaSharp 3.116.0",
-      "layer": "csharp",
-      "command": "dotnet run",
-      "result": "success",
+      "description": "Add SkiaSharp 3.116.0 package",
+      "command": "dotnet add package SkiaSharp --version 3.116.0",
       "exitCode": 0,
-      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n✓ Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n✓ Background is white as expected\n\n=== All tests complete ==="
+      "layer": "setup",
+      "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Test with SkiaSharp 2.88.9 (reporter's 'last known good' version)",
-      "layer": "csharp",
-      "command": "dotnet remove package SkiaSharp && dotnet add package SkiaSharp --version 2.88.9 && dotnet run",
-      "result": "success",
+      "description": "Run basic image drawing test (DrawImage/DrawBitmap)",
+      "command": "dotnet run",
       "exitCode": 0,
-      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n✓ Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n✓ Background is white as expected\n\n=== All tests complete ==="
+      "output": "SkiaSharp Version: 3.116.0.0\nImage saved to output.png",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Main program source code",
+          "content": "using SkiaSharp;\nusing System;\nusing System.IO;\n\npublic class Program\n{\n    public static void Main()\n    {\n        // ... (omitted for brevity)\n    }\n}"
+        },
+        {
+          "filename": "output.png",
+          "description": "Generated PNG image",
+          "content": "(Binary content)"
+        }
+      ],
+      "layer": "csharp",
+      "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Test with latest stable SkiaSharp release (3.119.2)",
-      "layer": "csharp",
-      "command": "dotnet remove package SkiaSharp && dotnet add package SkiaSharp && dotnet run",
-      "result": "success",
+      "description": "Simulate SKCGSurfaceFactory logic (pinned memory + SKSurface.Create)",
+      "command": "dotnet run (modified Program.cs)",
       "exitCode": 0,
-      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n✓ Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n✓ Background is white as expected\n\n=== All tests complete ==="
-    },
-    {
-      "stepNumber": 5,
-      "description": "Build SkiaSharp test project from main branch source",
-      "layer": "csharp",
-      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj",
-      "result": "success",
-      "exitCode": 0,
-      "output": "Build succeeded with 13 warnings. Test project compiled successfully."
-    },
-    {
-      "stepNumber": 6,
-      "description": "Run SKImageTest suite on main branch (51 tests covering image operations)",
-      "layer": "csharp",
-      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \"FullyQualifiedName~SKImageTest\"",
-      "result": "success",
-      "exitCode": 0,
-      "output": "Passed!  - Failed:     0, Passed:    51, Skipped:     0, Total:    51, Duration: 952 ms"
+      "output": "Pixel at 50,50: R=255 G=0 B=0 A=255\nSUCCESS: Pixel is Red\nPixel at 10,10: R=0 G=0 B=255 A=255\nSUCCESS: Background Pixel is Blue",
+      "layer": "native",
+      "result": "success"
     }
   ],
-  "environment": {
-    "os": "macOS",
-    "arch": "arm64",
-    "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "3.116.0, 2.88.9, 3.119.2, main",
-    "dockerUsed": false
-  },
-  "feedback": {
-    "triageCorrections": [
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "platform": "host-macos-arm64",
+      "result": "not-reproduced",
+      "notes": "Basic drawing and surface creation works as expected."
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.8,
+      "reason": "Cannot reproduce with basic usage. Likely specific to user's environment or usage pattern (e.g. specific view configuration)."
+    },
+    "actions": [
       {
-        "topic": "reproQuality",
-        "upstream": "Triage marked reproQuality as 'none' and suggested request-info",
-        "corrected": "Confirmed: no reproduction code exists. Created own comprehensive tests — all passed. Issue cannot be verified without reporter's actual code. Triage assessment was correct."
+        "type": "add-comment",
+        "description": "Post comment requesting more information"
       }
-    ]
+    ],
+    "workarounds": [],
+    "missingInfo": [
+      "Exact code used to reproduce the issue (Minimal Reproducible Example)",
+      "Whether the issue happens with SKCanvasView, SKGLView, or off-screen rendering",
+      "Specific hardware details (Mac model, GPU)",
+      "Does it happen on Simulator or Device (if applicable)?"
+    ],
+    "proposedResponse": {
+      "status": "ready",
+      "summary": "Request for more information as reproduction failed.",
+      "body": "Thanks for the report. We attempted to reproduce this issue using a simple console application with SkiaSharp 3.116.0 on macOS, but `DrawImage` and `DrawBitmap` seem to work correctly, producing the expected output.\n\nWe also simulated the internal `SKCGSurfaceFactory` logic used by `SKCanvasView` on macOS and confirmed that pixel data is correctly written to memory in the expected format (RGBA).\n\nSince we cannot reproduce the blank screen issue with basic usage, could you please provide:\n1. A small sample project or code snippet that demonstrates the issue.\n2. Details about how you are using SkiaSharp (e.g., `SKCanvasView`, `SKGLView`, or off-screen rendering).\n3. Confirm if this happens on a specific device or simulator.\n\nWithout a reproduction case, it is difficult to determine the cause of the issue."
+    }
   }
 }
