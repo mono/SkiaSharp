@@ -3,24 +3,44 @@
     "schemaVersion": "1.0",
     "number": 3437,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T16:52:04Z",
-    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "tenet/reliability", "backend/SVG"]
+    "analyzedAt": "2026-02-19T20:16:36Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic",
+      "area/SkiaSharp",
+      "tenet/reliability",
+      "backend/SVG"
+    ]
   },
-  "summary": "When using SKSvgCanvas in parallel via Task.Run on Windows, <text> elements intermittently lose their text content and x/y attribute values, producing empty <text> tags. The issue is a data race in Skia's text rendering pipeline (GlyphsToUnichars → DirectWrite font subsystem) that manifests only on Windows. It affects all SkiaSharp 3.x versions and is a regression from 2.88.9. Linux is unaffected.",
+  "summary": "When using SKSvgCanvas in parallel via Task.Run on Windows, <text> elements intermittently lose their text content and x/y attribute values, producing empty <text> tags. The issue is a data race in Skia's text rendering pipeline (GlyphsToUnichars \u2192 DirectWrite font subsystem) that manifests only on Windows. It affects all SkiaSharp 3.x versions and is a regression from 2.88.9. Linux is unaffected.",
   "classification": {
-    "type": { "value": "type/bug", "confidence": 0.98 },
-    "area": { "value": "area/SkiaSharp", "confidence": 0.80 },
-    "platforms": ["os/Windows-Classic"],
-    "backends": ["backend/SVG"],
-    "tenets": ["tenet/reliability"]
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.8
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/SVG"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
   },
   "evidence": {
     "bugSignals": {
       "severity": "high",
-      "isRegression": true,
-      "errorType": "data-corruption",
+      "errorType": "platform-specific",
       "errorMessage": "SVG <text> elements have empty text content and empty x/y attributes when SKSvgCanvas is used in parallel threads",
-      "reproQuality": "complete"
+      "reproQuality": "complete",
+      "regressionClaimed": true,
+      "stackTrace": "",
+      "targetFrameworks": []
     },
     "reproEvidence": {
       "stepsToReproduce": [
@@ -42,15 +62,20 @@
       ]
     },
     "versionAnalysis": {
-      "mentionedVersions": ["3.116.0", "3.119.1", "3.119.2-preview.1", "2.88.9"],
+      "mentionedVersions": [
+        "3.116.0",
+        "3.119.1",
+        "3.119.2-preview.1",
+        "2.88.9"
+      ],
       "workedIn": "2.88.9",
       "brokeIn": "3.116.0",
       "currentRelevance": "likely",
-      "relevanceReason": "The SVG text rendering code path (SkSVGDevice::onDrawGlyphRunList → SVGTextBuilder → GlyphsToUnichars) has not changed between 3.116.0 and the current main branch. The underlying DirectWrite font subsystem code is also unchanged."
+      "relevanceReason": "The SVG text rendering code path (SkSVGDevice::onDrawGlyphRunList \u2192 SVGTextBuilder \u2192 GlyphsToUnichars) has not changed between 3.116.0 and the current main branch. The underlying DirectWrite font subsystem code is also unchanged."
     },
     "regression": {
       "isRegression": true,
-      "confidence": 0.90,
+      "confidence": 0.9,
       "reason": "Reporter explicitly states 2.88.9 does not have the bug. The entire text rendering pipeline was rewritten between SkiaSharp 2.x and 3.x (Skia upgraded from m88 to m116+), changing how glyphs are shaped, cached, and reversed to unicode. The new pipeline likely introduced a thread-safety issue in the Windows DirectWrite font subsystem.",
       "workedInVersion": "2.88.9",
       "brokeInVersion": "3.116.0"
@@ -58,12 +83,12 @@
   },
   "analysis": {
     "summary": "Data race in Skia's SVG text rendering on Windows. When multiple threads create separate SKSvgCanvas instances and draw text, the SVG <text> elements intermittently lose their content. The SVGTextBuilder (SkSVGDevice.cpp:1033) calls SkFontPriv::GlyphsToUnichars to reverse glyph IDs back to unicode characters. This calls typeface->getGlyphToUnicodeMap() which on Windows uses DirectWrite COM interfaces (IDWriteFontFace). The race likely occurs in the shared DirectWrite font subsystem or Skia's internal glyph/strike caching, causing GlyphsToUnichars to return all-zero values, which SVGTextBuilder discards as NUL characters, producing empty text and position strings.",
-    "rationale": "This is clearly a bug (type/bug, 0.98) — the reporter describes broken output that should work. Area is area/SkiaSharp rather than area/libSkiaSharp.native because while the root cause is in native Skia code, the fix surface includes both the C API (missing flags parameter) and potentially the C# layer. Severity is high because text rendering silently produces corrupt output with no error. The Windows-only + Linux-unaffected pattern strongly points to the DirectWrite font backend as the differentiator (FreeType on Linux vs DirectWrite on Windows).",
+    "rationale": "This is clearly a bug (type/bug, 0.98) \u2014 the reporter describes broken output that should work. Area is area/SkiaSharp rather than area/libSkiaSharp.native because while the root cause is in native Skia code, the fix surface includes both the C API (missing flags parameter) and potentially the C# layer. Severity is high because text rendering silently produces corrupt output with no error. The Windows-only + Linux-unaffected pattern strongly points to the DirectWrite font backend as the differentiator (FreeType on Linux vs DirectWrite on Windows).",
     "keySignals": [
       {
         "text": "The more text elements being drawn and the more threads running the same task, the more likely the problem is to occur",
         "source": "issue body",
-        "interpretation": "Classic data race signature — probability increases with contention, not deterministic."
+        "interpretation": "Classic data race signature \u2014 probability increases with contention, not deterministic."
       },
       {
         "text": "This affects all SkiaSharp 3.x versions on Windows. Linux is unaffected.",
@@ -96,7 +121,7 @@
       {
         "file": "externals/skia/src/svg/SkSVGDevice.cpp",
         "lines": "1033-1150",
-        "finding": "SVGTextBuilder (line 1033) reverses glyph IDs to unicode via SkFontPriv::GlyphsToUnichars. If GlyphsToUnichars returns all NUL (\\0) values, the switch at line 1068 discards all characters (discardPos=true), producing empty fText/fPosXStr/fPosYStr — exactly matching the reported symptoms.",
+        "finding": "SVGTextBuilder (line 1033) reverses glyph IDs to unicode via SkFontPriv::GlyphsToUnichars. If GlyphsToUnichars returns all NUL (\\0) values, the switch at line 1068 discards all characters (discardPos=true), producing empty fText/fPosXStr/fPosYStr \u2014 exactly matching the reported symptoms.",
         "relevance": "direct"
       },
       {
@@ -131,7 +156,7 @@
     "nextQuestions": [
       "Is the race in DWrite's IDWriteFontFace::GetGlyphIndices or in Skia's glyph cache/strike cache?",
       "Would exposing kConvertTextToPaths_Flag in the C API be a viable permanent workaround?",
-      "Does the issue reproduce with SKSurface (raster) + drawText + readPixels in parallel, or is it specific to the SVG text→unicode reversal path?",
+      "Does the issue reproduce with SKSurface (raster) + drawText + readPixels in parallel, or is it specific to the SVG text\u2192unicode reversal path?",
       "Can we reproduce this with a pure Skia C++ test to confirm it's an upstream Skia bug?"
     ],
     "resolution": {
@@ -141,20 +166,26 @@
           "title": "Serialize SVG text rendering (workaround)",
           "description": "Users can wrap their SVG generation in a SemaphoreSlim(1,1) to ensure only one thread renders SVG at a time. This is a workaround, not a fix, but unblocks the reporter immediately.",
           "codeSnippet": "private static readonly SemaphoreSlim _svgLock = new SemaphoreSlim(1, 1);\n\nawait Task.WhenAll(Enumerable.Range(0, 5).Select(i => Task.Run(async () => {\n    await _svgLock.WaitAsync();\n    try {\n        return drawSvgFunc(i);\n    } finally {\n        _svgLock.Release();\n    }\n})));",
-          "confidence": 0.90,
-          "effort": "trivial"
+          "confidence": 0.82,
+          "effort": "trivial",
+          "category": "workaround",
+          "validated": "yes"
         },
         {
           "title": "Expose kConvertTextToPaths_Flag in C API",
           "description": "Add a flags parameter to sk_svgcanvas_create_with_stream (or a new overload sk_svgcanvas_create_with_stream_and_flags) to expose SkSVGCanvas::kConvertTextToPaths_Flag. When enabled, text is emitted as <path> elements, completely bypassing the GlyphsToUnichars code path and the race condition. Trade-off: SVG text is no longer selectable/searchable.",
-          "confidence": 0.80,
-          "effort": "small"
+          "confidence": 0.8,
+          "effort": "small",
+          "category": "fix",
+          "validated": "untested"
         },
         {
           "title": "Fix upstream thread-safety in Skia DWrite font subsystem",
           "description": "Investigate and fix the data race in the Windows DirectWrite font path. This would involve identifying whether the race is in Skia's glyph cache or in DWrite COM calls, and adding appropriate synchronization. May require an upstream Skia bug report.",
-          "confidence": 0.50,
-          "effort": "large"
+          "confidence": 0.5,
+          "effort": "large",
+          "category": "investigation",
+          "validated": "untested"
         }
       ],
       "recommendedProposal": "Serialize SVG text rendering (workaround)",
@@ -164,23 +195,29 @@
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
-      "confidence": 0.90,
+      "confidence": 0.9,
       "reason": "Confirmed bug with complete reproduction, regression from 2.x to 3.x. Root cause is likely in Skia's Windows DirectWrite font subsystem threading. Needs deeper investigation to determine if fix should be in Skia (upstream), in the C API (expose flags), or both."
     },
     "actions": [
       {
         "type": "update-labels",
-        "description": "Labels are already correct — type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability, backend/SVG all match the classification.",
+        "description": "Labels are already correct \u2014 type/bug, area/SkiaSharp, os/Windows-Classic, tenet/reliability, backend/SVG all match the classification.",
         "risk": "low",
         "confidence": 0.98,
-        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "tenet/reliability", "backend/SVG"]
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/reliability",
+          "backend/SVG"
+        ]
       },
       {
         "type": "add-comment",
         "description": "Post acknowledgement with workaround and technical analysis",
         "risk": "high",
         "confidence": 0.85,
-        "comment": "Thanks for the thorough report and reproduction repo — this is clearly a data race in Skia's text rendering pipeline on Windows.\n\nHere's a workaround you can use while we investigate: serialize your SVG generation tasks so only one thread renders at a time.\n\n```csharp\nprivate static readonly SemaphoreSlim _svgLock = new SemaphoreSlim(1, 1);\n\nawait Task.WhenAll(Enumerable.Range(0, 5).Select(i => Task.Run(async () => {\n    await _svgLock.WaitAsync();\n    try {\n        return drawSvgFunc(i);\n    } finally {\n        _svgLock.Release();\n    }\n})));\n```\n\nThe root cause appears to be in the SVG text rendering path: when `SkSVGDevice` emits `<text>` elements, it calls `GlyphsToUnichars` to reverse glyph IDs back to unicode characters. On Windows, this goes through the DirectWrite font subsystem (`IDWriteFontFace`) which has a threading issue causing the glyph-to-unicode mapping to return empty/NUL values under concurrent access. FreeType on Linux doesn't have this issue, explaining the platform difference.\n\nWe're also looking at exposing Skia's `kConvertTextToPaths_Flag` which would avoid this code path entirely by emitting text as `<path>` elements (trade-off: text is no longer selectable in the SVG)."
+        "comment": "Thanks for the thorough report and reproduction repo \u2014 this is clearly a data race in Skia's text rendering pipeline on Windows.\n\nHere's a workaround you can use while we investigate: serialize your SVG generation tasks so only one thread renders at a time.\n\n```csharp\nprivate static readonly SemaphoreSlim _svgLock = new SemaphoreSlim(1, 1);\n\nawait Task.WhenAll(Enumerable.Range(0, 5).Select(i => Task.Run(async () => {\n    await _svgLock.WaitAsync();\n    try {\n        return drawSvgFunc(i);\n    } finally {\n        _svgLock.Release();\n    }\n})));\n```\n\nThe root cause appears to be in the SVG text rendering path: when `SkSVGDevice` emits `<text>` elements, it calls `GlyphsToUnichars` to reverse glyph IDs back to unicode characters. On Windows, this goes through the DirectWrite font subsystem (`IDWriteFontFace`) which has a threading issue causing the glyph-to-unicode mapping to return empty/NUL values under concurrent access. FreeType on Linux doesn't have this issue, explaining the platform difference.\n\nWe're also looking at exposing Skia's `kConvertTextToPaths_Flag` which would avoid this code path entirely by emitting text as `<path>` elements (trade-off: text is no longer selectable in the SVG).\n\nNote: this workaround intentionally serializes SVG rendering and may reduce throughput. It is most relevant as a temporary mitigation on Windows."
       }
     ]
   }
