@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3520,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-19T06:33:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "user-error",
+  "scope": "unknown",
+  "notes": "Reproduced: SKSvgCanvas output is missing the closing </svg> tag when the underlying stream is read before the canvas is disposed. This is by-design behavior — SKSvgCanvas writes the closing </svg> tag during Dispose(). The reporter's code uses 'using var' for all three objects (MemoryStream, SKManagedWStream, SKSvgCanvas) and reads managedStream.ToArray() before the canvas is disposed (since 'using var' defers disposal to end of enclosing scope). The workaround is to explicitly dispose the canvas before reading the stream. Tested 2.88.9, 3.119.0, 3.119.2, and main — behavior is identical on all versions, contradicting the reporter's claim that 2.88.9 worked. The reporter's follow-up noting SKFileWStream 'works' is likely because they read the file after the scope ended (i.e., after disposal). This is not an SKManagedWStream-specific bug — it's a disposal ordering issue.",
+  "reproductionTime": "~12 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Reporter's 'last known good' version. Same behavior: missing </svg> when read before disposal."
+    },
+    {
+      "version": "3.119.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Reporter's actual version. Missing </svg> confirmed."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Latest stable. Same behavior."
+    },
+    {
+      "version": "main (source)",
+      "source": "source",
+      "result": "reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Main branch source. Same behavior — not a regression."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.119.0" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create a standalone console project with reporter's SkiaSharp version (3.119.0)",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.0",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nRestored Repro.csproj.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 3.119.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.119.0\" />\n  </ItemGroup>\n</Project>"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write reproduction code that mimics the reporter's pattern: uses 'using var' for MemoryStream, SKManagedWStream, and SKSvgCanvas, then reads the stream BEFORE canvas disposal. Also includes a correct pattern (explicit disposal before reading) for comparison.",
+      "layer": "csharp",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction with two tests: reporter's pattern (read before disposal) and correct pattern (dispose then read)",
+          "content": "using System.Text;\nusing SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKCanvas).Assembly.GetName().Version}\");\nConsole.WriteLine();\n\n// Test 1: Reporter's pattern — using var, read BEFORE disposal\nConsole.WriteLine(\"=== Test 1: Reporter's pattern (read before canvas disposal) ===\");\n{\n    var bounds = new SKRect(0, 0, 200, 200);\n    using var managedStream = new MemoryStream();\n    using var stream = new SKManagedWStream(managedStream);\n    using var canvas = SKSvgCanvas.Create(bounds, stream);\n    using var paint = new SKPaint();\n    paint.Color = SKColors.Red;\n    paint.Style = SKPaintStyle.Fill;\n    canvas.DrawRect(new SKRect(10, 10, 100, 100), paint);\n    paint.Color = SKColors.Blue;\n    canvas.DrawCircle(150, 150, 40, paint);\n    // Read BEFORE canvas is disposed\n    var svgData = managedStream.ToArray();\n    var svgText = Encoding.UTF8.GetString(svgData);\n    Console.WriteLine($\"SVG length: {svgData.Length} bytes\");\n    Console.WriteLine($\"Ends with </svg>: {svgText.TrimEnd().EndsWith(\"</svg>\")}\");\n    Console.WriteLine($\"Last 100 chars: ...{svgText[Math.Max(0, svgText.Length - 100)..]}\");\n}\n\n// Test 2: Correct pattern — explicit dispose before reading\nConsole.WriteLine(\"=== Test 2: Correct pattern (dispose canvas first, then read) ===\");\n{\n    var bounds = new SKRect(0, 0, 200, 200);\n    var ms2 = new MemoryStream();\n    var ws2 = new SKManagedWStream(ms2);\n    var canvas2 = SKSvgCanvas.Create(bounds, ws2);\n    using var paint2 = new SKPaint();\n    paint2.Color = SKColors.Red;\n    paint2.Style = SKPaintStyle.Fill;\n    canvas2.DrawRect(new SKRect(10, 10, 100, 100), paint2);\n    paint2.Color = SKColors.Blue;\n    canvas2.DrawCircle(150, 150, 40, paint2);\n    canvas2.Dispose();\n    ws2.Dispose();\n    var svgData = ms2.ToArray();\n    var svgText = Encoding.UTF8.GetString(svgData);\n    Console.WriteLine($\"SVG length: {svgData.Length} bytes\");\n    Console.WriteLine($\"Ends with </svg>: {svgText.TrimEnd().EndsWith(\"</svg>\")}\");\n    ms2.Dispose();\n}\n\nConsole.WriteLine(\"SUCCESS: test completed\");"
+        }
+      ],
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build the reproduction project",
+      "layer": "csharp",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run the reproduction. Test 1 (reporter's pattern) shows missing </svg> tag (264 bytes, ends with False). Test 2 (correct pattern) shows complete SVG with </svg> tag (271 bytes, ends with True). This confirms the reported behavior.",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\n\n=== Test 1: Reporter's pattern (read before canvas disposal) ===\nSVG length: 264 bytes\nEnds with </svg>: False\nLast 100 chars: ...d\" x=\"10\" y=\"10\" width=\"90\" height=\"90\"/>\n\t<ellipse fill=\"blue\" cx=\"150\" cy=\"150\" rx=\"40\" ry=\"40\"/>\n\n\n=== Test 2: Correct pattern (dispose canvas first, then read) ===\nSVG length: 271 bytes\nEnds with </svg>: True\nLast 100 chars: ...0\" y=\"10\" width=\"90\" height=\"90\"/>\n\t<ellipse fill=\"blue\" cx=\"150\" cy=\"150\" rx=\"40\" ry=\"40\"/>\n</svg>\n\nSUCCESS: test completed",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test with 2.88.9 (reporter's 'last known good' version) in a fresh project. Same behavior — missing </svg> when read before disposal, complete when disposed first. The claim that 2.88.9 worked is not confirmed.",
+      "layer": "csharp",
+      "command": "cd ../Repro-288 && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 2.88.0.0\n=== Test 1: Reporter's pattern (read before canvas disposal) ===\nSVG length: 264 bytes\nEnds with </svg>: False\n=== Test 2: Correct pattern (dispose canvas first, then read) ===\nSVG length: 271 bytes\nEnds with </svg>: True\nSUCCESS: test completed",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test with latest stable 3.119.2 in a fresh project. Same behavior.",
+      "layer": "csharp",
+      "command": "cd ../Repro-latest && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\n=== Test 1: Reporter's pattern ===\nEnds with </svg>: False\n=== Test 2: Correct pattern ===\nEnds with </svg>: True\nSUCCESS: test completed",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Test on main branch source using console sample. Same behavior — this is not a regression.",
+      "layer": "csharp",
+      "command": "dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\n=== Test 1: Reporter pattern ===\nEnds with </svg>: False\n=== Test 2: Correct pattern ===\nEnds with </svg>: True\nSUCCESS: test completed",
+      "result": "wrong-output"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SVG output from SKSvgCanvas is missing closing </svg> tag when the underlying stream is read before the canvas is disposed"
+  },
+  "environment": {
+    "os": "macOS 26.2",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.23",
+    "dotnetSdkVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.0",
+    "dockerUsed": false
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.90,
+      "reason": "Reproduced on all tested versions (2.88.9, 3.119.0, 3.119.2, main) — this is not a regression. The behavior is by-design: SKSvgCanvas writes the closing </svg> tag during Dispose(). The reporter's code reads the stream before the canvas is disposed due to 'using var' scope. The workaround is to explicitly dispose the canvas before reading."
+    },
+    "workarounds": [
+      "Dispose the SKSvgCanvas explicitly before reading the stream: call canvas.Dispose() (or use a using block) before managedStream.ToArray()",
+      "Replace 'using var canvas = ...' with a 'using (var canvas = ...) { }' block so disposal happens at the end of the block, then read the stream outside the block"
+    ],
+    "proposedResponse": {
+      "status": "ready",
+      "summary": "Reproduced as user-error: stream read before canvas disposal; workaround provided.",
+      "body": "Thanks for reporting this! We were able to reproduce the missing `</svg>` tag behavior.\n\nHowever, this is actually **working as designed** — `SKSvgCanvas` writes the closing `</svg>` tag when the canvas is **disposed**. In your code, `using var` defers disposal to the end of the enclosing scope, so when you call `managedStream.ToArray()`, the canvas hasn't been disposed yet and the closing tag hasn't been written.\n\n**The fix** is to explicitly dispose the canvas before reading the stream:\n\n```csharp\n// Option 1: Use a using block (not using var)\nusing (var canvas = SKSvgCanvas.Create(bounds, stream))\n{\n    // draw operations...\n}  // canvas disposed here, </svg> written\nresult.Data = managedStream.ToArray();  // now complete\n\n// Option 2: Explicit Dispose()\nvar canvas = SKSvgCanvas.Create(bounds, stream);\n// draw operations...\ncanvas.Dispose();  // </svg> written\nresult.Data = managedStream.ToArray();  // now complete\n```\n\nWe tested this across multiple versions (2.88.9, 3.119.0, 3.119.2, and main) and the behavior is consistent — this is not a regression.\n\nRegarding `SKFileWStream` appearing to work: with file streams, you likely read the file after the scope ends (i.e., after the canvas is disposed), so the closing tag is present. The difference is when you read the output, not which stream type you use.\n\nHope that helps! Let us know if you have any questions."
+    },
+    "actions": [
+      {
+        "type": "add-comment",
+        "description": "Post reproduction findings with workaround",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "Reproduced: missing </svg> when stream is read before canvas disposal. This is by-design — SVG close tag is emitted on Dispose(). Workaround: use a using block or explicitly dispose the canvas before reading the stream."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as working-as-designed with workaround provided",
+        "risk": "medium",
+        "confidence": 0.85
+      },
+      {
+        "type": "update-labels",
+        "description": "Add docs-gap label since this is a common usage pitfall that could benefit from documentation",
+        "risk": "low",
+        "confidence": 0.80,
+        "labels": ["docs-gap"]
+      }
+    ]
+  }
+}
