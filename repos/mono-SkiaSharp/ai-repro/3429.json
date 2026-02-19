@@ -3,77 +3,125 @@
     "schemaVersion": "1.0",
     "number": 3429,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T19:24:16Z"
+    "analyzedAt": "2026-02-19T21:51:38.985681Z"
   },
   "inputs": {
     "triageFile": "ai-triage/3429.json"
   },
   "conclusion": "needs-platform",
-  "notes": "Memory leak reproduction requires Windows OS with Nvidia Quadro GPU and high-resolution monitor. The issue is specific to WPF's D3D compositor interaction with Quadro drivers and cannot be reproduced on macOS. Triage analysis correctly identified this as a WPF framework issue (dotnet/wpf#10005) triggered by SkiaSharp's rendering workload, not a SkiaSharp code bug. Code verification confirms: (1) SKElement implementation matches triage findings - creates WriteableBitmap, passes to WPF compositor which leaks on Quadro drivers; (2) SKGLElement disposal bug (#3309) remains unfixed in main branch - PR #3311 is still open as of 2026-02-12. If reporter uses SKGLElement, that PR would fix the OpenTK disposal leak, but not the broader WPF+Quadro compositor issue.",
-  "assessment": "likely-bug",
-  "blockers": [
-    "Reproduction requires Windows operating system with WPF framework support",
-    "Reproduction requires Nvidia Quadro series GPU with specific driver behavior - leak does not occur on Nvidia GeForce or AMD GPUs",
-    "Reproduction requires high-resolution monitor with DPI scaling to trigger WPF compositor memory leak under GPU texture churn"
+  "notes": "Console fallback testing on macOS arm64 did not show sustained memory growth on either 3.116.0 or 2.88.9 (growth stabilized around 46 MB in the stress loop). The report is specific to WPF on Windows with Nvidia Quadro drivers, and that UI/driver path is unavailable in this environment. Linux Docker cross-platform fallback could not be executed because the Docker daemon was not running.",
+  "assessment": "unknown",
+  "scope": "unknown",
+  "reproductionTime": "~25 minutes",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Console stress drawing loop showed NO_LEAK_PATTERN (Baseline 41MB -> Final 87MB)."
+    },
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Comparison run matched 3.116.0 memory profile (Baseline 41MB -> Final 87MB)."
+    },
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "error",
+      "platform": "docker-linux-x64",
+      "notes": "Cross-platform fallback blocked: Docker daemon unavailable."
+    }
   ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Verify environment constraints - check if Windows with Nvidia Quadro GPU is available",
+      "description": "Create a fresh console repro project with reporter version 3.116.0 as fallback because host is not Windows.",
       "layer": "setup",
-      "command": "uname -s && uname -m",
-      "output": "Darwin\narm64",
-      "result": "skip"
+      "command": "mkdir -p /tmp/repro-3429-host-31160 && cd /tmp/repro-3429-host-31160 && dotnet new console -n Repro3429 --framework net10.0 && cd Repro3429 && dotnet add package SkiaSharp --version 3.116.0",
+      "output": "The template \"Console App\" was created successfully. Restore succeeded. PackageReference for package \"SkiaSharp\" version \"3.116.0\" added to Repro3429.csproj and restore completed successfully.",
+      "exitCode": 0,
+      "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Verify SKElement.cs implementation matches triage findings about WriteableBitmap compositor leak path",
+      "description": "Add a high-resolution repeated drawing loop to detect sustained process memory growth.",
       "layer": "csharp",
-      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console stress loop drawing many lines to SKBitmap while sampling working-set memory.",
+          "content": "using System;\nusing System.Diagnostics;\nusing SkiaSharp;\n\nstatic long GetMemoryMb()\n{\n    GC.Collect();\n    GC.WaitForPendingFinalizers();\n    GC.Collect();\n    return Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024);\n}\n\nConsole.WriteLine($\"SkiaSharp: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"OS: {Environment.OSVersion}\");\n\nvar baseline = GetMemoryMb();\nlong max = baseline;\nfor (var i = 0; i < 220; i++)\n{\n    using var bitmap = new SKBitmap(3840, 2160, SKColorType.Bgra8888, SKAlphaType.Premul);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.White);\n    using var paint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };\n\n    for (var j = 0; j < 600; j++)\n    {\n        paint.Color = new SKColor((byte)(j % 255), (byte)((j * 3) % 255), (byte)((j * 7) % 255));\n        var y = (j * 7) % 2160;\n        canvas.DrawLine(0, y, 3839, y, paint);\n    }\n\n    if ((i + 1) % 40 == 0)\n    {\n        var current = GetMemoryMb();\n        if (current > max)\n            max = current;\n        Console.WriteLine($\"Iteration {i + 1}: working-set={current}MB\");\n    }\n}\n\nvar final = GetMemoryMb();\nif (final > max)\n    max = final;\n\nConsole.WriteLine($\"BaselineMB={baseline}; FinalMB={final}; PeakMB={max}; GrowthMB={final - baseline}\");\nConsole.WriteLine((final - baseline) > 200 ? \"POTENTIAL_LEAK_PATTERN\" : \"NO_LEAK_PATTERN\");\n"
+        },
+        {
+          "filename": "Repro3429.csproj",
+          "description": "Console project targeting net10.0 with SkiaSharp 3.116.0 package reference.",
+          "content": "\ufeff<Project Sdk=\"Microsoft.NET.Sdk\">\n\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n\n</Project>\n"
+        }
+      ],
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Check SKGLElement.cs disposal implementation and verify if PR #3311 has been merged",
+      "description": "Run the reporter-version stress repro and observe memory trend.",
       "layer": "csharp",
-      "command": "gh pr view 3311 --repo mono/SkiaSharp --json state,merged",
+      "command": "cd /tmp/repro-3429-host-31160/Repro3429 && dotnet run -c Release",
+      "output": "SkiaSharp: 3.116.0.0\nOS: Unix 26.2.0\nIteration 40: working-set=87MB\nIteration 80: working-set=87MB\nIteration 120: working-set=87MB\nIteration 160: working-set=87MB\nIteration 200: working-set=87MB\nBaselineMB=41; FinalMB=87; PeakMB=87; GrowthMB=46\nNO_LEAK_PATTERN",
+      "exitCode": 0,
       "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Verify related issues and external references cited in triage",
-      "layer": "setup",
+      "description": "Run the same stress repro on 2.88.9 for regression comparison.",
+      "layer": "csharp",
+      "command": "mkdir -p /tmp/repro-3429-host-2889 && cd /tmp/repro-3429-host-2889 && dotnet new console -n Repro3429 --framework net10.0 && cd Repro3429 && dotnet add package SkiaSharp --version 2.88.9 && cp /tmp/repro-3429-host-31160/Repro3429/Program.cs Program.cs && dotnet run -c Release",
+      "output": "SkiaSharp: 2.88.0.0\nOS: Unix 26.2.0\nIteration 40: working-set=87MB\nIteration 80: working-set=87MB\nIteration 120: working-set=87MB\nIteration 160: working-set=87MB\nIteration 200: working-set=87MB\nBaselineMB=41; FinalMB=87; PeakMB=87; GrowthMB=46\nNO_LEAK_PATTERN",
+      "exitCode": 0,
       "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Attempt Linux Docker cross-platform verification with reporter version.",
+      "layer": "deployment",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:10.0 bash -lc \"...dotnet add package SkiaSharp --version 3.116.0...\"",
+      "output": "docker: Cannot connect to the Docker daemon at unix://$HOME/.docker/run/docker.sock. Is the docker daemon running?",
+      "exitCode": 125,
+      "result": "failure"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Windows WPF runtime path was not executable on this macOS host.",
+      "layer": "deployment",
+      "result": "skip"
     }
   ],
   "environment": {
-    "os": "macOS",
+    "os": "macOS 26.2",
     "arch": "arm64",
-    "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "3.116.1-preview (source main branch)",
-    "dockerUsed": false
-  },
-  "versionResults": [
-    {
-      "version": "2.88.9 (reporter - last known good)",
-      "source": "nuget",
-      "result": "not-tested",
-      "notes": "Cannot test memory leak behavior on macOS - requires Windows with WPF and Nvidia Quadro GPU. Reporter claims this version worked without leaks."
-    },
-    {
-      "version": "3.116.0 (reporter - broken)",
-      "source": "nuget",
-      "result": "not-tested",
-      "notes": "Cannot test memory leak behavior on macOS - requires Windows with WPF and Nvidia Quadro GPU. Reporter observes unbounded memory growth with this version."
-    },
-    {
-      "version": "main (source)",
-      "source": "source",
-      "result": "not-tested",
-      "notes": "Cannot test memory leak behavior on macOS. Code verification shows: (1) SKElement WriteableBitmap path unchanged - still vulnerable to WPF compositor leak on affected drivers; (2) SKGLElement disposal bug (#3309) remains unfixed - PR #3311 not yet merged."
+    "dotnetVersion": "10.0.2",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0 (reporter)",
+    "dockerUsed": true,
+    "gpu": {
+      "backend": "Metal",
+      "available": true
     }
-  ],
-  "feedback": {
-    "triageCorrections": []
-  }
+  },
+  "blockers": [
+    "Requires Windows host WPF rendering path with Nvidia Quadro drivers; current environment is macOS arm64.",
+    "Docker Linux fallback could not run because the Docker daemon was unavailable during reproduction."
+  ]
 }
