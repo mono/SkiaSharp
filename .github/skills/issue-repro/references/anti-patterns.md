@@ -45,3 +45,9 @@ See SKILL.md for the authoritative output limits table.
 | File content | Inline for small source files; omit binaries |
 
 **Redaction:** `/Users/{name}/` → `$HOME/`, tokens → `[REDACTED]`
+
+## Additional Anti-Patterns
+
+20. **Never use `sudo`.** If a command requires `sudo`, find an alternative. `sudo` prompts for a password interactively, which blocks the session indefinitely. Use user-local installs, Docker, or different approaches.
+
+21. **No repo markdown artifacts.** NEVER create markdown summary files (e.g., `REPRO_SUMMARY.md`, `COMPLETION_REPORT.md`) in the repository working tree. All working files belong in the session workspace (`~/.copilot/session-state/`). Clean up any accidentally created files before persisting.

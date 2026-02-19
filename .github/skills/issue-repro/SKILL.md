@@ -14,6 +14,15 @@ description: >-
 
 Systematically reproduce a SkiaSharp bug and produce structured, schema-validated reproduction JSON.
 
+> **Quick flow:**
+> 1. Load issue + any prior triage JSON
+> 2. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [anti-patterns](references/anti-patterns.md)
+> 3. Create brief plan (5-10 lines: strategy, platform, expected outcome)
+> 4. Check environment: `docker info`, `dotnet --version`, available simulators
+> 5. Build repro project and attempt reproduction
+> 6. Try multiple SkiaSharp versions if time permits
+> 7. Generate JSON → validate → persist
+
 ```
 Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON + Output) → Phase 5 (Validate & Persist)
 ```
@@ -73,7 +82,7 @@ All platform files fall back to `platform-console.md` for core SkiaSharp bugs.
 
 ### 5. Plan
 
-Output a brief plan before executing (1-2 sentences: what platform, what version, what approach).
+Output a brief plan before executing (5-10 sentences: what platform, what version, what approach).
 
 ---
 
@@ -92,11 +101,21 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full 19-
 
 ---
 
+> **Pre-flight — confirm before reproducing:**
+>
+> - [ ] Issue data loaded (cache JSON or GitHub API)
+> - [ ] Prior triage JSON loaded (if exists in `ai-triage/`)
+> - [ ] Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
+> - [ ] Read [references/anti-patterns.md](references/anti-patterns.md) — at least the critical rules
+> - [ ] Environment checked: `docker info` (if needed), `dotnet --version`, `xcodebuild -showsdks` (if iOS)
+> - [ ] Created a brief plan (3-5 lines: reproduction strategy, which platform, what you expect)
+> - [ ] Never use `sudo` — if a command requires it, find an alternative approach
+
 ## Phase 3 — Reproduce
 
 > **Overview — you will test up to 4 configurations:**
 > - **3A:** Reporter's version on primary platform *(always)*
-> - **3B:** Latest stable release *(if 3A reproduced)*
+> - **3B:** Latest stable release *(always)*
 > - **3C:** Main branch source *(MANDATORY if 3B still reproduced)*
 > - **3D:** Cross-platform verification *(conditional — see table below)*
 
@@ -117,7 +136,7 @@ Follow the platform file from Phase 2.4. For each step, capture:
 
 **Push hard.** Don't bail early. Only conclude `not-reproduced` after genuinely exhausting approaches.
 
-### 3B. Test on latest release (if reproduced)
+### 3B. Test on latest release
 
 > **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/repro-{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results. See [references/anti-patterns.md](references/anti-patterns.md) #7.
 
@@ -152,6 +171,24 @@ Use the same platform strategy from 3A with the latest stable SkiaSharp. Record 
 | Windows (reported) | Console + Docker Linux |
 
 Test reporter's version only. Derive `scope`: reproduced on ≥2 platforms → `"universal"`, primary only → `"platform-specific/{platform}"`, skipped → `"unknown"`.
+
+### Simulation Strategy (last resort)
+
+Some bugs live in framework-specific code (MAUI views, WPF handlers, Uno controls) that can't be run in a console app. Use this **escalation order** — only move to the next level if the previous one fails:
+
+1. **Direct run** — Build and run the actual project type (MAUI, WPF, etc.)
+2. **Real platform** — Use a simulator/emulator (iOS Simulator, Android Emulator)
+3. **Automation** — Use Appium or Playwright to drive UI testing
+4. **Docker** — Run in a container (Linux-only scenarios)
+5. **Simulate** — Extract the logic into a console app and model the inputs
+
+**When to simulate:** Only when steps 1-4 are impossible (wrong OS, no SDK, no device). Example: a WPF bug on a macOS host with no Windows VM.
+
+**How to simulate:** Extract the suspect code path into a standalone console app. Model the framework inputs (e.g., resize events, binding updates) and verify the logic path triggers the bug.
+
+**Recording:** Set `reproProject.type: "simulation"` in the JSON. The triage's `classifiedPlatform` vs repro's `type: "simulation"` shows the gap clearly.
+
+**Example:** Opus reproduced SKXamlCanvas NRE (#3430) by extracting the resize handler logic into a console app, feeding 73 dimension combinations, and confirming 100% NRE rate when width/height were 0.
 
 ---
 
@@ -203,44 +240,7 @@ When conclusion is `reproduced` or `not-reproduced`, generate the `output` objec
 
 #### Writing proposedResponse
 
-The `proposedResponse.body` is a Markdown GitHub comment. Follow these guidelines:
-
-- **Tone:** Professional, helpful, empathetic. Thank the reporter.
-- **Evidence:** Cite specific versions tested, platforms, and error messages observed.
-- **Workarounds:** If discovered, include them prominently.
-- **Status:** Use `"ready"` only when confidence ≥ 0.85. Use `"needs-human-edit"` for lower confidence or sensitive situations. Use `"do-not-post"` for internal-only findings.
-
-**Templates by conclusion:**
-
-**Reproduced (fixed on latest):**
-```markdown
-Thanks for reporting this! We were able to reproduce the issue with SkiaSharp {reporter_version}.
-
-The good news is that this appears to be fixed in {fixed_version}. Could you try upgrading?
-
-**Tested versions:**
-| Version | Result |
-|---------|--------|
-| {reporter_version} | ❌ Reproduced |
-| {fixed_version} | ✅ Fixed |
-
-{workaround_section_if_any}
-```
-
-**Not reproduced:**
-```markdown
-Thanks for the report. We attempted to reproduce this on {environment} with SkiaSharp {reporter_version} but were unable to observe the reported behavior.
-
-Could you share the following to help us investigate further?
-{missing_info_list}
-```
-
-**Reproduced universally:**
-```markdown
-We've confirmed this issue. The reported behavior reproduces on {platforms} with SkiaSharp {reporter_version}.
-
-We're tracking this for a fix. {workaround_section_if_any}
-```
+See [references/response-guidelines.md](references/response-guidelines.md) for tone, evidence requirements, status thresholds (`ready`/`needs-human-edit`/`do-not-post`), and conclusion-specific templates.
 
 #### Workarounds
 
@@ -262,6 +262,16 @@ Use the same action types as triage. Common repro actions:
 | `link-related` | Discovered related issue during repro | low |
 
 ---
+
+> **Post-flight — confirm before persisting:**
+>
+> - [ ] Validation script passed (exit 0)
+> - [ ] No absolute paths in JSON (`/Users/`, `/tmp/`, `/home/`)
+> - [ ] `environment.dockerUsed` is set (even if `false`)
+> - [ ] If `conclusion: "reproduced"` → `output` and `reproProject` are present
+> - [ ] Step numbers are sequential starting from 1
+> - [ ] No markdown summary files created in the repo (clean up any leftovers)
+> - [ ] All required fields present (check [schema-cheatsheet](references/schema-cheatsheet.md))
 
 ## Phase 5 — Validate & Persist
 

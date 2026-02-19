@@ -14,6 +14,16 @@ description: >-
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
+> **Quick flow:**
+> 1. Setup cache worktree
+> 2. Load issue data (cache first, GitHub API fallback)
+> 3. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [labels](references/labels.md), [triage-examples](references/triage-examples.md)
+> 4. Create brief plan (5-10 lines)
+> 5. Investigate code — **READ-ONLY, never edit source files**
+> 6. Generate JSON
+> 7. Validate with script
+> 8. Persist to data-cache and push
+
 ### Data sources
 
 **Local cache first.** Issue data is pre-cached on the `docs-data-cache` branch (synced hourly). The cache contains full issue JSON with comments, labels, and timeline — use it as the primary source. You can `grep` across all cached items for duplicate detection and cross-referencing.
@@ -98,81 +108,50 @@ If fetched via API, work directly from the `gh` output (skip the script).
 
 ---
 
+> **Pre-flight — confirm before analyzing:**
+>
+> - [ ] Cache worktree is set up and pulled
+> - [ ] Issue data loaded (cache JSON or GitHub API)
+> - [ ] Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
+> - [ ] Read [references/labels.md](references/labels.md) for valid label values
+> - [ ] Read [references/triage-examples.md](references/triage-examples.md) for calibration
+> - [ ] Created a brief plan (5-10 lines: what to investigate, what type you suspect)
+>
+> **Reminder:** Triage is READ-ONLY. Do NOT edit any source files (.cs, .cpp, .csproj).
+
 ## Phase 3 — Analyze
 
 ### First triage in session
 
-Read [references/labels.md](references/labels.md) for valid label values and cardinality, and [references/triage-examples.md](references/triage-examples.md) for calibration.
+Read [references/labels.md](references/labels.md) for valid label values and cardinality, [references/triage-examples.md](references/triage-examples.md) for calibration, and [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields.
 
 ### Classify and generate JSON
 
-Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate JSON with 6 groups:
+Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate JSON with 6 groups.
 
-> **⚠️ Schema rules:**
-> - `meta.schemaVersion` must be `"1.0"`
-> - **Optional fields: OMIT them entirely** — do NOT set them to `null`. If a field is not applicable, leave it out of the JSON.
-> - `classification.platforms`, `classification.backends`, and `classification.tenets` are simple string arrays (no confidence wrapper)
-> - `classification.partner` is a single string (no confidence wrapper)
-> - `evidence.bugSignals` includes: `severity`, `regressionClaimed`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality`, `targetFrameworks`
-> - `evidence.regression` and `evidence.fixStatus` are optional objects — include when signals exist
-> - `analysis.keySignals[]` captures structured evidence quotes `{text, source, interpretation?}`
-> - `analysis.resolution.proposals[]` include `title`, `codeSnippet` when applicable
-> - `analysis.resolution.recommendedProposal` names the best proposal to try first
-> - `analysis.rationale` is a single summary string (not per-field)
-> - `output.actions` are simplified: `{ type, description }` with optional `risk`, `confidence`, `labels`, `comment`, `linkedIssue`
-> - `additionalProperties: false` — no extra fields allowed at any level
+> **⚠️ Schema Compliance:**
+>
+> 1. **Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md)** — This is the authoritative source for structure, fields, and enums.
+> 2. **Review [references/labels.md](references/labels.md)** — Use only valid label values.
+> 3. **Follow these critical constraints:**
+>    - `meta.schemaVersion` must be `"1.0"`
+>    - **Optional fields:** OMIT entirely if not applicable. Do NOT set to `null`.
+>    - **String Arrays:** `platforms`, `backends`, `tenets` are simple string arrays (no confidence wrapper).
+>    - **Investigation:** `analysis.codeInvestigation` is MANDATORY. At least one entry for bugs, two for close-* actions.
+>    - **Rationale:** `analysis.rationale` is a single summary string (not per-field).
+>    - **Validation:** No extra properties allowed (`additionalProperties: false`).
 
-#### meta + summary
+#### JSON Groups Overview
 
-- `schemaVersion`: `"1.0"`
-- `number`: GitHub issue number
-- `repo`: `"mono/SkiaSharp"`
-- `analyzedAt`: ISO 8601 UTC
-- `currentLabels`: labels currently on the issue (optional)
+| Group | Content |
+|-------|---------|
+| `meta` | Version `"1.0"`, issue number, repo, `analyzedAt` (ISO 8601). |
+| `classification` | `type` and `area` (required objects with confidence). `platforms`, `backends` (optional string arrays). |
+| `evidence` | `bugSignals` (for bugs), `reproEvidence` (all attachments/links), `regression` (if claimed), `fixStatus` (if fixed). |
+| `analysis` | `summary` (required), `codeInvestigation` (findings from Phase 2), `keySignals` (quotes), `rationale` (decision summary), `resolution` (proposals). |
+| `output` | `actionability` (suggested action) and `actions` (automatable tasks). |
 
-#### classification
-
-- `type` and `area` are **compulsory** (non-nullable) — every issue must have both
-- `type` and `area` have `value` (full GitHub label) and `confidence` (0.0–1.0)
-- `platforms`, `backends`, and `tenets` are simple string arrays (no confidence) — omit if not applicable
-- `partner` is a single string — omit if no partner involvement
-- Valid labels: see [references/labels.md](references/labels.md)
-
-#### evidence
-
-- `bugSignals`: Strongly recommended for bugs — `severity`, `regressionClaimed`, `errorType`, `errorMessage`, `stackTrace`, `reproQuality` (complete/partial/none), `targetFrameworks` (TFM strings)
-- `reproEvidence`: extract ALL screenshots, attachments, code snippets, steps — preserve every URL. Include `relatedIssues` (issue numbers) and `repoLinks` (external repro repos) when found.
-- `versionAnalysis`: `mentionedVersions`, `workedIn`, `brokeIn`, `currentRelevance` (likely/unlikely/unknown), `relevanceReason`
-- `regression`: Include when regression signals exist — `{isRegression, confidence, reason, workedInVersion, brokeInVersion}`
-- `fixStatus`: Include when there's evidence the issue may already be fixed — `{likelyFixed, confidence, reason, relatedPRs, relatedCommits, fixedInVersion}`
-
-#### analysis
-
-- **`summary`**: Analytical summary of what's going on and the likely cause. Required.
-- **`codeInvestigation`**: Source code signals from mandatory investigation — `{file, finding, relevance}` with optional `lines` for each file examined. `relevance` is one of `direct`, `related`, `context`. At least one required for bugs; close-* actions require at least two.
-- **`keySignals`**: Structured evidence quotes — `{text, source, interpretation?}` for each signal that drove triage decisions. `interpretation` is optional but recommended for non-obvious signals. Enables downstream querying and audit.
-- **`rationale`**: Single paragraph explaining key classification decisions (type, area, severity). Replace the former per-field rationales with one concise explanation.
-- **`workarounds`**: Array of workaround strings found during triage.
-- **`nextQuestions`**: Open questions that repro or fix should investigate.
-- **`errorFingerprint`**: Normalized fingerprint of the error for cross-issue dedup (optional).
-- **`resolution`**: Proposals with `{title, description, category?, codeSnippet?, validated?, confidence?, effort?}`. `category` is one of `workaround`, `fix`, `alternative`, `investigation`. `validated` starts as `untested` (upgraded in Phase 3.7). Include `recommendedProposal` (title of best proposal) and `recommendedReason`. Omit for duplicates/abandoned.
-
-#### output
-
-- **`actionability`**: `suggestedAction`, `confidence`, `reason`
-- **`missingInfo`**: Information needed from the reporter (optional array).
-- **`actions`**: Simplified automatable operations — each is `{type, description}` with optional `risk`, `confidence`, `labels`, `comment`, `linkedIssue`:
-
-| Type | Risk | Notes |
-|------|------|-------|
-| `update-labels` | low | Include `labels` array |
-| `add-comment` | high | Read [references/response-guidelines.md](references/response-guidelines.md) for tone. Include `comment` text |
-| `close-issue` | medium | |
-| `link-related` | low | Include `linkedIssue` number |
-| `link-duplicate` | medium | Include `linkedIssue` number |
-| `convert-to-discussion` | high | |
-| `update-project` | low | |
-| `set-milestone` | low | |
+Refer to the cheatsheet for the exact field structure and enum values.
 
 ---
 
@@ -219,6 +198,15 @@ pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/triage-{number
 
 ---
 
+> **Post-flight — confirm before persisting:**
+>
+> - [ ] Validation script passed (exit 0)
+> - [ ] No absolute paths in JSON (`/Users/`, `/tmp/`, `/home/`)
+> - [ ] No source files were edited during this triage (verify with `git diff`)
+> - [ ] `classification.platforms` and `classification.backends` are plain string arrays (not objects)
+> - [ ] All required fields present (check [schema-cheatsheet](references/schema-cheatsheet.md))
+> - [ ] No markdown summary files created in the repo
+
 ## Phase 5 — Persist & Present
 
 ### 1. Write to cache
@@ -259,21 +247,11 @@ cd ..
 
 ---
 
-## Anti-Patterns (NEVER DO)
+## Anti-Patterns
 
-1. **Pre-baked delegation.** NEVER write your classification in a sub-agent prompt. Sub-agents investigate and return evidence. YOU classify based on their evidence.
+See [references/anti-patterns.md](references/anti-patterns.md) — **read this file on first triage in session**.
 
-2. **Age-based closure.** NEVER close an issue because it's old. Old issues with no code fix are STILL OPEN BUGS/REQUESTS.
-
-3. **Platform-deprecated ≠ stale.** NEVER assume a Xamarin.Forms issue is stale. Check if the same code/gap exists in MAUI before suggesting closure.
-
-4. **Assertion without citation.** NEVER write "the code does X" without a `{file, lines}` entry in `codeInvestigation`. No file:line = no claim.
-
-5. **Batch shortcuts.** When triaging multiple issues, each gets FULL investigation. Parallel investigation is fine; parallel conclusions are not.
-
-6. **.NET Forward Compatibility.** NEVER conclude "doesn't support .NET X" when the library targets a lower TFM. .NET is forward-compatible by design — a `net8.0` library works on `net10.0` apps via NuGet TFM fallback. NEVER suggest "downgrade to .NET 8" as a workaround for TFM fallback. The only exception is platform-specific TFMs (e.g., `net8.0-ios`) where platform-specific native assets are required.
-
-7. **Writing code or running builds.** Triage is READ-ONLY analysis. NEVER create `.cs`/`.csproj` files, write reproduction code, run `dotnet build/test/cake`, or execute the reporter's code. If reproduction is needed, output `needs-investigation` and move on — that's the `issue-repro` skill's job.
+**#0 (CRITICAL):** Triage is READ-ONLY. If you edit a source file during triage, you have FAILED. See the anti-patterns reference for the full list.
 
 ---
 
