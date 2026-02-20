@@ -1,6 +1,6 @@
 # Anti-Patterns (Full Reference)
 
-The 7 critical rules are in SKILL.md. This file has the complete list with examples.
+The critical rules are in SKILL.md. This file has the complete list with examples.
 
 ## Step Result Decision Table
 

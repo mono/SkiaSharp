@@ -17,10 +17,10 @@ Systematically reproduce a SkiaSharp bug and produce structured, schema-validate
 > **Quick flow:**
 > 1. Load issue + any prior triage JSON
 > 2. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [anti-patterns](references/anti-patterns.md)
-> 3. Create brief plan (5-10 lines: strategy, platform, expected outcome)
+> 3. Create brief plan (3-5 lines: strategy, platform, expected outcome)
 > 4. Check environment: `docker info`, `dotnet --version`, available simulators
 > 5. Build repro project and attempt reproduction
-> 6. Try multiple SkiaSharp versions if time permits
+> 6. Test multiple SkiaSharp versions (3A reporter's → 3B latest → 3C main)
 > 7. Generate JSON → validate → persist
 
 ```
@@ -82,13 +82,13 @@ All platform files fall back to `platform-console.md` for core SkiaSharp bugs.
 
 ### 5. Plan
 
-Output a brief plan before executing (5-10 sentences: what platform, what version, what approach).
+Output a brief plan before executing (3-5 lines: what platform, what version, what approach).
 
 ---
 
 ## Key Rules (read before Phase 3)
 
-Read [references/anti-patterns.md](references/anti-patterns.md) for the full 19-rule list. Critical rules:
+Read [references/anti-patterns.md](references/anti-patterns.md) for the full list. Critical rules:
 
 1. **Source code investigation.** Stop at "did it reproduce." Root cause is the `issue-fix` skill's job.
 2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design.
@@ -268,7 +268,10 @@ Use the same action types as triage. Common repro actions:
 > - [ ] Validation script passed (exit 0)
 > - [ ] No absolute paths in JSON (`/Users/`, `/tmp/`, `/home/`)
 > - [ ] `environment.dockerUsed` is set (even if `false`)
-> - [ ] If `conclusion: "reproduced"` → `output` and `reproProject` are present
+> - [ ] If `reproduced` → `output`, `reproProject`, and `versionResults` all present
+> - [ ] If `not-reproduced` → `output` and `versionResults` present; no `failure`/`wrong-output` steps
+> - [ ] If blocked (`needs-platform`/`needs-hardware`/`partial`/`inconclusive`) → `blockers[]` present (min 1)
+> - [ ] `proposedResponse.status` is set (`ready`/`needs-human-edit`/`do-not-post`)
 > - [ ] Step numbers are sequential starting from 1
 > - [ ] No markdown summary files created in the repo (clean up any leftovers)
 > - [ ] All required fields present (check [schema-cheatsheet](references/schema-cheatsheet.md))

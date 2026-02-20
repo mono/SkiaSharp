@@ -50,8 +50,8 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | Enum | Values |
 |------|--------|
 | **classifiedType** | `type/bug`, `type/feature-request`, `type/question`, `type/enhancement`, `type/documentation` |
-| **classifiedArea** | `area/SkiaSharp`, `area/SkiaSharp.Views`, `area/SkiaSharp.Views.Maui`, `area/SkiaSharp.Views.Blazor`, `area/SkiaSharp.Views.Uno`, `area/HarfBuzzSharp`, `area/Build`, `area/Docs`, + others |
-| **classifiedPlatform** | `os/Android`, `os/iOS`, `os/macOS`, `os/Linux`, `os/Windows-Classic`, `os/Windows-WinUI`, `os/WASM`, + others |
+| **classifiedArea** | `area/Build`, `area/Docs`, `area/HarfBuzzSharp`, `area/libHarfBuzzSharp.native`, `area/libSkiaSharp.native`, `area/SkiaSharp`, `area/SkiaSharp.HarfBuzz`, `area/SkiaSharp.Views`, `area/SkiaSharp.Views.Blazor`, `area/SkiaSharp.Views.Forms`, `area/SkiaSharp.Views.Maui`, `area/SkiaSharp.Views.Uno`, `area/SkiaSharp.Workbooks` |
+| **classifiedPlatform** | `os/Android`, `os/iOS`, `os/macOS`, `os/Linux`, `os/Windows-Classic`, `os/Windows-WinUI`, `os/Windows-Universal-UWP`, `os/Windows-Nano-Server`, `os/WASM`, `os/Tizen`, `os/tvOS`, `os/watchOS` |
 | **classifiedBackend** | `backend/OpenGL`, `backend/Metal`, `backend/Vulkan`, `backend/Raster`, `backend/Direct3D`, `backend/PDF`, `backend/SVG`, `backend/XPS` |
 | **suggestedAction** | `needs-investigation`, `close-as-fixed`, `close-as-by-design`, `close-with-docs`, `close-as-duplicate`, `convert-to-discussion`, `request-info`, `keep-open` |
 | **errorType** | `crash`, `exception`, `wrong-output`, `missing-output`, `performance`, `build-error`, `memory-leak`, `platform-specific`, `other` |

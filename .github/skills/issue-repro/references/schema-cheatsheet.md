@@ -12,12 +12,22 @@ Read this BEFORE generating JSON. Full schema: `references/repro-schema.json`.
 | `reproductionSteps` | array | At least 1 step (see step fields below) |
 | `environment` | object | `os`, `arch`, `dotnetVersion`, `skiaSharpVersion`, `dockerUsed` (all required) |
 
-## Conditionally Required (when `conclusion` = `"reproduced"`)
+## Conditionally Required by Conclusion
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `output` | object | Must include `actionability`, `actions`, `proposedResponse` |
-| `reproProject` | object | Must include `type`, `tfm`, `packages` |
+| Conclusion | Additional Required Fields |
+|------------|---------------------------|
+| `reproduced` | `output`, `versionResults`, `reproProject` |
+| `not-reproduced` | `output`, `versionResults` |
+| `needs-platform`, `needs-hardware`, `partial`, `inconclusive` | `blockers` (string array, min 1 item) |
+
+## Step-Result Constraints by Conclusion
+
+| Conclusion | Step Constraint |
+|------------|----------------|
+| `reproduced` | Must contain ≥1 step with `result: "failure"` or `"wrong-output"` |
+| `not-reproduced` | Must contain ≥1 `"success"` step AND zero `"failure"`/`"wrong-output"` steps |
+
+⚠️ For `not-reproduced`: if a setup step failed then succeeded on retry, record **only the final successful attempt**. Any `failure`/`wrong-output` step will fail validation.
 
 ## Enum Values
 
@@ -61,22 +71,26 @@ Required: `version`, `source`, `result`
 
 `source`: `"nuget"` or `"source"`. `result`: `"reproduced"`, `"not-reproduced"`, `"error"`, `"not-tested"`.
 
-## Output (required when reproduced)
+## Output (required when reproduced or not-reproduced)
 
 ```json
 "output": {
   "actionability": { "suggestedAction": "<enum>", "confidence": 0.0-1.0, "reason": "..." },
   "actions": [{ "type": "<actionType>", "description": "...", "risk": "low|medium|high", "confidence": 0.0-1.0 }],
-  "proposedResponse": { "body": "GitHub comment markdown" }
+  "proposedResponse": { "body": "GitHub comment markdown", "status": "ready|needs-human-edit|do-not-post" },
+  "missingInfo": ["What info is needed from reporter"]
 }
 ```
 
 ## Common Mistakes
 
-1. **Missing `output` when reproduced** — `output` + `reproProject` are required when conclusion is `"reproduced"`.
-2. **Missing `environment.dockerUsed`** — Always include, even if `false`.
-3. **Extra fields** — `additionalProperties: false` everywhere. No extra keys.
-4. **Null values** — Omit optional fields entirely. Never set to `null`.
-5. **Absolute paths** — Redact `/Users/name/` → `$HOME/`, `/tmp/...` → relative descriptions.
-6. **Step `result` = expectation** — `result` is TECHNICAL outcome. Build fails = `"failure"` even if that confirms the bug.
-7. **Missing `stepNumber`** — Every step needs a sequential number starting from 1.
+1. **Missing `output` when not-reproduced** — `output` + `versionResults` are required for BOTH `reproduced` AND `not-reproduced`.
+2. **Missing `blockers` for blocked conclusions** — `needs-platform`, `needs-hardware`, `partial`, `inconclusive` all require `blockers[]` (min 1 item).
+3. **`failure`/`wrong-output` steps with `not-reproduced`** — When conclusion is `not-reproduced`, ALL steps must be `success` or `skip`. Record only final successful attempts.
+4. **Missing `environment.dockerUsed`** — Always include, even if `false`. It's REQUIRED, not optional.
+5. **Missing `proposedResponse.status`** — Must be `"ready"`, `"needs-human-edit"`, or `"do-not-post"`.
+6. **Extra fields** — `additionalProperties: false` everywhere. No extra keys.
+7. **Null values** — Omit optional fields entirely. Never set to `null`.
+8. **Absolute paths** — Redact `/Users/name/` → `$HOME/`, `/tmp/...` → relative descriptions.
+9. **Step `result` = expectation** — `result` is TECHNICAL outcome. Build fails = `"failure"` even if that confirms the bug.
+10. **Missing `stepNumber`** — Every step needs a sequential number starting from 1.

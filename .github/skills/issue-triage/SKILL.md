@@ -17,8 +17,8 @@ Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated tria
 > **Quick flow:**
 > 1. Setup cache worktree
 > 2. Load issue data (cache first, GitHub API fallback)
-> 3. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [labels](references/labels.md), [triage-examples](references/triage-examples.md)
-> 4. Create brief plan (5-10 lines)
+> 3. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [labels](references/labels.md), [triage-examples](references/triage-examples.md), [anti-patterns](references/anti-patterns.md)
+> 4. Create brief plan (3-5 lines)
 > 5. Investigate code — **READ-ONLY, never edit source files**
 > 6. Generate JSON
 > 7. Validate with script
@@ -115,9 +115,10 @@ If fetched via API, work directly from the `gh` output (skip the script).
 > - [ ] Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
 > - [ ] Read [references/labels.md](references/labels.md) for valid label values
 > - [ ] Read [references/triage-examples.md](references/triage-examples.md) for calibration
-> - [ ] Created a brief plan (5-10 lines: what to investigate, what type you suspect)
+> - [ ] Read [references/anti-patterns.md](references/anti-patterns.md) — at least the critical rules
+> - [ ] Created a brief plan (3-5 lines: what to investigate, what type you suspect)
 >
-> **Reminder:** Triage is READ-ONLY. Do NOT edit any source files (.cs, .cpp, .csproj).
+> **Reminder:** Triage is READ-ONLY. Do NOT edit any source files (.cs, .cpp, .csproj, .json).
 
 ## Phase 3 — Analyze
 
@@ -127,7 +128,7 @@ Read [references/labels.md](references/labels.md) for valid label values and car
 
 ### Classify and generate JSON
 
-Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate JSON with 6 groups.
+Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate the JSON.
 
 > **⚠️ Schema Compliance:**
 >
@@ -145,6 +146,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 
 | Group | Content |
 |-------|---------|
+| `summary` | One-sentence description of the issue (top-level string, required). |
 | `meta` | Version `"1.0"`, issue number, repo, `analyzedAt` (ISO 8601). |
 | `classification` | `type` and `area` (required objects with confidence). `platforms`, `backends` (optional string arrays). |
 | `evidence` | `bugSignals` (for bugs), `reproEvidence` (all attachments/links), `regression` (if claimed), `fixStatus` (if fixed). |

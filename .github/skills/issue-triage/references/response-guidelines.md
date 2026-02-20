@@ -22,7 +22,7 @@ Say so honestly. Shift the response toward diagnosis: explain the likely cause, 
 
 ## Tone
 
-- Empathetic, direct, technical. No emoji, no "Great question!", no forced enthusiasm.
+- Empathetic, direct, technical. No emoji in prose, no "Great question!", no forced enthusiasm. (Emoji OK in data tables: ✅/❌ for pass/fail.)
 - "Would you be able to..." not "Run..." for asks.
 
 ## Examples
