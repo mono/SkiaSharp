@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3511,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-20T23:39:35Z"
+  },
+  "summary": "libmicrohttpd dependency is still listed in External-Dependency-Info.txt despite being removed from the build.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Docs",
+      "confidence": 0.9
+    },
+    "platforms": [],
+    "backends": [],
+    "tenets": []
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "regressionClaimed": false,
+      "errorType": "other",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Check External-Dependency-Info.txt in release/3.119.3-preview.1"
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/blob/release/3.119.3-preview.1/External-Dependency-Info.txt#L1475",
+          "description": "Link to the file showing the issue"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The user reports that `libmicrohttpd` is still listed in `External-Dependency-Info.txt` even though it was removed from the Skia build in PR #3463. I have confirmed that `External-Dependency-Info.txt` still contains an entry for `libmicrohttpd`.",
+    "codeInvestigation": [
+      {
+        "file": "External-Dependency-Info.txt",
+        "finding": "Contains 'libmicrohttpd' section",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/DEPS",
+        "finding": "Does not contain 'libmicrohttpd', only commented out",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "However, it still appears in the External-Dependency-Info.txt of latest preview release (3.119.3-preview.1).",
+        "source": "issue body"
+      }
+    ],
+    "rationale": "The `External-Dependency-Info.txt` file is out of sync with the actual dependencies defined in `externals/skia/DEPS`. `libmicrohttpd` was removed from `DEPS` (commented out), but the info file was not updated.",
+    "resolution": {
+      "hypothesis": "The External-Dependency-Info.txt file is manually maintained or the update process failed to remove the entry.",
+      "proposals": [
+        {
+          "title": "Remove libmicrohttpd from External-Dependency-Info.txt",
+          "category": "fix",
+          "description": "Remove the libmicrohttpd entry from External-Dependency-Info.txt manually.",
+          "validated": "untested"
+        }
+      ]
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "This is a documentation/metadata update that needs to be done."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add type/bug and area/Docs labels",
+        "confidence": 1.0,
+        "labels": [
+          "type/bug",
+          "area/Docs"
+        ],
+        "risk": "low"
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the issue",
+        "confidence": 1.0,
+        "comment": "Thanks for the report! I confirmed that `libmicrohttpd` is indeed still listed in `External-Dependency-Info.txt` despite being removed from `DEPS`. We'll get this updated.",
+        "risk": "low"
+      }
+    ]
+  }
+}
