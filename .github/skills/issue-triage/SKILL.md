@@ -18,7 +18,7 @@ Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated tria
 > 1. Setup cache worktree
 > 2. Load issue data (cache first, GitHub API fallback)
 > 3. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [labels](references/labels.md), [triage-examples](references/triage-examples.md), [anti-patterns](references/anti-patterns.md)
-> 4. Create brief plan (3-5 lines)
+> 4. Create brief plan (5-10 lines)
 > 5. Investigate code — **READ-ONLY, never edit source files**
 > 6. Generate JSON
 > 7. Validate with script
@@ -116,7 +116,7 @@ If fetched via API, work directly from the `gh` output (skip the script).
 > - [ ] Read [references/labels.md](references/labels.md) for valid label values
 > - [ ] Read [references/triage-examples.md](references/triage-examples.md) for calibration
 > - [ ] Read [references/anti-patterns.md](references/anti-patterns.md) — at least the critical rules
-> - [ ] Created a brief plan (3-5 lines: what to investigate, what type you suspect)
+> - [ ] Created a brief plan (5-10 lines: what to investigate, what type you suspect)
 >
 > **Reminder:** Triage is READ-ONLY. Do NOT edit any source files (.cs, .cpp, .csproj, .json).
 

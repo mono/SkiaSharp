@@ -17,7 +17,7 @@ Systematically reproduce a SkiaSharp bug and produce structured, schema-validate
 > **Quick flow:**
 > 1. Load issue + any prior triage JSON
 > 2. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [anti-patterns](references/anti-patterns.md)
-> 3. Create brief plan (3-5 lines: strategy, platform, expected outcome)
+> 3. Create brief plan (5-10 lines: strategy, platform, expected outcome)
 > 4. Check environment: `docker info`, `dotnet --version`, available simulators
 > 5. Build repro project and attempt reproduction
 > 6. Test multiple SkiaSharp versions (3A reporter's → 3B latest → 3C main)
@@ -82,7 +82,7 @@ All platform files fall back to `platform-console.md` for core SkiaSharp bugs.
 
 ### 5. Plan
 
-Output a brief plan before executing (3-5 lines: what platform, what version, what approach).
+Output a brief plan before executing (5-10 lines: what platform, what version, what approach).
 
 ---
 
@@ -108,7 +108,7 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 > - [ ] Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
 > - [ ] Read [references/anti-patterns.md](references/anti-patterns.md) — at least the critical rules
 > - [ ] Environment checked: `docker info` (if needed), `dotnet --version`, `xcodebuild -showsdks` (if iOS)
-> - [ ] Created a brief plan (3-5 lines: reproduction strategy, which platform, what you expect)
+> - [ ] Created a brief plan (5-10 lines: reproduction strategy, which platform, what you expect)
 > - [ ] Never use `sudo` — if a command requires it, find an alternative approach
 
 ## Phase 3 — Reproduce
