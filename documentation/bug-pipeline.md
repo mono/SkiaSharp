@@ -10,9 +10,9 @@ The skills are meant to be run in order (often by different people / at differen
 
 | Step | Skill | Output | Primary job |
 |------|-------|--------|-------------|
-| 1 | `triage-issue` | `ai-triage/{n}.json` | Classification, code investigation, workaround search, suggested action |
-| 2 | `bug-repro` | `ai-repro/{n}.json` | Standalone repro + version results (reporter → latest → main) |
-| 3 | `bug-fix` | `ai-fix/{n}.json` + PR | Root cause, fix, regression test; consumes triage/repro artifacts |
+| 1 | `issue-triage` | `ai-triage/{n}.json` | Classification, code investigation, workaround search, suggested action |
+| 2 | `issue-repro` | `ai-repro/{n}.json` | Standalone repro + version results (reporter → latest → main) |
+| 3 | `issue-fix` | `ai-fix/{n}.json` + PR | Root cause, fix, regression test; consumes triage/repro artifacts |
 
 ---
 
@@ -30,12 +30,13 @@ Expected artifact locations:
 
 - `"$CACHE/ai-triage/{n}.json"`
 - `"$CACHE/ai-repro/{n}.json"`
+- `"$CACHE/ai-fix/{n}.json"`
 
 ---
 
 ## Role boundaries (what each skill owns)
 
-### triage-issue (Step 1 of 3)
+### issue-triage (Step 1 of 3)
 Owns (exclusive):
 - **Classification**: `type`, `area`, platform labels, severity, actionability
 - **Evidence extraction**: steps, snippets, attachments, environment info
@@ -45,19 +46,21 @@ Owns (exclusive):
 
 Does *not* own:
 - Building/running code to confirm (that’s repro)
-- Root-cause debugging/fixes (that’s bug-fix)
+- Root-cause debugging/fixes (that’s issue-fix)
 
-### bug-repro (Step 2 of 3)
+### issue-repro (Step 2 of 3)
 Owns (exclusive):
 - **Factual reproduction** (no judgment): did the reported symptoms occur?
 - **Version matrix**: reporter → latest stable → `main (source)` when feasible
+- **Platform dispatch**: select platform-specific playbook (`references/platform-*.md`) based on issue signals and triage data
+- **Cross-platform verification**: test on alternative platform to determine scope (universal vs platform-specific)
 - **Minimal repro source**: capture text source files via `reproductionSteps[].filesCreated[].content` (Program.cs, .csproj, etc.)
 
 Does *not* own:
 - Root-cause analysis or proposing fixes
-- Deciding labels/closure (triage owns that)
+- Primary label/closure decisions (triage owns initial classification, but repro may update labels when reproduction confirms or contradicts platform scope)
 
-### bug-fix (Step 3 of 3)
+### issue-fix (Step 3 of 3)
 Owns (exclusive):
 - Root-cause analysis and minimal code change
 - Regression tests and verifying the fix
@@ -72,8 +75,9 @@ Does *not* own:
 ## Handoff contract (fields consumers should rely on)
 
 ### triage → repro
-Repro may use triage as hints only:
-- `classification.*` (type/area/platforms/backends)
+Repro consumes triage for platform selection and hints:
+- `classification.platforms[]` → **informs platform file selection** (e.g., `["os/Linux"]` → Docker)
+- `classification.*` (type/area/backends)
 - `evidence.reproEvidence.*` (steps/snippets/attachments)
 - `evidence.bugSignals.*` (severity, errorType, errorMessage, stackTrace)
 - `analysis.codeInvestigation[]` (entry points / suspected code paths)
@@ -87,9 +91,9 @@ Fix should treat repro JSON as the baseline execution record:
 - `versionResults[]` (especially whether `main (source)` reproduces)
 - `reproProject` (packages + tfm)
 - `reproductionSteps[]` including **source file content** in `filesCreated[].content`
-- `environment` (os/arch/dotnetVersion/dockerUsed)
+- `environment` (os/arch/dotnetVersion/skiaSharpVersion/dockerUsed)
 - `artifacts[]` (binary inputs and where to get them)
-- `feedback.triageCorrections[]` (where repro corrected triage)
+- `feedback.corrections[]` (where repro corrected triage)
 
 ---
 
@@ -97,7 +101,7 @@ Fix should treat repro JSON as the baseline execution record:
 
 - **Default**: reproduce using a standalone NuGet-based console/test project.
 - **Docker**: use only when the reported platform is unavailable on the host (or when the repro explicitly requires Linux/Android/etc.).
-- **bug-fix should start from ai-repro**:
+- **issue-fix should start from ai-repro**:
   - Rehydrate the repro project from `ai-repro` source files.
   - Re-run after applying the fix to verify it is resolved.
   - Only run a separate Docker-based repro if the issue is platform-only and cannot be exercised otherwise.
@@ -107,14 +111,14 @@ Fix should treat repro JSON as the baseline execution record:
 ## Pipeline gates (when to run the next step)
 
 - If triage suggests `request-info` or `close-*`: do **not** run repro/fix unless a human overrides.
-- If repro concludes `not-reproduced` / `inconclusive`: bug-fix generally should **not** start; instead update triage actions (request more info / close / document).
-- If repro concludes `reproduced` or `wrong-output`: proceed to bug-fix.
+- If repro concludes `not-reproduced` / `inconclusive`: issue-fix generally should **not** start; instead update triage actions (request more info / close / document).
+- If repro concludes `reproduced` or `wrong-output`: proceed to issue-fix.
 
 ---
 
-## PR integration (bug-fix)
+## PR integration (issue-fix)
 
-When `ai-triage`/`ai-repro` exist, the bug-fix PR should copy in:
+When `ai-triage`/`ai-repro` exist, the issue-fix PR should copy in:
 - A short triage summary (type/area/platform/severity + key codeInvestigation entries)
 - Reproduction matrix from `versionResults[]`
 - The minimal repro commands (from `reproductionSteps[].command`) and any required artifacts
@@ -127,13 +131,14 @@ Each step records corrections to upstream findings **in its OWN JSON** — never
 
 | Step | Field | Corrects |
 |------|-------|----------|
-| Repro | `feedback.triageCorrections[]` | Triage findings that reproduction contradicts |
+| Repro | `feedback.corrections[]` | Triage findings that reproduction contradicts |
 | Fix | `feedback.corrections[]` | Both triage and repro findings that the fix contradicts |
 
 Each correction has:
 - `topic` — what category (classification, scope, root-cause, affected-platforms, etc.)
 - `upstream` — what the upstream step said
 - `corrected` — what this step actually found
+- `source` — which upstream step is being corrected (`"triage"` or `"repro"` for fix; always `"triage"` for repro)
 
 **Rules:**
 - Corrections are additive — never edit upstream JSON files
@@ -161,5 +166,5 @@ CACHE=".data-cache/repos/mono-SkiaSharp"
 N=1234
 [ -f "$CACHE/ai-triage/$N.json" ] && echo "✅ Triaged"
 [ -f "$CACHE/ai-repro/$N.json" ] && echo "✅ Reproduced" && python3 -c "import json; print('  conclusion:', json.load(open('$CACHE/ai-repro/$N.json'))['conclusion'])"
-[ -f "$CACHE/ai-fix/$N.json" ] && echo "✅ Fix" && python3 -c "import json; print('  status:', json.load(open('$CACHE/ai-fix/$N.json'))['status'])"
+[ -f "$CACHE/ai-fix/$N.json" ] && echo "✅ Fix" && python3 -c "import json; print('  status:', json.load(open('$CACHE/ai-fix/$N.json'))['status']['value'])"
 ```
