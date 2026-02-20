@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3435,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-20T23:55:00Z"
+  },
+  "summary": "System.DllNotFoundException: libSkiaSharp on Blazor WASM when upgrading to .NET 10 due to incompatible native assets.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/WASM"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ],
+    "backends": []
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "platform-specific",
+      "errorMessage": "System.DllNotFoundException: libSkiaSharp",
+      "reproQuality": "none",
+      "targetFrameworks": [
+        "net10.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.1",
+        "3.119.2-preview1"
+      ],
+      "workedIn": "3.116.1",
+      "brokeIn": "3.119.2-preview1",
+      "currentRelevance": "likely",
+      "relevanceReason": "Issue occurs on .NET 10 upgrade with both versions."
+    }
+  },
+  "analysis": {
+    "summary": "The issue is caused by SkiaSharp.targets selecting .NET 9 native assets for .NET 10, which are likely incompatible due to Emscripten version differences.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "NativeFileReference condition `VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')` selects .NET 9 assets for .NET 10.",
+        "relevance": "direct",
+        "lines": "40"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Started getting this runtime error after upgrading Blazor app from .Net 9 to .Net 10.",
+        "source": "issue body"
+      },
+      {
+        "text": "System.DllNotFoundException: libSkiaSharp",
+        "source": "issue title"
+      }
+    ],
+    "rationale": "The MSBuild targets file uses `VersionGreaterThanOrEquals('9.0')` to select native assets. For .NET 10, this evaluates to true, causing the .NET 9 assets (compiled with Emscripten 3.1.56) to be used. .NET 10 WASM likely requires a newer Emscripten version, rendering these assets incompatible. This is a common pattern with WASM upgrades.",
+    "resolution": {
+      "hypothesis": "SkiaSharp needs to be rebuilt with the Emscripten version matching .NET 10, and targets updated to select it.",
+      "recommendedProposal": "Compile new native assets for .NET 10 and update targets.",
+      "recommendedReason": "Standard procedure for supporting new .NET WASM versions."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Requires verifying the exact Emscripten version for .NET 10 and producing new builds."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add type/bug, area/libSkiaSharp.native, os/WASM",
+        "risk": "low",
+        "confidence": 1.0,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the likely cause (Emscripten mismatch) and confirm investigation.",
+        "risk": "high",
+        "confidence": 0.9,
+        "comment": "Thanks for the report. This `DllNotFoundException` on .NET 10 is likely caused by an Emscripten version mismatch.\n\nOur build targets currently use the .NET 9 assets (built with Emscripten 3.1.56) for any version >= 9.0:\n\nhttps://github.com/mono/SkiaSharp/blob/main/binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets#L40\n\n```xml\n<NativeFileReference Include=\"$(SkiaSharpStaticLibraryPath)\\3.1.56\\$(_SkiaSharpNativeBinaryType)\\*.a\" Condition=\"$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0'))\" />\n```\n\nSince .NET 10 likely uses a newer Emscripten toolchain, these static libraries are binary incompatible. We need to build new native assets for .NET 10 and update the targets file."
+      }
+    ]
+  }
+}
