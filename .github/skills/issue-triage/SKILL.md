@@ -14,6 +14,14 @@ description: >-
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
+## ⛔ MANDATORY FIRST STEPS (do not skip)
+
+1. Read THIS entire SKILL.md before any investigation
+2. Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
+3. Read [references/anti-patterns.md](references/anti-patterns.md) for critical rules
+
+These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded.
+
 > **Quick flow:**
 > 1. Setup cache worktree
 > 2. Load issue data (cache first, GitHub API fallback)
@@ -254,6 +262,8 @@ cd ..
 See [references/anti-patterns.md](references/anti-patterns.md) — **read this file on first triage in session**.
 
 **#0 (CRITICAL):** Triage is READ-ONLY. If you edit a source file during triage, you have FAILED. See the anti-patterns reference for the full list.
+
+**#1 (CRITICAL):** NEVER use `store_memory` during triage. Triage produces JSON artifacts, not memories. Storing unverified facts pollutes all future sessions.
 
 ---
 

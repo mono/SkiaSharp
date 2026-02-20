@@ -51,3 +51,7 @@ See SKILL.md for the authoritative output limits table.
 20. **Never use `sudo`.** If a command requires `sudo`, find an alternative. `sudo` prompts for a password interactively, which blocks the session indefinitely. Use user-local installs, Docker, or different approaches.
 
 21. **No repo markdown artifacts.** NEVER create markdown summary files (e.g., `REPRO_SUMMARY.md`, `COMPLETION_REPORT.md`) in the repository working tree. All working files belong in the session workspace (`~/.copilot/session-state/`). Clean up any accidentally created files before persisting.
+
+22. **Fabricating output or evidence.** NEVER use echo/print statements to simulate command output, claim "reproduced" from static code analysis without executing the code, or report environment details (OS version, SDK version) without actually running the diagnostic commands. If you cannot run it, report `needs-platform`.
+
+23. **Modifying product source during repro.** Reproduction ONLY creates new test projects in `/tmp/`. NEVER edit `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source — that is the `issue-fix` skill's job. Revert immediately if done accidentally.

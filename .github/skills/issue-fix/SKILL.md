@@ -29,6 +29,7 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 > **Phases may be abbreviated** when `ai-triage/{n}.json` and/or `ai-repro/{n}.json` exist — but you must explicitly consume them and meet the gate with evidence (don’t redo the work).
 > **NEVER** say "in parallel" — phases are strictly sequential.
 > **NEVER** start *new* research (Phase 3) before PR exists (Phase 2).
+> **NEVER** use `store_memory` — fixes produce JSON artifacts and PRs, not memories.
 
 ---
 

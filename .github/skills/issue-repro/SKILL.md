@@ -14,6 +14,14 @@ description: >-
 
 Systematically reproduce a SkiaSharp bug and produce structured, schema-validated reproduction JSON.
 
+## ⛔ MANDATORY FIRST STEPS (do not skip)
+
+1. Read THIS entire SKILL.md before any investigation
+2. Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
+3. Read [references/anti-patterns.md](references/anti-patterns.md) for critical rules
+
+These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded.
+
 > **Quick flow:**
 > 1. Load issue + any prior triage JSON
 > 2. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [anti-patterns](references/anti-patterns.md)
@@ -94,6 +102,9 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design.
 3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.
 4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions.
+5. **Honesty over completion.** `not-reproduced` and `needs-platform` are VALID SUCCESS conclusions. Reporting inability to reproduce is correct behavior, NOT failure. NEVER invent output you did not observe from an actual command execution.
+6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/` only. If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
+7. **NEVER use `store_memory`.** Reproduction produces JSON artifacts, not memories. Storing unverified observations as permanent facts pollutes all future sessions.
 
 **Intermittent bugs:** If results are inconsistent, run 3–5 times. Reproduced ≥1 time → `reproduced` with note "Intermittent: X/Y runs". Never reproduced after 5 → `not-reproduced`.
 
@@ -118,6 +129,8 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 > - **3B:** Latest stable release *(always)*
 > - **3C:** Main branch source *(MANDATORY if 3B still reproduced)*
 > - **3D:** Cross-platform verification *(conditional — see table below)*
+>
+> **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation.
 
 ### 3A. Reproduce with reporter's version
 

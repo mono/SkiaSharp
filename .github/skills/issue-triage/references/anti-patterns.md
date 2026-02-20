@@ -55,3 +55,8 @@ are required.
 
 NEVER create markdown summary files, plans, or reports in the repository working tree.
 All working files belong in the session workspace (`~/.copilot/session-state/`).
+
+### 8. Fabrication
+
+NEVER invent code investigation findings, claim "the code shows X" without reading the actual
+file, or fabricate file paths / line numbers. If you cannot find the code, say so.
