@@ -39,7 +39,7 @@ These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded
 **GitHub CLI fallback.** If the issue is not in the cache (too new, or cache stale), use `gh` CLI or the GitHub MCP tools (`issue_read`, `get_file_contents`) to fetch it directly. Local cache is faster and searchable; API is the fallback, not forbidden.
 
 ```
-Phase 1 (Setup) → Phase 2 (Preprocess + Investigate) → Phase 3 (Analyze) → Phase 3.5 (Workaround Search) → Phase 3.7 (Validate Code) → Phase 4 (Schema Validate) → Phase 5 (Persist)
+Phase 1 (Setup) → Phase 2 (Preprocess + Investigate) → Phase 3 (Analyze) → Phase 3.5 (Workaround Search) → Phase 3.7 (Validate Code) → Phase 4 (Validate) → Phase 5 (Persist)
 ```
 
 ---
@@ -194,30 +194,27 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contain
 
 ## Phase 4 — Validate
 
+> **🛑 PHASE GATE: You CANNOT proceed to Phase 5 without passing validation.**
+> **Skipping validation = INVALID triage. The task is incomplete.**
+
 ```bash
 # Try pwsh first, fall back to python3
 pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/triage-{number}.json \
   || python3 .github/skills/issue-triage/scripts/validate-triage.py /tmp/triage-{number}.json
 ```
 
-> **⚠️ NEVER use hand-rolled validation.** Always use the scripts above.
+- **Exit 0** = ✅ valid → proceed to Phase 5
+- **Exit 1** = ❌ fix the errors listed in the output, then re-run. Repeat up to 3 times.
+- **Exit 2** = fatal error, stop and report
 
-- Exit 0 = valid → Phase 5
-- Exit 1 = fix and retry (max 3)
-- Exit 2 = stop and report
+> **⚠️ NEVER hand-roll your own validation. NEVER assume it passes. RUN THE SCRIPT.**
 
 ---
 
-> **Post-flight — confirm before persisting:**
->
-> - [ ] Validation script passed (exit 0)
-> - [ ] No absolute paths in JSON (`/Users/`, `/tmp/`, `/home/`)
-> - [ ] No source files were edited during this triage (verify with `git diff`)
-> - [ ] `classification.platforms` and `classification.backends` are plain string arrays (not objects)
-> - [ ] All required fields present (check [schema-cheatsheet](references/schema-cheatsheet.md))
-> - [ ] No markdown summary files created in the repo
-
 ## Phase 5 — Persist & Present
+
+> **🛑 PHASE GATE: Phase 4 validator MUST have printed ✅ before you reach this step.**
+> **If you have not run the validation script, GO BACK and run it now.**
 
 ### 1. Write to cache
 
@@ -264,6 +261,8 @@ See [references/anti-patterns.md](references/anti-patterns.md) — **read this f
 **#0 (CRITICAL):** Triage is READ-ONLY. If you edit a source file during triage, you have FAILED. See the anti-patterns reference for the full list.
 
 **#1 (CRITICAL):** NEVER use `store_memory` during triage. Triage produces JSON artifacts, not memories. Storing unverified facts pollutes all future sessions.
+
+**#2 (CRITICAL):** NEVER skip the validation script. You MUST run `validate-triage.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the triage is invalid.
 
 ---
 

@@ -508,4 +508,16 @@ Before marking complete, verify ALL gates were passed:
 - [ ] **Phase 6**: Minimal fix implemented
 - [ ] **Phase 7**: Build passes, tests pass
 - [ ] **Phase 8**: PR finalized with "Fixes #NNNN"
-- [ ] **Phase 9**: Fix JSON generated, validated, and persisted
+- [ ] **Phase 9**: Fix JSON generated, validated with `validate-fix.ps1`/`.py` (saw ✅), and persisted
+
+---
+
+## Anti-Patterns
+
+See the triage and repro anti-patterns references for the full lists. Critical rules for fix:
+
+**#0 (CRITICAL):** NEVER use `store_memory`. Fixes produce JSON artifacts and PRs, not memories.
+
+**#1 (CRITICAL):** NEVER skip the validation script. You MUST run `validate-fix.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the fix JSON is invalid.
+
+**#2 (CRITICAL):** NEVER skip phases or reorder them. Sequential execution is required — see the ⛔ block at the top.

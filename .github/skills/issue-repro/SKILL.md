@@ -105,6 +105,7 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 5. **Honesty over completion.** `not-reproduced` and `needs-platform` are VALID SUCCESS conclusions. Reporting inability to reproduce is correct behavior, NOT failure. NEVER invent output you did not observe from an actual command execution.
 6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/` only. If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
 7. **NEVER use `store_memory`.** Reproduction produces JSON artifacts, not memories. Storing unverified observations as permanent facts pollutes all future sessions.
+8. **NEVER skip validation.** You MUST run `validate-repro.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the reproduction is invalid.
 
 **Intermittent bugs:** If results are inconsistent, run 3–5 times. Reproduced ≥1 time → `reproduced` with note "Intermittent: X/Y runs". Never reproduced after 5 → `not-reproduced`.
 
@@ -276,32 +277,29 @@ Use the same action types as triage. Common repro actions:
 
 ---
 
-> **Post-flight — confirm before persisting:**
->
-> - [ ] Validation script passed (exit 0)
-> - [ ] No absolute paths in JSON (`/Users/`, `/tmp/`, `/home/`)
-> - [ ] `environment.dockerUsed` is set (even if `false`)
-> - [ ] If `reproduced` → `output`, `reproProject`, and `versionResults` all present
-> - [ ] If `not-reproduced` → `output` and `versionResults` present; no `failure`/`wrong-output` steps
-> - [ ] If blocked (`needs-platform`/`needs-hardware`/`partial`/`inconclusive`) → `blockers[]` present (min 1)
-> - [ ] `proposedResponse.status` is set (`ready`/`needs-human-edit`/`do-not-post`)
-> - [ ] Step numbers are sequential starting from 1
-> - [ ] No markdown summary files created in the repo (clean up any leftovers)
-> - [ ] All required fields present (check [schema-cheatsheet](references/schema-cheatsheet.md))
-
 ## Phase 5 — Validate & Persist
 
+> **🛑 PHASE GATE: You CANNOT persist without passing validation.**
+> **Skipping validation = INVALID reproduction. The task is incomplete.**
+
+### 1. Validate (MANDATORY — run first)
+
 ```bash
-# Validate — try pwsh first, fall back to python3
+# Try pwsh first, fall back to python3
 pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/repro-{number}.json \
   || python3 .github/skills/issue-repro/scripts/validate-repro.py /tmp/repro-{number}.json
-# Exit 0=valid, 1=fix+retry, 2=fatal
 ```
 
-> **⚠️ NEVER use hand-rolled validation.** Always use the scripts above.
+- **Exit 0** = ✅ valid → proceed to step 2
+- **Exit 1** = ❌ fix the errors listed in the output, then re-run. Repeat up to 3 times.
+- **Exit 2** = fatal error, stop and report
+
+> **⚠️ NEVER hand-roll your own validation. NEVER assume it passes. RUN THE SCRIPT.**
+> **If you have not seen ✅ from the validator, DO NOT proceed to persist.**
+
+### 2. Persist (only after validator prints ✅)
 
 ```bash
-# Persist
 cp /tmp/repro-{number}.json $CACHE/ai-repro/{number}.json
 cd .data-cache
 git add repos/mono-SkiaSharp/ai-repro/{number}.json
@@ -310,7 +308,7 @@ git push  # Rebase up to 3x on conflict
 cd ..
 ```
 
-### Present summary
+### 3. Present summary
 
 ```
 ✅ Reproduction: ai-repro/{number}.json

@@ -60,3 +60,9 @@ All working files belong in the session workspace (`~/.copilot/session-state/`).
 
 NEVER invent code investigation findings, claim "the code shows X" without reading the actual
 file, or fabricate file paths / line numbers. If you cannot find the code, say so.
+
+### 9. Skipping validation
+
+NEVER skip the validation script (`validate-triage.ps1` / `validate-triage.py`). NEVER assume
+the JSON is valid without running it. NEVER persist to the data cache without seeing ✅ from the
+validator. Mentally reviewing the JSON is not a substitute for the script.
