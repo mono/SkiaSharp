@@ -89,11 +89,11 @@ function Invoke-Copilot {
         Write-Host "  [dry-run] Would invoke: copilot --model $Model"
         return
     }
-    # Run copilot in background and tail the log for a live window
-    $proc = Start-Process -FilePath 'bash' `
-        -ArgumentList '-c', "echo '' | copilot -p '$($Prompt -replace "'","'\''")' --model '$Model' --allow-all-tools --deny-tool 'shell(git push)' > '$LogPath' 2>&1" `
-        -NoNewWindow -PassThru
-    Start-Sleep -Milliseconds 500
+    # Run copilot in background, subshell wraps pipe so redirect captures copilot output
+    $escaped = $Prompt -replace "'", "'\''"
+    $cmd = "(echo '' | copilot -p '${escaped}' --model '${Model}' --allow-all-tools --deny-tool 'shell(git push)') > '${LogPath}' 2>&1"
+    $proc = Start-Process -FilePath 'bash' -ArgumentList '-c', $cmd -NoNewWindow -PassThru
+    Start-Sleep -Seconds 2
     $lastLine = ''
     while (-not $proc.HasExited) {
         if (Test-Path $LogPath) {
