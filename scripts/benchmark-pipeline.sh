@@ -134,7 +134,7 @@ invoke_copilot() {
                 for ((i=drawn; i<LOG_WINDOW; i++)); do
                     printf "\033[2K  │\n"
                 done
-                printf "\033[2K  └ %d lines (pid %d)\n" "$cur_count" "$pid"
+                printf "\033[2K  └ %d lines | pid %d | %s\n" "$cur_count" "$pid" "$logpath"
                 prev_count=$cur_count
             fi
         fi
