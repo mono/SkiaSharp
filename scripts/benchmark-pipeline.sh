@@ -9,6 +9,19 @@
 #   ./scripts/benchmark-pipeline.sh --dry-run                          # no copilot calls
 set -euo pipefail
 
+# ── CLEANUP TRAP ──────────────────────────────────────────────────────────────
+COPILOT_PID=""
+cleanup() {
+    if [[ -n "$COPILOT_PID" ]] && kill -0 "$COPILOT_PID" 2>/dev/null; then
+        echo ""
+        echo "  ⚠ Killing copilot (pid $COPILOT_PID)..."
+        kill "$COPILOT_PID" 2>/dev/null || true
+        wait "$COPILOT_PID" 2>/dev/null || true
+    fi
+    exit 130
+}
+trap cleanup INT TERM
+
 # ── DEFAULTS ──────────────────────────────────────────────────────────────────
 ISSUES=(3400 3428 3429 3430 3435 3437 3440 3472 3509 3511 3519 3520)
 MODELS=("claude-opus-4.6" "gpt-5.3-codex" "gemini-3-pro-preview")
@@ -97,13 +110,14 @@ invoke_copilot() {
         echo "  [dry-run] Would invoke: copilot --model $(model_short "$model")"
         return
     fi
-    local LOG_WINDOW=8
+    local LOG_WINDOW=24
 
     # Start copilot in background
     echo '' | copilot -p "$prompt" --model "$model" \
         --allow-all-tools --deny-tool 'shell(git push)' \
         > "$logpath" 2>&1 &
     local pid=$!
+    COPILOT_PID=$pid
     sleep 1
 
     # Draw initial empty window
@@ -137,6 +151,7 @@ invoke_copilot() {
         sleep 1
     done
     wait "$pid" 2>/dev/null || true
+    COPILOT_PID=""
 
     # Final redraw
     local lines=0
