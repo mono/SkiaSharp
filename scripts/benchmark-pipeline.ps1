@@ -14,7 +14,7 @@
 .EXAMPLE  pwsh scripts/benchmark-pipeline.ps1 -DryRun
 #>
 param(
-    [int[]]$Issues = @(3400, 3428, 3429, 3430, 3435, 3437, 3440, 3472, 3509, 3511, 3519, 3520),
+    [int[]]$Issues = @(3400),
     [string[]]$Models = @('claude-opus-4.6', 'gpt-5.3-codex', 'gemini-3-pro-preview'),
     [string]$Resume,
     [switch]$SkipRuns,
@@ -89,7 +89,26 @@ function Invoke-Copilot {
         Write-Host "  [dry-run] Would invoke: copilot --model $Model"
         return
     }
-    '' | & copilot -p $Prompt --model $Model --allow-all-tools --deny-tool 'shell(git push)' > $LogPath 2>&1
+    # Run copilot in background and tail the log for a live window
+    $proc = Start-Process -FilePath 'bash' `
+        -ArgumentList '-c', "echo '' | copilot -p '$($Prompt -replace "'","'\''")' --model '$Model' --allow-all-tools --deny-tool 'shell(git push)' > '$LogPath' 2>&1" `
+        -NoNewWindow -PassThru
+    Start-Sleep -Milliseconds 500
+    $lastLine = ''
+    while (-not $proc.HasExited) {
+        if (Test-Path $LogPath) {
+            $tail = Get-Content $LogPath -Tail 1 -ErrorAction SilentlyContinue
+            if ($tail -and $tail -ne $lastLine) {
+                $display = if ($tail.Length -gt 120) { $tail.Substring(0, 117) + '...' } else { $tail }
+                Write-Host "  │ $display"
+                $lastLine = $tail
+            }
+        }
+        Start-Sleep -Seconds 3
+    }
+    $proc.WaitForExit()
+    $lineCount = if (Test-Path $LogPath) { (Get-Content $LogPath).Count } else { 0 }
+    Write-Host "  └ Done ($lineCount lines logged)"
 }
 
 function Collect-Json {
