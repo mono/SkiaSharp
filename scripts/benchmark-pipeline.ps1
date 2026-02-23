@@ -89,10 +89,14 @@ function Invoke-Copilot {
         Write-Host "  [dry-run] Would invoke: copilot --model $Model"
         return
     }
-    # Run copilot in background, subshell wraps pipe so redirect captures copilot output
-    $escaped = $Prompt -replace "'", "'\''"
-    $cmd = "(echo '' | copilot -p '${escaped}' --model '${Model}' --allow-all-tools --deny-tool 'shell(git push)') > '${LogPath}' 2>&1"
-    $proc = Start-Process -FilePath 'bash' -ArgumentList '-c', $cmd -NoNewWindow -PassThru
+    # Run copilot in background via temp script (avoids quoting hell with Start-Process + bash -c)
+    $scriptFile = [System.IO.Path]::GetTempFileName() + '.sh'
+    @"
+#!/bin/bash
+echo '' | copilot -p "$($Prompt -replace '"','\"')" --model "$Model" --allow-all-tools --deny-tool 'shell(git push)' > "$LogPath" 2>&1
+"@ | Set-Content -Path $scriptFile -NoNewline
+    chmod +x $scriptFile 2>$null
+    $proc = Start-Process -FilePath 'bash' -ArgumentList $scriptFile -NoNewWindow -PassThru
     Start-Sleep -Seconds 2
     $lastLine = ''
     while (-not $proc.HasExited) {
@@ -107,6 +111,7 @@ function Invoke-Copilot {
         Start-Sleep -Seconds 3
     }
     $proc.WaitForExit()
+    Remove-Item $scriptFile -ErrorAction SilentlyContinue
     $lineCount = if (Test-Path $LogPath) { (Get-Content $LogPath).Count } else { 0 }
     Write-Host "  └ Done ($lineCount lines logged)"
 }
