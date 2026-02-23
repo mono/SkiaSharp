@@ -160,7 +160,7 @@ validate_json() {
     fi
 }
 
-# ── PHASE 1+2: SKILL RUNS ────────────────────────────────────────────────────
+# ── PHASE 1: SKILL RUNS ───────────────────────────────────────────────────────
 if ! $SKIP_RUNS; then
     echo ""
     echo "═══════════════════════════════════════════════════════"
@@ -240,10 +240,15 @@ Save your analysis report using the create tool to: $OUTDIR/analysis/REVIEWER.md
         echo "  Analysis by $short..."
         invoke_copilot "$ANALYSIS_PROMPT" "$model" "$OUTDIR/analysis-logs/$short.log"
     done
+fi
 
-    # ── META-ANALYSIS ─────────────────────────────────────────────────────────
+# ── PHASE 3: FINAL ANALYSIS ──────────────────────────────────────────────────
+if ! $SKIP_ANALYSIS; then
     echo ""
-    echo "  Meta-analysis: consolidating..."
+    echo "═══════════════════════════════════════════════════════"
+    echo "  Phase 3: Final Analysis"
+    echo "═══════════════════════════════════════════════════════"
+
     META_PROMPT="Read the 3 analysis reports in $OUTDIR/analysis/ (one from each model).
 Produce a final consolidated REPORT.md with:
 1. Consensus findings — where all 3 reviewers agree
