@@ -32,7 +32,7 @@ These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded
 > 7. Generate JSON → validate → persist
 
 ```
-Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON + Output) → Phase 5 (Validate & Persist)
+Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON + Output) → Phase 5 (Validate) → Phase 6 (Persist & Present)
 ```
 
 ---
@@ -277,7 +277,7 @@ Use the same action types as triage. Common repro actions:
 
 ---
 
-## Phase 5 — Validate & Persist
+## Phase 5 — Validate
 
 > **🛑 PHASE GATE: You CANNOT persist without passing validation.**
 > **Skipping validation = INVALID reproduction. The task is incomplete.**
@@ -290,25 +290,26 @@ pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/repro-{number}.j
   || python3 .github/skills/issue-repro/scripts/validate-repro.py /tmp/repro-{number}.json
 ```
 
-- **Exit 0** = ✅ valid → proceed to step 2
+- **Exit 0** = ✅ valid → proceed to Phase 6
 - **Exit 1** = ❌ fix the errors listed in the output, then re-run. Repeat up to 3 times.
 - **Exit 2** = fatal error, stop and report
 
 > **⚠️ NEVER hand-roll your own validation. NEVER assume it passes. RUN THE SCRIPT.**
-> **If you have not seen ✅ from the validator, DO NOT proceed to persist.**
+> **If you have not seen ✅ from the validator, DO NOT proceed to Phase 6.**
 
-### 2. Persist (only after validator prints ✅)
+> **🛑 PHASE GATE: Validator MUST have printed ✅ before proceeding to Phase 6.**
+
+## Phase 6 — Persist & Present
+
+### 1. Persist (only after validator prints ✅)
 
 ```bash
-cp /tmp/repro-{number}.json $CACHE/ai-repro/{number}.json
-cd .data-cache
-git add repos/mono-SkiaSharp/ai-repro/{number}.json
-git commit -m "ai-repro: reproduce #{number}"
-git push  # Rebase up to 3x on conflict
-cd ..
+pwsh .github/skills/issue-repro/scripts/persist-repro.ps1 /tmp/repro-{number}.json
 ```
 
-### 3. Present summary
+This copies the JSON to data-cache and commits+pushes (or skips git in benchmark mode).
+
+### 2. Present summary
 
 ```
 ✅ Reproduction: ai-repro/{number}.json

@@ -216,11 +216,13 @@ pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/triage-{number
 > **🛑 PHASE GATE: Phase 4 validator MUST have printed ✅ before you reach this step.**
 > **If you have not run the validation script, GO BACK and run it now.**
 
-### 1. Write to cache
+### 1. Persist
 
 ```bash
-cp /tmp/triage-{number}.json $CACHE/ai-triage/{number}.json
+pwsh .github/skills/issue-triage/scripts/persist-triage.ps1 /tmp/triage-{number}.json
 ```
+
+This copies the JSON to data-cache and commits+pushes (or skips git in benchmark mode).
 
 ### 2. Present summary
 
@@ -241,16 +243,6 @@ Actions:
 - If repro already exists and reproduces: next step is **issue-fix** (consume both JSONs).
 
 If `add-comment` exists, show `comment` in a copy-paste block. **⚠️ NEVER post via GitHub API.**
-
-### 3. Push
-
-```bash
-cd .data-cache
-git add repos/mono-SkiaSharp/ai-triage/{number}.json
-git commit -m "ai-triage: classify #{number}"
-git push  # Rebase up to 3x on conflict
-cd ..
-```
 
 ---
 
