@@ -45,16 +45,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# ── MODEL SHORT NAMES ─────────────────────────────────────────────────────────
-model_short() {
-    case "$1" in
-        *opus*)   echo "opus" ;;
-        *gpt*)    echo "gpt" ;;
-        *gemini*) echo "gemini" ;;
-        *)        echo "${1##*-}" ;;
-    esac
-}
-
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 export SKIASHARP_BENCHMARK=1
 
@@ -107,7 +97,7 @@ invoke_copilot() {
     local prompt="$1" model="$2" logpath="$3"
     if $DRY_RUN; then
         echo "[dry-run] copilot -p '$prompt' --model $model" > "$logpath"
-        echo "  [dry-run] Would invoke: copilot --model $(model_short "$model")"
+        echo "  [dry-run] Would invoke: copilot --model $model"
         return
     fi
     local LOG_WINDOW=24
@@ -219,8 +209,7 @@ if ! $SKIP_RUNS; then
     run=0
     for issue in "${ISSUES[@]}"; do
         for model in "${MODELS[@]}"; do
-            short=$(model_short "$model")
-            tag="${issue}-${short}"
+            tag="${issue}-${model}"
             run=$((run + 1))
 
             t_done=false; r_done=false
@@ -232,7 +221,7 @@ if ! $SKIP_RUNS; then
             fi
 
             echo ""
-            echo "[$run/$TOTAL] ══ Issue #$issue with $short ══"
+            echo "[$run/$TOTAL] ══ Issue #$issue with $model ══"
             reset_repo
 
             # ── TRIAGE ──
@@ -283,12 +272,11 @@ For each model (opus, gpt, gemini), score 1-10 on these dimensions:
 
 Produce a markdown report with per-model score table, notable strengths/weaknesses, examples of best/worst outputs, and recommendations.
 Save your analysis report using the create tool to: $OUTDIR/analysis/REVIEWER.md
-(Replace REVIEWER with your model short name.)"
+(Replace REVIEWER with your full model name, e.g. claude-opus-4.6.)"
 
     for model in "${MODELS[@]}"; do
-        short=$(model_short "$model")
-        echo "  Analysis by $short..."
-        invoke_copilot "$ANALYSIS_PROMPT" "$model" "$OUTDIR/analysis-logs/$short.log"
+        echo "  Analysis by $model..."
+        invoke_copilot "$ANALYSIS_PROMPT" "$model" "$OUTDIR/analysis-logs/$model.log"
     done
 fi
 
