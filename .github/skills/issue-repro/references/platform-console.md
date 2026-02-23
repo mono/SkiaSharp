@@ -24,7 +24,7 @@ platform-reported bugs are actually in core SkiaSharp and reproducible in a cons
 ## Create Project
 
 ```bash
-mkdir -p /tmp/repro-{number} && cd /tmp/repro-{number}
+mkdir -p /tmp/skiasharp/repro/{number} && cd /tmp/skiasharp/repro/{number}
 dotnet new console -n Repro --framework {reporter_tfm}
 cd Repro
 dotnet add package SkiaSharp --version {reporter_version}

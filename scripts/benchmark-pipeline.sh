@@ -90,7 +90,7 @@ reset_repo() {
     # git reset --hard "$REPO_SHA" >/dev/null 2>&1
     git -C .data-cache reset --hard "$DATA_CACHE_SHA" >/dev/null 2>&1
     git -C .data-cache clean -fdx >/dev/null 2>&1
-    rm -f /tmp/triage-*.json /tmp/repro-*.json
+    rm -rf /tmp/skiasharp/triage /tmp/skiasharp/repro /tmp/skiasharp/fix
 }
 
 invoke_copilot() {
@@ -164,18 +164,15 @@ invoke_copilot() {
 
 collect_json() {
     local issue="$1" tag="$2" dest_dir="$3" skill="$4"
-    # Search: data-cache, session-state, /tmp
+    # Search: data-cache, /tmp/skiasharp, session-state
     local candidates=(
         "$REPO_ROOT/.data-cache/repos/mono-SkiaSharp/ai-$skill/$issue.json"
+        "/tmp/skiasharp/$skill/$issue.json"
     )
     # Recent session-state JSONs
     while IFS= read -r f; do
         candidates+=("$f")
     done < <(find "$HOME/.copilot/session-state" -name "*.json" -path "*/files/*" -newer "$dest_dir/../logs/$tag.log" 2>/dev/null || true)
-    # /tmp files
-    for f in /tmp/${skill}-*.json; do
-        [[ -f "$f" ]] && candidates+=("$f")
-    done
 
     for src in "${candidates[@]}"; do
         if [[ -f "$src" ]]; then

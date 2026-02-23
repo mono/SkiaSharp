@@ -68,7 +68,7 @@ If not stated, use the latest stable release. **.NET is forward-compatible** —
 
 ### 3. Environment check
 
-**⚠️ Run `dotnet --info` in `/tmp/repro-{number}/`** (NOT the SkiaSharp repo, which has `global.json` pinning SDK 8.0). Record SDK version, workload versions, and runtime version.
+**⚠️ Run `dotnet --info` in `/tmp/skiasharp/repro/{number}/`** (NOT the SkiaSharp repo, which has `global.json` pinning SDK 8.0). Record SDK version, workload versions, and runtime version.
 
 Also check: Docker (`docker --version`), Playwright MCP tools, GPU availability, .NET workloads (`dotnet workload list`). Install missing workloads now — don't wait.
 
@@ -103,7 +103,7 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.
 4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions.
 5. **Honesty over completion.** `not-reproduced` and `needs-platform` are VALID SUCCESS conclusions. Reporting inability to reproduce is correct behavior, NOT failure. NEVER invent output you did not observe from an actual command execution.
-6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/` only. If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
+6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/skiasharp/repro/` only. If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
 7. **NEVER use `store_memory`.** Reproduction produces JSON artifacts, not memories. Storing unverified observations as permanent facts pollutes all future sessions.
 8. **NEVER skip validation.** You MUST run `validate-repro.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the reproduction is invalid.
 
@@ -152,7 +152,7 @@ Follow the platform file from Phase 2.4. For each step, capture:
 
 ### 3B. Test on latest release
 
-> **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/repro-{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results. See [references/anti-patterns.md](references/anti-patterns.md) #7.
+> **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/skiasharp/repro/{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results. See [references/anti-patterns.md](references/anti-patterns.md) #7.
 
 Use the same platform strategy from 3A with the latest stable SkiaSharp. Record in `versionResults`.
 
@@ -221,7 +221,7 @@ Read [references/conclusion-guide.md](references/conclusion-guide.md). Key quest
 
 ### 2. Generate JSON
 
-Write to `/tmp/repro-{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json). See [references/repro-examples.md](references/repro-examples.md) for full worked examples.
+Write to `/tmp/skiasharp/repro/{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json). See [references/repro-examples.md](references/repro-examples.md) for full worked examples.
 
 **Key rules** (schema enforces the rest):
 - **Optional fields: OMIT entirely** — do NOT set to `null`
@@ -286,8 +286,8 @@ Use the same action types as triage. Common repro actions:
 
 ```bash
 # Try pwsh first, fall back to python3
-pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/repro-{number}.json \
-  || python3 .github/skills/issue-repro/scripts/validate-repro.py /tmp/repro-{number}.json
+pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/{number}.json \
+  || python3 .github/skills/issue-repro/scripts/validate-repro.py /tmp/skiasharp/repro/{number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to Phase 6
@@ -304,7 +304,7 @@ pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/repro-{number}.j
 ### 1. Persist (only after validator prints ✅)
 
 ```bash
-pwsh .github/skills/issue-repro/scripts/persist-repro.ps1 /tmp/repro-{number}.json
+pwsh .github/skills/issue-repro/scripts/persist-repro.ps1 /tmp/skiasharp/repro/{number}.json
 ```
 
 This copies the JSON to data-cache and commits+pushes (or skips git in benchmark mode).

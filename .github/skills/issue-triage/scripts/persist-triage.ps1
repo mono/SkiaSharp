@@ -2,8 +2,8 @@
 .SYNOPSIS Persist a validated triage JSON to data-cache.
 .DESCRIPTION Copies the triage JSON to the data-cache worktree and optionally commits+pushes.
              In benchmark mode ($env:SKIASHARP_BENCHMARK or -NoPush), git operations are skipped.
-.EXAMPLE  pwsh persist-triage.ps1 /tmp/triage-3400.json
-.EXAMPLE  pwsh persist-triage.ps1 /tmp/triage-3400.json -NoPush
+.EXAMPLE  pwsh persist-triage.ps1 /tmp/skiasharp/triage/3400.json
+.EXAMPLE  pwsh persist-triage.ps1 /tmp/skiasharp/triage/3400.json -NoPush
 #>
 param(
     [Parameter(Mandatory, Position = 0)][string]$Path,

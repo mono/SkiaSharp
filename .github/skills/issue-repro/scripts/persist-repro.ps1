@@ -2,8 +2,8 @@
 .SYNOPSIS Persist a validated repro JSON to data-cache.
 .DESCRIPTION Copies the repro JSON to the data-cache worktree and optionally commits+pushes.
              In benchmark mode ($env:SKIASHARP_BENCHMARK or -NoPush), git operations are skipped.
-.EXAMPLE  pwsh persist-repro.ps1 /tmp/repro-3400.json
-.EXAMPLE  pwsh persist-repro.ps1 /tmp/repro-3400.json -NoPush
+.EXAMPLE  pwsh persist-repro.ps1 /tmp/skiasharp/repro/3400.json
+.EXAMPLE  pwsh persist-repro.ps1 /tmp/skiasharp/repro/3400.json -NoPush
 #>
 param(
     [Parameter(Mandatory, Position = 0)][string]$Path,

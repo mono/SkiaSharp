@@ -210,7 +210,7 @@ but you MUST still proceed to Phase 4 (Reproduce) to validate the hypothesis.**
 > - You need evidence, not assumptions
 
 If `ai-repro/NNNN.json` exists and `conclusion` is `reproduced`/`wrong-output`:
-- Rehydrate the repro source from `reproductionSteps[].filesCreated[].content` into a local folder (e.g., `/tmp/repro-NNNN/`) and run it.
+- Rehydrate the repro source from `reproductionSteps[].filesCreated[].content` into a local folder (e.g., `/tmp/skiasharp/repro/NNNN/`) and run it.
 - Prefer this NuGet-based repro as the baseline; use Docker only if the host cannot exercise the target platform.
 
 If no `ai-repro` exists:
@@ -417,7 +417,7 @@ Examples: [references/fix-examples.md](references/fix-examples.md)
 
 ### 1. Generate JSON
 
-Write to `/tmp/fix-{number}.json`:
+Write to `/tmp/skiasharp/fix/{number}.json`:
 
 - `meta`: schemaVersion `"1.0"`, number, repo, analyzedAt (ISO 8601 UTC)
 - `inputs`: `{ triageFile, reproFile }` — paths to upstream files consumed (if any)
@@ -462,8 +462,8 @@ If the fix discovered that triage or repro got something wrong, record it:
 
 ```bash
 # Try pwsh first, fall back to python3
-pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/fix-{number}.json \
-  || python3 .github/skills/issue-fix/scripts/validate-fix.py /tmp/fix-{number}.json
+pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/skiasharp/fix/{number}.json \
+  || python3 .github/skills/issue-fix/scripts/validate-fix.py /tmp/skiasharp/fix/{number}.json
 ```
 
 > **⚠️ NEVER use hand-rolled validation.** Always use the scripts above.
@@ -473,7 +473,7 @@ pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/fix-{number}.json \
 ```bash
 cd .data-cache
 mkdir -p repos/mono-SkiaSharp/ai-fix
-cp /tmp/fix-{number}.json repos/mono-SkiaSharp/ai-fix/{number}.json
+cp /tmp/skiasharp/fix/{number}.json repos/mono-SkiaSharp/ai-fix/{number}.json
 git add repos/mono-SkiaSharp/ai-fix/{number}.json
 git commit -m "ai-fix: fix #{number}"
 git push  # Rebase up to 3x on conflict
