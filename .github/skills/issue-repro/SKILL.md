@@ -221,7 +221,9 @@ Read [references/conclusion-guide.md](references/conclusion-guide.md). Key quest
 
 ### 2. Generate JSON
 
-Write to `/tmp/skiasharp/repro/{number}.json`. Schema: [references/repro-schema.json](references/repro-schema.json). See [references/repro-examples.md](references/repro-examples.md) for full worked examples.
+Write to `/tmp/skiasharp/repro/{number}.json`. Use the exact literal path `/tmp/skiasharp/repro/` — do NOT substitute `$TMPDIR` or any other variable. Run `mkdir -p /tmp/skiasharp/repro` first if needed.
+
+Schema: [references/repro-schema.json](references/repro-schema.json). See [references/repro-examples.md](references/repro-examples.md) for full worked examples.
 
 **Key rules** (schema enforces the rest):
 - **Optional fields: OMIT entirely** — do NOT set to `null`

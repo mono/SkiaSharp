@@ -417,7 +417,7 @@ Examples: [references/fix-examples.md](references/fix-examples.md)
 
 ### 1. Generate JSON
 
-Write to `/tmp/skiasharp/fix/{number}.json`:
+Write to `/tmp/skiasharp/fix/{number}.json` — use this exact literal path, do NOT substitute `$TMPDIR` or any other variable:
 
 - `meta`: schemaVersion `"1.0"`, number, repo, analyzedAt (ISO 8601 UTC)
 - `inputs`: `{ triageFile, reproFile }` — paths to upstream files consumed (if any)

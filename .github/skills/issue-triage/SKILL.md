@@ -136,7 +136,7 @@ Read [references/labels.md](references/labels.md) for valid label values and car
 
 ### Classify and generate JSON
 
-Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate the JSON.
+Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate the JSON. Write to `/tmp/skiasharp/triage/{number}.json` — use this exact literal path, do NOT substitute `$TMPDIR` or any other variable.
 
 > **⚠️ Schema Compliance:**
 >
