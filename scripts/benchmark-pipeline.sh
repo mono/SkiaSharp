@@ -84,7 +84,7 @@ echo "════════════════════════�
 # ── HELPERS ───────────────────────────────────────────────────────────────────
 reset_repo() {
     cd "$REPO_ROOT"
-    git reset --hard "$REPO_SHA" >/dev/null 2>&1
+    # git reset --hard "$REPO_SHA" >/dev/null 2>&1
     git -C .data-cache reset --hard "$DATA_CACHE_SHA" >/dev/null 2>&1
     git -C .data-cache clean -fdx >/dev/null 2>&1
     rm -f /tmp/triage-*.json /tmp/repro-*.json
@@ -97,27 +97,62 @@ invoke_copilot() {
         echo "  [dry-run] Would invoke: copilot --model $(model_short "$model")"
         return
     fi
-    # Run copilot, stream last line of log every 3s
+    local LOG_WINDOW=8
+
+    # Start copilot in background
     echo '' | copilot -p "$prompt" --model "$model" \
         --allow-all-tools --deny-tool 'shell(git push)' \
         > "$logpath" 2>&1 &
     local pid=$!
-    sleep 2
-    local last_line=""
+    sleep 1
+
+    # Draw initial empty window
+    for ((i=0; i<LOG_WINDOW; i++)); do echo "  │"; done
+    echo "  └ waiting..."
+
+    # Stream: redraw the window in-place as log grows
+    local prev_count=0
     while kill -0 "$pid" 2>/dev/null; do
         if [[ -f "$logpath" ]]; then
-            local tail_line
-            tail_line=$(tail -1 "$logpath" 2>/dev/null || true)
-            if [[ -n "$tail_line" && "$tail_line" != "$last_line" ]]; then
-                local display="${tail_line:0:120}"
-                echo "  │ $display"
-                last_line="$tail_line"
+            local cur_count
+            cur_count=$(wc -l < "$logpath" 2>/dev/null | tr -d ' ')
+            if (( cur_count != prev_count )); then
+                # Move cursor up LOG_WINDOW+1 lines (window + status), clear each
+                echo -ne "\033[$((LOG_WINDOW + 1))A"
+                local window
+                window=$(tail -n "$LOG_WINDOW" "$logpath" 2>/dev/null || true)
+                local drawn=0
+                while IFS= read -r line; do
+                    printf "\033[2K  │ %.120s\n" "$line"
+                    drawn=$((drawn + 1))
+                done <<< "$window"
+                # Pad remaining empty lines
+                for ((i=drawn; i<LOG_WINDOW; i++)); do
+                    printf "\033[2K  │\n"
+                done
+                printf "\033[2K  └ %d lines (pid %d)\n" "$cur_count" "$pid"
+                prev_count=$cur_count
             fi
         fi
-        sleep 3
+        sleep 1
     done
     wait "$pid" 2>/dev/null || true
+
+    # Final redraw
     local lines=0
+    [[ -f "$logpath" ]] && lines=$(wc -l < "$logpath" | tr -d ' ')
+    echo -ne "\033[$((LOG_WINDOW + 1))A"
+    local window
+    window=$(tail -n "$LOG_WINDOW" "$logpath" 2>/dev/null || true)
+    local drawn=0
+    while IFS= read -r line; do
+        printf "\033[2K  │ %.120s\n" "$line"
+        drawn=$((drawn + 1))
+    done <<< "$window"
+    for ((i=drawn; i<LOG_WINDOW; i++)); do
+        printf "\033[2K  │\n"
+    done
+    printf "\033[2K  └ Done (%d lines logged)\n" "$lines"
     [[ -f "$logpath" ]] && lines=$(wc -l < "$logpath" | tr -d ' ')
     echo "  └ Done ($lines lines logged)"
 }
