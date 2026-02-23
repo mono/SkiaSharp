@@ -104,7 +104,7 @@ invoke_copilot() {
 
     # Start copilot in background
     echo '' | copilot -p "$prompt" --model "$model" \
-        --allow-all-tools --deny-tool 'shell(git push)' \
+        --allow-all-tools --deny-tool 'shell(git:push)' \
         > "$logpath" 2>&1 &
     local pid=$!
     COPILOT_PID=$pid
