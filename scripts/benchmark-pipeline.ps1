@@ -84,6 +84,11 @@ function Reset-Repo {
 
 function Invoke-Copilot {
     param([string]$Prompt, [string]$Model, [string]$LogPath)
+    if ($script:DryRun) {
+        "[dry-run] copilot -p '$Prompt' --model $Model" | Out-File $LogPath
+        Write-Host "  [dry-run] Would invoke: copilot --model $Model"
+        return
+    }
     '' | & copilot -p $Prompt --model $Model --allow-all-tools --deny-tool 'shell(git push)' > $LogPath 2>&1
 }
 
@@ -135,11 +140,6 @@ if (-not $SkipRuns) {
             Write-Host ""
             Write-Host "[$run/$total] ══ Issue #$issue with $short ══"
 
-            if ($DryRun) {
-                Write-Host "  [dry-run] Would run triage + repro"
-                continue
-            }
-
             Reset-Repo
 
             # ── TRIAGE ──
@@ -189,7 +189,7 @@ if (-not $SkipRuns) {
 }
 
 # ── PHASE 3: CROSS-MODEL ANALYSIS ────────────────────────────────────────────
-if (-not $SkipAnalysis -and -not $DryRun) {
+if (-not $SkipAnalysis) {
     Write-Host ""
     Write-Host "═══════════════════════════════════════════════════════"
     Write-Host "  Phase 3: Cross-Model Analysis"
