@@ -261,10 +261,10 @@ echo ""
 echo "═══════════════════════════════════════════════════════"
 echo "  Benchmark Complete"
 echo "═══════════════════════════════════════════════════════"
-triage_jsons=$(ls "$OUTDIR/triage/json/"*.json 2>/dev/null | wc -l | tr -d ' ')
-repro_jsons=$(ls "$OUTDIR/repro/json/"*.json 2>/dev/null | wc -l | tr -d ' ')
-triage_logs=$(ls "$OUTDIR/triage/logs/"*.log 2>/dev/null | wc -l | tr -d ' ')
-repro_logs=$(ls "$OUTDIR/repro/logs/"*.log 2>/dev/null | wc -l | tr -d ' ')
+triage_jsons=$(find "$OUTDIR/triage/json" -name '*.json' 2>/dev/null | wc -l | tr -d ' ')
+repro_jsons=$(find "$OUTDIR/repro/json" -name '*.json' 2>/dev/null | wc -l | tr -d ' ')
+triage_logs=$(find "$OUTDIR/triage/logs" -name '*.log' 2>/dev/null | wc -l | tr -d ' ')
+repro_logs=$(find "$OUTDIR/repro/logs" -name '*.log' 2>/dev/null | wc -l | tr -d ' ')
 echo "  Triage:  $triage_jsons/$TOTAL JSONs, $triage_logs logs"
 echo "  Repro:   $repro_jsons/$TOTAL JSONs, $repro_logs logs"
 echo "  Output:  $OUTDIR"
