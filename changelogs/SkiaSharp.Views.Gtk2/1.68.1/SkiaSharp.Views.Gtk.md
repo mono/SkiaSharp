@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.Views.Gtk.SKWidget
 
 ```csharp
-public class SKWidget : Gtk.DrawingArea, Atk.Implementor, GLib.IWrapper, System.IDisposable {
+public class SKWidget : Gtk.DrawingArea {
 	// constructors
 	public SKWidget ();
 	// properties

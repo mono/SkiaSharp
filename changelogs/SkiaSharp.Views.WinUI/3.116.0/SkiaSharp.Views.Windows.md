@@ -11,17 +11,17 @@
 Removed constructors:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 
-[Obsolete]
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 ```
 
 Removed property:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use BackendRenderTarget instead.")]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 ```
 
@@ -30,7 +30,7 @@ public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 #### New Type: SkiaSharp.Views.Windows.AngleSwapChainPanel
 
 ```csharp
-public class AngleSwapChainPanel : Microsoft.UI.Xaml.Controls.SwapChainPanel {
+public class AngleSwapChainPanel : Microsoft.UI.Xaml.Controls.SwapChainPanel, Microsoft.UI.Composition.IAnimationObject, Microsoft.UI.Composition.IVisualElement, Microsoft.UI.Composition.IVisualElement2, System.IEquatable<Microsoft.UI.Xaml.Controls.Grid>, System.IEquatable<Microsoft.UI.Xaml.Controls.Panel>, System.IEquatable<Microsoft.UI.Xaml.Controls.SwapChainPanel>, System.IEquatable<Microsoft.UI.Xaml.DependencyObject>, System.IEquatable<Microsoft.UI.Xaml.FrameworkElement>, System.IEquatable<Microsoft.UI.Xaml.UIElement>, System.Runtime.InteropServices.ICustomQueryInterface, System.Runtime.InteropServices.IDynamicInterfaceCastable, WinRT.IWinRTObject {
 	// constructors
 	public AngleSwapChainPanel ();
 	// properties
@@ -47,7 +47,7 @@ public class AngleSwapChainPanel : Microsoft.UI.Xaml.Controls.SwapChainPanel {
 #### New Type: SkiaSharp.Views.Windows.SKSwapChainPanel
 
 ```csharp
-public class SKSwapChainPanel : SkiaSharp.Views.Windows.AngleSwapChainPanel {
+public class SKSwapChainPanel : SkiaSharp.Views.Windows.AngleSwapChainPanel, Microsoft.UI.Composition.IAnimationObject, Microsoft.UI.Composition.IVisualElement, Microsoft.UI.Composition.IVisualElement2, System.IEquatable<Microsoft.UI.Xaml.Controls.Grid>, System.IEquatable<Microsoft.UI.Xaml.Controls.Panel>, System.IEquatable<Microsoft.UI.Xaml.Controls.SwapChainPanel>, System.IEquatable<Microsoft.UI.Xaml.DependencyObject>, System.IEquatable<Microsoft.UI.Xaml.FrameworkElement>, System.IEquatable<Microsoft.UI.Xaml.UIElement>, System.Runtime.InteropServices.ICustomQueryInterface, System.Runtime.InteropServices.IDynamicInterfaceCastable, WinRT.IWinRTObject {
 	// constructors
 	public SKSwapChainPanel ();
 	// properties

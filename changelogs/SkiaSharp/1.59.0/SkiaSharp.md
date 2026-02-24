@@ -50,7 +50,7 @@ public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use SKPixmap.ReadPixels instead.")]
  public bool CopyPixelsTo (IntPtr dst, int dstSize, int dstRowBytes, bool preserveDstPad);
 ```
 
@@ -93,9 +93,9 @@ public bool IsSrgb { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use SKColorSpacePrimaries.ToXyzD50 instead.")]
  public static SKMatrix44 ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries);
- [Obsolete ()]
+ [Obsolete ("Use SKColorSpacePrimaries.ToXyzD50(SKMatrix44) instead.")]
  public static bool ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries, SKMatrix44 toXyzD50);
 ```
 

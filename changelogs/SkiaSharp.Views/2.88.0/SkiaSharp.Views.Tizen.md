@@ -29,7 +29,7 @@ protected override SkiaSharp.SKSizeI GetRawSurfaceSize ();
 Obsoleted constructors:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
  public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 ```
 

@@ -23,7 +23,7 @@ Modified base type:
 Removed method:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 protected virtual void OnDraw (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info);
 ```
 
@@ -33,7 +33,7 @@ protected virtual void OnDraw (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInf
 Removed method:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use PaintSurface instead.")]
 public virtual void SetRenderer (SKGLSurfaceView.ISKRenderer renderer);
 ```
 
@@ -43,7 +43,7 @@ public virtual void SetRenderer (SKGLSurfaceView.ISKRenderer renderer);
 Removed method:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 protected virtual void OnDrawFrame (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -53,7 +53,7 @@ protected virtual void OnDrawFrame (SkiaSharp.SKSurface surface, SkiaSharp.GRBac
 Removed method:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use PaintSurface instead.")]
 public virtual void SetRenderer (SKGLTextureView.ISKRenderer renderer);
 ```
 
@@ -63,7 +63,7 @@ public virtual void SetRenderer (SKGLTextureView.ISKRenderer renderer);
 Removed method:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 protected virtual void OnDrawFrame (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -73,17 +73,17 @@ protected virtual void OnDrawFrame (SkiaSharp.SKSurface surface, SkiaSharp.GRBac
 Removed constructors:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 
-[Obsolete]
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 ```
 
 Removed property:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use BackendRenderTarget instead.")]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 ```
 

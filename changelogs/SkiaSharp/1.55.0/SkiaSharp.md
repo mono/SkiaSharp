@@ -11,7 +11,7 @@
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use Flush() instead.")]
  public void Flush (GRContextFlushBits flagsBitfield);
 ```
 
@@ -53,11 +53,11 @@ public SKRectI ClipDeviceBounds { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use ClipPath(SKPath, SKClipOperation, bool) instead.")]
  public void ClipPath (SKPath path, SKRegionOperation operation, bool antialias);
- [Obsolete ()]
+ [Obsolete ("Use ClipRect(SKRect, SKClipOperation, bool) instead.")]
  public void ClipRect (SKRect rect, SKRegionOperation operation, bool antialias);
- [Obsolete ()]
+ [Obsolete ("Use DrawColor(SKColor, SKBlendMode) instead.")]
  public void DrawColor (SKColor color, SKXferMode mode);
 ```
 
@@ -130,9 +130,9 @@ public static bool TryParse (string hexString, out SKColor color);
 Obsoleted fields:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use MaxColorCubeDimension instead.")]
  public static const int MaxCubeSize;
- [Obsolete ()]
+ [Obsolete ("Use MinColorCubeDimension instead.")]
  public static const int MinCubeSize;
 ```
 
@@ -165,7 +165,7 @@ public void Close ();
 Obsoleted fields:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use UltraExpanded instead.")]
  UltaExpanded = 9,
 ```
 
@@ -181,7 +181,7 @@ UltraExpanded = 9,
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use CreateDisplacementMapEffect instead.")]
  public static SKImageFilter CreateCompose (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input, SKImageFilter.CropRect cropRect);
 ```
 
@@ -207,7 +207,7 @@ Modified methods:
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use MapPoint instead.")]
  public SKPoint MapXY (float x, float y);
 ```
 
@@ -227,7 +227,7 @@ public static void PreConcat (ref SKMatrix target, SKMatrix matrix);
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use BlendMode instead.")]
  public SKXferMode XferMode { get; set; }
 ```
 
@@ -282,7 +282,7 @@ public SKPath Simplify ();
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use Create1DPath(SKPath, float, float, SKPath1DPathEffectStyle) instead.")]
  public static SKPathEffect Create1DPath (SKPath path, float advance, float phase, SkPath1DPathEffectStyle style);
 ```
 

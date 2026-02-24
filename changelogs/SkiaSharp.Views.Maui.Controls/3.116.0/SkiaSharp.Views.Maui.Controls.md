@@ -8,12 +8,9 @@
 
 #### Type Changed: SkiaSharp.Views.Maui.Controls.SKCanvasView
 
-Removed interfaces:
+Removed interface:
 
 ```csharp
-Microsoft.Maui.Controls.IElementController
-Microsoft.Maui.Controls.IViewController
-Microsoft.Maui.Controls.IVisualElementController
 ISKCanvasViewController
 ```
 
@@ -26,21 +23,15 @@ protected override Microsoft.Maui.SizeRequest OnMeasure (double widthConstraint,
 
 #### Type Changed: SkiaSharp.Views.Maui.Controls.SKGLView
 
-Removed interfaces:
+Removed interface:
 
 ```csharp
-Microsoft.Maui.Controls.IElementController
-Microsoft.Maui.Controls.IViewController
-Microsoft.Maui.Controls.IVisualElementController
 ISKGLViewController
 ```
 
-Added interfaces:
+Added interface:
 
 ```csharp
-Microsoft.Maui.IElement
-Microsoft.Maui.ITransform
-Microsoft.Maui.IView
 SkiaSharp.Views.Maui.ISKGLView
 ```
 

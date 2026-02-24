@@ -12,7 +12,7 @@
 public static class AppHostBuilderExtensions {
 	// methods
 
-	[Obsolete]
+	[Obsolete ("Use SkiaSharp.Views.Maui.Controls.Hosting.UseSkiaSharp(bool, bool) instead.")]
 public static Microsoft.Maui.Hosting.MauiAppBuilder UseSkiaSharpCompatibilityRenderers (this Microsoft.Maui.Hosting.MauiAppBuilder builder);
 }
 ```

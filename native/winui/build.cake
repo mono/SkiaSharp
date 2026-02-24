@@ -8,27 +8,7 @@ var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
 
 void CheckDeps(FilePath dll)
 {
-    Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
-
-    var dumpbins = GetFiles($"{VS_INSTALL}/VC/Tools/MSVC/*/bin/Host*/*/dumpbin.exe");
-    if (dumpbins.Count == 0) {
-        throw new Exception("Could not find dumpbin.exe, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
-    }
-
-    RunProcess(dumpbins.First(), $"/dependents {dll}", out var stdoutEnum);
-    var stdout = stdoutEnum.ToArray();
-
-    var needed = MatchRegex(@"\s\s+(\S+\.dll)", stdout).ToList();
-
-    Information("Dependencies:");
-    foreach (var need in needed) {
-        Information($"    {need}");
-    }
-
-    foreach (var exclude in VERIFY_EXCLUDED) {
-        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{dll} contained a dependency on {exclude}.");
-    }
+    CheckWindowsDependencies(dll, excluded: VERIFY_EXCLUDED);
 }
 
 Task("SkiaSharp.Views.WinUI.Native")

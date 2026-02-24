@@ -12,8 +12,10 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() 
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-var VERIFY_GLIBC_MAX_VAR = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
-var VERIFY_GLIBC_MAX = string.IsNullOrEmpty(VERIFY_GLIBC_MAX_VAR) ? null : System.Version.Parse(VERIFY_GLIBC_MAX_VAR);
+var VERIFY_INCLUDED = Argument("verifyIncluded", Argument("verifyincluded", ""))
+    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+var VERIFY_GLIBC_MAX = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));
@@ -32,40 +34,13 @@ if (!string.IsNullOrEmpty(CXX))
 if (!string.IsNullOrEmpty(AR))
     COMPILERS += $"ar='{AR}' ";
 
-void CheckDeps(FilePath so)
+void CheckDeps(FilePath so, bool checkIncluded = true)
 {
-    Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
-
-    RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
-    var stdout = stdoutEnum.ToArray();
-
-    var needed = MatchRegex(@"\(NEEDED\).+\[(.+)\]", stdout).ToList();
-
-    Information("Dependencies:");
-    foreach (var need in needed) {
-        Information($"    {need}");
-    }
-
-    foreach (var exclude in VERIFY_EXCLUDED) {
-        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{so} contained a dependency on {exclude}.");
-    }
-
-    var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
-    glibcs.Sort();
-
-    Information("GLIBC:");
-    foreach (var glibc in glibcs) {
-        Information($"    {glibc}");
-    }
-    
-    if (VERIFY_GLIBC_MAX != null) {
-        foreach (var glibc in glibcs) {
-            var version = System.Version.Parse(glibc);
-            if (version > VERIFY_GLIBC_MAX)
-                throw new Exception($"{so} contained a dependency on GLIBC {glibc} which is greater than the expected GLIBC {VERIFY_GLIBC_MAX}.");
-        }
-    }
+    CheckLinuxDependencies(
+        so,
+        excluded: VERIFY_EXCLUDED,
+        included: checkIncluded ? VERIFY_INCLUDED : null,
+        maxGlibc: string.IsNullOrEmpty(VERIFY_GLIBC_MAX) ? null : VERIFY_GLIBC_MAX);
 }
 
 Task("libSkiaSharp")
@@ -98,6 +73,13 @@ Task("libSkiaSharp")
             ? $", '-D__WORDSIZE={wordSize}'"
             : $"";
 
+        // Architecture-specific Spectre mitigation flags
+        var spectreFlags = arch switch {
+            "x64" or "x86" => ", '-mretpoline'",
+            "arm" or "arm64" => ", '-mharden-sls=all'",
+            _ => ""  // RISC-V, LoongArch - no standard flags yet
+        };
+
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
@@ -115,7 +97,7 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' {wordSizeDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
@@ -159,7 +141,7 @@ Task("libHarfBuzzSharp")
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
 
-        CheckDeps(so);
+        CheckDeps(so, checkIncluded: false); // HarfBuzz doesn't need fontconfig
     }
 });
 

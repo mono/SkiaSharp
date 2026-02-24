@@ -6,6 +6,7 @@ set -ex
 # $2 - The target architecture to build for     [ arm | arm64 | riscv64 | x86 | x64 | loongarch64 ]
 # $3 - The ABI                                  [ gnu | musl ]
 # $4 - The variant                              [ "" | alpine ]
+# $5 - Extra arguments to pass to dotnet cake
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -15,11 +16,11 @@ DOCKER_DIR="$1"
 # the target architecture to build for
 ARCH="$2"
 
-# the docker image architecture to use
+# the docker platform to use
 MACHINE_ARCH="$(uname -m)"
 case $MACHINE_ARCH in
-  arm64) IMAGE_ARCH=arm64v8 ; MACHINE_ARCH=aarch64 ;;
-  *)     IMAGE_ARCH=amd64   ;;
+  arm64) PLATFORM=linux/arm64 ; MACHINE_ARCH=aarch64 ;;
+  *)     PLATFORM=linux/amd64 ;;
 esac
 
 # the ABI
@@ -28,10 +29,19 @@ ABI=$3
 # the variant
 VARIANT=$4
 
+# extra arguments passed through
+EXTRA_ARGS=$5
+
+# architecture-specific additional args (matching CI configuration)
+ADDITIONAL_ARGS=""
+case $ARCH in
+  loongarch64) ADDITIONAL_ARGS="--verifyGlibcMax=2.38" ;;
+esac
+
 (cd $DIR && 
   docker build --tag skiasharp-linux-$ABI-cross-$ARCH \
+    --platform=$PLATFORM                              \
     --build-arg BUILD_ARCH=$ARCH                      \
-    --build-arg IMAGE_ARCH=$IMAGE_ARCH                \
     --build-arg MACHINE_ARCH=$MACHINE_ARCH            \
     $DOCKER_DIR)
 
@@ -40,4 +50,4 @@ VARIANT=$4
 (cd $DIR/../.. && 
     docker run --rm --name skiasharp-linux-$ABI-cross-$ARCH --volume $(pwd):/work skiasharp-linux-$ABI-cross-$ARCH /bin/bash -c " \
         dotnet tool restore ; \
-        dotnet cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH $VARIANT ")
+        dotnet cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH $VARIANT $ADDITIONAL_ARGS $EXTRA_ARGS ")

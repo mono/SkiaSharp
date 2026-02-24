@@ -31,7 +31,7 @@ public static class Extensions {
 #### New Type: SkiaSharp.Views.Desktop.SKControl
 
 ```csharp
-public class SKControl : System.Windows.Forms.Control {
+public class SKControl : System.Windows.Forms.Control, System.ComponentModel.IComponent, System.ComponentModel.ISynchronizeInvoke, System.IDisposable, System.Windows.Forms.IBindableComponent, System.Windows.Forms.IDropTarget, System.Windows.Forms.IWin32Window {
 	// constructors
 	public SKControl ();
 	// properties
@@ -48,7 +48,7 @@ public class SKControl : System.Windows.Forms.Control {
 #### New Type: SkiaSharp.Views.Desktop.SKGLControl
 
 ```csharp
-public class SKGLControl : OpenTK.GLControl {
+public class SKGLControl : OpenTK.GLControl, System.ComponentModel.IComponent, System.ComponentModel.ISynchronizeInvoke, System.IDisposable, System.Windows.Forms.IBindableComponent, System.Windows.Forms.IContainerControl, System.Windows.Forms.IDropTarget, System.Windows.Forms.IWin32Window {
 	// constructors
 	public SKGLControl ();
 	// properties

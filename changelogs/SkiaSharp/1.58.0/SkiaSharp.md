@@ -71,9 +71,9 @@ public SKColorSpace ColorSpace { get; }
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use LocalClipBounds instead.")]
  public SKRect ClipBounds { get; }
- [Obsolete ()]
+ [Obsolete ("Use DeviceClipBounds instead.")]
  public SKRectI ClipDeviceBounds { get; }
 ```
 
@@ -87,9 +87,9 @@ public SKRect LocalClipBounds { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use GetLocalClipBounds instead.")]
  public bool GetClipBounds (ref SKRect bounds);
- [Obsolete ()]
+ [Obsolete ("Use GetDeviceClipBounds instead.")]
  public bool GetClipDeviceBounds (ref SKRectI bounds);
 ```
 
@@ -108,11 +108,11 @@ Removed fields:
 ```csharp
 public static const int MaxColorCubeDimension;
 
-[Obsolete]
+[Obsolete ("Use MaxColorCubeDimension instead.")]
 public static const int MaxCubeSize;
 public static const int MinColorCubeDimension;
 
-[Obsolete]
+[Obsolete ("Use MinColorCubeDimension instead.")]
 public static const int MinCubeSize;
 ```
 

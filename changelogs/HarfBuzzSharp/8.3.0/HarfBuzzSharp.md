@@ -9,7 +9,7 @@
 Removed constructor:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate) instead.")]
 public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate);
 ```
 

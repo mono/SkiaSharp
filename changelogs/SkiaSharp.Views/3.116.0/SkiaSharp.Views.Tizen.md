@@ -11,17 +11,17 @@
 Removed constructors:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 
-[Obsolete]
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 ```
 
 Removed property:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use BackendRenderTarget instead.")]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 ```
 
@@ -48,7 +48,7 @@ public static SkiaSharp.SKSizeI ToSKSizeI (this Tizen.NUI.Size2D size);
 #### New Type: SkiaSharp.Views.Tizen.NUI.CustomRenderingView
 
 ```csharp
-public abstract class CustomRenderingView : Tizen.NUI.BaseComponents.ImageView {
+public abstract class CustomRenderingView : Tizen.NUI.BaseComponents.ImageView, System.ComponentModel.INotifyPropertyChanged, System.IDisposable, Tizen.NUI.Binding.IResourcesProvider, Tizen.NUI.Binding.Internals.IDynamicResourceHandler, Tizen.NUI.Binding.Internals.INameScope {
 	// constructors
 	protected CustomRenderingView ();
 	// properties
@@ -67,7 +67,7 @@ public abstract class CustomRenderingView : Tizen.NUI.BaseComponents.ImageView {
 #### New Type: SkiaSharp.Views.Tizen.NUI.SKCanvasView
 
 ```csharp
-public class SKCanvasView : SkiaSharp.Views.Tizen.NUI.CustomRenderingView {
+public class SKCanvasView : SkiaSharp.Views.Tizen.NUI.CustomRenderingView, System.ComponentModel.INotifyPropertyChanged, System.IDisposable, Tizen.NUI.Binding.IResourcesProvider, Tizen.NUI.Binding.Internals.IDynamicResourceHandler, Tizen.NUI.Binding.Internals.INameScope {
 	// constructors
 	public SKCanvasView ();
 	// properties
@@ -81,7 +81,7 @@ public class SKCanvasView : SkiaSharp.Views.Tizen.NUI.CustomRenderingView {
 #### New Type: SkiaSharp.Views.Tizen.NUI.SKGLSurfaceView
 
 ```csharp
-public class SKGLSurfaceView : SkiaSharp.Views.Tizen.NUI.CustomRenderingView {
+public class SKGLSurfaceView : SkiaSharp.Views.Tizen.NUI.CustomRenderingView, System.ComponentModel.INotifyPropertyChanged, System.IDisposable, Tizen.NUI.Binding.IResourcesProvider, Tizen.NUI.Binding.Internals.IDynamicResourceHandler, Tizen.NUI.Binding.Internals.INameScope {
 	// constructors
 	public SKGLSurfaceView ();
 	// methods

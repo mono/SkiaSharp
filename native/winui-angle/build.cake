@@ -4,8 +4,25 @@ DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 string ANGLE_VERSION = GetVersion("ANGLE", "release");
 
+var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
+
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/msbuild.cake"
+
+string GetSpectreLibPath(string arch)
+{
+    // Normalize architecture names to match spectre lib directory structure
+    var spectreArch = arch.ToLower() switch {
+        "win32" => "x86",
+        _ => arch.ToLower()
+    };
+
+    var spectrePaths = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/lib/spectre/{spectreArch}");
+    if (spectrePaths.Count == 0) {
+        throw new Exception($"Could not find spectre library path for {spectreArch}, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+    }
+    return spectrePaths.First().FullPath;
+}
 
 Task("sync-ANGLE")
     .WithCriteria(IsRunningOnWindows())
@@ -106,6 +123,7 @@ Task("ANGLE")
         if (Skip(arch)) return;
 
         var suffix = wasdk ? "_wasdk" : "";
+        var spectreLibPath = GetSpectreLibPath(arch);
 
         try
         {
@@ -124,7 +142,7 @@ Task("ANGLE")
                 $"angle_enable_gl_desktop_backend=false " +
                 $"angle_enable_vulkan=false " +
                 $"extra_cflags=[ '/guard:cf', '/GS' ] " +
-                $"extra_ldflags=[ '/guard:cf' ]");
+                $"extra_ldflags=[ '/guard:cf', '/LIBPATH:{spectreLibPath}' ]");
 
             RunNinja(ANGLE_PATH, $"out/winui{suffix}/{arch}", target);
         }
@@ -137,6 +155,7 @@ Task("ANGLE")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.dll"), outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"out/winui{suffix}/{arch}/{target}.pdb"), outDir);
+        CheckWindowsDependencies($"{outDir}/{target}.dll", excluded: VERIFY_EXCLUDED);
     }
 });
 
