@@ -309,7 +309,7 @@ pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/
 pwsh .github/skills/issue-repro/scripts/persist-repro.ps1 /tmp/skiasharp/repro/{number}.json
 ```
 
-This copies the JSON to data-cache and commits+pushes (or skips git in benchmark mode).
+This copies the JSON to data-cache and handles git automatically (skips in benchmark mode).
 
 ### 2. Present summary
 

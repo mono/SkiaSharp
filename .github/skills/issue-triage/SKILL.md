@@ -30,7 +30,7 @@ These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded
 > 5. Investigate code — **READ-ONLY, never edit source files**
 > 6. Generate JSON
 > 7. Validate with script
-> 8. Persist to data-cache and push
+> 8. Persist to data-cache
 
 ### Data sources
 
@@ -222,7 +222,7 @@ pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/tria
 pwsh .github/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{number}.json
 ```
 
-This copies the JSON to data-cache and commits+pushes (or skips git in benchmark mode).
+This copies the JSON to data-cache and handles git automatically (skips in benchmark mode).
 
 ### 2. Present summary
 

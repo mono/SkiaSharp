@@ -471,14 +471,10 @@ pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/skiasharp/fix/{numbe
 ### 4. Persist
 
 ```bash
-cd .data-cache
-mkdir -p repos/mono-SkiaSharp/ai-fix
-cp /tmp/skiasharp/fix/{number}.json repos/mono-SkiaSharp/ai-fix/{number}.json
-git add repos/mono-SkiaSharp/ai-fix/{number}.json
-git commit -m "ai-fix: fix #{number}"
-git push  # Rebase up to 3x on conflict
-cd ..
+pwsh .github/skills/issue-fix/scripts/persist-fix.ps1 /tmp/skiasharp/fix/{number}.json
 ```
+
+This copies the JSON to data-cache and handles git automatically (skips in benchmark mode).
 
 ---
 
