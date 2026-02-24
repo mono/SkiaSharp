@@ -96,6 +96,7 @@ reset_repo() {
 invoke_copilot() {
     local prompt="$1" model="$2" logpath="$3"
     if $DRY_RUN; then
+        mkdir -p "$(dirname "$logpath")"
         echo "[dry-run] copilot -p '$prompt' --model $model" > "$logpath"
         echo "  [dry-run] Would invoke: copilot --model $model"
         return
@@ -103,6 +104,7 @@ invoke_copilot() {
     local LOG_WINDOW=24
 
     # Start copilot in background
+    mkdir -p "$(dirname "$logpath")"
     echo '' | copilot -p "$prompt" --model "$model" \
         --yolo --deny-tool 'shell(git push)' \
         > "$logpath" 2>&1 &
