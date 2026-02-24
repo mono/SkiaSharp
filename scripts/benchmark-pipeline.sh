@@ -55,7 +55,7 @@ TRIAGE_VALIDATOR="$REPO_ROOT/.github/skills/issue-triage/scripts/validate-triage
 REPRO_VALIDATOR="$REPO_ROOT/.github/skills/issue-repro/scripts/validate-repro.ps1"
 
 if [[ -n "$RESUME" ]]; then
-    OUTDIR="$RESUME"
+    OUTDIR="$(cd "$RESUME" 2>/dev/null && pwd || echo "$REPO_ROOT/$RESUME")"
 else
     OUTDIR="$REPO_ROOT/output/benchmarks/$(date +%Y%m%d-%H%M%S)"
 fi
