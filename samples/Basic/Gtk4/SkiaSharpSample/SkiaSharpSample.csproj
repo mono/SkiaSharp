@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GirCore.Gtk-4.0" Version="0.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Desktop.Common\SkiaSharp.Views.Desktop.Common.csproj" />
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Gtk4\SkiaSharp.Views.Gtk4.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+</Project>
