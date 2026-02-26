@@ -10,7 +10,7 @@ using SkiaSharp.Views.Blazor.Internal;
 namespace SkiaSharp.Views.Blazor
 {
 	[SupportedOSPlatform("browser")]
-	public partial class SKCanvasView : IDisposable, IAsyncDisposable
+	public partial class SKCanvasView : IDisposable
 	{
 		private SKHtmlCanvasInterop interop = null!;
 		private SizeWatcherInterop sizeWatcher = null!;
@@ -34,7 +34,7 @@ namespace SkiaSharp.Views.Blazor
 		public Action<SKPaintSurfaceEventArgs>? OnPaintSurface { get; set; }
 
 		[Parameter]
-		public EventCallback<SKTouchEventArgs> Touch { get; set; }
+		public Action<SKTouchEventArgs>? Touch { get; set; }
 
 		[Parameter]
 		public bool EnableTouchEvents
@@ -88,7 +88,7 @@ namespace SkiaSharp.Views.Blazor
 
 				if (EnableTouchEvents)
 				{
-					touchInterop = await SKTouchInterop.CreateAsync(JS, htmlCanvas, OnPointerEvent);
+					touchInterop = await SKTouchInterop.ImportAsync(JS, htmlCanvas, OnPointerEvent);
 				}
 			}
 		}
@@ -185,9 +185,9 @@ namespace SkiaSharp.Views.Blazor
 			Invalidate();
 		}
 
-		private void OnPointerEvent(SKTouchCallbackHelper.PointerEventData data)
+		private void OnPointerEvent(PointerEventData data)
 		{
-			if (!EnableTouchEvents || !Touch.HasDelegate)
+			if (!EnableTouchEvents || Touch == null)
 				return;
 
 			var args = new SKTouchEventArgs(
@@ -200,29 +200,17 @@ namespace SkiaSharp.Views.Blazor
 				wheelDelta: data.WheelDelta,
 				pressure: data.Pressure);
 
-			_ = Touch.InvokeAsync(args);
+			Touch.Invoke(args);
 		}
 
 		public void Dispose()
 		{
+			touchInterop?.Dispose();
 			dpiWatcher?.Unsubscribe(OnDpiChanged);
 			sizeWatcher?.Dispose();
 			interop?.Dispose();
 
 			FreeBitmap();
-		}
-
-		public async ValueTask DisposeAsync()
-		{
-			if (touchInterop is not null)
-			{
-				await touchInterop.DisposeAsync();
-				touchInterop = null;
-			}
-
-			Dispose();
-
-			GC.SuppressFinalize(this);
 		}
 	}
 }

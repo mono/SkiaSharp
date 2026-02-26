@@ -1,6 +1,12 @@
+﻿
+type SKTouchCallback = DotNet.DotNetObjectReference | ((data: object) => void);
 
-type DotNetRef = {
-	invokeMethodAsync(name: string, data: object): void;
+type SKTouchElement = {
+	SKTouchInterop: SKTouchInstance;
+} & HTMLElement
+
+type SKTouchInstance = {
+	callback: SKTouchCallback;
 }
 
 const enum SKTouchAction {
@@ -26,135 +32,174 @@ const enum SKMouseButton {
 	Right = 3,
 }
 
-const activeElements = new Map<HTMLElement, DotNetRef>();
+export class SKTouchInterop {
+	static elements: Map<string, HTMLElement>;
 
-export function initializeTouchEvents(element: HTMLElement, dotNetRef: DotNetRef): void {
-	if (!element || !dotNetRef) return;
+	public static start(element: HTMLElement, elementId: string, callback: SKTouchCallback): void {
+		if ((!element && !elementId) || !callback)
+			return;
 
-	activeElements.set(element, dotNetRef);
+		SKTouchInterop.init();
 
-	element.style.touchAction = "none";
-	element.style.userSelect = "none";
+		element = element || document.querySelector('[' + elementId + ']');
 
-	element.addEventListener("pointerdown", onPointerDown);
-	element.addEventListener("pointermove", onPointerMove);
-	element.addEventListener("pointerup", onPointerUp);
-	element.addEventListener("pointercancel", onPointerCancel);
-	element.addEventListener("pointerenter", onPointerEnter);
-	element.addEventListener("pointerleave", onPointerLeave);
-	element.addEventListener("wheel", onWheel, { passive: false });
-}
+		const touchElement = element as SKTouchElement;
+		touchElement.SKTouchInterop = {
+			callback: callback,
+		};
 
-export function disposeTouchEvents(element: HTMLElement): void {
-	if (!element) return;
+		element.style.touchAction = "none";
+		element.style.userSelect = "none";
 
-	activeElements.delete(element);
+		element.addEventListener("pointerdown", SKTouchInterop.onPointerDown);
+		element.addEventListener("pointermove", SKTouchInterop.onPointerMove);
+		element.addEventListener("pointerup", SKTouchInterop.onPointerUp);
+		element.addEventListener("pointercancel", SKTouchInterop.onPointerCancel);
+		element.addEventListener("pointerenter", SKTouchInterop.onPointerEnter);
+		element.addEventListener("pointerleave", SKTouchInterop.onPointerLeave);
+		element.addEventListener("wheel", SKTouchInterop.onWheel, { passive: false });
 
-	element.style.touchAction = "";
-	element.style.userSelect = "";
-
-	element.removeEventListener("pointerdown", onPointerDown);
-	element.removeEventListener("pointermove", onPointerMove);
-	element.removeEventListener("pointerup", onPointerUp);
-	element.removeEventListener("pointercancel", onPointerCancel);
-	element.removeEventListener("pointerenter", onPointerEnter);
-	element.removeEventListener("pointerleave", onPointerLeave);
-	element.removeEventListener("wheel", onWheel);
-}
-
-function onPointerDown(e: PointerEvent): void {
-	sendPointerEvent(e, SKTouchAction.Pressed);
-	try {
-		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-	} catch {
-		/* ignore */
+		SKTouchInterop.elements.set(elementId, element);
 	}
-}
 
-function onPointerMove(e: PointerEvent): void {
-	sendPointerEvent(e, SKTouchAction.Moved);
-}
+	public static stop(elementId: string): void {
+		if (!elementId || !SKTouchInterop.elements)
+			return;
 
-function onPointerUp(e: PointerEvent): void {
-	sendPointerEvent(e, SKTouchAction.Released);
-}
+		const element = SKTouchInterop.elements.get(elementId);
+		if (!element)
+			return;
 
-function onPointerCancel(e: PointerEvent): void {
-	sendPointerEvent(e, SKTouchAction.Cancelled);
-}
+		SKTouchInterop.elements.delete(elementId);
 
-function onPointerEnter(e: PointerEvent): void {
-	sendPointerEvent(e, SKTouchAction.Entered);
-}
+		element.style.touchAction = "";
+		element.style.userSelect = "";
 
-function onPointerLeave(e: PointerEvent): void {
-	sendPointerEvent(e, SKTouchAction.Exited);
-}
-
-function onWheel(e: WheelEvent): void {
-	const ref = activeElements.get(e.currentTarget as HTMLElement);
-	if (!ref) return;
-
-	const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-	const x = e.clientX - rect.left;
-	const y = e.clientY - rect.top;
-
-	const delta = e.deltaMode === 0
-		? Math.round(-e.deltaY / 10)
-		: (e.deltaY < 0 ? 1 : -1);
-
-	ref.invokeMethodAsync("OnPointerEvent", {
-		id: -1,
-		action: SKTouchAction.WheelChanged,
-		deviceType: SKTouchDeviceType.Mouse,
-		mouseButton: SKMouseButton.Unknown,
-		x,
-		y,
-		pressure: 0,
-		inContact: false,
-		wheelDelta: delta,
-	});
-
-	e.preventDefault();
-}
-
-function getDeviceType(pointerType: string): SKTouchDeviceType {
-	switch (pointerType) {
-		case "mouse": return SKTouchDeviceType.Mouse;
-		case "pen": return SKTouchDeviceType.Pen;
-		default: return SKTouchDeviceType.Touch;
+		element.removeEventListener("pointerdown", SKTouchInterop.onPointerDown);
+		element.removeEventListener("pointermove", SKTouchInterop.onPointerMove);
+		element.removeEventListener("pointerup", SKTouchInterop.onPointerUp);
+		element.removeEventListener("pointercancel", SKTouchInterop.onPointerCancel);
+		element.removeEventListener("pointerenter", SKTouchInterop.onPointerEnter);
+		element.removeEventListener("pointerleave", SKTouchInterop.onPointerLeave);
+		element.removeEventListener("wheel", SKTouchInterop.onWheel);
 	}
-}
 
-function getMouseButton(button: number): SKMouseButton {
-	switch (button) {
-		case 0: return SKMouseButton.Left;
-		case 1: return SKMouseButton.Middle;
-		case 2: return SKMouseButton.Right;
-		default: return SKMouseButton.Unknown;
+	static init() {
+		if (SKTouchInterop.elements)
+			return;
+
+		SKTouchInterop.elements = new Map<string, HTMLElement>();
 	}
-}
 
-function sendPointerEvent(e: PointerEvent, action: SKTouchAction): void {
-	const ref = activeElements.get(e.currentTarget as HTMLElement);
-	if (!ref) return;
+	static onPointerDown(e: PointerEvent): void {
+		SKTouchInterop.sendPointerEvent(e, SKTouchAction.Pressed);
+		try {
+			(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+		} catch {
+			/* ignore */
+		}
+	}
 
-	const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-	const x = e.clientX - rect.left;
-	const y = e.clientY - rect.top;
-	const deviceType = getDeviceType(e.pointerType);
-	const mouseButton = getMouseButton(e.button);
-	const inContact = e.buttons !== 0 || action === SKTouchAction.Pressed;
+	static onPointerMove(e: PointerEvent): void {
+		SKTouchInterop.sendPointerEvent(e, SKTouchAction.Moved);
+	}
 
-	ref.invokeMethodAsync("OnPointerEvent", {
-		id: e.pointerId,
-		action,
-		deviceType,
-		mouseButton,
-		x,
-		y,
-		pressure: e.pressure,
-		inContact,
-		wheelDelta: 0,
-	});
+	static onPointerUp(e: PointerEvent): void {
+		SKTouchInterop.sendPointerEvent(e, SKTouchAction.Released);
+	}
+
+	static onPointerCancel(e: PointerEvent): void {
+		SKTouchInterop.sendPointerEvent(e, SKTouchAction.Cancelled);
+	}
+
+	static onPointerEnter(e: PointerEvent): void {
+		SKTouchInterop.sendPointerEvent(e, SKTouchAction.Entered);
+	}
+
+	static onPointerLeave(e: PointerEvent): void {
+		SKTouchInterop.sendPointerEvent(e, SKTouchAction.Exited);
+	}
+
+	static onWheel(e: WheelEvent): void {
+		const touchElement = (e.currentTarget as SKTouchElement);
+		if (!touchElement || !touchElement.SKTouchInterop)
+			return;
+
+		const instance = touchElement.SKTouchInterop;
+		const rect = touchElement.getBoundingClientRect();
+		const x = e.clientX - rect.left;
+		const y = e.clientY - rect.top;
+
+		const delta = e.deltaMode === 0
+			? Math.round(-e.deltaY / 10)
+			: (e.deltaY < 0 ? 1 : -1);
+
+		const data = {
+			id: -1,
+			action: SKTouchAction.WheelChanged,
+			deviceType: SKTouchDeviceType.Mouse,
+			mouseButton: SKMouseButton.Unknown,
+			x,
+			y,
+			pressure: 0,
+			inContact: false,
+			wheelDelta: delta,
+		};
+
+		SKTouchInterop.invokeCallback(instance.callback, data);
+		e.preventDefault();
+	}
+
+	static getDeviceType(pointerType: string): SKTouchDeviceType {
+		switch (pointerType) {
+			case "mouse": return SKTouchDeviceType.Mouse;
+			case "pen": return SKTouchDeviceType.Pen;
+			default: return SKTouchDeviceType.Touch;
+		}
+	}
+
+	static getMouseButton(button: number): SKMouseButton {
+		switch (button) {
+			case 0: return SKMouseButton.Left;
+			case 1: return SKMouseButton.Middle;
+			case 2: return SKMouseButton.Right;
+			default: return SKMouseButton.Unknown;
+		}
+	}
+
+	static sendPointerEvent(e: PointerEvent, action: SKTouchAction): void {
+		const touchElement = (e.currentTarget as SKTouchElement);
+		if (!touchElement || !touchElement.SKTouchInterop)
+			return;
+
+		const instance = touchElement.SKTouchInterop;
+		const rect = touchElement.getBoundingClientRect();
+		const x = e.clientX - rect.left;
+		const y = e.clientY - rect.top;
+		const deviceType = SKTouchInterop.getDeviceType(e.pointerType);
+		const mouseButton = SKTouchInterop.getMouseButton(e.button);
+		const inContact = e.buttons !== 0 || action === SKTouchAction.Pressed;
+
+		const data = {
+			id: e.pointerId,
+			action,
+			deviceType,
+			mouseButton,
+			x,
+			y,
+			pressure: e.pressure,
+			inContact,
+			wheelDelta: 0,
+		};
+
+		SKTouchInterop.invokeCallback(instance.callback, data);
+	}
+
+	static invokeCallback(callback: SKTouchCallback, data: object): void {
+		if (typeof callback === 'function') {
+			callback(data);
+		} else {
+			callback.invokeMethod('OnPointerEvent', data);
+		}
+	}
 }
