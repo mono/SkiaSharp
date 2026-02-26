@@ -64,7 +64,11 @@ export function disposeTouchEvents(element: HTMLElement): void {
 
 function onPointerDown(e: PointerEvent): void {
 	sendPointerEvent(e, SKTouchAction.Pressed);
-	try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* ignore */ }
+	try {
+		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+	} catch {
+		/* ignore */
+	}
 }
 
 function onPointerMove(e: PointerEvent): void {

@@ -32,7 +32,9 @@ function onPointerDown(e) {
     try {
         e.currentTarget.setPointerCapture(e.pointerId);
     }
-    catch ( /* ignore */_a) { /* ignore */ }
+    catch (_a) {
+        /* ignore */
+    }
 }
 function onPointerMove(e) {
     sendPointerEvent(e, 2 /* SKTouchAction.Moved */);

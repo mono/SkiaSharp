@@ -18,7 +18,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 		public static async Task<SKTouchInterop> CreateAsync(
 			IJSRuntime js,
 			ElementReference element,
-			Func<SKTouchCallbackHelper.PointerEventData, Task> callback)
+			Action<SKTouchCallbackHelper.PointerEventData> callback)
 		{
 			var interop = new SKTouchInterop();
 			interop.element = element;

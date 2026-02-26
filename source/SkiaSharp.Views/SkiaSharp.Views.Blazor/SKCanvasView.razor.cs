@@ -185,7 +185,7 @@ namespace SkiaSharp.Views.Blazor
 			Invalidate();
 		}
 
-		private async Task OnPointerEvent(SKTouchCallbackHelper.PointerEventData data)
+		private void OnPointerEvent(SKTouchCallbackHelper.PointerEventData data)
 		{
 			if (!EnableTouchEvents || !Touch.HasDelegate)
 				return;
@@ -200,7 +200,7 @@ namespace SkiaSharp.Views.Blazor
 				wheelDelta: data.WheelDelta,
 				pressure: data.Pressure);
 
-			await Touch.InvokeAsync(args);
+			_ = Touch.InvokeAsync(args);
 		}
 
 		public void Dispose()

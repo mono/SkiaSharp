@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel;
-using System.Threading.Tasks;
 using Microsoft.JSInterop;
 
 namespace SkiaSharp.Views.Blazor.Internal
@@ -8,15 +7,15 @@ namespace SkiaSharp.Views.Blazor.Internal
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class SKTouchCallbackHelper
 	{
-		private readonly Func<SKTouchCallbackHelper.PointerEventData, Task> callback;
+		private readonly Action<SKTouchCallbackHelper.PointerEventData> callback;
 
-		public SKTouchCallbackHelper(Func<PointerEventData, Task> callback)
+		public SKTouchCallbackHelper(Action<PointerEventData> callback)
 		{
 			this.callback = callback;
 		}
 
 		[JSInvokable]
-		public Task OnPointerEvent(PointerEventData data) => callback(data);
+		public void OnPointerEvent(PointerEventData data) => callback(data);
 
 		public class PointerEventData
 		{
