@@ -7,45 +7,41 @@ namespace SkiaSharp.Views.Gtk4.Tests
 {
 	public class SKDrawingAreaTest
 	{
-		private static bool TryInitGtk()
+		private static void InitGtk()
 		{
 			try
 			{
+				global::Gtk.Module.Initialize();
 				global::Gtk.Functions.Init();
-				return true;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				// Skip test if GTK cannot be initialized (e.g., no display server)
-				return false;
+				throw new SkipException($"GTK cannot be initialized: {ex.Message}");
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CanCreateDrawingArea()
 		{
-			if (!TryInitGtk())
-				return;
+			InitGtk();
 
 			using var area = new SKDrawingArea();
 			Assert.NotNull(area);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void InitialCanvasSizeIsEmpty()
 		{
-			if (!TryInitGtk())
-				return;
+			InitGtk();
 
 			using var area = new SKDrawingArea();
 			Assert.Equal(SKSize.Empty, area.CanvasSize);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void PaintSurfaceEventCanBeSubscribed()
 		{
-			if (!TryInitGtk())
-				return;
+			InitGtk();
 
 			var eventRaised = false;
 			using var area = new SKDrawingArea();

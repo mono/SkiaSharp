@@ -4,7 +4,49 @@ namespace SkiaSharp.Views.Gtk
 {
 	public static class GTKExtensions
 	{
-		// Rectangle
+		// Point (Graphene)
+
+		public static SKPoint ToSKPoint(this Graphene.Point point)
+		{
+			return new SKPoint(point.X, point.Y);
+		}
+
+		public static Graphene.Point ToGraphenePoint(this SKPoint point)
+		{
+			var gp = Graphene.Point.Alloc();
+			gp = gp.Init(point.X, point.Y);
+			return gp;
+		}
+
+		// Size (Graphene)
+
+		public static SKSize ToSKSize(this Graphene.Size size)
+		{
+			return new SKSize(size.Width, size.Height);
+		}
+
+		public static Graphene.Size ToGrapheneSize(this SKSize size)
+		{
+			var gs = Graphene.Size.Alloc();
+			gs = gs.Init(size.Width, size.Height);
+			return gs;
+		}
+
+		// Rect (Graphene)
+
+		public static SKRect ToSKRect(this Graphene.Rect rect)
+		{
+			return new SKRect(rect.GetX(), rect.GetY(), rect.GetX() + rect.GetWidth(), rect.GetY() + rect.GetHeight());
+		}
+
+		public static Graphene.Rect ToGrapheneRect(this SKRect rect)
+		{
+			var gr = Graphene.Rect.Alloc();
+			gr = gr.Init(rect.Left, rect.Top, rect.Width, rect.Height);
+			return gr;
+		}
+
+		// Rectangle (Gdk)
 
 		public static SKRectI ToSKRectI(this Gdk.Rectangle rect)
 		{

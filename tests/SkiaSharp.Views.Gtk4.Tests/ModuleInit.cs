@@ -10,6 +10,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			GLib.Module.Initialize();
 			Gdk.Module.Initialize();
 			Cairo.Module.Initialize();
+			Graphene.Module.Initialize();
 		}
 	}
 }
