@@ -13,9 +13,7 @@ namespace SkiaSharp.Views.Gtk
 
 		public static Graphene.Point ToGraphenePoint(this SKPoint point)
 		{
-			var gp = Graphene.Point.Alloc();
-			gp = gp.Init(point.X, point.Y);
-			return gp;
+			return Graphene.Point.Alloc().Init(point.X, point.Y);
 		}
 
 		// Size (Graphene)
@@ -27,9 +25,7 @@ namespace SkiaSharp.Views.Gtk
 
 		public static Graphene.Size ToGrapheneSize(this SKSize size)
 		{
-			var gs = Graphene.Size.Alloc();
-			gs = gs.Init(size.Width, size.Height);
-			return gs;
+			return Graphene.Size.Alloc().Init(size.Width, size.Height);
 		}
 
 		// Rect (Graphene)
@@ -41,9 +37,7 @@ namespace SkiaSharp.Views.Gtk
 
 		public static Graphene.Rect ToGrapheneRect(this SKRect rect)
 		{
-			var gr = Graphene.Rect.Alloc();
-			gr = gr.Init(rect.Left, rect.Top, rect.Width, rect.Height);
-			return gr;
+			return Graphene.Rect.Alloc().Init(rect.Left, rect.Top, rect.Width, rect.Height);
 		}
 
 		// Rectangle (Gdk)
