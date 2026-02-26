@@ -1,8 +1,14 @@
 ﻿using System;
 
+#if __MAUI__
 using Microsoft.Maui;
+#endif
 
+#if __MAUI__
 namespace SkiaSharp.Views.Maui
+#elif __BLAZOR__
+namespace SkiaSharp.Views.Blazor
+#endif
 {
 	public class SKTouchEventArgs : EventArgs
 	{

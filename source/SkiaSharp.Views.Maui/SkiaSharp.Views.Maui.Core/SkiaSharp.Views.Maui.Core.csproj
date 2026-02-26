@@ -22,6 +22,9 @@
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" Condition="$(TargetFramework.Contains('-'))" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Shared\SKTouchEventArgs.cs" />
+  </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-'))">
     <Compile Remove="**\Ref\**\*.cs" />
     <None Include="**\Ref\**\*.cs" />
