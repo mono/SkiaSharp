@@ -1,0 +1,34 @@
+using System;
+using System.ComponentModel;
+using System.Threading.Tasks;
+using Microsoft.JSInterop;
+
+namespace SkiaSharp.Views.Blazor.Internal
+{
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public class SKTouchCallbackHelper
+	{
+		private readonly Func<SKTouchCallbackHelper.PointerEventData, Task> callback;
+
+		public SKTouchCallbackHelper(Func<PointerEventData, Task> callback)
+		{
+			this.callback = callback;
+		}
+
+		[JSInvokable]
+		public Task OnPointerEvent(PointerEventData data) => callback(data);
+
+		public class PointerEventData
+		{
+			public long Id { get; set; }
+			public int Action { get; set; }
+			public int DeviceType { get; set; }
+			public int MouseButton { get; set; }
+			public float X { get; set; }
+			public float Y { get; set; }
+			public float Pressure { get; set; }
+			public bool InContact { get; set; }
+			public int WheelDelta { get; set; }
+		}
+	}
+}

@@ -10,11 +10,12 @@ using SkiaSharp.Views.Blazor.Internal;
 namespace SkiaSharp.Views.Blazor
 {
 	[SupportedOSPlatform("browser")]
-	public partial class SKCanvasView : IDisposable
+	public partial class SKCanvasView : IDisposable, IAsyncDisposable
 	{
 		private SKHtmlCanvasInterop interop = null!;
 		private SizeWatcherInterop sizeWatcher = null!;
 		private DpiWatcherInterop dpiWatcher = null!;
+		private SKTouchInterop? touchInterop;
 		private ElementReference htmlCanvas;
 
 		private SKSizeI pixelSize;
@@ -24,12 +25,23 @@ namespace SkiaSharp.Views.Blazor
 		private double dpi;
 		private SKSize canvasSize;
 		private bool enableRenderLoop;
+		private bool enableTouchEvents;
 
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
 
 		[Parameter]
 		public Action<SKPaintSurfaceEventArgs>? OnPaintSurface { get; set; }
+
+		[Parameter]
+		public EventCallback<SKTouchEventArgs> Touch { get; set; }
+
+		[Parameter]
+		public bool EnableTouchEvents
+		{
+			get => enableTouchEvents;
+			set => enableTouchEvents = value;
+		}
 
 		[Parameter]
 		public bool EnableRenderLoop
@@ -73,6 +85,11 @@ namespace SkiaSharp.Views.Blazor
 
 				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
 				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
+
+				if (EnableTouchEvents)
+				{
+					touchInterop = await SKTouchInterop.CreateAsync(JS, htmlCanvas, OnPointerEvent);
+				}
 			}
 		}
 
@@ -168,6 +185,24 @@ namespace SkiaSharp.Views.Blazor
 			Invalidate();
 		}
 
+		private async Task OnPointerEvent(SKTouchCallbackHelper.PointerEventData data)
+		{
+			if (!EnableTouchEvents || !Touch.HasDelegate)
+				return;
+
+			var args = new SKTouchEventArgs(
+				id: data.Id,
+				type: (SKTouchAction)data.Action,
+				mouseButton: (SKMouseButton)data.MouseButton,
+				deviceType: (SKTouchDeviceType)data.DeviceType,
+				location: new SKPoint(data.X, data.Y),
+				inContact: data.InContact,
+				wheelDelta: data.WheelDelta,
+				pressure: data.Pressure);
+
+			await Touch.InvokeAsync(args);
+		}
+
 		public void Dispose()
 		{
 			dpiWatcher?.Unsubscribe(OnDpiChanged);
@@ -175,6 +210,17 @@ namespace SkiaSharp.Views.Blazor
 			interop?.Dispose();
 
 			FreeBitmap();
+		}
+
+		public async ValueTask DisposeAsync()
+		{
+			if (touchInterop is not null)
+			{
+				await touchInterop.DisposeAsync();
+				touchInterop = null;
+			}
+
+			Dispose();
 		}
 	}
 }
