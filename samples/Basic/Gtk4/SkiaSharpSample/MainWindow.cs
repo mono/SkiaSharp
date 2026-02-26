@@ -23,7 +23,7 @@ namespace SkiaSharpSample
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
-			// the the canvas and properties
+			// get the canvas and properties
 			var canvas = e.Surface.Canvas;
 
 			// make sure the canvas is blank
