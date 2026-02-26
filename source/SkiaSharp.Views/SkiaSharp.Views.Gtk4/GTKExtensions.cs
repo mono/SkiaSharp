@@ -57,7 +57,19 @@ namespace SkiaSharp.Views.Gtk
 			return gdkRect;
 		}
 
-		// Color (RGBA)
+		// Point3D (Graphene)
+
+		public static SKPoint3 ToSKPoint3(this Graphene.Point3D point)
+		{
+			return new SKPoint3(point.X, point.Y, point.Z);
+		}
+
+		public static Graphene.Point3D ToGraphenePoint3D(this SKPoint3 point)
+		{
+			return Graphene.Point3D.Alloc().Init(point.X, point.Y, point.Z);
+		}
+
+		// Color (RGBA → SKColor)
 
 		public static SKColor ToSKColor(this Gdk.RGBA color)
 		{
@@ -75,6 +87,23 @@ namespace SkiaSharp.Views.Gtk
 			rgba.Green = color.Green / 255f;
 			rgba.Blue = color.Blue / 255f;
 			rgba.Alpha = color.Alpha / 255f;
+			return rgba;
+		}
+
+		// ColorF (RGBA → SKColorF)
+
+		public static SKColorF ToSKColorF(this Gdk.RGBA color)
+		{
+			return new SKColorF(color.Red, color.Green, color.Blue, color.Alpha);
+		}
+
+		public static Gdk.RGBA ToGdkRGBA(this SKColorF color)
+		{
+			var rgba = new Gdk.RGBA();
+			rgba.Red = color.Red;
+			rgba.Green = color.Green;
+			rgba.Blue = color.Blue;
+			rgba.Alpha = color.Alpha;
 			return rgba;
 		}
 	}

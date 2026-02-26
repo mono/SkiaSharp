@@ -280,5 +280,91 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(0f, skSize.Width);
 			Assert.Equal(0f, skSize.Height);
 		}
+
+		// Point3D conversions (Graphene)
+
+		[Fact]
+		public void GraphenePoint3DToSKPoint3()
+		{
+			var gp = Graphene.Point3D.Alloc();
+			gp = gp.Init(1.5f, 2.5f, 3.5f);
+
+			var skPoint3 = gp.ToSKPoint3();
+
+			Assert.Equal(1.5f, skPoint3.X);
+			Assert.Equal(2.5f, skPoint3.Y);
+			Assert.Equal(3.5f, skPoint3.Z);
+		}
+
+		[Fact]
+		public void SKPoint3ToGraphenePoint3D()
+		{
+			var skPoint3 = new SKPoint3(4.5f, 5.5f, 6.5f);
+
+			var gp = skPoint3.ToGraphenePoint3D();
+
+			Assert.Equal(4.5f, gp.X);
+			Assert.Equal(5.5f, gp.Y);
+			Assert.Equal(6.5f, gp.Z);
+		}
+
+		[Fact]
+		public void Point3DRoundTrip()
+		{
+			var original = new SKPoint3(10.25f, 20.75f, 30.5f);
+
+			var gp = original.ToGraphenePoint3D();
+			var roundTripped = gp.ToSKPoint3();
+
+			Assert.Equal(original.X, roundTripped.X);
+			Assert.Equal(original.Y, roundTripped.Y);
+			Assert.Equal(original.Z, roundTripped.Z);
+		}
+
+		// SKColorF conversions (Gdk.RGBA)
+
+		[Fact]
+		public void GdkRGBAToSKColorF()
+		{
+			var rgba = new Gdk.RGBA();
+			rgba.Red = 1.0f;
+			rgba.Green = 0.5f;
+			rgba.Blue = 0.25f;
+			rgba.Alpha = 0.75f;
+
+			var skColorF = rgba.ToSKColorF();
+
+			Assert.Equal(1.0f, skColorF.Red);
+			Assert.Equal(0.5f, skColorF.Green);
+			Assert.Equal(0.25f, skColorF.Blue);
+			Assert.Equal(0.75f, skColorF.Alpha);
+		}
+
+		[Fact]
+		public void SKColorFToGdkRGBA()
+		{
+			var skColorF = new SKColorF(0.2f, 0.4f, 0.6f, 0.8f);
+
+			var rgba = skColorF.ToGdkRGBA();
+
+			Assert.Equal(0.2f, rgba.Red);
+			Assert.Equal(0.4f, rgba.Green);
+			Assert.Equal(0.6f, rgba.Blue);
+			Assert.Equal(0.8f, rgba.Alpha);
+		}
+
+		[Fact]
+		public void ColorFRoundTrip()
+		{
+			var original = new SKColorF(0.1f, 0.2f, 0.3f, 0.4f);
+
+			var rgba = original.ToGdkRGBA();
+			var roundTripped = rgba.ToSKColorF();
+
+			Assert.Equal(original.Red, roundTripped.Red);
+			Assert.Equal(original.Green, roundTripped.Green);
+			Assert.Equal(original.Blue, roundTripped.Blue);
+			Assert.Equal(original.Alpha, roundTripped.Alpha);
+		}
 	}
 }
