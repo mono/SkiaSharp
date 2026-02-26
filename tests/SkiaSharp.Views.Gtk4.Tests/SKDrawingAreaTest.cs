@@ -11,7 +11,6 @@ namespace SkiaSharp.Views.Gtk4.Tests
 		{
 			try
 			{
-				GLib.Module.Initialize();
 				global::Gtk.Functions.Init();
 				return true;
 			}

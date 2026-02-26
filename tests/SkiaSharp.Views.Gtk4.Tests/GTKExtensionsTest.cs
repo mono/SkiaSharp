@@ -7,11 +7,6 @@ namespace SkiaSharp.Views.Gtk4.Tests
 {
 	public class GTKExtensionsTest
 	{
-		static GTKExtensionsTest()
-		{
-			GLib.Module.Initialize();
-		}
-
 		// Rectangle conversions
 
 		[Fact]
