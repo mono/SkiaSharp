@@ -221,6 +221,8 @@ namespace SkiaSharp.Views.Blazor
 			}
 
 			Dispose();
+
+			GC.SuppressFinalize(this);
 		}
 	}
 }
