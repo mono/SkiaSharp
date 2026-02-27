@@ -11,10 +11,6 @@ namespace SkiaSharp.Views.Gtk
 			return new SKPoint(point.X, point.Y);
 		}
 
-		/// <summary>
-		/// Converts an <see cref="SKPoint"/> to a <see cref="Graphene.Point"/>.
-		/// The caller is responsible for disposing the returned object.
-		/// </summary>
 		public static Graphene.Point ToGraphenePoint(this SKPoint point)
 		{
 			return Graphene.Point.Alloc().Init(point.X, point.Y);
@@ -27,10 +23,6 @@ namespace SkiaSharp.Views.Gtk
 			return new SKSize(size.Width, size.Height);
 		}
 
-		/// <summary>
-		/// Converts an <see cref="SKSize"/> to a <see cref="Graphene.Size"/>.
-		/// The caller is responsible for disposing the returned object.
-		/// </summary>
 		public static Graphene.Size ToGrapheneSize(this SKSize size)
 		{
 			return Graphene.Size.Alloc().Init(size.Width, size.Height);
@@ -43,10 +35,6 @@ namespace SkiaSharp.Views.Gtk
 			return new SKRect(rect.GetX(), rect.GetY(), rect.GetX() + rect.GetWidth(), rect.GetY() + rect.GetHeight());
 		}
 
-		/// <summary>
-		/// Converts an <see cref="SKRect"/> to a <see cref="Graphene.Rect"/>.
-		/// The caller is responsible for disposing the returned object.
-		/// </summary>
 		public static Graphene.Rect ToGrapheneRect(this SKRect rect)
 		{
 			return Graphene.Rect.Alloc().Init(rect.Left, rect.Top, rect.Width, rect.Height);
@@ -76,10 +64,6 @@ namespace SkiaSharp.Views.Gtk
 			return new SKPoint3(point.X, point.Y, point.Z);
 		}
 
-		/// <summary>
-		/// Converts an <see cref="SKPoint3"/> to a <see cref="Graphene.Point3D"/>.
-		/// The caller is responsible for disposing the returned object.
-		/// </summary>
 		public static Graphene.Point3D ToGraphenePoint3D(this SKPoint3 point)
 		{
 			return Graphene.Point3D.Alloc().Init(point.X, point.Y, point.Z);
