@@ -7,7 +7,6 @@ type SKTouchElement = {
 
 type SKTouchInstance = {
 	callback: SKTouchCallback;
-	enabled: boolean;
 }
 
 const enum SKTouchAction {
@@ -47,7 +46,6 @@ export class SKTouchInterop {
 		const touchElement = element as SKTouchElement;
 		touchElement.SKTouchInterop = {
 			callback: callback,
-			enabled: true,
 		};
 
 		element.style.touchAction = "none";
@@ -62,19 +60,6 @@ export class SKTouchInterop {
 		element.addEventListener("wheel", SKTouchInterop.onWheel, { passive: false });
 
 		SKTouchInterop.elements.set(elementId, element);
-	}
-
-	public static setEnabled(elementId: string, enabled: boolean): void {
-		if (!elementId || !SKTouchInterop.elements)
-			return;
-
-		const element = SKTouchInterop.elements.get(elementId);
-		if (!element)
-			return;
-
-		const touchElement = element as SKTouchElement;
-		if (touchElement.SKTouchInterop)
-			touchElement.SKTouchInterop.enabled = enabled;
 	}
 
 	public static stop(elementId: string): void {
@@ -141,8 +126,6 @@ export class SKTouchInterop {
 			return;
 
 		const instance = touchElement.SKTouchInterop;
-		if (!instance.enabled)
-			return;
 		const rect = touchElement.getBoundingClientRect();
 		const x = e.clientX - rect.left;
 		const y = e.clientY - rect.top;
@@ -190,8 +173,6 @@ export class SKTouchInterop {
 			return;
 
 		const instance = touchElement.SKTouchInterop;
-		if (!instance.enabled)
-			return;
 		const rect = touchElement.getBoundingClientRect();
 		const x = e.clientX - rect.left;
 		const y = e.clientY - rect.top;
