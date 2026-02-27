@@ -263,6 +263,8 @@ ThreadLocal<SKPaint> paint = new(() => new SKPaint());
 | Using default parameters in public APIs | ABI breaking |
 | **Skipping failing tests** | **Unacceptable — tests must pass** |
 | **Using `externals-download` after C API changes** | **Causes `EntryPointNotFoundException`** |
+| Passing `fixed` pointers to native objects that outlive the block | GC moves memory → corruption. Use `GCHandle.Alloc(Pinned)` or `Marshal.AllocCoTaskMem` |
+| Testing WASM version changes without cleaning `bin/obj/_framework` | Stale cached native `.wasm` files produce false results |
 
 ---
 
