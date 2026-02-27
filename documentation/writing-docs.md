@@ -90,6 +90,8 @@ This generates both the changelogs and the XML API docs in the `docs/` directory
 
 After generating, you can open the XML files in any text editor and add or update documentation. Any members that do not have content will have the placeholder text "To be added."
 
+You can also use the `api-docs` Copilot skill to write and review XML documentation. Ask Copilot to "fill in missing docs", "document SKCanvas", or "review documentation quality" and it will follow the .NET API documentation guidelines automatically.
+
 As you edit, you can apply formatting and see what docs are still missing by running:
 
 ```bash
