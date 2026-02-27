@@ -41,6 +41,9 @@ export class SKTouchInterop {
 
 		SKTouchInterop.init();
 
+		if (SKTouchInterop.elements.has(elementId))
+			return;
+
 		element = element || document.querySelector('[' + elementId + ']');
 
 		const touchElement = element as SKTouchElement;
@@ -132,7 +135,7 @@ export class SKTouchInterop {
 
 		const delta = e.deltaMode === 0
 			? Math.round(-e.deltaY / 10)
-			: (e.deltaY < 0 ? 1 : -1);
+			: (e.deltaY === 0 ? 0 : (e.deltaY < 0 ? 1 : -1));
 
 		const data = {
 			id: -1,
@@ -149,6 +152,7 @@ export class SKTouchInterop {
 		const handled = SKTouchInterop.invokeCallback(instance.callback, data);
 		if (handled) {
 			e.preventDefault();
+			e.stopPropagation();
 		}
 	}
 
