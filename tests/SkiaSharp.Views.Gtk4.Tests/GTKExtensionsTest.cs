@@ -7,9 +7,21 @@ namespace SkiaSharp.Views.Gtk4.Tests
 {
 	public class GTKExtensionsTest
 	{
+		public GTKExtensionsTest()
+		{
+			try
+			{
+				Graphene.Point.Zero();
+			}
+			catch (Exception ex) when (ex is DllNotFoundException or TypeInitializationException)
+			{
+				throw new SkipException($"Native GTK4 libraries not available: {ex.Message}");
+			}
+		}
+
 		// Point conversions (Graphene)
 
-		[Fact]
+		[SkippableFact]
 		public void GraphenePointToSKPoint()
 		{
 			var gp = Graphene.Point.Alloc();
@@ -21,7 +33,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(2.5f, skPoint.Y);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKPointToGraphenePoint()
 		{
 			var skPoint = new SKPoint(3.5f, 4.5f);
@@ -32,7 +44,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(4.5f, gp.Y);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void PointRoundTrip()
 		{
 			var original = new SKPoint(10.25f, 20.75f);
@@ -46,7 +58,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 		// Size conversions (Graphene)
 
-		[Fact]
+		[SkippableFact]
 		public void GrapheneSizeToSKSize()
 		{
 			var gs = Graphene.Size.Alloc();
@@ -58,7 +70,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(200.5f, skSize.Height);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKSizeToGrapheneSize()
 		{
 			var skSize = new SKSize(50.25f, 75.75f);
@@ -69,7 +81,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(75.75f, gs.Height);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SizeRoundTrip()
 		{
 			var original = new SKSize(320.5f, 240.5f);
@@ -83,7 +95,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 		// Rect conversions (Graphene)
 
-		[Fact]
+		[SkippableFact]
 		public void GrapheneRectToSKRect()
 		{
 			var gr = Graphene.Rect.Alloc();
@@ -99,7 +111,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(40f, skRect.Height);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKRectToGrapheneRect()
 		{
 			var skRect = new SKRect(10f, 20f, 40f, 60f);
@@ -112,7 +124,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(40f, gr.GetHeight());
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void RectRoundTrip()
 		{
 			var original = new SKRect(5f, 10f, 100f, 200f);
@@ -128,7 +140,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 		// Rectangle conversions (Gdk)
 
-		[Fact]
+		[SkippableFact]
 		public void GdkRectangleToSKRectI()
 		{
 			var gdkRect = new Gdk.Rectangle();
@@ -147,7 +159,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(40, skRect.Height);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKRectIToGdkRectangle()
 		{
 			var skRect = new SKRectI(10, 20, 40, 60);
@@ -160,7 +172,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(40, gdkRect.Height);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void RectangleRoundTrip()
 		{
 			var original = new SKRectI(5, 10, 100, 200);
@@ -173,7 +185,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 		// Color conversions (Gdk.RGBA)
 
-		[Fact]
+		[SkippableFact]
 		public void GdkRGBAToSKColor()
 		{
 			var rgba = new Gdk.RGBA();
@@ -190,7 +202,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(255, skColor.Alpha);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKColorToGdkRGBA()
 		{
 			var skColor = new SKColor(255, 128, 0, 255);
@@ -203,7 +215,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(1.0f, rgba.Alpha, 0.01f);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TransparentColorConversion()
 		{
 			var skColor = new SKColor(0, 0, 0, 0);
@@ -216,7 +228,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(0.0f, rgba.Alpha, 0.01f);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void WhiteColorConversion()
 		{
 			var skColor = SKColors.White;
@@ -229,7 +241,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(1.0f, rgba.Alpha, 0.01f);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ColorRoundTrip()
 		{
 			var original = new SKColor(128, 64, 32, 255);
@@ -246,7 +258,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 		// Zero/empty values
 
-		[Fact]
+		[SkippableFact]
 		public void ZeroRectangleConversion()
 		{
 			var gdkRect = new Gdk.Rectangle();
@@ -259,7 +271,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(0, skRect.Bottom);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ZeroPointConversion()
 		{
 			var gp = Graphene.Point.Zero();
@@ -270,7 +282,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(0f, skPoint.Y);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ZeroSizeConversion()
 		{
 			var gs = Graphene.Size.Zero();
@@ -283,7 +295,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 		// Point3D conversions (Graphene)
 
-		[Fact]
+		[SkippableFact]
 		public void GraphenePoint3DToSKPoint3()
 		{
 			var gp = Graphene.Point3D.Alloc();
@@ -296,7 +308,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(3.5f, skPoint3.Z);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKPoint3ToGraphenePoint3D()
 		{
 			var skPoint3 = new SKPoint3(4.5f, 5.5f, 6.5f);
@@ -308,7 +320,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(6.5f, gp.Z);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Point3DRoundTrip()
 		{
 			var original = new SKPoint3(10.25f, 20.75f, 30.5f);
@@ -323,7 +335,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 
 		// SKColorF conversions (Gdk.RGBA)
 
-		[Fact]
+		[SkippableFact]
 		public void GdkRGBAToSKColorF()
 		{
 			var rgba = new Gdk.RGBA();
@@ -340,7 +352,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(0.75f, skColorF.Alpha);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKColorFToGdkRGBA()
 		{
 			var skColorF = new SKColorF(0.2f, 0.4f, 0.6f, 0.8f);
@@ -353,7 +365,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(0.8f, rgba.Alpha);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ColorFRoundTrip()
 		{
 			var original = new SKColorF(0.1f, 0.2f, 0.3f, 0.4f);

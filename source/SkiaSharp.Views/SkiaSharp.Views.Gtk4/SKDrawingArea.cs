@@ -2,14 +2,14 @@ using System;
 using System.ComponentModel;
 using SkiaSharp.Views.Desktop;
 
-#nullable disable
+#nullable enable
 
 namespace SkiaSharp.Views.Gtk
 {
 	public class SKDrawingArea : global::Gtk.DrawingArea
 	{
-		private Cairo.ImageSurface pix;
-		private SKSurface surface;
+		private Cairo.ImageSurface? pix;
+		private SKSurface? surface;
 
 		public SKDrawingArea()
 			: base(new GObject.ConstructArgument[] { })
@@ -20,7 +20,7 @@ namespace SkiaSharp.Views.Gtk
 		public SKSize CanvasSize => pix == null ? SKSize.Empty : new SKSize(pix.Width, pix.Height);
 
 		[Category("Appearance")]
-		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
+		public event EventHandler<SKPaintSurfaceEventArgs>? PaintSurface;
 
 		private void OnDrawFunc(global::Gtk.DrawingArea area, Cairo.Context cr, int width, int height)
 		{
@@ -34,14 +34,14 @@ namespace SkiaSharp.Views.Gtk
 				return;
 
 			// start drawing
-			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			using (new SKAutoCanvasRestore(surface!.Canvas, true))
 			{
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, imgInfo));
 			}
 
 			surface.Canvas.Flush();
 
-			pix.MarkDirty();
+			pix!.MarkDirty();
 
 			// swap R and B
 			if (imgInfo.ColorType == SKColorType.Rgba8888)
@@ -63,7 +63,7 @@ namespace SkiaSharp.Views.Gtk
 			PaintSurface?.Invoke(this, e);
 		}
 
-		public new void Dispose()
+		public override void Dispose()
 		{
 			FreeDrawingObjects();
 			base.Dispose();
@@ -84,8 +84,8 @@ namespace SkiaSharp.Views.Gtk
 					// get the data pointer from the Cairo surface via the internal API
 					var dataPtr = Cairo.Internal.ImageSurface.GetData(pix.Handle);
 
-					// (re)create the SkiaSharp drawing objects
-					surface = SKSurface.Create(imgInfo, dataPtr, imgInfo.RowBytes);
+					// (re)create the SkiaSharp drawing objects using the Cairo stride
+					surface = SKSurface.Create(imgInfo, dataPtr, pix.Stride);
 				}
 			}
 
