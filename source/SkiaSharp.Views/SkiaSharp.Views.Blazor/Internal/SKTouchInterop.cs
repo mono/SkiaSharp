@@ -21,21 +21,21 @@ namespace SkiaSharp.Views.Blazor.Internal
 		private readonly ElementReference htmlElement;
 		private readonly string htmlElementId;
 #if NET7_0_OR_GREATER
-		private readonly Action<JSObject> callbackHelper;
+		private readonly Func<JSObject, bool> callbackHelper;
 #else
 		private readonly SKTouchCallbackHelper callbackHelper;
 
 		private DotNetObjectReference<SKTouchCallbackHelper>? callbackReference;
 #endif
 
-		public static async Task<SKTouchInterop> ImportAsync(IJSRuntime js, ElementReference element, Action<PointerEventData> callback)
+		public static async Task<SKTouchInterop> ImportAsync(IJSRuntime js, ElementReference element, Func<PointerEventData, bool> callback)
 		{
 			var interop = new SKTouchInterop(js, element, callback);
 			await interop.ImportAsync();
 			return interop;
 		}
 
-		public SKTouchInterop(IJSRuntime js, ElementReference element, Action<PointerEventData> callback)
+		public SKTouchInterop(IJSRuntime js, ElementReference element, Func<PointerEventData, bool> callback)
 			: base(js, ModuleName, JsFilename)
 		{
 			htmlElement = element;
@@ -44,6 +44,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 #if NET7_0_OR_GREATER
 			callbackHelper = new((jsObj) =>
 			{
+				using var _ = jsObj;
 				var data = new PointerEventData
 				{
 					Id = jsObj.GetPropertyAsInt32("id"),
@@ -56,7 +57,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 					InContact = jsObj.GetPropertyAsBoolean("inContact"),
 					WheelDelta = jsObj.GetPropertyAsInt32("wheelDelta"),
 				};
-				callback(data);
+				return callback(data);
 			});
 #else
 			callbackHelper = new SKTouchCallbackHelper(callback);
@@ -74,7 +75,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 			Stop(htmlElementId);
 
 		[JSImport(StartSymbol, ModuleName)]
-		private static partial void Start(JSObject? element, string elementId, [JSMarshalAs<JSType.Function<JSType.Object>>] Action<JSObject> callback);
+		private static partial void Start(JSObject? element, string elementId, [JSMarshalAs<JSType.Function<JSType.Object, JSType.Boolean>>] Func<JSObject, bool> callback);
 
 		[JSImport(StopSymbol, ModuleName)]
 		private static partial void Stop(string elementId);

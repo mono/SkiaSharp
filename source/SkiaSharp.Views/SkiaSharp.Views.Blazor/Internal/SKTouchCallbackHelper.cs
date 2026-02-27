@@ -22,15 +22,15 @@ namespace SkiaSharp.Views.Blazor.Internal
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class SKTouchCallbackHelper
 	{
-		private readonly Action<PointerEventData> callback;
+		private readonly Func<PointerEventData, bool> callback;
 
-		public SKTouchCallbackHelper(Action<PointerEventData> callback)
+		public SKTouchCallbackHelper(Func<PointerEventData, bool> callback)
 		{
 			this.callback = callback;
 		}
 
 		[JSInvokable]
-		public void OnPointerEvent(PointerEventData data) => callback(data);
+		public bool OnPointerEvent(PointerEventData data) => callback(data);
 	}
 #endif
 }

@@ -213,10 +213,10 @@ namespace SkiaSharp.Views.Blazor
 			}
 		}
 
-		private void OnPointerEvent(PointerEventData data)
+		private bool OnPointerEvent(PointerEventData data)
 		{
 			if (Touch == null)
-				return;
+				return false;
 
 			var args = new SKTouchEventArgs(
 				id: data.Id,
@@ -229,6 +229,8 @@ namespace SkiaSharp.Views.Blazor
 				pressure: data.Pressure);
 
 			Touch.Invoke(args);
+
+			return args.Handled;
 		}
 
 		public void Dispose()

@@ -1,5 +1,5 @@
 ﻿
-type SKTouchCallback = DotNet.DotNetObjectReference | ((data: object) => void);
+type SKTouchCallback = DotNet.DotNetObjectReference | ((data: object) => boolean);
 
 type SKTouchElement = {
 	SKTouchInterop: SKTouchInstance;
@@ -146,8 +146,10 @@ export class SKTouchInterop {
 			wheelDelta: delta,
 		};
 
-		SKTouchInterop.invokeCallback(instance.callback, data);
-		e.preventDefault();
+		const handled = SKTouchInterop.invokeCallback(instance.callback, data);
+		if (handled) {
+			e.preventDefault();
+		}
 	}
 
 	static getDeviceType(pointerType: string): SKTouchDeviceType {
@@ -192,14 +194,18 @@ export class SKTouchInterop {
 			wheelDelta: 0,
 		};
 
-		SKTouchInterop.invokeCallback(instance.callback, data);
+		const handled = SKTouchInterop.invokeCallback(instance.callback, data);
+		if (handled) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
 	}
 
-	static invokeCallback(callback: SKTouchCallback, data: object): void {
+	static invokeCallback(callback: SKTouchCallback, data: object): boolean {
 		if (typeof callback === 'function') {
-			callback(data);
+			return callback(data);
 		} else {
-			callback.invokeMethod('OnPointerEvent', data);
+			return callback.invokeMethod('OnPointerEvent', data);
 		}
 	}
 }

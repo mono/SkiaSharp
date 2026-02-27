@@ -87,8 +87,10 @@ export class SKTouchInterop {
             inContact: false,
             wheelDelta: delta,
         };
-        SKTouchInterop.invokeCallback(instance.callback, data);
-        e.preventDefault();
+        const handled = SKTouchInterop.invokeCallback(instance.callback, data);
+        if (handled) {
+            e.preventDefault();
+        }
     }
     static getDeviceType(pointerType) {
         switch (pointerType) {
@@ -127,14 +129,18 @@ export class SKTouchInterop {
             inContact,
             wheelDelta: 0,
         };
-        SKTouchInterop.invokeCallback(instance.callback, data);
+        const handled = SKTouchInterop.invokeCallback(instance.callback, data);
+        if (handled) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
     }
     static invokeCallback(callback, data) {
         if (typeof callback === 'function') {
-            callback(data);
+            return callback(data);
         }
         else {
-            callback.invokeMethod('OnPointerEvent', data);
+            return callback.invokeMethod('OnPointerEvent', data);
         }
     }
 }
