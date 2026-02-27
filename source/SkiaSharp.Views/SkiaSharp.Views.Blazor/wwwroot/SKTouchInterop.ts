@@ -133,9 +133,33 @@ export class SKTouchInterop {
 		const x = e.clientX - rect.left;
 		const y = e.clientY - rect.top;
 
-		const delta = e.deltaMode === 0
-			? Math.round(-e.deltaY / 10)
-			: (e.deltaY === 0 ? 0 : (e.deltaY < 0 ? 1 : -1));
+		// Normalize browser wheel delta to v120 standard (120 = one discrete mouse notch).
+		// Sign: positive = scroll up (away from user), matching Windows WHEEL_DELTA convention.
+		//
+		// Browser values are device/OS/browser-dependent (W3C spec explicitly warns against
+		// assuming consistent deltas across user agents). These constants are the most common
+		// observed defaults:
+		//   Pixel mode (Chrome/Edge/Safari): ~100 CSS pixels per notch
+		//   Line mode (Firefox): ~3 lines per notch (follows OS "lines per notch" setting)
+		//   Page mode (rare, accessibility tools): ~1 page per notch
+		//
+		// Sources:
+		//   - Chromium kPixelsPerLineStep: https://chromium.googlesource.com/chromium/src/third_party/+/refs/heads/main/blink/renderer/core/input/mouse_wheel_event_manager.cc
+		//   - Firefox line mode: https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+		//   - W3C Pointer Events 4 (wheel): https://www.w3.org/TR/pointerevents4/
+		const WHEEL_DELTA = 120;
+		const PIXELS_PER_NOTCH = 100;
+		const LINES_PER_NOTCH = 3;
+
+		let delta: number;
+		if (e.deltaMode === 1 /* DOM_DELTA_LINE */) {
+			delta = Math.round(-e.deltaY * (WHEEL_DELTA / LINES_PER_NOTCH));
+		} else if (e.deltaMode === 2 /* DOM_DELTA_PAGE */) {
+			delta = Math.round(-e.deltaY * WHEEL_DELTA);
+		} else {
+			// DOM_DELTA_PIXEL (0) — default for most browsers
+			delta = Math.round(-e.deltaY * (WHEEL_DELTA / PIXELS_PER_NOTCH));
+		}
 
 		const data = {
 			id: -1,
