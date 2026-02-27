@@ -15,7 +15,7 @@ namespace SkiaSharp.Views.Blazor
 		private SKHtmlCanvasInterop interop = null!;
 		private SizeWatcherInterop sizeWatcher = null!;
 		private DpiWatcherInterop dpiWatcher = null!;
-		private SKTouchInterop? touchInterop;
+		private SKTouchInterop touchInterop = null!;
 		private ElementReference htmlCanvas;
 
 		private SKSizeI pixelSize;
@@ -40,7 +40,14 @@ namespace SkiaSharp.Views.Blazor
 		public bool EnableTouchEvents
 		{
 			get => enableTouchEvents;
-			set => enableTouchEvents = value;
+			set
+			{
+				if (enableTouchEvents != value)
+				{
+					enableTouchEvents = value;
+					touchInterop?.SetEnabled(value);
+				}
+			}
 		}
 
 		[Parameter]
@@ -86,10 +93,8 @@ namespace SkiaSharp.Views.Blazor
 				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
 				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
 
-				if (EnableTouchEvents)
-				{
-					touchInterop = await SKTouchInterop.ImportAsync(JS, htmlCanvas, OnPointerEvent);
-				}
+				touchInterop = await SKTouchInterop.ImportAsync(JS, htmlCanvas, OnPointerEvent);
+				touchInterop.SetEnabled(EnableTouchEvents);
 			}
 		}
 
@@ -187,7 +192,7 @@ namespace SkiaSharp.Views.Blazor
 
 		private void OnPointerEvent(PointerEventData data)
 		{
-			if (!EnableTouchEvents || Touch == null)
+			if (Touch == null)
 				return;
 
 			var args = new SKTouchEventArgs(

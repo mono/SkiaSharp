@@ -10,7 +10,7 @@
 
             <SKCanvasView @ref="skiaView"
                           OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
-                          @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp" />
+                          Touch="OnTouch" EnableTouchEvents="true" />
 
         </div>
     </div>
@@ -54,30 +54,29 @@
         }
     }
 
-    void OnPointerDown(PointerEventArgs e)
+    void OnTouch(SKTouchEventArgs e)
     {
-        var touchLocation = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        switch (e.ActionType)
+        {
+            case SKTouchAction.Pressed:
+                drawing = new SKPath();
+                drawing.MoveTo(e.Location);
+                e.Handled = true;
+                break;
 
-        drawing = new SKPath();
-        drawing.MoveTo(touchLocation);
+            case SKTouchAction.Moved:
+                if (drawing is not null)
+                {
+                    drawing.LineTo(e.Location);
+                    e.Handled = true;
+                }
+                break;
 
-        skiaView.Invalidate();
-    }
-
-    void OnPointerMove(PointerEventArgs e)
-    {
-        if (drawing is null)
-            return;
-
-        var touchLocation = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
-        drawing.LineTo(touchLocation);
-
-        skiaView.Invalidate();
-    }
-
-    void OnPointerUp(PointerEventArgs e)
-    {
-        drawing = null;
+            case SKTouchAction.Released:
+                drawing = null;
+                e.Handled = true;
+                break;
+        }
 
         skiaView.Invalidate();
     }

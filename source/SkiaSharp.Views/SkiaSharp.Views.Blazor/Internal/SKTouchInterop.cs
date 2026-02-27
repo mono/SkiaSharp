@@ -17,6 +17,7 @@ namespace SkiaSharp.Views.Blazor.Internal
 		private const string JsFilename = "./_content/SkiaSharp.Views.Blazor/SKTouchInterop.js";
 		private const string StartSymbol = "SKTouchInterop.start";
 		private const string StopSymbol = "SKTouchInterop.stop";
+		private const string SetEnabledSymbol = "SKTouchInterop.setEnabled";
 
 		private readonly ElementReference htmlElement;
 		private readonly string htmlElementId;
@@ -74,11 +75,17 @@ namespace SkiaSharp.Views.Blazor.Internal
 		public void Stop() =>
 			Stop(htmlElementId);
 
+		public void SetEnabled(bool enabled) =>
+			SetEnabled(htmlElementId, enabled);
+
 		[JSImport(StartSymbol, ModuleName)]
 		private static partial void Start(JSObject? element, string elementId, [JSMarshalAs<JSType.Function<JSType.Object>>] Action<JSObject> callback);
 
 		[JSImport(StopSymbol, ModuleName)]
 		private static partial void Stop(string elementId);
+
+		[JSImport(SetEnabledSymbol, ModuleName)]
+		private static partial void SetEnabled(string elementId, bool enabled);
 #else
 		public void Start()
 		{
@@ -97,6 +104,9 @@ namespace SkiaSharp.Views.Blazor.Internal
 			callbackReference?.Dispose();
 			callbackReference = null;
 		}
+
+		public void SetEnabled(bool enabled) =>
+			Invoke(SetEnabledSymbol, htmlElementId, enabled);
 #endif
 	}
 }

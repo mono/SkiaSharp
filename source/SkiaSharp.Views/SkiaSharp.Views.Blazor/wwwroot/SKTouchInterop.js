@@ -7,6 +7,7 @@ export class SKTouchInterop {
         const touchElement = element;
         touchElement.SKTouchInterop = {
             callback: callback,
+            enabled: true,
         };
         element.style.touchAction = "none";
         element.style.userSelect = "none";
@@ -18,6 +19,16 @@ export class SKTouchInterop {
         element.addEventListener("pointerleave", SKTouchInterop.onPointerLeave);
         element.addEventListener("wheel", SKTouchInterop.onWheel, { passive: false });
         SKTouchInterop.elements.set(elementId, element);
+    }
+    static setEnabled(elementId, enabled) {
+        if (!elementId || !SKTouchInterop.elements)
+            return;
+        const element = SKTouchInterop.elements.get(elementId);
+        if (!element)
+            return;
+        const touchElement = element;
+        if (touchElement.SKTouchInterop)
+            touchElement.SKTouchInterop.enabled = enabled;
     }
     static stop(elementId) {
         if (!elementId || !SKTouchInterop.elements)
@@ -70,6 +81,8 @@ export class SKTouchInterop {
         if (!touchElement || !touchElement.SKTouchInterop)
             return;
         const instance = touchElement.SKTouchInterop;
+        if (!instance.enabled)
+            return;
         const rect = touchElement.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -110,6 +123,8 @@ export class SKTouchInterop {
         if (!touchElement || !touchElement.SKTouchInterop)
             return;
         const instance = touchElement.SKTouchInterop;
+        if (!instance.enabled)
+            return;
         const rect = touchElement.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
