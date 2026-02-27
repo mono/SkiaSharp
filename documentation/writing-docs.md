@@ -6,10 +6,9 @@ SkiaSharp provides two types of documentation: concept docs and API docs.
 
 ## Concept Docs
 
-The concept docs are found at MicrosoftDocs/xamarin-docs:
+The concept docs are on the `docs` branch of this repository and published to:
 
-- https://github.com/MicrosoftDocs/xamarin-docs/tree/live/docs/xamarin-forms/user-interface/graphics/skiasharp
-- https://github.com/MicrosoftDocs/xamarin-docs/tree/live/docs/graphics-games/skiasharp
+- https://mono.github.io/SkiaSharp/
 
 ## API Docs
 
