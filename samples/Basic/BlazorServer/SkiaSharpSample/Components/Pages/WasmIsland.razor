@@ -1,0 +1,95 @@
+@page "/wasm-island"
+
+<h1>WASM Island</h1>
+
+<p>
+    This page is Static SSR. The canvases below are <strong>WASM islands</strong> — 
+    <code>@@rendermode InteractiveWebAssembly</code> components within an otherwise server-rendered page.
+    Server-rendered images are visible (and animate!) until the WASM bundle loads and takes over.
+</p>
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Default — WASM island with server placeholder</h5>
+            <div class="border rounded p-2 canvas-container" style="position: relative;">
+                <img id="placeholder-default" src="/api/skia/default" class="dynamic-skia-img canvas-placeholder" alt="Loading..." />
+                <div id="wasm-canvas-default" class="canvas-wasm-overlay" style="opacity: 0;">
+                    <SkiaSharpSample.Client.SkiaCanvas Variant="default"
+                        @rendermode="Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveWebAssembly" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Circles — WASM island</h5>
+            <div class="border rounded p-2 canvas-container" style="position: relative;">
+                <img id="placeholder-circles" src="/api/skia/circles" class="dynamic-skia-img canvas-placeholder" alt="Loading..." />
+                <div id="wasm-canvas-circles" class="canvas-wasm-overlay" style="opacity: 0;">
+                    <SkiaSharpSample.Client.SkiaCanvas Variant="circles"
+                        @rendermode="Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveWebAssembly" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Clock — animated server image → WASM takeover</h5>
+            <div class="border rounded p-2 canvas-container" style="position: relative;">
+                <img id="placeholder-clock" src="/api/skia/clock" class="dynamic-skia-img canvas-placeholder" alt="Loading..." />
+                <div id="wasm-canvas-clock" class="canvas-wasm-overlay" style="opacity: 0;">
+                    <SkiaSharpSample.Client.SkiaCanvas Variant="clock"
+                        @rendermode="Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveWebAssembly" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <strong>How it works:</strong>
+    <ol class="mb-0">
+        <li>Page loads via <strong>Static SSR</strong> — instant. The <code>&lt;img&gt;</code> tags show server-rendered images.</li>
+        <li>The clock image <strong>animates via endpoint polling</strong> while WASM downloads in the background.</li>
+        <li>Once WASM activates, <code>SKCanvasView</code> renders client-side and fades in over the placeholder.</li>
+        <li>The green label at the bottom-right confirms you're seeing the live WASM canvas.</li>
+    </ol>
+</div>
+
+<div class="alert alert-secondary mt-2" id="wasm-status">
+    ⏳ WASM status: <strong>loading...</strong> (server-rendered images shown while WASM bundle downloads)
+</div>
+
+<script suppress-error="BL9992">
+    // Start dynamic image updates for placeholders while WASM loads
+    // Use load event to ensure skia-canvas.js is parsed first
+    function startSkiaDynamic() {
+        if (typeof SkiaDynamic === 'undefined') {
+            setTimeout(startSkiaDynamic, 50);
+            return;
+        }
+        SkiaDynamic.start('placeholder-default', 'default', 0, true);
+        SkiaDynamic.start('placeholder-circles', 'circles', 0, true);
+        SkiaDynamic.start('placeholder-clock', 'clock', 1000, true);
+    }
+    startSkiaDynamic();
+
+    // Observe the WASM canvas containers — when a <canvas> element appears, fade in the overlay
+    const observer = new MutationObserver(() => {
+        document.querySelectorAll('.canvas-wasm-overlay').forEach(overlay => {
+            if (overlay.querySelector('canvas') && overlay.style.opacity === '0') {
+                overlay.style.transition = 'opacity 0.4s ease-in';
+                overlay.style.opacity = '1';
+                // Stop the placeholder polling for this variant
+                const placeholder = overlay.parentElement?.querySelector('.canvas-placeholder');
+                if (placeholder?.id) SkiaDynamic.stop(placeholder.id);
+                const status = document.getElementById('wasm-status');
+                if (status) status.innerHTML = '✅ WASM status: <strong>active!</strong> The canvases below are now rendering client-side via SkiaSharp WASM.';
+            }
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+</script>

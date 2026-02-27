@@ -1,0 +1,68 @@
+@page "/auto"
+
+@* 
+    This page is Static SSR. The interactive component below uses InteractiveAuto:
+    - Prerender: shows server-rendered placeholder image from /api/skia/{variant}
+    - Interactive Server phase: shows animated placeholder (clock polls every second)
+    - WASM phase: switches to live SKCanvasView rendering client-side
+    
+    The AutoContent component lives in the Client project so it's available to both
+    the server (for prerender + Interactive Server) and WASM runtimes.
+*@
+
+<h1>Interactive Auto</h1>
+
+<p>
+    This page uses <code>@@rendermode InteractiveAuto</code> on the canvas component.
+    The page itself is <strong>Static SSR</strong> (loads instantly). The interactive component
+    starts as <strong>Interactive Server</strong>, then transitions to <strong>WASM</strong>
+    once the bundle downloads. On subsequent visits, it goes straight to WASM.
+    The clock animates even during the server phase!
+</p>
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Clock — InteractiveAuto component</h5>
+            <div class="border rounded p-2 canvas-container">
+                <SkiaSharpSample.Client.AutoContent Variant="clock"
+                    @rendermode="Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveAuto" />
+            </div>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h5>Default — InteractiveAuto</h5>
+            <div class="border rounded p-2 canvas-container">
+                <SkiaSharpSample.Client.AutoContent Variant="default"
+                    @rendermode="Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveAuto" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h5>Circles — InteractiveAuto</h5>
+            <div class="border rounded p-2 canvas-container">
+                <SkiaSharpSample.Client.AutoContent Variant="circles"
+                    @rendermode="Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveAuto" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <strong>What's happening:</strong>
+    <ul class="mb-0">
+        <li><strong>First visit:</strong> Page prerenders instantly (static image from <code>/api/skia/clock</code>).
+            JavaScript starts polling the endpoint for animation while WASM downloads.</li>
+        <li><strong>Interactive Server activates:</strong> Shows "waiting for WASM" badge. Clock continues animating via endpoint.</li>
+        <li><strong>Once WASM loads:</strong> Component switches to client-side <code>SKCanvasView</code>.
+            The green "✓ WASM Active" badge appears. Endpoint polling stops.</li>
+        <li><strong>Subsequent visits:</strong> Goes straight to WASM (cached bundle).</li>
+    </ul>
+</div>
+
+<div class="alert alert-secondary mt-2">
+    <strong>Architecture note:</strong> The page itself is Static SSR (server project).
+    The <code>AutoContent</code> component lives in the <code>.Client</code> project so it's
+    available to both server and WASM runtimes. It uses <code>OperatingSystem.IsBrowser()</code>
+    to detect which environment it's running in.
+</div>

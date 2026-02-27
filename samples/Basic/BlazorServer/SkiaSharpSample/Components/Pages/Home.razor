@@ -1,0 +1,75 @@
+@page "/"
+
+<h1>SkiaSharp SSR Rendering</h1>
+
+<p>
+    This sample demonstrates server-side SkiaSharp rendering for Blazor without WebAssembly.
+    SkiaSharp runs entirely on the server and delivers rendered images to the browser.
+</p>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Inline Base64</h5>
+                    <p class="card-text">
+                        Image rendered at SSR time and embedded directly as a <code>data:</code> URI.
+                        Zero additional HTTP requests.
+                    </p>
+                    <a href="inline" class="btn btn-primary">View Demo</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Image Endpoint</h5>
+                    <p class="card-text">
+                        Image served from <code>/api/skia/&lt;name&gt;</code> endpoint.
+                        Cacheable, shareable URL. Browser fetches separately.
+                    </p>
+                    <a href="endpoint" class="btn btn-primary">View Demo</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">JS Canvas</h5>
+                    <p class="card-text">
+                        Pixels rendered server-side, pushed to a <code>&lt;canvas&gt;</code>
+                        element via minimal JavaScript. Enables compositing.
+                    </p>
+                    <a href="canvas" class="btn btn-primary">View Demo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title">WASM Island</h5>
+                    <p class="card-text">
+                        SSR page with a <code>InteractiveWebAssembly</code> island.
+                        Server snapshot shows instantly; WASM takes over when ready.
+                    </p>
+                    <a href="wasm-island" class="btn btn-success">View Demo</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Auto Mode</h5>
+                    <p class="card-text">
+                        <code>InteractiveAuto</code>: starts as Server (pushes image),
+                        transitions to WASM. Shows render mode diagnostics.
+                    </p>
+                    <a href="auto" class="btn btn-warning">View Demo</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

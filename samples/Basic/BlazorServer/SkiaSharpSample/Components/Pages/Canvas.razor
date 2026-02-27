@@ -1,0 +1,101 @@
+@page "/canvas"
+@attribute [StreamRendering]
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+@implements IDisposable
+
+<h1>JS Canvas Rendering</h1>
+
+<p>
+    The images below are rendered by SkiaSharp on the server and drawn onto
+    <code>&lt;canvas&gt;</code> elements via minimal JavaScript. This approach enables
+    compositing, overlays, and future animation/interaction patterns.
+    The clock animates via server-side timer pushing frames.
+</p>
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Default — via <code>drawImage()</code> on canvas</h5>
+            <div class="border rounded p-2 canvas-container">
+                <canvas id="canvas-default" width="800" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Circles — via <code>drawImage()</code> on canvas</h5>
+            <div class="border rounded p-2 canvas-container">
+                <canvas id="canvas-circles" width="800" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Clock — animated via server push (WebP frames)</h5>
+            <div class="border rounded p-2 canvas-container">
+                <canvas id="canvas-clock" width="800" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <strong>How it works:</strong> On first interactive render, C# encodes the SkiaSharp output
+    and calls JavaScript via <code>IJSRuntime</code>. Two approaches are demonstrated:
+    <ul class="mb-0 mt-1">
+        <li><code>drawImageFromBytes</code> — sends WebP bytes, JS decodes with <code>createImageBitmap()</code> and draws to canvas (efficient, compressed)</li>
+        <li>The clock uses a server-side <code>PeriodicTimer</code> that pushes a new WebP frame every second via SignalR</li>
+    </ul>
+</div>
+
+@inject IJSRuntime JS
+
+@code {
+    private PeriodicTimer? _clockTimer;
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        // Render static variants once
+        var defaultWebP = SkiaRenderer.RenderToWebP(800, 300, "default");
+        await JS.InvokeVoidAsync("SkiaCanvas.drawImageFromBytes", "canvas-default", defaultWebP);
+
+        var circlesWebP = SkiaRenderer.RenderToWebP(800, 300, "circles");
+        await JS.InvokeVoidAsync("SkiaCanvas.drawImageFromBytes", "canvas-circles", circlesWebP);
+
+        // Render clock once immediately
+        var clockWebP = SkiaRenderer.RenderToWebP(800, 300, "clock");
+        await JS.InvokeVoidAsync("SkiaCanvas.drawImageFromBytes", "canvas-clock", clockWebP);
+
+        // Start animation loop for clock
+        _cts = new CancellationTokenSource();
+        _clockTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _ = AnimateClockAsync(_cts.Token);
+    }
+
+    private async Task AnimateClockAsync(CancellationToken ct)
+    {
+        try
+        {
+            while (await _clockTimer!.WaitForNextTickAsync(ct))
+            {
+                var clockWebP = SkiaRenderer.RenderToWebP(800, 300, "clock");
+                await JS.InvokeVoidAsync("SkiaCanvas.drawImageFromBytes", "canvas-clock", clockWebP);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _clockTimer?.Dispose();
+    }
+}

@@ -1,0 +1,66 @@
+@page "/endpoint"
+
+<h1>Image Endpoint</h1>
+
+<p>
+    The images below are served from <code>/api/skia/&lt;name&gt;</code> — a Minimal API endpoint
+    that renders with SkiaSharp and returns WebP. The browser fetches them as normal images.
+    Images resize dynamically with the container. The clock animates every second.
+</p>
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Default — <code>/api/skia/default</code></h5>
+            <div class="border rounded p-2 canvas-container">
+                <img id="dyn-endpoint-default" src="/api/skia/default" class="dynamic-skia-img"
+                     alt="SkiaSharp default rendering" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Circles — <code>/api/skia/circles</code></h5>
+            <div class="border rounded p-2 canvas-container">
+                <img id="dyn-endpoint-circles" src="/api/skia/circles" class="dynamic-skia-img"
+                     alt="SkiaSharp circles rendering" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Clock — <code>/api/skia/clock</code> (animated)</h5>
+            <div class="border rounded p-2 canvas-container">
+                <img id="dyn-endpoint-clock" src="/api/skia/clock" class="dynamic-skia-img"
+                     alt="SkiaSharp clock rendering" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <strong>How it works:</strong> The <code>/api/skia/&#123;name&#125;?w=WIDTH&amp;h=HEIGHT</code> endpoint in <code>Program.cs</code>
+    creates an <code>SKSurface</code>, draws via <code>SkiaRenderer.Draw()</code>, encodes to WebP,
+    and returns the bytes. JavaScript watches the container size and re-fetches at the correct
+    resolution. The clock polls every second for animation.
+</div>
+
+<div class="alert alert-secondary mt-2">
+    <strong>Tip:</strong> Try opening <a href="/api/skia/circles" target="_blank">/api/skia/circles</a>
+    directly in a new tab — it's just an image URL. Try resizing the browser window!
+</div>
+
+<script suppress-error="BL9992">
+    function startSkiaDynamic() {
+        if (typeof SkiaDynamic === 'undefined') {
+            setTimeout(startSkiaDynamic, 50);
+            return;
+        }
+        SkiaDynamic.start('dyn-endpoint-default', 'default', 0, true);
+        SkiaDynamic.start('dyn-endpoint-circles', 'circles', 0, true);
+        SkiaDynamic.start('dyn-endpoint-clock', 'clock', 1000, true);
+    }
+    startSkiaDynamic();
+</script>

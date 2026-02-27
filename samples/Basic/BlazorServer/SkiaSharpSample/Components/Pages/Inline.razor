@@ -1,0 +1,79 @@
+@page "/inline"
+
+<h1>Inline Base64 Image</h1>
+
+<p>
+    The images below are rendered by SkiaSharp on the server during SSR and embedded
+    directly into the HTML as base64 <code>data:</code> URIs. No additional HTTP requests
+    are needed — the pixels arrive with the page. The clock uses a dynamic endpoint
+    that refreshes every second.
+</p>
+
+<div class="container">
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Default (WebP, base64-inline)</h5>
+            <div class="border rounded p-2 canvas-container">
+                <img id="dyn-inline-default" src="@GetInlineWebP("default")" class="dynamic-skia-img"
+                     alt="SkiaSharp default rendering" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Circles (WebP, base64-inline)</h5>
+            <div class="border rounded p-2 canvas-container">
+                <img id="dyn-inline-circles" src="@GetInlineWebP("circles")" class="dynamic-skia-img"
+                     alt="SkiaSharp circles rendering" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <h5>Clock (animated via endpoint polling)</h5>
+            <div class="border rounded p-2 canvas-container">
+                <img id="dyn-inline-clock" src="@GetInlinePng("clock")" class="dynamic-skia-img"
+                     alt="SkiaSharp clock rendering" />
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <strong>How it works:</strong> The default and circles images arrive as base64 <code>data:</code> URIs
+    embedded in the HTML — zero round-trips. The clock starts with an inline image, then
+    JavaScript polls <code>/api/skia/clock</code> every second to animate. On resize,
+    all images refresh at the new container size.
+</div>
+
+<script suppress-error="BL9992">
+    // After SSR, start dynamic updates for all images
+    function startSkiaDynamic() {
+        if (typeof SkiaDynamic === 'undefined') {
+            setTimeout(startSkiaDynamic, 50);
+            return;
+        }
+        // Default and circles: resize-aware (no animation)
+        SkiaDynamic.start('dyn-inline-default', 'default', 0, true);
+        SkiaDynamic.start('dyn-inline-circles', 'circles', 0, true);
+        // Clock: animated every 1 second + resize-aware
+        SkiaDynamic.start('dyn-inline-clock', 'clock', 1000, true);
+    }
+    startSkiaDynamic();
+</script>
+
+@code {
+    private string GetInlineWebP(string variant)
+    {
+        var bytes = SkiaRenderer.RenderToWebP(800, 300, variant);
+        return $"data:image/webp;base64,{Convert.ToBase64String(bytes)}";
+    }
+
+    private string GetInlinePng(string variant)
+    {
+        var bytes = SkiaRenderer.RenderToPng(800, 300, variant);
+        return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
+    }
+}

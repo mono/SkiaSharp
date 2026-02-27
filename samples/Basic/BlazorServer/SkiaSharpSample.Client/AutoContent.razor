@@ -1,0 +1,177 @@
+@using SkiaSharp
+@using SkiaSharp.Views.Blazor
+
+@* 
+    This component runs with InteractiveAuto:
+    - During prerender: shows a placeholder <img> from the server API
+    - During Interactive Server phase: JS polls endpoint to animate the image
+    - During WASM phase: shows live SKCanvasView
+*@
+
+@if (_isWasm)
+{
+    <div style="position: relative;">
+        <div class="skia-canvas-wrap">
+            <SKCanvasView @ref="_skiaView" OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true" />
+        </div>
+        <span class="badge bg-success" style="position: absolute; bottom: 8px; right: 8px; z-index: 1;">
+            ✓ WASM Active
+        </span>
+    </div>
+}
+else
+{
+    <div style="position: relative;">
+        <img id="@_imgId" src="/api/skia/@Variant" class="dynamic-skia-img"
+             alt="Server-rendered @Variant (waiting for WASM...)" />
+        <span class="badge @(_isInteractive ? "bg-primary" : "bg-secondary")"
+              style="position: absolute; bottom: 8px; right: 8px;">
+            @(_isInteractive ? "Interactive Server — waiting for WASM" : "Prerendering")
+        </span>
+    </div>
+}
+
+@code {
+    private SKCanvasView? _skiaView;
+    private bool _isWasm;
+    private bool _isInteractive;
+    private string _imgId = "";
+
+    [Parameter] public string Variant { get; set; } = "clock";
+
+    [Inject] IJSRuntime JS { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        _isWasm = OperatingSystem.IsBrowser();
+        _imgId = $"auto-img-{Variant}-{Guid.NewGuid():N}";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_isWasm)
+        {
+            _isInteractive = true;
+            StateHasChanged();
+
+            // Start dynamic image updates — clock animates, others resize
+            try
+            {
+                var interval = Variant == "clock" ? 1000 : 0;
+                await JS.InvokeVoidAsync("SkiaDynamic.start", _imgId, Variant, interval, true);
+            }
+            catch (JSException) { }
+        }
+    }
+
+    void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.White);
+
+        using var paint = new SKPaint { IsAntialias = true };
+        using var font = new SKFont { Size = 24 };
+        var info = e.Info;
+
+        switch (Variant)
+        {
+            case "circles":
+                DrawCircles(canvas, info, paint);
+                break;
+            case "clock":
+                DrawClock(canvas, info, paint, font);
+                break;
+            default:
+                DrawDefault(canvas, info, paint, font);
+                break;
+        }
+
+        // WASM label
+        paint.Color = SKColors.Green;
+        font.Size = 14;
+        canvas.DrawText($"✓ WASM — {DateTime.Now:HH:mm:ss.fff}", info.Width - 10, info.Height - 10, SKTextAlign.Right, font, paint);
+    }
+
+    private static void DrawDefault(SKCanvas canvas, SKImageInfo info, SKPaint paint, SKFont font)
+    {
+        paint.Color = SKColors.CornflowerBlue;
+        paint.Style = SKPaintStyle.Fill;
+        canvas.DrawCircle(info.Width / 2f, info.Height / 2f, 80, paint);
+        paint.Color = SKColors.White;
+        font.Size = 28;
+        canvas.DrawText("SkiaSharp Auto", info.Width / 2f, info.Height / 2f + 10, SKTextAlign.Center, font, paint);
+    }
+
+    private static void DrawCircles(SKCanvas canvas, SKImageInfo info, SKPaint paint)
+    {
+        var colors = new[] { SKColors.Red, SKColors.Orange, SKColors.Gold, SKColors.Green, SKColors.CornflowerBlue, SKColors.Purple };
+        var centerX = info.Width / 2f;
+        var centerY = info.Height / 2f;
+        var maxRadius = Math.Min(info.Width, info.Height) * 0.4f;
+        for (int i = 0; i < colors.Length; i++)
+        {
+            paint.Color = colors[i].WithAlpha(180);
+            paint.Style = SKPaintStyle.Fill;
+            var angle = (float)(i * 2 * Math.PI / colors.Length);
+            canvas.DrawCircle(
+                centerX + MathF.Cos(angle) * maxRadius * 0.3f,
+                centerY + MathF.Sin(angle) * maxRadius * 0.3f,
+                maxRadius * 0.5f, paint);
+        }
+    }
+
+    private static void DrawClock(SKCanvas canvas, SKImageInfo info, SKPaint paint, SKFont font)
+    {
+        var centerX = info.Width / 2f;
+        var centerY = info.Height / 2f;
+        var clockRadius = Math.Min(info.Width, info.Height) * 0.4f;
+        var now = DateTime.Now;
+
+        paint.Color = SKColors.LightGray;
+        paint.Style = SKPaintStyle.Fill;
+        canvas.DrawCircle(centerX, centerY, clockRadius, paint);
+
+        paint.Color = SKColors.Black;
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = 3;
+        canvas.DrawCircle(centerX, centerY, clockRadius, paint);
+
+        for (int i = 0; i < 12; i++)
+        {
+            var angle = (float)(i * 2 * Math.PI / 12) - MathF.PI / 2;
+            canvas.DrawLine(
+                centerX + MathF.Cos(angle) * clockRadius * 0.85f,
+                centerY + MathF.Sin(angle) * clockRadius * 0.85f,
+                centerX + MathF.Cos(angle) * clockRadius * 0.95f,
+                centerY + MathF.Sin(angle) * clockRadius * 0.95f, paint);
+        }
+
+        paint.StrokeWidth = 4;
+        paint.StrokeCap = SKStrokeCap.Round;
+        var hourAngle = (float)((now.Hour % 12 + now.Minute / 60.0) * 2 * Math.PI / 12) - MathF.PI / 2;
+        canvas.DrawLine(centerX, centerY,
+            centerX + MathF.Cos(hourAngle) * clockRadius * 0.5f,
+            centerY + MathF.Sin(hourAngle) * clockRadius * 0.5f, paint);
+
+        paint.StrokeWidth = 2;
+        var minuteAngle = (float)((now.Minute + now.Second / 60.0) * 2 * Math.PI / 60) - MathF.PI / 2;
+        canvas.DrawLine(centerX, centerY,
+            centerX + MathF.Cos(minuteAngle) * clockRadius * 0.7f,
+            centerY + MathF.Sin(minuteAngle) * clockRadius * 0.7f, paint);
+
+        paint.Color = SKColors.Red;
+        paint.StrokeWidth = 1;
+        var secondAngle = (float)(now.Second * 2 * Math.PI / 60) - MathF.PI / 2;
+        canvas.DrawLine(centerX, centerY,
+            centerX + MathF.Cos(secondAngle) * clockRadius * 0.8f,
+            centerY + MathF.Sin(secondAngle) * clockRadius * 0.8f, paint);
+
+        paint.Color = SKColors.Black;
+        paint.Style = SKPaintStyle.Fill;
+        canvas.DrawCircle(centerX, centerY, 5, paint);
+
+        paint.Color = SKColors.DarkGray;
+        font.Size = 16;
+        canvas.DrawText(now.ToString("HH:mm:ss"), centerX, centerY + clockRadius + 30, SKTextAlign.Center, font, paint);
+    }
+}
