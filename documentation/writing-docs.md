@@ -22,11 +22,12 @@ This repository is pulled into the main SkiaSharp repo as a Git submodule at `do
 
 ## Automated Pipeline
 
-A GitHub Actions workflow regenerates the API docs daily from the latest CI build artifacts:
+A GitHub Actions workflow in [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs) regenerates the API docs daily from the latest CI build artifacts. It checks out this repo (for the Cake build scripts) and the docs repo, then runs the doc generation targets:
 
-- **Workflow**: [`.github/workflows/update-docs.yml`](../.github/workflows/update-docs.yml)
+- **Workflow**: [`update-docs.yml`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/update-docs.yml) (in the docs repo)
 - **Schedule**: Runs daily at 6 AM UTC
-- **Manual trigger**: Go to the Actions tab → "Update API Docs" → "Run workflow"
+- **Manual trigger**: Go to the [Actions tab](https://github.com/mono/SkiaSharp-API-docs/actions) on `mono/SkiaSharp-API-docs` → "Update API Docs" → "Run workflow"
+- **Branch parameter**: Optionally specify a SkiaSharp branch to generate docs from (defaults to `main`)
 
 ### What the pipeline does
 
