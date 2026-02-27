@@ -149,6 +149,22 @@ return ToImage(image);
 return ToImage(image.release());
 ```
 
+### 5. Pinned pointer lifetime with `fixed`
+```csharp
+// WRONG: native object outlives the fixed block, GC moves the array
+fixed (byte* ptr = data)
+{
+    blob = new Blob(ptr, data.Length); // blob stores ptr
+} // ptr invalid here — data can be moved/collected
+
+// CORRECT: stable pin for native-retained pointers
+var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+var ptr = handle.AddrOfPinnedObject();
+blob = new Blob(ptr, data.Length, () => handle.Free());
+```
+
+Known affected API: `HarfBuzzSharp.Blob.FromStream` — passes temporary `fixed` pointer to native HarfBuzz which stores it, leading to data corruption under GC pressure.
+
 ## Summary
 
 | Question | Answer |

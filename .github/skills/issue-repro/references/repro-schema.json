@@ -1,0 +1,802 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/repro-schema.json",
+  "title": "SkiaSharp Bug Reproduction",
+  "description": "Per-issue AI bug reproduction v1.0. Captures systematic reproduction attempts with step-by-step results, environment details, binary artifact references, and actionable output (proposed response, actions, workarounds). Output limits: 2KB per step (4KB for failure steps), 50 lines for stack traces. Absolute paths containing usernames must be redacted.",
+  "type": "object",
+  "required": [
+    "meta",
+    "conclusion",
+    "notes",
+    "reproductionSteps",
+    "environment"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "stepResult": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failure",
+        "wrong-output",
+        "skip"
+      ],
+      "description": "TECHNICAL outcome only \u2014 NOT whether it matched expectations. success=command exited 0. failure=command exited non-zero or exception thrown (EVEN IF this confirms the bug). wrong-output=process ran without error but output is incorrect. skip=step was skipped."
+    },
+    "stepLayer": {
+      "type": "string",
+      "enum": [
+        "csharp",
+        "c-api",
+        "native",
+        "deployment",
+        "setup"
+      ],
+      "description": "Which layer of the SkiaSharp stack this step exercises."
+    },
+    "conclusionValue": {
+      "type": "string",
+      "enum": [
+        "reproduced",
+        "not-reproduced",
+        "needs-platform",
+        "needs-hardware",
+        "partial",
+        "inconclusive"
+      ],
+      "description": "FACTUAL observation of whether reported behavior occurred. reproduced=reported behavior was observed INCLUDING wrong/incomplete output cases (even if 'working as designed'). not-reproduced=reported behavior was NOT observed. needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced. inconclusive=insufficient info."
+    },
+    "artifactSource": {
+      "type": "string",
+      "enum": [
+        "issue-attachment",
+        "test-data",
+        "generated",
+        "external"
+      ],
+      "description": "Where the binary artifact comes from."
+    },
+    "suggestedAction": {
+      "type": "string",
+      "enum": [
+        "needs-investigation",
+        "close-as-fixed",
+        "close-as-by-design",
+        "close-with-docs",
+        "close-as-duplicate",
+        "convert-to-discussion",
+        "request-info",
+        "keep-open"
+      ],
+      "description": "Recommended next action for the maintainer. close-as-by-design=behavior is intentional but may warrant docs/workaround."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0.0-1.0 confidence score. 0.95+=explicit, 0.80-0.94=strong inference, 0.60-0.79=ambiguous, <0.60=uncertain."
+    },
+    "actionType": {
+      "type": "string",
+      "enum": [
+        "update-labels",
+        "add-comment",
+        "close-issue",
+        "convert-to-discussion",
+        "link-related",
+        "link-duplicate",
+        "update-project",
+        "set-milestone"
+      ],
+      "description": "Type of automatable operation."
+    },
+    "actionRisk": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "low=reversible/cosmetic. medium=state change. high=irreversible or reputation-sensitive."
+    }
+  },
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "number",
+        "repo",
+        "analyzedAt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "1.0",
+          "description": "Schema version."
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "GitHub issue number."
+        },
+        "repo": {
+          "type": "string",
+          "description": "Repository in owner/name format.",
+          "pattern": "^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$"
+        },
+        "analyzedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp of when reproduction was performed."
+        }
+      },
+      "description": "Metadata about this reproduction analysis."
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "triageFile": {
+          "type": "string",
+          "description": "Relative path to ai-triage JSON if consumed, e.g. 'ai-triage/2997.json'."
+        }
+      },
+      "description": "Upstream pipeline files consumed by this step."
+    },
+    "conclusion": {
+      "$ref": "#/$defs/conclusionValue",
+      "description": "Factual observation of whether the reported behavior was reproduced."
+    },
+    "notes": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Free-text summary of reproduction results for humans."
+    },
+    "assessment": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "likely-bug",
+        "working-as-designed",
+        "breaking-change",
+        "docs-gap",
+        "user-error"
+      ],
+      "description": "EDITORIAL classification only. Use to record opinions without corrupting the factual 'conclusion'."
+    },
+    "scope": {
+      "type": "string",
+      "description": "Cross-platform scope derived from Phase 3D verification. 'universal'=reproduced on \u22652 platforms, 'platform-specific/{platform}'=reproduced only on one platform, 'unknown'=only tested one platform.",
+      "pattern": "^(universal|unknown|platform-specific/(macos|linux|windows|wasm|ios|android))$"
+    },
+    "reproductionTime": {
+      "type": "string",
+      "description": "Approximate time spent reproducing, e.g. '~10 minutes'."
+    },
+    "versionResults": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "version",
+          "source",
+          "result"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "SkiaSharp version tested, e.g. '2.88.9', '3.116.1', 'main (source)'."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "nuget",
+              "source"
+            ],
+            "description": "nuget=released NuGet package, source=built from source code."
+          },
+          "result": {
+            "type": "string",
+            "enum": [
+              "reproduced",
+              "not-reproduced",
+              "error",
+              "not-tested"
+            ],
+            "description": "What happened with this version. reproduced=reported behavior observed (including wrong/incomplete output). error=build or setup failed."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Brief note about result on this version."
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform/environment where this version was tested, e.g. 'host-macos-arm64', 'docker-linux-x64', 'wasm-blazor'."
+          }
+        },
+        "description": "Test result for a specific SkiaSharp version."
+      },
+      "description": "Results of testing across different SkiaSharp versions."
+    },
+    "reproProject": {
+      "type": "object",
+      "required": [
+        "type",
+        "tfm",
+        "packages"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "console",
+            "blazor-wasm",
+            "docker",
+            "mobile",
+            "wpf",
+            "winforms",
+            "winui",
+            "maui",
+            "test",
+            "existing",
+            "simulation"
+          ],
+          "description": "Project type used for reproduction. Must match the platform file used."
+        },
+        "tfm": {
+          "type": "string",
+          "description": "Target framework moniker, e.g. 'net10.0'."
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "version"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "NuGet package name."
+              },
+              "version": {
+                "type": "string",
+                "description": "NuGet package version."
+              }
+            },
+            "description": "A NuGet package dependency."
+          },
+          "description": "NuGet packages used in the reproduction project."
+        }
+      },
+      "description": "Reproduction project configuration used for testing."
+    },
+    "reproductionSteps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "stepNumber",
+          "description",
+          "layer",
+          "result"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "stepNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Sequential step number starting from 1."
+          },
+          "description": {
+            "type": "string",
+            "minLength": 5,
+            "description": "What this step does and why."
+          },
+          "layer": {
+            "$ref": "#/$defs/stepLayer",
+            "description": "Which layer of the SkiaSharp stack this step exercises."
+          },
+          "command": {
+            "type": "string",
+            "description": "Shell command executed. Redact absolute paths containing usernames."
+          },
+          "exitCode": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Process exit code. 0=success. Required when command ran and result is success/failure/wrong-output."
+          },
+          "output": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Command output. Max 2KB for success steps, 4KB for failure steps. Truncate with [...truncated...] if needed."
+          },
+          "filesCreated": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "filename",
+                "description"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "filename": {
+                  "type": "string",
+                  "description": "Filename or relative path from project root."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "What this file contains and why it was created."
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Full source code content. Include for source files (Program.cs, .csproj) that form the reproduction."
+                }
+              },
+              "description": "A file created during this step."
+            },
+            "description": "Files created in this step. Include content for source files that form the reproduction."
+          },
+          "result": {
+            "$ref": "#/$defs/stepResult",
+            "description": "Technical outcome of this step."
+          }
+        },
+        "description": "A single reproduction step with command, output, and result."
+      },
+      "description": "Sequential steps executed during reproduction, with commands, outputs, and results."
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "filename",
+          "description",
+          "source",
+          "available"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Filename of the binary asset."
+          },
+          "description": {
+            "type": "string",
+            "description": "What this file is and why it's needed."
+          },
+          "source": {
+            "$ref": "#/$defs/artifactSource",
+            "description": "Where the artifact comes from."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the asset."
+          },
+          "available": {
+            "type": "boolean",
+            "description": "Whether the file could be obtained for reproduction."
+          }
+        },
+        "description": "A binary artifact needed for reproduction."
+      },
+      "description": "Binary files needed for reproduction. Reference by URL/filename, never inline binary content."
+    },
+    "errorMessages": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primaryError": {
+          "type": "string",
+          "description": "Main error message or exception type."
+        },
+        "stackTrace": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "Stack trace, max 50 lines. Redact absolute paths."
+        },
+        "additionalErrors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "An additional error message."
+          },
+          "description": "Other error messages observed."
+        }
+      },
+      "description": "Error messages and stack traces observed during reproduction."
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "os",
+        "arch",
+        "dotnetVersion",
+        "skiaSharpVersion",
+        "dockerUsed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "os": {
+          "type": "string",
+          "description": "Operating system, e.g. 'macOS 15.3', 'Ubuntu 24.04'."
+        },
+        "arch": {
+          "type": "string",
+          "description": "CPU architecture, e.g. 'arm64', 'x64'."
+        },
+        "dotnetVersion": {
+          "type": "string",
+          "description": ".NET runtime version, e.g. '10.0.2'."
+        },
+        "dotnetSdkVersion": {
+          "type": "string",
+          "description": "Exact .NET SDK version from 'dotnet --info', e.g. '10.0.102'. CRITICAL: run dotnet --info in the TEST directory (/tmp/skiasharp/repro/), NOT the SkiaSharp repo (which has global.json pinning to SDK 8)."
+        },
+        "wasmToolsVersion": {
+          "type": "string",
+          "description": "wasm-tools workload manifest version from 'dotnet --info', e.g. '10.0.102/10.0.100'. Required for WASM/Blazor reproductions."
+        },
+        "skiaSharpVersion": {
+          "type": "string",
+          "description": "Primary SkiaSharp version used."
+        },
+        "dockerUsed": {
+          "type": "boolean",
+          "description": "Whether Docker was used for reproduction."
+        },
+        "gpu": {
+          "type": "object",
+          "required": [
+            "available"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "backend": {
+              "type": "string",
+              "description": "GPU backend, e.g. 'Metal', 'OpenGL', 'Vulkan'."
+            },
+            "available": {
+              "type": "boolean",
+              "description": "Whether GPU acceleration was available."
+            }
+          },
+          "description": "GPU details. Include for rendering bugs."
+        }
+      },
+      "description": "Environment where reproduction was performed."
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "A specific reason reproduction was incomplete."
+      },
+      "minItems": 1,
+      "description": "Specific reasons reproduction was incomplete. Required when conclusion is partial, needs-platform, needs-hardware, or inconclusive."
+    },
+    "feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "corrections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "source",
+              "topic",
+              "upstream",
+              "corrected"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "source": {
+                "type": "string",
+                "const": "triage",
+                "description": "Which upstream step is being corrected."
+              },
+              "topic": {
+                "type": "string",
+                "description": "What category of finding was corrected, e.g. 'classification', 'scope', 'affected-platforms', 'expected-behavior'."
+              },
+              "upstream": {
+                "type": "string",
+                "description": "What the triage step said or concluded."
+              },
+              "corrected": {
+                "type": "string",
+                "description": "What reproduction actually found to be true."
+              }
+            },
+            "description": "A single correction to a triage finding."
+          },
+          "description": "Corrections to triage findings discovered during reproduction."
+        }
+      },
+      "description": "Feedback on upstream pipeline steps. Record corrections when reproduction contradicts triage."
+    },
+    "output": {
+      "type": "object",
+      "required": [
+        "actionability",
+        "actions",
+        "proposedResponse"
+      ],
+      "additionalProperties": false,
+      "description": "Actionable output: recommended disposition, automatable operations, and proposed response. Required when conclusion is reproduced or not-reproduced.",
+      "properties": {
+        "actionability": {
+          "type": "object",
+          "required": [
+            "suggestedAction",
+            "confidence",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "description": "Recommended high-level disposition. Structure matches triage schema.",
+          "properties": {
+            "suggestedAction": {
+              "$ref": "#/$defs/suggestedAction",
+              "description": "Recommended next action for the maintainer."
+            },
+            "confidence": {
+              "$ref": "#/$defs/confidence",
+              "description": "Confidence in the suggested action."
+            },
+            "reason": {
+              "type": "string",
+              "description": "Why this action is suggested, citing reproduction evidence."
+            }
+          }
+        },
+        "workarounds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "A verified workaround."
+          },
+          "description": "Verified workarounds discovered during reproduction, e.g. 'Upgrade to 3.116.1', 'Run dotnet workload restore'."
+        },
+        "proposedResponse": {
+          "type": "object",
+          "required": [
+            "status",
+            "body"
+          ],
+          "additionalProperties": false,
+          "description": "Draft GitHub comment to post on the issue. Separate from actions[] add-comment because it has status metadata and is the primary user-facing deliverable.",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "ready",
+                "needs-human-edit",
+                "do-not-post"
+              ],
+              "description": "ready=can post as-is. needs-human-edit=draft needs maintainer review. do-not-post=internal notes only."
+            },
+            "summary": {
+              "type": "string",
+              "description": "One-line summary of what the response says."
+            },
+            "body": {
+              "type": "string",
+              "description": "Full Markdown comment body for the GitHub issue."
+            }
+          }
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "type",
+              "description"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "$ref": "#/$defs/actionType",
+                "description": "Type of automatable operation."
+              },
+              "description": {
+                "type": "string",
+                "description": "What this action does."
+              },
+              "risk": {
+                "$ref": "#/$defs/actionRisk",
+                "description": "Risk level of the action."
+              },
+              "confidence": {
+                "$ref": "#/$defs/confidence",
+                "description": "Confidence that this action is appropriate."
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "A label name."
+                },
+                "description": "Labels to add/remove (for update-labels actions)."
+              },
+              "comment": {
+                "type": "string",
+                "description": "Comment text (for add-comment actions)."
+              },
+              "linkedIssue": {
+                "type": "integer",
+                "description": "Issue number to link (for link-related/link-duplicate actions).",
+                "minimum": 1
+              }
+            },
+            "description": "A single automatable action."
+          },
+          "description": "Automatable operations. Each action has a type, description, and optional risk/confidence/labels/comment/linkedIssue."
+        },
+        "missingInfo": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "A piece of missing information."
+          },
+          "description": "Information needed from the reporter when conclusion is not-reproduced or partial. E.g. 'Exact .NET SDK version', 'Full exception stack trace', 'Minimal reproduction project'."
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "conclusion": {
+            "const": "reproduced"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reproductionSteps": {
+            "contains": {
+              "properties": {
+                "result": {
+                  "enum": [
+                    "failure",
+                    "wrong-output"
+                  ]
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conclusion": {
+            "const": "not-reproduced"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reproductionSteps": {
+            "allOf": [
+              {
+                "contains": {
+                  "properties": {
+                    "result": {
+                      "const": "success"
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "contains": {
+                    "properties": {
+                      "result": {
+                        "enum": [
+                          "failure",
+                          "wrong-output"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "result"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conclusion": {
+            "enum": [
+              "needs-platform",
+              "needs-hardware",
+              "partial",
+              "inconclusive"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "meta",
+          "conclusion",
+          "notes",
+          "reproductionSteps",
+          "environment",
+          "blockers"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conclusion": {
+            "enum": [
+              "reproduced",
+              "not-reproduced"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "meta",
+          "conclusion",
+          "notes",
+          "reproductionSteps",
+          "environment",
+          "output",
+          "versionResults"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conclusion": {
+            "const": "reproduced"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "meta",
+          "conclusion",
+          "notes",
+          "reproductionSteps",
+          "environment",
+          "output",
+          "reproProject"
+        ]
+      }
+    }
+  ]
+}

@@ -216,6 +216,10 @@ The actual shared library is in `libfontconfig1` (runtime package).
 
 **Fix:** Download both `-dev` (headers) AND runtime (actual .so) packages in the Dockerfile.
 
+### WASM Stale Artifact Trap
+
+When testing different SkiaSharp NuGet versions on WASM, native `.wasm` binaries are cached in `bin/obj/_framework` and are version-specific (tied to Emscripten version). Changing the NuGet version reference (e.g., via `sed`) without cleaning these directories leaves stale native files, producing false positive/negative results. **Always use fresh project directories per version** or clean `bin/`, `obj/`, and `_framework` before rebuilding.
+
 ---
 
 ## Summary

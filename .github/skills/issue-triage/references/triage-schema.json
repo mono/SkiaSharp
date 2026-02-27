@@ -1,0 +1,821 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/triage-schema.json",
+  "title": "SkiaSharp Issue Triage",
+  "description": "Per-issue AI triage output. Classification values ARE full GitHub labels (e.g., 'type/bug', 'os/Linux').",
+  "type": "object",
+  "required": [
+    "meta",
+    "summary",
+    "classification",
+    "evidence",
+    "analysis",
+    "output"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0.0-1.0 confidence score. 0.95+=explicit, 0.80-0.94=strong inference, 0.60-0.79=ambiguous, <0.60=uncertain."
+    },
+    "classifiedType": {
+      "type": "string",
+      "enum": [
+        "type/bug",
+        "type/feature-request",
+        "type/question",
+        "type/enhancement",
+        "type/documentation"
+      ],
+      "description": "Issue type. Pick ONE best fit \u2014 trust issue content over title prefix."
+    },
+    "classifiedArea": {
+      "type": "string",
+      "enum": [
+        "area/Build",
+        "area/Docs",
+        "area/HarfBuzzSharp",
+        "area/libHarfBuzzSharp.native",
+        "area/libSkiaSharp.native",
+        "area/SkiaSharp",
+        "area/SkiaSharp.HarfBuzz",
+        "area/SkiaSharp.Views",
+        "area/SkiaSharp.Views.Blazor",
+        "area/SkiaSharp.Views.Forms",
+        "area/SkiaSharp.Views.Maui",
+        "area/SkiaSharp.Views.Uno",
+        "area/SkiaSharp.Workbooks"
+      ],
+      "description": "Component area. Pick MOST SPECIFIC match. Values are actual GitHub labels."
+    },
+    "classifiedPlatform": {
+      "type": "string",
+      "enum": [
+        "os/Android",
+        "os/iOS",
+        "os/macOS",
+        "os/Linux",
+        "os/Windows-Classic",
+        "os/Windows-WinUI",
+        "os/Windows-Universal-UWP",
+        "os/Windows-Nano-Server",
+        "os/WASM",
+        "os/Tizen",
+        "os/tvOS",
+        "os/watchOS"
+      ],
+      "description": "Platform label. Omit platforms array entirely if not platform-specific."
+    },
+    "classifiedBackend": {
+      "type": "string",
+      "enum": [
+        "backend/Direct3D",
+        "backend/Metal",
+        "backend/OpenGL",
+        "backend/Raster",
+        "backend/Vulkan",
+        "backend/PDF",
+        "backend/SVG",
+        "backend/XPS"
+      ],
+      "description": "Rendering backend label. Omit backends array entirely if not backend-specific."
+    },
+    "classifiedTenet": {
+      "type": "string",
+      "enum": [
+        "tenet/compatibility",
+        "tenet/performance",
+        "tenet/reliability"
+      ],
+      "description": "Quality tenet label. Omit tenets array entirely if no tenets apply."
+    },
+    "classifiedPartner": {
+      "type": "string",
+      "enum": [
+        "partner/maui",
+        "partner/tizen",
+        "partner/unoplatform"
+      ],
+      "description": "Third-party partner flag. Omit if no partner involvement."
+    },
+    "suggestedAction": {
+      "type": "string",
+      "enum": [
+        "needs-investigation",
+        "close-as-fixed",
+        "close-as-by-design",
+        "close-with-docs",
+        "close-as-duplicate",
+        "convert-to-discussion",
+        "request-info",
+        "keep-open"
+      ],
+      "description": "Recommended next action for the maintainer. close-as-by-design=behavior is intentional but may warrant docs/workaround."
+    },
+    "actionType": {
+      "type": "string",
+      "enum": [
+        "update-labels",
+        "add-comment",
+        "close-issue",
+        "convert-to-discussion",
+        "link-related",
+        "link-duplicate",
+        "update-project",
+        "set-milestone"
+      ],
+      "description": "Type of automatable operation."
+    },
+    "actionRisk": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "low=reversible/cosmetic. medium=state change. high=irreversible or reputation-sensitive."
+    }
+  },
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Metadata about this triage analysis.",
+      "required": [
+        "schemaVersion",
+        "number",
+        "repo",
+        "analyzedAt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "1.0",
+          "description": "Schema version."
+        },
+        "number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "GitHub issue number."
+        },
+        "repo": {
+          "type": "string",
+          "description": "Repository in owner/name format.",
+          "pattern": "^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$"
+        },
+        "analyzedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp of when triage was performed."
+        },
+        "currentLabels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "A label name."
+          },
+          "description": "Labels currently on the issue at time of triage."
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Reporter-facing summary: what the user reported, their environment, and symptoms. Factual restatement only \u2014 no analysis or hypothesis."
+    },
+    "classification": {
+      "type": "object",
+      "description": "Issue classification labels and confidence scores.",
+      "required": [
+        "type",
+        "area"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "object",
+          "description": "Issue type classification with confidence.",
+          "required": [
+            "value",
+            "confidence"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/classifiedType",
+              "description": "Issue type label."
+            },
+            "confidence": {
+              "$ref": "#/$defs/confidence",
+              "description": "Confidence in type classification."
+            }
+          }
+        },
+        "area": {
+          "type": "object",
+          "description": "Component area classification with confidence.",
+          "required": [
+            "value",
+            "confidence"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "$ref": "#/$defs/classifiedArea",
+              "description": "Component area label."
+            },
+            "confidence": {
+              "$ref": "#/$defs/confidence",
+              "description": "Confidence in area classification."
+            }
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedPlatform",
+            "description": "A platform label."
+          },
+          "description": "Platform labels if issue is platform-specific, e.g. ['os/macOS', 'os/Linux']. Omit if not platform-specific."
+        },
+        "backends": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedBackend",
+            "description": "A backend label."
+          },
+          "description": "Rendering backend labels if backend-specific, e.g. ['backend/Metal']. Omit if not backend-specific."
+        },
+        "tenets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedTenet",
+            "description": "A tenet label."
+          },
+          "description": "Quality tenet labels, e.g. ['tenet/reliability']. Omit if no tenets apply."
+        },
+        "partner": {
+          "$ref": "#/$defs/classifiedPartner",
+          "description": "Third-party partner flag, e.g. 'partner/maui'. Omit if no partner involvement."
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Evidence extracted from the issue: reproduction material, bug signals, version info, regression analysis, and fix status.",
+      "additionalProperties": false,
+      "properties": {
+        "reproEvidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "stepsToReproduce": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A single reproduction step."
+              },
+              "description": "Steps to reproduce as described by the reporter."
+            },
+            "codeSnippets": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A code snippet from the issue."
+              },
+              "description": "Code snippets from the issue body."
+            },
+            "screenshots": {
+              "type": "array",
+              "description": "Screenshots attached to the issue.",
+              "items": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Screenshot URL."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "What the screenshot shows."
+                  }
+                },
+                "description": "A screenshot from the issue."
+              }
+            },
+            "attachments": {
+              "type": "array",
+              "description": "File attachments on the issue.",
+              "items": {
+                "type": "object",
+                "required": [
+                  "url",
+                  "filename"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Attachment download URL."
+                  },
+                  "filename": {
+                    "type": "string",
+                    "description": "Original filename."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "What the attachment contains."
+                  }
+                },
+                "description": "A file attachment from the issue."
+              }
+            },
+            "environmentDetails": {
+              "type": "string",
+              "description": "Reporter's environment as described in the issue."
+            },
+            "relatedIssues": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "A GitHub issue number."
+              },
+              "description": "GitHub issue numbers referenced in the issue text."
+            },
+            "repoLinks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Repository URL."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "What the linked repository demonstrates."
+                  }
+                },
+                "description": "A link to an external reproduction repository."
+              },
+              "description": "Links to external reproduction repositories."
+            }
+          },
+          "description": "Reproduction material extracted from the issue."
+        },
+        "bugSignals": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "severity": {
+              "type": "string",
+              "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low"
+              ],
+              "description": "Impact severity. critical=crash/data loss. high=feature broken. medium=degraded. low=cosmetic."
+            },
+            "regressionClaimed": {
+              "type": "boolean",
+              "description": "Quick flag: whether the reporter said this worked in a previous version. See evidence.regression for detailed analysis."
+            },
+            "errorType": {
+              "type": "string",
+              "enum": [
+                "crash",
+                "exception",
+                "wrong-output",
+                "missing-output",
+                "performance",
+                "build-error",
+                "memory-leak",
+                "platform-specific",
+                "other"
+              ],
+              "description": "Category of error behavior. crash=segfault/SIGABRT/hard crash. exception=managed .NET exception thrown. wrong-output=produces incorrect results. missing-output=produces no output or empty. performance=works but too slow. build-error=compile/link/restore failure. memory-leak=growing memory or handles. platform-specific=works on some platforms but not others. other=none of the above."
+            },
+            "errorMessage": {
+              "type": "string",
+              "description": "Primary error message from the report."
+            },
+            "stackTrace": {
+              "type": "string",
+              "maxLength": 5000,
+              "description": "Stack trace if provided. Max 50 lines. Redact absolute paths."
+            },
+            "reproQuality": {
+              "type": "string",
+              "enum": [
+                "complete",
+                "partial",
+                "none"
+              ],
+              "description": "How complete the reproduction steps are. complete=fully reproducible. partial=some steps missing. none=no repro steps."
+            },
+            "targetFrameworks": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A target framework moniker."
+              },
+              "description": "Target framework monikers mentioned, e.g. ['net8.0-android', 'net8.0-ios']."
+            }
+          },
+          "description": "Bug evidence signals. Required when classification.type.value is 'type/bug'."
+        },
+        "versionAnalysis": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mentionedVersions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A SkiaSharp version string."
+              },
+              "description": "SkiaSharp versions mentioned in the issue."
+            },
+            "workedIn": {
+              "type": "string",
+              "description": "Version the reporter claims worked (their words). See regression.workedInVersion for analytical conclusion."
+            },
+            "brokeIn": {
+              "type": "string",
+              "description": "Version the reporter claims broke (their words). See regression.brokeInVersion for analytical conclusion."
+            },
+            "currentRelevance": {
+              "type": "string",
+              "enum": [
+                "likely",
+                "unlikely",
+                "unknown"
+              ],
+              "description": "Whether the issue is still relevant to the current/latest version."
+            },
+            "relevanceReason": {
+              "type": "string",
+              "description": "Explains the currentRelevance assessment."
+            }
+          },
+          "description": "Version information from the issue."
+        },
+        "regression": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "isRegression": {
+              "type": "boolean",
+              "description": "Analytical conclusion: whether this is a regression based on evidence review. See bugSignals.regressionClaimed for the reporter claim."
+            },
+            "confidence": {
+              "$ref": "#/$defs/confidence",
+              "description": "Confidence in the regression assessment."
+            },
+            "reason": {
+              "type": "string",
+              "description": "Why this is or isn't considered a regression."
+            },
+            "workedInVersion": {
+              "type": "string",
+              "description": "Last version where this worked, based on analysis. See versionAnalysis.workedIn for reporter claim."
+            },
+            "brokeInVersion": {
+              "type": "string",
+              "description": "First version where this broke, based on analysis. See versionAnalysis.brokeIn for reporter claim."
+            }
+          },
+          "description": "Regression analysis. Omit if no regression signals."
+        },
+        "fixStatus": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "likelyFixed": {
+              "type": "boolean",
+              "description": "Whether the issue appears to be already fixed."
+            },
+            "confidence": {
+              "$ref": "#/$defs/confidence",
+              "description": "Confidence in the fix status assessment."
+            },
+            "reason": {
+              "type": "string",
+              "description": "Why the issue is or isn't considered fixed."
+            },
+            "relatedPRs": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "A PR number."
+              },
+              "description": "PR numbers that may have fixed this."
+            },
+            "relatedCommits": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "A commit SHA."
+              },
+              "description": "Commit SHAs that may have fixed this."
+            },
+            "fixedInVersion": {
+              "type": "string",
+              "description": "Version the fix shipped in, if known."
+            }
+          },
+          "description": "Whether the issue may already be fixed. Omit if no fix signals."
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "description": "Analytical assessment: root cause hypothesis, code investigation, and resolution proposals.",
+      "required": [
+        "summary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "Root cause hypothesis and technical analysis. Why this happens, what code paths are involved, what the fix likely requires. Distinct from top-level summary which is a factual restatement."
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Single paragraph explaining key classification decisions (replaces per-field rationales)."
+        },
+        "keySignals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "text",
+              "source"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "The evidence text (quote or paraphrase)."
+              },
+              "source": {
+                "type": "string",
+                "description": "Where this came from, e.g. 'issue body', 'comment #3', 'code search'."
+              },
+              "interpretation": {
+                "type": "string",
+                "description": "What this signal means for triage."
+              }
+            },
+            "description": "A single evidence quote that drove a triage decision."
+          },
+          "description": "Structured evidence quotes that drove triage decisions. Enables downstream querying."
+        },
+        "codeInvestigation": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "file",
+              "finding",
+              "relevance"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "file": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Relative path from repo root."
+              },
+              "lines": {
+                "type": "string",
+                "description": "Line range, e.g. '100-120' or '42'."
+              },
+              "finding": {
+                "type": "string",
+                "description": "What was found at this location."
+              },
+              "relevance": {
+                "type": "string",
+                "enum": [
+                  "direct",
+                  "related",
+                  "context"
+                ],
+                "description": "How relevant this is to the issue."
+              }
+            },
+            "description": "A code investigation finding with file and line reference."
+          },
+          "description": "Source code investigation results with file:line citations. HIGH VALUE for downstream pipeline steps."
+        },
+        "errorFingerprint": {
+          "type": "string",
+          "description": "Advisory only \u2014 a short normalized string summarizing the error signature (e.g. 'DllNotFoundException-libSkiaSharp-iOS'). NOT a stable hash. Used as a human-readable hint for cross-issue dedup, not for mechanical matching."
+        },
+        "workarounds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "A known workaround."
+          },
+          "description": "Known workarounds found during triage."
+        },
+        "nextQuestions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "An open question for downstream investigation."
+          },
+          "description": "Open questions that repro or fix should investigate."
+        },
+        "resolution": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hypothesis": {
+              "type": "string",
+              "description": "Best hypothesis for the root cause."
+            },
+            "proposals": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "description"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Short title for the proposal."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "What the proposed fix or resolution is."
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "workaround",
+                      "fix",
+                      "alternative",
+                      "investigation"
+                    ],
+                    "description": "What kind of proposal. workaround=temporary mitigation. fix=root cause fix. alternative=different approach. investigation=needs more research."
+                  },
+                  "codeSnippet": {
+                    "type": "string",
+                    "description": "Code snippet illustrating the proposed fix, if applicable."
+                  },
+                  "validated": {
+                    "type": "string",
+                    "enum": [
+                      "untested",
+                      "yes",
+                      "no"
+                    ],
+                    "description": "Whether the proposal code has been validated. untested=not yet checked. yes=passed validation. no=failed validation."
+                  },
+                  "confidence": {
+                    "$ref": "#/$defs/confidence",
+                    "description": "Confidence that this proposal would resolve the issue."
+                  },
+                  "effort": {
+                    "type": "string",
+                    "enum": [
+                      "trivial",
+                      "small",
+                      "medium",
+                      "large"
+                    ],
+                    "description": "Estimated effort to implement."
+                  }
+                },
+                "description": "A single fix or resolution proposal."
+              },
+              "description": "Proposed fixes or resolutions, ordered by recommendation."
+            },
+            "recommendedProposal": {
+              "type": "string",
+              "description": "Title of the recommended proposal to try first."
+            },
+            "recommendedReason": {
+              "type": "string",
+              "description": "Why this proposal is recommended over others."
+            }
+          },
+          "description": "Root cause hypothesis and fix proposals."
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": [
+        "actionability",
+        "actions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "actionability": {
+          "type": "object",
+          "required": [
+            "suggestedAction",
+            "confidence",
+            "reason"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "suggestedAction": {
+              "$ref": "#/$defs/suggestedAction",
+              "description": "Recommended next action for the maintainer."
+            },
+            "confidence": {
+              "$ref": "#/$defs/confidence",
+              "description": "Confidence in the suggested action."
+            },
+            "reason": {
+              "type": "string",
+              "description": "Why this action is suggested."
+            }
+          },
+          "description": "Recommended high-level disposition for the issue."
+        },
+        "missingInfo": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "A piece of missing information."
+          },
+          "description": "Information needed from the reporter."
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "type",
+              "description"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "$ref": "#/$defs/actionType",
+                "description": "Type of automatable operation."
+              },
+              "description": {
+                "type": "string",
+                "description": "What this action does."
+              },
+              "risk": {
+                "$ref": "#/$defs/actionRisk",
+                "description": "Risk level of the action."
+              },
+              "confidence": {
+                "$ref": "#/$defs/confidence",
+                "description": "Confidence that this action is appropriate."
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "A label name."
+                },
+                "description": "Labels to add/remove (for update-labels actions)."
+              },
+              "comment": {
+                "type": "string",
+                "description": "Comment text (for add-comment actions)."
+              },
+              "linkedIssue": {
+                "type": "integer",
+                "description": "Issue number to link (for link-related/link-duplicate actions).",
+                "minimum": 1
+              }
+            },
+            "description": "A single automatable action."
+          },
+          "description": "Automatable operations. Simplified: just type + description + relevant data."
+        }
+      },
+      "description": "Actionable output: recommended disposition and automatable operations."
+    }
+  }
+}
