@@ -12,6 +12,12 @@ description: >
 
 Write and review XML API documentation for SkiaSharp.
 
+## Key Concepts
+
+- The `docs/` directory is a **Git submodule** pointing to [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs) — changes must be committed and PR'd to that repository
+- XML files are **generated from NuGet assemblies** using `mdoc` — if new APIs were added, regenerate before editing (see [Regenerating Docs](#regenerating-docs))
+- For existing APIs, you can edit the XML files directly without regenerating
+
 ## File Locations
 
 ```
@@ -64,6 +70,23 @@ grep -rE " </|  </" docs/SkiaSharpAPI/
 
 - [references/patterns.md](references/patterns.md) - XML syntax and examples
 - [references/checklist.md](references/checklist.md) - Review severity criteria
+- [documentation/writing-docs.md](../../../documentation/writing-docs.md) - Full docs generation workflow (automated pipeline, local generation, cake targets)
+
+## Regenerating Docs
+
+When new APIs have been added (new classes, methods, properties), the XML doc files must be regenerated before you can document them. A daily GitHub Actions workflow does this automatically from the latest CI NuGet packages.
+
+**To regenerate locally** (e.g., after adding new APIs):
+
+```bash
+dotnet tool restore
+dotnet cake --target=docs-download-output   # Download latest NuGets
+dotnet cake --target=update-docs            # Regenerate XML docs
+```
+
+New members will appear with "To be added." placeholders. See [documentation/writing-docs.md](../../../documentation/writing-docs.md) for full details.
+
+**To edit existing docs** (no regeneration needed): just edit the XML files directly and run `dotnet cake --target=docs-format-docs` to format and validate.
 
 ## XML Validation
 

@@ -1,0 +1,49 @@
+name: Update API Docs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *' # daily at 6 AM UTC
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Download latest NuGet packages
+        run: dotnet cake --target=docs-download-output
+
+      - name: Regenerate API docs
+        run: dotnet cake --target=update-docs
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          path: docs
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/update-api-docs
+          commit-message: 'Update API docs from latest CI build'
+          title: 'Update API docs from latest CI build'
+          body: |
+            Automated update of XML API documentation generated from the latest CI NuGet packages.
+
+            This PR was created by the [Update API Docs](https://github.com/${{ github.repository }}/actions/workflows/update-docs.yml) workflow.
+          labels: docs
