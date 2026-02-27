@@ -30,18 +30,18 @@ namespace SkiaSharp.Views.Gtk
 			// get the drawing objects
 			var imgInfo = CreateDrawingObjects(width, height);
 
-			if (imgInfo.Width == 0 || imgInfo.Height == 0)
+			if (imgInfo.Width == 0 || imgInfo.Height == 0 || surface == null || pix == null)
 				return;
 
 			// start drawing
-			using (new SKAutoCanvasRestore(surface!.Canvas, true))
+			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, imgInfo));
 			}
 
 			surface.Canvas.Flush();
 
-			pix!.MarkDirty();
+			pix.MarkDirty();
 
 			// swap R and B
 			if (imgInfo.ColorType == SKColorType.Rgba8888)

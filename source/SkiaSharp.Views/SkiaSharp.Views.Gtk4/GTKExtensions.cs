@@ -1,5 +1,3 @@
-using System;
-
 namespace SkiaSharp.Views.Gtk
 {
 	public static class GTKExtensions
