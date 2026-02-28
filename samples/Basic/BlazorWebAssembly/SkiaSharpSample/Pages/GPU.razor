@@ -8,7 +8,10 @@
 
 <h1>GPU Canvas</h1>
 
-<p>Pure SkSL lava lamp — all rendering in the shader. Tap or drag to add a blob.</p>
+<p>
+    Pure SkSL lava lamp — all rendering in the shader.
+    Tap or drag to add a blob.
+</p>
 
 <div class="canvas-container border rounded p-2">
 
@@ -22,6 +25,7 @@
 </div>
 
 @code {
+
     // SkSL shader source: a "lava lamp" metaball effect.
     // 6 colored blobs orbit on Lissajous curves. When the user touches,
     // an extra white-hot blob appears at the touch position and merges
@@ -115,22 +119,26 @@
 
     // SKRuntimeShaderBuilder: compiled once via BuildShader(), then reused.
     // Each frame we update uniforms and call Build() to get a new SKShader.
-    SKRuntimeShaderBuilder builder = SKRuntimeEffect.BuildShader(sksl);
-    long startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    readonly SKRuntimeShaderBuilder builder = SKRuntimeEffect.BuildShader(sksl);
+    readonly long startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-    // Touch state passed to the shader as uniforms
+    // The paint that is reused for drawing the shader quad.
+    readonly SKPaint shaderPaint = new();
+
+    // Touch state passed to the shader as uniforms.
     float touchX = -1f, touchY = -1f;
     float touchActive = 0f;
+    // FPS display value, updated ~4Hz.
     double displayFps;
     long lastUiUpdate;
 
-    // Rolling average FPS calculation
+    // Rolling average FPS calculation.
     int tickIndex = 0;
     long tickSum = 0;
     long[] tickList = new long[100];
     long lastTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-    // Handle touch/mouse: track position while pressed, clear on release
+    // Handle touch/mouse: track position while pressed, clear on release.
     void OnTouch(SKTouchEventArgs e)
     {
         if (e.ActionType == SKTouchAction.Pressed || e.ActionType == SKTouchAction.Moved)
@@ -147,14 +155,14 @@
         }
     }
 
-    // Called every frame by SKGLView's render loop
+    // Called every frame by SKGLView's render loop.
     void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
         var width = e.Info.Width;
         var height = e.Info.Height;
 
-        // Update uniforms — no allocations, reuses the builder's internal storage
+        // Update uniforms — no allocations, reuses the builder's internal storage.
         var elapsed = (float)(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000f;
         builder.Uniforms["iTime"] = elapsed;
         builder.Uniforms["iResolution"] = new float[] { width, height };
@@ -164,16 +172,15 @@
         };
         builder.Uniforms["iTouchActive"] = touchActive;
 
-        // Build() creates a shader from cached effect + current uniforms
-        // Draw a full-screen quad to run the shader on every pixel
+        // Build() creates a shader from cached effect + current uniforms.
+        // Draw a full-screen quad to run the shader on every pixel.
         using var shader = builder.Build();
-        using var paint = new SKPaint();
-        paint.Shader = shader;
-        canvas.DrawRect(0, 0, width, height, paint);
+        shaderPaint.Shader = shader;
+        canvas.DrawRect(0, 0, width, height, shaderPaint);
 
         displayFps = GetCurrentFPS();
 
-        // Throttle Blazor UI updates to ~4Hz for the FPS counter
+        // Throttle Blazor UI updates to ~4Hz for the FPS counter.
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         if (now - lastUiUpdate > 250)
         {
@@ -190,7 +197,8 @@
         tickSum -= tickList[tickIndex];
         tickSum += delta;
         tickList[tickIndex] = delta;
-        if (++tickIndex == tickList.Length) tickIndex = 0;
+        if (++tickIndex == tickList.Length)
+            tickIndex = 0;
         return 1000.0 / ((double)tickSum / tickList.Length);
     }
 }

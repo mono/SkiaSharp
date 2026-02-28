@@ -8,7 +8,9 @@
 
 <h1>Drawing Canvas</h1>
 
-<p>Draw with touch or mouse. Use the scroll wheel to change brush size.</p>
+<p>
+    Draw with touch or mouse. Use the scroll wheel to change brush size.
+</p>
 
 <div class="canvas-container border rounded p-2">
 
@@ -23,8 +25,7 @@
     <div class="overlay-toolbar">
         @foreach (var (name, color) in colors)
         {
-            var isSelected = currentColor == color;
-            <div class="color-swatch @(isSelected ? "selected" : "")"
+            <div class="color-swatch @(currentColor == color ? "selected" : "")"
                  style="background:@name"
                  @onclick="() => SetColor(color)" />
         }
@@ -34,14 +35,25 @@
 </div>
 
 @code {
+
     SKCanvasView skiaView = null!;
     float brushSize = 25f;
     SKColor currentColor = SKColors.Black;
-    List<DrawingStroke> strokes = new();
+    List<DrawingStroke> strokes = [];
     DrawingStroke? currentStroke = null;
     SKPoint lastPoint;
 
-    static readonly (string Name, SKColor Color)[] colors = new[]
+    // The paint that is reused for drawing strokes.
+    readonly SKPaint strokePaint = new()
+    {
+        IsAntialias = true,
+        Style = SKPaintStyle.Stroke,
+        StrokeCap = SKStrokeCap.Round,
+        StrokeJoin = SKStrokeJoin.Round,
+    };
+
+    // The available brush colors with their CSS names.
+    static readonly (string Name, SKColor Color)[] colors =
     {
         ("black", SKColors.Black),
         ("red", SKColors.Red),
@@ -54,36 +66,30 @@
     void OnPaintSurface(SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
+
+        // Clear to white before drawing the strokes.
         canvas.Clear(SKColors.White);
 
-        using var paint = new SKPaint
-        {
-            IsAntialias = true,
-            Style = SKPaintStyle.Stroke,
-            StrokeCap = SKStrokeCap.Round,
-            StrokeJoin = SKStrokeJoin.Round,
-        };
-
-        // Draw completed strokes
+        // Draw completed strokes.
         foreach (var stroke in strokes)
         {
-            paint.Color = stroke.Color;
-            paint.StrokeWidth = stroke.StrokeWidth;
-            canvas.DrawPath(stroke.Path, paint);
+            strokePaint.Color = stroke.Color;
+            strokePaint.StrokeWidth = stroke.StrokeWidth;
+            canvas.DrawPath(stroke.Path, strokePaint);
         }
 
-        // Draw in-progress stroke
-        if (currentStroke != null)
+        // Draw in-progress stroke.
+        if (currentStroke is not null)
         {
-            paint.Color = currentStroke.Color;
-            paint.StrokeWidth = currentStroke.StrokeWidth;
-            canvas.DrawPath(currentStroke.Path, paint);
+            strokePaint.Color = currentStroke.Color;
+            strokePaint.StrokeWidth = currentStroke.StrokeWidth;
+            canvas.DrawPath(currentStroke.Path, strokePaint);
         }
 
-        // Brush size indicator at last pointer position
-        paint.Color = SKColors.Gray;
-        paint.StrokeWidth = 1;
-        canvas.DrawCircle(lastPoint, brushSize / 2f, paint);
+        // Brush size indicator at last pointer position.
+        strokePaint.Color = SKColors.Gray;
+        strokePaint.StrokeWidth = 1;
+        canvas.DrawCircle(lastPoint, brushSize / 2f, strokePaint);
     }
 
     void OnTouch(SKTouchEventArgs e)
@@ -93,13 +99,13 @@
         switch (e.ActionType)
         {
             case SKTouchAction.Pressed:
-                currentStroke = new DrawingStroke(new SKPath(), currentColor) { StrokeWidth = brushSize };
+                currentStroke = new DrawingStroke(new(), currentColor, brushSize);
                 currentStroke.Path.MoveTo(e.Location);
                 e.Handled = true;
                 break;
 
             case SKTouchAction.Moved:
-                if (currentStroke != null)
+                if (currentStroke is not null)
                 {
                     currentStroke.Path.LineTo(e.Location);
                     e.Handled = true;
@@ -107,7 +113,7 @@
                 break;
 
             case SKTouchAction.Released:
-                if (currentStroke != null)
+                if (currentStroke is not null)
                 {
                     strokes.Add(currentStroke);
                     currentStroke = null;
@@ -136,7 +142,9 @@
     void ClearCanvas()
     {
         foreach (var stroke in strokes)
+        {
             stroke.Path.Dispose();
+        }
         strokes.Clear();
         currentStroke?.Path.Dispose();
         currentStroke = null;
@@ -145,9 +153,6 @@
     }
 
     // Represents a single drawing stroke with its path, color, and width.
-    // Path is owned — callers must dispose it when removing strokes.
-    record DrawingStroke(SKPath Path, SKColor Color)
-    {
-        public float StrokeWidth { get; set; }
-    }
+    // Path is owned — callers must dispose when removing strokes.
+    record DrawingStroke(SKPath Path, SKColor Color, float StrokeWidth = 25);
 }
