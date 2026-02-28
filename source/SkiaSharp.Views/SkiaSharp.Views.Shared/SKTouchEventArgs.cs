@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if __MAUI__ || __BLAZOR__
+
+using System;
 
 #if __MAUI__
 using Microsoft.Maui;
@@ -90,3 +92,5 @@ namespace SkiaSharp.Views.Blazor
 		Right
 	}
 }
+
+#endif
