@@ -1,83 +1,61 @@
 ﻿@page "/raster"
 
-<h1>Raster (Bitmap) Canvas</h1>
+<h1>Raster Canvas</h1>
 
-<p>The canvas below is using pixels in memory. Click and drag to draw a line.</p>
+<p>Shows basic 2D rendering using SKCanvasView (bitmap-backed).</p>
 
 <div class="container">
     <div class="row">
         <div class="col border rounded p-2 canvas-container">
 
-            <SKCanvasView @ref="skiaView"
-                          OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
-                          Touch="OnTouch" EnableTouchEvents="true" />
+            <SKCanvasView OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true" />
 
         </div>
     </div>
 </div>
 
 @code {
-    SKCanvasView skiaView = null!;
-    SKPath? drawing;
-
     void OnPaintSurface(SKPaintSurfaceEventArgs e)
     {
-        // the the canvas and properties
         var canvas = e.Surface.Canvas;
+        var width = e.Info.Width;
+        var height = e.Info.Height;
 
-        // make sure the canvas is blank
         canvas.Clear(SKColors.White);
 
-        // decide what the text looks like
-        using var paint = new SKPaint
-            {
-                Color = SKColors.Black,
-                IsAntialias = true,
-                Style = SKPaintStyle.Fill
-            };
-        using var font = new SKFont
-            {
-                Size = 24
-            };
+        using var paint = new SKPaint { IsAntialias = true };
+        using var font = new SKFont { Size = 20 };
 
-        // draw some text
-        var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-        canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+        // gradient rectangle filling most of the canvas
+        using var shader = SKShader.CreateLinearGradient(
+            new SKPoint(40, 40),
+            new SKPoint(width - 40, height - 60),
+            new[] { SKColors.Blue, SKColors.Green },
+            SKShaderTileMode.Clamp);
+        paint.Shader = shader;
+        paint.Style = SKPaintStyle.Fill;
+        canvas.DrawRect(new SKRect(40, 40, width - 40, height - 60), paint);
+        paint.Shader = null;
 
-        // draw the path
-        if (drawing != null)
-        {
-            paint.Style = SKPaintStyle.Stroke;
-            paint.StrokeWidth = 5;
+        // filled red circle
+        paint.Color = SKColors.Red;
+        paint.Style = SKPaintStyle.Fill;
+        canvas.DrawCircle(width / 2f, height / 2f - 30, 50, paint);
 
-            canvas.DrawPath(drawing, paint);
-        }
-    }
+        // stroked yellow rectangle
+        paint.Color = SKColors.Yellow;
+        paint.Style = SKPaintStyle.Stroke;
+        paint.StrokeWidth = 3;
+        canvas.DrawRect(new SKRect(80, 80, width - 80, height - 100), paint);
 
-    void OnTouch(SKTouchEventArgs e)
-    {
-        switch (e.ActionType)
-        {
-            case SKTouchAction.Pressed:
-                drawing = new SKPath();
-                drawing.MoveTo(e.Location);
-                e.Handled = true;
-                break;
+        // thick orange line
+        paint.Color = SKColors.Orange;
+        paint.StrokeWidth = 6;
+        canvas.DrawLine(60, 60, width - 60, height - 80, paint);
 
-            case SKTouchAction.Moved:
-                if (drawing is not null)
-                {
-                    drawing.LineTo(e.Location);
-                    e.Handled = true;
-                }
-                break;
-
-            case SKTouchAction.Released:
-                drawing = null;
-                e.Handled = true;
-                break;
-        }
-
-        skiaView.Invalidate();
+        // centered text near the bottom
+        paint.Style = SKPaintStyle.Fill;
+        paint.Color = SKColors.Black;
+        canvas.DrawText("Hello, SkiaSharp!", width / 2f, height - 30, SKTextAlign.Center, font, paint);
     }
 }

@@ -1,0 +1,164 @@
+@page "/drawing"
+
+<h1>Drawing Canvas</h1>
+
+<p>Draw with touch or mouse. Use the scroll wheel to change brush size. Pen pressure adjusts stroke width automatically.</p>
+
+<div class="container">
+    <div class="row">
+        <div class="col border rounded p-2 canvas-container">
+
+            <SKCanvasView @ref="skiaView"
+                          OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
+                          Touch="OnTouch" EnableTouchEvents="true" />
+
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col">
+            <p>Brush: @(brushSize)px</p>
+            <div>
+                @foreach (var (name, color) in colors)
+                {
+                    var isSelected = currentColor == color;
+                    <div style="width:30px;height:30px;border-radius:50%;background:@name;border:2px solid @(isSelected ? "white" : "transparent");cursor:pointer;display:inline-block;margin:4px"
+                         @onclick="() => SetColor(color)" />
+                }
+            </div>
+            <button class="btn btn-secondary mt-2" @onclick="ClearCanvas">Clear</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    SKCanvasView skiaView = null!;
+    float brushSize = 5f;
+    SKColor currentColor = SKColors.Black;
+    List<DrawingStroke> strokes = new();
+    DrawingStroke? currentStroke = null;
+    SKPoint lastPoint;
+
+    static readonly (string Name, SKColor Color)[] colors = new[]
+    {
+        ("black", SKColors.Black),
+        ("red", SKColors.Red),
+        ("blue", SKColors.Blue),
+        ("green", SKColors.Green),
+        ("orange", SKColors.Orange),
+        ("purple", SKColors.Purple),
+    };
+
+    void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.White);
+
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            Style = SKPaintStyle.Stroke,
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round,
+        };
+
+        // draw completed strokes
+        foreach (var stroke in strokes)
+        {
+            paint.Color = stroke.Color;
+            paint.StrokeWidth = stroke.StrokeWidth;
+            canvas.DrawPath(stroke.Path, paint);
+        }
+
+        // draw in-progress stroke
+        if (currentStroke != null)
+        {
+            paint.Color = currentStroke.Color;
+            paint.StrokeWidth = currentStroke.StrokeWidth;
+            canvas.DrawPath(currentStroke.Path, paint);
+        }
+
+        // brush size indicator at last pointer position
+        paint.Color = SKColors.Gray;
+        paint.StrokeWidth = 1;
+        canvas.DrawCircle(lastPoint, brushSize / 2f, paint);
+    }
+
+    void OnTouch(SKTouchEventArgs e)
+    {
+        lastPoint = e.Location;
+
+        switch (e.ActionType)
+        {
+            case SKTouchAction.Pressed:
+                float width = GetStrokeWidth(e);
+                currentStroke = new DrawingStroke
+                {
+                    Path = new SKPath(),
+                    Color = currentColor,
+                    StrokeWidth = width,
+                };
+                currentStroke.Path.MoveTo(e.Location);
+                e.Handled = true;
+                break;
+
+            case SKTouchAction.Moved:
+                if (currentStroke != null)
+                {
+                    currentStroke.StrokeWidth = GetStrokeWidth(e);
+                    currentStroke.Path.LineTo(e.Location);
+                    e.Handled = true;
+                }
+                break;
+
+            case SKTouchAction.Released:
+                if (currentStroke != null)
+                {
+                    strokes.Add(currentStroke);
+                    currentStroke = null;
+                }
+                e.Handled = true;
+                break;
+
+            case SKTouchAction.WheelChanged:
+                brushSize += e.WheelDelta / 120f;
+                brushSize = Math.Clamp(brushSize, 1f, 50f);
+                e.Handled = true;
+                break;
+        }
+
+        skiaView.Invalidate();
+        StateHasChanged();
+    }
+
+    float GetStrokeWidth(SKTouchEventArgs e)
+    {
+        if (e.Pressure > 0 && (e.DeviceType == SKTouchDeviceType.Touch || e.DeviceType == SKTouchDeviceType.Pen))
+            return brushSize * e.Pressure;
+        return brushSize;
+    }
+
+    void SetColor(SKColor color)
+    {
+        currentColor = color;
+        skiaView.Invalidate();
+        StateHasChanged();
+    }
+
+    void ClearCanvas()
+    {
+        foreach (var stroke in strokes)
+            stroke.Path.Dispose();
+        strokes.Clear();
+        currentStroke?.Path.Dispose();
+        currentStroke = null;
+        skiaView.Invalidate();
+        StateHasChanged();
+    }
+
+    private class DrawingStroke
+    {
+        public SKPath Path = null!;
+        public SKColor Color;
+        public float StrokeWidth;
+    }
+}
