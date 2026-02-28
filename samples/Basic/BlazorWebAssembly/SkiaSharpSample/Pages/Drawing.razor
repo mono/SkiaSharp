@@ -12,12 +12,11 @@
     Draw with touch or mouse. Use the scroll wheel to change brush size.
 </p>
 
-<div class="canvas-container border rounded p-2">
+<div class="canvas-container border rounded p-2" @onwheel="OnWheel" @onwheel:preventDefault>
 
     <SKCanvasView @ref="skiaView"
                   OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
-                  @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp"
-                  @onwheel="OnWheel" @onwheel:preventDefault="true" />
+                  @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp" />
 
     <div class="overlay-info">
         Brush: @(brushSize.ToString("F2"))px

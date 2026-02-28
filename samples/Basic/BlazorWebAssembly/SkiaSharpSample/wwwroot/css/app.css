@@ -1,5 +1,12 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+#app {
+    height: 100%;
 }
 
 h1:focus {
@@ -22,6 +29,12 @@ a, .btn-link {
 
 .content {
     padding-top: 1.1rem;
+    padding-bottom: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .valid.modified:not([type=checkbox]) {
@@ -105,9 +118,11 @@ code {
 
 .canvas-container {
     line-height: 1;
+    flex: 1;
+    min-height: 0;
 }
 
     .canvas-container canvas {
         width: 100%;
-        height: 300px;
+        height: 100%;
     }
