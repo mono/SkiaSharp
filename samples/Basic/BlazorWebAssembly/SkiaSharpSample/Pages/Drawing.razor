@@ -10,21 +10,22 @@
 
 <p>Draw with touch or mouse. Use the scroll wheel to change brush size. Pen pressure adjusts stroke width automatically.</p>
 
-<div class="canvas-container border rounded p-2" style="position:relative">
+<div class="canvas-container border rounded p-2">
 
     <SKCanvasView @ref="skiaView"
                   OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
                   Touch="OnTouch" EnableTouchEvents="true" />
 
-    <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1;background:rgba(0,0,0,0.5);border:1px solid rgba(0,0,0,0.4);border-radius:8px;padding:6px 16px;backdrop-filter:blur(4px)">
-        <span style="color:white;font-size:0.85rem;font-weight:500">Brush: @(brushSize.ToString("F2"))px</span>
+    <div class="overlay-info">
+        Brush: @(brushSize.ToString("F2"))px
     </div>
 
-    <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:1;background:rgba(0,0,0,0.5);border:1px solid rgba(0,0,0,0.4);border-radius:8px;padding:8px 16px;backdrop-filter:blur(4px)">
+    <div class="overlay-toolbar">
         @foreach (var (name, color) in colors)
         {
             var isSelected = currentColor == color;
-            <div style="width:26px;height:26px;border-radius:50%;background:@name;border:2px solid @(isSelected ? "white" : "transparent");cursor:pointer"
+            <div class="color-swatch @(isSelected ? "selected" : "")"
+                 style="background:@name"
                  @onclick="() => SetColor(color)" />
         }
         <button class="btn btn-outline-light btn-sm" @onclick="ClearCanvas">Clear</button>

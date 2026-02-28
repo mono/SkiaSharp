@@ -10,13 +10,13 @@
 
 <p>Pure SkSL lava lamp — all rendering in the shader. Tap or drag to add a blob.</p>
 
-<div class="canvas-container border rounded p-2" style="position:relative">
+<div class="canvas-container border rounded p-2">
 
     <SKGLView @ref="glView" OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
               EnableRenderLoop="true" EnableTouchEvents="true" Touch="OnTouch" />
 
-    <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:1;background:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.6);border-radius:8px;padding:6px 16px;backdrop-filter:blur(4px)">
-        <span style="color:black;font-size:0.85rem;font-weight:500">@($"{displayFps:F2}")fps</span>
+    <div class="overlay-stats">
+        @($"{displayFps:F2}") fps
     </div>
 
 </div>
