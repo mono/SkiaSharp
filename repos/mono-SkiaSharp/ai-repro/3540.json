@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3540,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-14T12:00:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "assessment": "feature-request",
+  "notes": "Confirmed: GTK3 and GTK4 SKDrawingArea views have no scroll wheel event handling. Neither view subscribes to scroll events, attaches EventControllerScroll (GTK4), or sets ScrollMask (GTK3). The WheelDelta/WheelChanged infrastructure exists only in the MAUI Core layer (Windows implementation). This is a feature request — the requested functionality does not exist yet.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Inspect GTK4 SKDrawingArea.cs for scroll event handling — confirmed file has 105 lines with only PaintSurface rendering via SetDrawFunc callback, no scroll controllers, no input events",
+      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.Gtk4/SKDrawingArea.cs | wc -l",
+      "exitCode": 0,
+      "output": "105 lines. File contains: constructor with SetDrawFunc, OnDrawFunc rendering method, OnPaintSurface event, Dispose, CreateDrawingObjects, FreeDrawingObjects. No EventControllerScroll, no AddController, no scroll/wheel/touch references.",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Inspect GTK3 SKDrawingArea.cs for scroll event handling — confirmed file has 104 lines with only OnDrawn rendering, no scroll event subscription",
+      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.Gtk3/SKDrawingArea.cs | wc -l",
+      "exitCode": 0,
+      "output": "104 lines. File contains: constructor, OnDrawn rendering override, OnPaintSurface event, Dispose, CreateDrawingObjects, FreeDrawingObjects. No EventMask.ScrollMask, no ScrollEvent handler, no input handling.",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify WheelDelta/WheelChanged exists in MAUI Core (reference implementation) but not in GTK views",
+      "command": "grep -rn 'WheelDelta\\|WheelChanged' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/",
+      "exitCode": 0,
+      "output": "SKTouchEventArgs.cs:32: WheelDelta = wheelDelta;\nSKTouchEventArgs.cs:50: public int WheelDelta { get; private set; }\nSKTouchEventArgs.cs:68: WheelChanged,\nPlatform/Windows/SKTouchHandler.cs:35: view.PointerWheelChanged -= OnPointerWheelChanged;\nPlatform/Windows/SKTouchHandler.cs:101: private void OnPointerWheelChanged(...)\nPlatform/Windows/SKTouchHandler.cs:122: var wheelDelta = pointerPoint?.Properties?.MouseWheelDelta ?? 0;",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Confirm no SKTouchHandler or scroll-related files exist for either GTK platform",
+      "command": "find source/SkiaSharp.Views/SkiaSharp.Views.Gtk3 source/SkiaSharp.Views/SkiaSharp.Views.Gtk4 -type f -name '*.cs' | sort",
+      "exitCode": 0,
+      "output": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk3/SKDrawingArea.cs\nsource/SkiaSharp.Views/SkiaSharp.Views.Gtk4/SKDrawingArea.cs\n\nOnly one .cs file per GTK view directory. No Touch/Input/Scroll handler files exist.",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Feature does not exist. Latest stable SkiaSharp.Views.Gtk4 NuGet package has no scroll event handling — source inspection of SKDrawingArea confirms only PaintSurface rendering.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "current-main",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Feature does not exist on main branch either. GTK3 and GTK4 SKDrawingArea have no scroll event handling in the current source.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "scope": "unknown",
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "Well-scoped enhancement filed by the maintainer with complete implementation guidance. Confirmed the feature is absent — ready for implementation as part of the v120 normalization effort (#3533)."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Area label could be refined to area/SkiaSharp.Views since changes are in the view layer",
+        "risk": "low",
+        "confidence": 0.90
+      }
+    ],
+    "proposedResponse": {
+      "body": "Confirmed via source inspection: neither the GTK3 nor GTK4 `SKDrawingArea` views have any scroll wheel event handling. The `WheelDelta`/`WheelChanged` infrastructure exists in the MAUI Core layer (with a working Windows implementation), but no equivalent `SKTouchHandler` or scroll event wiring exists for GTK platforms.\n\nSpecifically:\n- **GTK4** `SKDrawingArea` — no `EventControllerScroll` attached, no input events of any kind\n- **GTK3** `SKDrawingArea` — no `ScrollMask` set, no `ScrollEvent` handler\n- No `SKTouchHandler` equivalent exists for either GTK view\n\nThis is ready for implementation following the specification in the issue body.",
+      "status": "do-not-post"
+    }
+  }
+}
