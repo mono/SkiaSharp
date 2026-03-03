@@ -1,18 +1,19 @@
 ---
 name: issue-repro
 description: >-
-  Reproduce a SkiaSharp bug systematically and capture structured reproduction
-  results. Produces schema-validated JSON with step-by-step commands, outputs,
+  Reproduce a SkiaSharp issue systematically and capture structured reproduction
+  results. Handles bugs (verify reported behavior) and enhancements (confirm feature
+  is missing). Produces schema-validated JSON with step-by-step commands, outputs,
   environment details, and conclusion.
   Triggers: "repro #123", "reproduce #123", "reproduce issue", "try to reproduce",
   "can you reproduce", "repro this bug", "create reproduction".
 ---
 
-# Bug Reproduction
+# Issue Reproduction
 
 **Bug pipeline: Step 2 of 3 (Repro).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
 
-Systematically reproduce a SkiaSharp bug and produce structured, schema-validated reproduction JSON.
+Systematically reproduce a SkiaSharp issue and produce structured, schema-validated reproduction JSON.
 
 ## ⛔ MANDATORY FIRST STEPS (do not skip)
 
@@ -55,7 +56,14 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
 
 ### 1. Classify
 
-Read [references/bug-categories.md](references/bug-categories.md) to classify the bug type.
+Read [references/bug-categories.md](references/bug-categories.md) to classify the issue type.
+
+**Enhancement / feature request?** If the triage JSON shows `type/enhancement` or the issue clearly requests new functionality:
+- **Still produce a repro JSON.** Enhancements are valid reproduction targets.
+- **Goal:** Confirm the feature is missing by inspecting source code and attempting the requested behavior.
+- **Conclusion:** Use `not-reproduced` (the feature doesn't exist yet) with `assessment: "feature-request"`.
+- **Steps:** Include code investigation steps showing the feature is absent (e.g., grep for missing handlers, verify API doesn't exist).
+- **Skip multi-version testing** (Phases 3B/3C/3D) — there's nothing to regress-test.
 
 ### 2. Extract reporter's version & TFM
 

@@ -255,3 +255,30 @@ When the reporter upgrades SkiaSharp (e.g. 2.x → 3.x) and gets compiler errors
 - Always include SkiaSharp version and runtime info in output.
 - Save artifacts (PNGs, crash logs) to files — reference by filename, don't inline.
 - Test helpers available in repo: `PathToImages`, `PathToFonts`, `IsWindows`/`IsMac`/`IsLinux`.
+
+---
+
+## 7. Enhancement / Feature Request
+
+Not a bug — the issue requests new functionality that doesn't exist yet.
+
+### Signals
+- Triage JSON has `type/enhancement` or `type/feature-request`
+- Issue title contains "add", "expose", "support", "new method", "feature request"
+- No error, crash, or incorrect behavior reported — issue describes desired behavior
+
+### Strategy
+1. **Confirm the feature is missing** — grep for the requested API, handler, or behavior in the source code.
+2. **Document what exists** — note related infrastructure that's already in place (e.g., shared enums, sibling platform implementations).
+3. **Skip multi-version testing** — there's nothing to regress-test across versions.
+
+### Conclusion
+- `not-reproduced` — the requested feature literally doesn't exist, so there's no behavior to observe.
+- `assessment: "feature-request"`
+- Include code investigation steps showing the feature is absent.
+
+### Example
+Issue: "Add wheel support to GTK3 views"
+- Step 1: grep for `WheelEvent` or `ScrollEvent` in GTK3 view → not found
+- Step 2: confirm `SKTouchAction.WheelChanged` enum exists (shared infra) but GTK3 `SKDrawingArea` doesn't subscribe to it
+- Conclusion: `not-reproduced`, assessment: `feature-request`

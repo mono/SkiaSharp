@@ -80,7 +80,7 @@ This triggers the `issue-triage` skill in each agent.
 Launch one `general-purpose` **sync** agent per issue, sequentially. Each agent's prompt is exactly:
 
 ```
-reproduce issue #{number}. You MUST invoke the issue-repro skill and produce a validated repro JSON, even for enhancements.
+reproduce issue #{number}
 ```
 
 This triggers the `issue-repro` skill in each agent.

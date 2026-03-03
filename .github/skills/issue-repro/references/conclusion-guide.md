@@ -1,6 +1,6 @@
 # Conclusion Guide
 
-How to choose the correct `conclusion` value for a bug reproduction attempt.
+How to choose the correct `conclusion` value for a reproduction attempt (bugs and enhancements).
 
 ## Contents
 1. [Factual vs Editorial](#️-critical-principle-factual-vs-editorial)
@@ -134,8 +134,11 @@ Recommended values:
 - `"breaking-change"`
 - `"docs-gap"`
 - `"user-error"`
+- `"feature-request"` — issue is an enhancement, not a bug. The feature doesn't exist yet.
 
 **Example (#3279-style):** conclusion = `reproduced`, assessment = `breaking-change`, notes explain the rename/migration guidance.
+
+**Example (enhancement):** conclusion = `not-reproduced`, assessment = `feature-request`, notes = "Confirmed: GTK3 SKDrawingArea has no wheel event handler. The feature requested in this issue does not exist yet."
 
 ### `blockers[]`
 
