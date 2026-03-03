@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3539,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-18T12:00:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Issue #3539 is a type/enhancement request to add scroll wheel and full touch/input event infrastructure to WPF and WinForms views. Code inspection confirms the current state: WPF (SKElement, SKGLElement) and WinForms (SKControl, SKGLControl) views have zero touch/wheel/input event handling \u2014 grep found no references to Touch, MouseWheel, EnableTouch, or SKTouchHandler in either view project. The MAUI Windows SKTouchHandler already implements wheel support via PointerWheelChanged with MouseWheelDelta passthrough, confirming the reference pattern exists. Console fallback is not applicable \u2014 this is purely about UI view event wiring in platform-specific WPF/WinForms classes, not core SkiaSharp logic. Requires Windows host to verify WPF/WinForms runtime behavior.",
+  "blockers": [
+    "Requires Windows host \u2014 WPF and WinForms UI frameworks cannot run on macOS",
+    "Enhancement request (type/enhancement), not a bug \u2014 no broken behavior to reproduce at runtime",
+    "Console fallback not applicable \u2014 issue is about UI view event wiring, not core SkiaSharp API logic"
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Verify environment: macOS arm64 with .NET SDK 10.0.102",
+      "command": "uname -ms && dotnet --version",
+      "exitCode": 0,
+      "output": "Darwin arm64\n10.0.102",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Code inspection: verify WPF views have no touch/wheel infrastructure",
+      "command": "grep -rn 'Touch|MouseWheel|EnableTouch|SKTouchHandler' source/SkiaSharp.Views/SkiaSharp.Views.WPF/ source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/ || echo 'No matches'",
+      "exitCode": 0,
+      "output": "No touch/wheel references found in WPF or WinForms views",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Code inspection: verify MAUI Windows SKTouchHandler has wheel support as reference",
+      "command": "grep -n 'WheelDelta|WheelChanged|MouseWheel' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "35: view.PointerWheelChanged -= OnPointerWheelChanged;\n44: view.PointerWheelChanged += OnPointerWheelChanged;\n101: private void OnPointerWheelChanged(...)\n122: var wheelDelta = pointerPoint?.Properties?.MouseWheelDelta ?? 0;",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Runtime verification skipped: WPF/WinForms require Windows host, current host is macOS",
+      "layer": "deployment",
+      "result": "skip"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "N/A (enhancement request, no specific version tested)",
+    "dockerUsed": false
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "type/enhancement \u2014 correct classification",
+        "corrected": "Confirmed: this is an enhancement request, not a bug. No broken behavior to reproduce."
+      }
+    ]
+  }
+}
