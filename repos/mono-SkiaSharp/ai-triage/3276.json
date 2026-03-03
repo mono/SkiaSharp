@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3276,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Reporter's Blazor web app throws 'native libSkiaSharp library version incompatible' exception on Linux Azure App Service due to DevExpress.Drawing.Skia pulling a different version of SkiaSharp native assets than the explicitly referenced SkiaSharp 3.119.0, and the NativeAssets.Linux.NoDependencies package being referenced in a library project instead of the application project.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.82 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.90 },
+    "platforms": ["os/Linux"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor web app (Dashboard) referencing DevExpress.Drawing.Skia 24.2.6",
+        "Have a shared Core library referencing SkiaSharp 3.119.0 and SkiaSharp.NativeAssets.Linux.NoDependencies 3.119.0",
+        "Deploy to Azure App Service on Linux",
+        "Observe native libSkiaSharp version exception at runtime"
+      ],
+      "environmentDetails": "Azure App Service (Linux), Visual Studio (Windows), SkiaSharp 3.119.0, DevExpress.Drawing.Skia 24.2.6",
+      "screenshots": [
+        { "url": "https://github.com/user-attachments/assets/9624c2c7-42fa-454a-a838-c8ab6f4db6ee", "description": "Browser console showing native library version exception" }
+      ],
+      "relatedIssues": [3117]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.0", "2.88.9"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The version check mechanism in SkiaSharpVersion.cs is unchanged. DevExpress.Drawing.Skia 24.2.6 likely depends on an older SkiaSharp version, creating a transitive version conflict."
+    }
+  },
+  "analysis": {
+    "summary": "Third-party dependency version conflict: DevExpress.Drawing.Skia 24.2.6 likely pulls an older SkiaSharp native library transitively, which conflicts with the explicitly referenced SkiaSharp 3.119.0. Additionally, NativeAssets.Linux.NoDependencies is referenced in the Core library project rather than the Dashboard application project, which may prevent the correct native binary from being deployed.",
+    "rationale": "This is not a SkiaSharp bug but a packaging/dependency configuration issue. The version check in SkiaSharpVersion.CheckNativeLibraryCompatible is working as designed — it detects that the loaded native library version doesn't match the managed assembly version. The root cause is a transitive dependency conflict from DevExpress.Drawing.Skia, compounded by the NativeAssets package being in a library project instead of the application project. Issue #3117 documents the same version mismatch pattern with third-party packages (Aspose, Avalonia). Classified as question because the reporter is asking for configuration guidance, not reporting broken SkiaSharp behavior.",
+    "keySignals": [
+      { "text": "Is DevExpress.Drawing.Skia internally dependent on a different version of SkiaSharp or does it override anything that may conflict with our version?", "source": "issue body", "interpretation": "Reporter suspects transitive dependency conflict — this is almost certainly the root cause." },
+      { "text": "The Worker project proves that SkiaSharp works in the same Linux environment", "source": "issue body", "interpretation": "Confirms SkiaSharp 3.119.0 works on the Linux host. The issue is specific to the Dashboard project where DevExpress is involved." },
+      { "text": "The same configuration works on Windows, but not on Linux", "source": "issue body", "interpretation": "Windows auto-includes NativeAssets.Win32 which may resolve correctly. Linux requires manual NativeAssets references, making version conflicts more visible." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SkiaSharpVersion.cs", "lines": "38-67", "finding": "CheckNativeLibraryCompatible throws InvalidOperationException when native library version falls outside [NativeMinimum, NativeMinimum.Major+1). For SkiaSharp 3.119.0, NativeMinimum is 119.0, so native must be in range [119.0, 120.0). If DevExpress brings in an older native (e.g. 116.x or 2.88.x era), the check fails.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKObject.cs", "lines": "39-41", "finding": "Static constructor calls CheckNativeLibraryCompatible(true), meaning the version check runs on first use of any SKObject and throws immediately if incompatible.", "relevance": "direct" },
+      { "file": "documentation/packages.md", "lines": "139-141", "finding": "NativeAssets packages must be referenced in the application project (executable), not library projects. The reporter has NativeAssets.Linux.NoDependencies in the Core library project, not the Dashboard app project — the native binary may not be copied to the final output.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Move SkiaSharp.NativeAssets.Linux.NoDependencies PackageReference from Core library to the Dashboard application project",
+      "Check DevExpress.Drawing.Skia's transitive SkiaSharp dependency version with 'dotnet list package --include-transitive' and align all versions",
+      "Clean solution (delete bin/obj folders) and rebuild to clear stale native binaries"
+    ],
+    "nextQuestions": [
+      "What exact error message appears in the exception (screenshot is not readable as text)?",
+      "What version of SkiaSharp does DevExpress.Drawing.Skia 24.2.6 depend on transitively?",
+      "What does 'dotnet list package --include-transitive --framework net8.0' show for the Dashboard project?"
+    ],
+    "resolution": {
+      "hypothesis": "DevExpress.Drawing.Skia 24.2.6 has a transitive dependency on an older SkiaSharp native library. When deployed to Linux, NuGet resolves the native binary from DevExpress's dependency chain instead of the explicitly referenced 3.119.0. Additionally, the NativeAssets reference is in a library project where it may not propagate to the published output.",
+      "proposals": [
+        {
+          "title": "Move NativeAssets to application project and pin version",
+          "description": "Add an explicit SkiaSharp.NativeAssets.Linux.NoDependencies 3.119.0 PackageReference in the Dashboard (application) project, not just the Core library. This ensures the correct native binary is deployed. Remove the reference from Core if it's only needed for deployment.",
+          "category": "workaround",
+          "confidence": 0.80,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Audit transitive dependencies and align versions",
+          "description": "Run 'dotnet list package --include-transitive' on the Dashboard project to identify which SkiaSharp version DevExpress.Drawing.Skia brings transitively. If it brings an older version, either (a) update DevExpress to a version that supports SkiaSharp 3.119.0, or (b) downgrade SkiaSharp to match DevExpress's expected version.",
+          "category": "investigation",
+          "confidence": 0.85,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Clean and rebuild solution",
+          "description": "Delete all bin/ and obj/ folders across the solution, restore NuGet packages, and rebuild. Stale cached native binaries from previous versions are a common cause of this error, as confirmed by multiple reporters in #3117.",
+          "category": "workaround",
+          "confidence": 0.60,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Audit transitive dependencies and align versions",
+      "recommendedReason": "The root cause is almost certainly a version conflict between DevExpress's transitive SkiaSharp dependency and the explicitly referenced 3.119.0. Identifying the exact version mismatch will guide whether to update DevExpress, downgrade SkiaSharp, or pin the native assets version in the app project."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.78,
+      "reason": "This is a dependency configuration issue, not a SkiaSharp bug. The version check is working as designed. The reporter needs to align their package versions and move NativeAssets to the application project."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and native labels; correct from type/bug",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": ["type/question", "area/libSkiaSharp.native", "os/Linux"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post diagnosis with workaround steps for version conflict resolution",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the detailed project structure — that helps narrow this down.\n\nThis is almost certainly a transitive dependency version conflict. `DevExpress.Drawing.Skia 24.2.6` likely depends on a different version of SkiaSharp internally, and on Linux, the wrong native `libSkiaSharp` binary ends up being loaded. The version check in SkiaSharp detects the mismatch and throws the exception you're seeing.\n\nTwo things to check:\n\n1. **Audit transitive dependencies.** Run this in the Dashboard project directory to see which SkiaSharp version DevExpress brings in:\n   ```\n   dotnet list package --include-transitive\n   ```\n   Look for any SkiaSharp-related packages with a different version than 3.119.0.\n\n2. **Move NativeAssets to the app project.** `SkiaSharp.NativeAssets.Linux.NoDependencies` is currently in the Core library — per [deployment guidance](https://github.com/mono/SkiaSharp/blob/main/documentation/packages.md#deployment--containers), NativeAssets packages should be in the **application** (executable) project so the correct binary is deployed. Add it directly to the Dashboard project.\n\nIf DevExpress depends on an older SkiaSharp version, you'll need to either align your SkiaSharp version to match what DevExpress expects, or update DevExpress to a version that supports SkiaSharp 3.119.0. This is a question best directed to DevExpress support.\n\nA clean rebuild (delete all `bin/` and `obj/` folders) after making changes is also recommended — stale native binaries are a common cause of this error."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #3117 which documents the same version mismatch pattern",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3117
+      }
+    ]
+  }
+}
