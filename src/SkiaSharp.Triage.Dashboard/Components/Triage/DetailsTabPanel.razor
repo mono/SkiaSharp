@@ -1,238 +1,244 @@
 @using SkiaSharp.Triage.Dashboard.Helpers
 @using static SkiaSharp.Triage.Dashboard.Helpers.TriageFormatHelper
 
-@* ═══ Summary ═══════════════════════════════════════════ *@
-<div class="section-card">
-    <h3 class="section-title">Summary</h3>
-    <p class="summary-text">@Issue.Summary</p>
-</div>
-
-@* ═══ Resolution Proposals ══════════════════════════════ *@
-@if (Issue.Analysis?.Resolution is not null)
+@if (Tab == "analysis")
 {
-    var res = Issue.Analysis.Resolution;
+    @* ═══ Summary ═══════════════════════════════════════════ *@
     <div class="section-card">
-        <h3 class="section-title">Resolution Proposals</h3>
-        @if (res.Hypothesis is not null)
-        {
-            <div class="resolution-hypothesis">
-                <h4>Hypothesis</h4>
-                <div class="md-content">@MarkdownHelper.ToHtml(res.Hypothesis)</div>
-            </div>
-        }
-        @if (res.Proposals is { Count: > 0 })
-        {
-            <h4>Proposals</h4>
-            <div class="proposals-list">
-                @{ var sortedProposals = res.Proposals.OrderByDescending(p => p.Title == res.RecommendedProposal).ToList(); }
-                @foreach (var proposal in sortedProposals)
-                {
-                    var isRecommended = proposal.Title == res.RecommendedProposal;
-                    <div class="proposal-card @(isRecommended ? "proposal-recommended" : "")">
-                        @if (isRecommended)
-                        {
-                            <span class="badge-recommended">★ Recommended</span>
-                        }
-                        <h5>@proposal.Title</h5>
-                        <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
-                        <div class="proposal-meta">
-                            @if (proposal.Category is not null)
+        <h3 class="section-title">Summary</h3>
+        <p class="summary-text">@Issue.Summary</p>
+    </div>
+
+    @* ═══ Resolution Proposals ══════════════════════════════ *@
+    @if (Issue.Analysis?.Resolution is not null)
+    {
+        var res = Issue.Analysis.Resolution;
+        <div class="section-card">
+            <h3 class="section-title">Resolution Proposals</h3>
+            @if (res.Hypothesis is not null)
+            {
+                <div class="resolution-hypothesis">
+                    <h4>Hypothesis</h4>
+                    <div class="md-content">@MarkdownHelper.ToHtml(res.Hypothesis)</div>
+                </div>
+            }
+            @if (res.Proposals is { Count: > 0 })
+            {
+                <h4>Proposals</h4>
+                <div class="proposals-list">
+                    @{ var sortedProposals = res.Proposals.OrderByDescending(p => p.Title == res.RecommendedProposal).ToList(); }
+                    @foreach (var proposal in sortedProposals)
+                    {
+                        var isRecommended = proposal.Title == res.RecommendedProposal;
+                        <div class="proposal-card @(isRecommended ? "proposal-recommended" : "")">
+                            @if (isRecommended)
                             {
-                                <span class="label">@FormatLabel(proposal.Category.Value.ToJsonString())</span>
+                                <span class="badge-recommended">★ Recommended</span>
                             }
-                            @if (proposal.Effort is not null)
+                            <h5>@proposal.Title</h5>
+                            <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
+                            <div class="proposal-meta">
+                                @if (proposal.Category is not null)
+                                {
+                                    <span class="label">@FormatLabel(proposal.Category.Value.ToJsonString())</span>
+                                }
+                                @if (proposal.Effort is not null)
+                                {
+                                    <span class="label">Effort: @FormatLabel(proposal.Effort.Value.ToJsonString())</span>
+                                }
+                                @if (proposal.Validated is not null)
+                                {
+                                    <span class="label">Validated: @FormatLabel(proposal.Validated.Value.ToJsonString())</span>
+                                }
+                                @if (proposal.Confidence is not null)
+                                {
+                                    <span class="field-confidence">@proposal.Confidence.Value.ToString("P0")</span>
+                                }
+                            </div>
+                            @if (proposal.CodeSnippet is not null)
                             {
-                                <span class="label">Effort: @FormatLabel(proposal.Effort.Value.ToJsonString())</span>
+                                <pre class="code-block"><code>@proposal.CodeSnippet</code></pre>
                             }
-                            @if (proposal.Validated is not null)
+                            @if (isRecommended && res.RecommendedReason is not null)
                             {
-                                <span class="label">Validated: @FormatLabel(proposal.Validated.Value.ToJsonString())</span>
-                            }
-                            @if (proposal.Confidence is not null)
-                            {
-                                <span class="field-confidence">@proposal.Confidence.Value.ToString("P0")</span>
+                                <div class="recommended-reason"><strong>Why:</strong> @res.RecommendedReason</div>
                             }
                         </div>
-                        @if (proposal.CodeSnippet is not null)
-                        {
-                            <pre class="code-block"><code>@proposal.CodeSnippet</code></pre>
-                        }
-                        @if (isRecommended && res.RecommendedReason is not null)
-                        {
-                            <div class="recommended-reason"><strong>Why:</strong> @res.RecommendedReason</div>
-                        }
-                    </div>
-                }
-            </div>
-        }
-    </div>
-}
-
-@* ═══ Key Signals ═══════════════════════════════════════ *@
-@if (Issue.Analysis?.KeySignals is { Count: > 0 })
-{
-    <div class="section-card">
-        <h3 class="section-title">Key Signals</h3>
-        @foreach (var signal in Issue.Analysis.KeySignals)
-        {
-            <div class="signal-card">
-                <blockquote class="signal-quote">"@signal.Text"</blockquote>
-                <span class="evidence-source">— @signal.Source</span>
-                <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
-            </div>
-        }
-    </div>
-}
-
-@* ═══ Code Investigation ═══════════════════════════════ *@
-@if (Issue.Analysis?.CodeInvestigation is { Count: > 0 })
-{
-    <div class="section-card">
-        <h3 class="section-title">Code Investigation</h3>
-        @foreach (var entry in Issue.Analysis.CodeInvestigation)
-        {
-            <div class="code-investigation-card">
-                <div class="code-file-ref">
-                    <a href="@GetFileUrl(entry)" target="_blank" rel="noopener noreferrer">
-                        <code>@entry.File</code>
-                        @if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
-                        {
-                            <span class="code-lines">L@(entry.Lines)</span>
-                        }
-                    </a>
-                    <span class="label label-relevance-@entry.Relevance.ToJsonString()">@FormatLabel(entry.Relevance.ToJsonString())</span>
-                </div>
-                <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Finding)</div>
-            </div>
-        }
-    </div>
-}
-
-@* ═══ Workarounds & Next Questions ═════════════════════ *@
-@if (Issue.Analysis?.Workarounds is { Count: > 0 } || Issue.Analysis?.NextQuestions is { Count: > 0 })
-{
-    <div class="section-card">
-        <h3 class="section-title">Workarounds & Next Questions</h3>
-        @if (Issue.Analysis?.Workarounds is { Count: > 0 })
-        {
-            <h4>Workarounds</h4>
-            <ul>
-                @foreach (var w in Issue.Analysis.Workarounds)
-                {
-                    <li class="md-content">@MarkdownHelper.ToHtml(w)</li>
-                }
-            </ul>
-        }
-        @if (Issue.Analysis?.NextQuestions is { Count: > 0 })
-        {
-            <h4>Next Questions</h4>
-            <ul class="uncertainty-list">
-                @foreach (var q in Issue.Analysis.NextQuestions)
-                {
-                    <li>@q</li>
-                }
-            </ul>
-        }
-    </div>
-}
-
-@* ═══ Evidence ═════════════════════════════════════════ *@
-@if (Issue.Evidence.ReproEvidence is not null)
-{
-    var evidence = Issue.Evidence.ReproEvidence;
-    <div class="section-card">
-        <h3 class="section-title">Evidence</h3>
-        @if (evidence.StepsToReproduce is { Count: > 0 })
-        {
-            <h4>Steps to Reproduce</h4>
-            <ol class="repro-steps">
-                @foreach (var step in evidence.StepsToReproduce)
-                {
-                    <li>@step</li>
-                }
-            </ol>
-        }
-        @if (evidence.CodeSnippets is { Count: > 0 })
-        {
-            <h4>Code Snippets</h4>
-            @foreach (var snippet in evidence.CodeSnippets)
-            {
-                <pre class="code-block"><code>@snippet</code></pre>
-            }
-        }
-        @if (evidence.Screenshots is { Count: > 0 })
-        {
-            <h4>Screenshots (@evidence.Screenshots.Count)</h4>
-            @foreach (var ss in evidence.Screenshots)
-            {
-                <div class="screenshot-item">
-                    <a href="@ss.Url" target="_blank" rel="noopener noreferrer">📸 @(ss.Description ?? ss.Url)</a>
-                </div>
-            }
-        }
-        @if (evidence.Attachments is { Count: > 0 })
-        {
-            <h4>Attachments</h4>
-            @foreach (var att in evidence.Attachments)
-            {
-                <div class="attachment-item">
-                    <a href="@att.Url" target="_blank" rel="noopener noreferrer">📎 @att.Filename</a>
-                    @if (att.Description is not null)
-                    {
-                        <span class="evidence-source">@att.Description</span>
                     }
                 </div>
             }
-        }
-        @if (evidence.RepoLinks is { Count: > 0 })
-        {
-            <h4>Repository Links</h4>
-            @foreach (var link in evidence.RepoLinks)
+        </div>
+    }
+
+    @* ═══ Workarounds & Next Questions ═════════════════════ *@
+    @if (Issue.Analysis?.Workarounds is { Count: > 0 } || Issue.Analysis?.NextQuestions is { Count: > 0 })
+    {
+        <div class="section-card">
+            <h3 class="section-title">Workarounds & Next Questions</h3>
+            @if (Issue.Analysis?.Workarounds is { Count: > 0 })
             {
-                <div class="repo-link-item">
-                    <a href="@link.Url" target="_blank" rel="noopener noreferrer">🔗 @(link.Description ?? link.Url)</a>
+                <h4>Workarounds</h4>
+                <ul>
+                    @foreach (var w in Issue.Analysis.Workarounds)
+                    {
+                        <li class="md-content">@MarkdownHelper.ToHtml(w)</li>
+                    }
+                </ul>
+            }
+            @if (Issue.Analysis?.NextQuestions is { Count: > 0 })
+            {
+                <h4>Next Questions</h4>
+                <ul class="uncertainty-list">
+                    @foreach (var q in Issue.Analysis.NextQuestions)
+                    {
+                        <li>@q</li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+
+    @* ═══ Rationale ════════════════════════════════════════ *@
+    @if (Issue.Analysis?.Rationale is not null || Issue.Analysis?.ErrorFingerprint is not null)
+    {
+        <div class="section-card">
+            <h3 class="section-title">Rationale</h3>
+            @if (Issue.Analysis?.Rationale is not null)
+            {
+                <div class="reason-text md-content">@MarkdownHelper.ToHtml(Issue.Analysis.Rationale)</div>
+            }
+            @if (Issue.Analysis?.ErrorFingerprint is not null)
+            {
+                <div class="field-row" style="margin-top: 0.5rem">
+                    <span class="field-label">Error Fingerprint:</span>
+                    <code>@Issue.Analysis.ErrorFingerprint</code>
                 </div>
             }
-        }
-        @if (evidence.RelatedIssues is { Count: > 0 })
-        {
-            <h4>Related Issues</h4>
-            <div class="related-issues">
-                @foreach (var num in evidence.RelatedIssues)
-                {
-                    <a href="https://github.com/@Issue.Meta.Repo/issues/@num" target="_blank" rel="noopener noreferrer" class="related-issue-link">#@num</a>
-                }
-            </div>
-        }
-        @if (evidence.EnvironmentDetails is not null)
-        {
-            <h4>Environment</h4>
-            <p>@evidence.EnvironmentDetails</p>
-        }
-    </div>
+        </div>
+    }
 }
-
-@* ═══ Rationale ════════════════════════════════════════ *@
-@if (Issue.Analysis?.Rationale is not null || Issue.Analysis?.ErrorFingerprint is not null)
+else if (Tab == "investigation")
 {
-    <div class="section-card">
-        <h3 class="section-title">Rationale</h3>
-        @if (Issue.Analysis?.Rationale is not null)
-        {
-            <div class="reason-text md-content">@MarkdownHelper.ToHtml(Issue.Analysis.Rationale)</div>
-        }
-        @if (Issue.Analysis?.ErrorFingerprint is not null)
-        {
-            <div class="field-row" style="margin-top: 0.5rem">
-                <span class="field-label">Error Fingerprint:</span>
-                <code>@Issue.Analysis.ErrorFingerprint</code>
-            </div>
-        }
-    </div>
+    @* ═══ Key Signals ═══════════════════════════════════════ *@
+    @if (Issue.Analysis?.KeySignals is { Count: > 0 })
+    {
+        <div class="section-card">
+            <h3 class="section-title">Key Signals</h3>
+            @foreach (var signal in Issue.Analysis.KeySignals)
+            {
+                <div class="signal-card">
+                    <blockquote class="signal-quote">"@signal.Text"</blockquote>
+                    <span class="evidence-source">— @signal.Source</span>
+                    <div class="signal-interp md-content">@MarkdownHelper.ToHtml(signal.Interpretation)</div>
+                </div>
+            }
+        </div>
+    }
+
+    @* ═══ Code Investigation ═══════════════════════════════ *@
+    @if (Issue.Analysis?.CodeInvestigation is { Count: > 0 })
+    {
+        <div class="section-card">
+            <h3 class="section-title">Code Investigation</h3>
+            @foreach (var entry in Issue.Analysis.CodeInvestigation)
+            {
+                <div class="code-investigation-card">
+                    <div class="code-file-ref">
+                        <a href="@GetFileUrl(entry)" target="_blank" rel="noopener noreferrer">
+                            <code>@entry.File</code>
+                            @if (!string.IsNullOrEmpty(entry.Lines) && entry.Lines != "N/A")
+                            {
+                                <span class="code-lines">L@(entry.Lines)</span>
+                            }
+                        </a>
+                        <span class="label label-relevance-@entry.Relevance.ToJsonString()">@FormatLabel(entry.Relevance.ToJsonString())</span>
+                    </div>
+                    <div class="code-relevance md-content">@MarkdownHelper.ToHtml(entry.Finding)</div>
+                </div>
+            }
+        </div>
+    }
+
+    @* ═══ Evidence ═════════════════════════════════════════ *@
+    @if (Issue.Evidence.ReproEvidence is not null)
+    {
+        var evidence = Issue.Evidence.ReproEvidence;
+        <div class="section-card">
+            <h3 class="section-title">Evidence</h3>
+            @if (evidence.StepsToReproduce is { Count: > 0 })
+            {
+                <h4>Steps to Reproduce</h4>
+                <ol class="repro-steps">
+                    @foreach (var step in evidence.StepsToReproduce)
+                    {
+                        <li>@step</li>
+                    }
+                </ol>
+            }
+            @if (evidence.CodeSnippets is { Count: > 0 })
+            {
+                <h4>Code Snippets</h4>
+                @foreach (var snippet in evidence.CodeSnippets)
+                {
+                    <pre class="code-block"><code>@snippet</code></pre>
+                }
+            }
+            @if (evidence.Screenshots is { Count: > 0 })
+            {
+                <h4>Screenshots (@evidence.Screenshots.Count)</h4>
+                @foreach (var ss in evidence.Screenshots)
+                {
+                    <div class="screenshot-item">
+                        <a href="@ss.Url" target="_blank" rel="noopener noreferrer">📸 @(ss.Description ?? ss.Url)</a>
+                    </div>
+                }
+            }
+            @if (evidence.Attachments is { Count: > 0 })
+            {
+                <h4>Attachments</h4>
+                @foreach (var att in evidence.Attachments)
+                {
+                    <div class="attachment-item">
+                        <a href="@att.Url" target="_blank" rel="noopener noreferrer">📎 @att.Filename</a>
+                        @if (att.Description is not null)
+                        {
+                            <span class="evidence-source">@att.Description</span>
+                        }
+                    </div>
+                }
+            }
+            @if (evidence.RepoLinks is { Count: > 0 })
+            {
+                <h4>Repository Links</h4>
+                @foreach (var link in evidence.RepoLinks)
+                {
+                    <div class="repo-link-item">
+                        <a href="@link.Url" target="_blank" rel="noopener noreferrer">🔗 @(link.Description ?? link.Url)</a>
+                    </div>
+                }
+            }
+            @if (evidence.RelatedIssues is { Count: > 0 })
+            {
+                <h4>Related Issues</h4>
+                <div class="related-issues">
+                    @foreach (var num in evidence.RelatedIssues)
+                    {
+                        <a href="https://github.com/@Issue.Meta.Repo/issues/@num" target="_blank" rel="noopener noreferrer" class="related-issue-link">#@num</a>
+                    }
+                </div>
+            }
+            @if (evidence.EnvironmentDetails is not null)
+            {
+                <h4>Environment</h4>
+                <p>@evidence.EnvironmentDetails</p>
+            }
+        </div>
+    }
 }
 
 @code {
     [Parameter, EditorRequired] public TriagedIssue Issue { get; set; } = default!;
+    [Parameter] public string Tab { get; set; } = "analysis";
 
     private string GetFileUrl(CodeInvestigationEntry entry) =>
         TriageFormatHelper.GetFileUrl(Issue.Meta.Repo, entry);

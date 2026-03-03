@@ -126,6 +126,9 @@ else
                     <button type="button" class="content-tab @(_activeTab == "analysis" ? "active" : "")" @onclick='() => _activeTab = "analysis"'>
                         Analysis
                     </button>
+                    <button type="button" class="content-tab @(_activeTab == "investigation" ? "active" : "")" @onclick='() => _activeTab = "investigation"'>
+                        Investigation
+                    </button>
                     @if (_repro is not null)
                     {
                         <button type="button" class="content-tab @(_activeTab == "repro" ? "active" : "")" @onclick='() => _activeTab = "repro"'>
@@ -136,7 +139,11 @@ else
 
                 @if (_activeTab == "analysis")
                 {
-                    <DetailsTabPanel Issue="@_issue" />
+                    <DetailsTabPanel Issue="@_issue" Tab="analysis" />
+                }
+                else if (_activeTab == "investigation")
+                {
+                    <DetailsTabPanel Issue="@_issue" Tab="investigation" />
                 }
                 else if (_activeTab == "repro" && _repro is not null)
                 {
