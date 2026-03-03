@@ -153,6 +153,33 @@ else
     }
     else if (_activeTab == "actions")
     {
+        @if (_repro?.Output?.ProposedResponse is not null)
+        {
+            var response = _repro.Output.ProposedResponse;
+            <div class="section-card">
+                <h3 class="section-title">Draft Response</h3>
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                    <span class="badge-rs badge-rs-@response.Status.ToJsonString()">@FormatLabel(response.Status.ToJsonString())</span>
+                    @if (response.Summary is not null)
+                    {
+                        <span class="draft-summary">@response.Summary</span>
+                    }
+                </div>
+                <div class="draft-body-full md-content">
+                    @MarkdownHelper.ToHtml(response.Body)
+                </div>
+                <div class="draft-actions">
+                    <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(response.Body)" title="Copy markdown to clipboard">
+                        📋 Copy
+                    </button>
+                    <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro.Meta.Repo)/issues/@(_issue?.Meta.Number ?? _repro.Meta.Number)"
+                       target="_blank" rel="noopener noreferrer" class="btn-goto">
+                        GitHub ↗
+                    </a>
+                </div>
+            </div>
+        }
+
         @foreach (var action in _allActions)
         {
             <div class="section-card action-card">
@@ -189,33 +216,6 @@ else
                     <p>Linked: <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro?.Meta.Repo)/issues/@action.LinkedIssue"
                                   target="_blank" rel="noopener noreferrer">#@action.LinkedIssue</a></p>
                 }
-            </div>
-        }
-
-        @if (_repro?.Output?.ProposedResponse is not null)
-        {
-            var response = _repro.Output.ProposedResponse;
-            <div class="section-card">
-                <h3 class="section-title">Draft Response</h3>
-                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
-                    <span class="badge-rs badge-rs-@response.Status.ToJsonString()">@FormatLabel(response.Status.ToJsonString())</span>
-                    @if (response.Summary is not null)
-                    {
-                        <span class="draft-summary">@response.Summary</span>
-                    }
-                </div>
-                <div class="draft-body-full md-content">
-                    @MarkdownHelper.ToHtml(response.Body)
-                </div>
-                <div class="draft-actions">
-                    <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(response.Body)" title="Copy markdown to clipboard">
-                        📋 Copy
-                    </button>
-                    <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro.Meta.Repo)/issues/@(_issue?.Meta.Number ?? _repro.Meta.Number)"
-                       target="_blank" rel="noopener noreferrer" class="btn-goto">
-                        GitHub ↗
-                    </a>
-                </div>
             </div>
         }
     }
