@@ -3,112 +3,81 @@
     "schemaVersion": "1.0",
     "number": 3509,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T19:31:00Z"
+    "analyzedAt": "2026-07-22T00:00:00Z"
   },
   "conclusion": "inconclusive",
-  "notes": "The issue provides no code, no reproduction steps, and no specific error messages \u2014 only \u0027images not appearing\u0027. Created comprehensive tests covering basic image drawing scenarios (DrawBitmap, DrawImage, FromEncodedData, pixel verification). All tests passed on SkiaSharp 2.88.9, 3.116.0, 3.119.2, and main branch, showing images render correctly. Without actual reproduction code from the reporter, cannot determine if there\u0027s a real bug or a usage error. Recommend requesting complete reproduction from reporter including actual code, expected vs actual behavior, and platform details.",
+  "notes": "The issue contains only template placeholder text with no actual code, error messages, expected/actual behavior, or screenshots. Created a minimal console app testing SKBitmap creation, SKCanvas drawing (rect/circle), SKImage encoding/decoding, and pixel verification \u2014 all worked correctly on SkiaSharp 3.116.0 and 3.116.1. Without the reporter\u0027s actual code, it is impossible to determine what specific scenario causes images to not appear.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create console app with SkiaSharp 3.116.0 (reporter\u0027s version)",
+      "description": "Create console project with SkiaSharp 3.116.0",
       "layer": "setup",
+      "result": "success",
       "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.116.0",
       "exitCode": 0,
-      "output": "Console app created, SkiaSharp 3.116.0 package added",
+      "output": "The template \u0022Console App\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp\u0027 version \u00273.116.0\u0027 added.",
       "filesCreated": [
         {
           "filename": "Repro.csproj",
-          "description": "Project file with SkiaSharp reference",
+          "description": "Console project file with SkiaSharp 3.116.0 package reference",
           "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.116.0\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
         },
         {
           "filename": "Program.cs",
-          "description": "Comprehensive image drawing tests covering DrawBitmap, DrawImage, FromEncodedData, and pixel verification"
+          "description": "Repro code testing bitmap creation, drawing, image encoding/decoding, and pixel verification",
+          "content": "using SkiaSharp;\n\nConsole.WriteLine(\u0022Test 1: Creating bitmap and drawing...\u0022);\nusing var bitmap = new SKBitmap(400, 400);\nusing var canvas = new SKCanvas(bitmap);\ncanvas.Clear(SKColors.White);\nusing var paint = new SKPaint();\npaint.Color = SKColors.Red;\npaint.Style = SKPaintStyle.Fill;\ncanvas.DrawRect(new SKRect(50, 50, 200, 200), paint);\npaint.Color = SKColors.Blue;\ncanvas.DrawCircle(300, 300, 80, paint);\ncanvas.Flush();\nvar redPixel = bitmap.GetPixel(100, 100);\nvar bluePixel = bitmap.GetPixel(300, 300);\nvar whitePixel = bitmap.GetPixel(10, 10);\nConsole.WriteLine($\u0022Red pixel (100,100): R={redPixel.Red} G={redPixel.Green} B={redPixel.Blue} A={redPixel.Alpha}\u0022);\nConsole.WriteLine($\u0022Blue pixel (300,300): R={bluePixel.Red} G={bluePixel.Green} B={bluePixel.Blue} A={bluePixel.Alpha}\u0022);\nConsole.WriteLine($\u0022White pixel (10,10): R={whitePixel.Red} G={whitePixel.Green} B={whitePixel.Blue} A={whitePixel.Alpha}\u0022);\nConsole.WriteLine(\u0022\\nTest 2: Encoding image to PNG...\u0022);\nusing var image = SKImage.FromBitmap(bitmap);\nif (image == null) { Console.WriteLine(\u0022ERROR: SKImage.FromBitmap returned null!\u0022); return 1; }\nusing var data = image.Encode(SKEncodedImageFormat.Png, 100);\nif (data == null) { Console.WriteLine(\u0022ERROR: image.Encode returned null!\u0022); return 1; }\nConsole.WriteLine($\u0022Encoded PNG size: {data.Size} bytes\u0022);\nConsole.WriteLine(\u0022\\nTest 3: Decoding image back...\u0022);\nusing var decoded = SKImage.FromEncodedData(data);\nif (decoded == null) { Console.WriteLine(\u0022ERROR: SKImage.FromEncodedData returned null!\u0022); return 1; }\nConsole.WriteLine($\u0022Decoded image: {decoded.Width}x{decoded.Height}\u0022);\nusing var decodedBitmap = SKBitmap.FromImage(decoded);\nvar dRedPixel = decodedBitmap.GetPixel(100, 100);\nConsole.WriteLine($\u0022Decoded red pixel (100,100): R={dRedPixel.Red} G={dRedPixel.Green} B={dRedPixel.Blue} A={dRedPixel.Alpha}\u0022);\nbool redOk = dRedPixel.Red \u003E 200 \u0026\u0026 dRedPixel.Green \u003C 50 \u0026\u0026 dRedPixel.Blue \u003C 50;\nbool blueOk = bluePixel.Red \u003C 50 \u0026\u0026 bluePixel.Green \u003C 50 \u0026\u0026 bluePixel.Blue \u003E 200;\nif (redOk \u0026\u0026 blueOk) Console.WriteLine(\u0022\\nSUCCESS: test completed - images appear correctly\u0022);\nelse Console.WriteLine($\u0022\\nFAILURE: pixel colors unexpected (red ok: {redOk}, blue ok: {blueOk})\u0022);\nreturn 0;"
         }
-      ],
-      "result": "success"
+      ]
     },
     {
       "stepNumber": 2,
-      "description": "Run comprehensive image drawing tests with SkiaSharp 3.116.0",
+      "description": "Build console app with SkiaSharp 3.116.0",
       "layer": "csharp",
-      "command": "dotnet run",
+      "result": "success",
+      "command": "dotnet build",
       "exitCode": 0,
-      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n\u2713 Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n\u2713 Background is white as expected\n\n=== All tests complete ===",
-      "result": "success"
+      "output": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)"
     },
     {
       "stepNumber": 3,
-      "description": "Test with SkiaSharp 2.88.9 (reporter\u0027s \u0027last known good\u0027 version)",
+      "description": "Run console app \u2014 test bitmap creation, drawing, encoding, and decoding",
       "layer": "csharp",
-      "command": "dotnet remove package SkiaSharp \u0026\u0026 dotnet add package SkiaSharp --version 2.88.9 \u0026\u0026 dotnet run",
+      "result": "success",
+      "command": "dotnet run",
       "exitCode": 0,
-      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n\u2713 Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n\u2713 Background is white as expected\n\n=== All tests complete ===",
-      "result": "success"
+      "output": "Test 1: Creating bitmap and drawing...\nRed pixel (100,100): R=255 G=0 B=0 A=255\nBlue pixel (300,300): R=0 G=0 B=255 A=255\nWhite pixel (10,10): R=255 G=255 B=255 A=255\n\nTest 2: Encoding image to PNG...\nEncoded PNG size: 2241 bytes\n\nTest 3: Decoding image back...\nDecoded image: 400x400\nDecoded red pixel (100,100): R=255 G=0 B=0 A=255\n\nSUCCESS: test completed - images appear correctly"
     },
     {
       "stepNumber": 4,
-      "description": "Test with latest stable SkiaSharp release (3.119.2)",
+      "description": "Test with latest SkiaSharp 3.116.1 in fresh project directory",
       "layer": "csharp",
-      "command": "dotnet remove package SkiaSharp \u0026\u0026 dotnet add package SkiaSharp \u0026\u0026 dotnet run",
+      "result": "success",
+      "command": "cd /tmp/skiasharp/repro/3509-latest/Repro \u0026\u0026 dotnet run",
       "exitCode": 0,
-      "output": "=== Test 1: Basic image drawing ===\nDrew red bitmap at (50, 50)\nSaved to /tmp/test1.png (630 bytes)\n\n=== Test 2: Load from encoded data ===\nCreated test PNG (160 bytes)\nLoaded image: 50x50\nDrew loaded image at (75, 75)\nSaved to /tmp/test2.png (629 bytes)\n\n=== Test 3: Verify pixel data ===\nCenter pixel (50,50): #ffff0000\n\u2713 Red square rendered correctly\nCorner pixel (10,10): #ffffffff\n\u2713 Background is white as expected\n\n=== All tests complete ===",
-      "result": "success"
-    },
-    {
-      "stepNumber": 5,
-      "description": "Build SkiaSharp test project from main branch source",
-      "layer": "csharp",
-      "command": "dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj",
-      "exitCode": 0,
-      "output": "Build succeeded with 13 warnings. Test project compiled successfully.",
-      "result": "success"
-    },
-    {
-      "stepNumber": 6,
-      "description": "Run SKImageTest suite on main branch (51 tests covering image operations)",
-      "layer": "csharp",
-      "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --no-build --filter \u0022FullyQualifiedName~SKImageTest\u0022",
-      "exitCode": 0,
-      "output": "Passed!  - Failed:     0, Passed:    51, Skipped:     0, Total:    51, Duration: 952 ms",
-      "result": "success"
+      "output": "Test 1: Creating bitmap and drawing...\nRed pixel (100,100): R=255 G=0 B=0 A=255\nBlue pixel (300,300): R=0 G=0 B=255 A=255\nWhite pixel (10,10): R=255 G=255 B=255 A=255\n\nTest 2: Encoding image to PNG...\nEncoded PNG size: 2241 bytes\n\nTest 3: Decoding image back...\nDecoded image: 400x400\nDecoded red pixel (100,100): R=255 G=0 B=0 A=255\n\nSUCCESS: test completed - images appear correctly"
     }
   ],
   "environment": {
-    "os": "macOS",
+    "os": "macOS 26.3",
     "arch": "arm64",
-    "dotnetVersion": "8.0.417",
-    "skiaSharpVersion": "3.116.0, 2.88.9, 3.119.2, main",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
     "dockerUsed": false
   },
-  "inputs": {
-    "triageFile": "ai-triage/3509.json"
-  },
-  "assessment": "user-error",
   "versionResults": [
-    {
-      "version": "2.88.9",
-      "source": "nuget",
-      "result": "not-reproduced",
-      "notes": "All image drawing tests passed. Basic bitmap drawing, image loading from encoded data, and pixel verification all worked correctly."
-    },
     {
       "version": "3.116.0",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Reporter\u0027s version. All tests passed identically to 2.88.9. Images rendered correctly, pixel data verified."
+      "notes": "All image creation, drawing, encoding, and decoding tests passed with correct pixel values.",
+      "platform": "host-macos-arm64"
     },
     {
-      "version": "3.119.2",
+      "version": "3.116.1",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Latest stable release. All tests passed. No rendering issues detected."
-    },
-    {
-      "version": "main (source)",
-      "source": "source",
-      "result": "not-reproduced",
-      "notes": "Built and tested main branch. SKImageTest suite passed all 51 tests. Image operations work correctly."
+      "notes": "Same tests passed on latest stable release.",
+      "platform": "host-macos-arm64"
     }
   ],
   "reproProject": {
@@ -122,17 +91,37 @@
     ]
   },
   "blockers": [
-    "No reproduction code provided in issue \u2014 only template placeholders",
-    "No specific error messages or symptoms beyond \u0027images not appearing\u0027",
-    "Cannot verify reporter\u0027s exact scenario without their code"
+    "Reporter provided no actual code \u2014 issue body contains only template placeholder text (\u0027// some C# code here\u0027)",
+    "No error messages, expected behavior, actual behavior, or screenshots were provided",
+    "Cannot determine which SkiaSharp view or rendering approach the reporter is using (SKCanvasView, SKGLView, MAUI, WPF, etc.)"
   ],
   "feedback": {
-    "triageCorrections": [
+    "corrections": []
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "ready",
+      "body": "Thanks for the report. We attempted to reproduce this on macOS arm64 with SkiaSharp 3.116.0 and 3.116.1, but basic image creation, drawing, encoding, and decoding all work correctly.\n\nThe issue template appears to still contain placeholder text rather than your actual code. Could you help us investigate by providing:\n\n1. **Your actual code** \u2014 the drawing/rendering code that isn\u0027t working\n2. **Expected vs actual behavior** \u2014 what should appear and what you see instead\n3. **Any errors or log output** \u2014 exceptions, warnings, or console messages\n4. **Which view/framework** \u2014 are you using SKCanvasView, SKGLView, MAUI, WPF, or something else?\n5. **A screenshot** \u2014 showing what you see (or don\u0027t see)\n\nA minimal reproduction project on GitHub would be ideal. Without these details, we\u0027re unable to determine what might be going wrong.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 3.116.0 (reporter) | \u2705 Basic image APIs work correctly |\n| 3.116.1 (latest) | \u2705 Basic image APIs work correctly |"
+    },
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.95,
+      "reason": "The issue contains no actual code, no error messages, and no expected/actual behavior. Basic SkiaSharp image APIs work correctly. Cannot investigate further without reporter providing their actual code and specific details."
+    },
+    "actions": [
       {
-        "topic": "reproQuality",
-        "upstream": "Triage marked reproQuality as \u0027none\u0027 and suggested request-info",
-        "corrected": "Confirmed: no reproduction code exists. Created own comprehensive tests \u2014 all passed. Issue cannot be verified without reporter\u0027s actual code. Triage assessment was correct."
+        "type": "update-labels",
+        "description": "Add needs-info label since issue lacks reproduction details",
+        "risk": "low",
+        "confidence": 0.95
       }
+    ],
+    "missingInfo": [
+      "Actual code that reproduces the issue (not template placeholders)",
+      "Expected behavior vs actual behavior",
+      "Any error messages or exceptions",
+      "Which SkiaSharp view or rendering approach is being used",
+      "Screenshots showing the problem"
     ]
   }
 }
