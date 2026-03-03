@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3273,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-06-21T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Blazor WASM app running in IDE debug mode shows 'No canvas element was provided' console error due to stale cached static assets; clearing browser and project caches resolves the issue, but is impractical for server deployments with many users.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.78 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.95 },
+    "platforms": ["os/WASM", "os/macOS"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "other",
+      "errorMessage": "No canvas element was provided",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM app with SKCanvasView",
+        "Run in debug mode from IDE (not dotnet watch)",
+        "Observe 'No canvas element was provided' error in browser console"
+      ],
+      "environmentDetails": "macOS, Blazor WASM, SkiaSharp 3.119 (also reported with 3.116.0 and 3.119.0)",
+      "relatedIssues": [2258]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "3.119.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The JS interop code path for element lookup has not changed. The issue is related to Blazor static asset caching behavior, which is outside SkiaSharp's control."
+    }
+  },
+  "analysis": {
+    "summary": "The error originates in SKHtmlCanvas.ts init() (line 47-53) where the canvas element lookup via document.querySelector fails. In .NET 7+ JSImport path, the element parameter is passed as null, relying entirely on an attribute selector fallback using the Blazor-internal '_bl_' prefix. When stale cached static assets are served (common in IDE debug mode), the expected DOM attributes and the cached JS module get out of sync, causing the querySelector to return null. All three reporters independently confirmed that clearing browser and project caches resolves the issue. The third commenter raises a valid server deployment concern: telling users to clear cache is impractical.",
+    "rationale": "Classified as type/bug because users experience a real runtime error that prevents SKCanvasView from rendering. The root cause is stale cached Blazor static assets rather than a logic error in SkiaSharp's JS interop code. However, the element lookup strategy (passing null and relying on querySelector fallback in the .NET 7+ path) could be made more robust. The area is clearly SkiaSharp.Views.Blazor as the error originates in its JS module.",
+    "keySignals": [
+      { "text": "I found it may caused by the caching issue. At first I made a mistake, I used the interactiveAuto mode in blazor, but when i switched to interactiveWasm, it still doesn't work until l clear all the cache", "source": "comment by syminomega", "interpretation": "Switching Blazor render modes leaves stale cached assets that cause element lookup failures." },
+      { "text": "after properly cleaning and rebuilding, I no longer had this issue", "source": "comment by mennowo", "interpretation": "Second independent confirmation that stale build artifacts/caches cause this error." },
+      { "text": "my app is running on a server and is accessible for many people, which I can't tell all, how to clear the cache successfully", "source": "comment by Benny-prog", "interpretation": "The cache-clearing workaround is impractical for production server deployments. The 2.88.6 to 3.119.0 upgrade path particularly triggers this." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts", "lines": "47-53", "finding": "The init() method falls back to document.querySelector('[' + elementId + ']') when element is null. If the DOM doesn't have the expected _bl_ attribute (stale render), this returns null and triggers the error.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SKHtmlCanvasInterop.cs", "lines": "76-77", "finding": "In .NET 7+ JSImport path, InitRaster passes null as the element parameter and relies on htmlElementId ('_bl_' + element.Id) for element lookup. The pre-.NET 7 path passes the actual ElementReference.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "67-77", "finding": "OnAfterRenderAsync initializes the JS interop on firstRender. The htmlCanvas ElementReference is set by Blazor's @ref binding. Timing of this setup relative to JS module loading could matter.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs", "lines": "22-23", "finding": "In .NET 7+, JSHost.ImportAsync is used with a relative path '../' prefix. Static asset caching of this JS module is the likely root cause of stale element references.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Clear browser cache and project bin/obj/_framework directories, then run dotnet restore before launching in debug mode",
+      "Use 'dotnet watch' instead of IDE debug mode to avoid stale asset serving",
+      "After switching Blazor render modes (e.g., InteractiveAuto to InteractiveWebAssembly), do a full clean and rebuild"
+    ],
+    "nextQuestions": [
+      "Does this reproduce consistently with a fresh project (no prior cache), or only after mode switches/upgrades?",
+      "Could the .NET 7+ JSImport path pass the element reference directly instead of null to avoid the querySelector fallback?",
+      "Is Blazor's static asset versioning (_content/ cache-busting) working correctly for SkiaSharp.Views.Blazor JS files?"
+    ],
+    "resolution": {
+      "hypothesis": "Stale cached Blazor static assets cause the SKHtmlCanvas.js init() method to fail when looking up the canvas element by its _bl_ attribute ID. This is triggered by IDE debug mode, render mode changes, or major version upgrades that change the JS module content.",
+      "proposals": [
+        {
+          "title": "Clear caches and rebuild",
+          "description": "Clear browser cache, delete bin/obj/_framework directories, run dotnet restore, then launch the app. This is the confirmed workaround from all reporters.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate passing ElementReference in JSImport path",
+          "description": "In the .NET 7+ JSImport path, the element parameter is passed as null, relying on querySelector fallback. Investigate whether the actual ElementReference (as JSObject) can be passed to avoid the DOM lookup entirely, making the init more robust against cache mismatches.",
+          "category": "investigation",
+          "confidence": 0.55,
+          "effort": "medium",
+          "validated": "untested"
+        },
+        {
+          "title": "Add retry or deferred initialization",
+          "description": "If querySelector returns null, retry after a short delay (e.g., requestAnimationFrame or setTimeout) to handle cases where the DOM is not yet fully rendered when the JS module executes.",
+          "category": "fix",
+          "confidence": 0.50,
+          "effort": "small",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Clear caches and rebuild",
+      "recommendedReason": "Confirmed by all three reporters as effective. The other proposals require code investigation to determine feasibility."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "While the cache-clearing workaround is known, the server deployment concern from the third commenter is valid — the root cause (element lookup fallback fragility when caches are stale) should be investigated for a more robust solution."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply Blazor views bug labels and WASM platform",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the caching issue, provide workaround, and ask for more details about the server deployment scenario",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for reporting this, and thanks to everyone who confirmed the caching behavior.\n\nThe error comes from the JS interop layer when it can't find the canvas element in the DOM. This happens when stale cached static assets (particularly `_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js`) are served instead of the current version.\n\n**Workaround:**\n1. Clear your browser cache\n2. Delete `bin/`, `obj/`, and any `_framework/` directories in your project\n3. Run `dotnet restore` before launching in debug mode\n\nThis has been confirmed by multiple reporters. If you've recently switched Blazor render modes (e.g., InteractiveAuto → InteractiveWebAssembly) or upgraded SkiaSharp versions, a full clean rebuild is essential.\n\n@Benny-prog — for the server deployment scenario, could you share more details about your hosting setup? Specifically: are you using Blazor WASM standalone or hosted in ASP.NET Core? The server should be serving cache-busted asset URLs via Blazor's static asset middleware, which would prevent clients from using stale JS modules."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference older Blazor WASM issue for context",
+        "risk": "low",
+        "confidence": 0.55,
+        "linkedIssue": 2258
+      }
+    ]
+  }
+}
