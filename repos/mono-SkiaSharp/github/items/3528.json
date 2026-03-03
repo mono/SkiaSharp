@@ -1,0 +1,134 @@
+{
+  "number": 3528,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add touch/pointer event support to Blazor views and revamp sample app",
+  "body": "## Description\n\nAdds touch/pointer event support to the Blazor \u0060SKCanvasView\u0060 and \u0060SKGLView\u0060 components, and revamps the Blazor WebAssembly sample app into a three-page showcase of SkiaSharp capabilities.\n\n- Fixes #3534\n\n## Touch/pointer event system\n\n### Shared touch types\n\n\u0060SKTouchAction\u0060, \u0060SKTouchDeviceType\u0060, \u0060SKMouseButton\u0060, and \u0060SKTouchEventArgs\u0060 are moved from \u0060SkiaSharp.Views.Maui.Core\u0060 to \u0060SkiaSharp.Views.Shared\u0060 with \u0060#if __BLAZOR__\u0060 / \u0060#if __MAUI__\u0060 namespace switching \u2014 the same shared-file pattern used by \u0060SKPaintSurfaceEventArgs\u0060.\n\n### JS interop (\u0060SKTouchInterop.ts\u0060)\n\nA class-based module (matching the \u0060SizeWatcher\u0060/\u0060DpiWatcher\u0060 pattern) that:\n\n- Listens for \u0060pointer*\u0060 and \u0060wheel\u0060 events on the canvas element.\n- Maps browser events to \u0060SKTouchAction\u0060/\u0060SKMouseButton\u0060/\u0060SKTouchDeviceType\u0060 enum values.\n- Invokes the C# callback **synchronously** and reads back the \u0060Handled\u0060 return value.\n- When \u0060Handled\u0060 is \u0060true\u0060: calls \u0060preventDefault()\u0060 \u002B \u0060stopPropagation()\u0060 (e.g., blocks page scrolling for handled wheel events).\n- When \u0060Handled\u0060 is \u0060false\u0060: browser default behavior is preserved.\n- \u0060start()\u0060 adds all listeners with \u0060setPointerCapture\u0060; \u0060stop()\u0060 removes them and releases capture.\n- Normalizes wheel delta to the **v120 standard** (120 = one mouse notch) across browsers and platforms.\n\n### C# interop (\u0060SKTouchInterop.cs\u0060)\n\nInherits from \u0060JSModuleInterop\u0060 with \u0060#if NET7_0_OR_GREATER\u0060 split:\n\n- **NET7\u002B**: \u0060[JSImport]\u0060 static partial methods with \u0060Func\u003CJSObject, bool\u003E\u0060 callback. The \u0060JSObject\u0060 proxy is disposed via \u0060using var _\u0060 after property extraction to prevent GC/finalizer pressure from high-frequency pointer events.\n- **Pre-NET7**: \u0060DotNetObjectReference\u003CSKTouchCallbackHelper\u003E\u0060 with \u0060[JSInvokable] bool OnPointerEvent(...)\u0060.\n\n### View changes (\u0060SKCanvasView\u0060 \u0026 \u0060SKGLView\u0060)\n\nNew component parameters:\n\n| Parameter | Type | Description |\n|-----------|------|-------------|\n| \u0060Touch\u0060 | \u0060Action\u003CSKTouchEventArgs\u003E?\u0060 | Callback for pointer/touch/wheel events |\n| \u0060EnableTouchEvents\u0060 | \u0060bool\u0060 | Opt-in; when \u0060false\u0060 (default), no JS listeners are attached |\n\nThe JS module is imported on first render but listeners are **not** attached until \u0060EnableTouchEvents\u0060 is set to \u0060true\u0060. Toggling at runtime calls \u0060Start()\u0060/\u0060Stop()\u0060 to fully connect/disconnect all JS event listeners.\n\n## Blazor sample app revamp\n\nThe basic Blazor WebAssembly sample is rebuilt from the ground up into three pages:\n\n| Page | What it demonstrates |\n|------|---------------------|\n| **Home** | CPU-rendered gradient background with animated circles, text rendering with \u0060SKFont\u0060/\u0060SKTextBlob\u0060, and \u0060SKCanvasView\u0060 basics |\n| **GPU** | \u0060SKGLView\u0060 with a real-time SkSL metaball shader, touch interaction (drag to attract blobs), and FPS overlay |\n| **Drawing** | Multi-touch drawing canvas with stroke recording, color picker toolbar, wheel-to-resize brush, and undo support |\n\n\n\n### Sample features exercised\n\n- \u0060SKCanvasView\u0060 with \u0060OnPaintSurface\u0060 (Home)\n- \u0060SKGLView\u0060 with \u0060EnableRenderLoop\u0060 and \u0060OnPaintSurface\u0060 (GPU)\n- Touch events: \u0060Pressed\u0060, \u0060Moved\u0060, \u0060Released\u0060, \u0060WheelChanged\u0060 (Drawing, GPU)\n- \u0060Handled\u0060 feedback loop \u2014 blocks page scroll during drawing, allows scroll on Home\n- \u0060SKRuntimeEffect.BuildShader\u0060 with SkSL (GPU)\n- \u0060SKPath\u0060 stroke recording and replay (Drawing)\n- Scoped \u0060.razor.css\u0060 for component-level styling (GPU, Drawing)\n\n\n## API Changes\n\n**Added:**\n\n- \u0060enum SKTouchAction { Entered, Pressed, Moved, Released, Cancelled, Exited, WheelChanged }\u0060 (shared)\n- \u0060enum SKTouchDeviceType { Touch, Mouse, Pen }\u0060 (shared)\n- \u0060enum SKMouseButton { Unknown, Left, Middle, Right }\u0060 (shared)\n- \u0060class SKTouchEventArgs : EventArgs\u0060 \u2014 Id, ActionType, DeviceType, MouseButton, Location, InContact, WheelDelta, Pressure, Handled (shared)\n- \u0060Action\u003CSKTouchEventArgs\u003E? SKCanvasView.Touch\u0060\n- \u0060bool SKCanvasView.EnableTouchEvents\u0060\n- \u0060Action\u003CSKTouchEventArgs\u003E? SKGLView.Touch\u0060\n- \u0060bool SKGLView.EnableTouchEvents\u0060\n\n**Moved (no breaking change):**\n\n- \u0060SKTouchEventArgs\u0060, \u0060SKTouchAction\u0060, \u0060SKTouchDeviceType\u0060, \u0060SKMouseButton\u0060 moved from \u0060SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs\u0060 to \u0060SkiaSharp.Views.Shared/SKTouchEventArgs.cs\u0060 with conditional namespace via \u0060#if __BLAZOR__\u0060 / \u0060#if __MAUI__\u0060\n\n## Behavioral Changes\n\nTouch events are opt-in via \u0060EnableTouchEvents=\u0022true\u0022\u0060. When \u0060false\u0060 (default), no JS event listeners are attached. **Existing usage is unaffected.**\n\nWhen touch events are enabled:\n- \u0060e.Handled = true\u0060 \u2192 JS calls \u0060preventDefault()\u0060/\u0060stopPropagation()\u0060 on the browser event\n- \u0060e.Handled = false\u0060 (default) \u2192 browser default behavior is preserved\n\n## Usage\n\n\u0060\u0060\u0060razor\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022\n              Touch=\u0022OnTouch\u0022 EnableTouchEvents=\u0022true\u0022 /\u003E\n\n@code {\n    void OnTouch(SKTouchEventArgs e)\n    {\n        var point = e.Location;    // CSS pixels\n        var device = e.DeviceType; // Touch, Mouse, or Pen\n        e.Handled = true;          // preventDefault \u002B stopPropagation in browser\n    }\n}\n\u0060\u0060\u0060\n\n## PR Checklist\n\n- [ ] Has tests (no existing Blazor test project; recommend \u0060tests/SkiaSharp.Views.Blazor.Tests\u0060 with bUnit)\n- [x] Rebased on top of main\n- [x] Changes adhere to coding standard\n- [x] Updated sample app\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-26T17:24:52",
+  "updatedAt": "2026-03-02T15:52:59",
+  "closedAt": "2026-03-02T15:52:55",
+  "commentCount": 18,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/add-touch-event-blazor-canvas",
+  "additions": 1178,
+  "deletions": 191,
+  "changedFiles": 22,
+  "commits": 25,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:28:57"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:30:17"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:32:16"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:36:07"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:43:36"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:43:39"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T23:17:24"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-02-26T23:31:41"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T23:44:07"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T23:44:10"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-02-27T00:27:50"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-27T00:31:37"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-27T00:34:01"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-02-27T01:04:27"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-27T01:09:32"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-27T01:09:35"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-27T20:25:58"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2026-02-28T03:01:22"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-28T03:09:57"
+    }
+  ]
+}

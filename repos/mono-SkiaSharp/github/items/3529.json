@@ -1,0 +1,29 @@
+{
+  "number": 3529,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add learnings from Copilot memory audit to docs and instructions",
+  "body": "## Summary\n\nAudited all 159 Copilot memories stored for this repository. Found massive duplication (~57 duplicates) and noise (~100 ephemeral/issue-specific items). Extracted 3 genuinely useful, non-obvious patterns and added them to the appropriate files.\n\n## Changes (4 files, 26 lines added)\n\n### copilot-instructions.md \u2014 Anti-Patterns table\n- **Pinned pointer lifetime**: \u0060fixed\u0060 blocks create temporary pins; native objects that store the pointer outlive the scope \u2192 GC corruption\n- **WASM stale artifacts**: cached \u0060.wasm\u0060 binaries in \u0060bin/obj/_framework\u0060 are version-specific; changing NuGet versions without cleaning produces false results\n\n### documentation/memory-management.md \u2014 Common Mistake #5\n- Full code example showing wrong (\u0060fixed\u0060) vs correct (\u0060GCHandle.Alloc\u0060) patterns for native-retained pointers\n- Calls out \u0060HarfBuzzSharp.Blob.FromStream\u0060 as a known affected API\n\n### documentation/adding-libraries.md \u2014 Summary checklist\n- Dual NuGet registration requirement: new packages need entries in **both** \u0060scripts/VERSIONS.txt\u0060 and \u0060build.cake\u0060 \u0060SUPPORTED_NUGETS\u0060\n\n### documentation/debugging-methodology.md \u2014 WASM Stale Artifact Trap\n- Explains the version-specific caching behavior and recommends fresh project dirs per version\n\n## What was filtered out\n\n~130 of 159 memories should be deleted from GitHub settings. Key categories of noise:\n- 20\u002B SKSvgCanvas duplicates (13 copies of \u0022SVG closes on Dispose\u0022)\n- 13 issue-specific findings (#3400, #3435, #3440, etc.)\n- 15 dashboard UI implementation details\n- 12 schema consistency wishlists (should be GitHub issues)\n- 11 Copilot CLI tooling quirks\n- 6 data-integrity postmortem notes",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-27T00:57:02",
+  "updatedAt": "2026-02-27T00:58:07",
+  "closedAt": "2026-02-27T00:58:06",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-27T00:58:06",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/memory-audit-doc-improvements",
+  "additions": 26,
+  "deletions": 1,
+  "changedFiles": 4,
+  "commits": 1,
+  "reviews": []
+}

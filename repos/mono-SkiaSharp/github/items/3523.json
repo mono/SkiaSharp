@@ -1,0 +1,17 @@
+{
+  "number": 3523,
+  "type": "issue",
+  "state": "open",
+  "title": "[Mac Catalyst] Mouse hover (non-contact move) events not delivered by SKCanvasView",
+  "body": "## Description\n\nOn Mac Catalyst, \u0060SKCanvasView\u0060 with \u0060EnableTouchEvents = true\u0060 does not deliver mouse hover events (mouse move without any button pressed). The \u0060Touch\u0060 event only fires for \u0060Pressed\u0060, \u0060Moved\u0060 (with contact), and \u0060Released\u0060 \u2014 never for non-contact \u0060Moved\u0060, \u0060Entered\u0060, or \u0060Exited\u0060 actions.\n\n## Expected Behavior\n\nWhen the mouse cursor moves over the \u0060SKCanvasView\u0060 without any button pressed, the \u0060Touch\u0060 event should fire with:\n- \u0060ActionType = SKTouchAction.Moved\u0060 and \u0060InContact = false\u0060, OR\n- \u0060ActionType = SKTouchAction.Entered\u0060 / \u0060SKTouchAction.Exited\u0060 when the cursor enters/leaves the view\n\nThis works correctly on other platforms (e.g., WPF, WinUI).\n\n## Actual Behavior\n\nNo touch events are delivered at all when the mouse hovers over the canvas without pressing a button. Only mouse clicks (Pressed/Released) and dragging (Moved with InContact=true) generate events.\n\n## Root Cause Analysis\n\nOn Mac Catalyst (UIKit), mouse hover requires a \u0060UIHoverGestureRecognizer\u0060 to be added to the view. Standard \u0060UIGestureRecognizer\u0060 and touch handling (\u0060touchesBegan\u0060/\u0060touchesMoved\u0060/\u0060touchesEnded\u0060) only track **contacts** (finger or mouse button pressed), not passive pointer movement.\n\n### Suggested Fix\n\nIn the Mac Catalyst platform handler for \u0060SKCanvasView\u0060, add a \u0060UIHoverGestureRecognizer\u0060:\n\n\u0060\u0060\u0060csharp\n// In the Mac Catalyst SKCanvasView handler (e.g., SKCanvasViewHandler or the native view)\nvar hoverRecognizer = new UIHoverGestureRecognizer((recognizer) =\u003E\n{\n    var location = recognizer.LocationInView(this);\n    var skPoint = new SKPoint((float)location.X, (float)location.Y);\n    \n    SKTouchAction action = recognizer.State switch\n    {\n        UIGestureRecognizerState.Began =\u003E SKTouchAction.Entered,\n        UIGestureRecognizerState.Changed =\u003E SKTouchAction.Moved,\n        UIGestureRecognizerState.Ended or \n        UIGestureRecognizerState.Cancelled =\u003E SKTouchAction.Exited,\n        _ =\u003E SKTouchAction.Moved\n    };\n    \n    var args = new SKTouchEventArgs(/* id */ -1, action, SKMouseButton.Unknown, SKTouchDeviceType.Mouse, \n        skPoint, inContact: false, wheelDelta: 0, pressure: 0);\n    OnTouch(args);\n});\nAddGestureRecognizer(hoverRecognizer);\n\u0060\u0060\u0060\n\n\u0060UIHoverGestureRecognizer\u0060 is available since iOS 13.0 / Mac Catalyst 13.0.\n\n## Reproduction Steps\n\n1. Create a MAUI app targeting \u0060net9.0-maccatalyst\u0060\n2. Add an \u0060SKCanvasView\u0060 with \u0060EnableTouchEvents=\u0022True\u0022\u0060  \n3. Subscribe to the \u0060Touch\u0060 event and log all events\n4. Run on macOS\n5. Move the mouse cursor over the canvas **without clicking**\n6. Observe: no events are logged\n\n## Environment\n\n- SkiaSharp: 3.119.1\n- SkiaSharp.Views.Maui.Controls: 3.119.1\n- .NET: 9.0\n- macOS (Mac Catalyst)\n- Also affects iPadOS with trackpad/mouse support",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-20T22:58:47",
+  "updatedAt": "2026-02-20T22:58:47",
+  "commentCount": 0,
+  "reactionCount": 0
+}

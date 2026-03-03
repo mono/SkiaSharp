@@ -1,0 +1,22 @@
+{
+  "number": 3525,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkiaSharp rendering performance is much lower than native Skia C\u002B\u002B",
+  "body": "### Description\n\nThere is a large performance gap between SkiaSharp and equivalent native Skia C\u002B\u002B code. The C\u002B\u002B version achieves around 120 fps while the managed SkiaSharp code achieves less than 10 fps by default, and up to 40 fps with new OpenGL flags. Benchmarks and sample code are available below.\n\nBenchmark repo: https://github.com/wieslawsoltes/FastSkiaSharp\nFork with downgraded Skia (same version as SkiaSharp): https://github.com/mattleibow/FastSkiaSharp/tree/main_119\nDiscussion thread: https://x.com/wieslawsoltes/status/1984761177520685154\nInvestigation PR: https://github.com/mono/SkiaSharp/pull/3418\n\n### Code\n\nRepository examples and minimal repros:\n- https://github.com/wieslawsoltes/FastSkiaSharp\n- https://github.com/mattleibow/FastSkiaSharp/tree/main_119\n\nNo standalone code snippet, see full repo above.\n\n### Expected Behavior\n\nSkiaSharp rendering performance should be much closer to that of native Skia for equivalent rendering workloads, ideally within 80\u201390% of the native C\u002B\u002B performance.\n\n### Actual Behavior\n\nSkiaSharp rendering is much slower than native Skia, showing frame rates \u003C10 fps in default configuration and around 40 fps with new OpenGL flags, compared to 120 fps for native C\u002B\u002B.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio Code (macOS)\n\n### Platform / Operating System\n\nmacOS\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n![Performance comparison](image1)\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-24T04:23:49",
+  "updatedAt": "2026-02-24T04:23:49",
+  "commentCount": 0,
+  "reactionCount": 0
+}

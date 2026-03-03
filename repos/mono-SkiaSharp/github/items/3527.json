@@ -1,0 +1,94 @@
+{
+  "number": 3527,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add SkiaSharp.Views.Gtk4 using GirCore.Gtk-4.0 bindings",
+  "body": "**Description of Change**\n\nAdds GTK 4 views for SkiaSharp using \u003Ca href=\u0022https://github.com/gircore/gir.core\u0022\u003EGirCore.Gtk-4.0\u003C/a\u003E (v0.7.0), mirroring the existing GTK 3 views but using GTK 4 idioms.\n\n**Key GTK 3 \u2192 GTK 4 differences:**\n\n- \u0060SetDrawFunc\u0060 callback replaces \u0060OnDrawn\u0060 override\n- \u0060Gdk.RGBA\u0060 (float 0\u20131) replaces \u0060Gdk.Color\u0060 (16-bit)\n- \u0060Graphene.Point\u0060/\u0060Size\u0060/\u0060Rect\u0060 (float-based) replace \u0060Gdk.Point\u0060/\u0060Size\u0060 (int-based)\n- \u0060Cairo.Internal.ImageSurface.GetData(handle)\u0060 replaces \u0060ImageSurface.DataPtr\u0060\n- \u0060ApplicationWindow\u0060 with code-only creation replaces \u0060Window\u0060 \u002B \u0060.glade\u0060 builder\n- \u0060Application.New()\u0060 / \u0060RunWithSynchronizationContext()\u0060 replaces \u0060Application.Init()\u0060 / \u0060Run()\u0060\n\n**Files added:**\n\n- **Library** \u2014 \u0060source/SkiaSharp.Views/SkiaSharp.Views.Gtk4/\u0060 (\u0060SKDrawingArea\u0060, \u0060GTKExtensions\u0060, csproj)\n- **Sample** \u2014 \u0060samples/Basic/Gtk4/SkiaSharpSample/\u0060 (Program, MainWindow, csproj, sln)\n- **Tests** \u2014 \u0060tests/SkiaSharp.Views.Gtk4.Tests/\u0060 (29 tests: Graphene point/size/rect/point3D conversions, Gdk rectangle/color conversions, SKColorF conversions, round-trips, widget construction; includes \u0060ModuleInit.cs\u0060 with \u0060[ModuleInitializer]\u0060 to register GLib/Gdk/Cairo/Graphene DLL import resolvers; uses \u0060[SkippableFact]\u0060 for GTK widget tests)\n- **Infra** \u2014 \u0060build.cake\u0060 version entry, \u0060scripts/VERSIONS.txt\u0060 nuget version entry, \u0060SkiaSharpSource.sln\u0060 project entry, \u0060SkiaSharpSource.Linux.slnf\u0060 / \u0060SkiaSharpSource.Mac.slnf\u0060 / \u0060SkiaSharpSource.Windows.slnf\u0060 filter entries\n\nAll GirCore packages resolve from the existing \u0060dotnet-public\u0060 Azure DevOps mirror \u2014 no changes to \u0060nuget.config\u0060 are required.\n\n\u0060\u0060\u0060csharp\n// GTK4 usage \u2014 same event-driven pattern as GTK3\nvar skiaView = new SKDrawingArea();\nskiaView.PaintSurface \u002B= (sender, e) =\u003E\n{\n    var canvas = e.Surface.Canvas;\n    canvas.Clear(SKColors.White);\n    canvas.DrawText(\u0022SkiaSharp on GTK4\u0022, 100, 100, SKTextAlign.Center, font, paint);\n};\n\u0060\u0060\u0060\n\n**Additional fixes:**\n- Added \u0060.nuget/\u0060 to \u0060.gitignore\u0060 to prevent \u0060.nuget/nuget.exe\u0060 (an 8MB build artifact) from being accidentally committed. The \u0060nuget.exe\u0060 binary is unnecessary \u2014 \u0060dotnet restore\u0060 handles all package restoration.\n- Added \u0060SkiaSharp.Views.Gtk4\u0060 nuget version entry to \u0060scripts/VERSIONS.txt\u0060 so the CI sample build\u0027s \u0060ProjectReference\u0060 \u2192 \u0060PackageReference\u0060 substitution resolves correctly.\n\n**Bugs Fixed**\n\nNone \u2014 new feature.\n\n**API Changes**\n\nAdded:\n\n- \u0060SkiaSharp.Views.Gtk.SKDrawingArea\u0060 (extends \u0060Gtk.DrawingArea\u0060, uses \u0060SetDrawFunc\u0060)\n- \u0060SKSize SKDrawingArea.CanvasSize { get; }\u0060\n- \u0060event EventHandler\u003CSKPaintSurfaceEventArgs\u003E SKDrawingArea.PaintSurface\u0060\n- \u0060SKPoint GTKExtensions.ToSKPoint(this Graphene.Point)\u0060\n- \u0060Graphene.Point GTKExtensions.ToGraphenePoint(this SKPoint)\u0060\n- \u0060SKPoint3 GTKExtensions.ToSKPoint3(this Graphene.Point3D)\u0060\n- \u0060Graphene.Point3D GTKExtensions.ToGraphenePoint3D(this SKPoint3)\u0060\n- \u0060SKSize GTKExtensions.ToSKSize(this Graphene.Size)\u0060\n- \u0060Graphene.Size GTKExtensions.ToGrapheneSize(this SKSize)\u0060\n- \u0060SKRect GTKExtensions.ToSKRect(this Graphene.Rect)\u0060\n- \u0060Graphene.Rect GTKExtensions.ToGrapheneRect(this SKRect)\u0060\n- \u0060SKRectI GTKExtensions.ToSKRectI(this Gdk.Rectangle)\u0060\n- \u0060Gdk.Rectangle GTKExtensions.ToGdkRectangle(this SKRectI)\u0060\n- \u0060SKColor GTKExtensions.ToSKColor(this Gdk.RGBA)\u0060\n- \u0060Gdk.RGBA GTKExtensions.ToGdkRGBA(this SKColor)\u0060\n- \u0060SKColorF GTKExtensions.ToSKColorF(this Gdk.RGBA)\u0060\n- \u0060Gdk.RGBA GTKExtensions.ToGdkRGBA(this SKColorF)\u0060\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [x] Has tests (29 tests covering Graphene point/size/rect/point3D, Gdk rectangle, SKColor/SKColorF color conversions, round-trips, and widget construction)\n- [x] Rebased on top of main at time of PR\n- [x] Merged related skia PRs\n- [x] Changes adhere to coding standard\n- [x] Updated documentation\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-26T16:47:52",
+  "updatedAt": "2026-02-27T23:16:12",
+  "closedAt": "2026-02-27T23:16:11",
+  "commentCount": 17,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-27T23:16:11",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/create-gtk4-views",
+  "additions": 854,
+  "deletions": 0,
+  "changedFiles": 18,
+  "commits": 22,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T18:57:55"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T18:58:44"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T18:59:51"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T19:06:02"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T19:22:48"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T19:22:51"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T19:25:35"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T19:27:33"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T19:28:54"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T19:41:58"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2026-02-26T21:00:50"
+    }
+  ]
+}

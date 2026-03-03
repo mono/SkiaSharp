@@ -1,0 +1,30 @@
+{
+  "number": 3539,
+  "type": "issue",
+  "state": "open",
+  "title": "Add wheel support to WPF and Windows Forms views with v120 normalization",
+  "body": "## Overview\n\nAdd scroll wheel support to SkiaSharp\u0027s WPF and Windows Forms views by adding touch handler infrastructure and wiring up \u0060MouseWheel\u0060 events, passing through the native values which are already in the [v120 standard](https://github.com/mono/SkiaSharp/issues/3533) (120 = one discrete mouse wheel notch).\n\n**Parent issue**: #3533\n\n## Current State\n\n- **WPF** \u0060SKElement\u0060 / \u0060SKGLElement\u0060 (\u0060source/SkiaSharp.Views/SkiaSharp.Views.WPF/\u0060) \u2014 only handles \u0060PaintSurface\u0060, no input events\n- **Windows Forms** \u0060SKControl\u0060 / \u0060SKGLControl\u0060 (\u0060source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/\u0060) \u2014 only handles \u0060PaintSurface\u0060, no input events\n- Neither platform has any \u0060SKTouchHandler\u0060 or touch event infrastructure\n\n\u003E **Note**: This requires building touch handler infrastructure first (not just wheel support). Consider implementing the full \u0060SKTouchEventArgs\u0060 pipeline for mouse/touch/pen events at the same time.\n\n## Platform Details \u2014 WPF\n\n### Native API\n\n[\u0060System.Windows.Input.MouseWheelEventArgs.Delta\u0060](https://learn.microsoft.com/en-us/dotnet/api/system.windows.input.mousewheeleventargs.delta)\n\n\u0060\u0060\u0060csharp\nprivate void OnMouseWheel(object sender, MouseWheelEventArgs e) {\n    int delta = e.Delta;  // \u00B1120 per notch, already v120!\n}\n\u0060\u0060\u0060\n\n### Raw Values\n\n| Device | Delta value | Notes |\n|---|---|---|\n| Standard mouse notch | \u00B1120 | Exactly WHEEL_DELTA |\n| Fast scroll | \u00B1240, \u00B1360 | Multiple notches per event |\n| High-res mouse | \u00B115, \u00B130, \u00B160 | Sub-notch values |\n| Precision trackpad | \u00B11 to \u00B1119 | Fine-grained |\n\n### Sign Convention\n\n- \u0060Delta \u003E 0\u0060 = forward (away from user) = **scroll up**\n- \u0060Delta \u003C 0\u0060 = backward (toward user) = **scroll down**\n- **Already matches** v120 convention \u2014 passthrough\n\n### Official Documentation\n\n- [MouseWheelEventArgs.Delta](https://learn.microsoft.com/en-us/dotnet/api/system.windows.input.mousewheeleventargs.delta) \u2014 \u0022the amount the mouse wheel has changed\u0022\n- [Mouse.MouseWheelDeltaForOneLine](https://learn.microsoft.com/en-us/dotnet/api/system.windows.input.mouse.mousewheeldeltaforoneline) \u2014 the constant 120\n- [UIElement.MouseWheel Event](https://learn.microsoft.com/en-us/dotnet/api/system.windows.uielement.mousewheel) \u2014 WPF event to subscribe to\n\n## Platform Details \u2014 Windows Forms\n\n### Native API\n\n[\u0060System.Windows.Forms.MouseEventArgs.Delta\u0060](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.mouseeventargs.delta)\n\n\u0060\u0060\u0060csharp\nprivate void OnMouseWheel(object sender, MouseEventArgs e) {\n    int delta = e.Delta;  // \u00B1120 per notch, already v120!\n}\n\u0060\u0060\u0060\n\n### Raw Values\n\nSame as WPF \u2014 uses the same underlying \u0060WM_MOUSEWHEEL\u0060 Windows message.\n\n### Official Documentation\n\n- [MouseEventArgs.Delta (WinForms)](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.mouseeventargs.delta) \u2014 \u0022a signed count of the number of detents the wheel has rotated, multiplied by the WHEEL_DELTA constant\u0022\n- [Control.MouseWheel Event](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.control.mousewheel) \u2014 WinForms event to subscribe to\n\n## Normalization Logic\n\n\u0060\u0060\u0060csharp\n// Both WPF and WinForms: passthrough \u2014 already v120\nint wheelDelta = e.Delta;\n// Mouse notch up \u2192 120\n// Mouse notch down \u2192 -120\n// High-res mouse \u2192 sub-120 values\n// No conversion needed\n\u0060\u0060\u0060\n\n## Implementation Notes\n\n- **This is a larger effort** \u2014 WPF and WinForms views have NO touch handler infrastructure today. Adding wheel support requires:\n  1. Creating \u0060SKTouchHandler\u0060 equivalent for WPF/WinForms (or adding events to existing view classes)\n  2. Wiring up \u0060MouseWheel\u0060 event alongside other input events (MouseDown, MouseMove, MouseUp, etc.)\n  3. Exposing \u0060Touch\u0060 event and \u0060EnableTouchEvents\u0060 property on \u0060SKElement\u0060/\u0060SKControl\u0060\n- Consider following the MAUI pattern: separate \u0060SKTouchHandler\u0060 class that can be attached to the view\n- The MAUI Windows handler (\u0060Platform/Windows/SKTouchHandler.cs\u0060) is a good reference, but uses WinUI \u0060PointerRoutedEventArgs\u0060 which differs from WPF/WinForms APIs\n- Priority is lower than MAUI platforms since WPF/WinForms views are less commonly used with touch/input\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-27T21:58:36",
+  "updatedAt": "2026-02-27T21:58:36",
+  "commentCount": 0,
+  "reactionCount": 0
+}

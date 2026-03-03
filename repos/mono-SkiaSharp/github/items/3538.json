@@ -1,0 +1,26 @@
+{
+  "number": 3538,
+  "type": "issue",
+  "state": "open",
+  "title": "Add wheel support to Tizen MAUI views with v120 normalization",
+  "body": "## Overview\n\nAdd scroll wheel support to SkiaSharp\u0027s Tizen MAUI views by handling \u0060Wheel\u0060 events in the Tizen \u0060SKTouchHandler\u0060, normalized to the [v120 standard](https://github.com/mono/SkiaSharp/issues/3533) (120 = one discrete mouse wheel notch).\n\n**Parent issue**: #3533\n\n## Current State\n\nThe Tizen \u0060SKTouchHandler\u0060 (\u0060source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs\u0060) currently:\n- Handles: \u0060TouchEvent\u0060 with \u0060PointStateType\u0060 (Down, Up, Motion, Leave, Interrupted)\n- Does **NOT** handle: \u0060WheelEvent\u0060\n- Has no wheel delta support\n\n## Platform Details\n\n### Native API\n\n[\u0060Tizen.NUI.Wheel\u0060](https://docs.tizen.org/application/dotnet/api/TizenFX/API13/api/Tizen.NUI.Wheel.html) class:\n\n\u0060\u0060\u0060csharp\n// Wheel event properties:\npublic WheelType Type { get; }      // MouseWheel or CustomWheel\npublic int Direction { get; }       // 0 = vertical, 1 = horizontal\npublic uint Modifiers { get; }      // Alt, Shift, Ctrl bitmask\npublic int Z { get; }               // Scroll delta (ticks)\npublic uint TimeStamp { get; }\npublic Vector2 Point { get; }       // Cursor position\n\u0060\u0060\u0060\n\n### Raw Values Per Discrete Mouse Notch\n\n| Device | Z value | Notes |\n|---|---|---|\n| Standard mouse wheel | \u00B11 | One tick per notch |\n| Fast scroll | \u00B11 per event | Multiple rapid events |\n\n### Sign Convention\n\n- \u0060Z \u003E 0\u0060 = rolling **down** / clockwise\n- \u0060Z \u003C 0\u0060 = rolling **up** / counter-clockwise\n- **Must negate** \u2014 opposite of v120 convention (where positive = up)\n\n### Official Documentation\n\n- [Tizen.NUI.Wheel class (API reference)](https://docs.tizen.org/application/dotnet/api/TizenFX/API13/api/Tizen.NUI.Wheel.html) \u2014 API reference with Z, Direction, Type properties\n- [TizenFX Wheel.cs source code](https://github.com/Samsung/TizenFX/blob/main/src/Tizen.NUI/src/public/Events/Wheel.cs) \u2014 implementation source\n- [Dali::WheelEvent (native API)](https://docs.tizen.org/application/native/api/wearable/6.0/structDali_1_1WheelEvent.html) \u2014 underlying native wheel event struct with \u0060direction\u0060 and \u0060z\u0060 fields\n- [Tizen.NUI.BaseComponents.View](https://docs.tizen.org/application/dotnet/api/TizenFX/API13/api/Tizen.NUI.BaseComponents.View.html) \u2014 base class that provides \u0060WheelEvent\u0060 handler\n\n\u003E **Note**: The [Tizen NUI CustomView guide](https://docs.tizen.org/application/dotnet/guides/user-interface/nui/customview/) covers class derivation, visuals, and gestures but does **not** cover wheel event handling. For wheel semantics, refer to the \u0060Wheel\u0060 class API reference and \u0060Dali::WheelEvent\u0060 native docs linked above.\n\n## Normalization Logic\n\n\u0060\u0060\u0060csharp\n// In wheel event handler:\nint wheelDelta = -wheel.Z * 120;\n// Negate: Tizen positive = down, v120 positive = up\n// Scale: 1 tick \u00D7 120 = 120\n//\n// Mouse notch down (Z=1) \u2192 -120\n// Mouse notch up (Z=-1) \u2192 120\n\u0060\u0060\u0060\n\n### Expected Results\n\n| Input | Calculation | WheelDelta |\n|---|---|---|\n| Mouse notch up (Z=-1) | \u0060-(-1) \u00D7 120\u0060 | **120** |\n| Mouse notch down (Z=1) | \u0060-(1) \u00D7 120\u0060 | **-120** |\n| Two notches up (Z=-2) | \u0060-(-2) \u00D7 120\u0060 | **240** |\n\n## Implementation Notes\n\n- Register a \u0060WheelEvent\u0060 handler on the NUI View (alongside existing \u0060TouchEvent\u0060)\n- Fire \u0060SKTouchAction.WheelChanged\u0060 with \u0060SKTouchDeviceType.Mouse\u0060\n- Use \u0060wheel.Point\u0060 for cursor position (convert to view coordinates as needed)\n- Set \u0060inContact = false\u0060\n- Check \u0060wheel.Direction\u0060 \u2014 0 = vertical (use \u0060Z\u0060), 1 = horizontal (future enhancement)\n- Feed \u0060args.Handled\u0060 back to the event system\n- Reference: Windows handler in \u0060Platform/Windows/SKTouchHandler.cs\u0060 for the pattern\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-27T21:58:28",
+  "updatedAt": "2026-02-27T22:40:02",
+  "commentCount": 0,
+  "reactionCount": 0
+}

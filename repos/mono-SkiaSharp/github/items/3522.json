@@ -1,0 +1,32 @@
+{
+  "number": 3522,
+  "type": "pr",
+  "state": "open",
+  "title": "Investigating #3509: Images fail to render on macOS",
+  "body": "## Investigation: #3509 - Images fail to render on macOS with SkiaSharp 3.116.0\n\n### Status: \uD83D\uDD0D Investigating\n\n### Issue Summary\n- **Title:** Images fail to render on macOS with SkiaSharp 3.116.0\n- **Symptoms:** \u0060SKCanvas.DrawImage\u0060 with \u0060SKImage.FromBitmap\u0060 or \u0060SKImage.FromEncodedData\u0060 results in transparent/empty output.\n- **Platform:** macOS ARM64, SkiaSharp 3.116.0\n- **Reproduction:** See \u0060repro_3509/\u0060 folder. Create a red bitmap, draw to blue surface, verify pixel is red.\n\n### Related Issues\n| Issue | Title | Why Similar | Status |\n|-------|-------|-------------|--------|\n| TBD | | | |\n\n**Links from related issues:**\n- TBD\n\n### Reproduction Results\n| Environment | SkiaSharp Version | Result |\n|-------------|-------------------|--------|\n| macOS ARM64 | 3.116.0 | \u274C Fails (Transparent output) |\n| macOS ARM64 | 2.88.9 | \u2705 Works |\n\n### Current Hypothesis\nRegression in \u0060SKImage.FromBitmap\u0060 or \u0060SKCanvas.DrawImage\u0060 implementation in 3.116.0, possibly related to memory ownership or P/Invoke signature changes.\n\n### Investigation Plan\n- [x] Fetch issue and extract details\n- [ ] Search for related issues\n- [ ] Read all comments on related issues\n- [x] Reproduce on target platform\n- [ ] Compare working vs broken versions (code diff)\n- [ ] Identify fix location\n\n### Progress Log\n| Action | Result |\n|--------|--------|\n| Reproduced issue | Confirmed regression in 3.116.0 |\n\n### Alternatives Tried\n| Approach | Result | Next Step |\n|----------|--------|-----------|\n| \u0060SKImage.FromBitmap\u0060 | Failed | Try \u0060SKImage.FromEncodedData\u0060 |\n| \u0060SKImage.FromEncodedData\u0060 | Failed | Try 2.88.9 |\n| 2.88.9 | Passed | Confirm regression |",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-20T19:20:37",
+  "updatedAt": "2026-02-20T19:20:46",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "merged": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/issue-3509-macos-drawimage-fix",
+  "additions": 4006,
+  "deletions": 1854,
+  "changedFiles": 43,
+  "commits": 27,
+  "reviews": []
+}

@@ -1,0 +1,33 @@
+{
+  "number": 3542,
+  "type": "pr",
+  "state": "open",
+  "title": "Disable serialization assembly generation",
+  "body": "Prevent Sgen from trying to load reference assemblies when used in projects that use legacy Xml serialization.\r\n\r\n**Description of Change**\r\n\r\nAdded GenerateSerializationAssemblies tag with \u0022off\u0022 to the main project\r\n\r\n**Bugs Fixed**\r\n\r\nA common issue with legacy projects using Xml serialization:\r\nhttps://github.com/dotnet/msbuild/issues/2707\r\n\r\nSgen generates code so that the runtime no longer needs to use reflection in order to serialize or deserialize xml, speeding up serialization considerably. Adding a reference to SkiaSharp breaks the feature.\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description) \r\nIt has no runtime side effects, just prevents a compiletime error for some projects\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\nNo related PR found\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\nNothing needs to change",
+  "author": {
+    "login": "mlsomers",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-03-03T12:59:54",
+  "updatedAt": "2026-03-03T13:01:39",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "patch-1",
+  "additions": 2,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

@@ -1,0 +1,37 @@
+{
+  "number": 3541,
+  "type": "pr",
+  "state": "open",
+  "title": "Add revamped Blazor sample pages from PR #3528 (sample changes only)",
+  "body": "Brings in the sample app changes from #3528 without the touch event infrastructure (TypeScript interop, \u0060EnableTouchEvents\u0060/\u0060Touch\u0060 view parameters, \u0060SKTouchEventArgs\u0060 relocation).\n\n**What changed**\n\n- **\u0060Home.razor\u0060** \u2014 replaced plain text demo with radial gradient background, semi-transparent colored circles, and centered text via \u0060SKShader.CreateRadialGradient\u0060\n- **\u0060GPU.razor\u0060** \u2014 replaced clock demo with a real-time SkSL metaball lava-lamp shader using \u0060SKRuntimeEffect.BuildShader\u0060; drag interaction adapted to Blazor native \u0060@onpointerdown\u0060/\u0060@onpointermove\u0060/\u0060@onpointerup\u0060 (filtered to primary pointer)\n- **\u0060GPU.razor.css\u0060** \u2014 new; floating FPS overlay panel\n- **\u0060Drawing.razor\u0060** \u2014 new page; multi-stroke drawing canvas with color picker toolbar and scroll-wheel brush sizing, using Blazor native pointer/wheel events instead of the new touch API\n- **\u0060Drawing.razor.css\u0060** \u2014 new; floating info and toolbar overlays\n- **\u0060NavMenu.razor\u0060** \u2014 \u0022Raster Canvas\u0022 \u2192 \u0022Drawing\u0022; labels updated to Home / GPU / Drawing with matching icons\n- **\u0060NavMenu.razor.css\u0060** \u2014 GPU card and pencil icons replace old ones\n- **\u0060MainLayout.razor.css\u0060** \u2014 \u0060height: 100vh\u0060 \u002B \u0060overflow: hidden\u0060 for full-height layout\n\nTouch interaction in GPU and Drawing uses \u0060@onpointerdown\u0060/\u0060@onpointermove\u0060/\u0060@onpointerup\u0060/\u0060@onwheel\u0060 \u2014 the same pattern as the existing \u0060Raster.razor\u0060 \u2014 since \u0060EnableTouchEvents\u0060/\u0060Touch\u0060 are not yet in the codebase.\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [ ] Has tests (if omitted, state reason in description)\n- [ ] Rebased on top of main at time of PR\n- [ ] Merged related skia PRs\n- [ ] Changes adhere to coding standard\n- [ ] Updated documentation\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Please look at mono/SkiaSharp#3528 and bring in the sample changes only. We want the new sample but none of the other things.\n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC We\u0027d love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-28T12:04:40",
+  "updatedAt": "2026-02-28T14:02:44",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/add-sample-changes-from-3528",
+  "additions": 528,
+  "deletions": 107,
+  "changedFiles": 10,
+  "commits": 3,
+  "reviews": []
+}

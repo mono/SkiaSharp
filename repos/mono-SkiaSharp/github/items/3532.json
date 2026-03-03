@@ -1,0 +1,29 @@
+{
+  "number": 3532,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix case-sensitive nupkg path \u002B move docs workflow to docs repo",
+  "body": "## Summary\n\n### 1. Move docs workflow to \u0060mono/SkiaSharp-API-docs\u0060\n\nThe \u0060update-docs.yml\u0060 workflow now lives entirely in the docs repo where \u0060GITHUB_TOKEN\u0060 has native write access \u2014 no PATs or deploy keys needed. It checks out this repo at a configurable \u0060skiasharp-branch\u0060 (default: \u0060main\u0060) to get the Cake build scripts.\n\n### 2. Case-sensitive nupkg path fix\n\n\u0060UpdateDocs.cake\u0060 used \u0060.ToLower()\u0060 for nupkg filenames, but actual files are PascalCase. Works on macOS (case-insensitive), fails on Linux/Windows (case-sensitive).\n\n## Changes\n\n- \u0060.github/workflows/update-docs.yml\u0060: **Removed** (now in docs repo)\n- \u0060documentation/writing-docs.md\u0060: Updated pipeline section to reference docs repo workflow\n- \u0060scripts/cake/UpdateDocs.cake\u0060: Remove \u0060.ToLower()\u0060 from nupkg path\n\n## Related\n\n- mono/SkiaSharp-API-docs#63 (the workflow in the docs repo)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-27T02:21:50",
+  "updatedAt": "2026-02-27T14:19:51",
+  "closedAt": "2026-02-27T14:19:49",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-27T14:19:49",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-docs-case-sensitivity",
+  "additions": 5,
+  "deletions": 53,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}

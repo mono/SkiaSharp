@@ -1,0 +1,29 @@
+{
+  "number": 3530,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add daily API docs generation pipeline",
+  "body": "## Summary\r\n\r\nAdds an automated daily pipeline to regenerate XML API docs from the latest CI NuGet packages, along with updated documentation.\r\n\r\n## Changes\r\n\r\n- **\u0060.github/workflows/update-docs.yml\u0060** (new) \u2014 GitHub Actions workflow that runs daily at 6 AM UTC (\u002B manual trigger). Downloads latest NuGets from the public SkiaSharp-CI feed, runs \u0060dotnet cake --target=update-docs\u0060 to regenerate XML docs, and creates a PR on \u0060mono/SkiaSharp-API-docs\u0060 via \u0060peter-evans/create-pull-request\u0060.\r\n\r\n- **\u0060documentation/writing-docs.md\u0060** (rewrite) \u2014 Full rewrite replacing outdated \u0060bootstrapper.ps1\u0060 references with current \u0060dotnet cake\u0060 commands. New sections: Automated Pipeline, Generating Docs Locally, Editing API Docs, Cake Targets Reference.\r\n\r\n- **\u0060.github/skills/api-docs/SKILL.md\u0060** (enhanced) \u2014 Added Key Concepts section (docs submodule, when to regenerate vs edit), Regenerating Docs section with commands, and link to \u0060writing-docs.md\u0060.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-27T01:34:12",
+  "updatedAt": "2026-02-27T01:40:43",
+  "closedAt": "2026-02-27T01:40:41",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-27T01:40:41",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/automated-api-docs-pipeline",
+  "additions": 158,
+  "deletions": 34,
+  "changedFiles": 3,
+  "commits": 3,
+  "reviews": []
+}
