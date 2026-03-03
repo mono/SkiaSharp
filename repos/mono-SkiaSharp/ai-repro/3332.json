@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3332,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-08-22T20:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "scope": "universal",
+  "notes": "Reproduced as reported: SKCanvasView in Blazor WASM does not fill 100% height of its parent flex container. The canvas element's intrinsic size (set by HTML width/height attributes for the drawing buffer at 2x DPI) conflicts with CSS percentage-based heights in flexbox layouts. Canvas CSS height resolves to 550px while the viewport is ~1700px. Confirmed on SkiaSharp.Views.Blazor 3.119.0, 3.119.2 (latest), and main branch source — the issue persists across all versions.",
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.119.0"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.0",
+    "dockerUsed": false,
+    "wasmToolsVersion": "10.0.102/10.0.100"
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project with net10.0 TFM and SkiaSharp.Views.Blazor 3.119.0, add reporter's flex layout code",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.0",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Blazor WASM project file with WasmBuildNative enabled and SkiaSharp.Views.Blazor 3.119.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk.BlazorWebAssembly\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <WasmBuildNative>true</WasmBuildNative>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"3.119.0\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Reporter's exact code: SKCanvasView in a flex container with CSS height:100% on canvas-container and canvas elements",
+          "content": "@page \"/\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<div class=\"top-container\">\n    <div class=\"canvas-container\">\n        <SKCanvasView OnPaintSurface=\"OnPaintSurface\" />\n    </div>\n</div>\n\n<style>\n    .top-container { flex: 1 1 auto; width: 100%; min-height: 100%; border: 1px solid red; padding: 1rem; display: flex; flex-direction: column; }\n    .canvas-container { flex: 1; background-color: #90ee90; width: 100%; height: 100%; }\n    .canvas-container canvas { padding: 0; margin: 0; width: 100%; height: 100%; }\n</style>\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.Blue);\n        using var paint = new SKPaint { Color = SKColors.Yellow, IsAntialias = true };\n        SKFont font = new SKFont(SKTypeface.Default, 32);\n        canvas.DrawText($\"{e.RawInfo.Width} : {e.RawInfo.Height}\", 20, 50, font, paint);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build the Blazor WASM project with native compilation",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s) Time Elapsed 00:00:07.73",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Serve the app and verify canvas sizing in browser with Playwright. Canvas height is 550px while viewport is 1680px — canvas fills only ~33% of available vertical space instead of 100%.",
+      "command": "dotnet run --urls http://localhost:5111 --no-build",
+      "exitCode": 0,
+      "output": "Console log: REPRO: rendered 2200x1100. JS evaluation: viewport height=1680px, topContainer height=588px, canvasContainer height=556px, canvas CSS height=550px, canvas HTML height=1100. Canvas fills only ~33% of viewport height.",
+      "layer": "deployment",
+      "result": "wrong-output"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.119.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Canvas height 550px in 1680px viewport. Blue canvas covers only ~33% of available vertical space.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same behavior: canvas height 550px in 1732px viewport. No change from reporter's version.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Same behavior on main branch source: canvas height 550px in 1784px viewport. Bug persists in development.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Reproduced on all tested versions including main branch. The SKCanvasView Blazor component renders a bare canvas element with no default display:block styling. The JS interop sets HTML width/height attributes for the drawing buffer, which changes the canvas intrinsic size and conflicts with CSS percentage-based heights in flexbox."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels already correctly applied (type/bug, os/WASM, area/SkiaSharp.Views.Blazor)",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the detailed report and reproduction project!\n\nWe've confirmed this issue. The SKCanvasView canvas element does not fill 100% of its parent container height when using flexbox with percentage-based CSS heights. This reproduces across all tested versions:\n\n| Version | Result |\n|---------|--------|\n| 3.119.0 (reported) | ❌ Reproduced |\n| 3.119.2 (latest) | ❌ Reproduced |\n| main (source) | ❌ Reproduced |\n\nThe root cause is the interaction between the HTML `<canvas>` element's intrinsic sizing and CSS flexbox layout. The SKCanvasView component renders a bare `<canvas>` element (inline by default), and the JS interop sets its HTML `width`/`height` attributes for the drawing buffer resolution, which changes the canvas's intrinsic size and can interfere with flexbox height calculations.\n\n**Workaround:** Set `display:block` and explicit sizing directly on the `SKCanvasView` component:\n\n```razor\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\"\n    style=\"width:100%; height:100%; display:block;\" />\n```\n\nAlternatively, use `position:absolute` to decouple from intrinsic sizing:\n\n```css\n.canvas-container {\n    position: relative;\n    flex: 1;\n}\n.canvas-container canvas {\n    position: absolute;\n    top: 0; bottom: 0; left: 0; right: 0;\n}\n```\n\nSee also #2038 and #2834 for prior discussion of this pattern.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Set style=\"width:100%; height:100%; display:block;\" directly on SKCanvasView component",
+      "Use position:absolute on the canvas with inset:0 to decouple from intrinsic sizing",
+      "Use explicit pixel dimensions instead of percentage-based heights"
+    ]
+  }
+}
