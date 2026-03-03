@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3428,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-03T18:15:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "notes": "Tested SKGLView with SkiaSharp 3.116.0 and 3.119.2 on iOS simulator (iPhone 16 Pro, iOS 26.2) with .NET 10.0.102. Both versions rendered correctly — CornflowerBlue background with white text, no EAGL errors. The iOS simulator translates OpenGL ES calls to Metal via com.apple.metal.simulator, which masks the real-device EAGL binding failure. The reporter's error 'Failed to bind EAGLDrawable' is specific to CAEAGLLayer on physical iOS devices where native EAGL/OpenGL ES is used directly. A real iOS device is needed to reproduce this bug.",
+  "reproProject": {
+    "type": "maui",
+    "tfm": "net10.0-ios",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Maui.Controls",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3 (arm64) + iOS Simulator 26.2 (iPhone 16 Pro)",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create .NET 10 MAUI project with SkiaSharp.Views.Maui.Controls 3.116.0",
+      "command": "dotnet new maui -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Maui.Controls --version 3.116.0",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "MauiProgram.cs",
+          "description": "MAUI app entry point with .UseSkiaSharp() registration",
+          "content": "using Microsoft.Extensions.Logging;\nusing SkiaSharp.Views.Maui.Controls.Hosting;\n\nnamespace Repro;\n\npublic static class MauiProgram\n{\n\tpublic static MauiApp CreateMauiApp()\n\t{\n\t\tvar builder = MauiApp.CreateBuilder();\n\t\tbuilder\n\t\t\t.UseMauiApp<App>()\n\t\t\t.UseSkiaSharp()\n\t\t\t.ConfigureFonts(fonts =>\n\t\t\t{\n\t\t\t\tfonts.AddFont(\"OpenSans-Regular.ttf\", \"OpenSansRegular\");\n\t\t\t\tfonts.AddFont(\"OpenSans-Semibold.ttf\", \"OpenSansSemibold\");\n\t\t\t});\n\n#if DEBUG\n\t\tbuilder.Logging.AddDebug();\n#endif\n\n\t\treturn builder.Build();\n\t}\n}"
+        },
+        {
+          "filename": "MainPage.xaml",
+          "description": "XAML page with SKGLView to test EAGL rendering",
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<ContentPage xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\"\n             xmlns:x=\"http://schemas.microsoft.com/winfx/2009/xaml\"\n             xmlns:skia=\"clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\"\n             x:Class=\"Repro.MainPage\">\n    <Grid RowDefinitions=\"Auto,*\">\n        <Label Grid.Row=\"0\" Text=\"SKGLView EAGL Test (Issue #3428)\" FontSize=\"20\" HorizontalOptions=\"Center\" Padding=\"10\" />\n        <skia:SKGLView Grid.Row=\"1\" x:Name=\"GlView\" PaintSurface=\"OnGLPaintSurface\" />\n    </Grid>\n</ContentPage>"
+        },
+        {
+          "filename": "MainPage.xaml.cs",
+          "description": "Code-behind with SKGLView PaintSurface handler drawing blue background and white text",
+          "content": "using SkiaSharp;\nusing SkiaSharp.Views.Maui;\n\nnamespace Repro;\n\npublic partial class MainPage : ContentPage\n{\n\tpublic MainPage()\n\t{\n\t\tInitializeComponent();\n\t}\n\n\tprivate void OnGLPaintSurface(object? sender, SKPaintGLSurfaceEventArgs args)\n\t{\n\t\tvar canvas = args.Surface.Canvas;\n\t\tcanvas.Clear(SKColors.CornflowerBlue);\n\n\t\tusing var paint = new SKPaint\n\t\t{\n\t\t\tColor = SKColors.White,\n\t\t\tTextSize = 48,\n\t\t\tIsAntialias = true\n\t\t};\n\t\tcanvas.DrawText(\"Hello SkiaSharp GL!\", 50, 200, paint);\n\n\t\tConsole.WriteLine($\"OnGLPaintSurface called - GRContext null: {(GlView?.GRContext is null)}\");\n\t}\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build MAUI app for iOS simulator (arm64)",
+      "command": "dotnet build -f net10.0-ios -r iossimulator-arm64",
+      "exitCode": 0,
+      "output": "Build succeeded. 2 Warning(s) 0 Error(s) (CS0618 obsolete API warnings only)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Install and launch app on iPhone 16 Pro simulator (iOS 26.2)",
+      "command": "xcrun simctl install <sim-id> Repro.app && xcrun simctl launch <sim-id> com.companyname.repro",
+      "exitCode": 0,
+      "output": "App launched successfully. Log stream shows: 'OnGLPaintSurface called - GRContext null: False' (called twice). No EAGL errors, no OpenGL errors, no framebuffer errors.",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify rendering output via simulator screenshot",
+      "command": "xcrun simctl io <sim-id> screenshot screenshot-3116-0.png",
+      "exitCode": 0,
+      "output": "Screenshot captured. SKGLView renders CornflowerBlue background with white 'Hello SkiaSharp GL!' text. No white canvas observed. The simulator log shows com.apple.metal.simulator connections — confirming EAGL calls are translated to Metal on the simulator.",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project on same simulator",
+      "command": "mkdir /tmp/skiasharp/repro/3428-latest && dotnet new maui && dotnet add package SkiaSharp.Views.Maui.Controls --version 3.119.2 && dotnet build -f net10.0-ios -r iossimulator-arm64 && xcrun simctl install && xcrun simctl launch",
+      "exitCode": 0,
+      "output": "Build succeeded. App renders identically to 3.116.0 — CornflowerBlue background, white text visible. OnGLPaintSurface called with non-null GRContext. No EAGL errors.",
+      "layer": "deployment",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "SKGLView renders correctly on iOS simulator. OnGLPaintSurface fires, GRContext is non-null, CornflowerBlue background with text visible. No EAGL binding errors. Simulator translates OpenGL ES to Metal, masking potential real-device EAGL failures.",
+      "platform": "iossimulator-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Same behavior as 3.116.0 — renders correctly on iOS simulator with no EAGL errors.",
+      "platform": "iossimulator-arm64"
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.75,
+      "reason": "Bug could not be reproduced on iOS simulator because the simulator translates OpenGL ES to Metal, masking the EAGL binding failure. The reporter's 'Failed to bind EAGLDrawable' error is specific to real iOS devices. Need confirmation of device model, iOS version, and a minimal reproduction project to test on physical hardware."
+    },
+    "actions": [
+      {
+        "type": "add-comment",
+        "description": "Post reproduction attempt results with request for device details",
+        "risk": "low",
+        "confidence": 0.80
+      }
+    ],
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "summary": "Not reproduced on iOS simulator; requesting real device details",
+      "body": "Thanks for the report. We attempted to reproduce this on an iOS simulator (iPhone 16 Pro, iOS 26.2) with .NET 10.0.102 using both SkiaSharp 3.116.0 and 3.119.2.\n\nOn the simulator, SKGLView renders correctly — the `PaintSurface` event fires, `GRContext` is non-null, and the canvas displays the expected content (not white). No \"Failed to bind EAGLDrawable\" errors appear in the logs.\n\nThis is likely because the iOS simulator translates OpenGL ES (EAGL) calls through Apple's Metal translation layer (`com.apple.metal.simulator`), which masks the real-device EAGL binding failure.\n\n**Tested versions:**\n| Version | Simulator Result |\n|---------|------------------|\n| 3.116.0 | ✅ Renders correctly |\n| 3.119.2 | ✅ Renders correctly |\n\nTo help us reproduce on a real device, could you share:\n1. The specific iOS device model and iOS version\n2. A minimal reproduction project (or confirm if a simple SKGLView with `PaintSurface` is enough to trigger it)\n3. Whether switching to `SKCanvasView` (non-GL, CPU rendering) works as a workaround\n\nThe underlying issue may be that the iOS `SKGLView` uses deprecated `EAGLContext` (OpenGL ES), which Apple deprecated in iOS 12. The MacCatalyst handler already uses Metal (`SKMetalView`) — the iOS handler may need the same migration."
+    },
+    "missingInfo": [
+      "Specific iOS device model and iOS version",
+      "Minimal standalone reproduction project",
+      "Whether SKCanvasView (non-GL) works as a workaround",
+      "Whether the issue occurs on all .NET 10 iOS devices or specific hardware only"
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "reproducibility",
+        "upstream": "Triage assumed bug would reproduce on any iOS .NET 10 environment",
+        "corrected": "Bug does not reproduce on iOS simulator — simulator translates EAGL to Metal. Real device required."
+      }
+    ]
+  }
+}
