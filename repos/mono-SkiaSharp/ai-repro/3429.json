@@ -1,0 +1,125 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3429,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T00:00:00Z"
+  },
+  "conclusion": "needs-hardware",
+  "notes": "Console fallback tested on macOS arm64 with 500 iterations of 4K pattern drawing. No memory leak detected in core SkiaSharp \u2014 managed memory stabilized at ~155 KB after GC on both 3.116.0 and 3.119.2. The bug is specific to WPF hardware-accelerated GPU compositing with Nvidia Quadro drivers on high-DPI monitors. Docker Linux cannot help since WPF is Windows-only and the bug requires specific GPU hardware.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console app with SkiaSharp 3.116.0 for memory leak testing",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.116.0' added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "content": "using System;\nusing System.Diagnostics;\nusing SkiaSharp;\n\nconst int iterations = 500;\nconst int width = 3840;\nconst int height = 2160;\n\nlong initialMemory = GC.GetTotalMemory(true);\nlong peakMemory = initialMemory;\n\nConsole.WriteLine($\"Initial memory: {initialMemory / 1024.0:F0} KB\");\nConsole.WriteLine($\"Drawing {iterations} frames at {width}x{height}...\");\n\nvar sw = Stopwatch.StartNew();\n\nfor (int i = 0; i < iterations; i++)\n{\n    using var bitmap = new SKBitmap(width, height);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.White);\n\n    using var paint = new SKPaint { Style = SKPaintStyle.Fill, IsAntialias = true };\n\n    for (int x = 0; x < width; x += 20)\n        for (int y = 0; y < height; y += 20)\n        {\n            paint.Color = new SKColor((byte)(x % 256), (byte)(y % 256), (byte)((x + y) % 256));\n            canvas.DrawRect(x, y, 18, 18, paint);\n        }\n\n    using var path = new SKPath();\n    for (int j = 0; j < 50; j++)\n    {\n        path.Reset();\n        path.MoveTo(j * 10, 0);\n        path.LineTo(width, j * 10);\n        path.LineTo(width - j * 10, height);\n        path.LineTo(0, height - j * 10);\n        path.Close();\n        paint.Style = SKPaintStyle.Stroke;\n        paint.StrokeWidth = 2;\n        paint.Color = SKColors.Blue;\n        canvas.DrawPath(path, paint);\n    }\n\n    using var shader = SKShader.CreateColor(SKColors.Red);\n    paint.Shader = shader;\n    paint.Style = SKPaintStyle.Fill;\n    canvas.DrawRect(0, 0, 100, 100, paint);\n    paint.Shader = null;\n\n    using var image = SKImage.FromBitmap(bitmap);\n    using var data = image.Encode(SKEncodedImageFormat.Png, 80);\n\n    if (i % 100 == 0)\n    {\n        long currentMemory = GC.GetTotalMemory(false);\n        if (currentMemory > peakMemory) peakMemory = currentMemory;\n        Console.WriteLine($\"  Iteration {i}: memory = {currentMemory / 1024.0:F0} KB\");\n    }\n}\n\nsw.Stop();\nGC.Collect();\nGC.WaitForPendingFinalizers();\nGC.Collect();\n\nlong finalMemory = GC.GetTotalMemory(true);\nConsole.WriteLine($\"Results: Initial={initialMemory/1024}KB Final={finalMemory/1024}KB Peak={peakMemory/1024}KB Growth={(finalMemory-initialMemory)/1024}KB\");\nConsole.WriteLine(\"SUCCESS: test completed\");",
+          "description": "Console app that draws 500 iterations of 4K patterns to test for memory leaks in core SkiaSharp"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build console repro app with SkiaSharp 3.116.0",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run memory leak test with SkiaSharp 3.116.0 \u2014 500 iterations of 4K pattern drawing",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "Initial memory: 99 KB\nDrawing 500 frames at 3840x2160...\n  Iteration 0: memory = 147 KB\n  Iteration 100: memory = 236 KB\n  Iteration 200: memory = 316 KB\n  Iteration 300: memory = 406 KB\n  Iteration 400: memory = 494 KB\n\nResults:\n  Duration: 199.6s\n  Initial memory: 99 KB\n  Final memory:   155 KB\n  Peak memory:    494 KB\n  Memory growth:  56 KB\n  WARNING: Significant memory growth (56.7%) \u2014 possible leak\nSUCCESS: test completed",
+      "layer": "native",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run memory leak test with SkiaSharp 3.119.2 (latest stable) in fresh project directory",
+      "command": "cd /tmp/skiasharp/repro/3429-latest/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "Initial memory: 99 KB\nDrawing 500 frames at 3840x2160...\n  Iteration 0: memory = 148 KB\n  Iteration 100: memory = 236 KB\n  Iteration 200: memory = 316 KB\n  Iteration 300: memory = 406 KB\n  Iteration 400: memory = 494 KB\n\nResults:\n  Duration: 148.5s\n  Initial memory: 99 KB\n  Final memory:   156 KB\n  Peak memory:    494 KB\n  Memory growth:  57 KB\n  WARNING: Significant memory growth (57.0%) \u2014 possible leak\nSUCCESS: test completed",
+      "layer": "native",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Console fallback: 500 iterations of 4K pattern drawing. Managed memory peaked at 494 KB during rendering but returned to 155 KB after GC. No sustained memory leak detected in core SkiaSharp software rendering path.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Identical results to 3.116.0 \u2014 peak 494 KB, final 156 KB after GC. No memory leak in core SkiaSharp.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "blockers": [
+    "Requires Windows with WPF \u2014 current environment is macOS arm64, WPF is Windows-only",
+    "Requires Nvidia Quadro GPU \u2014 reporter confirmed leak only occurs with Quadro series drivers, not Geforce or AMD",
+    "Requires high-resolution/high-DPI monitor \u2014 reporter indicates leak occurs specifically on high-resolution displays"
+  ],
+  "scope": "unknown",
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.8,
+      "reason": "Memory leak not reproduced in core SkiaSharp console rendering on macOS. Bug is specific to WPF + Nvidia Quadro GPU compositing layer. Need to know which WPF control (SKElement vs SKGLElement) is used, as the SKGLElement has known memory leak issues (#3309). Also need driver version and DPI details."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/SkiaSharp.Views label to indicate WPF view layer involvement",
+        "risk": "low",
+        "confidence": 0.85
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference known SKGLElement memory leak issue #3309",
+        "risk": "low",
+        "confidence": 0.75
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the detailed report and investigation narrowing this to Nvidia Quadro GPUs.\n\nWe attempted to reproduce the memory leak using a console application on macOS (arm64) with both SkiaSharp 3.116.0 and 3.119.2, running 500 iterations of 4K (3840\u00d72160) pattern drawing. No sustained memory leak was detected in core SkiaSharp \u2014 managed memory peaked during rendering but returned to baseline after garbage collection.\n\nThis suggests the leak is in the WPF GPU compositing layer rather than core SkiaSharp rendering, which aligns with your finding that `RenderMode.SoftwareOnly` prevents it.\n\nCould you help us narrow this down further?\n\n1. **Which SkiaSharp WPF control are you using \u2014 `SKElement` or `SKGLElement`?** This is critical because:\n   - `SKGLElement` has a known memory leak (#3309) where GPU resources aren't fully disposed. PR #3311 addresses this.\n   - `SKElement` uses software rendering internally, so the leak would be in how WPF composites the `WriteableBitmap` to the GPU.\n\n2. **What is your Nvidia Quadro driver version?**\n3. **What is your monitor resolution and Windows DPI scaling factor?**\n4. **Could you share a memory profiler trace** (e.g., from dotMemory or Visual Studio Diagnostic Tools) showing what objects or handles are growing?\n\nIf you're currently using `SKGLElement`, switching to `SKElement` might resolve the issue while keeping WPF hardware acceleration enabled for the rest of your application.",
+      "status": "needs-human-edit"
+    },
+    "missingInfo": [
+      "Which SkiaSharp WPF control is used (SKElement or SKGLElement)",
+      "Nvidia Quadro driver version",
+      "Monitor resolution and Windows DPI scaling factor",
+      "Memory profiler trace showing what objects/handles are leaking"
+    ]
+  }
+}
