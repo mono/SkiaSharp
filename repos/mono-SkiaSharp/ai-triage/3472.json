@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3472,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-25T12:00:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "tenet/reliability"]
+  },
+  "summary": "HarfBuzzSharp.Blob.FromStream uses a fixed block to pin a managed byte array, but the pointer escapes the fixed scope and is held by the native Blob, so the GC can relocate the array and cause a crash.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.98 },
+    "area": { "value": "area/HarfBuzzSharp", "confidence": 0.95 },
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Potential crash due to GC relocating pinned-then-unpinned managed array",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call HarfBuzzSharp.Blob.FromStream with any stream",
+        "The fixed block pins the byte array temporarily and creates a Blob holding a pointer to it",
+        "After the fixed block exits, the GC may relocate the array",
+        "Accessing the Blob data from native code crashes or returns corrupt data"
+      ],
+      "environmentDetails": "All platforms — this is a managed memory safety issue, not platform-specific"
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.90,
+      "reason": "PR #3473 is open but not yet merged. The bug still exists in current code.",
+      "relatedPRs": [3473]
+    }
+  },
+  "analysis": {
+    "summary": "The fixed block in Blob.FromStream (line 79) only pins the managed byte array for the duration of the block, but the pointer is passed to the native Blob constructor which holds it indefinitely. After the fixed block exits, the GC can move the array, leaving the native Blob with a dangling pointer. The release delegate only disposes the MemoryStream, not the array itself, so there is no mechanism keeping the array pinned.",
+    "rationale": "This is clearly a bug — the fixed statement provides temporary pinning, but the pointer escapes its scope into native code. The reporter correctly identified the issue by code inspection and submitted PR #3473 with a fix using Marshal.AllocCoTaskMem, which is the established pattern in SkiaSharp (see SKImage.cs:30, SKFrontBufferedManagedStream.cs:90). The area label should be area/HarfBuzzSharp since the bug is in HarfBuzzSharp.Blob, not SkiaSharp. The os/Windows-Classic label is incorrect since this affects all platforms.",
+    "keySignals": [
+      { "text": "If GC runs after the blob is created, the managed array memory might be moved resulting in a crash", "source": "issue body", "interpretation": "Correct diagnosis — the fixed block scope is too narrow for the lifetime of the pointer." },
+      { "text": "fixed (byte* dataPtr = data) { return new Blob((IntPtr)dataPtr, ...); }", "source": "issue body (code)", "interpretation": "The pointer escapes the fixed block — classic GC safety violation." },
+      { "text": "Should copy via an UnmanagedMemoryStream", "source": "issue body (expected behavior)", "interpretation": "Reporter proposes using unmanaged memory allocation, which is the correct fix pattern." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/HarfBuzzSharp/Blob.cs", "lines": "71-82", "finding": "FromStream uses fixed(byte* dataPtr = data) but the pointer escapes the fixed scope when passed to the Blob constructor. After the fixed block exits at line 81, the GC can relocate the byte[] array while the native Blob still holds the original pointer.", "relevance": "direct" },
+      { "file": "binding/HarfBuzzSharp/Blob.cs", "lines": "84-89", "finding": "The Create method passes the pointer directly to hb_blob_create with MemoryMode.ReadOnly. HarfBuzz stores this pointer for the lifetime of the blob — confirming the pointer must remain valid.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKImage.cs", "lines": "30", "finding": "SKImage uses Marshal.AllocCoTaskMem for similar unmanaged memory needs — this is the established pattern in the codebase for long-lived native pointers.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/SKFrontBufferedManagedStream.cs", "lines": "90", "finding": "SKFrontBufferedManagedStream also uses Marshal.AllocCoTaskMem for buffers passed to native code — confirms the fix pattern.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "PR #3473 proposed fix uses stream.Length which throws on non-seekable streams — does it need to handle that case?",
+      "Should the fix first copy to MemoryStream for non-seekable streams, then allocate unmanaged memory?"
+    ],
+    "resolution": {
+      "hypothesis": "The fixed block pins the managed array only for its scope, but the native Blob holds the pointer indefinitely. The fix is to allocate unmanaged memory and copy the stream data there.",
+      "proposals": [
+        {
+          "title": "Use Marshal.AllocCoTaskMem for unmanaged memory",
+          "description": "Allocate unmanaged memory with Marshal.AllocCoTaskMem, copy the stream data to it, and free it in the release delegate. This matches the pattern used in SKImage.cs and SKFrontBufferedManagedStream.cs. PR #3473 implements this approach but uses stream.Length which may not work for non-seekable streams.",
+          "category": "fix",
+          "codeSnippet": "public static unsafe Blob FromStream(Stream stream)\n{\n    using var ms = new MemoryStream();\n    stream.CopyTo(ms);\n    var length = (int)ms.Length;\n    var dataPtr = Marshal.AllocCoTaskMem(length);\n    Marshal.Copy(ms.GetBuffer(), 0, dataPtr, length);\n    return new Blob(dataPtr, length, MemoryMode.ReadOnly, () => Marshal.FreeCoTaskMem(dataPtr));\n}",
+          "confidence": 0.90,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Use GCHandle.Alloc with Pinned flag",
+          "description": "Pin the managed array permanently using GCHandle.Alloc(data, GCHandleType.Pinned), and free it in the release delegate. This avoids the copy but keeps the managed array pinned in memory for the lifetime of the Blob.",
+          "category": "alternative",
+          "codeSnippet": "public static unsafe Blob FromStream(Stream stream)\n{\n    using var ms = new MemoryStream();\n    stream.CopyTo(ms);\n    var data = ms.ToArray();\n    var handle = GCHandle.Alloc(data, GCHandleType.Pinned);\n    var dataPtr = handle.AddrOfPinnedObject();\n    return new Blob(dataPtr, data.Length, MemoryMode.ReadOnly, () => handle.Free());\n}",
+          "confidence": 0.85,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use Marshal.AllocCoTaskMem for unmanaged memory",
+      "recommendedReason": "Matches the established pattern in SkiaSharp (SKImage.cs, SKFrontBufferedManagedStream.cs). Avoids long-term GC pinning fragmentation that GCHandle.Alloc(Pinned) can cause. PR #3473 already implements a variant of this approach."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Valid bug with PR #3473 already submitted. Needs code review — the PR's use of stream.Length may not handle non-seekable streams. The fix pattern is straightforward and well-established in the codebase."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Fix area label to HarfBuzzSharp (not SkiaSharp) and remove incorrect os/Windows-Classic since this is cross-platform",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/HarfBuzzSharp", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug and note the PR, flag the non-seekable stream concern",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed analysis — you're right that the `fixed` block scope is too narrow here. The pointer escapes into the native `Blob` and the GC can relocate the array after the block exits.\n\nPR #3473 looks like the right approach. One thing to watch: the proposed fix uses `stream.Length` which will throw on non-seekable streams (e.g., `NetworkStream`, `GZipStream`). The current code handles this by copying to a `MemoryStream` first. A combined approach — copy to `MemoryStream`, then allocate unmanaged memory — would preserve compatibility with all stream types.\n\nThis pattern is already used elsewhere in the codebase (`SKImage.cs`, `SKFrontBufferedManagedStream.cs`) with `Marshal.AllocCoTaskMem`."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to the fix PR",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3473
+      }
+    ]
+  }
+}
