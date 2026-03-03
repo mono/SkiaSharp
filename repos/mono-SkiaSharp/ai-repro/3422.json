@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3422,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-23T00:00:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "assessment": "likely-bug",
+  "notes": "Unable to reproduce on macOS arm64 with .NET SDK 10.0.102 and wasm-tools workload installed. Both SkiaSharp 3.119.1 (reporter's version) and 3.119.2 (latest stable) built and ran successfully with no TypeInitializationException or DllNotFoundException. The app rendered the SKCanvasView correctly with 'SUCCESS: rendered 1600x1200' in browser console. The issue was likely specific to earlier .NET 10 SDK previews (the reporter used VS 2026 with early .NET 10) and/or missing wasm-tools workload. Multiple commenters confirmed 'dotnet workload restore' resolved the issue. The reporter's environment (early .NET 10 preview SDK) differs significantly from current .NET 10.0.102.",
+  "scope": "unknown",
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      { "name": "SkiaSharp.Views.Blazor", "version": "3.119.1" }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false,
+    "wasmToolsVersion": "10.0.102"
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project targeting net10.0",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp.Views.Blazor 3.119.1 package",
+      "command": "dotnet add package SkiaSharp.Views.Blazor --version 3.119.1",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp.Views.Blazor' version '3.119.1' added.",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Add reporter's SKCanvasView Razor component with OnPaintSurface handler drawing text",
+      "command": "Created Pages/Home.razor with SKCanvasView, OnPaintSurface handler, SKPaint, SKFont, DrawText",
+      "layer": "csharp",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Razor page with SKCanvasView and OnPaintSurface handler drawing text using reporter's code",
+          "content": "@page \"/\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\" style=\"width:800px;height:600px;\" />\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs args)\n    {\n        var canvas = args.Surface.Canvas;\n        canvas.Clear(SKColors.White);\n        using var paint = new SKPaint { Color = SKColors.Black, IsAntialias = true, Style = SKPaintStyle.Fill };\n        using var font = new SKFont { Size = 24 };\n        var coord = new SKPoint(args.Info.Width / 2, (args.Info.Height + font.Size) / 2);\n        canvas.DrawText(\"SkiaSharp\", coord, font, paint);\n        Console.WriteLine($\"SUCCESS: rendered {args.Info.Width}x{args.Info.Height}\");\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build the Blazor WASM project with native WASM compilation",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Serve the app and verify in browser — no TypeInitializationException or DllNotFoundException",
+      "command": "dotnet run --urls http://localhost:5111 --no-build",
+      "exitCode": 0,
+      "output": "Browser console: SUCCESS: rendered 1600x1200. No errors. SKCanvasView rendered 'SkiaSharp' text correctly.",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project directory",
+      "command": "dotnet new blazorwasm + dotnet add package SkiaSharp.Views.Blazor --version 3.119.2 + dotnet build + dotnet run --urls http://localhost:5112",
+      "exitCode": 0,
+      "output": "Build succeeded. Browser console: SUCCESS: rendered 1600x1200. No errors.",
+      "layer": "deployment",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Built and ran successfully on .NET 10 SDK 10.0.102 with wasm-tools. SKCanvasView rendered correctly, no runtime errors.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Built and ran successfully on .NET 10 SDK 10.0.102 with wasm-tools. SKCanvasView rendered correctly, no runtime errors.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.75,
+      "reason": "Cannot reproduce with current .NET 10 SDK 10.0.102 and wasm-tools workload installed. The issue was reported with early .NET 10 previews. Multiple users confirmed 'dotnet workload restore' resolved the issue. Need to determine if the issue persists on current SDK versions or was resolved by SDK/workload updates."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Remove incorrect os/Windows-Universal-UWP label — this is a WASM issue, not UWP",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "add-comment",
+        "description": "Report reproduction results and ask if issue persists on current .NET 10 SDK",
+        "risk": "low",
+        "confidence": 0.80
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the report. We attempted to reproduce this on macOS arm64 with .NET SDK 10.0.102 and the `wasm-tools` workload installed, but were unable to observe the reported behavior.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| SkiaSharp 3.119.1 | ✅ Works — rendered successfully |\n| SkiaSharp 3.119.2 | ✅ Works — rendered successfully |\n\nBoth versions built and ran without any `TypeInitializationException` or `DllNotFoundException`. The `SKCanvasView` rendered correctly.\n\nThis issue was likely related to earlier .NET 10 SDK preview versions and/or a missing `wasm-tools` workload. Several commenters confirmed that `dotnet workload restore` resolved the issue.\n\nCould you confirm:\n1. What .NET SDK version are you currently using? (`dotnet --info` output)\n2. Is the `wasm-tools` workload installed? (`dotnet workload list`)\n3. Does the issue still occur with the latest .NET 10 SDK (10.0.102)?",
+      "status": "needs-human-edit"
+    },
+    "missingInfo": [
+      "Exact .NET SDK version currently in use (dotnet --info output)",
+      "Whether wasm-tools workload is installed (dotnet workload list output)",
+      "Whether issue persists with latest .NET 10 SDK 10.0.102"
+    ],
+    "workarounds": [
+      "Run 'dotnet workload restore' (or 'dotnet workload install wasm-tools') to ensure the WASM toolchain is installed",
+      "Add explicit PackageReference for SkiaSharp.NativeAssets.WebAssembly in addition to SkiaSharp.Views.Blazor",
+      "Ensure WasmBuildNative is not set to false in your .csproj; use RunAOTCompilation=false instead if needed",
+      "Update to the latest .NET 10 SDK (10.0.102 or later)"
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "reproducibility",
+        "upstream": "Bug affecting all Blazor WASM users on .NET 10 — requires emscripten version mismatch fix",
+        "corrected": "Not reproducible on .NET 10 SDK 10.0.102 with wasm-tools installed. Likely resolved by SDK/workload updates since the original report."
+      }
+    ]
+  }
+}
