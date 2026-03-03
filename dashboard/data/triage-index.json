@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-03-03T22:08:48.2000849Z",
-  "totalCount": 12,
+  "generatedAt": "2026-03-03T22:28:24.2417699Z",
+  "totalCount": 15,
   "summary": {
     "needsInvestigation": 6,
     "closeable": 2,
     "quickWins": 2,
     "regressions": 6,
-    "withRepro": 12,
+    "withRepro": 14,
     "reproduced": 5,
     "notReproduced": 2
   },
@@ -14,15 +14,23 @@
     {
       "label": "type/bug",
       "count": 12
+    },
+    {
+      "label": "type/enhancement",
+      "count": 3
     }
   ],
   "byArea": [
+    {
+      "label": "area/SkiaSharp.Views",
+      "count": 4
+    },
     {
       "label": "area/SkiaSharp",
       "count": 4
     },
     {
-      "label": "area/SkiaSharp.Views",
+      "label": "area/SkiaSharp.Views.Maui",
       "count": 2
     },
     {
@@ -31,10 +39,6 @@
     },
     {
       "label": "area/libSkiaSharp.native",
-      "count": 1
-    },
-    {
-      "label": "area/SkiaSharp.Views.Maui",
       "count": 1
     },
     {
@@ -52,6 +56,10 @@
       "count": 6
     },
     {
+      "label": "keep-open",
+      "count": 4
+    },
+    {
       "label": "request-info",
       "count": 3
     },
@@ -61,10 +69,6 @@
     },
     {
       "label": "close-as-by-design",
-      "count": 1
-    },
-    {
-      "label": "keep-open",
       "count": 1
     }
   ],
@@ -83,6 +87,53 @@
     }
   ],
   "issues": [
+    {
+      "number": 3540,
+      "title": "Maintainer-filed enhancement to add scroll wheel event support to GTK3 and GTK4 SKDrawingArea views, normalizing values to the v120 standard (120 = one discrete notch), as part of the cross-platform v120 normalization effort (#3533).",
+      "issueTitle": "Add wheel support to GTK3/GTK4 views with v120 normalization",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views",
+      "action": "keep-open",
+      "confidence": 0.95,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-28T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3539,
+      "title": "Enhancement request to add scroll wheel and full touch/input event infrastructure to WPF (SKElement, SKGLElement) and Windows Forms (SKControl, SKGLControl) views, which currently only handle PaintSurface with no input event support.",
+      "issueTitle": "Add wheel support to WPF and Windows Forms views with v120 normalization",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views",
+      "action": "keep-open",
+      "confidence": 0.92,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-28T00:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "needs-platform"
+    },
+    {
+      "number": 3538,
+      "title": "Maintainer-filed enhancement to add scroll wheel support to SkiaSharp\u0027s Tizen MAUI views by handling WheelEvent in the Tizen SKTouchHandler with v120 normalization (120 units = one discrete mouse notch), as part of the cross-platform wheel standardization project (#3533).",
+      "issueTitle": "Add wheel support to Tizen MAUI views with v120 normalization",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views.Maui",
+      "action": "keep-open",
+      "confidence": 0.95,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-03-06T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "needs-platform"
+    },
     {
       "number": 3520,
       "title": "Reporter finds that SVG output from SKSvgCanvas with SKManagedWStream is missing the closing \u003C/svg\u003E tag because MemoryStream.ToArray() is called before the canvas is disposed \u2014 the SVG canvas writes the closing tag in its destructor.",

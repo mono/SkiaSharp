@@ -1,0 +1,129 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3538,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-06T12:00:00Z",
+    "currentLabels": [
+      "type/enhancement",
+      "area/SkiaSharp"
+    ]
+  },
+  "summary": "Maintainer-filed enhancement to add scroll wheel support to SkiaSharp\u0027s Tizen MAUI views by handling WheelEvent in the Tizen SKTouchHandler with v120 normalization (120 units = one discrete mouse notch), as part of the cross-platform wheel standardization project (#3533).",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Tizen"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ],
+    "partner": "partner/tizen"
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Tizen NUI platform, SkiaSharp MAUI views, Tizen.NUI.Wheel API",
+      "relatedIssues": [
+        3533,
+        3534,
+        3535,
+        3536,
+        3537,
+        3539,
+        3540
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Well-specified implementation task from the maintainer. The Tizen SKTouchHandler currently only handles TouchEvent (Down/Up/Motion/Leave/Interrupted). It needs a WheelEvent handler that normalizes Tizen\u0027s Z values (\u00B11 per tick, positive=down) to v120 convention (positive=up, \u00D7120 scale). The SKTouchAction.WheelChanged enum value and SKTouchEventArgs.WheelDelta property already exist; only the Tizen platform handler needs the new event wiring.",
+    "rationale": "Classified as enhancement because it adds new capability (wheel event support) to an existing view component. Area is SkiaSharp.Views.Maui since the change is in the Tizen platform handler under source/SkiaSharp.Views.Maui/. The Windows handler already implements the pattern, serving as a reference. This is one of seven sibling issues under the v120 parent (#3533).",
+    "keySignals": [
+      {
+        "text": "Parent issue: #3533",
+        "source": "issue body",
+        "interpretation": "Part of systematic cross-platform wheel standardization project."
+      },
+      {
+        "text": "Reference: Windows handler in Platform/Windows/SKTouchHandler.cs for the pattern",
+        "source": "issue body",
+        "interpretation": "Maintainer explicitly points to the implementation pattern to follow."
+      },
+      {
+        "text": "Must negate \u2014 opposite of v120 convention (where positive = up)",
+        "source": "issue body",
+        "interpretation": "Tizen Z sign convention is inverted vs v120; normalization formula is -Z * 120."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs",
+        "finding": "SetEnabled only subscribes to view.TouchEvent. No WheelEvent subscription exists. The handler has no wheel-related code at all.",
+        "relevance": "direct",
+        "lines": "21-38"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+        "finding": "Windows handler subscribes to PointerWheelChanged alongside other pointer events, and fires SKTouchAction.WheelChanged with MouseWheelDelta \u2014 this is the reference implementation pattern.",
+        "relevance": "related",
+        "lines": "35-44"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+        "finding": "WheelDelta property (int) and SKTouchAction.WheelChanged enum value already exist in the shared event args \u2014 no changes needed to the shared API surface.",
+        "relevance": "direct",
+        "lines": "50-68"
+      }
+    ],
+    "resolution": {
+      "hypothesis": "The Tizen SKTouchHandler needs a WheelEvent handler that normalizes Z values to v120 and fires SKTouchAction.WheelChanged.",
+      "proposals": [
+        {
+          "title": "Add WheelEvent handler to Tizen SKTouchHandler",
+          "description": "Subscribe to view.WheelEvent in SetEnabled, add OnWheelEvent handler that computes wheelDelta = -wheel.Z * 120, and fires SKTouchAction.WheelChanged with SKTouchDeviceType.Mouse and inContact=false. Follow the Windows handler pattern.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.95,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Add WheelEvent handler to Tizen SKTouchHandler",
+      "recommendedReason": "The issue provides complete implementation specification including normalization formula, sign convention, and reference handler. Small, well-scoped change."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "Well-specified implementation task filed by the maintainer as part of the v120 standardization project. Ready for implementation."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct area label from area/SkiaSharp to area/SkiaSharp.Views.Maui and add platform/partner labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views.Maui",
+          "os/Tizen",
+          "partner/tizen",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to parent v120 standardization issue",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3533
+      }
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3538,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-22T00:00:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Issue #3538 is an enhancement request to add WheelEvent handling to the Tizen SKTouchHandler. Code inspection confirms the Tizen handler (SKTouchHandler.cs) only subscribes to view.TouchEvent with no WheelEvent support, while the Windows handler already implements PointerWheelChanged with SKTouchAction.WheelChanged and WheelDelta. The shared API surface (SKTouchAction.WheelChanged, SKTouchEventArgs.WheelDelta) already exists. Cannot verify on Tizen \u2014 no Tizen workload or device/emulator available in this environment.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Check dotnet environment for Tizen workload availability",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet workload list",
+      "exitCode": 0,
+      "output": "Installed workloads: android, ios, maccatalyst, macos, maui, tvos, wasm-tools. No tizen workload found."
+    },
+    {
+      "stepNumber": 2,
+      "description": "Inspect Tizen SKTouchHandler source for wheel event support",
+      "layer": "csharp",
+      "result": "success",
+      "command": "cat source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "SKTouchHandler only subscribes to view.TouchEvent (line 29). No WheelEvent subscription or handler exists. Only handles PointStateType: Down, Up, Motion, Leave, Interrupted."
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify Windows SKTouchHandler has wheel support as reference",
+      "layer": "csharp",
+      "result": "success",
+      "command": "grep -n Wheel source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "Line 35: view.PointerWheelChanged -= OnPointerWheelChanged;\nLine 44: view.PointerWheelChanged \u002B= OnPointerWheelChanged;\nLine 101: private void OnPointerWheelChanged(...)\nLine 103: args.Handled = CommonHandler(sender, SKTouchAction.WheelChanged, args);\nLine 122: var wheelDelta = pointerPoint?.Properties?.MouseWheelDelta ?? 0;"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify shared SKTouchAction.WheelChanged and WheelDelta API exists",
+      "layer": "csharp",
+      "result": "success",
+      "command": "grep -n \u0027WheelChanged\\|WheelDelta\u0027 source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+      "exitCode": 0,
+      "output": "Line 32: WheelDelta = wheelDelta;\nLine 50: public int WheelDelta { get; private set; }\nLine 68: WheelChanged,"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Attempt to create Tizen MAUI project \u2014 blocked by missing workload",
+      "layer": "setup",
+      "result": "skip"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "skiaSharpVersion": "not-applicable",
+    "dockerUsed": false,
+    "dotnetSdkVersion": "10.0.102"
+  },
+  "blockers": [
+    "Tizen workload not installed \u2014 dotnet workload list shows no tizen workload",
+    "No Tizen device or emulator available \u2014 macOS arm64 environment without Tizen SDK",
+    "Enhancement request requires Tizen NUI View.WheelEvent to test \u2014 cannot exercise wheel events without the Tizen platform runtime"
+  ],
+  "feedback": {
+    "corrections": []
+  }
+}
