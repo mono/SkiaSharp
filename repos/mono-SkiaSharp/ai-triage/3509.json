@@ -1,0 +1,88 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3509,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-10T00:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Reporter claims images are not appearing on screen but provides no actual code, no error messages, no expected/actual behavior, and no screenshots — the bug template is essentially unfilled.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.40 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.50 },
+    "platforms": ["os/macOS"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "regressionClaimed": true,
+      "errorType": "missing-output",
+      "reproQuality": "none"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [],
+      "environmentDetails": "SkiaSharp 3.116.0, Visual Studio (Windows), macOS"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9"],
+      "currentRelevance": "unknown",
+      "relevanceReason": "No code or error details provided to determine if the issue is still relevant or reproducible."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.30,
+      "reason": "Reporter selected 2.88.9 as last known good version from the template dropdown, but provided no evidence to support a regression claim."
+    }
+  },
+  "analysis": {
+    "summary": "The issue contains only template placeholder text. No actual code, error messages, expected behavior, actual behavior, screenshots, or log output were provided. It is impossible to investigate or classify the problem further without this information.",
+    "rationale": "Classified as type/bug with low confidence because the reporter selected the bug template and claims images don't appear, but the body contains only placeholder text (e.g., '// some C# code here', '<!-- xaml code here -->'). The area is generic area/SkiaSharp since no specific component (Views, MAUI, HarfBuzz, etc.) is mentioned. Without any reproducible code or error details, the only appropriate action is to request more information.",
+    "keySignals": [
+      { "text": "I have some code that puts things on the screen, but nothing appears.", "source": "issue body", "interpretation": "Vague description with no specifics — could be any drawing or rendering issue." },
+      { "text": "// some C# code here", "source": "issue body", "interpretation": "Template placeholder — no actual code was provided." },
+      { "text": "Expected Behavior: _No response_", "source": "issue body", "interpretation": "Reporter did not fill in expected or actual behavior sections." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "455-505", "finding": "DrawImage overloads exist and are well-structured with proper null checks. Without knowing what code the reporter is using, no code path can be implicated.", "relevance": "context" },
+      { "file": "binding/SkiaSharp/SKImage.cs", "lines": "166-228", "finding": "SKImage.FromEncodedData factory methods exist with multiple overloads (SKData, byte[], Stream, string). All validate inputs and return null on failure. No obvious defect in these paths.", "relevance": "context" }
+    ],
+    "nextQuestions": [
+      "What specific code is the reporter running?",
+      "Which SkiaSharp view or rendering approach is being used (SKCanvasView, SKGLView, bitmap, etc.)?",
+      "Are there any exceptions, warnings, or log output?",
+      "What does 'nothing appears' mean — blank canvas, black screen, or partial rendering?",
+      "Is this a MAUI, WPF, WinForms, or other framework integration?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.95,
+      "reason": "The bug template is unfilled — no code, no errors, no expected/actual behavior. Cannot investigate without more information."
+    },
+    "missingInfo": [
+      "Actual code that reproduces the issue (not template placeholders)",
+      "Expected behavior vs actual behavior",
+      "Any error messages or exceptions in the console/output",
+      "Which SkiaSharp view or rendering approach is being used",
+      "Screenshots showing the problem",
+      "Platform/OS version details"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and SkiaSharp labels, add macOS platform",
+        "risk": "low",
+        "confidence": 0.70,
+        "labels": ["type/bug", "area/SkiaSharp", "os/macOS"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request the missing information needed to investigate",
+        "risk": "high",
+        "confidence": 0.95,
+        "comment": "Thanks for opening this issue. Unfortunately, the report doesn't contain enough information for us to investigate.\n\nTo help us look into this, could you provide:\n\n1. **Your actual code** — the drawing/rendering code that isn't working (the template placeholders are still in place)\n2. **Expected vs actual behavior** — what should appear and what you see instead (blank canvas, black screen, partial rendering, etc.)\n3. **Any errors or log output** — exceptions, warnings, or console messages\n4. **Which view/framework** — are you using SKCanvasView, SKGLView, SKBitmap, MAUI, WPF, or something else?\n5. **A screenshot** — showing what you see (or don't see)\n\nA minimal reproduction project on GitHub would be ideal. Without these details, we're unable to determine what might be going wrong."
+      }
+    ]
+  }
+}
