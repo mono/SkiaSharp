@@ -88,6 +88,16 @@ public enum SuggestedAction
     [JsonStringEnumMemberName("keep-open")] KeepOpen
 }
 
+// ── Repro Platform ───────────────────────────────────────────────
+
+[JsonConverter(typeof(JsonStringEnumConverter<ReproPlatform>))]
+public enum ReproPlatform
+{
+    [JsonStringEnumMemberName("linux")] Linux,
+    [JsonStringEnumMemberName("macos")] MacOS,
+    [JsonStringEnumMemberName("windows")] Windows
+}
+
 // ── Actions ──────────────────────────────────────────────────────
 
 [JsonConverter(typeof(JsonStringEnumConverter<ActionType>))]

@@ -108,6 +108,13 @@ else
                     <span class="badge-repro-conclusion badge-repro-@_repro.Conclusion.ToJsonString()">@FormatLabel(_repro.Conclusion.ToJsonString())</span>
                 </div>
             }
+            @if (_issue.Output.Actionability.SuggestedReproPlatform is not null)
+            {
+                <div class="qf-group">
+                    <span class="qf-label">Repro Platform</span>
+                    <span class="label label-os">@FormatLabel(_issue.Output.Actionability.SuggestedReproPlatform.Value.ToJsonString())</span>
+                </div>
+            }
             @if (_issue.Evidence.VersionAnalysis?.MentionedVersions is { Count: > 0 })
             {
                 <div class="qf-group">

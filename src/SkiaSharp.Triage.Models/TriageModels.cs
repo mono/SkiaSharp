@@ -150,7 +150,8 @@ public record TriageOutput(
 public record Actionability(
     SuggestedAction SuggestedAction,
     double Confidence,
-    string Reason
+    string Reason,
+    ReproPlatform? SuggestedReproPlatform = null
 );
 
 public record TriageAction(

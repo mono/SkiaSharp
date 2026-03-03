@@ -1,0 +1,243 @@
+name: AI Issue Triage & Repro
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage and reproduce'
+        required: true
+        type: string
+      skip_repro:
+        description: 'Skip the reproduction step'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: triage-${{ github.event.inputs.issue_number || github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  # ─── Stage 1: Triage (always Linux) ───────────────────────────────
+  triage:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'ai-triage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      issue_number: ${{ steps.issue.outputs.number }}
+      suggested_action: ${{ steps.parse.outputs.suggested_action }}
+      repro_platform: ${{ steps.parse.outputs.repro_platform }}
+      repro_runner: ${{ steps.parse.outputs.repro_runner }}
+      should_repro: ${{ steps.parse.outputs.should_repro }}
+
+    steps:
+      - name: Determine issue number
+        id: issue
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "number=${{ inputs.issue_number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout data cache
+        uses: actions/checkout@v4
+        with:
+          ref: docs-data-cache
+          path: .data-cache
+
+      - name: Invoke triage skill
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          mkdir -p .data-cache/ai-triage
+          # TODO: invoke Copilot triage skill
+          # Expected output: .data-cache/ai-triage/${ISSUE_NUMBER}.json
+          echo "::notice::Triage skill invocation placeholder for issue #${ISSUE_NUMBER}"
+
+      - name: Parse triage results
+        id: parse
+        env:
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          FILE=".data-cache/ai-triage/${ISSUE_NUMBER}.json"
+          if [ ! -f "$FILE" ]; then
+            echo "::error::Triage output not found at $FILE"
+            exit 1
+          fi
+
+          # Extract suggested action
+          ACTION=$(jq -r '.output.actionability.suggestedAction' "$FILE")
+          echo "suggested_action=$ACTION" >> "$GITHUB_OUTPUT"
+
+          # Extract suggested repro platform (from AI triage output)
+          PLATFORM=$(jq -r '.output.actionability.suggestedReproPlatform // empty' "$FILE")
+
+          # Fallback: derive from classification.platforms if AI didn't set it
+          if [ -z "$PLATFORM" ]; then
+            PLATFORM=$(jq -r '
+              (.classification.platforms // []) |
+              if any(test("os/iOS|os/macOS|os/tvOS|os/watchOS")) then "macos"
+              elif any(test("os/Windows|os/WPF|os/WinUI|os/UWP")) then "windows"
+              else "linux"
+              end
+            ' "$FILE")
+          fi
+
+          echo "repro_platform=$PLATFORM" >> "$GITHUB_OUTPUT"
+
+          # Map platform to GitHub runner
+          case "$PLATFORM" in
+            macos)   echo "repro_runner=macos-latest" >> "$GITHUB_OUTPUT" ;;
+            windows) echo "repro_runner=windows-latest" >> "$GITHUB_OUTPUT" ;;
+            *)       echo "repro_runner=ubuntu-latest" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+          # Determine if repro should run
+          if [ "$ACTION" = "needs-investigation" ] && [ "${{ inputs.skip_repro }}" != "true" ]; then
+            echo "should_repro=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_repro=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "::notice::Issue #${ISSUE_NUMBER}: action=$ACTION, platform=$PLATFORM"
+
+      - name: Commit triage results
+        env:
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          cd .data-cache
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "ai-triage/${ISSUE_NUMBER}.json"
+          if git diff --cached --quiet; then
+            echo "::notice::No changes to commit"
+          else
+            git commit -m "ai: triage issue #${ISSUE_NUMBER}"
+            git push
+          fi
+
+      - name: Upload triage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: triage-${{ steps.issue.outputs.number }}
+          path: .data-cache/ai-triage/${{ steps.issue.outputs.number }}.json
+          retention-days: 30
+
+  # ─── Stage 2: Repro (dynamic platform) ────────────────────────────
+  repro:
+    needs: triage
+    if: needs.triage.outputs.should_repro == 'true'
+    runs-on: ${{ needs.triage.outputs.repro_runner }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout data cache
+        uses: actions/checkout@v4
+        with:
+          ref: docs-data-cache
+          path: .data-cache
+
+      - name: Download triage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: triage-${{ needs.triage.outputs.issue_number }}
+          path: .data-cache/ai-triage/
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+          dotnet-quality: 'preview'
+
+      - name: Platform-specific setup (macOS)
+        if: needs.triage.outputs.repro_platform == 'macos'
+        run: |
+          echo "::notice::macOS runner — Xcode and iOS SDKs available"
+          xcodebuild -version || true
+
+      - name: Platform-specific setup (Linux)
+        if: needs.triage.outputs.repro_platform == 'linux'
+        run: |
+          echo "::notice::Linux runner — installing X11/GTK dependencies"
+          sudo apt-get update -q
+          sudo apt-get install -y -q libfontconfig1-dev libx11-dev || true
+
+      - name: Invoke repro skill
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
+          REPRO_PLATFORM: ${{ needs.triage.outputs.repro_platform }}
+        run: |
+          mkdir -p .data-cache/ai-repro
+          TRIAGE_FILE=".data-cache/ai-triage/${ISSUE_NUMBER}.json"
+          # TODO: invoke Copilot repro skill
+          # Expected input: issue number + triage JSON
+          # Expected output: .data-cache/ai-repro/${ISSUE_NUMBER}.json
+          echo "::notice::Repro skill invocation placeholder for issue #${ISSUE_NUMBER} on ${REPRO_PLATFORM}"
+
+      - name: Commit repro results
+        env:
+          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
+        run: |
+          cd .data-cache
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "ai-repro/${ISSUE_NUMBER}.json"
+          if git diff --cached --quiet; then
+            echo "::notice::No changes to commit"
+          else
+            git commit -m "ai: repro issue #${ISSUE_NUMBER} (${{ needs.triage.outputs.repro_platform }})"
+            git push
+          fi
+
+      - name: Upload repro artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repro-${{ needs.triage.outputs.issue_number }}
+          path: .data-cache/ai-repro/${{ needs.triage.outputs.issue_number }}.json
+          retention-days: 30
+
+  # ─── Summary ──────────────────────────────────────────────────────
+  summary:
+    needs: [triage, repro]
+    if: always() && needs.triage.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Post summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
+          TRIAGE_ACTION: ${{ needs.triage.outputs.suggested_action }}
+          REPRO_PLATFORM: ${{ needs.triage.outputs.repro_platform }}
+          REPRO_RESULT: ${{ needs.repro.result }}
+        run: |
+          echo "## AI Triage Pipeline Summary"
+          echo ""
+          echo "| Step | Status |"
+          echo "|------|--------|"
+          echo "| Triage | ✅ $TRIAGE_ACTION |"
+          if [ "$REPRO_RESULT" = "success" ]; then
+            echo "| Repro ($REPRO_PLATFORM) | ✅ Complete |"
+          elif [ "$REPRO_RESULT" = "skipped" ]; then
+            echo "| Repro | ⏭️ Skipped (action: $TRIAGE_ACTION) |"
+          else
+            echo "| Repro ($REPRO_PLATFORM) | ❌ $REPRO_RESULT |"
+          fi
