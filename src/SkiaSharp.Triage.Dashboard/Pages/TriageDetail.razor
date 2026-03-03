@@ -3,6 +3,7 @@
 @using static SkiaSharp.Triage.Dashboard.Helpers.TriageFormatHelper
 @inject DashboardDataService DataService
 @inject NavigationManager Navigation
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime
 
 <PageTitle>@(_issueTitle ?? _issue?.Summary ?? $"Issue #{Number}") - SkiaSharp Dashboard</PageTitle>
 
@@ -22,7 +23,7 @@ else
     <TriageDetailNav BackUrl="@BackUrl" PrevNumber="@_prevNumber" NextNumber="@_nextNumber" 
                      CurrentIndex="@_currentIndex" TotalCount="@_totalCount" DetailUrl="@DetailUrl" />
 
-    <!-- Minimal Header -->
+    <!-- Compact Header -->
     <div class="triage-detail-header triage-detail-header-minimal">
         <div class="detail-title-row">
             @if (_issue is not null)
@@ -56,26 +57,278 @@ else
         }
     </div>
 
-    <!-- Hero Section -->
+    <!-- Verdict Banner + Corrections -->
     <TriageHero Issue="@_issue" Repro="@_repro" />
 
-    <!-- Pipeline Stepper -->
-    <PipelineStepper HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" />
+    <!-- Two-Column Layout -->
+    <div class="triage-detail-layout">
+        <!-- Main Column -->
+        <div class="triage-main">
+            @if (_issue is not null)
+            {
+                <DetailsTabPanel Issue="@_issue" />
+            }
+        </div>
 
-    <!-- Tabs -->
-    <DetailTabs HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" 
-                ActiveTab="@_activeTab" OnTabChanged="@(tab => _activeTab = tab)" />
+        <!-- Sidebar -->
+        <div class="triage-sidebar">
+            @if (_allActions.Count > 0)
+            {
+                <div class="sidebar-card">
+                    <h3 class="section-title">Actions</h3>
+                    @foreach (var action in _allActions)
+                    {
+                        <div class="action-item">
+                            <div class="action-item-header">
+                                <span class="badge-action badge-act-@action.Type.ToJsonString()" title="@GetActionTypeTooltip(action.Type)">
+                                    @FormatLabel(action.Type.ToJsonString())
+                                </span>
+                                @if (action.Risk is not null)
+                                {
+                                    <span class="badge-risk-sm badge-risk-@action.Risk.Value.ToJsonString()">
+                                        @FormatLabel(action.Risk.Value.ToJsonString())
+                                    </span>
+                                }
+                            </div>
+                            <div class="action-item-body md-content">@MarkdownHelper.ToHtml(action.Description)</div>
+                            @if (action.Labels is { Count: > 0 })
+                            {
+                                <div class="action-item-labels">
+                                    @foreach (var lbl in action.Labels)
+                                    {
+                                        <span class="label">@lbl</span>
+                                    }
+                                </div>
+                            }
+                            @if (action.Comment is not null)
+                            {
+                                <div class="action-item-comment">
+                                    <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(action.Comment)">📋 Copy</button>
+                                    <div class="md-content draft-content">@MarkdownHelper.ToHtml(action.Comment)</div>
+                                </div>
+                            }
+                            @if (action.LinkedIssue is not null)
+                            {
+                                <p>Linked: <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro?.Meta.Repo)/issues/@action.LinkedIssue"
+                                              target="_blank" rel="noopener noreferrer">#@action.LinkedIssue</a></p>
+                            }
+                        </div>
+                    }
+                </div>
+            }
 
-    @* ═══ Tab 1: Details ═══ *@
-    @if (_issue is not null)
+            @if (_issue is not null)
+            {
+                <!-- Quick Facts: Classification -->
+                <div class="sidebar-card">
+                    <h3 class="section-title">Classification</h3>
+                    <dl class="sidebar-dl">
+                        <dt>Type</dt>
+                        <dd>
+                            <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
+                            <span class="field-confidence">@_issue.Classification.Type.Confidence.ToString("P0")</span>
+                        </dd>
+                        @if (_issue.Classification.Area is not null)
+                        {
+                            <dt>Area</dt>
+                            <dd>
+                                <span class="label label-area">@FormatLabel(_issue.Classification.Area.Value)</span>
+                                <span class="field-confidence">@_issue.Classification.Area.Confidence.ToString("P0")</span>
+                            </dd>
+                        }
+                        @if (_issue.Classification.Platforms is { Count: > 0 })
+                        {
+                            <dt>Platforms</dt>
+                            <dd>@foreach (var p in _issue.Classification.Platforms) { <span class="label label-os">@FormatLabel(p)</span> }</dd>
+                        }
+                        @if (_issue.Classification.Backends is { Count: > 0 })
+                        {
+                            <dt>Backends</dt>
+                            <dd>@foreach (var b in _issue.Classification.Backends) { <span class="label label-backend">@FormatLabel(b)</span> }</dd>
+                        }
+                    </dl>
+                </div>
+
+                <!-- Quick Facts: Bug Signals -->
+                @if (_issue.Evidence.BugSignals is not null)
+                {
+                    <div class="sidebar-card">
+                        <h3 class="section-title">Bug Signals</h3>
+                        <dl class="sidebar-dl">
+                            @if (_issue.Evidence.BugSignals.Severity is not null)
+                            {
+                                <dt>Severity</dt>
+                                <dd><span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString()">@FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())</span></dd>
+                            }
+                            @if (_issue.Evidence.BugSignals.ReproQuality is not null)
+                            {
+                                <dt>Repro Quality</dt>
+                                <dd>@FormatLabel(_issue.Evidence.BugSignals.ReproQuality.Value.ToJsonString())</dd>
+                            }
+                            @if (_issue.Evidence.BugSignals.RegressionClaimed == true)
+                            {
+                                <dt>Regression</dt>
+                                <dd><span class="signal signal-yes">🔄 Yes</span></dd>
+                            }
+                            @if (_issue.Evidence.BugSignals.ErrorType is not null)
+                            {
+                                <dt>Error</dt>
+                                <dd><code>@_issue.Evidence.BugSignals.ErrorType.Value.ToJsonString()</code></dd>
+                            }
+                        </dl>
+                    </div>
+                }
+
+                <!-- Quick Facts: Regression -->
+                @if (_issue.Evidence.Regression is not null)
+                {
+                    <div class="sidebar-card">
+                        <h3 class="section-title">Regression</h3>
+                        <dl class="sidebar-dl">
+                            <dt>Status</dt>
+                            <dd>
+                                @if (_issue.Evidence.Regression.IsRegression)
+                                {
+                                    <span class="badge-regression">⚡ Regression</span>
+                                    <span class="field-confidence">@_issue.Evidence.Regression.Confidence.ToString("P0")</span>
+                                }
+                                else
+                                {
+                                    <span>Not a regression</span>
+                                }
+                            </dd>
+                            @if (_issue.Evidence.Regression.WorkedInVersion is not null)
+                            {
+                                <dt>Worked in</dt>
+                                <dd>@_issue.Evidence.Regression.WorkedInVersion</dd>
+                            }
+                            @if (_issue.Evidence.Regression.BrokeInVersion is not null)
+                            {
+                                <dt>Broke in</dt>
+                                <dd>@_issue.Evidence.Regression.BrokeInVersion</dd>
+                            }
+                        </dl>
+                    </div>
+                }
+
+                <!-- Quick Facts: Version Analysis -->
+                @if (_issue.Evidence.VersionAnalysis is not null)
+                {
+                    <div class="sidebar-card">
+                        <h3 class="section-title">Version Analysis</h3>
+                        <dl class="sidebar-dl">
+                            @if (_issue.Evidence.VersionAnalysis.MentionedVersions is { Count: > 0 })
+                            {
+                                <dt>Versions</dt>
+                                <dd>@foreach (var v in _issue.Evidence.VersionAnalysis.MentionedVersions) { <span class="label">@v</span> }</dd>
+                            }
+                            @if (_issue.Evidence.VersionAnalysis.CurrentRelevance is not null)
+                            {
+                                <dt>Relevant</dt>
+                                <dd><span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString()">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString())</span></dd>
+                            }
+                            @if (_issue.Evidence.VersionAnalysis.WorkedIn is not null)
+                            {
+                                <dt>Worked in</dt>
+                                <dd>@_issue.Evidence.VersionAnalysis.WorkedIn</dd>
+                            }
+                            @if (_issue.Evidence.VersionAnalysis.BrokeIn is not null)
+                            {
+                                <dt>Broke in</dt>
+                                <dd>@_issue.Evidence.VersionAnalysis.BrokeIn</dd>
+                            }
+                        </dl>
+                    </div>
+                }
+            }
+
+            <!-- Reproduction Result -->
+            @if (_repro is not null)
+            {
+                <div class="sidebar-card">
+                    <h3 class="section-title">Reproduction</h3>
+                    <dl class="sidebar-dl">
+                        <dt>Conclusion</dt>
+                        <dd>
+                            <span class="badge-repro-conclusion badge-repro-@_repro.Conclusion.ToJsonString()">
+                                @FormatLabel(_repro.Conclusion.ToJsonString())
+                            </span>
+                            @if (_repro.Assessment is not null)
+                            {
+                                <span class="badge-assessment">@FormatLabel(_repro.Assessment.Value.ToJsonString())</span>
+                            }
+                        </dd>
+                        @if (_repro.ReproductionSteps is { Count: > 0 })
+                        {
+                            <dt>Steps</dt>
+                            <dd>@_repro.ReproductionSteps.Count steps</dd>
+                        }
+                        @if (_repro.Environment?.Os is not null)
+                        {
+                            <dt>Environment</dt>
+                            <dd>@_repro.Environment.Os @_repro.Environment?.Arch</dd>
+                        }
+                    </dl>
+                    @if (_repro.Output?.MissingInfo is { Count: > 0 })
+                    {
+                        <div class="repro-missing-indicator">
+                            ⚠ Missing info (@_repro.Output.MissingInfo.Count)
+                        </div>
+                    }
+                </div>
+
+                <!-- Draft Response Preview -->
+                @if (_repro.Output?.ProposedResponse is not null)
+                {
+                    var response = _repro.Output.ProposedResponse;
+                    <div class="sidebar-card">
+                        <h3 class="section-title">Draft Response</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                            <span class="badge-rs badge-rs-@response.Status.ToJsonString()">@FormatLabel(response.Status.ToJsonString())</span>
+                        </div>
+                        @if (response.Summary is not null)
+                        {
+                            <p class="draft-summary">@response.Summary</p>
+                        }
+                        <div class="draft-actions">
+                            <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(response.Body)" title="Copy markdown to clipboard">
+                                📋 Copy
+                            </button>
+                            <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro.Meta.Repo)/issues/@(_issue?.Meta.Number ?? _repro.Meta.Number)"
+                               target="_blank" rel="noopener noreferrer" class="btn-goto">
+                                GitHub ↗
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Full-Width Draft Response -->
+    @if (_repro?.Output?.ProposedResponse is not null)
     {
-        <DetailsTabPanel Issue="@_issue" ActiveTab="@_activeTab" />
+        var response = _repro.Output.ProposedResponse;
+        <div class="section-card draft-response-full">
+            <h3 class="section-title">Draft Response</h3>
+            <div class="draft-body-full md-content">
+                @MarkdownHelper.ToHtml(response.Body)
+            </div>
+        </div>
     }
 
-    @* ═══ Tab 2: Repro Log ═══ *@
+    <!-- Repro Log Toggle -->
     @if (_repro is not null)
     {
-        <ReproTabPanel Repro="@_repro" ActiveTab="@_activeTab" />
+        <div class="repro-log-toggle">
+            <button type="button" class="btn-toggle-repro" @onclick="() => _showReproLog = !_showReproLog">
+                @(_showReproLog ? "▲ Hide Repro Log" : "▼ Show Repro Log")
+            </button>
+        </div>
+        @if (_showReproLog)
+        {
+            <ReproTabPanel Repro="@_repro" ActiveTab="details" />
+        }
     }
 
     <!-- Bottom Navigation -->
@@ -103,7 +356,8 @@ else
     private int _currentIndex;
     private int _totalCount;
     private bool _loading = true;
-    private string _activeTab = "details";
+    private bool _showReproLog;
+    private List<TriageAction> _allActions = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -117,7 +371,7 @@ else
         _issue = triageTask.Result;
         _repro = reproTask.Result;
         _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
-        _activeTab = "details";
+        RebuildActions();
         LoadNavigation();
         _loading = false;
     }
@@ -129,9 +383,24 @@ else
             _issue = await DataService.GetTriageDetailAsync(Number);
             _repro = await DataService.GetReproDetailAsync(Number);
             _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
-            _activeTab = "details";
+            _showReproLog = false;
+            RebuildActions();
             LoadNavigation();
         }
+    }
+
+    private void RebuildActions()
+    {
+        _allActions = [];
+        if (_issue?.Output?.Actions is not null) _allActions.AddRange(_issue.Output.Actions);
+        if (_repro?.Output?.Actions is not null) _allActions.AddRange(_repro.Output.Actions);
+    }
+
+    private async Task CopyToClipboard(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        try { await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text); }
+        catch { }
     }
 
     private void LoadNavigation()

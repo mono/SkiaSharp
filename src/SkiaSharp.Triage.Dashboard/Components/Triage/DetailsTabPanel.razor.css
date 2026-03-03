@@ -1,51 +1,49 @@
-/* Collapsible sections */
-.collapsible-section {
+/* ── Section Card (consistent style for all sections) ── */
+.section-card {
+    background: #fff;
     border: 1px solid #e1e4e8;
     border-radius: 0.375rem;
-    margin-bottom: 0.75rem;
-    background: #fafbfc;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
 }
 
-.collapsible-section > summary {
-    cursor: pointer;
-    padding: 0.75rem 1rem;
-    list-style: none;
-    user-select: none;
+.section-card h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #495057;
+    margin: 1rem 0 0.5rem 0;
 }
 
-.collapsible-section > summary::-webkit-details-marker {
-    display: none;
+.section-card h4:first-of-type { margin-top: 0.25rem; }
+
+/* ── Section Title (uppercase small) ──────────────────── */
+.section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6c757d;
+    margin: 0 0 0.75rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
 }
 
-.collapsible-section > summary h3 {
-    margin: 0;
-    font-size: 0.95rem;
-    font-weight: 600;
+/* ── Summary ──────────────────────────────────────────── */
+.summary-text {
+    font-size: 1rem;
+    line-height: 1.6;
     color: #333;
-    display: inline;
+    margin: 0;
 }
 
-.collapsible-section[open] > summary {
-    border-bottom: 1px solid #e1e4e8;
-    background: #f6f8fa;
+/* ── Proposals list (replaces carousel) ───────────────── */
+.proposals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-.collapsible-section[open] > summary h3::before {
-    content: '▼ ';
-}
-
-/* Replace the ▶ with ▼ when open — the ▶ is in the text so we just hide it */
-.collapsible-section[open] > summary h3 {
-    /* The ▶ is embedded in the h3 text, CSS can't change it.
-       The visual cue comes from the open/closed state of <details>. */
-}
-
-.collapsible-body {
-    padding: 1rem;
-}
-
-/* ── Details panel: evidence, signals, code investigation, proposals ── */
-
+/* ── Details panel items ──────────────────────────────── */
 .screenshot-item, .attachment-item, .repo-link-item {
     padding: 0.25rem 0;
     font-size: 0.85rem;
@@ -70,7 +68,7 @@
 }
 
 .signal-card {
-    background: #fff;
+    background: #fafbfc;
     border: 1px solid #e9ecef;
     border-radius: 6px;
     padding: 0.75rem;
@@ -93,7 +91,7 @@
 }
 
 .code-investigation-card {
-    background: #fff;
+    background: #fafbfc;
     border: 1px solid #e9ecef;
     border-radius: 6px;
     padding: 0.75rem;
@@ -108,9 +106,7 @@
     color: inherit;
 }
 
-.code-file-ref a:hover {
-    color: #0d6efd;
-}
+.code-file-ref a:hover { color: #0d6efd; }
 
 .code-file-ref code {
     font-size: 0.82rem;
@@ -121,9 +117,7 @@
     word-break: break-all;
 }
 
-.code-file-ref a:hover code {
-    background: #cfe2ff;
-}
+.code-file-ref a:hover code { background: #cfe2ff; }
 
 .code-lines {
     font-size: 0.72rem;
@@ -160,55 +154,6 @@
     margin-bottom: 0.25rem;
 }
 
-.proposals-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.proposals-header h4 {
-    margin: 0;
-}
-
-.carousel-hint {
-    font-size: 0.75rem;
-    color: #6c757d;
-}
-
-.proposals-carousel {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding: 0 1rem;
-    padding-bottom: 0.75rem;
-    margin: 0 -1.25rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    -webkit-overflow-scrolling: touch;
-}
-
-.proposals-carousel::-webkit-scrollbar {
-    height: 6px;
-}
-
-.proposals-carousel::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.proposals-carousel::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-.proposals-carousel > .proposal-card {
-    flex: 0 0 calc(100% - 3rem);
-    max-width: calc(100% - 3rem);
-    scroll-snap-align: center;
-}
-
 .proposal-card {
     border: 1px solid #e9ecef;
     border-radius: 8px;
@@ -234,9 +179,6 @@
     margin-bottom: 0.5rem;
 }
 
-.proposal-card details { font-size: 0.85rem; }
-.proposal-card details summary { cursor: pointer; color: #6c757d; }
-
 .recommended-reason {
     background: #fef3c7;
     border-top: 1px dashed #f59e0b;
@@ -247,7 +189,6 @@
     color: #92400e;
 }
 
-/* Bug signals grid */
 .bug-signals-grid {
     display: flex;
     gap: 0.5rem;
