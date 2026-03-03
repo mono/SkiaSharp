@@ -69,7 +69,6 @@ public enum VersionTestResult
 {
     [JsonStringEnumMemberName("reproduced")] Reproduced,
     [JsonStringEnumMemberName("not-reproduced")] NotReproduced,
-    [JsonStringEnumMemberName("wrong-output")] WrongOutput,
     [JsonStringEnumMemberName("error")] Error,
     [JsonStringEnumMemberName("not-tested")] NotTested
 }
