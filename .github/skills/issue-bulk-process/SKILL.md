@@ -38,18 +38,55 @@ Store the `{owner}` and `{repo}` for use in all subsequent phases.
 
 ### 2. Resolve issue list
 
+Use the `gh` CLI for all issue lookups. It handles pagination automatically via the `-L` (limit) flag —
+no manual page iteration needed.
+
 **If explicit numbers given:** Use them directly — they refer to the current repository.
 
-**If "newest N issues" or similar:** Fetch using the `github-mcp-server-list_issues` tool:
+**If "newest N issues" or similar:**
 
+```bash
+gh issue list --state open -L {N} --json number,title -q '.[] | "\(.number)\t\(.title)"'
 ```
-owner: {owner}, repo: {repo}, state: "OPEN",
-orderBy: "CREATED_AT", direction: "DESC", perPage: N
+
+**If search query** (e.g., "all blazor issues", "issues about WASM", "label:area/foo"):
+
+```bash
+gh issue list -S "{search terms}" --state open -L 500 --json number,title -q '.[] | "\(.number)\t\(.title)"'
 ```
 
-**Filter out pull requests** — the API may return PRs mixed with issues. Exclude any entry that has a `pull_request` field.
+For label-based queries, use `--label` instead of `-S`:
 
-Extract issue numbers from the response. Present the list to the user and confirm before proceeding.
+```bash
+gh issue list --label "area/SkiaSharp.Views" --state open -L 500 --json number,title -q '.[] | "\(.number)\t\(.title)"'
+```
+
+> **Note:** `-L 500` is a generous upper bound. `gh` fetches exactly as many pages as needed and
+> stops when results are exhausted, so over-specifying the limit is fine.
+
+Extract issue numbers from the output. Present the list to the user and confirm before proceeding.
+
+### 3. Skip already-processed issues
+
+Before launching triage/repro agents, check for existing result files:
+
+```bash
+# Check for existing triage results
+ls .data-cache/repos/{owner}-{repo}/ai-triage/{number}.json 2>/dev/null
+
+# Check for existing repro results
+ls .data-cache/repos/{owner}-{repo}/ai-repro/{number}.json 2>/dev/null
+```
+
+- **Default behavior:** Skip issues that already have a triage JSON file. Skip reproduction for
+  issues that already have a repro JSON file. Report skipped issues in the summary with a ⏩ icon.
+- **Force re-processing:** If the user explicitly says "force", "re-triage", "re-process",
+  "redo", or "again", process all issues regardless of existing results.
+- **Present skip info:** Before proceeding, show the user how many will be skipped vs processed:
+  ```
+  Found 33 issues. 15 already triaged, 12 already reproduced.
+  Will triage: 18 | Will reproduce: 21
+  ```
 
 ## Phase 2 — Triage (parallel)
 
@@ -112,7 +149,7 @@ Present a consolidated summary table using data extracted from the agent respons
 - Inconclusive: {inconclusive}
 ```
 
-**Conclusion icons:** ❌ reproduced · ✅ not-reproduced · ⏭️ needs-platform/hardware · ❓ inconclusive · ⏱️ timeout
+**Conclusion icons:** ❌ reproduced · ✅ not-reproduced · ⏭️ needs-platform/hardware · ❓ inconclusive · ⏱️ timeout · ⏩ skipped (already processed)
 
 ## Error Handling
 
