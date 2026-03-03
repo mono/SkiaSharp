@@ -45,5 +45,88 @@
       "state": "COMMENTED",
       "submittedAt": "2026-02-22T19:58:39"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-03-03T18:17:57.7832564Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3939626489,
+        "author": "mattleibow",
+        "body": "@copilot can you set up the pages pipeline to also deploy this Web app into a samples sub folder on the pages site. So basically mono.github.io/SkiaSharp.Extended/sample\n\nAlso, for testing now, let\u0027s also make PRs go live. This way we can test. This is not a super critical site at the moment so if something breaks we can just reset. ",
+        "createdAt": "2026-02-21T22:41:53",
+        "reactions": []
+      },
+      {
+        "id": 3939644088,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot can you set up the pages pipeline to also deploy this Web app into a samples sub folder on the pages site. So basically mono.github.io/SkiaSharp.Extended/sample\n\u003E \n\u003E Also, for testing now, let\u0027s ...\n\nDone in 0f54bbe. The \u0060builds-docs.yml\u0060 workflow now:\n\n1. Installs \u0060wasm-tools\u0060 workload and runs \u0060dotnet publish\u0060 for the Blazor sample\n2. Copies the published output into \u0060docs/_site/sample/\u0060 so it deploys at \u0060mono.github.io/SkiaSharp.Extended/sample/\u0060\n3. Deploys on **all** pushes and PRs to main (removed the \u0060refs/heads/main\u0060 gate)\n\nAlso configured the Blazor app for GitHub Pages hosting:\n- \u0060\u003Cbase href=\u0022/SkiaSharp.Extended/sample/\u0022 /\u003E\u0060 in \u0060index.html\u0060\n- \u0060404.html\u0060 with SPA redirect script for client-side routing\n- \u0060.nojekyll\u0060 to prevent Jekyll from ignoring \u0060_framework/\u0060 directories",
+        "createdAt": "2026-02-21T22:52:25",
+        "reactions": []
+      },
+      {
+        "id": 3939664025,
+        "author": "mattleibow",
+        "body": "@copilot can we update the copilot instructions to require that whenever we touch the Blazor sample or update some feature or control in the libraries, we also add screenshots of the affected and related pages to the PR ad a new comment. This way we can review and even look at change history. This must always be done. ",
+        "createdAt": "2026-02-21T23:07:49",
+        "reactions": []
+      },
+      {
+        "id": 3939671123,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot can we update the copilot instructions to require that whenever we touch the Blazor sample or update some feature or control in the libraries, we also add screenshots of the affected and rela...\n\nUpdated the copilot instructions in ce51807. Added two new sections:\n\n1. **Blazor Sample** \u2014 Documents the sample app location and GitHub Pages deployment\n2. **PR Screenshot Requirement** \u2014 States that PRs touching \u0060samples/SkiaSharpDemo.Blazor/\u0060, \u0060source/SkiaSharp.Extended/\u0060, or \u0060source/SkiaSharp.Extended.UI.Maui/\u0060 must always include screenshots of all affected and related Blazor sample pages as a PR comment",
+        "createdAt": "2026-02-21T23:14:17",
+        "reactions": []
+      },
+      {
+        "id": 3939676368,
+        "author": "mattleibow",
+        "body": "@copilot please use different and more correct glyphs in the sidebar. Also, can you add grouping like we have in the Maui samples demo. ",
+        "createdAt": "2026-02-21T23:18:08",
+        "reactions": []
+      },
+      {
+        "id": 3939688387,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please use different and more correct glyphs in the sidebar. Also, can you add grouping like we have in the Maui samples demo. \n\nDone in c37a98e. Changes:\n\n**Sidebar glyphs** \u2014 Replaced the generic icons with contextually correct ones:\n- \uD83C\uDFE0 Home \u2192 house icon (unchanged)\n- \u2B20 Shapes \u2192 pentagon icon\n- \u2934 Path Interpolation \u2192 bezier curve icon  \n- \uD83D\uDDBC BlurHash \u2192 image/landscape icon\n\n**Grouping** \u2014 Added an \u0022EXTENDED\u0022 group header in the sidebar (matching the MAUI sample\u0027s \u0060DemoGroup(\u0022EXTENDED\u0022)\u0060) with subdued styling. Also added the same header on the Home page.\n\nNote: Can\u0027t take live screenshots in this environment because the Blazor WASM \u0060\u003Cbase href\u003E\u0060 is set to \u0060/SkiaSharp.Extended/sample/\u0060 for GitHub Pages, which prevents local dev loading. The screenshots will be visible once the PR deploys to Pages.",
+        "createdAt": "2026-02-21T23:27:34",
+        "reactions": []
+      },
+      {
+        "id": 3939714857,
+        "author": "mattleibow",
+        "body": "@copilot \r\n\r\n\u003E Note: Can\u0027t take live screenshots in this environment because the Blazor WASM \u003Cbase href\u003E is set to /SkiaSharp.Extended/sample/ for GitHub Pages, which prevents local dev loading. The screenshots will be visible once the PR deploys to Pages.\r\n\r\nThis is unacceptable. Local dev is required. We need to figure out a way to support local dev and the deploy base href",
+        "createdAt": "2026-02-21T23:45:54",
+        "reactions": []
+      },
+      {
+        "id": 3939731105,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot \r\n\u003E \r\n\u003E \u003E Note: Can\u0027t take live screenshots in this environment because the Blazor WASM \u003Cbase href\u003E is set to /SkiaSharp.Extended/sample/ for GitHub Pages, which prevents local dev loading. The s...\n\nFixed in 5c60c6d. The \u0060\u003Cbase href\u003E\u0060 is now \u0060/\u0060 in the source \u0060index.html\u0060 so local dev works out of the box with \u0060dotnet run\u0060. The CI workflow rewrites it to \u0060/SkiaSharp.Extended/sample/\u0060 in the published output and generates the \u0060404.html\u0060 for SPA routing at deploy time.\n\nLocal dev screenshot (\u0060dotnet run\u0060 \u2192 \u0060http://localhost:5222/\u0060):\n\n![Home page](https://github.com/user-attachments/assets/be96e374-99c7-4e92-8f6c-1d47afa7d76d)",
+        "createdAt": "2026-02-21T23:55:02",
+        "reactions": []
+      },
+      {
+        "id": 3939766365,
+        "author": "mattleibow",
+        "body": "@copilot this is nice, now please revert the \u0022deploy on ors\u0022 we only want to deploy pages on main. However, we still need to post images in comments if we change pages.",
+        "createdAt": "2026-02-22T00:18:02",
+        "reactions": []
+      },
+      {
+        "id": 3939775913,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot this is nice, now please revert the \u0022deploy on ors\u0022 we only want to deploy pages on main. However, we still need to post images in comments if we change pages.\n\nRestored in 3e686de. The Deploy step now has \u0060if: github.ref == \u0027refs/heads/main\u0027\u0060 again \u2014 PRs still build and upload artifacts but only pushes to main deploy to GitHub Pages.",
+        "createdAt": "2026-02-22T00:25:37",
+        "reactions": []
+      },
+      {
+        "id": 3943276080,
+        "author": "mattleibow",
+        "body": "@copilot please have a look at the code and take a screenshot of the pages and put it in the pr description",
+        "createdAt": "2026-02-23T08:15:10",
+        "reactions": []
+      }
+    ]
+  }
 }

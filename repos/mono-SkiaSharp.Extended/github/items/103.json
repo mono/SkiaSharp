@@ -33,8 +33,16 @@
     }
   ],
   "engagement": {
-    "syncedAt": "2026-02-06T13:10:55.0197041Z",
+    "syncedAt": "2026-03-03T18:17:58.6654333Z",
     "reactions": [],
-    "comments": []
+    "comments": [
+      {
+        "id": 3942884134,
+        "author": "mattleibow",
+        "body": "\nClosing this draft after letting it rest for ~5 years. \uD83D\uDE42\n\nThe idea here is genuinely interesting \u2014 declarative, XAML-composable image effects is a compelling pattern on paper \u2014 but after thinking it through carefully, the concept doesn\u0027t hold up strongly enough against how real apps actually work:\n\n- The most common visual treatments (blur-behind, frosted glass, loading placeholders) all require **compositor-level** effects, not per-image SkiaSharp paint pipelines. Those are architecturally different problems.\n- Cases like grayscale for disabled/out-of-stock states are real, but the right answer is likely a focused, single-purpose attached property \u2014 not a full filter pipeline.\n- For apps that need image filters at scale, server-side image transformation (Cloudinary, imgix, etc.) or platform-native approaches are a better fit.\n\nThe surviving real use case \u2014 something like a \u0060Grayscale\u0060 property on an image view for state-driven UX \u2014 is worth revisiting, but as a much smaller, focused feature rather than a general filter pipeline.\n\nClosing in favour of potentially revisiting a narrower version of this if the need comes up concretely from users. The \u0060dev/filters\u0060 branch will stay around if we ever want to reference the approach.\n\n",
+        "createdAt": "2026-02-23T06:11:09",
+        "reactions": []
+      }
+    ]
   }
 }

@@ -76,8 +76,324 @@
     }
   ],
   "engagement": {
-    "syncedAt": "2026-02-06T13:07:55.6695661Z",
+    "syncedAt": "2026-03-03T18:17:31.3156612Z",
     "reactions": [],
-    "comments": []
+    "comments": [
+      {
+        "id": 3926966150,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please remove the dynamic surface iew from this PR and focus it on the gesture view. We should use the existing surface view pattern in the repo. Look at the other controls.\n\u003E \n\u003E Please make sure...\n\nChanges implemented in commits 2eccdb4 and b8e6328:\n\n**Architecture Changes:**\n- \u2705 Removed \u0060SKDynamicSurfaceView\u0060 - focusing solely on gesture view\n- \u2705 Created testable \u0060SKGestureEngine\u0060 in core library (\u0060SkiaSharp.Extended/Gestures/\u0060)\n- \u2705 \u0060SKGestureSurfaceView\u0060 now extends \u0060SKSurfaceView\u0060 (following existing patterns)\n\n**Gesture Support:**\n- Tap, double-tap, multi-tap\n- Long press\n- Pan/drag  \n- Pinch to zoom\n- Rotation\n- Fling (with velocity)\n- Hover\n\n**Selection Modes:**\n- \u0060Immediate\u0060 - Start dragging immediately\n- \u0060TapToSelect\u0060 - Tap to select, then drag\n- \u0060LongPressToSelect\u0060 - Long press to select and start drag\n\n**Tests:** 39 unit tests (all passing) covering gesture engine\n\n**Demo:** Added \u0060GesturePage\u0060 to sample app under \u0022UI \u0026 CONTROLS\u0022\n\nThe gesture engine is platform-agnostic and testable, enabling reuse for future non-MAUI platforms. Rebase on main is pending (cannot perform rebases in this environment).",
+        "createdAt": "2026-02-19T12:29:13",
+        "reactions": []
+      },
+      {
+        "id": 3976217510,
+        "author": "mattleibow",
+        "body": "@copilot after we have done the refactoring, I think we should drop the gesture view and rather let that be part of the gesture page. Right now it is just a view that forwards events. We instead, the app page should just use the tracker directly. Most controls that will be developed will use parts of the tracker and will not need all gestures. Having a view in the library is not that useful. Everyone can use the tracker. ",
+        "createdAt": "2026-02-28T03:11:25",
+        "reactions": []
+      },
+      {
+        "id": 3976234687,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot after we have done the refactoring, I think we should drop the gesture view and rather let that be part of the gesture page. Right now it is just a view that forwards events. We instead, the ...\n\nDone in ece50d3. Removed \u0060SKGestureSurfaceView\u0060 from the library. The sample now demonstrates using \u0060SKGestureTracker\u0060 directly with a standard \u0060SKCanvasView\u0060:\n\n\u0060\u0060\u0060csharp\n// Create tracker\nprivate readonly SKGestureTracker _tracker = new();\n\n// Wire up touch\nprivate void OnTouch(object? sender, SKTouchEventArgs e)\n{\n    e.Handled = _tracker.ProcessTouch(e);\n    if (e.Handled) canvasView.InvalidateSurface();\n}\n\n// Subscribe to needed events\n_tracker.TapDetected \u002B= OnTap;\n_tracker.PanDetected \u002B= OnPan;\n\u0060\u0060\u0060\n\nKept \u0060SKGestureTrackerExtensions.cs\u0060 for the convenient \u0060ProcessTouch()\u0060 method.",
+        "createdAt": "2026-02-28T03:23:34",
+        "reactions": []
+      },
+      {
+        "id": 3976713119,
+        "author": "mattleibow",
+        "body": "@copilot please make the same sample for Blazor. It should work exactly the same. \n\nAlso we don\u0027t need SKGestureTrackerExtensions as it can just be in the sample. ",
+        "createdAt": "2026-02-28T09:07:19",
+        "reactions": []
+      },
+      {
+        "id": 3976726842,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please make the same sample for Blazor. It should work exactly the same. \n\u003E \n\u003E Also we don\u0027t need SKGestureTrackerExtensions as it can just be in the sample. \n\nDone in ffb2e93.\n\n**Blazor sample:** Added \u0060Pages/Gestures.razor\u0060 with the same features as the MAUI sample:\n- Draggable stickers with selection\n- Pan, zoom (scroll/double-click), fling\n- Uses Blazor pointer events (\u0060@onpointerdown\u0060, \u0060@onpointermove\u0060, \u0060@onpointerup\u0060, \u0060@onwheel\u0060)\n- Added navigation link under \u0022CONTROLS\u0022 in NavMenu\n\n**Removed \u0060SKGestureTrackerExtensions\u0060:** Both samples now use inline helpers to process touch/pointer events to tracker input. This shows the recommended pattern for apps.",
+        "createdAt": "2026-02-28T09:19:17",
+        "reactions": []
+      },
+      {
+        "id": 3977080786,
+        "author": "github-actions[bot]",
+        "body": "\uD83D\uDCD6 **Documentation Preview**\n\nThe documentation for this PR has been deployed and is available at:\n\n\uD83D\uDD17 **[View Staging Documentation](https://mono.github.io/SkiaSharp.Extended/staging/326/)**\n\n\uD83D\uDD17 **[View Staging Blazor Sample](https://mono.github.io/SkiaSharp.Extended/staging/326/sample/)**\n\nThis preview will be updated automatically when you push new commits to this PR.\n\n---\n*This comment is automatically updated by the documentation staging workflow.*",
+        "createdAt": "2026-02-28T12:10:40",
+        "reactions": []
+      },
+      {
+        "id": 3977085863,
+        "author": "mattleibow",
+        "body": "@copilot the pan moves at half the speed and the rotation center is to the top left",
+        "createdAt": "2026-02-28T12:14:49",
+        "reactions": []
+      },
+      {
+        "id": 3977096128,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot the pan moves at half the speed and the rotation center is to the top left\n\nFixed in ecc6225. The issues were:\n\n1. **Pan at half speed**: The offset was in content-space but being accumulated with screen-space deltas. Changed to screen-space offset (applied last in matrix) so pan delta applies 1:1.\n\n2. **Rotation/zoom pivot at top-left**: Rewrote \u0060AdjustOffsetForScalePivot\u0060 and \u0060AdjustOffsetForRotatePivot\u0060 to work correctly with screen-space offset. The pivot point now stays fixed under your finger when zooming/rotating.",
+        "createdAt": "2026-02-28T12:24:01",
+        "reactions": []
+      },
+      {
+        "id": 3977116003,
+        "author": "mattleibow",
+        "body": "@copilot i think that commit should be reverted. It was working fine for the Maui app so we need to investigate the Blazor page. The scaling is still off. Maybe worse. So I think just like with the Maui app, we need to consider raw pixels vs scaled pixels. ",
+        "createdAt": "2026-02-28T12:42:12",
+        "reactions": []
+      },
+      {
+        "id": 3977124249,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot i think that commit should be reverted. It was working fine for the Maui app so we need to investigate the Blazor page. The scaling is still off. Maybe worse. So I think just like with the Ma...\n\nReverted in 5874832. The Blazor sample now correctly calculates \u0060DisplayScale\u0060 from canvas pixel size vs CSS size. The issue was that \u0060PointerEventArgs.OffsetX/Y\u0060 are in CSS pixels but \u0060e.Info.Width/Height\u0060 are in device pixels - these differ on high-DPI displays. Now \u0060SetViewSize\u0060 uses CSS pixel coordinates to match the touch event coordinate system.",
+        "createdAt": "2026-02-28T12:49:22",
+        "reactions": []
+      },
+      {
+        "id": 3979260191,
+        "author": "mattleibow",
+        "body": "Is the comment machine working? ",
+        "createdAt": "2026-03-01T06:28:27",
+        "reactions": []
+      },
+      {
+        "id": 3979263608,
+        "author": "mattleibow",
+        "body": "Yes! Comment monitoring is active and working. \uD83D\uDFE2 I\u0027ll address any feedback as it comes in.",
+        "createdAt": "2026-03-01T06:29:46",
+        "reactions": []
+      },
+      {
+        "id": 3979310222,
+        "author": "mattleibow",
+        "body": "Can you do a thorough review of the api and make sure it is developer friendly and consistent. Don\u0027t make changes right now, we just want a review. Compare with existing apis like the android gestures and ios gestures. See what they have and we don\u0027t. See what we have and they don\u0027t. Ask gpt and gemini to also review. Watch gemini, he likes to edit files. After a review, post a detailed comment of your findings. ",
+        "createdAt": "2026-03-01T06:52:51",
+        "reactions": []
+      },
+      {
+        "id": 3979324356,
+        "author": "mattleibow",
+        "body": "## Gesture API Review \u2014 Detailed Findings\n\nI did a thorough review of our gesture API surface, comparing against Android\u0027s \u0060GestureDetector\u0060/\u0060ScaleGestureDetector\u0060 and iOS\u0027s \u0060UIGestureRecognizer\u0060 family. I also consulted GPT and Gemini for additional perspectives. Here are the consolidated findings.\n\n---\n\n### \u2705 What We Have That They Don\u0027t (Unique Value)\n\n1. **Platform-agnostic** \u2014 Accepts raw touch events (\u0060ProcessTouchDown/Move/Up\u0060) rather than being tied to \u0060MotionEvent\u0060 or \u0060UITouch\u0060. Works identically across MAUI, Blazor, WPF, or any SkiaSharp surface.\n2. **Unified transform management** \u2014 \u0060SKGestureTracker\u0060 handles the complex matrix math of applying scale/rotation/translation around pivot points. On Android/iOS, developers manually implement this.\n3. **Integrated momentum/fling** \u2014 Built-in fling with friction and animation timer. Android needs a separate \u0060Scroller\u0060; iOS needs custom physics.\n4. **Desktop-first features** \u2014 Explicit \u0060HoverDetected\u0060 and \u0060ScrollDetected\u0060 events for mouse. Mobile gesture APIs treat these as second-class.\n5. **Two-layer architecture** \u2014 Clean separation of detection (engine) vs. transform management (tracker). Use engine alone for custom gesture handling; use tracker for standard pan/zoom/rotate.\n6. **Deterministic testing** \u2014 \u0060TimeProvider\u0060 allows fully deterministic unit tests without real timers.\n7. **Options pattern** \u2014 \u0060SKGestureEngineOptions\u0060/\u0060SKGestureTrackerOptions\u0060 allow pre-configuration, unlike native APIs where you set properties after construction.\n\n---\n\n### \u274C What They Have That We\u0027re Missing\n\n1. **Simultaneous gesture handling** \u2014 iOS has \u0060shouldRecognizeSimultaneouslyWith\u0060. Our state machine is rigid (Detecting\u2192Panning OR Pinching). Can\u0027t long-press while panning.\n2. **Gesture dependencies** \u2014 No equivalent to iOS \u0060requireGestureRecognizerToFail\u0060. We fire \u0060Tap\u0060 immediately, then \u0060DoubleTap\u0060 \u2014 ideally single-tap should wait for the double-tap window to expire.\n3. **Velocity during pan** \u2014 iOS \u0060UIPanGestureRecognizer.velocity(in:)\u0060 gives velocity at any point during the gesture. We only calculate velocity on finger-up (for fling). No \u0022current velocity\u0022 during drag.\n4. **Gesture state per event** \u2014 Both platforms expose Began/Changed/Ended states per gesture. We use separate GestureStarted/GestureEnded events that are generic rather than per-gesture.\n5. **Quick scale / one-finger zoom** \u2014 Android has double-tap-and-hold to scale (quick scale). We don\u0027t support this.\n6. **Swipe gesture** \u2014 iOS has \u0060UISwipeGestureRecognizer\u0060 for directional swipes (up/down/left/right). We don\u0027t distinguish swipe from fling.\n7. **Touch pressure/force** \u2014 iOS exposes force/pressure. Not relevant for most use cases but worth noting.\n8. **Screen edge pan** \u2014 iOS has \u0060UIScreenEdgePanGestureRecognizer\u0060. Very iOS-specific, probably not needed.\n\n---\n\n### \u26A0\uFE0F API Inconsistencies \u0026 Developer Friction\n\n1. **\u0060ProcessTouchMove\u0060 parameter inconsistency** \u2014 Down/Up take \u0060isMouse\u0060 but Move takes \u0060inContact\u0060. Asymmetric API surface.\n2. **Pan vs. Drag confusion** \u2014 Engine fires \u0060PanDetected\u0060, Tracker adds \u0060DragStarted/Updated/Ended\u0060. These overlap conceptually. When should a developer use Pan events vs Drag events?\n3. **EventArgs naming inconsistency**:\n   - \u0060SKPanEventArgs\u0060: \u0060Location\u0060 / \u0060PreviousLocation\u0060 \n   - \u0060SKPinchEventArgs\u0060: \u0060Center\u0060 / \u0060PreviousCenter\u0060\n   - \u0060SKDragEventArgs\u0060: \u0060StartLocation\u0060 / \u0060CurrentLocation\u0060\n   - Three different naming patterns for essentially \u0022current position\u0022 and \u0022previous position\u0022\n4. **Drag interruption on pinch** \u2014 \u0060DragUpdated\u0060 stops firing when second finger arrives for pinch. If dragging an item then rotating with second finger, the item freezes.\n5. **Feature toggles incomplete** \u2014 \u0060IsPanEnabled\u0060, \u0060IsPinchEnabled\u0060, etc. exist but no \u0060IsHoverEnabled\u0060 or \u0060IsScrollEnabled\u0060, even though those events exist.\n6. **Matrix recalculation** \u2014 \u0060Matrix\u0060 property recalculates 5 matrix operations on every access. Should be cached and only updated when transform changes.\n7. **Fling only from pan** \u2014 If user pinch-zooms and releases while moving (fling-to-zoom), momentum stops instantly since we only fling from Panning state.\n\n---\n\n### \uD83D\uDCA1 Naming Suggestions\n\n| Current | Suggestion | Rationale |\n|---------|-----------|-----------|\n| \u0060SKGestureEngine\u0060 | \u0060SKGestureDetector\u0060 | Industry standard (matches Android\u0027s \u0060GestureDetector\u0060). \u0022Engine\u0022 implies heavier runtime. |\n| \u0060SKGestureTracker\u0060 | Consider keeping as-is or \u0060SKTransformTracker\u0060 | \u0022Tracker\u0022 is actually OK since it tracks transform state. |\n| \u0060ProcessTouchDown/Move/Up\u0060 | \u0060OnTouchDown/Move/Up\u0060 or \u0060ProcessPointerDown/Move/Up\u0060 | \u0060Process\u0060 is OK but \u0060On\u0060 is more idiomatic for event sinks. \u0060Pointer\u0060 is more accurate for multi-input. |\n| \u0060PreviousCenter\u0060 | \u0060PreviousLocation\u0060 or just use \u0060Center\u0060/\u0060PreviousCenter\u0060 consistently | Pick one naming convention across all EventArgs. |\n\n---\n\n### \uD83D\uDD0D Other Concerns\n\n1. **Pivot logic** \u2014 Tracker pivots around the center of the view. Standard behavior pivots around the centroid of the fingers. If content is offset, pivot might feel disconnected.\n2. **Threading documentation** \u2014 Engine relies on \u0060SynchronizationContext.Current\u0060 for timer callbacks. If initialized on a background thread, behavior could be unpredictable. Needs clear documentation.\n3. **Coordinate space documentation** \u2014 No documentation on expected coordinate units (pixels vs. DIPs). This has already caused real bugs (the pan-at-half-speed issue).\n4. **No custom gesture extensibility** \u2014 Both Android and iOS allow subclassing for custom gestures. Our engine has no extensibility hooks.\n5. **\u0060Handled\u0060 property semantics** \u2014 All EventArgs have \u0060Handled\u0060 but the behavior when set varies: Pan\u2192suppresses transform, Drag\u2192suppresses fling, but Tap/DoubleTap\u2192no effect. Should document clearly.\n\n---\n\n### \uD83D\uDCCA Priority Assessment\n\n**Should address before merge:**\n- EventArgs naming consistency (# 3 under Inconsistencies)\n- ProcessTouchMove parameter inconsistency (# 1)\n- Document coordinate space expectations\n- Cache Matrix property (# 6)\n\n**Nice to have / future work:**\n- Rename Engine \u2192 Detector\n- Simultaneous gesture handling\n- Velocity during pan\n- Quick scale gesture\n- Swipe gesture detection\n\nLet me know which items to tackle!",
+        "createdAt": "2026-03-01T06:58:19",
+        "reactions": []
+      },
+      {
+        "id": 3979522369,
+        "author": "mattleibow",
+        "body": "Let\u0027s fix the naming issues and the velocity during pan. ",
+        "createdAt": "2026-03-01T08:56:16",
+        "reactions": []
+      },
+      {
+        "id": 3979526698,
+        "author": "mattleibow",
+        "body": "Looking into this \u2014 will fix the EventArgs naming inconsistencies and add velocity to pan events. Working in small commits.\n\n\u2705 **Done.** Two commits pushed:\n\n1. **\u0060e0ac6aa\u0060 \u2014 Add velocity to SKPanEventArgs** \n   - \u0060SKPanEventArgs\u0060 now includes a \u0060Velocity\u0060 property (\u0060SKPoint\u0060, pixels/second) calculated from the fling tracker during the gesture\n   - Consumers can read current velocity during drag without waiting for fling\n\n2. **\u0060c23fb86\u0060 \u2014 Rename Center/PreviousCenter \u2192 FocalPoint/PreviousFocalPoint**\n   - \u0060SKPinchEventArgs\u0060 and \u0060SKRotateEventArgs\u0060 now use \u0060FocalPoint\u0060/\u0060PreviousFocalPoint\u0060 \n   - Aligns with industry standard (Android uses \u0022focus\u0022 for the midpoint of fingers)\n   - Pan\u0027s \u0060Location\u0060/\u0060PreviousLocation\u0060 stays as-is (single finger, not a centroid)\n   - Drag\u0027s \u0060StartLocation\u0060/\u0060CurrentLocation\u0060 stays as-is (semantically different \u2014 origin vs current)\n\n**Re: \u0060ProcessTouchMove(inContact)\u0060 vs \u0060ProcessTouchDown(isMouse)\u0060** \u2014 These are genuinely different concepts. \u0060isMouse\u0060 distinguishes mouse clicks from touch (for tap timing). \u0060inContact\u0060 distinguishes hover from drag (mouse move without button vs with button). Kept as-is since they serve different purposes.",
+        "createdAt": "2026-03-01T08:59:07",
+        "reactions": []
+      },
+      {
+        "id": 3979727461,
+        "author": "mattleibow",
+        "body": "Awesome. Can we also look at naming of the event args. The SKFlingEventArgs could maybe be SKFlingGestureEventArgs. The same with pan and others. We should keep the SK[type]GestureEventArgs. This is to ensure that we are consistent with naming as well as to disambiguate from a scroll views scroll event or a drag and drop UI events. \n\nAlso, you said the feature toggles were incomplete. Can you ensure all features have a toggle. And then ensure both samples have a config/customization page/popup/overlay so we can experiment with the various combinations. \n\nThen, we need to go back through the whole chat history and see where we made changes and ensure we have testing for it. Maybe we go thought the feature set offered and ensure they have comprehensive tests for the edge cases, common paths as well as any cross feature conflicts. \n\nFor the Blazor sample, I see we are missing the gestures page on the home page. ",
+        "createdAt": "2026-03-01T10:43:57",
+        "reactions": []
+      },
+      {
+        "id": 3979733574,
+        "author": "mattleibow",
+        "body": "Looking into this \u2014 multiple items to address:\n\n1. **Rename EventArgs** to \u0060SK[Type]GestureEventArgs\u0060 pattern (e.g., \u0060SKFlingGestureEventArgs\u0060)\n2. **Complete feature toggles** for all gesture types\n3. **Config UI** in both MAUI and Blazor samples\n4. **Comprehensive tests** \u2014 audit chat history for untested changes\n5. **Blazor gestures page** \u2014 add to home page navigation\n\nWorking through each one, committing frequently.\n\n---\n\n\u2705 All 5 items complete. Commits pushed:\n\n| Commit | Description |\n|--------|-------------|\n| \u00602e37daab\u0060 | Rename all EventArgs to SK*GestureEventArgs |\n| \u0060bfbb428a\u0060 | Add missing feature toggles (Tap, DoubleTap, LongPress, Hover) |\n| \u0060f7ae824c\u0060 | Add Gestures to Blazor home page |\n| \u0060af4d3c0b\u0060 | Add config/settings UI to Blazor gesture demo |\n| \u006074f00391\u0060 | Add comprehensive tests (feature toggles, options, pan velocity, drag-suppresses-fling) |\n\n**Summary:**\n- 8 EventArgs types renamed: \u0060SK*EventArgs\u0060 \u2192 \u0060SK*GestureEventArgs\u0060\n- 4 new feature toggles: \u0060IsTapEnabled\u0060, \u0060IsDoubleTapEnabled\u0060, \u0060IsLongPressEnabled\u0060, \u0060IsHoverEnabled\u0060\n- Blazor home page now links to Gestures demo under CONTROLS section\n- Blazor demo has collapsible settings panel matching MAUI (toggles, sliders, state display, reset)\n- 12 new tests covering toggles, options pattern, pan velocity, drag-handled-suppresses-fling\n- All 258 tests pass",
+        "createdAt": "2026-03-01T10:48:11",
+        "reactions": []
+      },
+      {
+        "id": 3979775088,
+        "author": "mattleibow",
+        "body": "Let\u0027s rename engine to detector. \n\nThen do another api review using 3 agents with the same criteria as before. \n\nAlso, make sure there are conceptual docs for this gesture system. ",
+        "createdAt": "2026-03-01T11:18:30",
+        "reactions": []
+      },
+      {
+        "id": 3979776459,
+        "author": "mattleibow",
+        "body": "Looking into this \u2014 three items:\n\n1. **Rename SKGestureEngine \u2192 SKGestureDetector** (class, file, options, tests)\n2. **API review** using 3 agents with same criteria as the earlier comprehensive review\n3. **Conceptual docs** for the gesture system\n\n---\n\n\u2705 All three items complete:\n\n| Commit | Description |\n|--------|-------------|\n| \u006092152980\u0060 | Rename SKGestureEngine \u2192 SKGestureDetector \u002B fix netstandard2.0 build |\n| \u0060eb5dafd0\u0060 | Add conceptual docs for gesture system |\n\n---\n\n## 3-Agent API Review Results\n\nRan reviews using GPT-5.1-Codex, Gemini 3 Pro, and Claude Opus 4.6. Here are the **consensus findings** (issues flagged by 2\u002B agents):\n\n### Critical / High Priority\n\n| # | Issue | Agents | Action |\n|---|-------|--------|--------|\n| 1 | **\u0060GestureStarted\u0060/\u0060GestureEnded\u0060 use bare \u0060EventArgs\u0060** \u2014 can\u0027t add gesture type, duration, etc. later without breaking | 3/3 | Create \u0060SKGestureLifecycleEventArgs\u0060 |\n| 2 | **No common base EventArgs class** \u2014 \u0060Handled\u0060, \u0060Timestamp\u0060 repeated across all 7 types | 2/3 | Create \u0060SKGestureEventArgs\u0060 base |\n| 3 | **\u0060SKTapGestureEventArgs\u0060 reused for LongPress** \u2014 no duration info, conceptually different gesture | 2/3 | Create \u0060SKLongPressGestureEventArgs\u0060 |\n| 4 | **\u0060PanDetected\u0060 fires when \u0060IsPanEnabled=false\u0060** \u2014 inconsistent with other toggle guards | 2/3 | Move check before invocation |\n| 5 | **\u0060Scale\u0060 naming ambiguous** \u2014 is it delta or absolute? Android calls it \u0060getScaleFactor()\u0060 | 2/3 | Rename to \u0060ScaleDelta\u0060 |\n| 6 | **No options validation** \u2014 MinScale \u003E MaxScale, negative FlingFriction, etc. silently accepted | 2/3 | Add validation |\n| 7 | **Thread safety: timer callbacks \u002B state reads** \u2014 fling/zoom timers marshal via SyncContext; if null, race conditions | 2/3 | Null-check SyncContext, document UI-thread requirement |\n| 8 | **No per-gesture begin/end lifecycle** (Pinch/Rotate lack Started/Ended) | 2/3 | Consider adding lifecycle events for pinch/rotate |\n\n### Medium Priority\n\n| # | Issue | Agents | Action |\n|---|-------|--------|--------|\n| 9 | **\u0060Flinging\u0060 event breaks naming convention** \u2014 should be \u0060FlingUpdated\u0060 for consistency | 2/3 | Rename |\n| 10 | **Feature toggles not in Options** \u2014 can\u0027t configure at construction time | 2/3 | Move to options |\n| 11 | **No programmatic transform setters** \u2014 can\u0027t \u0060SetTransform(scale, rotation, offset)\u0060 | 2/3 | Add \u0060SetTransform()\u0060 method |\n| 12 | **Duplicate property surface** \u2014 tracker forwards ~12 properties to Options, but Options is also public | 2/3 | Pick one path |\n| 13 | **Missing Swipe gesture** (distinct from Fling) \u2014 directional command vs velocity-based momentum | 2/3 | Consider for v2 |\n| 14 | **\u0060isMouse\u0060 not stored in touch state** \u2014 ProcessTouchUp accepts independent isMouse, could mismatch | 1/3 | Store in touch state |\n| 15 | **OnGestureStarted/OnGestureEnded are \u0060private\u0060 not \u0060protected virtual\u0060** \u2014 blocks subclassing | 1/3 | Make consistent |\n\n### Low Priority / V2\n\n| # | Issue | Agents |\n|---|-------|--------|\n| 16 | EventArgs not sealed | 1/3 |\n| 17 | \u0060SKFlingGestureEventArgs\u0060 dual-purpose (DeltaX/Y meaningless on FlingDetected) | 1/3 |\n| 18 | Missing \u0060TotalDelta\u0060 on drag args | 1/3 |\n| 19 | \u0060StopFling()\u0060 fires \u0060FlingCompleted\u0060 vs natural completion \u2014 no distinction | 1/3 |\n| 20 | Scroll delta sign convention undocumented (platform-dependent) | 1/3 |\n\n### Overall Assessment\n\nAll three agents agreed the library is a **solid foundation** with good separation of concerns. The main risks are around:\n1. **Future-proofing** \u2014 bare EventArgs and no common base class make later additions breaking\n2. **Consistency** \u2014 toggle guards, naming conventions, and property forwarding patterns vary\n3. **Completeness** \u2014 per-gesture lifecycle events and programmatic transforms are common needs\n\nThe agents recommended shipping with fixes for #1-7 (high impact, low effort) and documenting #8-15 as known limitations for v2.",
+        "createdAt": "2026-03-01T11:19:35",
+        "reactions": []
+      },
+      {
+        "id": 3979793152,
+        "author": "mattleibow",
+        "body": "Let\u0027s fix the high and medium issues. ",
+        "createdAt": "2026-03-01T11:32:29",
+        "reactions": []
+      },
+      {
+        "id": 3979796387,
+        "author": "mattleibow",
+        "body": "On it \u2014 addressing all high and medium priority items from the API review.\n\n---\n\n\u2705 **All 12 fixes complete.** 258 tests pass.\n\n### High Priority (7 commits)\n\n| # | Fix | Commit |\n|---|-----|--------|\n| 1 | Create \u0060SKGestureEventArgs\u0060 base class with \u0060Handled\u0060 | \u00608181a0f0\u0060 |\n| 2 | Create \u0060SKGestureLifecycleEventArgs\u0060, make OnGestureStarted/Ended protected virtual | \u0060d79267a4\u0060 |\n| 3 | Create \u0060SKLongPressGestureEventArgs\u0060 with Location \u002B Duration | \u0060920fdd55\u0060 |\n| 4 | Fix PanDetected firing when IsPanEnabled=false | \u00602a2312fd\u0060 |\n| 5 | Rename Scale \u2192 ScaleDelta on pinch args | \u00606290b4e1\u0060 |\n| 6 | Add options validation (ArgumentOutOfRangeException) | \u0060de4f475d\u0060 |\n| 7 | Thread safety: capture SyncContext to local before null-check | \u00605431b2e4\u0060 |\n\n### Medium Priority (5 commits)\n\n| # | Fix | Commit |\n|---|-----|--------|\n| 8 | Rename Flinging \u2192 FlingUpdated | \u00603b6fe17e\u0060 |\n| 9 | Move feature toggles (Is*Enabled) to SKGestureTrackerOptions | \u0060414d2fca\u0060 |\n| 10 | Add SetTransform/SetScale/SetRotation/SetOffset methods | \u0060ffc92c5c\u0060 |\n| 11 | Remove duplicate forwarding properties (consumers use Options.X) | \u00604e504c96\u0060 |\n| 12 | Store isMouse in TouchState for reliable mouse detection | \u0060da978216\u0060 |\n\n\u0060OnGestureStarted\u0060/\u0060OnGestureEnded\u0060 were already made protected virtual in fix #2, so #13 was a no-op.",
+        "createdAt": "2026-03-01T11:34:56",
+        "reactions": []
+      },
+      {
+        "id": 3980136470,
+        "author": "mattleibow",
+        "body": "Can you ask 3 models to do another api review. Make sure to look at how existing dotnet apis look and function. Make sure to use mslearn and context7. What naming styles and API structures are used in dotnet that we should match.\n\nAlso make sure there are comprehensive xml comment docs throughout the code. The docs should match dotnet recommendations and guidelines. Use mslearn to gather examples of how docs are written. \n\nWe need to make sure the api and docs match that of dotnet as well as make sure the api is developer friendly and easy to use. Consistency with dotnet and within are essential. ",
+        "createdAt": "2026-03-01T14:49:38",
+        "reactions": []
+      },
+      {
+        "id": 3980143981,
+        "author": "mattleibow",
+        "body": "Looking into this \u2014 two major items:\n\n1. **3-model API review** \u2014 comparing against .NET framework conventions\n2. **Comprehensive XML docs** \u2014 matching .NET documentation guidelines\n\n---\n\n## \u2705 XML Documentation \u2014 Complete\n\nPushed comprehensive XML docs covering all public types using \u0060\u003Csummary\u003E\u0060, \u0060\u003Cparam\u003E\u0060, \u0060\u003Creturns\u003E\u0060, \u0060\u003Cvalue\u003E\u0060, \u0060\u003Cremarks\u003E\u0060, \u0060\u003Cexample\u003E\u0060, \u0060\u003Cexception cref\u003E\u0060, and \u0060\u003Cseealso\u003E\u0060 tags.\n\n## 3-Agent API Review (.NET Conventions)\n\nReviewed by GPT-5.1-Codex, Gemini 3 Pro, and Claude Opus 4.6 against .NET FDG, WPF, MAUI, and UWP patterns.\n\n### \u2713 Already Correct\nAll 3 agents confirmed: \u0060EventHandler\u003CT\u003E\u0060 pattern, EventArgs suffix, \u0060On{Name}\u0060 raisers on Detector, Is/Can/Has prefixes, nouns for props, verbs for methods, Handled property, Drag lifecycle, validation.\n\n### Consensus Issues (2\u002B agents)\n\n**High:**\n1. **Event names: \u0060*Detected\u0060 \u2192 past tense** (3/3) \u2014 \u0060TapDetected\u0060\u2192\u0060Tapped\u0060, \u0060PanDetected\u0060\u2192\u0060PanUpdated\u0060, \u0060PinchDetected\u0060\u2192\u0060PinchUpdated\u0060, etc. (matches UWP/MAUI)\n2. **\u0060SKGestureTracker\u0060 unsealed but no inheritance story** (2/3) \u2014 seal or add \u0060protected virtual On*\u0060 methods\n\n**Medium:**\n3. **Duration options use \u0060int\u0060 ms instead of \u0060TimeSpan\u0060** (2/3) \u2014 LongPressDuration, ZoomAnimationDuration, FlingFrameInterval\n4. **Tracker events lack \u0060protected virtual On*\u0060 raisers** (2/3) \u2014 add or seal\n5. **\u0060TouchSlop\u0060 is Android terminology** (2/3) \u2014 consider \u0060TouchThreshold\u0060\n\n**Single-agent findings:**\n6. Missing \u0060Dispose(bool)\u0060 pattern on unsealed Detector (Critical)\n7. \u0060SKGestureLifecycleEventArgs\u0060 doesn\u0027t derive from \u0060SKGestureEventArgs\u0060 (Medium)\n8. \u0060TransformChanged\u0060/\u0060FlingCompleted\u0060 carry no event data (Medium)\n9. \u0060SetViewSize()\u0060 should be a \u0060ViewSize\u0060 property (Medium)\n10. \u0060IsRotateEnabled\u0060 \u2192 \u0060IsRotationEnabled\u0060 (Low)\n\nLet me know which to fix!",
+        "createdAt": "2026-03-01T14:52:08",
+        "reactions": []
+      },
+      {
+        "id": 3980567681,
+        "author": "mattleibow",
+        "body": "Can you investigate why the docs are not reaching the API docs site. \n\nFor example, we just added api docs, yet nothing here https://mono.github.io/SkiaSharp.Extended/staging/326/api/SkiaSharp.Extended.Gestures.SKDragGestureEventArgs.html ",
+        "createdAt": "2026-03-01T17:29:44",
+        "reactions": []
+      },
+      {
+        "id": 3980576782,
+        "author": "mattleibow",
+        "body": "Found the issue and pushed a fix (be6b5229).\n\n**Root cause:** The \u0060SkiaSharp.Extended.csproj\u0060 didn\u0027t have \u0060\u003CGenerateDocumentationFile\u003Etrue\u003C/GenerateDocumentationFile\u003E\u0060 set. Without this, the C# compiler doesn\u0027t emit the XML documentation file (\u0060.xml\u0060) alongside the DLL. Docfx needs this XML file to populate the API reference summaries.\n\n**Fix:** Added \u0060GenerateDocumentationFile=true\u0060 to the csproj. Also added \u0060NoWarn=CS1591\u0060 to suppress missing-XML-comment warnings for pre-existing non-gesture code (Geometry, PathInterpolation, etc.) that doesn\u0027t have XML docs yet.\n\nThe docs deployment workflow should now rebuild and the API pages at https://mono.github.io/SkiaSharp.Extended/staging/326/api/SkiaSharp.Extended.Gestures.SKDragGestureEventArgs.html will show the full XML doc summaries for constructors, properties, and class descriptions.",
+        "createdAt": "2026-03-01T17:34:24",
+        "reactions": []
+      },
+      {
+        "id": 3980600265,
+        "author": "mattleibow",
+        "body": "For the event names, please list them all and show what you think they should be. \n\nPlease check for other cases of duration that should be timespan. \n\nSee if there are other slop properties that should be threashold\n\nWhat data is available for TransformChanged/FlingCompleted\n\nWhat does view size property do? Do we need it? \n\nI think we should/undo SKGestureEventArgs. It is just coincidence they all have a handled property. For example, will SKGestureLifecycleEventArgs need a handled? What other events have a handled that makes no sense? ",
+        "createdAt": "2026-03-01T17:45:03",
+        "reactions": []
+      },
+      {
+        "id": 3980605982,
+        "author": "mattleibow",
+        "body": "Here\u0027s my investigation into all the items:\n\n---\n\n### 1. Event Name Renames\n\n**Detector events** (low-level detection):\n\n| Current | Proposed | Rationale |\n|---------|----------|-----------|\n| \u0060TapDetected\u0060 | \u0060Tapped\u0060 | Matches UWP \u0060GestureRecognizer.Tapped\u0060 |\n| \u0060DoubleTapDetected\u0060 | \u0060DoubleTapped\u0060 | Matches UWP \u0060GestureRecognizer.Tapped\u0060 (TapCount=2) |\n| \u0060LongPressDetected\u0060 | \u0060LongPressed\u0060 | Past-tense verb pattern |\n| \u0060PanDetected\u0060 | \u0060PanUpdated\u0060 | Matches MAUI \u0060PanGestureRecognizer.PanUpdated\u0060 |\n| \u0060PinchDetected\u0060 | \u0060PinchUpdated\u0060 | Matches MAUI \u0060PinchGestureRecognizer.PinchUpdated\u0060 |\n| \u0060RotateDetected\u0060 | \u0060RotateUpdated\u0060 | Consistent with PinchUpdated pattern |\n| \u0060FlingDetected\u0060 | \u0060FlingStarted\u0060 | One-shot at gesture end; \u0022started\u0022 distinguishes from \u0060FlingUpdated\u0060 |\n| \u0060HoverDetected\u0060 | \u0060Hover\u0060 or \u0060HoverUpdated\u0060 | Simple or consistent |\n| \u0060ScrollDetected\u0060 | \u0060Scrolled\u0060 | Past-tense, matches .NET conventions |\n| \u0060GestureStarted\u0060 | \u0060GestureStarted\u0060 | Already correct |\n| \u0060GestureEnded\u0060 | \u0060GestureEnded\u0060 | Already correct |\n\n**Tracker-only events** \u2014 all already correct: \u0060TransformChanged\u0060, \u0060DragStarted/Updated/Ended\u0060, \u0060FlingUpdated\u0060, \u0060FlingCompleted\u0060.\n\n---\n\n### 2. Duration to TimeSpan\n\nThree properties use \u0060int\u0060 milliseconds that should be \u0060TimeSpan\u0060:\n\n| Property | Current | Location |\n|----------|---------|----------|\n| \u0060LongPressDuration\u0060 | \u0060int\u0060 (500ms) | \u0060SKGestureDetectorOptions\u0060 |\n| \u0060ZoomAnimationDuration\u0060 | \u0060int\u0060 (250ms) | \u0060SKGestureTrackerOptions\u0060 |\n| \u0060FlingFrameInterval\u0060 | \u0060int\u0060 (16ms) | \u0060SKGestureTrackerOptions\u0060 |\n\nAll should become \u0060TimeSpan\u0060 with defaults like \u0060TimeSpan.FromMilliseconds(500)\u0060.\n\n---\n\n### 3. Slop to Threshold\n\nTwo properties use \u0022Slop\u0022 (Android-specific jargon):\n\n| Current | Proposed | Location |\n|---------|----------|----------|\n| \u0060TouchSlop\u0060 | \u0060TouchThreshold\u0060 | \u0060SKGestureDetectorOptions\u0060 |\n| \u0060DoubleTapSlop\u0060 | \u0060DoubleTapThreshold\u0060 | \u0060SKGestureDetectorOptions\u0060 |\n\n---\n\n### 4. TransformChanged / FlingCompleted Data\n\n**TransformChanged** \u2014 currently \u0060EventHandler\u0060 (no data). Could carry Matrix/Offset/Scale/Rotation, but these are already readable from \u0060tracker.Matrix\u0060, \u0060tracker.Scale\u0060, etc. The event is just a notification to invalidate/redraw. **Recommend keeping as \u0060EventHandler\u0060** \u2014 no useful new data to carry.\n\n**FlingCompleted** \u2014 currently \u0060EventHandler\u0060 (no data). By the time it fires, fling has decelerated to zero velocity. No useful data. **Recommend keeping as \u0060EventHandler\u0060**.\n\n---\n\n### 5. SetViewSize / ViewSize\n\n\u0060SetViewSize(float width, float height)\u0060 stores view dimensions so the tracker can compute the pivot center for scale/rotation. It\u0027s essential \u2014 without it, transforms pivot around (0,0) instead of view center.\n\n**Recommendation:** Change to \u0060SKSize ViewSize { get; set; }\u0060 property \u2014 it\u0027s just a data store with no side effects, and properties are more idiomatic .NET.\n\n---\n\n### 6. SKGestureEventArgs Base Class\n\n\u0060Handled\u0060 is only actually read in the tracker for **3 event types**:\n1. **DoubleTap** \u2014 \u0060e.Handled\u0060 skips double-tap zoom\n2. **Pan** \u2014 \u0060e.Handled\u0060 skips offset update\n3. **Drag** \u2014 \u0060dragArgs.Handled\u0060 skips offset update\n\nEvents where Handled is **never read** and makes no sense:\n- \u0060Tapped\u0060 \u2014 fire and forget\n- \u0060LongPressed\u0060 \u2014 fire and forget\n- \u0060PinchDetected\u0060 \u2014 tracker always applies scale regardless\n- \u0060RotateDetected\u0060 \u2014 tracker always applies rotation regardless\n- \u0060FlingDetected/FlingUpdated\u0060 \u2014 one-shot\n- \u0060HoverDetected\u0060 \u2014 informational\n- \u0060ScrollDetected\u0060 \u2014 tracker always applies zoom regardless\n- \u0060GestureStarted/GestureEnded\u0060 \u2014 lifecycle events\n\n**Recommendation:** Remove \u0060SKGestureEventArgs\u0060 base class. Add \u0060Handled\u0060 only to the EventArgs that actually use it:\n- \u0060SKTapGestureEventArgs\u0060 (for DoubleTap \u2014 uses same class)\n- \u0060SKPanGestureEventArgs\u0060\n- \u0060SKDragGestureEventArgs\u0060\n\nOR \u2014 make Pinch/Rotate/Scroll also respect Handled (add checks in tracker), which would justify a common base. But currently it\u0027s misleading: setting \u0060Handled = true\u0060 on PinchDetected does nothing.",
+        "createdAt": "2026-03-01T17:46:34",
+        "reactions": []
+      },
+      {
+        "id": 3980636726,
+        "author": "mattleibow",
+        "body": "For view size, why is it pivoting around view center and not center of the gesture? \n\nFor the gesture detector, isn\u0027t the *Detected better as it is a notification rather than confirmation that the event was selected. \n\nCan you look at what adding a Handled property to the events would do. Can all of them be cancelled? \n\nAlso, since the event types are shared between the detector and tracker, does it make sense? Are some properties used for one vs the other or are all used for both. Similarly, does the handled property mean the same thing to both? ",
+        "createdAt": "2026-03-01T18:01:36",
+        "reactions": []
+      },
+      {
+        "id": 3980643241,
+        "author": "mattleibow",
+        "body": "Good questions. Let me address each:\n\n---\n\n### 1. Why pivot around view center instead of gesture center?\n\nThe pivot **does** use the gesture focal point \u2014 just indirectly. Here\u0027s what happens:\n\nThe \u0060AdjustOffsetForPivot(screenPivot, ...)\u0060 method computes the delta between the gesture focal point and the view center, then adjusts \u0060_offset\u0060 so the content under the finger stays pinned. The view center is used as the **matrix origin** (the point around which scale/rotation are applied in the \u0060Matrix\u0060 property), but the offset correction makes it **appear** as if the transform pivots around the gesture point.\n\nThink of it as: \u0022scale around view center, but shift offset so the finger\u0027s point doesn\u0027t move.\u0022 The end result is identical to pivoting around the gesture point. This is the standard approach for composing a single offset\u002Bscale\u002Brotation matrix that applies correctly to an SKCanvas.\n\nIf we removed ViewSize and pivoted directly around the gesture point, we\u0027d need a different matrix construction (translate-to-gesture, scale, rotate, translate-back) \u2014 but then the matrix would change meaning depending on where the last gesture was, making \u0060SetTransform()\u0060/\u0060SetScale()\u0060 etc. harder to reason about.\n\n**TL;DR:** The view center is the matrix origin for mathematical simplicity. The \u0060AdjustOffsetForPivot\u0060 method ensures the visual result is that the transform appears to pivot around the gesture focal point.\n\n---\n\n### 2. Event naming: \u0060*Detected\u0060 vs past tense\n\nYou make a good point. The detector is a notification system \u2014 \u0022I detected a tap\u0022 rather than \u0022the user confirmed a tap.\u0022 From that perspective, \u0060*Detected\u0060 reads naturally as \u0022this gesture was detected.\u0022\n\nThe .NET convention argument (UWP \u0060GestureRecognizer.Tapped\u0060, MAUI \u0060PanGestureRecognizer.PanUpdated\u0060) leans toward past tense. But those are first-party platform APIs where the gesture recognizer IS the canonical source.\n\nFor our detector, \u0060*Detected\u0060 could be more honest \u2014 it\u0027s saying \u0022I think this happened\u0022 rather than \u0022this happened.\u0022 If we go with \u0060*Detected\u0060, the naming is already correct and no changes are needed.\n\n**My recommendation:** Keep \u0060*Detected\u0060 on the detector. On the tracker (which wraps and enriches), the existing names (\u0060DragStarted/Updated/Ended\u0060, \u0060FlingUpdated\u0060, \u0060FlingCompleted\u0060, \u0060TransformChanged\u0060) are already past tense, which is correct since those are confirmed state changes.\n\n---\n\n### 3. What would Handled do for each event?\n\nLet me map out what \u0022cancelling\u0022 would mean for every event type in the tracker:\n\n| Event | What Handled could suppress | Useful? |\n|-------|---------------------------|---------|\n| **TapDetected** | Nothing \u2014 tap is fire-and-forget, no tracker behavior | No |\n| **DoubleTapDetected** | Double-tap zoom animation | **Yes** (already implemented) |\n| **LongPressDetected** | Nothing \u2014 fire-and-forget | No |\n| **PanDetected** | Offset update (pan translation) | **Yes** (already implemented) |\n| **PinchDetected** | Scale update | **Yes** \u2014 useful for locking scale |\n| **RotateDetected** | Rotation update | **Yes** \u2014 useful for locking rotation |\n| **FlingDetected** | Fling animation start | **Yes** \u2014 useful for conditional fling |\n| **HoverDetected** | Nothing \u2014 informational only | No |\n| **ScrollDetected** | Scroll zoom | **Yes** \u2014 useful for custom scroll handling |\n| **DragStarted/Updated** | Offset update for this drag | **Yes** (already implemented) |\n\nSo 6 out of 11 event types could meaningfully use Handled. Currently only 3 do. If we add Handled checks for Pinch, Rotate, Scroll, and Fling, the base class approach makes more sense.\n\n**For the detector:** Handled is meaningless \u2014 the detector has no behavior to suppress. It just fires events. So on the detector side, Handled does nothing.\n\n---\n\n### 4. Are EventArgs shared? Should they be?\n\n**Currently:** Both detector and tracker use the exact same EventArgs instances. The detector creates them, fires its event, and the tracker receives the same object and re-fires it.\n\n**Property usage analysis:**\n\n| EventArgs | Properties used by Detector | Properties used by Tracker | All shared? |\n|-----------|---------------------------|---------------------------|-------------|\n| \u0060SKTapGestureEventArgs\u0060 | Location, TapCount (to create) | Location (for double-tap zoom focal point), TapCount (n/a) | Yes |\n| \u0060SKPanGestureEventArgs\u0060 | Location, PreviousLocation, Delta, Velocity (to create) | Delta (for offset), Velocity (n/a \u2014 used at fling time), Location (for drag) | Yes |\n| \u0060SKPinchGestureEventArgs\u0060 | FocalPoint, PreviousFocalPoint, ScaleDelta (to create) | All three (scale \u002B pivot \u002B pan) | Yes |\n| \u0060SKRotateGestureEventArgs\u0060 | FocalPoint, PreviousFocalPoint, RotationDelta (to create) | FocalPoint \u002B RotationDelta (for rotation \u002B pivot) | Yes |\n| \u0060SKFlingGestureEventArgs\u0060 | VelocityX, VelocityY (to create) | VelocityX/Y (to start fling). Tracker also creates NEW instances with DeltaX/DeltaY for FlingUpdated | **Partial** \u2014 DeltaX/DeltaY only used by tracker |\n| \u0060SKScrollGestureEventArgs\u0060 | Location, DeltaX, DeltaY (to create) | All (for zoom pivot \u002B delta) | Yes |\n| \u0060SKHoverGestureEventArgs\u0060 | Location (to create) | Location (pass-through) | Yes |\n| \u0060SKLongPressGestureEventArgs\u0060 | Location, Duration (to create) | Pass-through | Yes |\n| \u0060SKDragGestureEventArgs\u0060 | N/A (tracker-only) | StartLocation, CurrentLocation, Delta | Tracker-only |\n\n**Key finding:** \u0060SKFlingGestureEventArgs\u0060 is the only one with tracker-specific properties (\u0060DeltaX\u0060, \u0060DeltaY\u0060). The detector only uses \u0060VelocityX/Y\u0060, while the tracker creates separate instances with all four for \u0060FlingUpdated\u0060.\n\n**Does Handled mean the same to both?** No. On the detector, it\u0027s meaningless (detector never reads it). On the tracker, it means \u0022skip the default transform behavior.\u0022 This is a tracker-level concept.\n\n**Options:**\n1. **Keep shared EventArgs, add Handled checks to tracker for all applicable events.** Handled is a tracker concept \u2014 the detector ignores it, which is fine.\n2. **Split into separate EventArgs** \u2014 one for detector (no Handled), one for tracker (with Handled). But this adds complexity for no real gain since Handled being ignored by the detector is harmless.\n3. **Remove SKGestureEventArgs base, add Handled only to types where it matters.** Cleaner but means 6\u002B separate Handled properties.\n\n**My recommendation:** Option 1 \u2014 keep the shared base class with Handled, but add Handled checks in the tracker for Pinch, Rotate, Scroll, and Fling so the property actually works everywhere. This way apps can suppress any individual transform behavior.",
+        "createdAt": "2026-03-01T18:04:34",
+        "reactions": []
+      },
+      {
+        "id": 3981070925,
+        "author": "mattleibow",
+        "body": "\r\nWhy is the view center as the matrix origin instead of 0x0?\r\n\r\n",
+        "createdAt": "2026-03-01T21:32:41",
+        "reactions": []
+      },
+      {
+        "id": 3981071660,
+        "author": "mattleibow",
+        "body": "Good question. The view center origin is a design choice, not a requirement. Here\u0027s the tradeoff:\n\n**Current approach (view center origin):**\n\u0060\u0060\u0060\nMatrix = Translate(\u002Bcenter) \u00B7 Scale \u00B7 Rotate \u00B7 Translate(offset) \u00B7 Translate(-center)\n\u0060\u0060\u0060\nThis means: move origin to center, apply scale\u002Brotation there, apply offset, move back. The visual effect is that at \u0060Scale=1, Rotation=0, Offset=(0,0)\u0060 the content is displayed unchanged (identity). Zooming in \u0022zooms toward the center of the screen\u0022 by default.\n\n**Alternative (0,0 origin):**\n\u0060\u0060\u0060\nMatrix = Scale \u00B7 Rotate \u00B7 Translate(offset)\n\u0060\u0060\u0060\nSimpler, but at \u0060Scale=2, Rotation=0, Offset=(0,0)\u0060 the content scales from the top-left corner. Everything expands down-right. The user must manually set offset to compensate if they want center-anchored zoom.\n\n**Why view center was chosen:**\n1. **Natural default behavior** \u2014 pinch-to-zoom without any prior panning zooms toward the screen center, which feels right. With (0,0) origin, it would zoom from the corner.\n2. **Consistent initial state** \u2014 \u0060Scale=1, Offset=(0,0)\u0060 means \u0022no transform applied\u0022 regardless of view size.\n3. **SetTransform/SetScale/SetRotation intuition** \u2014 \u0060SetScale(2)\u0060 doubles the content around the center, which is what most callers expect.\n\n**However**, the \u0060AdjustOffsetForPivot\u0060 method already corrects the offset so the actual pinch/rotate gesture pivots around the finger position (not the center). The view center is just the mathematical anchor \u2014 the user never sees it.\n\n**Can we switch to (0,0)?** Yes, but:\n- \u0060AdjustOffsetForPivot\u0060 would need to change (it currently computes \u0060d = screenPivot - center\u0060)\n- \u0060SetTransform()\u0060 and \u0060SetScale()\u0060 behavior would change (scaling would anchor at top-left)\n- The offset values would have different meaning (content-space vs screen-space)\n\nThe view-center approach is what map libraries (Leaflet, Google Maps) and photo viewers typically use. (0,0) origin is what raw canvas transforms and game engines typically use.\n\n**My recommendation:** Keep view center. It gives the most intuitive default behavior for the common use case (image/map viewer). But I\u0027m happy to switch to (0,0) if you prefer \u2014 it simplifies the Matrix property and removes the SetViewSize requirement entirely.",
+        "createdAt": "2026-03-01T21:32:58",
+        "reactions": []
+      },
+      {
+        "id": 3981084257,
+        "author": "mattleibow",
+        "body": "Could we make it so that the operations that need the screen center pass it in? like SetScale? The goal is to make things work without needing it. I like the zoom center, but if we need the origin, then maybe we use that. And things like the wheel zoom, we can zoom around the pointer location. Is that something that could work? I want this to maybe zoom around the cursor location like you do on a maps/image control. Is that something that would simplify, make things not need a view size and still be the best dev/user experience?",
+        "createdAt": "2026-03-01T21:39:54",
+        "reactions": []
+      },
+      {
+        "id": 3981091224,
+        "author": "mattleibow",
+        "body": "Yes, this can absolutely work and would be a nice simplification. Here\u0027s the design:\n\n**Core idea:** Switch from view-center origin to (0,0) origin. Every operation that currently uses view center would instead take a \u0060pivot\u0060 parameter directly.\n\n### What changes\n\n**Matrix property** \u2014 simplifies dramatically:\n\u0060\u0060\u0060csharp\n// Before (view-center origin):\nMatrix = T(\u002Bcenter) \u00B7 S \u00B7 R \u00B7 T(offset) \u00B7 T(-center)\n\n// After (0,0 origin):\nMatrix = S \u00B7 R \u00B7 T(offset)\n\u0060\u0060\u0060\nThree operations instead of five. No \u0060_viewWidth\u0060/\u0060_viewHeight\u0060 needed.\n\n**AdjustOffsetForPivot** \u2014 still needed, but no longer uses view center. The \u0060screenPivot\u0060 parameter IS the pivot (no more \u0060d = screenPivot - center\u0060):\n\u0060\u0060\u0060csharp\n// The pivot is passed directly from the gesture focal point or cursor location\nprivate void AdjustOffsetForPivot(SKPoint pivot, float oldScale, float newScale, ...)\n{\n    // pivot is used directly, no center subtraction\n}\n\u0060\u0060\u0060\n\n**Where pivots come from** (all already available):\n| Operation | Pivot source | Already have it? |\n|-----------|-------------|-----------------|\n| Pinch zoom | \u0060e.FocalPoint\u0060 (finger midpoint) | \u2705 Yes |\n| Pinch rotate | \u0060e.FocalPoint\u0060 | \u2705 Yes |\n| Scroll/wheel zoom | \u0060e.Location\u0060 (cursor position) | \u2705 Yes |\n| Double-tap zoom | \u0060e.Location\u0060 (tap position) | \u2705 Yes |\n| Fling animation | No pivot needed (just offset) | \u2705 N/A |\n| Pan | No pivot needed (just offset) | \u2705 N/A |\n\n**SetScale/SetRotation** \u2014 would take an optional pivot parameter:\n\u0060\u0060\u0060csharp\npublic void SetScale(float scale, SKPoint? pivot = null)\npublic void SetRotation(float degrees, SKPoint? pivot = null)\n\u0060\u0060\u0060\nIf \u0060pivot\u0060 is null, scale/rotate around (0,0). If provided, adjust offset to keep that point stationary.\n\n### What gets removed\n- \u0060SetViewSize()\u0060 method \u2014 gone entirely\n- \u0060_viewWidth\u0060 / \u0060_viewHeight\u0060 fields \u2014 gone\n- The \u0022you must call SetViewSize before reading Matrix\u0022 footgun \u2014 gone\n\n### Behavior change\nThe only difference apps would see: at \u0060Scale=2, Offset=(0,0), Rotation=0\u0060, content zooms from top-left instead of center. But in practice, pinch/wheel zoom always provides a focal point, so the user experience is identical \u2014 content stays under the finger/cursor.\n\nFor \u0060SetScale(2)\u0060 without a pivot, it zooms from (0,0). If apps want center zoom, they pass \u0060SetScale(2, new SKPoint(width/2, height/2))\u0060. This is more explicit and doesn\u0027t require the tracker to \u0022know\u0022 the view size.\n\n### Summary\nThis is a clean simplification:\n- Removes SetViewSize requirement\n- Simpler Matrix computation\n- More explicit API (pivot is always visible at call site)\n- Same user experience for gesture-driven transforms (finger/cursor pivot)\n- Better for non-fullscreen use cases (e.g., zooming a sub-region)\n\nWant me to implement this?",
+        "createdAt": "2026-03-01T21:44:11",
+        "reactions": []
+      },
+      {
+        "id": 3981096454,
+        "author": "mattleibow",
+        "body": "This is great, please do! Update all docs as well. Add tests to cover these new and changed cases.",
+        "createdAt": "2026-03-01T21:47:06",
+        "reactions": []
+      },
+      {
+        "id": 3981102299,
+        "author": "mattleibow",
+        "body": "Done \u2014 pushed 97e091de.\n\n**Changes:**\n- Removed \u0060SetViewSize()\u0060 method and \u0060_viewWidth\u0060/\u0060_viewHeight\u0060 fields entirely\n- Simplified \u0060Matrix\u0060 property to \u0060Scale \u00B7 Rotate \u00B7 Translate(offset)\u0060 (3 ops, was 5)\n- Simplified \u0060AdjustOffsetForPivot\u0060 \u2014 pivot is used directly, no view center subtraction\n- Added optional \u0060pivot\u0060 parameter to \u0060SetScale(float scale, SKPoint? pivot = null)\u0060 and \u0060SetRotation(float degrees, SKPoint? pivot = null)\u0060\n- Gesture-driven transforms (pinch, wheel, double-tap) continue to automatically pivot around the gesture focal point\n- Removed \u0060SetViewSize\u0060 calls from both Blazor and MAUI samples\n- Updated gesture docs \u2014 removed all SetViewSize references\n- Added 4 new tests: SetScale with/without pivot, SetRotation with pivot, Matrix without SetViewSize\n- All 262 tests pass",
+        "createdAt": "2026-03-01T21:50:25",
+        "reactions": []
+      },
+      {
+        "id": 3982776910,
+        "author": "mattleibow",
+        "body": "Can you now do another 3 agent review like before. Also, make use things are tested and both api and conceptual docs are updated. Make sure the PR title and description match the final changes and not the  past commits. Improve the PR description ",
+        "createdAt": "2026-03-02T08:05:06",
+        "reactions": []
+      },
+      {
+        "id": 3982785938,
+        "author": "mattleibow",
+        "body": "Looking into this \u2014 you\u0027re asking for:\n1. A 3-agent review (architecture, API surface, test coverage)\n2. Verify tests are comprehensive\n3. Update both API docs (XML) and conceptual docs\n4. Update PR title and description to reflect final state\n\n## 3-Agent Review \u2705\n\n**Architecture Review** found:\n- \uD83D\uDC1B \u0060GestureStarted\u0060 event fired multiple times on multi-touch (should only fire on first finger down)\n- \u2705 Fixed: guards on \u0060_touches.Count == 1\u0060\n\n**API Surface Review** found:\n- \uD83D\uDC1B \u0060MinScale\u0060/\u0060MaxScale\u0060 cross-validation was one-sided (\u0060MinScale\u0060 could be set \u003E \u0060MaxScale\u0060)\n- \u2705 Fixed: added \u0060value \u003E _maxScale\u0060 check to MinScale setter\n- \uD83D\uDC1B \u0060PinchState.FromLocations\u0060 calculated radius from only \u0060locations[0]\u0060 instead of average (incorrect for 3\u002B fingers)\n- \u2705 Fixed: now averages distance across all touch points\n\n**Test Coverage Review** found gaps. All addressed:\n- \u2705 Options validation: 13 \u0060ArgumentOutOfRangeException\u0060 checks now tested\n- \u2705 EventArgs properties: PreviousLocation, ScaleDelta, Speed verified with exact values\n- \u2705 Transform math: pinch scale assertions now use exact expected values (\u0060\u22482.0\u0060, \u0060\u22480.5\u0060)\n- \u2705 Added 28 new tests (290 total, all passing)\n\n## Additional Work \u2705\n\n- **Conceptual docs** updated: pivot params on SetScale/SetRotation, GestureStarted clarification\n- **API docs** already enabled from prior commit (GenerateDocumentationFile=true)\n- **PR title and description** updated to reflect final state of the codebase\n\n## Commits\n\n| SHA | Description |\n|-----|-------------|\n| \u006036b07ce3\u0060 | Fix GestureStarted multi-fire, MinScale validation, pinch radius |\n| \u0060ddda2817\u0060 | Add 28 new tests \u002B docs updates |\n\nAll pushed. 290 tests passing.",
+        "createdAt": "2026-03-02T08:06:55",
+        "reactions": []
+      },
+      {
+        "id": 3989679422,
+        "author": "mattleibow",
+        "body": "Please do a review of the code diff and update the PR description and title. Make sure to look for the staging comment and then also add it as links in the description.\r\n\r\nAlso remove the regions from the tests as 1 region per test is not useful.",
+        "createdAt": "2026-03-03T09:13:54",
+        "reactions": []
+      },
+      {
+        "id": 3989799663,
+        "author": "mattleibow",
+        "body": "Done \u2014 all three items addressed:\n\n**1. PR description \u0026 title updated**\n- Title: \u0022Add platform-agnostic gesture recognition system (SKGestureDetector \u002B SKGestureTracker)\u0022\n- Description rewritten with full architecture, gesture table, design decisions, test coverage, and file summary\n\n**2. Staging links added to description**\n- \uD83D\uDCD6 [Staging Documentation](https://mono.github.io/SkiaSharp.Extended/staging/326/)\n- \uD83C\uDFAE [Staging Blazor Sample](https://mono.github.io/SkiaSharp.Extended/staging/326/sample/)\n\n**3. Removed all regions from test files** (commit \u006011c27885\u0060)\n- Removed 118 \u0060#region\u0060/\u0060#endregion\u0060 lines across 11 test files\n- 204 gesture tests still passing\n\n**Review findings** (from fresh diff review):\n- \uD83D\uDD34 \u0060_zoomPrevCumulative\u0060 field is dead code (assigned but never read)\n- \uD83D\uDFE1 Pinch/Rotate events fire even when disabled (only transform is suppressed)\n- \uD83D\uDFE1 \u0060GetActiveTouchPoints\u0060 uses LINQ allocations in 60Hz hot path\n- \uD83D\uDFE1 \u0060DateTime.Now\u0060 default TimeProvider is non-monotonic\n- \uD83D\uDFE2 Doc refers to \u0060ZoomTo\u0060 \u0060targetScale\u0060 param but it\u0027s actually a multiplier\n\nLet me know which of these to address.",
+        "createdAt": "2026-03-03T09:37:28",
+        "reactions": []
+      },
+      {
+        "id": 3990843976,
+        "author": "mattleibow",
+        "body": "Please fix them all. Also note, the lottie icon in the blazor sidebar is not showing.",
+        "createdAt": "2026-03-03T12:56:14",
+        "reactions": []
+      },
+      {
+        "id": 3991233527,
+        "author": "mattleibow",
+        "body": "All fixed in \u00600f0298c0\u0060:\n\n**Review findings fixed:**\n1. \uD83D\uDD34 **Dead \u0060_zoomPrevCumulative\u0060 field** \u2014 removed (was assigned but never read)\n2. \uD83D\uDFE1 **Event gating** \u2014 \u0060PinchDetected\u0060, \u0060RotateDetected\u0060, \u0060FlingDetected\u0060 now suppressed when their feature toggles are disabled (previously only the transform was suppressed)\n3. \uD83D\uDFE1 **LINQ allocations in hot path** \u2014 replaced \u0060GetActiveTouchPoints()\u0060 LINQ chain with zero-allocation loop \u002B insertion sort (called at 60Hz on every touch move)\n4. \uD83D\uDFE1 **Non-monotonic TimeProvider** \u2014 switched default from \u0060DateTime.Now.Ticks\u0060 to \u0060Environment.TickCount64 * TicksPerMillisecond\u0060 (immune to DST/NTP adjustments)\n5. \uD83D\uDFE2 **Doc param names** \u2014 fixed \u0060ZoomTo\u0060 docs: \u0060factor\u0060/\u0060focalPoint\u0060 (not \u0060targetScale\u0060/\u0060pivot\u0060)\n\n**Blazor sidebar fix:**\n6. \uD83C\uDD95 **Gestures icon** \u2014 added missing \u0060.bi-hand-index-nav-menu\u0060 CSS class with hand icon SVG\n\n**Test fix:**\n- Fixed flaky \u0060Fling_EventuallyCompletes\u0060 test \u2014 was mixing real and fake time providers, causing velocity calculation to be wrong under parallel test load\n\n204 gesture tests passing.",
+        "createdAt": "2026-03-03T13:52:30",
+        "reactions": []
+      },
+      {
+        "id": 3991388411,
+        "author": "mattleibow",
+        "body": "Please do a thorough 3 agent review to find any issues. Make sure the API is consistent and follows .NET guidelines. Make sure the docs are up to date.",
+        "createdAt": "2026-03-03T14:18:41",
+        "reactions": []
+      },
+      {
+        "id": 3991395287,
+        "author": "mattleibow",
+        "body": "Running a thorough 3-agent review now \u2014 checking API consistency against .NET guidelines, docs accuracy, and code quality. Will report back with findings.",
+        "createdAt": "2026-03-03T14:19:47",
+        "reactions": []
+      },
+      {
+        "id": 3991473719,
+        "author": "mattleibow",
+        "body": "## 3-Agent Review Complete \u2014 All Findings Fixed\n\n### Review Summary\n\nThree parallel review agents analyzed the full gesture system:\n\n| Agent | Focus | \uD83D\uDD34 Critical | \uD83D\uDFE1 Moderate | \uD83D\uDFE2 Minor |\n|-------|-------|-------------|-------------|----------|\n| API/.NET Guidelines | Public API surface, naming, XML docs | 2 | 4 | 0 |\n| Documentation Accuracy | Markdown docs vs code consistency | 0 | 0 | 3 |\n| Code Quality \u0026 Bugs | Logic, thread safety, edge cases | 2 | 4 | 5 |\n\n### Critical Fixes (commit \u0060dbe5229d\u0060)\n\n1. **NaN propagation through Clamp** \u2014 \u0060Clamp(NaN, min, max)\u0060 returned NaN (all NaN comparisons are false), cascading through scale \u2192 offset \u2192 Matrix \u2192 blank canvas. Fixed: NaN now maps to \u0060min\u0060.\n\n2. **Scroll zoom negative scaleDelta** \u2014 \u00601f \u002B delta * 0.1f\u0060 with delta \u2264 -10 (common on macOS trackpad momentum) produced scaleDelta \u2264 0, causing massive offset teleport. Fixed: clamped to \u0060Math.Max(0.01f, ...)\u0060.\n\n3. **TimeProvider null guard** \u2014 Both \u0060SKGestureDetector.TimeProvider\u0060 and \u0060SKGestureTracker.TimeProvider\u0060 setters now throw \u0060ArgumentNullException\u0060 on null.\n\n4. **ZoomTo after Dispose** \u2014 Could create a \u0060Timer\u0060 after disposal. Now throws \u0060ObjectDisposedException\u0060.\n\n5. **Long press timer leak** \u2014 Timer was not stopped when entering Pinching state (2nd finger down). Now explicitly cancelled.\n\n### Minor XML Doc Fixes\n- Canvas example: \u0060SetMatrix\u0060 \u2192 \u0060Save/Concat/Restore\u0060 pattern\n- \u0060InvalidateVisual()\u0060 \u2192 \u0060InvalidateSurface()\u0060\n- \u0022properties contain\u0022 \u2192 \u0022property contains\u0022 (singular)\n\n### Tests\n208 gesture tests passing (was 204, \u002B4 new tests for null guard, dispose, and scroll zoom edge cases).\n\n### Deferred Items (not bugs, acceptable for v1)\n- Thread pool timer callbacks (long press, fling, zoom) run without synchronization when \u0060SynchronizationContext\u0060 is null \u2014 only affects non-UI scenarios (tests, console apps)\n- Duplicate \u0060ProcessTouchDown\u0060 with same ID silently overwrites \u2014 matches platform behavior\n- \u0060isMouse\u0060 parameter in \u0060ProcessTouchUp\u0060 is dead \u2014 tracked for future API cleanup\n- Zoom animation overwrites concurrent scroll-wheel changes during 250ms window \u2014 acceptable UX tradeoff",
+        "createdAt": "2026-03-03T14:32:24",
+        "reactions": []
+      }
+    ]
   }
 }

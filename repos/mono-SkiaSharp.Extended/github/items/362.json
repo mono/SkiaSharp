@@ -70,5 +70,137 @@
       "state": "COMMENTED",
       "submittedAt": "2026-02-26T01:12:59"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-03-03T18:17:49.1070525Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3960698500,
+        "author": "mattleibow",
+        "body": "@copilot can you see if you can create a local composite action that runs the build so we don\u0027t need to duplicate the steps in the main vs staging. Or maybe see if there is a way to merge the deploy workflow and use different params/vars depending. \n\nPlease try the merge first as that is the preferred way ",
+        "createdAt": "2026-02-25T17:07:42",
+        "reactions": []
+      },
+      {
+        "id": 3960736561,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot can you see if you can create a local composite action that runs the build so we don\u0027t need to duplicate the steps in the main vs staging. Or maybe see if there is a way to merge the deploy w...\n\nDone in 7bdb9e1. Merged \u0060docs-deploy-main.yml\u0060 and \u0060docs-deploy-staging-pr.yml\u0060 into a single \u0060docs-deploy.yml\u0060.\n\nA \u0060setup-build-variables\u0060 step at the start of the \u0060build\u0060 job branches on \u0060github.event_name\u0060 to emit outputs (\u0060artifact_name\u0060, \u0060sample_base_href\u0060, \u0060sample_segment_count\u0060, \u0060is_staging\u0060, \u0060pr_number\u0060). The rest of the job consumes those outputs, so the build steps are written once. In the \u0060deploy\u0060 job, two conditional steps replace the two separate deploy jobs \u2014 one runs when \u0060is_staging == \u0027false\u0027\u0060 (updates gh-pages root, preserving \u0060staging/\u0060), the other when \u0060is_staging == \u0027true\u0027\u0060 (writes to \u0060staging/{pr}/\u0060). The \u0060comment\u0060 job condition now also guards on \u0060is_staging == \u0027true\u0027\u0060. \u0060docs-go-live.yml\u0060 is updated to reference the new \u0060\u0022Docs - Deploy\u0022\u0060 workflow name.",
+        "createdAt": "2026-02-25T17:14:33",
+        "reactions": []
+      },
+      {
+        "id": 3960782454,
+        "author": "mattleibow",
+        "body": "@copilot can we use the Ubuntu-latest for the docs. Then also switch to use the Maui-android workload. ",
+        "createdAt": "2026-02-25T17:23:31",
+        "reactions": []
+      },
+      {
+        "id": 3960813567,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot can we use the Ubuntu-latest for the docs. Then also switch to use the Maui-android workload. \n\nDone in 89984da. The build job now runs on \u0060ubuntu-latest\u0060 with \u0060dotnet workload install maui-android\u0060. The PowerShell copy/rewrite step was also converted to bash to match the new Linux runner.",
+        "createdAt": "2026-02-25T17:29:10",
+        "reactions": []
+      },
+      {
+        "id": 3960916978,
+        "author": "github-actions[bot]",
+        "body": "\uD83D\uDCD6 **Documentation Preview**\n\nThe documentation for this PR has been deployed and is available at:\n\n\uD83D\uDD17 **[View Staging Documentation](https://mono.github.io/SkiaSharp.Extended/staging/362/)**\n\n\uD83D\uDD17 **[View Staging Blazor Sample](https://mono.github.io/SkiaSharp.Extended/staging/362/sample/)**\n\nThis preview will be updated automatically when you push new commits to this PR.\n\n---\n*This comment is automatically updated by the documentation staging workflow.*",
+        "createdAt": "2026-02-25T17:44:06",
+        "reactions": []
+      },
+      {
+        "id": 3960933963,
+        "author": "mattleibow",
+        "body": "@copilot please review the workflow changes and let me know what issues there are. Also, please visit the staging links to make sure it all works. ",
+        "createdAt": "2026-02-25T17:46:04",
+        "reactions": []
+      },
+      {
+        "id": 3960985652,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please review the workflow changes and let me know what issues there are. Also, please visit the staging links to make sure it all works. \n\nReview complete. One issue found and fixed (ea0c18f):\n\n**Fixed \u2014 Fork PR deploy would fail**: The \u0060deploy\u0060 job has \u0060permissions: contents: write\u0060 and does \u0060git push origin gh-pages\u0060. For PRs from forked repos, \u0060GITHUB_TOKEN\u0060 is read-only and the push would fail. Added a job-level \u0060if\u0060 guard: \u0060github.event_name != \u0027pull_request\u0027 || github.event.pull_request.head.repo.full_name == github.repository\u0060. The \u0060comment\u0060 job is naturally skipped when \u0060deploy\u0060 is skipped (via \u0060needs\u0060).\n\n**Not fixed \u2014 pre-existing**: \u0060docfx.json\u0060 looks for \u0060**/bin/Release/net9.0/**.dll\u0060 but the build step uses \u0060-f net10.0\u0060. This existed in the original \u0060builds-docs.yml\u0060 and docfx silently skips missing metadata sources. Separately tracked.\n\n**Staging links**: The \u0060docs-deploy.yml\u0060 workflow runs on this PR itself (it matches the path filter \u0060.github/workflows/docs-deploy.yml\u0060). I wasn\u0027t able to reach the live staging URLs from my environment, so staging verification will need to be confirmed once the CI run on commit ea0c18f completes.\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060mono.github.io\u0060\n\u003E   - Triggering command: \u0060/home/REDACTED/work/_temp/ghcca-node/node/bin/node /home/REDACTED/work/_temp/ghcca-node/node/bin/node --enable-source-maps /home/REDACTED/work/_temp/copilot-developer-action-main/dist/index.js\u0060 (dns block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp.Extended/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n",
+        "createdAt": "2026-02-25T17:54:41",
+        "reactions": []
+      },
+      {
+        "id": 3961721689,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-25T20:05:35",
+        "reactions": []
+      },
+      {
+        "id": 3961983735,
+        "author": "mattleibow",
+        "body": "@copilot please address the review comments ",
+        "createdAt": "2026-02-25T20:50:07",
+        "reactions": []
+      },
+      {
+        "id": 3962022875,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please address the review comments \n\nAll 4 review comments addressed in 8897fca:\n\n1. **PR_NUMBER validation in staging deploy** (\u0060docs-deploy.yml\u0060 line 146) \u2014 added \u0060[[ \u0022$PR_NUMBER\u0022 =~ ^[1-9][0-9]*$ ]]\u0060 regex guard before filesystem operations, matching the fork PR workflow pattern.\n\n2. **PR_NUMBER validation in cleanup** (\u0060docs-cleanup-staging-pr.yml\u0060) \u2014 same regex guard added before any path use.\n\n3. **Duplicate comment on reopen** (\u0060docs-deploy.yml\u0060 comment job) \u2014 added \u0060listComments\u0060 check for existing bot comment with \u0022Documentation Preview\u0022 body, identical to the fork PR workflow\u0027s dedup logic.\n\n4. **Silent wrong-branch operation in cleanup** \u2014 merged the two separate checkout steps into one. The \u0060git fetch\u0060 and \u0060git checkout\u0060 are now tested with \u0060if !\u0060 and exit cleanly with a clear message if gh-pages doesn\u0027t exist, rather than falling through to operate on the default branch.",
+        "createdAt": "2026-02-25T20:56:38",
+        "reactions": []
+      },
+      {
+        "id": 3962489319,
+        "author": "mattleibow",
+        "body": "@copilot there are now yaml errors:\r\n\r\n[Invalid workflow file: .github/workflows/docs-deploy-fork-pr.yml#L135](https://github.com/mono/SkiaSharp.Extended/actions/runs/22417614210/workflow)\r\nYou have an error in your yaml syntax on line 135\r\n\r\nDid you validate?",
+        "createdAt": "2026-02-25T22:26:14",
+        "reactions": []
+      },
+      {
+        "id": 3962529815,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot there are now yaml errors:\r\n\u003E \r\n\u003E [Invalid workflow file: .github/workflows/docs-deploy-fork-pr.yml#L135](https://github.com/mono/SkiaSharp.Extended/actions/runs/22417614210/workflow)\r...\n\nFixed in 3c6ac9a. The root cause: removing the indentation from the template literal content left those lines at column 0, which YAML interprets as terminating the block scalar (\u0060script: |\u0060) prematurely.\n\nReplaced both comment bodies with \u0060[...].join(\u0027\\n\u0027)\u0060 arrays \u2014 every JS line stays indented at the block scalar level so YAML parses correctly, and the resulting PR comment has no extra whitespace. All four workflow files validated with \u0060python3 -c \u0022import yaml; yaml.safe_load(...)\u0022\u0060 before pushing.",
+        "createdAt": "2026-02-25T22:33:09",
+        "reactions": []
+      },
+      {
+        "id": 3962890230,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-25T23:30:51",
+        "reactions": []
+      },
+      {
+        "id": 3962939874,
+        "author": "mattleibow",
+        "body": "@copilot\u002Bclaude-sonnet-4.6 can we add a PR number and commit message to the docs page and sample app. For main builds, just use \u0022main\u0022 and for PR use \u0022PR #2468\u0022 as the \u0022source branch\u0022 and then a commit has. Maybe something like \u0022source\u0022 (dot) \u0022commit\u0022 in the footer or something.",
+        "createdAt": "2026-02-25T23:45:26",
+        "reactions": []
+      },
+      {
+        "id": 3962969966,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot\u002Bclaude-sonnet-4.6 can we add a PR number and commit message to the docs page and sample app. For main builds, just use \u0022main\u0022 and for PR use \u0022PR #2468\u0022 as the \u0022source branch\u0022 and then a commi...\n\nDone in 841b7ce. Here\u0027s how it works in both surfaces:\n\n**Docs site (docfx footer)** \u2014 the \u0060Build docs\u0060 step uses \u0060jq\u0060 to create a patched \u0060docfx-build.json\u0060 with \u0060_appFooter\u0060 injected into \u0060globalMetadata\u0060, then runs docfx on it. The footer reads:\n- Main builds: \u0060source: main \u00B7 abc1234\u0060\n- PR builds: \u0060source: PR #362 \u00B7 abc1234\u0060\n\n**Blazor sample (fixed badge)** \u2014 added a \u0060\u003Cdiv id=\u0022build-info\u0022\u003EBUILD_INFO_PLACEHOLDER\u003C/div\u003E\u0060 to \u0060wwwroot/index.html\u0060. The \u0060Copy Blazor sample\u0060 step uses \u0060sed\u0060 to replace the placeholder with the same \u0060SOURCE_LABEL \u00B7 COMMIT_SHORT\u0060 string at deploy time. A small semi-transparent fixed-position monospace badge appears in the bottom-right corner of every page (styled in \u0060app.css\u0060). Locally it shows the literal placeholder text, making it easy to spot during development.\n\n**PR_NUMBER early validation** (review comment \u00602855820813\u0060) \u2014 also included in this commit: the regex guard \u0060^[1-9][0-9]*$\u0060 is now applied at the very start of the \u0060pull_request\u0060 branch in \u0060Setup build variables\u0060, before the PR number is used to construct artifact names or paths.",
+        "createdAt": "2026-02-25T23:54:24",
+        "reactions": []
+      },
+      {
+        "id": 3963010404,
+        "author": "mattleibow",
+        "body": "@copilot\u002Bclaude-sonnet-4.6 Maybe we can set assembly attributes on wasm app and use that. there are msbuild items/properties we could use. Then at runtime it could update something in the layout razor or something. Wherever. insead of editing the html.",
+        "createdAt": "2026-02-26T00:04:50",
+        "reactions": []
+      },
+      {
+        "id": 3963040650,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot\u002Bclaude-sonnet-4.6 Maybe we can set assembly attributes on wasm app and use that. there are msbuild items/properties we could use. Then at runtime it could update something in the layout razor...\n\nDone in d213119. Replaced the \u0060sed\u0060/placeholder approach with a proper MSBuild \u002B runtime attribute flow:\n\n**\u0060SkiaSharpDemo.Blazor.csproj\u0060** \u2014 added a \u0060BuildInfo\u0060 MSBuild property (defaulting to \u0060\u0022local\u0022\u0060) and an \u0060AssemblyAttribute\u0060 item that bakes it into the compiled assembly as \u0060[assembly: AssemblyMetadata(\u0022BuildInfo\u0022, \u0022...\u0022)]\u0060.\n\n**CI (\u0060docs-deploy.yml\u0060)** \u2014 \u0060dotnet publish\u0060 now receives \u0060-p:BuildInfo=\u0022PR #362 \u00B7 abc1234\u0022\u0060 (or \u0060\u0022main \u00B7 abc1234\u0022\u0060), so the value is baked in at compile time. The \u0060sed\u0060/placeholder lines are gone entirely.\n\n**\u0060MainLayout.razor\u0060** \u2014 reads the attribute at runtime:\n\u0060\u0060\u0060csharp\nprivate string _buildInfo = typeof(App).Assembly\n    .GetCustomAttributes\u003CAssemblyMetadataAttribute\u003E()\n    .FirstOrDefault(a =\u003E a.Key == \u0022BuildInfo\u0022)?.Value ?? \u0022local\u0022;\n\u0060\u0060\u0060\nRenders it as \u0060\u003Cfooter class=\u0022build-info\u0022\u003E@_buildInfo\u003C/footer\u003E\u0060 inside \u0060\u003Cmain\u003E\u0060.\n\n**\u0060MainLayout.razor.css\u0060** \u2014 small right-aligned muted monospace footer style.\n\nLocal dev shows \u0060\u0022local\u0022\u0060, deployed shows \u0060\u0022main \u00B7 abc1234\u0022\u0060 or \u0060\u0022PR #362 \u00B7 abc1234\u0022\u0060.",
+        "createdAt": "2026-02-26T00:12:19",
+        "reactions": []
+      },
+      {
+        "id": 3963260907,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot what happened?\n\nA CSS regression was introduced when inserting the \u0060.build-info\u0060 rule \u2014 the \u0060@media (min-width: 641px) {\u0060 opening line was accidentally dropped from \u0060MainLayout.razor.css\u0060, leaving the responsive layout rules unscoped. Fixed in 278019f.",
+        "createdAt": "2026-02-26T01:13:04",
+        "reactions": []
+      }
+    ]
+  }
 }

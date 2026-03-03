@@ -45,5 +45,32 @@
       "state": "APPROVED",
       "submittedAt": "2026-02-20T01:14:26"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-03-03T18:18:01.4499326Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3930838990,
+        "author": "mattleibow",
+        "body": "@copilot \r\n\r\n\u0060\u0060\u0060\r\nVSTest version 18.0.1 (x64)\r\n\r\nVSTest version 18.0.1 (x64)\r\n\r\nStarting test execution, please wait...\r\nStarting test execution, please wait...\r\nA total of 1 test files matched the specified pattern.\r\nA total of 1 test files matched the specified pattern.\r\n[xUnit.net 00:00:14.20]     SkiaSharp.Extended.UI.Controls.Tests.SKConfettiColorCollectionTypeConverterTest.CanParseMultipleColors(value: \u0022 red, red, blue \u0022) [FAIL]\r\n  Failed SkiaSharp.Extended.UI.Controls.Tests.SKConfettiColorCollectionTypeConverterTest.CanParseMultipleColors(value: \u0022 red, red, blue \u0022) [556 ms]\r\n  Error Message:\r\n   System.InvalidOperationException : Cannot convert \u0022 red\u0022 into Microsoft.Maui.Graphics.Color\r\n  Stack Trace:\r\n     at Microsoft.Maui.Graphics.Color.Parse(String value)\r\n   at Microsoft.Maui.Graphics.Converters.ColorTypeConverter.ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object fromValue)\r\n   at SkiaSharp.Extended.UI.Controls.Converters.SKConfettiColorCollectionTypeConverter.ConvertFromStringCore(String value) in D:\\a\\1\\s\\source\\SkiaSharp.Extended.UI.Maui\\Controls\\Confetti\\SKConfettiColorCollectionTypeConverter.shared.cs:line 21\r\n   at SkiaSharp.Extended.UI.Controls.Converters.StringTypeConverter.ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, Object value) in D:\\a\\1\\s\\source\\SkiaSharp.Extended.UI.Maui\\Controls\\StringTypeConverter.shared.cs:line 18\r\n   at SkiaSharp.Extended.UI.Controls.Tests.SKConfettiColorCollectionTypeConverterTest.CanParseMultipleColors(String value) in D:\\a\\1\\s\\tests\\SkiaSharp.Extended.UI.Maui.Tests\\Controls\\Confetti\\SKConfettiColorCollectionTypeConverterTest.cs:line 37\r\n   at InvokeStub_SKConfettiColorCollectionTypeConverterTest.CanParseMultipleColors(Object, Span\u00601)\r\n   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)\r\nResults File: D:\\a\\1\\s\\output\\test-results\\VssAdministrator_runnervmuf26m_2026-02-19_21_00_40.trx\r\n\r\nFailed!  - Failed:     1, Passed:   138, Skipped:     0, Total:   139, Duration: 18 s - SkiaSharp.Extended.UI.Maui.Tests.dll (net10.0)\r\nResults File: D:\\a\\1\\s\\output\\test-results\\VssAdministrator_runnervmuf26m_2026-02-19_21_00_40[1].trx\r\n\r\nPassed!  - Failed:     0, Passed:   139, Skipped:     0, Total:   139, Duration: 18 s - SkiaSharp.Extended.UI.Maui.Tests.dll (net9.0)\r\nAn error occurred when executing task \u0027test\u0027.\r\nError: .NET CLI: Process returned an error (exit code 1).\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2026-02-20T00:07:57",
+        "reactions": []
+      },
+      {
+        "id": 3930860787,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot \r\n\u003E \r\n\u003E \u0060\u0060\u0060\r...\n\nFixed in 9968043. In .NET 10, \u0060ColorTypeConverter.ConvertFromInvariantString\u0060 no longer trims whitespace from individual tokens, so \u0060\u0022 red\u0022\u0060 failed to parse. Added \u0060.Trim()\u0060 to each individual \u0060part\u0060 before passing it to the color converter in \u0060SKConfettiColorCollectionTypeConverter\u0060.",
+        "createdAt": "2026-02-20T00:14:14",
+        "reactions": []
+      },
+      {
+        "id": 3936567070,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-20T18:58:48",
+        "reactions": []
+      }
+    ]
+  }
 }

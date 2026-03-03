@@ -50,5 +50,46 @@
       "state": "COMMENTED",
       "submittedAt": "2026-03-02T07:38:40"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-03-03T18:17:37.0424921Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3982426652,
+        "author": "mattleibow",
+        "body": "@copilot i see the docs comment was not posted because the way things work. Can we update the yaml to also fire the comment update after a commit just like we have it deploy the code.",
+        "createdAt": "2026-03-02T06:32:34",
+        "reactions": []
+      },
+      {
+        "id": 3982445704,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot i see the docs comment was not posted because the way things work. Can we update the yaml to also fire the comment update after a commit just like we have it deploy the code.\n\nDone in a6c6551. The \u0060comment\u0060 job condition now includes \u0060synchronize\u0060, and the script logic is updated to \u0060updateComment\u0060 on the existing bot comment when one is found (rather than skipping), or \u0060createComment\u0060 if none exists yet.",
+        "createdAt": "2026-03-02T06:38:31",
+        "reactions": []
+      },
+      {
+        "id": 3982486472,
+        "author": "github-actions[bot]",
+        "body": "\uD83D\uDCD6 **Documentation Preview**\n\nThe documentation for this PR has been deployed and is available at:\n\n\uD83D\uDD17 **[View Staging Documentation](https://mono.github.io/SkiaSharp.Extended/staging/369/)**\n\n\uD83D\uDD17 **[View Staging Blazor Sample](https://mono.github.io/SkiaSharp.Extended/staging/369/sample/)**\n\nThis preview will be updated automatically when you push new commits to this PR.\n\n---\n*This comment is automatically updated by the documentation staging workflow.*",
+        "createdAt": "2026-03-02T06:49:23",
+        "reactions": []
+      },
+      {
+        "id": 3982514208,
+        "author": "mattleibow",
+        "body": "@copilot can you see why this is not working https://mono.github.io/SkiaSharp.Extended/staging/369/sample/shapes ",
+        "createdAt": "2026-03-02T06:57:56",
+        "reactions": []
+      },
+      {
+        "id": 3982536398,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot can you see why this is not working https://mono.github.io/SkiaSharp.Extended/staging/369/sample/shapes \n\nThe root cause: GitHub Pages only serves the **root-level** \u0060404.html\u0060 for all missing paths. The staging deploy job was only writing to \u0060staging/369/\u0060 \u2014 it never placed \u0060404.html\u0060 at the gh-pages root, so there was nothing to intercept the 404 and do the SPA redirect.\n\nFixed in fda9852: the staging deploy step now also copies \u0060404.html\u0060 to the gh-pages root (\u0060git add .nojekyll 404.html staging/$PR_NUMBER\u0060). Once this PR\u0027s next CI run deploys, the root 404.html will be in place and navigating directly to staging Blazor routes like \u0060/SkiaSharp.Extended/staging/369/sample/shapes\u0060 will redirect correctly.\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060mono.github.io\u0060\n\u003E   - Triggering command: \u0060/home/REDACTED/work/_temp/ghcca-node/node/bin/node /home/REDACTED/work/_temp/ghcca-node/node/bin/node --enable-source-maps /home/REDACTED/work/_temp/copilot-developer-action-main/dist/index.js\u0060 (dns block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp.Extended/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n",
+        "createdAt": "2026-03-02T07:04:36",
+        "reactions": []
+      }
+    ]
+  }
 }

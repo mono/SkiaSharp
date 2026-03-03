@@ -41,7 +41,7 @@
     }
   ],
   "engagement": {
-    "syncedAt": "2026-02-06T13:07:39.9862836Z",
+    "syncedAt": "2026-03-03T18:18:10.4483242Z",
     "reactions": [],
     "comments": [
       {
@@ -49,6 +49,90 @@
         "author": "mattleibow",
         "body": "/azp run",
         "createdAt": "2026-02-05T03:45:59",
+        "reactions": []
+      },
+      {
+        "id": 3926783041,
+        "author": "mattleibow",
+        "body": "@copilot please do a thorough review and think deeply about this. Fix any bugs and make improvements. \n\n Also, the file resource provider may not look in the app resources as I think it is just on the file system. However the base resource provider does not allow custom inheritance so we can\u0027t fix right now. \n\n\n\n",
+        "createdAt": "2026-02-19T11:54:24",
+        "reactions": []
+      },
+      {
+        "id": 3926818314,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please do a thorough review and think deeply about this. Fix any bugs and make improvements. \n\u003E \n\u003E  Also, the file resource provider may not look in the app resources as I think it is just on the...\n\nI\u0027ve addressed the FileResourceProvider limitation you identified. \n\n**Changes in commit \u006064ec5d1\u0060:**\n\n1. **Added detailed comments in code** explaining that FileResourceProvider cannot access MAUI app package resources and noting the TODO for when custom ResourceProvider inheritance is supported\n\n2. **Updated documentation** with:\n   - Clear warning about the current limitation\n   - Workaround example showing how to extract images from app package to file system at runtime\n   - Corrected examples using file system paths instead of app package paths\n\n3. **Added explanatory comments to tests** clarifying they work because test assets are copied to output directory\n\n**Root cause confirmed:** ResourceProvider.Load() methods are not virtual/abstract (verified by compilation), making custom implementation impossible until SkiaSharp.Resources is updated.\n\nThe implementation now provides the ImageAssetsFolder property with clear documentation about its file system-only limitation and practical workarounds for MAUI apps.",
+        "createdAt": "2026-02-19T12:01:15",
+        "reactions": []
+      },
+      {
+        "id": 3926868536,
+        "author": "mattleibow",
+        "body": "@copilot please make sure there is a sample image in the demo app that can demonstrate this new feature. Maybe some drop down / picker on the lottie page that allows picking between the base64, the file system and in future, the .lotrie file format. \n\nIn fact, maybe we need to consider the .lottie file format. Please research that and make sure that works. We will have to extract for now, but in future we could use a zip file resource provider or something.\n\nPlease make sure this new lottie file format is supported, everything is tested with 90% code coverage and that the sample has all of this demonstrations ",
+        "createdAt": "2026-02-19T12:10:57",
+        "reactions": []
+      },
+      {
+        "id": 3926892919,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please make sure there is a sample image in the demo app that can demonstrate this new feature. Maybe some drop down / picker on the lottie page that allows picking between the base64, the fi...\n\nThis is a comprehensive enhancement request. I\u0027ll address it in stages:\n\n**Phase 1 - .lottie Format Research \u0026 Support:**\n- .lottie is a ZIP container format with animations \u002B assets (images, fonts, themes)\n- Requires extracting ZIP contents and using FileResourceProvider for embedded images\n- Will create \u0060SKDotLottieLottieImageSource\u0060 class to handle .lottie files\n\n**Phase 2 - Demo App Enhancements:**\n- Add picker to switch between:\n  - Base64-embedded images (existing dotnetbot.json)\n  - External file system images (new sample with ImageAssetsFolder)\n  - .lottie format (new .lottie file with bundled assets)\n- Create sample animations demonstrating each approach\n\n**Phase 3 - Testing:**\n- Expand test coverage to 90%\n- Add tests for .lottie format\n- Add tests for various image loading scenarios\n\nStarting implementation now. This will take multiple commits as I add each component.",
+        "createdAt": "2026-02-19T12:15:33",
+        "reactions": []
+      },
+      {
+        "id": 3926950424,
+        "author": "mattleibow",
+        "body": "@copilot can we rather make all the existing image sources support dot lottie. In fact all should support the assets folder too. The stream and uri should somehow detect the dotlottie and switch to use that. \n\nWe should not need a new source for a type. The source is where it comes from, not what it is. ",
+        "createdAt": "2026-02-19T12:26:32",
+        "reactions": []
+      },
+      {
+        "id": 3931858962,
+        "author": "mattleibow",
+        "body": "@copilot please do a full review and fix the issues. Make sure you have 90% test coverage. ",
+        "createdAt": "2026-02-20T06:05:55",
+        "reactions": []
+      },
+      {
+        "id": 3935758767,
+        "author": "mattleibow",
+        "body": "@copilot please rebase and make sure you use the best docs. also, please use this file as the .lottie file: \r\n[dotnetbot.lottie.zip](https://github.com/user-attachments/files/25446904/dotnetbot.lottie.zip)\r\n",
+        "createdAt": "2026-02-20T16:03:14",
+        "reactions": []
+      },
+      {
+        "id": 3936100497,
+        "author": "mattleibow",
+        "body": ". ",
+        "createdAt": "2026-02-20T17:10:27",
+        "reactions": []
+      },
+      {
+        "id": 3936106637,
+        "author": "mattleibow",
+        "body": "@copilot Please make sure the spec is right. This is https://dotlottie.io/spec/1.0/ and https://dotlottie.io/spec/2.0/\n\nChanges https://dotlottie.io/spec/ ",
+        "createdAt": "2026-02-20T17:11:27",
+        "reactions": []
+      },
+      {
+        "id": 3936106695,
+        "author": "mattleibow",
+        "body": "@copilot Please make sure the spec is right. This is https://dotlottie.io/spec/1.0/ and https://dotlottie.io/spec/2.0/\n\nChanges https://dotlottie.io/spec/ ",
+        "createdAt": "2026-02-20T17:11:28",
+        "reactions": []
+      },
+      {
+        "id": 3936138313,
+        "author": "Copilot",
+        "body": "Just as a heads up, I was blocked by some firewall rules while working on your feedback. Expand below for details.\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060dotlottie.io\u0060\n\u003E   - Triggering command: \u0060/home/REDACTED/work/_temp/ghcca-node/node/bin/node /home/REDACTED/work/_temp/ghcca-node/node/bin/node --enable-source-maps /home/REDACTED/work/_temp/copilot-developer-action-main/dist/index.js\u0060 (dns block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp.Extended/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n",
+        "createdAt": "2026-02-20T17:16:51",
+        "reactions": []
+      },
+      {
+        "id": 3936144279,
+        "author": "Copilot",
+        "body": "Just as a heads up, I was blocked by some firewall rules while working on your feedback. Expand below for details.\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060dotlottie.io\u0060\n\u003E   - Triggering command: \u0060/home/REDACTED/work/_temp/ghcca-node/node/bin/node /home/REDACTED/work/_temp/ghcca-node/node/bin/node --enable-source-maps /home/REDACTED/work/_temp/copilot-developer-action-main/dist/index.js\u0060 (dns block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp.Extended/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n",
+        "createdAt": "2026-02-20T17:17:49",
         "reactions": []
       }
     ]

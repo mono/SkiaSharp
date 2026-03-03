@@ -33,5 +33,39 @@
   "deletions": 23,
   "changedFiles": 5,
   "commits": 6,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-03-03T18:18:03.81493Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3936040986,
+        "author": "mattleibow",
+        "body": "@copilot i think the goal is to also animate to a position. So actually play. Can you think of a good way to do this. ",
+        "createdAt": "2026-02-20T17:00:00",
+        "reactions": []
+      },
+      {
+        "id": 3936120609,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot i think the goal is to also animate to a position. So actually play. Can you think of a good way to do this. \n\nAdded \u0060PlayToFrame\u0060, \u0060PlayToProgress\u0060, and \u0060PlayToTime\u0060 in commit \u00602daa73d\u0060. These drive the animation timer naturally to a target, auto-detecting whether to play forward or backward:\n\n\u0060\u0060\u0060csharp\n// Toggle switch: animates forward on open, backward on close\nlottieView.PlayToFrame(isOn ? lottieView.FrameCount - 1 : 0);\n\n// Animate to the 50% position\nlottieView.PlayToProgress(0.5);\n\n// Animate to a specific time\nlottieView.PlayToTime(TimeSpan.FromSeconds(1.5));\n\u0060\u0060\u0060\n\nKey design choices:\n- Direction (forward/backward) is auto-detected by comparing \u0060target\u0060 to \u0060Progress\u0060\n- Speed respects \u0060AnimationSpeed\u0060\u0027s magnitude (e.g. 2x speed = twice as fast)\n- \u0060AnimationCompleted\u0060 is **not** fired when \u0060PlayTo\u0060 stops at the target \u2014 that event remains for natural playback completion only\n- Calling any \u0060SeekTo*\u0060 method or loading a new source cancels a running \u0060PlayTo\u0060\n\nThe sample app also has \u0022Play\u21920%\u0022, \u0022Play\u219250%\u0022, \u0022Play\u2192100%\u0022 buttons to demonstrate the animated seeking.",
+        "createdAt": "2026-02-20T17:13:51",
+        "reactions": []
+      },
+      {
+        "id": 3938215766,
+        "author": "mattleibow",
+        "body": "@copilot please remove the methods. Please just add the framestart and frameend. We just want to props to control the segment. This needs to be respected in both directions of playback. Instead of 0 and count, it is now start and end. ",
+        "createdAt": "2026-02-21T05:37:24",
+        "reactions": []
+      },
+      {
+        "id": 3938232077,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please remove the methods. Please just add the framestart and frameend. We just want to props to control the segment. This needs to be respected in both directions of playback. Instead of 0 a...\n\nDone in commit \u00601aa694e\u0060. All seek/play-to methods (\u0060SeekToFrame\u0060, \u0060SeekToTime\u0060, \u0060SeekToProgress\u0060, \u0060PlayToFrame\u0060, \u0060PlayToProgress\u0060, \u0060PlayToTime\u0060, \u0060Pause\u0060, \u0060Resume\u0060) have been removed, along with their internal state and test coverage. The API is now just two plain settable properties:\n\n\u0060\u0060\u0060csharp\n// Multi-state animation: restrict to a frame sub-range\nlottieView.FrameStart = 0;   lottieView.FrameEnd = 30;  // forward: plays 0\u219229\nlottieView.FrameStart = 30;  lottieView.FrameEnd = -1;  // forward: plays 30\u2192end\n// AnimationSpeed = -1 reverses direction within the same range\n\u0060\u0060\u0060\n\n\u0060Duration\u0060, \u0060FrameCount\u0060, \u0060Progress\u0060, and \u0060CurrentFrame\u0060 all reflect the active range. InPoint/OutPoint from the Lottie file are always respected.",
+        "createdAt": "2026-02-21T05:50:06",
+        "reactions": []
+      }
+    ]
+  }
 }

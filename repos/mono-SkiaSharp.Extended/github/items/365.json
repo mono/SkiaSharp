@@ -114,5 +114,116 @@
       "state": "COMMENTED",
       "submittedAt": "2026-02-26T22:42:14"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-03-03T18:17:35.1722731Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3969347591,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot due to a somewhat unfortunate naming, the maui project has a assembly name of \u0060SkiaSharp.Extended.UI\u0060. And we also can\u0027t move the enum the way it is as the namespace is a breaking change. \n\u003E \n\u003E P...\n\nDone in 3d1b22a.\n\n- \u0060SKLottieRepeatMode\u0060 enum is back in MAUI (\u0060SkiaSharp.Extended.UI.Controls\u0060, \u0060SkiaSharp.Extended.UI\u0060 assembly) \u2014 no namespace/assembly breaking change.\n- New \u0060SKLottieRepeat\u0060 readonly struct in core (\u0060SkiaSharp.Extended\u0060) replaces the enum for \u0060SKLottiePlayer\u0060. It has a private constructor, static factories (\u0060Never\u0060, \u0060Restart(count = -1)\u0060, \u0060Reverse(count = -1)\u0060), and bool properties (\u0060IsRepeating\u0060, \u0060IsRestartRepeating\u0060, \u0060IsReverseRepeating\u0060) plus \u0060Count\u0060.\n- \u0060SKLottiePlayer.Repeat\u0060 (single \u0060SKLottieRepeat\u0060 property) replaces the old separate \u0060RepeatMode\u0060 \u002B \u0060RepeatCount\u0060 properties.\n- \u0060SKLottieView.Update()\u0060 bridges the MAUI \u0060RepeatMode\u0060\u002B\u0060RepeatCount\u0060 bindable properties into a \u0060SKLottieRepeat\u0060 for the player.\n- MAUI sample XAML uses \u0060controls:SKLottieRepeatMode\u0060 again (no \u0060extended:\u0060 xmlns needed).\n- Blazor sample uses \u0060SKLottieRepeat.Restart()\u0060/\u0060SKLottieRepeat.Reverse()\u0060 directly.",
+        "createdAt": "2026-02-26T21:31:16",
+        "reactions": []
+      },
+      {
+        "id": 3969634670,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please make sure you are doing good things here. The lottie player needs tests. the player should not be designed around the view, instead the API should be clean, neat and be self-contained....\n\nDone in 6c74782. Added \u0060SKLottiePlayerTest\u0060 with 20 tests (in \u0060tests/SkiaSharp.Extended.Tests/Lottie/\u0060) covering initial state, \u0060SetAnimation\u0060, \u0060Seek\u0060, \u0060Update\u0060, all three repeat modes, negative speed, and event firing. The player API is self-contained: \u0060Progress\u0060/\u0060Duration\u0060/\u0060IsComplete\u0060/\u0060HasAnimation\u0060 are all getter-only; \u0060Seek()\u0060 and \u0060Update()\u0060 are the mutation methods; \u0060Reset()\u0060 sets state directly without a guard flag. Also fixed \u0060AnimationCompleted\u0060 to only fire on the \u0060false \u2192 true\u0060 transition.",
+        "createdAt": "2026-02-26T22:35:17",
+        "reactions": []
+      },
+      {
+        "id": 3981039811,
+        "author": "github-actions[bot]",
+        "body": "\uD83D\uDCD6 **Documentation Preview**\n\nThe documentation for this PR has been deployed and is available at:\n\n\uD83D\uDD17 **[View Staging Documentation](https://mono.github.io/SkiaSharp.Extended/staging/365/)**\n\n\uD83D\uDD17 **[View Staging Blazor Sample](https://mono.github.io/SkiaSharp.Extended/staging/365/sample/)**\n\nThis preview will be updated automatically when you push new commits to this PR.\n\n---\n*This comment is automatically updated by the documentation staging workflow.*",
+        "createdAt": "2026-03-01T21:14:04",
+        "reactions": []
+      },
+      {
+        "id": 3981049451,
+        "author": "mattleibow",
+        "body": "@copilot please merge the latest changes in from main\n\nthen also go and see what test exist for lottie in the Maui tests and ee what we can move into the core tests. The goal is to have most tests in the core tests and then only maui/view specific tests in the Maui tests. \n\nAdd a new Blazor tests project as well using xunit and bunit. \n\nInvestigate the value of a Blazor version of SKAnimatedSurfaceView so we can share animation logic for multiple types of components. See what Blazor tests we need for this as well. \n\nMake sure to add xml comment docs to the new types we are adding. Also make sure the csproj has the doc file generation enabled. \n\nAlso add new conceptual docs for the new things. ",
+        "createdAt": "2026-03-01T21:19:44",
+        "reactions": []
+      },
+      {
+        "id": 3981096384,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please merge the latest changes in from main\n\u003E \n\u003E then also go and see what test exist for lottie in the Maui tests and ee what we can move into the core tests. The goal is to have most tests in ...\n\nDone in 0a555b7. Here\u0027s what was addressed:\n\n**Merge from main** \u2014 branch was already ahead of main with nothing to merge.\n\n**Test migration** \u2014 Added 9 new tests to \u0060SKLottiePlayerTest\u0060 (negative delta clamping, speed scaling \u00D72 / \u00D70.5 / \u00D70, dynamic speed changes, negative speed mid-playback, \u0060Reverse(count:0)\u0060 one-cycle completion, negative speed \u002B infinite Restart). \u0060SKLottieViewTest\u0060 slimmed to 4 view/file-loading-only tests; all playback logic tests now live in core.\n\n**Blazor test project** \u2014 New \u0060tests/SkiaSharp.Extended.UI.Blazor.Tests/\u0060 with xunit v3 \u002B bunit; 2 tests pass.\n\n**Blazor \u0060SKAnimatedCanvasView\u0060** \u2014 New component in \u0060source/SkiaSharp.Extended.UI.Blazor/Controls/\u0060 that mirrors MAUI \u0060SKAnimatedSurfaceView\u0060: \u0060PeriodicTimer\u0060 at ~60 fps, \u0060IsAnimationEnabled\u0060 parameter, \u0060OnPaintSurface\u0060 callback, virtual \u0060UpdateAsync(TimeSpan deltaTime)\u0060 for subclassing. Implements \u0060IAsyncDisposable\u0060 for clean shutdown.\n\n**XML docs** \u2014 \u0060GenerateDocumentationFile=true\u0060 added to core, MAUI, and Blazor csproj. All public members of \u0060SKLottiePlayer\u0060 and \u0060SKLottieRepeat\u0060 have full XML docs (\u0060\u003Csummary\u003E\u0060, \u0060\u003Cparam\u003E\u0060, \u0060\u003Cremarks\u003E\u0060).\n\n**Conceptual docs** \u2014 \u0060lottie.md\u0060 updated with a \u0022Cross-Platform Usage with SKLottiePlayer\u0022 section and \u0060SKLottieRepeat\u0060 factory table. \u0060toc.yml\u0060 updated to list \u0022Lottie Player\u0022 under the \u0060SkiaSharp.Extended\u0060 section.\n",
+        "createdAt": "2026-03-01T21:47:04",
+        "reactions": []
+      },
+      {
+        "id": 3982737588,
+        "author": "mattleibow",
+        "body": "@copilot please merge the latest in from main and then see why the lottie does not load in the Blazor app. ",
+        "createdAt": "2026-03-02T07:56:34",
+        "reactions": []
+      },
+      {
+        "id": 3982829608,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please merge the latest in from main and then see why the lottie does not load in the Blazor app. \n\nFixed in 7a9986d.\n\n**Merge from main**: Applied the 3 files changed in main (\u0060docs-deploy.yml\u0060, \u0060docs/404.html\u0060, \u0060docs/docfx.json\u0060 \u2014 the 404 direct-navigation fix).\n\n**Root cause of Lottie not loading**: \u0060Animation.Create(stream)\u0060 was being called with an \u0060HttpClient\u0060 response stream, which in WASM is a lazy async stream. Native Skottie code can\u0027t perform synchronous reads on such a stream, so it silently returns \u0060null\u0060, causing the \u0022Failed to load animation\u0022 state.\n\n**Fix**: Changed \u0060LoadAnimationAsync()\u0060 to use \u0060Http.GetStringAsync(...)\u0060 \u002B \u0060Animation.Parse(json)\u0060. This reads the entire JSON into memory before handing it to the native parser \u2014 fully WASM-compatible.\n\nAlso added the missing \u0060bi-play-circle-nav-menu\u0060 CSS icon class for the Lottie entry in the nav sidebar.",
+        "createdAt": "2026-03-02T08:15:09",
+        "reactions": []
+      },
+      {
+        "id": 3989305591,
+        "author": "mattleibow",
+        "body": "Please do a review of the code diff and update the PR description and title. Make sure to look for the staging comment and then also add it as links in the description. ",
+        "createdAt": "2026-03-03T07:46:33",
+        "reactions": []
+      },
+      {
+        "id": 3989676241,
+        "author": "mattleibow",
+        "body": "Done \u2705\n\n**Updated PR title:** \u0022Extract SKLottiePlayer and add Blazor Lottie support\u0022\n\n**Updated PR description** with:\n- Summary of all changes across core, Blazor, MAUI, sample app, docs, and tests\n- Staging links from the deployment comment:\n  - \uD83D\uDCD6 [Staging Documentation](https://mono.github.io/SkiaSharp.Extended/staging/365/)\n  - \uFFFD\uFFFD [Staging Blazor Sample](https://mono.github.io/SkiaSharp.Extended/staging/365/sample/)\n- Key design decisions (player-owns-state, direction preservation, explicit canvas invalidation, WASM string loading)\n- Full file change breakdown (31 files, \u002B2169/\u2212739 lines, 160 tests)",
+        "createdAt": "2026-03-03T09:13:12",
+        "reactions": []
+      },
+      {
+        "id": 3989691697,
+        "author": "mattleibow",
+        "body": "The razor code in the conceptual docs are not looking so nice. Also, please double check all links. as some are not valid.",
+        "createdAt": "2026-03-03T09:16:29",
+        "reactions": []
+      },
+      {
+        "id": 3989801396,
+        "author": "mattleibow",
+        "body": "Done \u2705 (commit \u00603643c10c\u0060)\n\n**Fixed broken links in \u0060lottie-player.md\u0060:**\n- \u0060lottie.md\u0060 \u2192 \u0060lottie-maui.md\u0060\n- \u0060blazor-lottie.md\u0060 \u2192 \u0060lottie-blazor.md\u0060\n(These were missed during the file rename.)\n\n**Fixed Razor code highlighting in \u0060lottie-blazor.md\u0060:**\n- Changed all 10 code fences from \u0060\u0060\u0060razor\u0060 to \u0060\u0060\u0060cshtml-razor\u0060 for proper docfx syntax highlighting. The \u0060razor\u0060 language tag isn\u0027t recognized by docfx\u0027s highlighter, which was causing the Razor code blocks to render without any syntax coloring.\n\nThe staging deployment should update shortly \u2014 check [Staging Docs](https://mono.github.io/SkiaSharp.Extended/staging/365/) to verify.",
+        "createdAt": "2026-03-03T09:37:48",
+        "reactions": []
+      },
+      {
+        "id": 3990852057,
+        "author": "mattleibow",
+        "body": "pleas do a 3 agent review of the code and see what issue we can fix.",
+        "createdAt": "2026-03-03T12:57:12",
+        "reactions": []
+      },
+      {
+        "id": 3991239131,
+        "author": "mattleibow",
+        "body": "## 3-Agent Code Review \u2014 Results\n\nDispatched reviews to **Claude Opus 4.6**, **Gemini 3 Pro**, and **GPT-5.3 Codex**.\n\n### Consensus Findings (flagged by 2\u002B agents)\n\n| # | Severity | File | Issue | Agents |\n|---|----------|------|-------|--------|\n| 1 | \uD83D\uDFE1 MODERATE | \u0060SKLottieView.razor.cs:119-161\u0060 | \u0060LoadAnimationAsync\u0060 missing \u0060CancellationTokenSource\u0060 \u2014 race condition on rapid \u0060Source\u0060 changes (stale out-of-order results) \u002B native resource leak if disposed mid-load | 3/3 |\n| 2 | \uD83D\uDFE1 MODERATE | \u0060SKLottieView.razor.cs:185-190\u0060 | \u0060DisposeAsync\u0060 disposes native animation but doesn\u0027t call \u0060_player.SetAnimation(null)\u0060 \u2014 use-after-free if animation loop callback fires during teardown | 2/3 |\n\n### Non-Consensus (1 agent only, not actioned)\n- Missing public \u0060Seek()\u0060 method (Gemini only)\n- \u0060HttpClient\u0060 hard dependency for Blazor Server compat (Gemini only)\n\n### Fixes Applied\n\nBoth consensus issues fixed in commit [\u00605dcf3bb4\u0060](https://github.com/mono/SkiaSharp.Extended/commit/5dcf3bb4):\n\n1. **Added \u0060CancellationTokenSource\u0060** to \u0060LoadAnimationAsync\u0060 \u2014 cancels in-flight loads when \u0060Source\u0060 changes or component disposes, with post-cancellation guard checks\n2. **\u0060DisposeAsync\u0060 now calls \u0060_player.SetAnimation(null)\u0060** before disposing the native handle, preventing use-after-free during teardown\n\nAll 160 tests pass \u2705",
+        "createdAt": "2026-03-03T13:53:30",
+        "reactions": []
+      },
+      {
+        "id": 3991390526,
+        "author": "mattleibow",
+        "body": "Please do a thorough 3 agent review to find any issues. Make sure the API is consistent and follows .NET guidelines. Make sure the docs are up to date.",
+        "createdAt": "2026-03-03T14:19:02",
+        "reactions": []
+      },
+      {
+        "id": 3991394161,
+        "author": "mattleibow",
+        "body": "## Thorough 3-Agent Review \u2014 Results\n\nDispatched to **Claude Opus 4.6** (API/.NET guidelines), **Gemini 3 Pro** (bugs/logic), **GPT-5.3 Codex** (docs accuracy).\n\n### Findings\n\n| # | Severity | Area | File | Issue | Agent |\n|---|----------|------|------|-------|-------|\n| 1 | \uD83D\uDFE1 | API consistency | \u0060SKLottieView.razor.cs:46\u0060 | Blazor \u0060RepeatCount\u0060 defaulted to \u0060-1\u0060 (infinite loop) vs MAUI \u00600\u0060 (play once) \u2014 inconsistent cross-platform behavior | Opus |\n| 2 | \uD83D\uDFE1 | Event ordering | \u0060SKLottieView.shared.cs:156\u0060 | MAUI \u0060AnimationCompleted\u0060 event fired before \u0060IsComplete\u0060/\u0060Progress\u0060 BindableProperties were synced \u2014 subscribers saw stale state | Opus |\n| 3 | \uD83D\uDFE1 | Resource safety | \u0060SKLottieView.razor.cs:147\u0060 | Dispose-before-clear: \u0060_loadedAnimation\u0060 disposed while \u0060_player\u0060 still referenced it, potential use-after-free if paint fires during \u0060Animation.Parse\u0060 | Gemini |\n| 4 | \uD83D\uDFE1 | Docs | \u0060docs/index.md:61\u0060 | Link to \u0060docs/lottie.md\u0060 broken \u2014 file was renamed to \u0060lottie-maui.md\u0060 | GPT-5.3 |\n\n### All Fixes Applied \u2014 commit [\u0060f4249fc14\u0060](https://github.com/mono/SkiaSharp.Extended/commit/f4249fc14)\n\n1. **RepeatCount default aligned** \u2014 Blazor now defaults to \u00600\u0060 (play once), matching MAUI\n2. **AnimationCompleted ordering fixed** \u2014 \u0060OnPlayerAnimationCompleted\u0060 now syncs \u0060Duration\u0060, \u0060Progress\u0060, \u0060IsComplete\u0060 before firing the event\n3. **Disposal ordering fixed** \u2014 \u0060_player.SetAnimation(null)\u0060 called before disposing native handle during reload\n4. **Broken doc link fixed** \u2014 \u0060lottie.md\u0060 \u2192 \u0060lottie-maui.md\u0060 in docs/index.md\n\n### Not Actioned (lower priority)\n- Overshoot time loss on loop restart (Gemini only) \u2014 animation plays correctly, just loses sub-frame time at boundaries. Low visual impact.\n\nAll 160 tests pass \u2705",
+        "createdAt": "2026-03-03T14:19:39",
+        "reactions": []
+      }
+    ]
+  }
 }
