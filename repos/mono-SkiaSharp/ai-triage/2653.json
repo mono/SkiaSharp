@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2653,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": ["type/bug", "status/needs-attention"]
+  },
+  "summary": "DllNotFoundException for libSkiaSharp on Linux (Docker/Alpine/Azure) due to missing native dependencies (fontconfig), incorrect NativeAssets package selection, or GLIBC version incompatibility. Multiple root causes reported across 43 comments spanning 2 years; the GLIBC issue is confirmed fixed in 3.119.0-preview.1.2.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.85 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.90 },
+    "platforms": ["os/Linux"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "platform-specific",
+      "errorMessage": "Unable to load shared library 'libSkiaSharp' or one of its dependencies. Error loading shared library liblibSkiaSharp: No such file or directory",
+      "stackTrace": "at SkiaSharp.SkiaApi.sk_managedstream_set_procs → SKAbstractManagedStream..cctor → SKManagedStream..ctor → SKCodec.WrapManagedStream → SKBitmap.Decode",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net7.0", "net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create .NET 7/8 app using SKBitmap.Decode in Docker container on Alpine Linux",
+        "Install SkiaSharp and SkiaSharp.NativeAssets.Linux packages",
+        "Build and run in container"
+      ],
+      "environmentDetails": "Docker containers on Alpine (musl) and Debian (glibc), Azure App Service, Azure Kubernetes Service, Raspberry Pi, WSL Ubuntu. SkiaSharp versions 2.88.6 through 3.116.1.",
+      "relatedIssues": [1001, 1050, 3035]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.6", "2.88.8", "2.88.9", "3.116.0", "3.116.1", "3.119.0-preview.1.2"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The GLIBC compatibility issue was fixed in 3.119.0-preview but not yet in a stable release. The fontconfig/packaging confusion remains a common deployment pitfall for all versions."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.75,
+      "reason": "Comment 32 (OP) confirms 2.88.9 works and newer versions reintroduce the issue. Comment 26 reports linux-musl-x64 native assets missing in 3.116.0. Comment 39 (maintainer) acknowledges GLIBC issue and states it is fixed in the latest preview.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.80,
+      "reason": "Maintainer (comment 39) states the latest preview fixes the GLIBC compatibility issue. User (comment 40) confirms 3.119.0-preview.1.2 resolves the issue. The build system sets VERIFY_GLIBC_MAX to 2.28, ensuring compatibility with older systems.",
+      "fixedInVersion": "3.119.0-preview.1.2"
+    }
+  },
+  "analysis": {
+    "summary": "Umbrella issue aggregating multiple distinct Linux deployment failures: (1) missing fontconfig dependency when using SkiaSharp.NativeAssets.Linux instead of NoDependencies, (2) missing linux-musl-x64 native assets in 3.116.0, and (3) GLIBC 2.29 requirement in some 3.x builds breaking older distros. The GLIBC issue is confirmed fixed in 3.119.0-preview. The fontconfig/packaging confusion is a documentation/guidance gap rather than a code bug.",
+    "rationale": "Classified as type/bug because the core complaint — DllNotFoundException at runtime — represents broken behavior, not a usage question. The area is libSkiaSharp.native because the failures are in native library loading, not managed API behavior. Multiple sub-causes exist: some are packaging issues (missing musl assets), some are dependency issues (fontconfig), and some are build-time issues (GLIBC version). The maintainer has actively engaged and the primary regression (GLIBC) is fixed in preview.",
+    "keySignals": [
+      { "text": "Error loading shared library /app/runtimes/linux-musl-x64/native/liblibSkiaSharp: No such file or directory", "source": "issue body", "interpretation": "The 'liblibSkiaSharp' double-prefix is normal .NET behavior — dlopen prepends 'lib' to the DllImport name 'libSkiaSharp'. The real problem is the .so file not being found at any search path." },
+      { "text": "SkiaSharp.NativeAssets.Linux.NoDependencies version 2.88.6, along with the base skiasharp 2.88.6 worked fine for me", "source": "comment 1 (hsellentin)", "interpretation": "Confirms the NoDependencies package resolves the fontconfig dependency issue — this is the standard workaround for containers." },
+      { "text": "When using this Skiasharp version no runtime libraries for linux-musl-x64 are published", "source": "comment 26 (Ghostbird)", "interpretation": "Separate sub-issue: 3.116.0 may not be including musl native assets in the regular NativeAssets.Linux package." },
+      { "text": "If it is the glibc, the latest preview should fix this", "source": "comment 39 (mattleibow)", "interpretation": "Maintainer acknowledges the GLIBC regression and states it is fixed in preview builds." },
+      { "text": "I can confirm, using SkiaSharp 3.119.0-preview.1.2 fixed the issue for me", "source": "comment 40 (enusbaum)", "interpretation": "User confirms the GLIBC fix works in 3.119.0-preview." },
+      { "text": "Having SkiaSharp.NativeAssets.Linux version 2.88.9 installed, I can confirm that everything works as expected. Updating to newer versions brings this issue back up again.", "source": "comment 32 (OP)", "interpretation": "OP confirms this is a regression from 2.88.9 to 3.x." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SkiaApi.cs", "lines": "12", "finding": "P/Invoke DllImport uses 'libSkiaSharp' as the library name. On Linux, .NET dlopen prepends 'lib' producing 'liblibSkiaSharp' in search logs — this is expected .NET behavior, not a naming bug. The actual native file is 'libSkiaSharp.so'.", "relevance": "direct" },
+      { "file": "native/linux/build.cake", "lines": "18", "finding": "VERIFY_GLIBC_MAX defaults to '2.28', which means the build system verifies the compiled binary doesn't exceed GLIBC 2.28 symbols. This was likely violated in some 3.x builds, causing failures on older Linux distros. The verification check ensures the fix.", "relevance": "direct" },
+      { "file": "documentation/packages.md", "lines": "176-216", "finding": "Comprehensive troubleshooting section explains: (1) 'liblibSkiaSharp' is normal .NET dlopen behavior, (2) fontconfig missing means NoDependencies should be used, (3) Alpine needs linux-musl-* RIDs. All workarounds documented here.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Use SkiaSharp.NativeAssets.Linux.NoDependencies instead of SkiaSharp.NativeAssets.Linux for Docker containers",
+      "Install fontconfig if using the full NativeAssets.Linux package: apt-get install libfontconfig1",
+      "Upgrade to 3.119.0-preview.1.2 or later to resolve the GLIBC compatibility regression",
+      "Pin to 2.88.9 if upgrading to 3.x is not feasible"
+    ],
+    "nextQuestions": [
+      "Is the linux-musl-x64 native asset missing from SkiaSharp.NativeAssets.Linux 3.116.0+ (comment 26), or is it only in NoDependencies?",
+      "Has the GLIBC fix from 3.119.0-preview been included in a stable release yet?"
+    ],
+    "resolution": {
+      "hypothesis": "Multiple overlapping causes: (1) users not installing fontconfig or not using NoDependencies in containers, (2) GLIBC 2.29 requirement in 3.x builds breaking older distros — fixed in 3.119.0-preview, (3) possible missing musl assets in NativeAssets.Linux 3.116.0.",
+      "proposals": [
+        {
+          "title": "Use NoDependencies package for containers",
+          "description": "Replace SkiaSharp.NativeAssets.Linux with SkiaSharp.NativeAssets.Linux.NoDependencies in the application project. This eliminates the fontconfig dependency and includes both glibc and musl variants.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Upgrade to 3.119.0-preview or later",
+          "description": "The GLIBC compatibility regression is fixed in 3.119.0-preview.1.2. Upgrading both SkiaSharp and the NativeAssets package resolves the GLIBC issue.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Install fontconfig in container",
+          "description": "If using SkiaSharp.NativeAssets.Linux (not NoDependencies), install fontconfig in the Dockerfile: RUN apt-get update && apt-get install -y libfontconfig1",
+          "category": "workaround",
+          "confidence": 0.80,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use NoDependencies package for containers",
+      "recommendedReason": "Highest confidence, trivial effort, addresses the most common root cause (missing fontconfig), and includes musl variants for Alpine. Multiple commenters confirmed this resolves their issue."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.80,
+      "reason": "The GLIBC regression is fixed in preview but not yet in a stable release. The issue serves as a valuable reference for Linux deployment troubleshooting. Should be closed once 3.119.0 stable ships and the musl-x64 asset inclusion is verified."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm existing labels and add platform label",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/libSkiaSharp.native", "os/Linux"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Summarize the multiple root causes and workarounds for the many affected users",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "This issue has collected several distinct Linux deployment failures over 2 years. Here's a summary of root causes and workarounds:\n\n**1. Missing fontconfig dependency** — The `SkiaSharp.NativeAssets.Linux` package requires `libfontconfig.so.1`. In containers, either install it (`apt-get install -y libfontconfig1`) or switch to `SkiaSharp.NativeAssets.Linux.NoDependencies`, which has zero third-party dependencies.\n\n**2. GLIBC version incompatibility (3.x regression)** — Some 3.x builds required GLIBC 2.29+, breaking older distros. This is fixed in 3.119.0-preview.1.2 and later. If you're on an older distro, upgrading to the latest SkiaSharp should resolve this.\n\n**3. Alpine (musl) containers** — Use `SkiaSharp.NativeAssets.Linux.NoDependencies`, which includes both glibc and musl variants.\n\nThe `liblibSkiaSharp` in the error log is normal — .NET prepends `lib` to the library name `libSkiaSharp` when searching. The real issue is that the `.so` file or one of its dependencies wasn't found.\n\nWe'll close this once the GLIBC fix ships in a stable release."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related DllNotFoundException issue",
+        "risk": "low",
+        "confidence": 0.70,
+        "linkedIssue": 1001
+      }
+    ]
+  }
+}
