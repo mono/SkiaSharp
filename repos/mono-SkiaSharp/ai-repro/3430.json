@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3430,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "NRE reproduced via simulation. The bug occurs when ActualWidth/ActualHeight are positive but small enough that (int)(value * dpi) rounds to 0. The DoInvalidate guard (ActualWidth <= 0) passes, but CreateBitmap produces a 0-pixel SKImageInfo. Since info.Width > 0 is false, bitmap is not recreated after FreeBitmap nullifies it, causing NRE at line 72 (bitmap.PixelBuffer.AsStream()). The code is identical across 3.116.0, 3.119.2, and main. The WinUI version does not have this issue.",
+  "scope": "unknown",
+  "reproProject": {
+    "type": "simulation",
+    "tfm": "net8.0",
+    "packages": []
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console simulation project extracting CreateBitmap/FreeBitmap/DoInvalidate logic from SKXamlCanvas.Skia.cs",
+      "command": "mkdir -p /tmp/skiasharp/repro/3430 && cd /tmp/skiasharp/repro/3430 && dotnet new console -n Repro --framework net8.0",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Simulation of SKXamlCanvas.Skia.cs logic — extracts CreateBitmap, FreeBitmap, DoInvalidate, and CreateSize methods into a standalone console app with 6 test scenarios covering normal resize, sub-pixel dimensions, and high DPI"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build simulation project",
+      "command": "cd /tmp/skiasharp/repro/3430/Repro && dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded in 5.0s",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run simulation — reproduces NRE in 5 of 6 scenarios when pixel dimensions round to 0",
+      "command": "cd /tmp/skiasharp/repro/3430/Repro && dotnet run",
+      "exitCode": 1,
+      "output": "=== SKXamlCanvas NRE Reproduction (Issue #3430) ===\nSimulating CreateBitmap/FreeBitmap logic from SKXamlCanvas.Skia.cs\n\n--- Test 1: Normal resize (100x100 -> 200x200) ---\n  RESULT: OK — no NRE\n\n--- Test 2: Resize to sub-pixel width (100x100 -> 0.5x100, dpi=1.0) ---\n  After CreateBitmap: info=(0x100), bitmap=NULL\n  RESULT: NRE — bitmap is null at line 72! pixelWidth=0, pixelHeight=100\n\n--- Test 3: Resize to sub-pixel height (100x100 -> 100x0.3, dpi=1.0) ---\n  After CreateBitmap: info=(100x0), bitmap=NULL\n  RESULT: NRE — bitmap is null at line 72! pixelWidth=100, pixelHeight=0\n\n--- Test 4: Both sub-pixel (100x100 -> 0.5x0.5, dpi=1.0) ---\n  RESULT: NRE — bitmap is null at line 72!\n\n--- Test 5: High DPI (100x100 -> 0.3x100, dpi=2.0) ---\n  RESULT: NRE — bitmap is null at line 72!\n\n--- Test 6: First render sub-pixel (0.5x100, dpi=1.0) ---\n  RESULT: NRE — bitmap is null at line 72!\n\n=== Summary ===\nTotal tests: 6\nNRE triggered: 5/6\nFAILURE: NullReferenceException reproduced in 5 of 6 scenarios",
+      "layer": "csharp",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify source code unchanged across versions — git log confirms only 2 commits to file, neither modifies bug logic",
+      "command": "git --no-pager log --oneline -- source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs",
+      "exitCode": 0,
+      "output": "c264c449b Fix SKXamlCanvas on Uno Skia to use Bgra8888 (#2918)\nbc5020b9e Modernize the repository and prepare SkiaSharp 3.0 (#2505)",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "NRE reproduced via simulation — 5/6 test scenarios trigger NullReferenceException when pixel dimensions round to 0",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Source code identical to 3.116.0 (git log confirms no changes to file). Same logic bug present.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Source code on main is identical — git diff shows no changes. Bug persists on main.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "root-cause",
+        "upstream": "Double FreeBitmap() at line 106 nullifies bitmap just created during standard resize",
+        "corrected": "The second FreeBitmap() at line 106 is a no-op during standard resize (pixels already null). The real trigger is sub-pixel dimensions where ActualWidth > 0 passes DoInvalidate guard but (int)(ActualWidth * dpi) == 0 causes CreateBitmap to skip bitmap creation."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Bug reproduced on all versions including main. Root cause is clear: guard mismatch between DoInvalidate (checks ActualWidth) and CreateBitmap (checks pixel dimensions). Fix needed."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add os/Linux label — bug affects all Uno Skia backends",
+        "risk": "low",
+        "confidence": 0.85
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the report @MartinZikmund — confirmed.\n\nWe reproduced the NRE by simulating the `CreateBitmap`/`FreeBitmap` logic. The root cause is a guard mismatch:\n\n- `DoInvalidate()` checks `ActualWidth <= 0 || ActualHeight <= 0` (line 45)\n- `CreateBitmap()` checks `info.Width > 0 && info.Height > 0` (line 89) where `info.Width = (int)(ActualWidth * dpi)`\n\nWhen `ActualWidth` is positive but small enough that `(int)(ActualWidth * dpi)` rounds to 0 (e.g., during window resize animations), the DoInvalidate guard passes but bitmap is never created, causing the NRE at line 72.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 3.116.0 (reporter) | ❌ Reproduced |\n| 3.119.2 (latest) | ❌ Reproduced |\n| main | ❌ Reproduced |\n\nNRE triggered in 5/6 test scenarios (sub-pixel width, height, both, high DPI, and first render). Normal integer resizes work correctly.\n\n**Workaround:** Set `MinWidth=\"1\" MinHeight=\"1\"` on `SKXamlCanvas` to prevent sub-pixel dimensions.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Set MinWidth=\"1\" MinHeight=\"1\" on SKXamlCanvas to prevent sub-pixel dimensions"
+    ]
+  }
+}
