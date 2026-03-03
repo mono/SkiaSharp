@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-03-03T22:33:46.8691762Z",
-  "totalCount": 15,
+  "generatedAt": "2026-03-03T23:11:17.6396386Z",
+  "totalCount": 46,
   "summary": {
-    "needsInvestigation": 6,
-    "closeable": 2,
-    "quickWins": 2,
-    "regressions": 6,
+    "needsInvestigation": 16,
+    "closeable": 12,
+    "quickWins": 12,
+    "regressions": 8,
     "withRepro": 14,
     "reproduced": 5,
     "notReproduced": 2
@@ -13,21 +13,37 @@
   "byType": [
     {
       "label": "type/bug",
-      "count": 12
+      "count": 31
     },
     {
       "label": "type/enhancement",
+      "count": 8
+    },
+    {
+      "label": "type/question",
+      "count": 4
+    },
+    {
+      "label": "type/feature-request",
       "count": 3
     }
   ],
   "byArea": [
     {
-      "label": "area/SkiaSharp.Views",
-      "count": 4
+      "label": "area/SkiaSharp.Views.Blazor",
+      "count": 19
     },
     {
       "label": "area/SkiaSharp",
-      "count": 4
+      "count": 9
+    },
+    {
+      "label": "area/libSkiaSharp.native",
+      "count": 7
+    },
+    {
+      "label": "area/SkiaSharp.Views",
+      "count": 5
     },
     {
       "label": "area/SkiaSharp.Views.Maui",
@@ -36,10 +52,6 @@
     {
       "label": "area/Build",
       "count": 2
-    },
-    {
-      "label": "area/libSkiaSharp.native",
-      "count": 1
     },
     {
       "label": "area/HarfBuzzSharp",
@@ -53,37 +65,45 @@
   "byAction": [
     {
       "label": "needs-investigation",
-      "count": 6
+      "count": 16
     },
     {
       "label": "keep-open",
-      "count": 4
+      "count": 11
+    },
+    {
+      "label": "close-as-fixed",
+      "count": 5
+    },
+    {
+      "label": "close-with-docs",
+      "count": 5
     },
     {
       "label": "request-info",
-      "count": 3
-    },
-    {
-      "label": "close-as-duplicate",
-      "count": 1
+      "count": 4
     },
     {
       "label": "close-as-by-design",
+      "count": 4
+    },
+    {
+      "label": "close-as-duplicate",
       "count": 1
     }
   ],
   "bySeverity": [
     {
-      "label": "high",
-      "count": 5
+      "label": "medium",
+      "count": 18
     },
     {
-      "label": "medium",
-      "count": 5
+      "label": "high",
+      "count": 10
     },
     {
       "label": "low",
-      "count": 2
+      "count": 3
     }
   ],
   "issues": [
@@ -133,6 +153,36 @@
       "hasTriage": true,
       "hasRepro": true,
       "reproConclusion": "needs-platform"
+    },
+    {
+      "number": 3534,
+      "title": "Maintainer-filed enhancement to add scroll wheel event support to Blazor WASM views (SKCanvasView and SKGLView), normalizing browser WheelEvent deltaY values to the v120 standard (120 = one discrete mouse notch), as part of the cross-platform v120 normalization project (#3533).",
+      "issueTitle": "Add wheel support to Blazor WASM views with v120 normalization",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "action": "keep-open",
+      "confidence": 0.95,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-03-05T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3533,
+      "title": "Maintainer-filed tracking issue to standardize SKTouchEventArgs.WheelDelta across all platforms to use the v120 convention (120 units = one discrete mouse wheel notch), with seven sub-issues covering Blazor, Android, macOS, iOS, Tizen, WPF/WinForms, and GTK.",
+      "issueTitle": "Standardize WheelDelta to v120 convention across all platforms",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views",
+      "action": "keep-open",
+      "confidence": 0.98,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-02-27T20:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
     },
     {
       "number": 3520,
@@ -322,6 +372,22 @@
       "reproConclusion": "not-reproduced"
     },
     {
+      "number": 3422,
+      "title": "Blazor WASM apps targeting .NET 10 fail at runtime with TypeInitializationException (SKImageInfo) or DllNotFoundException (libSkiaSharp) because the SkiaSharp WASM static libraries compiled with emscripten 3.1.56 may be incompatible with .NET 10\u0027s emscripten toolchain, or the wasm-tools workload is not installed.",
+      "issueTitle": "[BUG] Blazor WASM NET10 -",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-07-21T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
       "number": 3400,
       "title": "SKDocument.CreateXps() renders \u003Cimage\u003E elements from SVG at approximately 30-40% of their correct size, while CreatePdf() renders the same SVG content correctly. All non-image SVG elements (text, barcodes, shapes) render correctly in both formats.",
       "issueTitle": "[BUG] SKDocument.CreateXps() incorrectly scales \u003Cimage\u003E elements from SVG, while CreatePdf() renders correctly",
@@ -337,6 +403,444 @@
       "hasTriage": true,
       "hasRepro": true,
       "reproConclusion": "needs-platform"
+    },
+    {
+      "number": 3332,
+      "title": "SKCanvasView in Blazor WASM does not fill 100% height of its parent container because the canvas element\u0027s intrinsic size (set by the JS interop for the drawing buffer) interferes with CSS percentage-based height in flexbox layouts.",
+      "issueTitle": "[BUG] SKCanvasView in Blazor WASM not using 100% height",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "close-with-docs",
+      "confidence": 0.72,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-08-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3322,
+      "title": "SKCanvasView in Blazor throws unhandled TypeError during Dispose() when SizeWatcherInterop.Stop() calls ResizeObserver.unobserve() with an undefined element reference, caused by the DOM element being removed before the component is disposed.",
+      "issueTitle": "[BUG] Unhandled exception in Dispose() when show/hide multiple SKCanvasView in Blazor",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-31T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3313,
+      "title": "SKCanvasView in Blazor WASM shows severe performance degradation (120fps to sub-20fps) when drawing a scaled SKImage, because the raster backend performs CPU-based image scaling in WASM; SKGLView handles it fine via GPU hardware acceleration.",
+      "issueTitle": "[BUG] Blazor - SKImage rendering tanks performance when scaling image in SKCanvasView",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.8,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3279,
+      "title": "Reporter encounters compiler errors (CS0117, CS1501) when upgrading from SkiaSharp 2.88.9 to 3.x because SKMatrix.MakeTranslation, MakeScale, MakeRotation, MakeIdentity, and static PostConcat were renamed/replaced with Create* instance methods in the 3.0 breaking changes.",
+      "issueTitle": "[BUG] SKMatrix Operations work well in SkiaSharp 2.88.9 not work in  3.119.0",
+      "type": "type/question",
+      "area": "area/SkiaSharp",
+      "action": "close-with-docs",
+      "confidence": 0.95,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2026-02-19T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3276,
+      "title": "Reporter\u0027s Blazor web app throws \u0027native libSkiaSharp library version incompatible\u0027 exception on Linux Azure App Service due to DevExpress.Drawing.Skia pulling a different version of SkiaSharp native assets than the explicitly referenced SkiaSharp 3.119.0, and the NativeAssets.Linux.NoDependencies package being referenced in a library project instead of the application project.",
+      "issueTitle": "[BUG] Web app throws native libSkiaSharp library version exception in hosted environment",
+      "type": "type/question",
+      "area": "area/libSkiaSharp.native",
+      "action": "close-with-docs",
+      "confidence": 0.78,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3273,
+      "title": "Blazor WASM app running in IDE debug mode shows \u0027No canvas element was provided\u0027 console error due to stale cached static assets; clearing browser and project caches resolves the issue, but is impractical for server deployments with many users.",
+      "issueTitle": "[BUG] Blazor Wasm [DebugMode]: No canvas element was provided",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.75,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-06-21T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3259,
+      "title": "NullReferenceException in SKManagedWStreamWriteProxyImplementation when an exception thrown during SKSvgCanvas drawing is caught externally, leaving the canvas and managed stream undisposed so the native finalizer later invokes the write callback on a GC\u0027d object.",
+      "issueTitle": "[BUG] Blazor null exception at SkiaSharp.DelegateProxies.SKManagedWStreamWriteProxyImplementation",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": true,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3224,
+      "title": "DllNotFoundException for libSkiaSharp in Blazor WASM because the reporter uses SkiaSharp directly in a class library without referencing SkiaSharp.NativeAssets.WebAssembly or SkiaSharp.Views.Blazor in the WASM app project. WASM requires static linking via NativeFileReference, which only activates when the NativeAssets.WebAssembly package is present.",
+      "issueTitle": "[BUG] Blazor Wasm : The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "high",
+      "action": "close-with-docs",
+      "confidence": 0.78,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2026-07-14T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3066,
+      "title": "Blazor views (SKCanvasView and SKGLView) construct HTML element IDs using the internal Blazor convention \u0027_bl_\u0027 \u002B ElementReference.Id, which is documented as not safe for user code, risking breakage if Blazor changes this internal convention.",
+      "issueTitle": "Blazor views use the Blazor element ID \u0060_bl_#\u0060 which may not be safe",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.82,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 3015,
+      "title": "DllNotFoundException for libSkiaSharp in a WASI Wasm Console app because SkiaSharp.NativeAssets.WebAssembly only supports browser-based WASM (Blazor/Uno) via Emscripten static linking, not the WASI runtime.",
+      "issueTitle": "[BUG] DllNotFoundException when trying to invoke Skia in a Wasi Wasm Console app",
+      "type": "type/feature-request",
+      "area": "area/libSkiaSharp.native",
+      "action": "request-info",
+      "confidence": 0.75,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-18T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2836,
+      "title": "Blazor WASM app using SkiaSharp 2.88.3 with .NET 8 and InteractiveWebAssembly render mode works in Visual Studio debugger but crashes with MONO AOT runtime error (aot-runtime-wasm.c:150) when deployed to Azure App Service, because the 2.88.x WASM static libraries lack proper emscripten version mapping for .NET 8.",
+      "issueTitle": "Skia Blazor Runs in debugger but not when deployed",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "high",
+      "action": "close-as-fixed",
+      "confidence": 0.8,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2732,
+      "title": "TypeInitializationException with inner DllNotFoundException for libSkiaSharp when using SkiaSharp 2.88.3 in a Blazor WebAssembly app on Windows, with a recent report of the same error on SkiaSharp 3.119.0 with .NET 8.",
+      "issueTitle": "The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.8,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-17T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2653,
+      "title": "DllNotFoundException for libSkiaSharp on Linux (Docker/Alpine/Azure) due to missing native dependencies (fontconfig), incorrect NativeAssets package selection, or GLIBC version incompatibility. Multiple root causes reported across 43 comments spanning 2 years; the GLIBC issue is confirmed fixed in 3.119.0-preview.1.2.",
+      "issueTitle": "[BUG] SKiaSharp on linux can\u0027t find liblibSkiaSharp.so",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "high",
+      "action": "keep-open",
+      "confidence": 0.8,
+      "isRegression": true,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2651,
+      "title": "Repeated Surface.Snapshot() calls in OnPaintSurface on a large Blazor WASM canvas (8000x2000) without disposing previous SKImage instances exhausts WASM heap memory after ~34 iterations, crashing in SkData::MakeWithCopy during pixel allocation.",
+      "issueTitle": "Exception when doing snapshot in OnPaintSurface",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "close-as-by-design",
+      "confidence": 0.88,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2607,
+      "title": "TypeInitializationException for SKData when deploying a .NET 6 server-side app to Docker on GCP \u2014 caused by missing or conflicting SkiaSharp NativeAssets.Linux packages in the container, not a code bug.",
+      "issueTitle": "[BUG]  The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception (even after applying the solution of issue #2124).",
+      "type": "type/question",
+      "area": "area/libSkiaSharp.native",
+      "action": "close-with-docs",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2429,
+      "title": "SKBitmap.Decode and SKCodec.Create return null for a specific JPEG image that is valid and renders correctly in other viewers. Tested on SkiaSharp 2.80.4 and 2.88.3 on both Linux and Windows.",
+      "issueTitle": "[BUG] SKBitmap.Decode always returns null for a specific image",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2411,
+      "title": "DllNotFoundException for libSkiaSharp when deploying Blazor WebAssembly (.NET 7.0) app to Azure App Service via GitHub Actions. Works with .NET 6.0 but not .NET 7.0. SkiaSharp 2.88.3 predates .NET 7 WASM support which was added in later 2.88.x releases.",
+      "issueTitle": "[BUG] SkiaSharp not working when deploy Blazor client side application (.NET 7.0) to Azure App Service (Windows) using GitHub Actions (CI/CD Pipeline)",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "close-as-fixed",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2374,
+      "title": "Reporter requests that the Dispose method in SKGLView for Blazor be made virtual so subclasses can properly override disposal and clean up their own resources.",
+      "issueTitle": "[FEATURE] Make Dispose a virtual method in SKGLView for blazor",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "action": "keep-open",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-25T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2352,
+      "title": "SKFontManager.MatchTypeface returns null for custom fonts loaded via SKTypeface.FromStream() in Blazor WASM because custom-loaded fonts are not registered with the system font manager, and the method was deprecated for not working on all platforms.",
+      "issueTitle": "[BUG] SKFontManager.MatchTypeface return null for custom font in Blazor",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "low",
+      "action": "close-as-by-design",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2334,
+      "title": "Colors render incorrectly with alpha/transparency in Blazor WASM because SKCanvasView creates the raster surface with SKAlphaType.Opaque instead of SKAlphaType.Premul, making it the only platform view with this alpha type; HTML Canvas putImageData interprets the undefined alpha bytes, causing color distortion.",
+      "issueTitle": "Colors are not correct with alpha in WASM",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.88,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2329,
+      "title": "The Blazor SKGLView component keeps its GRContext field private, unlike all other GPU-backed views (macOS, WPF, WinForms, WinUI, Metal) which expose it as a public property, preventing users from creating additional GPU surfaces sharing the same context.",
+      "issueTitle": "[FEATURE] [Blazor] Expose GRContext in SKGLView.razor.cs",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "action": "keep-open",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2238,
+      "title": "Reporter gets SRI integrity hash mismatch error for SkiaSharp.Views.Blazor.dll when publishing a Blazor WASM app on Windows 10 with SkiaSharp 2.88.1 and VS 2022 Preview 17.4.0 Preview 1.0; works fine in debug mode.",
+      "issueTitle": "[BUG] I get Failed to find a valid digest in the \u0027integrity\u0027 attribute when publish wasm on windows 10",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "close-as-fixed",
+      "confidence": 0.72,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2221,
+      "title": "EntryPointNotFoundException for sk_paint_set_stroke_width in Blazor WASM when deployed to Azure App Service with SkiaSharp 2.88.1 on .NET 6.0, caused by the IL trimmer stripping P/Invoke methods during publish.",
+      "issueTitle": "[BUG] Blazor WASM EntryPointNotFoundException",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "close-as-fixed",
+      "confidence": 0.78,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2072,
+      "title": "Tracking issue to enable nullable reference types in SkiaSharp.Views.Blazor \u2014 already completed in PR #2505 (SkiaSharp 3.0 modernization) which added \u003CNullable\u003Eenable\u003C/Nullable\u003E and restructured the project with full nullable annotations.",
+      "issueTitle": "Enable Nullable Reference Types (SkiaSharp.Views.Blazor)",
+      "type": "type/enhancement",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "action": "close-as-fixed",
+      "confidence": 0.97,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 2049,
+      "title": "SKGLView in Blazor WASM fails to render some elements on iOS Safari while SKCanvasView renders correctly; likely a WebGL compatibility issue on mobile Safari.",
+      "issueTitle": "[BUG] SKGLView doesn\u0027t work correctly on Blazor running on iOS",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.75,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 1911,
+      "title": "Feature request to expose the private \u0027canvasSize\u0027 field as a public \u0027CanvasSize\u0027 property on SKCanvasView and SKGLView in SkiaSharp.Views.Blazor, matching all other platform views which already expose it.",
+      "issueTitle": "[FEATURE] [WASM] Expose canvasSize in SkiaSharp.Views.Blazor",
+      "type": "type/feature-request",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "action": "keep-open",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 1902,
+      "title": "SKTypeface.FromFamilyName returns default font (Noto Mono) instead of requested font family in Blazor WASM because the WASM sandbox has no access to system fonts.",
+      "issueTitle": "SKTypeface.FromFamilyName does not change the font or text style in SkiaSharp.Views.Blazor",
+      "type": "type/question",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "action": "close-as-by-design",
+      "confidence": 0.88,
+      "isRegression": false,
+      "closeable": true,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 1194,
+      "title": "Feature request to support SkiaSharp as a Blazor Extension enabling both client-side WASM and server-side Blazor rendering. Client-side WASM was shipped via SkiaSharp.Views.Blazor (PR #1811, Oct 2021), but server-side Blazor support remains unimplemented due to the architecture requiring in-browser JS interop and native WASM binaries.",
+      "issueTitle": "[FEATURE] Support SkiaSharp as a Blazor Extension",
+      "type": "type/feature-request",
+      "area": "area/SkiaSharp.Views.Blazor",
+      "action": "keep-open",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
     }
   ]
 }

@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2329,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "The Blazor SKGLView component keeps its GRContext field private, unlike all other GPU-backed views (macOS, WPF, WinForms, WinUI, Metal) which expose it as a public property, preventing users from creating additional GPU surfaces sharing the same context.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SKGLView in a Blazor WASM app",
+        "Attempt to access GRContext from the view to create an additional GPU surface",
+        "Observe that the context field is private and inaccessible"
+      ],
+      "environmentDetails": "Blazor WASM, SkiaSharp.Views.Blazor",
+      "relatedIssues": [
+        358
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.x"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Blazor SKGLView still has a private context field with no public property in the current codebase."
+    }
+  },
+  "analysis": {
+    "summary": "The Blazor SKGLView.razor.cs has a private GRContext field (line 24) with no public property, while every other GPU-backed view in SkiaSharp exposes GRContext publicly. Issue #358 added GRContext exposure to native views but the Blazor view (added later) was not given parity.",
+    "rationale": "This is an enhancement request for API parity. The reporter correctly identifies that macOS SKGLView exposes GRContext publicly while the Blazor equivalent does not. All six other GPU view implementations (macOS SKGLView, macOS SKGLLayer, WPF SKGLElement, WinForms SKGLControl, WinUI SKSwapChainPanel, Apple SKMetalView) expose GRContext. The Blazor view is the only one missing it.",
+    "keySignals": [
+      {
+        "text": "On macOS we can directly access the GRContext of the view",
+        "source": "issue body",
+        "interpretation": "Reporter is comparing Blazor to macOS view and found an inconsistency."
+      },
+      {
+        "text": "In the Blazor view this is not an option since the field is private",
+        "source": "issue body",
+        "interpretation": "Correctly identifies the private field as the gap."
+      },
+      {
+        "text": "I\u0027m using the GRContext of the view to generate an additional surface for rendering",
+        "source": "issue body",
+        "interpretation": "Valid use case: sharing GPU context for offscreen rendering."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+        "finding": "GRContext is declared as \u0060private GRContext? context;\u0060 with no public property exposing it.",
+        "relevance": "direct",
+        "lines": "24"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+        "finding": "WPF view exposes \u0060public GRContext GRContext =\u003E grContext;\u0060 \u2014 confirms pattern used on other platforms.",
+        "relevance": "related",
+        "lines": "78"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs",
+        "finding": "WinUI view exposes \u0060public GRContext GRContext =\u003E context;\u0060 \u2014 same pattern.",
+        "relevance": "related",
+        "lines": "31"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKGLControl.cs",
+        "finding": "WinForms view exposes \u0060public GRContext GRContext =\u003E grContext;\u0060 \u2014 same pattern.",
+        "relevance": "related",
+        "lines": "71"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "finding": "macOS view exposes \u0060public GRContext GRContext =\u003E context;\u0060 \u2014 the exact view the reporter references.",
+        "relevance": "direct",
+        "lines": "86"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKMetalView.cs",
+        "finding": "Metal view also exposes \u0060public GRContext GRContext =\u003E context;\u0060 \u2014 universal pattern across all GPU views except Blazor.",
+        "relevance": "related",
+        "lines": "125"
+      }
+    ],
+    "workarounds": [
+      "Access the GRContext indirectly via \u0060e.Surface.Context\u0060 in the OnPaintSurface callback (returns GRRecordingContext, cast to GRContext if needed)."
+    ],
+    "resolution": {
+      "hypothesis": "The Blazor SKGLView was implemented after issue #358 added GRContext exposure to native views, and the public property was simply omitted.",
+      "proposals": [
+        {
+          "title": "Add public GRContext property to Blazor SKGLView",
+          "description": "Add \u0060public GRContext? GRContext =\u003E context;\u0060 to SKGLView.razor.cs, matching the pattern used in all other GPU view implementations.",
+          "category": "fix",
+          "codeSnippet": "public GRContext? GRContext =\u003E context;",
+          "validated": "untested",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "title": "Use Surface.Context as workaround",
+          "description": "Access the GRContext via \u0060e.Surface.Context\u0060 inside the OnPaintSurface callback. This returns a GRRecordingContext which can be cast to GRContext. Limited to use within the paint callback only.",
+          "category": "workaround",
+          "codeSnippet": "OnPaintSurface = (e) =\u003E {\n    var grContext = e.Surface.Context as GRContext;\n    // use grContext to create additional surfaces\n}",
+          "validated": "untested",
+          "confidence": 0.75,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Add public GRContext property to Blazor SKGLView",
+      "recommendedReason": "Trivial one-line change that brings Blazor view to parity with all other GPU views. Matches existing pattern exactly."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.9,
+      "reason": "Valid enhancement request with trivial fix. All other GPU views expose GRContext; the Blazor view is the only exception."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, Blazor views, and WASM labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the gap and provide workaround",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for reporting this inconsistency. You\u0027re right that the Blazor \u0060SKGLView\u0060 is the only GPU-backed view that doesn\u0027t expose \u0060GRContext\u0060 as a public property \u2014 all other implementations (macOS, WPF, WinForms, WinUI, Metal) do.\n\nAs a workaround, you can access the context from inside your \u0060OnPaintSurface\u0060 callback via \u0060e.Surface.Context\u0060:\n\n\u0060\u0060\u0060csharp\nOnPaintSurface = (e) =\u003E\n{\n    var grContext = e.Surface.Context as GRContext;\n    // create additional surfaces sharing the same context\n};\n\u0060\u0060\u0060\n\nThis is limited to use within the callback, so it won\u0027t help if you need the context outside of paint events. The proper fix would be adding \u0060public GRContext? GRContext =\u003E context;\u0060 to the Blazor view, matching the other platforms."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to original GRContext exposure issue #358",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 358
+      }
+    ]
+  }
+}

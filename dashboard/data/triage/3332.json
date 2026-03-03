@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3332,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-08-22T12:00:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/WASM",
+      "area/SkiaSharp.Views.Blazor",
+      "tenet/reliability"
+    ]
+  },
+  "summary": "SKCanvasView in Blazor WASM does not fill 100% height of its parent container because the canvas element\u0027s intrinsic size (set by the JS interop for the drawing buffer) interferes with CSS percentage-based height in flexbox layouts.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.75
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM project with SkiaSharp.Views.Blazor 3.119.0",
+        "Add SKCanvasView inside a flex container with CSS height: 100% on the canvas",
+        "Observe that the canvas does not fill the container height"
+      ],
+      "environmentDetails": "Windows 11, Visual Studio, SkiaSharp.Views.Blazor 3.119.0",
+      "relatedIssues": [
+        1838,
+        1889,
+        2038,
+        2834
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/skanva/TestSS",
+          "description": "Minimal Blazor WASM repro project"
+        }
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "wrong-output",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Blazor SKCanvasView sizing logic has not changed since 3.119.0. The SizeWatcher and canvas HTML attribute setting code remains the same."
+    }
+  },
+  "analysis": {
+    "summary": "The SKCanvasView Blazor component renders a bare \u003Ccanvas\u003E element observed by a ResizeObserver. The JS interop sets the canvas\u0027s HTML width/height attributes to cssSize * dpi for the drawing buffer, which changes the canvas\u0027s intrinsic size. In flexbox layouts with CSS percentage-based heights, this intrinsic size can interfere with the layout algorithm, causing the canvas to not fill its parent container. This is a recurring theme across multiple issues (#1838, #1889, #2038, #2834).",
+    "rationale": "Classified as type/bug because the component does not behave as expected when using standard CSS sizing patterns (flex \u002B height:100%). However, it is a CSS interaction issue rather than a rendering bug \u2014 the canvas element\u0027s dual nature (HTML attributes for drawing buffer vs CSS for layout) is well-known, and the component doesn\u0027t provide default styling to mitigate it. Multiple prior issues confirm this pattern and CSS-based workarounds exist.",
+    "keySignals": [
+      {
+        "text": "The SKCanvasView takes some random height that is less than 100%",
+        "source": "issue body",
+        "interpretation": "The canvas element\u0027s clientHeight doesn\u0027t match the container\u0027s height, suggesting CSS layout interaction with the canvas intrinsic size."
+      },
+      {
+        "text": "The Skia canvas only fills the blue area. It should extend to cover the green area.",
+        "source": "issue body",
+        "interpretation": "The drawing surface matches the reported clientHeight but the container (green) is taller \u2014 classic canvas intrinsic size vs CSS height conflict."
+      },
+      {
+        "text": "flex: 1; height: 100%; on canvas-container with height: 100% on canvas",
+        "source": "issue body (CSS)",
+        "interpretation": "Flexbox with percentage heights on inline replaced elements (canvas) is a known problematic combination."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor",
+        "finding": "Renders \u003Ccanvas @ref=\u0027htmlCanvas\u0027 @attributes=\u0027AdditionalAttributes\u0027 /\u003E \u2014 a bare canvas element with no default CSS styling (no display:block, no width/height defaults)",
+        "relevance": "direct",
+        "lines": "1"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SizeWatcher.ts",
+        "finding": "SizeWatcher.invoke() reports element.clientWidth/clientHeight \u2014 these are CSS-computed sizes of the canvas element itself, which depend on the canvas\u0027s intrinsic size when CSS doesn\u0027t fully constrain it",
+        "relevance": "direct",
+        "lines": "62-74"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts",
+        "finding": "requestAnimationFrame() sets this.htmlCanvas.width/height to the device pixel size (cssSize * dpi), which changes the canvas\u0027s intrinsic size and can trigger CSS layout recalculation",
+        "relevance": "direct",
+        "lines": "137-146"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+        "finding": "OnSizeChanged compares canvasSize*dpi (device pixels) with newSize (CSS pixels) \u2014 this comparison is incorrect when dpi != 1 but was added to prevent the infinite resize loop from #1838/#1889",
+        "relevance": "related",
+        "lines": "163-169"
+      }
+    ],
+    "workarounds": [
+      "Set style directly on SKCanvasView: \u003CSKCanvasView style=\u0022width:100%; height:100%; display:block;\u0022 OnPaintSurface=\u0022OnPaintSurface\u0022 /\u003E",
+      "Use position:absolute on the canvas with top:0; bottom:0; left:0; right:0 to decouple from intrinsic sizing",
+      "Set explicit pixel dimensions instead of percentage-based heights"
+    ],
+    "nextQuestions": [
+      "Would adding a default style=\u0027display:block; width:100%; height:100%\u0027 to the SKCanvasView.razor template be appropriate?",
+      "Should the SizeWatcher observe the parent container instead of the canvas element to avoid intrinsic size feedback?",
+      "Is the OnSizeChanged comparison (device pixels vs CSS pixels) causing subtle sizing mismatches at non-1x DPI?"
+    ],
+    "resolution": {
+      "hypothesis": "The canvas element\u0027s intrinsic size (set by HTML width/height attributes for the drawing buffer) conflicts with CSS percentage-based heights in flexbox layouts. Canvas elements are inline replaced elements by default, and their intrinsic size influences layout calculations differently than block elements.",
+      "proposals": [
+        {
+          "title": "Apply display:block and size:100% via style attribute",
+          "description": "Set style=\u0027width:100%; height:100%; display:block;\u0027 directly on the SKCanvasView component via the AdditionalAttributes parameter. This overrides the canvas\u0027s inline behavior and decouples CSS sizing from intrinsic size.",
+          "category": "workaround",
+          "codeSnippet": "\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 style=\u0022width:100%; height:100%; display:block;\u0022 /\u003E",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "title": "Use position:absolute for canvas sizing",
+          "description": "Wrap the canvas in a position:relative container and set the canvas to position:absolute with inset:0. This completely decouples the canvas from intrinsic size influence on flexbox layout. Confirmed working in #2038.",
+          "category": "workaround",
+          "codeSnippet": ".canvas-container { position: relative; flex: 1; }\n.canvas-container canvas { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }",
+          "validated": "untested",
+          "confidence": 0.8,
+          "effort": "trivial"
+        },
+        {
+          "title": "Add default display:block to SKCanvasView.razor template",
+          "description": "Modify SKCanvasView.razor to include a default style on the canvas element (display:block) to prevent inline layout issues. Users could still override via AdditionalAttributes.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.65,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Apply display:block and size:100% via style attribute",
+      "recommendedReason": "Simplest workaround that the reporter can apply immediately. Confirmed effective by maintainer guidance in #2834."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.72,
+      "reason": "This is a recurring CSS interaction issue with canvas elements in flexbox layouts. The component works correctly \u2014 it sizes itself based on CSS-computed clientWidth/clientHeight. The reporter needs to use CSS that properly constrains the canvas element\u0027s size independent of its intrinsic dimensions. Multiple prior issues (#2038, #2834) confirmed this pattern with CSS workarounds."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correctly applied",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Provide CSS workaround and explanation",
+        "risk": "high",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed repro.\n\nThis is a known interaction between the HTML \u0060\u003Ccanvas\u003E\u0060 element\u0027s intrinsic sizing and CSS percentage-based heights in flexbox layouts. The \u0060\u003Ccanvas\u003E\u0060 element is inline by default, and SkiaSharp sets its HTML \u0060width\u0060/\u0060height\u0060 attributes (for the drawing buffer resolution), which changes the intrinsic size and can interfere with flexbox height calculations.\n\nHere\u0027s a workaround you can use: set \u0060display:block\u0060 and explicit sizing directly on the SKCanvasView component:\n\n\u0060\u0060\u0060razor\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022\n    style=\u0022width:100%; height:100%; display:block;\u0022 /\u003E\n\u0060\u0060\u0060\n\nAlternatively, use \u0060position: absolute\u0060 on the canvas to decouple it from intrinsic size influence:\n\n\u0060\u0060\u0060css\n.canvas-container {\n    position: relative;\n    flex: 1;\n}\n.canvas-container canvas {\n    position: absolute;\n    top: 0;\n    bottom: 0;\n    left: 0;\n    right: 0;\n}\n\u0060\u0060\u0060\n\nSee also #2038 and #2834 for prior discussion of this pattern."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related canvas sizing issues",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 2038
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference maintainer advice on canvas sizing",
+        "risk": "low",
+        "confidence": 0.8,
+        "linkedIssue": 2834
+      }
+    ]
+  }
+}

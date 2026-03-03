@@ -1,0 +1,166 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2238,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z"
+  },
+  "summary": "Reporter gets SRI integrity hash mismatch error for SkiaSharp.Views.Blazor.dll when publishing a Blazor WASM app on Windows 10 with SkiaSharp 2.88.1 and VS 2022 Preview 17.4.0 Preview 1.0; works fine in debug mode.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.75
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/WASM",
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM project using the GPU.razor sample page",
+        "Add SkiaSharp and SkiaSharp.Views.Blazor 2.88.1",
+        "Publish the project (dotnet publish or VS publish)",
+        "Run the published output and observe browser console error"
+      ],
+      "environmentDetails": "Windows 10, VS 2022 Preview 17.4.0 Preview 1.0, SkiaSharp 2.88.1"
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "Failed to find a valid digest in the \u0027integrity\u0027 attribute for resource \u0027http://localhost:5580/_framework/SkiaSharp.Views.Blazor.dll\u0027 with computed SHA-256 integrity",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.1"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "SkiaSharp 2.88.1 is outdated. The reporter was using VS 2022 Preview 17.4.0 Preview 1.0 (early .NET 7 preview SDK), which had known Blazor WASM publishing bugs including SRI integrity hash mismatches. This was widely fixed in later .NET SDK releases."
+    }
+  },
+  "analysis": {
+    "summary": "SRI (Subresource Integrity) hash mismatch during Blazor WASM publish. The blazor.boot.json manifest records a SHA-256 hash for each DLL, but when the IL Linker or AOT compiler modifies the DLL during publish, the hash becomes stale. This is a known .NET SDK/Blazor framework issue (dotnet/aspnetcore#37753), not SkiaSharp-specific. The reporter\u0027s use of VS 2022 Preview 17.4.0 Preview 1.0 (early .NET 7 preview tooling) makes this especially likely to be an SDK bug.",
+    "rationale": "Classified as type/bug with medium confidence because the root cause is in the .NET SDK Blazor publishing pipeline, not in SkiaSharp itself. The SkiaSharp.Views.Blazor package does not control integrity hash generation or verification. The \u0027works in debug mode\u0027 signal confirms this is a publish-only issue where the IL Linker modifies assemblies after hash computation. Using a preview SDK significantly increases the likelihood of such framework bugs.",
+    "keySignals": [
+      {
+        "text": "Failed to find a valid digest in the \u0027integrity\u0027 attribute for resource \u0027http://localhost:5580/_framework/SkiaSharp.Views.Blazor.dll\u0027",
+        "source": "issue body",
+        "interpretation": "SRI integrity hash mismatch \u2014 the DLL was modified after the hash was computed during publish."
+      },
+      {
+        "text": "It works fine in debugmode!",
+        "source": "issue body",
+        "interpretation": "Debug mode does not apply IL linking or integrity checking, confirming this is a publish pipeline issue."
+      },
+      {
+        "text": "Microsoft Visual Studio Community 2022 (64-bit) - Preview Version 17.4.0 Preview 1.0",
+        "source": "issue body",
+        "interpretation": "Very early preview SDK \u2014 known to have Blazor WASM publishing bugs that were fixed in stable releases."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "finding": "The Blazor Views project uses Microsoft.NET.Sdk.Razor and has no custom integrity/hash/linking configuration. It does not control how blazor.boot.json hashes are generated \u2014 that is entirely the .NET SDK\u0027s responsibility.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/nuget/buildTransitive/SkiaSharp.Views.Blazor.props",
+        "finding": "Build props only add Emscripten LD flags for a JS interop workaround (dotnet/runtime#76077). No integrity-related configuration.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Update to a stable .NET SDK release (not preview) and rebuild",
+      "Add \u003CBlazorCacheBootResources\u003Efalse\u003C/BlazorCacheBootResources\u003E to the app\u0027s csproj to disable integrity checking",
+      "Clean the publish output (delete bin/obj/_framework) and republish"
+    ],
+    "nextQuestions": [
+      "Does the issue persist with a stable .NET 6 SDK instead of VS 2022 Preview?",
+      "Is the app using IL linking or AOT compilation during publish?"
+    ],
+    "resolution": {
+      "hypothesis": "The .NET SDK preview build incorrectly computes or stales the SRI integrity hashes in blazor.boot.json during the publish pipeline, causing the browser to reject the SkiaSharp.Views.Blazor.dll.",
+      "proposals": [
+        {
+          "title": "Update to stable .NET SDK",
+          "description": "The reporter is using VS 2022 Preview 17.4.0 Preview 1.0 which bundles a preview .NET SDK with known Blazor WASM publish bugs. Upgrading to a stable VS/SDK release should resolve the integrity hash mismatch.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "title": "Disable SRI integrity checking",
+          "description": "Add \u003CBlazorCacheBootResources\u003Efalse\u003C/BlazorCacheBootResources\u003E to the application csproj to disable the browser\u0027s integrity check on framework DLLs. This is a temporary workaround that reduces security but avoids the hash mismatch.",
+          "category": "workaround",
+          "codeSnippet": "\u003CPropertyGroup\u003E\n  \u003CBlazorCacheBootResources\u003Efalse\u003C/BlazorCacheBootResources\u003E\n\u003C/PropertyGroup\u003E",
+          "validated": "untested",
+          "confidence": 0.75,
+          "effort": "trivial"
+        },
+        {
+          "title": "Clean publish output",
+          "description": "Delete bin/, obj/, and the _framework output directory, then republish. Stale cached files from previous builds can cause hash mismatches.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.6,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Update to stable .NET SDK",
+      "recommendedReason": "Most likely root cause is the preview SDK. Upgrading to stable release resolves both this and potential other preview-related issues."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.72,
+      "reason": "The SRI integrity hash mismatch is a known .NET SDK/Blazor framework issue (dotnet/aspnetcore#37753) that was fixed in stable SDK releases. The reporter was using a very early preview SDK (VS 2022 17.4.0 Preview 1.0). Both SkiaSharp and the .NET SDK have had multiple stable releases since then. The issue is almost certainly resolved by updating tooling."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor, WASM, and Windows labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the SRI integrity issue is a known .NET SDK bug and suggest updating tooling",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for reporting this. The \u0022Failed to find a valid digest in the \u0027integrity\u0027 attribute\u0022 error is a known issue in the Blazor WASM publishing pipeline (tracked in dotnet/aspnetcore#37753), not specific to SkiaSharp. It happens when the IL Linker modifies assemblies during publish but the integrity hashes in \u0060blazor.boot.json\u0060 aren\u0027t updated to match.\n\nYou\u0027re using VS 2022 Preview 17.4.0 Preview 1.0, which bundles a preview .NET SDK that had several Blazor publish bugs. Here are workarounds in order of preference:\n\n1. **Update to a stable .NET SDK/VS release** \u2014 this is most likely already fixed in later tooling.\n2. **Clean and republish** \u2014 delete \u0060bin/\u0060, \u0060obj/\u0060, and the \u0060_framework\u0060 output, then publish again.\n3. **Disable integrity checking** (temporary) \u2014 add this to your app\u0027s \u0060.csproj\u0060:\n\n\u0060\u0060\u0060xml\n\u003CPropertyGroup\u003E\n  \u003CBlazorCacheBootResources\u003Efalse\u003C/BlazorCacheBootResources\u003E\n\u003C/PropertyGroup\u003E\n\u0060\u0060\u0060\n\nWould you be able to try with a stable VS 2022 release and let us know if the issue persists?"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with similar Blazor WASM deployment issue #2221",
+        "risk": "low",
+        "confidence": 0.6,
+        "linkedIssue": 2221
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed \u2014 the .NET SDK bug has been resolved in stable releases",
+        "risk": "medium",
+        "confidence": 0.65
+      }
+    ]
+  }
+}

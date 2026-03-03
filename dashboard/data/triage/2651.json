@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2651,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Repeated Surface.Snapshot() calls in OnPaintSurface on a large Blazor WASM canvas (8000x2000) without disposing previous SKImage instances exhausts WASM heap memory after ~34 iterations, crashing in SkData::MakeWithCopy during pixel allocation.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/WASM"
+    ],
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM app with SKCanvasView sized 8000x2000",
+        "In OnPaintSurface, call e.Surface.Snapshot() on every paint cycle and store in a field without disposing the previous image",
+        "Trigger repeated paints via mouse move (Invalidate on each mouse move)",
+        "After ~34 iterations, crash occurs in native memory allocation"
+      ],
+      "environmentDetails": "Windows 11, Chrome, .NET 6.0/7.0, SkiaSharp 2.88.3, SkiaSharp.Views.Blazor 2.88.6",
+      "relatedIssues": [
+        576
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Uncaught Error at operator new \u2192 SkData::PrivateNewWithCopy \u2192 MakeRasterCopyPriv \u2192 SkSurface_Raster::onNewImageSnapshot",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net6.0",
+        "net7.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.3",
+        "2.88.6"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Snapshot() behavior (full pixel copy via MakeRasterCopyPriv) is unchanged across versions. The root cause is a usage pattern, not a version-specific defect."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter calls Surface.Snapshot() on every OnPaintSurface invocation on a large 8000x2000 canvas, storing the result in a field (layerBackGround) without disposing the previous SKImage. Each snapshot copies all pixel data (~64MB for 8000x2000x4 RGBA). After ~34 snapshots, the WASM heap (~2GB limit) is exhausted, causing an allocation failure in SkData::MakeWithCopy. This is a memory management issue in user code, not a SkiaSharp defect.",
+    "rationale": "Classified as type/bug because the reporter experiences a crash, but the root cause is missing disposal of SKImage objects \u2014 a common memory management pattern that is correct-but-easy-to-misuse. The stack trace confirms OOM in native pixel allocation (operator new \u2192 SkData::PrivateNewWithCopy), not a logic error in SkiaSharp. Maintainer mattleibow confirmed the identical pattern in #576 (surface.Snapshot() stored without disposing old images causes memory growth). Suggesting close-as-by-design with a workaround.",
+    "keySignals": [
+      {
+        "text": "layerBackGround = e.Surface.Snapshot(); // Here the exception is raised",
+        "source": "issue body",
+        "interpretation": "The old layerBackGround SKImage is overwritten without Dispose(), leaking ~64MB per iteration."
+      },
+      {
+        "text": "When the canvas is smaller (300x400) the exception is not occurring",
+        "source": "issue body",
+        "interpretation": "Smaller canvas = smaller snapshots (~480KB each), takes much longer to exhaust WASM heap. Confirms memory exhaustion as root cause."
+      },
+      {
+        "text": "Restore Snapshot Number Restore 34 \u2192 Uncaught Error",
+        "source": "log output",
+        "interpretation": "34 iterations \u00D7 64MB = ~2.2GB, exceeding typical WASM memory limit."
+      },
+      {
+        "text": "operator new \u2192 SkData::PrivateNewWithCopy \u2192 MakeRasterCopyPriv",
+        "source": "stack trace",
+        "interpretation": "Crash in memory allocation during pixel copy \u2014 out-of-memory in WASM heap."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKSurface.cs",
+        "finding": "Snapshot() calls sk_surface_new_image_snapshot which returns a new SKImage wrapping a full raster copy of all surface pixels. Each call allocates width\u00D7height\u00D74 bytes of unmanaged memory.",
+        "relevance": "direct",
+        "lines": "274-275"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "finding": "SKImage implements ISKReferenceCounted and must be explicitly disposed. When not disposed, the underlying SkImage (and its pixel data) persists until GC finalizer runs \u2014 which may not happen fast enough on WASM to prevent OOM.",
+        "relevance": "direct",
+        "lines": "16-24"
+      }
+    ],
+    "workarounds": [
+      "Dispose the previous SKImage before creating a new snapshot: layerBackGround?.Dispose(); layerBackGround = e.Surface.Snapshot();",
+      "For drag-and-drop rendering, consider using SKPicture (via SKPictureRecorder) instead of pixel snapshots \u2014 it records draw commands rather than copying pixels, using far less memory."
+    ],
+    "nextQuestions": [
+      "Would a SaveLayer/RestoreToCount approach work better for the reporter\u0027s drag-and-drop use case?",
+      "Should SkiaSharp log a warning when WASM heap usage is high during Snapshot()?"
+    ],
+    "resolution": {
+      "hypothesis": "The reporter\u0027s code leaks SKImage instances by reassigning layerBackGround without disposing the old value. On WASM with a large canvas (8000x2000 = ~64MB per snapshot), this exhausts the heap after ~34 iterations.",
+      "proposals": [
+        {
+          "title": "Dispose old snapshot before creating new one",
+          "description": "Add explicit disposal of the previous SKImage before reassigning. This is the minimal fix for the immediate crash.",
+          "category": "workaround",
+          "codeSnippet": "// In the else branch of OnPaintSurface:\ncanvas.DrawImage(layerBackGround, rect1);\n\n// Draw something permanent\n\nlayerBackGround?.Dispose();\nlayerBackGround = e.Surface.Snapshot();\n\n// Draw something temporary",
+          "validated": "untested",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "title": "Use SKPictureRecorder instead of pixel snapshots",
+          "description": "Record draw commands into an SKPicture instead of copying pixels. SKPicture stores vector commands (small) rather than a full pixel buffer (64MB). Better suited for the drag-and-drop use case described.",
+          "category": "alternative",
+          "validated": "untested",
+          "confidence": 0.75,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Dispose old snapshot before creating new one",
+      "recommendedReason": "Trivial one-line fix that directly addresses the memory leak. Matches the guidance from mattleibow on #576 for the identical pattern."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.88,
+      "reason": "The crash is caused by user code not disposing SKImage objects. SkiaSharp\u0027s Snapshot() correctly allocates pixel memory \u2014 the user must manage the lifecycle. Identical pattern confirmed by maintainer in #576."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, blazor, and WASM labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post workaround explaining the disposal pattern and alternative approach",
+        "risk": "high",
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed report and stack trace.\n\nThe crash is caused by a memory leak in the snapshot pattern. Each call to \u0060Surface.Snapshot()\u0060 copies all pixel data from the surface \u2014 for an 8000\u00D72000 canvas, that\u0027s ~64MB per snapshot. Since \u0060layerBackGround\u0060 is reassigned without disposing the previous \u0060SKImage\u0060, those ~64MB allocations accumulate until the WASM heap is exhausted (after ~34 iterations in your case).\n\nHere\u0027s a workaround \u2014 dispose the old image before creating a new one:\n\n\u0060\u0060\u0060csharp\ncanvas.DrawImage(layerBackGround, rect1);\n\n// Draw something permanent\n\nlayerBackGround?.Dispose();\nlayerBackGround = e.Surface.Snapshot();\n\n// Draw something temporary\n\u0060\u0060\u0060\n\nFor your drag-and-drop use case, you might also consider using \u0060SKPictureRecorder\u0060 instead of pixel snapshots. It records draw commands (very small) rather than copying the full pixel buffer, which scales much better on memory-constrained platforms like WASM.\n\nSee also #576 which describes the same pattern."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #576 which has the identical Snapshot() memory pattern",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 576
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design \u2014 disposal is the caller\u0027s responsibility",
+        "risk": "medium",
+        "confidence": 0.85
+      }
+    ]
+  }
+}

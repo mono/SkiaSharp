@@ -1,0 +1,184 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2049,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z"
+  },
+  "summary": "SKGLView in Blazor WASM fails to render some elements on iOS Safari while SKCanvasView renders correctly; likely a WebGL compatibility issue on mobile Safari.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/iOS",
+      "os/WASM"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM app using SKGLView",
+        "Draw shapes using SkiaSharp canvas (e.g., rigorous column shapes from DWSIM)",
+        "Run the app on iOS Safari",
+        "Observe that some elements are missing from the rendered output",
+        "Compare with SKCanvasView which renders correctly on iOS"
+      ],
+      "screenshots": [
+        {
+          "url": "https://user-images.githubusercontent.com/2669419/168793503-e92fb335-8013-4a2c-b0f4-0dd425083044.png",
+          "description": "SKGLView output on iOS - missing elements"
+        },
+        {
+          "url": "https://user-images.githubusercontent.com/2669419/168867118-cf186e85-ee25-46b2-89bb-439560594e09.PNG",
+          "description": "SKCanvasView output on iOS - correct rendering"
+        }
+      ],
+      "environmentDetails": "Blazor WASM, SkiaSharp.Views.Blazor preview.256, iOS Safari",
+      "repoLinks": [
+        {
+          "url": "https://github.com/DanWBR/dwsim/blob/windows/DWSIM.Drawing.SkiaSharp/GraphicObjects/Shapes/RigorousColumn.vb#L116",
+          "description": "Drawing code for the Methanol and Acetone columns"
+        }
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "wrong-output",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "preview.256"
+      ],
+      "currentRelevance": "unknown",
+      "relevanceReason": "The Blazor view component has been updated since this early preview version. WebGL context creation and surface management code may have changed, and iOS Safari WebGL2 support has also improved since May 2022."
+    }
+  },
+  "analysis": {
+    "summary": "SKGLView uses WebGL (via emscripten GL module) while SKCanvasView uses software raster rendering via 2D canvas. The WebGL context creation code in SKHtmlCanvas.ts requests WebGL2 first (majorVersion: 2) and falls back to WebGL1. iOS Safari had limited and buggy WebGL2 support in 2022 when this issue was filed. Some GL operations may fail silently on iOS Safari, causing partial rendering. The reporter confirms SKCanvasView works correctly, which bypasses WebGL entirely.",
+    "rationale": "Classified as bug because the same drawing code produces correct output with SKCanvasView but incorrect output with SKGLView on iOS. The issue is platform-specific (iOS Safari) and backend-specific (WebGL). The area is SkiaSharp.Views.Blazor since both the GL context setup and the Blazor view component are involved. Severity is medium because a workaround exists (SKCanvasView).",
+    "keySignals": [
+      {
+        "text": "Blazor\u0027s SKGLView doesn\u0027t render some elements when run on iOS",
+        "source": "issue body",
+        "interpretation": "Partial rendering failure \u2014 not a complete blank, some elements missing. Suggests specific GL operations fail silently on iOS Safari."
+      },
+      {
+        "text": "It does work on all desktop browsers I\u0027ve tried (Safari, Chrome, Edge, etc)",
+        "source": "issue body",
+        "interpretation": "Desktop WebGL works fine, including desktop Safari. Points to mobile Safari WebGL limitations specifically."
+      },
+      {
+        "text": "SKCanvasView renders correctly on iOS",
+        "source": "issue body (screenshot)",
+        "interpretation": "Software raster path works \u2014 confirms the drawing code is correct and the issue is in the WebGL rendering pipeline."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+        "finding": "SKGLView.OnRenderFrame creates a GRContext with GRGlInterface.Create(), creates a GRBackendRenderTarget with WebGL FBO info, and renders via SKSurface.Create on the GL backend. Uses SKColorType.Rgba8888 and GRSurfaceOrigin.BottomLeft. The GL pipeline depends on the browser\u0027s WebGL implementation being fully functional.",
+        "relevance": "direct",
+        "lines": "99-155"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts",
+        "finding": "createWebGLContext requests WebGL2 (majorVersion: 2) first, falls back to WebGL1 if WebGL2 fails. Context attributes include stencil: 8, depth: 1, antialias: 1. iOS Safari had partial WebGL2 support in 2022 \u2014 the fallback to WebGL1 may succeed but certain operations may still fail.",
+        "relevance": "direct",
+        "lines": "209-236"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+        "finding": "SKCanvasView.OnRenderFrame uses software rendering \u2014 creates an SKSurface backed by a pinned byte array, draws to it, then copies pixels to the HTML canvas via putImageData. This completely bypasses WebGL and works correctly on iOS.",
+        "relevance": "related",
+        "lines": "87-108"
+      }
+    ],
+    "workarounds": [
+      "Use SKCanvasView instead of SKGLView in Blazor when targeting iOS Safari"
+    ],
+    "nextQuestions": [
+      "Does the issue persist with current SkiaSharp 3.x Blazor views and current iOS Safari?",
+      "Is the WebGL2 fallback to WebGL1 actually triggered on iOS Safari, or does WebGL2 context creation succeed but with limited functionality?",
+      "Which specific drawing operations fail \u2014 is it related to stencil buffer, anti-aliasing, or specific shader features?"
+    ],
+    "resolution": {
+      "hypothesis": "iOS Safari\u0027s WebGL implementation (especially WebGL2 in 2022) has limitations that cause certain Skia GL operations to fail silently, resulting in partial rendering. Desktop browsers have more complete WebGL2 implementations.",
+      "proposals": [
+        {
+          "title": "Use SKCanvasView as workaround",
+          "description": "Replace SKGLView with SKCanvasView in Blazor components targeting iOS. SKCanvasView uses software rendering and bypasses WebGL entirely, providing correct rendering at the cost of GPU acceleration.",
+          "category": "workaround",
+          "validated": "yes",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "title": "Investigate WebGL context attributes for iOS",
+          "description": "Adjust WebGL context creation attributes in SKHtmlCanvas.ts to be more conservative on iOS Safari \u2014 e.g., disable antialiasing, reduce stencil bits, or force WebGL1. This may resolve the partial rendering without giving up GPU acceleration.",
+          "category": "investigation",
+          "validated": "untested",
+          "confidence": 0.4,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Use SKCanvasView as workaround",
+      "recommendedReason": "Reporter already confirmed SKCanvasView works correctly. This is a zero-effort workaround that the reporter can apply immediately."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "The issue is from 2022 with an early preview version. iOS Safari WebGL2 support has improved significantly since then. Need to verify if the issue still reproduces on current SkiaSharp and iOS versions before investing in a fix."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor views, iOS, and WASM platform labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Blazor",
+          "os/iOS",
+          "os/WASM",
+          "backend/OpenGL"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, suggest SKCanvasView workaround, and ask if issue persists on current versions",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the report and screenshots \u2014 the side-by-side comparison makes the issue clear.\n\nAs a workaround, you can use \u0060SKCanvasView\u0060 instead of \u0060SKGLView\u0060 in your Blazor component. \u0060SKCanvasView\u0060 uses software rendering and bypasses WebGL entirely, which avoids the iOS Safari compatibility issue. The trade-off is no GPU acceleration, but for most 2D drawing workloads the performance difference is minimal.\n\nThis is likely related to iOS Safari\u0027s WebGL implementation \u2014 certain GL operations that work on desktop browsers may not be fully supported on mobile Safari. Since this was filed against an early preview version, would you be able to check whether this still reproduces with the current SkiaSharp release? iOS Safari\u0027s WebGL2 support has improved considerably since May 2022."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2214 (SKGLView Blazor WASM question) and #2224 (SKGLView Blazor crashes)",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 2214
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2224 (SKGLView Blazor memory access out of bounds)",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 2224
+      }
+    ]
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1902,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z"
+  },
+  "summary": "SKTypeface.FromFamilyName returns default font (Noto Mono) instead of requested font family in Blazor WASM because the WASM sandbox has no access to system fonts.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM app with SKCanvasView",
+        "Use SKTypeface.FromFamilyName(\u0022Tahoma\u0022, SKFontStyle.BoldItalic) to create a typeface",
+        "Check FamilyName \u2014 always returns \u0022Noto Mono\u0022 regardless of the requested family",
+        "Text is rendered with Noto Mono instead of the requested font"
+      ],
+      "environmentDetails": "Blazor WASM, SkiaSharp.Views.Blazor"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "This is a fundamental WASM platform limitation \u2014 Skia\u0027s font manager in WASM only has access to bundled fonts, not system fonts. This behavior has not changed."
+    }
+  },
+  "analysis": {
+    "summary": "In WASM, Skia\u0027s font manager has no access to browser or system fonts. When SKTypeface.FromFamilyName is called, SkTypeface::MakeFromName delegates to the font manager which can only resolve fonts bundled into the WASM binary. Since only Noto Mono is bundled by default, all family name lookups fall back to it. This is by-design platform behavior, not a SkiaSharp bug.",
+    "rationale": "Classified as question (not bug) because the behavior is correct for the WASM platform \u2014 the font manager cannot access system fonts from a sandboxed environment. The reporter and community confirmed the workaround of loading fonts via stream. Multiple commenters have validated this approach over 3\u002B years.",
+    "keySignals": [
+      {
+        "text": "typeFace: Noto Mono",
+        "source": "issue body",
+        "interpretation": "Default WASM font returned because requested font not available in sandbox"
+      },
+      {
+        "text": "Skia\u0027s font manager is highly limited under wasm so you can\u0027t expect a functional font manager. It is better to load fonts explicitly via stream",
+        "source": "comment by Gillibald",
+        "interpretation": "Domain expert confirms WASM font manager limitation \u2014 expected behavior"
+      },
+      {
+        "text": "The font is loaded with SKTypeface.FromStream, reading the resource with Reflection. Issue resolved",
+        "source": "comment by harveytriana (OP)",
+        "interpretation": "Reporter self-resolved using FromStream with embedded resource"
+      },
+      {
+        "text": "Embedding a font in my WASM Blazor app and loading it via a stream does indeed work",
+        "source": "comment by mennowo",
+        "interpretation": "Workaround confirmed by another user in Jan 2025"
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "finding": "FromFamilyName delegates to sk_typeface_create_from_name which calls SkTypeface::MakeFromName \u2014 this uses the platform font manager, which on WASM only knows about bundled fonts",
+        "relevance": "direct",
+        "lines": "60-71"
+      },
+      {
+        "file": "externals/skia/src/c/sk_typeface.cpp",
+        "finding": "C API directly calls SkTypeface::MakeFromName(familyName, style) \u2014 no special WASM handling, font manager fallback returns default typeface when family not found",
+        "relevance": "direct",
+        "lines": "56-58"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "finding": "FromStream, FromData, and FromFile provide alternative font loading that bypasses the font manager \u2014 these work on WASM because they load font data directly",
+        "relevance": "related",
+        "lines": "92-121"
+      }
+    ],
+    "workarounds": [
+      "Use SKTypeface.FromStream() with an embedded resource font file",
+      "Use SKTypeface.FromData() with font data fetched via HttpClient or JS interop",
+      "Register fonts as a singleton service to avoid reloading on each paint"
+    ],
+    "resolution": {
+      "hypothesis": "WASM sandbox prevents access to system fonts. Skia\u0027s font manager only resolves bundled fonts (Noto Mono), so FromFamilyName always returns the default. Fonts must be loaded explicitly via stream or data.",
+      "proposals": [
+        {
+          "title": "Load font from embedded resource",
+          "description": "Embed the .ttf font file as an embedded resource in the Blazor project and load it using SKTypeface.FromStream at startup. Register the typeface as a singleton service for reuse.",
+          "category": "workaround",
+          "codeSnippet": "using var stream = typeof(MyApp).Assembly.GetManifestResourceStream(\u0022MyApp.Fonts.Tahoma.ttf\u0022);\nvar typeface = SKTypeface.FromStream(stream);\nif (typeface == null)\n    throw new InvalidOperationException(\u0022Failed to load font from embedded resource.\u0022);",
+          "validated": "yes",
+          "confidence": 0.9,
+          "effort": "small"
+        },
+        {
+          "title": "Fetch font via HttpClient",
+          "description": "Download the font file from a web service using HttpClient and load it via SKTypeface.FromData. This avoids bloating the assembly and allows browser caching. Ensure CORS headers are configured if fetching from an external server.",
+          "category": "alternative",
+          "codeSnippet": "var fontBytes = await httpClient.GetByteArrayAsync(\u0022/fonts/Tahoma.ttf\u0022);\nusing var data = SKData.CreateCopy(fontBytes);\nvar typeface = SKTypeface.FromData(data);\nif (typeface == null)\n    throw new InvalidOperationException(\u0022Failed to load font from data.\u0022);",
+          "validated": "yes",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Fetch font via HttpClient",
+      "recommendedReason": "Avoids bloating the WASM assembly size, allows browser HTTP caching, and supports dynamic font selection. The embedded resource approach is simpler but increases app download size."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.88,
+      "reason": "WASM sandbox limitation \u2014 FromFamilyName cannot access system fonts by design. Workaround is well-established and confirmed by reporter and community."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question, Blazor views, and WASM labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation of WASM font limitation with workaround code",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "This is expected behavior on WASM. The Skia font manager in WASM only has access to fonts bundled into the binary (Noto Mono by default) \u2014 it cannot reach browser or system fonts from the sandbox.\n\nHere\u0027s the recommended workaround: load fonts explicitly using \u0060SKTypeface.FromStream()\u0060 or \u0060SKTypeface.FromData()\u0060:\n\n\u0060\u0060\u0060csharp\n// Option 1: Embedded resource\nusing var stream = typeof(MyApp).Assembly\n    .GetManifestResourceStream(\u0022MyApp.Fonts.Tahoma.ttf\u0022);\nvar typeface = SKTypeface.FromStream(stream);\n\n// Option 2: Fetch from server (enables browser caching)\nvar fontBytes = await httpClient.GetByteArrayAsync(\u0022/fonts/Tahoma.ttf\u0022);\nusing var data = SKData.CreateCopy(fontBytes);\nvar typeface = SKTypeface.FromData(data);\n\u0060\u0060\u0060\n\nBoth \u0060FromStream\u0060 and \u0060FromData\u0060 can return null if the font data is invalid \u2014 add a null check before use. For best performance, load fonts once at startup and register them as a singleton service rather than reloading on each paint call.\n\nThis limitation applies to all WASM-based apps because Emscripten\u0027s sandbox doesn\u0027t expose the host font system."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design platform limitation",
+        "risk": "medium",
+        "confidence": 0.85
+      }
+    ]
+  }
+}

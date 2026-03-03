@@ -1,0 +1,193 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2429,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": []
+  },
+  "summary": "SKBitmap.Decode and SKCodec.Create return null for a specific JPEG image that is valid and renders correctly in other viewers. Tested on SkiaSharp 2.80.4 and 2.88.3 on both Linux and Windows.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.8
+    },
+    "platforms": [
+      "os/Linux",
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Download the attached image.zip containing the problematic JPEG",
+        "Call SKBitmap.Decode(imageContentStream) or SKCodec.Create(imageContentStream)",
+        "Observe that both return null"
+      ],
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/11087936/image.zip",
+          "filename": "image.zip",
+          "description": "ZIP containing the problematic JPEG image"
+        }
+      ],
+      "environmentDetails": "Linux Debian 11 (bullseye-slim docker) and Windows 10 (10.0.19045), x64",
+      "relatedIssues": [
+        1621,
+        1551,
+        2359,
+        2347
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "SKBitmap.Decode returns null; SKCodec.Create returns null",
+      "reproQuality": "complete",
+      "targetFrameworks": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.4",
+        "2.88.3"
+      ],
+      "currentRelevance": "unknown",
+      "relevanceReason": "The issue was reported on 2.80.4 and 2.88.3. It has not been confirmed whether SkiaSharp 3.x with updated Skia can decode this specific image."
+    }
+  },
+  "analysis": {
+    "summary": "Skia\u0027s native codec fails to parse a specific JPEG image, causing SKCodec.Create to return null, which propagates as null from SKBitmap.Decode. The image is valid per other decoders. This is part of a broader pattern of image-specific decode failures (see #2359, #2347, #1621). Comment 2 in the thread is a separate issue related to MemoryStream position after CopyToAsync in Blazor.",
+    "rationale": "The OP provides a reproducible case with an attached image, stack traces pointing to null returns from native codec creation. The image being valid in other viewers confirms this is a Skia codec limitation, not a corrupt file. Classified as type/bug since a valid image cannot be decoded. The area is area/SkiaSharp as the C# API returns null without diagnostics, though the root cause is in the native Skia codec.",
+    "keySignals": [
+      {
+        "text": "Cannot create Bitmap or Codec of a specific jpg image (attached). The image is not corrupted, it can be opened in Windows Photos and other image viewers",
+        "source": "issue body",
+        "interpretation": "Confirms this is a Skia codec limitation for a specific JPEG format, not a corrupt file."
+      },
+      {
+        "text": "Looks similar to #1621 and #1551. However, this workaround does not work",
+        "source": "issue body",
+        "interpretation": "OP tried the SKData workaround from #1621 but it also fails, confirming the issue is in the native codec, not the stream wrapping layer."
+      },
+      {
+        "text": "It is kind of weird to return null to indicate errors",
+        "source": "comment 2",
+        "interpretation": "Valid UX concern \u2014 SKBitmap.Decode returning null with no error info makes debugging difficult."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "SKBitmap.Decode(Stream) delegates to SKCodec.Create(stream) and returns null if codec is null. No error information is propagated.",
+        "relevance": "direct",
+        "lines": "461-471"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "finding": "SKCodec.Create(SKStream) calls sk_codec_new_from_stream which returns null if Skia cannot parse the image. The SKCodecResult out parameter is available but not surfaced in the stream overload.",
+        "relevance": "direct",
+        "lines": "252-264"
+      },
+      {
+        "file": "externals/skia/src/c/sk_codec.cpp",
+        "finding": "C API delegates to SkCodec::MakeFromStream and SkCodec::MakeFromData. If the native codec cannot identify or parse the image format, null is returned.",
+        "relevance": "direct",
+        "lines": "21-28"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "finding": "WrapManagedStream creates SKManagedStream (seekable) or SKFrontBufferedManagedStream (non-seekable). This is not the cause since the OP also tried SKData-based decode.",
+        "relevance": "related",
+        "lines": "278-289"
+      }
+    ],
+    "workarounds": [
+      "Pre-process the problematic JPEG with another library (e.g., System.Drawing, ImageSharp, or ImageMagick) to re-encode as PNG before passing to SkiaSharp",
+      "Use SKCodec.Create with the out SKCodecResult parameter to get a diagnostic error code"
+    ],
+    "nextQuestions": [
+      "What JPEG profile/features does the attached image use? (CMYK, unusual ICC profile, non-standard markers)",
+      "Does SkiaSharp 3.x with an updated Skia version decode this image successfully?",
+      "Is the issue in libjpeg-turbo (used by Skia) or in Skia\u0027s codec layer above it?"
+    ],
+    "resolution": {
+      "hypothesis": "The specific JPEG image uses a format feature or profile that Skia\u0027s native codec (via libjpeg-turbo) does not support. Since the image renders in other viewers, this is a codec coverage gap rather than a corrupt file.",
+      "proposals": [
+        {
+          "title": "Pre-process image with alternative codec",
+          "description": "Use System.Drawing.Common, SixLabors.ImageSharp, or ImageMagick to load the problematic JPEG and re-encode it as PNG before passing to SkiaSharp.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Use SKCodecResult for diagnostics",
+          "description": "Use the SKCodec.Create overload with out SKCodecResult to get the specific failure reason (e.g., InvalidInput, IncompleteInput, Unimplemented).",
+          "category": "investigation",
+          "codeSnippet": "var codec = SKCodec.Create(stream, out SKCodecResult result);\nif (codec == null)\n    Console.WriteLine($\u0022Codec creation failed: {result}\u0022);",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "trivial"
+        },
+        {
+          "title": "Test with latest SkiaSharp 3.x",
+          "description": "SkiaSharp 3.x includes a significantly updated Skia engine. The JPEG codec may have been improved to handle this image format.",
+          "category": "investigation",
+          "validated": "untested",
+          "confidence": 0.5,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Use SKCodecResult for diagnostics",
+      "recommendedReason": "This is the fastest path to understanding the root cause. The SKCodecResult will reveal what specifically Skia\u0027s codec doesn\u0027t like about this image."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Reproducible bug with attached image. Need to download the image, examine its JPEG profile, and test with latest SkiaSharp to determine if this is still an issue or was fixed by Skia updates."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, and platform labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Linux",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with diagnostics suggestion and workaround",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed report and attached image. This is a known pattern where specific JPEG images can\u0027t be decoded by Skia\u0027s native codec \u2014 we have several related reports (#2359, #2347, #1621).\n\nTo get more diagnostic info, you can use the \u0060SKCodecResult\u0060 overload:\n\n\u0060\u0060\u0060csharp\nvar codec = SKCodec.Create(stream, out SKCodecResult result);\nif (codec == null)\n    Console.WriteLine($\u0022Codec creation failed: {result}\u0022);\n\u0060\u0060\u0060\n\nAs a workaround, you can pre-process the image with another library (e.g., SixLabors.ImageSharp) to re-encode it as PNG before passing to SkiaSharp.\n\nWe\u0027ll investigate whether SkiaSharp 3.x (with updated Skia) handles this image correctly."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference similar decode failure issue #2359",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 2359
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference similar decode failure issue #2347",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 2347
+      }
+    ]
+  }
+}

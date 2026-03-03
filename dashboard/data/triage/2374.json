@@ -1,0 +1,118 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2374,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "summary": "Reporter requests that the Dispose method in SKGLView for Blazor be made virtual so subclasses can properly override disposal and clean up their own resources.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a class that inherits from SKGLView in Blazor",
+        "Attempt to override Dispose to add custom cleanup logic",
+        "Observe that Dispose is not virtual and cannot be overridden"
+      ],
+      "environmentDetails": "Blazor WebAssembly, SkiaSharp.Views.Blazor"
+    }
+  },
+  "analysis": {
+    "summary": "SKGLView.razor.cs implements IDisposable with a non-virtual public Dispose() method at line 190. This prevents subclasses from properly overriding disposal. The same pattern exists in SKCanvasView.razor.cs (line 171). Neither class implements the standard .NET Dispose(bool) pattern. Additionally, SKGLView.Dispose() only disposes dpiWatcher, sizeWatcher, and interop \u2014 it does not release native Skia resources (context, glInterface, renderTarget, surface) which could be a separate resource leak concern.",
+    "rationale": "This is an enhancement request, not a bug \u2014 the existing Dispose works correctly for the base class. The reporter wants extensibility for subclass scenarios. The [FEATURE] tag and the specific ask for \u0027virtual\u0027 confirm this is a design improvement request, not broken behavior.",
+    "keySignals": [
+      {
+        "text": "SKGLView in blazor implementation has a non-virtual Dispose method, which creates problems when subclassing it.",
+        "source": "issue body",
+        "interpretation": "Reporter is subclassing SKGLView and cannot properly extend disposal logic."
+      },
+      {
+        "text": "Could we have a virtual Dispose method instead?",
+        "source": "issue body",
+        "interpretation": "Clear, specific ask \u2014 make Dispose virtual or implement Dispose(bool) pattern."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+        "finding": "Dispose() is public non-virtual, implements IDisposable directly. Only disposes dpiWatcher, sizeWatcher, and interop. Does not use the Dispose(bool) pattern.",
+        "relevance": "direct",
+        "lines": "190-195"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+        "finding": "Same non-virtual Dispose() pattern. Also implements IDisposable directly without Dispose(bool). Calls FreeBitmap() in addition to base cleanup.",
+        "relevance": "related",
+        "lines": "171-178"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+        "finding": "Class declaration is \u0027public partial class SKGLView : IDisposable\u0027 \u2014 not sealed, so subclassing is expected to work, but Dispose cannot be overridden.",
+        "relevance": "direct",
+        "lines": "12"
+      }
+    ],
+    "resolution": {
+      "hypothesis": "The Blazor views implement IDisposable directly without the standard Dispose(bool) pattern, preventing subclass cleanup.",
+      "proposals": [
+        {
+          "title": "Implement standard Dispose(bool) pattern",
+          "description": "Refactor SKGLView (and SKCanvasView) to use the standard .NET Dispose pattern with a protected virtual Dispose(bool disposing) method. This is the recommended .NET approach for extensible disposal and would also be the right place to add cleanup of native resources (context, glInterface, renderTarget, surface).",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "small"
+        },
+        {
+          "title": "Use composition instead of inheritance",
+          "description": "As a workaround, wrap SKGLView inside a custom component using composition rather than subclassing. Handle additional cleanup in the wrapper component\u0027s own IDisposable.Dispose() implementation, calling the inner SKGLView\u0027s Dispose() from the wrapper.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Implement standard Dispose(bool) pattern",
+      "recommendedReason": "The standard .NET Dispose pattern is the idiomatic solution. It allows subclasses to override Dispose(bool) while maintaining correct disposal semantics. This also creates an opportunity to fix the missing native resource cleanup in SKGLView.Dispose()."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.9,
+      "reason": "Valid enhancement request. The fix is straightforward (implement Dispose(bool) pattern) and would improve extensibility of Blazor views."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and Blazor area labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge request and suggest workaround",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the report. This is a valid request \u2014 the Blazor views implement \u0060IDisposable\u0060 directly without the standard \u0060Dispose(bool)\u0060 pattern, which prevents subclasses from extending disposal.\n\nAs a workaround, you can use composition instead of inheritance: wrap \u0060SKGLView\u0060 inside your own Blazor component and handle additional cleanup in the wrapper\u0027s \u0060Dispose()\u0060 method.\n\nThe proper fix would be implementing the standard .NET Dispose pattern with a \u0060protected virtual void Dispose(bool disposing)\u0060 method. This applies to both \u0060SKGLView\u0060 and \u0060SKCanvasView\u0060 in the Blazor package."
+      }
+    ]
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2072,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": [
+      "type/enhancement",
+      "status/long-term"
+    ]
+  },
+  "summary": "Tracking issue to enable nullable reference types in SkiaSharp.Views.Blazor \u2014 already completed in PR #2505 (SkiaSharp 3.0 modernization) which added \u003CNullable\u003Eenable\u003C/Nullable\u003E and restructured the project with full nullable annotations.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.99
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Nullable was enabled in the 3.0 modernization. The Blazor project was entirely restructured and nullable was enabled from the start of the new project structure."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.98,
+      "reason": "The SkiaSharp.Views.Blazor.csproj has \u003CNullable\u003Eenable\u003C/Nullable\u003E since commit bc5020b9e (2023-07-30, PR #2505). All source files use nullable annotations (e.g., byte[]?, SKSurface?, GRContext?, Action\u003C\u003E? parameters).",
+      "relatedPRs": [
+        2505
+      ],
+      "fixedInVersion": "3.0.0-preview"
+    }
+  },
+  "analysis": {
+    "summary": "This is a maintainer-filed tracking issue for enabling nullable reference types in the Blazor views project. The work was completed as part of the SkiaSharp 3.0 modernization (PR #2505, merged 2023-07-30). The csproj has \u003CNullable\u003Eenable\u003C/Nullable\u003E and all source files use proper nullable annotations throughout.",
+    "rationale": "The issue is classified as enhancement (matching existing labels) since it tracks a code quality improvement. The area is SkiaSharp.Views.Blazor since that\u0027s the specific project. Fix status is confirmed by examining the csproj and source files \u2014 nullable is fully enabled with proper annotations on all nullable fields and parameters.",
+    "keySignals": [
+      {
+        "text": "type/enhancement, status/long-term",
+        "source": "issue labels",
+        "interpretation": "Filed by maintainer as part of a batch of nullable tracking issues (#2055-#2075) covering all SkiaSharp projects."
+      },
+      {
+        "text": "Modernize the repository and prepare SkiaSharp 3.0 (#2505)",
+        "source": "commit bc5020b9e",
+        "interpretation": "The 3.0 modernization PR restructured the Blazor project entirely, enabling nullable from the start."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "finding": "\u003CNullable\u003Eenable\u003C/Nullable\u003E is present in the PropertyGroup, confirming nullable reference types are enabled project-wide.",
+        "relevance": "direct",
+        "lines": "8"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+        "finding": "Fields use nullable annotations: \u0027byte[]? pixels\u0027, \u0027Action\u003CSKPaintSurfaceEventArgs\u003E? OnPaintSurface\u0027, \u0027IReadOnlyDictionary\u003Cstring, object\u003E? AdditionalAttributes\u0027. The null-forgiving operator (null!) is used for late-initialized DI/lifecycle fields.",
+        "relevance": "direct",
+        "lines": "15-22"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+        "finding": "GL-specific fields use nullable annotations: \u0027GRContext? context\u0027, \u0027GRGlInterface? glInterface\u0027, \u0027GRBackendRenderTarget? renderTarget\u0027, \u0027SKSurface? surface\u0027, \u0027SKCanvas? canvas\u0027.",
+        "relevance": "direct",
+        "lines": "24-29"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs",
+        "finding": "Internal files also use nullable annotations: \u0027JSObject? module\u0027.",
+        "relevance": "related",
+        "lines": "20"
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.97,
+      "reason": "Nullable reference types are fully enabled in SkiaSharp.Views.Blazor since the 3.0 modernization (PR #2505). The csproj has \u003CNullable\u003Eenable\u003C/Nullable\u003E and all source files use proper nullable annotations."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update labels to reflect completed enhancement",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Note that nullable was enabled in the 3.0 modernization",
+        "risk": "high",
+        "confidence": 0.95,
+        "comment": "Nullable reference types were enabled for SkiaSharp.Views.Blazor as part of the 3.0 modernization in PR #2505 (commit bc5020b9). The project has \u0060\u003CNullable\u003Eenable\u003C/Nullable\u003E\u0060 in its csproj and all source files use proper nullable annotations.\n\nClosing as completed."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as completed \u2014 nullable is fully enabled",
+        "risk": "medium",
+        "confidence": 0.97
+      }
+    ]
+  }
+}

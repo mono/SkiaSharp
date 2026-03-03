@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3259,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "NullReferenceException in SKManagedWStreamWriteProxyImplementation when an exception thrown during SKSvgCanvas drawing is caught externally, leaving the canvas and managed stream undisposed so the native finalizer later invokes the write callback on a GC\u0027d object.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/SVG"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKSvgCanvas backed by a MemoryStream",
+        "Draw on the canvas via a method that throws an exception",
+        "Catch the exception externally without disposing the canvas first",
+        "Observe a NullReferenceException later in SKManagedWStreamWriteProxyImplementation"
+      ],
+      "environmentDetails": "Windows 10, SkiaSharp 3.116.0, Blazor Server"
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "System.NullReferenceException: Object reference not set to an instance of an object. at SkiaSharp.DelegateProxies.SKManagedWStreamWriteProxyImplementation",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The managed stream delegate proxy code has not changed and still lacks null-checks. The WeakReference-based GetUserData pattern can return null when the managed object is GC\u0027d."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.6,
+      "reason": "Reporter claims it worked in 2.88.9. The delegate proxy infrastructure was refactored in 3.x to use WeakReference-based user data, which may have changed the failure mode from a silent error to a crash."
+    }
+  },
+  "analysis": {
+    "summary": "The root cause is a missing null-check in SKManagedWStreamWriteProxyImplementation. When an exception is thrown during canvas drawing and caught externally, the SKSvgCanvas and its owned SKManagedWStream are never disposed. Later, when Skia\u0027s native code (or the GC finalizer) tries to write to the stream via the delegate proxy, GetUserData returns null because the managed object\u0027s WeakReference target has been collected, causing NullReferenceException.",
+    "rationale": "This is a real bug in the delegate proxy layer: SKManagedWStreamWriteProxyImplementation dereferences the result of GetUserData without a null-check. The reporter\u0027s code has a usage flaw (not using try/finally for disposal), but the library should handle this gracefully rather than crashing the entire Blazor app. The read-stream proxy (DelegateProxies.stream.cs) has the same pattern. Related issue #3520 also involves SKSvgCanvas and SKManagedWStream but describes a different symptom (missing closing SVG tag).",
+    "keySignals": [
+      {
+        "text": "Object reference not set to an instance of an object. at SkiaSharp.DelegateProxies.SKManagedWStreamWriteProxyImplementation",
+        "source": "issue body",
+        "interpretation": "GetUserData returned null \u2014 the managed stream object was already GC\u0027d or disposed when the native callback fired."
+      },
+      {
+        "text": "if this throws an exception, i later get the exception mentioned above",
+        "source": "issue body",
+        "interpretation": "Exception during drawing prevents canvas.Dispose() from running, leaving the managed stream in a dangling state for native callbacks."
+      },
+      {
+        "text": "resulting in, the whole Blazor App crashes",
+        "source": "issue body",
+        "interpretation": "Unhandled exception in UnmanagedCallersOnly callback is fatal \u2014 Blazor cannot catch it."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/DelegateProxies.wstream.cs",
+        "finding": "SKManagedWStreamWriteProxyImplementation calls GetUserData then immediately dereferences the result with stream.OnWrite() \u2014 no null-check. If the WeakReference target is null, this throws NullReferenceException.",
+        "relevance": "direct",
+        "lines": "31-36"
+      },
+      {
+        "file": "binding/Binding.Shared/DelegateProxies.shared.cs",
+        "finding": "GetUserData returns (T)weak.Target when the user data was created with makeWeak:true. WeakReference.Target returns null after GC collects the object, so GetUserData can return null.",
+        "relevance": "direct",
+        "lines": "64-70"
+      },
+      {
+        "file": "binding/SkiaSharp/SKAbstractManagedWStream.cs",
+        "finding": "CreateUserData is called with makeWeak:true, meaning the managed stream is held by a WeakReference. If nothing else holds a strong reference and the stream is not properly disposed, the GC can collect it.",
+        "relevance": "direct",
+        "lines": "36-37"
+      },
+      {
+        "file": "binding/SkiaSharp/SKSVG.cs",
+        "finding": "SKSvgCanvas.Create(bounds, Stream) creates an SKManagedWStream and passes it to SKObject.Owned, meaning the canvas owns the stream. If the canvas is never disposed, the stream is never disposed either.",
+        "relevance": "related",
+        "lines": "17-24"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "finding": "DisposeManaged iterates OwnedObjects and disposes them. This only runs when the canvas is explicitly disposed (disposing=true), not during finalization.",
+        "relevance": "related",
+        "lines": "82-92"
+      }
+    ],
+    "workarounds": [
+      "Wrap the canvas in a using statement or try/finally block to ensure disposal even when exceptions occur."
+    ],
+    "nextQuestions": [
+      "Should all delegate proxy implementations (wstream, stream, drawable, trace) add null-checks for GetUserData results?",
+      "Was the behavior different in 2.88.x because GetUserData did not use WeakReference?"
+    ],
+    "resolution": {
+      "hypothesis": "The delegate proxy callbacks lack null-checks on the result of GetUserData. When the managed object is collected (WeakReference.Target returns null), the proxy crashes instead of returning a safe default.",
+      "proposals": [
+        {
+          "title": "Use try/finally to ensure canvas disposal",
+          "description": "Wrap the canvas usage in a using statement or try/finally block so the canvas and its owned managed stream are always properly disposed, even when drawing methods throw exceptions.",
+          "category": "workaround",
+          "codeSnippet": "public string DrawSVG()\n{\n    var stream = new MemoryStream();\n    using var canvas = SKSvgCanvas.Create(\n        new SKRect(0, 0, width, height),\n        stream);\n\n    DrawSomeStuff(canvas); // if this throws, canvas is still disposed\n\n    canvas.Dispose(); // explicit dispose before reading stream\n    return Encoding.Default.GetString(stream.ToArray());\n}",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "trivial"
+        },
+        {
+          "title": "Add null-checks in delegate proxy callbacks",
+          "description": "Add null-checks to SKManagedWStreamWriteProxyImplementation and the other wstream proxy methods so they return safe defaults (false/0) instead of crashing when GetUserData returns null.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.8,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Use try/finally to ensure canvas disposal",
+      "recommendedReason": "This is a straightforward usage fix the reporter can apply immediately. The library-side null-check fix is also warranted but requires a code change and rebuild."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "The null-check gap in the delegate proxy is a real defensive programming issue that should be fixed, but the reporter\u0027s immediate problem is solvable with proper disposal. Needs investigation to determine if all proxy callbacks should be hardened."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, Windows, and SVG backend labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "backend/SVG"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post workaround and analysis",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the report and code sample.\n\nThe crash happens because when \u0060DrawSomeStuff\u0060 throws, execution jumps to the outer \u0060catch\u0060 block without ever calling \u0060canvas.Dispose()\u0060. This leaves the native SVG canvas alive but the managed \u0060SKManagedWStream\u0060 eligible for garbage collection. When Skia\u0027s native code later tries to write through the stream callback, the managed object is gone and the proxy throws \u0060NullReferenceException\u0060.\n\nHere\u0027s a workaround \u2014 wrap the canvas in a \u0060using\u0060 statement so it\u0027s always disposed, even when an exception occurs:\n\n\u0060\u0060\u0060csharp\npublic string DrawSVG()\n{\n    var stream = new MemoryStream();\n    using (var canvas = SKSvgCanvas.Create(\n        new SKRect(0, 0, width, height),\n        stream))\n    {\n        DrawSomeStuff(canvas);\n    }\n    return Encoding.Default.GetString(stream.ToArray());\n}\n\u0060\u0060\u0060\n\nNote: the \u0060using\u0060 block also ensures the SVG closing tag (\u0060\u003C/svg\u003E\u0060) is written before you read the stream, which is important for valid SVG output.\n\nThat said, the delegate proxy layer should handle this more gracefully rather than crashing the process. We\u0027ll look into adding null-checks to the managed stream callbacks."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related SKSvgCanvas/SKManagedWStream issue",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 3520
+      }
+    ]
+  }
+}

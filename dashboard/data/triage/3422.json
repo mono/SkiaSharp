@@ -3,7 +3,7 @@
     "schemaVersion": "1.0",
     "number": 3422,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T16:41:00Z",
+    "analyzedAt": "2026-07-21T12:00:00Z",
     "currentLabels": [
       "type/bug",
       "os/Windows-Universal-UWP",
@@ -12,44 +12,39 @@
       "tenet/reliability"
     ]
   },
-  "summary": "SkiaSharp fails on Blazor WASM with .NET 10: TypeInitializationException for SKImageInfo / DllNotFoundException for libSkiaSharp. Root cause is SkiaSharp does not yet officially target net10.0 \u2014 the Blazor package ships net6.0/net8.0 only, and the pre-built WASM static libraries (.a) may not match .NET 10\u0027s Emscripten version. The wasm-tools workload must also be explicitly installed. PR #3514 tracks adding .NET 10 support.",
+  "summary": "Blazor WASM apps targeting .NET 10 fail at runtime with TypeInitializationException (SKImageInfo) or DllNotFoundException (libSkiaSharp) because the SkiaSharp WASM static libraries compiled with emscripten 3.1.56 may be incompatible with .NET 10\u0027s emscripten toolchain, or the wasm-tools workload is not installed.",
   "classification": {
     "type": {
       "value": "type/bug",
-      "confidence": 0.9
+      "confidence": 0.95
     },
     "area": {
       "value": "area/SkiaSharp.Views.Blazor",
-      "confidence": 0.95
+      "confidence": 0.85
     },
     "platforms": [
       "os/WASM"
-    ],
-    "tenets": [
-      "tenet/compatibility"
     ]
   },
   "evidence": {
     "reproEvidence": {
       "stepsToReproduce": [
         "Create a Blazor WebAssembly project targeting net10.0",
-        "Add SkiaSharp.Views.Blazor NuGet package (any version: 3.119.2-preview.1, 3.119.1, 3.118.0-preview.2.3)",
-        "Add an SKCanvasView component to a Razor page",
-        "Run the application and navigate to the page with the component"
+        "Add SkiaSharp.Views.Blazor NuGet package (any version: 3.116.1, 3.118.0-preview, 3.119.1, 3.119.2-preview.1)",
+        "Add an SKCanvasView component with an OnPaintSurface handler",
+        "Run the app and navigate to the page \u2014 TypeInitializationException or DllNotFoundException at runtime"
       ],
-      "environmentDetails": "Windows 11 Pro, VS 2026, .NET 10, Edge/Chrome. Also reproduced on macOS with Rider (comments #4, #9) and Linux production deployments (comment #8).",
+      "environmentDetails": "Windows 11 \u002B VS 2026, macOS \u002B Rider; .NET 10 SDK; Edge/Chrome; multiple SkiaSharp versions tested (3.116.1 through 3.119.2-preview.1)",
       "relatedIssues": [
         3435,
-        3224,
-        2732,
-        3068,
         3514
       ]
     },
     "bugSignals": {
       "severity": "high",
-      "errorType": "crash",
-      "errorMessage": "ManagedError: TypeInitialization_Type, SkiaSharp.SKImageInfo",
+      "regressionClaimed": false,
+      "errorType": "platform-specific",
+      "errorMessage": "ManagedError: TypeInitialization_Type, SkiaSharp.SKImageInfo / System.DllNotFoundException: libSkiaSharp",
       "reproQuality": "complete",
       "targetFrameworks": [
         "net10.0"
@@ -57,130 +52,152 @@
     },
     "versionAnalysis": {
       "mentionedVersions": [
-        "3.119.2-preview.1",
+        "3.116.1",
+        "3.118.0-preview.2",
         "3.119.1",
-        "3.118.0-preview.2.3",
-        "2.88.9"
+        "3.119.2-preview.1",
+        "3.119.2",
+        "2.88.9",
+        "2.88.0"
       ],
       "currentRelevance": "likely",
-      "relevanceReason": "The SkiaSharp build system still targets net8.0 as TFMCurrent with TFMNext empty \u2014 no net10.0 TFM exists in the released packages. PR #3514 (open) adds .NET 10 support but has not been merged or released."
-    },
-    "fixStatus": {
-      "likelyFixed": false,
-      "confidence": 0.75,
-      "reason": "PR #3514 (open, not merged) updates TFMs to include net10.0 and restructures the build for .NET 10 SDK. Until that ships in a release, .NET 10 WASM support is not officially available.",
-      "relatedPRs": [
-        3514
-      ]
+      "relevanceReason": "The issue persists across all tested SkiaSharp versions (2.88.x through 3.119.2) when targeting .NET 10. Rolling back to .NET 8 resolves it. The WASM NativeFileReference MSBuild targets use VersionGreaterThanOrEquals(9.0) to select emscripten 3.1.56 binaries for net10.0, which may be incompatible with .NET 10\u0027s emscripten toolchain."
     }
   },
   "analysis": {
-    "summary": "Blazor WASM on .NET 10 fails because SkiaSharp does not yet officially support net10.0. The Blazor package only ships net6.0 and net8.0 assemblies. While the NativeFileReference targets use VersionGreaterThanOrEquals(9.0) which should match 10.0, the pre-built static libraries (.a files) may be incompatible with .NET 10\u0027s Emscripten version. Additionally, the wasm-tools workload must be explicitly installed. Some users report dotnet workload restore fixes the issue, but others (especially on macOS) still fail.",
-    "codeInvestigation": [
-      {
-        "file": "source/SkiaSharp.Build.props",
-        "finding": "TFMPrevious=net6.0, TFMCurrent=net8.0, TFMNext=\u003Cempty\u003E. No net10.0 TFM defined. The Blazor package only builds for net6.0 and net8.0.",
-        "relevance": "direct",
-        "lines": "62-66"
-      },
-      {
-        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
-        "finding": "TargetFrameworks=$(TFMCurrent);$(TFMPrevious);$(TFMNext) \u2014 resolves to net8.0;net6.0 only. No net10.0 PackageReference for Microsoft.AspNetCore.Components.Web exists (only net6.0\u2013net9.0 conditions).",
-        "relevance": "direct",
-        "lines": "4"
-      },
-      {
-        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
-        "finding": "NativeFileReference for net9.0\u002B uses VersionGreaterThanOrEquals(9.0) which matches 10.0. The 3.1.56 emscripten variant .a files should be selected. However, .NET 10 may ship a newer Emscripten requiring recompiled .a files.",
-        "relevance": "direct",
-        "lines": "23-33"
-      },
-      {
-        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
-        "finding": "A workaround for dotnet/runtime#109289 reorders link step args for libSkiaSharp.a. This workaround may not be effective or needed in .NET 10, potentially causing linking failures.",
-        "relevance": "related",
-        "lines": "35-51"
-      }
-    ],
-    "rationale": "Classified as type/bug because the expected behavior (SkiaSharp rendering in Blazor WASM) fails with a runtime exception. Area is SkiaSharp.Views.Blazor since the failure is specific to Blazor WASM platform integration, not core SkiaSharp functionality. Severity is high because it completely blocks all SkiaSharp usage on .NET 10 WASM \u2014 no workaround works for all users. The os/Windows-Universal-UWP label currently applied is incorrect \u2014 this is a WASM issue, not UWP.",
+    "summary": "Blazor WASM static linking of libSkiaSharp.a into dotnet.wasm fails on .NET 10. The MSBuild targets correctly select the emscripten 3.1.56 static libraries for net10.0 (via VersionGreaterThanOrEquals condition), but .NET 10 ships a different emscripten toolchain version that may be ABI-incompatible with these pre-compiled .a files. Additionally, the wasm-tools workload must be installed for native WASM builds, and .NET 10 may require explicit WasmBuildNative/RunAOTCompilation configuration. Issue #3514 tracks updating SkiaSharp to the .NET 10 SDK which would address this.",
+    "rationale": "This is a deployment/build-system bug, not a usage error. The errors (TypeInitializationException at SKImageInfo static init, DllNotFoundException for libSkiaSharp) both indicate the native WASM library failed to link into dotnet.wasm. Multiple users across Windows and macOS confirm the issue is specific to .NET 10 \u2014 the same code works on .NET 8 and .NET 9. The inconsistent success of workarounds (workload restore works for some but not others) suggests multiple interacting factors: missing wasm-tools workload, emscripten ABI mismatch, and .NET 10 build property changes.",
     "keySignals": [
       {
         "text": "ManagedError: TypeInitialization_Type, SkiaSharp.SKImageInfo",
         "source": "issue body",
-        "interpretation": "SKImageInfo static constructor fails because libSkiaSharp cannot be loaded \u2014 classic WASM native linking failure."
+        "interpretation": "Static constructor failed, likely because P/Invoke to libSkiaSharp failed during SKImageInfo type initialization."
       },
       {
-        "text": "DllNotFoundException: libSkiaSharp at SkiaSharp.SKPath..ctor",
-        "source": "comment #3 (jahnotto)",
-        "interpretation": "Same root cause \u2014 native static library not linked into dotnet.wasm. Confirms this is a build-time linking issue, not a runtime loading issue."
+        "text": "System.DllNotFoundException: libSkiaSharp",
+        "source": "comment by jahnotto",
+        "interpretation": "The native symbols were not linked into dotnet.wasm \u2014 the static .a file was not included during the WASM build."
+      },
+      {
+        "text": "there is no last known good version...it seems more related to .net 10 WASM projects",
+        "source": "comment by NetRushJacob",
+        "interpretation": "Not a SkiaSharp regression \u2014 the issue is caused by .NET 10 WASM toolchain changes."
       },
       {
         "text": "I tried rolling back to 2.88.9 but the same issue occurs, so it\u0027s something specific to .Net 10",
-        "source": "comment #4 (Webreaper)",
-        "interpretation": "Version-independent: all SkiaSharp versions fail on .NET 10 WASM. Points to a .NET 10 SDK / Emscripten toolchain incompatibility rather than a SkiaSharp regression."
+        "source": "comment by Webreaper",
+        "interpretation": "Confirms the problem is in the .NET 10 WASM build pipeline, not in any specific SkiaSharp version."
       },
       {
-        "text": "Restoring the .NET 10 wasm workload helped me. dotnet workload restore",
-        "source": "comment #6 (EngstromJimmy)",
-        "interpretation": "Confirms wasm-tools workload is required but not automatically installed. This is a partial workaround \u2014 works on Windows but not macOS for all users."
+        "text": "dotnet workload restore...that worked!",
+        "source": "comment by jahnotto confirming EngstromJimmy\u0027s fix",
+        "interpretation": "Installing the wasm-tools workload resolves the issue for some users, suggesting missing emscripten toolchain as a factor."
       },
       {
-        "text": "dotnet workload restore didn\u0027t have any effect for me - still seeing the same issue on MacOS",
-        "source": "comment #8 (Webreaper)",
-        "interpretation": "Workload restore alone is insufficient on macOS. Suggests possible Emscripten version mismatch between pre-built .a files and .NET 10 SDK on macOS."
+        "text": "dotnet workload restore didn\u0027t have any effect for me on MacOS",
+        "source": "comment by Webreaper",
+        "interpretation": "Workload restore alone is insufficient for all environments \u2014 suggests deeper ABI incompatibility on some platforms."
       },
       {
-        "text": "TFMCurrent=net8.0, TFMNext=\u003Cempty\u003E",
-        "source": "source/SkiaSharp.Build.props:64-66",
-        "interpretation": "SkiaSharp\u0027s build system doesn\u0027t target net10.0. The Blazor package only ships net6.0 and net8.0 assemblies. PR #3514 addresses this."
+        "text": "Removing WasmBuildNative false...And in a different project adding RunAOTCompilation false",
+        "source": "comment by DrDruid",
+        "interpretation": "WasmBuildNative must be true for static linking. .NET 10 may have changed default behavior requiring explicit RunAOTCompilation=false."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "NativeFileReference for net9.0\u002B uses VersionGreaterThanOrEquals(9.0) selecting emscripten 3.1.56 binaries. This condition correctly matches net10.0, so the .a files are selected. The issue is whether 3.1.56-compiled binaries are ABI-compatible with .NET 10\u0027s emscripten linker.",
+        "relevance": "direct",
+        "lines": "32-40"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "WasmBuildNative is set to true only when it\u0027s empty and UsingMicrosoftNETSdkBlazorWebAssembly is true. If a user explicitly sets WasmBuildNative=false, native linking is skipped entirely, causing DllNotFoundException.",
+        "relevance": "direct",
+        "lines": "22-24"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "Workaround target for dotnet/runtime#109289 reorders libSkiaSharp.a in linker args. This workaround may need updating for .NET 10\u0027s changed WASM build pipeline.",
+        "relevance": "related",
+        "lines": "44-63"
+      },
+      {
+        "file": "output/native/wasm/libSkiaSharp.a/",
+        "finding": "Pre-compiled WASM static libraries exist for emscripten versions 2.0.23, 3.1.12, 3.1.34, 3.1.56. No version matching .NET 10\u0027s emscripten is present if .NET 10 uses a newer version.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+        "finding": "SkiaSharp.Views.Blazor has a ProjectReference to SkiaSharp.NativeAssets.WebAssembly, confirming the WASM native assets should be transitively included.",
+        "relevance": "context",
+        "lines": "37"
       }
     ],
     "workarounds": [
-      "Run \u0060dotnet workload install wasm-tools\u0060 or \u0060dotnet workload restore\u0060 to ensure the WASM build tools are installed (works for some users on Windows, not confirmed on macOS)",
-      "Stay on .NET 9 until SkiaSharp officially adds .NET 10 support (PR #3514)"
+      "Run \u0027dotnet workload restore\u0027 (or \u0027dotnet workload install wasm-tools\u0027) and restart \u2014 works for some users",
+      "Add explicit PackageReference for SkiaSharp.NativeAssets.WebAssembly \u2014 works for some users",
+      "Ensure WasmBuildNative is not set to false; add RunAOTCompilation=false if needed \u2014 works for some users",
+      "Target .NET 8 or .NET 9 instead of .NET 10 \u2014 confirmed working"
     ],
     "nextQuestions": [
-      "Does PR #3514 (.NET 10 SDK update) resolve this completely, including the macOS failures?",
-      "Are the pre-built emscripten 3.1.56 .a files compatible with .NET 10\u0027s emscripten version, or do new .a files need to be compiled?",
-      "Is the _SkiaSharpRuntimeIssue109289Workaround target still needed or harmful on .NET 10?"
+      "What exact emscripten version does .NET 10\u0027s wasm-tools workload ship? If it\u0027s newer than 3.1.56, SkiaSharp needs to compile new .a files with that version.",
+      "Does #3514 (Update to .NET 10 SDK) resolve this issue? It restructures TFMs and may include updated WASM binaries.",
+      "Is there a .NET 10 MSBuild change that affects WasmBuildNative or NativeFileReference behavior?",
+      "Why does the workaround work for some users (jahnotto, tolzy88) but not others (Webreaper)? Possibly related to macOS vs Windows emscripten toolchain differences."
     ],
     "resolution": {
-      "hypothesis": "SkiaSharp does not yet support .NET 10. The Blazor package targets net6.0/net8.0 only, and the WASM static libraries may be compiled against an incompatible Emscripten version. The wasm-tools workload must be installed but is not sufficient on all platforms.",
+      "hypothesis": ".NET 10 ships a newer emscripten toolchain that is ABI-incompatible with SkiaSharp\u0027s emscripten 3.1.56-compiled WASM static libraries. The fix requires rebuilding libSkiaSharp.a with the emscripten version shipped in .NET 10\u0027s wasm-tools workload and adding a new NativeFileReference condition for net10.0.",
       "proposals": [
         {
-          "description": "Run \u0060dotnet workload install wasm-tools\u0060 to ensure the WASM build tools are available. This enables the native static linking step that embeds libSkiaSharp into dotnet.wasm. Works on Windows for some users but may not resolve the issue on macOS.",
-          "title": "Install wasm-tools workload",
-          "codeSnippet": "dotnet workload install wasm-tools\n# or\ndotnet workload restore",
+          "title": "Install wasm-tools workload and add NativeAssets.WebAssembly",
+          "description": "Run \u0027dotnet workload restore\u0027 (or \u0027dotnet workload install wasm-tools\u0027), add explicit SkiaSharp.NativeAssets.WebAssembly PackageReference, and ensure WasmBuildNative is not set to false. Add RunAOTCompilation=false if present.",
+          "category": "workaround",
+          "codeSnippet": "\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00223.119.2\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.119.2\u0022 /\u003E\n\u003C!-- Ensure WasmBuildNative is NOT explicitly set to false --\u003E\n\u003C!-- If RunAOTCompilation is needed, keep it; otherwise remove WasmBuildNative=false --\u003E",
+          "validated": "untested",
           "confidence": 0.5,
           "effort": "trivial"
         },
         {
-          "description": "Downgrade the project to net9.0 until SkiaSharp ships official .NET 10 support. .NET 9 \u002B SkiaSharp 3.119.1 is a known-working combination for Blazor WASM.",
-          "title": "Stay on .NET 9",
+          "title": "Target .NET 8 or .NET 9 instead of .NET 10",
+          "description": "Downgrade the target framework to net8.0 or net9.0 where SkiaSharp WASM works reliably. This is a temporary workaround until .NET 10 support is added.",
+          "category": "workaround",
+          "validated": "untested",
           "confidence": 0.9,
           "effort": "small"
         },
         {
-          "description": "PR #3514 restructures TFMs to include net10.0 as TFMCurrent and updates the SDK. This is the proper fix that will add official .NET 10 support to SkiaSharp including the Blazor WASM package.",
-          "title": "Merge PR #3514 \u2014 .NET 10 SDK update",
+          "title": "Rebuild WASM static libraries for .NET 10 emscripten version",
+          "description": "Identify the emscripten version shipped in .NET 10\u0027s wasm-tools workload, rebuild libSkiaSharp.a and libHarfBuzzSharp.a with that version, and add a new NativeFileReference entry in the MSBuild targets with a VersionEquals(10.0) or VersionGreaterThanOrEquals(10.0) condition.",
+          "category": "fix",
+          "validated": "untested",
           "confidence": 0.85,
+          "effort": "medium"
+        },
+        {
+          "title": "Complete .NET 10 SDK update (issue #3514)",
+          "description": "Merge the .NET 10 SDK update tracked in #3514, which restructures TFMs and updates the build system. This should include updated WASM emscripten builds compatible with .NET 10.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.8,
           "effort": "large"
         }
       ],
-      "recommendedProposal": "Stay on .NET 9",
-      "recommendedReason": "Most reliable workaround while PR #3514 is in progress. The wasm-tools workload install only works for some users."
+      "recommendedProposal": "Install wasm-tools workload and add NativeAssets.WebAssembly",
+      "recommendedReason": "Most actionable immediate workaround for users, though it only works for some. The proper fix is rebuilding WASM libraries for .NET 10\u0027s emscripten version via #3514."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
-      "confidence": 0.85,
-      "reason": "Known gap: .NET 10 is not yet an officially supported TFM. PR #3514 is the fix path but needs to be merged and released. Issue should remain open to track .NET 10 WASM support."
+      "confidence": 0.9,
+      "reason": "Real bug affecting all Blazor WASM users on .NET 10. Requires determining exact emscripten version mismatch and rebuilding native WASM libraries. Tracked in #3514."
     },
     "actions": [
       {
         "type": "update-labels",
-        "description": "Fix labels: remove incorrect os/Windows-Universal-UWP, add tenet/compatibility",
+        "description": "Fix labels \u2014 remove incorrect os/Windows-Universal-UWP (this is not a UWP issue, it\u0027s WASM)",
         "risk": "low",
         "confidence": 0.95,
         "labels": [
@@ -191,25 +208,25 @@
         ]
       },
       {
-        "type": "link-related",
-        "description": "Cross-reference with #3514 (.NET 10 SDK update PR)",
-        "risk": "low",
-        "confidence": 0.9,
-        "linkedIssue": 3514
+        "type": "add-comment",
+        "description": "Acknowledge the issue, provide workarounds, and link to .NET 10 SDK update effort",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed report. This is a known issue with SkiaSharp\u0027s WASM support on .NET 10.\n\nThe root cause is that SkiaSharp\u0027s pre-compiled WASM static libraries were built with emscripten 3.1.56, and .NET 10 ships a different emscripten toolchain version. The static \u0060.a\u0060 files need to be rebuilt to match.\n\nHere are some workarounds that have helped others (results vary by environment):\n\n1. **Install the wasm-tools workload** and add the native assets package explicitly:\n   \u0060\u0060\u0060\n   dotnet workload restore\n   \u0060\u0060\u0060\n   \u0060\u0060\u0060xml\n   \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00223.119.2\u0022 /\u003E\n   \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.119.2\u0022 /\u003E\n   \u0060\u0060\u0060\n\n2. **Ensure \u0060WasmBuildNative\u0060 is not set to \u0060false\u0060** \u2014 if you have \u0060\u003CWasmBuildNative\u003Efalse\u003C/WasmBuildNative\u003E\u0060, remove it. If needed, use \u0060\u003CRunAOTCompilation\u003Efalse\u003C/RunAOTCompilation\u003E\u0060 instead.\n\n3. **Target .NET 8 or .NET 9** as a temporary fallback \u2014 these work reliably with current SkiaSharp versions.\n\nA proper fix requires rebuilding the WASM native libraries for .NET 10\u0027s emscripten version. This is being tracked as part of the .NET 10 SDK update."
       },
       {
         "type": "link-duplicate",
-        "description": "Mark #3435 as duplicate of this issue (confirmed by reporter in #3435 comment)",
+        "description": "Link #3435 as duplicate (same .NET 10 Blazor WASM DllNotFoundException)",
         "risk": "medium",
-        "confidence": 0.95,
+        "confidence": 0.92,
         "linkedIssue": 3435
       },
       {
-        "type": "add-comment",
-        "description": "Post analysis with workaround and status update on .NET 10 support",
-        "risk": "high",
-        "confidence": 0.8,
-        "comment": "Thanks for the report and the additional confirmation from others in the thread.\n\nSkiaSharp doesn\u0027t officially support .NET 10 yet \u2014 the current packages target net6.0 and net8.0 for Blazor WASM. The \u0060DllNotFoundException\u0060 / \u0060TypeInitializationException\u0060 occurs because the WASM static libraries (\u0060.a\u0060 files) aren\u0027t being linked into \u0060dotnet.wasm\u0060 correctly under the .NET 10 SDK.\n\nSome users have had success with:\n\n\u0060\u0060\u0060\ndotnet workload install wasm-tools\n\u0060\u0060\u0060\n\nThis ensures the WASM build tools are installed, which are required for native static linking. However, this doesn\u0027t work for everyone \u2014 particularly on macOS \u2014 likely due to Emscripten version differences between the pre-built libraries and the .NET 10 SDK.\n\nThe most reliable workaround right now is to **stay on .NET 9** (\u0060net9.0\u0060) until .NET 10 support ships. Work is tracked in PR #3514.\n\nWe\u0027ll update this issue when .NET 10 support is available in a release."
+        "type": "link-related",
+        "description": "Link #3514 (.NET 10 SDK update) as the tracking issue for the proper fix",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3514
       }
     ]
   }

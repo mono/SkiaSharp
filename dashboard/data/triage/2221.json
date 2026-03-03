@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2221,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "EntryPointNotFoundException for sk_paint_set_stroke_width in Blazor WASM when deployed to Azure App Service with SkiaSharp 2.88.1 on .NET 6.0, caused by the IL trimmer stripping P/Invoke methods during publish.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM app using SkiaSharp.Views.Blazor with SKGLView",
+        "Use SKPaint with StrokeWidth property in render loop",
+        "Deploy to Azure App Service (published/trimmed build)",
+        "Observe intermittent EntryPointNotFoundException, especially when window is snapped to half-screen and refreshed"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.1, Blazor WASM .NET 6.0, deployed to Azure App Service"
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "exception",
+      "errorMessage": "System.EntryPointNotFoundException: sk_paint_set_stroke_width at SkiaSharp.SKPaint.set_StrokeWidth(Single)",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net6.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.1"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "SkiaSharp 3.x added IsTrimmable assembly attribute and LibraryImport (source-generated P/Invoke) on .NET 7\u002B via PR #2917, which makes P/Invoke methods visible to the trimmer. The reported .NET 6.0 is EOL."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.8,
+      "reason": "SkiaSharp now declares IsTrimmable and uses LibraryImport on .NET 7\u002B, which generates trim-safe source code for P/Invoke. The reported configuration (.NET 6 \u002B SkiaSharp 2.88.1) is outdated.",
+      "relatedPRs": [
+        2917
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The IL trimmer in .NET 6 Blazor WASM stripped P/Invoke methods from SkiaSharp during publish, causing EntryPointNotFoundException at runtime. SkiaSharp 3.x addressed this by adding IsTrimmable metadata and switching to LibraryImport on .NET 7\u002B, which generates trim-safe P/Invoke stubs.",
+    "rationale": "The reporter describes a clear deployment-specific exception (works locally, fails in production) with a trimming workaround that confirms the root cause. The error is in a core P/Invoke call, not the Blazor views layer. Since SkiaSharp has since added trimming support via IsTrimmable and LibraryImport, and the reported version/framework are both outdated, this is likely fixed.",
+    "keySignals": [
+      {
+        "text": "System.EntryPointNotFoundException: sk_paint_set_stroke_width",
+        "source": "issue body",
+        "interpretation": "P/Invoke method not found \u2014 either trimmed from managed assembly or native symbol missing from WASM binary."
+      },
+      {
+        "text": "works locally in Debug and Release mode but intermittently when deployed",
+        "source": "issue body",
+        "interpretation": "Trimming is only aggressive during publish. Local Debug/Release runs don\u0027t enable full trimming."
+      },
+      {
+        "text": "Add ILLink.Descriptors.xml to prevent trimming of SkiaSharp",
+        "source": "issue body (workaround)",
+        "interpretation": "Confirms the IL trimmer as root cause \u2014 preserving the assemblies prevents the error."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs",
+        "finding": "Assembly now declares [AssemblyMetadata(\u0022IsTrimmable\u0022, \u0022True\u0022)] \u2014 signals trim compatibility to the .NET trimmer",
+        "relevance": "direct",
+        "lines": "55"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "finding": "On .NET 7\u002B, USE_LIBRARY_IMPORT is defined, enabling source-generated P/Invoke via LibraryImport which is inherently trim-safe",
+        "relevance": "direct",
+        "lines": "15-17"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "finding": "sk_paint_set_stroke_width has three code paths: LibraryImport (.NET 7\u002B), DllImport (.NET 6), and delegates (.NET 4.x). The .NET 6 DllImport path was vulnerable to trimming.",
+        "relevance": "direct",
+        "lines": "9114-9131"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "finding": "StrokeWidth property directly calls SkiaApi.sk_paint_set_stroke_width \u2014 the P/Invoke call that was being trimmed",
+        "relevance": "direct",
+        "lines": "161-163"
+      }
+    ],
+    "workarounds": [
+      "Add ILLink.Descriptors.xml with \u003Cassembly fullname=\u0022SkiaSharp\u0022/\u003E to prevent trimming (reporter\u0027s workaround)",
+      "Upgrade to SkiaSharp 3.x on .NET 8\u002B which has built-in trimming support via IsTrimmable and LibraryImport"
+    ],
+    "resolution": {
+      "hypothesis": "The .NET 6 IL trimmer stripped P/Invoke declarations from SkiaSharp during Blazor WASM publish because the assembly lacked trimming annotations. SkiaSharp 3.x resolved this by adding IsTrimmable metadata and switching to LibraryImport on .NET 7\u002B.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 3.x on .NET 8\u002B",
+          "description": "Upgrade to the latest SkiaSharp 3.x release targeting .NET 8\u002B. The assembly now declares IsTrimmable and uses LibraryImport (source-generated P/Invoke) which is inherently trim-safe.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "medium"
+        },
+        {
+          "title": "ILLink.Descriptors.xml workaround for .NET 6",
+          "description": "Add ILLink.Descriptors.xml to the project to preserve SkiaSharp assemblies from trimming. Only needed for legacy .NET 6 projects.",
+          "category": "workaround",
+          "codeSnippet": "\u003C!-- ILLink.Descriptors.xml --\u003E\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\n\u003Clinker\u003E\n\t\u003Cassembly fullname=\u0022SkiaSharp\u0022/\u003E\n\t\u003Cassembly fullname=\u0022SkiaSharp.Views.Blazor\u0022/\u003E\n\u003C/linker\u003E",
+          "validated": "untested",
+          "confidence": 0.95,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 3.x on .NET 8\u002B",
+      "recommendedReason": "Addresses the root cause with built-in trim support rather than working around the trimmer. .NET 6 is EOL."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.78,
+      "reason": "SkiaSharp 3.x added IsTrimmable and LibraryImport support (PR #2917) addressing the trimming root cause. The reported .NET 6 \u002B SkiaSharp 2.88.1 configuration is outdated."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, and WASM labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain the fix via IsTrimmable and LibraryImport, suggest upgrading",
+        "risk": "high",
+        "confidence": 0.78,
+        "comment": "Thanks for the detailed report and workaround.\n\nThis trimming issue has been addressed in SkiaSharp 3.x. The assembly now declares \u0060[AssemblyMetadata(\u0022IsTrimmable\u0022, \u0022True\u0022)]\u0060 and uses source-generated \u0060LibraryImport\u0060 on .NET 7\u002B (PR #2917), which makes all P/Invoke methods inherently visible to the trimmer.\n\nUpgrading to the latest SkiaSharp 3.x release on .NET 8\u002B should resolve this without needing the \u0060ILLink.Descriptors.xml\u0060 workaround. If you\u0027re still on .NET 6, your linker descriptor workaround remains the correct approach \u2014 though note that .NET 6 has reached end-of-life.\n\nIf you\u0027re still seeing this on a current SkiaSharp \u002B .NET version, please reopen with updated details."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in SkiaSharp 3.x",
+        "risk": "medium",
+        "confidence": 0.78
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference similar Blazor WASM deployment issue",
+        "risk": "low",
+        "confidence": 0.6,
+        "linkedIssue": 2836
+      }
+    ]
+  }
+}

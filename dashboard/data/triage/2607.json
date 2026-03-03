@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2607,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "TypeInitializationException for SKData when deploying a .NET 6 server-side app to Docker on GCP \u2014 caused by missing or conflicting SkiaSharp NativeAssets.Linux packages in the container, not a code bug.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.82
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Linux"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET 6 app using SkiaSharp to resize images",
+        "Install SkiaSharp 2.88.5 along with NativeAssets.Linux, NativeAssets.Linux.NoDependencies, NativeAssets.WebAssembly, and Views.Blazor",
+        "Deploy to GCP Container Registry with Docker",
+        "Call any SkiaSharp API (e.g. SKImage.FromEncodedData) \u2014 TypeInitializationException is thrown"
+      ],
+      "environmentDetails": ".NET 6, SkiaSharp 2.88.5, Docker on GCP Linux, Visual Studio 2022",
+      "relatedIssues": [
+        2124,
+        1341,
+        1204
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.5"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The underlying cause is a packaging/deployment issue, not a version-specific bug. The same problem can occur with any SkiaSharp version if the native library is not properly deployed in the container."
+    }
+  },
+  "analysis": {
+    "summary": "The TypeInitializationException occurs because SKData\u0027s static constructor calls SkiaApi.sk_data_new_empty() via P/Invoke, which requires libSkiaSharp.so to be loaded. In the Docker container, the native library either isn\u0027t present or the wrong variant is loaded. The reporter installed conflicting packages (both NativeAssets.Linux and NoDependencies, plus unnecessary WASM and Blazor packages), which likely causes deployment confusion.",
+    "rationale": "This is a deployment/packaging question, not a code bug. The reporter\u0027s code works locally on Windows. The exception is a standard DllNotFoundException wrapped in TypeInitializationException \u2014 the native library isn\u0027t being found in the Docker container. The reporter\u0027s package list shows a misunderstanding of which packages are needed. Comments confirm that using NoDependencies (with or without fontconfig/freetype) resolves the issue.",
+    "keySignals": [
+      {
+        "text": "The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception",
+        "source": "issue body",
+        "interpretation": "SKData\u0027s static constructor fails because libSkiaSharp.so cannot be loaded via P/Invoke \u2014 classic DllNotFoundException wrapped in TypeInitializationException."
+      },
+      {
+        "text": "SkiaSharp.NativeAssets.Linux (2.88.5) and SkiaSharp.NativeAssets.Linux.NoDependencies (2.88.5) and SkiaSharp.NativeAssets.WebAssembly (2.88.5)",
+        "source": "issue body",
+        "interpretation": "Reporter installed conflicting/unnecessary packages. Having both NativeAssets.Linux and NoDependencies can cause the wrong binary to be deployed."
+      },
+      {
+        "text": "I am not using Blazor or Web assembly specifically",
+        "source": "comment by ak4shp",
+        "interpretation": "Confirms this is a server-side Linux app in Docker, not WASM. Views.Blazor and NativeAssets.WebAssembly are unnecessary."
+      },
+      {
+        "text": "This worked for me after adding missing 2 libs",
+        "source": "comment by atakane",
+        "interpretation": "Community-confirmed workaround: NoDependencies \u002B libfontconfig1 \u002B libfreetype6 in Dockerfile."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKData.cs",
+        "finding": "SKData\u0027s static constructor calls SkiaApi.sk_data_new_empty() which P/Invokes into libSkiaSharp. If the native library isn\u0027t loaded, this throws DllNotFoundException which is wrapped in TypeInitializationException.",
+        "relevance": "direct",
+        "lines": "20-28"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "finding": "SKObject.EnsureStaticInstanceAreInitialized() triggers SKData\u0027s static constructor early, meaning ANY SkiaSharp API call will trigger the exception if the native library is missing.",
+        "relevance": "related",
+        "lines": "43-48"
+      },
+      {
+        "file": "documentation/packages.md",
+        "finding": "Documentation clearly states: Docker containers should use NativeAssets.Linux.NoDependencies for zero system deps, or NativeAssets.Linux with fontconfig installed. Reporter had both packages which can cause conflicts.",
+        "relevance": "direct",
+        "lines": "127-131"
+      }
+    ],
+    "workarounds": [
+      "Remove all unnecessary packages (Views.Blazor, NativeAssets.WebAssembly). Use ONLY SkiaSharp \u002B SkiaSharp.NativeAssets.Linux.NoDependencies for Docker containers.",
+      "If using NativeAssets.Linux instead of NoDependencies, add \u0027RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\u0027 to Dockerfile.",
+      "Ensure the NativeAssets package is referenced in the executable project, not just a library project."
+    ],
+    "resolution": {
+      "hypothesis": "The native library libSkiaSharp.so is not present or the wrong variant is loaded in the Docker container because the reporter installed conflicting NativeAssets packages.",
+      "proposals": [
+        {
+          "title": "Use NoDependencies only",
+          "description": "Remove all NativeAssets packages except SkiaSharp.NativeAssets.Linux.NoDependencies. Remove SkiaSharp.Views.Blazor and SkiaSharp.NativeAssets.WebAssembly as they are not needed for a server-side app. The NoDependencies package has zero external dependencies and works in minimal Docker containers.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "trivial"
+        },
+        {
+          "title": "Use NativeAssets.Linux with fontconfig",
+          "description": "If system font enumeration is needed, use SkiaSharp.NativeAssets.Linux (not NoDependencies) and install fontconfig in the Dockerfile: \u0027RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\u0027.",
+          "category": "alternative",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Use NoDependencies only",
+      "recommendedReason": "Simplest approach for Docker containers with no system library dependencies. Community-confirmed in comments on this issue."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "This is a packaging/deployment question with a well-documented solution. The community has already confirmed the workaround in the issue comments, and documentation/packages.md covers this scenario."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Reclassify as question about native asset deployment on Linux",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/question",
+          "area/libSkiaSharp.native",
+          "os/Linux"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post summary with correct package guidance",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the report. This is a native library deployment issue \u2014 the \u0060TypeInitializationException\u0060 for \u0060SKData\u0060 means \u0060libSkiaSharp.so\u0060 could not be loaded in your Docker container.\n\nThe issue is that you have conflicting packages installed. For a server-side .NET app in Docker, you only need two packages:\n\n\u0060\u0060\u0060xml\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.5\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.5\u0022 /\u003E\n\u0060\u0060\u0060\n\nRemove \u0060SkiaSharp.Views.Blazor\u0060, \u0060SkiaSharp.NativeAssets.WebAssembly\u0060, and \u0060SkiaSharp.NativeAssets.Linux\u0060 \u2014 these are for different platforms and having them all can cause the wrong native binary to be deployed.\n\nIf you need system font enumeration (via \u0060SKFontManager\u0060), use \u0060SkiaSharp.NativeAssets.Linux\u0060 instead and add \u0060RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\u0060 to your Dockerfile.\n\nThe NativeAssets package must be in the **application** (executable) project, not a library project, to ensure the native binary is included in the publish output."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference the original Blazor WASM issue the reporter was following",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 2124
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered \u2014 community-confirmed workaround exists",
+        "risk": "medium",
+        "confidence": 0.8
+      }
+    ]
+  }
+}

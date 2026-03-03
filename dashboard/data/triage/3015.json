@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3015,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-18T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "DllNotFoundException for libSkiaSharp in a WASI Wasm Console app because SkiaSharp.NativeAssets.WebAssembly only supports browser-based WASM (Blazor/Uno) via Emscripten static linking, not the WASI runtime.",
+  "classification": {
+    "type": {
+      "value": "type/feature-request",
+      "confidence": 0.85
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET 9 WASI Wasm Console app with wasi-wasm RID",
+        "Add SkiaSharp and SkiaSharp.NativeAssets.WebAssembly 3.0.0-preview.4.1 package references",
+        "Build and run with wasmtime",
+        "Observe DllNotFoundException: libSkiaSharp"
+      ],
+      "attachments": [
+        {
+          "url": "https://github.com/user-attachments/files/17092944/WasiSkiaSharpRepro.zip",
+          "filename": "WasiSkiaSharpRepro.zip",
+          "description": "Minimal WASI Wasm repro project with built .wasm file"
+        }
+      ],
+      "environmentDetails": ".NET 9 preview 6, wasi-wasm RID, Visual Studio (Windows), SkiaSharp 3.0.0-preview.4.1"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.0.0-preview.4.1"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "WASI is still not a supported target. The NativeAssets.WebAssembly MSBuild targets have not changed to include WASI support."
+    }
+  },
+  "analysis": {
+    "summary": "The NativeAssets.WebAssembly package only activates static linking for Blazor (UsingMicrosoftNETSdkBlazorWebAssembly) and Uno (IsUnoHead \u002B UnoRuntimeIdentifier==WebAssembly). A WASI Wasm Console app sets neither property, so the .a files are never passed to the linker. Additionally, the shipped .a files are Emscripten-compiled targeting browser WASM APIs, which are incompatible with the WASI runtime even if linking were configured.",
+    "rationale": "While filed as a bug, WASI WASM is a fundamentally different compilation target from browser-based WASM. The NativeAssets.WebAssembly package was designed for Emscripten/browser WASM (Blazor, Uno). Supporting WASI would require recompiling libSkiaSharp with a WASI-compatible toolchain and adding new MSBuild conditions. This is a new platform support request, not a defect in existing functionality.",
+    "keySignals": [
+      {
+        "text": "The NativeAssets has build targets for Blazor, but seems to be missing them for Wasi Wasm apps",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identified the gap \u2014 MSBuild targets only activate for Blazor/Uno, not WASI."
+      },
+      {
+        "text": "System.DllNotFoundException: libSkiaSharp",
+        "source": "issue body",
+        "interpretation": "Expected failure \u2014 the native library was never linked into the WASI binary because MSBuild conditions excluded it."
+      },
+      {
+        "text": "The 3.x series should be including the native assets. Have you tried that yet?",
+        "source": "comment by mattleibow",
+        "interpretation": "Maintainer asked about 3.x, but reporter\u0027s csproj already shows 3.0.0-preview.4.1. The 3.x series includes WASM native assets for Blazor/Uno but not WASI."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "NativeFileReference items are only added when UsingMicrosoftNETSdkBlazorWebAssembly or UsingMicrosoftNETSdkWebAssembly is true. A WASI Wasm Console app sets neither, so the .a files are never linked.",
+        "relevance": "direct",
+        "lines": "22-41"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets",
+        "finding": "The Uno Platform path also does not apply \u2014 it requires IsUnoHead==True and UnoRuntimeIdentifier==WebAssembly.",
+        "relevance": "related",
+        "lines": "9-11"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.props",
+        "finding": "Props file defines SkiaSharpStaticLibraryPath pointing to the Emscripten-compiled .a files. These are browser WASM binaries, not WASI-compatible.",
+        "relevance": "direct",
+        "lines": "1-10"
+      }
+    ],
+    "nextQuestions": [
+      "Is WASI a target SkiaSharp intends to support?",
+      "Would Skia need to be compiled with wasi-sdk instead of Emscripten for WASI compatibility?",
+      "Are there Skia upstream efforts for WASI support?"
+    ],
+    "resolution": {
+      "hypothesis": "WASI is a distinct compilation target from browser WASM. The Emscripten-compiled static libraries in NativeAssets.WebAssembly are not compatible with WASI. Supporting WASI would require compiling libSkiaSharp with a WASI-compatible toolchain (wasi-sdk/WASI libc) and adding MSBuild integration for the wasi-wasm RID.",
+      "proposals": [
+        {
+          "title": "Add WASI-specific NativeAssets package or RID support",
+          "description": "Compile libSkiaSharp with wasi-sdk targeting WASI, and either extend NativeAssets.WebAssembly to detect wasi-wasm RID or create a new NativeAssets.Wasi package. This requires Skia to build under wasi-sdk which may have significant upstream dependencies.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.5,
+          "effort": "large"
+        },
+        {
+          "title": "Document WASI as unsupported",
+          "description": "Update documentation to clarify that NativeAssets.WebAssembly targets browser-based WASM only (Blazor, Uno) and that WASI is not currently supported.",
+          "category": "alternative",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Document WASI as unsupported",
+      "recommendedReason": "WASI support is a significant engineering effort requiring upstream Skia compatibility. Clarifying documentation helps set correct expectations while WASI matures in the .NET ecosystem."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.75,
+      "reason": "Reporter is already using 3.x preview. The maintainer\u0027s question about 3.x may be moot. Clarify that WASI is not supported and ask if there\u0027s a specific use case driving WASI over Blazor WASM."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Reclassify as feature request for WASI platform support",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "type/feature-request",
+          "area/libSkiaSharp.native",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain WASI vs browser WASM distinction and current support scope",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the report and the repro project.\n\nThe \u0060SkiaSharp.NativeAssets.WebAssembly\u0060 package currently supports browser-based WASM only \u2014 specifically Blazor and Uno Platform apps. The native \u0060.a\u0060 libraries are compiled with Emscripten, which targets browser APIs. A WASI Console app (\u0060wasi-wasm\u0060 RID) uses a fundamentally different runtime (WASI system calls instead of browser/Emscripten APIs), so the Emscripten-compiled libraries aren\u0027t compatible.\n\nFor reference, the MSBuild targets in the NativeAssets.WebAssembly package only activate when \u0060UsingMicrosoftNETSdkBlazorWebAssembly\u0060 or \u0060UsingMicrosoftNETSdkWebAssembly\u0060 is set, which a WASI Console app doesn\u0027t set.\n\nSupporting WASI would require recompiling libSkiaSharp with a WASI-compatible toolchain (e.g., wasi-sdk). Could you share more about your use case? That would help us evaluate prioritizing WASI support."
+      }
+    ]
+  }
+}
