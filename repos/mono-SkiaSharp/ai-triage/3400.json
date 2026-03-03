@@ -1,0 +1,135 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3400,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "backend/PDF", "tenet/reliability", "backend/Xps"]
+  },
+  "summary": "SKDocument.CreateXps() renders <image> elements from SVG at approximately 30-40% of their correct size, while CreatePdf() renders the same SVG content correctly. All non-image SVG elements (text, barcodes, shapes) render correctly in both formats.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.80 },
+    "platforms": ["os/Windows-Classic"],
+    "backends": ["backend/XPS"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Images in XPS output are significantly smaller (approximately 30-40% of correct size)",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net9.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load an SVG containing <image> elements with Base64-encoded images",
+        "Parse using SKSvg.Load()",
+        "Generate XPS using SKDocument.CreateXps() and PDF using SKDocument.CreatePdf() with the same SKPicture",
+        "Compare image dimensions in XPS vs PDF output"
+      ],
+      "environmentDetails": "Windows 10/11, .NET 9.0, SkiaSharp 3.119.1 / 3.116.0, Svg.Skia 3.2.1"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.1", "3.116.0", "2.88.9"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The Skia XPS backend image handling code (SkXPSDevice::drawImageRect) has not been significantly changed, and the DPI scaling logic in SkXPSDocument/SkXPSDevice remains the same."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.60,
+      "reason": "Reporter claims 2.88.9 was last known good version. However, issue #1728 reports similar XPS image problems in 2.88.8, suggesting this may be a longstanding upstream Skia XPS backend issue rather than a SkiaSharp regression.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "The XPS backend in upstream Skia handles images differently from vector elements. SkXPSDevice::drawImageRect() converts images to bitmap shaders and draws them as filled rectangles, while vector elements go through standard geometry paths. The XPS spec requires 96 DPI internally, but SkiaSharp defaults to 72 DPI when calling CreateXps() without an explicit DPI parameter. The endSheet() method applies a DPI-based scale factor, and the bitmap shader rasterization in drawImageRect() interacts with this scaling differently than vector geometry — likely causing images to be scaled incorrectly while other elements render fine. Issue #1728 documents a very similar XPS image rendering bug confirmed as an upstream Skia issue.",
+    "rationale": "This is clearly a bug — the same SKPicture produces correct PDF output but incorrect XPS output for image elements only. The root cause is in the upstream Skia XPS backend (SkXPSDevice), not in SkiaSharp's C# wrapper or C API layer. The wrapper correctly passes through the DPI parameter. The issue affects label printing applications using the Windows XPS print pipeline.",
+    "keySignals": [
+      { "text": "Images are significantly smaller (approximately 30-40% of correct size)", "source": "issue body", "interpretation": "Consistent with a DPI-related double-scaling issue. 72/96 = 0.75, and if applied incorrectly images could shrink to ~56% (0.75^2) or similar." },
+      { "text": "All other SVG elements (text, barcodes, rectangles, shapes) render correctly in both formats", "source": "issue body", "interpretation": "Only raster images are affected — confirms the issue is in the image-specific code path (drawImageRect), not general XPS scaling." },
+      { "text": "Same SKPicture object produces correct output with CreatePdf() and CreateImage()", "source": "issue body", "interpretation": "The input data is correct; the bug is in the XPS output path specifically." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKDocument.cs", "lines": "67-73", "finding": "CreateXps(SKWStream, float) correctly passes DPI to SkiaApi.sk_document_create_xps_from_stream. Default DPI is 72.0f (DefaultRasterDpi). The C# wrapper is a simple pass-through with no additional scaling logic.", "relevance": "context" },
+      { "file": "externals/skia/src/xps/SkXPSDevice.cpp", "lines": "1997-2031", "finding": "drawImageRect() converts images to bitmap shaders via SkMakeBitmapShaderForPaint and draws as filled rectangles. This image-specific code path handles coordinate mapping differently from vector geometry paths, which could explain why only images are affected.", "relevance": "direct" },
+      { "file": "externals/skia/src/xps/SkXPSDevice.cpp", "lines": "265-273", "finding": "endSheet() applies a scale from fCurrentUnitsPerMeter to 96 DPI (XPS spec fixed). When user passes 72 DPI, this produces a scale factor that may interact incorrectly with the bitmap shader matrix in drawImageRect().", "relevance": "direct" },
+      { "file": "externals/skia/src/xps/SkXPSDocument.cpp", "lines": "37-50", "finding": "SkXPSDocument constructor computes fUnitsPerMeter (fixed at ~2834.6, based on 72 points/inch) and fPixelsPerMeter (based on user DPI). These are passed to beginSheet() and affect the convertToPpm scaling used for image rasterization.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Use SKDocument.CreatePdf() instead of CreateXps() for correct image rendering",
+      "Try passing 96f as the DPI parameter to CreateXps(stream, 96f) to match the XPS spec's native DPI, which may reduce the scaling discrepancy"
+    ],
+    "nextQuestions": [
+      "Does passing dpi=96 to CreateXps() produce correctly-sized images?",
+      "Is this the same root cause as issue #1728 (XPS DrawBitMap clipping)?",
+      "Has the upstream Skia XPS backend been fixed in newer Skia versions?"
+    ],
+    "resolution": {
+      "hypothesis": "The Skia XPS backend applies DPI-based scaling that interacts incorrectly with the bitmap shader coordinate matrix used in drawImageRect(). When the user-specified DPI (72, the default) differs from the XPS spec DPI (96), images get an extra scale factor that vector geometry does not, causing images to render smaller.",
+      "proposals": [
+        {
+          "title": "Use PDF instead of XPS",
+          "description": "Replace SKDocument.CreateXps() with SKDocument.CreatePdf() for correct image rendering. The reporter already confirmed PDF works correctly.",
+          "category": "alternative",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Pass native XPS DPI (96) explicitly",
+          "description": "Call CreateXps(stream, 96f) instead of CreateXps(stream) to avoid the 72-to-96 DPI scaling mismatch. This may fix the image scaling by matching the XPS spec's native 96 DPI.",
+          "codeSnippet": "using var document = SKDocument.CreateXps(xpsStream, 96f);",
+          "category": "workaround",
+          "confidence": 0.55,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Fix upstream Skia XPS image scaling",
+          "description": "Investigate and fix the DPI scaling interaction in SkXPSDevice::drawImageRect() or the endSheet() scaling logic to handle bitmap shader coordinates consistently with vector geometry. This is an upstream Skia fix.",
+          "category": "fix",
+          "confidence": 0.60,
+          "effort": "large"
+        }
+      ],
+      "recommendedProposal": "Use PDF instead of XPS",
+      "recommendedReason": "Most reliable workaround. The upstream Skia XPS backend has known image handling issues (see #1728) and fixing it requires changes to the Skia C++ codebase."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Confirmed wrong-output bug in the upstream Skia XPS backend. Needs investigation to determine if passing 96 DPI resolves the issue and whether an upstream Skia fix is feasible."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Correct labels: replace backend/PDF and backend/Xps with backend/XPS",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic", "backend/XPS", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge bug, provide workarounds, link to related issue",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the detailed reproduction code and analysis.\n\nThis appears to be an issue in the upstream Skia XPS backend's image handling. The XPS device converts images to bitmap shaders (`SkXPSDevice::drawImageRect`) and applies DPI-based scaling that interacts differently with images than with vector geometry — which explains why text, shapes, and barcodes render correctly but images don't.\n\nTwo workarounds to try:\n\n1. **Use PDF output** — you've already confirmed this works correctly.\n2. **Pass 96 DPI explicitly** — the XPS spec is fixed at 96 DPI, but SkiaSharp defaults to 72. Matching the native DPI may help:\n\n```csharp\nusing var document = SKDocument.CreateXps(xpsStream, 96f);\n```\n\nNote: you'd need to adjust your `contentScale` calculation accordingly if you change the DPI.\n\nThis is related to #1728, which reports similar XPS image rendering issues and was identified as an upstream Skia bug. We'll investigate whether the DPI alignment resolves the scaling or if an upstream fix is needed."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related XPS image issue #1728",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 1728
+      }
+    ]
+  }
+}
