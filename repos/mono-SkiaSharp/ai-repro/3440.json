@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3440,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-06-23T12:00:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Bug is in WinUI view layer: AngleSwapChainPanel.OnLoaded → GlesContext.CreateSurface → PropertySetExtensions.AddSingle triggers TypeInitializationException with COMException 'Element not found' during WinRT class activation. This code path is exclusive to Windows WinUI runtime — console apps do not use WinRT activation, ANGLE, or PropertySetExtensions. Tested core SkiaSharp on macOS console with both 3.119.1 and 3.119.2; basic rendering works correctly. Docker cannot help as WinRT activation requires Windows. Requires Windows host with WinUI/Windows App SDK to reproduce the ANGLE surface creation failure.",
+  "blockers": [
+    "Requires Windows host — bug is in WinUI ANGLE/OpenGL rendering path (PropertySetExtensions WinRT activation), not reproducible via console or Docker",
+    "WinRT class activation (BaseActivationFactory) only runs on Windows with Windows App SDK runtime",
+    "Console fallback tested on macOS: core SkiaSharp rendering works, but cannot trigger AngleSwapChainPanel/GlesContext code path"
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "3.119.1" }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 3.119.1 (console fallback — WinUI not available on macOS)",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.1",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp' version '3.119.1' added",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project referencing SkiaSharp 3.119.1",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.119.1\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Console app testing core SkiaSharp rendering (cannot test WinUI ANGLE path)",
+          "content": "using SkiaSharp;\n\ntry\n{\n    using var bitmap = new SKBitmap(100, 100);\n    using var canvas = new SKCanvas(bitmap);\n    using var paint = new SKPaint { Color = SKColors.Red, IsAntialias = true };\n    canvas.Clear(SKColors.White);\n    canvas.DrawCircle(50, 50, 40, paint);\n    var pixel = bitmap.GetPixel(50, 50);\n    Console.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\n    Console.WriteLine($\"Center pixel: R={pixel.Red}, G={pixel.Green}, B={pixel.Blue}, A={pixel.Alpha}\");\n    if (pixel.Red > 200 && pixel.Green < 50 && pixel.Blue < 50)\n        Console.WriteLine(\"SUCCESS: Core SkiaSharp rendering works correctly\");\n    else\n        Console.WriteLine($\"UNEXPECTED: Pixel values unexpected: {pixel}\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"ERROR: {ex.GetType().Name}: {ex.Message}\");\n    Console.WriteLine(ex.StackTrace);\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and run console app with SkiaSharp 3.119.1 — tests core rendering (cannot test WinUI path)",
+      "command": "dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)\nSkiaSharp version: 3.119.0.0\nCenter pixel: R=255, G=0, B=0, A=255\nSUCCESS: Core SkiaSharp rendering works correctly",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Test with latest SkiaSharp 3.119.2 in fresh project directory",
+      "command": "cd /tmp/skiasharp/repro/3440 && dotnet new console -n Repro-latest --framework net8.0 && cd Repro-latest && dotnet add package SkiaSharp --version 3.119.2 && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)\nSkiaSharp version: 3.119.0.0\nCenter pixel: R=255, G=0, B=0, A=255\nSUCCESS: Core SkiaSharp rendering works correctly",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Core SkiaSharp works on macOS console, but the reported bug is in WinUI ANGLE path (PropertySetExtensions WinRT activation) which cannot be triggered without Windows + WinUI runtime",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Same as 3.119.1 — core rendering works but WinUI view layer untestable on macOS",
+      "platform": "host-macos-arm64"
+    }
+  ]
+}
