@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3519,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-03T21:20:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced as reported. Win32 NuGet package grew from ~13 MB to ~82 MB due to native PDB files (libSkiaSharp.pdb, ~80-84 MB per architecture) being included in 3.119.2. Linux packages grew from ~40 MB to ~54 MB because .so files are no longer stripped (contain debug_info). macOS is unaffected. Root cause is PR #3374 which set IncludeSymbols=true for all NativeAssets projects without setting SymbolPackageFormat=snupkg. Not fixed on main \u2014 NativeAssets.Build.targets unchanged since the regression commit.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Download SkiaSharp.NativeAssets.Win32 3.119.1 and 3.119.2 from NuGet",
+      "layer": "setup",
+      "result": "success",
+      "command": "curl -sL https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.win32/3.119.1/skiasharp.nativeassets.win32.3.119.1.nupkg -o win32-3.119.1.nupkg \u0026\u0026 curl -sL https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.win32/3.119.2/skiasharp.nativeassets.win32.3.119.2.nupkg -o win32-3.119.2.nupkg",
+      "exitCode": 0,
+      "output": "win32-3.119.1.nupkg: 13,804 KB\nwin32-3.119.2.nupkg: 82,460 KB"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Extract Win32 packages and compare runtimes contents",
+      "layer": "deployment",
+      "result": "wrong-output",
+      "command": "unzip -q win32-3.119.1.nupkg -d win32-3.119.1 \u0026\u0026 unzip -q win32-3.119.2.nupkg -d win32-3.119.2 \u0026\u0026 find win32-3.119.2/runtimes -type f -name \u0027*.pdb\u0027",
+      "exitCode": 0,
+      "output": "3.119.1 runtimes (DLLs only, 30 MB total):\n  win-arm64/native/libSkiaSharp.dll (9,644 KB)\n  win-x64/native/libSkiaSharp.dll (11,128 KB)\n  win-x86/native/libSkiaSharp.dll (9,300 KB)\n\n3.119.2 runtimes (DLLs \u002B PDBs, 280 MB total):\n  win-arm64/native/libSkiaSharp.dll (10,168 KB)\n  win-arm64/native/libSkiaSharp.pdb (82,828 KB)\n  win-x64/native/libSkiaSharp.dll (11,340 KB)\n  win-x64/native/libSkiaSharp.pdb (81,868 KB)\n  win-x86/native/libSkiaSharp.dll (9,868 KB)\n  win-x86/native/libSkiaSharp.pdb (84,524 KB)"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Download and compare Linux native asset packages",
+      "layer": "deployment",
+      "result": "wrong-output",
+      "command": "curl -sL https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.linux/3.119.1/skiasharp.nativeassets.linux.3.119.1.nupkg -o linux-3.119.1.nupkg \u0026\u0026 curl -sL https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.linux/3.119.2/skiasharp.nativeassets.linux.3.119.2.nupkg -o linux-3.119.2.nupkg",
+      "exitCode": 0,
+      "output": "linux-3.119.1.nupkg: 39,876 KB\nlinux-3.119.2.nupkg: 54,300 KB\n\n3.119.1 linux-x64/native/libSkiaSharp.so: ELF 64-bit, stripped (8,820 KB)\n3.119.2 linux-x64/native/libSkiaSharp.so: ELF 64-bit, with debug_info, not stripped (10,920 KB)\n3.119.1 linux-musl-x64/native/libSkiaSharp.so: stripped (8,732 KB)\n3.119.2 linux-musl-x64/native/libSkiaSharp.so: with debug_info, not stripped (18,024 KB)"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify macOS packages are unaffected",
+      "layer": "deployment",
+      "result": "success",
+      "command": "curl -sL https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.macos/3.119.1/skiasharp.nativeassets.macos.3.119.1.nupkg -o macos-3.119.1.nupkg \u0026\u0026 curl -sL https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.macos/3.119.2/skiasharp.nativeassets.macos.3.119.2.nupkg -o macos-3.119.2.nupkg",
+      "exitCode": 0,
+      "output": "macos-3.119.1.nupkg: 7,788 KB\nmacos-3.119.2.nupkg: 6,984 KB\nmacOS packages unchanged/slightly smaller \u2014 no debug symbols included"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test 3.119.3-preview.1.1 Win32 package for fix",
+      "layer": "deployment",
+      "result": "wrong-output",
+      "command": "curl -sL https://api.nuget.org/v3-flatcontainer/skiasharp.nativeassets.win32/3.119.3-preview.1.1/skiasharp.nativeassets.win32.3.119.3-preview.1.1.nupkg -o win32-preview.nupkg \u0026\u0026 unzip -q win32-preview.nupkg -d win32-preview \u0026\u0026 find win32-preview/runtimes -name \u0027*.pdb\u0027",
+      "exitCode": 0,
+      "output": "win32-preview.nupkg: 81,964 KB \u2014 still contains PDB files:\n  win-arm64/native/libSkiaSharp.pdb (82,876 KB)\n  win-x64/native/libSkiaSharp.pdb (82,016 KB)\n  win-x86/native/libSkiaSharp.pdb (84,656 KB)"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Check main branch NativeAssets.Build.targets for fix",
+      "layer": "deployment",
+      "result": "wrong-output",
+      "command": "git -C $REPO log --oneline -5 -- binding/NativeAssets.Build.targets",
+      "exitCode": 0,
+      "output": "Last change: 6a7a452af \u0027Preserve and pack the Android symbols (#3374)\u0027 \u2014 this is the regression commit. NativeAssets.Build.targets unchanged on main since the regression. IncludeSymbols=true still set without SymbolPackageFormat=snupkg."
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "assessment": "likely-bug",
+  "scope": "universal",
+  "versionResults": [
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Win32 package 13,804 KB with only DLL files. Linux .so files stripped. No debug symbols in packages.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Win32 package 82,460 KB \u2014 includes libSkiaSharp.pdb (~80-84 MB per arch). Linux package 54,300 KB \u2014 .so files not stripped with debug_info. 497% increase on Win32, 36% increase on Linux.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.3-preview.1.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Win32 package 81,964 KB \u2014 PDB files still present. Issue not fixed in latest preview.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "NativeAssets.Build.targets unchanged since regression commit 6a7a452af. IncludeSymbols=true without SymbolPackageFormat=snupkg still present.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.NativeAssets.Win32",
+        "version": "3.119.2"
+      },
+      {
+        "name": "SkiaSharp.NativeAssets.Linux",
+        "version": "3.119.2"
+      },
+      {
+        "name": "SkiaSharp.NativeAssets.macOS",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for reporting this \u2014 we\u0027ve confirmed the size increase.\n\n**Root cause:** PR #3374 (\u0022Preserve and pack the Android symbols\u0022) expanded \u0060IncludeSymbols=true\u0060 to all \u0060NativeAssets\u0060 projects without setting \u0060SymbolPackageFormat=snupkg\u0060. This causes native debug symbols to be bundled in the main \u0060.nupkg\u0060 instead of a separate symbols package.\n\n**Findings:**\n\n| Package | 3.119.1 | 3.119.2 | Cause |\n|---------|---------|---------|-------|\n| Win32 | 13 MB | 82 MB | \u0060libSkiaSharp.pdb\u0060 (~80-84 MB per arch) included |\n| Linux | 40 MB | 54 MB | \u0060.so\u0060 files not stripped (contain \u0060debug_info\u0060) |\n| macOS | 7 MB | 7 MB | Unaffected |\n\nThe issue also persists in \u00603.119.3-preview.1.1\u0060 and on the \u0060main\u0060 branch.\n\n**Workaround (from @Jack251970):** Add MSBuild targets to delete PDB files from the \u0060runtimes/\u0060 folder after build/publish:\n\n\u0060\u0060\u0060xml\n\u003CTarget Name=\u0022RemoveNativePdbs\u0022 AfterTargets=\u0022Build\u0022\u003E\n  \u003CItemGroup\u003E\n    \u003CPdbFilesToRemove Include=\u0022$(OutputPath)runtimes\\**\\*.pdb\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n  \u003CDelete Files=\u0022@(PdbFilesToRemove)\u0022 /\u003E\n\u003C/Target\u003E\n\u0060\u0060\u0060"
+    },
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.95,
+      "reason": "Confirmed packaging regression from PR #3374. Debug symbols included in main NuGet packages across Win32 and Linux. Not fixed on main or latest preview. Needs a fix to either set SymbolPackageFormat=snupkg or exclude debug symbols from the NativeAssetPackageFile globs."
+    },
+    "workarounds": [
+      "Add MSBuild target to delete runtimes/**/*.pdb files after build/publish (workaround from Jack251970 in issue comments)"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/Build and os/Linux labels to reflect packaging regression affecting Win32 and Linux",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #3374 which introduced the regression",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ]
+  }
+}
