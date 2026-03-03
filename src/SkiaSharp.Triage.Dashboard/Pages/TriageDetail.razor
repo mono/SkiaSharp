@@ -66,7 +66,86 @@ else
         <div class="triage-main">
             @if (_issue is not null)
             {
-                <DetailsTabPanel Issue="@_issue" />
+                <!-- Quick Facts Row -->
+                <div class="quick-facts-row">
+                    <div class="qf-group">
+                        <span class="qf-label">Type</span>
+                        <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
+                        <span class="field-confidence">@_issue.Classification.Type.Confidence.ToString("P0")</span>
+                    </div>
+                    @if (_issue.Classification.Area is not null)
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Area</span>
+                            <span class="label label-area">@FormatLabel(_issue.Classification.Area.Value)</span>
+                        </div>
+                    }
+                    @if (_issue.Evidence.BugSignals?.Severity is not null)
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Severity</span>
+                            <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString()">@FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())</span>
+                        </div>
+                    }
+                    @if (_issue.Evidence.Regression is not null && _issue.Evidence.Regression.IsRegression)
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Regression</span>
+                            <span class="badge-regression">⚡ Yes</span>
+                            @if (_issue.Evidence.Regression.BrokeInVersion is not null)
+                            {
+                                <span class="qf-detail">broke in @_issue.Evidence.Regression.BrokeInVersion</span>
+                            }
+                        </div>
+                    }
+                    @if (_issue.Classification.Platforms is { Count: > 0 })
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Platforms</span>
+                            @foreach (var p in _issue.Classification.Platforms) { <span class="label label-os">@FormatLabel(p)</span> }
+                        </div>
+                    }
+                    @if (_repro is not null)
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Repro</span>
+                            <span class="badge-repro-conclusion badge-repro-@_repro.Conclusion.ToJsonString()">@FormatLabel(_repro.Conclusion.ToJsonString())</span>
+                        </div>
+                    }
+                    @if (_issue.Evidence.VersionAnalysis?.MentionedVersions is { Count: > 0 })
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Versions</span>
+                            @foreach (var v in _issue.Evidence.VersionAnalysis.MentionedVersions) { <span class="label">@v</span> }
+                        </div>
+                    }
+                </div>
+
+                <!-- Content Tabs -->
+                <div class="content-tabs">
+                    <button type="button" class="content-tab @(_activeTab == "analysis" ? "active" : "")" @onclick='() => _activeTab = "analysis"'>
+                        Analysis
+                    </button>
+                    @if (_repro is not null)
+                    {
+                        <button type="button" class="content-tab @(_activeTab == "repro" ? "active" : "")" @onclick='() => _activeTab = "repro"'>
+                            Reproduction Log
+                        </button>
+                    }
+                </div>
+
+                @if (_activeTab == "analysis")
+                {
+                    <DetailsTabPanel Issue="@_issue" />
+                }
+                else if (_activeTab == "repro" && _repro is not null)
+                {
+                    <ReproTabPanel Repro="@_repro" ActiveTab="repro" />
+                }
+            }
+            else if (_repro is not null)
+            {
+                <ReproTabPanel Repro="@_repro" ActiveTab="repro" />
             }
         </div>
 
@@ -117,219 +196,35 @@ else
                 </div>
             }
 
-            @if (_issue is not null)
+            <!-- Draft Response -->
+            @if (_repro?.Output?.ProposedResponse is not null)
             {
-                <!-- Quick Facts: Classification -->
+                var response = _repro.Output.ProposedResponse;
                 <div class="sidebar-card">
-                    <h3 class="section-title">Classification</h3>
-                    <dl class="sidebar-dl">
-                        <dt>Type</dt>
-                        <dd>
-                            <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
-                            <span class="field-confidence">@_issue.Classification.Type.Confidence.ToString("P0")</span>
-                        </dd>
-                        @if (_issue.Classification.Area is not null)
-                        {
-                            <dt>Area</dt>
-                            <dd>
-                                <span class="label label-area">@FormatLabel(_issue.Classification.Area.Value)</span>
-                                <span class="field-confidence">@_issue.Classification.Area.Confidence.ToString("P0")</span>
-                            </dd>
-                        }
-                        @if (_issue.Classification.Platforms is { Count: > 0 })
-                        {
-                            <dt>Platforms</dt>
-                            <dd>@foreach (var p in _issue.Classification.Platforms) { <span class="label label-os">@FormatLabel(p)</span> }</dd>
-                        }
-                        @if (_issue.Classification.Backends is { Count: > 0 })
-                        {
-                            <dt>Backends</dt>
-                            <dd>@foreach (var b in _issue.Classification.Backends) { <span class="label label-backend">@FormatLabel(b)</span> }</dd>
-                        }
-                    </dl>
-                </div>
-
-                <!-- Quick Facts: Bug Signals -->
-                @if (_issue.Evidence.BugSignals is not null)
-                {
-                    <div class="sidebar-card">
-                        <h3 class="section-title">Bug Signals</h3>
-                        <dl class="sidebar-dl">
-                            @if (_issue.Evidence.BugSignals.Severity is not null)
-                            {
-                                <dt>Severity</dt>
-                                <dd><span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString()">@FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())</span></dd>
-                            }
-                            @if (_issue.Evidence.BugSignals.ReproQuality is not null)
-                            {
-                                <dt>Repro Quality</dt>
-                                <dd>@FormatLabel(_issue.Evidence.BugSignals.ReproQuality.Value.ToJsonString())</dd>
-                            }
-                            @if (_issue.Evidence.BugSignals.RegressionClaimed == true)
-                            {
-                                <dt>Regression</dt>
-                                <dd><span class="signal signal-yes">🔄 Yes</span></dd>
-                            }
-                            @if (_issue.Evidence.BugSignals.ErrorType is not null)
-                            {
-                                <dt>Error</dt>
-                                <dd><code>@_issue.Evidence.BugSignals.ErrorType.Value.ToJsonString()</code></dd>
-                            }
-                        </dl>
+                    <h3 class="section-title">Draft Response</h3>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <span class="badge-rs badge-rs-@response.Status.ToJsonString()">@FormatLabel(response.Status.ToJsonString())</span>
                     </div>
-                }
-
-                <!-- Quick Facts: Regression -->
-                @if (_issue.Evidence.Regression is not null)
-                {
-                    <div class="sidebar-card">
-                        <h3 class="section-title">Regression</h3>
-                        <dl class="sidebar-dl">
-                            <dt>Status</dt>
-                            <dd>
-                                @if (_issue.Evidence.Regression.IsRegression)
-                                {
-                                    <span class="badge-regression">⚡ Regression</span>
-                                    <span class="field-confidence">@_issue.Evidence.Regression.Confidence.ToString("P0")</span>
-                                }
-                                else
-                                {
-                                    <span>Not a regression</span>
-                                }
-                            </dd>
-                            @if (_issue.Evidence.Regression.WorkedInVersion is not null)
-                            {
-                                <dt>Worked in</dt>
-                                <dd>@_issue.Evidence.Regression.WorkedInVersion</dd>
-                            }
-                            @if (_issue.Evidence.Regression.BrokeInVersion is not null)
-                            {
-                                <dt>Broke in</dt>
-                                <dd>@_issue.Evidence.Regression.BrokeInVersion</dd>
-                            }
-                        </dl>
-                    </div>
-                }
-
-                <!-- Quick Facts: Version Analysis -->
-                @if (_issue.Evidence.VersionAnalysis is not null)
-                {
-                    <div class="sidebar-card">
-                        <h3 class="section-title">Version Analysis</h3>
-                        <dl class="sidebar-dl">
-                            @if (_issue.Evidence.VersionAnalysis.MentionedVersions is { Count: > 0 })
-                            {
-                                <dt>Versions</dt>
-                                <dd>@foreach (var v in _issue.Evidence.VersionAnalysis.MentionedVersions) { <span class="label">@v</span> }</dd>
-                            }
-                            @if (_issue.Evidence.VersionAnalysis.CurrentRelevance is not null)
-                            {
-                                <dt>Relevant</dt>
-                                <dd><span class="label label-relevance-@_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString()">@FormatLabel(_issue.Evidence.VersionAnalysis.CurrentRelevance.Value.ToJsonString())</span></dd>
-                            }
-                            @if (_issue.Evidence.VersionAnalysis.WorkedIn is not null)
-                            {
-                                <dt>Worked in</dt>
-                                <dd>@_issue.Evidence.VersionAnalysis.WorkedIn</dd>
-                            }
-                            @if (_issue.Evidence.VersionAnalysis.BrokeIn is not null)
-                            {
-                                <dt>Broke in</dt>
-                                <dd>@_issue.Evidence.VersionAnalysis.BrokeIn</dd>
-                            }
-                        </dl>
-                    </div>
-                }
-            }
-
-            <!-- Reproduction Result -->
-            @if (_repro is not null)
-            {
-                <div class="sidebar-card">
-                    <h3 class="section-title">Reproduction</h3>
-                    <dl class="sidebar-dl">
-                        <dt>Conclusion</dt>
-                        <dd>
-                            <span class="badge-repro-conclusion badge-repro-@_repro.Conclusion.ToJsonString()">
-                                @FormatLabel(_repro.Conclusion.ToJsonString())
-                            </span>
-                            @if (_repro.Assessment is not null)
-                            {
-                                <span class="badge-assessment">@FormatLabel(_repro.Assessment.Value.ToJsonString())</span>
-                            }
-                        </dd>
-                        @if (_repro.ReproductionSteps is { Count: > 0 })
-                        {
-                            <dt>Steps</dt>
-                            <dd>@_repro.ReproductionSteps.Count steps</dd>
-                        }
-                        @if (_repro.Environment?.Os is not null)
-                        {
-                            <dt>Environment</dt>
-                            <dd>@_repro.Environment.Os @_repro.Environment?.Arch</dd>
-                        }
-                    </dl>
-                    @if (_repro.Output?.MissingInfo is { Count: > 0 })
+                    @if (response.Summary is not null)
                     {
-                        <div class="repro-missing-indicator">
-                            ⚠ Missing info (@_repro.Output.MissingInfo.Count)
-                        </div>
+                        <p class="draft-summary">@response.Summary</p>
                     }
-                </div>
-
-                <!-- Draft Response Preview -->
-                @if (_repro.Output?.ProposedResponse is not null)
-                {
-                    var response = _repro.Output.ProposedResponse;
-                    <div class="sidebar-card">
-                        <h3 class="section-title">Draft Response</h3>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-                            <span class="badge-rs badge-rs-@response.Status.ToJsonString()">@FormatLabel(response.Status.ToJsonString())</span>
-                        </div>
-                        @if (response.Summary is not null)
-                        {
-                            <p class="draft-summary">@response.Summary</p>
-                        }
-                        <div class="draft-actions">
-                            <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(response.Body)" title="Copy markdown to clipboard">
-                                📋 Copy
-                            </button>
-                            <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro.Meta.Repo)/issues/@(_issue?.Meta.Number ?? _repro.Meta.Number)"
-                               target="_blank" rel="noopener noreferrer" class="btn-goto">
-                                GitHub ↗
-                            </a>
-                        </div>
+                    <div class="draft-body-full md-content">
+                        @MarkdownHelper.ToHtml(response.Body)
                     </div>
-                }
+                    <div class="draft-actions">
+                        <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(response.Body)" title="Copy markdown to clipboard">
+                            📋 Copy
+                        </button>
+                        <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro.Meta.Repo)/issues/@(_issue?.Meta.Number ?? _repro.Meta.Number)"
+                           target="_blank" rel="noopener noreferrer" class="btn-goto">
+                            GitHub ↗
+                        </a>
+                    </div>
+                </div>
             }
         </div>
     </div>
-
-    <!-- Full-Width Draft Response -->
-    @if (_repro?.Output?.ProposedResponse is not null)
-    {
-        var response = _repro.Output.ProposedResponse;
-        <div class="section-card draft-response-full">
-            <h3 class="section-title">Draft Response</h3>
-            <div class="draft-body-full md-content">
-                @MarkdownHelper.ToHtml(response.Body)
-            </div>
-        </div>
-    }
-
-    <!-- Repro Log Toggle -->
-    @if (_repro is not null)
-    {
-        <div class="repro-log-toggle">
-            <button type="button" class="btn-toggle-repro" @onclick="() => _showReproLog = !_showReproLog">
-                @(_showReproLog ? "▲ Hide Repro Log" : "▼ Show Repro Log")
-            </button>
-        </div>
-        @if (_showReproLog)
-        {
-            <ReproTabPanel Repro="@_repro" ActiveTab="details" />
-        }
-    }
 
     <!-- Bottom Navigation -->
     <TriageDetailNav BackUrl="@BackUrl" PrevNumber="@_prevNumber" NextNumber="@_nextNumber" 
@@ -356,7 +251,7 @@ else
     private int _currentIndex;
     private int _totalCount;
     private bool _loading = true;
-    private bool _showReproLog;
+    private string _activeTab = "analysis";
     private List<TriageAction> _allActions = [];
 
     protected override async Task OnInitializedAsync()
@@ -383,7 +278,7 @@ else
             _issue = await DataService.GetTriageDetailAsync(Number);
             _repro = await DataService.GetReproDetailAsync(Number);
             _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
-            _showReproLog = false;
+            _activeTab = "analysis";
             RebuildActions();
             LoadNavigation();
         }
