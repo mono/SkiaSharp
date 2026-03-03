@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2334,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "Colors render incorrectly with alpha/transparency in Blazor WASM because SKCanvasView creates the raster surface with SKAlphaType.Opaque instead of SKAlphaType.Premul, making it the only platform view with this alpha type; HTML Canvas putImageData interprets the undefined alpha bytes, causing color distortion.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.95 },
+    "platforms": ["os/WASM"],
+    "backends": ["backend/Raster"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "Colors appear different/washed out when using alpha transparency in Blazor WASM vs Windows Forms/WPF",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net6.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WebAssembly app with SKCanvasView",
+        "Set paint.Color = paint.Color.WithAlpha((byte)(0xFF * 0.5)) for 50% transparency",
+        "Draw text with canvas.DrawText(\"Hello\", X, Y, paint)",
+        "Compare rendering with same code in Windows Forms — colors differ"
+      ],
+      "environmentDetails": "SkiaSharp 2.8.4, Windows 10, Chrome browser, Blazor WebAssembly",
+      "screenshots": [
+        { "url": "https://user-images.githubusercontent.com/120154182/206619822-5be48705-6a0b-4a27-bad6-4bb73b54ec81.png", "description": "Windows Forms rendering (correct)" },
+        { "url": "https://user-images.githubusercontent.com/120154182/206619856-0434797c-9879-4164-afa7-f43848def6b0.png", "description": "Blazor WASM rendering (incorrect colors)" },
+        { "url": "https://user-images.githubusercontent.com/120154182/206853437-5cfb6f2e-66b1-4724-bd34-7aa85367074a.png", "description": "Side-by-side comparison with same background color" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.8.4"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKCanvasView.razor.cs code still uses SKAlphaType.Opaque in the current codebase. The bug has not been fixed."
+    }
+  },
+  "analysis": {
+    "summary": "The Blazor SKCanvasView creates its raster surface with SKAlphaType.Opaque (line 113), while every other platform view (WindowsForms, WPF, WinUI, GTK, Android, iOS, Tizen) uses SKAlphaType.Premul. With Opaque, Skia does not guarantee meaningful values in the alpha channel. When the raw pixel bytes are transferred to the HTML Canvas via putImageData, the browser interprets these undefined alpha bytes, causing visible color distortion — especially when drawing with semi-transparent paints.",
+    "rationale": "Classified as bug because the same SkiaSharp drawing code produces correct colors on all other platforms but incorrect colors on Blazor WASM. The root cause is a code inconsistency (Opaque vs Premul) in the Blazor view implementation, not user error. The reporter confirmed the issue persists even with matching background colors, ruling out the initial suggestion about background color differences.",
+    "keySignals": [
+      { "text": "Transparency works fine in Windows Forms app and renders colours correctly with alpha. But in Web app, Transparency is not working as expected.", "source": "issue body", "interpretation": "Platform-specific rendering difference — same code, different results." },
+      { "text": "I executed both my samples with same background color, issue persists.", "source": "comment #2 (shuchipaharia)", "interpretation": "Eliminates background color as root cause. The issue is in the surface/pixel pipeline." },
+      { "text": "This flushed out color reminds me of situations when color space in an image was ignored.", "source": "comment #4 (themcoo)", "interpretation": "Close — the issue is related to alpha type, not color space, but the visual symptom is similar." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "113", "finding": "Surface created with SKAlphaType.Opaque — the ONLY platform view that does this. All others use SKAlphaType.Premul.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKControl.cs", "lines": "74", "finding": "Windows Forms uses SKAlphaType.Premul — confirms the reporter's observation that WinForms renders correctly.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts", "lines": "186-207", "finding": "putImageData transfers raw pixel bytes to HTML Canvas. ImageData respects the alpha channel — undefined alpha values from Opaque surface cause color distortion.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs", "lines": "63", "finding": "WPF also uses SKAlphaType.Premul, consistent with all non-Blazor views.", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Call canvas.Clear(SKColors.White) (or desired background color) at the start of OnPaintSurface to ensure all alpha bytes are set to 0xFF before drawing semi-transparent content."
+    ],
+    "nextQuestions": [
+      "Does changing SKAlphaType.Opaque to SKAlphaType.Premul in SKCanvasView.razor.cs fix the issue without side effects?",
+      "Was SKAlphaType.Opaque chosen intentionally for performance on WASM, or is it a bug?"
+    ],
+    "resolution": {
+      "hypothesis": "SKAlphaType.Opaque causes Skia to leave undefined values in the alpha channel. When putImageData writes these raw bytes to the HTML Canvas, the browser interprets the alpha, producing incorrect colors.",
+      "proposals": [
+        {
+          "title": "Clear canvas before drawing",
+          "description": "As a workaround, call canvas.Clear() with a solid background color at the start of OnPaintSurface. This ensures all pixels have defined alpha=0xFF before semi-transparent drawing occurs.",
+          "category": "workaround",
+          "codeSnippet": "void OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    var canvas = e.Surface.Canvas;\n    canvas.Clear(SKColors.White); // ensures defined alpha bytes\n    // ... your drawing code with transparency\n}",
+          "confidence": 0.85,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Change Blazor surface to SKAlphaType.Premul",
+          "description": "Change SKCanvasView.razor.cs line 113 from SKAlphaType.Opaque to SKAlphaType.Premul, matching all other platform views. This is the proper fix.",
+          "category": "fix",
+          "codeSnippet": "var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);",
+          "confidence": 0.80,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Clear canvas before drawing",
+      "recommendedReason": "Immediate workaround the reporter can apply now without waiting for a library update. The proper fix (changing to Premul) requires investigation into why Opaque was originally chosen."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Root cause identified in code (SKAlphaType.Opaque vs Premul inconsistency). Needs verification that changing to Premul doesn't break other Blazor rendering scenarios."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor views, and WASM labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM", "backend/Raster"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with workaround for alpha rendering on WASM",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed comparison with screenshots.\n\nThe Blazor `SKCanvasView` creates its raster surface with `SKAlphaType.Opaque`, while all other platform views (Windows Forms, WPF, etc.) use `SKAlphaType.Premul`. With `Opaque`, Skia doesn't guarantee meaningful alpha channel values in the pixel data, and when those bytes are transferred to the HTML Canvas via `putImageData`, the browser interprets them — producing the color distortion you're seeing.\n\nHere's a workaround you can use now: explicitly clear the canvas with a solid background color at the start of your paint handler:\n\n```csharp\nvoid OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    var canvas = e.Surface.Canvas;\n    canvas.Clear(SKColors.White); // ensures all alpha bytes are defined\n    // ... your drawing code with transparency\n}\n```\n\nThis ensures all pixels start with alpha=0xFF before any semi-transparent drawing occurs. Would you be able to confirm whether this resolves the color difference?"
+      }
+    ]
+  }
+}
