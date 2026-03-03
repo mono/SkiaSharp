@@ -175,10 +175,7 @@
                                     <div class="step-header">
                                         <span class="step-number">@step.StepNumber</span>
                                         <span class="step-layer badge-layer-@step.Layer.ToJsonString()">@FormatLabel(step.Layer.ToJsonString())</span>
-                                        @if (step.Result is not null)
-                                        {
-                                            <span class="badge-step-result badge-sr-@step.Result.Value.ToJsonString()">@FormatLabel(step.Result.Value.ToJsonString())</span>
-                                        }
+                                        <span class="badge-step-result badge-sr-@step.Result.ToJsonString()">@FormatLabel(step.Result.ToJsonString())</span>
                                         @if (step.ExitCode is not null && step.ExitCode != 0)
                                         {
                                             <span class="badge-exit-code">exit @step.ExitCode</span>

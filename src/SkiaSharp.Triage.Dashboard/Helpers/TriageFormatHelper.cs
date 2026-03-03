@@ -34,14 +34,6 @@ public static class TriageFormatHelper
         _ => ""
     };
 
-    public static string GetRiskStyle(RiskLevel risk) => risk switch
-    {
-        RiskLevel.Low => "background: #28a745; color: white;",
-        RiskLevel.Medium => "background: #ffc107; color: #212529;",
-        RiskLevel.High => "background: #dc3545; color: white;",
-        _ => ""
-    };
-
     public static string GetReproTooltip(ReproQuality quality) => quality switch
     {
         ReproQuality.Complete => "Full reproducible project provided — easiest to diagnose",

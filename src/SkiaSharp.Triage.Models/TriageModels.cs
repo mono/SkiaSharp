@@ -25,7 +25,7 @@ public record TriageMeta(
 
 public record TriageClassification(
     ClassifiedField Type,
-    ClassifiedField? Area = null,
+    ClassifiedField Area,
     List<string>? Platforms = null,
     List<string>? Backends = null,
     List<string>? Tenets = null,
@@ -49,8 +49,8 @@ public record TriageEvidence(
 
 public record BugSignals(
     BugSeverity? Severity = null,
-    bool? IsRegression = null,
-    string? ErrorType = null,
+    bool? RegressionClaimed = null,
+    ErrorType? ErrorType = null,
     string? ErrorMessage = null,
     string? StackTrace = null,
     ReproQuality? ReproQuality = null,
@@ -100,9 +100,9 @@ public record FixStatusInfo(
 
 public record TriageAnalysis(
     string Summary,
-    List<CodeInvestigationEntry> CodeInvestigation,
     string? Rationale = null,
     List<KeySignal>? KeySignals = null,
+    List<CodeInvestigationEntry>? CodeInvestigation = null,
     string? ErrorFingerprint = null,
     List<string>? Workarounds = null,
     List<string>? NextQuestions = null,
@@ -130,9 +130,11 @@ public record ResolutionAnalysis(
 );
 
 public record ResolutionProposal(
+    string Title,
     string Description,
-    string? Title = null,
+    ProposalCategory? Category = null,
     string? CodeSnippet = null,
+    ProposalValidation? Validated = null,
     double? Confidence = null,
     ProposalEffort? Effort = null
 );

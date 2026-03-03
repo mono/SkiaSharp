@@ -9,7 +9,6 @@ public enum ReproConclusion
 {
     [JsonStringEnumMemberName("reproduced")] Reproduced,
     [JsonStringEnumMemberName("not-reproduced")] NotReproduced,
-    [JsonStringEnumMemberName("wrong-output")] WrongOutput,
     [JsonStringEnumMemberName("needs-platform")] NeedsPlatform,
     [JsonStringEnumMemberName("needs-hardware")] NeedsHardware,
     [JsonStringEnumMemberName("partial")] Partial,
@@ -81,7 +80,7 @@ public enum VersionTestResult
 public enum ReproProjectType
 {
     [JsonStringEnumMemberName("console")] Console,
-    [JsonStringEnumMemberName("blazorwasm")] BlazorWasm,
+    [JsonStringEnumMemberName("blazor-wasm")] BlazorWasm,
     [JsonStringEnumMemberName("docker")] Docker,
     [JsonStringEnumMemberName("mobile")] Mobile,
     [JsonStringEnumMemberName("wpf")] Wpf,
@@ -89,7 +88,8 @@ public enum ReproProjectType
     [JsonStringEnumMemberName("winui")] WinUI,
     [JsonStringEnumMemberName("maui")] Maui,
     [JsonStringEnumMemberName("test")] Test,
-    [JsonStringEnumMemberName("existing")] Existing
+    [JsonStringEnumMemberName("existing")] Existing,
+    [JsonStringEnumMemberName("simulation")] Simulation
 }
 
 // ── Version Source ───────────────────────────────────────────────

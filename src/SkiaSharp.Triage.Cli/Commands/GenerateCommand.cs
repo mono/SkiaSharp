@@ -768,7 +768,6 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         var indexEntries = new List<TriageIndexEntry>();
         var triageNumbers = new HashSet<int>();
         var reproNumbers = new HashSet<int>();
-        var fixNumbers = new HashSet<int>();
         var byType = new Dictionary<string, int>();
         var byArea = new Dictionary<string, int>();
         var byAction = new Dictionary<string, int>();
@@ -779,10 +778,8 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         // Ensure output subdirectories exist
         var triageOutputDir = Path.Combine(settings.OutputDir, "triage");
         var reproOutputDir = Path.Combine(settings.OutputDir, "repro");
-        var fixOutputDir = Path.Combine(settings.OutputDir, "fix");
         CleanDirectory(triageOutputDir);
         CleanDirectory(reproOutputDir);
-        CleanDirectory(fixOutputDir);
 
         foreach (var repoKey in repoKeys)
         {
@@ -822,15 +819,14 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
 
                         // Compute summary stats
                         var typeValue = issue.Classification.Type.Value;
-                        var areaValue = issue.Classification.Area?.Value;
+                        var areaValue = issue.Classification.Area.Value;
                         var action = issue.Output.Actionability.SuggestedAction;
                         var severity = issue.Evidence.BugSignals?.Severity;
                         var isRegression = issue.Evidence.Regression?.IsRegression ?? false;
                         var hasCloseAction = issue.Output.Actions.Any(a => a.Type == ActionType.CloseIssue);
 
                         byType[typeValue] = byType.GetValueOrDefault(typeValue) + 1;
-                        if (areaValue is not null)
-                            byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
+                        byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
                         var actionStr = action.ToJsonString();
                         byAction[actionStr] = byAction.GetValueOrDefault(actionStr) + 1;
                         if (severity is not null)
@@ -905,7 +901,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
 
                         // Repro stats
                         withRepro++;
-                        if (repro.Conclusion is ReproConclusion.Reproduced or ReproConclusion.WrongOutput or ReproConclusion.Partial)
+                        if (repro.Conclusion is ReproConclusion.Reproduced or ReproConclusion.Partial)
                             reproduced++;
                         else if (repro.Conclusion == ReproConclusion.NotReproduced)
                             notReproduced++;
@@ -951,48 +947,6 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                     {
                         if (!settings.Quiet)
                             AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping repro {Path.GetFileName(file)}: {ex.Message}[/]");
-                    }
-                }
-            }
-        }
-
-        // ── Process fix files ──
-        foreach (var repoKey in repoKeys)
-        {
-            var cache = rootCache.ForRepo(repoKey);
-            var fixDir = cache.AiFixPath;
-            if (Directory.Exists(fixDir))
-            {
-                foreach (var file in Directory.GetFiles(fixDir, "*.json"))
-                {
-                    try
-                    {
-                        var json = await File.ReadAllTextAsync(file);
-                        var fix = JsonSerializer.Deserialize<FixResult>(json, TriageJsonOptions.Default);
-                        if (fix is null) continue;
-
-                        if (fix.Meta.SchemaVersion is not "1.0")
-                        {
-                            if (!settings.Quiet)
-                                AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: fix schema {fix.Meta.SchemaVersion} (need 1.0)[/]");
-                            continue;
-                        }
-
-                        var number = fix.Meta.Number;
-
-                        // Write per-issue fix detail file
-                        var detailPath = Path.Combine(fixOutputDir, $"{number}.json");
-                        await File.WriteAllTextAsync(detailPath, JsonSerializer.Serialize(fix, TriageJsonOptions.Default));
-
-                        fixNumbers.Add(number);
-
-                        if (!settings.Quiet)
-                            AnsiConsole.MarkupLine($"[dim]  ✓ Fix #{number}: {fix.Status.ToJsonString()}[/]");
-                    }
-                    catch (Exception ex)
-                    {
-                        if (!settings.Quiet)
-                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping fix {Path.GetFileName(file)}: {ex.Message}[/]");
                     }
                 }
             }

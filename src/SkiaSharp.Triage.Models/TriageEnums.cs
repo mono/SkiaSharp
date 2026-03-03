@@ -13,6 +13,20 @@ public enum BugSeverity
     [JsonStringEnumMemberName("low")] Low
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter<ErrorType>))]
+public enum ErrorType
+{
+    [JsonStringEnumMemberName("crash")] Crash,
+    [JsonStringEnumMemberName("exception")] Exception,
+    [JsonStringEnumMemberName("wrong-output")] WrongOutput,
+    [JsonStringEnumMemberName("missing-output")] MissingOutput,
+    [JsonStringEnumMemberName("performance")] Performance,
+    [JsonStringEnumMemberName("build-error")] BuildError,
+    [JsonStringEnumMemberName("memory-leak")] MemoryLeak,
+    [JsonStringEnumMemberName("platform-specific")] PlatformSpecific,
+    [JsonStringEnumMemberName("other")] Other
+}
+
 [JsonConverter(typeof(JsonStringEnumConverter<ReproQuality>))]
 public enum ReproQuality
 {
@@ -33,6 +47,23 @@ public enum CurrentRelevance
 
 // ── Resolution ───────────────────────────────────────────────────
 
+[JsonConverter(typeof(JsonStringEnumConverter<ProposalCategory>))]
+public enum ProposalCategory
+{
+    [JsonStringEnumMemberName("workaround")] Workaround,
+    [JsonStringEnumMemberName("fix")] Fix,
+    [JsonStringEnumMemberName("alternative")] Alternative,
+    [JsonStringEnumMemberName("investigation")] Investigation
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<ProposalValidation>))]
+public enum ProposalValidation
+{
+    [JsonStringEnumMemberName("untested")] Untested,
+    [JsonStringEnumMemberName("yes")] Yes,
+    [JsonStringEnumMemberName("no")] No
+}
+
 [JsonConverter(typeof(JsonStringEnumConverter<ProposalEffort>))]
 public enum ProposalEffort
 {
@@ -49,6 +80,7 @@ public enum SuggestedAction
 {
     [JsonStringEnumMemberName("needs-investigation")] NeedsInvestigation,
     [JsonStringEnumMemberName("close-as-fixed")] CloseAsFixed,
+    [JsonStringEnumMemberName("close-as-by-design")] CloseAsByDesign,
     [JsonStringEnumMemberName("close-with-docs")] CloseWithDocs,
     [JsonStringEnumMemberName("close-as-duplicate")] CloseAsDuplicate,
     [JsonStringEnumMemberName("convert-to-discussion")] ConvertToDiscussion,

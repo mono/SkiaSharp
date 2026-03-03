@@ -9,7 +9,7 @@ public record ReproResult(
     List<ReproStep> ReproductionSteps,
     ReproEnvironment Environment,
     ReproInputs? Inputs = null,
-    string? Assessment = null,
+    ReproAssessment? Assessment = null,
     string? Scope = null,
     string? ReproductionTime = null,
     List<ReproVersionResult>? VersionResults = null,
@@ -58,11 +58,11 @@ public record ReproStep(
     int StepNumber,
     string Description,
     StepLayer Layer,
+    StepResult Result,
     string? Command = null,
     int? ExitCode = null,
     string? Output = null,
-    List<ReproFileCreated>? FilesCreated = null,
-    StepResult? Result = null
+    List<ReproFileCreated>? FilesCreated = null
 );
 
 public record ReproFileCreated(
@@ -133,10 +133,11 @@ public record ReproErrorMessages(
 // ── Feedback ─────────────────────────────────────────────────────
 
 public record ReproFeedback(
-    List<TriageCorrection>? TriageCorrections = null
+    List<TriageCorrection>? Corrections = null
 );
 
 public record TriageCorrection(
+    string Source,
     string Topic,
     string Upstream,
     string Corrected

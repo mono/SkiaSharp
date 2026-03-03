@@ -10,7 +10,7 @@
 {
     <p><em>Loading triage data...</em></p>
 }
-else if (_issue is null && _repro is null && _fix is null)
+else if (_issue is null && _repro is null)
 {
     <h1>Issue Not Found</h1>
     <p>No triage or reproduction data for issue #@Number.</p>
@@ -60,16 +60,16 @@ else
     <TriageHero Issue="@_issue" Repro="@_repro" />
 
     <!-- Pipeline Stepper -->
-    <PipelineStepper HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" HasFix="@(_fix is not null)" />
+    <PipelineStepper HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" />
 
     <!-- Tabs -->
-    <DetailTabs HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" HasFix="@(_fix is not null)" 
+    <DetailTabs HasTriage="@(_issue is not null)" HasRepro="@(_repro is not null)" 
                 ActiveTab="@_activeTab" OnTabChanged="@(tab => _activeTab = tab)" />
 
     @* ═══ Tab 1: Details ═══ *@
     @if (_issue is not null)
     {
-        <DetailsTabPanel Issue="@_issue" Fix="@_fix" ActiveTab="@_activeTab" />
+        <DetailsTabPanel Issue="@_issue" ActiveTab="@_activeTab" />
     }
 
     @* ═══ Tab 2: Repro Log ═══ *@
@@ -97,7 +97,6 @@ else
     private TriageIndex? _index;
     private TriagedIssue? _issue;
     private ReproResult? _repro;
-    private FixResult? _fix;
     private string? _issueTitle;
     private int? _prevNumber;
     private int? _nextNumber;
@@ -111,14 +110,12 @@ else
         var indexTask = DataService.GetTriageIndexAsync();
         var triageTask = DataService.GetTriageDetailAsync(Number);
         var reproTask = DataService.GetReproDetailAsync(Number);
-        var fixTask = DataService.GetFixDetailAsync(Number);
 
-        await Task.WhenAll(indexTask, triageTask, reproTask, fixTask);
+        await Task.WhenAll(indexTask, triageTask, reproTask);
 
         _index = indexTask.Result;
         _issue = triageTask.Result;
         _repro = reproTask.Result;
-        _fix = fixTask.Result;
         _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
         _activeTab = "details";
         LoadNavigation();
@@ -131,7 +128,6 @@ else
         {
             _issue = await DataService.GetTriageDetailAsync(Number);
             _repro = await DataService.GetReproDetailAsync(Number);
-            _fix = await DataService.GetFixDetailAsync(Number);
             _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
             _activeTab = "details";
             LoadNavigation();

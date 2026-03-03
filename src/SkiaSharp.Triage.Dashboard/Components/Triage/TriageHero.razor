@@ -3,12 +3,12 @@
 @inject Microsoft.JSInterop.IJSRuntime JSRuntime
 
 @* ── Corrections Alert (above grid, full-width) ───────── *@
-@if (Repro?.Feedback?.TriageCorrections is { Count: > 0 })
+@if (Repro?.Feedback?.Corrections is { Count: > 0 })
 {
     <div class="hero-alert alert-corrections">
         <h4>⚠️ Repro Corrected Triage</h4>
         <ul class="corrections-list">
-            @foreach (var c in Repro.Feedback.TriageCorrections)
+            @foreach (var c in Repro.Feedback.Corrections)
             {
                 <li>
                     <span class="correction-topic">@c.Topic</span>
@@ -78,9 +78,9 @@
                         <span class="badge-repro-conclusion badge-repro-@Repro.Conclusion.ToJsonString()">
                             @FormatLabel(Repro.Conclusion.ToJsonString())
                         </span>
-                        @if (!string.IsNullOrEmpty(Repro.Assessment))
+                        @if (Repro.Assessment is not null)
                         {
-                            <span class="badge-assessment">@FormatLabel(Repro.Assessment)</span>
+                            <span class="badge-assessment">@FormatLabel(Repro.Assessment.Value.ToJsonString())</span>
                         }
                     </div>
                     <div class="repro-result-meta">

@@ -64,16 +64,4 @@ public class DashboardDataService(HttpClient http)
             return null;
         }
     }
-
-    public async Task<FixResult?> GetFixDetailAsync(int number)
-    {
-        try
-        {
-            return await http.GetFromJsonAsync<FixResult>($"data/fix/{number}.json", TriageJsonOptions.Default);
-        }
-        catch (HttpRequestException)
-        {
-            return null;
-        }
-    }
 }
