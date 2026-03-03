@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3066,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Blazor views (SKCanvasView and SKGLView) construct HTML element IDs using the internal Blazor convention '_bl_' + ElementReference.Id, which is documented as not safe for user code, risking breakage if Blazor changes this internal convention.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.85 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.98 },
+    "platforms": ["os/WASM"],
+    "tenets": ["tenet/reliability", "tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "other",
+      "errorMessage": "Using internal Blazor element ID convention '_bl_' + ElementReference.Id which is documented as not safe for user code",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net6.0", "net7.0", "net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Examine SKHtmlCanvasInterop.cs and SizeWatcherInterop.cs constructors",
+        "Note the hardcoded '_bl_' prefix combined with ElementReference.Id",
+        "Read ASP.NET Core documentation warning that ElementReference.Id is for JSON serialization only"
+      ],
+      "environmentDetails": "SkiaSharp 3.118.0-preview.1, Blazor WASM",
+      "relatedIssues": [3064]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.118.0-preview.1"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The '_bl_' + element.Id pattern is still present in the current codebase. Both SKHtmlCanvasInterop.cs:46 and SizeWatcherInterop.cs:43 use this pattern."
+    }
+  },
+  "analysis": {
+    "summary": "SKHtmlCanvasInterop and SizeWatcherInterop both construct HTML element IDs by concatenating '_bl_' with ElementReference.Id. This relies on Blazor's internal DOM convention where elements are tagged with '_bl_N' attributes. The ElementReference.Id property is documented as 'public to support Json serialization and should not be used by user code'. However, the maintainer notes that ASP.NET Core's own SDK uses the same pattern (ElementReferenceCapture.ts), mitigating the risk somewhat.",
+    "rationale": "Classified as type/bug because it relies on an unsupported internal API convention that could break in future Blazor versions. Severity is medium because it works today and ASP.NET Core itself uses the same pattern, but the risk exists. Filed by the maintainer as a tracking issue for future improvement. The area is clearly SkiaSharp.Views.Blazor since the affected files are in that package.",
+    "keySignals": [
+      { "text": "The Id is unique at least within the scope of a given user/circuit. This property is public to support Json serialization and should not be used by user code.", "source": "issue body (ASP.NET Core docs quote)", "interpretation": "ElementReference.Id is explicitly marked as not for user consumption, creating a fragile dependency." },
+      { "text": "Probably not too crazy as we are doing the same thing as the SDK", "source": "comment by mattleibow", "interpretation": "ASP.NET Core itself uses the same pattern, which reduces the breakage risk since Microsoft would need to update their own code too." },
+      { "text": "The new [JSImport] attribute does not yet support the ElementReference type, so we have to use the element ID", "source": "PR #3064 body", "interpretation": "The pattern was adopted as a workaround because [JSImport] cannot marshal ElementReference directly." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SKHtmlCanvasInterop.cs", "lines": "46", "finding": "Constructs htmlElementId = \"_bl_\" + element.Id, then passes this string to all JS interop calls (InitGL, InitRaster, Deinit, RequestAnimationFrame, PutImageData)", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SizeWatcherInterop.cs", "lines": "43", "finding": "Same pattern: htmlElementId = \"_bl_\" + element.Id, used for Observe/Unobserve JS calls", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts", "lines": "48", "finding": "JS side uses document.querySelector('[' + elementId + ']') to find the element when no element object is passed. Under NET7+ JSImport path, element is null so the querySelector is always used.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SizeWatcher.ts", "lines": "24", "finding": "Same querySelector pattern: element = element || document.querySelector('[' + elementId + ']')", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SKHtmlCanvasInterop.cs", "lines": "54-98", "finding": "Under NET7+ path, JSImport methods pass null for element parameter and rely entirely on the htmlElementId string. Under older path, both htmlCanvas ElementReference and htmlElementId are passed to JS.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "Does ASP.NET Core plan to support ElementReference in [JSImport] attributes in a future .NET version?",
+      "Could a custom HTML data-attribute or id be set on the canvas element as a safer alternative?",
+      "Has the '_bl_' convention changed in any .NET 9/10 preview?"
+    ],
+    "resolution": {
+      "hypothesis": "The '_bl_' prefix pattern was adopted as a workaround because [JSImport] cannot marshal ElementReference. The risk is that Blazor could change this internal convention, breaking element lookup.",
+      "proposals": [
+        {
+          "title": "Use a custom data attribute instead of _bl_ convention",
+          "description": "Set a custom data-skiasharp-id attribute on the canvas element (via AdditionalAttributes or Razor markup) and use that for querySelector instead of relying on _bl_ prefix. This decouples from Blazor internals entirely.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Monitor ASP.NET Core JSImport ElementReference support",
+          "description": "Track dotnet/aspnetcore for when [JSImport] gains native ElementReference marshalling support. Once available, pass the element directly to JS without needing string-based element lookup.",
+          "category": "investigation",
+          "confidence": 0.60,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Keep current pattern with documented risk",
+          "description": "Since ASP.NET Core's own ElementReferenceCapture.ts uses the same '_bl_' + id pattern, the risk of breakage is low — Microsoft would need to update their own code too. Document the dependency and monitor for changes.",
+          "category": "alternative",
+          "confidence": 0.80,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use a custom data attribute instead of _bl_ convention",
+      "recommendedReason": "Fully decouples from Blazor internals with minimal effort. A custom data attribute is stable and controlled by SkiaSharp."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Maintainer-filed tracking issue for a fragile dependency on Blazor internals. Needs investigation into safer alternatives, but not currently breaking."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor views, WASM, and reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the issue and summarize findings",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "This issue tracks the use of Blazor's internal `_bl_` + `ElementReference.Id` convention in `SKHtmlCanvasInterop` and `SizeWatcherInterop` to locate HTML elements from JS interop.\n\nThe pattern was adopted because `[JSImport]` (used on .NET 7+) doesn't support marshalling `ElementReference` directly, so a string-based element lookup via `document.querySelector('[' + elementId + ']')` is used instead.\n\nThe risk is somewhat mitigated by ASP.NET Core's own use of the same convention in `ElementReferenceCapture.ts`. A safer approach would be to set a custom `data-*` attribute on the canvas element and use that for JS-side element lookup, fully decoupling from Blazor internals."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #3064 which introduced the [JSImport] path using this pattern",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3064
+      }
+    ]
+  }
+}
