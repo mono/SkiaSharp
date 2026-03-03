@@ -242,15 +242,20 @@
                                 {
                                     <span class="badge-recommended">★ Recommended</span>
                                 }
-                                @if (proposal.Title is not null)
-                                {
-                                    <h5>@proposal.Title</h5>
-                                }
+                                <h5>@proposal.Title</h5>
                                 <div class="md-content">@MarkdownHelper.ToHtml(proposal.Description)</div>
                                 <div class="proposal-meta">
+                                    @if (proposal.Category is not null)
+                                    {
+                                        <span class="label">@FormatLabel(proposal.Category.Value.ToJsonString())</span>
+                                    }
                                     @if (proposal.Effort is not null)
                                     {
                                         <span class="label">Effort: @FormatLabel(proposal.Effort.Value.ToJsonString())</span>
+                                    }
+                                    @if (proposal.Validated is not null)
+                                    {
+                                        <span class="label">Validated: @FormatLabel(proposal.Validated.Value.ToJsonString())</span>
                                     }
                                     @if (proposal.Confidence is not null)
                                     {

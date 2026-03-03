@@ -979,34 +979,11 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         var indexPath = Path.Combine(settings.OutputDir, "triage-index.json");
         await File.WriteAllTextAsync(indexPath, JsonSerializer.Serialize(triageIndex, TriageJsonOptions.Default));
 
-        // ── Write legacy triage.json (backwards compatibility) ──
-        var legacyOutput = new
-        {
-            GeneratedAt = DateTime.UtcNow,
-            TotalCount = issues.Count,
-            Summary = new
-            {
-                NeedsInvestigation = needsInvestigation,
-                Closeable = closeable,
-                QuickWins = quickWins,
-                Regressions = regressions
-            },
-            ByType = byType.OrderByDescending(kv => kv.Value).Select(kv => new { Label = kv.Key, Count = kv.Value }),
-            ByArea = byArea.OrderByDescending(kv => kv.Value).Select(kv => new { Label = kv.Key, Count = kv.Value }),
-            ByAction = byAction.OrderByDescending(kv => kv.Value).Select(kv => new { Label = kv.Key, Count = kv.Value }),
-            BySeverity = bySeverity.OrderByDescending(kv => kv.Value).Select(kv => new { Label = kv.Key, Count = kv.Value }),
-            Issues = issues
-        };
-
-        var legacyPath = Path.Combine(settings.OutputDir, "triage.json");
-        await File.WriteAllTextAsync(legacyPath, JsonSerializer.Serialize(legacyOutput, TriageJsonOptions.Default));
-
         if (!settings.Quiet)
         {
             AnsiConsole.MarkupLine($"[green]  ✓ {indexPath} ({indexEntries.Count} entries, {triageNumbers.Count} triage, {reproNumbers.Count} repro)[/]");
             AnsiConsole.MarkupLine($"[green]  ✓ {triageOutputDir}/ ({triageNumbers.Count} files)[/]");
             AnsiConsole.MarkupLine($"[green]  ✓ {reproOutputDir}/ ({reproNumbers.Count} files)[/]");
-            AnsiConsole.MarkupLine($"[green]  ✓ {legacyPath} ({issues.Count} triaged issues, legacy)[/]");
         }
     }
 }
