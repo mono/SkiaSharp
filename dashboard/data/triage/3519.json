@@ -1,0 +1,191 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3519,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-27T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Native NuGet packages for Win32 increased from ~13 MB to ~75 MB and Linux from ~39 MB to ~54 MB in 3.119.2 due to native PDB files being included in packages after PR #3374 expanded the IsNativeAssetsProject symbol packaging to all platforms.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Windows-Classic",
+      "os/Linux"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Install SkiaSharp.NativeAssets.Win32 3.119.2",
+        "Compare size of native assets in runtimes/ folder to 3.119.1",
+        "Observe ~5.7x increase on Windows and ~1.4x increase on Linux"
+      ],
+      "environmentDetails": "Windows, Visual Studio, SkiaSharp 3.119.2"
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "performance",
+      "reproQuality": "complete"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.119.1",
+        "3.119.2"
+      ],
+      "workedIn": "3.119.1",
+      "brokeIn": "3.119.2",
+      "currentRelevance": "likely",
+      "relevanceReason": "The native PDB files are still included in packages. The IsNativeAssetsProject property and IncludeSymbols=true remain in binding/NativeAssets.Build.targets."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.95,
+      "reason": "PR #3374 (commit 6a7a452af) expanded the IsNativeAssetsProject symbol packaging from Windows-only to all platforms, and removed ExcludeSymbolsFromPackage=false while not setting SymbolPackageFormat=snupkg. This causes native PDB files to be bundled in the main NuGet package.",
+      "workedInVersion": "3.119.1",
+      "brokeInVersion": "3.119.2"
+    }
+  },
+  "analysis": {
+    "summary": "Native PDB files (~100 MB per Windows architecture) are included in the main NuGet packages due to PR #3374 expanding the IsNativeAssetsProject packaging mechanism to all platforms. The Win32 native output directory contains libSkiaSharp.pdb (80 MB) and libHarfBuzzSharp.pdb (20 MB) per architecture, and the NativeAssetPackageFile glob (libSkiaSharp*) matches both DLL and PDB files. Without SymbolPackageFormat=snupkg, the IncludeSymbols=true setting causes PDBs to end up in the main .nupkg rather than a separate symbols package.",
+    "rationale": "This is a packaging regression, not a functional bug. The native libraries themselves are unchanged, but the NuGet packages are 5-6x larger on Windows due to including native debug symbols. The root cause is clearly traced to PR #3374 which generalized the NativeAssets packaging. macOS is unaffected because its output directory has no PDB files and doesn\u0027t use IsNativeAssetsProject.",
+    "keySignals": [
+      {
+        "text": "Win32: 13,051 KB \u2192 75,014 KB, Linux: 39,466 KB \u2192 53,908 KB, macOS: 6,934 KB (unchanged)",
+        "source": "issue body",
+        "interpretation": "Massive Win32 increase aligns with PDB file sizes (~100 MB per arch). macOS unaffected confirms the issue is platform-specific to the packaging mechanism."
+      },
+      {
+        "text": "Whatever change happened seemed to land before preview 1",
+        "source": "issue body",
+        "interpretation": "Consistent with PR #3374 being merged before any 3.119.2 preview."
+      },
+      {
+        "text": "It seems that the new version includes pdb files in package.",
+        "source": "comment by Jack251970",
+        "interpretation": "Community member correctly identified the root cause and provided an MSBuild workaround."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/NativeAssets.Build.targets",
+        "finding": "IsNativeAssetsProject condition sets IncludeSymbols=true and BuildOutputTargetFolder=runtimes. PR #3374 expanded this from IsWindowsNativeAssets to IsNativeAssetsProject, applying it to all native asset projects.",
+        "relevance": "direct",
+        "lines": "28-32"
+      },
+      {
+        "file": "binding/NativeAssets.Build.targets",
+        "finding": "PDB/DBG files are separated into _TargetPathsToSymbols. However, without SymbolPackageFormat=snupkg, the default NuGet SDK behavior includes these in the main package.",
+        "relevance": "direct",
+        "lines": "49-52"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Win32/SkiaSharp.NativeAssets.Win32.csproj",
+        "finding": "NativeAssetPackageFile glob \u0027libSkiaSharp*\u0027 matches both .dll and .pdb files. The Windows output directory contains libSkiaSharp.pdb (80 MB) and libHarfBuzzSharp.pdb (20 MB) per architecture.",
+        "relevance": "direct",
+        "lines": "9-11"
+      },
+      {
+        "file": "native/windows/build.cake",
+        "finding": "Build script explicitly copies libSkiaSharp.pdb to the output directory alongside libSkiaSharp.dll. This has been present for a long time but previously only affected symbol packages.",
+        "relevance": "related",
+        "lines": "85-86"
+      },
+      {
+        "file": "source/SkiaSharp.NuGet.targets",
+        "finding": "AllowedOutputExtensionsInPackageBuildOutputFolder includes .pdb, which allows PDB files in the managed build output folder of NuGet packages.",
+        "relevance": "context",
+        "lines": "5"
+      }
+    ],
+    "workarounds": [
+      "Add MSBuild targets to delete PDB files from runtimes/ after build and publish (workaround from Jack251970 in issue comments)"
+    ],
+    "nextQuestions": [
+      "Should native PDB files be in a separate symbols package (snupkg) or excluded entirely?",
+      "Is the Linux size increase from versioned .so files (libSkiaSharp.so.119.0.0) being included alongside libSkiaSharp.so, or from expanded architecture support?",
+      "Should SymbolPackageFormat=snupkg be set globally for NativeAssets projects?"
+    ],
+    "resolution": {
+      "hypothesis": "PR #3374 generalized the NativeAssets packaging and IncludeSymbols=true without setting SymbolPackageFormat=snupkg, causing native PDB files to be bundled in the main NuGet package instead of a separate symbols package.",
+      "proposals": [
+        {
+          "title": "Set SymbolPackageFormat to snupkg",
+          "description": "Add SymbolPackageFormat=snupkg to the IsNativeAssetsProject PropertyGroup in NativeAssets.Build.targets. This moves PDB files to a separate .snupkg that is only downloaded by symbol servers, not by normal NuGet restore.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "title": "Exclude PDB files from NativeAssetPackageFile globs",
+          "description": "Change the Win32 csproj globs from \u0027libSkiaSharp*\u0027 to \u0027libSkiaSharp*.dll\u0027 (and similar for HarfBuzzSharp). This prevents PDB files from being picked up at all.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.75,
+          "effort": "small"
+        },
+        {
+          "title": "MSBuild target to remove PDB files from output",
+          "description": "Add AfterTargets Build/Publish targets to delete runtimes/**/*.pdb files from the output directory.",
+          "category": "workaround",
+          "codeSnippet": "\u003CTarget Name=\u0022RemoveUnnecessaryPdbFilesAfterBuild\u0022 AfterTargets=\u0022Build\u0022\u003E\n  \u003CItemGroup\u003E\n    \u003CPdbFilesToRemoveBuild Include=\u0022$(OutputPath)runtimes\\**\\*.pdb\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n  \u003CDelete Files=\u0022@(PdbFilesToRemoveBuild)\u0022 /\u003E\n\u003C/Target\u003E",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Set SymbolPackageFormat to snupkg",
+      "recommendedReason": "This is the standard NuGet approach for shipping debug symbols separately. It preserves debugging capability via symbol servers while keeping the main package small."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Root cause is identified (PR #3374 IncludeSymbols expansion), but the correct fix approach needs verification \u2014 whether to use snupkg, exclude PDBs entirely, or narrow the glob patterns."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, build, and platform labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "os/Windows-Classic",
+          "os/Linux",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report, confirm root cause, mention workaround",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for flagging this \u2014 the size increase is confirmed.\n\nThe root cause is PR #3374, which expanded native symbol packaging to all platforms. On Windows, this pulls in \u0060libSkiaSharp.pdb\u0060 (~80 MB) and \u0060libHarfBuzzSharp.pdb\u0060 (~20 MB) per architecture into the main NuGet package. Previously these were only in separate symbol packages.\n\nIn the meantime, @Jack251970\u0027s workaround above (MSBuild targets to delete PDB files from the output) is a solid stopgap. We\u0027ll look at setting \u0060SymbolPackageFormat=snupkg\u0060 so that debug symbols go to a separate symbols package rather than the main \u0060.nupkg\u0060."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #3374 which introduced the regression",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 3374
+      }
+    ]
+  }
+}
