@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2411,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": []
+  },
+  "summary": "DllNotFoundException for libSkiaSharp when deploying Blazor WebAssembly (.NET 7.0) app to Azure App Service via GitHub Actions. Works with .NET 6.0 but not .NET 7.0. SkiaSharp 2.88.3 predates .NET 7 WASM support which was added in later 2.88.x releases.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.82 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.88 },
+    "platforms": ["os/WASM"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "System.DllNotFoundException: libSkiaSharp",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net7.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WebAssembly (client-side) app targeting .NET 7.0",
+        "Add SkiaSharp 2.88.3 package reference",
+        "Use SKImageInfo/SKSurface/SKCanvas APIs in a Razor page",
+        "Deploy to Azure App Service (Windows) using GitHub Actions CI/CD",
+        "Navigate to the page and click the button — DllNotFoundException is thrown"
+      ],
+      "environmentDetails": "Visual Studio 2022 (17.5.0), .NET 7.0, SkiaSharp 2.88.3, Azure App Service (Windows), GitHub Actions CI/CD",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/files/10924231/Blazor-GitHub-Actions.zip", "description": "Repro projects for .NET 6.0 and .NET 7.0 with GitHub Actions workflow" }
+      ],
+      "relatedIssues": [2254, 2267]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3"],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "SkiaSharp 2.88.3 predates .NET 7 WASM support. PR #2254 added .NET 7 Blazor support and later 2.88.x releases (2.88.6+) included the emscripten 3.1.12 static libraries needed for .NET 7 WASM. The current SkiaSharp 3.x fully supports .NET 7+ WASM."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.92,
+      "reason": "PR #2254 added .NET 7 WASM support by including emscripten 3.1.12 static libraries (.a files) in SkiaSharp.NativeAssets.WebAssembly. The current build targets in SkiaSharp.NativeAssets.WebAssembly explicitly include NativeFileReference paths for .NET 7 (3.1.12/st/*.a), .NET 8 (3.1.34/st/*.a), and .NET 9+ (3.1.56/st/*.a). Version 2.88.3 only had .NET 6 emscripten 2.0.23 assets.",
+      "relatedPRs": [2254]
+    }
+  },
+  "analysis": {
+    "summary": "Blazor WASM uses static linking — native .a files are linked into dotnet.wasm at build time via NativeFileReference MSBuild items. SkiaSharp 2.88.3 only included emscripten 2.0.23 static libraries compatible with .NET 6. .NET 7 requires emscripten 3.1.12 libraries which were added in PR #2254 and shipped in later 2.88.x releases. Without matching .a files, the NativeFileReference glob finds nothing, WasmBuildNative produces a dotnet.wasm without SkiaSharp symbols, and DllImport(\"libSkiaSharp\") fails at runtime.",
+    "rationale": "Classified as type/bug because the reporter experienced a real failure, though the root cause is a version compatibility gap rather than a code defect. The fix was shipped in subsequent releases. Suggesting close-as-fixed since upgrading to any 2.88.6+ or 3.x release resolves the issue. Area is SkiaSharp.Views.Blazor because the WASM native asset packaging and NativeFileReference build targets are the affected component.",
+    "keySignals": [
+      { "text": "System.DllNotFoundException: libSkiaSharp", "source": "issue body", "interpretation": "Classic WASM static linking failure — the .a file was not linked into dotnet.wasm at build time." },
+      { "text": "When deploy Blazor client side application (.NET 6.0) ... SkiaSharp works fine without any issue. But when we deploy ... (.NET 7.0) ... we are facing libSkiaSharp assembly not found issue.", "source": "issue body", "interpretation": ".NET 6 uses emscripten 2.0.23 (included in 2.88.3), .NET 7 needs emscripten 3.1.12 (not included in 2.88.3)." },
+      { "text": "Version with issue: 2.88.3", "source": "issue body", "interpretation": "2.88.3 was released before .NET 7 GA (Nov 2022). PR #2254 added .NET 7 WASM support after this release." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets", "finding": "The NativeFileReference items are conditionally included per TargetFrameworkVersion: .NET 6 uses 2.0.23/*.a, .NET 7 uses 3.1.12/st/*.a, .NET 8 uses 3.1.34/st/*.a, .NET 9+ uses 3.1.56/st/*.a. Version 2.88.3 would only have had the .NET 6 (2.0.23) assets, so the .NET 7 NativeFileReference glob matched nothing.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.props", "finding": "SkiaSharpStaticLibraryPath points to the buildTransitive directory containing emscripten-versioned subdirectories with .a files. This property is consumed by both the NativeAssets.WebAssembly targets and SkiaSharp.Views.Blazor build props.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj", "finding": "SkiaSharp.Views.Blazor depends on SkiaSharp.NativeAssets.WebAssembly via ProjectReference. The package auto-includes WASM native assets. Current version supports net7.0 via Microsoft.AspNetCore.Components.Web 7.0.0 conditional reference.", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Upgrade SkiaSharp to 2.88.6+ which includes .NET 7 WASM static libraries",
+      "Upgrade to SkiaSharp 3.x on .NET 8+ for full WASM support with SIMD and threading options"
+    ],
+    "nextQuestions": [
+      "Did the reporter also have SkiaSharp.Views.Blazor or SkiaSharp.NativeAssets.WebAssembly referenced? The code doesn't use Blazor views directly."
+    ],
+    "resolution": {
+      "hypothesis": "SkiaSharp 2.88.3 was released before .NET 7 GA and did not include emscripten 3.1.12 static libraries needed for .NET 7 WASM. The NativeFileReference glob for .NET 7 matched no files, so libSkiaSharp symbols were not linked into dotnet.wasm.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 2.88.6+",
+          "description": "Upgrade the SkiaSharp package to version 2.88.6 or later which includes .NET 7 WASM support. This version ships the emscripten 3.1.12 static libraries required for .NET 7 Blazor WebAssembly.",
+          "category": "workaround",
+          "confidence": 0.92,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Upgrade to SkiaSharp 3.x on .NET 8+",
+          "description": "For the best experience, migrate to SkiaSharp 3.x targeting .NET 8+. This version has full WASM support with SIMD and threading options, plus built-in trimming support via IsTrimmable and LibraryImport.",
+          "category": "alternative",
+          "confidence": 0.95,
+          "effort": "small",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 2.88.6+",
+      "recommendedReason": "Minimal change — just bump the package version. Resolves the exact issue without requiring a TFM upgrade."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.90,
+      "reason": ".NET 7 WASM support was added in PR #2254 and shipped in later 2.88.x releases. Upgrading to 2.88.6+ or 3.x resolves the DllNotFoundException."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor, and WASM labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain root cause and recommend version upgrade",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed report and repro project.\n\nThe root cause is that SkiaSharp 2.88.3 was released before .NET 7 and didn't include the WASM static libraries needed for the .NET 7 Emscripten toolchain. Blazor WASM uses static linking (`.a` files linked into `dotnet.wasm` at build time), and each .NET version requires libraries built for a specific Emscripten version. SkiaSharp 2.88.3 only shipped the Emscripten 2.0.23 libraries used by .NET 6.\n\n.NET 7 WASM support was added in a subsequent release. Upgrading your SkiaSharp packages to **2.88.6 or later** should resolve the `DllNotFoundException`. For the best experience, consider upgrading to **SkiaSharp 3.x** on .NET 8+, which has full WASM support including SIMD and threading options."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #2254 which added .NET 7 WASM support",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 2254
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in later release",
+        "risk": "medium",
+        "confidence": 0.88
+      }
+    ]
+  }
+}
