@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3279,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-19T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Reporter encounters compiler errors (CS0117, CS1501) when upgrading from SkiaSharp 2.88.9 to 3.x because SKMatrix.MakeTranslation, MakeScale, MakeRotation, MakeIdentity, and static PostConcat were renamed/replaced with Create* instance methods in the 3.0 breaking changes.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.95 },
+    "platforms": ["os/WASM"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Upgrade SkiaSharp from 2.88.9 to 3.119.0",
+        "Attempt to compile code using SKMatrix.MakeTranslation, MakeScale, MakeRotation, MakeIdentity, and static PostConcat",
+        "Observe compiler errors CS0117 and CS1501"
+      ],
+      "environmentDetails": "Blazor WASM, Visual Studio on Windows 11, SkiaSharp 3.118.0-preview.2"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.9", "3.119.0", "3.118.0-preview.2"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.119.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The old Make* static methods were removed (obsoleted in 3.0.0 breaking changes, then fully removed). The Create* replacements are current API."
+    }
+  },
+  "analysis": {
+    "summary": "This is a migration question, not a bug. SKMatrix API was intentionally renamed in SkiaSharp 3.0: Make* → Create*, and static PostConcat(ref, matrix) → instance PostConcat(matrix). The breaking changes are documented in changelogs/SkiaSharp/3.0.0/SkiaSharp.breaking.md. A community member and the maintainer have already explained this in the comments.",
+    "rationale": "The reporter labels this as a bug, but the compiler errors are expected when upgrading across a major version with intentional breaking changes. The old APIs were marked [Obsolete] in the 3.0 changelog and replaced with Create* equivalents. This is a usage/migration question, not a defect. The maintainer confirmed this in comments.",
+    "keySignals": [
+      { "text": "CS0117: 'SKMatrix' does not contain a definition for 'MakeTranslation'", "source": "issue body", "interpretation": "Compiler error confirms the old API was removed — expected behavior after major version upgrade." },
+      { "text": "CS1501: No overload for method 'PostConcat' takes 2 arguments", "source": "issue body", "interpretation": "PostConcat changed from static(ref, matrix) to instance(matrix) — documented breaking change." },
+      { "text": "This isn't a bug. The API has changed - you need to update your code.", "source": "comment by molesmoke", "interpretation": "Community member correctly identified this as a migration issue." },
+      { "text": "Some of those apis were obsolete and were replaced.", "source": "comment by mattleibow", "interpretation": "Maintainer confirmed the intentional API rename and pointed to updated docs." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKMatrix.cs", "lines": "119-134", "finding": "CreateIdentity() and CreateTranslation(float, float) are the current replacements for the removed MakeIdentity() and MakeTranslation(). Same logic, new names.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKMatrix.cs", "lines": "136-204", "finding": "CreateScale and CreateRotation methods replace MakeScale and MakeRotation with identical signatures (except the name prefix).", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKMatrix.cs", "lines": "283-288", "finding": "PostConcat is now an instance method returning a new SKMatrix, not a static method with ref parameter. Usage: matrix = matrix.PostConcat(other) instead of SKMatrix.PostConcat(ref matrix, other).", "relevance": "direct" },
+      { "file": "changelogs/SkiaSharp/3.0.0/SkiaSharp.breaking.md", "finding": "All Make* methods are listed as [Obsolete] in the 3.0.0 breaking changes, confirming the intentional rename to Create*. PostConcat static overloads are also listed as obsolete.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Replace SKMatrix.MakeIdentity() with SKMatrix.CreateIdentity()",
+      "Replace SKMatrix.MakeTranslation(x, y) with SKMatrix.CreateTranslation(x, y)",
+      "Replace SKMatrix.MakeScale(sx, sy, px, py) with SKMatrix.CreateScale(sx, sy, px, py)",
+      "Replace SKMatrix.MakeRotation(radians, px, py) with SKMatrix.CreateRotation(radians, px, py)",
+      "Replace SKMatrix.PostConcat(ref matrix, other) with matrix = matrix.PostConcat(other)"
+    ],
+    "resolution": {
+      "hypothesis": "Reporter needs to update code to use the renamed Create* APIs introduced in SkiaSharp 3.0.",
+      "proposals": [
+        {
+          "title": "Rename Make* to Create*",
+          "description": "Replace all Make* calls with their Create* equivalents. The signatures are identical except for the method name prefix.",
+          "category": "fix",
+          "codeSnippet": "// Old (2.88.x)\nvar matrix = SKMatrix.MakeIdentity();\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(x, y));\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeScale(sx, sy, cx, cy));\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotation(angle, cx, cy));\n\n// New (3.x)\nvar matrix = SKMatrix.CreateIdentity();\nmatrix = matrix.PostConcat(SKMatrix.CreateTranslation(x, y));\nmatrix = matrix.PostConcat(SKMatrix.CreateScale(sx, sy, cx, cy));\nmatrix = matrix.PostConcat(SKMatrix.CreateRotation(angle, cx, cy));",
+          "confidence": 0.98,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Rename Make* to Create*",
+      "recommendedReason": "Direct 1:1 rename. The Create* methods have the same parameters and behavior as the old Make* methods."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.95,
+      "reason": "This is a migration question already answered by a community member and the maintainer. The breaking changes are documented and the fix is a simple rename."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Reclassify as question (migration help), add WASM platform",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/question", "area/SkiaSharp", "os/WASM"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post migration guide with code mapping",
+        "risk": "high",
+        "confidence": 0.90,
+        "comment": "This is an expected API change in SkiaSharp 3.x. The `Make*` static methods were renamed to `Create*`, and `PostConcat` changed from a static method to an instance method:\n\n| Old (2.88.x) | New (3.x) |\n|---|---|\n| `SKMatrix.MakeIdentity()` | `SKMatrix.CreateIdentity()` |\n| `SKMatrix.MakeTranslation(x, y)` | `SKMatrix.CreateTranslation(x, y)` |\n| `SKMatrix.MakeScale(sx, sy, px, py)` | `SKMatrix.CreateScale(sx, sy, px, py)` |\n| `SKMatrix.MakeRotation(r, px, py)` | `SKMatrix.CreateRotation(r, px, py)` |\n| `SKMatrix.PostConcat(ref m, other)` | `m = m.PostConcat(other)` |\n\nThe breaking changes are documented in the [3.0.0 changelog](https://github.com/mono/SkiaSharp/blob/main/changelogs/SkiaSharp/3.0.0/SkiaSharp.breaking.md)."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — migration question resolved",
+        "risk": "medium",
+        "confidence": 0.90
+      }
+    ]
+  }
+}
