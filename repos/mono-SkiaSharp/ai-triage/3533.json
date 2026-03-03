@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3533,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-27T20:00:00Z",
+    "currentLabels": ["type/enhancement", "area/SkiaSharp"]
+  },
+  "summary": "Maintainer-filed tracking issue to standardize SKTouchEventArgs.WheelDelta across all platforms to use the v120 convention (120 units = one discrete mouse wheel notch), with seven sub-issues covering Blazor, Android, macOS, iOS, Tizen, WPF/WinForms, and GTK.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.98 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [3534, 3535, 3536, 3537, 3538, 3539, 3540, 3527]
+    }
+  },
+  "analysis": {
+    "summary": "This is a cross-platform enhancement tracking issue filed by the maintainer (mattleibow). It defines the v120 standard for WheelDelta normalization and decomposes the work into seven platform-specific sub-issues. Code investigation confirms that only Windows MAUI passes a real WheelDelta (from PointerPointProperties.MouseWheelDelta), while Android hardcodes 0, Apple/iOS uses the basic constructor (no wheel param), Tizen uses the basic constructor (no wheel param), and Blazor/WPF/WinForms/GTK have no wheel event handling at all.",
+    "rationale": "Classified as type/enhancement because it improves existing WheelDelta behavior rather than fixing a crash or broken output. Area is SkiaSharp.Views because WheelDelta lives in SKTouchEventArgs and all work is in platform-specific touch/view handlers. No platform labels since this is cross-platform by nature — individual sub-issues carry platform labels.",
+    "keySignals": [
+      { "text": "SKTouchEventArgs.WheelDelta currently has no documented unit contract", "source": "issue body", "interpretation": "The property exists but lacks a formal specification for what values mean." },
+      { "text": "Only Windows MAUI passes meaningful values (raw ±120 per notch)", "source": "issue body", "interpretation": "Confirmed by code: Windows SKTouchHandler.cs line 122 reads MouseWheelDelta which follows v120." },
+      { "text": "All other platforms either hardcode 0 or don't handle wheel events at all", "source": "issue body", "interpretation": "Confirmed by code: Android passes 0, Apple/Tizen use no-wheelDelta constructors, Blazor/WPF/GTK have no wheel handling." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs", "lines": "50", "finding": "WheelDelta is declared as 'public int WheelDelta { get; private set; }' — the property exists but has no documentation or unit contract.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs", "lines": "101-124", "finding": "Windows handler subscribes to PointerWheelChanged and reads pointerPoint.Properties.MouseWheelDelta (already v120). This is the only platform that passes a real wheelDelta value.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs", "lines": "63-109", "finding": "Android handler uses MotionEvent Touch events only. All SKTouchEventArgs are constructed with wheelDelta=0. No AXIS_VSCROLL or GenericMotionEvent handling exists.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs", "lines": "97-109", "finding": "Apple handler uses the basic SKTouchEventArgs constructor (id, actionType, point, inContact) which defaults wheelDelta to 0. No scroll/wheel gesture recognition exists.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs", "lines": "40-53", "finding": "Tizen handler uses the basic SKTouchEventArgs constructor. No WheelEvent handling exists.", "relevance": "direct" }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.98,
+      "reason": "This is a maintainer-filed tracking issue that defines the v120 standard and coordinates seven sub-issues. It should remain open until all sub-issues are implemented."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update area label to SkiaSharp.Views since all work is in platform view handlers",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views"]
+      }
+    ]
+  }
+}
