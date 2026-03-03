@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3511,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-10T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "External-Dependency-Info.txt still lists libmicrohttpd (lines 1475-1988) even though PR #3463 removed the dependency from Skia's DEPS file; this stale entry is shipped as THIRD-PARTY-NOTICES.txt in every NuGet package.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.90 },
+    "area": { "value": "area/Build", "confidence": 0.85 }
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "other",
+      "errorMessage": "libmicrohttpd license text present in External-Dependency-Info.txt despite dependency removal",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Open External-Dependency-Info.txt in the repository",
+        "Search for libmicrohttpd at line 1475",
+        "Note the dependency is still listed despite being removed in PR #3463"
+      ],
+      "environmentDetails": "All platforms — file-level metadata issue",
+      "relatedIssues": [3463]
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.99,
+      "reason": "The libmicrohttpd section (lines 1475-1988) is still present in External-Dependency-Info.txt on the main branch. PR #3463 removed it from DEPS but did not update this file.",
+      "relatedPRs": [3463]
+    }
+  },
+  "analysis": {
+    "summary": "PR #3463 (merged 2026-01-27) correctly commented out microhttpd in externals/skia/DEPS but did not remove the corresponding license section from External-Dependency-Info.txt. This file is packed as THIRD-PARTY-NOTICES.txt in all NuGet packages via binding/NativeAssets.Build.targets line 17, so every shipped package still claims libmicrohttpd as a dependency.",
+    "rationale": "The reporter correctly identified a stale license entry. This is a legitimate metadata bug: the dependency was removed but the license file was not updated. The fix is trivial — remove lines 1475-1989 from External-Dependency-Info.txt. Additionally, scripts/guardian/CredScanSuppressions.json has 6 stale microhttpd suppressions that should also be cleaned up. Other removed dependencies (imgui, SPIR-V Headers, SPIR-V Tools) may also need review.",
+    "keySignals": [
+      { "text": "PR 3463 removed the libmicrohttpd dependency from Skia", "source": "issue body", "interpretation": "Reporter correctly references the PR that removed the dependency." },
+      { "text": "it still appears in the External-Dependency-Info.txt", "source": "issue body", "interpretation": "Confirmed: lines 1475-1988 still contain the full libmicrohttpd license text." }
+    ],
+    "codeInvestigation": [
+      { "file": "External-Dependency-Info.txt", "lines": "1475-1988", "finding": "Contains the full libmicrohttpd license text (LGPL/eCos dual license) spanning 513 lines, despite the dependency being removed from DEPS.", "relevance": "direct" },
+      { "file": "externals/skia/DEPS", "lines": "52", "finding": "The microhttpd entry is commented out: '# third_party/externals/microhttpd'. Confirms the dependency was removed in PR #3463.", "relevance": "direct" },
+      { "file": "binding/NativeAssets.Build.targets", "lines": "17", "finding": "External-Dependency-Info.txt is packed as THIRD-PARTY-NOTICES.txt in every NuGet package, meaning the stale entry ships to all consumers.", "relevance": "related" },
+      { "file": "scripts/guardian/CredScanSuppressions.json", "lines": "5-26", "finding": "Contains 6 stale credential scan suppressions referencing externals/skia/third_party/externals/microhttpd paths that no longer exist.", "relevance": "related" }
+    ],
+    "resolution": {
+      "hypothesis": "PR #3463 removed microhttpd from DEPS but missed updating External-Dependency-Info.txt and CredScanSuppressions.json.",
+      "proposals": [
+        {
+          "title": "Remove libmicrohttpd section from External-Dependency-Info.txt",
+          "description": "Delete lines 1474-1989 (the libmicrohttpd section including surrounding separator lines) from External-Dependency-Info.txt.",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Clean up stale CredScanSuppressions",
+          "description": "Remove the 6 microhttpd-related entries from scripts/guardian/CredScanSuppressions.json (lines 4-27) since the referenced files no longer exist.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Audit other removed dependencies",
+          "description": "Several other dependencies removed in PR #3463 (imgui, SPIR-V Headers, SPIR-V Tools) also still appear in External-Dependency-Info.txt. Consider removing those sections too for consistency.",
+          "category": "investigation",
+          "confidence": 0.80,
+          "effort": "small",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Remove libmicrohttpd section from External-Dependency-Info.txt",
+      "recommendedReason": "Directly addresses the reported issue with zero risk. The file is manually maintained and no regeneration step is needed."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.92,
+      "reason": "Valid bug — stale license entry needs removal. Trivial fix that should be included in the next release."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and build labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/Build"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report and confirm the fix is straightforward",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for catching this. You're correct — PR #3463 removed libmicrohttpd from Skia's DEPS but missed updating `External-Dependency-Info.txt`. Since this file is packed as `THIRD-PARTY-NOTICES.txt` in every NuGet package, the stale entry is currently shipping to all consumers.\n\nThe fix is straightforward: remove the libmicrohttpd section (lines 1475-1988) from `External-Dependency-Info.txt`. There are also a few stale entries in `scripts/guardian/CredScanSuppressions.json` that reference the now-removed microhttpd paths.\n\nWe'll also review whether other dependencies removed in #3463 (imgui, SPIR-V Headers, SPIR-V Tools) need similar cleanup."
+      }
+    ]
+  }
+}
