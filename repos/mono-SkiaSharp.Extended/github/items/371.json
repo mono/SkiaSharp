@@ -1,7 +1,7 @@
 {
   "number": 371,
   "type": "pr",
-  "state": "open",
+  "state": "closed",
   "title": "Add Pixel Comparer demo to Blazor sample with documentation",
   "body": "Adds an interactive \u0060SKPixelComparer\u0060 demo page to the Blazor sample app and corresponding conceptual documentation.\n\n### Blazor sample (\u0060samples/SkiaSharpDemo.Blazor/\u0060)\n\n- New \u0060PixelComparer.razor\u0060 page: side-by-side image display, rendered difference mask via \u0060SKCanvasView\u0060, and comparison statistics card\n- Dropdown to switch between image pairs (PNG, JPEG, cross-format), disabled during async comparison with inline spinner\n- Error handling: clears stale results and displays an alert on failure\n- \u0060IDisposable\u0060 cleanup for the \u0060SKImage\u0060 diff mask\n- Nav menu and home page entries\n- Test images copied to \u0060wwwroot/images/Comparer/\u0060\n\n### Documentation (\u0060docs/\u0060)\n\n- New \u0060docs/docs/pixel-comparer.md\u0060 \u2014 conceptual page covering basic comparison, difference mask generation, mask-based tolerance comparison, input overloads, and visual regression testing patterns\n- Added to \u0060docs/docs/toc.yml\u0060 under SkiaSharp.Extended\n- Added to \u0060docs/index.md\u0060 overview\n\n### Usage\n\n\u0060\u0060\u0060csharp\nvar result = SKPixelComparer.Compare(\u0022expected.png\u0022, \u0022actual.png\u0022);\nAssert.True(result.ErrorPixelPercentage \u003C 0.005,\n    $\u0022Too many differing pixels: {result.ErrorPixelPercentage:P2}\u0022);\n\nusing var mask = SKPixelComparer.GenerateDifferenceMask(\u0022expected.png\u0022, \u0022actual.png\u0022);\n\u0060\u0060\u0060\n\n![Pixel Comparer page](https://github.com/user-attachments/assets/c92875ed-c6a4-4201-9a0d-6ec895a9410c)\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp.Extended/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
   "author": {
@@ -20,13 +20,14 @@
     }
   ],
   "createdAt": "2026-03-03T15:04:18",
-  "updatedAt": "2026-03-03T22:32:20",
+  "updatedAt": "2026-03-03T22:37:39",
+  "closedAt": "2026-03-03T22:35:04",
   "commentCount": 1,
   "reactionCount": 0,
   "draft": false,
-  "mergeable": true,
-  "merged": false,
-  "mergeableState": "blocked",
+  "merged": true,
+  "mergedAt": "2026-03-03T22:35:04",
+  "mergeableState": "unknown",
   "baseBranch": "main",
   "headBranch": "copilot/add-pixel-comparer-to-sample",
   "additions": 362,
@@ -58,6 +59,16 @@
       "author": "copilot-swe-agent[bot]",
       "state": "COMMENTED",
       "submittedAt": "2026-03-03T16:27:05"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2026-03-03T22:34:19"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-03T22:37:39"
     }
   ],
   "engagement": {
