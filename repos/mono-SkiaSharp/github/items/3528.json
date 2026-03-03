@@ -130,5 +130,137 @@
       "state": "COMMENTED",
       "submittedAt": "2026-02-28T03:09:57"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-03-03T18:17:09.4483213Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3969580395,
+        "author": "mattleibow",
+        "body": "@copilot\u002Bclaude-opus-4.6 we need to add this to the GL view as well.",
+        "createdAt": "2026-02-26T22:23:15",
+        "reactions": []
+      },
+      {
+        "id": 3969592651,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot\u002Bclaude-opus-4.6 we need to add this to the GL view as well.\n\nAdded the same \u0060Touch\u0060 EventCallback, \u0060EnableTouchEvents\u0060 parameter, touch interop initialization, and \u0060IAsyncDisposable\u0060 to \u0060SKGLView\u0060 in commit 20724c4.",
+        "createdAt": "2026-02-26T22:25:52",
+        "reactions": []
+      },
+      {
+        "id": 3969643213,
+        "author": "Copilot",
+        "body": "Just as a heads up, I was blocked by some firewall rules while working on your feedback. Expand below for details.\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060crl.godaddy.com\u0060\n\u003E   - Triggering command: \u0060/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet restore --no-dependencies /home/REDACTED/work/SkiaSharp/SkiaSharp/samples/Basic/UnoPlatform/SkiaSharpSample.sln --packages /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/packages /p:DisableImplicitNuGetFallbackFolder=true --verbosity normal /p:TargetFrameworkRootPath=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:NetCoreTargetingPackRoot=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:AllowMissingPrunePackageData=true /p:EnableWindowsTargeting=true\u0060 (dns block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n",
+        "createdAt": "2026-02-26T22:37:20",
+        "reactions": []
+      },
+      {
+        "id": 3969686564,
+        "author": "Copilot",
+        "body": "Just as a heads up, I was blocked by some firewall rules while working on your feedback. Expand below for details.\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060crl.godaddy.com\u0060\n\u003E   - Triggering command: \u0060/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet restore --no-dependencies /home/REDACTED/work/SkiaSharp/SkiaSharp/samples/Basic/UnoPlatform/SkiaSharpSample.sln --packages /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/packages /p:DisableImplicitNuGetFallbackFolder=true --verbosity normal /p:TargetFrameworkRootPath=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:NetCoreTargetingPackRoot=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:AllowMissingPrunePackageData=true /p:EnableWindowsTargeting=true\u0060 (dns block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n",
+        "createdAt": "2026-02-26T22:47:55",
+        "reactions": []
+      },
+      {
+        "id": 3969891209,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot Please look at how we did interop for other features and make sure to match that.\n\nRefactored all touch interop to match the existing patterns in commit d047799:\n\n- \u0060SKTouchInterop\u0060 inherits from \u0060JSModuleInterop\u0060 with \u0060#if NET7_0_OR_GREATER\u0060 split (like \u0060SizeWatcherInterop\u0060, \u0060DpiWatcherInterop\u0060)\n- \u0060SKTouchCallbackHelper\u0060 guarded with \u0060#if !NET7_0_OR_GREATER\u0060 (like \u0060ActionHelper\u0060, \u0060FloatFloatActionHelper\u0060)\n- \u0060Touch\u0060 parameter changed to \u0060Action\u003CSKTouchEventArgs\u003E?\u0060 (like \u0060OnPaintSurface\u0060)\n- TypeScript rewritten as class-based module with \u0060invokeMethod\u0060 (sync) and \u0060typeof callback === \u0027function\u0027\u0060 pattern (like \u0060SizeWatcher\u0060, \u0060DpiWatcher\u0060)\n- No more \u0060IAsyncDisposable\u0060 \u2014 disposal goes through \u0060JSModuleInterop.Dispose()\u0060\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060crl.godaddy.com\u0060\n\u003E   - Triggering command: \u0060/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet restore --no-dependencies /home/REDACTED/work/SkiaSharp/SkiaSharp/samples/Basic/UnoPlatform/SkiaSharpSample.sln --packages /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/packages /p:DisableImplicitNuGetFallbackFolder=true --verbosity normal /p:TargetFrameworkRootPath=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:NetCoreTargetingPackRoot=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:AllowMissingPrunePackageData=true /p:EnableWindowsTargeting=true SkiaSharp.Views.Blazor/wwwroot/SKTouchInterop.js.map\u0060 (dns block)\n\u003E   - Triggering command: \u0060/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet restore --no-dependencies /home/REDACTED/work/SkiaSharp/SkiaSharp/samples/Gallery/Uno.WinUI/SkiaSharpSample.Skia.Gtk/SkiaSharpSample.Skia.Gtk.csproj --packages /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/packages /p:DisableImplicitNuGetFallbackFolder=true --verbosity normal /p:TargetFrameworkRootPath=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:NetCoreTargetingPackRoot=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:AllowMissingPrunePackageData=true /p:EnableWindowsTargeting=true SkiaSharp.Views//tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/packages\u0060 (dns block)\n\u003E   - Triggering command: \u0060/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/.dotnet/dotnet restore --no-dependencies /home/REDACTED/work/SkiaSharp/SkiaSharp/samples/Gallery/Uno/SkiaSharpSample.Wasm/SkiaSharpSample.Wasm.csproj --packages /tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/packages /p:DisableImplicitNuGetFallbackFolder=true --verbosity normal /p:TargetFrameworkRootPath=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:NetCoreTargetingPackRoot=/tmp/codeql-scratch-04aa162449f907a2/dbs/csharp/working/emptyFakeDotnetRoot /p:AllowMissingPrunePackageData=true /p:EnableWindowsTargeting=true SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs embly/SkiaSharpSample.sln working/.dotnet/dotnet-install.sh\u0060 (dns block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n",
+        "createdAt": "2026-02-26T23:44:13",
+        "reactions": []
+      },
+      {
+        "id": 3970047578,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot Please update the blazor basic sample to now use these touch events and remove the other attributes.\n\u003E \n\u003E Also address the comments\n\nUpdated the Raster sample to use \u0060Touch=\u0022OnTouch\u0022 EnableTouchEvents=\u0022true\u0022\u0060 instead of \u0060@onpointerdown\u0060/\u0060@onpointermove\u0060/\u0060@onpointerup\u0060 attributes. Also addressed the EnableTouchEvents toggle comment \u2014 touch interop is now always registered, with a JS-side \u0060enabled\u0060 flag toggled via \u0060setEnabled()\u0060. Commit 5b48423.",
+        "createdAt": "2026-02-27T00:34:03",
+        "reactions": []
+      },
+      {
+        "id": 3970145359,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot we need to consider the defults and try totally disconnect. But also, all of this should be tested using bUnit in a new test project. Please investigate what we have and what we should do. Th...\n\nAddressed the disconnect approach \u2014 \u0060EnableTouchEvents\u0060 now toggles \u0060Start()\u0060/\u0060Stop()\u0060 to fully attach/detach all JS event listeners, and the default \u0060false\u0060 skips registration entirely. Commit 4c23902.\n\nRegarding bUnit: There\u0027s currently no Blazor test project in the repo. bUnit (https://bunit.dev) supports testing Blazor components in isolation without a browser. It can mock \u0060IJSRuntime\u0060 and verify component rendering, parameter changes, and event callbacks. For \u0060SKCanvasView\u0060/\u0060SKGLView\u0060, bUnit could test:\n- Component renders a \u0060\u003Ccanvas\u003E\u0060 element\n- \u0060Touch\u0060 callback fires when \u0060OnPointerEvent\u0060 is invoked\n- \u0060EnableTouchEvents\u0060 toggle calls \u0060Start()\u0060/\u0060Stop()\u0060 on the interop\n- Parameters like \u0060IgnorePixelScaling\u0060, \u0060EnableRenderLoop\u0060 propagate correctly\n\nA new \u0060tests/SkiaSharp.Views.Blazor.Tests\u0060 project referencing \u0060bunit\u0060 \u002B \u0060xunit\u0060 would be the right setup. This would need the \u0060wasm-tools\u0060 workload and JSInterop mocking. Happy to create the test project structure if you\u0027d like.",
+        "createdAt": "2026-02-27T01:09:44",
+        "reactions": []
+      },
+      {
+        "id": 3974361953,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-27T18:18:13",
+        "reactions": []
+      },
+      {
+        "id": 3974362443,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-27T18:18:20",
+        "reactions": []
+      },
+      {
+        "id": 3974661668,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-27T19:21:49",
+        "reactions": []
+      },
+      {
+        "id": 3974662125,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-27T19:21:55",
+        "reactions": []
+      },
+      {
+        "id": 3976164319,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-28T02:35:47",
+        "reactions": []
+      },
+      {
+        "id": 3976164484,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-28T02:35:54",
+        "reactions": []
+      },
+      {
+        "id": 3976203015,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-28T03:01:44",
+        "reactions": []
+      },
+      {
+        "id": 3976203166,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-28T03:01:49",
+        "reactions": []
+      },
+      {
+        "id": 3976668131,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-28T08:27:17",
+        "reactions": []
+      },
+      {
+        "id": 3976668415,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-28T08:27:23",
+        "reactions": []
+      },
+      {
+        "id": 3985226483,
+        "author": "mattleibow",
+        "body": "Closing this as we do not want to be adding APIs to platforms. And there is no need to actually, the events are fine.",
+        "createdAt": "2026-03-02T15:52:55",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -36,7 +36,7 @@
   "commentCount": 17,
   "reactionCount": 0,
   "engagement": {
-    "syncedAt": "2026-02-12T15:34:44.8214551Z",
+    "syncedAt": "2026-03-03T18:17:13.2010525Z",
     "reactions": [],
     "comments": [
       {
@@ -62,7 +62,12 @@
           {
             "user": "IngweLand",
             "content": "\u002B1",
-            "createdAt": "2026-02-12T15:34:43.2176697Z"
+            "createdAt": "2026-03-03T18:17:10.5859298Z"
+          },
+          {
+            "user": "lone7254",
+            "content": "\u002B1",
+            "createdAt": "2026-03-03T18:17:10.5859309Z"
           }
         ]
       },
@@ -103,12 +108,22 @@
           {
             "user": "IngweLand",
             "content": "\u002B1",
-            "createdAt": "2026-02-12T15:34:44.5139887Z"
+            "createdAt": "2026-03-03T18:17:11.5504674Z"
           },
           {
             "user": "m3nax",
             "content": "\u002B1",
-            "createdAt": "2026-02-12T15:34:44.5139892Z"
+            "createdAt": "2026-03-03T18:17:11.550469Z"
+          },
+          {
+            "user": "sgreifeneder",
+            "content": "\u002B1",
+            "createdAt": "2026-03-03T18:17:11.5504691Z"
+          },
+          {
+            "user": "lone7254",
+            "content": "\u002B1",
+            "createdAt": "2026-03-03T18:17:11.5504692Z"
           }
         ]
       },
@@ -117,6 +132,74 @@
         "author": "sgreifeneder",
         "body": "Same issue, also running on macOS, Rider, SkiaSharp v3.119.2. \nI stumbled upon this issue while using SyncFusion to export Word to PDF (Syncfusion.DocIORenderer.Net.Core requires SkiaSharp)",
         "createdAt": "2026-02-12T15:21:54",
+        "reactions": []
+      },
+      {
+        "id": 3902108278,
+        "author": "tolzy88",
+        "body": "Been trying to use this since .NET9 still doesn\u0027t work on .NET10 either.\n\n(Blazor WASM)\nSystem.DllNotFoundException: libSkiaSharp",
+        "createdAt": "2026-02-14T16:07:17",
+        "reactions": [
+          {
+            "user": "sgreifeneder",
+            "content": "\u002B1",
+            "createdAt": "2026-03-03T18:17:11.9308755Z"
+          }
+        ]
+      },
+      {
+        "id": 3902135623,
+        "author": "tolzy88",
+        "body": "Rolling back to .NET8 and it works again however. Same version of SkiaSharp 3.119.2",
+        "createdAt": "2026-02-14T16:29:36",
+        "reactions": []
+      },
+      {
+        "id": 3907826247,
+        "author": "sgreifeneder",
+        "body": "We were able to fix this on net9 by:\n- installing wasm-tools workload\n- adding a global.json and pinning dotnet sdk to 9.0.311\n- adding 3.119.1 explicitly as nuget packages (because the Syncfusion version depends on exactly this SkiaSharp version)\n\u0060\u0060\u0060\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u0022[3.119.1]\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.HarfBuzz\u0022 Version=\u0022[3.119.1]\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u0022[3.119.1]\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u0022[3.119.1]\u0022 /\u003E\n\u0060\u0060\u0060",
+        "createdAt": "2026-02-16T11:02:33",
+        "reactions": []
+      },
+      {
+        "id": 3908560632,
+        "author": "Webreaper",
+        "body": "This is a .Net 10 problem, so it\u0027s not unexpected that it works with .Net 9. I\u0027ve had no problems at all with 8 \u0026 9, this problem only arose in .Net 10. \n\n@mattleibow - are you there? Help us Matt-B One Leibowie - you\u0027re our only hope. ",
+        "createdAt": "2026-02-16T13:40:20",
+        "reactions": []
+      },
+      {
+        "id": 3908585922,
+        "author": "tolzy88",
+        "body": "\u003E This is a .Net 10 problem, so it\u0027s not unexpected that it works with .Net 9. I\u0027ve had no problems at all with 8 \u0026 9, this problem only arose in .Net 10. \n\u003E \n\u003E @mattleibow - are you there? Help us Matt-B One Leibowie - you\u0027re our only hope. \n\nI\u0027ve had this issue on .NET9 as well. I think there are other issues at play though besides the runtime version, since some people claim to have built it okay.",
+        "createdAt": "2026-02-16T13:46:19",
+        "reactions": [
+          {
+            "user": "Webreaper",
+            "content": "\u002B1",
+            "createdAt": "2026-03-03T18:17:12.5980454Z"
+          }
+        ]
+      },
+      {
+        "id": 3915871320,
+        "author": "tolzy88",
+        "body": "UPDATE:\n\nI was able to fix it by including the NativeAssets package. I did not have to do this in the .NET8 version though. I also did \u0060dotnet workload restore\u0060 and rebooted.\n\n\u0060\u0060\u0060xml\n\t\t\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00223.119.2\u0022 /\u003E\n\t\t\u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.119.2\u0022 /\u003E\n\u0060\u0060\u0060",
+        "createdAt": "2026-02-17T16:53:45",
+        "reactions": []
+      },
+      {
+        "id": 3932537114,
+        "author": "Webreaper",
+        "body": "\u003E UPDATE:\n\u003E \n\u003E I was able to fix it by including the NativeAssets package. I did not have to do this in the .NET8 version though. I also did \u0060dotnet workload restore\u0060 and rebooted.\n\u003E \n\u003E \t\t\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00223.119.2\u0022 /\u003E\n\u003E \t\t\u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.119.2\u0022 /\u003E\n\nThis doesn\u0027t have any effect for me on .Net 10. Still broken.",
+        "createdAt": "2026-02-20T09:04:20",
+        "reactions": []
+      },
+      {
+        "id": 3983915298,
+        "author": "DrDruid",
+        "body": "What solved it for me was this : \nRemoving  \u0060\u003CWasmBuildNative\u003Efalse\u003C/WasmBuildNative\u003E\u0060 if had both \u0060\u003CWasmBuildNative\u003Efalse\u003C/WasmBuildNative\u003E\u0060 and \u0060\u003CRunAOTCompilation\u003Efalse\u003C/RunAOTCompilation\u003E. \u0060\nAnd in a different project there wasn\u0027t any  \u0060\u003CRunAOTCompilation\u003Efalse\u003C/RunAOTCompilation\u003E \u0060so I added it. \nApologies if its duplicate.\n\nEdit: I should note that csproj looks like that :\n\u0060\u0060\u0060\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\n\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet10.0\u003C/TargetFramework\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003COverrideHtmlAssetPlaceholders\u003Etrue\u003C/OverrideHtmlAssetPlaceholders\u003E\n    \u003CRunAOTCompilation\u003Efalse\u003C/RunAOTCompilation\u003E\n  \u003C/PropertyGroup\u003E\n\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly\u0022 Version=\u002210.0.3\u0022 /\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0022 Version=\u002210.0.3\u0022 PrivateAssets=\u0022all\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.119.2\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00223.119.2\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.119.2\u0022 /\u003E\n    \u003CPackageReference Include=\u0022Syncfusion.Blazor.ImageEditor\u0022 Version=\u002232.2.5\u0022 /\u003E\n    \u003CPackageReference Include=\u0022Syncfusion.Blazor.Themes\u0022 Version=\u002232.2.5\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\n\u003C/Project\u003E\n\u0060\u0060\u0060\n",
+        "createdAt": "2026-03-02T11:53:40",
         "reactions": []
       }
     ]

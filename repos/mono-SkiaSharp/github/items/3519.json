@@ -20,8 +20,43 @@
   "commentCount": 1,
   "reactionCount": 4,
   "engagement": {
-    "syncedAt": "2026-02-13T19:15:29.3953166Z",
-    "reactions": [],
-    "comments": []
+    "syncedAt": "2026-03-03T18:17:34.7243725Z",
+    "reactions": [
+      {
+        "user": "izhovkin",
+        "content": "\u002B1",
+        "createdAt": "2026-03-03T18:17:34.7243792Z"
+      },
+      {
+        "user": "artificialWave",
+        "content": "\u002B1",
+        "createdAt": "2026-03-03T18:17:34.7243803Z"
+      },
+      {
+        "user": "LaXiS96",
+        "content": "\u002B1",
+        "createdAt": "2026-03-03T18:17:34.7243807Z"
+      },
+      {
+        "user": "JimmyDirect",
+        "content": "\u002B1",
+        "createdAt": "2026-03-03T18:17:34.724381Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 3940956859,
+        "author": "Jack251970",
+        "body": "It seems that the new version includes pdb files in package. Here is a workaround for this:\n\n\u0060\u0060\u0060\n\u003C!-- Workaround for https://github.com/mono/SkiaSharp/issues/3519 --\u003E\n\u003CTarget Name=\u0022RemoveUnnecessaryPdbFilesAfterBuild\u0022 AfterTargets=\u0022Build\u0022\u003E\n  \u003CItemGroup\u003E\n    \u003CPdbFilesToRemoveBuild Include=\u0022$(OutputPath)runtimes\\**\\*.pdb\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n  \u003CDelete Files=\u0022@(PdbFilesToRemoveBuild)\u0022 /\u003E\n\u003C/Target\u003E\n\u003CTarget Name=\u0022RemoveUnnecessaryPdbFilesAfterPublish\u0022 AfterTargets=\u0022Publish\u0022\u003E\n  \u003CItemGroup\u003E\n    \u003CPdbFilesToRemovePublish Include=\u0022$(PublishDir)runtimes\\**\\*.pdb\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n  \u003CDelete Files=\u0022@(PdbFilesToRemovePublish)\u0022 /\u003E\n\u003C/Target\u003E\n\u0060\u0060\u0060",
+        "createdAt": "2026-02-22T13:30:17",
+        "reactions": [
+          {
+            "user": "JimmyDirect",
+            "content": "\u002B1",
+            "createdAt": "2026-03-03T18:17:34.6740927Z"
+          }
+        ]
+      }
+    ]
   }
 }
