@@ -5,31 +5,20 @@
 .ai-triage-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
     margin-bottom: 2rem;
 }
 
 .ai-triage-title {
     font-size: 0.95rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
     min-width: 0;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .issue-title-primary {
     font-weight: 500;
-}
-
-.issue-title-summary {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    font-size: 0.8rem;
-    color: var(--text-secondary, #6c757d);
-    opacity: 0.8;
-    overflow: hidden;
 }
 
 /* =========================== */
@@ -38,9 +27,9 @@
 
 .ai-triage-row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.5rem;
-    padding: 0.6rem 1rem;
+    padding: 0.5rem 1rem;
     background: #fff;
     border-radius: 8px;
     border-left: 4px solid #6c757d;
@@ -58,16 +47,12 @@
 .ai-triage-row.action-info { border-left-color: #6c757d; }
 .ai-triage-row.action-keep { border-left-color: #0d6efd; }
 
-.ai-triage-row .ai-triage-title {
-    min-width: 0;
-}
-
 .ai-triage-content {
     flex: 1;
     min-width: 0;
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    align-items: center;
+    gap: 0.5rem;
     overflow: hidden;
 }
 
@@ -76,6 +61,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem;
+    flex-shrink: 0;
 }
 
 .label-sm { font-size: 0.65rem; padding: 0.1rem 0.4rem; }
@@ -83,22 +69,12 @@
 /* Repro card on triage list */
 .triage-repro { background: #ede9fe; color: #5b21b6; }
 
-/* Confidence bar */
-.confidence-pill {
-    width: 60px;
-    height: 8px;
+/* Confidence badge */
+.badge-confidence {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 600;
     background: #e9ecef;
-    border-radius: 4px;
-    overflow: hidden;
-    flex-shrink: 0;
+    color: #495057;
 }
-
-.confidence-bar {
-    display: block;
-    height: 100%;
-    border-radius: 4px;
-}
-
-.confidence-high { background: #198754; }
-.confidence-medium { background: #ffc107; }
-.confidence-low { background: #dc3545; }

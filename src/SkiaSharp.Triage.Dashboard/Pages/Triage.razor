@@ -126,11 +126,10 @@ else
                         @if (issue.IssueTitle is not null)
                         {
                             <span class="issue-title-primary">@issue.IssueTitle</span>
-                            <span class="issue-title-summary">@issue.Title</span>
                         }
                         else
                         {
-                            @issue.Title
+                            <span class="issue-title-primary">@Truncate(issue.Title, 100)</span>
                         }
                     </span>
                     <span class="ai-triage-badges">
@@ -152,9 +151,7 @@ else
                         }
                         @if (issue.Confidence is not null)
                         {
-                            <span class="confidence-pill" title="Confidence: @issue.Confidence.Value.ToString("P0")">
-                                <span class="confidence-bar @GetConfidenceClass(issue.Confidence.Value)" style="width: @((int)(issue.Confidence.Value * 100))%"></span>
-                            </span>
+                            <span class="badge-confidence" title="Confidence: @issue.Confidence.Value.ToString("P0")">@((int)(issue.Confidence.Value * 100))%</span>
                         }
                         @if (issue.IsRegression)
                         {
@@ -352,4 +349,7 @@ else
         >= 0.70 => "confidence-medium",
         _ => "confidence-low"
     };
+
+    private static string Truncate(string value, int maxLength) =>
+        value.Length <= maxLength ? value : value[..maxLength] + "…";
 }
