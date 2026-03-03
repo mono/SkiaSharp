@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3540,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-28T12:00:00Z",
+    "currentLabels": ["type/enhancement", "os/Linux", "area/SkiaSharp"]
+  },
+  "summary": "Maintainer-filed enhancement to add scroll wheel event support to GTK3 and GTK4 SKDrawingArea views, normalizing values to the v120 standard (120 = one discrete notch), as part of the cross-platform v120 normalization effort (#3533).",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.98 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
+    "platforms": ["os/Linux"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [3533, 3527]
+    }
+  },
+  "analysis": {
+    "summary": "Well-scoped implementation task filed by the maintainer to add scroll wheel support to the GTK3 and GTK4 SkiaSharp views. Both views currently handle only rendering (PaintSurface) with no input event infrastructure. The shared SKTouchAction.WheelChanged and SKTouchEventArgs.WheelDelta APIs already exist in the MAUI layer and Windows has a working implementation, so this is about wiring up GTK-specific scroll events and normalizing to v120. GTK4 is the primary target using EventControllerScroll from GirCore; GTK3 needs both discrete direction enum and smooth delta handling.",
+    "rationale": "Classified as enhancement because it adds new functionality (scroll events) to existing GTK views. Area is SkiaSharp.Views since the changes are in the view layer, not core SkiaSharp. The issue is a sub-task of #3533 (cross-platform v120 normalization) and provides complete implementation guidance including API details, normalization formulas, and sign conventions.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk4/SKDrawingArea.cs",
+        "lines": "1-105",
+        "finding": "GTK4 SKDrawingArea extends Gtk.DrawingArea, handles only PaintSurface via SetDrawFunc callback. No scroll controllers, no input event handling, no SKTouchHandler. Dispose() frees drawing objects only.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk3/SKDrawingArea.cs",
+        "lines": "1-104",
+        "finding": "GTK3 SKDrawingArea extends Gtk.DrawingArea, handles only OnDrawn for rendering. No scroll event subscription (Events mask not set for ScrollMask), no input handling at all.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+        "lines": "19-68",
+        "finding": "SKTouchEventArgs already has WheelDelta property (int) and SKTouchAction enum includes WheelChanged. This shared infrastructure can be reused for GTK views.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+        "lines": "35-122",
+        "finding": "Windows SKTouchHandler subscribes to PointerWheelChanged, reads MouseWheelDelta, and fires SKTouchAction.WheelChanged. This is the reference implementation pattern for GTK to follow.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      { "text": "Parent issue: #3533", "source": "issue body", "interpretation": "Sub-task of the cross-platform v120 wheel normalization umbrella issue." },
+      { "text": "GTK4 view now exists and is the preferred target for adding scroll support", "source": "issue body", "interpretation": "GTK4 is primary, GTK3 for parity. GTK4 view was added in #3527." },
+      { "text": "Linux is unique in that libinput already uses the v120 convention natively", "source": "issue body", "interpretation": "Simplifies normalization — GTK abstracts libinput's native v120 to ±1.0 per notch, so multiply by 120." }
+    ],
+    "resolution": {
+      "hypothesis": "GTK4 needs an EventControllerScroll attached to SKDrawingArea, and GTK3 needs a ScrollEvent handler with both discrete direction and smooth delta support. Both normalize to v120 via round(-dy * 120).",
+      "proposals": [
+        {
+          "title": "Add EventControllerScroll to GTK4 SKDrawingArea",
+          "description": "Create a Gtk.EventControllerScroll in the SKDrawingArea constructor with Vertical|BothDirections flags, handle OnScroll to compute wheelDelta = (int)Math.Round(-dy * 120.0), and fire a new scroll event or integrate with SKTouchEventArgs infrastructure.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "medium",
+          "validated": "untested"
+        },
+        {
+          "title": "Add ScrollEvent handler to GTK3 SKDrawingArea",
+          "description": "Set Events |= EventMask.ScrollMask, subscribe to ScrollEvent. Handle both discrete direction (GDK_SCROLL_UP/DOWN mapped to ±1.0) and smooth direction (use delta_y directly). Normalize to v120 via round(-dy * 120.0).",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "medium",
+          "validated": "untested"
+        },
+        {
+          "title": "Add shared touch/scroll event infrastructure for GTK views",
+          "description": "Port or create an SKTouchHandler equivalent for GTK platforms that can fire SKTouchEventArgs with WheelChanged action and WheelDelta, enabling consumers to handle scroll events consistently with MAUI/Windows patterns.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "medium",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add EventControllerScroll to GTK4 SKDrawingArea",
+      "recommendedReason": "GTK4 is the preferred target per the issue description, uses the cleaner EventControllerScroll API, and the view already exists from #3527."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "Well-scoped implementation task filed by the maintainer with complete specifications. Ready for implementation as part of the v120 normalization effort."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update area label from area/SkiaSharp to area/SkiaSharp.Views since the work is in the view layer",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views", "os/Linux"]
+      }
+    ]
+  }
+}
