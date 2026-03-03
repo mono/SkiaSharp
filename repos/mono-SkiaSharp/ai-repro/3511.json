@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3511,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-13T00:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Reproduced as reported. External-Dependency-Info.txt (shipped as THIRD-PARTY-NOTICES.txt in NuGet packages) still lists libmicrohttpd at lines 1475-1988, despite the dependency being commented out in externals/skia/DEPS (line 52). The file has not been updated since its initial commit. This is a stale metadata entry that should be removed.",
+  "reproProject": {
+    "type": "existing",
+    "tfm": "n/a",
+    "packages": []
+  },
+  "errorMessages": {
+    "primaryError": "External-Dependency-Info.txt lists libmicrohttpd (lines 1475-1988) as a third-party dependency despite the DEPS entry being commented out, meaning the dependency is no longer fetched or used. This stale entry ships to all users as THIRD-PARTY-NOTICES.txt in NuGet packages."
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Check environment - macOS arm64 with .NET SDK 10.0.102",
+      "command": "dotnet --info | head -10",
+      "exitCode": 0,
+      "output": ".NET SDK:\n Version:           10.0.102\n Commit:            4452502459\n Workload version:  10.0.102\n MSBuild version:   18.0.7+445250245\n\nRuntime Environment:\n OS Name:     Mac OS X\n OS Version:  26.3\n OS Platform: Darwin",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify External-Dependency-Info.txt contains libmicrohttpd entry (lines 1475-1988, 514 lines of stale content)",
+      "command": "grep -n 'libmicrohttpd' External-Dependency-Info.txt",
+      "exitCode": 0,
+      "output": "1475:# libmicrohttpd\n1988:# END: libmicrohttpd",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify libmicrohttpd is commented out in externals/skia/DEPS confirming dependency removal",
+      "command": "grep -n 'microhttpd' externals/skia/DEPS",
+      "exitCode": 0,
+      "output": "52:  # \"third_party/externals/microhttpd\"             : \"https://android.googlesource.com/platform/external/libmicrohttpd@748945ec6f1c67b7efc934ab0808e1d32f2fb98d\",",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify External-Dependency-Info.txt ships in NuGet packages as THIRD-PARTY-NOTICES.txt",
+      "command": "grep 'External-Dependency-Info' binding/NativeAssets.Build.targets",
+      "exitCode": 0,
+      "output": "<None Include=\"$(MSBuildThisFileDirectory)..\\External-Dependency-Info.txt\" PackagePath=\"THIRD-PARTY-NOTICES.txt\" Pack=\"True\" Visible=\"False\" />",
+      "layer": "deployment",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify cgmanifest.json does not reference libmicrohttpd (already cleaned from manifest)",
+      "command": "grep 'microhttpd' cgmanifest.json || echo 'Not found in cgmanifest.json'",
+      "exitCode": 0,
+      "output": "Not found in cgmanifest.json",
+      "layer": "setup",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.4-dev (main branch source)",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "3.119.3-preview.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Reporter linked to release/3.119.3-preview.1 branch showing libmicrohttpd at line 1475. The file has not changed since its initial commit, so all released versions contain the stale entry.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.4-dev",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Main branch (HEAD) still contains the libmicrohttpd entry at lines 1475-1988 in External-Dependency-Info.txt. The bug persists on main.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "scope": "universal",
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.95,
+      "reason": "The stale libmicrohttpd entry in External-Dependency-Info.txt should be removed. This is a straightforward metadata cleanup with no risk to functionality."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add label 'area/packaging' to indicate this is a packaging/metadata issue",
+        "risk": "low",
+        "confidence": 0.9
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this! I was able to confirm that `External-Dependency-Info.txt` still lists `libmicrohttpd` (lines 1475\u20131988) on the main branch, even though the dependency entry in `externals/skia/DEPS` has been commented out.\n\nThis file is shipped as `THIRD-PARTY-NOTICES.txt` in all SkiaSharp NuGet packages, so the stale entry is present for all users.\n\n**Reproduction details:**\n- `grep -n 'libmicrohttpd' External-Dependency-Info.txt` shows entries at lines 1475 and 1988\n- `externals/skia/DEPS` line 52 has the microhttpd entry commented out with `#`\n- `cgmanifest.json` does not reference libmicrohttpd (already cleaned)\n\nThe fix is to remove lines 1474\u20131989 (the entire libmicrohttpd section including separators) from `External-Dependency-Info.txt`.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "No runtime impact \u2014 the stale entry is informational only and does not affect SkiaSharp functionality"
+    ]
+  }
+}
