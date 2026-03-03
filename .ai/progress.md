@@ -4,16 +4,15 @@
 
 ## Current Status
 
-**Overall**: ✅ UI reorganization complete — 4-tab layout with Response tab
+**Overall**: ✅ Schema v1.0 dashboard rewrite complete — fix step removed
 
 | Area | Status | Notes |
 |------|--------|-------|
 | Dashboard App | ✅ Complete | Blazor WASM at `src/SkiaSharp.Triage.Dashboard/` |
 | Triage CLI | ✅ Complete | .NET CLI at `src/SkiaSharp.Triage.Cli/` |
 | Triage Models | ✅ Complete | Shared library at `src/SkiaSharp.Triage.Models/` |
-| Schema v1.0 | ✅ Complete | Triage, Repro, Fix — strong types, no legacy |
-| Detail Page Design | ✅ Complete | Specification in `docs/design/issue-detail-layout.md` |
-| UI Reorg | ✅ Complete | 4 tabs: Overview, Reproduction, Response, Analysis |
+| Schema v1.0 | ✅ Complete | Triage + Repro — Fix step removed |
+| Detail Page Design | ✅ Complete | 2-tab layout: Details + Repro Log |
 | Multi-Repo | ✅ Complete | SkiaSharp + Extended, parallel sync |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
 

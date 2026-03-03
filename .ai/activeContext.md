@@ -8,22 +8,40 @@
 | | |
 |---|---|
 | **Phase** | AI Triage Dashboard — Schema v1.0 Rewrite |
-| **Status** | Phase 1 complete — models + fix removal |
+| **Status** | ✅ Complete — all phases done |
 | **Branch** | `docs-dashboard` |
 
 ## Recent Changes
 
-### 2026-02-14 — Schema v1.0 Model Rewrite + Fix Step Removal
+### 2026-03-03 — Full Schema v1.0 Dashboard Rewrite
 
-Updated all C# models to match new triage-schema.json and repro-schema.json from `issue-triage` and `issue-repro` skills. Removed fix step entirely.
+Complete rewrite of dashboard models, services, CLI, and UI to match new triage/repro skill schemas. Fix step removed entirely.
 
-**Changes:**
-- TriageEnums: Added `CloseAsByDesign` to SuggestedAction, new `ErrorType`, `ProposalCategory`, `ProposalValidation` enums
-- TriageModels: `Area` now non-nullable, `BugSignals.IsRegression` → `RegressionClaimed`, `ErrorType` now enum, `ResolutionProposal` gains `Category`/`Validated`, `Title` now required
-- ReproEnums: Removed `WrongOutput` from `ReproConclusion`, added `Simulation` project type, fixed `blazor-wasm` casing
-- ReproModels: `StepResult` now non-nullable, `TriageCorrections` → `Corrections`, `Source` added to corrections, `Assessment` now `ReproAssessment?` enum
+**Phase 1 — Models + Enums:**
+- TriageEnums: Added `CloseAsByDesign`, `ErrorType` (9 values), `ProposalCategory`, `ProposalValidation` enums
+- TriageModels: `Area` non-nullable, `BugSignals.RegressionClaimed`, `ErrorType` enum, proposals gain `Category`/`Validated`/required `Title`
+- ReproEnums: Removed `WrongOutput` from conclusion, added `Simulation` project type, fixed `blazor-wasm` casing
+- ReproModels: `StepResult` non-nullable, `Corrections` (renamed), `Source` field, `Assessment` → `ReproAssessment?` enum
 - Deleted `FixModels.cs` and `FixEnums.cs`
-- Removed fix references from CLI GenerateCommand, DashboardDataService, TriageDetail, DetailTabs, PipelineStepper, DetailsTabPanel, TriageHero, TriageFormatHelper
+
+**Phase 2 — CLI Generate:**
+- Removed fix processing from GenerateCommand
+- Removed legacy `triage.json` output (dashboard uses `triage-index.json`)
+- Removed `AiFixPath` from CacheService
+
+**Phase 3 — Dashboard Services:**
+- Deleted `TriageStats.cs` (unused `TriageData`/`TriageSummaryStats`)
+- Removed `GetTriageDataAsync` from DashboardDataService
+- Issues.razor switched to use `TriageIndex` for triaged number lookup
+
+**Phase 4 — Dashboard UI:**
+- DetailsTabPanel: Removed fix section (~120 lines), added Category/Validated to proposals
+- TriageDetail: Removed all fix loading and parameters
+- PipelineStepper: Removed Fix step (now 2-step: Triage → Repro)
+- DetailTabs: Removed HasFix parameter
+- TriageHero: Fixed `Corrections` rename, `Assessment` enum type
+- ReproTabPanel: Fixed `StepResult` non-nullable access
+- CSS: Added `close-as-by-design` badge, removed fix tab CSS
 
 ### 2026-02-13 — Scoped CSS Migration Complete
 
