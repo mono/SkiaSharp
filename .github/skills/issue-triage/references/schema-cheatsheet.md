@@ -54,7 +54,6 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | **classifiedPlatform** | `os/Android`, `os/iOS`, `os/macOS`, `os/Linux`, `os/Windows-Classic`, `os/Windows-WinUI`, `os/Windows-Universal-UWP`, `os/Windows-Nano-Server`, `os/WASM`, `os/Tizen`, `os/tvOS`, `os/watchOS` |
 | **classifiedBackend** | `backend/OpenGL`, `backend/Metal`, `backend/Vulkan`, `backend/Raster`, `backend/Direct3D`, `backend/PDF`, `backend/SVG`, `backend/XPS` |
 | **suggestedAction** | `needs-investigation`, `close-as-fixed`, `close-as-by-design`, `close-with-docs`, `close-as-duplicate`, `convert-to-discussion`, `request-info`, `keep-open` |
-| **reproPlatform** | `linux`, `macos`, `windows` |
 | **errorType** | `crash`, `exception`, `wrong-output`, `missing-output`, `performance`, `build-error`, `memory-leak`, `platform-specific`, `other` |
 | **severity** | `critical`, `high`, `medium`, `low` |
 | **reproQuality** | `complete`, `partial`, `none` |
@@ -71,8 +70,7 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
   "actionability": {
     "suggestedAction": "<suggestedAction enum>",
     "confidence": 0.0-1.0,
-    "reason": "Why this action",
-    "suggestedReproPlatform": "linux|macos|windows"
+    "reason": "Why this action"
   },
   "missingInfo": ["What info is needed from reporter"],
   "actions": [

@@ -159,7 +159,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 | `classification` | `type` and `area` (required objects with confidence). `platforms`, `backends` (optional string arrays). |
 | `evidence` | `bugSignals` (for bugs), `reproEvidence` (all attachments/links), `regression` (if claimed), `fixStatus` (if fixed). |
 | `analysis` | `summary` (required), `codeInvestigation` (findings from Phase 2), `keySignals` (quotes), `rationale` (decision summary), `resolution` (proposals). |
-| `output` | `actionability` (suggested action + `suggestedReproPlatform`) and `actions` (automatable tasks). |
+| `output` | `actionability` (suggested action) and `actions` (automatable tasks). |
 
 Refer to the cheatsheet for the exact field structure and enum values.
 
@@ -240,7 +240,6 @@ Actions:
 
 **Pipeline hint:**
 - If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **issue-repro** (`ai-repro/{number}.json`).
-- `output.actionability.suggestedReproPlatform` (`linux` | `macos` | `windows`) tells the pipeline which runner to use for reproduction. Choose based on the platforms in `classification.platforms`: macOS for iOS/macOS bugs, Windows for WPF/WinUI/UWP bugs, Linux for everything else (including WASM, Android, generic).
 - If repro already exists and reproduces: next step is **issue-fix** (consume both JSONs).
 
 If `add-comment` exists, show `comment` in a copy-paste block. **⚠️ NEVER post via GitHub API.**
