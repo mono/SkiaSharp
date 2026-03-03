@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3509,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-22T00:00:00Z"
+  },
+  "conclusion": "inconclusive",
+  "notes": "The issue contains only template placeholder text with no actual code, error messages, expected/actual behavior, or screenshots. Created a minimal console app testing SKBitmap creation, SKCanvas drawing (rect/circle), SKImage encoding/decoding, and pixel verification \u2014 all worked correctly on SkiaSharp 3.116.0 and 3.116.1. Without the reporter's actual code, it is impossible to determine what specific scenario causes images to not appear.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 3.116.0",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.116.0' added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>",
+          "description": "Console project file with SkiaSharp 3.116.0 package reference"
+        },
+        {
+          "filename": "Program.cs",
+          "content": "using SkiaSharp;\n\nConsole.WriteLine(\"Test 1: Creating bitmap and drawing...\");\nusing var bitmap = new SKBitmap(400, 400);\nusing var canvas = new SKCanvas(bitmap);\ncanvas.Clear(SKColors.White);\nusing var paint = new SKPaint();\npaint.Color = SKColors.Red;\npaint.Style = SKPaintStyle.Fill;\ncanvas.DrawRect(new SKRect(50, 50, 200, 200), paint);\npaint.Color = SKColors.Blue;\ncanvas.DrawCircle(300, 300, 80, paint);\ncanvas.Flush();\nvar redPixel = bitmap.GetPixel(100, 100);\nvar bluePixel = bitmap.GetPixel(300, 300);\nvar whitePixel = bitmap.GetPixel(10, 10);\nConsole.WriteLine($\"Red pixel (100,100): R={redPixel.Red} G={redPixel.Green} B={redPixel.Blue} A={redPixel.Alpha}\");\nConsole.WriteLine($\"Blue pixel (300,300): R={bluePixel.Red} G={bluePixel.Green} B={bluePixel.Blue} A={bluePixel.Alpha}\");\nConsole.WriteLine($\"White pixel (10,10): R={whitePixel.Red} G={whitePixel.Green} B={whitePixel.Blue} A={whitePixel.Alpha}\");\nConsole.WriteLine(\"\\nTest 2: Encoding image to PNG...\");\nusing var image = SKImage.FromBitmap(bitmap);\nif (image == null) { Console.WriteLine(\"ERROR: SKImage.FromBitmap returned null!\"); return 1; }\nusing var data = image.Encode(SKEncodedImageFormat.Png, 100);\nif (data == null) { Console.WriteLine(\"ERROR: image.Encode returned null!\"); return 1; }\nConsole.WriteLine($\"Encoded PNG size: {data.Size} bytes\");\nConsole.WriteLine(\"\\nTest 3: Decoding image back...\");\nusing var decoded = SKImage.FromEncodedData(data);\nif (decoded == null) { Console.WriteLine(\"ERROR: SKImage.FromEncodedData returned null!\"); return 1; }\nConsole.WriteLine($\"Decoded image: {decoded.Width}x{decoded.Height}\");\nusing var decodedBitmap = SKBitmap.FromImage(decoded);\nvar dRedPixel = decodedBitmap.GetPixel(100, 100);\nConsole.WriteLine($\"Decoded red pixel (100,100): R={dRedPixel.Red} G={dRedPixel.Green} B={dRedPixel.Blue} A={dRedPixel.Alpha}\");\nbool redOk = dRedPixel.Red > 200 && dRedPixel.Green < 50 && dRedPixel.Blue < 50;\nbool blueOk = bluePixel.Red < 50 && bluePixel.Green < 50 && bluePixel.Blue > 200;\nif (redOk && blueOk) Console.WriteLine(\"\\nSUCCESS: test completed - images appear correctly\");\nelse Console.WriteLine($\"\\nFAILURE: pixel colors unexpected (red ok: {redOk}, blue ok: {blueOk})\");\nreturn 0;",
+          "description": "Repro code testing bitmap creation, drawing, image encoding/decoding, and pixel verification"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build console app with SkiaSharp 3.116.0",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run console app \u2014 test bitmap creation, drawing, encoding, and decoding",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "Test 1: Creating bitmap and drawing...\nRed pixel (100,100): R=255 G=0 B=0 A=255\nBlue pixel (300,300): R=0 G=0 B=255 A=255\nWhite pixel (10,10): R=255 G=255 B=255 A=255\n\nTest 2: Encoding image to PNG...\nEncoded PNG size: 2241 bytes\n\nTest 3: Decoding image back...\nDecoded image: 400x400\nDecoded red pixel (100,100): R=255 G=0 B=0 A=255\n\nSUCCESS: test completed - images appear correctly",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with latest SkiaSharp 3.116.1 in fresh project directory",
+      "command": "cd /tmp/skiasharp/repro/3509-latest/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "Test 1: Creating bitmap and drawing...\nRed pixel (100,100): R=255 G=0 B=0 A=255\nBlue pixel (300,300): R=0 G=0 B=255 A=255\nWhite pixel (10,10): R=255 G=255 B=255 A=255\n\nTest 2: Encoding image to PNG...\nEncoded PNG size: 2241 bytes\n\nTest 3: Decoding image back...\nDecoded image: 400x400\nDecoded red pixel (100,100): R=255 G=0 B=0 A=255\n\nSUCCESS: test completed - images appear correctly",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "blockers": [
+    "Reporter provided no actual code \u2014 issue body contains only template placeholder text ('// some C# code here')",
+    "No error messages, expected behavior, actual behavior, or screenshots were provided",
+    "Cannot determine which SkiaSharp view or rendering approach the reporter is using (SKCanvasView, SKGLView, MAUI, WPF, etc.)"
+  ],
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "All image creation, drawing, encoding, and decoding tests passed with correct pixel values.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Same tests passed on latest stable release.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.95,
+      "reason": "The issue contains no actual code, no error messages, and no expected/actual behavior. Basic SkiaSharp image APIs work correctly. Cannot investigate further without reporter providing their actual code and specific details."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add needs-info label since issue lacks reproduction details",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the report. We attempted to reproduce this on macOS arm64 with SkiaSharp 3.116.0 and 3.116.1, but basic image creation, drawing, encoding, and decoding all work correctly.\n\nThe issue template appears to still contain placeholder text rather than your actual code. Could you help us investigate by providing:\n\n1. **Your actual code** \u2014 the drawing/rendering code that isn't working\n2. **Expected vs actual behavior** \u2014 what should appear and what you see instead\n3. **Any errors or log output** \u2014 exceptions, warnings, or console messages\n4. **Which view/framework** \u2014 are you using SKCanvasView, SKGLView, MAUI, WPF, or something else?\n5. **A screenshot** \u2014 showing what you see (or don't see)\n\nA minimal reproduction project on GitHub would be ideal. Without these details, we're unable to determine what might be going wrong.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 3.116.0 (reporter) | \u2705 Basic image APIs work correctly |\n| 3.116.1 (latest) | \u2705 Basic image APIs work correctly |",
+      "status": "ready"
+    },
+    "missingInfo": [
+      "Actual code that reproduces the issue (not template placeholders)",
+      "Expected behavior vs actual behavior",
+      "Any error messages or exceptions",
+      "Which SkiaSharp view or rendering approach is being used",
+      "Screenshots showing the problem"
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  }
+}
