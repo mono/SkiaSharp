@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3435,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-26T00:00:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "notes": "Attempted to reproduce DllNotFoundException for libSkiaSharp in Blazor WASM on .NET 10. Tested with SkiaSharp 3.116.1 and 3.119.2 on SDK 10.0.102 (macOS arm64). Both versions rendered successfully with zero browser console errors. Also tested without WasmBuildNative \u2014 still worked. The reporter filed this on Dec 21, 2025 and was likely using an earlier .NET 10 preview SDK with emscripten ABI incompatibilities that have since been resolved in SDK 10.0.102. A commenter confirms this is a duplicate of #3422.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project targeting net10.0",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0",
+      "exitCode": 0,
+      "output": "The template \"Blazor WebAssembly Standalone App\" was created successfully.\nRestore succeeded.",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp.Views.Blazor 3.116.1 and configure WasmBuildNative",
+      "command": "dotnet add package SkiaSharp.Views.Blazor --version 3.116.1",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp.Views.Blazor' version '3.116.1' added.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Pages/Home.razor",
+          "content": "@page \"/\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\" style=\"width:400px;height:300px;\" />\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var paint = new SKPaint { Color = SKColors.White, TextSize = 32, IsAntialias = true };\n        canvas.DrawText(\"Hello SkiaSharp!\", 50, 150, paint);\n        Console.WriteLine($\"SUCCESS: rendered {e.Info.Width}x{e.Info.Height}\");\n    }\n}",
+          "description": "Blazor page with SKCanvasView for rendering test"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build Blazor WASM project with native WASM compilation",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    2 Warning(s)\n    0 Error(s)\nTime Elapsed 00:00:12.3",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Serve app and verify in browser \u2014 check for DllNotFoundException",
+      "command": "dotnet run --urls http://localhost:5111 --no-build",
+      "exitCode": 0,
+      "output": "Browser console: SUCCESS: rendered 800x600. Zero errors. Canvas rendered CornflowerBlue background with white 'Hello SkiaSharp!' text. No DllNotFoundException observed.",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test without WasmBuildNative to check if missing config triggers DllNotFoundException",
+      "command": "dotnet build && dotnet run --urls http://localhost:5113 --no-build (fresh project, no WasmBuildNative property)",
+      "exitCode": 0,
+      "output": "Build succeeded. Browser console: SUCCESS: rendered 800x600. Zero errors even without explicit WasmBuildNative=true.",
+      "layer": "deployment",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Rendered successfully on .NET 10 SDK 10.0.102. No DllNotFoundException. Browser console showed SUCCESS message.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Also rendered successfully. No errors in browser console.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.116.1"
+      }
+    ]
+  },
+  "scope": "unknown",
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.75,
+      "reason": "DllNotFoundException could not be reproduced on .NET 10 SDK 10.0.102 with either SkiaSharp 3.116.1 or 3.119.2. The issue was filed Dec 2025, likely against an earlier .NET 10 preview SDK with emscripten ABI incompatibilities. The reporter may have been using a preview SDK that has since been updated. Need to confirm reporter's exact SDK version."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Fix platform label from Windows-Classic to WASM \u2014 this is a Blazor WASM issue",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the report. We attempted to reproduce this on macOS arm64 with .NET SDK 10.0.102 using both SkiaSharp 3.116.1 and 3.119.2, but were unable to observe the `DllNotFoundException`.\n\nBoth versions rendered successfully in a Blazor WASM app targeting `net10.0`, with no browser console errors.\n\nThis issue was filed in December 2025 \u2014 could you confirm which .NET 10 SDK version you were using? If you were on an earlier preview SDK, the emscripten toolchain may have had ABI incompatibilities that have since been resolved in SDK 10.0.102.\n\nCould you share the following to help us investigate further?\n- Output of `dotnet --info` (run outside any repo with a `global.json`)\n- Your `.csproj` file\n- Whether you have the `wasm-tools` workload installed (`dotnet workload list`)\n\nAlso noted: a commenter identified this as a duplicate of #3422.",
+      "status": "needs-human-edit"
+    },
+    "missingInfo": [
+      "Exact .NET SDK version used (dotnet --info output)",
+      "Complete .csproj file showing package references and properties",
+      "Whether wasm-tools workload was installed",
+      "Whether WasmBuildNative was set in the project"
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "os/Windows-Classic label applied",
+        "corrected": "This is a Blazor WASM (os/WASM) issue, not Windows Classic. The auto-triage misclassified the platform."
+      }
+    ]
+  }
+}
