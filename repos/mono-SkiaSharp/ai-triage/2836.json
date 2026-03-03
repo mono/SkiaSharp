@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2836,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Blazor WASM app using SkiaSharp 2.88.3 with .NET 8 and InteractiveWebAssembly render mode works in Visual Studio debugger but crashes with MONO AOT runtime error (aot-runtime-wasm.c:150) when deployed to Azure App Service, because the 2.88.x WASM static libraries lack proper emscripten version mapping for .NET 8.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.80 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.95 },
+    "platforms": ["os/WASM"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "[MONO] /__w/1/s/src/mono/mono/mini/aot-runtime-wasm.c:150",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET 8 Blazor app with SKCanvasView using @rendermode InteractiveWebAssembly",
+        "Run in Visual Studio debugger — works correctly",
+        "Deploy (publish) to Azure App Service",
+        "Navigate to the deployed page — WASM runtime crash"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, .NET 8, Visual Studio (Windows), deployed to Azure App Service (Linux)"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3", "2.88.2"],
+      "workedIn": "2.88.2",
+      "brokeIn": "2.88.3",
+      "currentRelevance": "unlikely",
+      "relevanceReason": "SkiaSharp 3.x completely rewrote WASM support with per-TFM emscripten version selection (3.1.34 for net8.0) and IsTrimmable metadata. The 2.88.x line is no longer maintained."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.70,
+      "reason": "Reporter claims regression from 2.88.2 to 2.88.3, but both versions lack proper .NET 8 WASM support. The 2.88.x line was designed for .NET 6 and did not include emscripten static libraries matched to .NET 8's toolchain. The difference likely reflects incidental changes in the WASM AOT compiler between .NET SDK patches, not a SkiaSharp regression."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.85,
+      "reason": "SkiaSharp 3.x includes NativeAssets.WebAssembly with explicit emscripten version mapping: net6.0 → 2.0.23, net7.0 → 3.1.12, net8.0 → 3.1.34, net9.0+ → 3.1.56. The targets file also sets WasmBuildNative=true and configures threading/SIMD variants. This directly addresses the WASM deployment failures seen with 2.88.x on .NET 8.",
+      "relatedPRs": [],
+      "relatedCommits": []
+    }
+  },
+  "analysis": {
+    "summary": "Blazor WASM apps use static linking — the native SkiaSharp .a files are compiled into dotnet.wasm during publish via emscripten. In debug mode the WASM interpreter runs without native linking, masking compatibility issues. SkiaSharp 2.88.3 did not ship emscripten static libraries matched to .NET 8's emscripten toolchain version, causing the AOT runtime crash on deployment. SkiaSharp 3.x resolves this with per-TFM emscripten version selection.",
+    "rationale": "Classified as type/bug because the reporter describes a clear failure (crash on deployment). The area is SkiaSharp.Views.Blazor because the issue is specific to Blazor WASM deployment of SKCanvasView. Suggested close-as-fixed because SkiaSharp 3.x includes proper .NET 8 WASM support with matched emscripten versions, which directly addresses the root cause. The 2.88.x line is EOL and won't receive fixes.",
+    "keySignals": [
+      { "text": "it works fine within the debugger however when I deploy to AzureWebSites ... it fails", "source": "issue body", "interpretation": "Classic WASM debug-vs-publish divergence: debug uses interpreter (no native linking), publish uses AOT (requires matched emscripten static libraries)." },
+      { "text": "[MONO] /__w/1/s/src/mono/mono/mini/aot-runtime-wasm.c:150", "source": "issue body", "interpretation": "MONO AOT runtime crash — the statically-linked WASM binary has symbol resolution or initialization failure, pointing to incompatible native library linkage." },
+      { "text": "Version of SkiaSharp: 2.88.3 (Current)", "source": "issue body", "interpretation": "2.88.3 predates .NET 8 WASM emscripten version support. The static .a files were compiled for older emscripten versions." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets", "lines": "24-37", "finding": "Current targets file maps emscripten versions to TFMs: net6.0→2.0.23, net7.0→3.1.12, net8.0→3.1.34, net9.0+→3.1.56. Sets WasmBuildNative=true and configures threading/SIMD. This per-TFM mapping did not exist in SkiaSharp 2.88.3.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "1-15", "finding": "SKCanvasView uses JSInterop and SupportedOSPlatform(browser). The component code itself is not the problem — the crash occurs at WASM native linking level before the component loads.", "relevance": "context" }
+    ],
+    "workarounds": ["Upgrade to SkiaSharp 3.x (3.116.1 or later) which includes proper .NET 8 WASM support with matched emscripten static libraries"],
+    "nextQuestions": ["Whether the reporter is able to upgrade to SkiaSharp 3.x given potential API changes from 2.88.x"],
+    "resolution": {
+      "hypothesis": "SkiaSharp 2.88.3 WASM static libraries were compiled with an emscripten version incompatible with .NET 8's WASM toolchain, causing native linking failure during publish. Debug mode uses the interpreter which bypasses native linking entirely.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 3.x",
+          "description": "Upgrade from SkiaSharp 2.88.3 to SkiaSharp 3.x (latest stable). Version 3.x includes NativeAssets.WebAssembly with per-TFM emscripten version mapping and proper .NET 8 WASM support. Also ensure the wasm-tools workload is installed.",
+          "codeSnippet": "dotnet workload install wasm-tools\n# Update PackageReference in .csproj:\n# <PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"3.116.1\" />",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "medium",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 3.x",
+      "recommendedReason": "Directly addresses the root cause by providing WASM static libraries compiled with the correct emscripten version for .NET 8. The 2.88.x line is EOL and will not receive fixes."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.80,
+      "reason": "SkiaSharp 3.x includes per-TFM emscripten version mapping in NativeAssets.WebAssembly that directly addresses this WASM deployment failure. The 2.88.x line is EOL."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply Blazor WASM labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post resolution suggesting upgrade to SkiaSharp 3.x with explanation of WASM static linking",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the report. This is a known limitation of SkiaSharp 2.88.x with .NET 8 Blazor WASM.\n\nBlazor WASM uses static linking — the native SkiaSharp `.a` files are compiled into `dotnet.wasm` during publish via emscripten. In debug mode, the WASM interpreter runs without native linking, which is why it works in Visual Studio. When deployed, the published app uses the AOT-compiled binary, which requires the static libraries to match the .NET SDK's emscripten version.\n\nSkiaSharp 2.88.3 did not include emscripten static libraries matched to .NET 8's toolchain. SkiaSharp 3.x resolves this with per-TFM emscripten version selection. To fix this:\n\n1. Install the wasm-tools workload:\n```\ndotnet workload install wasm-tools\n```\n\n2. Upgrade to SkiaSharp 3.x:\n```xml\n<PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"3.116.1\" />\n```\n\nNote that upgrading from 2.88.x to 3.x may involve minor API changes — check the [migration guide](https://github.com/mono/SkiaSharp/wiki/SkiaSharp-3.0-Migration-Guide) for details."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in SkiaSharp 3.x",
+        "risk": "medium",
+        "confidence": 0.75
+      },
+      {
+        "type": "link-related",
+        "description": "Link to similar Blazor WASM deployment issue",
+        "risk": "low",
+        "confidence": 0.70,
+        "linkedIssue": 2221
+      }
+    ]
+  }
+}
