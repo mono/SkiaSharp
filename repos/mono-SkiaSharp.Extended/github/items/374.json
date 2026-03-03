@@ -3,7 +3,7 @@
   "type": "pr",
   "state": "open",
   "title": "[WIP] Investigate pixel comparer libraries for feature alignment",
-  "body": "Thanks for asking me to work on this. I will get started on it and keep this PR\u0027s description up to date as I form a plan and make progress.\n\n\u003E can you have a look at what we have for the pixel comparer and then see what other libraries do for comparson. I know there are several like imagemagick and even https://github.com/dotnet/maui/tree/main/src/TestUtils/src/VisualTestUtils and  https://github.com/dotnet/maui/tree/main/src/TestUtils/src/VisualTestUtils.MagickNet. Look around for things that most libraries have and ensure we have something similar\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+  "body": "- [x] **Enhance \u0060SKPixelComparisonResult\u0060** with standard metrics found in most image comparison libraries:\n  - \u0060SumSquaredError\u0060 (long) - raw sum of per-channel squared differences\n  - \u0060MeanAbsoluteError\u0060 (double) - average absolute error per channel per pixel  \n  - \u0060MeanSquaredError\u0060 (double) - standard per-channel MSE metric\n  - \u0060RootMeanSquaredError\u0060 (double) - RMSE (used by MAUI VisualTestUtils/MagickNet)\n  - \u0060NormalizedRootMeanSquaredError\u0060 (double) - RMSE / 255.0 (range 0-1, useful for threshold testing)\n  - \u0060PeakSignalToNoiseRatio\u0060 (double) - PSNR in dB (standard quality metric)\n- [x] **Update core \u0060Compare\u0060 methods** to track sum of squared errors\n- [x] **Add tolerance-based \u0060Compare\u0060 overloads** (like ImageMagick\u0027s \u0022fuzz\u0022 threshold) for all input types: \u0060Compare(first, second, int tolerance)\u0060 - per-pixel threshold without needing a heavy mask image\n- [x] **Add \u0060GenerateDifferenceImage\u0060 method** that produces actual per-channel difference visualization (not just binary B/W like current \u0060GenerateDifferenceMask\u0060)\n- [x] **Add 22 comprehensive tests** for all new functionality\n- [x] **Update pixel-comparer documentation** with new metrics, tolerance comparison, and difference image docs\n- [x] Address code review feedback: use explicit constructor overloads for binary compatibility\n- [x] Run security scanning (CodeQL: 0 alerts)\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
   "author": {
     "login": "Copilot",
     "type": "Bot"
@@ -20,7 +20,7 @@
     }
   ],
   "createdAt": "2026-03-03T23:07:10",
-  "updatedAt": "2026-03-03T23:07:10",
+  "updatedAt": "2026-03-03T23:25:55",
   "commentCount": 0,
   "reactionCount": 0,
   "draft": true,
@@ -29,10 +29,10 @@
   "mergeableState": "blocked",
   "baseBranch": "main",
   "headBranch": "copilot/explore-pixel-comparer-libraries",
-  "additions": 0,
-  "deletions": 0,
-  "changedFiles": 0,
-  "commits": 1,
+  "additions": 406,
+  "deletions": 7,
+  "changedFiles": 4,
+  "commits": 3,
   "reviews": [],
   "engagement": {
     "syncedAt": "2026-03-03T23:11:42.6883304Z",
