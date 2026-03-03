@@ -60,172 +60,176 @@ else
     <!-- Verdict Banner + Corrections -->
     <TriageHero Issue="@_issue" Repro="@_repro" />
 
-    <!-- Single Column Layout -->
-    <div class="triage-detail-content">
-        @if (_issue is not null)
-        {
-            <!-- Quick Facts Row -->
-            <div class="quick-facts-row">
-                <div class="qf-group">
-                    <span class="qf-label">Type</span>
-                    <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
-                    <span class="field-confidence">@_issue.Classification.Type.Confidence.ToString("P0")</span>
+    <!-- Two-Column Layout -->
+    <div class="triage-detail-layout">
+        <!-- Main Column -->
+        <div class="triage-main">
+            @if (_issue is not null)
+            {
+                <!-- Quick Facts Row -->
+                <div class="quick-facts-row">
+                    <div class="qf-group">
+                        <span class="qf-label">Type</span>
+                        <span class="badge-type badge-@StripPrefix(_issue.Classification.Type.Value)">@FormatLabel(_issue.Classification.Type.Value)</span>
+                        <span class="field-confidence">@_issue.Classification.Type.Confidence.ToString("P0")</span>
+                    </div>
+                    @if (_issue.Classification.Area is not null)
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Area</span>
+                            <span class="label label-area">@FormatLabel(_issue.Classification.Area.Value)</span>
+                        </div>
+                    }
+                    @if (_issue.Evidence.BugSignals?.Severity is not null)
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Severity</span>
+                            <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString()">@FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())</span>
+                        </div>
+                    }
+                    @if (_issue.Evidence.Regression is not null && _issue.Evidence.Regression.IsRegression)
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Regression</span>
+                            <span class="badge-regression">⚡ Yes</span>
+                            @if (_issue.Evidence.Regression.BrokeInVersion is not null)
+                            {
+                                <span class="qf-detail">broke in @_issue.Evidence.Regression.BrokeInVersion</span>
+                            }
+                        </div>
+                    }
+                    @if (_issue.Classification.Platforms is { Count: > 0 })
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Platforms</span>
+                            @foreach (var p in _issue.Classification.Platforms) { <span class="label label-os">@FormatLabel(p)</span> }
+                        </div>
+                    }
+                    @if (_repro is not null)
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Repro</span>
+                            <span class="badge-repro-conclusion badge-repro-@_repro.Conclusion.ToJsonString()">@FormatLabel(_repro.Conclusion.ToJsonString())</span>
+                        </div>
+                    }
+                    @if (_issue.Evidence.VersionAnalysis?.MentionedVersions is { Count: > 0 })
+                    {
+                        <div class="qf-group">
+                            <span class="qf-label">Versions</span>
+                            @foreach (var v in _issue.Evidence.VersionAnalysis.MentionedVersions) { <span class="label">@v</span> }
+                        </div>
+                    }
                 </div>
-                @if (_issue.Classification.Area is not null)
-                {
-                    <div class="qf-group">
-                        <span class="qf-label">Area</span>
-                        <span class="label label-area">@FormatLabel(_issue.Classification.Area.Value)</span>
-                    </div>
-                }
-                @if (_issue.Evidence.BugSignals?.Severity is not null)
-                {
-                    <div class="qf-group">
-                        <span class="qf-label">Severity</span>
-                        <span class="badge-severity badge-sev-@_issue.Evidence.BugSignals.Severity.Value.ToJsonString()">@FormatLabel(_issue.Evidence.BugSignals.Severity.Value.ToJsonString())</span>
-                    </div>
-                }
-                @if (_issue.Evidence.Regression is not null && _issue.Evidence.Regression.IsRegression)
-                {
-                    <div class="qf-group">
-                        <span class="qf-label">Regression</span>
-                        <span class="badge-regression">⚡ Yes</span>
-                        @if (_issue.Evidence.Regression.BrokeInVersion is not null)
-                        {
-                            <span class="qf-detail">broke in @_issue.Evidence.Regression.BrokeInVersion</span>
-                        }
-                    </div>
-                }
-                @if (_issue.Classification.Platforms is { Count: > 0 })
-                {
-                    <div class="qf-group">
-                        <span class="qf-label">Platforms</span>
-                        @foreach (var p in _issue.Classification.Platforms) { <span class="label label-os">@FormatLabel(p)</span> }
-                    </div>
-                }
-                @if (_repro is not null)
-                {
-                    <div class="qf-group">
-                        <span class="qf-label">Repro</span>
-                        <span class="badge-repro-conclusion badge-repro-@_repro.Conclusion.ToJsonString()">@FormatLabel(_repro.Conclusion.ToJsonString())</span>
-                    </div>
-                }
-                @if (_issue.Evidence.VersionAnalysis?.MentionedVersions is { Count: > 0 })
-                {
-                    <div class="qf-group">
-                        <span class="qf-label">Versions</span>
-                        @foreach (var v in _issue.Evidence.VersionAnalysis.MentionedVersions) { <span class="label">@v</span> }
-                    </div>
-                }
-            </div>
 
-            <!-- Content Tabs -->
-            <div class="content-tabs">
-                <button type="button" class="content-tab @(_activeTab == "analysis" ? "active" : "")" @onclick='() => _activeTab = "analysis"'>
-                    Analysis
-                </button>
-                <button type="button" class="content-tab @(_activeTab == "investigation" ? "active" : "")" @onclick='() => _activeTab = "investigation"'>
-                    Investigation
-                </button>
-                @if (_repro is not null)
-                {
-                    <button type="button" class="content-tab @(_activeTab == "repro" ? "active" : "")" @onclick='() => _activeTab = "repro"'>
-                        Reproduction Log
+                <!-- Content Tabs -->
+                <div class="content-tabs">
+                    <button type="button" class="content-tab @(_activeTab == "analysis" ? "active" : "")" @onclick='() => _activeTab = "analysis"'>
+                        Analysis
                     </button>
-                }
-            </div>
+                    <button type="button" class="content-tab @(_activeTab == "investigation" ? "active" : "")" @onclick='() => _activeTab = "investigation"'>
+                        Investigation
+                    </button>
+                    @if (_repro is not null)
+                    {
+                        <button type="button" class="content-tab @(_activeTab == "repro" ? "active" : "")" @onclick='() => _activeTab = "repro"'>
+                            Reproduction Log
+                        </button>
+                    }
+                </div>
 
-            @if (_activeTab == "analysis")
-            {
-                <DetailsTabPanel Issue="@_issue" Tab="analysis" />
+                @if (_activeTab == "analysis")
+                {
+                    <DetailsTabPanel Issue="@_issue" Tab="analysis" />
+                }
+                else if (_activeTab == "investigation")
+                {
+                    <DetailsTabPanel Issue="@_issue" Tab="investigation" />
+                }
+                else if (_activeTab == "repro" && _repro is not null)
+                {
+                    <ReproTabPanel Repro="@_repro" ActiveTab="repro" />
+                }
             }
-            else if (_activeTab == "investigation")
-            {
-                <DetailsTabPanel Issue="@_issue" Tab="investigation" />
-            }
-            else if (_activeTab == "repro" && _repro is not null)
+            else if (_repro is not null)
             {
                 <ReproTabPanel Repro="@_repro" ActiveTab="repro" />
             }
-        }
-        else if (_repro is not null)
-        {
-            <ReproTabPanel Repro="@_repro" ActiveTab="repro" />
-        }
+        </div>
 
-        <!-- Actions -->
-        @if (_allActions.Count > 0)
-        {
-            <div class="section-card">
-                <h3 class="section-title">Actions</h3>
-                @foreach (var action in _allActions)
-                {
-                    <div class="action-item">
-                        <div class="action-item-header">
-                            <span class="badge-action badge-act-@action.Type.ToJsonString()" title="@GetActionTypeTooltip(action.Type)">
-                                @FormatLabel(action.Type.ToJsonString())
-                            </span>
-                            @if (action.Risk is not null)
-                            {
-                                <span class="badge-risk-sm badge-risk-@action.Risk.Value.ToJsonString()">
-                                    @FormatLabel(action.Risk.Value.ToJsonString())
+        <!-- Sidebar: Actions + Draft Response -->
+        <div class="triage-sidebar">
+            @if (_allActions.Count > 0)
+            {
+                <div class="sidebar-card">
+                    <h3 class="section-title">Actions</h3>
+                    @foreach (var action in _allActions)
+                    {
+                        <div class="action-item">
+                            <div class="action-item-header">
+                                <span class="badge-action badge-act-@action.Type.ToJsonString()" title="@GetActionTypeTooltip(action.Type)">
+                                    @FormatLabel(action.Type.ToJsonString())
                                 </span>
-                            }
-                        </div>
-                        <div class="action-item-body md-content">@MarkdownHelper.ToHtml(action.Description)</div>
-                        @if (action.Labels is { Count: > 0 })
-                        {
-                            <div class="action-item-labels">
-                                @foreach (var lbl in action.Labels)
+                                @if (action.Risk is not null)
                                 {
-                                    <span class="label">@lbl</span>
+                                    <span class="badge-risk-sm badge-risk-@action.Risk.Value.ToJsonString()">
+                                        @FormatLabel(action.Risk.Value.ToJsonString())
+                                    </span>
                                 }
                             </div>
-                        }
-                        @if (action.Comment is not null)
-                        {
-                            <div class="action-item-comment">
-                                <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(action.Comment)">📋 Copy</button>
-                                <div class="md-content draft-content">@MarkdownHelper.ToHtml(action.Comment)</div>
-                            </div>
-                        }
-                        @if (action.LinkedIssue is not null)
-                        {
-                            <p>Linked: <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro?.Meta.Repo)/issues/@action.LinkedIssue"
-                                          target="_blank" rel="noopener noreferrer">#@action.LinkedIssue</a></p>
-                        }
-                    </div>
-                }
-            </div>
-        }
-
-        <!-- Draft Response -->
-        @if (_repro?.Output?.ProposedResponse is not null)
-        {
-            var response = _repro.Output.ProposedResponse;
-            <div class="section-card">
-                <h3 class="section-title">Draft Response</h3>
-                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
-                    <span class="badge-rs badge-rs-@response.Status.ToJsonString()">@FormatLabel(response.Status.ToJsonString())</span>
-                    @if (response.Summary is not null)
-                    {
-                        <span class="draft-summary">@response.Summary</span>
+                            <div class="action-item-body md-content">@MarkdownHelper.ToHtml(action.Description)</div>
+                            @if (action.Labels is { Count: > 0 })
+                            {
+                                <div class="action-item-labels">
+                                    @foreach (var lbl in action.Labels)
+                                    {
+                                        <span class="label">@lbl</span>
+                                    }
+                                </div>
+                            }
+                            @if (action.Comment is not null)
+                            {
+                                <div class="action-item-comment">
+                                    <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(action.Comment)">📋 Copy</button>
+                                    <div class="md-content draft-content">@MarkdownHelper.ToHtml(action.Comment)</div>
+                                </div>
+                            }
+                            @if (action.LinkedIssue is not null)
+                            {
+                                <p>Linked: <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro?.Meta.Repo)/issues/@action.LinkedIssue"
+                                              target="_blank" rel="noopener noreferrer">#@action.LinkedIssue</a></p>
+                            }
+                        </div>
                     }
                 </div>
-                <div class="draft-body-full md-content">
-                    @MarkdownHelper.ToHtml(response.Body)
+            }
+
+            @if (_repro?.Output?.ProposedResponse is not null)
+            {
+                var response = _repro.Output.ProposedResponse;
+                <div class="sidebar-card">
+                    <h3 class="section-title">Draft Response</h3>
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                        <span class="badge-rs badge-rs-@response.Status.ToJsonString()">@FormatLabel(response.Status.ToJsonString())</span>
+                        @if (response.Summary is not null)
+                        {
+                            <span class="draft-summary">@response.Summary</span>
+                        }
+                    </div>
+                    <div class="draft-body-full md-content">
+                        @MarkdownHelper.ToHtml(response.Body)
+                    </div>
+                    <div class="draft-actions">
+                        <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(response.Body)" title="Copy markdown to clipboard">
+                            📋 Copy
+                        </button>
+                        <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro.Meta.Repo)/issues/@(_issue?.Meta.Number ?? _repro.Meta.Number)"
+                           target="_blank" rel="noopener noreferrer" class="btn-goto">
+                            GitHub ↗
+                        </a>
+                    </div>
                 </div>
-                <div class="draft-actions">
-                    <button type="button" class="btn-copy" @onclick="() => CopyToClipboard(response.Body)" title="Copy markdown to clipboard">
-                        📋 Copy
-                    </button>
-                    <a href="https://github.com/@(_issue?.Meta.Repo ?? _repro.Meta.Repo)/issues/@(_issue?.Meta.Number ?? _repro.Meta.Number)"
-                       target="_blank" rel="noopener noreferrer" class="btn-goto">
-                        GitHub ↗
-                    </a>
-                </div>
-            </div>
-        }
+            }
+        </div>
     </div>
 
     <!-- Bottom Navigation -->
