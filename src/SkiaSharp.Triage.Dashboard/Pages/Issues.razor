@@ -379,9 +379,9 @@ else
 
         try
         {
-            var triage = await DataService.GetTriageDataAsync();
+            var triage = await DataService.GetTriageIndexAsync();
             if (triage is not null)
-                _triagedNumbers = triage.Issues.Select(i => i.Meta.Number).ToHashSet();
+                _triagedNumbers = triage.Issues.Select(i => i.Number).ToHashSet();
         }
         catch { /* Triage data not yet available */ }
         

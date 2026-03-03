@@ -7,11 +7,23 @@
 
 | | |
 |---|---|
-| **Phase** | AI Triage Dashboard — UI Design |
-| **Status** | Design specification created |
+| **Phase** | AI Triage Dashboard — Schema v1.0 Rewrite |
+| **Status** | Phase 1 complete — models + fix removal |
 | **Branch** | `docs-dashboard` |
 
 ## Recent Changes
+
+### 2026-02-14 — Schema v1.0 Model Rewrite + Fix Step Removal
+
+Updated all C# models to match new triage-schema.json and repro-schema.json from `issue-triage` and `issue-repro` skills. Removed fix step entirely.
+
+**Changes:**
+- TriageEnums: Added `CloseAsByDesign` to SuggestedAction, new `ErrorType`, `ProposalCategory`, `ProposalValidation` enums
+- TriageModels: `Area` now non-nullable, `BugSignals.IsRegression` → `RegressionClaimed`, `ErrorType` now enum, `ResolutionProposal` gains `Category`/`Validated`, `Title` now required
+- ReproEnums: Removed `WrongOutput` from `ReproConclusion`, added `Simulation` project type, fixed `blazor-wasm` casing
+- ReproModels: `StepResult` now non-nullable, `TriageCorrections` → `Corrections`, `Source` added to corrections, `Assessment` now `ReproAssessment?` enum
+- Deleted `FixModels.cs` and `FixEnums.cs`
+- Removed fix references from CLI GenerateCommand, DashboardDataService, TriageDetail, DetailTabs, PipelineStepper, DetailsTabPanel, TriageHero, TriageFormatHelper
 
 ### 2026-02-13 — Scoped CSS Migration Complete
 

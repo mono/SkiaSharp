@@ -35,9 +35,6 @@ public class DashboardDataService(HttpClient http)
     public async Task<TrendData?> GetTrendDataAsync() =>
         await http.GetFromJsonAsync<TrendData>("data/github-trends.json", JsonOptions);
 
-    public async Task<TriageData?> GetTriageDataAsync() =>
-        await http.GetFromJsonAsync<TriageData>("data/triage.json", TriageJsonOptions.Default);
-
     public async Task<TriageIndex?> GetTriageIndexAsync() =>
         await http.GetFromJsonAsync<TriageIndex>("data/triage-index.json", TriageJsonOptions.Default);
 
