@@ -1,0 +1,49 @@
+{
+  "number": 353,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add Blazor WebAssembly sample with core extended demos and GitHub Pages deployment",
+  "body": "Adds a Blazor WASM sample app alongside the existing MAUI sample, implementing the three core \u0060SkiaSharp.Extended\u0060 demos (not UI.Maui).\n\n### New: \u0060samples/SkiaSharpDemo.Blazor/\u0060\n\n- **Shapes** \u2014 \u0060DrawSquare\u0060, \u0060DrawTriangle\u0060, \u0060DrawRegularPolygon\u0060, \u0060DrawStar\u0060 via \u0060SKCanvasView\u0060\n- **Path Interpolation** \u2014 Animated morphing between SVG shapes using \u0060SKPathInterpolation\u0060, with slider \u002B timer controls\n- **BlurHash** \u2014 Encode/decode images via \u0060SKBlurHash\u0060, with configurable components and punch parameters\n\nUses \u0060SkiaSharp.Views.Blazor\u0060 3.119.1 and a project reference to \u0060SkiaSharp.Extended\u0060. BlurHash sample images are copied to \u0060wwwroot/\u0060 and loaded via \u0060HttpClient\u0060.\n\nThe sidebar navigation uses contextually appropriate icons (pentagon for Shapes, bezier curve for Path Interpolation, image for BlurHash) and includes an \u0022EXTENDED\u0022 group header matching the MAUI sample\u0027s demo grouping pattern.\n\n### Local development\n\nThe source \u0060index.html\u0060 uses \u0060\u003Cbase href=\u0022/\u0022 /\u003E\u0060 so local development works out of the box with \u0060dotnet run\u0060. The CI workflow rewrites the base href to \u0060/SkiaSharp.Extended/sample/\u0060 in the published output and generates \u0060404.html\u0060 for SPA routing at deploy time \u2014 no manual path configuration needed for local dev.\n\n### GitHub Pages deployment\n\nUpdated \u0060builds-docs.yml\u0060 to build and deploy the Blazor sample to \u0060mono.github.io/SkiaSharp.Extended/sample/\u0060:\n\n- **Publish step** \u2014 Runs \u0060dotnet publish\u0060 for the Blazor WASM project and copies the output into \u0060docs/_site/sample/\u0060\n- **Base href rewrite** \u2014 CI rewrites \u0060\u003Cbase href=\u0022/\u0022 /\u003E\u0060 to \u0060\u003Cbase href=\u0022/SkiaSharp.Extended/sample/\u0022 /\u003E\u0060 in the published output\n- **SPA routing** \u2014 \u0060404.html\u0060 with redirect script is generated at deploy time (not in source) along with corresponding handler in \u0060index.html\u0060\n- **\u0060wasm-tools\u0060 workload** \u2014 Installed in CI for optimized Blazor publish\n- **Deploy gate** \u2014 Deployment only occurs on push to \u0060main\u0060 (gated by \u0060if: github.ref == \u0027refs/heads/main\u0027\u0060); PRs build and upload artifacts but do not deploy\n- **\u0060.nojekyll\u0060** \u2014 Added to prevent Jekyll from ignoring \u0060_framework/\u0060 directories\n- **Permissions** \u2014 Added \u0060contents: write\u0060, \u0060pages: write\u0060, \u0060id-token: write\u0060\n\n### Copilot instructions\n\n- Added **Blazor Sample** section documenting the sample app and its GitHub Pages deployment\n- Added **PR Screenshot Requirement** section: PRs touching the Blazor sample or library features/controls must include screenshots of all affected Blazor sample pages as a PR comment\n- Added \u0060SkiaSharp.Views.Blazor\u0060 to the Dependencies list\n\n### Other changes\n\n- **\u0060nuget.config\u0060** \u2014 Added \u0060nuget.org\u0060 source (\u0060SkiaSharp.Views.Blazor\u0060 is not on the \u0060dotnet-public\u0060 feed)\n- **\u0060SkiaSharp.Extended.sln\u0060** \u2014 Added project under \u0060samples\u0060 solution folder\n- **\u0060copilot-setup-steps.yml\u0060** \u2014 Added \u0060wasm-tools\u0060 workload installation alongside the existing MAUI Android workload\n\n### Screenshots\n\nHome page with sidebar grouping and icons:\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/be96e374-99c7-4e92-8f6c-1d47afa7d76d\u0022\u003E\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp.Extended/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-21T21:55:10",
+  "updatedAt": "2026-02-24T23:16:01",
+  "closedAt": "2026-02-24T23:15:56",
+  "commentCount": 11,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/add-blazor-sample",
+  "additions": 60614,
+  "deletions": 7,
+  "changedFiles": 80,
+  "commits": 19,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-02-22T00:49:48"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-22T19:58:39"
+    }
+  ]
+}

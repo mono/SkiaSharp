@@ -1,0 +1,58 @@
+{
+  "number": 372,
+  "type": "pr",
+  "state": "open",
+  "title": "Add llms.txt and llms-full.txt to documentation site",
+  "body": "Adds \u003Ca href=\u0022https://llmstxt.org/\u0022\u003Ellms.txt\u003C/a\u003E support so LLMs can discover and ingest the docs site content at \u0060mono.github.io/SkiaSharp.Extended/\u0060.\n\n- **\u0060docs/llms.md\u0060** \u2014 Source template for the curated \u0060llms.txt\u0060 index with links to all doc pages and API reference\n- **\u0060docs/llms-full-header.md\u0060** \u2014 Header content for the full-text \u0060llms-full.txt\u0060 file\n- **\u0060docs/generate-llms-full.sh\u0060** \u2014 Generates both \u0060llms.txt\u0060 (from template) and \u0060llms-full.txt\u0060 (header \u002B \u0060index.md\u0060 \u002B \u0060docs/*.md\u0060 glob) at build time\n- **\u0060docs/docfx.json\u0060** \u2014 Both generated files added to DocFX \u0060resource\u0060 section; template files excluded from content build\n- **\u0060.github/workflows/docs-deploy.yml\u0060** \u2014 Runs the generation script before the DocFX build step\n- **\u0060.gitignore\u0060** \u2014 Both \u0060docs/llms.txt\u0060 and \u0060docs/llms-full.txt\u0060 excluded (generated artifacts)\n\nWhen new doc pages are added, \u0060docs/llms.md\u0060 needs a new link entry. Article pages are auto-discovered via glob.\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC We\u0027d love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-03-03T15:16:50",
+  "updatedAt": "2026-03-03T16:12:37",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/enable-llms-text-for-docs",
+  "additions": 91,
+  "deletions": 2,
+  "changedFiles": 6,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-03-03T16:02:31"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-03T16:11:57"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-03T16:12:01"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-03T16:12:05"
+    }
+  ]
+}

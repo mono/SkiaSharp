@@ -1,0 +1,54 @@
+{
+  "number": 369,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix direct navigation 404 on Blazor sample pages",
+  "body": "GitHub Pages only serves the **root-level** \u0060404.html\u0060 for all missing paths \u2014 subdirectory \u0060404.html\u0060 files are never invoked. The existing SPA redirect handler lived at \u0060docs/_site/sample/404.html\u0060 and was never reached, so direct navigation to any sample route (e.g. \u0060/SkiaSharp.Extended/sample/shapes\u0060) returned GitHub\u0027s default 404.\n\n## Changes\n\n- **\u0060docs/404.html\u0060** \u2014 new root-level 404 page with an inline SPA redirect script. Dynamically detects the \u0060sample\u0060 segment in the URL path, then encodes the remaining route as a query string and redirects to that sample\u0027s \u0060index.html\u0060. Works for both main and staging deployments without hardcoded segment counts:\n  - Main: \u0060/SkiaSharp.Extended/sample/shapes\u0060 \u2192 \u0060/SkiaSharp.Extended/sample/?/shapes\u0060\n  - Staging: \u0060/SkiaSharp.Extended/staging/42/sample/shapes\u0060 \u2192 \u0060/SkiaSharp.Extended/staging/42/sample/?/shapes\u0060\n  - Non-sample 404s fall through to a plain \u0022Page Not Found\u0022 message.\n\n- **\u0060docs/docfx.json\u0060** \u2014 added \u0060404.html\u0060 to the \u0060resource\u0060 files so docfx copies it to \u0060_site/\u0060 (and thus to the gh-pages root) during every build.\n\n- **\u0060.github/workflows/docs-deploy.yml\u0060** \u2014 two improvements to the staging workflow:\n  - The \u0060comment\u0060 job now also runs on \u0060synchronize\u0060 events (new commits pushed to the PR), matching the deploy job behavior. The script updates an existing bot comment rather than skipping, so the staging preview link is always refreshed after each push.\n  - The staging deploy step now copies \u0060404.html\u0060 to the gh-pages root in addition to \u0060staging/$PR_NUMBER/\u0060. Because GitHub Pages only serves the root-level \u0060404.html\u0060 for all missing paths, staging deep-links (e.g. \u0060/SkiaSharp.Extended/staging/369/sample/shapes\u0060) would otherwise never trigger the SPA redirect \u2014 they now work correctly as soon as a staging deployment completes.\n\nThe complementary decode script already in \u0060sample/index.html\u0060 reads the encoded query string and restores the correct URL before the Blazor router initializes \u2014 no changes needed there.\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E When navigating directly to a sample page in the browser, I get a 404.\n\u003E \n\u003E \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC We\u0027d love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-03-02T06:08:00",
+  "updatedAt": "2026-03-02T07:40:15",
+  "closedAt": "2026-03-02T07:40:11",
+  "commentCount": 5,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-02T07:40:11",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/fix-404-error-on-sample-page",
+  "additions": 64,
+  "deletions": 21,
+  "changedFiles": 3,
+  "commits": 4,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2026-03-02T07:35:12"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2026-03-02T07:35:53"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-02T07:38:40"
+    }
+  ]
+}

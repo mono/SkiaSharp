@@ -1,0 +1,36 @@
+{
+  "number": 352,
+  "type": "pr",
+  "state": "open",
+  "title": "Add SkiaSharp.Extended.UI.Blazor with touch canvas view and gesture view",
+  "body": "Adds a new \u0060SkiaSharp.Extended.UI.Blazor\u0060 Razor Class Library that brings touch-enabled canvas and gesture recognition to Blazor, using the same \u0060SKTouchEventArgs\u0060 API as the MAUI package for source sharing.\n\n## Control hierarchy\n\n\u0060\u0060\u0060\nSKGestureSurfaceView \u2192 SKTouchCanvasView \u2192 SkiaSharp.Views.Blazor.SKCanvasView\n\u0060\u0060\u0060\n\n## New: \u0060source/SkiaSharp.Extended.UI.Blazor\u0060\n\n- **\u0060SKTouchAction\u0060 / \u0060SKTouchDeviceType\u0060 / \u0060SKTouchEventArgs\u0060** \u2014 Mirrors the MAUI touch API exactly (same enum integer values) to enable shared touch-handling code across platforms.\n- **\u0060SKCanvasView\u0060** \u2014 Thin wrapper around \u0060SkiaSharp.Views.Blazor.SKCanvasView\u0060.\n- **\u0060SKTouchCanvasView\u0060** \u2014 Wraps the canvas in a container div; attaches browser \u0060PointerEvent\u0060 listeners via an ES module (\u0060SKTouchInterop.js\u0060) and fires \u0060Touch\u0060 as \u0060EventCallback\u003CSKTouchEventArgs\u003E\u0060. Works across mouse, touch, and stylus.\n- **\u0060SKGestureSurfaceView\u0060** \u2014 Composes \u0060SKTouchCanvasView\u0060 with \u0060SKGestureEngine\u0060. Exposes the full gesture event surface (tap, double-tap, long press, pan, pinch, rotate, fling \u002B inertia, hover, scroll, drag lifecycle) as \u0060EventCallback\u003CT\u003E\u0060 parameters.\n\n\u0060\u0060\u0060razor\n\u003CSKGestureSurfaceView\n    OnPaintSurface=\u0022OnPaint\u0022\n    TapDetected=\u0022OnTap\u0022\n    PanDetected=\u0022OnPan\u0022\n    PinchDetected=\u0022OnPinch\u0022\n    FlingDetected=\u0022OnFling\u0022\n    Flinging=\u0022OnFlinging\u0022\n    ScrollDetected=\u0022OnScroll\u0022\n    Style=\u0022width: 100%; height: 100%;\u0022 /\u003E\n\u0060\u0060\u0060\n\n## New: \u0060samples/SkiaSharpBlazorDemo\u0060\n\nBlazor WASM app with a gesture demo page that mirrors the MAUI \u0060GesturePage\u0060: interactive checkerboard canvas with draggable stickers, per-gesture feature toggles, and a live event log.\n\n## New: \u0060tests/SkiaSharp.Extended.UI.Blazor.Tests\u0060\n\n23 unit tests covering:\n- \u0060SKTouchEventArgs\u0060 construction and MAUI-compatible enum values\n- Touch-action \u2192 gesture-engine routing logic (the same routing used inside \u0060SKGestureSurfaceView\u0060)\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Please can you add a SkiaSharp.Extended.UI.Blazor and implement the gesture view. \n\u003E \n\u003E Add a similar style sample app for Blazor. \n\u003E \n\u003E Please also create a touch event canvas view that adds the Touch event using the same SKTouchEventArgs api as the Maui api. We are going to share the same source and want to add these touch events to the actual Blazor app. But, we want to implement it here first. \n\u003E \n\u003E So there will be a gesture view -\u003E touch view -\u003E canvas view. \n\u003E \n\u003E Make sure we have unit tests. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp.Extended/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-21T21:44:58",
+  "updatedAt": "2026-02-21T22:12:47",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "merged": false,
+  "mergeableState": "unknown",
+  "baseBranch": "copilot/copy-skia-to-maui",
+  "headBranch": "copilot/add-gesture-view-and-touch-view",
+  "additions": 1949,
+  "deletions": 0,
+  "changedFiles": 27,
+  "commits": 3,
+  "reviews": []
+}

@@ -1,0 +1,37 @@
+{
+  "number": 351,
+  "type": "pr",
+  "state": "open",
+  "title": "Add FrameStart/FrameEnd range control and read-only frame properties to SKLottieView",
+  "body": "\u0060SKLottieView\u0060 had no programmatic playback control beyond setting \u0060Progress\u0060 directly, making stateful animations (toggle switches, multi-state icons) require polling hacks.\n\n## New read-only bindable properties\n\n- \u0060Fps\u0060 \u2014 animation frame rate\n- \u0060FrameCount\u0060 \u2014 frames in the active range\n- \u0060CurrentFrame\u0060 \u2014 current frame, zero-based within the active range, updated every frame\n\n## Frame range control: \u0060FrameStart\u0060 / \u0060FrameEnd\u0060\n\nTwo settable \u0060BindableProperty\u0060 integers that restrict playback to a sub-range of the InPoint\u2192OutPoint span. \u0060Duration\u0060, \u0060FrameCount\u0060, \u0060Progress\u0060, and \u0060CurrentFrame\u0060 operate transparently within the active range. Respected in both forward and reverse playback directions.\n\n| Property | Default | Meaning |\n|---|---|---|\n| \u0060FrameStart\u0060 | \u00600\u0060 | First frame to play (0-based from InPoint) |\n| \u0060FrameEnd\u0060 | \u0060-1\u0060 | End frame, exclusive (\u0060-1\u0060 = OutPoint, same convention as \u0060RepeatCount = -1\u0060) |\n\n\u0060\u0060\u0060csharp\n// Multi-state animation: each state is a different frame range\nlottieView.FrameStart = 0;  lottieView.FrameEnd = 30;  // idle\nlottieView.FrameStart = 30; lottieView.FrameEnd = 50;  // pressed\nlottieView.FrameStart = 0;  lottieView.FrameEnd = -1;  // full animation\n\u0060\u0060\u0060\n\nValues are clamped on assignment and persist across source changes (clamped to the new animation\u0027s frame count). XAML two-way binding works directly.\n\n## Other\n\n- InPoint/OutPoint from the Lottie file are always respected by Skottie; \u0060FrameStart\u0060/\u0060FrameEnd\u0060 further sub-clip that range\n- 14 unit tests covering frame range behaviour\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-20T16:06:43",
+  "updatedAt": "2026-02-21T05:50:37",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": false,
+  "merged": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "copilot/create-optimized-pr-from-issues",
+  "additions": 674,
+  "deletions": 23,
+  "changedFiles": 5,
+  "commits": 6,
+  "reviews": []
+}

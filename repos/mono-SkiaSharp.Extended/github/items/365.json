@@ -1,0 +1,118 @@
+{
+  "number": 365,
+  "type": "pr",
+  "state": "open",
+  "title": "Extract SKLottiePlayer and add Blazor Lottie support",
+  "body": "## Summary\n\nExtract a shared \u0060SKLottiePlayer\u0060 from the MAUI \u0060SKLottieView\u0060 and add full Blazor WebAssembly Lottie support \u2014 including a new \u0060SKLottieView\u0060 Blazor component, \u0060SKAnimatedCanvasView\u0060 base component, documentation, and comprehensive tests.\n\n## Staging\n\n\uD83D\uDCD6 [**View Staging Documentation**](https://mono.github.io/SkiaSharp.Extended/staging/365/)\n\uD83C\uDFAE [**View Staging Blazor Sample**](https://mono.github.io/SkiaSharp.Extended/staging/365/sample/)\n\n## Changes\n\n### Core Library (\u0060SkiaSharp.Extended\u0060)\n- **\u0060SKLottiePlayer\u0060** \u2014 New platform-agnostic Lottie playback engine with Update/Render frame loop, speed control (including negative/reverse), and repeat management\n- **\u0060SKLottieRepeat\u0060** \u2014 Readonly struct with \u0060Never\u0060, \u0060Restart(count)\u0060, and \u0060Reverse(count)\u0060 factory methods, replacing the old separate RepeatMode/RepeatCount pattern\n- Added \u0060SkiaSharp.Skottie\u0060 dependency for Lottie rendering\n- Full XML documentation on all public APIs\n\n### Blazor Library (\u0060SkiaSharp.Extended.UI.Blazor\u0060) \u2014 New\n- **\u0060SKAnimatedCanvasView\u0060** \u2014 Base Blazor component wrapping \u0060SKCanvasView\u0060 with a ~60fps \u0060PeriodicTimer\u0060 animation loop, \u0060OnUpdate\u0060/\u0060OnPaintSurface\u0060 callbacks, and \u0060Invalidate()\u0060 support\n- **\u0060SKLottieView\u0060** \u2014 Blazor Lottie component with \u0060Source\u0060 (URL), \u0060RepeatMode\u0060, \u0060RepeatCount\u0060, \u0060AnimationSpeed\u0060, \u0060IsAnimationEnabled\u0060 parameters and lifecycle events (\u0060AnimationLoaded\u0060, \u0060AnimationCompleted\u0060, \u0060AnimationFailed\u0060, \u0060AnimationUpdated\u0060)\n- **\u0060SKLottieRepeatMode\u0060** \u2014 Blazor-specific enum (\u0060Restart\u0060/\u0060Reverse\u0060)\n\n### MAUI Library (\u0060SkiaSharp.Extended.UI.Maui\u0060)\n- Refactored \u0060SKLottieView\u0060 to delegate all playback logic to the shared \u0060SKLottiePlayer\u0060\n- Moved \u0060SKLottieAnimation\u0060, \u0060SKLottieAnimationFailedEventArgs\u0060 types to core with assembly-level type forwarders in MAUI for backward compatibility\n- Reduced \u0060SKLottieView\u0060 from ~540 to ~270 lines\n\n### Blazor Sample App\n- New Lottie demo page with speed slider (\u22123\u00D7 to \u002B3\u00D7), repeat mode/count controls, restart button, and live progress display\n- CSS isolation via \u0060.razor.css\u0060 files\n- \u0022Controls\u0022 group in sidebar nav and homepage\n- Bundled \u0060trophy.json\u0060 animation\n\n### Documentation\n- **\u0060lottie-player.md\u0060** \u2014 SKLottiePlayer API reference (frame loop, speed, repeat modes, seeking, events)\n- **\u0060lottie-blazor.md\u0060** \u2014 Blazor SKLottieView quick start, controls, events, sizing, plus SKAnimatedCanvasView guide\n- **\u0060lottie-maui.md\u0060** \u2014 Updated MAUI docs with speed/direction section and cross-links\n- Updated \u0060toc.yml\u0060 with new Blazor and Lottie Player sections\n\n### Tests\n- **160 tests** across 3 test projects:\n  - \u0060SKLottiePlayerTest\u0060 (31 tests) \u2014 Seek clamping, repeat modes, negative speed, boundary detection, mode switching mid-animation, completion events\n  - \u0060SKAnimatedCanvasViewTest\u0060 (bUnit) \u2014 Timer lifecycle, paint callback, enable/disable toggle\n  - \u0060SKLottieViewTest\u0060 (MAUI, 4 tests) \u2014 View-specific file loading tests (playback tests moved to core)\n\n## Key Design Decisions\n\n1. **Player owns playback state, views own platform integration.** \u0060SKLottiePlayer\u0060 is the single source of truth for progress, direction, and repeat logic. MAUI and Blazor views are thin wrappers that feed frame deltas and render calls.\n\n2. **Repeat mode changes preserve direction mid-animation.** Switching repeat modes (e.g., Reverse \u2192 Restart) does not reset the playback direction immediately \u2014 direction only resets when the animation actually hits a boundary. This prevents jarring mid-animation direction flips.\n\n3. **Blazor canvas invalidation is explicit.** \u0060SKAnimatedCanvasView\u0060 calls \u0060Invalidate()\u0060 on the inner \u0060SKCanvasView\u0060 each frame in addition to \u0060StateHasChanged()\u0060, because Blazor re-rendering alone does not trigger SkiaSharp canvas repainting.\n\n4. **WASM uses string-based animation loading.** \u0060Animation.Parse(json)\u0060 via \u0060HttpClient.GetStringAsync()\u0060 instead of \u0060Animation.Create(stream)\u0060, because native Skottie cannot read lazy async WASM streams synchronously.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-26T13:16:10",
+  "updatedAt": "2026-03-03T14:32:15",
+  "commentCount": 15,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/extract-skia-kottie-player",
+  "additions": 2503,
+  "deletions": 740,
+  "changedFiles": 34,
+  "commits": 29,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T16:54:30"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T16:57:45"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T16:58:20"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T17:04:55"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T17:12:21"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T17:12:24"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-02-26T21:16:05"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T21:40:02"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T21:56:49"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:03:59"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:04:24"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-02-26T22:06:36"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:15:14"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:34:23"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:35:12"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-26T22:42:14"
+    }
+  ]
+}

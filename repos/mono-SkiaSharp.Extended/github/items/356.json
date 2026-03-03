@@ -1,0 +1,59 @@
+{
+  "number": 356,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add Blazor WebAssembly sample with core extended demos and GitHub Pages deployment",
+  "body": "### Blazor sample (\u0060samples/SkiaSharpDemo.Blazor/\u0060)\n- Shapes, Path Interpolation, BlurHash demos using \u0060SkiaSharp.Views.Blazor\u0060 \u002B project reference to \u0060SkiaSharp.Extended\u0060\n- Sidebar with EXTENDED group header and contextual icons matching MAUI sample grouping\n- \u0060\u003Cbase href=\u0022/\u0022 /\u003E\u0060 in source for local dev; CI rewrites to \u0060/SkiaSharp.Extended/sample/\u0060 at publish time\n- \u0060\u003CWasmBuildNative\u003Etrue\u003C/WasmBuildNative\u003E\u0060 to ensure \u0060libSkiaSharp\u0060 is linked into the WASM build\n\n### CI (\u0060builds-docs.yml\u0060)\n- \u0060wasm-tools\u0060 workload install, \u0060dotnet publish\u0060 Blazor project, copy into \u0060docs/_site/sample/\u0060\n- Base href rewrite \u002B \u0060Get-ChildItem -Force\u0060 to copy all files including \u0060.nojekyll\u0060 without conditional check\n- Deploy gated to \u0060main\u0060 only; PRs build \u002B upload artifact\n- Build target updated from \u0060net9.0\u0060 to \u0060net10.0\u0060\n- Added \u0060permissions\u0060 block for \u0060contents: write\u0060 and \u0060pages: write\u0060\n\n### Docs\n- \u0022Try it live \u2192\u0022 links added to \u0060blurhash.md\u0060, \u0060geometry.md\u0060, \u0060path-interpolation.md\u0060 pointing to the Blazor sample\n- xref link fixes in \u0060confetti.md\u0060, \u0060geometry.md\u0060, \u0060lottie.md\u0060 for proper API cross-references\n- \u0022Sample\u0022 navigation entry added to \u0060docs/toc.yml\u0060\n\n### TFM updates\n- Dropped \u0060net9.0\u0060 targets from test projects (\u0060SkiaSharp.Extended.Tests\u0060, \u0060SkiaSharp.Extended.UI.Maui.Tests\u0060) \u2014 now \u0060net10.0\u0060 only\n- Dropped \u0060net9.0\u0060 targets from MAUI sample (\u0060SkiaSharpDemo\u0060) \u2014 now \u0060net10.0\u0060 only\n\n### Other\n- \u0060copilot-setup-steps.yml\u0060 \u2014 added \u0060wasm-tools\u0060 workload, updated to dotnet \u006010.0.x\u0060, added branch filters\n- \u0060azure-pipelines-steps-prepare.yml\u0060 \u2014 added \u0060wasm-tools\u0060 workload install step\n- \u0060copilot-instructions.md\u0060 \u2014 Blazor sample docs, PR screenshot requirement, \u0060SkiaSharp.Views.Blazor\u0060 dependency\n- Solution file updated with Blazor project under \u0060samples\u0060 folder\n\n### Screenshots\n\nHome page:\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/ca085ba3-4289-4609-8aca-89ba095bf995\u0022\u003E\n\nShapes page:\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/4ff5ff08-51e6-4ae4-842c-2583fe179feb\u0022\u003E\n\nPath Interpolation page:\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/e0d21dba-06d3-41ee-b1be-293840c4490d\u0022\u003E\n\nBlurHash page:\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/a04f6864-229a-4c32-b4da-8d337b9800ba\u0022\u003E",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-24T13:22:28",
+  "updatedAt": "2026-02-25T02:18:37",
+  "closedAt": "2026-02-25T02:18:36",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-25T02:18:36",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/copy-and-fix-pr-353",
+  "additions": 60638,
+  "deletions": 16,
+  "changedFiles": 84,
+  "commits": 8,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-02-24T22:46:23"
+    },
+    {
+      "author": "copilot-swe-agent[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-24T22:58:09"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2026-02-24T23:14:54"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-25T02:18:01"
+    }
+  ]
+}

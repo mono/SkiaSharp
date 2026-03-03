@@ -1,0 +1,38 @@
+{
+  "number": 368,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add Drawing and GPU sample pages to Blazor demo",
+  "body": "Brings in the sample-only changes from [mono/SkiaSharp#3528](https://github.com/mono/SkiaSharp/pull/3528) into the SkiaSharp.Extended Blazor demo app.\n\n### New pages\n\n- **\u0060Drawing.razor\u0060** \u2014 Interactive stroke-recording canvas: pointer down/move/up for drawing, mouse wheel to resize brush, color picker toolbar, clear button. Uses \u0060@onpointerdown/@onpointermove/@onpointerup/@onwheel\u0060 (adapted from PR\u0027s \u0060Touch\u0060/\u0060EnableTouchEvents\u0060 API which isn\u0027t released yet).\n- **\u0060GPU.razor\u0060** \u2014 Real-time SkSL metaball lava lamp via \u0060SKGLView\u0060 \u002B \u0060EnableRenderLoop\u0060 \u002B \u0060SKRuntimeEffect.BuildShader()\u0060. 6 blobs orbit on Lissajous curves; pointer drag adds a white-hot blob via uniforms. FPS counter throttled to ~4 Hz Blazor updates.\n\n### Nav / layout\n\n- **\u0060NavMenu.razor\u0060** \u2014 Added \u0022SKIA\u0022 section with GPU and Drawing links \u002B Bootstrap SVG icons (\u0060NavMenu.razor.css\u0060)\n- **\u0060MainLayout.razor.css\u0060** \u2014 \u0060height: 100vh\u0060 \u002B \u0060overflow: hidden\u0060 \u002B flex column \u0060min-height: 0\u0060 on \u0060main\u0060 for full-viewport canvas pages\n\n### Package\n\n- \u0060SkiaSharp.Views.Blazor\u0060 bumped \u00603.119.1 \u2192 3.119.2\u0060\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060https://api.github.com/repos/mono/SkiaSharp/pulls/3528/files\u0060\n\u003E   - Triggering command: \u0060/home/REDACTED/work/_temp/ghcca-node/node/bin/node /home/REDACTED/work/_temp/ghcca-node/node/bin/node --enable-source-maps /home/REDACTED/work/_temp/copilot-developer-action-main/dist/index.js\u0060 (http block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp.Extended/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Please look at  https://github.com/mono/SkiaSharp/pull/3528 and bring in the sample changes only. We want the new sample but none of the other things. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp.Extended/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-28T09:09:10",
+  "updatedAt": "2026-03-01T21:09:50",
+  "closedAt": "2026-03-01T21:09:46",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/add-sample-changes-only",
+  "additions": 484,
+  "deletions": 1,
+  "changedFiles": 8,
+  "commits": 2,
+  "reviews": []
+}

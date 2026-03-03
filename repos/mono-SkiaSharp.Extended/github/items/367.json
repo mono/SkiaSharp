@@ -1,0 +1,28 @@
+{
+  "number": 367,
+  "type": "pr",
+  "state": "open",
+  "title": "Add PivotViewer support: CXML collections, filtering, grid/histogram views",
+  "body": "## Summary\n\nAdds PivotViewer support to SkiaSharp.Extended \u2014 a modern reimplementation of Silverlight\u0027s \u0060PivotViewer\u0060 control using SkiaSharp and .NET MAUI. Builds on the Deep Zoom foundation from #366.\n\n### Core library (\u0060SkiaSharp.Extended.PivotViewer\u0060)\n- CXML parser with all facet types (String, Number, DateTime, Link)\n- SupplementUri auto-loading and collection merging\n- Filter engine with text, range, and comparison predicates\n- Word wheel search index\n- Grid layout engine with zoom-based item sizing\n- Histogram layout engine with bucket computation\n- Layout transition manager with spring animations\n- State serialization for view persistence\n- Shared bindable models (FilterPane, DetailPane, ControlBar, SortDropdown)\n- \u0060PivotViewerRenderer\u0060 for grid/histogram canvas rendering\n- Full Silverlight API parity (PivotViewerItem, Properties, Views, etc.)\n\n### MAUI layer (\u0060SkiaSharp.Extended.UI.Maui.PivotViewer\u0060)\n- \u0060SKPivotViewerView\u0060 with native accessible controls\n- \u0060PivotViewerControlBar\u0060 \u2014 filter toggle, view switch, sort, search, zoom\n- \u0060PivotViewerFilterPane\u0060 \u2014 scrollable checkbox categories\n- \u0060PivotViewerDetailPane\u0060 \u2014 item info, facets, tappable links\n- \u0060PivotViewerSortDropdown\u0060 \u2014 property selection overlay\n- All controls use \u0060AutomationProperties\u0060 for accessibility\n\n### Tests\n- **1,227 tests** covering all public APIs \u2014 CXML parsing, filter engine, layout math, rendering, controller state, models\n\n### Samples\n- \u0060MauiPivotViewer\u0060 \u2014 conceptcars collection with 298 items, real DZC thumbnails\n- \u0060BlazorPivotViewer\u0060 \u2014 Blazor WebAssembly integration\n\n### Architecture\n- Canvas renders **only** item grid/histogram \u2014 all UI chrome is native MAUI controls\n- Shared \u0060INotifyPropertyChanged\u0060 models in core for both MAUI and Blazor binding\n- PivotViewer depends on DeepZoom via only 1 file (\u0060CollectionImageProvider.cs\u0060) using 3 types\n\n\u003E This is PR 2 of 2. Depends on #366 (Deep Zoom).",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-26T22:13:14",
+  "updatedAt": "2026-02-26T22:13:14",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "clean",
+  "baseBranch": "feature/deepzoom",
+  "headBranch": "feature/pivotviewer",
+  "additions": 267484,
+  "deletions": 0,
+  "changedFiles": 8580,
+  "commits": 1,
+  "reviews": []
+}
