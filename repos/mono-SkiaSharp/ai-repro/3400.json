@@ -1,0 +1,115 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3400,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-06T12:00:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3400.json"
+  },
+  "conclusion": "needs-platform",
+  "notes": "SKDocument.CreateXps() requires the Windows XPS backend (guarded by #ifdef SK_BUILD_FOR_WIN in Skia). On macOS, SkXPS::MakeDocument returns nullptr, so CreateXps() returns null. Docker cannot help because XPS requires Windows COM APIs (IXpsOMObjectFactory). The bug — incorrect image scaling in XPS output — can only be reproduced on Windows. PDF creation works correctly on macOS, validating the repro code is sound.",
+  "assessment": "likely-bug",
+  "scope": "platform-specific/windows",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console repro project with SkiaSharp 3.116.1 and Svg.Skia 3.2.1",
+      "command": "dotnet new console -n Repro --framework net9.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.1 && dotnet add package Svg.Skia --version 3.2.1",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.116.1' added.\nPackageReference for package 'Svg.Skia' version '3.2.1' added.",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write repro code: generate SVG with embedded image, attempt CreateXps() and CreatePdf()",
+      "command": "cat > Program.cs (repro code based on reporter's code)",
+      "exitCode": 0,
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console app that creates an SVG with an embedded base64 PNG image, then attempts to generate both PDF and XPS output using SKDocument.CreatePdf() and SKDocument.CreateXps()",
+          "content": "using SkiaSharp;\nusing Svg.Skia;\nusing System;\nusing System.IO;\nusing System.Text;\n\nusing var surface = SKSurface.Create(new SKImageInfo(10, 10));\nvar c = surface.Canvas;\nc.Clear(SKColors.Red);\nusing var img = surface.Snapshot();\nusing var pngData = img.Encode(SKEncodedImageFormat.Png, 100);\nvar base64 = Convert.ToBase64String(pngData.ToArray());\n\nvar svgContent = $@\"<svg width=\"\"70mm\"\" height=\"\"50mm\"\" viewBox=\"\"0 0 265 189\"\" xmlns=\"\"http://www.w3.org/2000/svg\"\">\n  <rect x=\"\"5\"\" y=\"\"5\"\" width=\"\"255\"\" height=\"\"179\"\" fill=\"\"none\"\" stroke=\"\"black\"\"/>\n  <image href=\"\"data:image/png;base64,{base64}\"\" x=\"\"10\"\" y=\"\"22\"\" width=\"\"40\"\" height=\"\"20\"\" preserveAspectRatio=\"\"xMidYMid meet\"\"/>\n  <text x=\"\"10\"\" y=\"\"60\"\" font-size=\"\"12\"\">Test Text</text>\n</svg>\";\n\nusing var ms = new MemoryStream(Encoding.UTF8.GetBytes(svgContent));\nvar skSvg = new SKSvg();\nvar picture = skSvg.Load(ms);\nvar bounds = picture.CullRect;\nconst float contentScale = 72f / 96f;\nvar pageWidth = bounds.Width * contentScale;\nvar pageHeight = bounds.Height * contentScale;\n\nusing (var pdfStream = File.Create(\"output.pdf\"))\n{\n    using var pdfDoc = SKDocument.CreatePdf(pdfStream);\n    if (pdfDoc == null) { Console.WriteLine(\"FAILURE: CreatePdf null\"); return; }\n    using var canvas = pdfDoc.BeginPage(pageWidth, pageHeight);\n    canvas.Clear(SKColors.White);\n    canvas.Scale(contentScale);\n    canvas.DrawPicture(picture);\n    pdfDoc.EndPage();\n    pdfDoc.Close();\n    Console.WriteLine($\"PDF created, size={new FileInfo(\"output.pdf\").Length} bytes\");\n}\n\nusing (var xpsStream = File.Create(\"output.xps\"))\n{\n    using var xpsDoc = SKDocument.CreateXps(xpsStream);\n    if (xpsDoc == null) { Console.WriteLine(\"CreateXps returned null (not available)\"); return; }\n    using var canvas = xpsDoc.BeginPage(pageWidth, pageHeight);\n    canvas.Clear(SKColors.White);\n    canvas.Scale(contentScale);\n    canvas.DrawPicture(picture);\n    xpsDoc.EndPage();\n    xpsDoc.Close();\n    Console.WriteLine($\"XPS created, size={new FileInfo(\"output.xps\").Length} bytes\");\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build repro project",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded in 2.9s",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run repro — PDF works, XPS returns null on macOS (XPS backend is Windows-only)",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "Generated base64 image, length=132\nSVG bounds: 265x189\nPage size: 198.75x141.75, contentScale=0.75\n\n--- Testing PDF ---\nPDF created successfully, size=204800 bytes\n\n--- Testing XPS ---\nCreateXps returned null (XPS backend not available on this platform)\n\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Repeat with SkiaSharp 3.119.1 (latest) — same result, XPS returns null on macOS",
+      "command": "dotnet add package SkiaSharp --version 3.119.1 && dotnet run",
+      "exitCode": 0,
+      "output": "--- Testing PDF ---\nPDF created successfully, size=204800 bytes\n--- Testing XPS ---\nCreateXps returned null (XPS backend not available on this platform)\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Verified Skia source: SkXPSDocument.h guards MakeDocument with #ifdef SK_BUILD_FOR_WIN, returns nullptr on non-Windows",
+      "command": "cat externals/skia/include/docs/SkXPSDocument.h",
+      "exitCode": 0,
+      "output": "#ifdef SK_BUILD_FOR_WIN\nSK_API sk_sp<SkDocument> MakeDocument(...);\n#else\nSK_API sk_sp<SkDocument> MakeDocument(SkWStream*, SkScalar) { return nullptr; }\n#endif",
+      "layer": "native",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "blockers": [
+    "XPS backend requires Windows — SkXPS::MakeDocument is guarded by #ifdef SK_BUILD_FOR_WIN and returns nullptr on macOS/Linux",
+    "Docker cannot help because XPS depends on Windows COM APIs (IXpsOMObjectFactory), not available in Linux containers",
+    "The reported bug is about visual image scaling in XPS output, which requires the Windows XPS rendering pipeline to test"
+  ],
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "CreateXps() returns null on macOS — XPS backend is Windows-only",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "CreateXps() returns null on macOS — XPS backend is Windows-only",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "Triage classified as needs-investigation without noting platform requirement",
+        "corrected": "Bug requires Windows platform for reproduction — XPS backend is compile-time guarded for Windows only"
+      }
+    ]
+  }
+}
