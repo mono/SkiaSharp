@@ -52,6 +52,12 @@ if classification_type == "type/bug" and len(ci) == 0:
 if classification_type == "type/bug" and not data.get("evidence", {}).get("bugSignals"):
     print("⚠️  Warning: Bug issue has no evidence.bugSignals (recommended for bugs)")
 
+# suggestedReproPlatform should exist when needs-investigation (warning only)
+suggested_action = data.get("output", {}).get("actionability", {}).get("suggestedAction", "")
+repro_platform = data.get("output", {}).get("actionability", {}).get("suggestedReproPlatform")
+if suggested_action == "needs-investigation" and not repro_platform:
+    print("⚠️  Warning: needs-investigation action has no suggestedReproPlatform (recommended for CI routing)")
+
 # Absolute path check in codeInvestigation
 abs_pattern = re.compile(r"(/Users/|/home/|C:\\Users\\)")
 for entry in ci:

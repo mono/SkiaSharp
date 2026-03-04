@@ -1,0 +1,173 @@
+name: AI Triage and Reproduction
+
+# This workflow performs AI-powered triage and reproduction in two stages:
+# Stage 1: Triage the issue to classify it and determine if reproduction is needed
+# Stage 2: Reproduce the issue on the appropriate platform (Linux, macOS, or Windows)
+
+on:
+  # Manual trigger with issue number input
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage and reproduce'
+        required: true
+        type: string
+  
+  # Trigger on issue comment containing /triage-and-repro
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+
+jobs:
+  # =============================================================================
+  # Stage 1: AI Triage
+  # =============================================================================
+  # Always runs on ubuntu-latest to classify the issue and determine:
+  # 1. Whether reproduction is needed
+  # 2. Which platform to use for reproduction
+  #
+  # Platform selection logic:
+  # - macOS: os/iOS, os/macOS, os/tvOS, os/watchOS
+  # - Windows: os/Windows-Classic, os/Windows-WinUI, os/Windows-Universal-UWP, os/Windows-Nano-Server
+  # - Linux: os/Linux, os/WASM, os/Android, generic/no platform
+  # =============================================================================
+  
+  triage:
+    name: AI Triage
+    runs-on: ubuntu-latest
+    
+    # Only run on workflow_dispatch or when comment starts with /triage-and-repro
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage-and-repro'))
+    
+    outputs:
+      repro_platform: ${{ steps.extract_platform.outputs.platform }}
+      needs_repro: ${{ steps.extract_platform.outputs.needs_repro }}
+      issue_number: ${{ steps.set_issue_number.outputs.issue_number }}
+    
+    steps:
+      - name: Determine issue number
+        id: set_issue_number
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ISSUE_NUM="${{ inputs.issue_number }}"
+          else
+            ISSUE_NUM="${{ github.event.issue.number }}"
+          fi
+          echo "issue_number=$ISSUE_NUM" >> $GITHUB_OUTPUT
+          echo "Processing issue #$ISSUE_NUM"
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Run AI triage with Copilot
+        # This invokes the Copilot coding agent to perform triage
+        # The agent will run the issue-triage skill and produce JSON output
+        # at /tmp/skiasharp/triage/{number}.json
+        uses: actions/copilot@v1
+        with:
+          prompt: "triage issue #${{ steps.set_issue_number.outputs.issue_number }}"
+      
+      - name: Extract platform from triage output
+        id: extract_platform
+        shell: bash
+        run: |
+          ISSUE_NUM="${{ steps.set_issue_number.outputs.issue_number }}"
+          TRIAGE_FILE="/tmp/skiasharp/triage/${ISSUE_NUM}.json"
+          
+          if [ -f "$TRIAGE_FILE" ]; then
+            echo "Found triage output at $TRIAGE_FILE"
+            
+            # Extract suggestedReproPlatform from output.actionability (defaults to 'linux')
+            PLATFORM=$(jq -r '.output.actionability.suggestedReproPlatform // "linux"' "$TRIAGE_FILE")
+            
+            # Determine if repro is needed: suggestedAction == "needs-investigation"
+            ACTION=$(jq -r '.output.actionability.suggestedAction // ""' "$TRIAGE_FILE")
+            if [ "$ACTION" = "needs-investigation" ]; then
+              NEEDS_REPRO="true"
+            else
+              NEEDS_REPRO="false"
+            fi
+            
+            echo "platform=$PLATFORM" >> $GITHUB_OUTPUT
+            echo "needs_repro=$NEEDS_REPRO" >> $GITHUB_OUTPUT
+            
+            echo "✓ Triage complete: platform=$PLATFORM, needs_repro=$NEEDS_REPRO, action=$ACTION"
+          else
+            echo "⚠ Triage file not found at $TRIAGE_FILE - using defaults"
+            echo "platform=linux" >> $GITHUB_OUTPUT
+            echo "needs_repro=false" >> $GITHUB_OUTPUT
+          fi
+
+  # =============================================================================
+  # Stage 2: Platform-Specific Reproduction
+  # =============================================================================
+  # Three mutually exclusive jobs that run conditionally based on triage output.
+  # Only ONE of these jobs will run, determined by the platform detected in Stage 1.
+  # =============================================================================
+  
+  repro-linux:
+    name: Reproduce on Linux
+    runs-on: ubuntu-latest
+    needs: triage
+    if: needs.triage.outputs.repro_platform == 'linux' && needs.triage.outputs.needs_repro == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Run AI reproduction with Copilot
+        # This invokes the Copilot coding agent to reproduce the issue on Linux
+        # The agent will run the issue-repro skill and produce reproduction results
+        uses: actions/copilot@v1
+        with:
+          prompt: "reproduce issue #${{ needs.triage.outputs.issue_number }}"
+  
+  repro-macos:
+    name: Reproduce on macOS
+    runs-on: macos-latest
+    needs: triage
+    if: needs.triage.outputs.repro_platform == 'macos' && needs.triage.outputs.needs_repro == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Run AI reproduction with Copilot
+        # This invokes the Copilot coding agent to reproduce the issue on macOS
+        # The agent will run the issue-repro skill and produce reproduction results
+        uses: actions/copilot@v1
+        with:
+          prompt: "reproduce issue #${{ needs.triage.outputs.issue_number }}"
+  
+  repro-windows:
+    name: Reproduce on Windows
+    runs-on: windows-latest
+    needs: triage
+    if: needs.triage.outputs.repro_platform == 'windows' && needs.triage.outputs.needs_repro == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Run AI reproduction with Copilot
+        # This invokes the Copilot coding agent to reproduce the issue on Windows
+        # The agent will run the issue-repro skill and produce reproduction results
+        uses: actions/copilot@v1
+        with:
+          prompt: "reproduce issue #${{ needs.triage.outputs.issue_number }}"

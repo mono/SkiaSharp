@@ -48,7 +48,7 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
    cat $CACHE/github/items/{number}.json
    ```
    **Fallback:** `gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author`
-2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, and `analysis.nextQuestions[]` as **hints** (verify independently).
+2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, `analysis.nextQuestions[]`, and `output.actionability.suggestedReproPlatform` as **hints** (verify independently). The `suggestedReproPlatform` (`linux`|`macos`|`windows`) indicates which CI runner was selected for reproduction.
 
 ---
 

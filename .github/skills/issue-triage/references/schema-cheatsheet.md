@@ -61,6 +61,7 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | **relevance** (codeInvestigation) | `direct`, `related`, `context` |
 | **category** (proposals) | `workaround`, `fix`, `alternative`, `investigation` |
 | **validated** (proposals) | `untested`, `yes`, `no` |
+| **suggestedReproPlatform** | `linux`, `macos`, `windows` |
 | **actionType** | `update-labels`, `add-comment`, `close-issue`, `convert-to-discussion`, `link-related`, `link-duplicate`, `update-project`, `set-milestone` |
 
 ## Output (required)
@@ -70,7 +71,8 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
   "actionability": {
     "suggestedAction": "<suggestedAction enum>",
     "confidence": 0.0-1.0,
-    "reason": "Why this action"
+    "reason": "Why this action",
+    "suggestedReproPlatform": "linux|macos|windows (optional)"
   },
   "missingInfo": ["What info is needed from reporter"],
   "actions": [

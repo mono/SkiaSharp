@@ -35,6 +35,11 @@ if ($triage.classification.type.value -eq 'type/bug' -and -not $triage.evidence.
     Write-Host "⚠️  Warning: Bug issue has no evidence.bugSignals (recommended for bugs)"
 }
 
+# suggestedReproPlatform should exist when needs-investigation (warning only)
+if ($triage.output.actionability.suggestedAction -eq 'needs-investigation' -and -not $triage.output.actionability.suggestedReproPlatform) {
+    Write-Host "⚠️  Warning: needs-investigation action has no suggestedReproPlatform (recommended for CI routing)"
+}
+
 # Absolute path check in codeInvestigation
 $absPathPattern = '(/Users/|/home/|C:\\Users\\)'
 if ($triage.analysis.codeInvestigation) {
