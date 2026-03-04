@@ -39,12 +39,14 @@
       "enum": [
         "reproduced",
         "not-reproduced",
+        "confirmed",
+        "not-confirmed",
         "needs-platform",
         "needs-hardware",
         "partial",
         "inconclusive"
       ],
-      "description": "FACTUAL observation of whether reported behavior occurred. reproduced=reported behavior was observed INCLUDING wrong/incomplete output cases (even if 'working as designed'). not-reproduced=reported behavior was NOT observed. needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced. inconclusive=insufficient info."
+      "description": "FACTUAL observation of whether reported claim was verified. reproduced=reported behavior was observed INCLUDING wrong/incomplete output cases (even if 'working as designed') — use for bugs. not-reproduced=reported behavior was NOT observed — use for bugs. confirmed=reporter's claim verified for non-bug issue types (enhancement, feature-request, documentation) e.g. 'the feature IS missing' or 'the docs ARE wrong'. not-confirmed=reporter's claim not verified for non-bug types e.g. 'the feature actually exists'. needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced/confirmed. inconclusive=insufficient info."
     },
     "artifactSource": {
       "type": "string",
@@ -147,7 +149,7 @@
     },
     "conclusion": {
       "$ref": "#/$defs/conclusionValue",
-      "description": "Factual observation of whether the reported behavior was reproduced."
+      "description": "Factual observation of whether the reported behavior was reproduced (for bugs) or the reporter's claim was verified (for non-bug issue types)."
     },
     "notes": {
       "type": "string",
@@ -205,10 +207,12 @@
             "enum": [
               "reproduced",
               "not-reproduced",
+              "confirmed",
+              "not-confirmed",
               "error",
               "not-tested"
             ],
-            "description": "What happened with this version. reproduced=reported behavior observed (including wrong/incomplete output). error=build or setup failed."
+            "description": "What happened with this version. reproduced=reported behavior observed for bugs (including wrong/incomplete output). not-reproduced=reported behavior not observed for bugs. confirmed=claim verified for non-bug issues (e.g. feature missing in this version). not-confirmed=claim not verified for non-bug issues. error=build or setup failed."
           },
           "notes": {
             "type": "string",
@@ -796,6 +800,28 @@
           "environment",
           "output",
           "reproProject"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conclusion": {
+            "enum": [
+              "confirmed",
+              "not-confirmed"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "meta",
+          "conclusion",
+          "notes",
+          "reproductionSteps",
+          "environment",
+          "output"
         ]
       }
     }

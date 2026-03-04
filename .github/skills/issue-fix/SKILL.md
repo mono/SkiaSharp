@@ -13,7 +13,7 @@ description: >
 
 # Bug Fix Skill
 
-**Bug pipeline: Step 3 of 3 (Fix).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+**Issue pipeline: Step 3 of 3 (Fix).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 

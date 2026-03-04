@@ -11,7 +11,7 @@ description: >-
 
 # Issue Reproduction
 
-**Bug pipeline: Step 2 of 3 (Repro).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+**Issue pipeline: Step 2 of 3 (Repro).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
 
 Systematically reproduce a SkiaSharp issue and produce structured, schema-validated reproduction JSON.
 
@@ -59,11 +59,15 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
 Read [references/bug-categories.md](references/bug-categories.md) to classify the issue type.
 
 **Enhancement / feature request?** If the triage JSON shows `type/enhancement` or the issue clearly requests new functionality:
-- **Still produce a repro JSON.** Enhancements are valid reproduction targets.
+- **Still produce a repro JSON.** Enhancements are valid verification targets.
 - **Goal:** Confirm the feature is missing by inspecting source code and attempting the requested behavior.
-- **Conclusion:** Use `not-reproduced` (the feature doesn't exist yet) with `assessment: "feature-request"`.
+- **Conclusion:** Use `confirmed` (the feature IS missing, reporter's claim verified) with `assessment: "feature-request"`. Use `not-confirmed` if the feature actually exists.
 - **Steps:** Include code investigation steps showing the feature is absent (e.g., grep for missing handlers, verify API doesn't exist).
 - **Skip multi-version testing** (Phases 3B/3C/3D) — there's nothing to regress-test.
+
+**Documentation issue?** If the triage JSON shows `type/documentation`:
+- **Conclusion:** Use `confirmed` (docs ARE missing/wrong) with `assessment: "docs-gap"`. Use `not-confirmed` if docs are correct.
+- **Steps:** Include investigation steps showing the doc gap or error.
 
 ### 2. Extract reporter's version & TFM
 
@@ -218,14 +222,16 @@ Some bugs live in framework-specific code (MAUI views, WPF handlers, Uno control
 
 ### 1. Choose conclusion
 
-Read [references/conclusion-guide.md](references/conclusion-guide.md). Key question: did the reported behavior occur?
+Read [references/conclusion-guide.md](references/conclusion-guide.md). Key question: did the reported claim hold true?
 
-| Conclusion | When |
-|------------|------|
-| `reproduced` | Reported behavior occurred, including wrong/incomplete output (even if by-design) |
-| `not-reproduced` | Reported behavior did not occur |
-| `needs-platform` / `needs-hardware` | Requires unavailable platform/hardware |
-| `partial` / `inconclusive` | Partial or ambiguous results |
+| Conclusion | When | Issue Types |
+|------------|------|-------------|
+| `reproduced` | Reported behavior occurred, including wrong/incomplete output (even if by-design) | Bugs |
+| `not-reproduced` | Reported behavior did not occur | Bugs |
+| `confirmed` | Reporter's claim verified (feature IS missing, docs ARE wrong) | Enhancements, features, docs |
+| `not-confirmed` | Reporter's claim not verified (feature exists, docs are correct) | Enhancements, features, docs |
+| `needs-platform` / `needs-hardware` | Requires unavailable platform/hardware | Any |
+| `partial` / `inconclusive` | Partial or ambiguous results | Any |
 
 ### 2. Generate JSON
 

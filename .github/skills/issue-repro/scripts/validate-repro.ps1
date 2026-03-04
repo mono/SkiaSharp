@@ -78,6 +78,9 @@ switch ($conclusion) {
             $errors += "Conclusion is 'not-reproduced' but step(s) have 'failure'/'wrong-output'"
         }
     }
+    { $_ -in 'confirmed', 'not-confirmed' } {
+        # No step-result constraints — confirmation via code investigation may have any mix of results
+    }
     { $_ -in 'needs-platform', 'needs-hardware', 'partial', 'inconclusive' } {
         if (-not $repro.blockers -or $repro.blockers.Count -eq 0) {
             $errors += "Conclusion is '$conclusion' but blockers is missing or empty"

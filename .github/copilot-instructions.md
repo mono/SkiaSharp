@@ -375,7 +375,7 @@ The first three skills form a pipeline. Each can run standalone, but they work b
 | 2 | `issue-repro` | `ai-repro/{n}.json` | Repro |
 | 3 | `issue-fix` | `ai-fix/{n}.json` + PR | Fix |
 
-See [documentation/bug-pipeline.md](documentation/bug-pipeline.md) for handoff contracts and feedback loop.
+See [documentation/issue-pipeline.md](documentation/issue-pipeline.md) for handoff contracts and feedback loop.
 
 ### When NOT to Use Skills
 

@@ -10,7 +10,7 @@ description: >-
 
 # Triage Issue
 
-**Bug pipeline: Step 1 of 3 (Triage).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+**Issue pipeline: Step 1 of 3 (Triage).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
