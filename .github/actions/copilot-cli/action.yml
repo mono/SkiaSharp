@@ -2,14 +2,12 @@
 #
 # Setup: Create a PAT with Copilot access for this action.
 #
-# 1. Go to https://github.com/settings/personal-access-tokens/new
-# 2. Select "Fine-grained personal access token"
-# 3. Set a name (e.g., "Copilot CLI CI") and expiration
-# 4. Under "Permissions" → "Account permissions" → "GitHub Copilot" → Read-only
-# 5. Generate the token and copy it
-# 6. In your repo: Settings → Secrets and variables → Actions → New repository secret
-# 7. Name: COPILOT_TOKEN, Value: paste the token
-# 8. Reference in workflow: copilot-token: ${{ secrets.COPILOT_TOKEN }}
+# 1. Create a fine-grained PAT with Copilot access:
+#    https://github.com/settings/personal-access-tokens/new?name=Copilot+CLI+Token&description=GitHub+Copilot+CLI+automation+for+workflows&expires_in=90&user_copilot_requests=read
+# 2. Generate the token and copy it
+# 3. In your repo: Settings → Secrets and variables → Actions → New repository secret
+# 4. Name: COPILOT_TOKEN, Value: paste the token
+# 5. Reference in workflow: copilot-token: ${{ secrets.COPILOT_TOKEN }}
 #
 # Note: The default GITHUB_TOKEN does NOT have Copilot permissions.
 
