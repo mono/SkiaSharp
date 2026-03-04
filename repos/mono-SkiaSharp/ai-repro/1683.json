@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1683,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-04T21:15:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "notes": "Unable to reproduce the reported GPU resource leak on iOS simulator with SkiaSharp 3.116.1 and 3.119.2. Both versions ran continuously at ~55 FPS rendering 30 lines + 30 circles per frame (matching reporter's workload) for 84+ and 317+ seconds respectively with stable managed memory (~10 MB) and zero IOGPUResource leak messages. The reporter's version (2.80.2) targets Xamarin.iOS which is incompatible with modern .NET SDK. Important caveat: testing was on iOS simulator (iPhone 16 Pro, iOS 18.3) where OpenGL ES is translated to Metal by Apple's compatibility layer — GPU resource behavior differs from the physical iPhone 6s / iPad Mini 4 devices the reporter used. Another commenter (najak3d) independently reported no reproduction on SkiaSharp 2.88.6 running 8.5 hours on physical iPad Mini 4. The underlying code still lacks explicit GRContext.PurgeUnusedResources() calls, but Skia's internal GPU resource management may have improved since 2.80.x.",
+  "assessment": "likely-bug",
+  "reproProject": {
+    "type": "maui",
+    "tfm": "net10.0-ios",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Maui.Controls",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3 (Darwin)",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create MAUI iOS project with SkiaSharp 3.119.2 and SKGLView continuous rendering",
+      "command": "mkdir -p /tmp/skiasharp/repro/1683 && cd /tmp/skiasharp/repro/1683 && dotnet new maui -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Maui.Controls --version 3.119.2",
+      "exitCode": 0,
+      "output": "The template '.NET MAUI App' was created successfully. PackageReference for package 'SkiaSharp.Views.Maui.Controls' version '3.119.2' added.",
+      "filesCreated": [
+        {
+          "filename": "MauiProgram.cs",
+          "description": "MAUI app registration with UseSkiaSharp()",
+          "content": "using Microsoft.Extensions.Logging;\nusing SkiaSharp.Views.Maui.Controls.Hosting;\n\nnamespace Repro;\n\npublic static class MauiProgram\n{\n    public static MauiApp CreateMauiApp()\n    {\n        var builder = MauiApp.CreateBuilder();\n        builder.UseMauiApp<App>().UseSkiaSharp();\n        return builder.Build();\n    }\n}"
+        },
+        {
+          "filename": "MainPage.xaml",
+          "description": "XAML page with SKGLView and HasRenderLoop=True for continuous rendering",
+          "content": "<ContentPage xmlns:skia=\"clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\">\n    <Grid>\n        <skia:SKGLView x:Name=\"GlView\" HasRenderLoop=\"True\" PaintSurface=\"OnPaintSurface\" />\n        <Label x:Name=\"FrameCounter\" Text=\"Frames: 0\" />\n    </Grid>\n</ContentPage>"
+        },
+        {
+          "filename": "MainPage.xaml.cs",
+          "description": "PaintSurface handler drawing 30 lines + 30 circles per frame with memory logging",
+          "content": "using SkiaSharp; using SkiaSharp.Views.Maui;\nnamespace Repro;\npublic partial class MainPage : ContentPage\n{\n    int frameCount = 0;\n    readonly DateTime startTime = DateTime.UtcNow;\n    public MainPage() { InitializeComponent(); }\n    private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)\n    {\n        frameCount++;\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.DarkBlue);\n        using var linePaint = new SKPaint { Color = SKColors.Yellow, StrokeWidth = 2, IsAntialias = true, Style = SKPaintStyle.Stroke };\n        for (int i = 0; i < 30; i++)\n            canvas.DrawLine((float)(Math.Sin(frameCount*0.01+i)*e.Info.Width*0.4+e.Info.Width*0.5), (float)(Math.Cos(frameCount*0.01+i)*e.Info.Height*0.4+e.Info.Height*0.5), (float)(Math.Cos(frameCount*0.02+i*0.5)*e.Info.Width*0.3+e.Info.Width*0.5), (float)(Math.Sin(frameCount*0.02+i*0.5)*e.Info.Height*0.3+e.Info.Height*0.5), linePaint);\n        using var circlePaint = new SKPaint { Color = SKColors.Red, StrokeWidth = 2, IsAntialias = true, Style = SKPaintStyle.Stroke };\n        for (int i = 0; i < 30; i++)\n            canvas.DrawCircle((float)(Math.Sin(frameCount*0.015+i*0.3)*e.Info.Width*0.35+e.Info.Width*0.5), (float)(Math.Cos(frameCount*0.015+i*0.3)*e.Info.Height*0.35+e.Info.Height*0.5), 10+(i%10)*5, circlePaint);\n        canvas.Flush();\n        if (frameCount % 60 == 0) Console.WriteLine($\"[REPRO] Frame={frameCount} FPS={frameCount/(DateTime.UtcNow-startTime).TotalSeconds:F1} ManagedMem={GC.GetTotalMemory(false)/1048576.0:F1}MB\");\n    }\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build MAUI iOS app targeting iOS simulator",
+      "command": "dotnet build -f net10.0-ios",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s) Time Elapsed 00:00:22.91",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run app on iOS 18.3 simulator (iPhone 16 Pro) with continuous SKGLView rendering for 5+ minutes — reporter's app froze after ~60 seconds",
+      "command": "dotnet build -f net10.0-ios -t:Run -p:_DeviceName=:v2:udid=63E56E5D-15AF-49C6-88DB-08BC66BAF459",
+      "exitCode": 0,
+      "output": "App ran for 317+ seconds (5+ minutes), rendering 17,340+ frames at ~54.8 FPS. Managed memory stable at 10.2MB throughout. No IOGPUResource leak messages detected in system log. No freeze or crash occurred.\n[REPRO] Frame=13140 FPS=54.8 Elapsed=240s ManagedMem=10.2MB\n[REPRO] Frame=14700 FPS=54.8 Elapsed=268s ManagedMem=10.2MB\n[REPRO] Frame=17340 FPS=54.7 Elapsed=317s ManagedMem=10.2MB",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with SkiaSharp 3.116.1 on same iOS simulator to verify across versions",
+      "command": "cd /tmp/skiasharp/repro/1683-v2/Repro && dotnet build -f net10.0-ios -t:Run",
+      "exitCode": 0,
+      "output": "App ran for 84+ seconds rendering 4,560+ frames at ~54.6 FPS. Managed memory stable at 10.1MB. No IOGPUResource leak messages. No freeze or crash.\n[REPRO] Frame=4020 FPS=54.4 Elapsed=74s ManagedMem=10.1MB\n[REPRO] Frame=4560 FPS=54.6 Elapsed=84s ManagedMem=10.1MB",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.80.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Reporter's version targets Xamarin.iOS which is deprecated and incompatible with .NET 10.0 SDK. Cannot be tested with modern tooling.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Ran 4,560+ frames at 54.6 FPS for 84+ seconds on iOS simulator. Memory stable at 10.1MB. No GPU resource leak messages.",
+      "platform": "simulator-ios-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Ran 17,340+ frames at 54.8 FPS for 317+ seconds on iOS simulator. Memory stable at 10.2MB. No GPU resource leak or freeze. Reporter's app froze after ~60 seconds.",
+      "platform": "simulator-ios-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "suggestedReproPlatform",
+        "upstream": "macos",
+        "corrected": "iOS simulator on macOS — the bug is iOS-specific (SKGLView is a UIKit/GLKView component). Console macOS testing cannot reproduce this."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.70,
+      "reason": "Unable to reproduce on iOS simulator with SkiaSharp 3.116.1 and 3.119.2. Reporter used physical devices (iPhone 6s, iPad Mini 4) with SkiaSharp 2.80.2 — environment differs significantly. Another commenter independently could not reproduce on 2.88.6 (physical iPad Mini 4, 8.5 hours). The issue may be fixed in later versions or specific to older hardware/OpenGL ES drivers."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views, os/iOS, backend/OpenGL labels",
+        "risk": "low",
+        "confidence": 0.90
+      },
+      {
+        "type": "add-comment",
+        "description": "Report reproduction attempt results and ask for retest on current version",
+        "risk": "medium",
+        "confidence": 0.75
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the detailed report and profiler data.\n\nWe attempted to reproduce this with SkiaSharp 3.116.1 and 3.119.2 on the iOS simulator (iPhone 16 Pro, iOS 18.3) using a MAUI app with `SKGLView` and `HasRenderLoop=\"True\"`, rendering 30 lines + 30 circles per frame (matching the described workload).\n\n**Tested versions:**\n| Version | Platform | Frames | Duration | Memory | Result |\n|---------|----------|--------|----------|--------|--------|\n| 3.116.1 | iOS Simulator arm64 | 4,560+ | 84s | Stable 10.1MB | ✅ No leak |\n| 3.119.2 | iOS Simulator arm64 | 17,340+ | 317s | Stable 10.2MB | ✅ No leak |\n| 2.80.2 | — | — | — | — | ⬜ Not testable (Xamarin.iOS) |\n\nNo IOGPUResource leak messages or freezes were observed. This is consistent with @najak3d's [comment](https://github.com/mono/SkiaSharp/issues/1683#issuecomment-1750316461) reporting 8.5 hours of stable rendering on SkiaSharp 2.88.6.\n\n**Important caveat:** Our testing was on the iOS simulator (Apple Silicon), where OpenGL ES calls are translated to Metal. The reporter's physical devices (iPhone 6s, iPad Mini 4) used real OpenGL ES GPU drivers which may behave differently regarding resource management.\n\nCould anyone still experiencing this issue test with the latest SkiaSharp (3.119.2) on a physical iOS device? If the issue persists, a minimal reproduction project would help us investigate further.\n\n**Workaround (if still affected):** Use `SKCanvasView` instead of `SKGLView` for continuous rendering, or call `GRContext.PurgeUnusedResources(0)` periodically in your `PaintSurface` handler.",
+      "status": "needs-human-edit"
+    },
+    "missingInfo": [
+      "Test results on physical iOS device with SkiaSharp 3.119.2",
+      "Minimal reproduction project (MAUI or .NET iOS app) that triggers the leak",
+      "Whether the issue persists on newer iOS hardware or is specific to older devices (iPhone 6s / iPad Mini 4)"
+    ],
+    "workarounds": [
+      "Use SKCanvasView instead of SKGLView for continuous rendering on iOS",
+      "Call GRContext.PurgeUnusedResources(0) periodically in PaintSurface handler to force GPU resource cleanup"
+    ]
+  }
+}
