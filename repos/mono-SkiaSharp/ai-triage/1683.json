@@ -1,0 +1,135 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1683,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z",
+    "currentLabels": []
+  },
+  "summary": "SKGLView on iOS leaks IOGPUResource objects during continuous rendering via CADisplayLink, causing app freeze at 60,000 GPU resources. SKCanvasView does not exhibit this leak. Last commenter reported inability to reproduce on SkiaSharp 2.88.6, suggesting possible improvement in later versions.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
+    "platforms": ["os/iOS"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "errorMessage": "IOReturn IOGPUDevice::new_resource: PID likely leaking IOGPUResource (count=60000)",
+      "reproQuality": "complete",
+      "targetFrameworks": ["xamarin-ios"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Xamarin.iOS app with SKGLView",
+        "Set up a CADisplayLink to continuously call SetNeedsDisplay on the SKGLView",
+        "Draw approximately 30 DrawLine and 30 DrawCircle calls each frame",
+        "Observe IOGPUResource count climbing in device console",
+        "App freezes after ~1 minute when GPU resource count hits 60,000"
+      ],
+      "environmentDetails": "SkiaSharp 2.80.2, Xamarin.iOS 14.14.2.5, iOS 12.0+ deploy target, iPhone 6s / iPad Mini 4",
+      "screenshots": [
+        { "url": "https://user-images.githubusercontent.com/16193452/113833087-273fcc80-9781-11eb-9166-48a8d088ce7d.png", "description": "SKGLView memory profile showing rapid climb to 500MB then freeze" },
+        { "url": "https://user-images.githubusercontent.com/16193452/113833095-29a22680-9781-11eb-8e79-82f7b5797319.png", "description": "SKCanvasView memory profile showing stable ~185MB with continuous rendering" }
+      ],
+      "relatedIssues": [1680]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.80.2", "2.88.6"],
+      "currentRelevance": "unknown",
+      "relevanceReason": "Last commenter (najak3d) could NOT reproduce on 2.88.6 after 8.5 hours of continuous rendering on iPad Mini 4 with iOS 16.7. However, their test case (1 bitmap + 1 polygon) may be simpler than OP's ~60 draw calls per frame. The SKGLView iOS code still lacks explicit GPU resource cleanup, so the underlying code path has not changed."
+    }
+  },
+  "analysis": {
+    "summary": "SKGLView on iOS leaks GPU resources during continuous OpenGL ES rendering. The DrawInRect method creates and reuses a GRContext but never calls PurgeUnusedResources() or PurgeUnlockedResources() between frames. Each frame's draw calls may allocate GPU-side resources (textures, buffers) that are not reclaimed. SKCanvasView avoids this by creating a new CPU surface each frame with 'using var surface'. The OpenGL ES backend is also deprecated on iOS 12+ in favor of Metal.",
+    "rationale": "Classified as type/bug because the reporter describes a clear GPU resource leak leading to app freeze — this is broken behavior, not a usage question. Area is SkiaSharp.Views because the leak is in the SKGLView platform view code, not in core SkiaSharp. The code investigation confirms the view lacks GPU resource cleanup between frames and lacks a Dispose override. The last commenter's inability to reproduce on 2.88.6 is noted but inconclusive due to a simpler test case.",
+    "keySignals": [
+      { "text": "IOReturn IOGPUDevice::new_resource: PID likely leaking IOGPUResource (count=46000...60000)", "source": "issue body", "interpretation": "iOS GPU driver detects resource leak — GPU resource count climbs monotonically until system limit." },
+      { "text": "When I run the exact same code with SKCanvasView it can run forever (2hr+)", "source": "issue body", "interpretation": "Confirms the leak is specific to the GPU-accelerated path (SKGLView), not the drawing code itself." },
+      { "text": "Yep, it ran for 8.5 hrs -- full speed, no slow downs, no crashes. 50 FPS.", "source": "comment #8 (najak3d)", "interpretation": "Unable to reproduce on 2.88.6 with a simpler drawing workload — possible improvement in later Skia versions or workload-dependent." },
+      { "text": "don't use SKGLView on iOS", "source": "comment #4 (OP)", "interpretation": "OP's workaround is to switch to SKCanvasView entirely." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs", "lines": "108-165", "finding": "DrawInRect calls context.Flush() (which maps to gr_direct_context_flush_and_submit) but never calls PurgeUnusedResources() or PurgeUnlockedResources(). GPU resources allocated during draw calls may accumulate indefinitely.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs", "lines": "36-58", "finding": "SKGLView stores GRContext, surface, renderTarget, and canvas as fields but has NO Dispose override. When the view is destroyed, these GPU-backed resources are never explicitly released.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKCanvasView.cs", "lines": "79-115", "finding": "SKCanvasView creates a new CPU surface each frame with 'using var surface = drawable.CreateSurface()' — surface is disposed after each frame. Also has proper Dispose(bool) override and WillMoveToWindow cleanup. This explains why it doesn't leak.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/GRContext.cs", "lines": "159-169", "finding": "GRContext exposes PurgeResources(), PurgeUnusedResources(long ms), and PurgeUnlockedResources(bool) for explicit GPU resource cleanup. These are never called in SKGLView's render loop.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Use SKCanvasView instead of SKGLView for continuous rendering on iOS (CPU rendering, no GPU resource leak)",
+      "If GPU acceleration is required, call GRContext.PurgeUnusedResources(0) periodically in the PaintSurface handler to force GPU resource cleanup"
+    ],
+    "nextQuestions": [
+      "Was the leak fixed or mitigated in Skia between 2.80.2 and 2.88.6, or was najak3d's test case simply not complex enough to trigger it?",
+      "Does the same leak occur with a Metal-backed view, or is it specific to the OpenGL ES path?",
+      "Would adding PurgeUnlockedResources(true) after context.Flush() in DrawInRect resolve the leak without significant performance impact?"
+    ],
+    "resolution": {
+      "hypothesis": "GPU resources allocated during Skia draw calls are not being reclaimed between frames because SKGLView never calls any GRContext purge methods. With complex drawings (~60 draw calls/frame at display refresh rate), resources accumulate faster than the GPU driver can reclaim them, hitting the iOS system limit of 60,000 IOGPUResources.",
+      "proposals": [
+        {
+          "title": "Use SKCanvasView instead of SKGLView",
+          "description": "Switch from SKGLView to SKCanvasView for continuous rendering on iOS. SKCanvasView uses CPU rendering and properly disposes surfaces each frame, avoiding GPU resource accumulation entirely.",
+          "category": "workaround",
+          "confidence": 0.95,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Add periodic GPU resource purge to SKGLView",
+          "description": "Add a call to context.PurgeUnlockedResources(true) or context.PurgeUnusedResources(0) after context.Flush() in DrawInRect. This would force the GRContext to release unused GPU resources between frames.",
+          "codeSnippet": "// After context.Flush() in DrawInRect:\ncontext.PurgeUnlockedResources(true);",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Add Dispose override to SKGLView",
+          "description": "Add a Dispose override to clean up GRContext, surface, renderTarget, and canvas when the view is destroyed, similar to SKCanvasView's Dispose pattern. This won't fix the per-frame leak but prevents resource retention after view removal.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "small",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use SKCanvasView instead of SKGLView",
+      "recommendedReason": "Confirmed working by OP (ran 2hr+ without issues). The OpenGL ES backend is deprecated on iOS 12+ anyway. For users who need GPU features (custom shaders), the periodic purge fix should be investigated."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.75,
+      "reason": "Real GPU resource leak confirmed by code analysis (no purge calls in render loop, no Dispose override). However, last commenter could not reproduce on 2.88.6, so the current severity is uncertain. Needs reproduction on current SkiaSharp version to determine if still relevant.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, iOS, OpenGL labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/iOS", "backend/OpenGL", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge bug, share analysis and workaround, ask for retest on current version",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the detailed report and profiler data. Code analysis confirms that `SKGLView` on iOS never calls `GRContext.PurgeUnusedResources()` or `PurgeUnlockedResources()` between frames, which could cause GPU resource accumulation during continuous rendering. The view also lacks a `Dispose` override to clean up its `GRContext`, `SKSurface`, and `GRBackendRenderTarget`.\n\n**Workaround:** Use `SKCanvasView` instead of `SKGLView` for continuous rendering on iOS. If GPU acceleration is required, try calling `GRContext.PurgeUnusedResources(0)` periodically in your `PaintSurface` handler.\n\nNote: OpenGL ES is deprecated on iOS 12+ — consider Metal-backed views for GPU rendering on newer devices.\n\nOne commenter reported being unable to reproduce on SkiaSharp 2.88.6 — could anyone retest on the current version to confirm whether this is still an issue?"
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related SKPath memory leak issue #1680",
+        "risk": "low",
+        "confidence": 0.70,
+        "linkedIssue": 1680
+      }
+    ]
+  }
+}
