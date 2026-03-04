@@ -75,7 +75,7 @@ jobs:
         run: |
           $raw = switch ('${{ github.event_name }}') {
             'workflow_dispatch' { '${{ inputs.issue_number }}' }
-            'push'             { '3520' }
+            'push'             { '3422, 3520, 3420' }
             default            { '${{ github.event.issue.number }}' }
           }
 
