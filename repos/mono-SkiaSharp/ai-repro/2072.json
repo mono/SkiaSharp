@@ -1,0 +1,104 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2072,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:30:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "assessment": "feature-request",
+  "notes": "Enhancement request to enable nullable reference types in SkiaSharp.Views.Blazor. Confirmed the feature is fully implemented: the csproj has <Nullable>enable</Nullable> since PR #2505 (3.0 modernization, 2023-07-30), all source files use proper nullable annotations, no #nullable disable directives exist, and the released NuGet package (3.119.2) contains NullableContextAttribute in the assembly.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Check SkiaSharp.Views.Blazor.csproj for <Nullable>enable</Nullable> setting",
+      "command": "grep -n 'Nullable' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+      "exitCode": 0,
+      "output": "8:    <Nullable>enable</Nullable>",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify nullable annotations in SKCanvasView.razor.cs (byte[]?, Action<>?, IReadOnlyDictionary<>?)",
+      "command": "grep -n '?' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs | head -10",
+      "exitCode": 0,
+      "output": "21:\t\tprivate byte[]? pixels;\n32:\t\tpublic Action<SKPaintSurfaceEventArgs>? OnPaintSurface { get; set; }\n63:\t\tpublic IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify nullable annotations in SKGLView.razor.cs (GRContext?, SKSurface?, SKCanvas?)",
+      "command": "grep -n '?' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs | head -10",
+      "exitCode": 0,
+      "output": "24:\t\tprivate GRContext? context;\n25:\t\tprivate GRGlInterface? glInterface;\n26:\t\tprivate GRBackendRenderTarget? renderTarget;\n28:\t\tprivate SKSurface? surface;\n29:\t\tprivate SKCanvas? canvas;\n39:\t\tpublic Action<SKPaintGLSurfaceEventArgs>? OnPaintSurface { get; set; }",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify no #nullable disable directives exist in any Blazor source file",
+      "command": "grep -rn '#nullable' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/ --include='*.cs' --include='*.razor.cs' | grep -v obj/",
+      "exitCode": 0,
+      "output": "(no matches — no #nullable directives found, project-level enable applies to all files)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify NullableContextAttribute exists in released NuGet assembly (3.119.2)",
+      "command": "strings $HOME/.nuget/packages/skiasharp.views.blazor/3.119.2/lib/net8.0/SkiaSharp.Views.Blazor.dll | grep -i Nullable",
+      "exitCode": 0,
+      "output": "NullableAttribute\nNullableContextAttribute",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Nullable reference types are fully enabled. The released NuGet assembly contains NullableContextAttribute.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Source code has <Nullable>enable</Nullable> in csproj, all source files use proper nullable annotations, and no #nullable disable directives exist.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "scope": "universal",
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.97,
+      "reason": "The enhancement was completed in PR #2505 (SkiaSharp 3.0 modernization, merged 2023-07-30). The Blazor project has <Nullable>enable</Nullable> and all source files use proper nullable annotations with no #nullable disable directives. The released NuGet 3.119.2 assembly confirms NullableContextAttribute is present."
+    },
+    "actions": [
+      {
+        "type": "close-issue",
+        "description": "Close as completed — nullable reference types are fully enabled in SkiaSharp.Views.Blazor",
+        "risk": "low",
+        "confidence": 0.97
+      }
+    ],
+    "proposedResponse": {
+      "body": "This enhancement has been completed as part of the SkiaSharp 3.0 modernization in PR #2505.\n\nThe `SkiaSharp.Views.Blazor` project now has `<Nullable>enable</Nullable>` in its csproj and all source files use proper nullable annotations throughout (e.g., `byte[]?`, `Action<SKPaintSurfaceEventArgs>?`, `GRContext?`, `SKSurface?`, `IReadOnlyDictionary<string, object>?`). No `#nullable disable` directives exist anywhere in the project, and the released NuGet package (3.119.2) contains `NullableContextAttribute` in the assembly.\n\nClosing as completed.",
+      "status": "ready"
+    }
+  }
+}
