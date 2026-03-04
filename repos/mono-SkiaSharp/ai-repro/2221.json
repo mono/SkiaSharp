@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2221,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T03:30:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "assessment": "likely-bug",
+  "notes": "The reported EntryPointNotFoundException from IL trimming could not be reproduced. Reporter's exact config (.NET 6 + SkiaSharp 2.88.1) is untestable on .NET 10 SDK — SkiaSharp.Views.Blazor 2.88.x references IJSUnmarshalledObjectReference which was removed in newer .NET. Testing with SkiaSharp 3.119.2 on .NET 10 Blazor WASM (published with trimming) shows the issue is fixed — canvas renders correctly with StrokeWidth, no EntryPointNotFoundException. Fix was via IsTrimmable assembly attribute and LibraryImport (source-generated P/Invoke) on .NET 7+ (PR #2917).",
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project targeting net10.0",
+      "command": "mkdir -p /tmp/skiasharp/repro/2221-latest && cd /tmp/skiasharp/repro/2221-latest && dotnet new blazorwasm -n Repro --framework net10.0",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add SkiaSharp.Views.Blazor 3.119.2 with WasmBuildNative enabled, and create Home.razor with reporter's SKPaint code using StrokeWidth",
+      "command": "dotnet add package SkiaSharp.Views.Blazor --version 3.119.2",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp.Views.Blazor' version '3.119.2' added.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Blazor page with SKCanvasView using reporter's SKPaint code (StrokeWidth=2.0f, StrokeCap=Round, IsStroke=true) to trigger the P/Invoke call to sk_paint_set_stroke_width",
+          "content": "@page \"/\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<PageTitle>Home</PageTitle>\n<h1>SkiaSharp Trim Test</h1>\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\" style=\"width:800px;height:600px;\" />\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        var paint = new SKPaint()\n        {\n            Color = SKColor.Parse(\"#ffffff\"),\n            IsStroke = true,\n            StrokeWidth = 2.0f,\n            StrokeCap = SKStrokeCap.Round,\n        };\n        canvas.DrawRect(new SKRect(10, 10, 200, 200), paint);\n        Console.WriteLine($\"SUCCESS: rendered {e.Info.Width}x{e.Info.Height}\");\n    }\n}"
+        },
+        {
+          "filename": "Repro.csproj",
+          "description": "Project file with WasmBuildNative=true and SkiaSharp.Views.Blazor 3.119.2",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk.BlazorWebAssembly\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <WasmBuildNative>true</WasmBuildNative>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"3.119.2\" />\n  </ItemGroup>\n</Project>"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Publish with Release config which enables IL trimming for Blazor WASM",
+      "command": "dotnet publish -c Release -o publish",
+      "exitCode": 0,
+      "output": "Repro -> $TMPDIR/skiasharp/repro/2221-latest/Repro/publish/",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Serve trimmed published output via static file server and verify in browser with Playwright — checking for EntryPointNotFoundException on sk_paint_set_stroke_width",
+      "command": "python3 serve.py (static file server on localhost:5113 serving publish/wwwroot/)",
+      "exitCode": 0,
+      "output": "Browser console: SUCCESS: rendered 1600x1200. No errors. Canvas rendered cornflower blue background with white stroked rectangle. No EntryPointNotFoundException observed. StrokeWidth P/Invoke call works correctly after IL trimming.",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "error",
+      "notes": "SkiaSharp.Views.Blazor 2.88.9 fails on .NET 10 with TypeLoadException: IJSUnmarshalledObjectReference removed in newer .NET. Cannot test the trimming issue — reporter's .NET 6 SDK unavailable.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Published with IL trimming on .NET 10 Blazor WASM. Canvas renders correctly, StrokeWidth works, no EntryPointNotFoundException. Fix via IsTrimmable + LibraryImport.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "scope": "platform-specific/wasm",
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.88,
+      "reason": "The trimming issue is fixed in SkiaSharp 3.x via IsTrimmable assembly attribute and source-generated LibraryImport (PR #2917). Testing confirms 3.119.2 works correctly with IL trimming on .NET 10 Blazor WASM. Reporter's .NET 6 + SkiaSharp 2.88.1 configuration is EOL."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp, os/WASM labels",
+        "risk": "low",
+        "confidence": 0.92
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in SkiaSharp 3.x — trimming support added via IsTrimmable and LibraryImport",
+        "risk": "low",
+        "confidence": 0.88
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the detailed report and workaround!\n\nWe attempted to reproduce the `EntryPointNotFoundException` for `sk_paint_set_stroke_width` caused by IL trimming in Blazor WASM.\n\nThe reporter's exact configuration (SkiaSharp 2.88.1 + .NET 6) could not be tested on the current .NET 10 SDK due to API incompatibilities in the Blazor Views package. However, testing with the latest **SkiaSharp 3.119.2** on .NET 10 Blazor WASM with a published/trimmed build confirms the issue is **resolved**.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.9 | ⚠️ Untestable (JSInterop API incompatibility with .NET 10) |\n| 3.119.2 | ✅ Fixed — canvas renders correctly with `StrokeWidth` after trimming |\n\n**What changed:** SkiaSharp 3.x added `[AssemblyMetadata(\"IsTrimmable\", \"True\")]` and switched to source-generated `LibraryImport` on .NET 7+ (PR #2917), making all P/Invoke methods inherently trim-safe.\n\n**Recommendation:** Upgrade to SkiaSharp 3.x on .NET 8+. If staying on .NET 6 (now EOL), the `ILLink.Descriptors.xml` workaround described in this issue remains the correct approach.",
+      "status": "ready"
+    },
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.x on .NET 8+ which has built-in trimming support",
+      "Add ILLink.Descriptors.xml with <assembly fullname=\"SkiaSharp\"/> to prevent IL trimmer from stripping P/Invoke methods (reporter's workaround, for legacy .NET 6)"
+    ]
+  }
+}
