@@ -88,6 +88,20 @@ Required: `version`, `source`, `result`
 }
 ```
 
+### `add-comment` Risk Calculation
+
+Risk for `add-comment` actions is computed dynamically from content and confidence:
+
+| Condition | Risk | Rationale |
+|-----------|------|-----------|
+| Factual only (repro findings, version matrix, link references) AND confidence ≥ 0.85 | **low** | Reporting observed facts — minimal reputation exposure |
+| Includes workaround or technical suggestion AND confidence ≥ 0.85 | **medium** | Advice could be wrong, but evidence is strong |
+| Suggests closing, rejects the issue, or states "by-design" (any confidence) | **high** | Telling a reporter their issue isn't valid always needs human review |
+| Any content AND confidence < 0.70 | **high** | Not confident enough to speak for the maintainer |
+| Default / everything else | **medium** | |
+
+Other action type risks remain static: `update-labels`=low, `close-issue`=medium, `link-related`=low, `link-duplicate`=medium, `convert-to-discussion`=high.
+
 ## Common Mistakes
 
 1. **Missing `output` when not-reproduced** — `output` + `versionResults` are required for BOTH `reproduced` AND `not-reproduced`.
