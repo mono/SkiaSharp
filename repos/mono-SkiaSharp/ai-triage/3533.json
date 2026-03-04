@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3533,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-27T20:00:00Z",
+    "currentLabels": ["type/enhancement", "area/SkiaSharp"]
+  },
+  "summary": "Tracking issue to standardize SKTouchEventArgs.WheelDelta to v120 convention (120 units = 1 mouse wheel notch) across all platforms; currently only Windows MAUI passes meaningful values while all other platforms hardcode 0 or lack wheel handling entirely.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.92 },
+    "platforms": ["os/Windows-WinUI", "os/WASM", "os/Android", "os/macOS", "os/iOS", "os/Linux"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Subscribe to SKTouchEventArgs on any non-Windows platform",
+        "Scroll the mouse wheel over the SKCanvasView",
+        "Observe that WheelDelta is always 0 (or WheelChanged event never fires)"
+      ],
+      "environmentDetails": "All SkiaSharp view platforms except Windows MAUI",
+      "relatedIssues": [1079, 2449, 2807, 3534, 3535, 3536, 3537, 3538, 3539, 3540]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "WheelDelta has never been implemented on non-Windows MAUI platforms. The gap exists in the current codebase."
+    }
+  },
+  "analysis": {
+    "summary": "This is a maintainer-filed tracking/umbrella issue proposing standardization of WheelDelta across all SkiaSharp view platforms. Only the Windows MAUI SKTouchHandler currently passes WheelDelta from the native PointerPointProperties.MouseWheelDelta (already v120). Apple, Android, Tizen MAUI handlers hardcode wheelDelta=0 or use the no-wheel constructor. Blazor, WPF, WinForms, and GTK views lack touch/wheel handler infrastructure entirely. Seven sub-issues (#3534-#3540) are filed for each platform implementation.",
+    "rationale": "Classified as enhancement because the WheelDelta property and WheelChanged action already exist in the API surface — this is about improving existing functionality by implementing it consistently across all platforms. The issue is filed by the maintainer with a well-defined v120 standard, per-platform normalization formulas, and individual sub-issues. Area is SkiaSharp.Views since all changes are in platform-specific touch handlers.",
+    "keySignals": [
+      { "text": "SKTouchEventArgs.WheelDelta currently has no documented unit contract", "source": "issue body", "interpretation": "Existing API lacks specification — this standardizes behavior, not adds new API." },
+      { "text": "Only Windows MAUI passes meaningful values (raw +/-120 per notch). All other platforms either hardcode 0 or don't handle wheel events at all.", "source": "issue body", "interpretation": "Confirms only Windows MAUI has a working implementation." },
+      { "text": "7 sub-issues filed (#3534-#3540)", "source": "issue body", "interpretation": "This is a tracking/umbrella issue; individual work is scoped to sub-issues." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs", "lines": "50", "finding": "WheelDelta is an int property on SKTouchEventArgs; WheelChanged is an SKTouchAction enum value (line 68). The API surface already exists.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs", "lines": "101-127", "finding": "Windows handler subscribes to PointerWheelChanged and reads pointerPoint.Properties.MouseWheelDelta (already v120 convention). This is the only platform with working wheel support.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs", "lines": "54-110", "finding": "Apple handler only handles UITouch events (TouchesBegan/Moved/Ended/Cancelled). No scroll or wheel event handling exists. WheelDelta is always 0 via the base constructor.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs", "lines": "63-109", "finding": "Android handler processes MotionEvent touch actions only (Down/Move/Up/Cancel). No AXIS_VSCROLL handling. WheelDelta hardcoded to 0 in all event args constructors.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs", "lines": "40-53", "finding": "Tizen handler uses simple touch events only. No wheel event handling. Uses the basic constructor that defaults WheelDelta to 0.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs", "finding": "WPF view has no SKTouchHandler or wheel event wiring. No touch handler infrastructure exists for this view.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk4/SKDrawingArea.cs", "finding": "GTK4 view has no scroll/wheel event controller. No touch handler infrastructure exists.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "Should horizontal wheel (tilt) also be standardized, or only vertical?",
+      "Should WheelDelta change from int to float to avoid rounding loss on trackpad micro-gestures?",
+      "What is the priority ordering across sub-issues — should Blazor and Android be done first as stated?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "Well-defined tracking issue filed by the maintainer with clear sub-issues for each platform. The parent issue defines the standard; sub-issues track individual implementation work. No action needed on this issue itself."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update area label from area/SkiaSharp to area/SkiaSharp.Views since all changes are in view platform handlers",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference existing open issue requesting Mac scroll-wheel support",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 2449
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference existing Windows wheel DPI bug that may benefit from v120 standardization",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 2807
+      }
+    ]
+  }
+}
