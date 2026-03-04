@@ -9,34 +9,20 @@
     margin-bottom: 2rem;
 }
 
-.ai-triage-title {
-    font-size: 0.95rem;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.issue-title-primary {
-    font-weight: 500;
-}
-
 /* =========================== */
-/* Triage List - Compact Rows  */
+/* Triage List - 3-Line Rows   */
 /* =========================== */
 
 .ai-triage-row {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
     background: #fff;
     border-radius: 8px;
     border-left: 4px solid #6c757d;
     text-decoration: none;
     color: inherit;
     cursor: pointer;
-    overflow: hidden;
     transition: background 0.1s;
 }
 
@@ -47,21 +33,47 @@
 .ai-triage-row.action-info { border-left-color: #6c757d; }
 .ai-triage-row.action-keep { border-left-color: #0d6efd; }
 
-.ai-triage-content {
+.row-number {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+    flex-shrink: 0;
+    padding-top: 0.1rem;
+    min-width: 3.5rem;
+}
+
+.row-body {
     flex: 1;
     min-width: 0;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    overflow: hidden;
+    flex-direction: column;
+    gap: 0.2rem;
 }
 
-.ai-triage-badges {
+.row-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.row-summary {
+    font-size: 0.78rem;
+    color: #6c757d;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+
+.row-meta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.35rem;
-    flex-shrink: 0;
+    gap: 0.3rem;
+    margin-top: 0.05rem;
 }
 
 .label-sm { font-size: 0.65rem; padding: 0.1rem 0.4rem; }

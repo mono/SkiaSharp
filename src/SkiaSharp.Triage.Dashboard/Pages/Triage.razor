@@ -115,24 +115,16 @@ else
         <span>Showing <strong>@_filtered.Count</strong> of @_openCount open issues</span>
     </div>
 
-    <!-- Issue List (compact rows, click to navigate) -->
+    <!-- Issue List -->
     <div class="ai-triage-list">
         @foreach (var issue in _filtered)
         {
             <a href="@GetDetailUrl(issue.Number)" class="ai-triage-row @GetActionClass(issue.Action)">
-                <span class="issue-link">#@issue.Number</span>
-                <span class="ai-triage-content">
-                    <span class="ai-triage-title">
-                        @if (issue.IssueTitle is not null)
-                        {
-                            <span class="issue-title-primary">@issue.IssueTitle</span>
-                        }
-                        else
-                        {
-                            <span class="issue-title-primary">@Truncate(issue.Title, 100)</span>
-                        }
-                    </span>
-                    <span class="ai-triage-badges">
+                <span class="row-number">#@issue.Number</span>
+                <span class="row-body">
+                    <span class="row-title">@(issue.IssueTitle ?? Truncate(issue.Title, 120))</span>
+                    <span class="row-summary">@Truncate(issue.Title, 160)</span>
+                    <span class="row-meta">
                         @if (issue.Type is not null)
                         {
                             <span class="badge-type badge-@StripPrefix(issue.Type)">@FormatLabel(issue.Type)</span>
@@ -151,7 +143,7 @@ else
                         }
                         @if (issue.Confidence is not null)
                         {
-                            <span class="badge-confidence" title="Confidence: @issue.Confidence.Value.ToString("P0")">@((int)(issue.Confidence.Value * 100))%</span>
+                            <span class="badge-confidence">@((int)(issue.Confidence.Value * 100))%</span>
                         }
                         @if (issue.IsRegression)
                         {
