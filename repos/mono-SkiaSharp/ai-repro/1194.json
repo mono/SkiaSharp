@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1194,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-04T04:18:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "assessment": "feature-request",
+  "notes": "Confirmed: server-side Blazor rendering is not supported in SkiaSharp.Views.Blazor. SKCanvasView has [SupportedOSPlatform(\"browser\")] and JSModuleInterop uses JSHost.ImportAsync which throws PlatformNotSupportedException on non-WASM runtimes. Creating a Blazor Server app with SKCanvasView and @rendermode InteractiveServer builds successfully but throws PlatformNotSupportedException at runtime. The feature requested (marshaling SkiaSharp draw calls over SignalR for server-side Blazor) does not exist yet. No server-side or SignalR references exist anywhere in the Blazor views package.",
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.119.0-stable.1"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.0-stable.1",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Inspect SKCanvasView source for platform restrictions — confirms [SupportedOSPlatform(\"browser\")] annotation",
+      "command": "grep -n 'SupportedOSPlatform' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+      "exitCode": 0,
+      "output": "12:\t[SupportedOSPlatform(\"browser\")]",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Inspect JSModuleInterop for browser-only requirement — uses JSHost.ImportAsync (WASM-only) and NotSupportedException fallback",
+      "command": "grep -n 'SupportedOSPlatform\\|IJSInProcessRuntime\\|JSHost\\|NotSupportedException' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs",
+      "exitCode": 0,
+      "output": "14:\t[SupportedOSPlatform(\"browser\")]\n23:\t\t\tmoduleTask = JSHost.ImportAsync(moduleName, \"../\" + moduleUrl);\n25:\t\t\tif (js is not IJSInProcessRuntime)\n26:\t\t\t\tthrow new NotSupportedException(\"SkiaSharp currently only works on Web Assembly.\");",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify csproj limits SupportedPlatform to browser only and depends on NativeAssets.WebAssembly",
+      "command": "grep -n 'SupportedPlatform\\|NativeAssets' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+      "exitCode": 0,
+      "output": "22:    <SupportedPlatform Include=\"browser\" />",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Create Blazor Server app with SKCanvasView using InteractiveServer render mode",
+      "command": "dotnet new blazor -n Repro --framework net10.0 --interactivity Server && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.0-stable.1",
+      "exitCode": 0,
+      "output": "Restore succeeded.\nPackageReference for package 'SkiaSharp.Views.Blazor' version '3.119.0-stable.1' added.",
+      "filesCreated": [
+        {
+          "filename": "Components/Pages/Home.razor",
+          "description": "Blazor page using SKCanvasView with @rendermode InteractiveServer to test server-side rendering",
+          "content": "@page \"/\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n@rendermode InteractiveServer\n\n<h1>SkiaSharp Server-Side Blazor Test</h1>\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\" style=\"width:400px;height:300px;\" />\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var paint = new SKPaint { Color = SKColors.White, TextSize = 32 };\n        canvas.DrawText(\"Hello from Server!\", 10, 50, paint);\n        Console.WriteLine($\"SUCCESS: rendered {e.Info.Width}x{e.Info.Height}\");\n    }\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Build Blazor Server app — build succeeds with no compile-time block for server-side usage",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    4 Warning(s)\n    0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Run Blazor Server app and navigate with browser — SKCanvasView throws PlatformNotSupportedException, confirming server-side rendering is not supported",
+      "command": "dotnet run --urls http://localhost:5212 --no-build",
+      "exitCode": 0,
+      "output": "Server started. Browser navigated to app. Page renders heading but SKCanvasView component is absent. Browser console error: System.PlatformNotSupportedException: System.Runtime.InteropServices.JavaScript is not supported on this platform. at JSHost.ImportAsync() at JSModuleInterop..ctor() at SKHtmlCanvasInterop.ImportAsync() at SKCanvasView.OnAfterRenderAsync(). Circuit terminated with unhandled exception.",
+      "layer": "deployment",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.119.0-stable.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Feature request — server-side Blazor rendering does not exist. SKCanvasView throws PlatformNotSupportedException when used with InteractiveServer render mode, confirming the feature is missing.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "Multi-version testing skipped — this is a feature request. The source code confirms no server-side Blazor rendering path exists on any version.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Client-side WASM support was delivered via SkiaSharp.Views.Blazor (PR #1811), but the core feature request — server-side Blazor rendering via SignalR marshaling — remains unimplemented. High community interest (19 reactions, 48 comments)."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and Blazor labels",
+        "risk": "low",
+        "confidence": 0.93
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for this feature request and the ongoing discussion.\n\nWe investigated the current state of server-side Blazor support. The `SkiaSharp.Views.Blazor` package is designed exclusively for client-side WASM execution:\n\n- `SKCanvasView` has `[SupportedOSPlatform(\"browser\")]`\n- `JSModuleInterop` uses `JSHost.ImportAsync` which throws `PlatformNotSupportedException` on non-WASM runtimes\n- The `.csproj` limits `SupportedPlatform` to `browser` only\n\nWhen used with `@rendermode InteractiveServer`, `SKCanvasView` throws `PlatformNotSupportedException` at runtime — the circuit terminates with an unhandled exception.\n\nThe client-side Blazor WASM support was shipped in `SkiaSharp.Views.Blazor` (merged in #1811). The remaining gap is server-side Blazor support, which would require a fundamentally different architecture (e.g., serializing draw commands over SignalR as explored in the [BlazorSkiaSharp prototype](https://github.com/mattleibow/BlazorSkiaSharp)).\n\nFor server-side scenarios today:\n1. **Static image rendering** — Use SkiaSharp on the server to render to PNG/JPEG and serve via `<img>` tags\n2. **Interactive WASM render mode (.NET 8+)** — Keep business logic on the server while `SKCanvasView` renders client-side in WASM",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Use SkiaSharp on the server to render static images (PNG/JPEG) and serve via <img> tags",
+      "Use Blazor Interactive WebAssembly render mode (.NET 8+) to run SKCanvasView client-side while keeping business logic on the server"
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  }
+}
