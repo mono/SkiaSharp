@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS Validate an issue-repro JSON file against repro-schema.json.
 .EXAMPLE  pwsh scripts/validate-repro.ps1 ai-repro/2997.json
-.NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.5+.
+.NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.4+ (Test-Json -SchemaFile).
 #>
-#requires -Version 7.5
+#requires -Version 7.4
 param([Parameter(Mandatory, Position = 0)] [string]$Path)
 $ErrorActionPreference = 'Stop'
 

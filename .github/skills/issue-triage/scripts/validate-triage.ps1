@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS Validate an ai-triage JSON file against triage-schema.json.
 .EXAMPLE  pwsh scripts/validate-triage.ps1 ai-triage/2794.json
-.NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.5+.
+.NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.4+ (Test-Json -SchemaFile).
 #>
-#requires -Version 7.5
+#requires -Version 7.4
 param([Parameter(Mandatory, Position = 0)] [string]$Path)
 $ErrorActionPreference = 'Stop'
 
