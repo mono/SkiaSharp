@@ -160,6 +160,8 @@ Follow the platform file from Phase 2.4. For each step, capture:
 
 **Step `result` = what actually happened** (technical outcome), not whether it was expected. A build that fails is `result: "failure"` even if that confirms the bug. See [references/anti-patterns.md](references/anti-patterns.md) for details.
 
+> **Note:** Use `layer: "investigation"` for source-code analysis steps in enhancement confirmations (grep, file reading). See Phase 2.1 for the full enhancement flow.
+
 **Push hard.** Don't bail early. Only conclude `not-reproduced` after genuinely exhausting approaches.
 
 ### 3B. Test on latest release

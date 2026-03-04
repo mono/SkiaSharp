@@ -56,6 +56,16 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | **suggestedAction** | `needs-investigation`, `close-as-fixed`, `close-as-by-design`, `close-with-docs`, `close-as-duplicate`, `convert-to-discussion`, `request-info`, `keep-open` |
 | **errorType** | `crash`, `exception`, `wrong-output`, `missing-output`, `performance`, `build-error`, `memory-leak`, `platform-specific`, `other` |
 | **severity** | `critical`, `high`, `medium`, `low` |
+
+### Severity rubric (bugs only)
+
+| Severity | Criteria |
+|----------|----------|
+| `critical` | Crash/data loss affecting most users, no workaround |
+| `high` | Crash or memory corruption possible, narrow trigger or workaround exists |
+| `medium` | Wrong output, degraded behavior, workaround available |
+| `low` | Cosmetic, edge case, minor inconvenience |
+
 | **reproQuality** | `complete`, `partial`, `none` |
 | **currentRelevance** | `likely`, `unlikely`, `unknown` |
 | **relevance** (codeInvestigation) | `direct`, `related`, `context` |
@@ -78,6 +88,12 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | `type/question` | `close-with-docs` | Answer exists in docs |
 | `type/question` | `convert-to-discussion` | Better suited for community Q&A |
 | `type/documentation` | `needs-investigation` | Docs are missing or wrong |
+
+**Distinguishing `request-info` vs `convert-to-discussion`:**
+- Use `request-info` when there IS a signal worth following up (regression claim, partial repro, plausible bug) — give the reporter a chance to provide details.
+- Use `convert-to-discussion` when there is NO actionable signal (empty template, "how do I?" question, vague feature wish).
+
+**Empty-template heuristic:** If the code/repro sections contain only template placeholders or are completely empty, use `request-info` regardless of type classification. A regression claim in the version fields upgrades priority even with sparse content.
 
 ## Output (required)
 
