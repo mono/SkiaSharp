@@ -105,7 +105,9 @@ jobs:
         shell: pwsh
         run: |
           $triageFile = '/tmp/skiasharp/triage/${{ steps.issue.outputs.issue_number }}.json'
-          .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $triageFile
+          $result = .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $triageFile
+          "platform=$($result.Platform)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "needs_repro=$($result.NeedsRepro)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Upload triage JSON
         if: always()

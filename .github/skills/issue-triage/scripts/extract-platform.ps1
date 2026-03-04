@@ -3,17 +3,14 @@
     Extract repro platform and action from a triage JSON file.
 .DESCRIPTION
     Reads the triage output JSON and extracts suggestedReproPlatform and
-    suggestedAction. Outputs GitHub Actions outputs for downstream jobs.
+    suggestedAction. Returns a PSCustomObject with Platform, NeedsRepro,
+    and Action properties.
 .PARAMETER TriageFile
     Path to the triage JSON file.
-.PARAMETER GitHubOutput
-    Path to $GITHUB_OUTPUT file. If not provided, writes to console only.
 #>
 param(
     [Parameter(Mandatory)]
-    [string]$TriageFile,
-
-    [string]$GitHubOutput = $env:GITHUB_OUTPUT
+    [string]$TriageFile
 )
 
 $ErrorActionPreference = 'Stop'
@@ -46,14 +43,8 @@ if (-not (Test-Path $TriageFile)) {
 
 Write-Host "Triage: platform=$platform, needs_repro=$needsRepro, action=$action"
 
-if ($GitHubOutput) {
-    "platform=$platform" | Out-File -FilePath $GitHubOutput -Append
-    "needs_repro=$needsRepro" | Out-File -FilePath $GitHubOutput -Append
-}
-
-# Return as object for local testing
 [PSCustomObject]@{
-    Platform  = $platform
+    Platform   = $platform
     NeedsRepro = $needsRepro
-    Action    = $action
+    Action     = $action
 }
