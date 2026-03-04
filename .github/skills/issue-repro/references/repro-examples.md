@@ -6,6 +6,7 @@ Each example conforms to [`repro-schema.json`](repro-schema.json).
 ## Contents
 1. [Example 1: C# API Bug — `reproduced`](#example-1-c-api-bug--reproduced)
 2. [Example 2: WASM/Blazor Bug — `reproduced` with cross-platform verification](#example-2-wasmblazor-bug--reproduced-with-cross-platform-verification)
+3. [Example 3: Enhancement — `confirmed` (feature missing)](#example-3-enhancement--confirmed-feature-missing)
 
 ---
 
@@ -284,42 +285,48 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
 
 ```json
 {
-  "issueNumber": 3540,
-  "environment": {
-    "os": "Ubuntu 22.04 LTS",
-    "arch": "x64",
-    "dotnetVersion": "8.0.400",
-    "skiaSharpVersion": "3.116.1"
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3540,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-15T10:00:00Z"
   },
+  "conclusion": "confirmed",
+  "notes": "The SKTouchAction.WheelChanged enum value exists and is implemented on WPF, WinForms, and Blazor, but the GTK3 SKDrawingArea does not subscribe to GDK scroll events. The shared infrastructure is in place — this is a gap in the GTK3 platform implementation.",
+  "reproductionTime": "~5 minutes",
+  "inputs": {
+    "triageFile": "ai-triage/3540.json"
+  },
+  "assessment": "feature-request",
   "reproductionSteps": [
     {
-      "order": 1,
+      "stepNumber": 1,
       "description": "Search for scroll/wheel event handling in GTK3 SKDrawingArea",
+      "layer": "investigation",
       "command": "grep -rn 'ScrollEvent\\|WheelEvent\\|WheelChanged' source/SkiaSharp.Views/SkiaSharp.Views.Gtk/",
-      "expectedResult": "No matches found — confirming absence",
-      "actualResult": "No matches found",
+      "output": "No matches found",
+      "exitCode": 1,
       "result": "success"
     },
     {
-      "order": 2,
+      "stepNumber": 2,
       "description": "Verify SKTouchAction.WheelChanged enum exists in shared infrastructure",
+      "layer": "investigation",
       "command": "grep -rn 'WheelChanged' binding/SkiaSharp/",
-      "expectedResult": "Enum value exists in SKTouchAction",
-      "actualResult": "Found SKTouchAction.WheelChanged in SKTouchAction.cs:28",
+      "output": "Found SKTouchAction.WheelChanged in SKTouchAction.cs:28",
+      "exitCode": 0,
       "result": "success"
     },
     {
-      "order": 3,
+      "stepNumber": 3,
       "description": "Check if other platforms implement wheel support for comparison",
+      "layer": "investigation",
       "command": "grep -rn 'WheelChanged' source/SkiaSharp.Views/",
-      "expectedResult": "Found in some platform implementations but not GTK3",
-      "actualResult": "Found in Blazor (SKTouchInterop.ts:150), WPF (SKElement.cs:89), WinForms (SKControl.cs:67). Not found in GTK3.",
+      "output": "Found in Blazor (SKTouchInterop.ts:150), WPF (SKElement.cs:89), WinForms (SKControl.cs:67). Not found in GTK3.",
+      "exitCode": 0,
       "result": "success"
     }
   ],
-  "conclusion": "confirmed",
-  "assessment": "feature-request",
-  "notes": "The SKTouchAction.WheelChanged enum value exists and is implemented on WPF, WinForms, and Blazor, but the GTK3 SKDrawingArea does not subscribe to GDK scroll events. The shared infrastructure is in place — this is a gap in the GTK3 platform implementation.",
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",

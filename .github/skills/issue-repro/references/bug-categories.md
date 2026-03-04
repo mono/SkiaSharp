@@ -274,8 +274,9 @@ Not a bug — the issue requests new functionality that doesn't exist yet.
 
 ### Conclusion
 - `confirmed` — the requested feature is verified as missing (reporter's claim is correct).
+- `not-confirmed` — the feature actually exists (reporter missed it, or it's available under a different name/API).
 - `assessment: "feature-request"`
-- Include code investigation steps showing the feature is absent.
+- Include code investigation steps showing the feature is absent or present.
 
 ### Example
 Issue: "Add wheel support to GTK3 views"
