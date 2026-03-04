@@ -47,7 +47,7 @@ else
             <label>Action</label>
             <select @bind="SelectedAction" @bind:after="ApplyFilters">
                 <option value="">All Actions</option>
-                @foreach (var a in _data.ByAction)
+                @foreach (var a in _data.ByAction.OrderBy(x => FormatLabel(x.Label)))
                 {
                     <option value="@a.Label">@FormatLabel(a.Label) (@a.Count)</option>
                 }
@@ -57,7 +57,7 @@ else
             <label>Type</label>
             <select @bind="SelectedType" @bind:after="ApplyFilters">
                 <option value="">All Types</option>
-                @foreach (var t in _data.ByType)
+                @foreach (var t in _data.ByType.OrderBy(x => FormatLabel(x.Label)))
                 {
                     <option value="@t.Label">@FormatLabel(t.Label) (@t.Count)</option>
                 }
@@ -67,7 +67,7 @@ else
             <label>Area</label>
             <select @bind="SelectedArea" @bind:after="ApplyFilters">
                 <option value="">All Areas</option>
-                @foreach (var a in _data.ByArea)
+                @foreach (var a in _data.ByArea.OrderBy(x => FormatLabel(x.Label)))
                 {
                     <option value="@a.Label">@FormatLabel(a.Label) (@a.Count)</option>
                 }
@@ -77,7 +77,7 @@ else
             <label>Severity</label>
             <select @bind="SelectedSeverity" @bind:after="ApplyFilters">
                 <option value="">All Severities</option>
-                @foreach (var s in _data.BySeverity)
+                @foreach (var s in _data.BySeverity.OrderBy(x => FormatLabel(x.Label)))
                 {
                     <option value="@s.Label">@FormatLabel(s.Label) (@s.Count)</option>
                 }
