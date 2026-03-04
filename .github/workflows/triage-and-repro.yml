@@ -1,14 +1,16 @@
 name: AI Triage and Reproduction
 
-# Two-stage workflow:
-# Stage 1: Triage on Linux → classify issue, determine repro platform
-# Stage 2: Reproduce on the appropriate platform (linux/macos/windows)
+# Four-stage pipeline:
+# 1. Setup: Parse issue number(s) into a matrix
+# 2. Triage: Classify each issue in parallel on Linux
+# 3. Build repro matrix: Aggregate triage results into repro matrix
+# 4. Reproduce: Run reproduction on the appropriate platform per issue
 
 on:
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Issue number to triage and reproduce'
+        description: 'Issue number(s) — comma or space separated (e.g. "3520, 3521" or "3520 3521 #3400")'
         required: true
         type: string
 
@@ -48,10 +50,10 @@ env:
 
 jobs:
   # ===========================================================================
-  # Stage 1: AI Triage (always Linux)
+  # Stage 0: Parse issue numbers into a matrix
   # ===========================================================================
-  triage:
-    name: AI Triage
+  setup:
+    name: Parse Issues
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' ||
@@ -64,26 +66,50 @@ jobs:
       )
 
     outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      issue_number: ${{ steps.issue.outputs.issue_number }}
+      issue_matrix: ${{ steps.parse.outputs.issue_matrix }}
 
     steps:
-      - name: Determine issue number
-        id: issue
+      - name: Parse issue numbers
+        id: parse
         shell: pwsh
         run: |
-          $issueNum = switch ('${{ github.event_name }}') {
+          $raw = switch ('${{ github.event_name }}') {
             'workflow_dispatch' { '${{ inputs.issue_number }}' }
             'push'             { '3520' }
             default            { '${{ github.event.issue.number }}' }
           }
-          if ($issueNum -notmatch '^\d+$') {
-            Write-Error "Invalid issue number: '$issueNum'"
+
+          # Split on commas and/or whitespace, strip # prefixes, filter to digits
+          $issues = $raw -split '[,\s]+' |
+            ForEach-Object { $_ -replace '^#', '' } |
+            Where-Object { $_ -match '^\d+$' } |
+            Select-Object -Unique
+
+          if ($issues.Count -eq 0) {
+            Write-Error "No valid issue numbers found in: '$raw'"
             exit 1
           }
-          "issue_number=$issueNum" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          Write-Host "Processing issue #$issueNum"
 
+          $matrix = @{
+            include = @($issues | ForEach-Object { @{ issue = $_ } })
+          }
+          $json = $matrix | ConvertTo-Json -Depth 3 -Compress
+          Write-Host "Issues: $($issues -join ', ') ($($issues.Count) total)"
+          Write-Host "Matrix: $json"
+          "issue_matrix=$json" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+  # ===========================================================================
+  # Stage 1: AI Triage (parallel, one per issue, always Linux)
+  # ===========================================================================
+  triage:
+    name: Triage #${{ matrix.issue }}
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJSON(needs.setup.outputs.issue_matrix) }}
+      fail-fast: false
+
+    steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -106,58 +132,94 @@ jobs:
         uses: ./.github/actions/copilot-cli
         with:
           copilot-token: ${{ secrets.COPILOT_TOKEN }}
-          prompt: 'triage issue #${{ steps.issue.outputs.issue_number }}'
+          prompt: 'triage issue #${{ matrix.issue }}'
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
-          artifact-name: 'triage-${{ steps.issue.outputs.issue_number }}'
+          artifact-name: 'triage-${{ matrix.issue }}'
 
-      - name: Build repro matrix
+      - name: Upload triage JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: triage-output-${{ matrix.issue }}
+          path: /tmp/skiasharp/triage/
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ===========================================================================
+  # Stage 2: Aggregate triage results into a repro matrix
+  # ===========================================================================
+  build-repro-matrix:
+    name: Build Repro Matrix
+    needs: triage
+    runs-on: ubuntu-latest
+    if: always() && needs.triage.result != 'cancelled'
+
+    outputs:
+      repro_matrix: ${{ steps.matrix.outputs.repro_matrix }}
+
+    steps:
+      - name: Checkout (for extract-platform script)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/skills/issue-triage/scripts
+
+      - name: Download all triage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: triage-output-*
+          path: ${{ runner.temp }}/triage-artifacts
+          merge-multiple: true
+
+      - name: Build repro matrix from triage results
         id: matrix
         shell: pwsh
         run: |
-          $triageFile = '/tmp/skiasharp/triage/${{ steps.issue.outputs.issue_number }}.json'
-          $result = .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $triageFile
-
           $runners = @{
             linux   = 'ubuntu-latest'
             macos   = 'macos-latest'
             windows = 'windows-latest'
           }
 
-          if ($result.NeedsRepro -eq 'true') {
-            $matrix = @{
-              include = @(
-                @{ platform = $result.Platform; runner = $runners[$result.Platform] }
-              )
+          $includes = @()
+          $triageFiles = Get-ChildItem '${{ runner.temp }}/triage-artifacts' -Filter '*.json' -ErrorAction SilentlyContinue
+
+          foreach ($file in $triageFiles) {
+            Write-Host "Processing: $($file.Name)"
+            try {
+              $result = .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $file.FullName
+              $issue = $file.BaseName  # e.g. "3520" from "3520.json"
+              if ($result.NeedsRepro -eq 'true') {
+                $includes += @{
+                  issue    = $issue
+                  platform = $result.Platform
+                  runner   = $runners[$result.Platform]
+                }
+                Write-Host "  → Repro needed: $($result.Platform) for #$issue"
+              } else {
+                Write-Host "  → No repro needed for #$issue (action: $($result.Action))"
+              }
+            } catch {
+              Write-Host "  ⚠️ Failed to process $($file.Name): $_"
             }
-          } else {
-            $matrix = @{ include = @() }
           }
 
+          $matrix = @{ include = $includes }
           $json = $matrix | ConvertTo-Json -Depth 3 -Compress
-          Write-Host "Matrix: $json"
-          "matrix=$json" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-      - name: Upload triage JSON
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: triage-output
-          path: /tmp/skiasharp/triage/
-          retention-days: 7
-          if-no-files-found: warn
+          Write-Host "Repro matrix: $json"
+          "repro_matrix=$json" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
   # ===========================================================================
-  # Stage 2: Reproduce on target platform (dynamic matrix from triage)
+  # Stage 3: Reproduce on target platform (dynamic matrix from triage results)
   # ===========================================================================
-
   repro:
-    name: Reproduce (${{ matrix.platform }})
-    needs: triage
-    if: ${{ fromJSON(needs.triage.outputs.matrix).include[0] != null }}
+    name: Repro #${{ matrix.issue }} (${{ matrix.platform }})
+    needs: build-repro-matrix
+    if: ${{ fromJSON(needs.build-repro-matrix.outputs.repro_matrix).include[0] != null }}
     runs-on: ${{ matrix.runner }}
     strategy:
-      matrix: ${{ fromJSON(needs.triage.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.build-repro-matrix.outputs.repro_matrix) }}
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
@@ -181,16 +243,16 @@ jobs:
         uses: ./.github/actions/copilot-cli
         with:
           copilot-token: ${{ secrets.COPILOT_TOKEN }}
-          prompt: 'reproduce issue #${{ needs.triage.outputs.issue_number }}'
+          prompt: 'reproduce issue #${{ matrix.issue }}'
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
-          artifact-name: 'repro-${{ matrix.platform }}-${{ needs.triage.outputs.issue_number }}'
+          artifact-name: 'repro-${{ matrix.platform }}-${{ matrix.issue }}'
 
       - name: Upload repro JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: repro-output-${{ matrix.platform }}
+          name: repro-output-${{ matrix.platform }}-${{ matrix.issue }}
           path: /tmp/skiasharp/repro/
           retention-days: 7
           if-no-files-found: warn
