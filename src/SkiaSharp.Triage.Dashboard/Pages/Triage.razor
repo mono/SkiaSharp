@@ -28,7 +28,7 @@ else
             <span class="triage-label">Closeable</span>
         </div>
         <div class="triage-card triage-info @(SelectedCard == "quick-wins" ? "selected" : "")" @onclick='() => FilterByCard("quick-wins")'>
-            <span class="triage-count">@_openIssues.Count(i => i.Closeable)</span>
+            <span class="triage-count">@_openIssues.Count(i => i.QuickWin)</span>
             <span class="triage-label">Quick Wins</span>
         </div>
         <div class="triage-card triage-danger @(SelectedCard == "regressions" ? "selected" : "")" @onclick='() => FilterByCard("regressions")'>
@@ -255,7 +255,7 @@ else
             {
                 "needs-investigation" => query.Where(i => i.Action == "needs-investigation"),
                 "closeable" => query.Where(i => i.Closeable),
-                "quick-wins" => query.Where(i => i.Closeable),
+                "quick-wins" => query.Where(i => i.QuickWin),
                 "regressions" => query.Where(i => i.IsRegression),
                 "has-repro" => query.Where(i => i.HasRepro),
                 _ => query

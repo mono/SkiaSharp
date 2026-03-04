@@ -38,6 +38,7 @@ public record TriageIndexEntry(
     double? Confidence,
     bool IsRegression,
     bool Closeable,
+    bool QuickWin,
     string State,
     DateTime AnalyzedAt,
     bool HasTriage,

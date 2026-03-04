@@ -837,7 +837,8 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
 
                         if (action == SuggestedAction.NeedsInvestigation) needsInvestigation++;
                         if (hasCloseAction) closeable++;
-                        if (hasCloseAction) quickWins++;
+                        var isQuickWin = hasCloseAction && issue.Output.Actionability.Confidence >= 0.90;
+                        if (isQuickWin) quickWins++;
                         if (isRegression) regressions++;
 
                         triageNumbers.Add(issue.Meta.Number);
@@ -856,6 +857,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                             Confidence: issue.Output.Actionability.Confidence,
                             IsRegression: isRegression,
                             Closeable: hasCloseAction,
+                            QuickWin: isQuickWin,
                             State: state,
                             AnalyzedAt: issue.Meta.AnalyzedAt,
                             HasTriage: true,
@@ -935,6 +937,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                                 Confidence: null,
                                 IsRegression: false,
                                 Closeable: false,
+                                QuickWin: false,
                                 State: state,
                                 AnalyzedAt: repro.Meta.AnalyzedAt,
                                 HasTriage: false,
