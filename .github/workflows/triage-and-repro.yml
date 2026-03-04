@@ -100,6 +100,7 @@ jobs:
         shell: pwsh
         run: |
           git fetch origin docs-data-cache:docs-data-cache
+          git branch --set-upstream-to=origin/docs-data-cache docs-data-cache
 
       - name: Run AI triage
         uses: ./.github/actions/copilot-cli
@@ -174,6 +175,7 @@ jobs:
         shell: pwsh
         run: |
           git fetch origin docs-data-cache:docs-data-cache
+          git branch --set-upstream-to=origin/docs-data-cache docs-data-cache
 
       - name: Run AI reproduction
         uses: ./.github/actions/copilot-cli
