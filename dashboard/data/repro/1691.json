@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1691,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced: SKBitmap.Decode takes ~23-28 seconds to decode a tiny 8x8 PNG with a 50MB tEXt metadata chunk, versus \u003C1ms for the same PNG without metadata. This matches the reporter\u0027s description of the decode call appearing to \u0027hang\u0027 on PNGs with large Exif values. The issue is in Skia\u0027s PNG codec which reads all pre-IDAT chunks in 4KB increments with no size limit or cancellation mechanism. A normal small PNG decodes instantly. Bug persists across all tested versions including main branch source.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 2.88.9 (reporter used 2.80.2 which lacks macOS ARM64 natives, so closest 2.x with ARM64 used)",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.9",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Repro code that creates PNG with large metadata chunk and tests SKBitmap.Decode timing",
+          "content": "// Creates a valid PNG with a large (50MB) tEXt metadata chunk before IDAT,\n// then attempts to decode it with SKBitmap.Decode using a 30s timeout.\n// Control test decodes the same PNG without metadata.\n// Prints timing for both to demonstrate the performance gap."
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build the repro project",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 1 Warning(s) 0 Error(s)"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run repro with SkiaSharp 2.88.9 \u2014 decode of 8x8 PNG with 50MB metadata took 27.6s",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\nOS: Darwin 25.3.0\nArch: Arm64\nCreating PNG with 50MB metadata chunk...\nPNG size: 50MB\nAttempting SKBitmap.Decode...\nDecode completed in 27,6s - bitmap: 8x8\nWARNING: Decode took 27,6s - excessively slow for a 512x512 image\n\nControl test: decoding a normal small PNG...\nNormal decode completed in 0ms - bitmap: 8x8\n\nSUCCESS: test completed"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run repro with SkiaSharp 3.119.2 (latest stable) \u2014 decode of 8x8 PNG with 50MB metadata took 23.0s",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "dotnet run (in fresh project with SkiaSharp 3.119.2)",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nOS: Darwin 25.3.0\nArch: Arm64\nCreating PNG with 50MB metadata chunk...\nPNG size: 50MB\nAttempting SKBitmap.Decode...\nDecode completed in 23,0s - bitmap: 8x8\nWARNING: Decode took 23,0s - excessively slow for a 512x512 image\n\nControl test: decoding a normal small PNG...\nNormal decode completed in 0ms - bitmap: 8x8\n\nSUCCESS: test completed"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Run repro against main branch source (project references) \u2014 decode of 8x8 PNG with 50MB metadata took 26.2s",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj --no-build",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nOS: Darwin 25.3.0\nArch: Arm64\nCreating PNG with 50MB metadata chunk...\nPNG size: 50MB\nAttempting SKBitmap.Decode...\nDecode completed in 26,2s - bitmap: 8x8\nWARNING: Decode took 26,2s - excessively slow for a tiny image\n\nControl test: decoding a normal small PNG...\nNormal decode completed in 0ms - bitmap: 8x8\n\nSUCCESS: test completed"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3 (Darwin 25.3.0)",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.9, 3.119.2, main",
+    "dockerUsed": false
+  },
+  "assessment": "likely-bug",
+  "scope": "unknown",
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Decode took 27.6s for 8x8 PNG with 50MB metadata. Reporter used 2.80.2 which lacks macOS ARM64 natives; 2.88.9 is closest 2.x with ARM64 support.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Decode took 23.0s for 8x8 PNG with 50MB metadata. Slightly faster than 2.x but still excessively slow.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Decode took 26.2s for 8x8 PNG with 50MB metadata. Bug persists on main branch.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.9"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for reporting this! We\u0027ve confirmed the issue.\n\nSKBitmap.Decode (and SKCodec.Create) processes PNG metadata chunks before pixel data in small 4KB increments. A PNG with a ~50MB metadata chunk takes **~23-28 seconds** to decode an 8x8 image, versus \u003C1ms for the same image without large metadata. With the 100MB Exif value in the original report, it would take even longer, appearing to hang.\n\n**Tested versions:**\n| Version | Result | Decode Time (8x8 PNG, 50MB metadata) |\n|---------|--------|--------------------------------------|\n| 2.88.9 | \u274C Reproduced | 27.6s |\n| 3.119.2 (latest) | \u274C Reproduced | 23.0s |\n| main (source) | \u274C Reproduced | 26.2s |\n\nThe root cause is in Skia\u0027s PNG codec (\u0060SkPngCodec::decodeBounds()\u0060) which reads all pre-IDAT chunks sequentially with no size guard or cancellation point.\n\n**Workarounds:**\n- Strip or limit Exif metadata size before passing to SkiaSharp (e.g., using MetadataExtractor or Magick.NET)\n- Pre-validate PNG chunk sizes by reading chunk headers and rejecting files with oversized pre-IDAT metadata\n- Run decode on a background thread with a timeout to prevent blocking critical paths"
+    },
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Bug reproduced across all versions including main. Skia\u0027s PNG codec processes large pre-IDAT metadata chunks in 4KB increments with no size limit, timeout, or cancellation mechanism. This is an upstream Skia design limitation."
+    },
+    "workarounds": [
+      "Strip or truncate Exif/metadata before decoding with SkiaSharp using a library like MetadataExtractor or Magick.NET",
+      "Pre-validate PNG chunk sizes by reading chunk headers and reject files with excessively large pre-IDAT metadata",
+      "Run SKBitmap.Decode on a background thread with a timeout to prevent blocking critical paths"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and reliability labels",
+        "risk": "low",
+        "confidence": 0.92
+      }
+    ]
+  }
+}
