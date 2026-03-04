@@ -163,12 +163,6 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
-      - name: Download triage artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: triage-output
-          path: /tmp/skiasharp/triage/
-
       - name: Run AI reproduction
         uses: ./.github/actions/copilot-cli
         with:
