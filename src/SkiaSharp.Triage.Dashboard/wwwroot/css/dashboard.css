@@ -137,29 +137,16 @@
 
 .triage-summary {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
-}
-
-@media (max-width: 768px) {
-    .triage-summary {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .triage-summary {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
-    }
 }
 
 .triage-card {
     padding: 1rem;
     border-radius: 8px;
     text-align: center;
+    min-width: 0;
 }
 
 .triage-count {
