@@ -1,0 +1,148 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2429,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T19:30:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "working-as-designed",
+  "notes": "Reproduced on all tested versions (2.88.3, 3.119.2, and main source). The attached image.jpeg is actually an AVIF image (magic bytes: ftypavif) with a misleading .jpeg extension. Skia does not include an AVIF codec, so SKCodec.Create returns null with CodecResult=Unimplemented. This is expected behavior. The reporter's image is valid but not a JPEG; it opens in other viewers because they support AVIF natively. Additionally, SKBitmap.Decode(byte[]) throws ArgumentNullException instead of returning null when codec creation fails \u2014 this is a secondary bug.",
+  "scope": "universal",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.3"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.3",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Download attached image.zip and extract the test image",
+      "command": "curl -sL -o image.zip 'https://github.com/mono/SkiaSharp/files/11087936/image.zip' && unzip -o image.zip",
+      "exitCode": 0,
+      "output": "inflating: image.jpeg",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Inspect the image file format \u2014 reveals it is AVIF, not JPEG",
+      "command": "file image.jpeg && xxd image.jpeg | head -3",
+      "exitCode": 0,
+      "output": "image.jpeg: ISO Media, AVIF Image\n00000000: 0000 0020 6674 7970 6176 6966 0000 0000  ... ftypavif....\n00000010: 6176 6966 6d69 6631 6d69 6166 4d41 3142  avifmif1miafMA1B\n00000020: 0000 0d47 6d65 7461 0000 0000 0000 0028  ...Gmeta.......(",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Create console repro project with SkiaSharp 2.88.3 and write test code exercising SKBitmap.Decode, SKCodec.Create, and SKData paths",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.3",
+      "exitCode": 0,
+      "output": "The template 'Console App' was created successfully.\nPackageReference for package 'SkiaSharp' version '2.88.3' added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console app testing 5 different SKBitmap/SKCodec decode paths against the problematic image"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build the repro project with SkiaSharp 2.88.3",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded.\n1 Warning(s) - NU1903 known vulnerability\n0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Run the repro \u2014 all decode methods return NULL, CodecResult is Unimplemented, byte[] overload throws ArgumentNullException",
+      "command": "dotnet run",
+      "exitCode": 134,
+      "output": "Image path: /tmp/skiasharp/repro/2429/image.jpeg\nFile exists: True\nFile size: 29660 bytes\n\n--- Test 1: SKBitmap.Decode(path) ---\nResult: NULL\n\n--- Test 2: SKCodec.Create(stream) ---\nResult: NULL\n\n--- Test 3: SKBitmap.Decode(SKData) ---\nSKData size: 29660 bytes\nResult: NULL\n\n--- Test 4: SKCodec.Create with SKCodecResult ---\nResult: NULL\nCodecResult: Unimplemented\n\n--- Test 5: SKBitmap.Decode(byte[]) ---\nUnhandled exception. System.ArgumentNullException: Value cannot be null. (Parameter 'codec')\n   at SkiaSharp.SKBitmap.Decode(SKCodec codec)\n   at SkiaSharp.SKBitmap.Decode(ReadOnlySpan`1 buffer)\n   at SkiaSharp.SKBitmap.Decode(Byte[] buffer)",
+      "layer": "csharp",
+      "result": "failure"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.3",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "All decode methods return null. CodecResult=Unimplemented. byte[] overload throws ArgumentNullException.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same behavior as 2.88.3 \u2014 all decode methods return null with CodecResult=Unimplemented.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Same behavior on main branch source \u2014 AVIF format remains unsupported.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "JPEG codec limitation \u2014 specific JPEG image cannot be decoded",
+        "corrected": "The file is not a JPEG at all \u2014 it is an AVIF image with a .jpeg extension. Skia does not include an AVIF codec, so this is expected behavior (Unimplemented) rather than a JPEG codec limitation."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "The attached file is an AVIF image misnamed as .jpeg. Skia does not support AVIF decoding, so returning null with CodecResult=Unimplemented is expected. This is not a bug in SkiaSharp but an unsupported format."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/SkiaSharp label",
+        "risk": "low",
+        "confidence": 0.85,
+        "labels": [
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation that the image is AVIF, not JPEG",
+        "risk": "medium",
+        "confidence": 0.85
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the report and the attached image!\n\nWe investigated this and found that the attached `image.jpeg` file is actually an **AVIF image** (ISO Media, AVIF format) with a misleading `.jpeg` file extension. You can verify this by checking the file's magic bytes \u2014 they start with `ftypavif` rather than the JPEG magic bytes `FFD8FF`.\n\nSkia (the underlying native library) does not include an AVIF codec, which is why `SKCodec.Create` returns `null` with `SKCodecResult.Unimplemented` \u2014 it correctly identifies that the format is not supported.\n\nThe image opens in Windows Photos, browsers, and other viewers because those applications have built-in AVIF support.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.3 (reported) | \u274c NULL \u2014 CodecResult: Unimplemented |\n| 3.119.2 (latest) | \u274c NULL \u2014 CodecResult: Unimplemented |\n| main (source) | \u274c NULL \u2014 CodecResult: Unimplemented |\n\n**Workaround:** Pre-process AVIF images with a library that supports AVIF (e.g., [SixLabors.ImageSharp](https://github.com/SixLabors/ImageSharp) or [LibHeifSharp](https://github.com/0xC0000054/libheif-sharp)) and convert to PNG/JPEG before passing to SkiaSharp.\n\n**Note:** The `SKBitmap.Decode(byte[])` overload throws `ArgumentNullException` instead of returning null when the codec fails \u2014 this could be improved to return null consistently like the other overloads.\n\n**Tip:** You can use `SKCodec.Create(stream, out SKCodecResult result)` to get diagnostic information when decoding fails.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Pre-process AVIF images with a library that supports AVIF (e.g., SixLabors.ImageSharp or LibHeifSharp) and convert to PNG/JPEG before passing to SkiaSharp",
+      "Use SKCodec.Create(stream, out SKCodecResult result) to get diagnostic error codes when decoding fails"
+    ],
+    "missingInfo": []
+  }
+}
