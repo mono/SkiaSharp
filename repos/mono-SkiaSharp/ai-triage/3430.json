@@ -92,7 +92,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the bug report with root cause confirmation and fix direction",
-        "risk": "high",
+        "risk": "low",
         "confidence": 0.88,
         "comment": "Thanks for the precise report — the analysis is correct.\n\nThe root cause is a double `FreeBitmap()` call in `CreateBitmap()`. When the canvas resizes:\n1. Line 87: `FreeBitmap()` nulls both `bitmap` and `pixels`\n2. Lines 89-102: `bitmap` is re-created\n3. Line 106: `FreeBitmap()` is called again (because `pixels` is still null), which nulls `bitmap` a second time\n4. Lines 108-113: Only `pixels` is re-created — `bitmap` stays null\n5. Line 72: `bitmap.PixelBuffer` throws NRE\n\nThe WinUI `SKXamlCanvas.cs` doesn't have this issue because it allocates bitmap and pixels together in a single block. The fix would be to restructure `CreateBitmap()` to follow the same pattern.\n\nWould you like to submit a PR for this?"
       }

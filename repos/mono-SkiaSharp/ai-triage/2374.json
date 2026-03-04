@@ -109,7 +109,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the request and confirm the gap applies to both Blazor views",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.80,
         "comment": "Thanks for the report. Confirmed — both `SKGLView` and `SKCanvasView` in the Blazor package implement `IDisposable` directly without the standard `Dispose(bool)` pattern, preventing subclasses from extending disposal.\n\nThe fix would involve introducing `protected virtual void Dispose(bool disposing)` following the standard .NET pattern ([CA1063](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1063)).\n\nIn the meantime, you can work around this by shadowing with `new`:\n\n```csharp\npublic new void Dispose()\n{\n    // Your custom cleanup here\n    base.Dispose();\n}\n```\n\nNote that this won't work for polymorphic disposal through `IDisposable` references — the proper virtual pattern is the right long-term fix."
       },

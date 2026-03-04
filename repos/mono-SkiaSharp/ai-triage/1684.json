@@ -67,7 +67,7 @@
       {
         "type": "add-comment",
         "description": "Explain that OnSizeChanged has never been [Obsolete] in SkiaSharp and suggest checking the CircularGauge class hierarchy",
-        "risk": "high",
+        "risk": "low",
         "confidence": 0.85,
         "comment": "Thanks for the report. SkiaSharp's `SKCanvasView.OnSizeChanged` has never been marked `[Obsolete]` in any version, including 2.80.2. The fact that only your `CircularGauge` class shows this warning (while `SemiCircularGauge` does not) strongly suggests the issue is in the `CircularGauge` class hierarchy rather than in SkiaSharp.\n\nWould you be able to compare the class declaration and inheritance chain of `CircularGauge` vs `SemiCircularGauge`? If `CircularGauge` inherits from an intermediate class (rather than directly from `SKCanvasView`), that intermediate class may be the source of the `[Obsolete]` attribute. Also, a clean rebuild (deleting `bin`/`obj` folders) after the Xamarin.AndroidX upgrade may help clear any stale build artifacts causing phantom warnings."
       },

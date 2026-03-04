@@ -96,7 +96,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the report and confirm the fix is straightforward",
-        "risk": "high",
+        "risk": "low",
         "confidence": 0.85,
         "comment": "Thanks for catching this. You're correct — PR #3463 removed libmicrohttpd from Skia's DEPS but missed updating `External-Dependency-Info.txt`. Since this file is packed as `THIRD-PARTY-NOTICES.txt` in every NuGet package, the stale entry is currently shipping to all consumers.\n\nThe fix is straightforward: remove the libmicrohttpd section (lines 1475-1988) from `External-Dependency-Info.txt`. There are also a few stale entries in `scripts/guardian/CredScanSuppressions.json` that reference the now-removed microhttpd paths.\n\nWe'll also review whether other dependencies removed in #3463 (imgui, SPIR-V Headers, SPIR-V Tools) need similar cleanup."
       }

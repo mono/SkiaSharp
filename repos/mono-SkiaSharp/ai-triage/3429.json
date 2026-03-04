@@ -119,7 +119,7 @@
       {
         "type": "add-comment",
         "description": "Request which WPF control is used and share known related issues",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.80,
         "comment": "Thanks for the detailed investigation narrowing this down to Nvidia Quadro GPUs.\n\nCould you clarify which SkiaSharp WPF control you're using — `SKElement` (software rendering) or `SKGLElement` (OpenGL)? The investigation path differs significantly:\n\n- **If `SKGLElement`:** There's a known memory leak in the OpenGL control (#3309) where disposal doesn't fully clean up GPU resources. PR #3311 addresses this with an OpenTK dependency update. As a workaround, you could try switching to `SKElement` — it still uses SkiaSharp's software renderer but allows WPF to handle GPU compositing for the rest of your app, so you wouldn't need `RenderMode.SoftwareOnly`.\n\n- **If `SKElement`:** The leak would be in how WPF's hardware-accelerated compositor handles the `WriteableBitmap` on Quadro drivers, which is harder to work around from SkiaSharp's side.\n\nA couple of additional details would help us investigate:\n- Nvidia Quadro driver version\n- Monitor resolution and DPI scaling\n- A memory profiler trace (e.g., from dotMemory or Visual Studio) showing what's growing"
       },

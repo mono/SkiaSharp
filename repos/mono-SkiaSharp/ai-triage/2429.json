@@ -170,7 +170,7 @@
       {
         "type": "add-comment",
         "description": "Post analysis with diagnostics suggestion and workaround",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for the detailed report and attached image. This is a known pattern where specific JPEG images can't be decoded by Skia's native codec \u2014 we have several related reports (#2359, #2347, #1621).\n\nTo get more diagnostic info, you can use the `SKCodecResult` overload:\n\n```csharp\nvar codec = SKCodec.Create(stream, out SKCodecResult result);\nif (codec == null)\n    Console.WriteLine($\"Codec creation failed: {result}\");\n```\n\nAs a workaround, you can pre-process the image with another library (e.g., SixLabors.ImageSharp) to re-encode it as PNG before passing to SkiaSharp.\n\nWe'll investigate whether SkiaSharp 3.x (with updated Skia) handles this image correctly."
       },

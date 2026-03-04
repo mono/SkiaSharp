@@ -119,7 +119,7 @@
       {
         "type": "add-comment",
         "description": "Provide analysis and workaround suggestion",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.85,
         "comment": "Thanks for reporting this. The error messages point to a failure in Apple's OpenGL ES layer — the `EAGLContext` can't bind the `CAEAGLLayer` to a renderbuffer, which causes the framebuffer to be incomplete and results in the white canvas.\n\nThe MAUI `SKGLView` on iOS still uses GLKit with OpenGL ES 2, which Apple deprecated in iOS 12.0. The Mac Catalyst handler already migrated to Metal (`SKMetalView`), but the iOS handler has not. It's likely that .NET 10's newer iOS SDK has further degraded OpenGL ES support.\n\nHere's a workaround you can use while we investigate: switch from `SKGLView` to `SKCanvasView` in your Mapsui MapControl for iOS. This uses CPU-based rendering instead of OpenGL ES and avoids the deprecated EAGL path entirely. Performance may differ for complex map rendering, but it should eliminate the framebuffer failure.\n\nThe proper fix would be to migrate the iOS `SKGLViewHandler` to use `SKMetalView` (Metal) instead of `SKGLView` (OpenGL ES), matching what Mac Catalyst already does. We'll investigate that path.\n\nCould you confirm which iOS version and device you're seeing this on, and whether it also occurs in the iOS Simulator?"
       },

@@ -98,7 +98,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the bug and note the PR, flag the non-seekable stream concern",
-        "risk": "high",
+        "risk": "low",
         "confidence": 0.85,
         "comment": "Thanks for the detailed analysis — you're right that the `fixed` block scope is too narrow here. The pointer escapes into the native `Blob` and the GC can relocate the array after the block exits.\n\nPR #3473 looks like the right approach. One thing to watch: the proposed fix uses `stream.Length` which will throw on non-seekable streams (e.g., `NetworkStream`, `GZipStream`). The current code handles this by copying to a `MemoryStream` first. A combined approach — copy to `MemoryStream`, then allocate unmanaged memory — would preserve compatibility with all stream types.\n\nThis pattern is already used elsewhere in the codebase (`SKImage.cs`, `SKFrontBufferedManagedStream.cs`) with `Marshal.AllocCoTaskMem`."
       },

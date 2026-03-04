@@ -102,7 +102,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge bug, explain root cause, note no safe user-side workaround",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.80,
         "comment": "Thanks for the detailed stack trace — this clearly points to the issue.\n\nThe root cause is in `SizeWatcher.js`: the `unobserve()` function doesn't check whether the element reference is still valid before calling `ResizeObserver.unobserve()`. When Blazor removes the DOM element before disposing the component, the lookup returns `undefined`, causing the TypeError. Additionally, since `SKCanvasView.Dispose()` calls `sizeWatcher?.Dispose()`, `interop?.Dispose()`, and `FreeBitmap()` sequentially without individual try-catch blocks, the exception also prevents proper cleanup of the pinned pixel buffer.\n\nWe don't have a clean user-side workaround for this yet. Catching the exception at the caller level would suppress the crash but would also skip the internal `FreeBitmap()` cleanup, leaking a pinned GCHandle. The fix needs to be in SkiaSharp itself — both a null guard in the JavaScript and defensive exception handling in the C# disposal chain.\n\nRegarding `Dispose(bool)` — you're right that the current pattern doesn't allow derived classes to customize disposal. We'll address that as part of the fix."
       },

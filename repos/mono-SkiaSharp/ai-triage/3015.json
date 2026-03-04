@@ -92,7 +92,7 @@
       {
         "type": "add-comment",
         "description": "Explain why WASI is not currently supported and clarify the technical gap",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.80,
         "comment": "Thanks for the detailed repro project.\n\nThe `SkiaSharp.NativeAssets.WebAssembly` package currently only activates for Blazor and Uno Platform WASM apps — the MSBuild targets check for `UsingMicrosoftNETSdkBlazorWebAssembly` or `UsingMicrosoftNETSdkWebAssembly`, which aren't set for WASI console apps using the `wasi-wasm` RID. So the `.a` static libraries are present in the package but never linked into the output binary.\n\nBeyond the MSBuild gap, it's unclear whether the Emscripten-compiled static libraries are compatible with the WASI toolchain, or whether a separate WASI-targeted native build would be required. We'll keep this open as a feature request to investigate WASI support.\n\nNote: your csproj already references 3.0.0-preview.4.1, so the 3.x suggestion in the earlier comment wouldn't change the outcome here — the issue is the missing WASI target, not the package version."
       },

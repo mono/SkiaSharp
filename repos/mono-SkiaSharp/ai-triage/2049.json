@@ -104,7 +104,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the bug, suggest SKCanvasView workaround, and ask if issue persists on current versions",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.80,
         "comment": "Thanks for the report and screenshots — the side-by-side comparison makes the issue clear.\n\nAs a workaround, you can use `SKCanvasView` instead of `SKGLView` in your Blazor component. `SKCanvasView` uses software rendering and bypasses WebGL entirely, which avoids the iOS Safari compatibility issue. The trade-off is no GPU acceleration, but for most 2D drawing workloads the performance difference is minimal.\n\nThis is likely related to iOS Safari's WebGL implementation — certain GL operations that work on desktop browsers may not be fully supported on mobile Safari. Since this was filed against an early preview version, would you be able to check whether this still reproduces with the current SkiaSharp release? iOS Safari's WebGL2 support has improved considerably since May 2022."
       },

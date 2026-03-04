@@ -105,7 +105,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the issue and summarize findings",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.75,
         "comment": "This issue tracks the use of Blazor's internal `_bl_` + `ElementReference.Id` convention in `SKHtmlCanvasInterop` and `SizeWatcherInterop` to locate HTML elements from JS interop.\n\nThe pattern was adopted because `[JSImport]` (used on .NET 7+) doesn't support marshalling `ElementReference` directly, so a string-based element lookup via `document.querySelector('[' + elementId + ']')` is used instead.\n\nThe risk is somewhat mitigated by ASP.NET Core's own use of the same convention in `ElementReferenceCapture.ts`. A safer approach would be to set a custom `data-*` attribute on the canvas element and use that for JS-side element lookup, fully decoupling from Blazor internals."
       },

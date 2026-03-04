@@ -95,7 +95,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge request with workaround and implementation guidance",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.80,
         "comment": "Thanks for the report! You're right that the Blazor `SKGLView` doesn't currently expose the `GRContext` as a public property, unlike the MAUI and macOS views.\n\n**Workaround:** Inside the `OnPaintSurface` callback, you can access the context via the surface:\n\n```csharp\nvoid OnPaintSurface(SKPaintGLSurfaceEventArgs e)\n{\n    var grContext = (GRContext)e.Surface.Context;\n    // Use grContext to create additional surfaces\n}\n```\n\nThis should work for creating additional GPU-backed surfaces within the paint callback. A PR to add `public GRContext? GRContext => context;` to the Blazor `SKGLView` would be welcome if you need access outside the callback."
       }

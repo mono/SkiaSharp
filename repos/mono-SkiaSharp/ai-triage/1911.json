@@ -91,7 +91,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the request, note the parity gap and the workaround",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.80,
         "comment": "Thanks for the well-scoped request. You're right that `canvasSize` should be exposed — every other platform view (WPF, WinUI, Uno) has a public `CanvasSize` property, and the `Dpi` property was already exposed on the Blazor views via PR #1832.\n\nAs a workaround until this is addressed, you can access the canvas dimensions inside your paint handler via `e.Info.Size`:\n\n```csharp\nvoid OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    var size = e.Info.Size; // pixel dimensions\n}\n```\n\nThis won't help if you need the size outside the paint callback, but it covers most use cases."
       },
