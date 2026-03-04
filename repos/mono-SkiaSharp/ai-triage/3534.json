@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3534,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-06T12:00:00Z",
+    "currentLabels": ["type/enhancement", "area/SkiaSharp"]
+  },
+  "summary": "Maintainer-filed enhancement to add scroll wheel event support to SkiaSharp's Blazor WASM views (SKCanvasView and SKGLView) with values normalized to the v120 standard (120 = one discrete mouse wheel notch), as part of the cross-platform wheel standardization effort (#3533).",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.98 },
+    "platforms": ["os/WASM"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SKCanvasView or SKGLView in a Blazor WASM application",
+        "Scroll the mouse wheel over the canvas",
+        "Observe that no wheel event is fired — the canvas has no wheel event handling"
+      ],
+      "environmentDetails": "Blazor WASM (net6.0+ and net8.0+), all browsers (Chrome, Firefox, Safari, Edge)",
+      "relatedIssues": [3533, 3528, 3541],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/issues/3533", "description": "Parent issue: Standardize WheelDelta to v120 convention across all platforms" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3528", "description": "Closed PR: Add touch/pointer event support to Blazor views and revamp sample app (included wheel)" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3541", "description": "Open PR: Add revamped Blazor sample pages from PR #3528 (sample changes only)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Blazor views currently have zero touch/wheel event infrastructure. This enhancement has never been implemented on main."
+    }
+  },
+  "analysis": {
+    "summary": "Well-specified maintainer-filed enhancement to add wheel event support to Blazor WASM canvas views. The issue provides complete normalization logic (TypeScript), cross-browser delta tables, expected results, and implementation notes. A prior PR (#3528) was closed but contained an implementation. The issue states work was validated on a feature branch with 72/72 Playwright tests passing across Chromium, Firefox, and WebKit.",
+    "rationale": "This is type/enhancement (adding wheel support to existing Blazor views that already handle rendering but lack input events) rather than type/feature-request (the touch event infrastructure exists in MAUI, this extends it to Blazor). Area is area/SkiaSharp.Views.Blazor since all changes are in the Blazor view components and their JS interop layer. The maintainer authored the issue with full implementation details, so this is actionable and well-scoped.",
+    "keySignals": [
+      { "text": "Add scroll wheel support to SkiaSharp's Blazor WASM views (SKCanvasView and SKGLView)", "source": "issue body", "interpretation": "Clear scope — two specific view components need wheel event handling." },
+      { "text": "Parent issue: #3533", "source": "issue body", "interpretation": "Part of a coordinated cross-platform wheel standardization effort with sibling issues #3535-#3540." },
+      { "text": "The v120 normalization has been implemented on branch copilot/add-touch-event-blazor-canvas (commit 052d325bc)", "source": "issue body", "interpretation": "Implementation exists on a feature branch and has been validated with automated tests." },
+      { "text": "Must handle both NET7+ ([JSImport]/[JSExport]) and pre-NET7 (DotNetObjectReference.invokeMethod) interop paths", "source": "issue body", "interpretation": "Implementation must support two JS interop patterns for backwards compatibility." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "1-80", "finding": "SKCanvasView currently handles only rendering (OnPaintSurface), DPI changes, and size changes. No touch, pointer, or wheel event infrastructure exists.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts", "lines": "1-60", "finding": "SKHtmlCanvas class handles canvas initialization (raster and GL) and render loop management only. No addEventListener calls for wheel, pointer, or touch events.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SKHtmlCanvasInterop.cs", "finding": "C# interop layer for canvas operations. No callback infrastructure for input events — only render frame callback exists.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs", "lines": "19-68", "finding": "SKTouchAction.WheelChanged enum and SKTouchEventArgs.WheelDelta property exist in MAUI. These types need to be shared with or duplicated for Blazor.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "Should the touch event types (SKTouchAction, SKTouchEventArgs, etc.) be moved to a shared assembly or duplicated for Blazor?",
+      "Will the closed PR #3528 be reworked or will a fresh PR be created from the feature branch?",
+      "Should horizontal wheel (deltaX) support be included in the same enhancement?"
+    ],
+    "resolution": {
+      "hypothesis": "The Blazor WASM views need a JS wheel event listener on the canvas element that normalizes browser-specific delta values to the v120 standard and calls back into C# via JS interop.",
+      "proposals": [
+        {
+          "title": "Implement wheel events from feature branch",
+          "description": "Merge or rework the implementation from branch copilot/add-touch-event-blazor-canvas. The feature branch has validated normalization logic covering pixel, line, and page deltaMode with tests across 3 browser engines.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "medium",
+          "validated": "untested"
+        },
+        {
+          "title": "Extract implementation from closed PR #3528",
+          "description": "PR #3528 contained touch/pointer and wheel event support for Blazor views but was closed. The wheel-specific changes could be extracted into a focused PR.",
+          "category": "alternative",
+          "confidence": 0.85,
+          "effort": "medium",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Implement wheel events from feature branch",
+      "recommendedReason": "The feature branch already has validated implementation with 72/72 Playwright tests passing across all major browser engines."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Well-specified enhancement with implementation on a feature branch. Needs review of the branch changes and creation of a PR.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update area label to the more specific Blazor area and add WASM platform label",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views.Blazor", "os/WASM"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference parent v120 standardization issue",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3533
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference closed PR that contained Blazor touch/wheel implementation",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 3528
+      }
+    ]
+  }
+}
