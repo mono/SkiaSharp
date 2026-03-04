@@ -111,6 +111,36 @@ jobs:
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'triage-${{ steps.issue.outputs.issue_number }}'
 
+      - name: Push data-cache (safety net)
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not (Test-Path '.data-cache')) {
+            Write-Host 'No data-cache worktree, skipping'
+            exit 0
+          }
+          Push-Location .data-cache
+          try {
+            git diff --cached --quiet 2>&1
+            $staged = $LASTEXITCODE -ne 0
+            $untracked = (git status --porcelain 2>&1) -match '\S'
+            if (-not $staged -and -not $untracked) {
+              Write-Host 'No uncommitted changes in data-cache'
+              exit 0
+            }
+            Write-Host '⚠️  Found uncommitted data-cache changes — committing and pushing'
+            git add -A
+            git commit -m 'ai-triage: persist from workflow safety net' --allow-empty-message 2>&1
+            for ($i = 0; $i -lt 3; $i++) {
+              git push 2>&1
+              if ($LASTEXITCODE -eq 0) { Write-Host '✅ Pushed'; exit 0 }
+              Write-Host "Push attempt $($i+1)/3 failed, rebasing..."
+              git pull --rebase 2>&1
+            }
+            Write-Host '❌ Push failed after 3 attempts'
+            exit 1
+          } finally { Pop-Location }
+
       - name: Build repro matrix
         id: matrix
         shell: pwsh
@@ -185,6 +215,36 @@ jobs:
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'repro-${{ matrix.platform }}-${{ needs.triage.outputs.issue_number }}'
+
+      - name: Push data-cache (safety net)
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not (Test-Path '.data-cache')) {
+            Write-Host 'No data-cache worktree, skipping'
+            exit 0
+          }
+          Push-Location .data-cache
+          try {
+            git diff --cached --quiet 2>&1
+            $staged = $LASTEXITCODE -ne 0
+            $untracked = (git status --porcelain 2>&1) -match '\S'
+            if (-not $staged -and -not $untracked) {
+              Write-Host 'No uncommitted changes in data-cache'
+              exit 0
+            }
+            Write-Host '⚠️  Found uncommitted data-cache changes — committing and pushing'
+            git add -A
+            git commit -m 'ai-repro: persist from workflow safety net' --allow-empty-message 2>&1
+            for ($i = 0; $i -lt 3; $i++) {
+              git push 2>&1
+              if ($LASTEXITCODE -eq 0) { Write-Host '✅ Pushed'; exit 0 }
+              Write-Host "Push attempt $($i+1)/3 failed, rebasing..."
+              git pull --rebase 2>&1
+            }
+            Write-Host '❌ Push failed after 3 attempts'
+            exit 1
+          } finally { Pop-Location }
 
       - name: Upload repro JSON
         if: always()

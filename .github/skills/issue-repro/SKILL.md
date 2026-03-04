@@ -314,11 +314,15 @@ pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/
 
 ### 1. Persist (only after validator prints ✅)
 
+> **🛑 MANDATORY: Use the persist script. NEVER manually `cp`, `git add`, `git commit`, or `git push`.**
+> The script handles copying, committing, and pushing with retry logic. Manual git commands
+> will leave unpushed commits that are lost when the runner shuts down.
+
 ```bash
 pwsh .github/skills/issue-repro/scripts/persist-repro.ps1 /tmp/skiasharp/repro/{number}.json
 ```
 
-This copies the JSON to data-cache and handles git automatically (skips in benchmark mode).
+This copies the JSON to data-cache and handles git commit + push automatically (skips in benchmark mode).
 
 ### 2. Present summary
 
