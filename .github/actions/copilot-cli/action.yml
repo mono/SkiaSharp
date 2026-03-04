@@ -9,30 +9,15 @@ inputs:
     required: true
   model:
     description: 'Model to use (e.g., "claude-opus-4.6", "claude-sonnet-4.5", "gpt-5")'
-    required: false
+    required: true
     default: 'claude-opus-4.6'
   mcp-config:
     description: 'MCP server configuration JSON'
     required: false
-  upload-artifact:
-    description: 'Upload logs + output as artifact'
-    required: false
-    default: 'true'
   artifact-name:
     description: 'Name for the uploaded artifact'
-    required: false
+    required: true
     default: 'copilot-output'
-  artifact-paths:
-    description: 'Additional paths to include in the artifact (newline-separated)'
-    required: false
-  additional-directories:
-    description: 'Comma-separated list of additional directories to trust'
-    required: false
-    default: '/tmp'
-  copilot-version:
-    description: 'Version of @github/copilot to install'
-    required: false
-    default: 'latest'
 outputs:
   logs-path:
     description: 'Path to copilot logs'
@@ -52,11 +37,7 @@ runs:
       shell: bash
       run: |
         echo "::group::Install Copilot CLI"
-        if [ "$COPILOT_VERSION" = "latest" ]; then
-          npm install -g @github/copilot
-        else
-          npm install -g @github/copilot@$COPILOT_VERSION
-        fi
+        npm install -g @github/copilot
         echo "CLI Version: $(copilot --version)"
         echo "::endgroup::"
 
@@ -70,33 +51,9 @@ runs:
           echo "::endgroup::"
         fi
 
-        # Build args — always yolo (allow all tools, no approval)
-        ARGS="--allow-all-tools"
-        ARGS+=" --add-dir /"
-        if [ -n "$ADDITIONAL_DIRS" ]; then
-          IFS=',' read -ra DIRS <<< "$ADDITIONAL_DIRS"
-          for dir in "${DIRS[@]}"; do
-            ARGS+=" --add-dir $dir"
-          done
-        fi
-        if [ -n "$MODEL" ]; then
-          ARGS+=" --model $MODEL"
-        fi
-        ARGS+=" --log-level all"
-        ARGS+=" --log-dir $HOME/.copilot/logs"
-        ARGS+=" --screen-reader --no-color --stream off"
-
-        echo "::group::Copilot args"
-        echo "$ARGS"
-        echo "::endgroup::"
-
-        echo "::group::Prompt"
-        echo "$PROMPT"
-        echo "::endgroup::"
-
         echo "::group::Run Copilot CLI"
         set +e
-        copilot -p "$PROMPT" $ARGS
+        copilot -p "$PROMPT" --yolo --model $MODEL --log-level all --log-dir $HOME/.copilot/logs --screen-reader --no-color --stream off
         EXIT_CODE=$?
         set -e
         echo "::endgroup::"
@@ -110,14 +67,11 @@ runs:
         COPILOT_VERSION: ${{ inputs.copilot-version }}
         MCP_CONFIG: ${{ inputs.mcp-config }}
         MODEL: ${{ inputs.model }}
-        ADDITIONAL_DIRS: ${{ inputs.additional-directories }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       if: ${{ always() && inputs.upload-artifact == 'true' }}
       with:
         name: ${{ inputs.artifact-name }}-${{ github.run_id }}-${{ github.run_attempt }}
-        path: |
-          ~/.copilot/logs
-          ${{ inputs.artifact-paths }}
+        path: ~/.copilot/logs
         if-no-files-found: warn
