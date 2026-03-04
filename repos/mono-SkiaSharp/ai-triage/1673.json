@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1673,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "Reporter believes SKMatrix.CreateRotationDegrees gives wrong results, but the behavior is correct by-design: rotation without a pivot rotates around origin (0,0), so a pre-translated path appears to swing around the origin instead of rotating in place.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.4
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/macOS"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "wrong-output",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "netcoreapp3.1"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKPath with vertices around origin (0,0)",
+        "Translate the path to an offset position using SKMatrix.CreateTranslation",
+        "Rotate the translated path using SKMatrix.CreateRotationDegrees(45.0F)",
+        "Observe that the path appears to swing around origin rather than rotating in place"
+      ],
+      "environmentDetails": "SkiaSharp 2.80.2, Visual Studio for Mac, macOS, command line PNG output",
+      "screenshots": [
+        {
+          "url": "https://user-images.githubusercontent.com/17300872/112697779-4c197300-8e56-11eb-8202-8e7541425c9a.png",
+          "description": "Reporter's custom rotation code (correct result)"
+        },
+        {
+          "url": "https://user-images.githubusercontent.com/17300872/112697845-723f1300-8e56-11eb-89ad-6a1aed89802e.png",
+          "description": "CreateRotationDegrees result (rotated around origin)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The rotation API implementation has not changed \u2014 this is fundamental matrix math behavior, not a version-specific issue."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter's code translates a path to an offset position first, then applies CreateRotationDegrees(45) which rotates around the origin (0,0). This causes the already-translated path to swing around the origin rather than rotating in place. This is standard affine transformation behavior, not a bug. The solution is to use the pivot overload CreateRotationDegrees(degrees, pivotX, pivotY) or rotate before translating.",
+    "rationale": "Classified as by-design because the SKMatrix.CreateRotation implementation correctly produces a standard 2D rotation matrix around the origin. The SetSinCos method at SKMatrix.cs:423-434 correctly sets cos/-sin/sin/cos with zero translation, and the pivot overload at lines 436-449 correctly computes the translate terms for rotation around an arbitrary point. The reporter's confusion stems from applying transforms in the wrong order \u2014 translating first, then rotating around origin \u2014 which is a common misunderstanding of matrix transformation order, not a defect.",
+    "keySignals": [
+      {
+        "text": "if you do BOTH a rotation and translation, the rotation has to happen first",
+        "source": "issue body",
+        "interpretation": "Reporter discovered transform order matters but attributes it to a bug rather than standard linear algebra."
+      },
+      {
+        "text": "SKPath is rotated in place. But appears to be translated as well as rotated",
+        "source": "issue body",
+        "interpretation": "Rotating around origin (0,0) will change position of any path not centered at origin \u2014 this is expected behavior."
+      },
+      {
+        "text": "I took some very old rotation code I wrote ages ago and got the right results",
+        "source": "issue body",
+        "interpretation": "Reporter's custom code likely rotates around the path center, while CreateRotationDegrees(angle) rotates around origin."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "165-176",
+        "finding": "CreateRotation(float radians) creates a rotation matrix around origin (0,0) via SetSinCos \u2014 sets cos/-sin/sin/cos with transX=0, transY=0. This is correct standard rotation matrix behavior.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "178-189",
+        "finding": "CreateRotation(float radians, float pivotX, float pivotY) overload exists that rotates around an arbitrary pivot point via SetSinCos with pivot parameters. This is the API the reporter should use for rotating in place.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "423-434",
+        "finding": "SetSinCos without pivot sets scaleX=cos, skewX=-sin, skewY=sin, scaleY=cos, all translation terms zero. This is the mathematically correct 2D rotation matrix.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "436-449",
+        "finding": "SetSinCos with pivot computes transX and transY using Dot() to combine rotation with translation to/from the pivot point. This correctly implements rotation around an arbitrary center.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SKMatrix.cs",
+        "lines": "191-205",
+        "finding": "CreateRotationDegrees delegates to CreateRotation after converting degrees to radians. Both the no-pivot and pivot overloads are available.",
+        "relevance": "context"
+      }
+    ],
+    "workarounds": [
+      "Use CreateRotationDegrees(degrees, pivotX, pivotY) to rotate around the path's center instead of the origin",
+      "Rotate the path before translating it to the desired position",
+      "Use SKMatrix.Concat to combine translation and rotation in the correct order"
+    ],
+    "resolution": {
+      "hypothesis": "The reporter applies translation before rotation, causing the path to swing around the origin. Using the pivot overload or reversing the operation order will produce the expected in-place rotation.",
+      "proposals": [
+        {
+          "title": "Use the pivot overload",
+          "description": "Use CreateRotationDegrees(degrees, pivotX, pivotY) where pivotX/pivotY is the center of the path (e.g., offset.X, offset.Y). This rotates the path around its own center.",
+          "category": "workaround",
+          "codeSnippet": "// After translating path to offset:\npath.Transform(SKMatrix.CreateRotationDegrees(45.0F, offset.X, offset.Y));",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "yes"
+        },
+        {
+          "title": "Rotate before translating",
+          "description": "Apply rotation while the path is still centered at origin, then translate. This is what the reporter already discovered works.",
+          "category": "workaround",
+          "codeSnippet": "// Rotate while centered at origin:\npath.Transform(SKMatrix.CreateRotationDegrees(45.0F));\n// Then translate to desired position:\npath.Transform(SKMatrix.CreateTranslation(offset.X, offset.Y));",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "yes"
+        },
+        {
+          "title": "Concatenate matrices in correct order",
+          "description": "Use SKMatrix.Concat to build a single combined transform: translate to origin, rotate, translate back.",
+          "category": "alternative",
+          "codeSnippet": "var rotation = SKMatrix.CreateRotationDegrees(45.0F, offset.X, offset.Y);\npath.Transform(rotation);",
+          "confidence": 0.9,
+          "effort": "trivial",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use the pivot overload",
+      "recommendedReason": "Simplest single-line change. CreateRotationDegrees(degrees, pivotX, pivotY) directly expresses the intent of rotating around a specific point."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.92,
+      "reason": "The rotation API is mathematically correct. CreateRotationDegrees(angle) rotates around origin by design. The reporter needs the pivot overload CreateRotationDegrees(angle, pivotX, pivotY) to rotate in place."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply by-design question labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/macOS"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain correct usage of rotation with pivot point",
+        "risk": "high",
+        "confidence": 0.9,
+        "comment": "Thanks for the detailed write-up and screenshots.\n\n`SKMatrix.CreateRotationDegrees(angle)` rotates around the origin (0,0) by design \u2014 this is standard affine transform behavior. When you translate a path first and then rotate around origin, the path swings around (0,0) rather than rotating in place.\n\nHere's a workaround you can use: the pivot overload rotates around any point you specify:\n\n```csharp\n// Rotate around the path's center (offset) instead of the origin:\npath.Transform(SKMatrix.CreateRotationDegrees(45.0F, offset.X, offset.Y));\n```\n\nAlternatively, as you discovered, rotating before translating also works because the path is still centered at origin at that point.\n\nClosing as by-design \u2014 the API is working correctly, and the pivot overload is the intended way to rotate around an arbitrary center."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design behavior",
+        "risk": "medium",
+        "confidence": 0.9
+      }
+    ]
+  }
+}
