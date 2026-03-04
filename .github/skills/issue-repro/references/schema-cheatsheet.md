@@ -41,7 +41,7 @@ Read this BEFORE generating JSON. Full schema: `references/repro-schema.json`.
 |------|--------|
 | **conclusionValue** | `reproduced`, `not-reproduced`, `confirmed`, `not-confirmed`, `needs-platform`, `needs-hardware`, `partial`, `inconclusive` |
 | **stepResult** | `success`, `failure`, `wrong-output`, `skip` |
-| **stepLayer** | `csharp`, `c-api`, `native`, `deployment`, `setup` |
+| **stepLayer** | `csharp`, `c-api`, `native`, `deployment`, `setup`, `investigation` |
 | **reproProject.type** | `console`, `blazor-wasm`, `docker`, `mobile`, `wpf`, `winforms`, `winui`, `maui`, `test`, `existing`, `simulation` |
 | **suggestedAction** | `needs-investigation`, `close-as-fixed`, `close-as-by-design`, `close-with-docs`, `close-as-duplicate`, `convert-to-discussion`, `request-info`, `keep-open` |
 

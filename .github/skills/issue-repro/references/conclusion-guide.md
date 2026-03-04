@@ -139,7 +139,7 @@ Cannot reproduce because specific hardware is required.
 
 ### `partial`
 
-Some aspects of the bug were reproduced, others could not be verified.
+Some aspects of the issue were reproduced or verified, others could not be.
 
 - **Required evidence:** what WAS reproduced AND what remains unverified
 - **Required:** populate `blockers[]` with specific reasons for incomplete reproduction

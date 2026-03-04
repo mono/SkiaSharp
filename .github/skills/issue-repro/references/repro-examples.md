@@ -298,6 +298,12 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
     "triageFile": "ai-triage/3540.json"
   },
   "assessment": "feature-request",
+  "environment": {
+    "os": "Ubuntu 22.04 LTS",
+    "arch": "x64",
+    "dotnetVersion": "8.0.400",
+    "skiaSharpVersion": "3.116.1"
+  },
   "reproductionSteps": [
     {
       "stepNumber": 1,
@@ -305,7 +311,7 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
       "layer": "investigation",
       "command": "grep -rn 'ScrollEvent\\|WheelEvent\\|WheelChanged' source/SkiaSharp.Views/SkiaSharp.Views.Gtk/",
       "output": "No matches found",
-      "exitCode": 1,
+      "exitCode": 0,
       "result": "success"
     },
     {
@@ -331,8 +337,7 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.90,
-      "suggestedLabels": ["area/views-gtk", "type/enhancement"],
-      "suggestedMilestone": "vnext"
+      "reason": "Feature gap confirmed — GTK3 SKDrawingArea lacks wheel/scroll event handling despite shared infrastructure existing. Needs implementation."
     },
     "actions": [],
     "proposedResponse": {

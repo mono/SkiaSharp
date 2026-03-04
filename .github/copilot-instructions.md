@@ -394,7 +394,7 @@ Work directly for:
 | "triage", "classify", "analyze issue" | Triage | `issue-triage` |
 | "repro", "reproduce", "reproduction", "try to reproduce" | Reproduction | `issue-repro` |
 | "crash", "exception", "wrong", "fails", "broken", "hard crash", "segfault", "undefined symbol", "AccessViolation" | Bug | `issue-fix` |
-| "add", "expose", "missing", "support", "new method", "feature request" | New API | `add-api` |
+| "add", "expose", "missing API", "missing method", "support", "new method", "feature request" | New API | `add-api` |
 | "docs", "documentation", "XML", "comments" | Docs | `api-docs` |
 | CVE, security, vulnerability | Security | `security-audit` then `native-dependency-update` |
 

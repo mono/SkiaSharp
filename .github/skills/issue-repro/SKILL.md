@@ -143,7 +143,7 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 > - **3C:** Main branch source *(MANDATORY if 3B still reproduced)*
 > - **3D:** Cross-platform verification *(conditional — see table below)*
 >
-> **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation.
+> **🛑 MINIMUM 2 VERSIONS REQUIRED (for bug reproductions).** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. Enhancement confirmations (`confirmed`/`not-confirmed`) do NOT require version testing — see Phase 2.1.
 
 ### 3A. Reproduce with reporter's version
 

@@ -209,7 +209,7 @@ but you MUST still proceed to Phase 4 (Reproduce) to validate the hypothesis.**
 > - The hypothesis could be wrong or incomplete
 > - You need evidence, not assumptions
 
-If `ai-repro/NNNN.json` exists and `conclusion` is `reproduced`/`wrong-output`:
+If `ai-repro/NNNN.json` exists and `conclusion` is `reproduced`:
 - Rehydrate the repro source from `reproductionSteps[].filesCreated[].content` into a local folder (e.g., `/tmp/skiasharp/repro/NNNN/`) and run it.
 - Prefer this NuGet-based repro as the baseline; use Docker only if the host cannot exercise the target platform.
 
