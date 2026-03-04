@@ -1,0 +1,29 @@
+{
+  "number": 3544,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix artifact upload on Windows for triage workflow",
+  "body": "On Windows runners, \u0060/tmp\u0060 resolves to the current drive root (e.g. \u0060D:\\tmp\u0060), not a Unix path. The \u0060upload-artifact\u0060 action couldn\u0027t find files at the literal \u0060/tmp/skiasharp/repro/\u0060 path.\n\nAdds a collect step before each upload that copies from all possible locations (\u0060/tmp/skiasharp/\u0060, \u0060C:\\tmp\\skiasharp\\\u0060, \u0060D:\\tmp\\skiasharp\\\u0060) to \u0060$RUNNER_TEMP\u0060 before uploading.\n\nFound in run https://github.com/mono/SkiaSharp/actions/runs/22688329260",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-04T21:12:35",
+  "updatedAt": "2026-03-04T21:18:36",
+  "closedAt": "2026-03-04T21:18:35",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-04T21:18:34",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-windows-artifact-upload",
+  "additions": 31,
+  "deletions": 2,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}
