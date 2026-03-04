@@ -772,7 +772,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         var byArea = new Dictionary<string, int>();
         var byAction = new Dictionary<string, int>();
         var bySeverity = new Dictionary<string, int>();
-        int needsInvestigation = 0, closeable = 0, quickWins = 0, regressions = 0;
+        int needsInvestigation = 0, closeable = 0, needsInfo = 0, quickWins = 0, regressions = 0;
         int withRepro = 0, reproduced = 0, notReproduced = 0;
 
         // Ensure output subdirectories exist
@@ -823,7 +823,8 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                         var action = issue.Output.Actionability.SuggestedAction;
                         var severity = issue.Evidence.BugSignals?.Severity;
                         var isRegression = issue.Evidence.Regression?.IsRegression ?? false;
-                        var hasCloseAction = issue.Output.Actions.Any(a => a.Type == ActionType.CloseIssue);
+                        var hasCloseAction = issue.Output.Actions.Any(a =>
+                            a.Type == ActionType.CloseIssue || a.Type == ActionType.ConvertToDiscussion);
 
                         byType[typeValue] = byType.GetValueOrDefault(typeValue) + 1;
                         byArea[areaValue] = byArea.GetValueOrDefault(areaValue) + 1;
@@ -837,6 +838,8 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
 
                         if (action == SuggestedAction.NeedsInvestigation) needsInvestigation++;
                         if (hasCloseAction) closeable++;
+                        var isNeedsInfo = action == SuggestedAction.RequestInfo;
+                        if (isNeedsInfo) needsInfo++;
                         var isQuickWin = hasCloseAction && issue.Output.Actionability.Confidence >= 0.90;
                         if (isQuickWin) quickWins++;
                         if (isRegression) regressions++;
@@ -857,6 +860,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                             Confidence: issue.Output.Actionability.Confidence,
                             IsRegression: isRegression,
                             Closeable: hasCloseAction,
+                            NeedsInfo: isNeedsInfo,
                             QuickWin: isQuickWin,
                             State: state,
                             AnalyzedAt: issue.Meta.AnalyzedAt,
@@ -937,6 +941,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                                 Confidence: null,
                                 IsRegression: false,
                                 Closeable: false,
+                                NeedsInfo: false,
                                 QuickWin: false,
                                 State: state,
                                 AnalyzedAt: repro.Meta.AnalyzedAt,
@@ -966,6 +971,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             Summary: new TriageIndexSummary(
                 NeedsInvestigation: needsInvestigation,
                 Closeable: closeable,
+                NeedsInfo: needsInfo,
                 QuickWins: quickWins,
                 Regressions: regressions,
                 WithRepro: withRepro,

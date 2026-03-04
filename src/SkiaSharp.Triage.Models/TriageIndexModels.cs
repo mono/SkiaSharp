@@ -20,6 +20,7 @@ public record TriageIndex(
 public record TriageIndexSummary(
     int NeedsInvestigation,
     int Closeable,
+    int NeedsInfo,
     int QuickWins,
     int Regressions,
     int WithRepro,
@@ -38,6 +39,7 @@ public record TriageIndexEntry(
     double? Confidence,
     bool IsRegression,
     bool Closeable,
+    bool NeedsInfo,
     bool QuickWin,
     string State,
     DateTime AnalyzedAt,

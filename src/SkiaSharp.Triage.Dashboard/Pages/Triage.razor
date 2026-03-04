@@ -27,6 +27,10 @@ else
             <span class="triage-count">@_openIssues.Count(i => i.Closeable)</span>
             <span class="triage-label">Closeable</span>
         </div>
+        <div class="triage-card triage-info @(SelectedCard == "needs-info" ? "selected" : "")" @onclick='() => FilterByCard("needs-info")'>
+            <span class="triage-count">@_openIssues.Count(i => i.NeedsInfo)</span>
+            <span class="triage-label">Needs Info</span>
+        </div>
         <div class="triage-card triage-danger @(SelectedCard == "regressions" ? "selected" : "")" @onclick='() => FilterByCard("regressions")'>
             <span class="triage-count">@_openIssues.Count(i => i.IsRegression)</span>
             <span class="triage-label">Regressions</span>
@@ -251,6 +255,7 @@ else
             {
                 "needs-investigation" => query.Where(i => i.Action == "needs-investigation"),
                 "closeable" => query.Where(i => i.Closeable),
+                "needs-info" => query.Where(i => i.NeedsInfo),
                 "regressions" => query.Where(i => i.IsRegression),
                 "has-repro" => query.Where(i => i.HasRepro),
                 _ => query
