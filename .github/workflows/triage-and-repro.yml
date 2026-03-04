@@ -26,6 +26,7 @@ permissions:
 env:
   GIT_USER_NAME: 'github-actions[bot]'
   GIT_USER_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
+  DATA_CACHE_BRANCH: 'docs-data-cache'
   MCP_CONFIG: |
     {
       "mcpServers": {
@@ -119,8 +120,9 @@ jobs:
       - name: Fetch data-cache branch
         shell: pwsh
         run: |
-          git fetch origin docs-data-cache:docs-data-cache
-          git branch --set-upstream-to=origin/docs-data-cache docs-data-cache
+          $branch = $env:DATA_CACHE_BRANCH
+          git fetch origin "${branch}:${branch}"
+          git branch --set-upstream-to="origin/$branch" $branch
 
       - name: Run AI triage
         uses: ./.github/actions/copilot-cli
@@ -230,8 +232,9 @@ jobs:
       - name: Fetch data-cache branch
         shell: pwsh
         run: |
-          git fetch origin docs-data-cache:docs-data-cache
-          git branch --set-upstream-to=origin/docs-data-cache docs-data-cache
+          $branch = $env:DATA_CACHE_BRANCH
+          git fetch origin "${branch}:${branch}"
+          git branch --set-upstream-to="origin/$branch" $branch
 
       - name: Run AI reproduction
         uses: ./.github/actions/copilot-cli
