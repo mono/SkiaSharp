@@ -155,11 +155,6 @@ jobs:
       repro_matrix: ${{ steps.matrix.outputs.repro_matrix }}
 
     steps:
-      - name: Checkout (for extract-platform script)
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: .github/skills/issue-triage/scripts
-
       - name: Download all triage artifacts
         uses: actions/download-artifact@v4
         with:
@@ -176,6 +171,7 @@ jobs:
             macos   = 'macos-latest'
             windows = 'windows-latest'
           }
+          $validPlatforms = @('linux', 'macos', 'windows')
 
           $includes = @()
           $triageFiles = Get-ChildItem '${{ runner.temp }}/triage-artifacts' -Filter '*.json' -ErrorAction SilentlyContinue
@@ -183,17 +179,23 @@ jobs:
           foreach ($file in $triageFiles) {
             Write-Host "Processing: $($file.Name)"
             try {
-              $result = .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $file.FullName
-              $issue = $file.BaseName  # e.g. "3520" from "3520.json"
-              if ($result.NeedsRepro -eq 'true') {
+              $triage = Get-Content $file.FullName -Raw | ConvertFrom-Json
+              $issue = $file.BaseName
+
+              $platform = $triage.output.actionability.suggestedReproPlatform
+              if (-not $platform -or $platform.ToLower() -notin $validPlatforms) { $platform = 'linux' }
+              $platform = $platform.ToLower()
+
+              $action = $triage.output.actionability.suggestedAction
+              if ($action -eq 'needs-investigation') {
                 $includes += @{
                   issue    = $issue
-                  platform = $result.Platform
-                  runner   = $runners[$result.Platform]
+                  platform = $platform
+                  runner   = $runners[$platform]
                 }
-                Write-Host "  → Repro needed: $($result.Platform) for #$issue"
+                Write-Host "  → Repro needed: $platform for #$issue"
               } else {
-                Write-Host "  → No repro needed for #$issue (action: $($result.Action))"
+                Write-Host "  → No repro needed for #$issue (action: $action)"
               }
             } catch {
               Write-Host "  ⚠️ Failed to process $($file.Name): $_"
