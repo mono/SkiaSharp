@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2329,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T00:00:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "assessment": "feature-request",
+  "notes": "Confirmed via source code inspection: Blazor SKGLView.razor.cs declares GRContext as a private field (line 24) with no public property, while all 13 other GPU-backed views in SkiaSharp expose it publicly via `public GRContext GRContext => context;`. This is a valid enhancement request for API parity, not a bug. Multi-version testing skipped per enhancement reproduction rules.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Inspect Blazor SKGLView.razor.cs for GRContext accessibility",
+      "command": "grep -n 'GRContext' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+      "exitCode": 0,
+      "output": "24:\t\tprivate GRContext? context;\n103:\t\t\t\tcontext = GRContext.CreateGl(glInterface);",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify all other GPU views expose GRContext publicly — found 13 instances across macOS, iOS, Android, WPF, WinForms, WinUI, Metal, and Tizen views",
+      "command": "grep -rn 'public GRContext' source/SkiaSharp.Views/",
+      "exitCode": 0,
+      "output": "SKGLControl.cs:71: public GRContext GRContext => grContext;\nSKGLElement.cs:78: public GRContext GRContext => grContext;\nmacOS/SKGLLayer.cs:31: public GRContext GRContext => context;\nmacOS/SKGLView.cs:86: public GRContext GRContext => context;\nSKGLSurfaceView.cs:36: public GRContext GRContext => renderer.GRContext;\nSKMetalView.cs:125: public GRContext GRContext => context;\nSKSwapChainPanel.cs:31: public GRContext GRContext => context;\niOS/SKGLLayer.cs:48: public GRContext GRContext => context;\niOS/SKGLView.cs:106: public GRContext GRContext => context;",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Confirm no public GRContext property exists in Blazor SKGLView — zero matches confirms the feature is missing",
+      "command": "grep -c 'public GRContext' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+      "exitCode": 0,
+      "output": "0",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.x",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Reporter's version. Feature request — GRContext was private in Blazor SKGLView since its introduction. Not a regression.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Latest stable. GRContext is still private in current source. Feature has never been implemented.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.92,
+      "reason": "Valid enhancement request for API parity. All 13 other GPU-backed views expose GRContext publicly; the Blazor SKGLView is the only one that does not. Trivial one-line fix."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and Blazor views labels",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "link-related",
+        "description": "Link to original GRContext exposure issue #358",
+        "risk": "low",
+        "confidence": 0.85
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this inconsistency. You're correct — the Blazor `SKGLView` is the only GPU-backed view in SkiaSharp that doesn't expose `GRContext` as a public property.\n\n**Confirmed via source inspection:**\n- `SKGLView.razor.cs` line 24: `private GRContext? context;` — no public property\n- All 13 other GPU views (macOS, iOS, Android, WPF, WinForms, WinUI, Metal, Tizen) expose `public GRContext GRContext => context;`\n\n**Workaround:** You can access the context inside your `OnPaintSurface` callback via `e.Surface.Context`:\n\n```csharp\nOnPaintSurface = (e) =>\n{\n    var grContext = e.Surface.Context as GRContext;\n    // create additional surfaces sharing the same context\n};\n```\n\nThis is limited to use within the callback. The proper fix would be adding `public GRContext? GRContext => context;` to the Blazor view, matching the pattern used on all other platforms.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Access GRContext via e.Surface.Context inside the OnPaintSurface callback (returns GRRecordingContext, cast to GRContext if needed)"
+    ]
+  }
+}
