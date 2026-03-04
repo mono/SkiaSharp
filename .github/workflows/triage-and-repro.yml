@@ -88,12 +88,18 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Configure git identity
         shell: pwsh
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Fetch data-cache branch
+        shell: pwsh
+        run: |
+          git fetch origin docs-data-cache:docs-data-cache
 
       - name: Run AI triage
         uses: ./.github/actions/copilot-cli
@@ -156,12 +162,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Configure git identity
         shell: pwsh
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Fetch data-cache branch
+        shell: pwsh
+        run: |
+          git fetch origin docs-data-cache:docs-data-cache
 
       - name: Run AI reproduction
         uses: ./.github/actions/copilot-cli
