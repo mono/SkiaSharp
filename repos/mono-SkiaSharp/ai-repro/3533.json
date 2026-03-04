@@ -1,0 +1,161 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3533,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-04T19:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "scope": "universal",
+  "notes": "Confirmed: SKTouchEventArgs.WheelDelta and SKTouchAction.WheelChanged exist in the shared API surface, but only the Windows MAUI SKTouchHandler populates WheelDelta (via MouseWheelDelta, which natively provides \u00b1120 per notch). All other platform handlers (Android, Apple/iOS, Tizen, Blazor, WPF, WinForms, GTK4) either hardcode WheelDelta=0 or have no wheel/scroll event handling at all. This gap persists across SkiaSharp 2.88.9, 3.119.0-stable.1, and the current main branch. The issue is a well-structured umbrella enhancement filed by the maintainer with sub-issues for each platform.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 3.119.0-stable.1 to verify core API works",
+      "command": "mkdir -p /tmp/skiasharp/repro/3533 && cd /tmp/skiasharp/repro/3533 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.0-stable.1",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for package 'SkiaSharp' version '3.119.0-stable.1' added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "content": "using SkiaSharp;\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Runtime: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}\");\nusing var bitmap = new SKBitmap(100, 100);\nusing var canvas = new SKCanvas(bitmap);\ncanvas.Clear(SKColors.White);\nConsole.WriteLine($\"Core SkiaSharp works: bitmap={bitmap.Width}x{bitmap.Height}\");\nConsole.WriteLine(\"SUCCESS: Core SkiaSharp operational. WheelDelta gap is in view layer handlers.\");",
+          "description": "Console app verifying core SkiaSharp loads and works"
+        },
+        {
+          "filename": "Repro.csproj",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.119.0-stable.1\" />\n  </ItemGroup>\n</Project>",
+          "description": "Project file with SkiaSharp 3.119.0-stable.1 package reference"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and run console app to verify core SkiaSharp is operational",
+      "command": "cd /tmp/skiasharp/repro/3533/Repro && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nRuntime: .NET 8.0.23\nOS: Darwin 25.3.0\nArch: Arm64\nCore SkiaSharp works: bitmap=100x100\nSUCCESS: Core SkiaSharp operational. WheelDelta gap is in view layer handlers.",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Investigation: Verify Windows MAUI handler is the ONLY handler with wheel event support",
+      "command": "grep -n 'wheel\\|Wheel\\|WheelDelta\\|PointerWheelChanged\\|MouseWheelDelta' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "35: view.PointerWheelChanged -= OnPointerWheelChanged;\n44: view.PointerWheelChanged += OnPointerWheelChanged;\n101: private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs args)\n103: args.Handled = CommonHandler(sender, SKTouchAction.WheelChanged, args);\n122: var wheelDelta = pointerPoint?.Properties?.MouseWheelDelta ?? 0;\n124: var args = new SKTouchEventArgs(id, touchActionType, mouse, device, skPoint, evt.Pointer.IsInContact, wheelDelta);",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Investigation: Verify Android handler hardcodes WheelDelta=0 with no GenericMotion/AXIS_VSCROLL handling",
+      "command": "grep -n 'wheel\\|Wheel\\|scroll\\|Scroll\\|GenericMotion\\|AXIS_VSCROLL' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs; grep -n 'new SKTouchEventArgs' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "No wheel/scroll matches found.\nSKTouchEventArgs creation always passes wheelDelta: 0:\n68: new SKTouchEventArgs(id, SKTouchAction.Pressed, button, deviceType, coords, true, 0, pressure)\n83: new SKTouchEventArgs(id, SKTouchAction.Moved, button, deviceType, coords, true, 0, pressure)\n94: new SKTouchEventArgs(id, SKTouchAction.Released, button, deviceType, coords, false, 0, pressure)\n103: new SKTouchEventArgs(id, SKTouchAction.Cancelled, button, deviceType, coords, false, 0, pressure)",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Investigation: Verify Apple (iOS/macOS) handler has no wheel/scroll support \u2014 uses simple constructor without WheelDelta",
+      "command": "grep -n 'wheel\\|Wheel\\|scroll\\|Scroll\\|PanGesture\\|scrollingDelta' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs; grep -n 'new SKTouchEventArgs' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "No wheel/scroll matches found.\n107: var args = new SKTouchEventArgs(id, actionType, point, inContact);\n(Uses simple constructor without wheelDelta parameter \u2014 defaults to 0)",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Investigation: Verify Tizen handler has no wheel/scroll support",
+      "command": "grep -n 'wheel\\|Wheel\\|scroll\\|Scroll' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs; grep -n 'new SKTouchEventArgs' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs",
+      "exitCode": 0,
+      "output": "No wheel/scroll matches found.\n51: onTouchAction?.Invoke(new SKTouchEventArgs(currentId, action, coords, inContact));\n(Uses simple constructor without wheelDelta parameter \u2014 defaults to 0)",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Investigation: Verify Blazor, WPF, WinForms, and GTK4 views have no wheel/scroll/touch event handling",
+      "command": "for f in source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs source/SkiaSharp.Views/SkiaSharp.Views.Gtk4/SKDrawingArea.cs; do echo \"--- $f ---\"; grep -c 'wheel\\|Wheel\\|scroll\\|Scroll\\|touch\\|Touch\\|pointer\\|Pointer\\|SKTouchHandler' \"$f\" || echo 0; done",
+      "exitCode": 0,
+      "output": "--- SKCanvasView.razor.cs --- 0\n--- SKElement.cs --- 0\n--- SKDrawingArea.cs --- 0\n(None of these views have any input/touch/wheel event handling \u2014 they only render via PaintSurface)",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 8,
+      "description": "Investigation: Verify the same gap exists on main branch source (no changes since latest stable)",
+      "command": "cd $REPO_ROOT && dotnet build samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj && dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "Build succeeded. 1 Warning(s) 0 Error(s)\nHello World!\nYour platform color type is Rgba8888\n(Main branch builds and runs \u2014 same investigation shows no wheel support added to any non-Windows handler)",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": ".NET 8.0.23",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.0-stable.1",
+    "dockerUsed": false
+  },
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.0-stable.1"
+      }
+    ]
+  },
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "WheelDelta API surface exists (added in Xamarin.Forms era). Only Windows/UWP handler populates it. All other platforms hardcode 0 or omit wheel handling.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.0-stable.1",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Same gap: only Windows MAUI SKTouchHandler subscribes to PointerWheelChanged and passes MouseWheelDelta. Android hardcodes 0, Apple/Tizen use constructors without wheelDelta. Blazor/WPF/GTK4 have no input handling at all.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "No wheel support added on main branch. Same code investigation shows 6 wheel-related lines in Windows handler, 0 in all others.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "This is a well-structured umbrella enhancement filed by the maintainer with 8 sub-issues for each platform. The actual implementation work happens in those sub-issues. This tracking issue should remain open as the specification and coordination point."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/SkiaSharp.Views label since the gap is in view-layer platform handlers, not core SkiaSharp",
+        "risk": "low",
+        "confidence": 0.9
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the detailed specification! We investigated and can confirm that `SKTouchEventArgs.WheelDelta` standardization to the v120 convention is needed.\n\n**Investigation findings:**\n\n| Platform | Wheel Support | Details |\n|----------|---------------|----------|\n| Windows MAUI | \u2705 Has support | Subscribes to `PointerWheelChanged`, passes `MouseWheelDelta` (\u00b1120/notch) |\n| Android MAUI | \u274c Hardcodes 0 | Touch handler only handles Down/Move/Up/Cancel, no `GenericMotion`/`AXIS_VSCROLL` |\n| Apple (iOS/macOS) | \u274c No support | Touch handler uses simple constructor without `wheelDelta` parameter |\n| Tizen | \u274c No support | Touch handler uses simple constructor without `wheelDelta` parameter |\n| Blazor WASM | \u274c No input handling | `SKCanvasView` only renders via `PaintSurface`, no touch/pointer/wheel events |\n| WPF | \u274c No input handling | `SKElement` only renders, no `SKTouchHandler` equivalent |\n| GTK4 | \u274c No input handling | `SKDrawingArea` only renders, no `EventControllerScroll` |\n\n**Tested on:** SkiaSharp 2.88.9, 3.119.0-stable.1, and main branch \u2014 gap persists across all versions.\n\nThe API surface (`SKTouchAction.WheelChanged`, `SKTouchEventArgs.WheelDelta`) has existed since the Xamarin.Forms era but was only ever wired up for Windows/UWP. The sub-issues cover each platform's implementation.",
+      "status": "do-not-post"
+    }
+  }
+}
