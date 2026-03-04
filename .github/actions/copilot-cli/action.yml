@@ -32,35 +32,35 @@ runs:
       with:
         node-version: '22'
 
+    - name: Install Copilot CLI
+      shell: pwsh
+      run: |
+        npm install -g @github/copilot
+        Write-Host "CLI Version: $(copilot --version)"
+
+    - name: Configure MCP
+      if: ${{ inputs.mcp-config != '' }}
+      shell: pwsh
+      run: |
+        if ($IsWindows) {
+          $configDir = Join-Path $env:APPDATA '.copilot'
+        } else {
+          $xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { Join-Path $HOME '.config' }
+          $configDir = Join-Path $xdg '.copilot'
+        }
+        New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+        $env:MCP_CONFIG | Set-Content (Join-Path $configDir 'mcp-config.json')
+        Get-Content (Join-Path $configDir 'mcp-config.json')
+      env:
+        MCP_CONFIG: ${{ inputs.mcp-config }}
+
     - name: Run Copilot CLI
       id: copilot
       shell: pwsh
       run: |
-        Write-Host '::group::Install Copilot CLI'
-        npm install -g @github/copilot
-        Write-Host "CLI Version: $(copilot --version)"
-        Write-Host '::endgroup::'
-
-        # Cross-platform log directory
         $logDir = Join-Path $env:RUNNER_TEMP 'copilot-logs'
         New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
-        # Cross-platform MCP config
-        if ($env:MCP_CONFIG) {
-          Write-Host '::group::Configure MCP'
-          if ($IsWindows) {
-            $configDir = Join-Path $env:APPDATA '.copilot'
-          } else {
-            $xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { Join-Path $HOME '.config' }
-            $configDir = Join-Path $xdg '.copilot'
-          }
-          New-Item -ItemType Directory -Force -Path $configDir | Out-Null
-          $env:MCP_CONFIG | Set-Content (Join-Path $configDir 'mcp-config.json')
-          Get-Content (Join-Path $configDir 'mcp-config.json')
-          Write-Host '::endgroup::'
-        }
-
-        Write-Host '::group::Run Copilot CLI'
         $copilotArgs = @(
           '-p', $env:PROMPT,
           '--yolo',
@@ -73,7 +73,6 @@ runs:
         )
         & copilot @copilotArgs
         $exitCode = $LASTEXITCODE
-        Write-Host '::endgroup::'
 
         "logs_path=$logDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
         "exit_code=$exitCode" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
@@ -81,7 +80,6 @@ runs:
         GH_TOKEN: ${{ github.token }}
         COPILOT_GITHUB_TOKEN: ${{ inputs.copilot-token }}
         PROMPT: ${{ inputs.prompt }}
-        MCP_CONFIG: ${{ inputs.mcp-config }}
         MODEL: ${{ inputs.model }}
 
     - name: Upload artifacts
