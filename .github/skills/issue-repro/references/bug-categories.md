@@ -271,9 +271,10 @@ Not a bug — the issue requests new functionality that doesn't exist yet.
 - No error, crash, or incorrect behavior reported — issue describes desired behavior
 
 ### Strategy
-1. **Confirm the feature is missing** — grep for the requested API, handler, or behavior in the source code.
+1. **Create a project that demonstrates the gap** — build a minimal project that attempts to use the requested feature. This may compile but not work, or may not compile at all. Either outcome is valid evidence.
 2. **Document what exists** — note related infrastructure that's already in place (e.g., shared enums, sibling platform implementations).
-3. **Skip multi-version testing** — there's nothing to regress-test across versions.
+3. **Test across versions** — the feature may exist in one version but not another, or may have been removed. Test reporter's version AND latest stable, same as bugs.
+4. **Look for workarounds** — the feature may be achievable through alternative APIs or approaches. Document any workarounds found.
 
 ### Conclusion
 - `confirmed` — the requested feature is verified as missing (reporter's claim is correct).
@@ -283,9 +284,11 @@ Not a bug — the issue requests new functionality that doesn't exist yet.
 
 ### Example
 Issue: "Add wheel support to GTK3 views"
-- Step 1: grep for `WheelEvent` or `ScrollEvent` in GTK3 view → not found
-- Step 2: confirm `SKTouchAction.WheelChanged` enum exists (shared infra) but GTK3 `SKDrawingArea` doesn't subscribe to it
-- Conclusion: `confirmed`, assessment: `feature-request`
+- Step 1: Create a GTK3 console project with SkiaSharp.Views.Gtk3 → project builds
+- Step 2: grep for `WheelEvent` or `ScrollEvent` in GTK3 view → not found
+- Step 3: confirm `SKTouchAction.WheelChanged` enum exists (shared infra) but GTK3 `SKDrawingArea` doesn't subscribe to it
+- Step 4: Test on latest stable → same gap
+- Conclusion: `confirmed`, assessment: `feature-request`, scope: `platform-specific/linux`
 
 ---
 
@@ -331,7 +334,7 @@ The issue reports missing, incorrect, or outdated documentation.
 ### Strategy
 1. **Verify the doc gap** — check if the referenced documentation page/section exists and is accurate.
 2. **Compare with source code** — confirm whether the API behavior matches or contradicts the docs.
-3. **Skip multi-version testing** — documentation issues are version-independent.
+3. **Test across versions** — documentation accuracy may vary by version. Test reporter's version AND latest stable to determine if docs were once correct but are now outdated.
 
 ### Conclusion
 - `confirmed` — docs ARE missing or wrong (reporter's claim is correct).

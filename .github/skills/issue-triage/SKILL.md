@@ -103,6 +103,14 @@ If fetched via API, work directly from the `gh` output (skip the script).
 4. For bugs: trace the code path — does the issue still exist?
 5. For feature requests: has it been implemented since filing?
 6. For questions: does the source confirm or contradict the assumption?
+7. **Search for related PRs** — check data-cache first, then fall back to CLI:
+   ```bash
+   # Data-cache lookup (fast, offline)
+   ls $CACHE/github/items/ | head -5  # check cache structure
+   # Fall back to GitHub CLI
+   gh pr list --search '{keywords from issue}' --state all --repo mono/SkiaSharp --limit 10 --json number,title,state,mergedAt
+   ```
+   Include ALL related PRs in `evidence.reproEvidence.repoLinks` — especially closed/unmerged PRs, as they reveal prior attempts and maintainer decisions.
 
 ### 4. Additional Research
 

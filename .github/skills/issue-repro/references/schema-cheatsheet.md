@@ -18,8 +18,8 @@ Read this BEFORE generating JSON. Full schema: `references/repro-schema.json`.
 |------------|---------------------------|
 | `reproduced` | `output`, `versionResults`, `reproProject` |
 | `not-reproduced` | `output`, `versionResults` |
-| `confirmed` | `output` |
-| `not-confirmed` | `output` |
+| `confirmed` | `output`, `versionResults`, `scope` |
+| `not-confirmed` | `output`, `versionResults`, `scope` |
 | `needs-platform`, `needs-hardware`, `partial`, `inconclusive` | `blockers` (string array, min 1 item) |
 
 ## Step-Result Constraints by Conclusion
@@ -33,7 +33,7 @@ Read this BEFORE generating JSON. Full schema: `references/repro-schema.json`.
 
 ⚠️ For `not-reproduced`: if a setup step failed then succeeded on retry, record **only the final successful attempt**. Any `failure`/`wrong-output` step will fail validation.
 
-💡 For `confirmed`/`not-confirmed`: these are for non-bug issues (enhancement, feature-request, documentation). Confirmation is typically via code investigation (grep, read source), not runtime failure. Steps that find evidence of absence (e.g., grep found no matching API) are valid as `success`.
+💡 For `confirmed`/`not-confirmed`: these are for non-bug issues (enhancement, feature-request, documentation). Create a project to demonstrate the gap, test across versions (a feature may exist in one version but not another), and derive `scope` from your investigation. Steps that find evidence of absence (e.g., project fails to compile because API doesn't exist, grep found no matching implementation) are valid.
 
 ## Enum Values
 

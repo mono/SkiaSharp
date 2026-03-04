@@ -132,7 +132,7 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 > - **3C:** Main branch source *(MANDATORY if 3B still reproduced)*
 > - **3D:** Cross-platform verification *(conditional — see table below)*
 >
-> **🛑 MINIMUM 2 VERSIONS REQUIRED (for bug reproductions).** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. Enhancement confirmations (`confirmed`/`not-confirmed`) do NOT require version testing — see Phase 2.1.
+> **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. This applies to ALL conclusion types — bugs (`reproduced`/`not-reproduced`) AND enhancements (`confirmed`/`not-confirmed`). For enhancements: a feature may exist in one version but not another, or may have been removed. Version testing reveals this.
 
 ### 3A. Reproduce with reporter's version
 
@@ -188,6 +188,8 @@ Use the same platform strategy from 3A with the latest stable SkiaSharp. Record 
 | Windows (reported) | Console + Docker Linux |
 
 Test reporter's version only. Derive `scope`: reproduced on ≥2 platforms → `"universal"`, primary only → `"platform-specific/{platform}"`, skipped → `"unknown"`.
+
+**For `confirmed`/`not-confirmed` conclusions:** Derive `scope` from your investigation — if the gap exists in ALL platform views → `"universal"`, if the gap is specific to one platform's view (e.g., Blazor only) → `"platform-specific/{platform}"`. Always set `scope` for confirmed conclusions (schema requires it).
 
 ### Simulation Strategy (last resort)
 

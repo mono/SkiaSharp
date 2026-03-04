@@ -293,11 +293,12 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
   },
   "conclusion": "confirmed",
   "notes": "The SKTouchAction.WheelChanged enum value exists and is implemented on WPF, WinForms, and Blazor, but the GTK3 SKDrawingArea does not subscribe to GDK scroll events. The shared infrastructure is in place — this is a gap in the GTK3 platform implementation.",
-  "reproductionTime": "~5 minutes",
+  "reproductionTime": "~10 minutes",
   "inputs": {
     "triageFile": "ai-triage/3540.json"
   },
   "assessment": "feature-request",
+  "scope": "platform-specific/linux",
   "environment": {
     "os": "Ubuntu 22.04 LTS",
     "arch": "x64",
@@ -308,6 +309,15 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
   "reproductionSteps": [
     {
       "stepNumber": 1,
+      "description": "Create a GTK3 project that attempts to use wheel events",
+      "layer": "setup",
+      "command": "dotnet new console -n WheelTest && cd WheelTest && dotnet add package SkiaSharp.Views.Gtk3 --version 3.116.1",
+      "output": "Project created and package added successfully",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
       "description": "Search for scroll/wheel event handling in GTK3 SKDrawingArea",
       "layer": "investigation",
       "command": "grep -rn 'ScrollEvent\\|WheelEvent\\|WheelChanged' source/SkiaSharp.Views/SkiaSharp.Views.Gtk/",
@@ -316,7 +326,7 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
       "result": "success"
     },
     {
-      "stepNumber": 2,
+      "stepNumber": 3,
       "description": "Verify SKTouchAction.WheelChanged enum exists in shared infrastructure",
       "layer": "investigation",
       "command": "grep -rn 'WheelChanged' binding/SkiaSharp/",
@@ -325,7 +335,7 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
       "result": "success"
     },
     {
-      "stepNumber": 3,
+      "stepNumber": 4,
       "description": "Check if other platforms implement wheel support for comparison",
       "layer": "investigation",
       "command": "grep -rn 'WheelChanged' source/SkiaSharp.Views/",
@@ -334,6 +344,32 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
       "result": "success"
     }
   ],
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Reporter's version. GTK3 SKDrawingArea does not subscribe to GDK scroll events. WheelChanged enum exists in shared code but is not wired up in GTK3 view.",
+      "platform": "host-linux-x64"
+    },
+    {
+      "version": "3.119.0-preview.1.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Latest stable. Same gap — no wheel event handling in GTK3 view.",
+      "platform": "host-linux-x64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Gtk3",
+        "version": "3.116.1"
+      }
+    ]
+  },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
@@ -352,9 +388,9 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
 ### Why this is a good enhancement confirmation
 
 - **Used `confirmed` not `not-reproduced`** — semantically correct for verifying a feature gap.
-- **Code investigation steps** — grep-based evidence, no runtime failure expected.
-- **All steps are `success`** — confirming absence is investigation, not runtime failure.
-- **No `versionResults`** — feature absence is version-independent; not needed for `confirmed`.
+- **Created a project** — demonstrates the gap is real, not just a source reading.
+- **Version testing** — confirmed the gap exists on both reporter's version and latest, proving it's not already fixed.
+- **Scope set** — `platform-specific/linux` signals the gap is GTK3-only (other platforms have wheel support).
 - **Noted related infrastructure** — WheelChanged enum and other platform implementations help the fix skill.
 - **Assessment `feature-request`** — correctly classifies the type of confirmation.
 

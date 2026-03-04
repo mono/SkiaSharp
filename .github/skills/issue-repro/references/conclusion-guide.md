@@ -97,8 +97,10 @@ If the user reports a breaking change error (e.g., CS0117), and you verify they 
 
 **The reporter's non-bug claim was verified.** Use for enhancements, feature requests, and documentation issues — NOT for bugs. This means you investigated and the reporter is correct: the feature IS missing, the docs ARE wrong, the API gap IS real.
 
-- **Required evidence:** ≥1 investigation step showing the claim is true (e.g., grep found no matching API, source code has no handler, docs are outdated)
-- **No step-result constraint:** investigation steps may all be `success` (grep ran successfully while confirming absence) or include `failure` (tried to use missing API → compile error). Both are valid.
+- **Required evidence:** ≥1 step showing the claim is true (e.g., project that tries to use missing API fails to compile, grep found no matching implementation, docs are outdated)
+- **Version testing required:** Test across versions just like bugs — a feature may exist in one version but not another. Populate `versionResults` with `confirmed`/`not-confirmed` per version.
+- **Scope required:** Derive `scope` from your investigation — gap in all platform views → `"universal"`, gap in one platform → `"platform-specific/{platform}"`.
+- **No step-result constraint:** steps may all be `success` (grep ran successfully while confirming absence) or include `failure` (tried to use missing API → compile error). Both are valid.
 - **Use when:** issue type is `type/enhancement`, `type/feature-request`, or `type/documentation` AND the reporter's claim is verified
 - **Example (feature):** `"Confirmed: SKDrawingArea has no wheel event handler — grep found no WheelEvent in GTK view implementation"`
 - **Example (docs):** `"Confirmed: SKPaint.FilterQuality docs reference removed API — XML docs still mention obsolete enum"`
