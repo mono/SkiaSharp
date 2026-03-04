@@ -10,7 +10,10 @@ instructions (how to create/build/run), see the `platform-*.md` files in this di
 4. [Platform-Specific Bugs](#4-platform-specific-bugs)
 5. [Build / Deployment Bugs](#5-build--deployment-bugs)
 6. [Memory / Disposal Bugs](#6-memory--disposal-bugs)
-7. [General Tips](#general-tips)
+7. [Enhancement / Feature Request](#7-enhancement--feature-request)
+8. [Platform Parity Gap](#8-platform-parity-gap)
+9. [Documentation Issue](#9-documentation-issue)
+10. [General Tips](#general-tips)
 
 **Constraints applying to ALL categories:**
 - No native rebuilds — use `dotnet cake --target=externals-download` only
@@ -313,3 +316,31 @@ Issue: "Mouse wheel events not delivered on Mac Catalyst"
 - Step 2: find `OnPointerWheelChanged` in Windows handler → fully implemented
 - Step 3: grep Apple handler for wheel/scroll → not found
 - Conclusion: `reproduced`, assessment: `likely-bug` (cross-platform API silently non-functional)
+
+---
+
+## 9. Documentation Issue
+
+The issue reports missing, incorrect, or outdated documentation.
+
+### Signals
+- Triage JSON has `type/documentation`
+- Issue mentions "docs", "documentation", "API reference", "missing example"
+- No code bug — the library works correctly but documentation is wrong or absent
+
+### Strategy
+1. **Verify the doc gap** — check if the referenced documentation page/section exists and is accurate.
+2. **Compare with source code** — confirm whether the API behavior matches or contradicts the docs.
+3. **Skip multi-version testing** — documentation issues are version-independent.
+
+### Conclusion
+- `confirmed` — docs ARE missing or wrong (reporter's claim is correct).
+- `not-confirmed` — docs are actually correct (reporter misread or looked in wrong place).
+- `assessment: "docs-gap"`
+- Include investigation steps showing the doc gap or correctness. Use `layer: "investigation"`.
+
+### Example
+Issue: "SKPaint.FilterQuality docs say it affects image scaling but it's deprecated"
+- Step 1: check API reference for SKPaint.FilterQuality → still documented as active
+- Step 2: check source code → marked `[Obsolete]` since v3.x
+- Conclusion: `confirmed`, assessment: `docs-gap`

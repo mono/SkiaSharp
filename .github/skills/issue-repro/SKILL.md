@@ -56,18 +56,7 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
 
 ### 1. Classify
 
-Read [references/bug-categories.md](references/bug-categories.md) to classify the issue type.
-
-**Enhancement / feature request?** If the triage JSON shows `type/enhancement` or the issue clearly requests new functionality:
-- **Still produce a repro JSON.** Enhancements are valid verification targets.
-- **Goal:** Confirm the feature is missing by inspecting source code and attempting the requested behavior.
-- **Conclusion:** Use `confirmed` (the feature IS missing, reporter's claim verified) with `assessment: "feature-request"`. Use `not-confirmed` if the feature actually exists.
-- **Steps:** Include code investigation steps showing the feature is absent (e.g., grep for missing handlers, verify API doesn't exist). Use `layer: "investigation"` for these steps.
-- **Skip multi-version testing** (Phases 3B/3C/3D) — there's nothing to regress-test.
-
-**Documentation issue?** If the triage JSON shows `type/documentation`:
-- **Conclusion:** Use `confirmed` (docs ARE missing/wrong) with `assessment: "docs-gap"`. Use `not-confirmed` if docs are correct.
-- **Steps:** Include investigation steps showing the doc gap or error. Use `layer: "investigation"` for these steps.
+Read [references/bug-categories.md](references/bug-categories.md) to classify the issue type and determine the reproduction strategy. That file covers bugs (Sections 1–6), enhancements (Section 7), platform parity gaps (Section 8), and documentation issues (Section 9) — including which conclusion values and `layer` to use for each.
 
 ### 2. Extract reporter's version & TFM
 
