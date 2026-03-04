@@ -130,12 +130,13 @@ jobs:
           fi
 
       - name: Upload triage JSON
-        if: steps.extract.outputs.needs_repro == 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: triage-output
           path: /tmp/skiasharp/triage/
           retention-days: 7
+          if-no-files-found: warn
 
   # ===========================================================================
   # Stage 2: Reproduce on target platform
@@ -162,6 +163,14 @@ jobs:
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'repro-linux-${{ needs.triage.outputs.issue_number }}'
+      - name: Upload repro JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repro-output-linux
+          path: /tmp/skiasharp/repro/
+          retention-days: 7
+          if-no-files-found: warn
 
   repro-macos:
     name: Reproduce (macOS)
@@ -184,6 +193,14 @@ jobs:
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'repro-macos-${{ needs.triage.outputs.issue_number }}'
+      - name: Upload repro JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repro-output-macos
+          path: /tmp/skiasharp/repro/
+          retention-days: 7
+          if-no-files-found: warn
 
   repro-windows:
     name: Reproduce (Windows)
@@ -214,3 +231,13 @@ jobs:
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'repro-windows-${{ needs.triage.outputs.issue_number }}'
+      - name: Upload repro JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repro-output-windows
+          path: |
+            /tmp/skiasharp/repro/
+            ${{ runner.temp }}/skiasharp/repro/
+          retention-days: 7
+          if-no-files-found: warn
