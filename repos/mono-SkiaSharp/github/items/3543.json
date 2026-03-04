@@ -1,0 +1,65 @@
+{
+  "number": 3543,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add AI triage-and-repro workflow with Copilot CLI action",
+  "body": "## Summary\n\nAdds a GitHub Actions workflow that uses Copilot CLI to automatically triage and reproduce SkiaSharp issues. Includes a reusable local composite action for running Copilot CLI in CI, plus improvements to the triage and repro skills.\n\n## Workflow: \u0060triage-and-repro.yml\u0060\n\n**4-stage pipeline:**\n\n1. **Setup** \u2014 Parses issue number(s) into a matrix. Accepts comma/space-separated input (e.g. \u00603520, 3521, #3400\u0060).\n2. **Triage** \u2014 Runs AI triage in parallel (one Linux runner per issue) using Copilot CLI. Classifies the issue, determines the repro platform (\u0060linux\u0060/\u0060macos\u0060/\u0060windows\u0060), and persists the result to the \u0060docs-data-cache\u0060 branch.\n3. **Build Repro Matrix** \u2014 Downloads all triage artifacts, extracts platform info, and builds a combined repro matrix with \u0060{issue, platform, runner}\u0060 entries.\n4. **Reproduce** \u2014 Runs AI reproduction in parallel on the correct platform per issue.\n\n**Triggers:**\n- \u0060workflow_dispatch\u0060 \u2014 Manual trigger with issue number(s) input\n- \u0060issue_comment\u0060 \u2014 \u0060/triage-and-repro\u0060 command from members/collaborators\n\n**Configurable env vars:** \u0060GIT_USER_NAME\u0060, \u0060GIT_USER_EMAIL\u0060, \u0060DATA_CACHE_BRANCH\u0060, \u0060MCP_CONFIG\u0060\n\n## Copilot CLI Action: \u0060.github/actions/copilot-cli/action.yml\u0060\n\nLocal composite action wrapping \u0060@github/copilot\u0060 CLI:\n- Cross-platform (Linux/macOS/Windows)\n- Installs via npm, configures MCP servers, runs with \u0060--yolo\u0060 (no-approval mode)\n- Requires a fine-grained PAT with Copilot read permission (instructions in action header)\n- Uploads logs as artifacts for debugging\n\n## Skill improvements\n\n### Triage skill\n- Added \u0060suggestedReproPlatform\u0060 field to schema (maps platforms to \u0060linux\u0060/\u0060macos\u0060/\u0060windows\u0060)\n- Added warning in validator when \u0060needs-investigation\u0060 lacks a repro platform\n- Strengthened persist instructions: must use \u0060persist-triage.ps1\u0060, never manual git commands\n- Added PR search guidance for finding related PRs during investigation\n\n### Repro skill\n- Added \u0060confirmed\u0060/\u0060not-confirmed\u0060 conclusion values for enhancements\n- \u0060confirmed\u0060 now requires \u0060versionResults\u0060 and \u0060scope\u0060 fields\n- Updated bug categories with enhancement reproduction guidance\n- Strengthened persist instructions (same as triage)\n\n### Validation scripts\n- Lowered \u0060#requires\u0060 from PowerShell 7.5 to 7.4 (Ubuntu runners ship 7.4.13, all features work on 7.4)\n- Applies to \u0060validate-triage.ps1\u0060, \u0060validate-repro.ps1\u0060, \u0060validate-fix.ps1\u0060\n\n### Other\n- Added \u0060issue-bulk-process\u0060 skill for batch triage\u002Brepro\n- Renamed \u0060bug-pipeline.md\u0060 \u2192 \u0060issue-pipeline.md\u0060\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-04T12:09:25",
+  "updatedAt": "2026-03-04T20:39:07",
+  "closedAt": "2026-03-04T20:39:05",
+  "commentCount": 11,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-04T20:39:05",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/triage-and-repro-workflow",
+  "additions": 1017,
+  "deletions": 67,
+  "changedFiles": 23,
+  "commits": 45,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-04T12:14:16"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-04T15:22:21"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-04T15:22:36"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-04T15:22:38"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-04T15:22:40"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-04T15:22:41"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-04T15:22:43"
+    }
+  ]
+}
