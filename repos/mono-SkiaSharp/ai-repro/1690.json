@@ -1,0 +1,86 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1690,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-04T23:50:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "The reported bug is in the SkiaSharp.NativeAssets.Win32 (and macOS) NuGet package's net462 targets file, which uses Content items with Link metadata instead of None. ASP.NET web publish treats Content items as web-deployable content, copying native binaries to both the publish root and the bin directory. This was confirmed by inspecting the 2.88.9 targets file which uses <Content Include=...> vs the 3.119.2 targets file which uses <None Include=...>. Full runtime reproduction requires Windows with .NET Framework SDK to build a net462 ASP.NET web app and observe the duplicate files during publish. The fix is confirmed in SkiaSharp 3.x where Content was changed to None, exactly as the reporter suggested.",
+  "blockers": [
+    "Requires Windows with .NET Framework SDK — the net462 targets files are only applied to projects targeting net462, which cannot be built on macOS",
+    "Docker on macOS (ARM64) cannot run Windows containers needed for .NET Framework builds"
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Inspect SkiaSharp.NativeAssets.Win32 2.88.9 net462 targets file for Content items",
+      "command": "cat $HOME/.nuget/packages/skiasharp.nativeassets.win32/2.88.9/build/net462/SkiaSharp.NativeAssets.Win32.targets",
+      "exitCode": 0,
+      "output": "Confirmed: targets file uses <Content Include=\"@(_NativeSkiaSharpFile)\"><Link>%(Dir)%(Filename)%(Extension)</Link><Visible>False</Visible><CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory></Content>. This Content item type causes ASP.NET publish to copy native binaries to the web root.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Create ASP.NET web app with SkiaSharp 2.88.9 on net8.0 and publish to check for duplication",
+      "command": "dotnet new web -n ReproWeb --framework net8.0 && cd ReproWeb && dotnet add package SkiaSharp --version 2.88.9 && dotnet publish -c Release -o ./publish",
+      "exitCode": 0,
+      "output": "Build succeeded. Publish output contains native files only in runtimes/ subdirectories (runtimes/osx/native/libSkiaSharp.dylib, runtimes/win-x64/native/libSkiaSharp.dll, etc.). No duplicate native files in publish root. The net462 targets are NOT applied to net8.0 projects — the bug is net462-specific.",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify net8.0 project has no native Content items from SkiaSharp",
+      "command": "dotnet msbuild -getItem:Content",
+      "exitCode": 0,
+      "output": "Content items list contains only appsettings.json, appsettings.Development.json, and web.config. No SkiaSharp native library Content items present. Confirms the net462 targets are not imported for net8.0.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Inspect SkiaSharp.NativeAssets.Win32 3.119.2 net462 targets file to confirm fix",
+      "command": "cat $HOME/.nuget/packages/skiasharp.nativeassets.win32/3.119.2/buildTransitive/net462/SkiaSharp.NativeAssets.Win32.targets",
+      "exitCode": 0,
+      "output": "Confirmed fix: targets file now uses <None Include=\"@(_NativeSkiaSharpFile)\"> instead of <Content Include=\"@(_NativeSkiaSharpFile)\">. The None item type avoids ASP.NET publish duplication while still copying to the output directory via CopyToOutputDirectory.",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Cannot build net462 web app on macOS — .NET Framework requires Windows. Targets file inspection confirms Content items with Link are present.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "Cannot build net462 web app on macOS. Targets file inspection confirms fix: Content changed to None.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "Triage analysis correctly identified the Content vs None issue and that it was fixed in 3.x (PR #2505)",
+        "corrected": "No correction needed — triage was accurate. The net462 targets in NativeAssets packages (not SkiaSharp.targets itself) contain the Content items. The fix in 3.x changed Content to None."
+      }
+    ]
+  }
+}
