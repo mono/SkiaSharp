@@ -16,6 +16,11 @@ on:
   # Trigger on issue comment containing /triage-and-repro
   issue_comment:
     types: [created]
+  
+  # Trigger on push when workflow file changes (for testing on PR branches)
+  push:
+    paths:
+      - '.github/workflows/triage-and-repro.yml'
 
 permissions:
   contents: read
@@ -41,9 +46,10 @@ jobs:
     name: AI Triage
     runs-on: ubuntu-latest
     
-    # Only run on workflow_dispatch or when a trusted user comments /triage-and-repro on an issue (not a PR)
+    # Only run on workflow_dispatch, push (self-test), or when a trusted user comments /triage-and-repro on an issue (not a PR)
     if: |
       github.event_name == 'workflow_dispatch' || 
+      github.event_name == 'push' ||
       (
         github.event_name == 'issue_comment' && 
         !github.event.issue.pull_request &&
@@ -63,6 +69,9 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ISSUE_NUM="${{ inputs.issue_number }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            # Self-test on push: use issue #3520 as default test case
+            ISSUE_NUM="3520"
           else
             ISSUE_NUM="${{ github.event.issue.number }}"
           fi
