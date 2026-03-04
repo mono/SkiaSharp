@@ -72,20 +72,19 @@ jobs:
     steps:
       - name: Determine issue number
         id: issue
-        shell: bash
+        shell: pwsh
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            ISSUE_NUM="${{ inputs.issue_number }}"
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            ISSUE_NUM="3520"
-          else
-            ISSUE_NUM="${{ github.event.issue.number }}"
-          fi
-          if ! [[ "$ISSUE_NUM" =~ ^[0-9]+$ ]]; then
-            echo "::error::Invalid issue number: '$ISSUE_NUM'" && exit 1
-          fi
-          echo "issue_number=$ISSUE_NUM" >> "$GITHUB_OUTPUT"
-          echo "📋 Processing issue #$ISSUE_NUM"
+          $issueNum = switch ('${{ github.event_name }}') {
+            'workflow_dispatch' { '${{ inputs.issue_number }}' }
+            'push'             { '3520' }
+            default            { '${{ github.event.issue.number }}' }
+          }
+          if ($issueNum -notmatch '^\d+$') {
+            Write-Error "Invalid issue number: '$issueNum'"
+            exit 1
+          }
+          "issue_number=$issueNum" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Processing issue #$issueNum"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -103,31 +102,10 @@ jobs:
 
       - name: Extract platform from triage
         id: extract
-        shell: bash
+        shell: pwsh
         run: |
-          ISSUE_NUM="${{ steps.issue.outputs.issue_number }}"
-          TRIAGE_FILE="/tmp/skiasharp/triage/${ISSUE_NUM}.json"
-          # Triage always runs on Linux, so /tmp is fine here
-
-          if [ -f "$TRIAGE_FILE" ]; then
-            PLATFORM=$(jq -r '.output.actionability.suggestedReproPlatform // "linux"' "$TRIAGE_FILE")
-            PLATFORM=${PLATFORM,,}
-            case "$PLATFORM" in
-              linux|macos|windows) ;;
-              *) echo "⚠ Unknown platform '$PLATFORM', defaulting to linux"; PLATFORM="linux" ;;
-            esac
-
-            ACTION=$(jq -r '.output.actionability.suggestedAction // ""' "$TRIAGE_FILE")
-            NEEDS_REPRO=$( [ "$ACTION" = "needs-investigation" ] && echo "true" || echo "false" )
-
-            echo "platform=$PLATFORM" >> $GITHUB_OUTPUT
-            echo "needs_repro=$NEEDS_REPRO" >> $GITHUB_OUTPUT
-            echo "✓ Triage: platform=$PLATFORM, needs_repro=$NEEDS_REPRO, action=$ACTION"
-          else
-            echo "⚠ Triage file not found — defaults"
-            echo "platform=linux" >> $GITHUB_OUTPUT
-            echo "needs_repro=false" >> $GITHUB_OUTPUT
-          fi
+          $triageFile = '/tmp/skiasharp/triage/${{ steps.issue.outputs.issue_number }}.json'
+          .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $triageFile
 
       - name: Upload triage JSON
         if: always()
@@ -217,12 +195,10 @@ jobs:
           name: triage-output
           path: ${{ runner.temp }}/skiasharp/triage/
       - name: Copy triage to /tmp for skill compatibility
-        shell: bash
+        shell: pwsh
         run: |
-          # Skills expect /tmp/skiasharp/triage/ — on Windows Git Bash, /tmp maps
-          # to a real temp dir, so create the expected structure
-          mkdir -p /tmp/skiasharp/triage
-          cp -r "$RUNNER_TEMP/skiasharp/triage/"* /tmp/skiasharp/triage/ 2>/dev/null || true
+          New-Item -ItemType Directory -Force -Path '/tmp/skiasharp/triage' | Out-Null
+          Copy-Item "$env:RUNNER_TEMP/skiasharp/triage/*" '/tmp/skiasharp/triage/' -ErrorAction SilentlyContinue
       - name: Run AI reproduction
         uses: ./.github/actions/copilot-cli
         with:

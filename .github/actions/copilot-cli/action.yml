@@ -34,40 +34,49 @@ runs:
 
     - name: Run Copilot CLI
       id: copilot
-      shell: bash
+      shell: pwsh
       run: |
-        echo "::group::Install Copilot CLI"
+        Write-Host '::group::Install Copilot CLI'
         npm install -g @github/copilot
-        echo "CLI Version: $(copilot --version)"
-        echo "::endgroup::"
+        Write-Host "CLI Version: $(copilot --version)"
+        Write-Host '::endgroup::'
 
-        # Cross-platform log directory (RUNNER_TEMP is set by GitHub on all OSes)
-        LOG_DIR="$RUNNER_TEMP/copilot-logs"
-        mkdir -p "$LOG_DIR"
+        # Cross-platform log directory
+        $logDir = Join-Path $env:RUNNER_TEMP 'copilot-logs'
+        New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
         # Cross-platform MCP config
-        if [ -n "$MCP_CONFIG" ]; then
-          echo "::group::Configure MCP"
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            CONFIG_DIR="$APPDATA/.copilot"
-          else
-            CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/.copilot"
-          fi
-          mkdir -p "$CONFIG_DIR"
-          echo "$MCP_CONFIG" > "$CONFIG_DIR/mcp-config.json"
-          cat "$CONFIG_DIR/mcp-config.json"
-          echo "::endgroup::"
-        fi
+        if ($env:MCP_CONFIG) {
+          Write-Host '::group::Configure MCP'
+          if ($IsWindows) {
+            $configDir = Join-Path $env:APPDATA '.copilot'
+          } else {
+            $xdg = if ($env:XDG_CONFIG_HOME) { $env:XDG_CONFIG_HOME } else { Join-Path $HOME '.config' }
+            $configDir = Join-Path $xdg '.copilot'
+          }
+          New-Item -ItemType Directory -Force -Path $configDir | Out-Null
+          $env:MCP_CONFIG | Set-Content (Join-Path $configDir 'mcp-config.json')
+          Get-Content (Join-Path $configDir 'mcp-config.json')
+          Write-Host '::endgroup::'
+        }
 
-        echo "::group::Run Copilot CLI"
-        set +e
-        copilot -p "$PROMPT" --yolo --model "$MODEL" --log-level all --log-dir "$LOG_DIR" --screen-reader --no-color --stream off
-        EXIT_CODE=$?
-        set -e
-        echo "::endgroup::"
+        Write-Host '::group::Run Copilot CLI'
+        $copilotArgs = @(
+          '-p', $env:PROMPT,
+          '--yolo',
+          '--model', $env:MODEL,
+          '--log-level', 'all',
+          '--log-dir', $logDir,
+          '--screen-reader',
+          '--no-color',
+          '--stream', 'off'
+        )
+        & copilot @copilotArgs
+        $exitCode = $LASTEXITCODE
+        Write-Host '::endgroup::'
 
-        echo "logs_path=$LOG_DIR" >> "$GITHUB_OUTPUT"
-        echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+        "logs_path=$logDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        "exit_code=$exitCode" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
       env:
         GH_TOKEN: ${{ github.token }}
         COPILOT_GITHUB_TOKEN: ${{ inputs.copilot-token }}
