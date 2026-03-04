@@ -1,0 +1,28 @@
+{
+  "number": 3545,
+  "type": "pr",
+  "state": "open",
+  "title": "Make add-comment risk dynamic based on content and confidence",
+  "body": "## Summary\n\nPreviously, all \u0060add-comment\u0060 actions in triage and repro JSON outputs were hardcoded as \u0060high\u0060 risk regardless of content. This made the risk field meaningless for comments \u2014 every comment required human review equally.\n\n## Changes\n\nUpdated the \u0060add-comment\u0060 risk from a static mapping to a dynamic calculation based on content type and confidence score:\n\n| Condition | Risk | Rationale |\n|-----------|------|-----------|\n| Factual only (repro findings, version matrix) AND confidence \u2265 0.85 | **low** | Reporting observed facts \u2014 minimal reputation exposure |\n| Includes workaround or technical suggestion AND confidence \u2265 0.85 | **medium** | Advice could be wrong, but evidence is strong |\n| Suggests closing, rejects the issue, or states \u0022by-design\u0022 (any confidence) | **high** | Always needs human review |\n| Any content AND confidence \u003C 0.70 | **high** | Not confident enough |\n| Default | **medium** | |\n\n### Files changed\n\n- \u0060.github/skills/issue-triage/references/schema-cheatsheet.md\u0060 \u2014 replaced static table with decision table\n- \u0060.github/skills/issue-repro/references/schema-cheatsheet.md\u0060 \u2014 added decision table\n- \u0060.github/skills/issue-triage/references/triage-schema.json\u0060 \u2014 updated actionRisk description\n- \u0060.github/skills/issue-repro/references/repro-schema.json\u0060 \u2014 updated actionRisk description\n\n### Impact on existing cached JSON\n\nApplying this to all 114 existing cached JSON files:\n- **29 actions drop** from high \u2192 medium/low (less noise for human review)\n- **5 actions elevate** from low/medium \u2192 high (close-paired comments that were under-rated)\n- **27 unchanged** (already correct)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-04T22:23:45",
+  "updatedAt": "2026-03-04T22:23:45",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "dev/dynamic-comment-risk",
+  "additions": 29,
+  "deletions": 3,
+  "changedFiles": 4,
+  "commits": 1,
+  "reviews": []
+}
