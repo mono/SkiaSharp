@@ -9,6 +9,8 @@ public enum ReproConclusion
 {
     [JsonStringEnumMemberName("reproduced")] Reproduced,
     [JsonStringEnumMemberName("not-reproduced")] NotReproduced,
+    [JsonStringEnumMemberName("confirmed")] Confirmed,
+    [JsonStringEnumMemberName("not-confirmed")] NotConfirmed,
     [JsonStringEnumMemberName("needs-platform")] NeedsPlatform,
     [JsonStringEnumMemberName("needs-hardware")] NeedsHardware,
     [JsonStringEnumMemberName("partial")] Partial,
@@ -48,7 +50,8 @@ public enum StepLayer
     [JsonStringEnumMemberName("c-api")] CApi,
     [JsonStringEnumMemberName("native")] Native,
     [JsonStringEnumMemberName("deployment")] Deployment,
-    [JsonStringEnumMemberName("setup")] Setup
+    [JsonStringEnumMemberName("setup")] Setup,
+    [JsonStringEnumMemberName("investigation")] Investigation
 }
 
 // ── Artifact Source ──────────────────────────────────────────────
@@ -69,6 +72,8 @@ public enum VersionTestResult
 {
     [JsonStringEnumMemberName("reproduced")] Reproduced,
     [JsonStringEnumMemberName("not-reproduced")] NotReproduced,
+    [JsonStringEnumMemberName("confirmed")] Confirmed,
+    [JsonStringEnumMemberName("not-confirmed")] NotConfirmed,
     [JsonStringEnumMemberName("error")] Error,
     [JsonStringEnumMemberName("not-tested")] NotTested
 }
