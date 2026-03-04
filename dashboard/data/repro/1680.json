@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1680,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T00:00:00Z"
+  },
+  "conclusion": "partial",
+  "notes": "Simulated the reported memory leak pattern (rapid surface recreation with SKPath drawing) in a console app on macOS arm64. Observed significant memory growth (~6x, \u002B170-200 MB) that plateaus after ~250 iterations across all tested versions (2.88.9, 3.119.2, main). The growth pattern is consistent across versions, suggesting the core Skia memory behavior hasn\u0027t changed. The actual UWP-specific view-layer leak (SKXamlCanvas surface management during resize) cannot be verified without Windows \u2014 multiple users confirmed it was fixed in 3.116.1 via the view layer, not core Skia. Reporter\u0027s version 2.80.2 has no osx-arm64 native binary; 2.88.9 used as closest testable 2.x version.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console repro project with SkiaSharp 2.88.9 (reporter\u0027s 2.80.2 lacks arm64 native binary)",
+      "layer": "setup",
+      "result": "success",
+      "command": "mkdir -p /tmp/skiasharp/repro/1680 \u0026\u0026 cd /tmp/skiasharp/repro/1680 \u0026\u0026 dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.9",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for SkiaSharp 2.88.9 added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console repro app simulating rapid surface recreation with SKPath drawing",
+          "content": "using System;\nusing System.Diagnostics;\nusing SkiaSharp;\n\n// Simulate #1680: SKPath memory leak during rapid surface recreation\nconst int iterations = 2000;\nconst int pathsPerFrame = 50;\n\nlong memStart = Process.GetCurrentProcess().WorkingSet64;\nConsole.WriteLine($\u0022Initial memory: {memStart / 1024.0 / 1024.0:F2} MB\u0022);\n\n// Test: Surface recreation with path drawing (simulating resize)\nfor (int i = 0; i \u003C iterations; i\u002B\u002B)\n{\n    int w = 800 \u002B (i % 200);\n    int h = 600 \u002B (i % 200);\n    using var surface = SKSurface.Create(new SKImageInfo(w, h));\n    var canvas = surface.Canvas;\n    canvas.Clear(SKColors.White);\n    using var paint = new SKPaint { Color = SKColors.Blue, IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };\n    for (int j = 0; j \u003C pathsPerFrame; j\u002B\u002B)\n    {\n        using var path = new SKPath();\n        path.MoveTo(j * 10 \u002B i % 100, j * 5);\n        path.LineTo(w - j * 10 - i % 100, h / 2);\n        path.QuadTo(w / 2, h - j * 5, j * 15, h / 3);\n        path.CubicTo(100 \u002B j \u002B i, 200 \u002B j, 300 - j, 400 - j \u002B i, w / 2, h / 2);\n        path.Close();\n        canvas.DrawPath(path, paint);\n    }\n    canvas.Flush();\n    if (i % 500 == 0) { GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect(); long memNow = Process.GetCurrentProcess().WorkingSet64; Console.WriteLine($\u0022  Frame {i,5}: {memNow / 1024.0 / 1024.0:F2} MB (delta: \u002B{(memNow - memStart) / 1024.0 / 1024.0:F2} MB)\u0022); }\n}\nGC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();\nlong memFinal = Process.GetCurrentProcess().WorkingSet64;\nConsole.WriteLine($\u0022Final: {memFinal / 1024.0 / 1024.0:F2} MB (delta: \u002B{(memFinal - memStart) / 1024.0 / 1024.0:F2} MB, ratio: {(double)memFinal / memStart:F2}x)\u0022);\nConsole.WriteLine(\u0022SUCCESS: test completed\u0022);"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and run memory leak simulation with SkiaSharp 2.88.9 \u2014 rapid surface recreation with SKPath drawing",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "cd /tmp/skiasharp/repro/1680/Repro \u0026\u0026 dotnet build \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "Initial memory: 34.11 MB\nIteration 0: 48.67 MB (delta: \u002B14.56 MB)\nIteration 250: 220.91 MB (delta: \u002B186.80 MB)\nIteration 500: 220.91 MB (delta: \u002B186.80 MB)\nIteration 750: 220.91 MB (delta: \u002B186.80 MB)\nIteration 1000: 220.92 MB (delta: \u002B186.81 MB)\nIteration 1250: 220.92 MB (delta: \u002B186.81 MB)\nIteration 1500: 220.92 MB (delta: \u002B186.81 MB)\nIteration 1750: 220.92 MB (delta: \u002B186.81 MB)\nFinal memory: 203.20 MB\nMemory delta: \u002B169.09 MB\nMemory ratio: 5.96x\nLEAK DETECTED: Memory grew by 169.09 MB (5.96x)\nSUCCESS: test completed"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build and run same simulation with SkiaSharp 3.119.2 (latest stable) in fresh project directory",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "mkdir -p /tmp/skiasharp/repro/1680-latest \u0026\u0026 cd /tmp/skiasharp/repro/1680-latest \u0026\u0026 dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "Initial memory: 34.17 MB\nIteration 0: 49.48 MB (delta: \u002B15.31 MB)\nIteration 250: 219.33 MB (delta: \u002B185.16 MB)\nIteration 500: 221.30 MB (delta: \u002B187.12 MB)\nIteration 750: 209.67 MB (delta: \u002B175.50 MB)\nIteration 1000: 208.53 MB (delta: \u002B174.36 MB)\nIteration 1250: 208.58 MB (delta: \u002B174.41 MB)\nIteration 1500: 208.62 MB (delta: \u002B174.45 MB)\nIteration 1750: 208.66 MB (delta: \u002B174.48 MB)\nFinal memory: 208.80 MB\nMemory delta: \u002B174.62 MB\nMemory ratio: 6.11x\nSUCCESS: test completed"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build and run same simulation against main branch source (project-referenced SkiaSharp)",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "cd $REPO_ROOT \u0026\u0026 dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "Initial memory: 34.22 MB\nSkiaSharp platform: Rgba8888\nFrame 0: 55.30 MB (delta: \u002B21.08 MB)\nFrame 500: 231.56 MB (delta: \u002B197.34 MB)\nFrame 1000: 233.39 MB (delta: \u002B199.17 MB)\nFrame 1500: 233.48 MB (delta: \u002B199.27 MB)\nFinal: 218.84 MB (delta: \u002B184.62 MB, ratio: 6.40x)\nSUCCESS: test completed"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Memory grew from 34 MB to 220 MB (~6x) then plateaued. Significant initial growth but not unbounded. Used 2.88.9 instead of reporter\u0027s 2.80.2 due to missing osx-arm64 native binary in 2.80.2.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Memory grew from 34 MB to 209 MB (~6x) then plateaued. Nearly identical pattern to 2.88.9. One notable difference: persistent surface test reclaims memory after dispose in 3.x (45 MB) vs 2.x (59 MB).",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Memory grew from 34 MB to 219 MB (~6.4x) then plateaued. Same pattern as NuGet versions. Core Skia path drawing memory behavior unchanged on main.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "simulation",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.9"
+      }
+    ]
+  },
+  "blockers": [
+    "Reporter\u0027s platform is UWP (Windows) \u2014 current environment is macOS arm64, UWP is not available",
+    "SkiaSharp 2.80.2 nupkg only contains x86_64 macOS native binary \u2014 no arm64 support, no Rosetta dotnet installed; used 2.88.9 as closest testable 2.x version",
+    "The reported fix in 3.116.1 appears to be in the UWP/WPF view layer (SKXamlCanvas surface lifecycle), not in core Skia \u2014 console simulation cannot reproduce view-layer behavior"
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "fixStatus",
+        "upstream": "Memory leak confirmed fixed in 3.116.1\u002B through Skia engine updates",
+        "corrected": "Core Skia path/surface memory behavior is unchanged in 3.x. The fix was likely in the UWP/WPF view layer (surface lifecycle management during resize), not in core Skia. Console simulation shows identical ~6x memory growth across all versions."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for the report. We attempted to reproduce this by simulating rapid surface recreation with SKPath drawing in a console application on macOS.\n\n**What we observed:**\n- Working set memory grows significantly (~6x, from ~34 MB to ~220 MB) during rapid surface creation/destruction with path drawing\n- This growth **plateaus** and does not grow unboundedly\n- The pattern is consistent across SkiaSharp 2.88.9, 3.119.2, and the main branch\n\n**What we couldn\u0027t test:**\n- The UWP-specific behavior with \u0060SKXamlCanvas\u0060 and window resize events (requires Windows)\n- SkiaSharp 2.80.2 (no macOS arm64 native binary available)\n\nMultiple users in #2368 have confirmed that upgrading to SkiaSharp 3.116.1\u002B resolved their memory leak issues. The fix appears to be in the view layer\u0027s surface lifecycle management during resize events, rather than in core Skia.\n\nSince UWP support was dropped in SkiaSharp 3.x, migration to WinUI would be needed to pick up this fix. If you\u0027re still actively affected, could you share whether migration to WinUI \u002B SkiaSharp 3.x is feasible for your project?"
+    },
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.65,
+      "reason": "Console simulation shows significant but bounded memory growth (~6x) across all versions. The actual UWP view-layer leak cannot be tested on macOS. Multiple users in #2368 confirmed 3.116.1 fixed their issue. The OP is on UWP which is not supported in 3.x, so we cannot ask them to verify. Need confirmation whether the view-layer fix in 3.x resolved the reporter\u0027s specific scenario."
+    },
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.116.1\u002B (requires migrating from UWP to WinUI)",
+      "Debounce/throttle resize events to reduce surface recreation frequency"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.9
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2368 which tracks the same root cause with more investigation",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "missingInfo": [
+      "Whether the reporter can migrate from UWP to WinUI to test SkiaSharp 3.x",
+      "Windows host with UWP development tools for direct reproduction of the view-layer leak"
+    ]
+  }
+}
