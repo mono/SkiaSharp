@@ -1,0 +1,162 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2238,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T13:00:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "notes": "The reported SRI integrity hash mismatch is a known .NET SDK Blazor publish pipeline bug (dotnet/aspnetcore#37753), not SkiaSharp-specific. The reporter was using VS 2022 Preview 17.4.0 Preview 1.0 which bundled a preview .NET SDK with known Blazor WASM publishing bugs. SkiaSharp 2.88.1 native WASM assets are ABI-incompatible with modern SDKs (.NET 8/10), preventing direct reproduction with the reporter\u0027s version. Testing with SkiaSharp 3.119.2 on stable .NET 8 SDK confirmed publish works correctly with no SRI integrity errors.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor 2.88.1 and .NET 8 SDK",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 2.88.1",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for package \u0027SkiaSharp.Views.Blazor\u0027 version \u00272.88.1\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Blazor WASM project file targeting net8.0 with SkiaSharp.Views.Blazor 2.88.1",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00222.88.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Attempt to publish Blazor WASM app with SkiaSharp 2.88.1 \u2014 native WASM assets ABI-incompatible with .NET 8 Emscripten toolchain",
+      "layer": "deployment",
+      "result": "skip",
+      "command": "dotnet publish -c Release -o publish",
+      "exitCode": 1,
+      "output": "wasm-ld: error: libSkiaSharp.a: undefined symbol: std::__2::__vector_base_common\u003Ctrue\u003E::__throw_length_error() const (24 linker errors). The SkiaSharp.NativeAssets.WebAssembly 2.88.1 native library was compiled with an older Emscripten C\u002B\u002B stdlib, incompatible with .NET 8\u0027s Emscripten 3.1.34 toolchain."
+    },
+    {
+      "stepNumber": 3,
+      "description": "Create fresh Blazor WASM project with latest SkiaSharp 3.119.2",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.119.2",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for package \u0027SkiaSharp.Views.Blazor\u0027 version \u00273.119.2\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Blazor page with SKCanvasView for rendering test",
+          "content": "@page \u0022/\u0022\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 style=\u0022width:800px;height:600px;\u0022 /\u003E\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var paint = new SKPaint { Color = SKColors.White, TextSize = 48, IsAntialias = true };\n        canvas.DrawText(\u0022Hello SkiaSharp!\u0022, 100, 100, paint);\n        Console.WriteLine($\u0022SUCCESS: rendered {e.Info.Width}x{e.Info.Height}\u0022);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 4,
+      "description": "Publish Blazor WASM app with SkiaSharp 3.119.2 \u2014 publish succeeds",
+      "layer": "deployment",
+      "result": "success",
+      "command": "dotnet publish -c Release -o publish",
+      "exitCode": 0,
+      "output": "Build succeeded with 3 warning(s) in 16.0s. Warnings: CS0618 obsolete API usage, NativeFileReference not linked without WasmBuildNative."
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify SRI integrity hashes in published blazor.boot.json match actual DLL files",
+      "layer": "deployment",
+      "result": "success",
+      "command": "python3 verify_integrity.py (computes SHA-256 of SkiaSharp.wasm and SkiaSharp.Views.Blazor.wasm, compares against blazor.boot.json)",
+      "exitCode": 0,
+      "output": "MATCH: SkiaSharp.wasm\nMATCH: SkiaSharp.Views.Blazor.wasm\nAll integrity hashes verified correctly."
+    },
+    {
+      "stepNumber": 6,
+      "description": "Serve published output and check browser console for SRI integrity errors",
+      "layer": "deployment",
+      "result": "success",
+      "command": "python3 -m http.server 5580 (serving published wwwroot) \u002B Playwright browser navigation to http://localhost:5580",
+      "exitCode": 0,
+      "output": "Page loaded successfully at http://localhost:5580. No SRI integrity errors in browser console. Only error: TypeInitializationException for SkiaSharp.SKImageInfo (expected \u2014 native binary not linked without WasmBuildNative). No \u0027Failed to find a valid digest\u0027 errors observed."
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "assessment": "working-as-designed",
+  "scope": "unknown",
+  "versionResults": [
+    {
+      "version": "2.88.1",
+      "source": "nuget",
+      "result": "error",
+      "notes": "Cannot publish \u2014 SkiaSharp.NativeAssets.WebAssembly 2.88.1 native library (libSkiaSharp.a) is ABI-incompatible with .NET 8/10 Emscripten toolchain. Linker fails with 24 undefined symbol errors. Requires .NET 6 SDK (not available) to reproduce the original environment.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Publish succeeds. SRI integrity hashes in blazor.boot.json match actual files. No \u0027Failed to find a valid digest\u0027 errors in browser console when serving published output.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "2.88.1"
+      },
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "errorType: build-error",
+        "corrected": "The SRI integrity error is a runtime/deployment error, not a build error. The app builds fine; the integrity mismatch only occurs when serving the published output in a browser."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for reporting this. The \u0022Failed to find a valid digest in the \u0027integrity\u0027 attribute\u0022 error is a known issue in the .NET SDK\u0027s Blazor WASM publishing pipeline ([dotnet/aspnetcore#37753](https://github.com/dotnet/aspnetcore/issues/37753)), not specific to SkiaSharp. It occurs when the IL Linker modifies assemblies during publish but the integrity hashes in \u0060blazor.boot.json\u0060 aren\u0027t updated to match.\n\nYou were using **VS 2022 Preview 17.4.0 Preview 1.0**, which bundled a preview .NET SDK with several known Blazor publish bugs. This has been fixed in stable SDK releases.\n\nWe tested with **SkiaSharp 3.119.2** on **.NET 8 SDK 8.0.417** and confirmed:\n- \u0060dotnet publish\u0060 succeeds\n- SRI integrity hashes in \u0060blazor.boot.json\u0060 match the actual published DLLs\n- No integrity errors when serving the published output in a browser\n\n**Recommended fix:** Update to a stable .NET SDK and SkiaSharp 3.x.\n\n**Workaround** (if you must stay on the older SDK): Add this to your app\u0027s \u0060.csproj\u0060:\n\u0060\u0060\u0060xml\n\u003CPropertyGroup\u003E\n  \u003CBlazorCacheBootResources\u003Efalse\u003C/BlazorCacheBootResources\u003E\n\u003C/PropertyGroup\u003E\n\u0060\u0060\u0060\n\nClosing as this is resolved in current tooling. Please reopen if the issue persists with a stable .NET SDK."
+    },
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.8,
+      "reason": "The SRI integrity hash mismatch is a known .NET SDK Blazor publish pipeline bug (dotnet/aspnetcore#37753) that was fixed in stable SDK releases. The reporter was using VS 2022 Preview 17.4.0 Preview 1.0. Both the .NET SDK and SkiaSharp have had multiple stable releases since. Testing with SkiaSharp 3.119.2 on .NET 8 SDK confirms publish works correctly with no integrity errors."
+    },
+    "workarounds": [
+      "Update to a stable .NET SDK release (not preview) and SkiaSharp 3.x",
+      "Add \u003CBlazorCacheBootResources\u003Efalse\u003C/BlazorCacheBootResources\u003E to the app csproj to disable integrity checking",
+      "Clean the publish output (delete bin/obj/_framework) and republish"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply area/SkiaSharp.Views.Blazor and os/WASM labels",
+        "risk": "low",
+        "confidence": 0.9
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed \u2014 the .NET SDK publish pipeline bug has been resolved in stable releases, and SkiaSharp 3.x works correctly",
+        "risk": "medium",
+        "confidence": 0.75
+      }
+    ],
+    "missingInfo": [
+      "Whether the issue persists with a stable .NET SDK instead of VS 2022 Preview 17.4.0"
+    ]
+  }
+}

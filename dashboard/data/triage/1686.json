@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1686,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "summary": "Reporter asks how to read 24-bit RGB Netpbm (PPM/PGM) images with SkiaSharp, since the format has no alpha channel and cannot be loaded directly as 32-bit ARGB/BGRA.",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "No platform specified; question is about the PPM file format and SkiaSharp pixel format support in general.",
+      "repoLinks": [
+        {
+          "url": "https://en.wikipedia.org/wiki/Netpbm",
+          "description": "Wikipedia reference for PPM/PGM/PBM file format"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The question is about pixel format support which has not changed. SKColorType.Rgb888x and SKImage.FromPixelCopy still exist."
+    }
+  },
+  "analysis": {
+    "summary": "This is a usage question about loading 24-bit RGB image data (PPM format) into SkiaSharp. SkiaSharp does not have a built-in PPM codec, but provides SKColorType.Rgb888x (4 bytes per pixel with padding) and multiple APIs for loading raw pixel data. A community member already posted a complete working solution in the comments using SKBitmap with Rgb888x and SetPixel. The question is effectively answered.",
+    "rationale": "Classified as type/question because the reporter asks \u0027is there any way to parse\u0027 and \u0027is there a better class\u0027. No broken behavior is described \u2014 this is a how-to question about an unsupported image format. The area is area/SkiaSharp because the question involves core pixel format and image decoding APIs, not views or platform-specific code.",
+    "keySignals": [
+      {
+        "text": "Is there any way to parse a 24-bit RGB image with Skiasharp?",
+        "source": "issue body",
+        "interpretation": "Usage question \u2014 reporter needs guidance on API, not reporting a defect."
+      },
+      {
+        "text": "24 bits per pixel: 8 for red, 8 for green, 8 for blue. There is no alpha channel",
+        "source": "issue body",
+        "interpretation": "Key constraint: 3 bytes per pixel with no alpha. Needs Rgb888x (4 bytes, padded) or manual RGBA conversion."
+      },
+      {
+        "text": "Community solution using PpmImage class with SKBitmap(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque)",
+        "source": "comment by simonegli8",
+        "interpretation": "Complete working solution provided. Uses SetPixel per-pixel which works but is slow; a bulk approach with InstallPixels would be faster."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "finding": "SKColorType.Rgb888x (value 5) exists \u2014 this is 4 bytes per pixel (RGB \u002B padding byte) with no alpha, which is the closest match for 24-bit RGB data. However, the raw PPM 3-byte-per-pixel data must be expanded to 4 bytes per pixel before use with this color type.",
+        "relevance": "direct",
+        "lines": "36-63"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "finding": "SKImage.FromPixelCopy(SKImageInfo, byte[], int) accepts raw pixel data as byte arrays. Combined with SKImageInfo using Rgb888x, this allows loading converted PPM pixel data directly into an SKImage.",
+        "relevance": "direct",
+        "lines": "63-73"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "SKBitmap.InstallPixels provides multiple overloads for loading raw pixel data from IntPtr. The community answer uses SKBitmap constructor with Rgb888x and SetPixel for per-pixel conversion, which is simpler but slower than bulk InstallPixels.",
+        "relevance": "related",
+        "lines": "589-617"
+      }
+    ],
+    "workarounds": [
+      "Parse PPM header manually, then use SKBitmap with SKColorType.Rgb888x and SKAlphaType.Opaque \u2014 set pixels via SetPixel (simple) or convert 3-byte RGB to 4-byte RGBX and use InstallPixels (faster).",
+      "Alternatively, convert 24-bit RGB data to 32-bit RGBA8888 by inserting 0xFF alpha bytes, then use SKImage.FromPixelCopy with SKColorType.Rgba8888."
+    ],
+    "resolution": {
+      "hypothesis": "SkiaSharp has no built-in PPM codec, but provides the pixel format (Rgb888x) and raw-pixel APIs (FromPixelCopy, InstallPixels) needed to manually load PPM data. The community comment already demonstrates a working approach.",
+      "proposals": [
+        {
+          "title": "Use SKBitmap with Rgb888x and SetPixel",
+          "description": "Parse the PPM header manually, create an SKBitmap with SKColorType.Rgb888x and SKAlphaType.Opaque, then iterate over pixels using SetPixel. This is the approach shown in the community comment and works correctly, though per-pixel SetPixel calls are slower than bulk pixel loading.",
+          "category": "workaround",
+          "codeSnippet": "var info = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);\nvar bitmap = new SKBitmap(info);\nfor (int y = 0; y \u003C height; y\u002B\u002B)\n    for (int x = 0; x \u003C width; x\u002B\u002B)\n    {\n        int i = (y * width \u002B x) * 3;\n        bitmap.SetPixel(x, y, new SKColor(ppmBytes[i], ppmBytes[i\u002B1], ppmBytes[i\u002B2]));\n    }",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "trivial"
+        },
+        {
+          "title": "Bulk load via InstallPixels with RGBX conversion",
+          "description": "Convert the 3-byte-per-pixel PPM data to 4-byte RGBX (insert padding byte), pin the buffer, and use SKBitmap.InstallPixels for better performance on large images.",
+          "category": "alternative",
+          "codeSnippet": "var info = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);\nbyte[] rgbx = new byte[width * height * 4];\nfor (int i = 0, j = 0; i \u003C ppmBytes.Length; i \u002B= 3, j \u002B= 4)\n{\n    rgbx[j] = ppmBytes[i]; rgbx[j\u002B1] = ppmBytes[i\u002B1]; rgbx[j\u002B2] = ppmBytes[i\u002B2]; rgbx[j\u002B3] = 0xFF;\n}\nvar handle = GCHandle.Alloc(rgbx, GCHandleType.Pinned);\nvar bitmap = new SKBitmap();\nbitmap.InstallPixels(info, handle.AddrOfPinnedObject(), info.RowBytes);\n// Keep handle alive while bitmap is in use",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Use SKBitmap with Rgb888x and SetPixel",
+      "recommendedReason": "Simpler approach with less error-prone memory management. The community comment already demonstrates this working. For most PPM image sizes, SetPixel performance is acceptable."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "The question has been answered by a community member with a complete working solution. SkiaSharp does not support PPM natively but provides the necessary APIs for manual loading."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question label and core SkiaSharp area",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post summary answer acknowledging community solution and adding the faster bulk approach",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the question. SkiaSharp doesn\u0027t include a built-in PPM codec, but you can load PPM pixel data using the raw pixel APIs.\n\nThe approach shown in @simonegli8\u0027s comment works well \u2014 parse the PPM header, then create an \u0060SKBitmap\u0060 with \u0060SKColorType.Rgb888x\u0060 and \u0060SKAlphaType.Opaque\u0060:\n\n\u0060\u0060\u0060csharp\nvar info = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);\nvar bitmap = new SKBitmap(info);\nfor (int y = 0; y \u003C height; y\u002B\u002B)\n    for (int x = 0; x \u003C width; x\u002B\u002B)\n    {\n        int i = (y * width \u002B x) * 3;\n        bitmap.SetPixel(x, y, new SKColor(rgb[i], rgb[i\u002B1], rgb[i\u002B2]));\n    }\n\u0060\u0060\u0060\n\nFor larger images, converting the 3-byte RGB data to 4-byte RGBX and using \u0060SKBitmap.InstallPixels\u0060 avoids per-pixel overhead. Note that \u0060Rgb888x\u0060 uses 4 bytes per pixel (RGB \u002B padding), so the raw 3-byte PPM data must be expanded before use with bulk APIs."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered \u2014 question resolved by community and confirmed by API investigation",
+        "risk": "medium",
+        "confidence": 0.8
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #1176 which asked about BGR888 support and received maintainer confirmation that Rgb888x is the closest available color type",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 1176
+      }
+    ]
+  }
+}

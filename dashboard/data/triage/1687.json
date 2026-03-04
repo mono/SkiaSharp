@@ -1,0 +1,164 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1687,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "Feature request to improve SKVertices API by exposing SkVertices::Builder, adding vertex/index count parameters, and adding ReadOnlySpan\u003CT\u003E overloads to CreateCopy for efficient vertex buffer construction without forced array allocations.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [
+        2431,
+        1270
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/2432",
+          "description": "Closed PR by seclerp adding offset/count overloads \u2014 maintainer suggested ReadOnlySpan\u003CT\u003E instead"
+        },
+        {
+          "url": "https://api.skia.org/classSkVertices_1_1Builder.html",
+          "description": "Upstream Skia SkVertices::Builder documentation"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "SKVertices API is unchanged since the issue was filed. No Builder C API or Span overloads have been added."
+    }
+  },
+  "analysis": {
+    "summary": "Request to improve SKVertices ergonomics in three ways: (1) expose SkVertices::Builder for efficient mutable construction, (2) add vertex/index count parameters to CreateCopy so shared arrays can be used without slicing, and (3) add ReadOnlySpan\u003CT\u003E overloads. The C API already accepts vertexCount/indexCount but the C# wrapper hides this by deriving counts from array lengths. Builder has no C API at all. A related PR (#2432) was closed with maintainer feedback preferring ReadOnlySpan\u003CT\u003E approach.",
+    "rationale": "Classified as enhancement because SKVertices.CreateCopy exists and works, but lacks ergonomic overloads and the Builder pattern. The reporter is a contributor who understands the underlying Skia API gap. Maintainer confirmed Span-based approach is preferred in #2432.",
+    "keySignals": [
+      {
+        "text": "vertex and index counts are not present in the API",
+        "source": "issue body",
+        "interpretation": "C# API derives counts from array Length, hiding the C API\u0027s existing vertexCount/indexCount parameters."
+      },
+      {
+        "text": "This forces user to allocate new arrays frequently since copy start and length can\u0027t be controlled",
+        "source": "issue body",
+        "interpretation": "Performance concern \u2014 inability to use array slices causes unnecessary GC pressure in hot paths."
+      },
+      {
+        "text": "Binding builder would allow for more efficient vertex buffer construction",
+        "source": "issue body",
+        "interpretation": "SkVertices::Builder exists in C\u002B\u002B but has no C API shim, so it cannot be exposed to C#."
+      },
+      {
+        "text": "maybe we can use ReadOnlySpan\u003CT\u003E?",
+        "source": "PR #2432 comment by mattleibow",
+        "interpretation": "Maintainer prefers Span-based overloads over offset/count parameters \u2014 aligns with modern .NET idioms."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKVertices.cs",
+        "finding": "CreateCopy takes arrays and derives vertexCount from positions.Length and indexCount from indices.Length. The underlying C API sk_vertices_make_copy already accepts explicit counts, but the C# wrapper hides this.",
+        "relevance": "direct",
+        "lines": "35-54"
+      },
+      {
+        "file": "externals/skia/include/c/sk_vertices.h",
+        "finding": "C API only exposes sk_vertices_make_copy, sk_vertices_ref, sk_vertices_unref. No Builder C API functions exist \u2014 would need new sk_vertices_builder_* functions.",
+        "relevance": "direct",
+        "lines": "17-19"
+      },
+      {
+        "file": "externals/skia/include/core/SkVertices.h",
+        "finding": "Upstream SkVertices::Builder class exists with positions(), texCoords(), colors(), indices() accessors and detach() method. Supports BuilderFlags for optional tex coords and colors.",
+        "relevance": "direct",
+        "lines": "67-95"
+      },
+      {
+        "file": "externals/skia/src/c/sk_vertices.cpp",
+        "finding": "C implementation simply forwards to SkVertices::MakeCopy. No Builder wrapper exists in the C shim layer.",
+        "relevance": "related",
+        "lines": "24-27"
+      }
+    ],
+    "nextQuestions": [
+      "Should Builder be exposed as a separate SKVerticesBuilder class or nested inside SKVertices?",
+      "What Span overloads should be added \u2014 ReadOnlySpan\u003CSKPoint\u003E, ReadOnlySpan\u003CSKColor\u003E, ReadOnlySpan\u003Cushort\u003E?",
+      "Should the existing array-based CreateCopy methods be marked [Obsolete] or kept alongside Span versions?"
+    ],
+    "resolution": {
+      "hypothesis": "The SKVertices API needs Span-based CreateCopy overloads (which naturally support slicing) and a new Builder wrapper backed by new C API functions.",
+      "proposals": [
+        {
+          "title": "Add ReadOnlySpan overloads to CreateCopy",
+          "description": "Add CreateCopy overloads accepting ReadOnlySpan\u003CSKPoint\u003E, ReadOnlySpan\u003CSKColor\u003E, ReadOnlySpan\u003Cushort\u003E. This solves the offset/count problem naturally since spans can be sliced. The underlying C API already accepts explicit counts, so no native changes needed.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "small"
+        },
+        {
+          "title": "Expose SkVertices::Builder via C API",
+          "description": "Create new C API functions (sk_vertices_builder_new, sk_vertices_builder_positions, sk_vertices_builder_tex_coords, sk_vertices_builder_colors, sk_vertices_builder_indices, sk_vertices_builder_detach, sk_vertices_builder_delete) and wrap them in a C# SKVerticesBuilder class. Larger effort but enables mutable construction pattern.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.75,
+          "effort": "medium"
+        },
+        {
+          "title": "Use array slicing as interim workaround",
+          "description": "Callers can use Array.Copy or LINQ to create sub-arrays before passing to CreateCopy. This works but incurs extra allocations the enhancement aims to eliminate.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.95,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Add ReadOnlySpan overloads to CreateCopy",
+      "recommendedReason": "Aligns with maintainer preference expressed in #2432, follows modern .NET idioms, solves the slicing problem naturally, and requires no native code changes."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Well-specified enhancement with clear implementation path. Maintainer has expressed preference for Span approach. Partially overlaps with open #2431.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and core SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2431 which requests the same offset/count functionality",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 2431
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request and share implementation direction based on maintainer feedback",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed feature request. This overlaps with #2431, and a PR (#2432) was previously submitted but closed in favor of a \u0060ReadOnlySpan\u003CT\u003E\u0060-based approach.\n\nThe planned direction is:\n1. **Span overloads for \u0060CreateCopy\u0060** \u2014 \u0060ReadOnlySpan\u003CSKPoint\u003E\u0060, \u0060ReadOnlySpan\u003CSKColor\u003E\u0060, \u0060ReadOnlySpan\u003Cushort\u003E\u0060 parameters would naturally support slicing without needing explicit offset/count parameters. The underlying C API already accepts explicit counts, so no native changes are needed.\n2. **\u0060SkVertices::Builder\u0060 exposure** \u2014 This would require new C API functions (\u0060sk_vertices_builder_*\u0060) and a corresponding \u0060SKVerticesBuilder\u0060 C# class. This is a larger effort but would enable the mutable construction pattern.\n\nIn the meantime, array slicing (\u0060AsSpan(offset, count).ToArray()\u0060) can be used as a workaround."
+      }
+    ]
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1674,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": []
+  },
+  "summary": "Crash in HandleDictionary.RegisterHandle (exception code 0x80000004) when creating SKFont or accessing SKSurface.Canvas on Windows 10 with SkiaSharp 2.80.2, affecting multiple users of an OpenGL-based game using RichTextKit for text rendering.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.92
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use SkiaSharp 2.80.2 with RichTextKit in a game application on Windows 10",
+        "Render text-heavy UI using SKFont and SKSurface/SKCanvas",
+        "Crash occurs intermittently in HandleDictionary.RegisterHandle \u2014 more frequent on text-heavy screens"
+      ],
+      "environmentDetails": "Windows 10 (10.0.19041/19042), .NET Framework 4.8 (CLR 4.8.4300.0/4.8.4341.0), SkiaSharp 2.80.2, OpenGL rendering context",
+      "relatedIssues": [
+        1383,
+        1032,
+        1817
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/toptensoftware/RichTextKit",
+          "description": "RichTextKit library used by reporter for text rendering \u2014 its developer confirmed the issue"
+        }
+      ]
+    },
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Exception Code 0x80000004 in HandleDictionary.RegisterHandle during SKFont construction and SKSurface.Canvas.get",
+      "stackTrace": "[Managed to Native Transition]\nSkiaSharp.dll!SkiaSharp.HandleDictionary.RegisterHandle(System.IntPtr handle, SkiaSharp.SKObject instance)\nSkiaSharp.dll!SkiaSharp.SKObject.RegisterHandle(System.IntPtr handle, SkiaSharp.SKObject instance)\nSkiaSharp.dll!SkiaSharp.SKObject.Handle.set(System.IntPtr value)\nSkiaSharp.dll!SkiaSharp.SKFont.SKFont(SkiaSharp.SKTypeface typeface, float size, float scaleX, float skewX)",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        ".NET Framework 4.8"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "The root cause \u2014 STA-alertable ReaderWriterLockSlim in HandleDictionary \u2014 was fixed in PR #1817 (merged Nov 2021) which replaced it with a non-alertable Win32 CRITICAL_SECTION. This fix shipped in SkiaSharp 2.88.x\u002B."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.85,
+      "reason": "PR #1817 replaced the alertable ReaderWriterLockSlim with a non-alertable Win32 CRITICAL_SECTION on Windows, directly addressing the re-entrancy crash in HandleDictionary. The RichTextKit developer (toptensoftware) who commented on this issue also reported the same root cause in #1383.",
+      "relatedPRs": [
+        1817
+      ],
+      "fixedInVersion": "2.88.4"
+    }
+  },
+  "analysis": {
+    "summary": "The crash in HandleDictionary.RegisterHandle is caused by STA thread re-entrancy during lock acquisition. On Windows with the STA threading model, .NET\u0027s ReaderWriterLockSlim.WaitOne() is alertable and can pump the Windows message loop (e.g., WM_PAINT), causing re-entrant calls into HandleDictionary while the lock is held. This was a known issue (#1383) fixed by PR #1817, which replaced the lock with a non-alertable Win32 CRITICAL_SECTION.",
+    "rationale": "The crash occurs at the managed-to-native transition in HandleDictionary.RegisterHandle, with exception code 0x80000004 (STATUS_SINGLE_STEP trace trap). The RichTextKit developer (toptensoftware) commented on both this issue and #1383, confirming the same underlying problem. The PlatformLock.cs file explicitly documents this fix with a reference to #1383. The reporter uses version 2.80.2, which predates the fix in 2.88.x.",
+    "keySignals": [
+      {
+        "text": "Exception Code: 0x80000004",
+        "source": "issue body",
+        "interpretation": "STATUS_SINGLE_STEP \u2014 trace trap caused by corrupted execution state from STA re-entrancy during lock wait."
+      },
+      {
+        "text": "I\u0027ve seen this in cases where OpenGL is not involved \u2014 just plain rendering to a Canvas",
+        "source": "comment by toptensoftware",
+        "interpretation": "Confirms this is a HandleDictionary locking issue, not an OpenGL-specific problem."
+      },
+      {
+        "text": "don\u0027t think this is threading related as all rendering in my case is done on a single UI thread",
+        "source": "comment by toptensoftware",
+        "interpretation": "The STA re-entrancy issue manifests on a single UI thread \u2014 the lock wait pumps messages, causing re-entrant calls on the SAME thread."
+      },
+      {
+        "text": "I just hit upon this issue and unfortunately this makes SkiaSharp unusable for my app",
+        "source": "toptensoftware on #1383",
+        "interpretation": "Same developer confirmed the same root cause on issue #1383, linking both reports."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/HandleDictionary.cs",
+        "finding": "RegisterHandle acquires instancesLock.EnterWriteLock() \u2014 on Windows with STA, this uses ReaderWriterLockSlim which is alertable and pumps messages during wait, causing re-entrancy and crash.",
+        "relevance": "direct",
+        "lines": "135-171"
+      },
+      {
+        "file": "binding/SkiaSharp/PlatformLock.cs",
+        "finding": "Comment block explicitly documents the fix for #1383: \u0027.NET locks are alertable when using the STA threading model and can cause the Windows message loop to be dispatched\u0027. Solution replaces with Win32 CRITICAL_SECTION.",
+        "relevance": "direct",
+        "lines": "1-19"
+      },
+      {
+        "file": "binding/SkiaSharp/PlatformLock.cs",
+        "finding": "NonAlertableWin32Lock class uses Kernel32 InitializeCriticalSectionEx/EnterCriticalSection/LeaveCriticalSection \u2014 these are non-alertable and won\u0027t pump messages during wait.",
+        "relevance": "direct",
+        "lines": "99-174"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "finding": "SKFont constructor calls SkiaApi.sk_font_new_with_values which returns a handle, then the Handle setter calls RegisterHandle \u2014 this is the exact crash path from the stack trace.",
+        "relevance": "direct",
+        "lines": "27-32"
+      }
+    ],
+    "resolution": {
+      "hypothesis": "STA-alertable lock in HandleDictionary causes re-entrancy via Windows message pump during lock acquisition. Fixed in PR #1817 with non-alertable Win32 CRITICAL_SECTION.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 2.88.x or later",
+          "description": "Upgrade from 2.80.2 to 2.88.4\u002B which includes the PlatformLock fix (PR #1817). This replaces the alertable ReaderWriterLockSlim with a non-alertable Win32 CRITICAL_SECTION on Windows, preventing the STA re-entrancy crash.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Set custom PlatformLock factory (for older versions)",
+          "description": "If upgrading is not immediately possible, set PlatformLock.Factory to return a custom lock implementation that uses Win32 CRITICAL_SECTION or Monitor instead of ReaderWriterLockSlim. This must be done before any SkiaSharp calls.",
+          "category": "workaround",
+          "codeSnippet": "// Must be called before any SkiaSharp usage\nSkiaSharp.Internals.PlatformLock.Factory = () =\u003E new MyNonAlertableLock();",
+          "validated": "untested",
+          "confidence": 0.65,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 2.88.x or later",
+      "recommendedReason": "The fix is already shipped in 2.88.4\u002B. Upgrading is the simplest and most reliable solution. The PlatformLock.Factory workaround requires implementing a custom lock and may have edge cases."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.82,
+      "reason": "The crash is caused by STA-alertable locking in HandleDictionary, which was fixed in PR #1817 (merged Nov 2021) and shipped in SkiaSharp 2.88.4\u002B. The RichTextKit developer confirmed the same root cause on #1383. The issue has been inactive since May 2021.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, core SkiaSharp, and Windows labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to root cause issue #1383",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 1383
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis explaining the fix and suggesting upgrade",
+        "risk": "high",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed crash dumps and stack traces \u2014 they were very helpful in pinpointing the root cause.\n\nThis crash is caused by a known issue with the \u0060HandleDictionary\u0060 lock on Windows. When using the STA threading model, .NET\u0027s \u0060ReaderWriterLockSlim\u0060 is alertable and can pump the Windows message loop during lock waits, causing re-entrant calls into \u0060HandleDictionary.RegisterHandle\u0060 \u2014 which corrupts state and triggers the crash (exception 0x80000004).\n\nThis was tracked as #1383 and fixed in PR #1817 (merged Nov 2021), which replaced the lock with a non-alertable Win32 \u0060CRITICAL_SECTION\u0060. The fix shipped in SkiaSharp **2.88.4\u002B**.\n\nUpgrading from 2.80.2 to 2.88.x (or the latest 3.x) should resolve this crash. If you\u0027re still seeing similar issues after upgrading, please let us know."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in 2.88.4\u002B",
+        "risk": "medium",
+        "confidence": 0.82
+      }
+    ]
+  }
+}

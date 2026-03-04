@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1902,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T18:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced as reported: SKTypeface.FromFamilyName returns \u0027Noto Mono\u0027 regardless of requested font family in Blazor WASM. This is a WASM platform limitation \u2014 Skia\u0027s font manager in WASM only has access to fonts bundled into the binary (Noto Mono by default), not system or browser fonts. Cross-platform test on macOS console confirms FromFamilyName works correctly on native platforms. Workaround is to load fonts explicitly via SKTypeface.FromStream() or SKTypeface.FromData().",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WebAssembly project with SkiaSharp.Views.Blazor 3.119.2",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.119.2",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for package \u0027SkiaSharp.Views.Blazor\u0027 version \u00273.119.2\u0027 added."
+    },
+    {
+      "stepNumber": 2,
+      "description": "Add WasmBuildNative to csproj and create repro page with reporter\u0027s SKTypeface.FromFamilyName code",
+      "layer": "setup",
+      "result": "success",
+      "command": "Edit Repro.csproj to add \u003CWasmBuildNative\u003Etrue\u003C/WasmBuildNative\u003E, create Pages/Home.razor with SKTypeface.FromFamilyName(\u0027Tahoma\u0027, SKFontStyle.BoldItalic) and console output",
+      "filesCreated": [
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Blazor page with SKCanvasView calling SKTypeface.FromFamilyName and logging the result to console",
+          "content": "@page \u0022/\u0022\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n\u003Ch1\u003EIssue #1902 Repro\u003C/h1\u003E\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 style=\u0022width:800px;height:600px;\u0022 /\u003E\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.White);\n        var fontFamily = \u0022Tahoma\u0022;\n        var typeFace = SKTypeface.FromFamilyName(fontFamily, SKFontStyle.BoldItalic);\n        Console.WriteLine($\u0022REPRO: Requested \u0027{fontFamily}\u0027, got \u0027{typeFace.FamilyName}\u0027\u0022);\n        Console.WriteLine($\u0022REPRO: Match={fontFamily == typeFace.FamilyName}\u0022);\n        using SKPaint paint = new() { Style = SKPaintStyle.Fill, TextSize = 26, IsAntialias = true, Typeface = typeFace, Color = SKColors.Black };\n        canvas.DrawText($\u0022Requested: {fontFamily}\u0022, 30, 40, paint);\n        canvas.DrawText($\u0022Got: {typeFace.FamilyName}\u0022, 30, 80, paint);\n        canvas.DrawText(\u0022Fancy Text\u0022, 30, 130, paint);\n        Console.WriteLine($\u0022SUCCESS: rendered {e.Info.Width}x{e.Info.Height}\u0022);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build Blazor WASM project with native compilation",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded with 5 warning(s). Warnings are for obsolete SKPaint.TextSize, SKPaint.Typeface, and SKCanvas.DrawText overloads."
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run Blazor WASM app and verify SKTypeface.FromFamilyName behavior in browser",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "dotnet run --urls http://localhost:5112 (then navigate with Playwright browser)",
+      "exitCode": 0,
+      "output": "Browser console:\nREPRO: Requested \u0027Tahoma\u0027, got \u0027Noto Mono\u0027\nREPRO: Match=False\nSUCCESS: rendered 1600x1200\n\nScreenshot confirms text rendered in Noto Mono monospace font, showing \u0027Requested: Tahoma\u0027 and \u0027Got: Noto Mono\u0027."
+    },
+    {
+      "stepNumber": 5,
+      "description": "Cross-platform test: console app on macOS with same FromFamilyName calls to verify WASM-specific behavior",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet new console \u0026\u0026 dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "Requested: \u0027Tahoma\u0027 =\u003E Got: \u0027Tahoma\u0027 Match=True\nRequested: \u0027Arial\u0027 =\u003E Got: \u0027Arial\u0027 Match=True\nRequested: \u0027Calibri\u0027 =\u003E Got: \u0027Helvetica\u0027 Match=False\nRequested: \u0027Helvetica\u0027 =\u003E Got: \u0027Helvetica\u0027 Match=True\nRequested: \u0027Times New Roman\u0027 =\u003E Got: \u0027Times New Roman\u0027 Match=True"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false,
+    "dotnetSdkVersion": "10.0.102",
+    "wasmToolsVersion": "10.0.102"
+  },
+  "assessment": "working-as-designed",
+  "scope": "platform-specific/wasm",
+  "versionResults": [
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "FromFamilyName(\u0027Tahoma\u0027) returns \u0027Noto Mono\u0027 in Blazor WASM. All font family requests fall back to Noto Mono, the only bundled font.",
+      "platform": "host-macos-arm64-wasm"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Same behavior on main branch: FromFamilyName(\u0027Tahoma\u0027) returns \u0027Noto Mono\u0027 in Blazor WASM sample. Tested via samples/Basic/BlazorWebAssembly.",
+      "platform": "host-macos-arm64-wasm"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Console app on macOS: FromFamilyName correctly resolves Tahoma, Arial, Helvetica, Times New Roman. Only Calibri falls back (expected \u2014 macOS doesn\u0027t have Calibri).",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "type/question with close-as-by-design",
+        "corrected": "Confirmed as by-design WASM limitation. Triage analysis was correct \u2014 this is expected platform behavior, not a SkiaSharp bug."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "ready",
+      "body": "Thanks for reporting this. We\u0027ve confirmed the behavior: \u0060SKTypeface.FromFamilyName()\u0060 always returns the default bundled font (Noto Mono) in Blazor WASM, regardless of the requested font family.\n\nThis is a **WASM platform limitation**, not a SkiaSharp bug. In the WASM sandbox, Skia\u0027s font manager has no access to system or browser fonts \u2014 it can only resolve fonts bundled into the WASM binary. Since only Noto Mono is bundled by default, all \u0060FromFamilyName()\u0060 lookups fall back to it.\n\n**Tested:**\n| Environment | Result |\n|---|---|\n| Blazor WASM (SkiaSharp 3.119.2) | \u274C Returns \u0027Noto Mono\u0027 for all font families |\n| Blazor WASM (main branch) | \u274C Same behavior |\n| Console macOS (SkiaSharp 3.119.2) | \u2705 Correctly resolves Tahoma, Arial, etc. |\n\n**Workaround:** Load fonts explicitly using \u0060SKTypeface.FromStream()\u0060 or \u0060SKTypeface.FromData()\u0060:\n\n\u0060\u0060\u0060csharp\n// Option 1: Embedded resource\nusing var stream = typeof(MyApp).Assembly\n    .GetManifestResourceStream(\u0022MyApp.Fonts.Tahoma.ttf\u0022);\nvar typeface = SKTypeface.FromStream(stream);\n\n// Option 2: Fetch from server (enables browser caching)\nvar fontBytes = await httpClient.GetByteArrayAsync(\u0022/fonts/Tahoma.ttf\u0022);\nusing var data = SKData.CreateCopy(fontBytes);\nvar typeface = SKTypeface.FromData(data);\n\u0060\u0060\u0060\n\nFor best performance, load fonts once at startup and reuse the \u0060SKTypeface\u0060 instance rather than reloading on each paint call."
+    },
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.92,
+      "reason": "WASM sandbox prevents access to system/browser fonts. Skia\u0027s font manager in WASM only has access to bundled fonts (Noto Mono by default). This is a fundamental platform limitation, not a SkiaSharp bug. Reporter and community have confirmed the FromStream/FromData workaround works."
+    },
+    "workarounds": [
+      "Use SKTypeface.FromStream() with an embedded resource font file (.ttf/.otf)",
+      "Use SKTypeface.FromData() with font data fetched via HttpClient",
+      "Register loaded typefaces as singleton services to avoid reloading on each paint call"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply WASM and question labels",
+        "risk": "low",
+        "confidence": 0.92
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design WASM platform limitation",
+        "risk": "medium",
+        "confidence": 0.88
+      }
+    ],
+    "missingInfo": []
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2411,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced DllNotFoundException: libSkiaSharp with SkiaSharp 2.88.3 on Blazor WASM (net8.0, SDK 8.0.417). The root cause is that SkiaSharp.NativeAssets.WebAssembly 2.88.3 only ships emscripten 2.0.23 static libraries (.a files) for .NET 6. When targeting .NET 7\u002B (which requires emscripten 3.1.12\u002B), the NativeFileReference glob finds no matching .a files, so libSkiaSharp is not linked into dotnet.native.wasm. Fixed in SkiaSharp 3.119.2 which ships emscripten 3.1.34 .a files for .NET 8. Tested on net8.0 instead of reporter\u0027s net7.0 (no .NET 7 SDK available) \u2014 same root cause applies.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project targeting net8.0 with SkiaSharp.Views.Blazor 2.88.3 and WasmBuildNative=true",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 2.88.3",
+      "exitCode": 0,
+      "output": "Restored Repro.csproj. PackageReference for package \u0027SkiaSharp.Views.Blazor\u0027 version \u00272.88.3\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Blazor WASM project file with WasmBuildNative=true and SkiaSharp.Views.Blazor 2.88.3",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CWasmBuildNative\u003Etrue\u003C/WasmBuildNative\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly\u0022 Version=\u00228.0.23\u0022 /\u003E\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0022 Version=\u00228.0.23\u0022 PrivateAssets=\u0022all\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00222.88.3\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Razor page reproducing the reporter\u0027s SkiaSharp code \u2014 creates SKSurface and draws text",
+          "content": "@page \u0022/\u0022\n@using SkiaSharp\n\n\u003Ch2\u003EHello, world!\u003C/h2\u003E\n\u003Cbutton @onclick=\u0022Create\u0022\u003ECreate\u003C/button\u003E\n\u003Cp\u003EStatus: @msg\u003C/p\u003E\n\n@code {\n    public string msg = string.Empty;\n    void Create()\n    {\n        try\n        {\n            SKImageInfo info = new SKImageInfo(612, 792);\n            SKSurface surface = SKSurface.Create(info);\n            SKCanvas canvas = surface.Canvas;\n            SKPaint paint = new SKPaint { TextSize = 11f };\n            canvas.DrawText(\u0022Hello\u0022, 0, 0, paint);\n            msg = \u0022End\u0022;\n        }\n        catch (Exception ex)\n        {\n            msg = ex.ToString();\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build Blazor WASM project with native WASM compilation \u2014 build succeeds but wasm-ld does NOT link any libSkiaSharp.a",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s). CRITICAL: wasm-ld command linked only system .a files (libicudata, libmono, etc.) \u2014 no libSkiaSharp.a was included. NativeAssets.WebAssembly 2.88.3 has no emscripten 3.1.34 assets for net8.0."
+    },
+    {
+      "stepNumber": 3,
+      "description": "Serve app with dotnet run, navigate browser to localhost:5111, click Create button \u2014 DllNotFoundException thrown in browser at runtime",
+      "layer": "native",
+      "result": "failure",
+      "command": "dotnet run --urls http://localhost:5111 --no-build",
+      "output": "Browser console: ERROR: System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: libSkiaSharp at SkiaSharp.SKImageInfo..cctor() --- End of inner exception stack trace --- at Repro.Pages.Home.Create(). Page status text showed same exception."
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.417",
+    "skiaSharpVersion": "2.88.3",
+    "dockerUsed": false
+  },
+  "assessment": "likely-bug",
+  "scope": "platform-specific/wasm",
+  "versionResults": [
+    {
+      "version": "2.88.3",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "DllNotFoundException: libSkiaSharp at runtime. NativeAssets.WebAssembly 2.88.3 only ships emscripten 2.0.23 .a files (for .NET 6). No .a files matched for net8.0 (emscripten 3.1.34), so libSkiaSharp was not linked into dotnet.native.wasm.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "SkiaSharp rendered text successfully. NativeAssets.WebAssembly 3.119.2 ships emscripten 3.1.34 .a files which were correctly linked into dotnet.native.wasm. Browser console showed \u0027SUCCESS: SkiaSharp rendered text\u0027 and page status was \u0027End\u0027.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "2.88.3"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "ready",
+      "body": "Thanks for the detailed report and repro projects!\n\nWe were able to reproduce the \u0060DllNotFoundException: libSkiaSharp\u0060 with SkiaSharp **2.88.3** on Blazor WebAssembly.\n\nThe root cause is that SkiaSharp 2.88.3 was released before .NET 7 and only included the WASM native libraries (\u0060.a\u0060 files) for the .NET 6 Emscripten toolchain (v2.0.23). When targeting .NET 7\u002B, the build system couldn\u0027t find matching native assets, so \u0060libSkiaSharp\u0060 was never linked into \u0060dotnet.native.wasm\u0060.\n\nThe good news is that this was fixed in subsequent releases. Upgrading resolves the issue.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.3 | \u274C \u0060DllNotFoundException: libSkiaSharp\u0060 |\n| 3.119.2 | \u2705 Works correctly |\n\n**Workaround:** Upgrade SkiaSharp to **2.88.6\u002B** (which added .NET 7 WASM support) or **3.x** (which has full .NET 8\u002B WASM support with SIMD)."
+    },
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.92,
+      "reason": "DllNotFoundException reproduced with SkiaSharp 2.88.3 which lacked .NET 7\u002B WASM native assets. Fixed in SkiaSharp 3.119.2 which includes emscripten 3.1.34 static libraries for .NET 8. The fix was shipped in subsequent releases after PR #2254."
+    },
+    "workarounds": [
+      "Upgrade SkiaSharp to 2.88.6\u002B which includes .NET 7 WASM static libraries",
+      "Upgrade to SkiaSharp 3.x on .NET 8\u002B for full WASM support with SIMD and threading options"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, Blazor, and WASM labels",
+        "risk": "low",
+        "confidence": 0.92
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed \u2014 upgrading to SkiaSharp 2.88.6\u002B or 3.x resolves the issue",
+        "risk": "medium",
+        "confidence": 0.9
+      }
+    ]
+  }
+}

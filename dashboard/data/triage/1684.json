@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1684,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "Reporter gets CS0809 \u0027Obsolete member overrides non-obsolete member\u0027 warning for OnSizeChanged in their custom CircularGauge class inheriting from SKCanvasView on Android after upgrading Xamarin.AndroidX packages, but SkiaSharp has never marked OnSizeChanged as [Obsolete].",
+  "classification": {
+    "type": {
+      "value": "type/question",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/Android"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a custom class inheriting from SKCanvasView (CircularGauge)",
+        "Override OnSizeChanged",
+        "Upgrade Xamarin.AndroidX.AppCompat to 1.2.0.7 and Navigation.Fragment to 2.3.3.1",
+        "Observe \u0027Obsolete member overrides non-obsolete member\u0027 warning on OnSizeChanged"
+      ],
+      "environmentDetails": "Android 7.1 to 11, SkiaSharp.Views 2.80.2, Xamarin.AndroidX.AppCompat 1.2.0.7, Xamarin.AndroidX.Navigation.Fragment 2.3.3.1"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "SkiaSharp 2.80.x is obsolete; the current 3.x version does not mark OnSizeChanged as [Obsolete] and never has. The warning is almost certainly caused by the reporter\u0027s project configuration or inheritance chain, not SkiaSharp."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter\u0027s CircularGauge class gets CS0809 warning for OnSizeChanged after upgrading AndroidX packages. Code investigation confirms SKCanvasView.OnSizeChanged has never been marked [Obsolete] in any SkiaSharp version. The fact that only one of the reporter\u0027s two gauge classes is affected (CircularGauge but not SemiCircularGauge) strongly indicates this is a user-side project configuration issue, not a SkiaSharp defect.",
+    "rationale": "Classified as question because: (1) OnSizeChanged is not and has never been [Obsolete] in SKCanvasView, (2) the issue is asymmetric \u2014 only one custom subclass is affected, (3) the timing correlates with a Xamarin.AndroidX upgrade, not a SkiaSharp change, (4) the reporter explicitly asks for suggestions, not reporting broken behavior. The area is SkiaSharp.Views since the question concerns SKCanvasView\u0027s Android platform implementation.",
+    "keySignals": [
+      {
+        "text": "However now only on the CircularGauge, I get the message in the heading for OnSizeChanged",
+        "source": "issue body",
+        "interpretation": "Only one of two classes is affected \u2014 indicates user-side issue, not library defect."
+      },
+      {
+        "text": "Using the SemiCircularGauge class if I type protected override \u2013 IntelliSense prompts you for all the overrides. But for the CircularGauge nothing.",
+        "source": "issue body",
+        "interpretation": "Asymmetric behavior between two classes using the same base type suggests the CircularGauge class itself has a problem, not SKCanvasView."
+      },
+      {
+        "text": "the method isn\u0027t marked as an obsolete/deprecated member in the first place",
+        "source": "issue body",
+        "interpretation": "Reporter correctly observes that OnSizeChanged shouldn\u0027t be obsolete \u2014 confirms this is not a SkiaSharp-originated attribute."
+      },
+      {
+        "text": "I recently upgraded to Xamarin.AndroidX.AppCompat 1.2.0.7",
+        "source": "issue body",
+        "interpretation": "The timing coincides with an AndroidX package upgrade, suggesting the issue may be caused by binding metadata changes in the AndroidX packages."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKCanvasView.cs",
+        "finding": "OnSizeChanged override has no [Obsolete] attribute. Method simply calls base.OnSizeChanged and updates canvas size. Confirmed in current code and pre-3.0 code (via git history).",
+        "relevance": "direct",
+        "lines": "119-125"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKCanvasView.cs",
+        "finding": "The only [Obsolete] method in the 2.x-era SKCanvasView was OnDraw(SKSurface, SKImageInfo), not OnSizeChanged. This was removed in commit a140a2033 for SkiaSharp 3.0.",
+        "relevance": "related",
+        "lines": "134-139"
+      }
+    ],
+    "resolution": {
+      "hypothesis": "The CS0809 warning is not caused by SkiaSharp. The CircularGauge class likely has a different inheritance chain or project-level configuration issue introduced during the Xamarin.AndroidX upgrade. The asymmetry between CircularGauge and SemiCircularGauge confirms the problem is in the reporter\u0027s code.",
+      "proposals": [
+        {
+          "title": "Check CircularGauge inheritance chain",
+          "description": "Verify that CircularGauge directly inherits from SKCanvasView and not from an intermediate class that marks OnSizeChanged as [Obsolete]. Compare the class declaration with SemiCircularGauge.",
+          "category": "investigation",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "trivial"
+        },
+        {
+          "title": "Clean and rebuild after AndroidX upgrade",
+          "description": "Clean the bin/obj folders and rebuild the entire solution after the Xamarin.AndroidX package upgrade. Stale build artifacts can cause phantom warnings.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.7,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Check CircularGauge inheritance chain",
+      "recommendedReason": "The asymmetric behavior between two classes using the same SKCanvasView base is the strongest signal. Comparing their class declarations will almost certainly reveal the difference."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "convert-to-discussion",
+      "confidence": 0.85,
+      "reason": "This is a support question about a warning not caused by SkiaSharp. OnSizeChanged has never been [Obsolete] in any SkiaSharp version. The asymmetric behavior and AndroidX upgrade timing point to user-side configuration. No comments for 4\u002B years."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and views labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/question",
+          "area/SkiaSharp.Views",
+          "os/Android"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain that OnSizeChanged has never been [Obsolete] in SkiaSharp and suggest checking the CircularGauge class hierarchy",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the report. SkiaSharp\u0027s \u0060SKCanvasView.OnSizeChanged\u0060 has never been marked \u0060[Obsolete]\u0060 in any version, including 2.80.2. The fact that only your \u0060CircularGauge\u0060 class shows this warning (while \u0060SemiCircularGauge\u0060 does not) strongly suggests the issue is in the \u0060CircularGauge\u0060 class hierarchy rather than in SkiaSharp.\n\nWould you be able to compare the class declaration and inheritance chain of \u0060CircularGauge\u0060 vs \u0060SemiCircularGauge\u0060? If \u0060CircularGauge\u0060 inherits from an intermediate class (rather than directly from \u0060SKCanvasView\u0060), that intermediate class may be the source of the \u0060[Obsolete]\u0060 attribute. Also, a clean rebuild (deleting \u0060bin\u0060/\u0060obj\u0060 folders) after the Xamarin.AndroidX upgrade may help clear any stale build artifacts causing phantom warnings."
+      },
+      {
+        "type": "convert-to-discussion",
+        "description": "Convert to discussion \u2014 support question not caused by SkiaSharp",
+        "risk": "high",
+        "confidence": 0.8
+      }
+    ]
+  }
+}

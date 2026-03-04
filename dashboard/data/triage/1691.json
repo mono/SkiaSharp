@@ -1,0 +1,191 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1691,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "SKBitmap.Decode and SKCodec.Create appear to hang indefinitely when decoding a PNG containing a ~100MB Exif metadata chunk, because Skia\u0027s PNG codec reads all pre-IDAT chunks in 4KB increments with no size limit or cancellation mechanism.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.88
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Use Magick.NET to generate a 512x512 PNG with a ~100MB Exif UserComment",
+        "Call SKCodec.Create(stream) or SKBitmap.Decode(stream) on the resulting stream",
+        "Observe that the call blocks indefinitely (actually processing very slowly)"
+      ],
+      "codeSnippets": [
+        "var skCodec = SKCodec.Create(stream);\nvar skBitmap = SKBitmap.Decode(skCodec);"
+      ],
+      "attachments": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/7286752/SkiaDecodingIssue.zip",
+          "filename": "SkiaDecodingIssue.zip",
+          "description": "Repro project demonstrating the hang"
+        }
+      ],
+      "environmentDetails": "SkiaSharp 2.80.2, .NET 5 Console App, Rider JetBrains IDE",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/1518",
+          "description": "PR #1518: Add support for reading Exif SubIFD (merged 2020-10-12)"
+        }
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "performance",
+      "errorMessage": "Code execution is blocked on SKBitmap.Decode method",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net5.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The PNG chunk processing code path in SkPngCodec::decodeBounds() has not changed \u2014 it still reads all pre-IDAT chunks in 4KB increments with no size limit."
+    }
+  },
+  "analysis": {
+    "summary": "The PNG codec in Skia reads every chunk before IDAT during codec creation. A ~100MB metadata chunk is processed in 4KB increments via process_data(), making it appear hung. There is no size limit, timeout, or cancellation mechanism at the native level. This is an upstream Skia design limitation exposed through SkiaSharp\u0027s SKCodec.Create and SKBitmap.Decode APIs.",
+    "rationale": "Classified as type/bug because the decode path appears to hang on valid (though pathological) input with no way to cancel or bound execution time. This is an upstream Skia limitation in PNG chunk processing. Severity is medium because a workaround exists (pre-validate metadata size or strip Exif before decoding) and the trigger requires crafted input.",
+    "keySignals": [
+      {
+        "text": "my code flow is locked on SKBitmap.Decode(skCodec) call",
+        "source": "issue body",
+        "interpretation": "The \u0027lock\u0027 is actually Skia reading the 100MB metadata chunk in 4KB increments during codec creation \u2014 extremely slow, not a deadlock."
+      },
+      {
+        "text": "with other 100Mb pictures everything works fine so the huge Exif value seems to be the issue",
+        "source": "issue body",
+        "interpretation": "Confirms the issue is specifically with pre-IDAT metadata size, not image pixel dimensions."
+      },
+      {
+        "text": "In critical systems where Skia is used to process customer pictures, that issue can make the system down",
+        "source": "issue body",
+        "interpretation": "Security/reliability concern \u2014 adversarial PNGs with large metadata could be used for DoS."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "externals/skia/src/codec/SkPngCodec.cpp",
+        "finding": "process_data() reads chunks in std::min(bufferSize=4096, length) increments. A 100MB chunk requires ~25,000 iterations through this loop, each calling png_process_data. No size guard, timeout, or cancellation point exists.",
+        "relevance": "direct",
+        "lines": "151-162"
+      },
+      {
+        "file": "externals/skia/src/codec/SkPngCodec.cpp",
+        "finding": "decodeBounds() loops through all pre-IDAT chunks. It only stops at IDAT. If a chunk before IDAT (e.g. eXIf or tEXt) is extremely large, the entire chunk must be read via process_data before reaching IDAT and actual image data.",
+        "relevance": "direct",
+        "lines": "188-207"
+      },
+      {
+        "file": "externals/skia/src/c/sk_codec.cpp",
+        "finding": "sk_codec_new_from_stream calls SkCodec::MakeFromStream which invokes SkPngCodec::MakeFromStream \u2192 decodeBounds(). The C API provides no cancellation token or size limit parameter.",
+        "relevance": "direct",
+        "lines": "21-24"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCodec.cs",
+        "finding": "SKCodec.Create(SKStream) calls sk_codec_new_from_stream via P/Invoke. No timeout, cancellation, or maximum metadata size guard at the managed layer either.",
+        "relevance": "related",
+        "lines": "252-264"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "SKBitmap.Decode(Stream) delegates to SKCodec.Create then Decode. The hang is in the Create step (decodeBounds) not the pixel decode step.",
+        "relevance": "related",
+        "lines": "461-471"
+      }
+    ],
+    "workarounds": [
+      "Pre-validate PNG metadata size before passing to SkiaSharp \u2014 read the PNG chunks manually and reject files with excessively large pre-IDAT chunks",
+      "Strip or truncate Exif metadata using a library like MetadataExtractor or Magick.NET before decoding with SkiaSharp",
+      "Run SKBitmap.Decode on a background thread with a CancellationTokenSource and timeout, aborting the thread if it exceeds a threshold"
+    ],
+    "nextQuestions": [
+      "Would Skia upstream accept a maximum metadata chunk size limit or a cancellation mechanism in the codec?",
+      "Could SkiaSharp add a managed-side pre-scan of PNG chunks to reject pathological inputs before entering native code?",
+      "Is Thread.Abort or thread interruption reliable enough to terminate the blocked native call?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia\u0027s PNG codec reads all pre-IDAT chunks sequentially in 4KB buffers with no size limit. A ~100MB metadata chunk takes an extremely long time to process, appearing as a hang.",
+      "proposals": [
+        {
+          "title": "Pre-validate PNG metadata size",
+          "description": "Before calling SKCodec.Create, read PNG chunk headers manually to check for oversized metadata chunks. Reject files exceeding a configurable threshold.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Strip Exif before decoding",
+          "description": "Use a metadata library (MetadataExtractor, Magick.NET) to strip or truncate Exif data before passing the stream to SkiaSharp for decoding.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "small"
+        },
+        {
+          "title": "Add managed-side chunk size guard",
+          "description": "Add an optional maximum metadata size parameter to SKCodec.Create that pre-scans PNG chunk headers and returns null if any pre-IDAT chunk exceeds the limit.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.65,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Strip Exif before decoding",
+      "recommendedReason": "Highest confidence workaround. The reporter already uses Magick.NET which can strip Exif. This avoids any SkiaSharp API changes and works immediately."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Real bug with complete reproduction \u2014 Skia\u0027s PNG codec has no size guard for metadata chunks, causing apparent hangs on pathological input. Needs investigation into whether a managed-side guard or upstream Skia change is feasible.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and core SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the issue and provide workaround with explanation of root cause",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed reproduction \u2014 this is a real issue in Skia\u0027s PNG codec.\n\nThe root cause is that Skia reads all PNG chunks before IDAT (the actual pixel data) in 4KB increments during codec creation. A ~100MB Exif chunk means ~25,000 read iterations before decoding even begins. It\u0027s not truly hanging \u2014 it\u0027s processing extremely slowly with no size guard or cancellation mechanism.\n\nHere\u0027s a workaround you can use now: since you\u0027re already using Magick.NET to create the images, strip or limit the Exif metadata size before passing the stream to SkiaSharp:\n\n\u0060\u0060\u0060csharp\n// Strip exif before decoding with SkiaSharp\nusing var image = new MagickImage(stream);\nimage.RemoveProfile(\u0022exif\u0022);\nvar cleaned = new MemoryStream();\nimage.Write(cleaned, MagickFormat.Png);\ncleaned.Seek(0, SeekOrigin.Begin);\n\nusing var codec = SKCodec.Create(cleaned);\nvar bitmap = SKBitmap.Decode(codec);\n\u0060\u0060\u0060\n\nAlternatively, you could pre-validate PNG chunk sizes by reading the chunk headers before passing to SkiaSharp, and reject files with excessively large metadata.\n\nWe\u0027ll investigate whether a managed-side guard can be added to SKCodec.Create to bound metadata processing time."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference PR #1518 which added Exif SubIFD support",
+        "risk": "low",
+        "confidence": 0.6,
+        "linkedIssue": 1518
+      }
+    ]
+  }
+}

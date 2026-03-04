@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3066,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-03-04T01:15:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced: Blazor views use _bl_ \u002B ElementReference.Id internal convention to construct HTML element IDs for JS interop. At runtime, the canvas element has a _bl_2 attribute, and SKHtmlCanvas.js uses document.querySelector(\u0027[_bl_2]\u0027) to locate it. This relies on Blazor\u0027s internal DOM convention documented as \u0027should not be used by user code\u0027. Pattern present in both NuGet 3.119.2 and main branch source. While this works today and ASP.NET Core itself uses the same pattern (ElementReferenceCapture.ts), it creates a fragile dependency on an undocumented internal convention.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor 3.119.2",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.119.2",
+      "exitCode": 0,
+      "output": "The template \u0027Blazor WebAssembly Standalone App\u0027 was created successfully.\nRestore succeeded.",
+      "filesCreated": [
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Blazor page with SKCanvasView to test _bl_ attribute usage at runtime",
+          "content": "@page \u0022/\u0022\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 style=\u0022width:400px;height:300px;\u0022 /\u003E\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        Console.WriteLine($\u0022SUCCESS: rendered {e.Info.Width}x{e.Info.Height}\u0022);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build Blazor WASM app with WasmBuildNative enabled",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded with 2 warning(s) in 7.3s"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run Blazor WASM app and verify canvas renders successfully",
+      "layer": "deployment",
+      "result": "success",
+      "command": "dotnet run --urls http://localhost:5112 --no-build",
+      "exitCode": 0,
+      "output": "Now listening on: http://localhost:5112\nBrowser console: SUCCESS: rendered 800x600"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Inspect DOM for _bl_ attributes on canvas element \u2014 confirms the reported fragile dependency",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "Browser JS: document.querySelectorAll(\u0027*\u0027) \u2014 check for _bl_ attributes",
+      "exitCode": 0,
+      "output": "Found canvas element with _bl_2 attribute: \u003Ccanvas style=\u0027width:400px;height:300px;\u0027 _bl_2=\u0027\u0027 width=\u0027800\u0027 height=\u0027600\u0027\u003E. querySelector(\u0027[_bl_2]\u0027) successfully locates the element. This confirms SkiaSharp relies on Blazor\u0027s internal _bl_ convention."
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify JS interop code uses querySelector with _bl_ attribute for element lookup",
+      "layer": "csharp",
+      "result": "wrong-output",
+      "command": "Browser JS: fetch(\u0027/_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js\u0027)",
+      "exitCode": 0,
+      "output": "SKHtmlCanvas.js: element = element || document.querySelector(\u0027[\u0027 \u002B elementId \u002B \u0027]\u0027);\nSizeWatcher.js: element = element || document.querySelector(\u0027[\u0027 \u002B elementId \u002B \u0027]\u0027);\nBoth JS files use the _bl_ convention to locate elements when element reference is null (NET7\u002B JSImport path)."
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false,
+    "dotnetSdkVersion": "10.0.102",
+    "wasmToolsVersion": "10.0.102"
+  },
+  "assessment": "likely-bug",
+  "scope": "platform-specific/wasm",
+  "versionResults": [
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Canvas element has _bl_2 attribute at runtime. JS interop uses querySelector(\u0027[_bl_2]\u0027) to locate elements. Pattern confirmed in SKHtmlCanvas.js and SizeWatcher.js.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Source code at SKHtmlCanvasInterop.cs:46 and SizeWatcherInterop.cs:43 still uses _bl_ \u002B element.Id pattern. Runtime test of Blazor sample confirms _bl_2 attribute on canvas element.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "We\u0027ve confirmed this issue. Both \u0060SKHtmlCanvasInterop\u0060 and \u0060SizeWatcherInterop\u0060 construct HTML element IDs using \u0060\u0022_bl_\u0022 \u002B element.Id\u0060, and at runtime the canvas element gets a \u0060_bl_2\u0060 attribute that the JS interop locates via \u0060document.querySelector(\u0027[_bl_2]\u0027)\u0060.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 3.119.2 (latest stable) | \u274C \u0060_bl_\u0060 pattern confirmed at runtime |\n| main (source) | \u274C \u0060_bl_\u0060 pattern still present in source and runtime |\n\nThe \u0060[JSImport]\u0060 path (NET7\u002B) always passes \u0060null\u0060 for the element parameter, so the \u0060querySelector\u0060 fallback with the \u0060_bl_\u0060 attribute is the only mechanism used to find the canvas element.\n\nA safer approach would be to set a custom \u0060data-*\u0060 attribute on the canvas element and use that for JS-side element lookup, fully decoupling from Blazor internals."
+    },
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "The _bl_ pattern is confirmed at runtime on both latest stable (3.119.2) and main branch. While it works today because ASP.NET Core itself uses the same convention, it relies on an internal API documented as unsafe for user code. Investigation needed to find a safer alternative."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply area/SkiaSharp.Views.Blazor and os/WASM labels",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ]
+  }
+}

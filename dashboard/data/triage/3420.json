@@ -3,7 +3,7 @@
     "schemaVersion": "1.0",
     "number": 3420,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T16:36:00Z",
+    "analyzedAt": "2026-03-04T20:42:00Z",
     "currentLabels": [
       "type/bug",
       "os/Android",
@@ -11,15 +11,15 @@
       "tenet/compatibility"
     ]
   },
-  "summary": "Android 16 KB page size support for libSkiaSharp.so \u2014 already fixed in SkiaSharp 3.116.1\u002B via PR #3096 (NDK r27c \u002B max-page-size=16384 linker flag). Reporter used v2.88.6 which will not receive the fix. Duplicate of #3419.",
+  "summary": "Reporter requests 16 KB ELF page size alignment for libSkiaSharp.so to comply with Google Play\u0027s Android 16\u002B requirement. This was already fixed in PR #3096 (merged Dec 2024) which updated the Android NDK to r27c and added -Wl,-z,max-page-size=16384 linker flag, backported to v3.116.1 and v3.118.0-preview.2.",
   "classification": {
     "type": {
       "value": "type/bug",
-      "confidence": 0.85
+      "confidence": 0.9
     },
     "area": {
       "value": "area/libSkiaSharp.native",
-      "confidence": 0.98
+      "confidence": 0.95
     },
     "platforms": [
       "os/Android"
@@ -32,35 +32,48 @@
     "reproEvidence": {
       "stepsToReproduce": [
         "Create a .NET MAUI Android app targeting Android 16",
-        "Build AAB using SkiaSharp.NativeAssets.Android v2.88.6",
-        "Run page size check on .so files",
-        "libSkiaSharp.so shows 4 KB page size"
+        "Build AAB using SkiaSharp v2.88.6 or v3.116.0",
+        "Run page size check on libSkiaSharp.so",
+        "Observe 4 KB page size instead of required 16 KB"
       ],
       "attachments": [
         {
           "url": "https://github.com/user-attachments/files/23669684/16KB_PageSize_Report.txt",
           "filename": "16KB_PageSize_Report.txt",
-          "description": "16KB page size report"
+          "description": "16KB page size analysis report"
         },
         {
           "url": "https://github.com/user-attachments/files/23547442/Android16_PageSize_Issue.pdf",
           "filename": "Android16_PageSize_Issue.pdf",
-          "description": "Android 16 page size issue PDF"
+          "description": "Android 16 page size issue details"
         }
       ],
-      "environmentDetails": "SkiaSharp.NativeAssets.Android v2.88.6, .NET MAUI 9.0, Android 16\u002B target",
+      "environmentDetails": "SkiaSharp.NativeAssets.Android v2.88.6 / v3.116.0, .NET MAUI 9.0, Android 16\u002B target, Visual Studio (Windows)",
       "relatedIssues": [
-        3025,
         3096,
-        3419
+        3098,
+        3099
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3096",
+          "description": "PR #3096: Update Android NDK to r27c and 16kb alignment (MERGED)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3098",
+          "description": "PR #3098: Backport to release/3.116.1 (MERGED)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3099",
+          "description": "PR #3099: Backport to release/3.118.0-preview.2 (MERGED)"
+        }
       ]
     },
     "bugSignals": {
-      "severity": "medium",
-      "isRegression": false,
-      "errorType": "compatibility",
-      "errorMessage": "libSkiaSharp.so has 4 KB page size, incompatible with Android 16\u002B 16 KB requirement",
-      "reproQuality": "complete",
+      "severity": "high",
+      "errorType": "platform-specific",
+      "errorMessage": "libSkiaSharp.so has 4 KB page size, incompatible with Android 16\u002B requirement for 16 KB page size",
+      "reproQuality": "partial",
       "targetFrameworks": [
         "net9.0-android"
       ]
@@ -71,125 +84,112 @@
         "2.88.9",
         "3.116.0"
       ],
-      "workedIn": "3.116.1",
-      "brokeIn": "2.88.6",
       "currentRelevance": "unlikely",
-      "relevanceReason": "The fix was merged in PR #3096 (commit db01ee168) and backported to 3.116.1 and 3.118.0-preview.2. All 3.x releases from 3.116.1 onward include the 16KB page alignment linker flag. The reporter\u0027s v2.88.6 is EOL and will not receive the fix."
+      "relevanceReason": "The 16 KB page alignment fix was merged in PR #3096 on Dec 4, 2024 and backported to v3.116.1. All versions from v3.116.1 onward include the fix. Reporter\u0027s versions (2.88.6, 3.116.0) predate the fix."
     },
     "fixStatus": {
       "likelyFixed": true,
-      "confidence": 0.98,
-      "reason": "PR #3096 added \u0027-Wl,-z,max-page-size=16384\u0027 to the Android build for both libSkiaSharp.so and libHarfBuzzSharp.so. Backported to release/3.116.1 (PR #3098) and release/3.118.0-preview.2 (PR #3099). The linker flag is present in the current native/android/build.cake (line 43) and native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk (line 11).",
+      "confidence": 0.95,
+      "reason": "PR #3096 added -Wl,-z,max-page-size=16384 to Android linker flags and updated NDK to r27c. Backported to v3.116.1 (PR #3098) and v3.118.0-preview.2 (PR #3099). The fix is confirmed present in native/android/build.cake line 43.",
       "relatedPRs": [
         3096,
         3098,
         3099
       ],
-      "relatedCommits": [
-        "db01ee168ac455c824a74ff09fbd197fe83cbf64"
-      ],
       "fixedInVersion": "3.116.1"
     }
   },
   "analysis": {
-    "summary": "Reporter requests 16 KB page size alignment for libSkiaSharp.so on Android, which Google requires for Android 16\u002B. This was already fixed in PR #3096 by adding the -Wl,-z,max-page-size=16384 linker flag and updating to NDK r27c. The fix shipped in SkiaSharp 3.116.1\u002B. The reporter is on v2.88.6 (EOL 2.x series), which will not receive the fix. Issue #3419 is an exact duplicate closed by maintainer as dup of this issue.",
+    "summary": "The 16 KB page size alignment issue for Android was already addressed in PR #3096 (merged Dec 4, 2024), which updated the Android NDK to r27c and added the -Wl,-z,max-page-size=16384 linker flag to both libSkiaSharp and libHarfBuzzSharp builds. The fix was backported to v3.116.1 and v3.118.0-preview.2. The reporter is using pre-fix versions (2.88.6 mentioned in body, 3.116.0 in version field). Upgrading to v3.116.1 or later resolves the issue.",
+    "rationale": "Classified as type/bug because the native library\u0027s 4 KB page alignment actively prevents deployment to Android 16\u002B via Google Play. area/libSkiaSharp.native because it\u0027s a native build configuration issue. Suggesting close-as-fixed because PR #3096 with the exact fix (max-page-size=16384 linker flag) is already merged and released in v3.116.1\u002B. The 2.x series is unsupported and will not receive this fix.",
+    "keySignals": [
+      {
+        "text": "Google Play now requires all 64-bit native libraries to use 16 KB memory page size starting with Android 16\u002B",
+        "source": "issue body",
+        "interpretation": "Compliance requirement from Google \u2014 apps with 4 KB aligned .so files will be rejected."
+      },
+      {
+        "text": "libSkiaSharp.so included in SkiaSharp.NativeAssets.Android v2.88.6 has a 4 KB page size",
+        "source": "issue body",
+        "interpretation": "Reporter is on a pre-fix version. The 2.x series is unsupported."
+      },
+      {
+        "text": "Have you tried the 3.x series of SkiaSharp? The 2.x series is not really supported and will be really hard to build with all the out of date components.",
+        "source": "maintainer comment (mattleibow)",
+        "interpretation": "Maintainer directed reporter to 3.x series which contains the fix."
+      }
+    ],
     "codeInvestigation": [
       {
         "file": "native/android/build.cake",
-        "finding": "Line 43 contains extra_ldflags with \u0027-Wl,-z,max-page-size=16384\u0027 \u2014 this is the 16KB page alignment linker flag required by Android 16\u002B. Present in current main branch.",
+        "finding": "extra_ldflags already contains \u0027-Wl,-z,max-page-size=16384\u0027 \u2014 the 16 KB alignment fix is present in current code",
         "relevance": "direct",
         "lines": "43"
       },
       {
-        "file": "native/android/build.cake",
-        "finding": "Android builds for all 4 architectures: x86, x86_64, armeabi-v7a, arm64-v8a. The linker flag applies to all architectures.",
-        "relevance": "context",
-        "lines": "18-21"
-      },
-      {
         "file": "native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk",
-        "finding": "HarfBuzzSharp.mk also includes -Wl,-z,max-page-size=16384 in LOCAL_LDFLAGS, so libHarfBuzzSharp.so is also 16KB-aligned.",
-        "relevance": "direct",
+        "finding": "LOCAL_LDFLAGS also includes -Wl,-z,max-page-size=16384 \u2014 libHarfBuzzSharp.so is also fixed",
+        "relevance": "related",
         "lines": "11"
       }
     ],
-    "rationale": "Classified as type/bug (not feature-request) because the native library violates a platform requirement, causing deployment failure. Area is libSkiaSharp.native since this is a native build configuration issue, not a C# API problem. Severity is medium because it blocks Android 16\u002B deployment but has a clear upgrade path. The fix is confirmed present in the codebase \u2014 the linker flag exists in both build.cake and HarfBuzzSharp.mk.",
-    "keySignals": [
-      {
-        "text": "extra_ldflags=[ \u0027-Wl,-z,max-page-size=16384\u0027 ]",
-        "source": "native/android/build.cake:43",
-        "interpretation": "The 16KB page alignment linker flag is already present in the current Android build configuration for libSkiaSharp.so."
-      },
-      {
-        "text": "LOCAL_LDFLAGS := -Wl,--gc-sections -Wl,-z,max-page-size=16384",
-        "source": "native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk:11",
-        "interpretation": "HarfBuzzSharp also has the 16KB alignment flag, so both native libraries are covered."
-      },
-      {
-        "text": "Update the Android NDK to r27c and update to 16kb alignment (#3096)",
-        "source": "git log commit db01ee168",
-        "interpretation": "The fix was merged to main and backported to 3.116.1 and 3.118.0-preview.2."
-      },
-      {
-        "text": "Have you tried the 3.x series of SkiaSharp? The 2.x series is not really supported",
-        "source": "comment by mattleibow on #3420",
-        "interpretation": "Maintainer already directed reporter to upgrade to 3.x, confirming 2.x will not be fixed."
-      },
-      {
-        "text": "SkiaSharp.NativeAssets.Android v2.88.6",
-        "source": "issue body",
-        "interpretation": "Reporter is on 2.88.6 (EOL). The fix only exists in 3.116.1\u002B."
-      }
-    ],
     "workarounds": [
-      "Upgrade to SkiaSharp 3.116.1 or later, which includes the 16KB page alignment fix for both libSkiaSharp.so and libHarfBuzzSharp.so."
+      "Upgrade to SkiaSharp v3.116.1 or later, which includes the 16 KB page alignment fix"
     ],
     "resolution": {
-      "hypothesis": "The issue is already fixed in SkiaSharp 3.116.1\u002B via PR #3096. The reporter needs to upgrade from the unsupported 2.x series.",
+      "hypothesis": "The reporter is using a pre-fix version of SkiaSharp. The 16 KB page alignment was added in PR #3096 and released in v3.116.1.",
       "proposals": [
         {
-          "description": "Upgrade from SkiaSharp 2.88.6 to 3.116.1 or later. The 16KB page alignment was added in PR #3096 and backported to 3.116.1. All subsequent 3.x releases include this fix.",
-          "title": "Upgrade to SkiaSharp 3.116.1\u002B",
-          "confidence": 0.98,
-          "effort": "medium"
-        },
-        {
-          "description": "For the best experience, upgrade directly to the latest stable 3.119.x release which includes the 16KB alignment fix plus all other improvements since 3.116.1.",
-          "title": "Use latest 3.119.x release",
-          "confidence": 0.98,
-          "effort": "medium"
+          "title": "Upgrade to SkiaSharp v3.116.1\u002B",
+          "description": "Upgrade SkiaSharp NuGet packages to v3.116.1 or later. This version includes the 16 KB page alignment fix (PR #3096) with -Wl,-z,max-page-size=16384 linker flag and Android NDK r27c.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.95,
+          "effort": "trivial"
         }
       ],
-      "recommendedProposal": "Upgrade to SkiaSharp 3.116.1\u002B",
-      "recommendedReason": "The fix already exists and is released. Minimum viable upgrade is 3.116.1; latest stable 3.119.x is recommended for additional improvements."
+      "recommendedProposal": "Upgrade to SkiaSharp v3.116.1\u002B",
+      "recommendedReason": "The exact fix (16 KB ELF page alignment) is already released. No code changes needed \u2014 just a NuGet package upgrade."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "close-as-fixed",
-      "confidence": 0.95,
-      "reason": "The 16KB page alignment was fixed in PR #3096 and shipped in SkiaSharp 3.116.1\u002B. The 2.x series is EOL. Reporter should upgrade."
+      "confidence": 0.92,
+      "reason": "PR #3096 added 16 KB page alignment to Android native builds and was backported to v3.116.1 (released Dec 2024). Upgrading resolves the issue."
     },
     "actions": [
       {
-        "type": "add-comment",
-        "description": "Inform reporter the fix exists in 3.116.1\u002B and recommend upgrading",
-        "risk": "high",
+        "type": "update-labels",
+        "description": "Labels are already correct \u2014 type/bug, area/libSkiaSharp.native, os/Android, tenet/compatibility",
+        "risk": "low",
         "confidence": 0.95,
-        "comment": "Thanks for the report. The 16 KB page alignment for Android was fixed in PR #3096 and shipped starting with SkiaSharp 3.116.1. Both \u0060libSkiaSharp.so\u0060 and \u0060libHarfBuzzSharp.so\u0060 are now built with \u0060-Wl,-z,max-page-size=16384\u0060.\n\nAs mentioned above, the 2.x series is no longer supported and won\u0027t receive this fix. Upgrading to SkiaSharp 3.116.1 or later (the latest stable is 3.119.2) will resolve the Android 16\u002B compatibility issue.\n\nFor migration guidance from 2.x to 3.x, see the [SkiaSharp 3.0 migration notes](https://github.com/mono/SkiaSharp/wiki/SkiaSharp-3.0-Migration)."
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/Android",
+          "tenet/compatibility"
+        ]
       },
       {
-        "type": "link-duplicate",
-        "description": "Link to original tracking issue #3025",
-        "risk": "low",
+        "type": "add-comment",
+        "description": "Inform reporter the fix is available in v3.116.1\u002B",
+        "risk": "high",
         "confidence": 0.9,
-        "linkedIssue": 3025
+        "comment": "Thanks for reporting this. The 16 KB page size alignment for \u0060libSkiaSharp.so\u0060 and \u0060libHarfBuzzSharp.so\u0060 on Android was addressed in PR #3096, which updated the Android NDK to r27c and added the \u0060-Wl,-z,max-page-size=16384\u0060 linker flag.\n\nThis fix is available in **SkiaSharp v3.116.1** and later. Upgrading your SkiaSharp NuGet packages to v3.116.1\u002B should resolve the Google Play compliance issue for Android 16\u002B.\n\nNote that the 2.88.x series is no longer actively supported and will not receive this fix. As @mattleibow mentioned, the 3.x series is the recommended path forward.\n\nWould you be able to confirm whether upgrading to v3.116.1 (or the latest v3.x release) resolves the page size check for your builds?"
       },
       {
         "type": "close-issue",
-        "description": "Close as already fixed in 3.116.1\u002B",
+        "description": "Close as fixed in v3.116.1",
         "risk": "medium",
-        "confidence": 0.9
+        "confidence": 0.88
+      },
+      {
+        "type": "link-related",
+        "description": "Link to the fix PR #3096",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3096
       }
     ]
   }

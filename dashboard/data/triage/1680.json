@@ -1,0 +1,213 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1680,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "Reporter describes memory leak when repeatedly drawing SKPath on SKCanvas during rapid window resizing on UWP with SkiaSharp 2.80.2. Memory approximately doubles and is not reclaimed by GC. Related issue #2368 confirmed this was fixed in SkiaSharp 3.116.1.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/Windows-Universal-UWP"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create UWP app with SKCanvasView that draws an SKPath",
+        "Rapidly resize the window by dragging",
+        "Observe memory usage approximately doubling",
+        "Remove SKCanvas from form to release all leaked memory"
+      ],
+      "screenshots": [
+        {
+          "url": "https://user-images.githubusercontent.com/45887081/113274396-61484300-9329-11eb-9376-bb857c3b936e.png",
+          "description": "Memory usage screenshot showing growth during resize"
+        }
+      ],
+      "environmentDetails": "SkiaSharp 2.80.2, VS 2019 Latest, UWP target 19041, Local machine",
+      "relatedIssues": [
+        2368,
+        2848,
+        2660
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/6242492/Leak2.zip",
+          "description": "Reporter\u0027s minimal UWP reproduction project"
+        }
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "errorMessage": "Memory grows to about double the size during rapid resize with SKPath drawing",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "UAP 19041"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.80.2",
+        "2.88.9",
+        "3.116.1"
+      ],
+      "currentRelevance": "unlikely",
+      "relevanceReason": "Multiple users confirmed the memory leak is resolved in SkiaSharp 3.116.1. The underlying Skia path caching behavior was improved in the 3.x branch."
+    },
+    "fixStatus": {
+      "likelyFixed": true,
+      "confidence": 0.85,
+      "reason": "Reporter of related #2368 (AquilaAbriel) confirmed the memory leak was fixed in 3.116.1. Comment from najak3d also confirmed 3.116.1 fully resolves the memory leak. The OP on UWP cannot verify since UWP support was dropped in 3.x.",
+      "relatedPRs": [],
+      "relatedCommits": [],
+      "fixedInVersion": "3.116.1"
+    }
+  },
+  "analysis": {
+    "summary": "Memory leak caused by Skia internally caching path data when SKPath is modified and redrawn repeatedly. Skia\u0027s SkPath has an isVolatile flag that tells the surface not to cache path data for frequently-changing paths, but this flag is not exposed in SkiaSharp\u0027s C API or C# bindings. The leak was confirmed fixed in SkiaSharp 3.x (likely through Skia engine updates).",
+    "rationale": "This is a genuine memory leak bug in SkiaSharp 2.x caused by Skia\u0027s internal path caching. When paths are rebuilt and drawn rapidly (resize, animation), Skia attaches cached data to the surface for each path version, growing memory without bound. The C\u002B\u002B SkPath::setIsVolatile(true) flag exists to prevent this, but it was never exposed through the C API layer. The bug is confirmed fixed in 3.116.1 by multiple independent reporters, making this a close-as-fixed candidate.",
+    "keySignals": [
+      {
+        "text": "When I trigger the Draw by resizing the page by constantly dragging to resize, the memory use goes up lots",
+        "source": "issue body",
+        "interpretation": "Classic Skia path cache growth from rapid path mutation and redraw."
+      },
+      {
+        "text": "Removing the SKCanvas from the form releases all the memory leaked",
+        "source": "issue body",
+        "interpretation": "Confirms the cache is tied to the surface/canvas lifecycle, not a managed object leak."
+      },
+      {
+        "text": "the memory leak I reported was actually fixed at some point: I just updated my debug project to SkiaSharp 3.116.1 and the bug seems to be fixed",
+        "source": "#2368 comment by AquilaAbriel",
+        "interpretation": "Independent confirmation that 3.x resolved this class of memory leak."
+      },
+      {
+        "text": "I was able to fully switch over to SKIA 3.116.1, and this FULLY RESOLVES the memory leak!",
+        "source": "#2368 comment by najak3d",
+        "interpretation": "Second independent confirmation from a user who was severely impacted."
+      },
+      {
+        "text": "2.88.9 is much more spiky in terms of memory usage when the canvas size changes rapidly",
+        "source": "comment 5 by AquilaAbriel",
+        "interpretation": "Behavior differs between 2.x versions; 2.88.9 uses 2x RAM vs 2.80.2 but actual persistent leak is similar."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "externals/skia/include/core/SkPath.h",
+        "finding": "Skia\u0027s SkPath has setIsVolatile(bool) flag. When false (default), Skia attaches a cache of data to speed repeated drawing. When true, Skia skips caching. This flag is key for animating/frequently-changing paths.",
+        "relevance": "direct",
+        "lines": "320-350"
+      },
+      {
+        "file": "externals/skia/include/c/sk_path.h",
+        "finding": "The C API for SKPath does not expose any volatile/isVolatile functions. sk_path_new, sk_path_delete, sk_path_reset are present but no volatile control.",
+        "relevance": "direct",
+        "lines": "18-54"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPath.cs",
+        "finding": "SKPath C# wrapper has no IsVolatile property. The class implements ISKSkipObjectRegistration and has proper Dispose/DisposeNative calling sk_path_delete, but no volatile control is available to users.",
+        "relevance": "direct",
+        "lines": "15-42"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "DrawPath simply passes path.Handle and paint.Handle to sk_canvas_draw_path. No caching or lifecycle management at the C# level \u2014 the leak is entirely in Skia\u0027s native layer.",
+        "relevance": "related",
+        "lines": "405-411"
+      }
+    ],
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.116.1 or later (confirmed fix by multiple users)",
+      "Minimize path recreation frequency during rapid resize events (e.g., debounce resize handlers)"
+    ],
+    "nextQuestions": [
+      "Can the OP migrate away from UWP to WinUI to use SkiaSharp 3.x?",
+      "Should SkiaSharp expose SkPath::setIsVolatile as a public API for advanced users?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia\u0027s internal path cache grows unbounded when paths are mutated and redrawn rapidly, because the default isVolatile=false tells Skia to cache data for each path version. This was resolved in SkiaSharp 3.x through Skia engine updates.",
+      "proposals": [
+        {
+          "title": "Upgrade to SkiaSharp 3.x",
+          "description": "Multiple users confirmed the memory leak is resolved in SkiaSharp 3.116.1\u002B. This is the recommended path forward. UWP users would need to migrate to WinUI since UWP support was dropped.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "medium"
+        },
+        {
+          "title": "Debounce resize events",
+          "description": "Reduce the frequency of SKPath recreation during rapid resize by throttling or debouncing the resize handler. This reduces cache growth rate but does not eliminate the underlying leak in 2.x.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.6,
+          "effort": "small"
+        },
+        {
+          "title": "Expose IsVolatile property",
+          "description": "Add sk_path_set_volatile/sk_path_get_volatile to the C API and an IsVolatile property to SKPath. This would let users mark frequently-changing paths as volatile to prevent Skia from caching their data.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.7,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Upgrade to SkiaSharp 3.x",
+      "recommendedReason": "The memory leak is confirmed fixed in 3.x by multiple independent users. This addresses the root cause without requiring additional API changes."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.8,
+      "reason": "Multiple independent users confirmed the memory leak is resolved in SkiaSharp 3.116.1\u002B. The related issue #2368 was closed for the same reason. The OP\u0027s UWP platform is no longer supported in 3.x, but the underlying bug is fixed."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp core, and UWP platform labels",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Universal-UWP"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2368 which tracks the same root cause and has more investigation",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 2368
+      },
+      {
+        "type": "add-comment",
+        "description": "Post resolution summary asking OP to verify with 3.x",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "This memory leak was caused by Skia\u0027s internal path caching when paths are rebuilt and redrawn rapidly. Multiple users in #2368 have confirmed this is resolved in SkiaSharp 3.116.1\u002B.\n\nSince the original report was on UWP (which is no longer supported in 3.x), migration to WinUI with SkiaSharp 3.x would be needed to pick up this fix.\n\nIf you\u0027re still experiencing this on SkiaSharp 3.x, please open a new issue with an updated reproduction project."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in SkiaSharp 3.x",
+        "risk": "medium",
+        "confidence": 0.75
+      }
+    ]
+  }
+}

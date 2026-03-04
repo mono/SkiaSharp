@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2732,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-18T01:36:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced on SkiaSharp 2.88.3: DllNotFoundException for libSkiaSharp occurs at runtime in browser because the .a files are not statically linked into dotnet.wasm. The 2.88.x NativeAssets.WebAssembly package did not auto-configure NativeFileReference for Blazor WASM apps. Fixed in SkiaSharp 3.x: both SkiaSharp.Views.Blazor 3.119.2 and plain SkiaSharp \u002B NativeAssets.WebAssembly 3.119.2 work correctly \u2014 the .targets file now auto-includes NativeFileReference when building for WASM. The comment #3 claim of 3.119.0 failure could not be reproduced with 3.119.2; likely a configuration issue on the reporter\u0027s end.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WebAssembly project with SkiaSharp 2.88.3 \u002B NativeAssets.WebAssembly (reporter\u0027s exact setup, no WasmBuildNative)",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.3 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.WebAssembly --version 2.88.3",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "filesCreated": [
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Blazor page using SKImageInfo and SKSurface.Create to reproduce the DllNotFoundException",
+          "content": "@page \u0022/\u0022\n@using SkiaSharp\n\n\u003Ch1\u003ESkiaSharp Repro #2732\u003C/h1\u003E\n\u003Cp\u003EStatus: @status\u003C/p\u003E\n\n@code {\n    private string status = \u0022Loading...\u0022;\n    protected override void OnInitialized()\n    {\n        try\n        {\n            var info = new SKImageInfo(512, 512);\n            using var surface = SKSurface.Create(info);\n            status = surface != null ? \u0022SUCCESS\u0022 : \u0022FAILURE: null surface\u0022;\n            Console.WriteLine(status);\n        }\n        catch (Exception ex)\n        {\n            status = $\u0022ERROR: {ex.GetType().Name}: {ex.Message}\u0022;\n            Console.WriteLine(status);\n            if (ex.InnerException != null)\n                Console.WriteLine($\u0022INNER: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\u0022);\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build Blazor WASM project with SkiaSharp 2.88.3",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 2 Warning(s) 0 Error(s)"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run Blazor WASM app and check browser console \u2014 DllNotFoundException: libSkiaSharp at runtime",
+      "layer": "native",
+      "result": "wrong-output",
+      "command": "dotnet run --urls http://localhost:5111 --no-build",
+      "output": "Browser console errors:\n[ERROR] System.DllNotFoundException: libSkiaSharp\n[ERROR]    at SkiaSharp.SKImageInfo..cctor()\n[LOG] ERROR: TypeInitializationException: TypeInitialization_Type, SkiaSharp.SKImageInfo\n[LOG] INNER: DllNotFoundException: libSkiaSharp\n\nPage shows: Status: ERROR: TypeInitializationException: TypeInitialization_Type, SkiaSharp.SKImageInfo"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test SkiaSharp 3.119.2 with SkiaSharp.Views.Blazor in fresh project \u2014 works correctly",
+      "layer": "native",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.119.2 \u0026\u0026 dotnet build \u0026\u0026 dotnet run --urls http://localhost:5112 --no-build",
+      "exitCode": 0,
+      "output": "Build succeeded with native linking (libSkiaSharp.a linked into dotnet.native.wasm). Browser console: SUCCESS: rendered 1024x1024. No errors."
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test SkiaSharp 3.119.2 with plain SkiaSharp \u002B NativeAssets.WebAssembly in fresh project \u2014 works correctly",
+      "layer": "native",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet add package SkiaSharp.NativeAssets.WebAssembly --version 3.119.2 \u0026\u0026 dotnet build \u0026\u0026 dotnet run --urls http://localhost:5113 --no-build",
+      "exitCode": 0,
+      "output": "Build succeeded with native linking (libSkiaSharp.a auto-linked). Browser console: SUCCESS: SKImageInfo and SKSurface created successfully. No errors."
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.3",
+    "dockerUsed": false,
+    "wasmToolsVersion": "10.0.102"
+  },
+  "assessment": "user-error",
+  "scope": "platform-specific/wasm",
+  "versionResults": [
+    {
+      "version": "2.88.3",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "DllNotFoundException: libSkiaSharp at runtime in browser. The 2.88.x NativeAssets.WebAssembly package does not auto-configure NativeFileReference for Blazor WASM apps.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Both SkiaSharp.Views.Blazor and plain SkiaSharp \u002B NativeAssets.WebAssembly work correctly. The .targets file auto-includes NativeFileReference for WASM builds.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.3"
+      },
+      {
+        "name": "SkiaSharp.NativeAssets.WebAssembly",
+        "version": "2.88.3"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "fixStatus",
+        "upstream": "likelyFixed: false, confidence: 0.55",
+        "corrected": "Confirmed fixed in 3.119.2. The fix from PR #3082 works correctly. Comment #3 claim of 3.119.0 failure could not be reproduced with 3.119.2."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "ready",
+      "body": "Thanks for reporting this! We were able to reproduce the \u0060TypeInitializationException\u0060 with inner \u0060DllNotFoundException: libSkiaSharp\u0060 using SkiaSharp 2.88.3 in a Blazor WebAssembly app.\n\nThe root cause is that in SkiaSharp 2.x, the \u0060NativeAssets.WebAssembly\u0060 package did not automatically configure the \u0060NativeFileReference\u0060 needed to statically link \u0060libSkiaSharp.a\u0060 into \u0060dotnet.native.wasm\u0060 at build time.\n\nThe good news is that this is **fixed in SkiaSharp 3.x**. We tested with SkiaSharp 3.119.2 and confirmed it works correctly with both:\n- \u0060SkiaSharp.Views.Blazor\u0060 (recommended for Blazor apps)\n- Plain \u0060SkiaSharp\u0060 \u002B \u0060SkiaSharp.NativeAssets.WebAssembly\u0060\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.3 | \u274C DllNotFoundException: libSkiaSharp |\n| 3.119.2 | \u2705 Fixed \u2014 renders correctly |\n\n**To fix this, upgrade to SkiaSharp 3.x:**\n\u0060\u0060\u0060xml\n\u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.119.2\u0022 /\u003E\n\u0060\u0060\u0060\n\nIf you must stay on 2.x, you can manually add the native file reference as described in [this comment](https://github.com/mono/SkiaSharp/issues/2732#issuecomment-2501856316).\n\n@tolzy88 \u2014 Regarding your report of the same issue on 3.119.0 with .NET 8: we were unable to reproduce this with 3.119.2. Could you share your \u0060.csproj\u0060 file and confirm which packages you\u0027re referencing? The \u0060NativeAssets.WebAssembly\u0060 package should auto-configure everything in 3.x."
+    },
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.9,
+      "reason": "The DllNotFoundException is reproduced on 2.88.3 but fully fixed in 3.119.2 with both SkiaSharp.Views.Blazor and plain NativeAssets.WebAssembly. The fix from PR #3082 correctly auto-configures NativeFileReference for WASM builds."
+    },
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.x (3.119.2 or later) which auto-configures WASM native linking",
+      "For 2.x: Manually add \u003CNativeFileReference Include=\u0022$(SkiaSharpStaticLibraryPath)\\3.1.34\\st\\*.a\u0022 /\u003E to the project file"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/wasm label to clarify this is a WASM-specific packaging issue",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed \u2014 the issue is resolved in SkiaSharp 3.x. Suggest upgrade.",
+        "risk": "medium",
+        "confidence": 0.85
+      }
+    ],
+    "missingInfo": [
+      "Comment #3 reporter (tolzy88): .csproj file contents showing package references and any custom MSBuild properties",
+      "Comment #3 reporter: exact .NET SDK version (dotnet --info output)"
+    ]
+  }
+}

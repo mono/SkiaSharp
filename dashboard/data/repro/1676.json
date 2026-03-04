@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1676,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-04T22:40:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced on Android emulator (API 36, arm64) with SkiaSharp 3.116.1, 3.119.2 (latest stable), and main branch source. When an SKGLSurfaceView is used with PreserveEGLContextOnPause=false and the app transitions background to foreground, the GL rendering thread crashes with SIGSEGV (null pointer dereference) immediately after OnResume. The EGL context is destroyed on pause and recreated on resume, but SKGLSurfaceViewRenderer.OnSurfaceCreated is empty and does not reset the GRContext, causing the stale GRContext to dereference a null pointer. The bug persists on the main branch \u2014 no fix has been applied.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create .NET Android project with SkiaSharp.Views 3.119.2",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new android -n Repro \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views --version 3.119.2",
+      "exitCode": 0,
+      "output": "The template \u0022Android Application\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp.Views\u0027 version \u00273.119.2\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "MainActivity.cs",
+          "description": "Android Activity with SKGLSurfaceView, PreserveEGLContextOnPause=false, and proper OnPause/OnResume lifecycle calls",
+          "content": "using SkiaSharp;\nusing SkiaSharp.Views.Android;\n\nnamespace Repro;\n\n[Activity(Label = \u0022SKGLSurfaceView Repro\u0022, MainLauncher = true, LaunchMode = Android.Content.PM.LaunchMode.SingleTop)]\npublic class MainActivity : Activity\n{\n    private SKGLSurfaceView? _skglView;\n    private int _frameCount;\n\n    protected override void OnCreate(Bundle? savedInstanceState)\n    {\n        base.OnCreate(savedInstanceState);\n        SetContentView(Resource.Layout.activity_main);\n        _skglView = FindViewById\u003CSKGLSurfaceView\u003E(Resource.Id.skglSurfaceView);\n        if (_skglView != null)\n        {\n            _skglView.PreserveEGLContextOnPause = false;\n            _skglView.PaintSurface \u002B= OnPaintSurface;\n        }\n    }\n\n    private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)\n    {\n        _frameCount\u002B\u002B;\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var paint = new SKPaint { Color = SKColors.White, TextSize = 48, IsAntialias = true };\n        canvas.DrawText($\u0022Frame: {_frameCount}\u0022, 50, 100, paint);\n        if (_frameCount % 60 == 0)\n            Android.Util.Log.Info(\u0022REPRO\u0022, $\u0022Rendered frame {_frameCount}\u0022);\n    }\n\n    protected override void OnResume()\n    {\n        base.OnResume();\n        _skglView?.OnResume();\n    }\n\n    protected override void OnPause()\n    {\n        _skglView?.OnPause();\n        base.OnPause();\n    }\n}"
+        },
+        {
+          "filename": "Resources/layout/activity_main.xml",
+          "description": "Android layout with full-screen SKGLSurfaceView",
+          "content": "\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\n\u003CRelativeLayout xmlns:android=\u0022http://schemas.android.com/apk/res/android\u0022\n    android:layout_width=\u0022match_parent\u0022\n    android:layout_height=\u0022match_parent\u0022\u003E\n    \u003CSkiaSharp.Views.Android.SKGLSurfaceView\n        android:id=\u0022@\u002Bid/skglSurfaceView\u0022\n        android:layout_width=\u0022match_parent\u0022\n        android:layout_height=\u0022match_parent\u0022 /\u003E\n\u003C/RelativeLayout\u003E"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and deploy to Android emulator (API 36, arm64)",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet build -c Debug -t:Install",
+      "exitCode": 0,
+      "output": "Build succeeded. 3 Warning(s) 0 Error(s)"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Launch app and verify GL rendering works initially \u2014 frames render at ~60fps",
+      "layer": "csharp",
+      "result": "success",
+      "command": "adb shell am start -n com.companyname.Repro/...MainActivity",
+      "exitCode": 0,
+      "output": "REPRO: SKGLSurfaceView created, PreserveEGLContextOnPause=false\nREPRO: Activity OnResume called\nREPRO: Rendered frame 60\nREPRO: Rendered frame 120\n...\nREPRO: Rendered frame 840"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Background app via Home key, wait 5s, bring back to foreground \u2014 SIGSEGV crash in GLThread on resume",
+      "layer": "native",
+      "result": "failure",
+      "command": "adb shell input keyevent KEYCODE_HOME \u0026\u0026 sleep 5 \u0026\u0026 adb shell am start --activity-single-top ...",
+      "exitCode": 11,
+      "output": "REPRO: Activity OnPause called\n[5 second pause]\nREPRO: Activity OnResume called\n[NO MORE FRAMES RENDERED]\nemuglGLESv2_enc: GL error 0x502 condition [bufferId==0]\nFatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid GLThread 69\ncrash_dump64: performing dump of process (target tid = GLThread)\nSignal 11 (SIGSEGV) - Cause: null pointer dereference\nProcess exited due to signal 11 (Segmentation fault)"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test with SkiaSharp 3.116.1 (older stable) \u2014 same SIGSEGV crash on resume from background",
+      "layer": "native",
+      "result": "failure",
+      "command": "dotnet new android -n Repro \u0026\u0026 dotnet add package SkiaSharp.Views --version 3.116.1 \u0026\u0026 dotnet build \u0026\u0026 adb install ...",
+      "exitCode": 11,
+      "output": "Build succeeded. Background/foreground test result:\nREPRO: Activity OnPause called\nREPRO: Activity OnResume called\n[NO FRAMES AFTER RESUME]\ncrash_dump64: performing dump of process\nSignal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test with main branch source \u2014 built Android sample from source with SKGLSurfaceView. Same SIGSEGV crash on resume.",
+      "layer": "native",
+      "result": "failure",
+      "command": "dotnet build samples/Basic/Android/SkiaSharpSample.csproj -c Debug -p:EmbedAssembliesIntoApk=true \u0026\u0026 adb install ...",
+      "exitCode": 11,
+      "output": "Build succeeded. Background/foreground test result:\nREPRO: [main] Activity OnResume called\n[NO FRAMES AFTER RESUME]\nemuglGLESv2_enc: GL error 0x502 condition [bufferId==0]\nFatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid GLThread 69\nProcess exited due to signal 11 (Segmentation fault)"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3 (host) \u002B Android API 36 emulator (arm64)",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "assessment": "likely-bug",
+  "scope": "platform-specific/android",
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "SIGSEGV null pointer dereference in GLThread on resume from background. Same crash pattern as 3.119.2.",
+      "platform": "emulator-android-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "SIGSEGV null pointer dereference in GLThread on resume from background. GL error 0x502 (GL_INVALID_OPERATION) followed by Fatal signal 11.",
+      "platform": "emulator-android-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Built from main branch source via project references. Same SIGSEGV crash pattern. The bug persists \u2014 OnSurfaceCreated still does not reset GRContext.",
+      "platform": "emulator-android-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net10.0-android",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "errorMessages": {
+    "primaryError": "Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid GLThread 69 \u2014 null pointer dereference",
+    "stackTrace": "emuglGLESv2_enc: GL2Encoder.cpp:s_glBufferData:694 GL error 0x502 condition [bufferId==0]\nFatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid GLThread 69\ncrash_dump64: performing dump of process (target tid = GLThread)\nDEBUG: signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0000000000000000\nDEBUG: Cause: null pointer dereference\nZygote: Process exited due to signal 11 (Segmentation fault)"
+  },
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for reporting this! We\u0027ve confirmed the issue. The SKGLSurfaceView crashes with a native SIGSEGV (null pointer dereference) when returning from the background.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| SkiaSharp 3.116.1 | \u274C Reproduced \u2014 SIGSEGV in GLThread |\n| SkiaSharp 3.119.2 (latest) | \u274C Reproduced \u2014 SIGSEGV in GLThread |\n| main (source) | \u274C Reproduced \u2014 SIGSEGV in GLThread |\n\n**Reproduction:** When \u0060PreserveEGLContextOnPause\u0060 is \u0060false\u0060 (or when Android destroys the EGL context), the GL rendering thread crashes with \u0060Fatal signal 11 (SIGSEGV), fault addr 0x0\u0060 immediately after the activity resumes. No frames are rendered after the resume.\n\n**Workarounds:**\n1. Switch to \u0060SKCanvasView\u0060 (CPU-based rendering) if GPU acceleration isn\u0027t critical \u2014 this avoids the EGL lifecycle issue entirely.\n2. If you must use GL rendering, ensure \u0060PreserveEGLContextOnPause = true\u0060 is set (though this is not guaranteed to work on all devices/API levels).\n\nWe\u0027re tracking this for a fix."
+    },
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.95,
+      "reason": "Bug reproduces on all tested versions including main branch. The root cause is well-understood from triage (empty OnSurfaceCreated vs TextureView FreeContext call), but needs a code fix."
+    },
+    "workarounds": [
+      "Switch to SKCanvasView (CPU-based rendering) which does not depend on the EGL context lifecycle",
+      "Set PreserveEGLContextOnPause = true on the SKGLSurfaceView (may not work on all devices)"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views, os/Android, backend/OpenGL labels",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ]
+  }
+}

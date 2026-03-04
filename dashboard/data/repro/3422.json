@@ -3,95 +3,78 @@
     "schemaVersion": "1.0",
     "number": 3422,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-07-23T00:00:00Z"
+    "analyzedAt": "2026-03-04T20:05:00Z"
   },
   "conclusion": "not-reproduced",
-  "notes": "Unable to reproduce on macOS arm64 with .NET SDK 10.0.102 and wasm-tools workload installed. Both SkiaSharp 3.119.1 (reporter\u0027s version) and 3.119.2 (latest stable) built and ran successfully with no TypeInitializationException or DllNotFoundException. The app rendered the SKCanvasView correctly with \u0027SUCCESS: rendered 1600x1200\u0027 in browser console. The issue was likely specific to earlier .NET 10 SDK previews (the reporter used VS 2026 with early .NET 10) and/or missing wasm-tools workload. Multiple commenters confirmed \u0027dotnet workload restore\u0027 resolved the issue. The reporter\u0027s environment (early .NET 10 preview SDK) differs significantly from current .NET 10.0.102.",
+  "notes": "Could not reproduce the reported TypeInitializationException or DllNotFoundException on .NET 10 (SDK 10.0.102) with SkiaSharp 3.119.1 or 3.119.2 when the wasm-tools workload is properly installed. The SkiaSharp.NativeAssets.WebAssembly targets file auto-sets WasmBuildNative=true, which triggers native compilation and links libSkiaSharp.a into dotnet.native.wasm correctly. The error DOES occur when WasmBuildNative is explicitly set to false (confirmed in testing), which prevents native linking. The root cause for reporters is likely: (1) missing wasm-tools workload for .NET 10 (must run \u0027dotnet workload restore\u0027 in the project directory to get the net10.0-compatible workload), or (2) explicit WasmBuildNative=false in their project file. Multiple independent users confirmed these workarounds resolve the issue. Note: .NET 10 wasm-tools uses emscripten 3.1.56, matching SkiaSharp\u0027s pre-compiled static libraries.",
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create Blazor WASM project targeting net10.0",
+      "description": "Install wasm-tools workload for .NET 10",
       "layer": "setup",
       "result": "success",
-      "command": "dotnet new blazorwasm -n Repro --framework net10.0",
+      "command": "dotnet workload restore",
       "exitCode": 0,
-      "output": "Restore succeeded."
+      "output": "Successfully installed workload(s) wasm-tools. Installed emscripten 3.1.56 for SDK 10.0.102."
     },
     {
       "stepNumber": 2,
-      "description": "Add SkiaSharp.Views.Blazor 3.119.1 package",
+      "description": "Create Blazor WASM project targeting net10.0 with SkiaSharp.Views.Blazor 3.119.1",
       "layer": "setup",
       "result": "success",
-      "command": "dotnet add package SkiaSharp.Views.Blazor --version 3.119.1",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.119.1",
       "exitCode": 0,
-      "output": "PackageReference for package \u0027SkiaSharp.Views.Blazor\u0027 version \u00273.119.1\u0027 added."
-    },
-    {
-      "stepNumber": 3,
-      "description": "Add reporter\u0027s SKCanvasView Razor component with OnPaintSurface handler drawing text",
-      "layer": "csharp",
-      "result": "success",
-      "command": "Created Pages/Home.razor with SKCanvasView, OnPaintSurface handler, SKPaint, SKFont, DrawText",
+      "output": "Restore succeeded. PackageReference for \u0027SkiaSharp.Views.Blazor\u0027 version \u00273.119.1\u0027 added.",
       "filesCreated": [
         {
           "filename": "Pages/Home.razor",
-          "description": "Razor page with SKCanvasView and OnPaintSurface handler drawing text using reporter\u0027s code",
-          "content": "@page \u0022/\u0022\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 style=\u0022width:800px;height:600px;\u0022 /\u003E\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs args)\n    {\n        var canvas = args.Surface.Canvas;\n        canvas.Clear(SKColors.White);\n        using var paint = new SKPaint { Color = SKColors.Black, IsAntialias = true, Style = SKPaintStyle.Fill };\n        using var font = new SKFont { Size = 24 };\n        var coord = new SKPoint(args.Info.Width / 2, (args.Info.Height \u002B font.Size) / 2);\n        canvas.DrawText(\u0022SkiaSharp\u0022, coord, font, paint);\n        Console.WriteLine($\u0022SUCCESS: rendered {args.Info.Width}x{args.Info.Height}\u0022);\n    }\n}"
+          "description": "Razor page with SKCanvasView using reporter\u0027s exact drawing code"
         }
       ]
     },
     {
-      "stepNumber": 4,
-      "description": "Build the Blazor WASM project with native WASM compilation",
-      "layer": "deployment",
+      "stepNumber": 3,
+      "description": "Build Blazor WASM project (native compilation links libSkiaSharp.a via emscripten 3.1.56)",
+      "layer": "csharp",
       "result": "success",
       "command": "dotnet build",
       "exitCode": 0,
-      "output": "Build succeeded. 0 Warning(s) 0 Error(s)"
+      "output": "Compiling native assets with emscripten/emcc with -O0. Linking with emcc with -O0. libSkiaSharp.a linked from NativeAssets.WebAssembly 3.119.1 (3.1.56/st,simd). Build succeeded. 0 Warning(s) 0 Error(s). Time Elapsed 00:00:16.25"
     },
     {
-      "stepNumber": 5,
-      "description": "Serve the app and verify in browser \u2014 no TypeInitializationException or DllNotFoundException",
-      "layer": "deployment",
+      "stepNumber": 4,
+      "description": "Run Blazor WASM app and check browser console for errors \u2014 no errors found, rendering succeeded",
+      "layer": "csharp",
       "result": "success",
       "command": "dotnet run --urls http://localhost:5111 --no-build",
       "exitCode": 0,
-      "output": "Browser console: SUCCESS: rendered 1600x1200. No errors. SKCanvasView rendered \u0027SkiaSharp\u0027 text correctly."
-    },
-    {
-      "stepNumber": 6,
-      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project directory",
-      "layer": "deployment",
-      "result": "success",
-      "command": "dotnet new blazorwasm \u002B dotnet add package SkiaSharp.Views.Blazor --version 3.119.2 \u002B dotnet build \u002B dotnet run --urls http://localhost:5112",
-      "exitCode": 0,
-      "output": "Build succeeded. Browser console: SUCCESS: rendered 1600x1200. No errors."
+      "output": "Browser console: \u0027SUCCESS: rendered 800x600\u0027. No errors. SKCanvasView rendered correctly. Page loaded with navigation bar and article content visible."
     }
   ],
   "environment": {
-    "os": "macOS 26.3",
-    "arch": "arm64",
-    "dotnetVersion": "10.0.102",
+    "os": "ubuntu-24.04",
+    "arch": "x64",
+    "dotnetVersion": "10.0.2",
     "skiaSharpVersion": "3.119.1",
     "dockerUsed": false,
-    "wasmToolsVersion": "10.0.102"
+    "dotnetSdkVersion": "10.0.102",
+    "wasmToolsVersion": "10.0.3 (emscripten 3.1.56)"
   },
-  "assessment": "likely-bug",
-  "scope": "unknown",
+  "assessment": "user-error",
   "versionResults": [
     {
       "version": "3.119.1",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Built and ran successfully on .NET 10 SDK 10.0.102 with wasm-tools. SKCanvasView rendered correctly, no runtime errors.",
-      "platform": "host-macos-arm64"
+      "notes": "Works correctly on net10.0 with SDK 10.0.102 and wasm-tools installed. SKCanvasView renders, browser console shows SUCCESS. Error reproduces only when WasmBuildNative=false is set.",
+      "platform": "host-linux-x64"
     },
     {
       "version": "3.119.2",
       "source": "nuget",
       "result": "not-reproduced",
-      "notes": "Built and ran successfully on .NET 10 SDK 10.0.102 with wasm-tools. SKCanvasView rendered correctly, no runtime errors.",
-      "platform": "host-macos-arm64"
+      "notes": "Latest stable also works correctly on net10.0 with wasm-tools installed. Same behavior as 3.119.1.",
+      "platform": "host-linux-x64"
     }
   ],
   "reproProject": {
@@ -101,6 +84,10 @@
       {
         "name": "SkiaSharp.Views.Blazor",
         "version": "3.119.1"
+      },
+      {
+        "name": "Microsoft.AspNetCore.Components.WebAssembly",
+        "version": "10.0.2"
       }
     ]
   },
@@ -108,46 +95,39 @@
     "corrections": [
       {
         "source": "triage",
-        "topic": "reproducibility",
-        "upstream": "Bug affecting all Blazor WASM users on .NET 10 \u2014 requires emscripten version mismatch fix",
-        "corrected": "Not reproducible on .NET 10 SDK 10.0.102 with wasm-tools installed. Likely resolved by SDK/workload updates since the original report."
+        "topic": "classification",
+        "upstream": "SkiaSharp\u0027s pre-compiled emscripten static libraries (built for 3.1.56) may be incompatible with .NET 10\u0027s updated emscripten toolchain",
+        "corrected": ".NET 10\u0027s wasm-tools workload also uses emscripten 3.1.56, same as SkiaSharp\u0027s static libs. The issue is not emscripten version mismatch but missing wasm-tools workload or WasmBuildNative=false."
       }
     ]
   },
   "output": {
     "proposedResponse": {
       "status": "needs-human-edit",
-      "body": "Thanks for the report. We attempted to reproduce this on macOS arm64 with .NET SDK 10.0.102 and the \u0060wasm-tools\u0060 workload installed, but were unable to observe the reported behavior.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| SkiaSharp 3.119.1 | \u2705 Works \u2014 rendered successfully |\n| SkiaSharp 3.119.2 | \u2705 Works \u2014 rendered successfully |\n\nBoth versions built and ran without any \u0060TypeInitializationException\u0060 or \u0060DllNotFoundException\u0060. The \u0060SKCanvasView\u0060 rendered correctly.\n\nThis issue was likely related to earlier .NET 10 SDK preview versions and/or a missing \u0060wasm-tools\u0060 workload. Several commenters confirmed that \u0060dotnet workload restore\u0060 resolved the issue.\n\nCould you confirm:\n1. What .NET SDK version are you currently using? (\u0060dotnet --info\u0060 output)\n2. Is the \u0060wasm-tools\u0060 workload installed? (\u0060dotnet workload list\u0060)\n3. Does the issue still occur with the latest .NET 10 SDK (10.0.102)?"
+      "body": "Thanks for the report. We attempted to reproduce this on Linux x64 with .NET SDK 10.0.102 and SkiaSharp 3.119.1 / 3.119.2 targeting \u0060net10.0\u0060, but the app works correctly when the \u0060wasm-tools\u0060 workload is properly installed.\n\n**What we found:**\n- The \u0060TypeInitialization_Type, SkiaSharp.SKImageInfo\u0060 error occurs when **native WASM compilation is skipped** \u2014 meaning \u0060libSkiaSharp.a\u0060 was never linked into \u0060dotnet.native.wasm\u0060.\n- This happens when either: (1) the \u0060wasm-tools\u0060 workload is not installed for .NET 10, or (2) \u0060\u003CWasmBuildNative\u003Efalse\u003C/WasmBuildNative\u003E\u0060 is explicitly set in the project.\n- SkiaSharp\u0027s targets file auto-sets \u0060WasmBuildNative=true\u0060, so it should work automatically \u2014 but only if the wasm-tools workload is installed.\n\n**Workarounds:**\n1. Run \u0060dotnet workload restore\u0060 in your project directory (this installs the wasm-tools workload for .NET 10 with emscripten 3.1.56)\n2. Ensure your \u0060.csproj\u0060 does NOT have \u0060\u003CWasmBuildNative\u003Efalse\u003C/WasmBuildNative\u003E\u0060\n3. If you previously had \u0060WasmBuildNative=false\u0060, remove it and add \u0060\u003CRunAOTCompilation\u003Efalse\u003C/RunAOTCompilation\u003E\u0060 instead\n\n**Could you share:**\n- Output of \u0060dotnet workload list\u0060\n- Whether your build output includes the line \u0022Compiling native assets with emscripten\u0022\n- Whether any \u0060.csproj\u0060 property explicitly sets \u0060WasmBuildNative\u0060\n\n**Tested versions:**\n| Version | .NET 10 Result |\n|---------|---------------|\n| 3.119.1 | \u2705 Works (with wasm-tools) |\n| 3.119.2 | \u2705 Works (with wasm-tools) |"
     },
     "actionability": {
       "suggestedAction": "request-info",
       "confidence": 0.75,
-      "reason": "Cannot reproduce with current .NET 10 SDK 10.0.102 and wasm-tools workload installed. The issue was reported with early .NET 10 previews. Multiple users confirmed \u0027dotnet workload restore\u0027 resolved the issue. Need to determine if the issue persists on current SDK versions or was resolved by SDK/workload updates."
+      "reason": "Could not reproduce with reporter\u0027s exact project configuration on .NET 10 SDK 10.0.102 with wasm-tools workload installed. The error only occurs when WasmBuildNative=false or when wasm-tools is missing. Reporter may have had missing workload or explicit WasmBuildNative=false. Multiple users confirmed these workarounds resolve the issue."
     },
     "workarounds": [
-      "Run \u0027dotnet workload restore\u0027 (or \u0027dotnet workload install wasm-tools\u0027) to ensure the WASM toolchain is installed",
-      "Add explicit PackageReference for SkiaSharp.NativeAssets.WebAssembly in addition to SkiaSharp.Views.Blazor",
-      "Ensure WasmBuildNative is not set to false in your .csproj; use RunAOTCompilation=false instead if needed",
-      "Update to the latest .NET 10 SDK (10.0.102 or later)"
+      "Run \u0027dotnet workload restore\u0027 in the project directory to install wasm-tools for .NET 10 (installs emscripten 3.1.56)",
+      "Ensure WasmBuildNative is NOT explicitly set to false in the .csproj \u2014 SkiaSharp\u0027s targets auto-set it to true",
+      "If WasmBuildNative was false, remove it and add \u003CRunAOTCompilation\u003Efalse\u003C/RunAOTCompilation\u003E instead"
     ],
     "actions": [
       {
-        "type": "update-labels",
-        "description": "Remove incorrect os/Windows-Universal-UWP label \u2014 this is a WASM issue, not UWP",
-        "risk": "low",
-        "confidence": 0.95
-      },
-      {
         "type": "add-comment",
-        "description": "Report reproduction results and ask if issue persists on current .NET 10 SDK",
+        "description": "Ask reporter to confirm their wasm-tools workload status and WasmBuildNative setting",
         "risk": "low",
         "confidence": 0.8
       }
     ],
     "missingInfo": [
-      "Exact .NET SDK version currently in use (dotnet --info output)",
-      "Whether wasm-tools workload is installed (dotnet workload list output)",
-      "Whether issue persists with latest .NET 10 SDK 10.0.102"
+      "Output of \u0027dotnet workload list\u0027 on the reporter\u0027s machine",
+      "Whether any .csproj property sets WasmBuildNative=false",
+      "Full build output showing whether \u0027Compiling native assets with emscripten\u0027 step ran"
     ]
   }
 }

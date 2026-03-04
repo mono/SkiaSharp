@@ -3,7 +3,7 @@
     "schemaVersion": "1.0",
     "number": 3386,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-12T16:25:00Z",
+    "analyzedAt": "2026-03-04T20:42:48Z",
     "currentLabels": [
       "type/bug",
       "os/Linux",
@@ -11,7 +11,7 @@
       "tenet/compatibility"
     ]
   },
-  "summary": "DllNotFoundException deploying SkiaSharp with NativeAssets.Linux.NoDependencies via .NET Aspire to Azure Container Apps \u2014 wrong native binary deployed",
+  "summary": "DllNotFoundException for libSkiaSharp when deploying ASP.NET Core WebAPI to Azure Container Apps via .NET Aspire, despite referencing SkiaSharp.NativeAssets.Linux.NoDependencies. The error indicates libfontconfig.so.1 is missing, which means the fontconfig-dependent binary is being loaded instead of the NoDependencies variant.",
   "classification": {
     "type": {
       "value": "type/bug",
@@ -31,32 +31,22 @@
   "evidence": {
     "reproEvidence": {
       "stepsToReproduce": [
-        "Create a .NET 9 WebAPI project using .NET Aspire",
-        "Add PackageReference for SkiaSharp and SkiaSharp.NativeAssets.Linux.NoDependencies",
-        "Deploy to Azure Container Apps via Aspire",
+        "Create ASP.NET Core WebAPI project with SkiaSharp and SkiaSharp.NativeAssets.Linux.NoDependencies",
+        "Deploy via .NET Aspire to Azure Container Apps (Linux containers)",
         "Call an endpoint that uses SKBitmap.Decode()"
       ],
-      "environmentDetails": "Azure Container Apps, Linux container, .NET 9.0.10, deployed via .NET Aspire, SkiaSharp 3.116.0",
+      "environmentDetails": "Azure Container Apps, Linux containers, .NET 9.0.10, deployed via .NET Aspire",
       "relatedIssues": [
-        2438,
-        1706,
         2377,
-        2607,
-        3235
-      ],
-      "repoLinks": [
-        {
-          "url": "https://github.com/AvantiPoint/aspnet-skia",
-          "description": "Custom Docker base image with native dependencies installed for SkiaSharp on ASP.NET"
-        }
+        2215
       ]
     },
     "bugSignals": {
-      "severity": "medium",
-      "isRegression": false,
-      "errorType": "DllNotFoundException",
-      "errorMessage": "Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. libfontconfig.so.1: cannot open shared object file: No such file or directory",
-      "stackTrace": "System.DllNotFoundException at SkiaSharp.SkiaApi.sk_managedstream_set_procs \u2192 SKAbstractManagedStream..cctor() \u2192 SKManagedStream..ctor() \u2192 SKCodec.WrapManagedStream() \u2192 SKCodec.Create() \u2192 SKBitmap.Decode()",
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. libfontconfig.so.1: cannot open shared object file: No such file or directory",
+      "stackTrace": "System.TypeInitializationException \u2192 System.DllNotFoundException at SkiaSharp.SkiaApi.sk_managedstream_set_procs \u2192 SKAbstractManagedStream..cctor() \u2192 SKManagedStream..ctor() \u2192 SKCodec.WrapManagedStream() \u2192 SKBitmap.Decode()",
       "reproQuality": "partial",
       "targetFrameworks": [
         "net9.0"
@@ -67,109 +57,116 @@
         "3.116.0",
         "2.88.9"
       ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
       "currentRelevance": "likely",
-      "relevanceReason": "The issue is a deployment/packaging interaction between NoDependencies and .NET Aspire\u0027s container build, not a SkiaSharp code regression. The underlying packaging structure hasn\u0027t changed, so this issue persists in current versions."
+      "relevanceReason": "The NoDependencies packaging structure has not changed fundamentally since 3.116.0. The issue is likely with how .NET Aspire deploys native assets, not a SkiaSharp code change."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.7,
+      "reason": "Reporter claims 2.88.9 worked but the deployment stack changed (.NET Aspire). The fontconfig error indicates the wrong binary variant is being deployed \u2014 this is a deployment configuration issue, not a SkiaSharp regression. The NoDependencies variant would not reference libfontconfig.so.1 at all."
     }
   },
   "analysis": {
-    "summary": "Reporter references NativeAssets.Linux.NoDependencies but the runtime error shows libfontconfig.so.1 missing \u2014 a dependency that NoDependencies explicitly excludes. This proves the deployed binary is NOT the NoDependencies variant; the standard NativeAssets.Linux binary (which requires fontconfig) was loaded instead. .NET Aspire\u0027s container build process likely selects the wrong native binary variant or a transitive dependency overrides NoDependencies.",
-    "codeInvestigation": [
-      {
-        "file": "binding/SkiaSharp/SKAbstractManagedStream.cs",
-        "finding": "Static constructor calls SkiaApi.sk_managedstream_set_procs() \u2014 this is the P/Invoke that triggers DllNotFoundException. The crash occurs at type initialization time, before any user code executes.",
-        "relevance": "direct",
-        "lines": "14-32"
-      },
-      {
-        "file": "binding/SkiaSharp.NativeAssets.Linux.NoDependencies/SkiaSharp.NativeAssets.Linux.NoDependencies.csproj",
-        "finding": "Package notes confirm NoDependencies only requires libpthread, libdl, libm, libc \u2014 fontconfig is explicitly excluded. The binary is packaged under runtimes/linux-x64/native/ etc.",
-        "relevance": "direct",
-        "lines": "6-16"
-      },
-      {
-        "file": "binding/SkiaSharp.NativeAssets.Linux/SkiaSharp.NativeAssets.Linux.csproj",
-        "finding": "Standard Linux package uses output/native/linux/ (different from linuxnodeps/) and packages under the same runtimes/linux-x64/native/ path. Both packages target the same RID paths, meaning a conflict between them results in one overwriting the other.",
-        "relevance": "direct",
-        "lines": "7-15"
-      },
-      {
-        "file": "documentation/packages.md",
-        "finding": "Troubleshooting section documents the \u0027Wrong Binary Deployed\u0027 pattern and lists checking for transitive NativeAssets.Linux references and container build tools deploying wrong RID variants as causes.",
-        "relevance": "context",
-        "lines": "176-196"
-      }
-    ],
-    "rationale": "Classified as type/bug because the NoDependencies package explicitly promises zero external dependencies, yet fontconfig is being required at runtime \u2014 meaning the wrong binary was deployed. This is area/libSkiaSharp.native because it\u0027s about native library selection and deployment, not a C# API issue. Severity is medium: it blocks production deployment but has a known workaround (switch to NativeAssets.Linux \u002B install fontconfig). Not a regression \u2014 the reporter\u0027s \u0027last known good\u0027 of 2.88.9 likely reflects a different deployment mechanism rather than a SkiaSharp change.",
+    "summary": "The root cause is a native binary mismatch: the reporter references SkiaSharp.NativeAssets.Linux.NoDependencies but the deployed container loads the fontconfig-dependent variant (from SkiaSharp.NativeAssets.Linux or the auto-included Win32/macOS native assets conflicting at RID resolution). The NoDependencies binary has zero third-party dependencies (only libc/libm/libpthread/libdl) and would never produce a libfontconfig.so.1 error. .NET Aspire container deployment may resolve a different NativeAssets variant or the NoDependencies package may not be referenced in the correct (executable) project.",
+    "rationale": "Classified as type/bug because the reporter has a clear DllNotFoundException with stack trace in a deployment scenario. Area is libSkiaSharp.native because this is about native binary loading/deployment, not the managed API. The fontconfig dependency error from NoDependencies is a known diagnostic pattern documented in packages.md \u2014 it means the wrong binary was deployed. This is not a SkiaSharp code regression but a deployment/packaging interaction with .NET Aspire.",
     "keySignals": [
       {
         "text": "libfontconfig.so.1: cannot open shared object file: No such file or directory",
-        "source": "issue body (first line of DllNotFoundException)",
-        "interpretation": "Per skia-patterns.md \u0027Wrong Binary Pattern\u0027: a libSkiaSharp.so WAS found and loaded, but it depends on fontconfig. NoDependencies has zero external deps, so this binary is NOT from NoDependencies \u2014 deployment is broken."
+        "source": "issue body (log output)",
+        "interpretation": "The NoDependencies variant never links to fontconfig. This error proves the fontconfig-dependent binary was loaded instead, meaning NoDependencies was not deployed correctly."
       },
       {
         "text": "PackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022",
-        "source": "issue body (csproj)",
-        "interpretation": "Reporter correctly references NoDependencies, confirming the issue is in the deployment pipeline selecting the wrong binary, not a misconfigured project."
+        "source": "issue body (code block)",
+        "interpretation": "Reporter correctly references NoDependencies, but the deployed binary doesn\u0027t match \u2014 deployment tooling is substituting or overriding the native asset."
       },
       {
-        "text": "I switched to SkiaSharp.NativeAssets.Linux and created a custom Docker image with native dependencies",
-        "source": "comment #2 (OP)",
-        "interpretation": "Reporter found the workaround themselves \u2014 confirming the root cause is wrong binary selection. Switching to the fontconfig-dependent package and providing fontconfig resolves the issue."
+        "text": "I switched to SkiaSharp.NativeAssets.Linux",
+        "source": "comment #2 by dansiegel",
+        "interpretation": "Reporter\u0027s workaround confirms the issue: switching to the fontconfig-dependent variant and installing fontconfig in a custom Docker image resolves the loading error."
       },
       {
-        "text": "System.Memory.Data was not found due to trimming",
-        "source": "comment #2 (OP)",
-        "interpretation": "Secondary issue: .NET Aspire enables trimming by default, which strips transitive references. This is a separate deployment concern unrelated to SkiaSharp\u0027s native loading."
+        "text": "System.Memory.Data was not found",
+        "source": "comment #2 by dansiegel",
+        "interpretation": "Secondary issue \u2014 .NET trimming strips transitive dependencies in container deployment. Not a SkiaSharp bug but affects the same deployment scenario."
       }
     ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Linux.NoDependencies/SkiaSharp.NativeAssets.Linux.NoDependencies.csproj",
+        "finding": "NoDependencies package ships from output/native/linuxnodeps/ and output/native/alpinenodeps/ paths with runtimes/linux-{arch}/native/ layout. The package explicitly excludes fontconfig \u2014 confirmed by the csproj PackageNotes listing only libpthread, libdl, libm, libc as dependencies.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp.NativeAssets.Linux/SkiaSharp.NativeAssets.Linux.csproj",
+        "finding": "The full NativeAssets.Linux package ships from output/native/linux/ paths to the same runtimes/linux-{arch}/native/ layout. Both packages target the same RID paths, so NuGet/RID resolution could pick either binary if both are transitively referenced.",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaSharp.csproj",
+        "finding": "SkiaSharp auto-includes NativeAssets for Win32 and macOS when TargetFramework has no platform suffix (net9.0), but does NOT auto-include NativeAssets.Linux. Linux native assets must always be manually added. This is correct behavior \u2014 the reporter did add NoDependencies manually.",
+        "relevance": "context",
+        "lines": "19-25"
+      }
+    ],
+    "errorFingerprint": "DllNotFoundException:libSkiaSharp:libfontconfig.so.1:NoDependencies",
     "workarounds": [
-      "Switch from NativeAssets.Linux.NoDependencies to NativeAssets.Linux, and install fontconfig in the container image (apt-get install -y libfontconfig1)",
-      "Use a custom base image with native dependencies pre-installed (e.g., ghcr.io/avantipoint/aspnet-skia:9.0)",
-      "If trimming causes System.Memory.Data to be stripped, add it as a direct PackageReference"
+      "Switch from SkiaSharp.NativeAssets.Linux.NoDependencies to SkiaSharp.NativeAssets.Linux and use a custom Docker base image with fontconfig installed (as reporter did with ghcr.io/avantipoint/aspnet-skia images)",
+      "Add ExcludeAssets=\u0022native\u0022 to the SkiaSharp PackageReference to prevent auto-included Win32/macOS native assets from interfering, then explicitly add NoDependencies",
+      "Verify the published output contains the correct libSkiaSharp.so by running ldd on it \u2014 NoDependencies variant should show only libc/libm/libpthread/libdl"
     ],
     "nextQuestions": [
-      "Does .NET Aspire\u0027s container build process use a different RID resolution that prefers NativeAssets.Linux over NoDependencies?",
-      "Is there a transitive NativeAssets.Linux reference being pulled in via another package that overrides NoDependencies?",
-      "Could SkiaSharp improve packaging so NoDependencies always wins when both packages are referenced?"
+      "Is .NET Aspire container publishing using a custom SDK container build that may resolve different RIDs than expected?",
+      "Does the NoDependencies package appear in the final container\u0027s runtimes/linux-x64/native/ directory, or is it being overridden?",
+      "Are there transitive NuGet references pulling in SkiaSharp.NativeAssets.Linux alongside NoDependencies?"
     ],
     "resolution": {
-      "hypothesis": ".NET Aspire\u0027s container build process deploys the standard NativeAssets.Linux binary instead of the NoDependencies variant, likely due to RID resolution conflicts or transitive package references overriding the explicit NoDependencies reference.",
+      "hypothesis": ".NET Aspire container deployment is not deploying the NoDependencies native binary, likely due to RID resolution conflicts, transitive package references, or the Aspire SDK container build process overriding native asset selection.",
       "proposals": [
         {
-          "description": "Replace NativeAssets.Linux.NoDependencies with NativeAssets.Linux and install fontconfig in the container. This accepts the fontconfig dependency but ensures the correct binary is loaded.",
-          "title": "Switch to NativeAssets.Linux with fontconfig",
-          "codeSnippet": "\u003C!-- In csproj --\u003E\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 /\u003E\n\n\u003C!-- In Dockerfile or ContainerBaseImage setup --\u003E\nRUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1",
+          "title": "Use NativeAssets.Linux with custom Docker image",
+          "description": "Switch to SkiaSharp.NativeAssets.Linux and create a custom Docker base image that includes fontconfig and other native dependencies. The reporter\u0027s workaround at ghcr.io/avantipoint/aspnet-skia:9.0 already implements this pattern.",
+          "category": "workaround",
+          "codeSnippet": "\u003CPackageReference Include=\u0022SkiaSharp\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 /\u003E\n\n\u003C!-- In csproj --\u003E\n\u003CContainerBaseImage\u003Eghcr.io/avantipoint/aspnet-skia:9.0\u003C/ContainerBaseImage\u003E",
+          "validated": "untested",
           "confidence": 0.9,
           "effort": "small"
         },
         {
-          "description": "Use a custom Docker base image like ghcr.io/avantipoint/aspnet-skia:9.0 that pre-installs all SkiaSharp native dependencies. Set ContainerBaseImage in csproj.",
-          "title": "Custom base image with dependencies",
-          "codeSnippet": "\u003CPropertyGroup\u003E\n  \u003CContainerBaseImage\u003Eghcr.io/avantipoint/aspnet-skia:9.0\u003C/ContainerBaseImage\u003E\n\u003C/PropertyGroup\u003E",
+          "title": "Verify NoDependencies deployment with ldd",
+          "description": "Diagnose whether the correct binary is being deployed by inspecting the container\u0027s published output. Run ldd on the deployed libSkiaSharp.so to confirm which variant was included. If it shows fontconfig dependency, the NoDependencies package was not used.",
+          "category": "investigation",
+          "validated": "untested",
           "confidence": 0.85,
-          "effort": "small"
+          "effort": "trivial"
         },
         {
-          "description": "Investigate whether .NET Aspire\u0027s container publish process has a bug or limitation with RID-specific native assets when both NativeAssets.Linux and NoDependencies are in the dependency graph. May require reporting upstream to the Aspire team.",
-          "title": "Investigate Aspire RID resolution",
-          "confidence": 0.6,
-          "effort": "large"
+          "title": "Exclude transitive native assets",
+          "description": "Add ExcludeAssets=\u0022native\u0022 to the SkiaSharp PackageReference to prevent any auto-included native assets from conflicting, then explicitly reference only SkiaSharp.NativeAssets.Linux.NoDependencies in the executable project.",
+          "category": "alternative",
+          "codeSnippet": "\u003CPackageReference Include=\u0022SkiaSharp\u0022 ExcludeAssets=\u0022native\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 /\u003E",
+          "validated": "untested",
+          "confidence": 0.7,
+          "effort": "trivial"
         }
       ],
-      "recommendedProposal": "Switch to NativeAssets.Linux with fontconfig",
-      "recommendedReason": "Simplest and most reliable workaround. The reporter confirmed this approach works. Avoids fighting with Aspire\u0027s RID resolution."
+      "recommendedProposal": "Use NativeAssets.Linux with custom Docker image",
+      "recommendedReason": "Reporter already validated this approach works. It\u0027s the most reliable path for container deployments that need font operations, and the custom base image pattern is reusable across projects."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "close-with-docs",
-      "confidence": 0.7,
-      "reason": "The reporter provided their own workaround and the issue is caused by .NET Aspire\u0027s container deployment, not a SkiaSharp code defect. However, keeping open to track whether SkiaSharp packaging can prevent this class of RID conflict is reasonable."
+      "confidence": 0.75,
+      "reason": "The reporter self-resolved with a workaround and posted the solution. The root cause is a deployment configuration issue (wrong native binary deployed), not a SkiaSharp code bug. The troubleshooting guidance in packages.md covers this exact scenario.",
+      "suggestedReproPlatform": "linux"
     },
     "actions": [
       {
         "type": "update-labels",
-        "description": "Labels are already correct \u2014 no changes needed",
+        "description": "Labels are already correct \u2014 type/bug, area/libSkiaSharp.native, os/Linux, tenet/compatibility",
         "risk": "low",
         "confidence": 0.95,
         "labels": [
@@ -181,17 +178,17 @@
       },
       {
         "type": "add-comment",
-        "description": "Acknowledge the report, confirm the diagnosis, and thank the reporter for the workaround",
+        "description": "Acknowledge the report, confirm the diagnosis, and thank the reporter for sharing their workaround",
         "risk": "high",
-        "confidence": 0.85,
-        "comment": "Thanks for the thorough write-up and for sharing the workaround.\n\nThe \u0060libfontconfig.so.1\u0060 error confirms the binary being loaded is the standard \u0060NativeAssets.Linux\u0060 variant, not \u0060NoDependencies\u0060 \u2014 the NoDependencies build has zero external dependencies, so a fontconfig error means the wrong \u0060.so\u0060 was deployed. This appears to be a .NET Aspire container build issue where its RID resolution selects the wrong native binary variant.\n\nYour workaround \u2014 switching to \u0060SkiaSharp.NativeAssets.Linux\u0060 \u002B installing fontconfig \u2014 is the right approach when Aspire controls the container build. We\u0027ll keep this open to investigate whether SkiaSharp\u0027s packaging can prevent this class of conflict.\n\nFor anyone else hitting this:\n1. Replace \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 with \u0060SkiaSharp.NativeAssets.Linux\u0060\n2. Install fontconfig in your container: \u0060apt-get install -y libfontconfig1\u0060\n3. If trimming strips \u0060System.Memory.Data\u0060, add it as a direct \u0060PackageReference\u0060"
+        "confidence": 0.8,
+        "comment": "Thanks for the detailed error output and for sharing your workaround \u2014 that\u0027s really helpful for others running into this.\n\nThe key diagnostic here is the \u0060libfontconfig.so.1\u0060 error. The \u0060NoDependencies\u0060 variant of \u0060libSkiaSharp.so\u0060 has zero third-party dependencies (only libc/libm/libpthread/libdl), so it would never produce a fontconfig error. This means the deployed container was loading the fontconfig-dependent binary instead of the NoDependencies one \u2014 likely due to how .NET Aspire\u0027s container publishing resolves native assets.\n\nYour approach of switching to \u0060SkiaSharp.NativeAssets.Linux\u0060 with a custom base image that includes the required native libraries is the right fix for this deployment scenario. For anyone else hitting this:\n\n1. Use \u0060SkiaSharp.NativeAssets.Linux\u0060 (not NoDependencies) if your container image includes fontconfig\n2. Or verify NoDependencies is actually deployed by running \u0060ldd\u0060 on the \u0060libSkiaSharp.so\u0060 in your published output\n3. Ensure the NativeAssets package is referenced in the **executable** project, not just a library\n\nIf anyone can reproduce the NoDependencies package being ignored during Aspire deployment, we\u0027d appreciate a minimal repro \u2014 that would help determine whether this is an Aspire SDK container publishing issue."
       },
       {
         "type": "link-related",
-        "description": "Cross-reference similar container deployment issues",
+        "description": "Link to similar DllNotFoundException issue on Linux",
         "risk": "low",
-        "confidence": 0.75,
-        "linkedIssue": 2438
+        "confidence": 0.65,
+        "linkedIssue": 2377
       }
     ]
   }
