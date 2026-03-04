@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2352,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T18:00:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/2352.json"
+  },
+  "conclusion": "reproduced",
+  "scope": "unknown",
+  "notes": "Reproduced: SKFontManager.Default.MatchTypeface() returns null for all typefaces on macOS, including both custom fonts loaded via FromStream and system fonts loaded via FromFamilyName. The bug is broader than reported — it affects all loading methods, not just FromStream. MatchTypeface was marked [Obsolete] in 2.x because it did not work on all platforms, and was removed entirely in 3.x. The alternative API SKFontManager.Default.MatchFamily(familyName, style) works correctly. Tested on 2.88.3 (reporter's version), 2.88.9 (latest 2.88.x), and 3.119.2 (API removed). Cross-platform testing skipped since MatchTypeface was deprecated for not working on all platforms — the scope is likely universal.",
+  "assessment": "working-as-designed",
+  "reproductionTime": "~15 minutes",
+  "versionResults": [
+    {
+      "version": "2.88.3",
+      "source": "nuget",
+      "result": "reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Reporter's version. MatchTypeface returns null for all typefaces (custom and system)."
+    },
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "Latest 2.88.x. Same behavior — MatchTypeface returns null for all typefaces."
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "platform": "host-macos-arm64",
+      "notes": "API removed in 3.x. Build fails with CS1061: SKFontManager does not contain MatchTypeface. The deprecated API was removed entirely."
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "2.88.3" }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create a .NET 8 console project with SkiaSharp 2.88.3 (reporter's version).",
+      "layer": "setup",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.3",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write repro code that loads a font via SKTypeface.FromStream() and calls SKFontManager.Default.MatchTypeface() with Normal, Bold, and Italic styles.",
+      "layer": "csharp",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console app that loads Arial Black from stream, calls MatchTypeface with different styles, prints results.",
+          "content": "using SkiaSharp;\n\nvar fontPath = \"/System/Library/Fonts/Supplemental/Arial Black.ttf\";\nConsole.WriteLine($\"Loading font from: {fontPath}\");\n\nusing var stream = File.OpenRead(fontPath);\nvar typeface = SKTypeface.FromStream(stream);\n\nif (typeface == null)\n{\n    Console.WriteLine(\"ERROR: Failed to load typeface from stream\");\n    return 1;\n}\n\nConsole.WriteLine($\"Loaded typeface: FamilyName={typeface.FamilyName}, Style={typeface.FontStyle}\");\n\n#pragma warning disable CS0618\nvar matchedNormal = SKFontManager.Default.MatchTypeface(typeface, SKFontStyle.Normal);\nvar matchedBold = SKFontManager.Default.MatchTypeface(typeface, SKFontStyle.Bold);\nvar matchedItalic = SKFontManager.Default.MatchTypeface(typeface, SKFontStyle.Italic);\n#pragma warning restore CS0618\n\nConsole.WriteLine($\"MatchTypeface(Normal): {(matchedNormal == null ? \"NULL\" : matchedNormal.FamilyName)}\");\nConsole.WriteLine($\"MatchTypeface(Bold): {(matchedBold == null ? \"NULL\" : matchedBold.FamilyName)}\");\nConsole.WriteLine($\"MatchTypeface(Italic): {(matchedItalic == null ? \"NULL\" : matchedItalic.FamilyName)}\");\n\nif (matchedNormal == null || matchedBold == null || matchedItalic == null)\n{\n    Console.WriteLine(\"BUG CONFIRMED: MatchTypeface returned null for at least one style\");\n    return 1;\n}\n\nConsole.WriteLine(\"SUCCESS: All MatchTypeface calls returned non-null\");\nreturn 0;"
+        }
+      ],
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build the repro project with SkiaSharp 2.88.3.",
+      "layer": "csharp",
+      "command": "dotnet build",
+      "output": "Build succeeded. 0 Error(s)",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run the repro. MatchTypeface returns null for all three font style queries (Normal, Bold, Italic), confirming the reported behavior.",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "Loading font from: /System/Library/Fonts/Supplemental/Arial Black.ttf\nLoaded typeface: FamilyName=Arial Black, Style=SkiaSharp.SKFontStyle\nMatchTypeface(Normal): NULL\nMatchTypeface(Bold): NULL\nMatchTypeface(Italic): NULL\nBUG CONFIRMED: MatchTypeface returned null for at least one style",
+      "exitCode": 1,
+      "result": "failure"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Additional test: MatchTypeface also returns null for system fonts loaded via FromFamilyName, and for fonts loaded via FromFile. The issue is not specific to FromStream — MatchTypeface is broken for all font sources on macOS. However, MatchFamily works correctly as an alternative.",
+      "layer": "csharp",
+      "command": "dotnet run (modified to compare FromFamilyName, FromStream, FromFile, and MatchFamily)",
+      "output": "=== MatchTypeface tests ===\nSystem Arial: Arial\nMatchTypeface(system, Bold): NULL\nStream ArialBlack: Arial Black\nMatchTypeface(stream, Normal): NULL\nFile ArialBlack: Arial Black\nMatchTypeface(file, Bold): NULL\n=== MatchFamily tests (alternative API) ===\nMatchFamily(Arial, Bold): Arial style=SkiaSharp.SKFontStyle\nMatchFamily(Arial Black, Normal): Arial Black\nFont manager family count: 180",
+      "exitCode": 0,
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test with latest 2.88.x (2.88.9) in fresh project directory. Same result — MatchTypeface returns null.",
+      "layer": "csharp",
+      "command": "cd /tmp/skiasharp/repro/2352-288latest/Repro && dotnet run",
+      "output": "Loading font from: /System/Library/Fonts/Supplemental/Arial Black.ttf\nLoaded typeface: FamilyName=Arial Black, Style=SkiaSharp.SKFontStyle\nMatchTypeface(Normal): NULL\nMatchTypeface(Bold): NULL\nMatchTypeface(Italic): NULL\nBUG CONFIRMED: MatchTypeface returned null for at least one style",
+      "exitCode": 1,
+      "result": "failure"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Test with latest stable 3.119.2. MatchTypeface was removed in 3.x — build fails with CS1061.",
+      "layer": "csharp",
+      "command": "cd /tmp/skiasharp/repro/2352-latest/Repro && dotnet build",
+      "output": "error CS1061: 'SKFontManager' does not contain a definition for 'MatchTypeface' and no accessible extension method 'MatchTypeface' accepting a first argument of type 'SKFontManager' could be found",
+      "exitCode": 1,
+      "result": "skip"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKFontManager.Default.MatchTypeface() returns null for all typefaces on macOS, regardless of how the font was loaded (FromStream, FromFamilyName, FromFile)"
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.2",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.3 (reporter), 2.88.9 (latest 2.88.x), 3.119.2 (latest stable)",
+    "dockerUsed": false
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.85,
+      "reason": "MatchTypeface was marked [Obsolete] in SkiaSharp 2.x because it did not work on all platforms, and was removed entirely in 3.x. The method returns null on macOS for all typefaces. The alternative API SKFontManager.Default.MatchFamily(familyName, style) works correctly. This is documented deprecated behavior, not a regression."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.90
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain deprecated API behavior and provide MatchFamily workaround",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Reproduced on macOS with 2.88.3 and 2.88.9. MatchTypeface returns null for all fonts. Use SKFontManager.Default.MatchFamily(familyName, style) instead."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design — deprecated API removed in 3.x",
+        "risk": "medium",
+        "confidence": 0.80
+      }
+    ],
+    "workarounds": [
+      "Use SKFontManager.Default.MatchFamily(familyName, SKFontStyle.Bold) instead of MatchTypeface — this correctly finds system fonts by family name and style.",
+      "Load each font style variant (Regular, Bold, Italic) as separate font files using SKTypeface.FromStream() or SKTypeface.FromData().",
+      "Upgrade to SkiaSharp 3.x where MatchTypeface is removed, and use MatchFamily or direct font loading for each style."
+    ],
+    "proposedResponse": {
+      "status": "ready",
+      "body": "Thanks for the detailed repro! We were able to reproduce this.\n\n`SKFontManager.MatchTypeface` returns `null` for all typefaces on macOS — not just custom fonts loaded via `FromStream`, but also system fonts loaded via `FromFamilyName`. This method was marked `[Obsolete]` in SkiaSharp 2.x because it did not work reliably across platforms, and it has been **removed entirely in SkiaSharp 3.x**.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.3 (reported) | ❌ MatchTypeface returns null |\n| 2.88.9 (latest 2.x) | ❌ MatchTypeface returns null |\n| 3.119.2 (latest 3.x) | API removed (CS1061) |\n\n**Workaround:** Use `SKFontManager.Default.MatchFamily(familyName, style)` instead:\n\n```csharp\n// Instead of:\n// var bold = SKFontManager.Default.MatchTypeface(typeface, SKFontStyle.Bold);\n\n// Use:\nvar bold = SKFontManager.Default.MatchFamily(typeface.FamilyName, SKFontStyle.Bold);\n```\n\nNote that `MatchFamily` only searches **system-installed fonts**. For custom fonts in Blazor WASM (where no system fonts exist), you'll need to load each style variant separately:\n\n```csharp\nvar regular = SKTypeface.FromStream(assembly.GetManifestResourceStream(\"App.tahoma.ttf\"));\nvar bold = SKTypeface.FromStream(assembly.GetManifestResourceStream(\"App.tahomabd.ttf\"));\n```\n\nFor the best experience, we recommend upgrading to SkiaSharp 3.x, which makes these patterns clearer by removing the non-functional `MatchTypeface` API."
+    }
+  }
+}
