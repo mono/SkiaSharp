@@ -1,0 +1,123 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3533,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-28T12:00:00Z",
+    "currentLabels": ["type/enhancement", "area/SkiaSharp"]
+  },
+  "summary": "Tracking issue to standardize SKTouchEventArgs.WheelDelta to the v120 convention (120 units = 1 mouse wheel notch) across all platforms; currently only Windows MAUI passes meaningful values while all other platforms hardcode 0 or lack wheel event handling entirely.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.90 },
+    "platforms": ["os/Android", "os/iOS", "os/macOS", "os/WASM", "os/Linux", "os/Windows-Classic"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "Cross-platform — affects all SkiaSharp view implementations. Only Windows MAUI currently passes WheelDelta correctly via MouseWheelDelta (±120 per notch).",
+      "relatedIssues": [3534, 3535, 3536, 3537, 3538, 3539, 3540, 3527],
+      "repoLinks": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "WheelDelta has never been standardized. Windows MAUI is the only platform that passes it through. All other platforms confirmed to hardcode 0 or not handle wheel events at all."
+    }
+  },
+  "analysis": {
+    "summary": "This is a well-structured umbrella enhancement filed by the maintainer (mattleibow) proposing to standardize WheelDelta across all platforms. It defines the v120 convention, documents the current state of each platform, provides normalization formulas, and links to individual sub-issues for each platform implementation.",
+    "rationale": "This is clearly an enhancement to improve existing functionality (SKTouchEventArgs.WheelDelta already exists but is only populated on Windows MAUI). The issue was filed by the maintainer as a tracking/specification issue with 8 linked sub-issues. It is not a bug since the property exists — it's just inconsistently implemented. Not a feature-request since the property and WheelChanged action already exist in the API.",
+    "keySignals": [
+      { "text": "SKTouchEventArgs.WheelDelta currently has no documented unit contract. Only Windows MAUI passes meaningful values (raw ±120 per notch).", "source": "issue body", "interpretation": "Establishes the gap: property exists but only one platform populates it correctly." },
+      { "text": "We need to standardize WheelDelta across all platforms to use the v120 convention: 120 units = 1 discrete mouse wheel notch.", "source": "issue body", "interpretation": "Clear specification of the proposed standard, matching both Windows WHEEL_DELTA and Linux libinput v120 conventions." },
+      { "text": "All other platforms either hardcode 0 or don't handle wheel events at all.", "source": "issue body", "interpretation": "Current state summary — confirms this is an improvement to existing but incomplete functionality." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs", "lines": "50", "finding": "WheelDelta is an int property on SKTouchEventArgs, set via constructor. The SKTouchAction enum includes WheelChanged (line 68). The API surface already exists.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs", "lines": "101-124", "finding": "Only Windows handler subscribes to PointerWheelChanged and passes MouseWheelDelta through. This is the only platform producing actual WheelDelta values (±120 per notch via Windows API).", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs", "lines": "63-109", "finding": "Android handler only handles MotionEventActions (Down/Move/Up/Cancel). No handling for MotionEvent.AXIS_VSCROLL or GenericMotion events — wheel events are completely absent.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Apple/SKTouchHandler.cs", "lines": "54-110", "finding": "Apple handler only handles UITouch events (TouchesBegan/Moved/Ended/Cancelled). No handling for scroll/wheel events via UIPanGestureRecognizer or NSEvent.scrollingDeltaY.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Tizen/SKTouchHandler.cs", "lines": "40-53", "finding": "Tizen handler only handles touch events. No handling for NUI Wheel events.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "1-180", "finding": "Blazor view has no touch/pointer/wheel event handling at all. Only renders via PaintSurface callback.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs", "lines": "1-129", "finding": "WPF SKElement has no touch or input event handling. It only renders via OnRender/PaintSurface — no SKTouchHandler equivalent exists for WPF.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Gtk4/SKDrawingArea.cs", "lines": "1-105", "finding": "GTK4 SKDrawingArea has no input event handling. Only renders via PaintSurface callback with Cairo surface bridge.", "relevance": "direct" }
+    ],
+    "nextQuestions": [
+      "Should horizontal scroll (WheelDelta for X axis) be supported in addition to vertical?",
+      "Should a new HorizontalWheelDelta property be added, or a direction indicator?",
+      "Will the WPF/WinForms sub-issue (#3539) introduce a full SKTouchHandler or a lighter wheel-only solution?"
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.95,
+      "reason": "This is a well-specified tracking/umbrella issue filed by the maintainer with 8 linked sub-issues for each platform. The actual implementation work happens in the sub-issues. This issue should remain open as the specification and coordination point."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update area label to SkiaSharp.Views and add platform labels for all affected platforms",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views", "os/Android", "os/iOS", "os/macOS", "os/WASM", "os/Linux", "os/Windows-Classic"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference sub-issue: Blazor WASM wheel support",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3534
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference sub-issue: Android MAUI wheel support",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3535
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference sub-issue: macOS MAUI wheel support",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3536
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference sub-issue: iOS/iPadOS and Mac Catalyst wheel support",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3537
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference sub-issue: Tizen MAUI wheel support",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3538
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference sub-issue: WPF/WinForms wheel support",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3539
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference sub-issue: GTK3/GTK4 wheel support",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3540
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related PR: GTK4 view implementation (prerequisite for GTK wheel support)",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 3527
+      }
+    ]
+  }
+}
