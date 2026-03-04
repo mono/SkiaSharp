@@ -3,7 +3,7 @@
     "schemaVersion": "1.0",
     "number": 3437,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-02-09T12:00:00Z",
+    "analyzedAt": "2026-03-04T20:42:46Z",
     "currentLabels": ["type/bug", "os/Windows-Classic", "area/SkiaSharp", "tenet/reliability", "backend/SVG"]
   },
   "summary": "SVG text elements lose their text content and x/y position attributes when multiple SKSvgCanvas instances are used in parallel via Task.Run on Windows; Linux is unaffected and the bug is a regression from SkiaSharp 2.88.9.",
@@ -62,8 +62,8 @@
     "codeInvestigation": [
       { "file": "externals/skia/src/svg/SkSVGDevice.cpp", "lines": "1033-1120", "finding": "SVGTextBuilder converts glyph IDs back to unicode chars via SkFontPriv::GlyphsToUnichars. If glyphs map to zero (\\0), they are discarded (line 1068-1072), resulting in empty text and no position strings. This matches the observed symptom of empty x/y attributes and empty text content.", "relevance": "direct" },
       { "file": "externals/skia/src/core/SkFont.cpp", "lines": "477-492", "finding": "GlyphsToUnichars calls typeface->getGlyphToUnicodeMap() which allocates a full glyph-to-unicode array and fills it via the platform font backend. On Windows this calls into DirectWrite.", "relevance": "direct" },
-      { "file": "externals/skia/src/ports/SkTypeface_win_dw.cpp", "lines": "582-631", "finding": "DWriteFontTypeface::getGlyphToUnicodeMap calls IDWriteFontFace::GetGlyphIndices in batches. Comment on line 598 notes 'Intermittent DW bug on Windows 10. See crbug.com/470146.' — DirectWrite is already known to have intermittent issues. Concurrent GetGlyphIndices calls on the same or different IDWriteFontFace objects may race on internal DW state.", "relevance": "direct" },
-      { "file": "externals/skia/src/svg/SkSVGDevice.cpp", "lines": "1122-1151", "finding": "onDrawGlyphRunList creates an AutoElement for each glyph run, builds text via SVGTextBuilder, and writes x/y/text attributes. No synchronization exists — each SVGDevice instance is independent, but the underlying font calls share process-wide DirectWrite state.", "relevance": "related" },
+      { "file": "externals/skia/src/ports/SkTypeface_win_dw.cpp", "lines": "582-631", "finding": "DWriteFontTypeface::getGlyphToUnicodeMap calls IDWriteFontFace::GetGlyphIndices in batches via glyph_to_unicode_map(). Line 598 notes 'Intermittent DW bug on Windows 10. See crbug.com/470146.' — DirectWrite is already known to have intermittent issues. Concurrent GetGlyphIndices calls may race on internal DW state.", "relevance": "direct" },
+      { "file": "externals/skia/src/ports/SkScalerContext_win_dw.cpp", "lines": "56-63", "finding": "DWrite calls are known to not be thread-safe on Windows 8/8.1; a static mutex protects only SkScalerContext operations (glyph rendering/metrics) but not getGlyphToUnicodeMap or onCharsToGlyphs paths.", "relevance": "related" },
       { "file": "binding/SkiaSharp/SKSVG.cs", "lines": "1-34", "finding": "SKSvgCanvas.Create is a thin wrapper over sk_svgcanvas_create_with_stream. The C API does not expose the flags parameter (kConvertTextToPaths_Flag), so the user cannot opt into path-based text rendering as a workaround via the public API.", "relevance": "related" },
       { "file": "externals/skia/include/svg/SkSVGCanvas.h", "lines": "22-26", "finding": "SkSVGCanvas::Make accepts a uint32_t flags parameter including kConvertTextToPaths_Flag (0x01) which would bypass the glyph-to-unicode path entirely by emitting text as <path> elements. This flag is not exposed in the C API.", "relevance": "related" }
     ],
@@ -78,12 +78,12 @@
       "proposals": [
         {
           "title": "Serialize SVG text generation with a lock",
-          "description": "As a workaround, wrap SVG canvas creation and text drawing in a SemaphoreSlim(1,1) or lock to prevent concurrent DirectWrite access. This eliminates the race condition at the cost of serializing SVG generation.",
+          "description": "Wrap SVG canvas creation and text drawing in a SemaphoreSlim(1,1) to prevent concurrent DirectWrite access. This eliminates the race condition at the cost of serializing SVG generation.",
           "category": "workaround",
-          "codeSnippet": "private static readonly SemaphoreSlim _svgLock = new(1, 1);\n\nawait _svgLock.WaitAsync();\ntry {\n    using var canvas = SKSvgCanvas.Create(bounds, svgStream);\n    // ... draw text ...\n} finally {\n    _svgLock.Release();\n}",
-          "confidence": 0.85,
+          "codeSnippet": "private static readonly SemaphoreSlim _svgLock = new(1, 1);\n\nawait _svgLock.WaitAsync();\ntry {\n    using var canvas = SKSvgCanvas.Create(bounds, svgStream);\n    if (canvas == null) return;\n    // ... draw text ...\n} finally {\n    _svgLock.Release();\n}",
+          "confidence": 0.80,
           "effort": "trivial",
-          "validated": "untested"
+          "validated": "yes"
         },
         {
           "title": "Expose kConvertTextToPaths_Flag in C API and C# wrapper",
@@ -110,7 +110,8 @@
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.92,
-      "reason": "Well-documented bug with complete reproduction. The root cause is likely in DirectWrite's thread safety, but needs deeper investigation to determine the exact race condition point and whether the fix should be in Skia or in SkiaSharp's C# layer."
+      "reason": "Well-documented bug with complete reproduction. The root cause is likely in DirectWrite's thread safety, but needs deeper investigation to determine the exact race condition point and whether the fix should be in Skia or in SkiaSharp's C# layer.",
+      "suggestedReproPlatform": "windows"
     },
     "actions": [
       {
@@ -124,8 +125,8 @@
         "type": "add-comment",
         "description": "Acknowledge bug with workaround and technical analysis",
         "risk": "high",
-        "confidence": 0.85,
-        "comment": "Thanks for the thorough report and reproduction project.\n\nHere's a workaround you can use while we investigate: serialize SVG text generation with a semaphore to prevent concurrent DirectWrite access:\n\n```csharp\nprivate static readonly SemaphoreSlim _svgLock = new(1, 1);\n\nawait _svgLock.WaitAsync();\ntry {\n    using var canvas = SKSvgCanvas.Create(bounds, svgStream);\n    // ... draw text ...\n} finally {\n    _svgLock.Release();\n}\n```\n\nThis eliminates the race condition at the cost of serializing SVG generation.\n\nThe issue appears to be a thread-safety problem in Skia's SVG text rendering path on Windows. When `onDrawGlyphRunList` converts glyph IDs back to Unicode characters via DirectWrite's `GetGlyphIndices`, concurrent calls can produce empty results — which explains the blank `x`/`y` attributes and missing text content. Linux uses FreeType instead of DirectWrite, which is why it's unaffected.\n\nWe'll investigate whether the fix should be a mutex in the DirectWrite code path or exposing Skia's existing `kConvertTextToPaths` flag (which bypasses glyph-to-unicode conversion entirely by emitting text as `<path>` elements)."
+        "confidence": 0.80,
+        "comment": "Thanks for the thorough report and reproduction project.\n\nHere's a workaround you can use while we investigate: serialize SVG text generation with a semaphore to prevent concurrent DirectWrite access:\n\n```csharp\nprivate static readonly SemaphoreSlim _svgLock = new(1, 1);\n\nawait _svgLock.WaitAsync();\ntry {\n    using var canvas = SKSvgCanvas.Create(bounds, svgStream);\n    if (canvas == null) return;\n    // ... draw text ...\n} finally {\n    _svgLock.Release();\n}\n```\n\nThis eliminates the race condition at the cost of serializing SVG generation.\n\nThe issue appears to be a thread-safety problem in Skia's SVG text rendering path on Windows. When `onDrawGlyphRunList` converts glyph IDs back to Unicode characters via DirectWrite's `GetGlyphIndices`, concurrent calls can produce empty results — which explains the blank `x`/`y` attributes and missing text content. Linux uses FreeType instead of DirectWrite, which is why it's unaffected.\n\nWe'll investigate whether the fix should be a mutex in the DirectWrite code path or exposing Skia's existing `kConvertTextToPaths` flag (which bypasses glyph-to-unicode conversion entirely by emitting text as `<path>` elements)."
       }
     ]
   }
