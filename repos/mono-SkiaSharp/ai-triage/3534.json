@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3534,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-04T12:00:00Z",
+    "currentLabels": [
+      "type/enhancement",
+      "area/SkiaSharp"
+    ]
+  },
+  "summary": "Maintainer-filed enhancement to add scroll wheel event support to Blazor WASM views (SKCanvasView and SKGLView) with browser WheelEvent deltaY normalized to the v120 standard (120 units per discrete mouse notch), as part of the cross-platform wheel standardization effort (#3533).",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Blazor",
+      "confidence": 0.98
+    },
+    "platforms": [
+      "os/WASM"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor WASM app with SKCanvasView or SKGLView",
+        "Attempt to handle wheel/scroll events on the canvas",
+        "Observe that no wheel events are fired \u2014 Blazor views have no touch/pointer/wheel interop"
+      ],
+      "environmentDetails": "Blazor WASM, any browser (Chrome, Firefox, Safari)",
+      "relatedIssues": [
+        3533,
+        3536,
+        3537,
+        3538,
+        3539,
+        3540,
+        2449
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Blazor views have never had touch/pointer/wheel event handling. SKCanvasView.razor.cs and SKGLView.razor.cs contain only rendering and sizing logic, with no input event interop."
+    }
+  },
+  "analysis": {
+    "summary": "Well-specified enhancement from the maintainer to add wheel event support to Blazor WASM views. The Blazor views currently have zero touch/pointer/wheel handling \u2014 no SKTouchInterop exists in the Blazor view directory. The MAUI core already defines SKTouchAction.WheelChanged and SKTouchEventArgs.WheelDelta (currently only implemented by the Windows MAUI handler). This issue provides complete normalization logic for converting browser WheelEvent.deltaY (with deltaMode handling for pixel/line/page modes) to v120 units, browser compatibility tables, sign convention, and implementation notes for both NET7+ JSImport and pre-NET7 DotNetObjectReference interop paths. Implementation has been validated on branch copilot/add-touch-event-blazor-canvas with 72/72 Playwright tests passing across Chromium, Firefox, and WebKit.",
+    "rationale": "This is clearly an enhancement (adding new input handling capability to existing Blazor views), not a bug or feature request. The views exist and render correctly but lack any input event handling. The area is SkiaSharp.Views.Blazor since the changes are specific to the Blazor WASM canvas views and their JavaScript interop. Filed by the maintainer (mattleibow) as part of a systematic cross-platform wheel standardization effort (#3533) with sibling issues for macOS (#3536), iOS (#3537), Tizen (#3538), WPF/WinForms (#3539), and GTK (#3540).",
+    "keySignals": [
+      {
+        "text": "Add scroll wheel support to SkiaSharp's Blazor WASM views (SKCanvasView and SKGLView) with values normalized to the v120 standard",
+        "source": "issue body",
+        "interpretation": "Clear enhancement scope \u2014 adding wheel events to views that currently have none."
+      },
+      {
+        "text": "Must handle both NET7+ ([JSImport] / [JSExport]) and pre-NET7 (DotNetObjectReference.invokeMethod) interop paths",
+        "source": "issue body",
+        "interpretation": "Two JS-to-C# interop paths needed, increasing implementation complexity."
+      },
+      {
+        "text": "Implementation Status: validated with Playwright across 3 browser engines \u2014 Chromium 24/24, Firefox 24/24, WebKit 24/24",
+        "source": "issue body",
+        "interpretation": "Implementation already exists on a feature branch and is validated. This issue tracks the spec and rationale."
+      },
+      {
+        "text": "Parent issue: #3533",
+        "source": "issue body",
+        "interpretation": "Part of systematic v120 normalization across all platforms."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+        "finding": "Blazor SKCanvasView has only rendering (OnRenderFrame), sizing (OnSizeChanged), and DPI (OnDpiChanged) callbacks. No touch, pointer, or wheel event handling exists. No SKTouchInterop or equivalent JS interop for input events.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+        "lines": "60-69",
+        "finding": "SKTouchAction enum already includes WheelChanged (line 68). SKTouchEventArgs has WheelDelta property (int, line 50). The data model is ready \u2014 only the Blazor platform handler is missing.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs",
+        "lines": "101-122",
+        "finding": "Windows MAUI handler is the only existing platform that implements WheelChanged \u2014 subscribes to PointerWheelChanged and reads MouseWheelDelta from PointerPoint.Properties. This is the reference implementation pattern.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts",
+        "finding": "TypeScript files exist for canvas rendering interop (SKHtmlCanvas) but there is no SKTouchInterop.ts file. Wheel event handling requires creating new JS interop files.",
+        "relevance": "direct"
+      }
+    ],
+    "nextQuestions": [
+      "Should the Blazor touch/wheel interop be a standalone SKTouchInterop.ts/js or integrated into SKHtmlCanvas?",
+      "Will horizontal wheel (deltaX) be supported in this issue or deferred?",
+      "Does the Blazor-specific SKCanvasView need its own SKTouchAction/EventArgs or should it reuse the MAUI core types?"
+    ],
+    "resolution": {
+      "hypothesis": "Blazor WASM views need a new JavaScript interop layer to listen for browser WheelEvent on the canvas element, normalize deltaY using deltaMode-aware v120 conversion, and call back into C# with SKTouchAction.WheelChanged and the normalized WheelDelta.",
+      "proposals": [
+        {
+          "title": "Implement wheel event interop per issue spec",
+          "description": "Create SKTouchInterop.ts/.js with wheel event listener on the canvas element. Normalize deltaY to v120 using the issue's deltaMode-aware logic (pixel: \u00d71.2, line: \u00d740, page: \u00d7120 with sign negation). Fire SKTouchAction.WheelChanged with SKTouchDeviceType.Mouse. Handle both NET7+ JSImport/JSExport and pre-NET7 DotNetObjectReference.invokeMethod interop paths. Support e.preventDefault()/stopPropagation() when Handled=true.",
+          "category": "fix",
+          "confidence": 0.92,
+          "effort": "medium",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Implement wheel event interop per issue spec",
+      "recommendedReason": "The issue provides a complete, validated specification. Implementation already exists on a feature branch with 72/72 passing tests across all browser engines."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Well-specified enhancement with validated implementation on a feature branch. Needs review and merge into main. The spec is complete with browser compatibility data and normalization logic.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Update area label to SkiaSharp.Views.Blazor and add WASM platform",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp.Views.Blazor",
+          "os/WASM"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to parent v120 standardization issue",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3533
+      },
+      {
+        "type": "link-related",
+        "description": "Link to related Mac scroll-wheel feature request",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 2449
+      }
+    ]
+  }
+}
