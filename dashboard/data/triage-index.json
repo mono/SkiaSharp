@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-03-04T20:47:05.2673892Z",
+  "generatedAt": "2026-03-04T20:48:43.8344259Z",
   "totalCount": 58,
   "summary": {
-    "needsInvestigation": 23,
+    "needsInvestigation": 24,
     "closeable": 18,
     "quickWins": 18,
-    "regressions": 9,
+    "regressions": 8,
     "withRepro": 40,
     "reproduced": 25,
     "notReproduced": 7
@@ -65,7 +65,7 @@
   "byAction": [
     {
       "label": "needs-investigation",
-      "count": 23
+      "count": 24
     },
     {
       "label": "close-as-fixed",
@@ -85,7 +85,7 @@
     },
     {
       "label": "request-info",
-      "count": 3
+      "count": 2
     },
     {
       "label": "close-as-duplicate",
@@ -99,7 +99,7 @@
   "bySeverity": [
     {
       "label": "medium",
-      "count": 20
+      "count": 21
     },
     {
       "label": "high",
@@ -107,7 +107,7 @@
     },
     {
       "label": "low",
-      "count": 5
+      "count": 4
     }
   ],
   "issues": [
@@ -190,17 +190,17 @@
     },
     {
       "number": 3520,
-      "title": "Reporter observes missing closing \u003C/svg\u003E tag when using SKSvgCanvas with SKManagedWStream wrapping a MemoryStream. The root cause is that MemoryStream.ToArray() is called before the SVG canvas is disposed \u2014 the closing tag is written by the native SkSVGDevice destructor during canvas disposal.",
+      "title": "Reporter finds the closing \u003C/svg\u003E tag missing when using SKSvgCanvas with SKManagedWStream, because managedStream.ToArray() is called before the SKCanvas is disposed \u2014 the SVG document is finalized (closing tag written) on canvas disposal, so reading the stream before disposal yields incomplete output.",
       "issueTitle": "[BUG] SKManagedWStream with SKSvgCanvas missing close SVG tag \u003C/svg\u003E",
       "type": "type/bug",
       "area": "area/SkiaSharp",
-      "severity": "low",
+      "severity": "medium",
       "action": "close-as-by-design",
-      "confidence": 0.88,
+      "confidence": 0.9,
       "isRegression": false,
       "closeable": true,
       "state": "open",
-      "analyzedAt": "2026-03-04T19:47:00Z",
+      "analyzedAt": "2026-03-04T20:42:39Z",
       "hasTriage": true,
       "hasRepro": true,
       "reproConclusion": "reproduced"
@@ -275,17 +275,17 @@
     },
     {
       "number": 3440,
-      "title": "MAUI app with LiveCharts2 using SkiaSharp 3.119.1 crashes on certain Windows 11 systems with COMException \u0027Element not found\u0027 during WinRT activation of SkiaSharp.Views.WinUI.Native.PropertySetExtensions in the ANGLE/OpenGL rendering path.",
+      "title": "MAUI app using SkiaSharp 3.119.1 crashes on certain Windows 11 systems with COMException \u0027Element not found\u0027 during WinRT activation of SkiaSharp.Views.WinUI.Native.PropertySetExtensions in the ANGLE/OpenGL rendering path (AngleSwapChainPanel \u2192 GlesContext.CreateSurface).",
       "issueTitle": "[BUG] Exception: SkiaSharp.Views.WinUI.Native.PropertySetExtensions",
       "type": "type/bug",
       "area": "area/SkiaSharp.Views",
       "severity": "high",
-      "action": "request-info",
-      "confidence": 0.85,
+      "action": "needs-investigation",
+      "confidence": 0.88,
       "isRegression": false,
       "closeable": false,
       "state": "open",
-      "analyzedAt": "2026-06-23T12:00:00Z",
+      "analyzedAt": "2026-03-04T20:42:00Z",
       "hasTriage": true,
       "hasRepro": true,
       "reproConclusion": "needs-platform"
@@ -360,17 +360,17 @@
     },
     {
       "number": 3428,
-      "title": "EAGL/OpenGL ES rendering fails on iOS with .NET 10 MAUI \u2014 SKGLView produces white canvas with \u0027Failed to bind EAGLDrawable\u0027 errors because the iOS handler still uses deprecated EAGLContext instead of Metal.",
+      "title": "MAUI SKGLView on iOS fails with \u0027Failed to bind EAGLDrawable\u0027 and \u0027Failed to make complete framebuffer object\u0027 on .NET 10, resulting in a white canvas. The iOS SKGLViewHandler uses the deprecated OpenGL ES (GLKView/EAGLContext) backend, which appears increasingly broken on newer iOS SDKs shipped with .NET 10.",
       "issueTitle": "[BUG] Failed to bind EAGLDrawable on .NET 10 in MAUI iOS",
       "type": "type/bug",
       "area": "area/SkiaSharp.Views.Maui",
       "severity": "high",
       "action": "needs-investigation",
-      "confidence": 0.85,
-      "isRegression": true,
+      "confidence": 0.88,
+      "isRegression": false,
       "closeable": false,
       "state": "open",
-      "analyzedAt": "2026-06-25T18:00:00Z",
+      "analyzedAt": "2026-03-04T20:42:00Z",
       "hasTriage": true,
       "hasRepro": true,
       "reproConclusion": "not-reproduced"
