@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3273,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-04T00:50:00Z"
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3273.json"
+  },
+  "conclusion": "not-reproduced",
+  "notes": "The exact 'No canvas element was provided' console error could not be reproduced with clean Blazor WASM builds using SkiaSharp 3.116.0, 3.119.0, 3.119.2, or main branch source. All clean builds render SKCanvasView correctly without errors. All three reporters confirm clearing caches resolves the issue. Version switching without cleaning bin/obj produces a TypeInitializationException (stale WASM binary), confirming cache sensitivity. The JS element lookup in SKHtmlCanvas.ts init() relies on querySelector with _bl_ attribute selector when element is null (NET7+ JSImport path), which would fail if cached JS runs against mismatched DOM. The specific trigger likely requires IDE debug mode static asset serving behavior.",
+  "assessment": "likely-bug",
+  "scope": "platform-specific/wasm",
+  "reproductionTime": "PT45M",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Clean Blazor WASM standalone app renders correctly, SUCCESS in console, no errors",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Clean build works. Version switch from 3.116.0 without cleaning bin/obj causes TypeInitializationException (stale native WASM binary) — confirms cache sensitivity but different error than reported",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Latest stable, clean build renders correctly with no errors",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Blazor WASM sample from main branch renders correctly with no errors",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {"name": "SkiaSharp.Views.Blazor", "version": "3.116.0"}
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM standalone app with SkiaSharp.Views.Blazor 3.116.0 and WasmBuildNative",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.116.0",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Blazor WASM project with SkiaSharp and WasmBuildNative enabled",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk.BlazorWebAssembly\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <WasmBuildNative>true</WasmBuildNative>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Razor page with SKCanvasView drawing cornflower blue background and white text",
+          "content": "@page \"/\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\" style=\"width:800px;height:600px;\" />\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs args)\n    {\n        var canvas = args.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var font = new SKFont(SKTypeface.Default, 48);\n        using var paint = new SKPaint { Color = SKColors.White, IsAntialias = true };\n        canvas.DrawText(\"Hello SkiaSharp!\", 100, 100, SKTextAlign.Left, font, paint);\n        Console.WriteLine($\"SUCCESS: rendered {args.Info.Width}x{args.Info.Height}\");\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build Blazor WASM app with native WASM compilation",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run app and verify canvas renders in browser with no errors (Playwright)",
+      "command": "dotnet run --urls http://localhost:5111 --no-build",
+      "exitCode": 0,
+      "output": "Browser console: SUCCESS: rendered 1600x1200. No errors. Canvas renders correctly with cornflower blue background and white text.",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test latest stable (3.119.2) with fresh project directory and clean build",
+      "command": "mkdir /tmp/skiasharp/repro/3273-latest && dotnet new blazorwasm && dotnet add package SkiaSharp.Views.Blazor --version 3.119.2 && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "Browser console: SUCCESS: rendered 1600x1200. No errors.",
+      "layer": "deployment",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test main branch source using Blazor WASM sample with project references",
+      "command": "dotnet build samples/Basic/BlazorWebAssembly/SkiaSharpSample/SkiaSharpSample.csproj && dotnet run --project samples/Basic/BlazorWebAssembly/SkiaSharpSample/SkiaSharpSample.csproj --urls http://localhost:5199 --no-build -- --pathbase=/app",
+      "exitCode": 0,
+      "output": "Raster Canvas page renders 'SkiaSharp' text correctly. No errors in browser console.",
+      "layer": "deployment",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.2",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.75,
+      "reason": "The exact 'No canvas element was provided' error could not be reproduced with clean builds or programmatic stale-cache simulation. All reporters confirm cache-clearing resolves it. Need more details about IDE, Blazor hosting model, and exact steps to trigger."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/SkiaSharp.Views.Blazor and os/WASM labels",
+        "risk": "low",
+        "confidence": 0.92
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this. We attempted to reproduce the \"No canvas element was provided\" error on macOS arm64 with SkiaSharp 3.116.0, 3.119.0, 3.119.2, and the current main branch source — all clean builds render `SKCanvasView` correctly without errors.\n\nHowever, we confirmed that **stale cached assets do cause runtime errors**: switching SkiaSharp versions without cleaning `bin/obj/_framework` produces a `TypeInitializationException` from mismatched WASM binaries. This aligns with all three reporters' observation that clearing caches resolves the issue.\n\nThe specific \"No canvas element was provided\" error originates in `SKHtmlCanvas.ts init()` where the element lookup uses `document.querySelector('[' + elementId + ']')` — this fails when the cached JS module doesn't match the current DOM state.\n\n**Workaround (confirmed by all reporters):**\n1. Clear browser cache\n2. Delete `bin/`, `obj/`, and `_framework/` directories\n3. Run `dotnet restore` before launching\n4. If switching Blazor render modes (Auto to WebAssembly), do a full clean rebuild\n\nCould you share:\n- Which IDE are you using (VS, Rider, VS Code)?\n- Are you using Blazor WASM standalone or Blazor Web App (with Server+WASM Auto mode)?\n- Does the error appear on the very first run, or only after rebuilding/switching versions?",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Clear browser cache and delete bin/obj/_framework directories, then run dotnet restore before launching",
+      "Use dotnet watch instead of IDE debug mode",
+      "After switching Blazor render modes or upgrading SkiaSharp versions, do a full clean rebuild"
+    ],
+    "missingInfo": [
+      "Which IDE is being used (VS, Rider, VS Code)?",
+      "Blazor WASM standalone or Blazor Web App (Server+WASM Auto mode)?",
+      "Does error appear on first run or only after rebuilding/version changes?",
+      "Exact Blazor render mode used (@rendermode InteractiveAuto vs InteractiveWebAssembly)"
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "type/bug with errorType: other",
+        "corrected": "The error is real but only manifests under stale cache conditions. Clean builds work correctly across all tested versions."
+      }
+    ]
+  }
+}
