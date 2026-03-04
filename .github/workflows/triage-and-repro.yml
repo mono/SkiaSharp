@@ -98,21 +98,12 @@ jobs:
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'triage-${{ steps.issue.outputs.issue_number }}'
 
-      - name: Extract platform and build matrix
-        id: extract
-        shell: pwsh
-        run: |
-          $triageFile = '/tmp/skiasharp/triage/${{ steps.issue.outputs.issue_number }}.json'
-          $result = .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $triageFile
-          "platform=$($result.Platform)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "needs_repro=$($result.NeedsRepro)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
       - name: Build repro matrix
         id: matrix
         shell: pwsh
         run: |
-          $platform = '${{ steps.extract.outputs.platform }}'
-          $needsRepro = '${{ steps.extract.outputs.needs_repro }}'
+          $triageFile = '/tmp/skiasharp/triage/${{ steps.issue.outputs.issue_number }}.json'
+          $result = .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $triageFile
 
           $runners = @{
             linux   = 'ubuntu-latest'
@@ -120,10 +111,10 @@ jobs:
             windows = 'windows-latest'
           }
 
-          if ($needsRepro -eq 'true') {
+          if ($result.NeedsRepro -eq 'true') {
             $matrix = @{
               include = @(
-                @{ platform = $platform; runner = $runners[$platform] }
+                @{ platform = $result.Platform; runner = $runners[$result.Platform] }
               )
             }
           } else {
