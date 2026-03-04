@@ -17,12 +17,6 @@ on:
   issue_comment:
     types: [created]
 
-  # Self-test: trigger on workflow/action file changes
-  push:
-    paths:
-      - '.github/workflows/triage-and-repro.yml'
-      - '.github/actions/copilot-cli/**'
-
 permissions:
   contents: write
   issues: write
@@ -57,7 +51,6 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'push' ||
       (
         github.event_name == 'issue_comment' &&
         !github.event.issue.pull_request &&
@@ -75,7 +68,6 @@ jobs:
         run: |
           $raw = switch ('${{ github.event_name }}') {
             'workflow_dispatch' { '${{ inputs.issue_number }}' }
-            'push'             { '3422, 3520, 3420' }
             default            { '${{ github.event.issue.number }}' }
           }
 
