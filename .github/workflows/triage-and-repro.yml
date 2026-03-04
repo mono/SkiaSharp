@@ -41,10 +41,15 @@ jobs:
     name: AI Triage
     runs-on: ubuntu-latest
     
-    # Only run on workflow_dispatch or when comment starts with /triage-and-repro
+    # Only run on workflow_dispatch or when a trusted user comments /triage-and-repro on an issue (not a PR)
     if: |
       github.event_name == 'workflow_dispatch' || 
-      (github.event_name == 'issue_comment' && !github.event.issue.pull_request && startsWith(github.event.comment.body, '/triage-and-repro'))
+      (
+        github.event_name == 'issue_comment' && 
+        !github.event.issue.pull_request &&
+        (github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'COLLABORATOR') &&
+        startsWith(github.event.comment.body, '/triage-and-repro')
+      )
     
     outputs:
       repro_platform: ${{ steps.extract_platform.outputs.platform }}
@@ -61,7 +66,12 @@ jobs:
           else
             ISSUE_NUM="${{ github.event.issue.number }}"
           fi
-          echo "issue_number=$ISSUE_NUM" >> $GITHUB_OUTPUT
+          # Validate issue number is digits only to prevent injection
+          if ! [[ "$ISSUE_NUM" =~ ^[0-9]+$ ]]; then
+            echo "Invalid issue number: '$ISSUE_NUM'. Expected digits only." >&2
+            exit 1
+          fi
+          printf 'issue_number=%s\n' "$ISSUE_NUM" >> "$GITHUB_OUTPUT"
           echo "Processing issue #$ISSUE_NUM"
       
       - name: Checkout code
@@ -89,6 +99,15 @@ jobs:
             
             # Extract suggestedReproPlatform from output.actionability (defaults to 'linux')
             PLATFORM=$(jq -r '.output.actionability.suggestedReproPlatform // "linux"' "$TRIAGE_FILE")
+            # Normalize and validate platform
+            PLATFORM=${PLATFORM,,}
+            case "$PLATFORM" in
+              linux|macos|windows) ;;
+              *)
+                echo "⚠ Unrecognized platform '$PLATFORM', falling back to 'linux'"
+                PLATFORM="linux"
+                ;;
+            esac
             
             # Determine if repro is needed: suggestedAction == "needs-investigation"
             ACTION=$(jq -r '.output.actionability.suggestedAction // ""' "$TRIAGE_FILE")
