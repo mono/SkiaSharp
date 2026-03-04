@@ -41,8 +41,44 @@
     }
   ],
   "engagement": {
-    "syncedAt": "2026-03-03T23:28:23.3339649Z",
+    "syncedAt": "2026-03-04T00:43:52.6322583Z",
     "reactions": [],
-    "comments": []
+    "comments": [
+      {
+        "id": 3994220853,
+        "author": "mattleibow",
+        "body": "@copilot\u002Bclaude-opus-4.6 please review these code changes and make sure we are doing it right.",
+        "createdAt": "2026-03-03T23:32:48",
+        "reactions": []
+      },
+      {
+        "id": 3994234717,
+        "author": "github-actions[bot]",
+        "body": "\uD83D\uDCD6 **Documentation Preview**\n\nThe documentation for this PR has been deployed and is available at:\n\n\uD83D\uDD17 **[View Staging Documentation](https://mono.github.io/SkiaSharp.Extended/staging/374/)**\n\n\uD83D\uDD17 **[View Staging Blazor Sample](https://mono.github.io/SkiaSharp.Extended/staging/374/sample/)**\n\nThis preview will be updated automatically when you push new commits to this PR.\n\n---\n*This comment is automatically updated by the documentation staging workflow.*",
+        "createdAt": "2026-03-03T23:36:47",
+        "reactions": []
+      },
+      {
+        "id": 3994247210,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot\u002Bclaude-opus-4.6 please review these code changes and make sure we are doing it right.\n\nI reviewed the full diff across all 4 changed files. Here\u0027s a summary:\n\n**Metrics (SKPixelComparisonResult)** \u2014 All formulas are mathematically correct and follow standard definitions used by ImageMagick and MAUI\u0027s \u0060MagickNetVisualComparer\u0060:\n- MAE/MSE normalize by \u0060TotalPixels \u00D7 3\u0060 (per-channel average)\n- PSNR uses standard \u006010 \u00D7 log\u2081\u2080(MAX\u00B2 / MSE)\u0060 with \u0060\u221E\u0060 for identical images\n- \u0060SumSquaredError\u0060 uses \u0060long\u0060 to prevent overflow on large images\n\n**Tolerance-based comparison** \u2014 Semantics match ImageMagick\u0027s fuzz: pixels with \u0060|\u0394R|\u002B|\u0394G|\u002B|\u0394B| \u2264 tolerance\u0060 are excluded from all metrics. \u0060tolerance=0\u0060 is verified equivalent to standard comparison via test.\n\n**Backward compatibility** \u2014 Old 3-param \u0060SKPixelComparisonResult\u0060 constructor preserved, chains to new 4-param constructor with \u0060sumSquaredError: 0\u0060.\n\n**\u0060GenerateDifferenceImage\u0060** \u2014 Follows same pattern as existing \u0060GenerateDifferenceMask\u0060.\n\n**Tests** \u2014 22 new tests covering metric correctness (boundary \u002B formula), tolerance edge cases, and diff image. All 63 tests pass (41 original \u002B 22 new).\n\nNo issues found \u2014 the implementation looks correct.",
+        "createdAt": "2026-03-03T23:40:34",
+        "reactions": []
+      },
+      {
+        "id": 3994343885,
+        "author": "mattleibow",
+        "body": "@copilot\u002Bclaude-opus-4.6 can you make sure to update the sample and ensure all the apis have docs.",
+        "createdAt": "2026-03-04T00:08:28",
+        "reactions": []
+      },
+      {
+        "id": 3994413232,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot\u002Bclaude-opus-4.6 can you make sure to update the sample and ensure all the apis have docs.\n\nDone in 336c0e7.\n\n**XML docs added** to all new public APIs:\n- \u0060SKPixelComparisonResult\u0060: 4-param constructor, \u0060SumSquaredError\u0060, \u0060MeanAbsoluteError\u0060, \u0060MeanSquaredError\u0060, \u0060RootMeanSquaredError\u0060, \u0060NormalizedRootMeanSquaredError\u0060, \u0060PeakSignalToNoiseRatio\u0060\n- \u0060SKPixelComparer\u0060: all 4 tolerance-based \u0060Compare\u0060 overloads, all 4 \u0060GenerateDifferenceImage\u0060 overloads\n\n**Blazor sample updated** with:\n- New metrics row (MAE, RMSE, NRMSE, PSNR)\n- Interactive tolerance slider\n- Difference Image panel alongside the Difference Mask\n- Links to API and documentation pages\n\n![Pixel Comparer sample screenshot](https://github.com/user-attachments/assets/977a74de-51cb-416f-ad67-6ff76bfc4765)",
+        "createdAt": "2026-03-04T00:27:19",
+        "reactions": []
+      }
+    ]
   }
 }
