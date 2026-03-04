@@ -1,0 +1,148 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1911,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T14:30:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "scope": "platform-specific/wasm",
+  "notes": "Confirmed: SKCanvasView and SKGLView in SkiaSharp.Views.Blazor do not expose a public CanvasSize property. The canvasSize field is private in both components across all tested versions (2.88.9, 3.119.2, and main branch source). Every other platform view (WPF, WinUI, WindowsForms, GTK3, GTK4, macOS, iOS, Android, Tizen) exposes public SKSize CanvasSize. The Dpi property was already exposed publicly on the Blazor views via PR #1832, establishing the exact pattern requested. PR #1912 attempted this fix but was closed without merge.",
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      { "name": "SkiaSharp.Views.Blazor", "version": "2.88.9" }
+    ]
+  },
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WebAssembly project and add SkiaSharp.Views.Blazor 2.88.9",
+      "command": "mkdir -p /tmp/skiasharp/repro/1911 && cd /tmp/skiasharp/repro/1911 && dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 2.88.9",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for package 'SkiaSharp.Views.Blazor' version '2.88.9' added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Blazor WASM project file with SkiaSharp.Views.Blazor package reference",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk.BlazorWebAssembly\">\n  <PropertyGroup>\n    <TargetFramework>net10.0</TargetFramework>\n    <Nullable>enable</Nullable>\n    <ImplicitUsings>enable</ImplicitUsings>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"Microsoft.AspNetCore.Components.WebAssembly\" Version=\"10.0.2\" />\n    <PackageReference Include=\"Microsoft.AspNetCore.Components.WebAssembly.DevServer\" Version=\"10.0.2\" PrivateAssets=\"all\" />\n    <PackageReference Include=\"SkiaSharp.Views.Blazor\" Version=\"2.88.9\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Blazor page that tries to access the missing CanvasSize property on SKCanvasView",
+          "content": "@page \"/\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<h1>SkiaSharp CanvasSize Test</h1>\n\n<SKCanvasView @ref=\"canvasView\" OnPaintSurface=\"OnPaintSurface\" />\n\n<p>Canvas Size: @canvasWidth x @canvasHeight</p>\n\n@code {\n    private SKCanvasView? canvasView;\n    private float canvasWidth;\n    private float canvasHeight;\n\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        // Try to access CanvasSize property (the feature requested in #1911)\n        var size = canvasView!.CanvasSize;\n        canvasWidth = size.Width;\n        canvasHeight = size.Height;\n\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n    }\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build Blazor project with SkiaSharp.Views.Blazor 2.88.9 — expect CS1061 because CanvasSize property does not exist",
+      "command": "cd /tmp/skiasharp/repro/1911/Repro && dotnet build",
+      "exitCode": 1,
+      "output": "Pages/Home.razor(19,32): error CS1061: 'SKCanvasView' does not contain a definition for 'CanvasSize' and no accessible extension method 'CanvasSize' accepting a first argument of type 'SKCanvasView' could be found (are you missing a using directive or an assembly reference?)\n\nBuild failed with 1 error(s) in 1.7s",
+      "layer": "csharp",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build same project with SkiaSharp.Views.Blazor 3.119.2 (latest stable) — same CS1061 error",
+      "command": "mkdir -p /tmp/skiasharp/repro/1911-latest && cd /tmp/skiasharp/repro/1911-latest && dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.2 && cp /tmp/skiasharp/repro/1911/Repro/Pages/Home.razor Pages/Home.razor && dotnet build",
+      "exitCode": 1,
+      "output": "Pages/Home.razor(19,32): error CS1061: 'SKCanvasView' does not contain a definition for 'CanvasSize' and no accessible extension method 'CanvasSize' accepting a first argument of type 'SKCanvasView' could be found (are you missing a using directive or an assembly reference?)\n\nBuild failed with 1 error(s) in 1.6s",
+      "layer": "csharp",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Investigate main branch source: confirm canvasSize is still private in both Blazor view components",
+      "command": "grep -n 'canvasSize\\|CanvasSize' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+      "exitCode": 0,
+      "output": "SKCanvasView.razor.cs:25: private SKSize canvasSize;\nSKGLView.razor.cs:33: private SKSize canvasSize;\n(No public CanvasSize property found in either file)",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify other platform views expose public CanvasSize — confirming the parity gap",
+      "command": "grep -rn 'public.*CanvasSize' source/SkiaSharp.Views/ --include='*.cs' | head -10",
+      "exitCode": 0,
+      "output": "SkiaSharp.Views.Gtk3/SKDrawingArea.cs:18: public SKSize CanvasSize => ...\nSkiaSharp.Views.Gtk4/SKDrawingArea.cs:20: public SKSize CanvasSize => ...\nSkiaSharp.Views.WindowsForms/SKGLControl.cs:69: public SKSize CanvasSize => lastSize;\nSkiaSharp.Views.WPF/SKGLElement.cs:76: public SKSize CanvasSize => lastSize;\nSkiaSharp.Views.WPF/SKElement.cs:30: public SKSize CanvasSize { get; private set; }\nSkiaSharp.Views.WindowsForms/SKControl.cs:25: public SKSize CanvasSize => ...\nSkiaSharp.Views.WinUI/SKXamlCanvas.cs:70: public SKSize CanvasSize { get; private set; }\nSkiaSharp.Views.WinUI/SKSwapChainPanel.cs:29: public SKSize CanvasSize => lastSize;\n(25+ platform views expose CanvasSize; 0 Blazor views do)",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Verify Dpi property IS already exposed on Blazor views — confirming the pattern from PR #1832 that should be replicated",
+      "command": "grep -n 'public.*Dpi' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+      "exitCode": 0,
+      "output": "SKCanvasView.razor.cs:65: public double Dpi => dpi;\nSKGLView.razor.cs:72: public double Dpi => dpi;\n(Dpi is exposed but CanvasSize is not — inconsistent pattern)",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "CS1061: SKCanvasView does not contain a definition for CanvasSize",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "CS1061: SKCanvasView does not contain a definition for CanvasSize — same gap in latest stable",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "canvasSize field remains private in both SKCanvasView.razor.cs and SKGLView.razor.cs on main branch"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Well-specified enhancement with trivial implementation. The pattern is established (Dpi property, 25+ other platform views), and PR #1912 demonstrated the exact fix. Needs maintainer decision on whether to accept."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement and area/SkiaSharp.Views.Blazor labels",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "link-related",
+        "description": "Link to closed PR #1912 that attempted this fix",
+        "risk": "low",
+        "confidence": 0.90
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the suggestion! We investigated and can confirm that the `CanvasSize` property is not currently available on the Blazor views (`SKCanvasView` and `SKGLView`).\n\n**Investigation:**\n- The `canvasSize` field exists as a private field in both `SKCanvasView.razor.cs` and `SKGLView.razor.cs`, but is not exposed publicly.\n- The `Dpi` property was already exposed via PR #1832 using the exact same pattern (`public double Dpi => dpi;`), so the precedent exists.\n- Every other platform view (WPF, WinUI, WindowsForms, GTK3, GTK4, macOS, iOS, Android, Tizen) exposes a public `CanvasSize` property.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.9 | ❌ CanvasSize not available |\n| 3.119.2 (latest) | ❌ CanvasSize not available |\n| main (source) | ❌ Still private |\n\n**Workaround:** Inside your `OnPaintSurface` handler, you can access the canvas dimensions via `e.Info.Size`:\n\n```csharp\nvoid OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    var size = e.Info.Size; // SKSizeI with Width and Height\n}\n```\n\nThis only works within the paint callback, not for external layout logic.",
+      "status": "ready"
+    },
+    "workarounds": [
+      "Inside OnPaintSurface handler, use e.Info.Size to get the canvas dimensions (pixel size). This only works within the paint callback, not for external layout logic."
+    ]
+  }
+}
