@@ -24,6 +24,8 @@ permissions:
 
 # MCP config shared across all Copilot invocations
 env:
+  GIT_USER_NAME: 'github-actions[bot]'
+  GIT_USER_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
   MCP_CONFIG: |
     {
       "mcpServers": {
@@ -111,8 +113,8 @@ jobs:
       - name: Configure git identity
         shell: pwsh
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name $env:GIT_USER_NAME
+          git config user.email $env:GIT_USER_EMAIL
 
       - name: Fetch data-cache branch
         shell: pwsh
@@ -222,8 +224,8 @@ jobs:
       - name: Configure git identity
         shell: pwsh
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name $env:GIT_USER_NAME
+          git config user.email $env:GIT_USER_EMAIL
 
       - name: Fetch data-cache branch
         shell: pwsh
