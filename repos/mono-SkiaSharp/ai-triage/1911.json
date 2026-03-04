@@ -1,0 +1,107 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1911,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z"
+  },
+  "summary": "Feature request to expose the private canvasSize field as a public CanvasSize property on SKCanvasView and SKGLView in SkiaSharp.Views.Blazor, matching the pattern already used by WPF, WinUI, and Uno platform views.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.90 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.98 },
+    "platforms": ["os/WASM"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "relatedIssues": [1831, 1888],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/pull/1832", "description": "PR #1832 (merged) — exposed Dpi property on Blazor views, same pattern requested here" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/1912", "description": "PR #1912 (closed without merge) — community PR that added public SKSize CanvasSize => canvasSize to both Blazor views" },
+        { "url": "https://github.com/mono/SkiaSharp/discussions/1888", "description": "Discussion #1888 — community discussion suggesting CanvasSize exposure" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "canvasSize is still a private field in both SKCanvasView.razor.cs and SKGLView.razor.cs on the main branch. PR #1912 was closed without merge."
+    }
+  },
+  "analysis": {
+    "summary": "The Blazor SKCanvasView and SKGLView components both have a private canvasSize field that tracks the HTML canvas element size, but unlike WPF (SKElement.CanvasSize), WinUI (SKXamlCanvas.CanvasSize), and Uno (SKXamlCanvas.CanvasSize) views, this field is not exposed as a public property. PR #1832 already merged the same pattern for the Dpi property. A community PR #1912 was submitted to fix this but was closed without merge or reviewer feedback.",
+    "rationale": "Classified as type/enhancement rather than type/bug because CanvasSize is a convention across views rather than a contractual interface requirement, and the Blazor component functions correctly — it just lacks a convenience accessor. The fix is trivial: add public SKSize CanvasSize => canvasSize; to both components. Confidence is high because the request is well-specified and the pattern is already established.",
+    "keySignals": [
+      { "text": "analogous to #1831 & #1832 it may is useful to expose the canvasSize Property, too", "source": "issue body", "interpretation": "Reporter correctly identifies the Dpi-exposure pattern from PR #1832 and requests the same for canvasSize." },
+      { "text": "Add a public property on both components to expose the private field", "source": "issue body", "interpretation": "Clear, well-scoped request — the reporter understands the implementation is trivial." },
+      { "text": "anyone who wants to do non-trivial JS interop needs the htmlCanvas ElementReference exposed", "source": "comment by simonsarris", "interpretation": "Related enhancement request — the commenter wants broader access to Blazor component internals for JS interop." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "25", "finding": "canvasSize is declared as private SKSize — not publicly accessible. Dpi was exposed (line 65) as public double Dpi => dpi; by PR #1832, but the same was never done for canvasSize.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs", "lines": "33", "finding": "Same pattern — canvasSize is private SKSize with no public accessor. Dpi is exposed (line 72).", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs", "lines": "30", "finding": "WPF view exposes public SKSize CanvasSize { get; private set; } — the property Blazor is missing.", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKXamlCanvas.cs", "lines": "70", "finding": "WinUI view also exposes public SKSize CanvasSize { get; private set; } — confirms cross-platform convention.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Inside OnPaintSurface handler, use e.Info.Size to get the canvas dimensions (pixel size). This only works within the paint callback, not for external layout logic."
+    ],
+    "nextQuestions": [
+      "Should htmlCanvas ElementReference also be exposed (as requested by commenter simonsarris)?",
+      "Why was PR #1912 closed without merge or feedback?"
+    ],
+    "resolution": {
+      "hypothesis": "The canvasSize field was kept private as an oversight when the Blazor views were first implemented, not as a deliberate design choice. All other platform views expose it publicly.",
+      "proposals": [
+        {
+          "title": "Add public CanvasSize property to both Blazor views",
+          "description": "Add public SKSize CanvasSize => canvasSize; to both SKCanvasView.razor.cs and SKGLView.razor.cs, matching the Dpi pattern already in place.",
+          "codeSnippet": "public SKSize CanvasSize => canvasSize;",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.95,
+          "effort": "trivial"
+        },
+        {
+          "title": "Use e.Info.Size inside paint handler",
+          "description": "As a workaround, access the canvas size via SKPaintSurfaceEventArgs.Info.Size within the OnPaintSurface callback. This provides the pixel dimensions but is only available during paint.",
+          "codeSnippet": "void OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    var size = e.Info.Size; // SKSizeI with Width and Height\n}",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Add public CanvasSize property to both Blazor views",
+      "recommendedReason": "Trivial one-liner that matches established patterns (Dpi property, other platform views). PR #1912 already demonstrated the exact implementation."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Well-specified enhancement with a trivial implementation. PR #1912 demonstrates the fix but was closed without explanation — needs maintainer decision on whether to reopen or submit a new PR.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, Blazor views, and WASM labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views.Blazor", "os/WASM"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the request, note the parity gap and the workaround",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the well-scoped request. You're right that `canvasSize` should be exposed — every other platform view (WPF, WinUI, Uno) has a public `CanvasSize` property, and the `Dpi` property was already exposed on the Blazor views via PR #1832.\n\nAs a workaround until this is addressed, you can access the canvas dimensions inside your paint handler via `e.Info.Size`:\n\n```csharp\nvoid OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    var size = e.Info.Size; // pixel dimensions\n}\n```\n\nThis won't help if you need the size outside the paint callback, but it covers most use cases."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to the closed PR #1912 that attempted this fix",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 1912
+      }
+    ]
+  }
+}
