@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3322,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-04T00:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced the reported behavior of unhandled exceptions from SizeWatcher.js during show/hide of multiple SKCanvasView components in Blazor WASM. The exact error variant observed was a null element in SizeWatcher.observe() rather than the reporter\u0027s unobserve() path, but both stem from the same root cause: SizeWatcher.js lacks null guards when DOM elements are removed before JS interop calls execute. Additionally, SKHtmlCanvas.js logs \u0027No canvas element was provided\u0027 errors (45 instances). Reproduced on all tested versions including main branch source \u2014 no fix exists yet.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor 3.116.0 and WasmBuildNative=true",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp.Views.Blazor --version 3.116.0",
+      "exitCode": 0,
+      "output": "Restore succeeded.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Blazor WASM project file with SkiaSharp.Views.Blazor and WasmBuildNative enabled",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet10.0\u003C/TargetFramework\u003E\n    \u003CWasmBuildNative\u003Etrue\u003C/WasmBuildNative\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.116.0\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Pages/Home.razor",
+          "description": "Home page with toggle/swap buttons and 5 SKCanvasView instances via CanvasWrapper child components with @key for forced recreation",
+          "content": "@page \u0022/\u0022\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n\u003Cbutton @onclick=\u0022ToggleCanvases\u0022\u003EToggle All\u003C/button\u003E\n\u003Cbutton @onclick=\u0022SwapCanvases\u0022\u003ESwap Canvases\u003C/button\u003E\n\u003Cbutton @onclick=\u0022RapidSwap\u0022\u003ERapid Swap (20x, no delay)\u003C/button\u003E\n\n@if (showCanvases)\n{\n    @foreach (var id in canvasIds)\n    {\n        \u003Cdiv @key=\u0022id\u0022\u003E\n            \u003CCanvasWrapper Id=\u0022id\u0022 /\u003E\n        \u003C/div\u003E\n    }\n}\n\n@code {\n    bool showCanvases = true;\n    List\u003Cint\u003E canvasIds = new() { 1, 2, 3, 4, 5 };\n    int nextId = 6;\n\n    void ToggleCanvases() =\u003E showCanvases = !showCanvases;\n    void SwapCanvases() {\n        canvasIds = Enumerable.Range(nextId, 5).ToList();\n        nextId \u002B= 5;\n    }\n    async Task RapidSwap() {\n        for (int i = 0; i \u003C 20; i\u002B\u002B) {\n            if (i % 3 == 0) showCanvases = !showCanvases;\n            else SwapCanvases();\n            StateHasChanged();\n            await Task.Yield();\n        }\n    }\n}"
+        },
+        {
+          "filename": "Pages/CanvasWrapper.razor",
+          "description": "Child component wrapping SKCanvasView with IDisposable logging to track component lifecycle",
+          "content": "@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n@implements IDisposable\n\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 style=\u0022width:150px;height:150px;\u0022 /\u003E\n\n@code {\n    [Parameter] public int Id { get; set; }\n    void OnPaintSurface(SKPaintSurfaceEventArgs e) {\n        e.Surface.Canvas.Clear(SKColors.CornflowerBlue);\n    }\n    public void Dispose() =\u003E Console.WriteLine($\u0022CanvasWrapper #{Id} disposing\u0022);\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build Blazor WASM project with native WASM compilation",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Error(s). Time Elapsed 00:00:12.54"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Serve app and navigate to home page with Playwright, verify initial rendering",
+      "layer": "deployment",
+      "result": "success",
+      "command": "dotnet run --urls http://localhost:5111 --no-build",
+      "exitCode": 0,
+      "output": "App loaded, 5 canvases rendered. Console shows: SUCCESS: Canvas 0-4 rendered 296x296. No errors on initial load."
+    },
+    {
+      "stepNumber": 4,
+      "description": "Click \u0027Rapid Swap (20x)\u0027 to rapidly create/destroy SKCanvasView components with no delay between operations",
+      "layer": "csharp",
+      "result": "failure",
+      "command": "Playwright click: Rapid Swap (20x, no delay)",
+      "exitCode": 1,
+      "output": "90 browser console errors. 45x \u0027No canvas element was provided\u0027 from SKHtmlCanvas.js:17. 45x \u0027crit: Microsoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100] Unhandled exception rendering component: TypeError: null is not an object (evaluating watcherElement.SizeWatcher = { callback: callback })\u0027. App shows \u0027An unhandled error has occurred\u0027 error banner and becomes unresponsive."
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false,
+    "dotnetSdkVersion": "10.0.102"
+  },
+  "assessment": "likely-bug",
+  "scope": "platform-specific/wasm",
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "90 browser console errors (45 TypeError \u002B 45 missing canvas element) when rapidly swapping SKCanvasView components. App crashes with unhandled error banner.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same 90 errors with identical pattern on latest stable release. Clean project dir used.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Same 90 errors reproduced using Blazor WASM sample with project references to main branch source. Bug exists on all tested versions.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "reproduction-difficulty",
+        "upstream": "Reporter says not easy to reproduce in separated sample",
+        "corrected": "Reproducible in a standalone sample by rapidly swapping @key\u0027d SKCanvasView components with Task.Yield() between iterations. The key is using @key to force Blazor to destroy and recreate components rather than reusing them."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for reporting this! We\u0027ve been able to reproduce the issue.\n\nWhen rapidly showing/hiding multiple \u0060SKCanvasView\u0060 components in Blazor WASM, the \u0060SizeWatcher.js\u0060 and \u0060SKHtmlCanvas.js\u0060 interop modules throw unhandled \u0060TypeError\u0060 exceptions because they don\u0027t check whether the DOM element still exists before accessing it. This causes the Blazor renderer to crash with an unhandled error.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 3.116.0 (reporter) | \u274C Reproduced |\n| 3.119.2 (latest) | \u274C Reproduced |\n| main (source) | \u274C Reproduced |\n\n**Reproduction:** Create a Blazor WASM app with multiple \u0060SKCanvasView\u0060 components that are rapidly toggled or swapped using \u0060@key\u0060 directives and \u0060Task.Yield()\u0060 between state changes. The issue occurs because Blazor removes DOM elements from the render tree before the component\u0027s JS interop disposal (or initialization of replacement components) can execute.\n\nThe fix needs null guards in the JavaScript interop modules (\u0060SizeWatcher.js\u0060, \u0060SKHtmlCanvas.js\u0060) and defensive exception handling in the C# disposal chain (\u0060SKCanvasView.Dispose()\u0060)."
+    },
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Bug reproduced on all versions including main branch. SizeWatcher.js and SKHtmlCanvas.js lack null guards for DOM elements removed before JS interop calls execute. Root cause is clear from triage analysis but fix needs implementation and testing."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm type/bug, area/SkiaSharp.Views.Blazor, os/WASM labels",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference similar Blazor disposal issue #2441",
+        "risk": "low",
+        "confidence": 0.8
+      }
+    ]
+  }
+}

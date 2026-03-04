@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3276,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T00:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced the version mismatch error by simulating a multi-project solution where a third-party package brings in an older SkiaSharp native library (3.116.1) while the managed assembly is 3.119.0. The CheckNativeLibraryCompatible check correctly detects the mismatch and throws InvalidOperationException. This is working as designed \u2014 the version check protects against ABI incompatibility. The reporter\u0027s issue is a transitive dependency conflict from DevExpress.Drawing.Skia bringing in older native assets, not a SkiaSharp bug. Cross-platform not tested via Docker (daemon unavailable) but the version check is platform-independent managed code.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create multi-project solution with Core library referencing SkiaSharp 3.119.0 and Dashboard app referencing older NativeAssets.macOS 3.116.1 (simulating DevExpress transitive dependency conflict)",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new sln \u0026\u0026 dotnet new classlib -n Core \u0026\u0026 dotnet new console -n Dashboard \u0026\u0026 dotnet add Dashboard reference Core",
+      "exitCode": 0,
+      "output": "Solution and projects created successfully",
+      "filesCreated": [
+        {
+          "filename": "Dashboard/Dashboard.csproj",
+          "description": "Dashboard app project with SkiaSharp 3.119.0 managed and NativeAssets.macOS 3.116.1 (older) to simulate version conflict from DevExpress",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CNoWarn\u003ENU1605\u003C/NoWarn\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.119.0\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.macOS\u0022 Version=\u00223.116.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CProjectReference Include=\u0022..\\Core\\Core.csproj\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Core/Core.csproj",
+          "description": "Core library project referencing SkiaSharp 3.119.0 (like reporter\u0027s Core project)",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.119.0\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Dashboard/Program.cs",
+          "description": "Dashboard entry point that exercises SkiaSharp via Core library, triggering the version check",
+          "content": "using SkiaSharp;\nusing Core;\ntry\n{\n    Console.WriteLine($\u0022Expected native minimum: {SkiaSharpVersion.NativeMinimum}\u0022);\n    Console.WriteLine($\u0022Actual native version: {SkiaSharpVersion.Native}\u0022);\n    Console.WriteLine($\u0022Compatible: {SkiaSharpVersion.CheckNativeLibraryCompatible(false)}\u0022);\n    var result = CoreHelper.GetSkiaInfo();\n    Console.WriteLine(result);\n}\ncatch (Exception ex)\n{\n    Console.Error.WriteLine($\u0022ERROR: {ex.GetType().Name}: {ex.Message}\u0022);\n    if (ex.InnerException != null)\n        Console.Error.WriteLine($\u0022INNER: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\u0022);\n    Environment.ExitCode = 1;\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build the multi-project solution with version mismatch (NU1605 suppressed to allow native asset downgrade)",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet build Dashboard/Dashboard.csproj",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run the Dashboard app \u2014 version mismatch between managed 3.119.0 and native 3.116.1 triggers InvalidOperationException",
+      "layer": "csharp",
+      "result": "failure",
+      "command": "dotnet run --project Dashboard/Dashboard.csproj",
+      "exitCode": 1,
+      "output": "Expected native minimum: 119.0\nActual native version: 116.0\nCompatible: False\nERROR: TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\nINNER: InvalidOperationException: The version of the native libSkiaSharp library (116.0) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [119.0, 120.0)."
+    },
+    {
+      "stepNumber": 4,
+      "description": "Baseline test: SkiaSharp 3.119.0 with aligned native assets works correctly on the same host",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet run --project Baseline/Baseline.csproj",
+      "exitCode": 0,
+      "output": "Starting baseline test...\nNative minimum: 119.0\nNative version: 119.0\nSUCCESS: Bitmap created 100x100"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test main branch console sample \u2014 works correctly with aligned versions",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "Hello World!\nYour platform color type is Rgba8888"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.0",
+    "dockerUsed": false
+  },
+  "inputs": {
+    "triageFile": "ai-triage/3276.json"
+  },
+  "assessment": "working-as-designed",
+  "scope": "universal",
+  "versionResults": [
+    {
+      "version": "3.119.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Version mismatch error reproduced when managed 3.119.0 loads native 3.116.1. InvalidOperationException thrown with message about incompatible native library version.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same version mismatch error on latest stable. The version check mechanism is unchanged \u2014 managed 3.119.2 rejects native 3.116.1.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Main branch console sample works correctly with aligned native assets. The version check mechanism has not changed \u2014 the issue is a deployment/configuration problem, not a code bug.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.0"
+      },
+      {
+        "name": "SkiaSharp.NativeAssets.macOS",
+        "version": "3.116.1"
+      }
+    ]
+  },
+  "errorMessages": {
+    "primaryError": "InvalidOperationException: The version of the native libSkiaSharp library (116.0) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [119.0, 120.0)."
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "type/question with close-with-docs",
+        "corrected": "Confirmed as working-as-designed. The version check correctly detects native library version mismatches. The reporter\u0027s issue is a transitive dependency conflict from DevExpress.Drawing.Skia, not a SkiaSharp defect."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for the detailed report and project structure \u2014 that helps narrow this down.\n\nWe were able to reproduce the version mismatch error by simulating a scenario where the managed SkiaSharp assembly expects one native library version but a different version is loaded at runtime.\n\n**What\u0027s happening:**\nSkiaSharp includes a version compatibility check that verifies the native \u0060libSkiaSharp\u0060 library matches the managed assembly. For SkiaSharp 3.119.0, the native library must be version 119.x. If a different version is loaded (e.g., 116.x from an older SkiaSharp), you get the error:\n\n\u003E \u0060InvalidOperationException: The version of the native libSkiaSharp library (X.Y) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [119.0, 120.0).\u0060\n\nThis is almost certainly caused by \u0060DevExpress.Drawing.Skia 24.2.6\u0060 depending on a different version of SkiaSharp internally, and the wrong native binary getting deployed.\n\n**Recommended steps:**\n\n1. **Audit transitive dependencies** \u2014 run this in your Dashboard project directory:\n   \u0060\u0060\u0060\n   dotnet list package --include-transitive\n   \u0060\u0060\u0060\n   Look for any SkiaSharp-related packages with a different version than 3.119.0.\n\n2. **Move NativeAssets to the app project** \u2014 \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 is currently in your Core library. Per [deployment guidance](https://github.com/mono/SkiaSharp/blob/main/documentation/packages.md), NativeAssets packages should be in the **application** (executable) project to ensure the correct native binary is deployed.\n\n3. **Align all SkiaSharp versions** \u2014 if DevExpress depends on an older SkiaSharp, either update DevExpress to a version that supports SkiaSharp 3.119.0, or downgrade SkiaSharp to match DevExpress\u0027s expected version.\n\n4. **Clean rebuild** \u2014 delete all \u0060bin/\u0060 and \u0060obj/\u0060 folders and rebuild. Stale native binaries are a common cause of this error.\n\nThis is the same pattern documented in #3117 \u2014 third-party packages that bundle or depend on different SkiaSharp versions can cause native library version conflicts."
+    },
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "The version check is working as designed. The reporter has a transitive dependency conflict from DevExpress.Drawing.Skia bringing in an older SkiaSharp native library. This is a configuration issue, not a SkiaSharp bug."
+    },
+    "workarounds": [
+      "Move SkiaSharp.NativeAssets.Linux.NoDependencies from Core library to Dashboard application project",
+      "Run \u0027dotnet list package --include-transitive\u0027 to identify the conflicting SkiaSharp version from DevExpress",
+      "Align all SkiaSharp package versions across the solution or downgrade to match DevExpress expected version",
+      "Clean rebuild: delete all bin/ and obj/ folders before rebuilding"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Reclassify as type/question since this is a configuration/dependency issue, not a bug",
+        "risk": "low",
+        "confidence": 0.85
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #3117 which documents the same version mismatch pattern with third-party packages",
+        "risk": "low",
+        "confidence": 0.85
+      }
+    ],
+    "missingInfo": [
+      "Exact error message text from the browser console screenshot",
+      "Output of \u0027dotnet list package --include-transitive\u0027 for the Dashboard project showing DevExpress SkiaSharp dependency version",
+      "Which version of SkiaSharp does DevExpress.Drawing.Skia 24.2.6 depend on transitively"
+    ]
+  }
+}
