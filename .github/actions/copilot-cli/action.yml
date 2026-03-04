@@ -1,0 +1,123 @@
+name: 'Copilot CLI'
+description: 'Install and run the GitHub Copilot CLI with a prompt'
+inputs:
+  copilot-token:
+    description: 'PAT with "Copilot Requests" permission (GITHUB_TOKEN does NOT work)'
+    required: true
+  prompt:
+    description: 'Prompt to send to Copilot'
+    required: true
+  model:
+    description: 'Model to use (e.g., "claude-opus-4.6", "claude-sonnet-4.5", "gpt-5")'
+    required: false
+    default: 'claude-opus-4.6'
+  mcp-config:
+    description: 'MCP server configuration JSON'
+    required: false
+  upload-artifact:
+    description: 'Upload logs + output as artifact'
+    required: false
+    default: 'true'
+  artifact-name:
+    description: 'Name for the uploaded artifact'
+    required: false
+    default: 'copilot-output'
+  artifact-paths:
+    description: 'Additional paths to include in the artifact (newline-separated)'
+    required: false
+  additional-directories:
+    description: 'Comma-separated list of additional directories to trust'
+    required: false
+    default: '/tmp'
+  copilot-version:
+    description: 'Version of @github/copilot to install'
+    required: false
+    default: 'latest'
+outputs:
+  logs-path:
+    description: 'Path to copilot logs'
+    value: ${{ steps.copilot.outputs.logs_path }}
+  exit-code:
+    description: 'Exit code from copilot'
+    value: ${{ steps.copilot.outputs.exit_code }}
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Run Copilot CLI
+      id: copilot
+      shell: bash
+      run: |
+        echo "::group::Install Copilot CLI"
+        if [ "$COPILOT_VERSION" = "latest" ]; then
+          npm install -g @github/copilot
+        else
+          npm install -g @github/copilot@$COPILOT_VERSION
+        fi
+        echo "CLI Version: $(copilot --version)"
+        echo "::endgroup::"
+
+        # Configure MCP servers
+        if [ -n "$MCP_CONFIG" ]; then
+          echo "::group::Configure MCP"
+          mkdir -p ${XDG_CONFIG_HOME:-$HOME/.config}/.copilot
+          CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/.copilot"
+          echo "$MCP_CONFIG" > "$CONFIG_DIR/mcp-config.json"
+          cat "$CONFIG_DIR/mcp-config.json"
+          echo "::endgroup::"
+        fi
+
+        # Build args — always yolo (allow all tools, no approval)
+        ARGS="--allow-all-tools"
+        ARGS+=" --add-dir /"
+        if [ -n "$ADDITIONAL_DIRS" ]; then
+          IFS=',' read -ra DIRS <<< "$ADDITIONAL_DIRS"
+          for dir in "${DIRS[@]}"; do
+            ARGS+=" --add-dir $dir"
+          done
+        fi
+        if [ -n "$MODEL" ]; then
+          ARGS+=" --model $MODEL"
+        fi
+        ARGS+=" --log-level all"
+        ARGS+=" --log-dir $HOME/.copilot/logs"
+        ARGS+=" --screen-reader --no-color --stream off"
+
+        echo "::group::Copilot args"
+        echo "$ARGS"
+        echo "::endgroup::"
+
+        echo "::group::Prompt"
+        echo "$PROMPT"
+        echo "::endgroup::"
+
+        echo "::group::Run Copilot CLI"
+        set +e
+        copilot -p "$PROMPT" $ARGS
+        EXIT_CODE=$?
+        set -e
+        echo "::endgroup::"
+
+        echo "logs_path=$HOME/.copilot/logs" >> $GITHUB_OUTPUT
+        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+      env:
+        GH_TOKEN: ${{ github.token }}
+        COPILOT_GITHUB_TOKEN: ${{ inputs.copilot-token }}
+        PROMPT: ${{ inputs.prompt }}
+        COPILOT_VERSION: ${{ inputs.copilot-version }}
+        MCP_CONFIG: ${{ inputs.mcp-config }}
+        MODEL: ${{ inputs.model }}
+        ADDITIONAL_DIRS: ${{ inputs.additional-directories }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      if: ${{ always() && inputs.upload-artifact == 'true' }}
+      with:
+        name: ${{ inputs.artifact-name }}-${{ github.run_id }}-${{ github.run_attempt }}
+        path: |
+          ~/.copilot/logs
+          ${{ inputs.artifact-paths }}
+        if-no-files-found: warn
