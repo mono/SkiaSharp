@@ -1,0 +1,119 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2374,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T18:30:00Z"
+  },
+  "conclusion": "confirmed",
+  "scope": "universal",
+  "assessment": "feature-request",
+  "notes": "Confirmed: SKGLView.Dispose() is declared as 'public void Dispose()' (non-virtual) in SkiaSharp.Views.Blazor, preventing subclasses from overriding disposal behavior. The same pattern exists in SKCanvasView. Tested on versions 2.88.9 and 3.119.2 — both exhibit the same gap. Main branch source also shows no change. The standard .NET Dispose(bool) pattern (CA1063) would resolve this.",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "2.88.9"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create class library project and add SkiaSharp.Views.Blazor 2.88.9",
+      "command": "dotnet new classlib -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 2.88.9",
+      "exitCode": 0,
+      "output": "Restore succeeded.\nPackageReference for package 'SkiaSharp.Views.Blazor' version '2.88.9' added.",
+      "filesCreated": [
+        {
+          "filename": "Class1.cs",
+          "description": "Subclass of SKGLView attempting to override Dispose to demonstrate the non-virtual gap",
+          "content": "using SkiaSharp.Views.Blazor;\n\nnamespace Repro;\n\npublic class MySKGLView : SKGLView\n{\n    private bool _customResourceAllocated = true;\n\n    public override void Dispose()\n    {\n        _customResourceAllocated = false;\n        Console.WriteLine(\"Custom dispose called\");\n        base.Dispose();\n    }\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build project with SKGLView subclass attempting to override Dispose (v2.88.9)",
+      "command": "dotnet build",
+      "exitCode": 1,
+      "output": "error CS0506: 'MySKGLView.Dispose()': cannot override inherited member 'SKGLView.Dispose()' because it is not marked virtual, abstract, or override\n\nBuild failed with 1 error(s) in 1.0s",
+      "layer": "csharp",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Test with latest stable SkiaSharp.Views.Blazor 3.119.2 in fresh project",
+      "command": "dotnet new classlib -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.2 && dotnet build",
+      "exitCode": 1,
+      "output": "error CS0506: 'MySKGLView.Dispose()': cannot override inherited member 'SKGLView.Dispose()' because it is not marked virtual, abstract, or override\n\nBuild failed with 1 error(s) in 1.3s",
+      "layer": "csharp",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Investigate main branch source for SKGLView.Dispose() and SKCanvasView.Dispose()",
+      "command": "grep -n 'public.*void Dispose' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+      "exitCode": 0,
+      "output": "SKGLView.razor.cs:190:\t\tpublic void Dispose()\nSKCanvasView.razor.cs:171:\t\tpublic void Dispose()",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "CS0506: Dispose is non-virtual, cannot override in subclass",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "CS0506: Same non-virtual Dispose, gap persists in latest stable",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "Source grep confirms Dispose() is still non-virtual on main branch; same pattern in SKCanvasView",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Enhancement confirmed across all versions including main. The fix is straightforward (implement Dispose(bool) pattern per CA1063) but needs implementation and testing."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement and area/SkiaSharp.Views.Blazor labels",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the suggestion! We investigated and can confirm that `SKGLView.Dispose()` is not virtual in SkiaSharp.Views.Blazor, which prevents subclasses from properly extending disposal behavior.\n\n**Investigation:**\n- Tested with SkiaSharp.Views.Blazor 2.88.9 and 3.119.2 — both have `public void Dispose()` (non-virtual)\n- Attempting `override` yields `CS0506: cannot override inherited member because it is not marked virtual`\n- The same pattern exists in `SKCanvasView`\n- Main branch source still shows the same non-virtual Dispose\n\nThe standard .NET fix would be implementing the `Dispose(bool)` pattern ([CA1063](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1063)).\n\n**Workaround:** You can shadow the method with `new`, though this breaks polymorphic disposal through `IDisposable` references:\n\n```csharp\npublic new void Dispose()\n{\n    // Custom cleanup\n    base.Dispose();\n}\n```\n\nWe've flagged this for consideration.",
+      "status": "ready"
+    },
+    "workarounds": [
+      "Shadow the Dispose method using 'new' keyword: public new void Dispose() { /* custom cleanup */ base.Dispose(); } — note this breaks polymorphic disposal through IDisposable references"
+    ]
+  }
+}
