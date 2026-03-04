@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1194,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-18T00:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "scope": "universal",
+  "assessment": "feature-request",
+  "notes": "Confirmed: SkiaSharp.Views.Blazor only supports client-side WebAssembly \u2014 server-side Blazor rendering is not implemented. The package has [SupportedOSPlatform(\"browser\")] on all view types, depends on SkiaSharp.NativeAssets.WebAssembly, and the JSModuleInterop throws NotSupportedException when IJSRuntime is not IJSInProcessRuntime (i.e., server-side Blazor). No server-side rendering code, SignalR marshaling, or alternative rendering pipeline exists in any version tested (2.88.9, 3.119.2, or main branch). Client-side WASM support was delivered via PR #1811, but the server-side portion of this feature request remains unaddressed.",
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Blazor",
+        "version": "2.88.9"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor Server app with SkiaSharp.Views.Blazor 2.88.9",
+      "command": "dotnet new blazor -n Repro --framework net10.0 --interactivity server --no-https && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 2.88.9",
+      "exitCode": 0,
+      "output": "The template 'Blazor Web App' was created successfully.\nPackageReference for package 'SkiaSharp.Views.Blazor' version '2.88.9' added.",
+      "filesCreated": [
+        {
+          "filename": "Components/Pages/Home.razor",
+          "description": "Blazor Server page using SKCanvasView with InteractiveServer render mode",
+          "content": "@page \"/\"\n@rendermode InteractiveServer\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<PageTitle>SkiaSharp Blazor Server Test</PageTitle>\n<h1>SkiaSharp Server-Side Blazor Test</h1>\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\" style=\"width:400px;height:300px;\" />\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(SKColors.CornflowerBlue);\n        using var paint = new SKPaint { Color = SKColors.White, TextSize = 32, IsAntialias = true };\n        canvas.DrawText(\"Hello from SkiaSharp!\", 50, 150, paint);\n        Console.WriteLine($\"SUCCESS: rendered {e.Info.Width}x{e.Info.Height}\");\n    }\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build Blazor Server app \u2014 builds successfully but SKCanvasView is browser-only",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded in 6.7s",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Investigate SkiaSharp.Views.Blazor 2.88.9 nuspec \u2014 confirm WASM-only dependency",
+      "command": "cat SkiaSharp.Views.Blazor.nuspec (from extracted nupkg)",
+      "exitCode": 0,
+      "output": "Package depends on SkiaSharp.NativeAssets.WebAssembly 2.88.9. Only targets net6.0. No server-side rendering code present.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Investigate JSModuleInterop source \u2014 confirm NotSupportedException for non-WASM runtimes",
+      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs",
+      "exitCode": 0,
+      "output": "Pre-.NET 7: throws NotSupportedException('SkiaSharp currently only works on Web Assembly.') when IJSRuntime is not IJSInProcessRuntime. .NET 7+: uses JSHost.ImportAsync which is WASM-only. [SupportedOSPlatform(\"browser\")] on class.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Investigate SKCanvasView source \u2014 confirm browser-only platform attribute",
+      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+      "exitCode": 0,
+      "output": "[SupportedOSPlatform(\"browser\")] on SKCanvasView class. Uses GCHandle for pixel buffer transfer, ElementReference for HTML canvas, JS interop for putImageData \u2014 all require in-process browser execution. No fallback for server-side rendering.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Investigate SkiaSharp.Views.Blazor.csproj \u2014 confirm browser-only SupportedPlatform",
+      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj",
+      "exitCode": 0,
+      "output": "<SupportedPlatform Include=\"browser\" /> in csproj. ProjectReference to SkiaSharp.NativeAssets.WebAssembly. No server-side rendering project or code found.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Search for any server-side Blazor support code in main branch source",
+      "command": "grep -r 'server|Server|SignalR' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/ --include='*.cs' --include='*.razor' --include='*.csproj'",
+      "exitCode": 0,
+      "output": "No server-related files found. Zero references to server-side Blazor, SignalR, or alternative rendering pipelines in SkiaSharp.Views.Blazor.",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Package builds in Blazor Server project but is WASM-only. Depends on SkiaSharp.NativeAssets.WebAssembly. JSModuleInterop throws NotSupportedException for non-WASM runtimes.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Same WASM-only architecture. Package still depends on SkiaSharp.NativeAssets.WebAssembly for both net6.0 and net8.0 TFMs. [SupportedOSPlatform(\"browser\")] still present. No server-side support added.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "Main branch source has identical WASM-only constraints. No server-side Blazor rendering code, SignalR marshaling, or alternative rendering pipeline exists.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.9,
+      "reason": "Confirmed feature request: server-side Blazor support is genuinely missing from SkiaSharp.Views.Blazor. Client-side WASM was delivered (PR #1811), but the server-side portion of the original request remains unaddressed across all versions. The maintainer closed #1921 as a duplicate of this issue in Nov 2024, confirming this is the canonical tracking issue."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and Blazor area labels",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the suggestion! We investigated and can confirm that server-side Blazor rendering is not currently available in SkiaSharp.\n\n**Investigation:**\n- SkiaSharp.Views.Blazor (tested 2.88.9 and 3.119.2) is explicitly WASM-only: `[SupportedOSPlatform(\"browser\")]` on all view types\n- The package depends on `SkiaSharp.NativeAssets.WebAssembly` \u2014 no server-side native assets\n- JS interop throws `NotSupportedException(\"SkiaSharp currently only works on Web Assembly.\")` when used outside WASM\n- No server-side rendering code, SignalR marshaling, or alternative pipeline exists in any version including main\n\nClient-side Blazor WASM support was delivered via PR #1811 and works well. The remaining server-side feature request would require a fundamentally different architecture (e.g., server-side image rendering sent as encoded images, or SKPicture serialization over SignalR).\n\n**Workaround for server-side scenarios today:** Use standard SkiaSharp on the server to render images, encode as PNG/JPEG, and send to the client as `<img>` tags:\n\n```csharp\nusing var surface = SKSurface.Create(new SKImageInfo(width, height));\nvar canvas = surface.Canvas;\n// ... draw operations ...\nusing var image = surface.Snapshot();\nusing var data = image.Encode(SKEncodedImageFormat.Png, 100);\nvar base64 = Convert.ToBase64String(data.ToArray());\n// Render as <img src=\"data:image/png;base64,...\" />\n```\n\nKeeping this open to track the server-side Blazor feature request.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Use standard SkiaSharp on the server to render images, encode as PNG/JPEG, and send to the client as <img> tags or via Blazor streaming",
+      "Use the maintainer's prototype repo (mattleibow/SkiaSharpBlazorComponents) as a starting point for server-side image rendering",
+      "For interactive scenarios, consider using Blazor Auto render mode (.NET 8+) which starts server-side then transitions to client WASM"
+    ]
+  }
+}
