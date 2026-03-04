@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2374,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T00:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "notes": "Confirmed: SKGLView.Dispose() is declared as 'public void Dispose()' (non-virtual) on line 190 of SKGLView.razor.cs. The class is not sealed, so subclassing is valid, but subclasses cannot override Dispose to add custom cleanup logic. SKCanvasView has the identical pattern (line 171 of SKCanvasView.razor.cs). Neither class implements the standard .NET Dispose(bool disposing) pattern. The reporter's enhancement request is valid.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Check SKGLView class declaration and Dispose method for virtual keyword",
+      "command": "grep -n 'class SKGLView\\|public.*void Dispose\\|virtual.*Dispose\\|sealed' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+      "exitCode": 0,
+      "output": "12:\tpublic partial class SKGLView : IDisposable\n190:\t\tpublic void Dispose()",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Check SKCanvasView class declaration and Dispose method for virtual keyword",
+      "command": "grep -n 'class SKCanvasView\\|public.*void Dispose\\|virtual.*Dispose\\|sealed' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+      "exitCode": 0,
+      "output": "13:\tpublic partial class SKCanvasView : IDisposable\n171:\t\tpublic void Dispose()",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify no Dispose(bool) pattern exists in either Blazor view — grep returns no matches confirming absence",
+      "command": "grep -rn 'Dispose(bool' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/",
+      "exitCode": 0,
+      "output": "(no matches — Dispose(bool) pattern is absent from both views)",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "main (source inspection)",
+    "dockerUsed": false
+  },
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Enhancement confirmed: both Blazor views use non-virtual Dispose without the standard Dispose(bool) pattern. Implementation is a small, well-scoped change to adopt the standard .NET IDisposable pattern."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement and area/SkiaSharp.Views.Blazor labels",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "proposedResponse": {
+      "body": "I can confirm that both `SKGLView` and `SKCanvasView` in `SkiaSharp.Views.Blazor` implement `IDisposable` with a non-virtual `Dispose()` method, and neither class is sealed. This means subclasses cannot override `Dispose()` to add custom cleanup logic.\n\nThe standard .NET fix would be to adopt the `Dispose(bool disposing)` pattern:\n\n```csharp\npublic void Dispose()\n{\n    Dispose(true);\n    GC.SuppressFinalize(this);\n}\n\nprotected virtual void Dispose(bool disposing)\n{\n    if (disposing)\n    {\n        // existing cleanup\n    }\n}\n```\n\nAs a workaround, subclasses can hide `Dispose` using the `new` keyword, though this doesn't provide polymorphic disposal:\n\n```csharp\npublic new void Dispose()\n{\n    MyResource?.Dispose();\n    base.Dispose();\n}\n```",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Use 'public new void Dispose()' in subclass to hide base Dispose and call base.Dispose() manually (does not work polymorphically)"
+    ]
+  }
+}
