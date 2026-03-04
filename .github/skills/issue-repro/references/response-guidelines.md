@@ -50,3 +50,38 @@ We've confirmed this issue. The reported behavior reproduces on {platforms} with
 
 We're tracking this for a fix. {workaround_section_if_any}
 ```
+
+### Confirmed (enhancement/feature request)
+
+```markdown
+Thanks for the suggestion! We investigated and can confirm that {feature_description} is not currently available in SkiaSharp.
+
+**Investigation:**
+{investigation_summary}
+
+{related_infrastructure_if_any}
+
+We've flagged this for consideration. {workaround_section_if_any}
+```
+
+### Confirmed (documentation gap)
+
+```markdown
+Thanks for pointing this out. We can confirm that the documentation for {topic} is {missing_or_incorrect}.
+
+**Finding:**
+{investigation_summary}
+
+We'll work on updating the documentation.
+```
+
+### Not confirmed
+
+```markdown
+Thanks for the report. We investigated and found that {feature_or_topic} {actually_exists_or_is_documented}.
+
+{evidence_summary}
+
+Could you take a look and let us know if we're missing something?
+{missing_info_list_if_any}
+```

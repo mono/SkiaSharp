@@ -254,7 +254,7 @@ If reproduction contradicts triage, record in `feedback.corrections[]`:
 
 ### 4. Generate output (required for definitive conclusions)
 
-When conclusion is `reproduced` or `not-reproduced`, generate the `output` object with actionability, actions, and a proposed response. Skip for blocked conclusions (`needs-platform`, `needs-hardware`, `partial`, `inconclusive`).
+When conclusion is `reproduced`, `not-reproduced`, `confirmed`, or `not-confirmed`, generate the `output` object with actionability, actions, and a proposed response. Skip for blocked conclusions (`needs-platform`, `needs-hardware`, `partial`, `inconclusive`).
 
 #### Choosing suggestedAction
 
@@ -267,6 +267,8 @@ When conclusion is `reproduced` or `not-reproduced`, generate the `output` objec
 | Not reproduced — works on all tested versions | `close-as-fixed` | 0.75+ |
 | Wrong output confirmed | `needs-investigation` | 0.85+ |
 | Reproduced but appears working-as-designed | `close-with-docs` | 0.70+ |
+| Confirmed — feature/docs gap verified | `needs-investigation` | 0.85+ |
+| Not confirmed — feature/docs actually exist | `close-with-docs` | 0.75+ |
 
 #### Writing proposedResponse
 

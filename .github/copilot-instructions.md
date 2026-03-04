@@ -365,7 +365,7 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 | Test release | `release-testing` | "test the release", "verify packages" |
 | Publish release | `release-publish` | "push to nuget", "tag release" |
 
-### Bug Pipeline (3 steps)
+### Issue Pipeline (3 steps)
 
 The first three skills form a pipeline. Each can run standalone, but they work best in sequence:
 

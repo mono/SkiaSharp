@@ -273,7 +273,7 @@ Not a bug — the issue requests new functionality that doesn't exist yet.
 3. **Skip multi-version testing** — there's nothing to regress-test across versions.
 
 ### Conclusion
-- `not-reproduced` — the requested feature literally doesn't exist, so there's no behavior to observe.
+- `confirmed` — the requested feature is verified as missing (reporter's claim is correct).
 - `assessment: "feature-request"`
 - Include code investigation steps showing the feature is absent.
 
@@ -281,4 +281,4 @@ Not a bug — the issue requests new functionality that doesn't exist yet.
 Issue: "Add wheel support to GTK3 views"
 - Step 1: grep for `WheelEvent` or `ScrollEvent` in GTK3 view → not found
 - Step 2: confirm `SKTouchAction.WheelChanged` enum exists (shared infra) but GTK3 `SKDrawingArea` doesn't subscribe to it
-- Conclusion: `not-reproduced`, assessment: `feature-request`
+- Conclusion: `confirmed`, assessment: `feature-request`
