@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2653,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T03:20:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "working-as-designed",
+  "notes": "Reproduced: DllNotFoundException with 'liblibSkiaSharp' occurs when using SkiaSharp.NativeAssets.Linux on Linux Docker without fontconfig installed. The 'liblibSkiaSharp' double-prefix is normal .NET dlopen behavior (prepends 'lib' to DllImport name 'libSkiaSharp'). The actual root cause is that libSkiaSharp.so dynamically links to libfontconfig.so.1, which is absent in minimal Docker images. The NoDependencies package variant works without fontconfig. This is by-design: the NativeAssets.Linux package intentionally depends on fontconfig for font discovery. Reproduced on 2.88.6, 3.119.2, and main branch — all behave identically.",
+  "scope": "platform-specific/linux",
+  "reproProject": {
+    "type": "docker",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "2.88.6" },
+      { "name": "SkiaSharp.NativeAssets.Linux", "version": "2.88.6" }
+    ]
+  },
+  "environment": {
+    "os": "Linux (Docker Debian 12 bookworm)",
+    "arch": "x64",
+    "dotnetVersion": "8.0.418",
+    "skiaSharpVersion": "2.88.6",
+    "dockerUsed": true
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project in Docker Debian x64 with SkiaSharp 2.88.6 and NativeAssets.Linux, no fontconfig installed",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c '[create csproj + Program.cs] && dotnet restore && dotnet build'",
+      "exitCode": 0,
+      "output": "Restored Repro.csproj (in 10.62 sec). Build succeeded. 0 Error(s)",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run application WITHOUT fontconfig installed - triggers DllNotFoundException with liblibSkiaSharp double-prefix in error log",
+      "command": "dotnet run --no-build",
+      "exitCode": 134,
+      "output": "FAILURE: TypeInitializationException: The type initializer for 'SkiaSharp.SKImageInfo' threw an exception.\nInner: DllNotFoundException: Unable to load shared library 'libSkiaSharp' or one of its dependencies.\nlibfontconfig.so.1: cannot open shared object file: No such file or directory\nruntimes/linux-x64/native/liblibSkiaSharp.so: cannot open shared object file: No such file or directory",
+      "layer": "native",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run same application WITH fontconfig installed - works correctly, confirming fontconfig is the missing dependency",
+      "command": "apt-get update -qq && apt-get install -y -qq libfontconfig1 && dotnet run --no-build",
+      "exitCode": 0,
+      "output": "Testing SkiaSharp native library loading...\nBitmap created: 100x100\nSUCCESS: SkiaSharp native library loaded and working",
+      "layer": "native",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test NoDependencies package (3.119.2) without fontconfig - works, confirming workaround",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c '[project with NoDependencies] && dotnet run'",
+      "exitCode": 0,
+      "output": "Testing SkiaSharp native library loading...\nBitmap created: 100x100\nSUCCESS: SkiaSharp native library loaded and working",
+      "layer": "native",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify with ldd that regular libSkiaSharp.so requires libfontconfig.so.1 and NoDeps variant does not",
+      "command": "ldd libSkiaSharp.so",
+      "exitCode": 0,
+      "output": "Regular build: libfontconfig.so.1 => not found\nNoDeps build: no fontconfig dependency (only libpthread, libdl, libm, libc)",
+      "layer": "native",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.6",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "DllNotFoundException without fontconfig. Works with fontconfig installed.",
+      "platform": "docker-linux-x64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same DllNotFoundException without fontconfig. Works with fontconfig installed.",
+      "platform": "docker-linux-x64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Regular native binary fails without fontconfig. NoDeps native binary works without fontconfig.",
+      "platform": "docker-linux-x64"
+    }
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "GLIBC compatibility regression fixed in 3.119.0-preview",
+        "corrected": "The core issue (missing fontconfig dependency) is not a regression and is present in all versions including main. The GLIBC issue mentioned in comments is a separate sub-issue."
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "The behavior is by-design: SkiaSharp.NativeAssets.Linux links to fontconfig for font discovery. Docker containers need either fontconfig installed or the NoDependencies package. This is documented in documentation/packages.md."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add os/Linux label to confirm platform",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation with workarounds",
+        "risk": "medium",
+        "confidence": 0.85
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this! We've reproduced the `DllNotFoundException` for `libSkiaSharp` in Docker containers without `fontconfig` installed.\n\n**Root cause:** The `SkiaSharp.NativeAssets.Linux` native library (`libSkiaSharp.so`) dynamically links to `libfontconfig.so.1` for font discovery. When fontconfig is missing (common in minimal Docker images), the native library fails to load. The `liblibSkiaSharp` in the error log is normal — .NET's dlopen prepends `lib` to the DllImport name `libSkiaSharp`.\n\n**Tested versions:**\n| Version | Without fontconfig | With fontconfig | NoDependencies |\n|---------|-------------------|----------------|----------------|\n| 2.88.6 | ❌ DllNotFoundException | ✅ Works | ✅ Works |\n| 3.119.2 | ❌ DllNotFoundException | ✅ Works | ✅ Works |\n| main (source) | ❌ DllNotFoundException | ✅ Works | ✅ Works |\n\n**Workarounds (pick one):**\n1. **Install fontconfig** in your Dockerfile:\n   ```dockerfile\n   # Debian/Ubuntu\n   RUN apt-get update && apt-get install -y libfontconfig1\n   # Alpine\n   RUN apk add --no-cache fontconfig\n   ```\n2. **Use the NoDependencies package** instead:\n   ```xml\n   <PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"3.119.2\" />\n   ```\n   This variant has zero external dependencies but lacks advanced font features.\n\nThis is by-design behavior — the regular NativeAssets.Linux package intentionally depends on fontconfig for font discovery.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Install fontconfig in Docker: apt-get install -y libfontconfig1 (Debian) or apk add --no-cache fontconfig (Alpine)",
+      "Use SkiaSharp.NativeAssets.Linux.NoDependencies instead of SkiaSharp.NativeAssets.Linux"
+    ]
+  }
+}
