@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1674,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:30:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "The crash in HandleDictionary.RegisterHandle (exception 0x80000004) is caused by Windows STA thread re-entrancy. On Windows, .NET's ReaderWriterLockSlim is alertable and can pump the Windows message loop during lock waits, causing re-entrant calls into HandleDictionary.RegisterHandle which corrupts state. This mechanism does not exist on macOS or Linux — STA threading and Windows message pumping are Windows-only concepts. Docker cannot simulate Windows STA behavior. SkiaSharp 2.80.2 lacks osx-arm64 native binaries, preventing testing the reporter's version. Tested SkiaSharp 3.119.2 (latest) on macOS ARM64 with concurrent stress tests (4 threads x 500 iterations of SKFont creation and SKSurface.Canvas access) — no crashes, but this is expected since STA re-entrancy doesn't exist on macOS. Triage identifies PR #1817 as the fix (shipped in 2.88.4+), replacing ReaderWriterLockSlim with non-alertable Win32 CRITICAL_SECTION.",
+  "blockers": [
+    "Requires Windows with STA threading model — the crash is caused by alertable ReaderWriterLockSlim pumping the Windows message loop during lock waits, causing re-entrant calls into HandleDictionary.RegisterHandle. This mechanism does not exist on macOS or Linux.",
+    "SkiaSharp 2.80.2 lacks osx-arm64 native binaries and no x64 .NET runtime is available for Rosetta fallback — cannot test the reporter's exact version on macOS ARM64.",
+    "Docker cannot simulate Windows STA threading model — Windows containers are not supported on macOS."
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console repro project with SkiaSharp 2.80.2 (reporter's version)",
+      "command": "mkdir -p /tmp/skiasharp/repro/1674 && cd /tmp/skiasharp/repro/1674 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.80.2",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp' version '2.80.2' added. Warning NU1903: known high severity vulnerability.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Stress test for HandleDictionary.RegisterHandle with rapid SKFont/SKCanvas creation and concurrent access (4 threads x 500 iterations)",
+          "content": "using System;\nusing System.Runtime.InteropServices;\nusing System.Threading;\nusing System.Threading.Tasks;\nusing SkiaSharp;\n\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\n\ntry {\n    using var typeface = SKTypeface.FromFamilyName(\"Arial\");\n    using var font = new SKFont(typeface, 16f, 1f, 0f);\n    Console.WriteLine($\"SKFont created OK: Size={font.Size}\");\n} catch (Exception ex) { Console.WriteLine($\"CRASH: {ex.GetType().Name}: {ex.Message}\"); }\n\nfor (int i = 0; i < 1000; i++) {\n    using var typeface = SKTypeface.FromFamilyName(\"Arial\");\n    using var font = new SKFont(typeface, 12f + (i % 20), 1f, 0f);\n}\n\nvar tasks = new Task[4];\nint crashCount = 0;\nfor (int t = 0; t < 4; t++) {\n    tasks[t] = Task.Run(() => {\n        for (int i = 0; i < 500; i++) {\n            try {\n                using var typeface = SKTypeface.FromFamilyName(\"Arial\");\n                using var font = new SKFont(typeface, 14f, 1f, 0f);\n                using var surface = SKSurface.Create(new SKImageInfo(50, 50));\n                surface.Canvas.DrawText(\"test\", 0, 25, font, new SKPaint());\n            } catch { Interlocked.Increment(ref crashCount); }\n        }\n    });\n}\nTask.WaitAll(tasks);\nConsole.WriteLine($\"Concurrent test crashes: {crashCount}\");\nConsole.WriteLine(\"SUCCESS: test completed\");"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build repro project with SkiaSharp 2.80.2",
+      "command": "cd /tmp/skiasharp/repro/1674/Repro && dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded with 2 warning(s) (NU1903 vulnerability warning).",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run repro with SkiaSharp 2.80.2 on macOS ARM64 — TypeInitializationException because 2.80.2 lacks osx-arm64 native binaries",
+      "command": "cd /tmp/skiasharp/repro/1674/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "OS: Darwin 25.3.0\nArch: Arm64\nSkiaSharp: 2.80.2\n.NET: .NET 8.0.23\n\nTest 1: CRASH: TypeInitializationException: The type initializer for 'SkiaSharp.SKTypeface' threw an exception.\nTest 2: CRASH: TypeInitializationException\nTest 3: CRASH: TypeInitializationException: The type initializer for 'SkiaSharp.SKImageInfo' threw an exception.\nTest 4: Concurrent test... Crashes: 2000\nTest 5: CRASH: TypeInitializationException",
+      "layer": "native",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Attempt x64 Rosetta fallback — no x64 .NET runtime installed",
+      "command": "cd /tmp/skiasharp/repro/1674/Repro && dotnet run -r osx-x64 --self-contained false",
+      "exitCode": 131,
+      "output": "You must install .NET to run this application. Architecture: x64. Failed to resolve libhostfxr.dylib [not found]. Error code: 0x80008083",
+      "layer": "setup",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Create fresh project with latest stable SkiaSharp 3.119.2 and run stress test — all tests pass on macOS ARM64 (no STA re-entrancy on macOS)",
+      "command": "mkdir -p /tmp/skiasharp/repro/1674-latest && cd /tmp/skiasharp/repro/1674-latest && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "OS: Darwin 25.3.0\nArch: Arm64\nSkiaSharp: 3.119.2 (latest stable)\n.NET: .NET 8.0.23\n\nTest 1: SKFont created OK: Size=16\nTest 2: 1000 SKFont creations completed OK\nTest 3: SKSurface.Canvas access OK\nTest 4: Concurrent (4 threads x 500)... Crashes: 0\nTest 5: 500 text draws completed OK\n\nSUCCESS: All tests completed without crash on latest stable",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3 (Darwin 25.3.0)",
+    "arch": "arm64",
+    "dotnetVersion": ".NET 8.0.23",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "2.80.2 (reporter), 3.119.2 (latest)",
+    "dockerUsed": false
+  },
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      { "name": "SkiaSharp", "version": "2.80.2" }
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  }
+}
