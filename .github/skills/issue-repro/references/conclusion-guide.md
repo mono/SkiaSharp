@@ -1,11 +1,11 @@
 # Conclusion Guide
 
-How to choose the correct `conclusion` value for a bug reproduction attempt.
+How to choose the correct `conclusion` value for a reproduction attempt (bugs and enhancements).
 
 ## Contents
 1. [Factual vs Editorial](#️-critical-principle-factual-vs-editorial)
 2. [Decision Flowchart](#decision-flowchart)
-3. [Conclusion Values](#conclusion-values) — reproduced, not-reproduced, needs-platform, needs-hardware, partial, inconclusive
+3. [Conclusion Values](#conclusion-values) — reproduced, not-reproduced, confirmed, not-confirmed, needs-platform, needs-hardware, partial, inconclusive
 4. [Supporting Fields](#supporting-fields) — notes, assessment, blockers
 5. [Confidence and Human Review](#confidence-and-human-review)
 6. [Scope Derivation](#scope-derivation-from-phase-3d-cross-platform-verification)
@@ -22,24 +22,40 @@ How to choose the correct `conclusion` value for a bug reproduction attempt.
 | "Is this behavior a defect?" | **Editorial** | Maintainers |
 | "Should this be fixed?" | **Editorial** | Maintainers |
 
-**Your job is ONLY to answer the factual question.** If the reporter says "I get error X" and you get error X, that's `reproduced` — even if error X is intentional, documented, or working-as-designed.
+**Your job is ONLY to answer the factual question.** For bugs: if the reporter says "I get error X" and you get error X, that's `reproduced`. For non-bug issues (enhancements, feature requests, documentation): if the reporter says "feature X is missing" and you confirm it's missing, that's `confirmed`.
 
-**Example:** Reporter says "SKMatrix.MakeIdentity() gives CS0117 in v3.0". You try it and get CS0117. Conclusion = `reproduced`. Your opinion that "this is an intentional API rename" goes in `notes`, NOT in the conclusion.
+**Example (bug):** Reporter says "SKMatrix.MakeIdentity() gives CS0117 in v3.0". You try it and get CS0117. Conclusion = `reproduced`. Your opinion that "this is an intentional API rename" goes in `notes`, NOT in the conclusion.
+
+**Example (enhancement):** Reporter says "SKDrawingArea has no wheel event handler". You grep the source and confirm there is no wheel handler. Conclusion = `confirmed`. Your opinion goes in `assessment` and `notes`.
 
 ---
 
 ## Decision Flowchart
 
 ```
-Did the REPORTED BEHAVIOR occur?
-├─ Yes, observed what reporter described → reproduced
-│  (crash, exception, wrong output, missing output — all are "reproduced")
-├─ No, behavior differs from report → not-reproduced
-├─ Couldn't run at all
-│  ├─ Missing platform/OS? → needs-platform
-│  ├─ Missing hardware? → needs-hardware
-│  └─ Missing info/assets? → partial or inconclusive
-└─ Some aspects matched, some didn't → partial
+What TYPE of issue is this?
+├─ Bug (type/bug)
+│  └─ Did the REPORTED BEHAVIOR occur?
+│     ├─ Yes, observed what reporter described → reproduced
+│     │  (crash, exception, wrong output, missing output — all are "reproduced")
+│     ├─ No, behavior differs from report → not-reproduced
+│     ├─ Couldn't run at all
+│     │  ├─ Missing platform/OS? → needs-platform
+│     │  ├─ Missing hardware? → needs-hardware
+│     │  └─ Missing info/assets? → partial or inconclusive
+│     └─ Some aspects matched, some didn't → partial
+│
+├─ Enhancement / Feature Request / Documentation (non-bug)
+│  └─ Is the reporter's claim TRUE?
+│     ├─ Yes, claim verified (feature IS missing, docs ARE wrong) → confirmed
+│     ├─ No, claim not verified (feature exists, docs are correct) → not-confirmed
+│     ├─ Couldn't verify
+│     │  ├─ Missing platform/OS? → needs-platform
+│     │  ├─ Missing hardware? → needs-hardware
+│     │  └─ Insufficient info? → partial or inconclusive
+│     └─ Some aspects verified, some not → partial
+│
+└─ Question → typically does NOT flow through repro
 ```
 
 ---
@@ -77,6 +93,29 @@ If the user reports a breaking change error (e.g., CS0117), and you verify they 
 
 **⚠️ This is NOT for "it's not a bug":** If the reported behavior occurred (you saw the same error/crash/output), use `reproduced` even if you believe the behavior is intentional. `not-reproduced` means the behavior literally didn't happen.
 
+### `confirmed`
+
+**The reporter's non-bug claim was verified.** Use for enhancements, feature requests, and documentation issues — NOT for bugs. This means you investigated and the reporter is correct: the feature IS missing, the docs ARE wrong, the API gap IS real.
+
+- **Required evidence:** ≥1 step showing the claim is true (e.g., project that tries to use missing API fails to compile, grep found no matching implementation, docs are outdated)
+- **Version testing required:** Test across versions just like bugs — a feature may exist in one version but not another. Populate `versionResults` with `confirmed`/`not-confirmed` per version.
+- **Scope required:** Derive `scope` from your investigation — gap in all platform views → `"universal"`, gap in one platform → `"platform-specific/{platform}"`.
+- **No step-result constraint:** steps may all be `success` (grep ran successfully while confirming absence) or include `failure` (tried to use missing API → compile error). Both are valid.
+- **Use when:** issue type is `type/enhancement`, `type/feature-request`, or `type/documentation` AND the reporter's claim is verified
+- **Example (feature):** `"Confirmed: SKDrawingArea has no wheel event handler — grep found no WheelEvent in GTK view implementation"`
+- **Example (docs):** `"Confirmed: SKPaint.FilterQuality docs reference removed API — XML docs still mention obsolete enum"`
+
+**⚠️ NEVER use `confirmed` for bugs.** If reported misbehavior was observed, use `reproduced`. `confirmed` is exclusively for verifying non-bug claims.
+
+### `not-confirmed`
+
+**The reporter's non-bug claim was NOT verified.** Use for enhancements, feature requests, and documentation issues when the reporter's claim is incorrect: the feature DOES exist, the docs ARE correct, the API IS available.
+
+- **Required evidence:** ≥1 investigation step showing the claim is false (e.g., found the API in source, docs are accurate)
+- **Use when:** issue type is non-bug AND the reporter's claim doesn't hold
+- **Example (feature):** `"Not confirmed: SKDrawingArea does have a wheel event handler — found in SKDrawingAreaBase.OnScrollEvent()"`
+- **Example (docs):** `"Not confirmed: SKPaint.FilterQuality docs were updated in v3.0 — current docs are accurate"`
+
 ### `needs-platform`
 
 Cannot reproduce because the required platform or OS is not available.
@@ -102,7 +141,7 @@ Cannot reproduce because specific hardware is required.
 
 ### `partial`
 
-Some aspects of the bug were reproduced, others could not be verified.
+Some aspects of the issue were reproduced or verified, others could not be.
 
 - **Required evidence:** what WAS reproduced AND what remains unverified
 - **Required:** populate `blockers[]` with specific reasons for incomplete reproduction
@@ -125,7 +164,15 @@ Cannot determine whether the bug exists. Results are ambiguous or information is
 
 A structured, **editorial** classification of what you think is happening, without corrupting the factual `conclusion`.
 
-Use this when the behavior is reproduced but appears intentional (API rename, breaking change, documentation gap, etc.).
+Use this to add nuance beyond the conclusion. Common pairings:
+
+| Conclusion | + Assessment | Meaning |
+|------------|-------------|---------|
+| `reproduced` | `working-as-designed` | Bug behavior exists but is intentional |
+| `reproduced` | `breaking-change` | Bug is an intentional API change |
+| `confirmed` | `feature-request` | Feature is genuinely missing |
+| `confirmed` | `docs-gap` | Documentation is genuinely wrong/missing |
+| `not-confirmed` | `user-error` | Reporter misunderstood existing API |
 
 Recommended values:
 - `"unknown"`
@@ -134,8 +181,11 @@ Recommended values:
 - `"breaking-change"`
 - `"docs-gap"`
 - `"user-error"`
+- `"feature-request"` — issue is an enhancement, not a bug. The feature doesn't exist yet.
 
 **Example (#3279-style):** conclusion = `reproduced`, assessment = `breaking-change`, notes explain the rename/migration guidance.
+
+**Example (enhancement):** conclusion = `confirmed`, assessment = `feature-request`, notes = "Confirmed: GTK3 SKDrawingArea has no wheel event handler. The feature requested in this issue does not exist yet."
 
 ### `blockers[]`
 

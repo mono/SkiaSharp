@@ -86,6 +86,8 @@ elif conclusion == "not-reproduced":
         errors.append("Conclusion is 'not-reproduced' but no step has result 'success'")
     if "failure" in results or "wrong-output" in results:
         errors.append("Conclusion is 'not-reproduced' but step(s) have 'failure'/'wrong-output'")
+elif conclusion in ("confirmed", "not-confirmed"):
+    pass  # No step-result constraints — confirmation via code investigation may have any mix of results
 elif conclusion in ("needs-platform", "needs-hardware", "partial", "inconclusive"):
     blockers = data.get("blockers", [])
     if not blockers:

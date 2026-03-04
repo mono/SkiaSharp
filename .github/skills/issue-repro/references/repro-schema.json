@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mono/SkiaSharp/repro-schema.json",
-  "title": "SkiaSharp Bug Reproduction",
-  "description": "Per-issue AI bug reproduction v1.0. Captures systematic reproduction attempts with step-by-step results, environment details, binary artifact references, and actionable output (proposed response, actions, workarounds). Output limits: 2KB per step (4KB for failure steps), 50 lines for stack traces. Absolute paths containing usernames must be redacted.",
+  "title": "SkiaSharp Issue Reproduction",
+  "description": "Per-issue AI reproduction v1.0. Captures systematic reproduction attempts with step-by-step results, environment details, binary artifact references, and actionable output (proposed response, actions, workarounds). Output limits: 2KB per step (4KB for failure steps), 50 lines for stack traces. Absolute paths containing usernames must be redacted.",
   "type": "object",
   "required": [
     "meta",
@@ -30,21 +30,24 @@
         "c-api",
         "native",
         "deployment",
-        "setup"
+        "setup",
+        "investigation"
       ],
-      "description": "Which layer of the SkiaSharp stack this step exercises."
+      "description": "Which layer of the SkiaSharp stack this step exercises. Use 'investigation' for source-code analysis steps (grep, file reading) in enhancement confirmations."
     },
     "conclusionValue": {
       "type": "string",
       "enum": [
         "reproduced",
         "not-reproduced",
+        "confirmed",
+        "not-confirmed",
         "needs-platform",
         "needs-hardware",
         "partial",
         "inconclusive"
       ],
-      "description": "FACTUAL observation of whether reported behavior occurred. reproduced=reported behavior was observed INCLUDING wrong/incomplete output cases (even if 'working as designed'). not-reproduced=reported behavior was NOT observed. needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced. inconclusive=insufficient info."
+      "description": "FACTUAL observation of whether reported claim was verified. reproduced=reported behavior was observed INCLUDING wrong/incomplete output cases (even if 'working as designed') — use for bugs. not-reproduced=reported behavior was NOT observed — use for bugs. confirmed=reporter's claim verified for non-bug issue types (enhancement, feature-request, documentation) e.g. 'the feature IS missing' or 'the docs ARE wrong'. not-confirmed=reporter's claim not verified for non-bug types e.g. 'the feature actually exists'. needs-platform=requires unavailable OS/platform. needs-hardware=requires specific hardware. partial=some aspects reproduced/confirmed. inconclusive=insufficient info."
     },
     "artifactSource": {
       "type": "string",
@@ -147,7 +150,7 @@
     },
     "conclusion": {
       "$ref": "#/$defs/conclusionValue",
-      "description": "Factual observation of whether the reported behavior was reproduced."
+      "description": "Factual observation of whether the reported behavior was reproduced (for bugs) or the reporter's claim was verified (for non-bug issue types)."
     },
     "notes": {
       "type": "string",
@@ -162,7 +165,8 @@
         "working-as-designed",
         "breaking-change",
         "docs-gap",
-        "user-error"
+        "user-error",
+        "feature-request"
       ],
       "description": "EDITORIAL classification only. Use to record opinions without corrupting the factual 'conclusion'."
     },
@@ -204,10 +208,12 @@
             "enum": [
               "reproduced",
               "not-reproduced",
+              "confirmed",
+              "not-confirmed",
               "error",
               "not-tested"
             ],
-            "description": "What happened with this version. reproduced=reported behavior observed (including wrong/incomplete output). error=build or setup failed."
+            "description": "What happened with this version. reproduced=reported behavior observed for bugs (including wrong/incomplete output). not-reproduced=reported behavior not observed for bugs. confirmed=claim verified for non-bug issues (e.g. feature missing in this version). not-confirmed=claim not verified for non-bug issues. error=build or setup failed."
           },
           "notes": {
             "type": "string",
@@ -535,7 +541,7 @@
         "proposedResponse"
       ],
       "additionalProperties": false,
-      "description": "Actionable output: recommended disposition, automatable operations, and proposed response. Required when conclusion is reproduced or not-reproduced.",
+      "description": "Actionable output: recommended disposition, automatable operations, and proposed response. Required when conclusion is reproduced, not-reproduced, confirmed, or not-confirmed.",
       "properties": {
         "actionability": {
           "type": "object",
@@ -651,7 +657,7 @@
             "type": "string",
             "description": "A piece of missing information."
           },
-          "description": "Information needed from the reporter when conclusion is not-reproduced or partial. E.g. 'Exact .NET SDK version', 'Full exception stack trace', 'Minimal reproduction project'."
+          "description": "Information needed from the reporter when conclusion is not-reproduced, not-confirmed, or partial. E.g. 'Exact .NET SDK version', 'Full exception stack trace', 'Minimal reproduction project'."
         }
       }
     }
@@ -795,6 +801,30 @@
           "environment",
           "output",
           "reproProject"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conclusion": {
+            "enum": [
+              "confirmed",
+              "not-confirmed"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "meta",
+          "conclusion",
+          "notes",
+          "reproductionSteps",
+          "environment",
+          "output",
+          "versionResults",
+          "scope"
         ]
       }
     }

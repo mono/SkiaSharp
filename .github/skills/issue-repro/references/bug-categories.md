@@ -10,7 +10,10 @@ instructions (how to create/build/run), see the `platform-*.md` files in this di
 4. [Platform-Specific Bugs](#4-platform-specific-bugs)
 5. [Build / Deployment Bugs](#5-build--deployment-bugs)
 6. [Memory / Disposal Bugs](#6-memory--disposal-bugs)
-7. [General Tips](#general-tips)
+7. [Enhancement / Feature Request](#7-enhancement--feature-request)
+8. [Platform Parity Gap](#8-platform-parity-gap)
+9. [Documentation Issue](#9-documentation-issue)
+10. [General Tips](#general-tips)
 
 **Constraints applying to ALL categories:**
 - No native rebuilds — use `dotnet cake --target=externals-download` only
@@ -255,3 +258,92 @@ When the reporter upgrades SkiaSharp (e.g. 2.x → 3.x) and gets compiler errors
 - Always include SkiaSharp version and runtime info in output.
 - Save artifacts (PNGs, crash logs) to files — reference by filename, don't inline.
 - Test helpers available in repo: `PathToImages`, `PathToFonts`, `IsWindows`/`IsMac`/`IsLinux`.
+
+---
+
+## 7. Enhancement / Feature Request
+
+Not a bug — the issue requests new functionality that doesn't exist yet.
+
+### Signals
+- Triage JSON has `type/enhancement` or `type/feature-request`
+- Issue title contains "add", "expose", "support", "new method", "feature request"
+- No error, crash, or incorrect behavior reported — issue describes desired behavior
+
+### Strategy
+1. **Create a project that demonstrates the gap** — build a minimal project that attempts to use the requested feature. This may compile but not work, or may not compile at all. Either outcome is valid evidence.
+2. **Document what exists** — note related infrastructure that's already in place (e.g., shared enums, sibling platform implementations).
+3. **Test across versions** — the feature may exist in one version but not another, or may have been removed. Test reporter's version AND latest stable, same as bugs.
+4. **Look for workarounds** — the feature may be achievable through alternative APIs or approaches. Document any workarounds found.
+
+### Conclusion
+- `confirmed` — the requested feature is verified as missing (reporter's claim is correct).
+- `not-confirmed` — the feature actually exists (reporter missed it, or it's available under a different name/API).
+- `assessment: "feature-request"`
+- Include code investigation steps showing the feature is absent or present.
+
+### Example
+Issue: "Add wheel support to GTK3 views"
+- Step 1: Create a GTK3 console project with SkiaSharp.Views.Gtk3 → project builds
+- Step 2: grep for `WheelEvent` or `ScrollEvent` in GTK3 view → not found
+- Step 3: confirm `SKTouchAction.WheelChanged` enum exists (shared infra) but GTK3 `SKDrawingArea` doesn't subscribe to it
+- Step 4: Test on latest stable → same gap
+- Conclusion: `confirmed`, assessment: `feature-request`, scope: `platform-specific/linux`
+
+---
+
+## 8. Platform Parity Gap
+
+A cross-platform API exists and works on some platforms but not others. This is a **bug** (broken API contract), not an enhancement.
+
+### Signals
+- API surface exists (enum, property, interface) across all platforms
+- At least one platform fully implements the feature
+- Another platform silently drops or ignores the functionality
+- Issue says "X works on Windows but not on Mac" or "events not delivered on platform Y"
+
+### Strategy
+1. **Verify the API surface exists** — find the shared enum/property/interface.
+2. **Find a working platform implementation** — grep for the feature in platform handlers.
+3. **Confirm the broken platform lacks it** — grep the specific platform handler for the missing code.
+4. **Test on the broken platform** if accessible — run a minimal app to confirm silence.
+
+### Conclusion
+- `reproduced` — the API is non-functional on the reported platform (confirmed broken contract).
+- `assessment: "likely-bug"`
+- **NOT `confirmed`** — this is a bug in an existing API, not a new feature request.
+
+### Example
+Issue: "Mouse wheel events not delivered on Mac Catalyst"
+- Step 1: find `SKTouchAction.WheelChanged` in shared code → exists
+- Step 2: find `OnPointerWheelChanged` in Windows handler → fully implemented
+- Step 3: grep Apple handler for wheel/scroll → not found
+- Conclusion: `reproduced`, assessment: `likely-bug` (cross-platform API silently non-functional)
+
+---
+
+## 9. Documentation Issue
+
+The issue reports missing, incorrect, or outdated documentation.
+
+### Signals
+- Triage JSON has `type/documentation`
+- Issue mentions "docs", "documentation", "API reference", "missing example"
+- No code bug — the library works correctly but documentation is wrong or absent
+
+### Strategy
+1. **Verify the doc gap** — check if the referenced documentation page/section exists and is accurate.
+2. **Compare with source code** — confirm whether the API behavior matches or contradicts the docs.
+3. **Test across versions** — documentation accuracy may vary by version. Test reporter's version AND latest stable to determine if docs were once correct but are now outdated.
+
+### Conclusion
+- `confirmed` — docs ARE missing or wrong (reporter's claim is correct).
+- `not-confirmed` — docs are actually correct (reporter misread or looked in wrong place).
+- `assessment: "docs-gap"`
+- Include investigation steps showing the doc gap or correctness. Use `layer: "investigation"`.
+
+### Example
+Issue: "SKPaint.FilterQuality docs say it affects image scaling but it's deprecated"
+- Step 1: check API reference for SKPaint.FilterQuality → still documented as active
+- Step 2: check source code → marked `[Obsolete]` since v3.x
+- Conclusion: `confirmed`, assessment: `docs-gap`

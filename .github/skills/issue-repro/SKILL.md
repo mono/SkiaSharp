@@ -1,18 +1,19 @@
 ---
 name: issue-repro
 description: >-
-  Reproduce a SkiaSharp bug systematically and capture structured reproduction
-  results. Produces schema-validated JSON with step-by-step commands, outputs,
+  Reproduce a SkiaSharp issue systematically and capture structured reproduction
+  results. Handles bugs (verify reported behavior) and enhancements (confirm feature
+  is missing). Produces schema-validated JSON with step-by-step commands, outputs,
   environment details, and conclusion.
   Triggers: "repro #123", "reproduce #123", "reproduce issue", "try to reproduce",
   "can you reproduce", "repro this bug", "create reproduction".
 ---
 
-# Bug Reproduction
+# Issue Reproduction
 
-**Bug pipeline: Step 2 of 3 (Repro).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+**Issue pipeline: Step 2 of 3 (Repro).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
 
-Systematically reproduce a SkiaSharp bug and produce structured, schema-validated reproduction JSON.
+Systematically reproduce a SkiaSharp issue and produce structured, schema-validated reproduction JSON.
 
 ## ⛔ MANDATORY FIRST STEPS (do not skip)
 
@@ -47,7 +48,7 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
    cat $CACHE/github/items/{number}.json
    ```
    **Fallback:** `gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author`
-2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, and `analysis.nextQuestions[]` as **hints** (verify independently).
+2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, `analysis.nextQuestions[]`, and `output.actionability.suggestedReproPlatform` as **hints** (verify independently). The `suggestedReproPlatform` (`linux`|`macos`|`windows`) indicates which CI runner was selected for reproduction.
 
 ---
 
@@ -55,7 +56,7 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
 
 ### 1. Classify
 
-Read [references/bug-categories.md](references/bug-categories.md) to classify the bug type.
+Read [references/bug-categories.md](references/bug-categories.md) to classify the issue type and determine the reproduction strategy. That file covers bugs (Sections 1–6), enhancements (Section 7), platform parity gaps (Section 8), and documentation issues (Section 9) — including which conclusion values and `layer` to use for each.
 
 ### 2. Extract reporter's version & TFM
 
@@ -131,7 +132,7 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 > - **3C:** Main branch source *(MANDATORY if 3B still reproduced)*
 > - **3D:** Cross-platform verification *(conditional — see table below)*
 >
-> **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation.
+> **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. This applies to ALL conclusion types — bugs (`reproduced`/`not-reproduced`) AND enhancements (`confirmed`/`not-confirmed`). For enhancements: a feature may exist in one version but not another, or may have been removed. Version testing reveals this.
 
 ### 3A. Reproduce with reporter's version
 
@@ -143,10 +144,12 @@ Follow the platform file from Phase 2.4. For each step, capture:
 | `exitCode` | 0=success, non-zero=failure |
 | `output` | 2KB success, 4KB failure |
 | `filesCreated` | Filename + source code content for repro files |
-| `layer` | `setup` / `csharp` / `c-api` / `native` / `deployment` |
+| `layer` | `setup` / `csharp` / `c-api` / `native` / `deployment` / `investigation` |
 | `result` | `success` / `failure` / `wrong-output` / `skip` |
 
 **Step `result` = what actually happened** (technical outcome), not whether it was expected. A build that fails is `result: "failure"` even if that confirms the bug. See [references/anti-patterns.md](references/anti-patterns.md) for details.
+
+> **Note:** Use `layer: "investigation"` for source-code analysis steps in enhancement confirmations (grep, file reading). See Phase 2.1 for the full enhancement flow.
 
 **Push hard.** Don't bail early. Only conclude `not-reproduced` after genuinely exhausting approaches.
 
@@ -186,6 +189,8 @@ Use the same platform strategy from 3A with the latest stable SkiaSharp. Record 
 
 Test reporter's version only. Derive `scope`: reproduced on ≥2 platforms → `"universal"`, primary only → `"platform-specific/{platform}"`, skipped → `"unknown"`.
 
+**For `confirmed`/`not-confirmed` conclusions:** Derive `scope` from your investigation — if the gap exists in ALL platform views → `"universal"`, if the gap is specific to one platform's view (e.g., Blazor only) → `"platform-specific/{platform}"`. Always set `scope` for confirmed conclusions (schema requires it).
+
 ### Simulation Strategy (last resort)
 
 Some bugs live in framework-specific code (MAUI views, WPF handlers, Uno controls) that can't be run in a console app. Use this **escalation order** — only move to the next level if the previous one fails:
@@ -210,14 +215,16 @@ Some bugs live in framework-specific code (MAUI views, WPF handlers, Uno control
 
 ### 1. Choose conclusion
 
-Read [references/conclusion-guide.md](references/conclusion-guide.md). Key question: did the reported behavior occur?
+Read [references/conclusion-guide.md](references/conclusion-guide.md). Key question: did the reported claim hold true?
 
-| Conclusion | When |
-|------------|------|
-| `reproduced` | Reported behavior occurred, including wrong/incomplete output (even if by-design) |
-| `not-reproduced` | Reported behavior did not occur |
-| `needs-platform` / `needs-hardware` | Requires unavailable platform/hardware |
-| `partial` / `inconclusive` | Partial or ambiguous results |
+| Conclusion | When | Issue Types |
+|------------|------|-------------|
+| `reproduced` | Reported behavior occurred, including wrong/incomplete output (even if by-design) | Bugs |
+| `not-reproduced` | Reported behavior did not occur | Bugs |
+| `confirmed` | Reporter's claim verified (feature IS missing, docs ARE wrong) | Enhancements, features, docs |
+| `not-confirmed` | Reporter's claim not verified (feature exists, docs are correct) | Enhancements, features, docs |
+| `needs-platform` / `needs-hardware` | Requires unavailable platform/hardware | Any |
+| `partial` / `inconclusive` | Partial or ambiguous results | Any |
 
 ### 2. Generate JSON
 
@@ -240,7 +247,7 @@ If reproduction contradicts triage, record in `feedback.corrections[]`:
 
 ### 4. Generate output (required for definitive conclusions)
 
-When conclusion is `reproduced` or `not-reproduced`, generate the `output` object with actionability, actions, and a proposed response. Skip for blocked conclusions (`needs-platform`, `needs-hardware`, `partial`, `inconclusive`).
+When conclusion is `reproduced`, `not-reproduced`, `confirmed`, or `not-confirmed`, generate the `output` object with actionability, actions, and a proposed response. Skip for blocked conclusions (`needs-platform`, `needs-hardware`, `partial`, `inconclusive`).
 
 #### Choosing suggestedAction
 
@@ -253,6 +260,8 @@ When conclusion is `reproduced` or `not-reproduced`, generate the `output` objec
 | Not reproduced — works on all tested versions | `close-as-fixed` | 0.75+ |
 | Wrong output confirmed | `needs-investigation` | 0.85+ |
 | Reproduced but appears working-as-designed | `close-with-docs` | 0.70+ |
+| Confirmed — feature/docs gap verified | `needs-investigation` | 0.85+ |
+| Not confirmed — feature/docs actually exist | `close-with-docs` | 0.75+ |
 
 #### Writing proposedResponse
 
@@ -305,11 +314,15 @@ pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/
 
 ### 1. Persist (only after validator prints ✅)
 
+> **🛑 MANDATORY: Use the persist script. NEVER manually `cp`, `git add`, `git commit`, or `git push`.**
+> The script handles copying, committing, and pushing with retry logic. Manual git commands
+> will leave unpushed commits that are lost when the runner shuts down.
+
 ```bash
 pwsh .github/skills/issue-repro/scripts/persist-repro.ps1 /tmp/skiasharp/repro/{number}.json
 ```
 
-This copies the JSON to data-cache and handles git automatically (skips in benchmark mode).
+This copies the JSON to data-cache and handles git commit + push automatically (skips in benchmark mode).
 
 ### 2. Present summary
 

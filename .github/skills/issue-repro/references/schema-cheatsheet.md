@@ -18,6 +18,8 @@ Read this BEFORE generating JSON. Full schema: `references/repro-schema.json`.
 |------------|---------------------------|
 | `reproduced` | `output`, `versionResults`, `reproProject` |
 | `not-reproduced` | `output`, `versionResults` |
+| `confirmed` | `output`, `versionResults`, `scope` |
+| `not-confirmed` | `output`, `versionResults`, `scope` |
 | `needs-platform`, `needs-hardware`, `partial`, `inconclusive` | `blockers` (string array, min 1 item) |
 
 ## Step-Result Constraints by Conclusion
@@ -26,16 +28,20 @@ Read this BEFORE generating JSON. Full schema: `references/repro-schema.json`.
 |------------|----------------|
 | `reproduced` | Must contain ≥1 step with `result: "failure"` or `"wrong-output"` |
 | `not-reproduced` | Must contain ≥1 `"success"` step AND zero `"failure"`/`"wrong-output"` steps |
+| `confirmed` | No step-result constraint — investigation steps may have any result |
+| `not-confirmed` | No step-result constraint — investigation steps may have any result |
 
 ⚠️ For `not-reproduced`: if a setup step failed then succeeded on retry, record **only the final successful attempt**. Any `failure`/`wrong-output` step will fail validation.
+
+💡 For `confirmed`/`not-confirmed`: these are for non-bug issues (enhancement, feature-request, documentation). Create a project to demonstrate the gap, test across versions (a feature may exist in one version but not another), and derive `scope` from your investigation. Steps that find evidence of absence (e.g., project fails to compile because API doesn't exist, grep found no matching implementation) are valid.
 
 ## Enum Values
 
 | Enum | Values |
 |------|--------|
-| **conclusionValue** | `reproduced`, `not-reproduced`, `needs-platform`, `needs-hardware`, `partial`, `inconclusive` |
+| **conclusionValue** | `reproduced`, `not-reproduced`, `confirmed`, `not-confirmed`, `needs-platform`, `needs-hardware`, `partial`, `inconclusive` |
 | **stepResult** | `success`, `failure`, `wrong-output`, `skip` |
-| **stepLayer** | `csharp`, `c-api`, `native`, `deployment`, `setup` |
+| **stepLayer** | `csharp`, `c-api`, `native`, `deployment`, `setup`, `investigation` |
 | **reproProject.type** | `console`, `blazor-wasm`, `docker`, `mobile`, `wpf`, `winforms`, `winui`, `maui`, `test`, `existing`, `simulation` |
 | **suggestedAction** | `needs-investigation`, `close-as-fixed`, `close-as-by-design`, `close-with-docs`, `close-as-duplicate`, `convert-to-discussion`, `request-info`, `keep-open` |
 
@@ -69,9 +75,9 @@ Required: `version`, `source`, `result`
 }
 ```
 
-`source`: `"nuget"` or `"source"`. `result`: `"reproduced"`, `"not-reproduced"`, `"error"`, `"not-tested"`.
+`source`: `"nuget"` or `"source"`. `result`: `"reproduced"`, `"not-reproduced"`, `"confirmed"`, `"not-confirmed"`, `"error"`, `"not-tested"`.
 
-## Output (required when reproduced or not-reproduced)
+## Output (required when reproduced, not-reproduced, confirmed, or not-confirmed)
 
 ```json
 "output": {
@@ -94,3 +100,4 @@ Required: `version`, `source`, `result`
 8. **Absolute paths** — Redact `/Users/name/` → `$HOME/`, `/tmp/...` → relative descriptions.
 9. **Step `result` = expectation** — `result` is TECHNICAL outcome. Build fails = `"failure"` even if that confirms the bug.
 10. **Missing `stepNumber`** — Every step needs a sequential number starting from 1.
+11. **Using `reproduced`/`not-reproduced` for non-bug issues** — For enhancements, feature requests, and documentation issues, use `confirmed`/`not-confirmed` instead. `reproduced` is for bugs where reported misbehavior was observed.

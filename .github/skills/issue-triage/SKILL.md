@@ -10,7 +10,7 @@ description: >-
 
 # Triage Issue
 
-**Bug pipeline: Step 1 of 3 (Triage).** See [`documentation/bug-pipeline.md`](../../../documentation/bug-pipeline.md).
+**Issue pipeline: Step 1 of 3 (Triage).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
@@ -103,6 +103,14 @@ If fetched via API, work directly from the `gh` output (skip the script).
 4. For bugs: trace the code path — does the issue still exist?
 5. For feature requests: has it been implemented since filing?
 6. For questions: does the source confirm or contradict the assumption?
+7. **Search for related PRs** — check data-cache first, then fall back to CLI:
+   ```bash
+   # Data-cache lookup (fast, offline)
+   ls $CACHE/github/items/ | head -5  # check cache structure
+   # Fall back to GitHub CLI
+   gh pr list --search '{keywords from issue}' --state all --repo mono/SkiaSharp --limit 10 --json number,title,state,mergedAt
+   ```
+   Include ALL related PRs in `evidence.reproEvidence.repoLinks` — especially closed/unmerged PRs, as they reveal prior attempts and maintainer decisions.
 
 ### 4. Additional Research
 
@@ -159,7 +167,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 | `classification` | `type` and `area` (required objects with confidence). `platforms`, `backends` (optional string arrays). |
 | `evidence` | `bugSignals` (for bugs), `reproEvidence` (all attachments/links), `regression` (if claimed), `fixStatus` (if fixed). |
 | `analysis` | `summary` (required), `codeInvestigation` (findings from Phase 2), `keySignals` (quotes), `rationale` (decision summary), `resolution` (proposals). |
-| `output` | `actionability` (suggested action) and `actions` (automatable tasks). |
+| `output` | `actionability` (suggested action + `suggestedReproPlatform`) and `actions` (automatable tasks). |
 
 Refer to the cheatsheet for the exact field structure and enum values.
 
@@ -218,11 +226,15 @@ pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/tria
 
 ### 1. Persist
 
+> **🛑 MANDATORY: Use the persist script. NEVER manually `cp`, `git add`, `git commit`, or `git push`.**
+> The script handles copying, committing, and pushing with retry logic. Manual git commands
+> will leave unpushed commits that are lost when the runner shuts down.
+
 ```bash
 pwsh .github/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{number}.json
 ```
 
-This copies the JSON to data-cache and handles git automatically (skips in benchmark mode).
+This copies the JSON to data-cache and handles git commit + push automatically (skips in benchmark mode).
 
 ### 2. Present summary
 
@@ -240,6 +252,12 @@ Actions:
 
 **Pipeline hint:**
 - If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **issue-repro** (`ai-repro/{number}.json`).
+- If `classification.type.value` is `type/enhancement` or `type/feature-request` and `suggestedAction == "needs-investigation"`: next step is also **issue-repro**, but repro will use `confirmed`/`not-confirmed` instead of `reproduced`/`not-reproduced`.
+- `output.actionability.suggestedReproPlatform` tells CI which runner to use for reproduction:
+  - `macos` — for os/iOS, os/macOS, os/tvOS, os/watchOS issues
+  - `windows` — for os/Windows-Classic, os/Windows-WinUI, os/Windows-Universal-UWP, os/Windows-Nano-Server issues
+  - `linux` — for everything else (os/Linux, os/WASM, os/Android, os/Tizen, or no platform specified)
+  - **Note:** For platform-independent API bugs (e.g., SVG output, stream handling), prefer `linux` even if the reporter tests on other platforms.
 - If repro already exists and reproduces: next step is **issue-fix** (consume both JSONs).
 
 If `add-comment` exists, show `comment` in a copy-paste block. **⚠️ NEVER post via GitHub API.**

@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS Validate an ai-triage JSON file against triage-schema.json.
 .EXAMPLE  pwsh scripts/validate-triage.ps1 ai-triage/2794.json
-.NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.5+.
+.NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.4+ (Test-Json -SchemaFile).
 #>
-#requires -Version 7.5
+#requires -Version 7.4
 param([Parameter(Mandatory, Position = 0)] [string]$Path)
 $ErrorActionPreference = 'Stop'
 
@@ -33,6 +33,11 @@ if ($triage.classification.type.value -eq 'type/bug' -and
 # bugSignals should exist for bugs (warning only)
 if ($triage.classification.type.value -eq 'type/bug' -and -not $triage.evidence.bugSignals) {
     Write-Host "⚠️  Warning: Bug issue has no evidence.bugSignals (recommended for bugs)"
+}
+
+# suggestedReproPlatform should exist when needs-investigation (warning only)
+if ($triage.output.actionability.suggestedAction -eq 'needs-investigation' -and -not $triage.output.actionability.suggestedReproPlatform) {
+    Write-Host "⚠️  Warning: needs-investigation action has no suggestedReproPlatform (recommended for CI routing)"
 }
 
 # Absolute path check in codeInvestigation

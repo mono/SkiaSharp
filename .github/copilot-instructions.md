@@ -365,7 +365,7 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 | Test release | `release-testing` | "test the release", "verify packages" |
 | Publish release | `release-publish` | "push to nuget", "tag release" |
 
-### Bug Pipeline (3 steps)
+### Issue Pipeline (3 steps)
 
 The first three skills form a pipeline. Each can run standalone, but they work best in sequence:
 
@@ -375,7 +375,7 @@ The first three skills form a pipeline. Each can run standalone, but they work b
 | 2 | `issue-repro` | `ai-repro/{n}.json` | Repro |
 | 3 | `issue-fix` | `ai-fix/{n}.json` + PR | Fix |
 
-See [documentation/bug-pipeline.md](documentation/bug-pipeline.md) for handoff contracts and feedback loop.
+See [documentation/issue-pipeline.md](documentation/issue-pipeline.md) for handoff contracts and feedback loop.
 
 ### When NOT to Use Skills
 
@@ -394,7 +394,7 @@ Work directly for:
 | "triage", "classify", "analyze issue" | Triage | `issue-triage` |
 | "repro", "reproduce", "reproduction", "try to reproduce" | Reproduction | `issue-repro` |
 | "crash", "exception", "wrong", "fails", "broken", "hard crash", "segfault", "undefined symbol", "AccessViolation" | Bug | `issue-fix` |
-| "add", "expose", "missing", "support", "new method", "feature request" | New API | `add-api` |
+| "add", "expose", "missing API", "missing method", "support", "new method", "feature request" | New API | `add-api` |
 | "docs", "documentation", "XML", "comments" | Docs | `api-docs` |
 | CVE, security, vulnerability | Security | `security-audit` then `native-dependency-update` |
 

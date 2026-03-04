@@ -754,6 +754,11 @@
             "reason": {
               "type": "string",
               "description": "Why this action is suggested."
+            },
+            "suggestedReproPlatform": {
+              "type": "string",
+              "enum": ["linux", "macos", "windows"],
+              "description": "Platform runner for reproduction. Choose based on classification.platforms: macOS for iOS/macOS/tvOS/watchOS bugs, Windows for WPF/WinUI/UWP bugs, Linux for everything else (including WASM, Android, generic). Used by CI to select the correct runner."
             }
           },
           "description": "Recommended high-level disposition for the issue."

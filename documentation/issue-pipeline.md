@@ -1,6 +1,6 @@
-# Bug Pipeline Guide
+# Issue Pipeline Guide
 
-This repo has a **3-step bug pipeline** designed to minimize duplicated work:
+This repo has a **3-step issue pipeline** designed to minimize duplicated work:
 
 1. **Triage** → classify + collect evidence + investigate code + propose actions
 2. **Repro** → produce factual reproduction results + version matrix + minimal repro source
@@ -112,7 +112,10 @@ Fix should treat repro JSON as the baseline execution record:
 
 - If triage suggests `request-info` or `close-*`: do **not** run repro/fix unless a human overrides.
 - If repro concludes `not-reproduced` / `inconclusive`: issue-fix generally should **not** start; instead update triage actions (request more info / close / document).
-- If repro concludes `reproduced` or `wrong-output`: proceed to issue-fix.
+- If repro concludes `reproduced`: proceed to issue-fix.
+- If repro concludes `confirmed` with `assessment: "feature-request"`: proceed to **add-api** skill (not issue-fix).
+- If repro concludes `confirmed` with `assessment: "docs-gap"`: proceed to **api-docs** skill.
+- If repro concludes `not-confirmed`: close or request more info (feature already exists or docs are correct).
 
 ---
 
@@ -156,6 +159,8 @@ Pipeline progress per issue can be determined by checking which artifacts exist:
 | `ai-triage` only | Triaged, awaiting repro |
 | `ai-triage` + `ai-repro` (conclusion: `reproduced`) | Reproduced, awaiting fix |
 | `ai-triage` + `ai-repro` (conclusion: `not-reproduced`) | Not reproduced — may need more info |
+| `ai-triage` + `ai-repro` (conclusion: `confirmed`) | Feature/docs gap confirmed — awaiting implementation |
+| `ai-triage` + `ai-repro` (conclusion: `not-confirmed`) | Claim not confirmed — may close or request info |
 | `ai-triage` + `ai-repro` + `ai-fix` (status: `in-progress`) | Fix in progress |
 | `ai-triage` + `ai-repro` + `ai-fix` (status: `fixed`) | Fixed ✅ |
 | `ai-triage` + `ai-repro` + `ai-fix` (status: `cannot-fix`) | Blocked — needs upstream or different approach |

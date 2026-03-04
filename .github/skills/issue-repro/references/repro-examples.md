@@ -6,6 +6,7 @@ Each example conforms to [`repro-schema.json`](repro-schema.json).
 ## Contents
 1. [Example 1: C# API Bug — `reproduced`](#example-1-c-api-bug--reproduced)
 2. [Example 2: WASM/Blazor Bug — `reproduced` with cross-platform verification](#example-2-wasmblazor-bug--reproduced-with-cross-platform-verification)
+3. [Example 3: Enhancement — `confirmed` (feature missing)](#example-3-enhancement--confirmed-feature-missing)
 
 ---
 
@@ -278,6 +279,123 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
 
 ---
 
-> **Note:** Both examples omit a Phase 3C step (testing against the `main` branch) for brevity.
+## Example 3: Enhancement — Confirmed (feature missing)
+
+Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3540,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-15T10:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "notes": "The SKTouchAction.WheelChanged enum value exists and is implemented on WPF, WinForms, and Blazor, but the GTK3 SKDrawingArea does not subscribe to GDK scroll events. The shared infrastructure is in place — this is a gap in the GTK3 platform implementation.",
+  "reproductionTime": "~10 minutes",
+  "inputs": {
+    "triageFile": "ai-triage/3540.json"
+  },
+  "assessment": "feature-request",
+  "scope": "platform-specific/linux",
+  "environment": {
+    "os": "Ubuntu 22.04 LTS",
+    "arch": "x64",
+    "dotnetVersion": "8.0.400",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create a GTK3 project that attempts to use wheel events",
+      "layer": "setup",
+      "command": "dotnet new console -n WheelTest && cd WheelTest && dotnet add package SkiaSharp.Views.Gtk3 --version 3.116.1",
+      "output": "Project created and package added successfully",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Search for scroll/wheel event handling in GTK3 SKDrawingArea",
+      "layer": "investigation",
+      "command": "grep -rn 'ScrollEvent\\|WheelEvent\\|WheelChanged' source/SkiaSharp.Views/SkiaSharp.Views.Gtk/",
+      "output": "No matches found",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify SKTouchAction.WheelChanged enum exists in shared infrastructure",
+      "layer": "investigation",
+      "command": "grep -rn 'WheelChanged' binding/SkiaSharp/",
+      "output": "Found SKTouchAction.WheelChanged in SKTouchAction.cs:28",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Check if other platforms implement wheel support for comparison",
+      "layer": "investigation",
+      "command": "grep -rn 'WheelChanged' source/SkiaSharp.Views/",
+      "output": "Found in Blazor (SKTouchInterop.ts:150), WPF (SKElement.cs:89), WinForms (SKControl.cs:67). Not found in GTK3.",
+      "exitCode": 0,
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Reporter's version. GTK3 SKDrawingArea does not subscribe to GDK scroll events. WheelChanged enum exists in shared code but is not wired up in GTK3 view.",
+      "platform": "host-linux-x64"
+    },
+    {
+      "version": "3.119.0-preview.1.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Latest stable. Same gap — no wheel event handling in GTK3 view.",
+      "platform": "host-linux-x64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp.Views.Gtk3",
+        "version": "3.116.1"
+      }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Feature gap confirmed — GTK3 SKDrawingArea lacks wheel/scroll event handling despite shared infrastructure existing. Needs implementation."
+    },
+    "actions": [],
+    "proposedResponse": {
+      "status": "ready",
+      "body": "Thanks for the suggestion! We investigated and can confirm that wheel/scroll event support is not currently implemented in the GTK3 `SKDrawingArea`.\n\nThe shared `SKTouchAction.WheelChanged` enum value exists and is already implemented on WPF, WinForms, and Blazor — so the infrastructure is in place. The GTK3 view just needs to subscribe to GDK scroll events and route them through the existing touch handler.\n\nWe've flagged this for implementation."
+    }
+  }
+}
+```
+
+### Why this is a good enhancement confirmation
+
+- **Used `confirmed` not `not-reproduced`** — semantically correct for verifying a feature gap.
+- **Created a project** — demonstrates the gap is real, not just a source reading.
+- **Version testing** — confirmed the gap exists on both reporter's version and latest, proving it's not already fixed.
+- **Scope set** — `platform-specific/linux` signals the gap is GTK3-only (other platforms have wheel support).
+- **Noted related infrastructure** — WheelChanged enum and other platform implementations help the fix skill.
+- **Assessment `feature-request`** — correctly classifies the type of confirmation.
+
+---
+
+> **Note:** Examples 1 and 2 omit a Phase 3C step (testing against the `main` branch) for brevity.
 > In real reproductions, always include a main-branch test step when a locally-built SkiaSharp
 > is available. See the SKILL.md Phase 3C instructions.

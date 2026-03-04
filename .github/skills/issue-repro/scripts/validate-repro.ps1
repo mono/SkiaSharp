@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS Validate an issue-repro JSON file against repro-schema.json.
 .EXAMPLE  pwsh scripts/validate-repro.ps1 ai-repro/2997.json
-.NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.5+.
+.NOTES    Exits 0=valid, 1=fixable (retry), 2=fatal. Requires PowerShell 7.4+ (Test-Json -SchemaFile).
 #>
-#requires -Version 7.5
+#requires -Version 7.4
 param([Parameter(Mandatory, Position = 0)] [string]$Path)
 $ErrorActionPreference = 'Stop'
 
@@ -77,6 +77,9 @@ switch ($conclusion) {
         if ($results -contains 'failure' -or $results -contains 'wrong-output') {
             $errors += "Conclusion is 'not-reproduced' but step(s) have 'failure'/'wrong-output'"
         }
+    }
+    { $_ -in 'confirmed', 'not-confirmed' } {
+        # No step-result constraints — confirmation via code investigation may have any mix of results
     }
     { $_ -in 'needs-platform', 'needs-hardware', 'partial', 'inconclusive' } {
         if (-not $repro.blockers -or $repro.blockers.Count -eq 0) {
