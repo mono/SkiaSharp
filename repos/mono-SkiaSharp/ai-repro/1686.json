@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1686,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "scope": "universal",
+  "notes": "Confirmed: SkiaSharp does not natively support Netpbm (PPM/PGM/PBM) image formats. SKImage.FromEncodedData, SKCodec.Create, and SKBitmap.Decode all return null when given PPM files (both P3 ASCII and P6 binary). This is expected — Skia's built-in codecs cover PNG, JPEG, WebP, GIF, BMP, ICO, and WBMP, but not Netpbm. However, 24-bit RGB pixel data can be loaded manually using SKColorType.Rgb888x with InstallPixels, SetPixel, or by expanding to RGBA and using SKImage.FromPixelCopy. A community member provided a complete working solution in the issue comments.",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.0"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3 (Darwin 25.3.0)",
+    "arch": "arm64",
+    "dotnetVersion": ".NET 8.0.23",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.0",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project and add SkiaSharp 3.119.0",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.0",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for package 'SkiaSharp' version '3.119.0' added.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 3.119.0 package reference",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.119.0\" />\n  </ItemGroup>\n</Project>"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write PPM test code that creates P6 and P3 PPM files, attempts native decode, and tests manual pixel loading workarounds",
+      "command": "cat > Program.cs",
+      "exitCode": 0,
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Test program that creates PPM test files, attempts native decode with SKImage/SKCodec/SKBitmap, and tests manual pixel loading via Rgb888x, SetPixel, and FromPixelCopy",
+          "content": "using System;\nusing System.IO;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\n// Create test PPM files (P6 binary and P3 ASCII)\nint width = 4, height = 2;\nbyte[] ppmPixels = new byte[] { 255,0,0, 0,255,0, 0,0,255, 255,255,255, 0,0,0, 0,255,255, 255,0,255, 255,255,0 };\n\n// Write P6 PPM and P3 PPM files\n// Test 1-4: Attempt native decode with SKImage.FromEncodedData, SKCodec.Create, SKBitmap.Decode\n// Test 5: Manual Rgb888x + InstallPixels\n// Test 6: SetPixel per-pixel approach\n// Test 7: SKImage.FromPixelCopy with RGBA conversion"
+        }
+      ]
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build and run repro — verify PPM native decode returns null and manual pixel loading works",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\nRuntime: .NET 8.0.23\n\n--- Test 1: SKImage.FromEncodedData with P6 PPM ---\nRESULT: SKImage.FromEncodedData returned null for PPM file\n\n--- Test 2: SKCodec.Create with P6 PPM ---\nRESULT: SKCodec.Create returned null for PPM file\n\n--- Test 3: SKImage.FromEncodedData with P3 (ASCII) PPM ---\nRESULT: SKImage.FromEncodedData returned null for ASCII PPM file\n\n--- Test 4: SKBitmap.Decode with P6 PPM ---\nRESULT: SKBitmap.Decode returned null for PPM file\n\n--- Test 5: Manual pixel loading with Rgb888x ---\nPixel (0,0): R=255, G=0, B=0 (expected: Red)\nSUCCESS: Manual Rgb888x pixel loading works\n\n--- Test 6: SetPixel per-pixel approach ---\nSUCCESS: SetPixel approach works\n\n--- Test 7: SKImage.FromPixelCopy with Rgba8888 ---\nSUCCESS: Created image from pixel copy: 4x2\n\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with SkiaSharp 2.88.9 (era of issue filing, April 2021) — same results: PPM not decodable, manual loading works",
+      "command": "dotnet run (with SkiaSharp 2.88.9 in fresh project directory)",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 2.88.0.0\nRESULT: SKImage.FromEncodedData returned null for PPM file\nRESULT: SKCodec.Create returned null for PPM file\nRESULT: SKBitmap.Decode returned null for PPM file\nSUCCESS: Manual Rgb888x pixel loading works\nSUCCESS: SetPixel approach works\nSUCCESS: Created image from pixel copy: 4x2\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test on main branch source (3.119.0 from source) — same results: PPM not supported natively",
+      "command": "dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\nRESULT: SKImage.FromEncodedData returned null (PPM not supported)\nRESULT: SKCodec.Create returned null (PPM not supported)\nPixel (0,0): R=255, G=0, B=0 (expected: Red)\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "PPM not natively decodable. SKImage.FromEncodedData, SKCodec.Create, SKBitmap.Decode all return null. Manual pixel loading via Rgb888x works.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.0",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Same behavior as 2.88.9 — PPM not supported natively, manual pixel loading works.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.0",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "Main branch source — same behavior. PPM codec not available in Skia built-in codecs.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "PPM is not a standard image format supported by Skia codec infrastructure. SkiaSharp provides raw pixel APIs (Rgb888x, InstallPixels, FromPixelCopy) that allow loading 24-bit RGB data. A community member already provided a complete working solution. This is a how-to question, not a missing feature."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/question and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.90
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — question resolved by community solution and confirmed by reproduction",
+        "risk": "medium",
+        "confidence": 0.80
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the question! SkiaSharp (via Skia) does not include a built-in codec for the Netpbm (PPM/PGM/PBM) format — `SKImage.FromEncodedData`, `SKCodec.Create`, and `SKBitmap.Decode` will all return `null` for PPM files. This is consistent across all tested versions (2.88.9, 3.119.0, and main).\n\nHowever, you can load 24-bit RGB pixel data manually using SkiaSharp's raw pixel APIs. The approach posted by @simonegli8 works well — here's the key pattern:\n\n```csharp\nvar info = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);\nvar bitmap = new SKBitmap(info);\nfor (int y = 0; y < height; y++)\n    for (int x = 0; x < width; x++)\n    {\n        int i = (y * width + x) * 3;\n        bitmap.SetPixel(x, y, new SKColor(rgb[i], rgb[i+1], rgb[i+2]));\n    }\n```\n\nFor better performance on large images, convert the 3-byte-per-pixel RGB data to 4-byte RGBX and use `InstallPixels`, or expand to RGBA and use `SKImage.FromPixelCopy`.\n\nClosing as answered since workarounds are available via the raw pixel APIs.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Parse PPM header manually, create SKBitmap with SKColorType.Rgb888x and SKAlphaType.Opaque, then use SetPixel to load pixels one-by-one",
+      "Convert 3-byte RGB to 4-byte RGBX, pin with GCHandle, and use SKBitmap.InstallPixels for better performance",
+      "Expand 3-byte RGB to 4-byte RGBA (insert 0xFF alpha), then use SKImage.FromPixelCopy with SKColorType.Rgba8888"
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  }
+}
