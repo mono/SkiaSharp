@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1687,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "scope": "universal",
+  "notes": "Confirmed across all tested versions (2.80.2, 3.119.2, main): SKVertices.CreateCopy only accepts array parameters with no ReadOnlySpan<T> overloads, no explicit vertex/index count parameters, and no SKVerticesBuilder type. The underlying C API (sk_vertices_make_copy) already accepts explicit vertexCount/indexCount but the C# wrapper derives these from array Length. SkVertices::Builder exists in upstream C++ Skia but has no C API shim. Users must allocate sub-arrays to pass subsets.",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.119.2"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": ".NET 8.0.23",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console repro project with SkiaSharp 2.80.2 (reporter era) and write test code using reflection to inspect SKVertices API surface",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.80.2",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '2.80.2' added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reflection-based test that enumerates SKVertices public API surface, checks for Span overloads and SKVerticesBuilder type, and demonstrates forced array allocation",
+          "content": "using System;\nusing System.Reflection;\nusing SkiaSharp;\n\n// Test 1: Enumerate CreateCopy overloads\nvar methods = typeof(SKVertices).GetMethods(BindingFlags.Public | BindingFlags.Static);\nforeach (var m in methods)\n{\n    var parms = string.Join(\", \", Array.ConvertAll(m.GetParameters(), p => $\"{p.ParameterType.Name} {p.Name}\"));\n    Console.WriteLine($\"  {m.Name}({parms})\");\n}\n// Test 2: Check for Span overloads\n// Test 3: Check for SKVerticesBuilder type\n// Test 4: Demonstrate forced allocation when using sub-array"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run repro with SkiaSharp 2.80.2 \u2014 reflection tests confirm API gap. Process crashes on native call due to missing arm64 binary in old version, but API surface inspection completed before crash.",
+      "command": "dotnet run",
+      "exitCode": 134,
+      "output": "SkiaSharp version: 2.80.0.0\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKColor[] colors)\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors)\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices)\nNo Span/ReadOnlySpan overloads found on SKVertices.\nSKVerticesBuilder does NOT exist in this assembly.\nNo nested Builder type found on SKVertices.\nDllNotFoundException: fat file, but missing compatible architecture (have 'x86_64', need 'arm64')",
+      "layer": "investigation",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Create fresh project with latest stable SkiaSharp 3.119.2 and run same tests \u2014 confirms API gap persists and demonstrates forced array allocation",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.2 && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKColor[] colors)\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors)\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices)\nNo Span/ReadOnlySpan overloads found on SKVertices.\nSKVerticesBuilder does NOT exist in this assembly.\nNo nested Builder type found on SKVertices.\nCreated vertices with 100 positions (required copying sub-array).\nSUCCESS: test completed",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build and run console sample from main branch source to verify API gap persists on latest development code",
+      "command": "dotnet build samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj && dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "SkiaSharp version (main): 3.119.0.0\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKColor[] colors)\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors)\nCreateCopy(SKVertexMode vmode, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, UInt16[] indices)\nNo Span overloads found.\nSKVerticesBuilder: NOT found\nNested Builder: NOT found\nSUCCESS: main source test completed",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify C API header (sk_vertices.h) and C# source (SKVertices.cs) \u2014 C API accepts explicit vertexCount/indexCount but C# derives from array Length; no builder functions in C API",
+      "command": "cat externals/skia/include/c/sk_vertices.h && cat binding/SkiaSharp/SKVertices.cs",
+      "exitCode": 0,
+      "output": "sk_vertices.h: sk_vertices_make_copy(vmode, vertexCount, positions, texs, colors, indexCount, indices) \u2014 accepts explicit counts.\nSKVertices.cs: CreateCopy derives vertexCount from positions.Length and indexCount from indices?.Length. No Span overloads. No Builder class. C API has no sk_vertices_builder_* functions.",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.80.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Reflection confirms no Span overloads, no Builder type. Native call failed due to missing arm64 binary (expected for this old version) but API surface inspection completed.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Full run succeeded. No Span overloads, no Builder type. Demonstrated forced array allocation when using subset of shared array.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "Built from main branch source. Same API gap \u2014 no Span overloads, no Builder type. C API and C# source both confirmed unchanged.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Well-specified enhancement with clear implementation path. Maintainer expressed preference for ReadOnlySpan<T> approach in closed PR #2432. The C API already supports explicit counts; the gap is in the C# wrapper and missing Builder C API shim."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2431 (same offset/count request) and closed PR #2432",
+        "risk": "low",
+        "confidence": 0.9
+      }
+    ],
+    "proposedResponse": {
+      "body": "Confirmed that the SKVertices API gap described in this issue still exists as of SkiaSharp 3.119.2 and the current main branch.\n\n**Findings:**\n- `SKVertices.CreateCopy` only accepts `SKPoint[]`, `SKColor[]`, and `UInt16[]` parameters \u2014 no `ReadOnlySpan<T>` overloads\n- The C# wrapper derives `vertexCount` from `positions.Length` and `indexCount` from `indices.Length`, hiding the explicit count parameters that the underlying C API (`sk_vertices_make_copy`) already accepts\n- No `SKVerticesBuilder` class exists \u2014 `SkVertices::Builder` in upstream Skia has no C API shim\n- Users must allocate sub-arrays to use a subset of a shared buffer, incurring unnecessary GC pressure\n\n**Workaround:** Use `Array.Copy` or `array.AsSpan(offset, count).ToArray()` to create sub-arrays before passing to `CreateCopy`.\n\nThis overlaps with #2431, and a related PR (#2432) was closed with maintainer feedback preferring a `ReadOnlySpan<T>`-based approach.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Use Array.Copy or array.AsSpan(offset, count).ToArray() to create sub-arrays before passing to CreateCopy"
+    ]
+  }
+}
