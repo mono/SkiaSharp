@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3534,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-06-26T00:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "scope": "platform-specific/wasm",
+  "notes": "Confirmed: Blazor WASM views (SKCanvasView and SKGLView) have zero wheel event support. The canvas renders correctly but has no wheel event listeners registered in JavaScript. MAUI views on Windows have full wheel support (SKTouchAction.WheelChanged, WheelDelta property, OnPointerWheelChanged handler) but none of this infrastructure exists in the Blazor views. The JS interop files (SKHtmlCanvas.ts, DpiWatcher.ts, SizeWatcher.ts) contain no addEventListener calls for wheel, pointer, or touch events. The feature gap exists on both the latest stable NuGet (3.119.2) and the main branch source.",
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net10.0",
+    "packages": [{"name": "SkiaSharp.Views.Blazor", "version": "3.119.2"}]
+  },
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false,
+    "wasmToolsVersion": "10.0.102"
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor 3.119.2 and add WasmBuildNative",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.2",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for 'SkiaSharp.Views.Blazor' version '3.119.2' added.",
+      "filesCreated": [
+        {
+          "filename": "Pages/WheelTest.razor",
+          "description": "Blazor page with SKCanvasView and wheel event counter to demonstrate the feature gap",
+          "content": "@page \"/wheeltest\"\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n<h3>Wheel Event Test</h3>\n<p>Wheel events received: <strong id=\"wheel-count\">@wheelCount</strong></p>\n<p>Last wheel delta: <strong id=\"wheel-delta\">@lastDelta</strong></p>\n\n<SKCanvasView OnPaintSurface=\"OnPaintSurface\" style=\"width:400px;height:300px;border:2px solid black;\" />\n\n@code {\n    private int wheelCount = 0;\n    private int lastDelta = 0;\n\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\n    {\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(new SKColor(0x33, 0x66, 0xFF));\n        Console.WriteLine($\"SUCCESS: Canvas rendered {e.Info.Width}x{e.Info.Height}\");\n    }\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build Blazor WASM project with native WASM compilation",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded with 3 warning(s) in 21.8s (CS0618 deprecation warnings for SKPaint.TextSize and SKCanvas.DrawText)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Serve app and verify canvas renders in browser via Playwright",
+      "command": "dotnet run --urls http://localhost:5192 --no-launch-profile",
+      "exitCode": 0,
+      "output": "Canvas rendered 792x592. Browser console: 'SUCCESS: Canvas rendered 792x592'. Page shows 'Wheel events received: 0', 'Last wheel delta: 0'.",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Dispatch WheelEvent on canvas via Playwright JS evaluation to confirm no wheel handling",
+      "command": "Playwright browser_evaluate: dispatch WheelEvent(deltaY=-100, deltaMode=0) on canvas element",
+      "exitCode": 0,
+      "output": "Canvas found (792x592). Wheel event dispatched but no SkiaSharp handler registered. Wheel count remains 0, delta remains 0. No wheel event is forwarded from JS to C# — SKCanvasView has no wheel event callback or interop.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Investigate Blazor view source code on main branch for wheel/touch event infrastructure",
+      "command": "grep -rn 'wheel|WheelChanged|wheelDelta|addEventListener' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/ --include='*.cs' --include='*.ts' --include='*.js' --include='*.razor'",
+      "exitCode": 0,
+      "output": "No matches found. Zero references to wheel, scroll, touch, or addEventListener in any Blazor view file (SKCanvasView.razor.cs, SKGLView.razor.cs, SKHtmlCanvas.ts, DpiWatcher.ts, SizeWatcher.ts). Confirms no wheel event infrastructure exists.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Verify MAUI has wheel support for comparison (confirms platform parity gap)",
+      "command": "grep -rn 'WheelChanged|WheelDelta|wheelDelta' source/SkiaSharp.Views.Maui/ --include='*.cs'",
+      "exitCode": 0,
+      "output": "Found in MAUI: SKTouchAction.WheelChanged enum (line 68), WheelDelta property (line 50), OnPointerWheelChanged handler in Windows/SKTouchHandler.cs (line 101), MouseWheelDelta extraction (line 122). MAUI Windows views have full wheel support.",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Latest stable. Blazor views render correctly but have zero wheel event infrastructure. No wheel listeners in JS, no touch/wheel callbacks in C# view components.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "Main branch source. Same status — no wheel support in Blazor views. MAUI has wheel support (SKTouchAction.WheelChanged, WheelDelta, Windows OnPointerWheelChanged) but Blazor does not.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Enhancement confirmed — Blazor WASM views lack wheel event support that MAUI already has. Implementation details and normalization logic are fully specified in the issue. A feature branch (copilot/add-touch-event-blazor-canvas) reportedly has a validated implementation."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm type/enhancement and add area/SkiaSharp.Views.Blazor label",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "link-related",
+        "description": "Link to parent v120 standardization issue #3533",
+        "risk": "low",
+        "confidence": 0.98
+      }
+    ],
+    "proposedResponse": {
+      "body": "Confirmed: Blazor WASM views (`SKCanvasView` and `SKGLView`) currently have no wheel event support.\n\n**Investigation:**\n- Created a Blazor WASM app with `SKCanvasView` on SkiaSharp.Views.Blazor 3.119.2\n- Canvas renders correctly (792x592), but dispatching `WheelEvent` on the canvas has no effect — no SkiaSharp handler is registered\n- Source code investigation: zero references to `wheel`, `scroll`, or `addEventListener` in the Blazor view JS interop files (`SKHtmlCanvas.ts`, `DpiWatcher.ts`, `SizeWatcher.ts`)\n- MAUI views **do** have wheel support (`SKTouchAction.WheelChanged`, `WheelDelta`, `OnPointerWheelChanged` on Windows), confirming this is a platform parity gap\n\n**Tested:** SkiaSharp 3.119.2 (NuGet) and main branch source — both lack the feature.\n\nThe issue provides comprehensive normalization logic and implementation notes. A feature branch (`copilot/add-touch-event-blazor-canvas`) reportedly has a validated implementation with 72/72 Playwright tests passing.",
+      "status": "do-not-post"
+    }
+  }
+}
