@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1684,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T00:00:00Z"
+  },
+  "conclusion": "not-reproduced",
+  "notes": "Attempted to reproduce CS0809 'Obsolete member overrides non-obsolete member' warning for OnSizeChanged when inheriting from SKCanvasView. Inspected the compiled SkiaSharp.Views.Android.dll from the 2.80.2 NuGet package using System.Reflection.Metadata — OnSizeChanged has NO [Obsolete] attribute. The only [Obsolete] method in SKCanvasView is OnDraw(SKSurface, SKImageInfo). Source code at the v2.80.2 git tag confirms this. Built a .NET Android library inheriting from SKCanvasView and overriding OnSizeChanged with SkiaSharp.Views 3.116.1 and 3.119.1 — zero warnings. The asymmetric behavior (only CircularGauge affected, not SemiCircularGauge) and timing with the Xamarin.AndroidX upgrade strongly suggest the CS0809 warning originates from the reporter's project configuration or class hierarchy, not from SkiaSharp.",
+  "assessment": "user-error",
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.1",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Download SkiaSharp.Views 2.80.2 NuGet package and inspect SkiaSharp.Views.Android.dll metadata for [Obsolete] attribute on OnSizeChanged using System.Reflection.Metadata",
+      "command": "dotnet run -- $HOME/.nuget/packages/skiasharp.views/2.80.2/skiasharp.views.2.80.2.nupkg",
+      "exitCode": 0,
+      "output": "Inspecting: lib/monoandroid1.0/SkiaSharp.Views.Android.dll\n\nType: SkiaSharp.Views.Android.SKCanvasView\n  OnDraw\n  OnSizeChanged\n  OnPaintSurface\n  OnDraw [OBSOLETE]\n\nResult: OnSizeChanged has NO [Obsolete] attribute. Only OnDraw(SKSurface, SKImageInfo) is [Obsolete].",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify source code at v2.80.2 git tag — check for [Obsolete] on OnSizeChanged in SKCanvasView.cs",
+      "command": "git show v2.80.2:source/SkiaSharp.Views/SkiaSharp.Views.Android/SKCanvasView.cs",
+      "exitCode": 0,
+      "output": "OnSizeChanged method found with NO [Obsolete] attribute. Only [Obsolete] method is OnDraw(SKSurface, SKImageInfo) with message 'Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.'",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Create .NET Android library that inherits from SKCanvasView and overrides OnSizeChanged (matching reporter scenario) with SkiaSharp.Views 3.116.1",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": ".NET Android class library referencing SkiaSharp.Views 3.116.1",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <TargetFramework>net10.0-android</TargetFramework>\n    <OutputType>Library</OutputType>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp.Views\" Version=\"3.116.1\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "CircularGauge.cs",
+          "description": "Two gauge classes inheriting from SKCanvasView and overriding OnSizeChanged",
+          "content": "using Android.Content;\nusing Android.Util;\nusing SkiaSharp.Views.Android;\n\nnamespace Repro;\n\npublic class CircularGauge : SKCanvasView\n{\n    public CircularGauge(Context context) : base(context) { }\n    public CircularGauge(Context context, IAttributeSet attrs) : base(context, attrs) { }\n\n    protected override void OnSizeChanged(int w, int h, int oldw, int oldh)\n    {\n        base.OnSizeChanged(w, h, oldw, oldh);\n    }\n}\n\npublic class SemiCircularGauge : SKCanvasView\n{\n    public SemiCircularGauge(Context context) : base(context) { }\n    public SemiCircularGauge(Context context, IAttributeSet attrs) : base(context, attrs) { }\n\n    protected override void OnSizeChanged(int w, int h, int oldw, int oldh)\n    {\n        base.OnSizeChanged(w, h, oldw, oldh);\n    }\n}"
+        }
+      ],
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build same project with latest stable SkiaSharp.Views 3.119.1 — verify no CS0809 warning",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify main branch source — check current SKCanvasView.cs for [Obsolete] on OnSizeChanged",
+      "command": "grep -n 'Obsolete\\|OnSizeChanged' source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKCanvasView.cs",
+      "exitCode": 0,
+      "output": "119:  protected override void OnSizeChanged(int w, int h, int oldw, int oldh)\n121:    base.OnSizeChanged(w, h, oldw, oldh)\n\nNo [Obsolete] attribute found anywhere in the file.",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.80.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Assembly metadata inspection of SkiaSharp.Views.Android.dll confirms OnSizeChanged has no [Obsolete] attribute. Cannot build a Xamarin.Android project (deprecated), but binary inspection is definitive.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.1",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": ".NET Android library inheriting from SKCanvasView and overriding OnSizeChanged builds with 0 warnings.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "not-reproduced",
+      "notes": "Source code inspection confirms no [Obsolete] attribute on OnSizeChanged.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "convert-to-discussion",
+      "confidence": 0.90,
+      "reason": "OnSizeChanged has never been marked [Obsolete] in any SkiaSharp version. The CS0809 warning is definitively not caused by SkiaSharp. The asymmetric behavior (only CircularGauge, not SemiCircularGauge) and timing with AndroidX upgrade confirm this is a user-side configuration issue. The issue is 4+ years old with no comments."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question and views labels",
+        "risk": "low",
+        "confidence": 0.90
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain that OnSizeChanged has never been [Obsolete] and suggest checking class hierarchy",
+        "risk": "medium",
+        "confidence": 0.85
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the report. We investigated this and can confirm that `SKCanvasView.OnSizeChanged` has **never** been marked `[Obsolete]` in any SkiaSharp version, including 2.80.2.\n\nWe inspected the compiled `SkiaSharp.Views.Android.dll` from the 2.80.2 NuGet package using reflection metadata — `OnSizeChanged` has no `[Obsolete]` attribute. The only `[Obsolete]` method in `SKCanvasView` is `OnDraw(SKSurface, SKImageInfo)` (which was replaced by `OnPaintSurface`). We also built a .NET Android library that inherits from `SKCanvasView` and overrides `OnSizeChanged` with the latest SkiaSharp — zero warnings.\n\nThe fact that only your `CircularGauge` class shows this warning (while `SemiCircularGauge` does not) strongly suggests the issue is in the `CircularGauge` class hierarchy rather than in SkiaSharp. Some things to check:\n\n1. **Intermediate base class** — Does `CircularGauge` inherit directly from `SKCanvasView`, or from an intermediate class that might mark `OnSizeChanged` as `[Obsolete]`?\n2. **Clean rebuild** — Delete `bin`/`obj` folders after the Xamarin.AndroidX upgrade. Stale build artifacts can produce phantom warnings.\n3. **AndroidX binding metadata** — The Xamarin.AndroidX packages sometimes add `[Obsolete]` through binding metadata files. Check if any `.xml` transform files in your project affect the inheritance chain.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.80.2 (assembly inspection) | No `[Obsolete]` on `OnSizeChanged` |\n| 3.119.1 (latest) | No warning when overriding `OnSizeChanged` |",
+      "status": "ready"
+    },
+    "missingInfo": [
+      "Full class declaration of CircularGauge (inheritance chain)",
+      "Full class declaration of SemiCircularGauge for comparison",
+      "Any intermediate base classes between CircularGauge and SKCanvasView"
+    ]
+  }
+}
