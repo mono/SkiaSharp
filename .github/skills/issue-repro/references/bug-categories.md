@@ -283,3 +283,33 @@ Issue: "Add wheel support to GTK3 views"
 - Step 1: grep for `WheelEvent` or `ScrollEvent` in GTK3 view → not found
 - Step 2: confirm `SKTouchAction.WheelChanged` enum exists (shared infra) but GTK3 `SKDrawingArea` doesn't subscribe to it
 - Conclusion: `confirmed`, assessment: `feature-request`
+
+---
+
+## 8. Platform Parity Gap
+
+A cross-platform API exists and works on some platforms but not others. This is a **bug** (broken API contract), not an enhancement.
+
+### Signals
+- API surface exists (enum, property, interface) across all platforms
+- At least one platform fully implements the feature
+- Another platform silently drops or ignores the functionality
+- Issue says "X works on Windows but not on Mac" or "events not delivered on platform Y"
+
+### Strategy
+1. **Verify the API surface exists** — find the shared enum/property/interface.
+2. **Find a working platform implementation** — grep for the feature in platform handlers.
+3. **Confirm the broken platform lacks it** — grep the specific platform handler for the missing code.
+4. **Test on the broken platform** if accessible — run a minimal app to confirm silence.
+
+### Conclusion
+- `reproduced` — the API is non-functional on the reported platform (confirmed broken contract).
+- `assessment: "missing-output"` or `"platform-specific"`
+- **NOT `confirmed`** — this is a bug in an existing API, not a new feature request.
+
+### Example
+Issue: "Mouse wheel events not delivered on Mac Catalyst"
+- Step 1: find `SKTouchAction.WheelChanged` in shared code → exists
+- Step 2: find `OnPointerWheelChanged` in Windows handler → fully implemented
+- Step 3: grep Apple handler for wheel/scroll → not found
+- Conclusion: `reproduced`, assessment: `missing-output` (cross-platform API silently non-functional)

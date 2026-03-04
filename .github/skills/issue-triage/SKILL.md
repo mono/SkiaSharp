@@ -240,10 +240,12 @@ Actions:
 
 **Pipeline hint:**
 - If `classification.type.value == "type/bug"` and `output.actionability.suggestedAction == "needs-investigation"`: next step is **issue-repro** (`ai-repro/{number}.json`).
+- If `classification.type.value` is `type/enhancement` or `type/feature-request` and `suggestedAction == "needs-investigation"`: next step is also **issue-repro**, but repro will use `confirmed`/`not-confirmed` instead of `reproduced`/`not-reproduced`.
 - `output.actionability.suggestedReproPlatform` tells CI which runner to use for reproduction:
-  - `macos` — for os/iOS, os/macOS, os/tvOS, os/watchOS bugs
-  - `windows` — for os/Windows-Classic, os/Windows-WinUI, os/Windows-Universal-UWP, os/Windows-Nano-Server bugs
+  - `macos` — for os/iOS, os/macOS, os/tvOS, os/watchOS issues
+  - `windows` — for os/Windows-Classic, os/Windows-WinUI, os/Windows-Universal-UWP, os/Windows-Nano-Server issues
   - `linux` — for everything else (os/Linux, os/WASM, os/Android, os/Tizen, or no platform specified)
+  - **Note:** For platform-independent API bugs (e.g., SVG output, stream handling), prefer `linux` even if the reporter tests on other platforms.
 - If repro already exists and reproduces: next step is **issue-fix** (consume both JSONs).
 
 If `add-comment` exists, show `comment` in a copy-paste block. **⚠️ NEVER post via GitHub API.**

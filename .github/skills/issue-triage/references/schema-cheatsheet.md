@@ -64,6 +64,21 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | **suggestedReproPlatform** | `linux`, `macos`, `windows` |
 | **actionType** | `update-labels`, `add-comment`, `close-issue`, `convert-to-discussion`, `link-related`, `link-duplicate`, `update-project`, `set-milestone` |
 
+### Choosing `suggestedAction` by issue type
+
+| Type | Common suggestedAction | When |
+|------|----------------------|------|
+| `type/bug` | `needs-investigation` | Repro code provided, bug seems real |
+| `type/bug` | `request-info` | Missing repro, vague description |
+| `type/bug` | `close-as-by-design` | Behavior is correct but confusing |
+| `type/enhancement` | `needs-investigation` | Well-specified, has clear scope |
+| `type/enhancement` | `keep-open` | Valid but low priority / needs design |
+| `type/feature-request` | `needs-investigation` | Clear request with implementation path |
+| `type/feature-request` | `keep-open` | Valid but requires design discussion |
+| `type/question` | `close-with-docs` | Answer exists in docs |
+| `type/question` | `convert-to-discussion` | Better suited for community Q&A |
+| `type/documentation` | `needs-investigation` | Docs are missing or wrong |
+
 ## Output (required)
 
 ```json
