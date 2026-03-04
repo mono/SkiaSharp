@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1673,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T19:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "working-as-designed",
+  "notes": "Reproduced as reported: SKMatrix.CreateRotationDegrees(45) rotates a pre-translated path around the origin (0,0), causing the path center to move from (200, 150) to (35.4, 247.5) \u2014 a 191-pixel displacement. This is correct affine transformation behavior, not a bug. The pivot overload CreateRotationDegrees(degrees, pivotX, pivotY) rotates in place with zero displacement. Behavior is identical across all tested versions (2.88.9, 3.119.2, main) as expected for fundamental matrix math. Reporter's version 2.80.2 could not be tested directly (x86_64-only natives on ARM64 host) so 2.88.9 was used as the closest testable v2 release \u2014 the rotation math is identical.",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.9"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3 (Darwin 25.3.0)",
+    "arch": "arm64",
+    "dotnetVersion": ".NET 8.0.23",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 2.88.9 (proxy for reporter's 2.80.2 which lacks ARM64 natives)",
+      "command": "dotnet new console -n Repro-v2 --framework net8.0 && cd Repro-v2 && dotnet add package SkiaSharp --version 2.88.9",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for package 'SkiaSharp' version '2.88.9' added.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that creates a path, translates it to (200,150), then rotates 45 degrees without pivot to observe displacement",
+          "content": "using SkiaSharp;\nusing System;\n\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\n\nvar path = new SKPath();\npath.AddRect(new SKRect(-25, -25, 25, 25));\nfloat offsetX = 200f, offsetY = 150f;\npath.Transform(SKMatrix.CreateTranslation(offsetX, offsetY));\nConsole.WriteLine($\"Center BEFORE rotation: ({path.Bounds.MidX}, {path.Bounds.MidY})\");\n\npath.Transform(SKMatrix.CreateRotationDegrees(45.0f));\nConsole.WriteLine($\"Center AFTER rotation (no pivot): ({path.Bounds.MidX}, {path.Bounds.MidY})\");\n\nfloat dist = MathF.Sqrt(MathF.Pow(path.Bounds.MidX - offsetX, 2) + MathF.Pow(path.Bounds.MidY - offsetY, 2));\nConsole.WriteLine($\"Distance moved: {dist:F2}\");\nConsole.WriteLine(dist > 1.0f ? \"REPRODUCED: path swung around origin\" : \"NOT REPRODUCED: stayed in place\");\n\nvar path2 = new SKPath();\npath2.AddRect(new SKRect(-25, -25, 25, 25));\npath2.Transform(SKMatrix.CreateTranslation(offsetX, offsetY));\npath2.Transform(SKMatrix.CreateRotationDegrees(45.0f, offsetX, offsetY));\nfloat dist2 = MathF.Sqrt(MathF.Pow(path2.Bounds.MidX - offsetX, 2) + MathF.Pow(path2.Bounds.MidY - offsetY, 2));\nConsole.WriteLine($\"With pivot - distance moved: {dist2:F2}\");\nConsole.WriteLine(dist2 < 1.0f ? \"Pivot overload rotates in place correctly\" : \"Unexpected: pivot overload also moved\");\nConsole.WriteLine(\"SUCCESS: test completed\");"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build console repro app with SkiaSharp 2.88.9",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run repro \u2014 rotation without pivot displaces path center 191px from (200,150) to (35.4,247.5)",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\nCenter BEFORE rotation: (200, 150)\nCenter AFTER rotation (no pivot): (35.355343, 247.48737)\nDistance moved: 191.34\nREPRODUCED: path swung around origin\nWith pivot - distance moved: 0.00\nPivot overload rotates in place correctly\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project \u2014 same displacement observed",
+      "command": "dotnet new console -n Repro-latest --framework net8.0 && cd Repro-latest && dotnet add package SkiaSharp --version 3.119.2 && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nCenter BEFORE rotation: (200, 150)\nCenter AFTER rotation (no pivot): (35.355343, 247.48737)\nDistance moved: 191.34\nREPRODUCED: path swung around origin\nWith pivot - distance moved: 0.00\nPivot overload rotates in place correctly\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test on main branch source using console sample \u2014 same displacement observed",
+      "command": "dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nCenter BEFORE rotation: (200, 150)\nCenter AFTER rotation (no pivot): (35.355343, 247.48737)\nDistance moved: 191.34\nREPRODUCED: path swung around origin",
+      "layer": "csharp",
+      "result": "wrong-output"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Proxy for reporter's 2.80.2 (which lacks ARM64 natives). Center displaced 191px from (200,150) to (35.4,247.5) when rotated without pivot. Pivot overload works correctly.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Identical behavior \u2014 same displacement. This is fundamental matrix math, version-independent.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Same behavior on main branch source build. This is by-design rotation around origin.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "scope": "universal",
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.92,
+      "reason": "The rotation API is mathematically correct. CreateRotationDegrees(angle) rotates around origin (0,0) by design \u2014 this is standard affine transformation behavior. The reporter needs the pivot overload CreateRotationDegrees(angle, pivotX, pivotY) to rotate in place."
+    },
+    "actions": [
+      {
+        "type": "add-comment",
+        "description": "Explain rotation pivot behavior and provide workaround",
+        "risk": "low",
+        "confidence": 0.92
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design \u2014 API works correctly, user needs pivot overload",
+        "risk": "medium",
+        "confidence": 0.9
+      }
+    ],
+    "workarounds": [
+      "Use CreateRotationDegrees(degrees, pivotX, pivotY) to rotate around the path's center instead of the origin",
+      "Apply rotation before translation (rotate while path is centered at origin, then translate to desired position)",
+      "Use SKMatrix.Concat to combine translation and rotation in the correct order"
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the detailed write-up and screenshots!\n\n`SKMatrix.CreateRotationDegrees(angle)` rotates around the origin (0,0) by design \u2014 this is standard affine transformation behavior. When you translate a path to an offset position first and then rotate around origin, the path swings around (0,0) rather than rotating in place.\n\nWe reproduced the behavior: a path translated to (200, 150) and then rotated 45\u00b0 without a pivot moves its center to (35.4, 247.5) \u2014 a 191-pixel displacement.\n\n**Workaround:** Use the pivot overload to rotate around any point you specify:\n\n```csharp\n// Rotate around the path's center (offset) instead of the origin:\npath.Transform(SKMatrix.CreateRotationDegrees(45.0F, offset.X, offset.Y));\n```\n\nAlternatively, as you discovered, rotating before translating also works because the path is still centered at origin:\n\n```csharp\npath.Transform(SKMatrix.CreateRotationDegrees(45.0F));\npath.Transform(SKMatrix.CreateTranslation(offset.X, offset.Y));\n```\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.9 (proxy for 2.80.2) | Behavior observed |\n| 3.119.2 (latest) | Same behavior |\n| main (source) | Same behavior |\n\nClosing as by-design \u2014 the API is working correctly per standard rotation matrix math. The pivot overload is the intended way to rotate around an arbitrary center point.",
+      "status": "ready"
+    }
+  }
+}
