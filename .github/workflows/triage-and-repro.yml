@@ -64,8 +64,7 @@ jobs:
       )
 
     outputs:
-      repro_platform: ${{ steps.extract.outputs.platform }}
-      needs_repro: ${{ steps.extract.outputs.needs_repro }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
       issue_number: ${{ steps.issue.outputs.issue_number }}
 
     steps:
@@ -99,7 +98,7 @@ jobs:
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'triage-${{ steps.issue.outputs.issue_number }}'
 
-      - name: Extract platform from triage
+      - name: Extract platform and build matrix
         id: extract
         shell: pwsh
         run: |
@@ -107,6 +106,33 @@ jobs:
           $result = .github/skills/issue-triage/scripts/extract-platform.ps1 -TriageFile $triageFile
           "platform=$($result.Platform)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "needs_repro=$($result.NeedsRepro)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Build repro matrix
+        id: matrix
+        shell: pwsh
+        run: |
+          $platform = '${{ steps.extract.outputs.platform }}'
+          $needsRepro = '${{ steps.extract.outputs.needs_repro }}'
+
+          $runners = @{
+            linux   = 'ubuntu-latest'
+            macos   = 'macos-latest'
+            windows = 'windows-latest'
+          }
+
+          if ($needsRepro -eq 'true') {
+            $matrix = @{
+              include = @(
+                @{ platform = $platform; runner = $runners[$platform] }
+              )
+            }
+          } else {
+            $matrix = @{ include = @() }
+          }
+
+          $json = $matrix | ConvertTo-Json -Depth 3 -Compress
+          Write-Host "Matrix: $json"
+          "matrix=$json" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Upload triage JSON
         if: always()
@@ -118,88 +144,34 @@ jobs:
           if-no-files-found: warn
 
   # ===========================================================================
-  # Stage 2: Reproduce on target platform
+  # Stage 2: Reproduce on target platform (dynamic matrix from triage)
   # ===========================================================================
 
-  repro-linux:
-    name: Reproduce (Linux)
-    runs-on: ubuntu-latest
+  repro:
+    name: Reproduce (${{ matrix.platform }})
     needs: triage
-    if: needs.triage.outputs.needs_repro == 'true' && needs.triage.outputs.repro_platform == 'linux'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: actions/download-artifact@v4
-        with:
-          name: triage-output
-          path: /tmp/skiasharp/triage/
-      - name: Run AI reproduction
-        uses: ./.github/actions/copilot-cli
-        with:
-          copilot-token: ${{ secrets.COPILOT_TOKEN }}
-          prompt: 'reproduce issue #${{ needs.triage.outputs.issue_number }}'
-          model: 'claude-opus-4.6'
-          mcp-config: ${{ env.MCP_CONFIG }}
-          artifact-name: 'repro-linux-${{ needs.triage.outputs.issue_number }}'
-      - name: Upload repro JSON
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: repro-output-linux
-          path: /tmp/skiasharp/repro/
-          retention-days: 7
-          if-no-files-found: warn
+    if: ${{ fromJSON(needs.triage.outputs.matrix).include[0] != null }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix: ${{ fromJSON(needs.triage.outputs.matrix) }}
 
-  repro-macos:
-    name: Reproduce (macOS)
-    runs-on: macos-latest
-    needs: triage
-    if: needs.triage.outputs.needs_repro == 'true' && needs.triage.outputs.repro_platform == 'macos'
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v4
-        with:
-          name: triage-output
-          path: /tmp/skiasharp/triage/
-      - name: Run AI reproduction
-        uses: ./.github/actions/copilot-cli
-        with:
-          copilot-token: ${{ secrets.COPILOT_TOKEN }}
-          prompt: 'reproduce issue #${{ needs.triage.outputs.issue_number }}'
-          model: 'claude-opus-4.6'
-          mcp-config: ${{ env.MCP_CONFIG }}
-          artifact-name: 'repro-macos-${{ needs.triage.outputs.issue_number }}'
-      - name: Upload repro JSON
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: repro-output-macos
-          path: /tmp/skiasharp/repro/
-          retention-days: 7
-          if-no-files-found: warn
 
-  repro-windows:
-    name: Reproduce (Windows)
-    runs-on: windows-latest
-    needs: triage
-    if: needs.triage.outputs.needs_repro == 'true' && needs.triage.outputs.repro_platform == 'windows'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
       - name: Download triage artifact
         uses: actions/download-artifact@v4
         with:
           name: triage-output
           path: ${{ runner.temp }}/skiasharp/triage/
+
       - name: Copy triage to /tmp for skill compatibility
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path '/tmp/skiasharp/triage' | Out-Null
-          Copy-Item "$env:RUNNER_TEMP/skiasharp/triage/*" '/tmp/skiasharp/triage/' -ErrorAction SilentlyContinue
+          Copy-Item (Join-Path $env:RUNNER_TEMP 'skiasharp/triage/*') '/tmp/skiasharp/triage/' -ErrorAction SilentlyContinue
+
       - name: Run AI reproduction
         uses: ./.github/actions/copilot-cli
         with:
@@ -207,14 +179,13 @@ jobs:
           prompt: 'reproduce issue #${{ needs.triage.outputs.issue_number }}'
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
-          artifact-name: 'repro-windows-${{ needs.triage.outputs.issue_number }}'
+          artifact-name: 'repro-${{ matrix.platform }}-${{ needs.triage.outputs.issue_number }}'
+
       - name: Upload repro JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: repro-output-windows
-          path: |
-            /tmp/skiasharp/repro/
-            ${{ runner.temp }}/skiasharp/repro/
+          name: repro-output-${{ matrix.platform }}
+          path: /tmp/skiasharp/repro/
           retention-days: 7
           if-no-files-found: warn
