@@ -1,3 +1,18 @@
+# Copilot CLI Action
+#
+# Setup: Create a PAT with Copilot access for this action.
+#
+# 1. Go to https://github.com/settings/personal-access-tokens/new
+# 2. Select "Fine-grained personal access token"
+# 3. Set a name (e.g., "Copilot CLI CI") and expiration
+# 4. Under "Permissions" → "Account permissions" → "GitHub Copilot" → Read-only
+# 5. Generate the token and copy it
+# 6. In your repo: Settings → Secrets and variables → Actions → New repository secret
+# 7. Name: COPILOT_TOKEN, Value: paste the token
+# 8. Reference in workflow: copilot-token: ${{ secrets.COPILOT_TOKEN }}
+#
+# Note: The default GITHUB_TOKEN does NOT have Copilot permissions.
+
 name: 'Copilot CLI'
 description: 'Install and run the GitHub Copilot CLI with a prompt (cross-platform)'
 inputs:
