@@ -133,12 +133,26 @@ jobs:
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'triage-${{ matrix.issue }}'
 
+      - name: Collect triage output
+        if: always()
+        shell: pwsh
+        run: |
+          $dest = Join-Path $env:RUNNER_TEMP 'skiasharp-triage'
+          New-Item -ItemType Directory -Force $dest | Out-Null
+          foreach ($src in @('/tmp/skiasharp/triage', 'C:\tmp\skiasharp\triage', 'D:\tmp\skiasharp\triage')) {
+            if (Test-Path $src) {
+              Write-Host "Found triage output in $src"
+              Copy-Item "$src/*" $dest -Recurse -ErrorAction SilentlyContinue
+            }
+          }
+          Get-ChildItem $dest -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $_" }
+
       - name: Upload triage JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: triage-output-${{ matrix.issue }}
-          path: /tmp/skiasharp/triage/
+          path: ${{ runner.temp }}/skiasharp-triage/
           retention-days: 7
           if-no-files-found: warn
 
@@ -247,11 +261,26 @@ jobs:
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'repro-${{ matrix.platform }}-${{ matrix.issue }}'
 
+      - name: Collect repro output
+        if: always()
+        shell: pwsh
+        run: |
+          $dest = Join-Path $env:RUNNER_TEMP 'skiasharp-repro'
+          New-Item -ItemType Directory -Force $dest | Out-Null
+          # Copy from all possible locations the agent may have written to
+          foreach ($src in @('/tmp/skiasharp/repro', 'C:\tmp\skiasharp\repro', 'D:\tmp\skiasharp\repro')) {
+            if (Test-Path $src) {
+              Write-Host "Found repro output in $src"
+              Copy-Item "$src/*" $dest -Recurse -ErrorAction SilentlyContinue
+            }
+          }
+          Get-ChildItem $dest -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "  $_" }
+
       - name: Upload repro JSON
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: repro-output-${{ matrix.platform }}-${{ matrix.issue }}
-          path: /tmp/skiasharp/repro/
+          path: ${{ runner.temp }}/skiasharp-repro/
           retention-days: 7
           if-no-files-found: warn
