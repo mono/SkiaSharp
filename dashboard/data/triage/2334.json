@@ -165,7 +165,7 @@
       {
         "type": "add-comment",
         "description": "Post analysis with workaround for alpha rendering on WASM",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.85,
         "comment": "Thanks for the detailed comparison with screenshots.\n\nThe Blazor \u0060SKCanvasView\u0060 creates its raster surface with \u0060SKAlphaType.Opaque\u0060, while all other platform views (Windows Forms, WPF, etc.) use \u0060SKAlphaType.Premul\u0060. With \u0060Opaque\u0060, Skia doesn\u0027t guarantee meaningful alpha channel values in the pixel data, and when those bytes are transferred to the HTML Canvas via \u0060putImageData\u0060, the browser interprets them \u2014 producing the color distortion you\u0027re seeing.\n\nHere\u0027s a workaround you can use now: explicitly clear the canvas with a solid background color at the start of your paint handler:\n\n\u0060\u0060\u0060csharp\nvoid OnPaintSurface(SKPaintSurfaceEventArgs e)\n{\n    var canvas = e.Surface.Canvas;\n    canvas.Clear(SKColors.White); // ensures all alpha bytes are defined\n    // ... your drawing code with transparency\n}\n\u0060\u0060\u0060\n\nThis ensures all pixels start with alpha=0xFF before any semi-transparent drawing occurs. Would you be able to confirm whether this resolves the color difference?"
       }

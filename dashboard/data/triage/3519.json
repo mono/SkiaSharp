@@ -175,7 +175,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the report, confirm root cause, mention workaround",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.85,
         "comment": "Thanks for flagging this \u2014 the size increase is confirmed.\n\nThe root cause is PR #3374, which expanded native symbol packaging to all platforms. On Windows, this pulls in \u0060libSkiaSharp.pdb\u0060 (~80 MB) and \u0060libHarfBuzzSharp.pdb\u0060 (~20 MB) per architecture into the main NuGet package. Previously these were only in separate symbol packages.\n\nIn the meantime, @Jack251970\u0027s workaround above (MSBuild targets to delete PDB files from the output) is a solid stopgap. We\u0027ll look at setting \u0060SymbolPackageFormat=snupkg\u0060 so that debug symbols go to a separate symbols package rather than the main \u0060.nupkg\u0060."
       },

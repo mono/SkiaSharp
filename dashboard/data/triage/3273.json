@@ -163,7 +163,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the caching issue, provide workaround, and ask for more details about the server deployment scenario",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for reporting this, and thanks to everyone who confirmed the caching behavior.\n\nThe error comes from the JS interop layer when it can\u0027t find the canvas element in the DOM. This happens when stale cached static assets (particularly \u0060_content/SkiaSharp.Views.Blazor/SKHtmlCanvas.js\u0060) are served instead of the current version.\n\n**Workaround:**\n1. Clear your browser cache\n2. Delete \u0060bin/\u0060, \u0060obj/\u0060, and any \u0060_framework/\u0060 directories in your project\n3. Run \u0060dotnet restore\u0060 before launching in debug mode\n\nThis has been confirmed by multiple reporters. If you\u0027ve recently switched Blazor render modes (e.g., InteractiveAuto \u2192 InteractiveWebAssembly) or upgraded SkiaSharp versions, a full clean rebuild is essential.\n\n@Benny-prog \u2014 for the server deployment scenario, could you share more details about your hosting setup? Specifically: are you using Blazor WASM standalone or hosted in ASP.NET Core? The server should be serving cache-busted asset URLs via Blazor\u0027s static asset middleware, which would prevent clients from using stale JS modules."
       },

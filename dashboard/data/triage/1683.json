@@ -186,7 +186,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge bug, share analysis and workaround, ask for retest on current version",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for the detailed report and profiler data. Code analysis confirms that \u0060SKGLView\u0060 on iOS never calls \u0060GRContext.PurgeUnusedResources()\u0060 or \u0060PurgeUnlockedResources()\u0060 between frames, which could cause GPU resource accumulation during continuous rendering. The view also lacks a \u0060Dispose\u0060 override to clean up its \u0060GRContext\u0060, \u0060SKSurface\u0060, and \u0060GRBackendRenderTarget\u0060.\n\n**Workaround:** Use \u0060SKCanvasView\u0060 instead of \u0060SKGLView\u0060 for continuous rendering on iOS. If GPU acceleration is required, try calling \u0060GRContext.PurgeUnusedResources(0)\u0060 periodically in your \u0060PaintSurface\u0060 handler.\n\nNote: OpenGL ES is deprecated on iOS 12\u002B \u2014 consider Metal-backed views for GPU rendering on newer devices.\n\nOne commenter reported being unable to reproduce on SkiaSharp 2.88.6 \u2014 could anyone retest on the current version to confirm whether this is still an issue?"
       },

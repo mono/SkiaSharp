@@ -196,7 +196,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the issue and provide workaround guidance",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for the detailed report. This is a known compatibility gap \u2014 SkiaSharp hasn\u0027t shipped official .NET 10 support yet. The WASM static libraries (\u0060.a\u0060 files) are compiled with emscripten 3.1.56 for .NET 9, and .NET 10 may ship with an incompatible emscripten version.\n\nHere\u0027s the most reliable workaround while we work on .NET 10 support: pin your project to .NET 9 via \u0060global.json\u0060:\n\n\u0060\u0060\u0060json\n{\n  \u0022sdk\u0022: {\n    \u0022version\u0022: \u00229.0.200\u0022,\n    \u0022rollForward\u0022: \u0022latestMinor\u0022\n  }\n}\n\u0060\u0060\u0060\n\nIf you need to stay on .NET 10, try these steps (results vary by environment):\n1. Run \u0060dotnet workload restore\u0060 to ensure wasm-tools is installed\n2. Add an explicit \u0060SkiaSharp.NativeAssets.WebAssembly\u0060 PackageReference\n3. Make sure \u0060WasmBuildNative\u0060 is **not** set to \u0060false\u0060 in your \u0060.csproj\u0060\n4. If you had \u0060WasmBuildNative=false\u0060, remove it and add \u0060\u003CRunAOTCompilation\u003Efalse\u003C/RunAOTCompilation\u003E\u0060 instead\n\n.NET 10 support is being tracked in PR #3514."
       },

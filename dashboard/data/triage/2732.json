@@ -171,7 +171,7 @@
       {
         "type": "add-comment",
         "description": "Request configuration details from the 3.119.0 reporter and provide guidance",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for the reports.\n\nFor anyone on SkiaSharp 2.x: WebAssembly uses static linking, not dynamic P/Invoke \u2014 the \u0060.a\u0060 files must be compiled into \u0060dotnet.wasm\u0060 at build time. In 2.x this requires manual configuration as described in the comment above. The recommended path is upgrading to SkiaSharp 3.x with \u0060SkiaSharp.Views.Blazor\u0060, which auto-includes the native assets.\n\n@tolzy88 \u2014 could you share your project file (\u0060.csproj\u0060)? Specifically:\n- Which SkiaSharp packages do you reference? (\u0060SkiaSharp.Views.Blazor\u0060 vs just \u0060SkiaSharp\u0060 \u002B \u0060NativeAssets.WebAssembly\u0060)\n- Are you using the Blazor WebAssembly SDK (\u0060Microsoft.NET.Sdk.BlazorWebAssembly\u0060)?\n- Is \u0060WasmBuildNative\u0060 set in your project?\n\nPR #3082 fixed the WASM native asset packaging for 3.x. If you\u0027re using \u0060SkiaSharp.Views.Blazor\u0060 and still seeing this, we\u0027ll need to dig deeper."
       },

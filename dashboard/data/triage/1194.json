@@ -180,7 +180,7 @@
       {
         "type": "add-comment",
         "description": "Summarize current state and provide server-side workaround guidance",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.75,
         "comment": "This issue has been partially addressed \u2014 client-side Blazor WASM rendering is available via the \u0060SkiaSharp.Views.Blazor\u0060 package (shipped in 2.88\u002B via PR #1811). The remaining request is server-side Blazor support.\n\nFor server-side Blazor scenarios today, you can render on the server using standard SkiaSharp and send encoded images to the client:\n\n\u0060\u0060\u0060csharp\n// Server-side rendering workaround\nusing var surface = SKSurface.Create(new SKImageInfo(width, height));\nvar canvas = surface.Canvas;\n// ... draw operations ...\nusing var image = surface.Snapshot();\nusing var data = image.Encode(SKEncodedImageFormat.Png, 100);\nvar base64 = Convert.ToBase64String(data.ToArray());\n// Send base64 string to client as \u003Cimg src=\u0022data:image/png;base64,...\u0022 /\u003E\n\u0060\u0060\u0060\n\nTrue server-side Blazor Extension support (drawing commands marshaled over SignalR) would require significant architectural work. Keeping this open to track the remaining server-side feature."
       },

@@ -155,7 +155,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the request and share implementation direction based on maintainer feedback",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for the detailed feature request. This overlaps with #2431, and a PR (#2432) was previously submitted but closed in favor of a \u0060ReadOnlySpan\u003CT\u003E\u0060-based approach.\n\nThe planned direction is:\n1. **Span overloads for \u0060CreateCopy\u0060** \u2014 \u0060ReadOnlySpan\u003CSKPoint\u003E\u0060, \u0060ReadOnlySpan\u003CSKColor\u003E\u0060, \u0060ReadOnlySpan\u003Cushort\u003E\u0060 parameters would naturally support slicing without needing explicit offset/count parameters. The underlying C API already accepts explicit counts, so no native changes are needed.\n2. **\u0060SkVertices::Builder\u0060 exposure** \u2014 This would require new C API functions (\u0060sk_vertices_builder_*\u0060) and a corresponding \u0060SKVerticesBuilder\u0060 C# class. This is a larger effort but would enable the mutable construction pattern.\n\nIn the meantime, array slicing (\u0060AsSpan(offset, count).ToArray()\u0060) can be used as a workaround."
       }

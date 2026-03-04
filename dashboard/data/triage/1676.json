@@ -155,7 +155,7 @@
       {
         "type": "add-comment",
         "description": "Post analysis with workaround and root cause hypothesis",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.85,
         "comment": "Thanks for reporting this. The freeze is likely caused by \u0060SKGLSurfaceViewRenderer.OnSurfaceCreated\u0060 not resetting the Skia \u0060GRContext\u0060 when Android recreates the EGL context after a background/foreground transition. The sibling \u0060SKGLTextureViewRenderer\u0060 handles this correctly by calling \u0060FreeContext()\u0060 in the same callback.\n\nAs a workaround, try calling \u0060OnPause()\u0060 and \u0060OnResume()\u0060 on your \u0060SKGLSurfaceView\u0060 from the hosting Fragment or Activity lifecycle:\n\n\u0060\u0060\u0060csharp\nprotected override void OnPause()\n{\n    base.OnPause();\n    skglSurfaceView.OnPause();\n}\n\nprotected override void OnResume()\n{\n    base.OnResume();\n    skglSurfaceView.OnResume();\n}\n\u0060\u0060\u0060\n\nAlternatively, if GPU acceleration isn\u0027t critical, switching to \u0060SKCanvasView\u0060 (CPU rendering) avoids the EGL lifecycle entirely.\n\nWould you be able to confirm whether the \u0060OnPause\u0060/\u0060OnResume\u0060 workaround resolves the freeze?"
       }

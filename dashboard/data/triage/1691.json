@@ -175,7 +175,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the issue and provide workaround with explanation of root cause",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for the detailed reproduction \u2014 this is a real issue in Skia\u0027s PNG codec.\n\nThe root cause is that Skia reads all PNG chunks before IDAT (the actual pixel data) in 4KB increments during codec creation. A ~100MB Exif chunk means ~25,000 read iterations before decoding even begins. It\u0027s not truly hanging \u2014 it\u0027s processing extremely slowly with no size guard or cancellation mechanism.\n\nHere\u0027s a workaround you can use now: since you\u0027re already using Magick.NET to create the images, strip or limit the Exif metadata size before passing the stream to SkiaSharp:\n\n\u0060\u0060\u0060csharp\n// Strip exif before decoding with SkiaSharp\nusing var image = new MagickImage(stream);\nimage.RemoveProfile(\u0022exif\u0022);\nvar cleaned = new MemoryStream();\nimage.Write(cleaned, MagickFormat.Png);\ncleaned.Seek(0, SeekOrigin.Begin);\n\nusing var codec = SKCodec.Create(cleaned);\nvar bitmap = SKBitmap.Decode(codec);\n\u0060\u0060\u0060\n\nAlternatively, you could pre-validate PNG chunk sizes by reading the chunk headers before passing to SkiaSharp, and reject files with excessively large metadata.\n\nWe\u0027ll investigate whether a managed-side guard can be added to SKCodec.Create to bound metadata processing time."
       },

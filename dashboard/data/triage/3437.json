@@ -205,7 +205,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge bug with workaround and technical analysis",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for the thorough report and reproduction project.\n\nHere\u0027s a workaround you can use while we investigate: serialize SVG text generation with a semaphore to prevent concurrent DirectWrite access:\n\n\u0060\u0060\u0060csharp\nprivate static readonly SemaphoreSlim _svgLock = new(1, 1);\n\nawait _svgLock.WaitAsync();\ntry {\n    using var canvas = SKSvgCanvas.Create(bounds, svgStream);\n    if (canvas == null) return;\n    // ... draw text ...\n} finally {\n    _svgLock.Release();\n}\n\u0060\u0060\u0060\n\nThis eliminates the race condition at the cost of serializing SVG generation.\n\nThe issue appears to be a thread-safety problem in Skia\u0027s SVG text rendering path on Windows. When \u0060onDrawGlyphRunList\u0060 converts glyph IDs back to Unicode characters via DirectWrite\u0027s \u0060GetGlyphIndices\u0060, concurrent calls can produce empty results \u2014 which explains the blank \u0060x\u0060/\u0060y\u0060 attributes and missing text content. Linux uses FreeType instead of DirectWrite, which is why it\u0027s unaffected.\n\nWe\u0027ll investigate whether the fix should be a mutex in the DirectWrite code path or exposing Skia\u0027s existing \u0060kConvertTextToPaths\u0060 flag (which bypasses glyph-to-unicode conversion entirely by emitting text as \u0060\u003Cpath\u003E\u0060 elements)."
       }

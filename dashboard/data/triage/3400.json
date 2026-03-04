@@ -182,7 +182,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge bug, provide workarounds, link to related issue",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.8,
         "comment": "Thanks for the detailed reproduction code and analysis.\n\nThis appears to be an issue in the upstream Skia XPS backend\u0027s image handling. The XPS device converts images to bitmap shaders (\u0060SkXPSDevice::drawImageRect\u0060) and applies DPI-based scaling that interacts differently with images than with vector geometry \u2014 which explains why text, shapes, and barcodes render correctly but images don\u0027t.\n\nTwo workarounds to try:\n\n1. **Use PDF output** \u2014 you\u0027ve already confirmed this works correctly.\n2. **Pass 96 DPI explicitly** \u2014 the XPS spec is fixed at 96 DPI, but SkiaSharp defaults to 72. Matching the native DPI may help:\n\n\u0060\u0060\u0060csharp\nusing var document = SKDocument.CreateXps(xpsStream, 96f);\n\u0060\u0060\u0060\n\nNote: you\u0027d need to adjust your \u0060contentScale\u0060 calculation accordingly if you change the DPI.\n\nThis is related to #1728, which reports similar XPS image rendering issues and was identified as an upstream Skia bug. We\u0027ll investigate whether the DPI alignment resolves the scaling or if an upstream fix is needed."
       },

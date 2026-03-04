@@ -195,7 +195,7 @@
       {
         "type": "add-comment",
         "description": "Acknowledge the crash, explain root cause pattern, suggest SKCanvasView workaround, and ask for deployment details",
-        "risk": "high",
+        "risk": "medium",
         "confidence": 0.82,
         "comment": "Thanks for the stack trace \u2014 this is a known pattern we\u0027re tracking across several related issues (#2948, #3136, #3168).\n\nThe crash happens because \u0060PropertySetExtensions\u0060 is a native WinRT component that requires proper activation factory registration. On certain Windows configurations (restricted environments, VMs, missing GPU drivers, Store certification), this WinRT activation fails before any rendering starts.\n\nHere\u0027s a workaround you can use while we investigate: if LiveCharts2 supports it, switch from the GL rendering path (\u0060SKGLView\u0060/\u0060SKSwapChainPanel\u0060) to the software rendering path (\u0060SKCanvasView\u0060/\u0060SKXamlCanvas\u0060). This avoids the ANGLE/OpenGL path and the \u0060PropertySetExtensions\u0060 dependency entirely.\n\nTo help us narrow down the root cause, could you confirm:\n1. Is \u0060SkiaSharp.Views.WinUI.Native.dll\u0060 present in the deployment output on the failing system?\n2. Is the failing system a VM, IoT edition, or otherwise restricted Windows configuration?\n3. What GPU driver is installed on the affected device?"
       }
