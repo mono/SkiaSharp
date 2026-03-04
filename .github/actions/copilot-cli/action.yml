@@ -1,5 +1,5 @@
 name: 'Copilot CLI'
-description: 'Install and run the GitHub Copilot CLI with a prompt'
+description: 'Install and run the GitHub Copilot CLI with a prompt (cross-platform)'
 inputs:
   copilot-token:
     description: 'PAT with "Copilot Requests" permission (GITHUB_TOKEN does NOT work)'
@@ -41,11 +41,19 @@ runs:
         echo "CLI Version: $(copilot --version)"
         echo "::endgroup::"
 
-        # Configure MCP servers
+        # Cross-platform log directory (RUNNER_TEMP is set by GitHub on all OSes)
+        LOG_DIR="$RUNNER_TEMP/copilot-logs"
+        mkdir -p "$LOG_DIR"
+
+        # Cross-platform MCP config
         if [ -n "$MCP_CONFIG" ]; then
           echo "::group::Configure MCP"
-          mkdir -p ${XDG_CONFIG_HOME:-$HOME/.config}/.copilot
-          CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/.copilot"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            CONFIG_DIR="$APPDATA/.copilot"
+          else
+            CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/.copilot"
+          fi
+          mkdir -p "$CONFIG_DIR"
           echo "$MCP_CONFIG" > "$CONFIG_DIR/mcp-config.json"
           cat "$CONFIG_DIR/mcp-config.json"
           echo "::endgroup::"
@@ -53,25 +61,24 @@ runs:
 
         echo "::group::Run Copilot CLI"
         set +e
-        copilot -p "$PROMPT" --yolo --model $MODEL --log-level all --log-dir $HOME/.copilot/logs --screen-reader --no-color --stream off
+        copilot -p "$PROMPT" --yolo --model "$MODEL" --log-level all --log-dir "$LOG_DIR" --screen-reader --no-color --stream off
         EXIT_CODE=$?
         set -e
         echo "::endgroup::"
 
-        echo "logs_path=$HOME/.copilot/logs" >> $GITHUB_OUTPUT
-        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+        echo "logs_path=$LOG_DIR" >> "$GITHUB_OUTPUT"
+        echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
       env:
         GH_TOKEN: ${{ github.token }}
         COPILOT_GITHUB_TOKEN: ${{ inputs.copilot-token }}
         PROMPT: ${{ inputs.prompt }}
-        COPILOT_VERSION: ${{ inputs.copilot-version }}
         MCP_CONFIG: ${{ inputs.mcp-config }}
         MODEL: ${{ inputs.model }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
-      if: ${{ always() && inputs.upload-artifact == 'true' }}
+      if: always()
       with:
         name: ${{ inputs.artifact-name }}-${{ github.run_id }}-${{ github.run_attempt }}
-        path: ~/.copilot/logs
+        path: ${{ steps.copilot.outputs.logs_path }}
         if-no-files-found: warn

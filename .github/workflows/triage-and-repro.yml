@@ -100,8 +100,6 @@ jobs:
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'triage-${{ steps.issue.outputs.issue_number }}'
-          artifact-paths: /tmp/skiasharp/triage/
-          additional-directories: '/tmp'
 
       - name: Extract platform from triage
         id: extract
@@ -109,6 +107,7 @@ jobs:
         run: |
           ISSUE_NUM="${{ steps.issue.outputs.issue_number }}"
           TRIAGE_FILE="/tmp/skiasharp/triage/${ISSUE_NUM}.json"
+          # Triage always runs on Linux, so /tmp is fine here
 
           if [ -f "$TRIAGE_FILE" ]; then
             PLATFORM=$(jq -r '.output.actionability.suggestedReproPlatform // "linux"' "$TRIAGE_FILE")
@@ -163,8 +162,6 @@ jobs:
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'repro-linux-${{ needs.triage.outputs.issue_number }}'
-          artifact-paths: /tmp/skiasharp/repro/
-          additional-directories: '/tmp'
 
   repro-macos:
     name: Reproduce (macOS)
@@ -187,8 +184,6 @@ jobs:
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'repro-macos-${{ needs.triage.outputs.issue_number }}'
-          artifact-paths: /tmp/skiasharp/repro/
-          additional-directories: '/tmp'
 
   repro-windows:
     name: Reproduce (Windows)
@@ -199,10 +194,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/download-artifact@v4
+      - name: Download triage artifact
+        uses: actions/download-artifact@v4
         with:
           name: triage-output
-          path: /tmp/skiasharp/triage/
+          path: ${{ runner.temp }}/skiasharp/triage/
+      - name: Copy triage to /tmp for skill compatibility
+        shell: bash
+        run: |
+          # Skills expect /tmp/skiasharp/triage/ — on Windows Git Bash, /tmp maps
+          # to a real temp dir, so create the expected structure
+          mkdir -p /tmp/skiasharp/triage
+          cp -r "$RUNNER_TEMP/skiasharp/triage/"* /tmp/skiasharp/triage/ 2>/dev/null || true
       - name: Run AI reproduction
         uses: ./.github/actions/copilot-cli
         with:
@@ -211,5 +214,3 @@ jobs:
           model: 'claude-opus-4.6'
           mcp-config: ${{ env.MCP_CONFIG }}
           artifact-name: 'repro-windows-${{ needs.triage.outputs.issue_number }}'
-          artifact-paths: /tmp/skiasharp/repro/
-          additional-directories: '/tmp'
