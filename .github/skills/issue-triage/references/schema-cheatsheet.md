@@ -119,13 +119,25 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | Type | Risk | Required Specific Fields |
 |------|------|--------------------------|
 | `update-labels` | low | `labels` (array of strings) |
-| `add-comment` | high | `comment` (markdown string). See `response-guidelines.md`. |
+| `add-comment` | **dynamic** (see below) | `comment` (markdown string). See `response-guidelines.md`. |
 | `close-issue` | medium | — |
 | `link-related` | low | `linkedIssue` (integer) |
 | `link-duplicate` | medium | `linkedIssue` (integer) |
 | `convert-to-discussion` | high | — |
 | `update-project` | low | — |
 | `set-milestone` | low | — |
+
+#### `add-comment` Risk Calculation
+
+Risk for `add-comment` is computed from the comment's content and the action's confidence score:
+
+| Condition | Risk | Rationale |
+|-----------|------|-----------|
+| Factual only (repro findings, version matrix, link references) AND confidence ≥ 0.85 | **low** | Reporting observed facts — minimal reputation exposure |
+| Includes workaround or technical suggestion AND confidence ≥ 0.85 | **medium** | Advice could be wrong, but evidence is strong |
+| Suggests closing, rejects the issue, or states "by-design" (any confidence) | **high** | Telling a reporter their issue isn't valid always needs human review |
+| Any content AND confidence < 0.70 | **high** | Not confident enough to speak for the maintainer |
+| Default / everything else | **medium** | |
 
 ## Common Mistakes
 
