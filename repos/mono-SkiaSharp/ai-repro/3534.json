@@ -1,0 +1,90 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3534,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-17T00:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "notes": "Confirmed: Blazor WASM views (SKCanvasView and SKGLView) have zero wheel/touch/pointer event handling. Both view files contain only rendering (OnRenderFrame), sizing (OnSizeChanged), and DPI (OnDpiChanged) callbacks. No SKTouchInterop or equivalent JS interop exists in the Blazor view directory. The shared MAUI core already defines SKTouchAction.WheelChanged (SKTouchEventArgs.cs:68) and SKTouchEventArgs.WheelDelta (line 50), and the Windows MAUI handler (SKTouchHandler.cs) is the only platform implementation. The feature requested — wheel event support with v120 normalization — does not exist.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Search Blazor view source for any wheel, touch, pointer, or scroll event handling — grep returns no matches, confirming absence",
+      "command": "grep -rni 'WheelChanged\\|WheelDelta\\|WheelEvent\\|wheel' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Search Blazor view source for any SKTouchInterop or TouchInterop JS interop — no matches found, no touch/input interop exists",
+      "command": "grep -rn 'SKTouchInterop\\|TouchInterop' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify SKCanvasView.razor.cs has only rendering/sizing logic, no input event handling",
+      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+      "exitCode": 0,
+      "output": "SKCanvasView contains: OnRenderFrame(), OnSizeChanged(), OnDpiChanged(), Invalidate(), CreateBitmap(), FreeBitmap(), Dispose(). No touch, pointer, wheel, or input event handlers. Only interop objects: SKHtmlCanvasInterop (rendering), SizeWatcherInterop, DpiWatcherInterop.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify SKGLView.razor.cs also lacks any input event handling",
+      "command": "cat source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+      "exitCode": 0,
+      "output": "SKGLView contains: OnRenderFrame() (with GL context management), OnSizeChanged(), OnDpiChanged(), Invalidate(), CreateSize(), Dispose(). Same pattern as SKCanvasView — rendering and sizing only, zero input event handling.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Confirm SKTouchAction.WheelChanged enum exists in shared MAUI core (infrastructure is ready but not wired to Blazor)",
+      "command": "grep -n 'WheelChanged\\|WheelDelta' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs",
+      "exitCode": 0,
+      "output": "50: public int WheelDelta { get; private set; }\n68: WheelChanged,",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Confirm only Windows MAUI handler implements WheelChanged — no Blazor, macOS, iOS, or Android implementation",
+      "command": "grep -rn 'WheelChanged' source/",
+      "exitCode": 0,
+      "output": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SKTouchEventArgs.cs:68: WheelChanged,\nsource/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Windows/SKTouchHandler.cs:103: args.Handled = CommonHandler(sender, SKTouchAction.WheelChanged, args);",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.0",
+    "dockerUsed": false
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Feature is confirmed missing. The shared infrastructure (SKTouchAction.WheelChanged, SKTouchEventArgs.WheelDelta) exists but Blazor views have zero input event handling. Implementation requires new JS interop for browser WheelEvent with v120 normalization."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm type/enhancement and area/SkiaSharp labels are accurate",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "proposedResponse": {
+      "body": "Confirmed that the Blazor WASM views (`SKCanvasView` and `SKGLView`) currently have **no wheel, touch, pointer, or scroll event handling**.\n\n**Investigation findings:**\n- Both `SKCanvasView.razor.cs` and `SKGLView.razor.cs` contain only rendering (`OnRenderFrame`), sizing (`OnSizeChanged`), and DPI (`OnDpiChanged`) callbacks — zero input event infrastructure.\n- No `SKTouchInterop` or equivalent JS interop exists in the Blazor view directory. The only wwwroot interop files are `DpiWatcher`, `SizeWatcher`, and `SKHtmlCanvas` (rendering).\n- The shared MAUI core already defines `SKTouchAction.WheelChanged` and `SKTouchEventArgs.WheelDelta`, but these are only wired up in the Windows MAUI handler (`SKTouchHandler.cs`).\n\nThe feature gap is verified — Blazor views need new JavaScript interop to listen for browser `WheelEvent`, normalize `deltaY` via `deltaMode`-aware v120 conversion, and callback into C# with `SKTouchAction.WheelChanged`.",
+      "status": "needs-human-edit"
+    }
+  }
+}
