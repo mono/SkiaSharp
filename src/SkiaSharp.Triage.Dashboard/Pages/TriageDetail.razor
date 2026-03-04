@@ -129,25 +129,25 @@ else
     <div class="content-tabs">
         @if (_issue is not null)
         {
-            <button type="button" class="content-tab @(_activeTab == "analysis" ? "active" : "")" @onclick='() => _activeTab = "analysis"'>
+            <button type="button" class="content-tab @(_activeTab == "analysis" ? "active" : "")" @onclick='() => SetTab("analysis")'>
                 Analysis
             </button>
         }
         @if (_allActions.Count > 0)
         {
-            <button type="button" class="content-tab @(_activeTab == "actions" ? "active" : "")" @onclick='() => _activeTab = "actions"'>
+            <button type="button" class="content-tab @(_activeTab == "actions" ? "active" : "")" @onclick='() => SetTab("actions")'>
                 Actions (@_allActions.Count)
             </button>
         }
         @if (_issue is not null)
         {
-            <button type="button" class="content-tab @(_activeTab == "investigation" ? "active" : "")" @onclick='() => _activeTab = "investigation"'>
+            <button type="button" class="content-tab @(_activeTab == "investigation" ? "active" : "")" @onclick='() => SetTab("investigation")'>
                 Investigation
             </button>
         }
         @if (_repro is not null)
         {
-            <button type="button" class="content-tab @(_activeTab == "repro" ? "active" : "")" @onclick='() => _activeTab = "repro"'>
+            <button type="button" class="content-tab @(_activeTab == "repro" ? "active" : "")" @onclick='() => SetTab("repro")'>
                 Reproduction Log
             </button>
         }
@@ -250,6 +250,7 @@ else
     [SupplyParameterFromQuery] public string? Repro { get; set; }
     [SupplyParameterFromQuery] public string? Sort { get; set; }
     [SupplyParameterFromQuery] public string? Card { get; set; }
+    [SupplyParameterFromQuery] public string? Tab { get; set; }
 
     private TriageIndex? _index;
     private TriagedIssue? _issue;
@@ -263,8 +264,13 @@ else
     private string _activeTab = "analysis";
     private List<TriageAction> _allActions = [];
 
+    private static readonly HashSet<string> _validTabs = ["analysis", "actions", "investigation", "repro"];
+
     protected override async Task OnInitializedAsync()
     {
+        if (!string.IsNullOrEmpty(Tab) && _validTabs.Contains(Tab))
+            _activeTab = Tab;
+
         var indexTask = DataService.GetTriageIndexAsync();
         var triageTask = DataService.GetTriageDetailAsync(Number);
         var reproTask = DataService.GetReproDetailAsync(Number);
@@ -287,7 +293,8 @@ else
             _issue = await DataService.GetTriageDetailAsync(Number);
             _repro = await DataService.GetReproDetailAsync(Number);
             _issueTitle = _index?.Issues.FirstOrDefault(i => i.Number == Number)?.IssueTitle;
-            _activeTab = "analysis";
+            if (!string.IsNullOrEmpty(Tab) && _validTabs.Contains(Tab))
+                _activeTab = Tab;
             RebuildActions();
             LoadNavigation();
         }
@@ -305,6 +312,21 @@ else
         if (string.IsNullOrEmpty(text)) return;
         try { await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text); }
         catch { }
+    }
+
+    private void SetTab(string tab)
+    {
+        _activeTab = tab;
+        // Update URL to persist tab selection
+        var uri = new Uri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        if (tab == "analysis")
+            query.Remove("tab");
+        else
+            query["tab"] = tab;
+        var qs = query.ToString();
+        var url = string.IsNullOrEmpty(qs) ? $"triage/{Number}" : $"triage/{Number}?{qs}";
+        Navigation.NavigateTo(url, replace: true);
     }
 
     private void LoadNavigation()
@@ -400,6 +422,7 @@ else
         if (!string.IsNullOrEmpty(Severity)) parts.Add($"severity={Severity}");
         if (!string.IsNullOrEmpty(Repro)) parts.Add($"repro={Repro}");
         if (!string.IsNullOrEmpty(Sort) && Sort != "newest") parts.Add($"sort={Sort}");
+        if (_activeTab != "analysis") parts.Add($"tab={_activeTab}");
         return parts.Count > 0 ? $"triage/{number}?{string.Join('&', parts)}" : $"triage/{number}";
     }
 

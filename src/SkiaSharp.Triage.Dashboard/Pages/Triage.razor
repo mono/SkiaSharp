@@ -43,6 +43,10 @@ else
 
     <!-- Filter Row -->
     <div class="filter-row">
+        <div class="filter-group filter-search">
+            <label>Search</label>
+            <input type="text" placeholder="Issue # or title..." @bind="SearchText" @bind:event="oninput" @bind:after="ApplyFilters" />
+        </div>
         <div class="filter-group">
             <label>Action</label>
             <select @bind="SelectedAction" @bind:after="ApplyFilters">
@@ -186,6 +190,7 @@ else
     private string SelectedSeverity { get; set; } = "";
     private string SelectedRepro { get; set; } = "";
     private string SelectedSort { get; set; } = "newest";
+    private string SearchText { get; set; } = "";
 
     private bool HasFilters =>
         !string.IsNullOrEmpty(SelectedCard) ||
@@ -193,7 +198,8 @@ else
         !string.IsNullOrEmpty(SelectedType) ||
         !string.IsNullOrEmpty(SelectedArea) ||
         !string.IsNullOrEmpty(SelectedSeverity) ||
-        !string.IsNullOrEmpty(SelectedRepro);
+        !string.IsNullOrEmpty(SelectedRepro) ||
+        !string.IsNullOrEmpty(SearchText);
 
     protected override async Task OnInitializedAsync()
     {
@@ -231,6 +237,17 @@ else
         if (_data is null) return;
 
         var query = _openIssues.AsEnumerable();
+
+        // Text search by issue number or title
+        if (!string.IsNullOrEmpty(SearchText))
+        {
+            var search = SearchText.Trim();
+            var searchNum = search.TrimStart('#');
+            if (int.TryParse(searchNum, out var num))
+                query = query.Where(i => i.Number == num || (i.IssueTitle ?? i.Title).Contains(search, StringComparison.OrdinalIgnoreCase));
+            else
+                query = query.Where(i => (i.IssueTitle ?? i.Title).Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
 
         if (!string.IsNullOrEmpty(SelectedCard))
         {
@@ -313,6 +330,7 @@ else
         SelectedSeverity = "";
         SelectedRepro = "";
         SelectedSort = "newest";
+        SearchText = "";
         ApplyFiltersInternal();
         UpdateUrl();
     }

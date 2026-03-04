@@ -9,6 +9,19 @@
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
   </PropertyGroup>
 
+  <Target Name="SetGitInfo" BeforeTargets="CoreCompile">
+    <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" StandardOutputImportance="low" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitCommitHash" />
+    </Exec>
+    <PropertyGroup>
+      <GitCommitHash Condition="'$(GitCommitHash)' == ''">unknown</GitCommitHash>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)GitInfo.g.cs" Overwrite="true" Lines="namespace SkiaSharp.Triage.Dashboard%3B%0Ainternal static class GitInfo { internal const string CommitHash = &quot;$(GitCommitHash)&quot;%3B }" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)GitInfo.g.cs" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\SkiaSharp.Triage.Models\SkiaSharp.Triage.Models.csproj" />
   </ItemGroup>
