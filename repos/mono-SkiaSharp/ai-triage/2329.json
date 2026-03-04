@@ -1,0 +1,104 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2329,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z"
+  },
+  "summary": "Feature request to expose the private GRContext field as a public property on the Blazor SKGLView component, matching the pattern used by MAUI and macOS SKGLView implementations.",
+  "classification": {
+    "type": { "value": "type/enhancement", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.98 },
+    "platforms": ["os/WASM"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Reference the Blazor SKGLView component",
+        "Attempt to access GRContext on the view instance",
+        "Observe that the context field is private and inaccessible"
+      ],
+      "environmentDetails": "Blazor WASM, SkiaSharp.Views.Blazor",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/blob/1131738c9b89212ae53e6d33d994a9480d77a3c8/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor/SKGLView.razor.cs#L22", "description": "Blazor SKGLView private GRContext field" },
+        { "url": "https://github.com/mono/SkiaSharp/blob/1131738c9b89212ae53e6d33d994a9480d77a3c8/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L86", "description": "macOS SKGLView public GRContext property" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Blazor SKGLView still has GRContext as a private field in the current codebase. No PR has been submitted to expose it."
+    }
+  },
+  "analysis": {
+    "summary": "The Blazor SKGLView component stores its GRContext as a private field (line 24 of SKGLView.razor.cs), unlike the MAUI SKGLView which exposes it as a public property. The reporter needs direct access to the GRContext to create additional rendering surfaces. A workaround exists via SKSurface.Context (available through the OnPaintSurface event args), but this only works inside the paint callback and returns GRRecordingContext rather than GRContext.",
+    "rationale": "This is an enhancement, not a feature request — the GRContext already exists as a private field in the Blazor view, it just needs to be exposed publicly. The MAUI and macOS views already expose this property, establishing the pattern. The fix is trivial (add a public property), and has 2 thumbs-up reactions indicating community interest.",
+    "keySignals": [
+      { "text": "on macOS we can directly access the GRContext of the view", "source": "issue body", "interpretation": "Reporter is comparing platform views and expects API parity." },
+      { "text": "In the Blazor view this is not an option since the field is private", "source": "issue body", "interpretation": "Correctly identified that GRContext is private in SKGLView.razor.cs line 24." },
+      { "text": "i'm using the GRContext of the view to generate an additional surface for rendering", "source": "issue body", "interpretation": "Concrete use case: creating secondary GPU-backed surfaces from the shared GL context." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs", "lines": "24", "finding": "GRContext is declared as 'private GRContext? context;' — not accessible outside the component", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SKGLView.cs", "lines": "58", "finding": "MAUI exposes 'public GRContext? GRContext => lastGRContext;' — establishes the pattern this request follows", "relevance": "related" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/ISKGLView.cs", "lines": "9", "finding": "ISKGLView interface defines 'GRContext? GRContext { get; }' as part of the contract", "relevance": "related" },
+      { "file": "binding/SkiaSharp/SKSurface.cs", "lines": "271-272", "finding": "SKSurface.Context property returns GRRecordingContext — partial workaround via event args Surface, but returns base type not GRContext", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Access GRContext via e.Surface.Context inside the OnPaintSurface callback (returns GRRecordingContext, cast to GRContext if needed)"
+    ],
+    "nextQuestions": [
+      "Should the Blazor SKGLView implement ISKGLView for consistency with MAUI?",
+      "Should the GRContext be accessible outside the paint callback, or only within it?"
+    ],
+    "resolution": {
+      "hypothesis": "The Blazor SKGLView was implemented without exposing GRContext as a public property, unlike other platform views that follow a consistent pattern.",
+      "proposals": [
+        {
+          "title": "Add public GRContext property to Blazor SKGLView",
+          "description": "Add a public read-only property that exposes the private context field, matching the MAUI pattern: 'public GRContext? GRContext => context;'",
+          "codeSnippet": "public GRContext? GRContext => context;",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: access GRContext via Surface.Context",
+          "description": "Inside the OnPaintSurface callback, cast e.Surface.Context to GRContext to obtain the GL context for creating additional surfaces.",
+          "codeSnippet": "void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\n{\n    var grContext = (GRContext)e.Surface.Context;\n    var additionalSurface = SKSurface.Create(grContext, true, new SKImageInfo(width, height));\n}",
+          "category": "workaround",
+          "confidence": 0.80,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add public GRContext property to Blazor SKGLView",
+      "recommendedReason": "Trivial one-line change that aligns Blazor with MAUI and macOS views. The workaround is limited to the paint callback scope."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Valid enhancement with clear implementation path and established pattern from other platform views. Trivial to implement but needs maintainer decision on whether to align Blazor view API with MAUI/macOS.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement, Blazor views, and WASM labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/enhancement", "area/SkiaSharp.Views.Blazor", "os/WASM"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge request with workaround and implementation guidance",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the report! You're right that the Blazor `SKGLView` doesn't currently expose the `GRContext` as a public property, unlike the MAUI and macOS views.\n\n**Workaround:** Inside the `OnPaintSurface` callback, you can access the context via the surface:\n\n```csharp\nvoid OnPaintSurface(SKPaintGLSurfaceEventArgs e)\n{\n    var grContext = (GRContext)e.Surface.Context;\n    // Use grContext to create additional surfaces\n}\n```\n\nThis should work for creating additional GPU-backed surfaces within the paint callback. A PR to add `public GRContext? GRContext => context;` to the Blazor `SKGLView` would be welcome if you need access outside the callback."
+      }
+    ]
+  }
+}
