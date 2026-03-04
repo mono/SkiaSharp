@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1194,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-17T12:00:00Z"
+  },
+  "summary": "Feature request to support SkiaSharp as a Blazor Extension enabling use on both client-side (WASM) and server-side Blazor deployment models. Client-side WASM support was delivered via PR #1811 and the SkiaSharp.Views.Blazor package; server-side Blazor rendering remains unimplemented.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.95 },
+    "platforms": ["os/WASM"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Blazor Server-Side application",
+        "Add SkiaSharp.Views.Blazor NuGet package",
+        "Add SKCanvasView component to a Razor page",
+        "Run the app — throws NotSupportedException: SkiaSharp currently only works on Web Assembly"
+      ],
+      "environmentDetails": "Any Blazor Server hosting model (.NET 6+)",
+      "relatedIssues": [1921, 1834, 1455],
+      "repoLinks": [
+        { "url": "https://github.com/mattleibow/BlazorSkiaSharp", "description": "Mattleibow's prototype using SKPicture serialization over SignalR for server-side Blazor" },
+        { "url": "https://github.com/mattleibow/SkiaSharpBlazorComponents", "description": "Early prototype rendering images on server and sending to client" },
+        { "url": "https://github.com/mattleibow/SkiaSharpBlazorWebAssembly", "description": "Sample repo for client-side Blazor WASM support" },
+        { "url": "https://github.com/BlazorExtensions/Canvas", "description": "Reference implementation of a Blazor Extension pattern for HTML5 Canvas" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.0-preview.145"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Client-side WASM support was shipped in SkiaSharp 2.88+, but server-side Blazor support has never been implemented. The SkiaSharp.Views.Blazor package still only works on WebAssembly."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "Client-side WASM was delivered via PR #1811 (merged Oct 2021). Server-side Blazor rendering was prototyped but never formally added to the package. The current code has [SupportedOSPlatform(\"browser\")] and uses WASM-only JS interop APIs.",
+      "relatedPRs": [1811, 3064, 3082]
+    }
+  },
+  "analysis": {
+    "summary": "Original request (March 2020) was for SkiaSharp to work as a Blazor Extension — supporting both client WASM and server-side Blazor hosting models. The client WASM portion was delivered in October 2021 via PR #1811 (SkiaSharp.Views.Blazor package). Server-side remains unimplemented. The maintainer (mattleibow) prototyped server-side rendering using SKPicture serialization over SignalR in an external repo, but this was never productized. Issue #1921 was closed as a duplicate of this issue in November 2024.",
+    "rationale": "Classified as feature-request because the issue explicitly asks for new functionality (Blazor Extension pattern for server-side rendering). The client-side WASM portion was delivered, making this partially complete. The remaining server-side feature requires a fundamentally different architecture: rendering on the server and transmitting results to the client, or serializing draw commands for client-side replay. This is a significant design effort, not a simple bug fix.",
+    "keySignals": [
+      { "text": "[FEATURE] Support SkiaSharp as a Blazor Extension", "source": "issue title", "interpretation": "Explicitly marked as a feature request by the reporter." },
+      { "text": "The PR is almost ready: #1811 ... I have merged #1811", "source": "mattleibow comment (Sep/Oct 2021)", "interpretation": "Client-side WASM support was delivered, addressing half of the original request." },
+      { "text": "SkiaSharp.Views.Blazor package still works in Blazor WebAssembly apps only", "source": "Stamo-Gochev comment (May 2022)", "interpretation": "Last substantive comment confirms server-side support is still missing." },
+      { "text": "Duplicate of #1194", "source": "mattleibow closing #1921 (Nov 2024)", "interpretation": "Maintainer considers this the canonical issue for Blazor server-side support." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "12-13", "finding": "SKCanvasView is decorated with [SupportedOSPlatform(\"browser\")] — explicitly WASM-only. Uses ElementReference, JS interop, and GCHandle for pixel buffer transfer, all of which require in-process browser execution.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/JSModuleInterop.cs", "lines": "25-26", "finding": "Pre-.NET 7 path throws NotSupportedException(\"SkiaSharp currently only works on Web Assembly\") when IJSRuntime is not IJSInProcessRuntime (i.e., server-side Blazor). .NET 7+ path uses JSHost.ImportAsync which is also WASM-only.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor.csproj", "lines": "22", "finding": "<SupportedPlatform Include=\"browser\" /> confirms browser-only targeting. Project also references SkiaSharp.NativeAssets.WebAssembly, further anchoring to WASM.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/Internal/SKHtmlCanvasInterop.cs", "lines": "14-18", "finding": "All rendering goes through HTML Canvas JS interop (putImageData, requestAnimationFrame). Server-side Blazor cannot use these APIs synchronously — would need a completely different rendering pipeline.", "relevance": "direct" }
+    ],
+    "nextQuestions": [
+      "Would server-side rendering via base64-encoded PNG images (as prototyped in BlazorSkiaSharp) be acceptable performance-wise for production use?",
+      "Should the SKPicture serialization approach (draw commands over SignalR) be pursued for lower-latency server-side scenarios?",
+      "With .NET 8+ Blazor Auto render mode, does the scenario change — could interactive rendering start on server then switch to WASM?",
+      "What is the demand level for server-side-only Blazor scenarios vs hybrid Auto mode?"
+    ],
+    "resolution": {
+      "hypothesis": "Server-side Blazor support requires a fundamentally different rendering approach: either server-side image generation sent as encoded images, or SKPicture serialization of draw commands replayed on the client. Both approaches were prototyped by the maintainer but never productized.",
+      "proposals": [
+        {
+          "title": "Server-side image rendering via encoded images",
+          "description": "Render on server using standard SkiaSharp (not the Blazor package), encode as PNG/JPEG, and send to client as <img> tag via Blazor's normal component model. This was prototyped in mattleibow/SkiaSharpBlazorComponents.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "SKPicture serialization over SignalR",
+          "description": "Record draw commands as SKPicture on server, serialize and send over SignalR to client where they are replayed on a WASM SkiaSharp canvas. Prototyped in mattleibow/BlazorSkiaSharp. Lower bandwidth than images but requires client WASM support.",
+          "category": "alternative",
+          "confidence": 0.60,
+          "effort": "large",
+          "validated": "untested"
+        },
+        {
+          "title": "Blazor Auto render mode integration",
+          "description": "With .NET 8+ Blazor Auto render mode, start with server-side image rendering and seamlessly transition to client WASM rendering. Would require the Blazor views to detect hosting model and switch rendering strategy.",
+          "category": "fix",
+          "confidence": 0.50,
+          "effort": "large",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Server-side image rendering via encoded images",
+      "recommendedReason": "Simplest approach that works today with existing SkiaSharp server capabilities. Render-to-image is a well-understood pattern and was already prototyped by the maintainer. Users can implement this now without waiting for a formal package."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.85,
+      "reason": "Partially delivered (client WASM works), but the server-side Blazor feature remains valid and requested. Significant design work needed — not a quick fix. The maintainer has acknowledged this as the canonical tracking issue by closing #1921 as a duplicate."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and Blazor labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/feature-request", "area/SkiaSharp.Views.Blazor", "os/WASM"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Summarize current state and provide server-side workaround guidance",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "This issue has been partially addressed — client-side Blazor WASM rendering is available via the `SkiaSharp.Views.Blazor` package (shipped in 2.88+ via PR #1811). The remaining request is server-side Blazor support.\n\nFor server-side Blazor scenarios today, you can render on the server using standard SkiaSharp and send encoded images to the client:\n\n```csharp\n// Server-side rendering workaround\nusing var surface = SKSurface.Create(new SKImageInfo(width, height));\nvar canvas = surface.Canvas;\n// ... draw operations ...\nusing var image = surface.Snapshot();\nusing var data = image.Encode(SKEncodedImageFormat.Png, 100);\nvar base64 = Convert.ToBase64String(data.ToArray());\n// Send base64 string to client as <img src=\"data:image/png;base64,...\" />\n```\n\nTrue server-side Blazor Extension support (drawing commands marshaled over SignalR) would require significant architectural work. Keeping this open to track the remaining server-side feature."
+      },
+      {
+        "type": "link-related",
+        "description": "Link related Blazor server-side request",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 1921
+      },
+      {
+        "type": "link-related",
+        "description": "Link related Blazor Desktop request",
+        "risk": "low",
+        "confidence": 0.75,
+        "linkedIssue": 1834
+      }
+    ]
+  }
+}
