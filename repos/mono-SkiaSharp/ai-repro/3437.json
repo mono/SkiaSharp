@@ -3,40 +3,39 @@
     "schemaVersion": "1.0",
     "number": 3437,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2026-03-10T12:00:00Z"
+    "analyzedAt": "2026-03-04T20:53:15Z"
   },
-  "conclusion": "needs-platform",
-  "notes": "Bug is Windows-specific (DirectWrite glyph-to-unicode race condition). Tested on macOS arm64 which uses CoreText backend — not reproduced after 4 runs with 3.119.1 and 4 runs with 3.119.2, both with 50+ parallel tasks. Reporter confirmed Linux (FreeType) is also unaffected. Requires Windows to reproduce the DirectWrite threading issue.",
-  "blockers": [
-    "Requires Windows — current environment is macOS arm64 (CoreText backend). DirectWrite is only available on Windows.",
-    "Docker cannot run Windows containers on macOS — cannot emulate the DirectWrite font backend"
-  ],
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Reproduced consistently on Windows: parallel SKSvgCanvas text rendering produces empty <text> elements with missing text content and x/y attributes. Synchronous calls never trigger the bug. Reproduced on 3.116.0 (2-5/5 parallel tasks affected per run) and 3.119.1 (3-5/5 tasks affected). Bug appears FIXED on main branch (0/5 across 5 runs). This is a race condition in the DirectWrite glyph-to-unicode mapping path used by the SVG text builder on Windows.",
+  "scope": "platform-specific/windows",
   "reproProject": {
     "type": "console",
     "tfm": "net10.0",
     "packages": [
       {
         "name": "SkiaSharp",
-        "version": "3.119.1"
+        "version": "3.116.0"
       }
     ]
   },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create console repro project with SkiaSharp 3.119.1",
-      "command": "mkdir -p /tmp/skiasharp/repro/3437 && cd /tmp/skiasharp/repro/3437 && dotnet new console -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.1",
+      "description": "Create console repro project with SkiaSharp 3.116.0",
+      "command": "mkdir -p $TMPDIR/skiasharp/repro/3437 && cd $TMPDIR/skiasharp/repro/3437 && dotnet new console -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
       "exitCode": 0,
-      "output": "Restore succeeded.",
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.116.0' added.",
       "filesCreated": [
         {
-          "filename": "Program.cs",
-          "description": "Reporter's reproduction code: creates SKSvgCanvas in parallel Task.Run calls, draws text elements, checks SVG output for blank text elements via regex",
-          "content": "using SkiaSharp;\nusing System.Text;\nusing System.Text.RegularExpressions;\n\nRegex containsBlankTextElement = new Regex(@\">\\s+</text>\");\nint numTextElementsPerTask = 10;\nint bugCount = 0;\n\nFunc<int, string> drawSvgFunc = (int taskI) => {\n    byte[] svgBytes;\n    using (var svgStream = new MemoryStream()) {\n        using (var canvas = SKSvgCanvas.Create(new SKRect(0, 0, 500, 500), svgStream)) {\n            for (int i = 0; i < numTextElementsPerTask; i++) {\n                using var paint = new SKPaint { Style = SKPaintStyle.Fill, Color = SKColors.Black };\n                using var typeface = SKTypeface.FromFamilyName(\"Arial\");\n                using var font = typeface.ToFont(14);\n                var text = $\"Hello, World {i + 1} of {numTextElementsPerTask}!\";\n                canvas.DrawText(text, 10, i * 15 + 20, SKTextAlign.Left, font, paint);\n            }\n        }\n        svgStream.Position = 0;\n        svgBytes = svgStream.ToArray();\n    }\n    var svgStringDecoded = Encoding.UTF8.GetString(svgBytes);\n    bool containsBlankText = containsBlankTextElement.IsMatch(svgStringDecoded);\n    if (containsBlankText) Interlocked.Increment(ref bugCount);\n    return svgStringDecoded;\n};\n\nawait Task.WhenAll(Enumerable.Range(0, 50).Select(i => Task.Run(() => drawSvgFunc(i))));\nConsole.WriteLine($\"Bug occurrences: {bugCount}\");"
+          "filename": "Repro.csproj",
+          "description": "Project file",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net10.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
         },
         {
-          "filename": "Repro.csproj",
-          "description": "Console project targeting net10.0 with SkiaSharp 3.119.1 NuGet package"
+          "filename": "Program.cs",
+          "description": "Reproduction code with parallel SVG text rendering test",
+          "content": "using SkiaSharp;\nusing System.Text;\nusing System.Text.RegularExpressions;\n\nRegex containsBlankTextElement = new Regex(@\">\\s+</text>\");\nint numTextElementsPerTask = 10;\nint bugCount = 0;\n\nFunc<int, string> drawSvgFunc = (int taskI) => {\n    Console.WriteLine($\"Start task {taskI}\");\n    byte[] svgBytes;\n    using (var svgStream = new MemoryStream()) {\n        using (var canvas = SKSvgCanvas.Create(new SKRect(0, 0, 500, 500), svgStream)) {\n            for (int i = 0; i < numTextElementsPerTask; i++) {\n                using var paint = new SKPaint { Style = SKPaintStyle.Fill, Color = SKColors.Black };\n                using var typeface = SKTypeface.FromFamilyName(\"Arial\");\n                using var font = typeface.ToFont(14);\n                var align = SKTextAlign.Left;\n                var text = $\"Hello, World {i + 1} of {numTextElementsPerTask}!\";\n                canvas.DrawText(text, 10, i * 15 + 20, align, font, paint);\n            }\n        }\n        svgStream.Position = 0;\n        svgBytes = svgStream.ToArray();\n    }\n    var svgStringDecoded = Encoding.UTF8.GetString(svgBytes);\n    bool containsBlankText = containsBlankTextElement.IsMatch(svgStringDecoded);\n    if (containsBlankText) {\n        Interlocked.Increment(ref bugCount);\n        Console.WriteLine($\"**bug found** during generation task {taskI}\");\n    } else {\n        Console.WriteLine($\"bug not found during generation task {taskI}\");\n    }\n    return svgStringDecoded;\n};\n\nConsole.WriteLine(\"****** SYNCHRONOUS CALLS ******\");\nfor (int syncAttempt = 0; syncAttempt < 5; syncAttempt++) {\n    await Task.Run(() => drawSvgFunc(syncAttempt));\n}\n\nConsole.WriteLine(\"****** PARALLEL CALLS ******\");\nawait Task.WhenAll(\n    Enumerable.Range(0, 5)\n    .Select(i => Task.Run(() => drawSvgFunc(i)))\n).ConfigureAwait(false);\n\nif (bugCount > 0)\n    Console.WriteLine($\"FAILURE: Bug reproduced in {bugCount} tasks\");\nelse\n    Console.WriteLine(\"SUCCESS: test completed - no bugs found\");\n\nConsole.WriteLine(\"Done\");"
         }
       ],
       "layer": "setup",
@@ -44,64 +43,112 @@
     },
     {
       "stepNumber": 2,
-      "description": "Build console repro project",
-      "command": "cd /tmp/skiasharp/repro/3437/Repro && dotnet build",
+      "description": "Build the repro project",
+      "command": "dotnet build",
       "exitCode": 0,
-      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "output": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)",
       "layer": "csharp",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Run repro with SkiaSharp 3.119.1 on macOS arm64 (4 runs with 50+ parallel tasks each)",
-      "command": "cd /tmp/skiasharp/repro/3437/Repro && dotnet run",
+      "description": "Run repro with SkiaSharp 3.116.0 - parallel SVG text rendering",
+      "command": "dotnet run",
       "exitCode": 0,
-      "output": "All 4 runs completed with 0 bug occurrences. Synchronous (5 tasks), parallel (20 tasks), and heavy parallel (50 tasks) all passed. RESULT: BUG NOT REPRODUCED. macOS uses CoreText, not DirectWrite.",
-      "layer": "native",
-      "result": "success"
+      "output": "****** SYNCHRONOUS CALLS ******\nStart task 0\nbug not found during generation task 0\nStart task 1\nbug not found during generation task 1\nStart task 2\nbug not found during generation task 2\nStart task 3\nbug not found during generation task 3\nStart task 4\nbug not found during generation task 4\n****** PARALLEL CALLS ******\nStart task 0\nStart task 2\nStart task 1\nStart task 4\n**bug found** during generation task 0\n**bug found** during generation task 2\nStart task 3\nbug not found during generation task 1\nbug not found during generation task 4\nbug not found during generation task 3\nFAILURE: Bug reproduced in 2 tasks\nDone",
+      "layer": "csharp",
+      "result": "wrong-output"
     },
     {
       "stepNumber": 4,
-      "description": "Test with latest SkiaSharp 3.119.2 on macOS arm64 (4 runs)",
-      "command": "cd /tmp/skiasharp/repro/3437-latest/Repro && dotnet run",
+      "description": "Run additional times to confirm intermittent nature (runs 2 and 3)",
+      "command": "dotnet run (x2 more runs)",
       "exitCode": 0,
-      "output": "All 4 runs: RESULT: BUG NOT REPRODUCED (0 bug occurrences each run with 50+ parallel tasks). Bug is Windows-specific.",
-      "layer": "native",
+      "output": "Run 2: FAILURE: Bug reproduced in 5 tasks\nRun 3: FAILURE: Bug reproduced in 4 tasks\nBug reproduced consistently in parallel section (2-5 of 5 tasks per run). Synchronous section never affected.",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test with SkiaSharp 3.119.1 (latest stable) in fresh project directory",
+      "command": "mkdir -p $TMPDIR/skiasharp/repro/3437-latest && cd $TMPDIR/skiasharp/repro/3437-latest && dotnet new console -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.1 && dotnet run",
+      "exitCode": 0,
+      "output": "Run 1: FAILURE: Bug reproduced in 5 tasks\nRun 2: FAILURE: Bug reproduced in 3 tasks\nBug still present in latest stable release.",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test with main branch source (built from source with project reference)",
+      "command": "dotnet build samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj && dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj (5 runs)",
+      "exitCode": 0,
+      "output": "Run 1-5: SUCCESS: test completed - no bugs found\nAll 5 runs passed — bug appears fixed on main branch (commit bf08d4d).",
+      "layer": "csharp",
       "result": "success"
     }
   ],
+  "environment": {
+    "os": "Windows",
+    "arch": "x64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
   "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Bug reproduced consistently: 2-5 of 5 parallel tasks produce empty <text> elements per run. Synchronous calls unaffected.",
+      "platform": "host-windows-x64"
+    },
     {
       "version": "3.119.1",
       "source": "nuget",
-      "result": "not-reproduced",
-      "notes": "Not reproduced on macOS arm64 (CoreText backend). 4 runs with up to 50 parallel tasks each. Bug is Windows-specific (DirectWrite).",
-      "platform": "host-macos-arm64"
+      "result": "reproduced",
+      "notes": "Bug still present: 3-5 of 5 parallel tasks affected per run.",
+      "platform": "host-windows-x64"
     },
     {
-      "version": "3.119.2",
-      "source": "nuget",
+      "version": "main (bf08d4d)",
+      "source": "source",
       "result": "not-reproduced",
-      "notes": "Not reproduced on macOS arm64 (CoreText backend). 4 runs with up to 50 parallel tasks each.",
-      "platform": "host-macos-arm64"
+      "notes": "Bug not reproduced in 5 consecutive runs (0 failures). Bug appears fixed on main branch.",
+      "platform": "host-windows-x64"
     }
   ],
-  "environment": {
-    "os": "macOS 26.3",
-    "arch": "arm64",
-    "dotnetVersion": "10.0",
-    "dotnetSdkVersion": "10.0.102",
-    "skiaSharpVersion": "3.119.1",
-    "dockerUsed": false
-  },
   "feedback": {
     "corrections": [
       {
         "source": "triage",
-        "topic": "reproducibility",
-        "upstream": "Triage predicted reproduced on any platform",
-        "corrected": "Bug is Windows-only as reporter stated. macOS (CoreText) is unaffected, Linux (FreeType) confirmed unaffected by reporter. Only DirectWrite on Windows triggers the race condition."
+        "topic": "resolution",
+        "upstream": "Bug requires investigation — no fix identified",
+        "corrected": "Bug appears fixed on main branch (not yet released). Fix exists between 3.119.1 and current main."
       }
     ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "keep-open",
+      "confidence": 0.88,
+      "reason": "Bug reproduced on all tested NuGet versions (3.116.0, 3.119.1) but appears fixed on main branch. Fix has not been released yet, so issue should remain open until the fix ships in a stable release."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correct — type/bug, os/Windows-Classic, area/SkiaSharp, tenet/reliability, backend/SVG",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "workarounds": [
+      "Serialize SVG text generation using a SemaphoreSlim(1,1) to prevent concurrent DirectWrite access",
+      "Upgrade to a future release that includes the main branch fix"
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the thorough report and reproduction project!\n\nWe were able to reproduce this issue on Windows with both SkiaSharp 3.116.0 and 3.119.1. The parallel section consistently produces empty `<text>` elements (2-5 of 5 tasks affected per run), while the synchronous section works correctly every time.\n\n**Good news:** Testing against the current main branch source shows the bug appears to be fixed — 5 consecutive runs all passed with zero failures. This fix hasn't been released yet.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 3.116.0 (NuGet) | ❌ Reproduced (2-5/5 parallel tasks affected) |\n| 3.119.1 (NuGet) | ❌ Reproduced (3-5/5 parallel tasks affected) |\n| main branch (source) | ✅ Not reproduced (0/5 across 5 runs) |\n\n**Workaround:** Until the fix ships in a stable release, you can serialize SVG text generation to avoid the race condition:\n\n```csharp\nprivate static readonly SemaphoreSlim _svgLock = new(1, 1);\n\nawait _svgLock.WaitAsync();\ntry {\n    using var canvas = SKSvgCanvas.Create(bounds, svgStream);\n    // ... draw text ...\n} finally {\n    _svgLock.Release();\n}\n```",
+      "status": "needs-human-edit"
+    }
   }
 }
