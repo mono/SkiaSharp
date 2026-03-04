@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2329,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T22:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "notes": "Confirmed: the Blazor SKGLView is the only GL view implementation in SkiaSharp that does not expose GRContext as a public property. The field exists as 'private GRContext? context' on line 24 of SKGLView.razor.cs, but no public accessor is defined. All 15+ other GL view implementations across macOS, iOS, Android, WPF, WinForms, WinUI, Tizen, Uno, and MAUI expose 'public GRContext GRContext => context'. A workaround exists via e.Surface.Context pattern matching inside the paint callback, but this only works during OnPaintSurface and returns GRRecordingContext (base class), not GRContext.",
+  "scope": "platform-specific/wasm",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Grep Blazor SKGLView.razor.cs for GRContext visibility — confirm field is private with no public accessor",
+      "command": "grep -n 'GRContext' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+      "exitCode": 0,
+      "output": "24:\t\tprivate GRContext? context;\n103:\t\t\t\tcontext = GRContext.CreateGl(glInterface);",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Grep all platform GL views for public GRContext property — confirm every other platform exposes it publicly",
+      "command": "grep -rn 'public GRContext' source/",
+      "exitCode": 0,
+      "output": "source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Shared/SKSwapChainPanel.cs:61: public GRContext GRContext => GetGRContext();\nsource/SkiaSharp.Views/SkiaSharp.Views.WindowsForms/SKGLControl.cs:71: public GRContext GRContext => grContext;\nsource/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/SKGLView.cs:58: public GRContext? GRContext => lastGRContext;\nsource/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureView.cs:47: public GRContext GRContext => renderer.GRContext;\nsource/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs:78: public GRContext GRContext => grContext;\nsource/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs:31: public GRContext GRContext => context;\nsource/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKMetalView.cs:125: public GRContext GRContext => context;\nsource/SkiaSharp.Views/SkiaSharp.Views/Platform/iOS/SKGLView.cs:106: public GRContext GRContext => context;\nsource/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs:86: public GRContext GRContext => context;\nsource/SkiaSharp.Views/SkiaSharp.Views/Platform/Tizen/SKGLSurfaceView.cs:45: public GRContext GRContext => context;",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify no public GRContext accessor exists anywhere in the Blazor view assembly",
+      "command": "grep -rn 'public.*GRContext' source/SkiaSharp.Views/SkiaSharp.Views.Blazor/",
+      "exitCode": 0,
+      "output": "(no matches — confirms no public GRContext property exists in the Blazor views)",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Confirm workaround exists via SKSurface.Context which returns GRRecordingContext base class, accessible only inside paint callback",
+      "command": "grep -n 'Context' binding/SkiaSharp/SKSurface.cs | head -5",
+      "exitCode": 0,
+      "output": "271:\t\tpublic GRRecordingContext? Context =>\n272:\t\t\tGRRecordingContext.GetObject(SkiaApi.sk_surface_get_recording_context(Handle));",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "main (source)",
+    "dockerUsed": false
+  },
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Confirmed platform parity gap: Blazor is the only GL view without a public GRContext property. Fix is trivial (one-line property addition), but requires maintainer decision on whether to also expose glInterface and renderTarget."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply enhancement and Blazor views labels",
+        "risk": "low",
+        "confidence": 0.95
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the suggestion! We investigated and can confirm that the `GRContext` property is not publicly accessible on the Blazor `SKGLView`.\n\n**Investigation:**\nThe Blazor `SKGLView.razor.cs` declares `private GRContext? context` (line 24) with no public accessor. Every other GL view implementation across all 15+ platforms (macOS, iOS, Android, WPF, WinForms, WinUI, Tizen, Uno, MAUI) exposes `public GRContext GRContext => context`. This appears to be an oversight rather than an intentional design decision.\n\n**Workaround:**\nInside the `OnPaintSurface` callback, you can access the context via pattern matching:\n\n```csharp\nvoid OnPaintSurface(SKPaintGLSurfaceEventArgs e)\n{\n    if (e.Surface.Context is GRContext grContext)\n    {\n        // Use grContext to create additional surfaces\n    }\n}\n```\n\nNote: This only works within the paint callback. Outside the callback, there is currently no way to access the `GRContext`.\n\nWe've flagged this for consideration.",
+      "status": "ready"
+    },
+    "workarounds": [
+      "Inside OnPaintSurface, use pattern matching: if (e.Surface.Context is GRContext grContext) { ... } — only works during the paint callback, not outside it."
+    ]
+  }
+}
