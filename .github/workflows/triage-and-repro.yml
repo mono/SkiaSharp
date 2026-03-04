@@ -89,6 +89,12 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Configure git identity
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
       - name: Run AI triage
         uses: ./.github/actions/copilot-cli
         with:
@@ -151,17 +157,17 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Configure git identity
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
       - name: Download triage artifact
         uses: actions/download-artifact@v4
         with:
           name: triage-output
-          path: ${{ runner.temp }}/skiasharp/triage/
-
-      - name: Copy triage to /tmp for skill compatibility
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path '/tmp/skiasharp/triage' | Out-Null
-          Copy-Item (Join-Path $env:RUNNER_TEMP 'skiasharp/triage/*') '/tmp/skiasharp/triage/' -ErrorAction SilentlyContinue
+          path: /tmp/skiasharp/triage/
 
       - name: Run AI reproduction
         uses: ./.github/actions/copilot-cli
