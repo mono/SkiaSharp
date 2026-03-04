@@ -3,7 +3,7 @@
   "type": "pr",
   "state": "open",
   "title": "Add standard image comparison metrics, tolerance-based compare, and difference image generation",
-  "body": "Surveyed ImageMagick, .NET MAUI \u0060VisualTestUtils.MagickNet\u0060, and other image comparison libraries to identify commonly-provided features missing from \u0060SKPixelComparer\u0060.\n\n### New metrics on \u0060SKPixelComparisonResult\u0060\n\n- \u0060SumSquaredError\u0060 (long) \u2014 raw \u03A3(\u0394R\u00B2 \u002B \u0394G\u00B2 \u002B \u0394B\u00B2)\n- \u0060MeanAbsoluteError\u0060 \u2014 per-channel MAE, range [0, 255]\n- \u0060MeanSquaredError\u0060 \u2014 per-channel MSE\n- \u0060RootMeanSquaredError\u0060 \u2014 RMSE (the metric MAUI\u0027s \u0060MagickNetVisualComparer\u0060 uses)\n- \u0060NormalizedRootMeanSquaredError\u0060 \u2014 RMSE / 255, range [0, 1] for threshold checks\n- \u0060PeakSignalToNoiseRatio\u0060 \u2014 PSNR in dB\n\n### Tolerance-based comparison\n\nLike ImageMagick\u0027s \u0060fuzz\u0060 \u2014 a uniform per-pixel threshold without needing a full mask image. Overloads for all input types (file paths, \u0060SKImage\u0060, \u0060SKBitmap\u0060, \u0060SKPixmap\u0060).\n\n\u0060\u0060\u0060csharp\n// Ignore pixels where total |\u0394R|\u002B|\u0394G|\u002B|\u0394B| \u2264 10\nvar result = SKPixelComparer.Compare(expected, actual, tolerance: 10);\n\u0060\u0060\u0060\n\n### Per-channel difference image\n\n\u0060GenerateDifferenceImage\u0060 produces actual RGB difference values per pixel (vs. \u0060GenerateDifferenceMask\u0060 which is binary B/W). Similar to ImageMagick\u0027s \u0060compare\u0060 output.\n\n\u0060\u0060\u0060csharp\nusing var diff = SKPixelComparer.GenerateDifferenceImage(expected, actual);\n// diff pixel RGB = absolute per-channel differences\n\u0060\u0060\u0060\n\n### Backward compatibility\n\nOld 3-param \u0060SKPixelComparisonResult\u0060 constructor preserved as an overload delegating to the new 4-param constructor.\n\n### XML documentation\n\nAll new public APIs have complete XML doc comments \u2014 tolerance-based \u0060Compare\u0060 overloads, \u0060GenerateDifferenceImage\u0060 overloads, new \u0060SKPixelComparisonResult\u0060 constructor and metric properties.\n\n### Blazor sample updated\n\nThe Pixel Comparer demo page now showcases all new features:\n- **Metrics display**: MAE, RMSE, NRMSE, and PSNR shown alongside existing stats\n- **Tolerance slider**: Interactive control to adjust tolerance and see filtered results in real time\n- **Difference Image**: Per-channel difference visualization shown alongside the existing binary difference mask\n\n![Pixel Comparer sample screenshot](https://github.com/user-attachments/assets/977a74de-51cb-416f-ad67-6ff76bfc4765)\n\n### Tests\n\n22 new tests covering metrics correctness, tolerance filtering, difference image output, and edge cases.\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+  "body": "Surveyed ImageMagick, .NET MAUI \u0060VisualTestUtils.MagickNet\u0060, and other image comparison libraries to identify commonly-provided features missing from \u0060SKPixelComparer\u0060.\n\n### New metrics on \u0060SKPixelComparisonResult\u0060\n\n- \u0060SumSquaredError\u0060 (long) \u2014 raw \u03A3(\u0394R\u00B2 \u002B \u0394G\u00B2 \u002B \u0394B\u00B2)\n- \u0060MeanAbsoluteError\u0060 \u2014 per-channel MAE, range [0, 255]\n- \u0060MeanSquaredError\u0060 \u2014 per-channel MSE\n- \u0060RootMeanSquaredError\u0060 \u2014 RMSE (the metric MAUI\u0027s \u0060MagickNetVisualComparer\u0060 uses)\n- \u0060NormalizedRootMeanSquaredError\u0060 \u2014 RMSE / 255, range [0, 1] for threshold checks\n- \u0060PeakSignalToNoiseRatio\u0060 \u2014 PSNR in dB\n\n### Tolerance-based comparison\n\nLike ImageMagick\u0027s \u0060fuzz\u0060 \u2014 a uniform per-pixel threshold without needing a full mask image. Overloads for all input types (file paths, \u0060SKImage\u0060, \u0060SKBitmap\u0060, \u0060SKPixmap\u0060).\n\n\u0060\u0060\u0060csharp\n// Ignore pixels where total |\u0394R|\u002B|\u0394G|\u002B|\u0394B| \u2264 10\nvar result = SKPixelComparer.Compare(expected, actual, tolerance: 10);\n\u0060\u0060\u0060\n\n### Per-channel difference image\n\n\u0060GenerateDifferenceImage\u0060 produces actual RGB difference values per pixel (vs. \u0060GenerateDifferenceMask\u0060 which is binary B/W). Similar to ImageMagick\u0027s \u0060compare\u0060 output.\n\n\u0060\u0060\u0060csharp\nusing var diff = SKPixelComparer.GenerateDifferenceImage(expected, actual);\n// diff pixel RGB = absolute per-channel differences\n\u0060\u0060\u0060\n\n### Backward compatibility\n\nOld 3-param \u0060SKPixelComparisonResult\u0060 constructor preserved as an overload delegating to the new 4-param constructor.\n\n### XML documentation\n\nAll new public APIs have complete XML doc comments \u2014 tolerance-based \u0060Compare\u0060 overloads, \u0060GenerateDifferenceImage\u0060 overloads, new \u0060SKPixelComparisonResult\u0060 constructor and metric properties.\n\n### Blazor sample updated\n\nThe Pixel Comparer demo page now showcases all new features:\n- **Metrics display**: All 8 metrics shown with descriptive sub-notes explaining what each one measures\n- **Tolerance slider**: Interactive control (using \u0060oninput\u0060 for real-time updates, range 0\u2013765) to adjust tolerance and see filtered results while dragging\n- **Difference Image**: Per-channel difference visualization shown alongside the existing binary difference mask\n- **Responsive layout**: On phones, mask and diff images stack below the comparison images (2-per-row); on large screens all 4 panels display in a single row. Metrics cards also reflow to 2-per-row on extra-small screens.\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/c5765be8-73cb-4163-9f2b-1276a995eceb\u0022\u003E\n\n**Mobile (375px):**\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/94fe4cc7-c3a9-4c85-a843-ba7fc627a187\u0022\u003E\n\n**Tolerance slider at 400:**\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/db1e5bb5-6704-4afa-b483-a441abc21e8e\u0022\u003E\n\n### Tests\n\n22 new tests covering metrics correctness, tolerance filtering, difference image output, and edge cases.\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
   "author": {
     "login": "Copilot",
     "type": "Bot"
@@ -20,24 +20,29 @@
     }
   ],
   "createdAt": "2026-03-03T23:07:10",
-  "updatedAt": "2026-03-04T00:28:03",
-  "commentCount": 5,
+  "updatedAt": "2026-03-04T12:15:03",
+  "commentCount": 13,
   "reactionCount": 0,
-  "draft": true,
+  "draft": false,
   "mergeable": true,
   "merged": false,
-  "mergeableState": "behind",
+  "mergeableState": "blocked",
   "baseBranch": "main",
   "headBranch": "copilot/explore-pixel-comparer-libraries",
-  "additions": 617,
-  "deletions": 32,
+  "additions": 626,
+  "deletions": 37,
   "changedFiles": 5,
-  "commits": 5,
+  "commits": 9,
   "reviews": [
     {
       "author": "copilot-pull-request-reviewer[bot]",
       "state": "COMMENTED",
       "submittedAt": "2026-03-04T00:12:45"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2026-03-04T12:05:59"
     }
   ],
   "engagement": {

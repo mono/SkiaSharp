@@ -1,0 +1,37 @@
+{
+  "number": 377,
+  "type": "pr",
+  "state": "open",
+  "title": "Add SKAnimatedSurfaceView for Blazor with runtime canvas/GL backend switching",
+  "body": "Extracts the animated surface view concept into its own focused PR, introducing \u0060SkiaSharp.Extended.UI.Blazor\u0060 \u2014 a new Blazor library with \u0060SKAnimatedSurfaceView\u0060, the Blazor equivalent of the MAUI \u0060SKAnimatedSurfaceView\u0060 \u002B \u0060PART_DrawingSurface\u0060 control-template pattern.\n\n## New library: \u0060SkiaSharp.Extended.UI.Blazor\u0060\n\n- **\u0060SKAnimatedSurfaceView\u0060** \u2014 ~60fps \u0060PeriodicTimer\u0060 render loop component that accepts a \u0060UseGL\u0060 parameter to switch between \u0060SKCanvasView\u0060 (software) and \u0060SKGLView\u0060 (WebGL/GPU) at runtime. The \u0060OnPaintSurface\u0060 callback is unified across both backends (\u0060Action\u003CSKSurface, SKSize\u003E\u0060), so drawing code requires no changes when toggling backends.\n\n\u0060\u0060\u0060razor\n\u003CSKAnimatedSurfaceView UseGL=\u0022@useGL\u0022\n                       IsAnimationEnabled=\u0022@isPlaying\u0022\n                       OnUpdate=\u0022HandleUpdate\u0022\n                       OnPaintSurface=\u0022HandlePaint\u0022\n                       style=\u0022width: 400px; height: 400px;\u0022 /\u003E\n\u0060\u0060\u0060\n\n- Subclass and override \u0060UpdateAsync(TimeSpan)\u0060 for reusable animated components; \u0060OnUpdate\u0060/\u0060OnPaintSurface\u0060 callbacks cover the delegate use-case without subclassing.\n- Cleans up the \u0060PeriodicTimer\u0060 loop via \u0060IAsyncDisposable\u0060; loop auto-restarts after a \u0060UseGL\u0060 toggle once the new DOM element is ready.\n\n## Blazor sample\n\nNew \u0060/animatedsurface\u0060 demo page showing runtime canvas\u2194GL backend switching, pause/resume, and speed control:\n\n![Animated Surface Demo](https://github.com/user-attachments/assets/c9b7ab1e-8eb5-4618-bdbd-0ef5859b9682)\n\n## Other\n\n- \u0060tests/SkiaSharp.Extended.UI.Blazor.Tests/\u0060 \u2014 unit tests for default params, \u0060IsAnimationEnabled\u0060 toggle, \u0060UseGL\u0060 toggle, and \u0060OnUpdate\u0060 callback\n- \u0060docs/docs/animated-surface-blazor.md\u0060 \u2014 API reference and usage guide\n- Solution and sample project references updated\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Can you look at https://github.com/mono/SkiaSharp.Extended/pull/365 and extract the animated surface view into a separate pr wit code, samples, tests and docs.\n\u003E \n\u003E Have a look at ways to improve and fix the bugs. \n\u003E \n\u003E One feature we need to add is a way to swap out the canvas view with a gl view in the razor. This needs to be a feature on the sample so the animated surface view should handle both. It would be up to the sample/consumer to decide what underlying view. \n\u003E \n\u003E This is sort of what the Maui app did with the control template. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp.Extended/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-03-04T11:57:41",
+  "updatedAt": "2026-03-04T12:20:31",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/extract-animated-surface-view",
+  "additions": 715,
+  "deletions": 0,
+  "changedFiles": 15,
+  "commits": 2,
+  "reviews": []
+}
