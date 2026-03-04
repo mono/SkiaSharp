@@ -302,7 +302,8 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
     "os": "Ubuntu 22.04 LTS",
     "arch": "x64",
     "dotnetVersion": "8.0.400",
-    "skiaSharpVersion": "3.116.1"
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
   },
   "reproductionSteps": [
     {

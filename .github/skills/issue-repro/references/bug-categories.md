@@ -304,7 +304,7 @@ A cross-platform API exists and works on some platforms but not others. This is 
 
 ### Conclusion
 - `reproduced` — the API is non-functional on the reported platform (confirmed broken contract).
-- `assessment: "missing-output"` or `"platform-specific"`
+- `assessment: "likely-bug"`
 - **NOT `confirmed`** — this is a bug in an existing API, not a new feature request.
 
 ### Example
@@ -312,4 +312,4 @@ Issue: "Mouse wheel events not delivered on Mac Catalyst"
 - Step 1: find `SKTouchAction.WheelChanged` in shared code → exists
 - Step 2: find `OnPointerWheelChanged` in Windows handler → fully implemented
 - Step 3: grep Apple handler for wheel/scroll → not found
-- Conclusion: `reproduced`, assessment: `missing-output` (cross-platform API silently non-functional)
+- Conclusion: `reproduced`, assessment: `likely-bug` (cross-platform API silently non-functional)

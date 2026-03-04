@@ -62,12 +62,12 @@ Read [references/bug-categories.md](references/bug-categories.md) to classify th
 - **Still produce a repro JSON.** Enhancements are valid verification targets.
 - **Goal:** Confirm the feature is missing by inspecting source code and attempting the requested behavior.
 - **Conclusion:** Use `confirmed` (the feature IS missing, reporter's claim verified) with `assessment: "feature-request"`. Use `not-confirmed` if the feature actually exists.
-- **Steps:** Include code investigation steps showing the feature is absent (e.g., grep for missing handlers, verify API doesn't exist).
+- **Steps:** Include code investigation steps showing the feature is absent (e.g., grep for missing handlers, verify API doesn't exist). Use `layer: "investigation"` for these steps.
 - **Skip multi-version testing** (Phases 3B/3C/3D) — there's nothing to regress-test.
 
 **Documentation issue?** If the triage JSON shows `type/documentation`:
 - **Conclusion:** Use `confirmed` (docs ARE missing/wrong) with `assessment: "docs-gap"`. Use `not-confirmed` if docs are correct.
-- **Steps:** Include investigation steps showing the doc gap or error.
+- **Steps:** Include investigation steps showing the doc gap or error. Use `layer: "investigation"` for these steps.
 
 ### 2. Extract reporter's version & TFM
 
@@ -155,7 +155,7 @@ Follow the platform file from Phase 2.4. For each step, capture:
 | `exitCode` | 0=success, non-zero=failure |
 | `output` | 2KB success, 4KB failure |
 | `filesCreated` | Filename + source code content for repro files |
-| `layer` | `setup` / `csharp` / `c-api` / `native` / `deployment` |
+| `layer` | `setup` / `csharp` / `c-api` / `native` / `deployment` / `investigation` |
 | `result` | `success` / `failure` / `wrong-output` / `skip` |
 
 **Step `result` = what actually happened** (technical outcome), not whether it was expected. A build that fails is `result: "failure"` even if that confirms the bug. See [references/anti-patterns.md](references/anti-patterns.md) for details.

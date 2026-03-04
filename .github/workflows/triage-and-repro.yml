@@ -34,7 +34,7 @@ jobs:
   # Platform selection logic:
   # - macOS: os/iOS, os/macOS, os/tvOS, os/watchOS
   # - Windows: os/Windows-Classic, os/Windows-WinUI, os/Windows-Universal-UWP, os/Windows-Nano-Server
-  # - Linux: os/Linux, os/WASM, os/Android, generic/no platform
+  # - Linux: os/Linux, os/WASM, os/Android, os/Tizen, or no platform specified
   # =============================================================================
   
   triage:
@@ -44,7 +44,7 @@ jobs:
     # Only run on workflow_dispatch or when comment starts with /triage-and-repro
     if: |
       github.event_name == 'workflow_dispatch' || 
-      (github.event_name == 'issue_comment' && startsWith(github.event.comment.body, '/triage-and-repro'))
+      (github.event_name == 'issue_comment' && !github.event.issue.pull_request && startsWith(github.event.comment.body, '/triage-and-repro'))
     
     outputs:
       repro_platform: ${{ steps.extract_platform.outputs.platform }}
@@ -108,6 +108,14 @@ jobs:
             echo "needs_repro=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Upload triage artifact
+        if: steps.extract_platform.outputs.needs_repro == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: triage-output
+          path: /tmp/skiasharp/triage/
+          retention-days: 7
+
   # =============================================================================
   # Stage 2: Platform-Specific Reproduction
   # =============================================================================
@@ -126,6 +134,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Download triage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: triage-output
+          path: /tmp/skiasharp/triage/
       
       - name: Run AI reproduction with Copilot
         # This invokes the Copilot coding agent to reproduce the issue on Linux
@@ -145,6 +159,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Download triage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: triage-output
+          path: /tmp/skiasharp/triage/
       
       - name: Run AI reproduction with Copilot
         # This invokes the Copilot coding agent to reproduce the issue on macOS
@@ -164,6 +184,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Download triage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: triage-output
+          path: /tmp/skiasharp/triage/
       
       - name: Run AI reproduction with Copilot
         # This invokes the Copilot coding agent to reproduce the issue on Windows
