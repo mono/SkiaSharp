@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3378,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": ["type/bug", "os/Windows-Classic", "os/Android", "area/SkiaSharp", "backend/Metal", "tenet/reliability"]
+  },
+  "summary": "SKStreamAsset is leaked in ToHarfBuzzBlob() when the stream's memory base is IntPtr.Zero — the else branch copies data to unmanaged memory but never disposes the original SKStreamAsset, causing a memory leak each time SKShaper is constructed.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp.HarfBuzz", "confidence": 0.98 },
+    "platforms": ["os/Android", "os/Windows-Classic"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "errorMessage": "SKStreamAsset not disposed in ToHarfBuzzBlob else branch",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-android"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKShaper with any SKTypeface",
+        "Dispose the SKShaper",
+        "Observe that SKStreamAsset from OpenStream() is never disposed when GetMemoryBase() returns IntPtr.Zero"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, Windows with Visual Studio, also reproduced on Android",
+      "relatedIssues": [3373],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/pull/3376", "description": "PR by reporter: adds Dispose in else branch (open, superseded by #3466)" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3466", "description": "PR by jeremy-visionaid: removes disposal from blob, fixes caller SKShaper to dispose stream (open, preferred approach)" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3467", "description": "PR adding tests for ToHarfBuzzBlob disposal behavior (open)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The ToHarfBuzzBlob code has not changed since 3.116.0 — the else branch still lacks SKStreamAsset disposal."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "Two open PRs exist (#3376 and #3466) but neither has been merged. Maintainer prefers #3466 approach (don't dispose in blob, fix the caller).",
+      "relatedPRs": [3376, 3466, 3467]
+    }
+  },
+  "analysis": {
+    "summary": "Confirmed memory leak in ToHarfBuzzBlob(). When SKStreamAsset.GetMemoryBase() returns IntPtr.Zero, the else branch copies data via Marshal.AllocCoTaskMem and the blob's release callback only frees the unmanaged copy — the original SKStreamAsset is never disposed. In the if branch, the blob's release callback disposes the asset. This inconsistency also means the caller cannot safely manage the asset's lifecycle. The SKShaper constructor chains OpenStream().ToHarfBuzzBlob() without capturing the stream, so it's leaked when the else path is taken.",
+    "rationale": "This is clearly a bug — the code has two branches with inconsistent disposal semantics, and one path definitively leaks. The reporter correctly identified the root cause. The area is SkiaSharp.HarfBuzz since BlobExtensions.cs and SKShaper.cs are both in that package. Severity is medium: it's a real memory leak but has a workaround (avoid creating many SKShaper instances, or manually manage the stream). Two competing PRs exist with maintainer guidance favoring #3466.",
+    "keySignals": [
+      { "text": "I think the bug is in ToHarfBuzzBlob() extension - it doesn't dispose SKStreamAsset in all paths", "source": "issue body", "interpretation": "Reporter correctly identifies the root cause — confirmed by code inspection." },
+      { "text": "First observed bug on Android, but seems to be a problem also on Windows", "source": "issue body", "interpretation": "Platform-independent bug — the leak is in managed C# code, not platform-specific." },
+      { "text": "The extension method copies the data and does not own or keep a reference to the asset. Would it be better to maybe fix the caller?", "source": "PR #3376 comment by mattleibow", "interpretation": "Maintainer prefers the caller (SKShaper) to manage disposal, not the extension method." }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/BlobExtensions.cs",
+        "lines": "21-31",
+        "finding": "Two branches: if GetMemoryBase() != IntPtr.Zero, blob's release callback disposes the asset (line 24). Else, data is copied to unmanaged memory and release callback only frees the copy (line 30) — SKStreamAsset is never disposed in this path.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs",
+        "lines": "20",
+        "finding": "Constructor calls Typeface.OpenStream(out index).ToHarfBuzzBlob() without capturing the SKStreamAsset in a variable — so it cannot be independently disposed by the caller.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "292-300",
+        "finding": "OpenStream() returns a new SKStreamAsset wrapping a native stream. Each call allocates a new native object that must be disposed.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Reuse SKShaper instances instead of creating and disposing them frequently to minimize the leak impact.",
+      "Manually separate the OpenStream and ToHarfBuzzBlob calls and dispose the stream yourself (requires custom SKShaper initialization)."
+    ],
+    "nextQuestions": [
+      "Which approach should be taken — #3376 (dispose in both branches) or #3466 (never dispose in blob, fix caller)?",
+      "Are there other callers of ToHarfBuzzBlob that might also leak the stream?"
+    ],
+    "resolution": {
+      "hypothesis": "The else branch in ToHarfBuzzBlob copies data but never disposes the source SKStreamAsset. The preferred fix is to remove disposal from the blob entirely and have the caller (SKShaper) manage the stream lifecycle.",
+      "proposals": [
+        {
+          "title": "Fix caller to dispose stream (PR #3466 approach)",
+          "description": "Remove asset.Dispose() from the blob's release callback in the if branch, and update SKShaper constructor to capture and dispose the SKStreamAsset separately. This is the maintainer-preferred approach.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Dispose in both branches (PR #3376 approach)",
+          "description": "Add asset.Dispose() to the else branch's release callback. Simpler change but makes the blob own the asset, which the maintainer considers problematic since the caller may still reference it.",
+          "category": "fix",
+          "confidence": 0.70,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Reuse SKShaper instances",
+          "description": "As a workaround, reuse SKShaper instances per typeface rather than creating new ones frequently. This minimizes the frequency of the leak.",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "small",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Fix caller to dispose stream (PR #3466 approach)",
+      "recommendedReason": "Maintainer (mattleibow) explicitly prefers the caller to manage disposal. PR #3466 includes tests and has the cleaner separation of ownership."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Bug is confirmed by code inspection with two open PRs. Needs review and merge of the preferred PR (#3466).",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Fix labels: change area to SkiaSharp.HarfBuzz (bug is in HarfBuzz extension), remove incorrect backend/Metal label",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.HarfBuzz", "os/Android", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug and point to the preferred PR",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "Thanks for the report and the PR in #3376. The root cause is confirmed: `ToHarfBuzzBlob()` has inconsistent disposal — the `if` branch (memory-backed stream) disposes the `SKStreamAsset` via the blob's release callback, but the `else` branch (copy to unmanaged memory) never disposes it.\n\nPR #3466 takes the approach suggested by the maintainer: remove disposal from the blob entirely and have `SKShaper` manage the stream lifecycle. That PR also includes tests.\n\nAs a workaround, reusing `SKShaper` instances per typeface (rather than creating new ones frequently) will minimize the leak impact."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to preferred fix PR #3466",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3466
+      }
+    ]
+  }
+}
