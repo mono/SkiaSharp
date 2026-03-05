@@ -1,0 +1,213 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3525,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-22T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SkiaSharp rendering performance on macOS is dramatically slower than equivalent native Skia C\u002B\u002B code (sub-10 fps vs 120 fps), with investigation PR #3418 showing that default OpenGL pixel format attributes (4x MSAA, VSync, legacy profile) and rendering loop overhead account for much of the gap.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/macOS"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Clone https://github.com/wieslawsoltes/FastSkiaSharp",
+        "Run the C\u002B\u002B native Skia benchmark \u2014 observes ~120 fps",
+        "Run the SkiaSharp managed equivalent \u2014 observes \u003C10 fps default",
+        "With OpenGL flag optimizations from PR #3418, achieves ~40 fps"
+      ],
+      "environmentDetails": "macOS, SkiaSharp 3.116.0, VS Code",
+      "repoLinks": [
+        {
+          "url": "https://github.com/wieslawsoltes/FastSkiaSharp",
+          "description": "Original benchmark repo comparing native Skia vs SkiaSharp"
+        },
+        {
+          "url": "https://github.com/mattleibow/FastSkiaSharp/tree/main_119",
+          "description": "Fork with downgraded Skia matching SkiaSharp version (111-119 fps native)"
+        },
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/3418",
+          "description": "Investigation PR with OpenGL optimizations (Dev/perf testing)"
+        }
+      ]
+    },
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "performance",
+      "errorMessage": "Sub-10 fps default rendering vs 120 fps native C\u002B\u002B; ~40 fps with optimized OpenGL flags",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0-macos"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKGLView pixel format attributes and rendering loop have not changed since 3.116.0. PR #3418 is still open and unmerged."
+    }
+  },
+  "analysis": {
+    "summary": "Significant rendering performance gap between SkiaSharp and native Skia C\u002B\u002B on macOS. The default SKGLView OpenGL configuration uses 4x MSAA, VSync, legacy GL profile, and 24-bit depth buffer \u2014 all unnecessary overhead for 2D rendering. PR #3418 demonstrates that removing MSAA, disabling VSync, using GL Core 3.2 profile, and streamlining the render loop improves from \u003C10 fps to ~40 fps, but a gap to native 120 fps remains, suggesting additional overhead in the managed rendering pipeline.",
+    "rationale": "Filed by the maintainer with a complete benchmark repo and investigation PR. The performance difference is measurable and reproducible. This is area/SkiaSharp.Views because the bottleneck is in SKGLView\u0027s OpenGL configuration and rendering loop, not in the core SkiaSharp bindings. Classified as type/bug because equivalent rendering workloads should perform comparably.",
+    "keySignals": [
+      {
+        "text": "The native code is 120fps, but skiasharp is sub 10fps",
+        "source": "PR #3418 body",
+        "interpretation": "Order-of-magnitude performance gap confirms real overhead in managed rendering path."
+      },
+      {
+        "text": "By first playing around found that I got to 40fps by using the new opengl flags in the SKGLView",
+        "source": "PR #3418 body",
+        "interpretation": "OpenGL pixel format configuration is a major contributor \u2014 4x improvement from flag changes alone."
+      },
+      {
+        "text": "My fork which downgrades skia to the same version in skiasharp is a tiny bit slower, 111-119 fps",
+        "source": "PR #3418 body",
+        "interpretation": "Skia version difference accounts for only ~1-9 fps \u2014 the majority of the gap is SkiaSharp overhead."
+      },
+      {
+        "text": "This all appears to be inside the skia code, which appears to be using similar compiler args",
+        "source": "PR #3418 body",
+        "interpretation": "Compiler optimization flags are not the culprit \u2014 the gap is in the GL setup and rendering pipeline."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "finding": "Default pixel format attributes request 4x MSAA (Multisample \u002B SampleBuffers=1 \u002B Samples=4), DoubleBuffer, 24-bit depth, and 32-bit color. PR #3418 shows removing MSAA and reducing depth to 0 significantly improves performance.",
+        "relevance": "direct",
+        "lines": "66-80"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "finding": "DrawRect() includes backing scale factor tracking with deferred redraw, renderTarget validity check, SKAutoCanvasRestore, and triple flush (canvas.Flush \u002B context.Flush \u002B OpenGLContext.FlushBuffer). PR #3418 replaces this with a streamlined RenderDirect() and RenderFrame() pair that bypasses scale deferral and extra checks.",
+        "relevance": "direct",
+        "lines": "108-175"
+      },
+      {
+        "file": "binding/SkiaSharp/GRContext.cs",
+        "finding": "GRContext.Flush() calls either gr_direct_context_flush_and_submit or gr_direct_context_flush depending on the submit parameter. The default DrawRect calls both canvas.Flush() (which calls GRContext.Flush) and context.Flush() \u2014 potentially double-flushing.",
+        "relevance": "related",
+        "lines": "140-148"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "SKCanvas.Flush() delegates to (Context as GRContext)?.Flush() \u2014 meaning canvas.Flush() followed by context.Flush() in SKGLView.DrawRect is redundant double-flush to the GPU pipeline.",
+        "relevance": "related",
+        "lines": "734-736"
+      },
+      {
+        "file": "binding/SkiaSharp/GRContextOptions.cs",
+        "finding": "GRContextOptions exposes limited tuning knobs (AvoidStencilBuffers, RuntimeProgramCacheSize, GlyphCacheTextureMaximumBytes, AllowPathMaskCaching, DoManualMipmapping, BufferMapThreshold). No options for controlling shader compilation strategy or GPU pipeline fencing.",
+        "relevance": "context",
+        "lines": "7-30"
+      }
+    ],
+    "nextQuestions": [
+      "After GL config optimizations (~40 fps), what accounts for the remaining 3x gap to native 120 fps?",
+      "Is the remaining overhead from P/Invoke transition cost, managed memory allocation, or GPU pipeline stalls?",
+      "Do other platforms (iOS Metal, Windows Direct3D) show a similar performance gap?",
+      "Would a CVDisplayLink-based render loop (bypassing NSView.DrawRect entirely) close the gap further?"
+    ],
+    "resolution": {
+      "hypothesis": "The performance gap has multiple causes: (1) default 4x MSAA in pixel format, (2) VSync capping framerate, (3) legacy GL profile, (4) redundant double-flush in rendering loop, (5) overhead from NSView.DrawRect event dispatch vs tight native loop. PR #3418 addresses (1)-(3) and partially (5), achieving ~40 fps \u2014 the remaining gap likely requires deeper pipeline optimization.",
+      "proposals": [
+        {
+          "title": "Optimize default OpenGL pixel format attributes",
+          "description": "Remove default 4x MSAA, use GL Core 3.2 profile, reduce depth buffer to 0 \u2014 matches changes in PR #3418. This alone yields a 4x improvement (\u003C10 fps \u2192 ~40 fps) with no API changes.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "small"
+        },
+        {
+          "title": "Expose VSync control on SKGLView",
+          "description": "Add a SwapInterval property (or VSync boolean) to SKGLView so users can disable VSync for benchmarking or uncapped rendering. PR #3418 sets SwapInterval=0 in PrepareOpenGL.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Fix redundant double-flush in DrawRect",
+          "description": "DrawRect calls canvas.Flush() then context.Flush(). Since canvas.Flush() already calls context.Flush(), the second call is redundant and forces an extra GPU pipeline sync. Remove the canvas.Flush() call.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.8,
+          "effort": "trivial"
+        },
+        {
+          "title": "Add RenderDirect() for tight rendering loops",
+          "description": "Expose a public RenderDirect() method that bypasses the NSView.DrawRect dispatch overhead, as prototyped in PR #3418. This allows callers to drive the render loop directly for maximum throughput.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.7,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Optimize default OpenGL pixel format attributes",
+      "recommendedReason": "Provides the largest single improvement (~4x) with the smallest change. The MSAA and legacy profile defaults are unnecessarily expensive for 2D rendering and match no practical use case."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Active investigation by maintainer with open PR #3418. Performance gap is confirmed and reproducible, but root cause of remaining 3x gap after GL optimizations needs profiling.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply performance bug labels for macOS OpenGL rendering",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/macOS",
+          "backend/OpenGL",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with gradient performance regression #3109",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 3109
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with Blazor WASM rendering performance #3313",
+        "risk": "low",
+        "confidence": 0.65,
+        "linkedIssue": 3313
+      }
+    ]
+  }
+}

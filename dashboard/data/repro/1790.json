@@ -1,0 +1,166 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1790,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T18:30:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "The reporter\u0027s specific claim (private field _blueP crashes but public field Paint works, despite being the same reference) could not be reproduced in isolation \u2014 both fields point to the same object and behave identically. However, AccessViolationException (SIGSEGV on macOS) IS confirmed when using a disposed SKPaint with DrawCircle. Since the reporter\u0027s class implements IDisposable with hidden code, the most likely explanation is that the Dispose() method (or other hidden code) disposes _blueP before it is used in Draw(). SkiaSharp does not throw ObjectDisposedException for disposed SKPaint objects \u2014 it crashes with a native SIGSEGV/AccessViolationException. This unsafe-after-dispose behavior is present across all tested versions (2.88.9, 3.119.2, and main branch).",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console repro project with SkiaSharp 2.88.9",
+      "layer": "setup",
+      "result": "success",
+      "command": "mkdir -p /tmp/skiasharp/repro/1790 \u0026\u0026 cd /tmp/skiasharp/repro/1790 \u0026\u0026 dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.9",
+      "exitCode": 0,
+      "output": "The template \u0022Console App\u0022 was created successfully. PackageReference for package \u0027SkiaSharp\u0027 version \u00272.88.9\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "5-test repro: (1) Reporter\u0027s class with private/public SKPaint fields, (2) GC stress, (3) Use-after-dispose subprocess, (4) Class-dispose-then-use subprocess, (5) GC stress 1000 iterations"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Test 1: Reporter\u0027s exact class pattern \u2014 private field vs public field vs local variable (all same reference)",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "_blueP Handle: 33870381056\nPaint Handle:  33870381056\nSame ref: True\nDrawCircle with local blueP: OK\nDrawCircle with Paint: OK\nDrawCircle with _blueP: OK\nTest 1: PASS \u2014 no AccessViolationException"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Test 2: Force GC collection between SKPaint creation and use to test premature collection",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet run (continued)",
+      "exitCode": 0,
+      "output": "Test 2: PASS \u2014 no crash after GC stress"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test 3: Use a disposed SKPaint with DrawCircle \u2014 run in subprocess to capture SIGSEGV",
+      "layer": "csharp",
+      "result": "failure",
+      "command": "dotnet exec Repro.dll test3",
+      "exitCode": 139,
+      "output": "Process exited with code 139 (SIGSEGV). No stdout or stderr captured \u2014 native crash before managed exception handling. This is the macOS equivalent of System.AccessViolationException on Windows."
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test 4: Dispose SKPaint via class Dispose(), then use the same object through the Paint field (simulating reporter\u0027s hidden IDisposable)",
+      "layer": "csharp",
+      "result": "failure",
+      "command": "dotnet exec Repro.dll test4",
+      "exitCode": 139,
+      "output": "Process exited with code 139 (SIGSEGV). Confirms that disposing SKPaint through the class and then using it via another field reference also crashes."
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test 5: GC premature collection stress test \u2014 1000 iterations with forced GC every 100 iterations",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet run (continued)",
+      "exitCode": 0,
+      "output": "Test 5: 1000 success, 0 crashes out of 1000 iterations. Premature GC collection is not the cause."
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3 (Darwin 25.3.0)",
+    "arch": "arm64",
+    "dotnetVersion": ".NET 8.0.23",
+    "skiaSharpVersion": "2.88.9",
+    "dockerUsed": false,
+    "dotnetSdkVersion": "10.0.102"
+  },
+  "assessment": "likely-bug",
+  "scope": "universal",
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Use-after-dispose causes SIGSEGV (exit 139). Reporter\u0027s field-access pattern works fine with same reference.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same behavior as 2.88.9 \u2014 SIGSEGV on use-after-dispose, no crash on field-access pattern.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.0-main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Built from main branch source. Use-after-dispose still causes SIGSEGV. Bug persists on main.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.9"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "Confidence 0.65 \u2014 described behavior contradicts C# reference semantics",
+        "corrected": "Confirmed: the field-access pattern IS impossible for same reference. Root cause is likely hidden Dispose() code. The underlying safety issue (SIGSEGV on disposed SKPaint instead of ObjectDisposedException) is a real SkiaSharp bug."
+      }
+    ]
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for the report! We investigated this and have some findings:\n\n**Key observation:** In your visible code, \u0060Paint = _blueP\u0060 makes them the same object reference. This means \u0060canvas.DrawCircle(P0, 5, _blueP)\u0060 and \u0060canvas.DrawCircle(P0, 5, Paint)\u0060 are passing the exact same object \u2014 they cannot behave differently unless something in the omitted code (the \u0060Dispose()\u0060 implementation, \u0060Create()\u0060 method, or other hidden sections) modifies \u0060_blueP\u0060 independently.\n\nWe confirmed that **using a disposed \u0060SKPaint\u0060 does cause \u0060AccessViolationException\u0060** (SIGSEGV on macOS) across all tested versions (2.88.9, 3.119.2, and current main). SkiaSharp does not throw \u0060ObjectDisposedException\u0060 in this case \u2014 it crashes at the native level.\n\nThe most likely explanation is that your \u0060IDisposable\u0060 implementation or another hidden method disposes or reassigns \u0060_blueP\u0060 before \u0060Draw()\u0060 is called.\n\nCould you share:\n1. The complete \u0060Dispose()\u0060 implementation\n2. The \u0060Create()\u0060 method and any other code that modifies \u0060_blueP\u0060\n3. The full stack trace of the \u0060AccessViolationException\u0060\n4. Which SkiaSharp NuGet version you\u0027re using\n\n**Workaround:** Ensure \u0060SKPaint\u0060 objects are not disposed before their last use. If your \u0060Dispose()\u0060 method disposes \u0060_blueP\u0060, avoid calling \u0060Draw()\u0060 after \u0060Dispose()\u0060."
+    },
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.8,
+      "reason": "The reporter\u0027s specific scenario (private vs public field difference) cannot be reproduced with the visible code \u2014 it requires the hidden IDisposable implementation to diagnose. However, the underlying safety issue (SIGSEGV on disposed SKPaint) is confirmed. Need full code to determine if this is user error (use-after-dispose) or a genuine SkiaSharp bug."
+    },
+    "workarounds": [
+      "Ensure SKPaint objects are not disposed before their last use in drawing operations",
+      "Check that IDisposable implementation does not dispose SKPaint fields that are still needed"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add memory/disposal and SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.85
+      },
+      {
+        "type": "add-comment",
+        "description": "Request full code and explain likely cause",
+        "risk": "medium",
+        "confidence": 0.8
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2821 (SKNativeObject GC/KeepAlive issue)",
+        "risk": "low",
+        "confidence": 0.5
+      }
+    ],
+    "missingInfo": [
+      "Complete Dispose() implementation in Sk0CubicBezier",
+      "Complete Create() method and any code that modifies _blueP",
+      "Full AccessViolationException stack trace",
+      "SkiaSharp NuGet package version"
+    ]
+  }
+}

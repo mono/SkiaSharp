@@ -1,0 +1,178 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2751,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "SKPixmap.GetPixelSpan() returns a span with length based on Width*Height*BytesPerPixel (Info.BytesSize) instead of the correct computeByteSize formula that accounts for RowBytes, causing undersized spans when the pixmap has RowBytes larger than its minimum (e.g., from ExtractSubset).",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.98
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Decode a PNG into an SKBitmap",
+        "Call ExtractSubset to get a smaller subset bitmap",
+        "Call PeekPixels() on the subset to get an SKPixmap",
+        "Call GetPixelSpan() on the pixmap \u2014 the span length is Width*Height*BytesPerPixel (too small)",
+        "Compare with (Height-1)*RowBytes \u002B Width*BytesPerPixel \u2014 the span is undersized"
+      ],
+      "codeSnippets": [
+        "Reporter provides complete code that decodes a PNG, extracts a 25x25 subset from a 111x33 image, and demonstrates the span is too short."
+      ],
+      "environmentDetails": "Windows 10.0.19045.0 x64, .NET 8.0.1, SkiaSharp 2.88.7"
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "wrong-output",
+      "errorMessage": "GetPixelSpan() returns span shorter than the actual pixel data footprint",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.7"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The BytesSize calculation in SKImageInfo has not changed \u2014 it still uses Width*Height*BytesPerPixel. The bug exists in current code."
+    }
+  },
+  "analysis": {
+    "summary": "SKPixmap.GetPixelSpan() uses Info.BytesSize (Width*Height*BytesPerPixel) for the span length, but this is incorrect when the pixmap\u0027s RowBytes exceeds Width*BytesPerPixel (as happens with subset pixmaps). Skia\u0027s native SkPixmap::computeByteSize() correctly computes (Height-1)*RowBytes \u002B Width*BytesPerPixel, but this function is not exposed through the C API for pixmaps. SKBitmap.GetPixelSpan() is NOT affected because it uses the native sk_bitmap_get_pixels() which returns computeByteSize() as the length.",
+    "rationale": "Classified as type/bug because GetPixelSpan() returns a span that doesn\u0027t cover the full pixel data memory footprint. The span is too short to safely access all rows when RowBytes \u003E minRowBytes. This is a calculation error in the C# wrapper, not a usage issue. Additionally, the non-byte generic GetPixelSpan\u003CT\u003E() has a related issue: it uses Width*Height as the element count, but pixel memory is non-contiguous when RowBytes \u003E Width*BytesPerPixel, so treating it as a flat array yields incorrect pixel values for rows beyond the first.",
+    "keySignals": [
+      {
+        "text": "the length that is used to create the span is incorrectly calculated when a pixmap is derived from ExtractSubset",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identifies that BytesSize doesn\u0027t account for RowBytes stride."
+      },
+      {
+        "text": "Neither of these APIs appear to be available in the exposed/referenced C library",
+        "source": "issue body",
+        "interpretation": "Reporter checked for computeByteSize in the C API and noted it\u0027s missing for pixmaps."
+      },
+      {
+        "text": "In theory, bug should occur on all devices",
+        "source": "issue body",
+        "interpretation": "Correct \u2014 this is a calculation error in the C# layer, platform-independent."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPixmap.cs",
+        "finding": "GetPixelSpan\u003CT\u003E(x, y) uses info.BytesSize (=Width*Height*BytesPerPixel) for the byte span length, not accounting for the pixmap\u0027s actual RowBytes. For non-byte types, uses Width*Height as element count, treating strided memory as contiguous.",
+        "relevance": "direct",
+        "lines": "129-171"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "finding": "BytesSize is defined as Width*Height*BytesPerPixel and RowBytes as Width*BytesPerPixel. Neither accounts for the actual row stride of the underlying pixel data when it exceeds the minimum.",
+        "relevance": "direct",
+        "lines": "112-116"
+      },
+      {
+        "file": "externals/skia/src/core/SkImageInfo.cpp",
+        "finding": "Native SkImageInfo::computeByteSize(rowBytes) correctly computes (height-1)*rowBytes \u002B width*bytesPerPixel, accounting for the actual stride.",
+        "relevance": "related",
+        "lines": "103-116"
+      },
+      {
+        "file": "externals/skia/include/c/sk_pixmap.h",
+        "finding": "No sk_pixmap_compute_byte_size function in the C API \u2014 computeByteSize is only exposed for SKBitmap via sk_bitmap_get_byte_count.",
+        "relevance": "related",
+        "lines": "10-38"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "SKBitmap.GetPixelSpan() correctly gets the length from native sk_bitmap_get_pixels() which uses computeByteSize(). SKBitmap is NOT affected by this bug.",
+        "relevance": "related",
+        "lines": "300-311"
+      },
+      {
+        "file": "externals/skia/src/c/sk_bitmap.cpp",
+        "finding": "sk_bitmap_get_pixels returns bmp-\u003EcomputeByteSize() as the length, confirming the native side uses the correct formula for bitmaps.",
+        "relevance": "context",
+        "lines": "33-44"
+      }
+    ],
+    "nextQuestions": [
+      "Should a sk_pixmap_compute_byte_size C API be added, or should the C# wrapper compute the correct size from RowBytes?",
+      "Should the non-byte GetPixelSpan\u003CT\u003E() be fixed to account for strided memory, or documented as only valid for tightly-packed pixmaps?"
+    ],
+    "resolution": {
+      "hypothesis": "SKPixmap.GetPixelSpan() uses SKImageInfo.BytesSize which assumes tight packing (RowBytes == Width*BytesPerPixel). For subset pixmaps where RowBytes comes from the parent bitmap, the span is undersized. Fix requires using the actual pixmap RowBytes in the size calculation.",
+      "proposals": [
+        {
+          "title": "Fix span length using pixmap RowBytes",
+          "description": "In SKPixmap.GetPixelSpan\u003CT\u003E(x, y), replace \u0060info.BytesSize\u0060 with a correct computation: \u0060(info.Height - 1) * RowBytes \u002B info.Width * info.BytesPerPixel\u0060 where RowBytes comes from the pixmap (not SKImageInfo). This matches Skia\u0027s native computeByteSize() formula.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "small"
+        },
+        {
+          "title": "Add sk_pixmap_compute_byte_size C API",
+          "description": "Expose SkPixmap::computeByteSize() through the C API as sk_pixmap_compute_byte_size(), then use it in the C# wrapper. This ensures the C# calculation stays in sync with upstream Skia.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "medium"
+        },
+        {
+          "title": "Workaround: use SKBitmap.GetPixelSpan instead",
+          "description": "Use \u0060bitmapSubset.GetPixelSpan()\u0060 instead of \u0060bitmapSubset.PeekPixels().GetPixelSpan()\u0060. SKBitmap.GetPixelSpan() correctly uses the native computeByteSize() for the span length.",
+          "category": "workaround",
+          "codeSnippet": "// Instead of:\nvar pixmap = bitmapSubset.PeekPixels();\nvar pixmapBytes = pixmap.GetPixelSpan();  // Bug: undersized span\n\n// Use:\nvar pixelBytes = bitmapSubset.GetPixelSpan();  // Correct: uses native computeByteSize()",
+          "validated": "yes",
+          "confidence": 0.9,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Fix span length using pixmap RowBytes",
+      "recommendedReason": "Simplest correct fix that doesn\u0027t require native code changes. Uses the pixmap\u0027s actual RowBytes (already available via P/Invoke) to compute the correct span length, matching Skia\u0027s computeByteSize formula."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Confirmed code-level bug with complete repro. The fix is straightforward but needs testing for edge cases (zero-height pixmaps, non-byte generic spans, offset variants).",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug and provide a workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the thorough analysis \u2014 you\u0027ve correctly identified the root cause.\n\n\u0060SKPixmap.GetPixelSpan()\u0060 uses \u0060Info.BytesSize\u0060 (\u0060Width * Height * BytesPerPixel\u0060) for the span length, which doesn\u0027t account for \u0060RowBytes\u0060 when it exceeds the minimum (as happens with subset pixmaps). Skia\u0027s native \u0060computeByteSize()\u0060 correctly uses \u0060(Height - 1) * RowBytes \u002B Width * BytesPerPixel\u0060, but this isn\u0027t currently wired through for pixmaps.\n\nAs a workaround, you can use \u0060SKBitmap.GetPixelSpan()\u0060 instead of going through \u0060PeekPixels()\u0060 \u2014 the bitmap path correctly delegates to the native \u0060computeByteSize()\u0060:\n\n\u0060\u0060\u0060csharp\n// Instead of:\nvar pixmap = bitmapSubset.PeekPixels();\nvar pixmapBytes = pixmap.GetPixelSpan();\n\n// Use:\nvar pixelBytes = bitmapSubset.GetPixelSpan();\n\u0060\u0060\u0060\n\nNote that in both cases the span includes row-stride padding between rows, so row-by-row access needs to account for \u0060RowBytes\u0060."
+      }
+    ]
+  }
+}

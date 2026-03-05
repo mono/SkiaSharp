@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2239,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z"
+  },
+  "summary": "Alpha8 GPU surface returns incorrect pixel values (5 instead of 50) when cleared with SKColor(25, 0, 0, 50), while CPU surface returns the correct alpha value; reporter confirms the issue also reproduces in native C\u002B\u002B Skia.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.8
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an Alpha8 SKImageInfo (1x1 pixel)",
+        "Create a GPU-backed SKSurface using SKSurface.Create(context, false, imageInfo)",
+        "Clear the surface with SKColor(25, 0, 0, 50)",
+        "Snapshot the surface, convert to bitmap via SKBitmap.FromImage",
+        "Read the pixel bytes \u2014 expect alpha=50 but get alpha=5"
+      ],
+      "environmentDetails": "Windows 10 WPF, Visual Studio 2022 17.3.2, Skia 2.88.1",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/files/9484517/Skia.TestBed.zip",
+          "description": "Complete WPF reproduction project"
+        },
+        {
+          "url": "https://fiddle.skia.org/c/feaaefb4c89602123b712bd2688c723f",
+          "description": "Skia fiddle showing expected Alpha8 behavior"
+        }
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "wrong-output",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net6.0-windows"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.1"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "No PRs or fixes found for Alpha8 GPU readback. The GPU surface creation and readback code paths haven\u0027t changed for Alpha8 handling."
+    }
+  },
+  "analysis": {
+    "summary": "GPU-backed Alpha8 surface returns wrong pixel value (5 instead of 50) when cleared with SKColor(25, 0, 0, 50). The value 5 is suspiciously close to premultiplied R (25 * 50/255 \u2248 4.9), suggesting the GPU backend may be storing the premultiplied red channel as the alpha value instead of preserving the alpha channel directly. Reporter confirms the issue also reproduces in native C\u002B\u002B Skia, indicating this is an upstream Skia bug rather than a SkiaSharp wrapper issue.",
+    "rationale": "Classified as type/bug because GPU and CPU render paths produce different pixel values for the same Alpha8 clear operation \u2014 this is incorrect behavior, not a usage question. Area is area/SkiaSharp because the reporter uses core SKSurface/SKImage APIs, though the root cause is likely in upstream Skia\u0027s GPU backend. The backend is OpenGL since this is WPF on Windows (default GPU backend). Severity is medium because there is a clear workaround (use CPU surfaces for Alpha8) and the use case is somewhat niche.",
+    "keySignals": [
+      {
+        "text": "GPU BYTES CONTENT: 0, 0, 0, 5",
+        "source": "issue body",
+        "interpretation": "GPU readback returns alpha=5 instead of expected alpha=50 for Alpha8 surface."
+      },
+      {
+        "text": "CPU BYTES CONTENT: 0, 0, 0, 50",
+        "source": "issue body",
+        "interpretation": "CPU surface correctly returns alpha=50, proving the expected value and isolating the bug to GPU path."
+      },
+      {
+        "text": "if i test this in pure native i get SOMETHING ELSE",
+        "source": "comment 1",
+        "interpretation": "Bug reproduces in native C\u002B\u002B Skia, confirming this is an upstream Skia issue, not a SkiaSharp wrapper bug."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "externals/skia/src/c/sk_surface.cpp",
+        "finding": "sk_surface_new_render_target passes through to SkSurfaces::RenderTarget with no Alpha8-specific handling \u2014 the GPU surface creation delegates entirely to upstream Skia.",
+        "relevance": "direct",
+        "lines": "72-74"
+      },
+      {
+        "file": "binding/SkiaSharp/SKBitmap.cs",
+        "finding": "SKBitmap.FromImage uses SKImageInfo.PlatformColorType (BGRA8888) instead of preserving the source image\u0027s color type. This causes Alpha8 images to be read as BGRA8888, producing 4 bytes per pixel instead of 1 \u2014 a secondary issue that affects the output format but not the core alpha value discrepancy.",
+        "relevance": "related",
+        "lines": "715-728"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "finding": "ReadPixels delegates to sk_image_read_pixels which calls upstream Skia. No Alpha8-specific conversion or handling in the wrapper.",
+        "relevance": "context",
+        "lines": "496-502"
+      }
+    ],
+    "workarounds": [
+      "Use CPU-backed surfaces for Alpha8 rendering: SKSurface.Create(imageInfo) instead of SKSurface.Create(context, budgeted, imageInfo)"
+    ],
+    "nextQuestions": [
+      "Does this reproduce on other GPU backends (Metal, Vulkan, Direct3D)?",
+      "Has this been fixed in newer Skia milestones (post-m103)?",
+      "Is the value 5 specifically premultiplied-R (25 * 50/255 \u2248 4.9) or is the calculation different?"
+    ],
+    "resolution": {
+      "hypothesis": "The GPU backend misinterprets color channels when clearing or reading back Alpha8 surfaces. The returned value (5) matches premultiplied red (25 * 50/255 \u2248 4.9), suggesting the GPU stores the premultiplied R channel where the alpha should go.",
+      "proposals": [
+        {
+          "title": "Use CPU surface for Alpha8",
+          "description": "Use SKSurface.Create(imageInfo) instead of SKSurface.Create(context, budgeted, imageInfo) when working with Alpha8 color type. CPU surfaces handle Alpha8 correctly.",
+          "category": "workaround",
+          "codeSnippet": "// Instead of:\n// using var surface = SKSurface.Create(context, false, imageInfo);\n// Use CPU surface for Alpha8:\nusing var surface = SKSurface.Create(imageInfo);",
+          "validated": "untested",
+          "confidence": 0.9,
+          "effort": "trivial"
+        },
+        {
+          "title": "Report upstream to Skia",
+          "description": "File a bug against upstream Skia for Alpha8 GPU surface readback producing incorrect values. Reporter confirmed the issue exists in native C\u002B\u002B Skia as well.",
+          "category": "investigation",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "small"
+        }
+      ],
+      "recommendedProposal": "Use CPU surface for Alpha8",
+      "recommendedReason": "Trivial change that avoids the GPU code path entirely. The reporter\u0027s use case (1x1 Alpha8 pixel) doesn\u0027t benefit from GPU acceleration."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Well-documented bug with complete repro code, confirmed to also affect upstream Skia. Needs investigation to determine if newer Skia versions fix this or if an upstream bug report is needed.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, Windows labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge bug, provide CPU workaround, explain upstream nature",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the thorough investigation, including testing at the native C\u002B\u002B level \u2014 that\u0027s very helpful.\n\nSince you\u0027ve confirmed this also reproduces in native Skia, the root cause is in Skia\u0027s GPU backend handling of Alpha8 surfaces, not in the SkiaSharp wrapper. The returned value (5) closely matches premultiplied red (25 \u00D7 50/255 \u2248 4.9), which suggests the GPU path is storing a premultiplied color channel rather than the alpha directly.\n\nAs a workaround, you can use a CPU-backed surface for Alpha8 rendering:\n\n\u0060\u0060\u0060csharp\n// Use CPU surface instead of GPU for Alpha8\nusing var surface = SKSurface.Create(imageInfo);\n\u0060\u0060\u0060\n\nThis avoids the GPU readback path entirely and correctly returns the expected alpha value. We\u0027ll track this for investigation against the upstream Skia library."
+      }
+    ]
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3029,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/iOS",
+      "status/needs-attention"
+    ]
+  },
+  "summary": "Degree symbol (\u00B0) renders as incorrect glyph when drawn alongside Chinese characters using PingFang SC font on iOS 18, due to Apple changing the PingFang font format in iOS 18.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.9
+    },
+    "area": {
+      "value": "area/libSkiaSharp.native",
+      "confidence": 0.85
+    },
+    "platforms": [
+      "os/iOS"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a MAUI or iOS app using SkiaSharp",
+        "Use SKTypeface.FromFamilyName to load PingFang SC (or let iOS auto-select for Chinese text)",
+        "Draw text containing both Chinese characters and the degree symbol (\u00B0) using SKCanvas.DrawText",
+        "Run on iOS 18.0\u002B device or simulator",
+        "Observe the degree symbol renders as incorrect glyph (rectangle with circle inside)"
+      ],
+      "screenshots": [
+        {
+          "url": "https://github.com/user-attachments/assets/975ca078-d846-4129-b072-103b6af4d8e7",
+          "description": "iOS 17 \u2014 correct rendering of degree symbol"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/dfe40b19-cc34-41c8-93c4-c6475f801f38",
+          "description": "iOS 18 \u2014 incorrect rendering of degree symbol"
+        },
+        {
+          "url": "https://github.com/user-attachments/assets/f78dea2d-2e59-43f5-99f0-cf0e63c1921e",
+          "description": "iOS 18 \u2014 degree char alone rendered as rectangle with circle"
+        }
+      ],
+      "environmentDetails": "iOS/iPadOS 18.0, SkiaSharp 2.88.8, also reproduced on 3.118.0-preview.1.2",
+      "relatedIssues": [],
+      "repoLinks": [
+        {
+          "url": "https://github.com/cho-trackman/SkiaIos18Bug",
+          "description": "Minimal repro project with SkiaSharp, CoreGraphics, and CoreText comparison"
+        }
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Degree symbol (\u00B0) renders as incorrect/garbled glyph alongside Chinese text on iOS 18",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0-ios"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.8",
+        "3.118.0-preview.1.2"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Issue persists across both 2.88.x and 3.118.x \u2014 the root cause is in Skia\u0027s CoreText font handling layer which hasn\u0027t been updated for iOS 18 PingFang font format changes."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.9,
+      "reason": "Reporter confirms the degree symbol rendered correctly on iOS 17.5 with same code and SkiaSharp version. The regression is caused by Apple changing the PingFang SC font format in iOS 18, not by a SkiaSharp code change.",
+      "workedInVersion": "iOS 17.5 (any SkiaSharp version)",
+      "brokeInVersion": "iOS 18.0 (any SkiaSharp version)"
+    }
+  },
+  "analysis": {
+    "summary": "The degree symbol (\u00B0, U\u002B00B0) renders as an incorrect glyph when drawn with PingFang SC on iOS 18. Apple changed the PingFang font to a new undocumented format in iOS 18 (confirmed via Apple Developer Forums). Skia reads font tables via CTFontCopyTable/CGFontCopyTableForTag \u2014 if the new font format affects how glyph mappings (cmap table) are exposed through CoreText, Skia would map the degree symbol to a wrong glyph ID. System text renderers (UILabel, CoreText) handle this via higher-level font fallback, but Skia\u0027s low-level DrawText uses a single typeface without automatic fallback.",
+    "rationale": "Classified as type/bug because previously working rendering broke on iOS 18. Area is area/libSkiaSharp.native because the root cause is in Skia\u0027s CoreText font port (SkTypeface_mac_ct.cpp, SkFontMgr_mac_ct.cpp) which reads font data from the OS \u2014 this is upstream of the C API and C# layers. Severity is medium: wrong output with a workaround available (use HarfBuzz shaper or explicit font fallback).",
+    "keySignals": [
+      {
+        "text": "I\u0027ve experiencing this regression on iOS 18 when drawing the degree symbol \u00B0",
+        "source": "issue body",
+        "interpretation": "Clear regression tied to iOS version, not SkiaSharp version."
+      },
+      {
+        "text": "It works on all iOS versions prior to 18. It also works in Japanese and Korean on iOS 18.",
+        "source": "issue body",
+        "interpretation": "Language-specific \u2014 PingFang SC (Chinese) is affected, but JP/KR fonts are not."
+      },
+      {
+        "text": "PingFang.ttc is no longer in /System/Library/Fonts/Core. iOS 18 has a new Chinese UI font.",
+        "source": "comment 8 (Apple Developer Forums reference)",
+        "interpretation": "Apple confirmed the PingFang font was moved and changed to a new format in iOS 18."
+      },
+      {
+        "text": "Just tested on 3.118.0-preview.1.2 and the issue is still there.",
+        "source": "comment 5",
+        "interpretation": "Not fixed by SkiaSharp version upgrades \u2014 confirms this is an upstream Skia/CoreText interaction issue."
+      },
+      {
+        "text": "what is to investigate here is how the PingFang SC font changed",
+        "source": "comment 4 (taublast)",
+        "interpretation": "Community member correctly identifies root cause as font-level change, not SkiaSharp code bug."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "externals/skia/src/ports/SkTypeface_mac_ct.cpp",
+        "finding": "Skia reads font tables via CTFontCopyTable and CGFontCopyTableForTag. If iOS 18\u0027s new PingFang format changes how these CoreText APIs expose glyph mappings, Skia would read incorrect cmap data, mapping the degree symbol to a wrong glyph.",
+        "relevance": "direct",
+        "lines": "878-926"
+      },
+      {
+        "file": "externals/skia/src/ports/SkFontMgr_mac_ct.cpp",
+        "finding": "onMatchFamilyStyleCharacter uses CTFontCreateForString for font fallback. However, this is only called by SKFontManager.MatchCharacter \u2014 basic DrawText with a specific typeface does NOT use font fallback, so if PingFang SC\u0027s degree symbol glyph mapping changed, DrawText will render the wrong glyph.",
+        "relevance": "direct",
+        "lines": "455-481"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "finding": "DrawText creates an SKTextBlob from text\u002Bfont, then draws it. No font fallback logic \u2014 uses exactly the typeface provided. If the font maps U\u002B00B0 to a wrong glyph, DrawText renders it as-is.",
+        "relevance": "related",
+        "lines": "639-660"
+      }
+    ],
+    "workarounds": [
+      "Use SkiaSharp.HarfBuzz SKShaper for text shaping which may handle font fallback better",
+      "Use a bundled font file instead of the system PingFang SC font (SKTypeface.FromFile or FromData)",
+      "Implement manual font fallback: check if the typeface contains the glyph with SKFont.ContainsGlyphs, and use a different typeface for characters that fail"
+    ],
+    "nextQuestions": [
+      "Does upstream Skia have a fix for iOS 18 PingFang font format changes?",
+      "Is the issue in the cmap table parsing or in how CoreText exposes the new font format?",
+      "Does the issue affect macOS Sequoia (which also ships new PingFang) or only iOS 18?",
+      "Does using HarfBuzz shaper fully resolve the issue or only partially?"
+    ],
+    "resolution": {
+      "hypothesis": "Apple changed the PingFang SC font to a new undocumented format in iOS 18. Skia\u0027s CoreText font port reads font tables (cmap, glyf, loca) via CTFontCopyTable/CGFontCopyTableForTag, and the new format causes incorrect glyph mapping for the degree symbol (U\u002B00B0). System renderers (UILabel, CoreText) use higher-level APIs with automatic font fallback, so they still render correctly.",
+      "proposals": [
+        {
+          "title": "Bundle a known-good font",
+          "description": "Instead of relying on the system PingFang SC font, bundle a known-good Chinese font (e.g., Noto Sans SC) with the app and load it with SKTypeface.FromFile or SKTypeface.FromData. This avoids the iOS 18 PingFang format issue entirely.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Use HarfBuzz text shaping",
+          "description": "Use SkiaSharp.HarfBuzz and SKShaper to perform text shaping, which uses HarfBuzz\u0027s own font parsing and may handle the new PingFang format correctly. This is also recommended for any complex text rendering.",
+          "category": "alternative",
+          "validated": "untested",
+          "confidence": 0.6,
+          "effort": "medium"
+        },
+        {
+          "title": "Update Skia to version with iOS 18 font fix",
+          "description": "Investigate whether upstream Skia (Chromium) has landed a fix for iOS 18 PingFang font format changes. If so, update the Skia submodule to incorporate the fix. This is the proper long-term fix.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.5,
+          "effort": "large"
+        }
+      ],
+      "recommendedProposal": "Bundle a known-good font",
+      "recommendedReason": "Highest confidence workaround that completely avoids the platform-specific font format issue. Bundling Noto Sans SC is straightforward and gives consistent rendering across all iOS versions."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Real rendering bug with complete repro, caused by iOS 18 font format change. Needs investigation into whether upstream Skia has a fix and whether HarfBuzz shaping resolves it.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm existing labels and add native area label",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "type/bug",
+          "area/libSkiaSharp.native",
+          "os/iOS",
+          "tenet/compatibility"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the iOS 18 font format change as root cause, suggest bundling a font as a workaround",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the thorough investigation, especially tracking down the Apple Developer Forums thread about PingFang font changes in iOS 18.\n\nThis appears to be caused by Apple shipping PingFang SC in a new font format on iOS 18. Skia reads font tables via CoreText APIs, and the new format likely causes incorrect glyph mapping for the degree symbol (U\u002B00B0). System text renderers (UILabel, CoreText) work around this with higher-level font fallback, but Skia\u0027s low-level text drawing uses a single typeface without automatic fallback.\n\nAs a workaround, you could bundle a known-good Chinese font (e.g., [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto\u002BSans\u002BSC)) with your app and load it via \u0060SKTypeface.FromFile()\u0060 or \u0060SKTypeface.FromData()\u0060. This avoids the system font entirely and gives consistent rendering across iOS versions.\n\nWe\u0027ll investigate whether upstream Skia has addressed this font format change and whether using SkiaSharp.HarfBuzz for text shaping also resolves the issue."
+      }
+    ]
+  }
+}

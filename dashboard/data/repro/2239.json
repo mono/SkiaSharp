@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2239,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T22:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "notes": "Reproduced on SkiaSharp 2.88.1: GPU-backed Alpha8 surface returns alpha=5 instead of expected 50 when cleared with SKColor(25, 0, 0, 50). The value 5 matches premultiplied red (25*50/255\u22484.9), confirming the GPU backend stores premultiplied R instead of alpha. CPU surfaces return correct value (50). Fixed in SkiaSharp 3.119.2 \u2014 likely resolved by upstream Skia updates between m88 and m128. Reporter confirmed this also affects native C\u002B\u002B Skia.",
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 2.88.1",
+      "layer": "setup",
+      "result": "success",
+      "command": "dotnet new console -n Repro --framework net8.0 \u0026\u0026 cd Repro \u0026\u0026 dotnet add package SkiaSharp --version 2.88.1",
+      "exitCode": 0,
+      "output": "The template \u0022Console App\u0022 was created successfully.\nPackageReference for package \u0027SkiaSharp\u0027 version \u00272.88.1\u0027 added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project referencing SkiaSharp 2.88.1",
+          "content": "\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\u003C/Project\u003E"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Repro code testing Alpha8 pixel values on CPU vs GPU surfaces using CGL OpenGL context",
+          "content": "using System;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nSKImageInfo imageInfo = new(1, 1, SKColorType.Alpha8);\nvar color = new SKColor(25, 0, 0, 50);\n\n// CPU baseline\nusing var bitmap = new SKBitmap(imageInfo);\nusing var canvas = new SKCanvas(bitmap);\ncanvas.Clear(color);\nConsole.WriteLine($\u0022Bitmap Alpha8: {bitmap.Bytes[0]}\u0022);\n\n// CPU Surface\nusing var cpuSurface = SKSurface.Create(imageInfo);\ncpuSurface.Canvas.Clear(color);\nusing var cpuPixmap = cpuSurface.PeekPixels();\nConsole.WriteLine($\u0022CPU Surface Alpha8: {cpuPixmap.GetPixelSpan()[0]}\u0022);\n\n// GPU Surface via CGL\nint[] attribs = new int[] { 0 };\nCGLChoosePixelFormat(attribs, out var pf, out _);\nCGLCreateContext(pf, IntPtr.Zero, out var ctx);\nCGLSetCurrentContext(ctx);\nusing var gli = GRGlInterface.Create();\nusing var grCtx = GRContext.CreateGl(gli);\nusing var gpuSurface = SKSurface.Create(grCtx, false, imageInfo);\ngpuSurface.Canvas.Clear(color);\ngpuSurface.Canvas.Flush();\ngpuSurface.Flush(true, true);\nusing var gpuImage = gpuSurface.Snapshot();\nusing var gpuBitmap = SKBitmap.FromImage(gpuImage);\nConsole.WriteLine($\u0022GPU Bitmap: {string.Join(\u0022, \u0022, gpuBitmap.Bytes)}\u0022);\n\n[DllImport(\u0022/System/Library/Frameworks/OpenGL.framework/OpenGL\u0022)]\nstatic extern int CGLChoosePixelFormat(int[] a, out IntPtr p, out int n);\n[DllImport(\u0022/System/Library/Frameworks/OpenGL.framework/OpenGL\u0022)]\nstatic extern int CGLCreateContext(IntPtr p, IntPtr s, out IntPtr c);\n[DllImport(\u0022/System/Library/Frameworks/OpenGL.framework/OpenGL\u0022)]\nstatic extern int CGLSetCurrentContext(IntPtr c);"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and verify CPU Alpha8 baseline \u2014 bitmap and CPU surface both return correct alpha=50",
+      "layer": "csharp",
+      "result": "success",
+      "command": "dotnet build \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "Bitmap Alpha8: 50\nCPU Surface Alpha8: 50\nCPU Surface -\u003E Image -\u003E Bitmap: 0, 0, 0, 50\nAll CPU tests return correct alpha value of 50."
+    },
+    {
+      "stepNumber": 3,
+      "description": "GPU Alpha8 test via CGL OpenGL context \u2014 GPU returns wrong alpha value (5 instead of 50)",
+      "layer": "native",
+      "result": "wrong-output",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "CGL context created\nGRContext created successfully via OpenGL\nGPU Bitmap Length: 4\nGPU Bitmap Content: 0, 0, 0, 5\nExpected: 0, 0, 0, 50 (like CPU path)\nMatch: False\nBUG: GPU alpha value is 5 instead of 50\nNote: premultiplied R would be 4.9 \u2248 5\nDirect GPU pixel readback: 5 (expected 50)"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project \u2014 bug is fixed, GPU returns correct alpha=50",
+      "layer": "native",
+      "result": "success",
+      "command": "mkdir -p /tmp/skiasharp/repro/2239-latest/Repro \u0026\u0026 dotnet add package SkiaSharp --version 3.119.2 \u0026\u0026 dotnet run",
+      "exitCode": 0,
+      "output": "CGL context created\nGRContext created successfully via OpenGL\nGPU Bitmap Length: 4\nGPU Bitmap Content: 0, 0, 0, 50\nExpected: 0, 0, 0, 50 (like CPU path)\nMatch: True\nDirect GPU pixel readback: 50 (expected 50)"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3 (Darwin 25.3.0)",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.1",
+    "dockerUsed": false
+  },
+  "assessment": "likely-bug",
+  "scope": "unknown",
+  "versionResults": [
+    {
+      "version": "2.88.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "GPU Alpha8 surface returns alpha=5 instead of 50. CPU surfaces return correct value. The erroneous value 5 matches premultiplied red (25*50/255\u22484.9).",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "GPU Alpha8 surface returns correct alpha=50. Bug fixed between 2.88.x and 3.119.x due to upstream Skia updates.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.1"
+      }
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "proposedResponse": {
+      "status": "needs-human-edit",
+      "body": "Thanks for the detailed reproduction, including testing at the native C\u002B\u002B Skia level.\n\n**Reproduction results:**\n\n| Version | Result |\n|---------|--------|\n| SkiaSharp 2.88.1 | \u274C **Reproduced** \u2014 GPU Alpha8 returns alpha=5 instead of 50 |\n| SkiaSharp 3.119.2 | \u2705 **Fixed** \u2014 GPU Alpha8 returns correct alpha=50 |\n\nThe bug was confirmed on macOS ARM64 using an OpenGL GPU context. The GPU-backed Alpha8 surface returns a value of 5 (which matches premultiplied red: 25 \u00D7 50/255 \u2248 4.9), while CPU surfaces correctly return 50. This was an upstream Skia GPU backend issue that has been resolved in the newer Skia version bundled with SkiaSharp 3.x.\n\n**Resolution:** Upgrade to SkiaSharp 3.119.2 (or any 3.x release). The Alpha8 GPU readback now returns the correct alpha value.\n\nClosing as fixed in the current release."
+    },
+    "actionability": {
+      "suggestedAction": "close-as-fixed",
+      "confidence": 0.9,
+      "reason": "Bug reproduced on reporter\u0027s version 2.88.1 but fixed in latest stable 3.119.2. Upgrading to SkiaSharp 3.x resolves the issue."
+    },
+    "workarounds": [
+      "Upgrade to SkiaSharp 3.x where the bug is fixed",
+      "Use CPU-backed surfaces for Alpha8 rendering: SKSurface.Create(imageInfo) instead of SKSurface.Create(context, false, imageInfo)"
+    ],
+    "actions": [
+      {
+        "type": "add-comment",
+        "description": "Confirm reproduction and recommend upgrading to SkiaSharp 3.x",
+        "risk": "medium",
+        "confidence": 0.9
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as fixed in SkiaSharp 3.x",
+        "risk": "medium",
+        "confidence": 0.85
+      },
+      {
+        "type": "update-labels",
+        "description": "Add type/bug and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.92
+      }
+    ]
+  }
+}

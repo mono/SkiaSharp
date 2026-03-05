@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1790,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z"
+  },
+  "summary": "Reporter gets System.AccessViolationException when passing a private SKPaint field directly to SKCanvas.DrawCircle in a WPF SKElement PaintSurface handler, but the same object accessed through a public field or a local variable works fine. Repro code is incomplete (missing Dispose implementation and other methods).",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.65
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.8
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a WPF app with SKElement and PaintSurface handler",
+        "Create a class wrapping SKPaint as a private field _blueP and public field Paint (assigned from _blueP)",
+        "Call canvas.DrawCircle(P0, 5, _blueP) \u2014 crashes with AccessViolationException",
+        "Call canvas.DrawCircle(P0, 5, Paint) \u2014 works fine (same object reference)"
+      ],
+      "environmentDetails": ".NET Framework 4.7.2, WPF, SkiaSharp.Views.WPF SKElement",
+      "relatedIssues": [
+        1137,
+        1244,
+        2821
+      ]
+    },
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "crash",
+      "errorMessage": "System.AccessViolationException",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net472"
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "unknown",
+      "relevanceReason": "No SkiaSharp version specified. The underlying GC/KeepAlive issue (#2821) is still open, but the reported behavior (same object reference behaving differently via different fields) cannot be explained by that issue alone."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter claims that accessing the same SKPaint object through a private field crashes but through a public field (assigned the same reference) works. This behavior is logically impossible in C# unless the hidden code (Dispose, Create, or other omitted methods) modifies _blueP independently of Paint. The incomplete repro (multiple \u0027miss code\u0027 sections, hidden IDisposable implementation) makes root cause determination impossible without the full code.",
+    "rationale": "Classified as type/bug because AccessViolationException is a genuine crash, but confidence is low (0.65) because the described behavior contradicts C# reference semantics. The most likely explanation is that the omitted Dispose implementation or other hidden code disposes/nullifies _blueP without affecting Paint. A secondary possibility is premature GC collection of the SKPaint wrapper during P/Invoke (related to #2821), though this shouldn\u0027t differ between field access patterns. Requesting full code is essential.",
+    "keySignals": [
+      {
+        "text": "canvas.DrawCircle(P0, 5, _blueP); // This raise System.AccessViolationException",
+        "source": "issue body",
+        "interpretation": "Direct use of private SKPaint field crashes. This implies the native handle is invalid at point of use."
+      },
+      {
+        "text": "canvas.DrawCircle(P0, 5, Paint); // This not crash",
+        "source": "issue body",
+        "interpretation": "Public field Paint (assigned _blueP in constructor) works. If truly the same reference, this is impossible \u2014 suggests hidden code modifies _blueP."
+      },
+      {
+        "text": "Paint = _blueP; // \u003C---look here",
+        "source": "issue body",
+        "interpretation": "Assignment in InitSkColorAndBrush. After this, Paint and _blueP are the same reference. Later divergence would require reassignment or disposal."
+      },
+      {
+        "text": "public class Sk0CubicBezier : IDisposable",
+        "source": "issue body",
+        "interpretation": "Class implements IDisposable but Dispose method is in hidden code. This is likely where _blueP gets disposed."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "finding": "SKPaint implements ISKSkipObjectRegistration, which means it is not tracked in the global HandleDictionary. Its native handle is freed by the finalizer (DisposeNative calls sk_compatpaint_delete). If the GC finalizes a SKPaint while its handle is still in use by native code, AccessViolationException results.",
+        "relevance": "direct",
+        "lines": "38-54"
+      },
+      {
+        "file": "binding/SkiaSharp/HandleDictionary.cs",
+        "finding": "RegisterHandle returns early for ISKSkipObjectRegistration instances. This means SKPaint objects have no strong root in the global dictionary, making them vulnerable to premature GC collection if no managed reference keeps them alive.",
+        "relevance": "related",
+        "lines": "140-141"
+      },
+      {
+        "file": "binding/SkiaSharp/SKObject.cs",
+        "finding": "Dispose(bool) sets Handle = IntPtr.Zero after calling DisposeNative. If the reporter\u0027s hidden Dispose() method calls _blueP.Dispose() but doesn\u0027t clear the Paint field reference, Paint would still point to the disposed object \u2014 but both fields would have Handle == IntPtr.Zero, so both should fail. The observed difference requires _blueP to be reassigned (not just disposed).",
+        "relevance": "related",
+        "lines": "259-277"
+      }
+    ],
+    "nextQuestions": [
+      "What is the full Dispose implementation in Sk0CubicBezier?",
+      "Is _blueP reassigned anywhere in the hidden code (Create method, etc.)?",
+      "What SkiaSharp NuGet version is being used?",
+      "Is the Draw method being called from multiple threads or after disposal?"
+    ],
+    "resolution": {
+      "hypothesis": "The omitted code (Dispose, Create, or other methods) either disposes or reassigns _blueP independently of Paint. Alternatively, premature GC collection of the SKPaint wrapper during P/Invoke (related to known issue #2821) could cause the native handle to be freed, but this would not explain why one field access pattern works and another doesn\u0027t.",
+      "proposals": [
+        {
+          "title": "Verify disposal pattern",
+          "description": "Check the IDisposable implementation and all code paths that modify _blueP. If _blueP is disposed or reassigned without updating Paint, that explains the divergent behavior. Ensure SKPaint objects are not disposed before their last use.",
+          "category": "investigation",
+          "validated": "untested",
+          "confidence": 0.75,
+          "effort": "trivial"
+        },
+        {
+          "title": "Use GC.KeepAlive as preventive measure",
+          "description": "Add GC.KeepAlive(_blueP) after the last P/Invoke call that uses _blueP.Handle, to prevent premature GC collection of the managed wrapper during the native call. This addresses the pattern described in #2821.",
+          "category": "workaround",
+          "codeSnippet": "canvas.DrawCircle(P0, 5, _blueP);\nGC.KeepAlive(_blueP);",
+          "validated": "untested",
+          "confidence": 0.4,
+          "effort": "trivial"
+        }
+      ],
+      "recommendedProposal": "Verify disposal pattern",
+      "recommendedReason": "The reported behavior (same object reference behaving differently through different fields) strongly suggests hidden code modifies _blueP. Full code review is needed before applying any workaround."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "request-info",
+      "confidence": 0.85,
+      "reason": "Repro code is incomplete (missing Dispose, Create, and other methods). The described behavior is impossible for identical object references, meaning the hidden code is the likely cause. Cannot diagnose without full source."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, and Windows labels",
+        "risk": "low",
+        "confidence": 0.8,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Request complete repro code and version info",
+        "risk": "high",
+        "confidence": 0.8,
+        "comment": "Thanks for the report. The behavior you describe \u2014 the same object crashing when accessed through \u0060_blueP\u0060 but working through \u0060Paint\u0060 (which holds the same reference) \u2014 suggests something in the omitted code is modifying \u0060_blueP\u0060. Since \u0060Paint = _blueP\u0060 makes them the same reference, any difference in behavior means one of them changed after that assignment.\n\nWould you be able to share the complete \u0060Sk0CubicBezier\u0060 class, especially the \u0060IDisposable\u0060 implementation and the \u0060Create\u0060 method? Also, which SkiaSharp NuGet version are you using, and could you include the full stack trace?\n\nIn the meantime, verify that \u0060_blueP\u0060 isn\u0027t being disposed or reassigned anywhere in the code you omitted. A common pattern that causes \u0060AccessViolationException\u0060 is using an \u0060SKPaint\u0060 after it has been disposed \u2014 the native handle becomes invalid but the managed reference still exists."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #2821 (SKNativeObject GC/KeepAlive issue)",
+        "risk": "low",
+        "confidence": 0.5,
+        "linkedIssue": 2821
+      }
+    ],
+    "missingInfo": [
+      "Complete source code for Sk0CubicBezier class, especially the IDisposable implementation",
+      "SkiaSharp NuGet package version",
+      "Full stack trace of the AccessViolationException",
+      "Whether Draw is called from multiple threads or after the object is disposed"
+    ]
+  }
+}

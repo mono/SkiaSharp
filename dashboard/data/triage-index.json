@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-03-04T22:38:07.4327708Z",
-  "totalCount": 58,
+  "generatedAt": "2026-03-05T14:14:56.3775761Z",
+  "totalCount": 69,
   "summary": {
-    "needsInvestigation": 24,
-    "closeable": 19,
-    "needsInfo": 2,
+    "needsInvestigation": 33,
+    "closeable": 20,
+    "needsInfo": 3,
     "quickWins": 7,
-    "regressions": 8,
-    "withRepro": 45,
-    "reproduced": 28,
+    "regressions": 11,
+    "withRepro": 55,
+    "reproduced": 35,
     "notReproduced": 9
   },
   "byType": [
     {
       "label": "type/bug",
-      "count": 40
+      "count": 49
     },
     {
       "label": "type/enhancement",
@@ -22,37 +22,37 @@
     },
     {
       "label": "type/question",
-      "count": 6
+      "count": 7
     },
     {
       "label": "type/feature-request",
-      "count": 2
+      "count": 3
     }
   ],
   "byArea": [
+    {
+      "label": "area/SkiaSharp",
+      "count": 21
+    },
     {
       "label": "area/SkiaSharp.Views.Blazor",
       "count": 19
     },
     {
-      "label": "area/SkiaSharp",
-      "count": 15
+      "label": "area/SkiaSharp.Views",
+      "count": 11
     },
     {
       "label": "area/libSkiaSharp.native",
-      "count": 9
+      "count": 10
     },
     {
-      "label": "area/SkiaSharp.Views",
-      "count": 8
+      "label": "area/SkiaSharp.Views.Maui",
+      "count": 3
     },
     {
       "label": "area/Build",
       "count": 3
-    },
-    {
-      "label": "area/SkiaSharp.Views.Maui",
-      "count": 2
     },
     {
       "label": "area/HarfBuzzSharp",
@@ -66,7 +66,7 @@
   "byAction": [
     {
       "label": "needs-investigation",
-      "count": 24
+      "count": 33
     },
     {
       "label": "close-as-fixed",
@@ -78,7 +78,7 @@
     },
     {
       "label": "close-with-docs",
-      "count": 7
+      "count": 8
     },
     {
       "label": "close-as-by-design",
@@ -86,7 +86,7 @@
     },
     {
       "label": "request-info",
-      "count": 2
+      "count": 3
     },
     {
       "label": "close-as-duplicate",
@@ -100,11 +100,11 @@
   "bySeverity": [
     {
       "label": "medium",
-      "count": 21
+      "count": 28
     },
     {
       "label": "high",
-      "count": 15
+      "count": 17
     },
     {
       "label": "low",
@@ -198,6 +198,25 @@
       "analyzedAt": "2026-02-28T12:00:00Z",
       "hasTriage": true,
       "hasRepro": false
+    },
+    {
+      "number": 3525,
+      "title": "SkiaSharp rendering performance on macOS is dramatically slower than equivalent native Skia C\u002B\u002B code (sub-10 fps vs 120 fps), with investigation PR #3418 showing that default OpenGL pixel format attributes (4x MSAA, VSync, legacy profile) and rendering loop overhead account for much of the gap.",
+      "issueTitle": "[BUG] SkiaSharp rendering performance is much lower than native Skia C\u002B\u002B",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2026-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
     },
     {
       "number": 3520,
@@ -540,6 +559,25 @@
       "reproConclusion": "reproduced"
     },
     {
+      "number": 3287,
+      "title": "SKGLView PaintSurface event fires on the GL thread instead of the main thread on Android in .NET MAUI, causing crashes when accessing UI properties. SKCanvasView and all other platforms (iOS, Windows, Xamarin Android) correctly fire on the main thread.",
+      "issueTitle": "[REGRESSION, 3.116.1, Android] SKGLView PaintSurface event is not always on the main thread in .NET MAUI",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views.Maui",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.82,
+      "isRegression": true,
+      "closeable": false,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "needs-platform"
+    },
+    {
       "number": 3279,
       "title": "Reporter encounters compiler errors (CS0117, CS1501) when upgrading from SkiaSharp 2.88.9 to 3.x because SKMatrix.MakeTranslation, MakeScale, MakeRotation, MakeIdentity, and static PostConcat were renamed/replaced with Create* instance methods in the 3.0 breaking changes.",
       "issueTitle": "[BUG] SKMatrix Operations work well in SkiaSharp 2.88.9 not work in  3.119.0",
@@ -633,6 +671,25 @@
       "reproConclusion": "reproduced"
     },
     {
+      "number": 3109,
+      "title": "Reporter describes a ~90% performance regression when drawing a rectangle with a linear gradient shader in SkiaSharp 3.116.0 compared to 2.88.9 on Windows, where simply commenting out the shader restores performance.",
+      "issueTitle": "[BUG] Unacceptable drop of performance",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "high",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": true,
+      "closeable": false,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
+    },
+    {
       "number": 3066,
       "title": "Blazor views (SKCanvasView and SKGLView) construct HTML element IDs using the internal Blazor convention \u0027_bl_\u0027 \u002B ElementReference.Id, which is documented as not safe for user code, risking breakage if Blazor changes this internal convention.",
       "issueTitle": "Blazor views use the Blazor element ID \u0060_bl_#\u0060 which may not be safe",
@@ -647,6 +704,25 @@
       "quickWin": false,
       "state": "open",
       "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
+    },
+    {
+      "number": 3029,
+      "title": "Degree symbol (\u00B0) renders as incorrect glyph when drawn alongside Chinese characters using PingFang SC font on iOS 18, due to Apple changing the PingFang font format in iOS 18.",
+      "issueTitle": "[BUG] iOS 18 Chinese rendering bug",
+      "type": "type/bug",
+      "area": "area/libSkiaSharp.native",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": true,
+      "closeable": false,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
       "hasTriage": true,
       "hasRepro": true,
       "reproConclusion": "reproduced"
@@ -679,6 +755,25 @@
       "confidence": 0.8,
       "isRegression": false,
       "closeable": true,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
+    },
+    {
+      "number": 2751,
+      "title": "SKPixmap.GetPixelSpan() returns a span with length based on Width*Height*BytesPerPixel (Info.BytesSize) instead of the correct computeByteSize formula that accounts for RowBytes, causing undersized spans when the pixmap has RowBytes larger than its minimum (e.g., from ExtractSubset).",
+      "issueTitle": "[BUG] SKPixmap.GetPixelSpan() returns incorrectly sized ReadOnlySpan\u003Cbyte\u003E",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.92,
+      "isRegression": false,
+      "closeable": false,
       "needsInfo": false,
       "quickWin": false,
       "state": "open",
@@ -763,6 +858,25 @@
       "reproConclusion": "reproduced"
     },
     {
+      "number": 2466,
+      "title": "SKBitmapImageSource and platform conversion extensions (ToBitmap, ToUIImage, ToWriteableBitmap) ignore the source bitmap\u0027s color space, causing non-sRGB bitmaps (e.g. linear) to display with incorrect colors on all platforms, with additional color type mismatches on Apple and Android.",
+      "issueTitle": "[BUG] SKBitmapImageSource handles non-sRGB bitmaps incorrectly",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2026-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
+    },
+    {
       "number": 2429,
       "title": "SKBitmap.Decode and SKCodec.Create return null for a specific JPEG image that is valid and renders correctly in other viewers. Tested on SkiaSharp 2.80.4 and 2.88.3 on both Linux and Windows.",
       "issueTitle": "[BUG] SKBitmap.Decode always returns null for a specific image",
@@ -837,6 +951,25 @@
       "reproConclusion": "reproduced"
     },
     {
+      "number": 2337,
+      "title": "SKGLView render thread silently stops after 8\u002B hours of continuous background rendering on UWP (DrawInBackground=true) \u2014 likely caused by unhandled EGL/ANGLE SwapBuffers failure with no device-lost recovery in AngleSwapChainPanel.RenderFrame.",
+      "issueTitle": "[BUG] SKGLView Render thread (DrawInBackground=true) stops when UWP app runs for a long time (\u003E8h)",
+      "type": "type/bug",
+      "area": "area/SkiaSharp.Views",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "needs-platform"
+    },
+    {
       "number": 2334,
       "title": "Colors render incorrectly with alpha/transparency in Blazor WASM because SKCanvasView creates the raster surface with SKAlphaType.Opaque instead of SKAlphaType.Premul, making it the only platform view with this alpha type; HTML Canvas putImageData interprets the undefined alpha bytes, causing color distortion.",
       "issueTitle": "Colors are not correct with alpha in WASM",
@@ -871,6 +1004,25 @@
       "analyzedAt": "2025-07-22T12:00:00Z",
       "hasTriage": true,
       "hasRepro": false
+    },
+    {
+      "number": 2239,
+      "title": "Alpha8 GPU surface returns incorrect pixel values (5 instead of 50) when cleared with SKColor(25, 0, 0, 50), while CPU surface returns the correct alpha value; reporter confirms the issue also reproduces in native C\u002B\u002B Skia.",
+      "issueTitle": "[BUG] Alpha8 GPU image draws incorrectly",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "needs-investigation",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-25T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
     },
     {
       "number": 2238,
@@ -980,6 +1132,60 @@
       "hasTriage": true,
       "hasRepro": true,
       "reproConclusion": "reproduced"
+    },
+    {
+      "number": 1790,
+      "title": "Reporter gets System.AccessViolationException when passing a private SKPaint field directly to SKCanvas.DrawCircle in a WPF SKElement PaintSurface handler, but the same object accessed through a public field or a local variable works fine. Repro code is incomplete (missing Dispose implementation and other methods).",
+      "issueTitle": "[BUG] SKPaint  System.AccessViolationException",
+      "type": "type/bug",
+      "area": "area/SkiaSharp",
+      "severity": "medium",
+      "action": "request-info",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": false,
+      "needsInfo": true,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-22T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "reproduced"
+    },
+    {
+      "number": 1729,
+      "title": "Feature request to expose Skia\u0027s SkPath operator== as SKPath.Equals(SKPath) in the C# API, enabling efficient native path comparison instead of iterating verbs in managed code.",
+      "issueTitle": "[FEATURE] Expose SKPath.Equals(SKPath)",
+      "type": "type/feature-request",
+      "area": "area/SkiaSharp",
+      "action": "needs-investigation",
+      "confidence": 0.9,
+      "isRegression": false,
+      "closeable": false,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-24T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": false
+    },
+    {
+      "number": 1693,
+      "title": "Reporter asks why SkiaSharp JPEG decode\u002Bencode is approximately 3x slower than raw libjpeg-turbo CLI tools (djpeg/cjpeg), providing benchmark code and timing comparisons.",
+      "issueTitle": "[QUESTION] JPEG decoding and encoding 3x slower than libjpeg-turbo?",
+      "type": "type/question",
+      "area": "area/SkiaSharp",
+      "action": "close-with-docs",
+      "confidence": 0.85,
+      "isRegression": false,
+      "closeable": true,
+      "needsInfo": false,
+      "quickWin": false,
+      "state": "open",
+      "analyzedAt": "2025-07-17T12:00:00Z",
+      "hasTriage": true,
+      "hasRepro": true,
+      "reproConclusion": "confirmed"
     },
     {
       "number": 1691,
