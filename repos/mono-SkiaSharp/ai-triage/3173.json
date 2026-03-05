@@ -1,0 +1,116 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3173,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-27T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "SKImageFilter.CreateTile(SKRect, SKRect) always throws ArgumentNullException because the 2-param overload passes null to the 3-param overload which incorrectly rejects null input, despite null being valid in Skia's C++ API.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.98 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.99 }
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "ArgumentNullException: Value cannot be null. (Parameter 'input')",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call SKImageFilter.CreateTile(src, dst) with any valid SKRect arguments",
+        "Observe ArgumentNullException thrown from the 3-param overload"
+      ],
+      "codeSnippets": [
+        "SKImageFilter.CreateTile(src, dst);"
+      ],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/blob/80d6b5915329d04ba8e557398e6ecc379dd48914/binding/SkiaSharp/SKImageFilter.cs#L321-L328", "description": "Source code showing the bug: 2-param overload passes null, 3-param overload rejects null" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3318", "description": "Open PR by jeremy-visionaid to fix this issue" },
+        { "url": "https://api.skia.org/classSkImageFilters.html#aad7faeda56f1beb913936d67cce31d1e", "description": "Skia C++ docs confirming null is valid for input filter parameter" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The ArgumentNullException guard on line 326 is still present in current main branch code."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter claims it worked in 2.88.9. The null guard was likely introduced during the v3 API rewrite. The v2 code likely used the nullable pattern consistent with other filter methods.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "Confirmed bug: SKImageFilter.CreateTile has an erroneous ArgumentNullException guard that makes the 2-param overload unusable and prevents passing null as the input filter in the 3-param overload. Every other filter method (15+) correctly uses the `input?.Handle ?? IntPtr.Zero` pattern. The Skia C++ API explicitly allows null input. An open PR #3318 exists to fix this.",
+    "rationale": "This is clearly a bug, not by-design. The null guard contradicts both the Skia C++ API contract (which allows null input) and the established pattern used by every other SKImageFilter factory method. The 2-param overload is completely broken since it always passes null to a method that always rejects null.",
+    "keySignals": [
+      { "text": "SKImageFilter.CreateTile with (SKRect src, SKRect dst) overload is useless. It makes a call to overload with input parameter and passes null to it. However this overload throws ArgumentException if input is null.", "source": "issue body", "interpretation": "Reporter correctly identified the self-contradicting code." },
+      { "text": "Null is actually valid for the input filter in Skia", "source": "comment by jeremy-visionaid", "interpretation": "Community member confirmed that Skia's C++ API accepts null for the input filter parameter, meaning the C# null guard is wrong." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKImageFilter.cs", "lines": "321-328", "finding": "CreateTile 2-param overload passes null to 3-param overload. The 3-param overload has `_ = input ?? throw new ArgumentNullException(nameof(input))` guard, making the 2-param overload always throw. Line 327 uses `input.Handle` instead of `input?.Handle ?? IntPtr.Zero`.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKImageFilter.cs", "lines": "34-408", "finding": "Every other filter method (CreateBlur, CreateColorFilter, CreateOffset, CreateDilate, CreateErode, CreateDropShadow, etc. — 15+ methods) correctly uses `input?.Handle ?? IntPtr.Zero` for the nullable input parameter. CreateTile is the only outlier.", "relevance": "direct" },
+      { "file": "externals/skia/src/c/sk_imagefilter.cpp", "lines": "111-113", "finding": "C API sk_imagefilter_new_tile passes input directly to SkImageFilters::Tile via sk_ref_sp(AsImageFilter(input)), which handles null correctly. The C layer does not reject null.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Use the P/Invoke API directly to bypass the C# null guard (advanced, not recommended)",
+      "Use reflection to call the underlying SkiaApi.sk_imagefilter_new_tile with IntPtr.Zero for input"
+    ],
+    "resolution": {
+      "hypothesis": "The null guard on CreateTile was added erroneously during the v3 rewrite. The fix is to remove the ArgumentNullException guard and use the same `input?.Handle ?? IntPtr.Zero` pattern as every other filter method.",
+      "proposals": [
+        {
+          "title": "Remove null guard and use nullable pattern",
+          "description": "Remove the `_ = input ?? throw new ArgumentNullException` guard on line 326 and change `input.Handle` to `input?.Handle ?? IntPtr.Zero` on line 327, matching the pattern used by all other SKImageFilter factory methods.",
+          "category": "fix",
+          "codeSnippet": "public static SKImageFilter CreateTile(SKRect src, SKRect dst, SKImageFilter? input)\n{\n    return GetObject(SkiaApi.sk_imagefilter_new_tile(&src, &dst, input?.Handle ?? IntPtr.Zero));\n}",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Remove null guard and use nullable pattern",
+      "recommendedReason": "One-line fix that aligns with the established pattern used by 15+ other methods in the same file. PR #3318 already proposes this fix."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.95,
+      "reason": "Confirmed bug with trivial fix and an open PR (#3318). Needs review and merge of the existing PR.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm type/bug label (already applied)",
+        "risk": "low",
+        "confidence": 0.99,
+        "labels": ["type/bug", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, confirm the analysis, and reference the open PR",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "Thanks for filing this — you're right that the 2-param `CreateTile` overload is broken. The 3-param overload has an erroneous `ArgumentNullException` guard on the `input` parameter, but Skia's C++ API explicitly allows `null` for input (it uses the source image directly). Every other `SKImageFilter` factory method correctly handles nullable input with `input?.Handle ?? IntPtr.Zero` — `CreateTile` is the only outlier.\n\nPR #3318 addresses this. In the meantime, there's unfortunately no clean workaround since the null guard is in the only public entry point for tile filters."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to fix PR #3318",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3318
+      }
+    ]
+  }
+}
