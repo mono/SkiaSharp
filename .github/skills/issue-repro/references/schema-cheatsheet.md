@@ -82,7 +82,7 @@ Required: `version`, `source`, `result`
 ```json
 "output": {
   "actionability": { "suggestedAction": "<enum>", "confidence": 0.0-1.0, "reason": "..." },
-  "actions": [{ "type": "<actionType>", "description": "...", "risk": "low|medium|high", "confidence": 0.0-1.0 }],
+  "actions": [{ "type": "<actionType>", "description": "...", "risk": "low|medium|high", "confidence": 0.0-1.0, ...data fields }],
   "proposedResponse": { "body": "GitHub comment markdown", "status": "ready|needs-human-edit|do-not-post" },
   "missingInfo": ["What info is needed from reporter"]
 }
@@ -100,7 +100,33 @@ Risk for `add-comment` actions is computed dynamically from content and confiden
 | Any content AND confidence < 0.70 | **high** | Not confident enough to speak for the maintainer |
 | Default / everything else | **medium** | |
 
-Other action type risks remain static: `update-labels`=low, `close-issue`=medium, `link-related`=low, `link-duplicate`=medium, `convert-to-discussion`=high.
+Other action type risks remain static: `update-labels`=low, `close-issue`=medium, `link-related`=low, `link-duplicate`=medium, `convert-to-discussion`=high, `set-milestone`=low.
+
+### Action Types & Required Fields
+
+| Type | Risk | Required Fields |
+|------|------|-----------------|
+| `update-labels` | low | `labels` (array of label strings to apply) |
+| `add-comment` | **dynamic** (see above) | `comment` (markdown string) |
+| `close-issue` | medium | `stateReason` (`completed` or `not_planned`) |
+| `link-related` | low | `linkedIssue` (integer issue number) |
+| `link-duplicate` | medium | `linkedIssue` (integer issue number) |
+| `convert-to-discussion` | high | `category` (discussion category name) |
+| `set-milestone` | low | `milestone` (milestone title) |
+
+### Action Data Requirements
+
+Every action MUST include its required data fields to be automatable:
+- `update-labels` without `labels` → **invalid**, omit the action
+- `add-comment` without `comment` → **invalid**, omit the action
+- `close-issue` without `stateReason` → **invalid**, omit the action
+- `link-related`/`link-duplicate` without `linkedIssue` → **invalid**, omit the action
+- `convert-to-discussion` without `category` → **invalid**, omit the action
+- `set-milestone` without `milestone` → **invalid**, omit the action
+
+If you cannot determine the required data for an action, do NOT include it. Hollow actions (correct type but missing data) are worse than no action — they pass schema validation but fail at execution time.
+
+If `proposedResponse` contains comment text, also include a matching `add-comment` action with the same text in `comment`.
 
 ## Common Mistakes
 
