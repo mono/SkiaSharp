@@ -20,8 +20,16 @@
   "commentCount": 1,
   "reactionCount": 0,
   "engagement": {
-    "syncedAt": "2026-03-03T18:17:31.1273124Z",
+    "syncedAt": "2026-03-05T14:15:58.161154Z",
     "reactions": [],
-    "comments": []
+    "comments": [
+      {
+        "id": 4005234132,
+        "author": "mattleibow",
+        "body": "## Investigation Summary\n\n**Root cause found and fixed in #3546.**\n\n\u0060SKGLView\u0060 on macOS reads stencil bits via \u0060glGetIntegerv(GL_STENCIL_BITS)\u0060 which returns **0** on macOS default framebuffers \u2014 a known driver quirk. Native Skia reads from \u0060NSOpenGLPixelFormat\u0060 instead (returns the correct value: 8). Without stencil, Skia can\u0027t use its fast \u0060TessellationPathRenderer\u0060 and falls back to the much slower \u0060DefaultPathRenderer\u0060, which CPU-tessellates every path individually.\n\n**One-line fix \u2192 15.6\u00D7 speedup:**\n\n| Config | Before | After | Native C\u002B\u002B |\n|---|---|---|---|\n| GL (40k paths) | **5.3 fps** | **77\u201393 fps** | 61 fps |\n| Metal (40k paths) | 15.5 fps | 15.5 fps | 15.5 fps |\n\n### Interesting findings along the way\n\n- **Metal had zero overhead** \u2014 SKMetalView matched native C\u002B\u002B Metal frame-for-frame at all complexity levels. The reported gap is purely GL.\n- **Native C\u002B\u002B GL without MSAA is also slow** \u2014 only 4.6 fps at 40k paths. The native app\u0027s speed comes entirely from 4\u00D7 MSAA enabling \u0060TessellationPathRenderer\u0060, not from being \u0022native.\u0022\n- **The reported \u0022120 fps\u0022 was VSync-masked** \u2014 disabling VSync revealed native GL actually runs at ~61 fps. Still fast, but not 120.\n- **macOS \u0060glGetIntegerv(GL_STENCIL_BITS)\u0060 lies** \u2014 returns 0 for the default framebuffer even when 8 stencil bits are allocated. This is a macOS-specific GL driver quirk that the native Skia codebase works around in \u0060GLWindowContext_mac.mm:127\u0060.\n- **After the fix, C# GL is faster than native C\u002B\u002B GL** \u2014 77\u201393 fps vs 61 fps. The .NET overhead is negligible; the bottleneck was entirely in Skia\u0027s path renderer selection.\n\nFull investigation details (12 benchmark apps, per-phase profiling, isolation experiments, AI model corroboration) are on the PR: #3546.",
+        "createdAt": "2026-03-05T13:56:06",
+        "reactions": []
+      }
+    ]
   }
 }
