@@ -81,6 +81,7 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
+      "suggestedReproPlatform": "macos",
       "confidence": 0.80,
       "reason": "Real bug with stack trace, needs deeper investigation into codec error handling"
     },
