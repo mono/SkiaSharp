@@ -1,0 +1,164 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3329,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-08-06T14:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "working-as-designed",
+  "scope": "platform-specific/linux",
+  "notes": "Reproduced on Docker Linux x64. SkiaSharp auto-includes NativeAssets for macOS and Win32 via !$(TargetFramework.Contains('-')) condition in SkiaSharp.csproj, but Linux is intentionally excluded because .NET has no '-linux' TFM and Linux has two variants (NativeAssets.Linux with fontconfig, NativeAssets.Linux.NoDependencies for minimal containers). Without NativeAssets.Linux, DllNotFoundException occurs. With an old transitive NativeAssets.Linux 2.88.9, the reporter's exact version mismatch error occurs. macOS host confirms native assets work fine without explicit reference (auto-included). Triage suggested close-as-by-design which aligns with findings.",
+  "errorMessages": {
+    "primaryError": "DllNotFoundException: Unable to load shared library 'libSkiaSharp' or one of its dependencies. When an old NativeAssets.Linux is transitively referenced, InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp."
+  },
+  "reproProject": {
+    "type": "docker",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 3.116.0 in Docker Linux (no NativeAssets.Linux)",
+      "command": "docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c 'dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0'",
+      "exitCode": 0,
+      "output": "Console project created with SkiaSharp 3.116.0 package reference. No NativeAssets.Linux added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console app project file with only SkiaSharp 3.116.0 (no NativeAssets.Linux)",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Minimal SkiaSharp usage that triggers native library loading",
+          "content": "using System;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\n\ntry\n{\n    using var bitmap = new SKBitmap(100, 100);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.White);\n    Console.WriteLine(\"SUCCESS: SkiaSharp loaded and rendered correctly\");\n}\ncatch (Exception ex)\n{\n    Console.Error.WriteLine($\"ERROR: {ex.GetType().Name}: {ex.Message}\");\n    if (ex.InnerException != null)\n        Console.Error.WriteLine($\"  Inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}\");\n    Environment.ExitCode = 1;\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run SkiaSharp 3.116.0 on Docker Linux without NativeAssets.Linux — DllNotFoundException",
+      "command": "dotnet run",
+      "exitCode": 1,
+      "output": "OS: Debian GNU/Linux 12 (bookworm)\nArch: X64\nSkiaSharp version: 3.116.0.0\nERROR: TypeInitializationException: The type initializer for 'SkiaSharp.SKImageInfo' threw an exception.\n  Inner: DllNotFoundException: Unable to load shared library 'libSkiaSharp' or one of its dependencies.\nlibSkiaSharp.so: cannot open shared object file: No such file or directory",
+      "layer": "native",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Add old NativeAssets.Linux 2.88.9 to simulate transitive dependency — version mismatch error matches reporter",
+      "command": "dotnet add package SkiaSharp.NativeAssets.Linux --version 2.88.9 && dotnet run",
+      "exitCode": 1,
+      "output": "OS: Debian GNU/Linux 12 (bookworm)\nArch: X64\nSkiaSharp version: 3.116.0.0\nERROR: TypeInitializationException: The type initializer for 'SkiaSharp.SKObject' threw an exception.\n  Inner: InvalidOperationException: The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [116.0, 117.0).",
+      "layer": "native",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test latest stable SkiaSharp 3.119.2 on Docker Linux without NativeAssets.Linux — same failure",
+      "command": "docker run (fresh container) dotnet add package SkiaSharp --version 3.119.2 && dotnet run",
+      "exitCode": 1,
+      "output": "OS: Debian GNU/Linux 12 (bookworm)\nArch: X64\nSkiaSharp version: 3.119.0.0\nERROR: TypeInitializationException: The type initializer for 'SkiaSharp.SKImageInfo' threw an exception.\n  Inner: DllNotFoundException: Unable to load shared library 'libSkiaSharp' or one of its dependencies.",
+      "layer": "native",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Verify main branch SkiaSharp.csproj has no Linux NativeAssets reference — confirms design unchanged",
+      "command": "grep -i linux binding/SkiaSharp/SkiaSharp.csproj",
+      "exitCode": 0,
+      "output": "No Linux references found in SkiaSharp.csproj. macOS and Win32 are auto-included for non-platform TFMs via !$(TargetFramework.Contains('-')) condition. Linux is intentionally excluded.",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Cross-platform: Run same repro on macOS host — succeeds because NativeAssets.macOS is auto-included",
+      "command": "dotnet run (macOS host, SkiaSharp 3.116.0, no explicit NativeAssets reference)",
+      "exitCode": 0,
+      "output": "OS: Darwin 25.3.0\nArch: Arm64\nSkiaSharp version: 3.116.0.0\nSUCCESS: SkiaSharp loaded and rendered correctly",
+      "layer": "native",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "Linux (Docker)",
+    "arch": "x64",
+    "dotnetVersion": "8.0.24",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": true
+  },
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "DllNotFoundException on Linux without NativeAssets.Linux. InvalidOperationException version mismatch with old NativeAssets.Linux 2.88.9.",
+      "platform": "docker-linux-x64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same DllNotFoundException on Linux without NativeAssets.Linux.",
+      "platform": "docker-linux-x64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "SkiaSharp.csproj on main still has no Linux NativeAssets reference. Design unchanged.",
+      "platform": "docker-linux-x64"
+    },
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "macOS works fine — NativeAssets.macOS is auto-included for non-platform TFMs.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.85,
+      "reason": "Linux NativeAssets exclusion from auto-inclusion is intentional per documentation/packages.md. .NET has no '-linux' TFM, and Linux has two variants (fontconfig vs NoDependencies) requiring user choice. The reporter's error is caused by not explicitly adding NativeAssets.Linux or by a transitive dependency pulling in an old version."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply platform label confirmed by reproduction",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Linux"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain by-design behavior, provide workaround, and cite documentation",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for reporting this. We were able to reproduce the issue — SkiaSharp on Linux without an explicit `NativeAssets.Linux` reference does fail with `DllNotFoundException`, and mixing in an old transitive version causes the version mismatch you described.\n\nHowever, this is currently **by design**. Unlike macOS and Windows, .NET doesn't have a `-linux` TFM, and Linux has two NativeAssets variants that require an explicit choice:\n\n- **`SkiaSharp.NativeAssets.Linux`** — requires `fontconfig` (system font access)\n- **`SkiaSharp.NativeAssets.Linux.NoDependencies`** — for minimal containers without `fontconfig`\n\n**Workaround:** Add a direct `PackageReference` with the matching SkiaSharp version to your **application** project:\n\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"3.116.0\" />\n```\n\nOr for minimal containers:\n\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"3.116.0\" />\n```\n\nIf you're seeing an old 2.88.x version being pulled in, you can identify the source with `dotnet list package --include-transitive`. The explicit reference above will override the transitive version.\n\nSee the [packages documentation](https://github.com/mono/SkiaSharp/blob/main/documentation/packages.md) for details."
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this. We were able to reproduce the issue — SkiaSharp on Linux without an explicit `NativeAssets.Linux` reference does fail with `DllNotFoundException`, and mixing in an old transitive version causes the version mismatch you described.\n\nHowever, this is currently **by design**. Unlike macOS and Windows, .NET doesn't have a `-linux` TFM, and Linux has two NativeAssets variants that require an explicit choice:\n\n- **`SkiaSharp.NativeAssets.Linux`** — requires `fontconfig` (system font access)\n- **`SkiaSharp.NativeAssets.Linux.NoDependencies`** — for minimal containers without `fontconfig`\n\n**Workaround:** Add a direct `PackageReference` with the matching SkiaSharp version to your **application** project:\n\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"3.116.0\" />\n```\n\nOr for minimal containers:\n\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"3.116.0\" />\n```\n\nIf you're seeing an old 2.88.x version being pulled in, you can identify the source with `dotnet list package --include-transitive`. The explicit reference above will override the transitive version.\n\nSee the [packages documentation](https://github.com/mono/SkiaSharp/blob/main/documentation/packages.md) for details.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Add explicit PackageReference to SkiaSharp.NativeAssets.Linux (or NoDependencies) with matching version",
+      "Use 'dotnet list package --include-transitive' to identify which dependency pulls in old NativeAssets.Linux"
+    ]
+  }
+}
