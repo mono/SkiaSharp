@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3309,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-02-19T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "SKGLElement (WPF) leaks memory because its Dispose method does not call the base GLWpfControl.Dispose(), and the bundled OpenTK.GLWpfControl 4.2.3 has a known memory leak fixed in 4.3.3.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.92 },
+    "platforms": ["os/Windows-Classic"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "errorMessage": "Memory grows continuously when disposing and recreating SKGLElement instances; never reclaimed",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net8.0-windows"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Clone https://github.com/beto-rodriguez/SkiaSharp-wpf-memory-leak",
+        "Run the project",
+        "Click 'click me' button repeatedly",
+        "Observe memory growing without ever being reclaimed"
+      ],
+      "environmentDetails": "Windows, WPF, SkiaSharp 3.119.0, OpenTK.GLWpfControl 4.2.3",
+      "repoLinks": [
+        { "url": "https://github.com/beto-rodriguez/SkiaSharp-wpf-memory-leak", "description": "Minimal WPF repro project demonstrating the memory leak" }
+      ],
+      "relatedIssues": [2872]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKGLElement.Dispose method still does not call base.Dispose() in current main. OpenTK dependency is still at 4.2.3."
+    }
+  },
+  "analysis": {
+    "summary": "SKGLElement.Dispose(bool) releases SkiaSharp-owned resources (GRContext, SKSurface, etc.) but never calls base.Dispose() on the GLWpfControl. Additionally, the pinned OpenTK.GLWpfControl 4.2.3 has a known leak (opentk/GLWpfControl#126) fixed in 4.3.3. Both issues contribute to unbounded memory growth when SKGLElement instances are disposed and recreated.",
+    "rationale": "Classified as type/bug because the reporter demonstrates clear memory growth with a repro project. The root cause is confirmed in source: Dispose(bool) at line 192 only calls Release() but never base.Dispose(). The upstream OpenTK fix in 4.3.3 compounds the issue. This is area/SkiaSharp.Views because SKGLElement is a WPF view control. Platform is os/Windows-Classic (WPF). A community PR (#3311) exists and is still open.",
+    "keySignals": [
+      { "text": "when the SKGLElement is disposed it does not call the Dispose method of the base class", "source": "issue body", "interpretation": "Reporter correctly identifies the missing base.Dispose() call as the root cause." },
+      { "text": "older versions of OpenTK have this memory leak: opentk/GLWpfControl#126", "source": "issue body", "interpretation": "Upstream dependency bug compounds the leak — GLWpfControl 4.2.3 has the leak, 4.3.3 fixes it." },
+      { "text": "You can see the memory leak is gone with #3311", "source": "issue body", "interpretation": "Reporter has already submitted a working fix as PR #3311 (updating OpenTK to 4.9.4 / GLWpfControl 4.3.3)." }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+        "lines": "192-202",
+        "finding": "Dispose(bool) calls Release() to clean up SkiaSharp resources (canvas, surface, renderTarget, grContext) but never calls base.Dispose(). The GLWpfControl base class holds native OpenGL resources that are leaked.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKGLElement.cs",
+        "lines": "204-213",
+        "finding": "Release() nulls out and disposes SkiaSharp objects only. No base class cleanup is invoked here either.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj",
+        "lines": "17-19",
+        "finding": "OpenTK 4.3.0 and OpenTK.GLWpfControl 4.2.3 are pinned for .NET Core+. The upstream fix for the memory leak (opentk/GLWpfControl#126) requires GLWpfControl >= 4.3.3.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Use PR #3311's approach: override OpenTK dependency versions in your app project to OpenTK 4.9.4 and OpenTK.GLWpfControl 4.3.3 via PackageReference with version override"
+    ],
+    "nextQuestions": [
+      "Does updating OpenTK introduce any breaking API changes that affect SKGLElement?",
+      "Should Dispose(bool) also call base.Dispose(disposing) even after the OpenTK update to follow proper disposal patterns?"
+    ],
+    "resolution": {
+      "hypothesis": "Two compounding issues: (1) SKGLElement.Dispose does not call base.Dispose(), leaking GLWpfControl native resources, and (2) the bundled OpenTK.GLWpfControl 4.2.3 has a known leak fixed in 4.3.3.",
+      "proposals": [
+        {
+          "title": "Update OpenTK dependencies per PR #3311",
+          "description": "Bump OpenTK to 4.9.4 and OpenTK.GLWpfControl to 4.3.3 (or newer) in the WPF csproj. PR #3311 already implements this. The upstream fix in GLWpfControl 4.3.3 resolves the native resource leak and exposes Dispose properly.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Add base.Dispose() call in SKGLElement.Dispose(bool)",
+          "description": "In addition to updating OpenTK, add a base.Dispose() call in the Dispose(bool) method to ensure proper disposal chain regardless of upstream version.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: override OpenTK version in app project",
+          "description": "Users can add explicit PackageReference overrides for OpenTK 4.9.4 and OpenTK.GLWpfControl 4.3.3 in their app csproj to get the upstream fix without waiting for a SkiaSharp release.",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "trivial",
+          "validated": "untested",
+          "codeSnippet": "<PackageReference Include=\"OpenTK\" Version=\"4.9.4\" NoWarn=\"NU1701\" />\n<PackageReference Include=\"OpenTK.GLWpfControl\" Version=\"4.3.3\" />"
+        }
+      ],
+      "recommendedProposal": "Update OpenTK dependencies per PR #3311",
+      "recommendedReason": "PR #3311 already implements the fix. The upstream GLWpfControl 4.3.3 resolves the root leak. Adding base.Dispose() should be done as a companion change for correctness."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Bug is well-documented with repro, root cause identified in source, and a community PR exists. Needs maintainer review of the OpenTK version bump for potential side effects.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, and Windows labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Windows-Classic", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, point to workaround, note PR #3311 is under review",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for the thorough analysis and repro project — confirmed that `SKGLElement.Dispose` doesn't call `base.Dispose()` and the bundled OpenTK.GLWpfControl 4.2.3 has a known leak (opentk/GLWpfControl#126).\n\nAs a workaround, you can override the OpenTK versions in your app project:\n\n```xml\n<PackageReference Include=\"OpenTK\" Version=\"4.9.4\" NoWarn=\"NU1701\" />\n<PackageReference Include=\"OpenTK.GLWpfControl\" Version=\"4.3.3\" />\n```\n\nPR #3311 addresses this. We'll review it for potential side effects from the OpenTK version bump."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference SKGLElement threading issue #2872 which also involves GLWpfControl",
+        "risk": "low",
+        "confidence": 0.70,
+        "linkedIssue": 2872
+      }
+    ]
+  }
+}
