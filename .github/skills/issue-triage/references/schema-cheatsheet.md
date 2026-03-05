@@ -72,7 +72,7 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | **category** (proposals) | `workaround`, `fix`, `alternative`, `investigation` |
 | **validated** (proposals) | `untested`, `yes`, `no` |
 | **suggestedReproPlatform** | `linux`, `macos`, `windows` |
-| **actionType** | `update-labels`, `add-comment`, `close-issue`, `convert-to-discussion`, `link-related`, `link-duplicate`, `update-project`, `set-milestone` |
+| **actionType** | `update-labels`, `add-comment`, `close-issue`, `convert-to-discussion`, `link-related`, `link-duplicate`, `set-milestone` |
 
 ### Choosing `suggestedAction` by issue type
 
@@ -114,18 +114,17 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 
 `missingInfo` is optional — include when reporter needs to provide more details (pair with `request-info` action).
 
-### Action Types & Specific Fields
+### Action Types & Required Fields
 
-| Type | Risk | Required Specific Fields |
-|------|------|--------------------------|
-| `update-labels` | low | `labels` (array of strings) |
+| Type | Risk | Required Fields |
+|------|------|-----------------|
+| `update-labels` | low | `labels` (array of label strings to apply) |
 | `add-comment` | **dynamic** (see below) | `comment` (markdown string). See `response-guidelines.md`. |
-| `close-issue` | medium | — |
-| `link-related` | low | `linkedIssue` (integer) |
-| `link-duplicate` | medium | `linkedIssue` (integer) |
-| `convert-to-discussion` | high | — |
-| `update-project` | low | — |
-| `set-milestone` | low | — |
+| `close-issue` | medium | `stateReason` (`completed` or `not_planned`) |
+| `link-related` | low | `linkedIssue` (integer issue number) |
+| `link-duplicate` | medium | `linkedIssue` (integer issue number) |
+| `convert-to-discussion` | high | `category` (discussion category name) |
+| `set-milestone` | low | `milestone` (milestone title) |
 
 #### `add-comment` Risk Calculation
 

@@ -123,7 +123,6 @@
         "convert-to-discussion",
         "link-related",
         "link-duplicate",
-        "update-project",
         "set-milestone"
       ],
       "description": "Type of automatable operation."
@@ -813,6 +812,19 @@
                 "type": "integer",
                 "description": "Issue number to link (for link-related/link-duplicate actions).",
                 "minimum": 1
+              },
+              "stateReason": {
+                "type": "string",
+                "enum": ["completed", "not_planned"],
+                "description": "Required for close-issue. Maps to GitHub API state_reason."
+              },
+              "category": {
+                "type": "string",
+                "description": "Required for convert-to-discussion. GitHub discussion category name."
+              },
+              "milestone": {
+                "type": "string",
+                "description": "Required for set-milestone. Milestone title."
               }
             },
             "description": "A single automatable action."
