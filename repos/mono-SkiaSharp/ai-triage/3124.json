@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3124,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "DrawPath with CubicTo produces visually incorrect rendering when bezier control points have extreme coordinate values (millions of pixels off-canvas), differing from GDI+ output for the same curve.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.80 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.75 },
+    "platforms": ["os/Windows-Classic"],
+    "backends": ["backend/Raster"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "wrong-output",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKBitmap (650x350) and SKCanvas",
+        "Create a path with MoveTo(-6388600, 3162518) then CubicTo(-6010237, 6388600, 639, 40, 639, 40)",
+        "Draw the path with a red stroke (width 2)",
+        "Save as PNG and compare with GDI+ DrawBeziers using the same points"
+      ],
+      "environmentDetails": "Windows, Visual Studio, SkiaSharp 3.116.0",
+      "screenshots": [
+        { "url": "https://github.com/user-attachments/assets/b8adb0a5-373d-4d2f-88fa-035d756d6ac7", "description": "Expected result from GDI+ showing smooth curve entering visible area" },
+        { "url": "https://github.com/user-attachments/assets/6fd56b61-4d99-4436-a8b4-d51f8ab7945a", "description": "Actual result from SkiaSharp showing incorrect rendering" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The DrawPath and CubicTo code paths are simple pass-throughs to Skia with no coordinate transformation or clamping. The upstream cubic rasterization logic has not changed significantly."
+    }
+  },
+  "analysis": {
+    "summary": "The SkiaSharp C# binding passes coordinates directly through P/Invoke to Skia without any transformation or validation. The C API layer also delegates directly to SkPath::cubicTo() and SkCanvas::drawPath(). The issue is in upstream Skia's cubic curve rasterization when control points have extreme values (millions of pixels off-screen). Skia's rendering pipeline includes a TooBigForMath() check, but its threshold (~8.5e37) is far above the reported values (~6.4e6). The discrepancy likely arises from floating-point precision loss during Skia's internal cubic subdivision, clipping, or stroking operations when the coordinate range spans millions of pixels.",
+    "rationale": "Classified as type/bug because the reporter demonstrates a clear visual difference between SkiaSharp and GDI+ for the same mathematical curve. The behavior is wrong-output rather than a crash. Area is area/SkiaSharp because the core drawing path is involved, though the root cause is likely in upstream Skia's rasterization rather than the SkiaSharp binding layer. Confidence is moderate (0.80) because the behavior may be considered a known Skia limitation rather than a SkiaSharp-specific bug.",
+    "keySignals": [
+      { "text": "The Canvas.DrawPath call leads to an incorrect result if the path points are too far from each other", "source": "issue title", "interpretation": "Reporter identifies the problem as related to extreme coordinate distance between control points." },
+      { "text": "SKPoint(-6388600, 3162518) ... SKPoint(-6010237, 6388600) ... SKPoint(639, 40)", "source": "issue body", "interpretation": "Control points span ~6.4 million pixels from the visible canvas area (650x350), causing precision issues in curve rasterization." },
+      { "text": "Although I am not sure whether this behavior is a bug", "source": "issue body", "interpretation": "Reporter acknowledges uncertainty — may be a known Skia limitation with large coordinates rather than a clear-cut bug." },
+      { "text": "We utilize the SkiaSharp library within one of our commercial DevExpress products", "source": "issue body", "interpretation": "Commercial user (DevExpress) — this has real-world impact for cross-platform drawing/printing workflows that must match GDI+ output." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "405-411", "finding": "DrawPath performs null checks on paint and path, then calls SkiaApi.sk_canvas_draw_path directly — no coordinate validation or transformation.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKPath.cs", "lines": "238-242", "finding": "CubicTo passes float coordinates directly to SkiaApi.sk_path_cubic_to — no clamping or precision handling for extreme values.", "relevance": "direct" },
+      { "file": "externals/skia/src/c/sk_canvas.cpp", "finding": "sk_canvas_draw_path delegates directly to SkCanvas::drawPath with no additional processing.", "relevance": "direct" },
+      { "file": "externals/skia/src/c/sk_path.cpp", "finding": "sk_path_cubic_to delegates directly to SkPath::cubicTo with no coordinate validation.", "relevance": "direct" },
+      { "file": "externals/skia/src/core/SkPathPriv.h", "lines": "290-301", "finding": "TooBigForMath() rejects paths with bounds exceeding ~8.5e37 — the reported values (~6.4e6) are well within this threshold, so the path is accepted but may lose precision during internal subdivision.", "relevance": "related" },
+      { "file": "externals/skia/src/core/SkScan_Hairline.cpp", "lines": "366-399", "finding": "hair_cubic() evaluates the cubic polynomial at subdivision points — with extreme input coordinates, the polynomial evaluation ((A*t+B)*t+C)*t+D could accumulate floating-point error.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "Does the incorrect rendering occur only with stroke style, or also with fill?",
+      "Is this reproducible on the latest Skia milestone (upstream), or has it been fixed?",
+      "Does applying a canvas transformation (translate+scale) to bring coordinates into a smaller range produce correct output?"
+    ],
+    "resolution": {
+      "hypothesis": "Skia's cubic curve rasterization loses precision when control points are millions of pixels apart, causing incorrect clipping or subdivision compared to GDI+ which handles the same range correctly.",
+      "proposals": [
+        {
+          "title": "Normalize coordinates before drawing",
+          "description": "Transform the path coordinates to a smaller range by computing a bounding box, applying a canvas translation and scale to map the curve into the visible area, then drawing. This avoids the large-coordinate precision issue entirely.",
+          "category": "workaround",
+          "codeSnippet": "// Compute transform to bring extreme coordinates into reasonable range\nvar bounds = path.Bounds;\nfloat scaleX = 650f / bounds.Width;\nfloat scaleY = 350f / bounds.Height;\nfloat scale = Math.Min(scaleX, scaleY);\ncanvas.Save();\ncanvas.Translate(-bounds.Left * scale, -bounds.Top * scale);\ncanvas.Scale(scale);\ncanvas.DrawPath(path, paint);\ncanvas.Restore();",
+          "confidence": 0.50,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Report upstream to Skia",
+          "description": "File an upstream Skia bug report with the minimal reproduction, as the issue is in Skia's core cubic rasterization, not the SkiaSharp binding layer. The SkiaSharp wrapper passes coordinates through without modification.",
+          "category": "investigation",
+          "confidence": 0.85,
+          "effort": "small",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Report upstream to Skia",
+      "recommendedReason": "The SkiaSharp binding layer is a thin pass-through — the bug is in Skia's cubic rasterization. An upstream fix would benefit all Skia consumers."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.80,
+      "reason": "The bug is reproducible with provided code and screenshots, but the root cause is likely in upstream Skia's rasterization rather than SkiaSharp. Reproduction is needed to confirm the visual difference and determine if a workaround (coordinate normalization) resolves it.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and platform labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Windows-Classic"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report and explain this is likely an upstream Skia precision issue with large coordinates",
+        "risk": "high",
+        "confidence": 0.75,
+        "comment": "Thanks for the detailed report and comparison with GDI+.\n\nThis appears to be a precision limitation in Skia's cubic curve rasterization when control points are far apart (millions of pixels off-canvas). SkiaSharp's binding layer passes coordinates directly through to Skia without any transformation, so the issue lies in how upstream Skia handles the curve subdivision and clipping for these extreme values.\n\nAs a potential workaround, you could try transforming the coordinate space before drawing — apply a canvas `Translate` and `Scale` to bring the curve's bounding box into a smaller range, which may avoid the precision loss during rasterization. However, we haven't verified this approach yet.\n\nWe'll investigate further to confirm the root cause and determine whether this warrants an upstream Skia bug report."
+      }
+    ]
+  }
+}
