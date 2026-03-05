@@ -1,0 +1,191 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3109,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Reporter describes a ~90% performance regression when drawing a rectangle with a linear gradient shader in SkiaSharp 3.116.0 compared to 2.88.9 on Windows, where simply commenting out the shader restores performance.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "performance",
+      "errorMessage": "PaintSurface becomes very slow when using a linear gradient shader",
+      "reproQuality": "partial",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKPaint with SKShader.CreateLinearGradient (2 colors, DarkBlue to Black)",
+        "Call canvas.DrawRect with the gradient paint in a PaintSurface handler",
+        "Observe significantly slower rendering compared to v2.88.9",
+        "Comment out the Shader assignment to confirm it returns to normal speed"
+      ],
+      "environmentDetails": "Windows, Visual Studio, SkiaSharp 3.116.0",
+      "relatedIssues": [
+        731,
+        543,
+        3525,
+        2555
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.0",
+        "3.118.0-preview",
+        "2.88.9"
+      ],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The gradient shader code path in SkiaSharp is a thin wrapper around Skia's SkGradientShader::MakeLinear. Performance differences are likely due to the upstream Skia version change between v2 and v3, which has not been reverted."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter explicitly states gradient rendering was fast in v2.88.9 and became very slow in v3.116.0+. Multiple similar performance regression reports exist across major version bumps (#731, #543, #3525).",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "Performance regression in linear gradient shader rendering between SkiaSharp v2 (Skia m88) and v3 (newer Skia). The C# and C API wrappers are thin pass-throughs \u2014 the bottleneck is in Skia's upstream SkGradientShader::MakeLinear or the raster backend's gradient fill pipeline. The reporter's code pattern (reusing a single SKPaint with shader, calling DrawRect repeatedly in PaintSurface) is standard usage. This is part of a broader pattern of performance regressions across major Skia version bumps.",
+    "rationale": "Classified as type/bug because the reporter describes a clear performance regression between versions with identical code. The C# wrapper at SKShader.cs:125-137 and C API at sk_shader.cpp:63-68 are trivially thin \u2014 there is no SkiaSharp-specific logic that could cause a 90% slowdown. The regression is almost certainly in the upstream Skia raster pipeline. Area is area/SkiaSharp (core shader) rather than Views because the slowdown is in the drawing operation itself, not the view event infrastructure.",
+    "keySignals": [
+      {
+        "text": "Having a gradient background was no issue with Version=\"2.88.9\". Using latest one or even the preview (3.118), the performance is down by 90%.",
+        "source": "issue body",
+        "interpretation": "Clear regression claim with specific version boundaries. v2\u2192v3 is a major Skia upstream upgrade."
+      },
+      {
+        "text": "Simply commenting out the Shader block, it returns fast... but flat.",
+        "source": "issue body",
+        "interpretation": "Confirms the shader itself is the bottleneck \u2014 not DrawRect, not surface creation, not the view infrastructure."
+      },
+      {
+        "text": "FireField.Width / FireField.Height",
+        "source": "code snippet",
+        "interpretation": "Suggests an animated or game-like scenario where PaintSurface is called at high frequency, amplifying any per-frame performance regression."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKShader.cs",
+        "lines": "125-137",
+        "finding": "CreateLinearGradient is a thin wrapper: validates args, pins arrays, calls SkiaApi.sk_shader_new_linear_gradient. No allocation, copy, or transformation overhead in the C# layer that could explain a 90% slowdown.",
+        "relevance": "direct"
+      },
+      {
+        "file": "externals/skia/src/c/sk_shader.cpp",
+        "lines": "63-68",
+        "finding": "C API calls SkGradientShader::MakeLinear directly. The only overhead is an optional matrix conversion. The performance difference must originate in the upstream Skia implementation.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKCanvas.cs",
+        "lines": "335-340",
+        "finding": "DrawRect is a simple P/Invoke to sk_canvas_draw_rect with null check \u2014 no additional overhead.",
+        "relevance": "context"
+      }
+    ],
+    "nextQuestions": [
+      "Is the reporter using SKCanvasView (raster) or SKGLView (GPU)? Raster gradients are more affected by Skia upstream changes.",
+      "What are the dimensions of the gradient fill? Full-screen raster gradient fills are CPU-intensive.",
+      "How frequently is PaintSurface called? An animation loop would amplify per-frame overhead.",
+      "Does GPU-accelerated rendering (SKGLView) eliminate the performance gap?"
+    ],
+    "resolution": {
+      "hypothesis": "The upstream Skia raster pipeline changed gradient rendering between the versions used in SkiaSharp v2 (m88) and v3 (newer milestone), resulting in significantly slower CPU-rendered gradients. This is not a SkiaSharp wrapper issue but an upstream Skia behavior change.",
+      "proposals": [
+        {
+          "title": "Switch to GPU-accelerated rendering",
+          "description": "If using SKCanvasView (CPU/raster), switching to SKGLView (GPU-accelerated via OpenGL) should significantly improve gradient rendering performance. GPU shaders handle gradients natively and bypass the raster pipeline bottleneck entirely.",
+          "category": "workaround",
+          "confidence": 0.75,
+          "effort": "small",
+          "validated": "yes"
+        },
+        {
+          "title": "Cache gradient as bitmap",
+          "description": "Pre-render the gradient to an SKBitmap once, then draw the bitmap in PaintSurface instead of applying the shader every frame. This avoids re-evaluating the gradient shader per-pixel on every frame.",
+          "codeSnippet": "// Once, when size changes:\nusing var surface = SKSurface.Create(new SKImageInfo(width, height));\nsurface.Canvas.DrawRect(0, 0, width, height, gradientPaint);\ncachedImage = surface.Snapshot();\n\n// In PaintSurface:\ncanvas.DrawImage(cachedImage, 0, 0);",
+          "category": "workaround",
+          "confidence": 0.8,
+          "effort": "small",
+          "validated": "yes"
+        },
+        {
+          "title": "Profile Skia raster gradient pipeline",
+          "description": "Profile the raster gradient fill path in the current Skia version to identify the specific bottleneck. Compare with the Skia version used in SkiaSharp 2.88.x to quantify the upstream regression.",
+          "category": "investigation",
+          "confidence": 0.7,
+          "effort": "large",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Cache gradient as bitmap",
+      "recommendedReason": "Immediately actionable by the reporter, avoids the per-frame shader evaluation cost regardless of rendering backend, and requires minimal code changes. The GPU switch is also good but requires more structural changes and may not be available in all deployment targets."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Genuine performance regression with plausible root cause in upstream Skia. Needs profiling to confirm whether it's a raster-specific issue or affects GPU rendering too. Reporter's code pattern is standard \u2014 this is not misuse.",
+      "suggestedReproPlatform": "windows"
+    },
+    "missingInfo": [
+      "Whether the reporter is using SKCanvasView (CPU) or SKGLView (GPU)",
+      "Approximate dimensions of the gradient-filled rectangle",
+      "How frequently PaintSurface is invoked (timer-based animation? user interaction?)"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, performance, and platform labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic",
+          "tenet/performance"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge regression, suggest bitmap caching workaround, ask clarifying questions",
+        "risk": "medium",
+        "confidence": 0.8,
+        "comment": "Thanks for the clear repro code \u2014 the shader-only performance difference is a useful signal.\n\nAs a workaround while we investigate, you can pre-render the gradient to an image once (when the size changes) and draw that cached image each frame instead of applying the shader directly:\n\n```csharp\n// Once, when size changes:\nusing var tempSurface = SKSurface.Create(new SKImageInfo((int)FireField.Width, (int)FireField.Height));\ntempSurface.Canvas.DrawRect(0, 0, FireField.Width, FireField.Height, BG);\ncachedGradient?.Dispose();\ncachedGradient = tempSurface.Snapshot();\n\n// In PaintSurface, replace the DrawRect+shader with:\ncanvas.DrawImage(cachedGradient, 0, 0);\n```\n\nThis avoids re-evaluating the gradient shader per-pixel on every frame.\n\nA couple of questions to help us narrow this down:\n1. Are you using `SKCanvasView` (CPU rendering) or `SKGLView` (GPU-accelerated)? GPU rendering handles gradient shaders natively and may not show this regression.\n2. How large is the `FireField` area (approximate pixel dimensions)?\n3. How frequently is `PaintSurface` called \u2014 is this running as an animation loop?"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference to broader SkiaSharp v3 performance regression report",
+        "risk": "low",
+        "confidence": 0.7,
+        "linkedIssue": 3525
+      }
+    ]
+  }
+}
