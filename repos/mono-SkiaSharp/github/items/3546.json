@@ -1,0 +1,28 @@
+{
+  "number": 3546,
+  "type": "pr",
+  "state": "open",
+  "title": "Fix macOS GL performance: read stencil bits from pixel format",
+  "body": "## Fix macOS GL performance: read stencil bits from pixel format\n\nFixes #3525\n\n### Problem\n\n\u0060SKGLView\u0060 on macOS suffers a severe performance regression because \u0060glGetIntegerv(GL_STENCIL_BITS)\u0060 returns **0** for the default framebuffer, even when the pixel format allocates 8 stencil bits. This is a macOS GL driver quirk \u2014 the native Skia sample app works around it by reading from \u0060NSOpenGLPixelFormat\u0060 instead (\u0060GLWindowContext_mac.mm:127\u0060).\n\nWithout the correct stencil value, Skia\u0027s \u0060GRBackendRenderTarget\u0060 is created with \u0060stencil=0\u0060, which disables \u0060TessellationPathRenderer\u0060 (requires stencil for stencil-and-cover rendering). Skia falls back to \u0060DefaultPathRenderer\u0060, which CPU-tessellates every path and issues ~40k individual GL draw calls \u2014 each with per-call GL state validation overhead.\n\n### Fix\n\nRead stencil bits from \u0060NSOpenGLPixelFormat.GetValue()\u0060 (matching the native approach), with a fallback to \u0060glGetIntegerv\u0060 for non-macOS platforms or if the pixel format is unavailable.\n\n### Results (MotionMark, 40k stroked paths, C12 complexity)\n\n| Metric | Before | After | Native C\u002B\u002B GL | Speedup |\n|---|---|---|---|---|\n| **FPS** | 5.3 | **77\u201393** | 61 | **15.6\u00D7** |\n| render | 62ms | 6.9ms | 6.9ms | 9\u00D7 |\n| flush | 125ms | 1.8ms | \u2014 | 69\u00D7 |\n| total | 187ms | 12ms | ~16ms | 15.6\u00D7 |\n\nC# GL now **outperforms** native C\u002B\u002B GL by 26\u201352%. Metal was already verified identical to native (zero overhead at all complexity levels).\n\n### What Changed\n\n- \u0060source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs\u0060 \u2014 Read stencil from pixel format instead of GL\n\n### Testing\n\n- Built and verified \u0060SkiaSharp.Views.csproj\u0060 compiles cleanly (0 errors)\n- Benchmarked across 12 separate test apps at 4 complexity levels\n- Verified Metal performance unchanged (still matches native exactly)\n- Verified GL performance with per-phase instrumentation\n- Consulted 3 AI models to corroborate diagnosis\n\nSee the investigation comment below for the full detailed process.\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-05T13:58:40",
+  "updatedAt": "2026-03-05T14:11:21",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-macos-gl-stencil-perf",
+  "additions": 12,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}
