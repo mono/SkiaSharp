@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3029,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-05T03:10:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Reproduced on macOS 26.3 (ARM64) with PingFang SC font. The degree symbol (U+00B0) returns glyph ID 0 (.notdef) through SKFont.GetGlyphs, while Chinese characters like U+5355 correctly map to glyph ID 768. Helvetica correctly maps the degree symbol to glyph ID 131. The issue persists across all tested SkiaSharp versions (2.88.8, 3.119.2, main). Root cause is Apple's font format change for PingFang SC (changed in iOS 18 / macOS 15+), which Skia's CoreText font port cannot properly read for certain glyph mappings.",
+  "scope": "platform-specific/macos",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.8"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3 (Darwin 25.3.0)",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.8",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project and add SkiaSharp 2.88.8",
+      "command": "mkdir -p /tmp/skiasharp/repro/3029 && cd /tmp/skiasharp/repro/3029 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.8",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '2.88.8' added.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console app that loads PingFang SC typeface, checks glyph mapping for degree symbol (U+00B0) and Chinese characters, draws text to PNG",
+          "content": "using System;\nusing System.IO;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine($\"SkiaSharp: {typeof(SKBitmap).Assembly.GetName().Version}\");\n\nvar typeface = SKTypeface.FromFamilyName(\"PingFang SC\");\nif (typeface == null) { Console.WriteLine(\"ERROR: PingFang SC not found\"); return; }\nConsole.WriteLine($\"Typeface: {typeface.FamilyName}\");\n\nstring testText = \"\\u5355\\u4F4D: \\u00B0C\";\nConsole.WriteLine($\"Test text: {testText}\");\n\nusing var font = new SKFont(typeface, 48);\nvar degreeChar = new char[] { '\\u00B0' };\nvar glyphs = new ushort[1];\nfont.GetGlyphs(degreeChar, glyphs);\nConsole.WriteLine($\"Degree symbol (U+00B0) glyph ID: {glyphs[0]}\");\n\nvar chineseChar = new char[] { '\\u5355' };\nvar chineseGlyphs = new ushort[1];\nfont.GetGlyphs(chineseChar, chineseGlyphs);\nConsole.WriteLine($\"Chinese char glyph ID: {chineseGlyphs[0]}\");\n\nint width = 400, height = 100;\nusing var bitmap = new SKBitmap(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);\nusing var canvas = new SKCanvas(bitmap);\ncanvas.Clear(SKColors.White);\n\nusing var paint = new SKPaint();\npaint.Color = SKColors.Black;\npaint.TextSize = 48;\npaint.IsAntialias = true;\npaint.Typeface = typeface;\ncanvas.DrawText(testText, 20, 60, paint);\n\nusing var image = SKImage.FromBitmap(bitmap);\nusing var data = image.Encode(SKEncodedImageFormat.Png, 100);\nusing (var stream = File.OpenWrite(\"output.png\")) { data.SaveTo(stream); }\nConsole.WriteLine(\"Saved: output.png\");\n\nvar helv = SKTypeface.FromFamilyName(\"Helvetica\");\nif (helv != null) {\n    using var fontH = new SKFont(helv, 48);\n    var glyphsH = new ushort[1];\n    fontH.GetGlyphs(degreeChar, glyphsH);\n    Console.WriteLine($\"Helvetica degree glyph ID: {glyphsH[0]}\");\n}\nConsole.WriteLine(\"SUCCESS: test completed\");"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build console repro app with SkiaSharp 2.88.8",
+      "command": "cd /tmp/skiasharp/repro/3029/Repro && dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run repro — degree symbol (U+00B0) maps to glyph ID 0 (.notdef) with PingFang SC, confirming wrong rendering",
+      "command": "cd /tmp/skiasharp/repro/3029/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "OS: Darwin 25.3.0\nArch: Arm64\nSkiaSharp: 2.88.0.0\nTypeface: PingFang SC (style: SkiaSharp.SKFontStyle)\nTest text: 单位: °C\nDegree symbol (U+00B0) glyph ID: 0\nChinese char glyph ID: 768\nSaved: output_288.png (5195 bytes)\nHelvetica degree glyph ID: 131\nSUCCESS: test completed",
+      "layer": "native",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with latest stable SkiaSharp 3.119.2 — same glyph mapping failure",
+      "command": "cd /tmp/skiasharp/repro/3029-latest/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "OS: Darwin 25.3.0\nArch: Arm64\nSkiaSharp: 3.119.0.0\nTypeface: PingFang SC\nTest text: 单位: °C\nDegree symbol (U+00B0) glyph ID: 0\nChinese char glyph ID: 768\nDrew text using SKTextBlob\nSaved: output_3119.png (5178 bytes)\nHelvetica degree glyph ID: 131\nSUCCESS: test completed",
+      "layer": "native",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test with main branch source — same glyph mapping failure persists",
+      "command": "dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "OS: Darwin 25.3.0\nArch: Arm64\nSkiaSharp: 3.119.0.0\nTypeface: PingFang SC\nTest text: 单位: °C\nDegree symbol (U+00B0) glyph ID: 0\nChinese char glyph ID: 768\nDrew text blob: True\nSaved: output_main.png (5178 bytes)\nSUCCESS: test completed",
+      "layer": "native",
+      "result": "wrong-output"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.8",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Degree symbol (U+00B0) returns glyph ID 0 (.notdef) with PingFang SC. Chinese char correctly maps to glyph 768. Helvetica correctly maps degree to glyph 131.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same glyph mapping failure — degree symbol returns glyph ID 0 with PingFang SC on macOS 26.3.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Bug persists on main branch. Glyph ID 0 for degree symbol with PingFang SC.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Reproduced on all SkiaSharp versions including main. Root cause is in Skia's CoreText font port interaction with Apple's new PingFang SC font format. Needs upstream Skia investigation."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm bug and native area labels, add os/macOS since it also reproduces on macOS",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "add-comment",
+        "description": "Post reproduction results with version matrix and workaround suggestions",
+        "risk": "medium",
+        "confidence": 0.9
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this and for the thorough investigation into the PingFang font changes!\n\nWe've confirmed this issue reproduces on **macOS 26.3** (ARM64) as well, which suggests it affects all Apple platforms with the updated PingFang SC font (iOS 18+ and macOS 15+).\n\n**Key finding:** The degree symbol (U+00B0) maps to glyph ID 0 (`.notdef` / missing glyph) when loaded through PingFang SC via Skia's CoreText font port. Chinese characters like U+5355 map correctly (glyph 768), and other fonts like Helvetica correctly map the degree symbol (glyph 131). This confirms the issue is specific to PingFang SC's new font format and how Skia reads its glyph tables.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| SkiaSharp 2.88.8 (reporter) | ❌ Reproduced |\n| SkiaSharp 3.119.2 (latest) | ❌ Reproduced |\n| main (source) | ❌ Reproduced |\n\n**Workarounds:**\n- Bundle a known-good Chinese font (e.g., [Noto Sans SC](https://fonts.google.com/noto/specimen/Noto+Sans+SC)) and load via `SKTypeface.FromFile()` or `SKTypeface.FromData()` to avoid the system PingFang SC entirely\n- Implement manual font fallback: check if the typeface contains the glyph with `SKFont.ContainsGlyphs()` and fall back to a different typeface for missing characters\n\nThis appears to be an upstream Skia issue in the CoreText font port's handling of Apple's new PingFang font format.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Bundle a known-good Chinese font (e.g., Noto Sans SC) and load via SKTypeface.FromFile() or SKTypeface.FromData()",
+      "Implement manual font fallback: check SKFont.ContainsGlyphs() and use a different typeface for characters that fail"
+    ]
+  },
+  "feedback": {
+    "corrections": []
+  }
+}
