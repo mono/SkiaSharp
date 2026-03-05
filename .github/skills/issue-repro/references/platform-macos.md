@@ -4,10 +4,9 @@ For bugs involving macOS rendering, views, GPU backends, or any macOS-specific U
 
 ## Contents
 1. [Signals](#signals) — [Prerequisites](#prerequisites) — [Create Project](#create-project)
-2. [macOS App Setup Gotchas](#macos-app-setup-gotchas) — [Backend-Specific Templates](#backend-specific-templates)
+2. [macOS App Tips](#macos-app-tips) — [Backend-Specific Templates](#backend-specific-templates)
 3. [Build](#build) — [Run & Verify](#run--verify) — [Iterate](#iterate)
 4. [Conclusion Mapping](#conclusion-mapping) — [Main Source Testing (Phase 3C)](#main-source-testing-phase-3c)
-5. [Pitfalls](#pitfalls)
 
 ## Signals
 
@@ -20,7 +19,6 @@ Also use when triage JSON has `classification.platforms` containing `os/macOS` o
 - .NET SDK (10.0+ recommended)
 - macOS workload: `dotnet workload install macos`
 - Xcode Command Line Tools: `xcode-select --install`
-- For native baseline comparison (performance bugs): `brew install cmake ninja`
 
 ## Create Project
 
@@ -45,54 +43,35 @@ dotnet add package SkiaSharp.Views --version {reporter_version}
 </PropertyGroup>
 ```
 
-## macOS App Setup Gotchas
+## macOS App Tips
 
-These are critical — a macOS .NET app won't show a window without them:
-
-1. **Application activation** — Required for the window to appear:
-```csharp
-NSApplication.SharedApplication.ActivationPolicy = NSApplicationActivationPolicy.Regular;
-NSApplication.SharedApplication.ActivateIgnoringOtherApps(true);
-```
-
-2. **Run the binary directly** — Do NOT use `open -n AppName.app`. The `open` command doesn't pipe stdout, so you won't see console output:
+**Run the binary directly** for stdout capture — `open -n AppName.app` launches detached from the terminal:
 ```bash
-# ✅ CORRECT — see stdout
+# ✅ See stdout
 ./bin/Release/net10.0-macos/osx-arm64/Repro.app/Contents/MacOS/Repro
 
-# ❌ WRONG — no stdout capture
+# ❌ No stdout capture
 open -n ./bin/Release/net10.0-macos/osx-arm64/Repro.app
 ```
 
-3. **Window creation** — Minimal AppDelegate pattern:
+**Use `dotnet build`, not `dotnet run`** — `dotnet run` doesn't reliably produce the `.app` bundle structure that macOS requires.
+
+**Code signing** — For local testing, add `<EnableCodeSigning>false</EnableCodeSigning>` to skip signing errors.
+
+**Add SkiaSharp views** to the window in your `AppDelegate.DidFinishLaunching`:
 ```csharp
-[Register("AppDelegate")]
-public class AppDelegate : NSApplicationDelegate
-{
-    private NSWindow? _window;
-
-    public override void DidFinishLaunching(NSNotification notification)
-    {
-        _window = new NSWindow(
-            new CGRect(100, 100, 800, 600),
-            NSWindowStyle.Titled | NSWindowStyle.Closable | NSWindowStyle.Resizable,
-            NSBackingStore.Buffered, false);
-        _window.Title = "SkiaSharp Repro";
-
-        // Add your SKCanvasView / SKGLView / SKMetalView here
-        // _window.ContentView = new SKCanvasView(frame);
-
-        _window.MakeKeyAndOrderFront(null);
-    }
-}
+// In DidFinishLaunching, add the appropriate view to your window:
+_window.ContentView = new SKCanvasView(frame);  // Software
+// or: new SKMetalView(frame);  // Metal
+// or: new SKGLView(frame);     // OpenGL
 ```
 
 ## Backend-Specific Templates
 
+Use these when the bug involves rendering output or GPU behavior — test multiple backends to isolate whether the issue is backend-specific.
+
 ### Metal Backend (SKMetalView)
 ```csharp
-using SkiaSharp.Views.Mac;
-
 var metalView = new SKMetalView(frame);
 metalView.PaintSurface += (s, e) =>
 {
@@ -105,8 +84,6 @@ _window.ContentView = metalView;
 
 ### OpenGL Backend (SKGLView)
 ```csharp
-using SkiaSharp.Views.Mac;
-
 var glView = new SKGLView(frame);
 glView.PaintSurface += (s, e) =>
 {
@@ -119,8 +96,6 @@ _window.ContentView = glView;
 
 ### Software Backend (SKCanvasView)
 ```csharp
-using SkiaSharp.Views.Mac;
-
 var canvasView = new SKCanvasView(frame);
 canvasView.PaintSurface += (s, e) =>
 {
@@ -140,23 +115,21 @@ dotnet build -c Release
 Common build errors:
 - `NETSDK1174: missing workload` → `dotnet workload install macos`
 - `error MT0000: ApplicationId not set` → Add `<ApplicationId>` to `.csproj`
-- `error: no signing identity found` → Add `<EnableCodeSigning>false</EnableCodeSigning>` for local testing
+- `error: no signing identity found` → Add `<EnableCodeSigning>false</EnableCodeSigning>`
 
 ## Run & Verify
 
 ```bash
-# Run directly for stdout capture
 ./bin/Release/net10.0-macos/osx-arm64/Repro.app/Contents/MacOS/Repro
 ```
 
 **Visual verification:** If the bug is visual, take a screenshot to verify rendering. Log key metrics to stdout.
 
-**For GPU bugs:** Test both Metal and GL backends. If one works and the other doesn't, that's a critical signal.
+**For GPU bugs:** Test both Metal and GL backends. If one works and the other doesn't, that's a critical signal — note the backend in the conclusion.
 
 ## Iterate
 
 - If the bug doesn't reproduce with SKCanvasView (software), try SKGLView (GL) or SKMetalView (Metal)
-- For GL-specific bugs, ensure the NSOpenGLPixelFormat includes the required attributes (stencil, MSAA, depth)
 - For performance issues, see **Category 10: Performance** in bug-categories.md for measurement methodology
 
 ## Conclusion Mapping
@@ -185,11 +158,3 @@ dotnet run
 ```
 
 After testing, revert: `git checkout -- samples/`
-
-## Pitfalls
-
-- macOS OpenGL is **deprecated by Apple** (last updated at OpenGL 4.1). GL bugs may be macOS driver quirks, not SkiaSharp bugs. Document which GL version is active.
-- `glGetIntegerv` can return incorrect values on macOS default framebuffers (e.g., `GL_STENCIL_BITS = 0` when stencil is actually allocated). Cross-check with `NSOpenGLPixelFormat.GetValue()`.
-- Metal requires a GPU — won't work in headless CI without GPU passthrough.
-- macOS `.app` bundles need specific directory structure. `dotnet build` handles this, but `dotnet run` may not.
-- The `NSOpenGLView` used by `SKGLView` is deprecated. Some visual bugs may be due to Apple's abandoned GL implementation.
