@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1729,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z"
+  },
+  "summary": "Feature request to expose Skia's SkPath operator== as SKPath.Equals(SKPath) in the C# API, enabling efficient native path comparison instead of iterating verbs in managed code.",
+  "classification": {
+    "type": { "value": "type/feature-request", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.95 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "repoLinks": [
+        { "url": "https://skia.org/docs/user/modules/pathkit/#equalsotherpath", "description": "Skia PathKit docs showing equals(otherPath) method" }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "Well-scoped feature request. Skia C++ has SkPath::operator== which compares FillType, verb array, point array, and weights. The C API (sk_path.h) does not expose an equality function, and SKPath in C# has no Equals override. Implementation would require adding sk_path_equals to the C API, regenerating bindings, and adding Equals/IEquatable<SKPath> to the C# wrapper.",
+    "rationale": "This is a feature request (not enhancement) because no path comparison API exists at any layer of the SkiaSharp stack. The upstream C++ supports it natively via operator==, so implementation is straightforward plumbing through C API and C# layers. The reporter's alternative of iterating verbs in C# is valid but significantly slower due to P/Invoke overhead per verb.",
+    "keySignals": [
+      { "text": "Skia has an equals(otherPath) method that would be good to expose", "source": "issue body", "interpretation": "Reporter correctly identifies the upstream capability and requests it be exposed." },
+      { "text": "Iterating over the paths in C# and looking for differences, but that would be considerably slower", "source": "issue body", "interpretation": "Valid concern — verb-by-verb iteration via P/Invoke is O(n) with per-call overhead vs single native comparison." }
+    ],
+    "codeInvestigation": [
+      { "file": "externals/skia/include/core/SkPath.h", "lines": "156-163", "finding": "SkPath has friend operator== that compares FillType, verb array, SkPoint array, and weights. Also has operator!=. This is the upstream API the reporter wants exposed.", "relevance": "direct" },
+      { "file": "externals/skia/include/c/sk_path.h", "lines": "18-71", "finding": "No sk_path_equals or similar function exists in the C API header. The equality comparison is not plumbed through the C shim layer.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKPath.cs", "lines": "15", "finding": "SKPath class does not implement IEquatable<SKPath> and has no Equals override. No equality comparison is available in managed code.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKPath.cs", "lines": "411-415", "finding": "SKPath exposes CreateIterator and CreateRawIterator which could be used for manual verb-by-verb comparison as the reporter's workaround, though with significant P/Invoke overhead.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/SKPath.cs", "lines": "483-486", "finding": "SKPath.ToSvgPathData() converts path to SVG string — could serve as an approximate equality check via string comparison, but loses fill type, conic weights, and floating-point precision.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Compare paths approximately via SVG strings: path1.ToSvgPathData() == path2.ToSvgPathData() — note this loses fill type, conic weights, and floating-point precision beyond 6 significant digits",
+      "Iterate both paths with CreateRawIterator() and compare verbs, points, and conic weights manually (correct but slow due to P/Invoke per verb)"
+    ],
+    "nextQuestions": [
+      "Should SKPath implement IEquatable<SKPath> with operator== and operator!= in addition to Equals?",
+      "Should GetHashCode also be overridden for consistency (SkPath doesn't expose a hash function)?"
+    ],
+    "resolution": {
+      "hypothesis": "The C++ SkPath::operator== exists and works correctly. Adding the C API function and C# wrapper is a straightforward 3-layer plumbing task.",
+      "proposals": [
+        {
+          "title": "SVG string comparison workaround",
+          "description": "Compare paths via their SVG string representation. Quick to implement now but lossy: SVG does not encode fill type, converts conics to quadratics (losing weights), and uses limited floating-point precision (~6 significant digits with %g format). Only suitable for approximate visual comparison of simple paths.",
+          "category": "workaround",
+          "codeSnippet": "bool AreApproximatelyEqual(SKPath a, SKPath b) => a.ToSvgPathData() == b.ToSvgPathData();",
+          "confidence": 0.50,
+          "effort": "trivial",
+          "validated": "no"
+        },
+        {
+          "title": "Add sk_path_equals to C API and SKPath.Equals to C#",
+          "description": "Add sk_path_equals(const sk_path_t*, const sk_path_t*) to C API wrapping SkPath::operator==, regenerate bindings, then add Equals(SKPath) and IEquatable<SKPath> to the C# wrapper with operator== and operator!= overloads.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "small",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add sk_path_equals to C API and SKPath.Equals to C#",
+      "recommendedReason": "Straightforward implementation since the upstream C++ API already exists. Provides the most efficient and correct comparison, preserving fill type, conic weights, and full floating-point precision."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Well-scoped feature request with clear implementation path through all three layers (C API, bindings, C# wrapper). Upstream Skia supports it natively.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply feature-request and SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/feature-request", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge feature request and explain implementation path",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the request — this is a reasonable API to expose since Skia's C++ `SkPath::operator==` already supports it, comparing fill type, verb array, point coordinates, and conic weights.\n\nThe iterator-based workaround you mentioned is the most correct managed-code approach. An SVG-based comparison (`ToSvgPathData()`) is simpler but lossy — it doesn't preserve fill type, converts conics to quadratics, and truncates coordinate precision.\n\nThe proper fix would be to plumb `SkPath::operator==` through the C API as `sk_path_equals` and expose it as `SKPath.Equals(SKPath)` with `IEquatable<SKPath>` support. This is a well-scoped addition."
+      }
+    ]
+  }
+}
