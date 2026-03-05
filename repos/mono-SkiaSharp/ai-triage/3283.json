@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3283,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "On Android, SKFontManager.GetFontFamilies() returns font alias names (e.g., 'georgia') that resolve to canonical families (e.g., 'serif') when passed to SKTypeface.FromFamilyName(), because Android's fonts.xml maps most traditional font names as aliases to a small set of actual system fonts.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.75 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "platforms": ["os/Android"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "SKTypeface.FromFamilyName returns typeface with FamilyName 'serif' instead of requested 'georgia'",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net9.0-android"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call SKFontManager.Default.GetFontFamilies() on Android — returns 'georgia' among others",
+        "Call SKTypeface.FromFamilyName('georgia', SKFontStyle) with a name from step 1",
+        "Check returned SKTypeface.FamilyName — it returns 'serif' instead of 'georgia'"
+      ],
+      "environmentDetails": "Android 13, .NET 9.0, MAUI 9.0.50, SkiaSharp 3.116.1, Android Emulator (Pixel 5), Galaxy Tab S9+",
+      "repoLinks": [
+        { "url": "https://github.com/DanTravison/SKtypefaceAndroid", "description": "Minimal MAUI repro project from reporter" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "3.116.1", "3.119.0", "2.88.9"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Reporter confirmed the same behavior on 3.119.0 and 2.88.9. The underlying Skia Android font manager code has not changed — aliases are parsed from Android's system fonts.xml."
+    },
+    "regression": {
+      "isRegression": false,
+      "confidence": 0.90,
+      "reason": "Reporter initially claimed 2.88.9 as last known good version but later confirmed the same behavior occurs on 2.88.9. This is long-standing Skia behavior on Android, not a SkiaSharp regression."
+    }
+  },
+  "analysis": {
+    "summary": "This is expected behavior from Skia's Android font manager. Android's fonts.xml defines aliases (e.g., 'georgia' → 'serif') for traditional font names. Skia enumerates these aliases in GetFontFamilies() but the resolved typeface reports its canonical family name from the font file. The disconnect is in Skia's Android port, not SkiaSharp's C# wrapper.",
+    "rationale": "Classified as type/bug because the API behavior is confusing — GetFontFamilies() returns names that don't round-trip through FromFamilyName().FamilyName. However, this is upstream Skia behavior on Android and is by-design: Android doesn't ship Georgia, Times New Roman, etc. as real fonts — they're aliases to serif/sans-serif/monospace. Reporter confirmed same behavior on 2.88.9, ruling out regression. The suggest action is close-as-by-design with an explanatory comment and workaround.",
+    "keySignals": [
+      { "text": "'georgia' is returned from GetFontFamilies yet both calls to SKTypeface.FromFamilyName return an SKTypeface with FamilyName = 'serif'", "source": "issue body", "interpretation": "Android alias resolution: 'georgia' maps to 'serif' in fonts.xml, and the typeface reports the canonical name." },
+      { "text": "I don't see this issue on Windows and have not tested yet tested on IOS or MacCatalyst", "source": "issue body", "interpretation": "Windows has real Georgia font installed; Android uses aliases. Platform difference confirms this is Android font system behavior." },
+      { "text": "I'm seeing the same behavior with SkiaSharp v3.119.0 and v2.88.9 as well.", "source": "comment #2", "interpretation": "Not a regression — this is long-standing Skia Android behavior across all SkiaSharp versions." },
+      { "text": "The only fonts that return the expected FontFamily are the various sans serif/serif fonts. All the others either return sans-serif, sans, or monospace.", "source": "issue body", "interpretation": "Exactly matches Android's alias structure: only canonical families (serif, sans-serif, monospace) exist as real fonts." }
+    ],
+    "codeInvestigation": [
+      { "file": "externals/skia/src/ports/SkFontMgr_android.cpp", "lines": "290-300", "finding": "onCountFamilies() and onGetFamilyName() enumerate ALL entries in fNameToFamilyMap including aliases, so GetFontFamilies() returns alias names like 'georgia'", "relevance": "direct" },
+      { "file": "externals/skia/src/ports/SkFontMgr_android_parser.cpp", "lines": "341-393", "finding": "Android fonts.xml <alias> elements without weight are added to the existing family's fNames array — e.g., 'georgia' is added to the serif family's names list", "relevance": "direct" },
+      { "file": "externals/skia/src/ports/SkFontMgr_android.cpp", "lines": "449-478", "finding": "addFamily() registers ALL names in FontFamily.fNames to fNameToFamilyMap pointing to the same SkFontStyleSet, so 'georgia' and 'serif' share the same style set", "relevance": "direct" },
+      { "file": "externals/skia/src/ports/SkFontMgr_android.cpp", "lines": "309-326", "finding": "onMatchFamily() uses exact case-insensitive matching against fNameToFamilyMap — 'georgia' is found and returns the serif style set, so the match succeeds but the typeface reports 'serif'", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKTypeface.cs", "lines": "48-72", "finding": "FromFamilyName calls sk_typeface_create_from_name which delegates to SkTypeface::MakeFromName — no SkiaSharp-layer transformation of the result", "relevance": "context" },
+      { "file": "externals/skia/src/c/sk_typeface.cpp", "lines": "56-58", "finding": "sk_typeface_create_from_name is a thin wrapper around SkTypeface::MakeFromName — SkiaSharp passes through Skia's result unchanged", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Bundle the desired font file (e.g., Georgia.ttf) with your app and use SKTypeface.FromFile() or SKTypeface.FromData() to load it directly",
+      "Build a mapping table: for each name from GetFontFamilies(), call MatchFamily(name).FamilyName to discover canonical names and filter out aliases"
+    ],
+    "nextQuestions": [
+      "Should SkiaSharp document the Android alias behavior in the API docs for SKFontManager.GetFontFamilies()?",
+      "Could SkiaSharp provide a helper to deduplicate alias names from GetFontFamilies() on Android?"
+    ],
+    "resolution": {
+      "hypothesis": "Android's fonts.xml defines aliases for traditional font names (georgia → serif, arial → sans-serif, etc.). Skia's Android font manager enumerates aliases in GetFontFamilies() but typefaces report their canonical family name. This is upstream Skia behavior, not a SkiaSharp bug.",
+      "proposals": [
+        {
+          "title": "Bundle fonts with the app",
+          "description": "Instead of relying on system font name resolution, bundle the desired .ttf/.otf font files with the MAUI app and load them directly using SKTypeface.FromFile() or SKTypeface.FromData(). This guarantees the exact font is used regardless of platform.",
+          "category": "workaround",
+          "codeSnippet": "// In MAUI, embed font as app resource then load:\nusing var stream = await FileSystem.OpenAppPackageFileAsync(\"Georgia.ttf\");\nusing var data = SKData.Create(stream);\nvar typeface = SKTypeface.FromData(data);",
+          "confidence": 0.90,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Filter aliases from GetFontFamilies",
+          "description": "Build a deduplicated font family list by resolving each name from GetFontFamilies() through MatchFamily() and comparing the returned typeface's FamilyName to the requested name. Only keep entries where they match (canonical names).",
+          "category": "workaround",
+          "codeSnippet": "var mgr = SKFontManager.Default;\nvar realFamilies = mgr.GetFontFamilies()\n    .Where(name => {\n        using var tf = mgr.MatchFamily(name);\n        return tf != null && tf.FamilyName.Equals(name, StringComparison.OrdinalIgnoreCase);\n    })\n    .ToArray();",
+          "confidence": 0.80,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Bundle fonts with the app",
+      "recommendedReason": "Bundling fonts is the standard cross-platform approach and guarantees the exact typeface. Relying on system font name resolution is inherently platform-dependent."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.82,
+      "reason": "This is upstream Skia behavior reflecting Android's font aliasing system. GetFontFamilies() enumerates aliases by design. The typeface correctly reports its canonical name. Reporter confirmed same behavior on 2.88.9 — not a regression. Workaround exists (bundle fonts)."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, Android labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Android"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain Android font aliasing behavior and provide workarounds",
+        "risk": "high",
+        "confidence": 0.82,
+        "comment": "Thanks for the detailed repro and for confirming this across multiple versions.\n\nThis is expected behavior from Skia's Android font manager. Android doesn't ship fonts like Georgia, Arial, or Times New Roman as separate font files — instead, its `fonts.xml` defines these names as *aliases* that map to a small set of actual system fonts (`serif`, `sans-serif`, `monospace`). When Skia enumerates font families, it includes these alias names, but the resolved typeface reports its canonical family name from the font file itself.\n\nThis is why `GetFontFamilies()` returns \"georgia\" but `FromFamilyName(\"georgia\").FamilyName` returns \"serif\" — the lookup succeeds (you do get a valid typeface), but it's the serif font that Android maps \"georgia\" to. The same behavior exists in 2.88.9 as you confirmed, and it applies to all Android devices.\n\nHere's a workaround: bundle the specific fonts you need with your app and load them directly:\n\n```csharp\nusing var stream = await FileSystem.OpenAppPackageFileAsync(\"Georgia.ttf\");\nusing var data = SKData.Create(stream);\nvar typeface = SKTypeface.FromData(data);\n```\n\nAlternatively, you can filter aliases from `GetFontFamilies()` to show only canonical system fonts:\n\n```csharp\nvar mgr = SKFontManager.Default;\nvar realFamilies = mgr.GetFontFamilies()\n    .Where(name => {\n        using var tf = mgr.MatchFamily(name);\n        return tf != null && tf.FamilyName.Equals(name, StringComparison.OrdinalIgnoreCase);\n    })\n    .ToArray();\n```\n\nThis is upstream Skia behavior that SkiaSharp passes through. We'll consider whether documenting this Android alias behavior in the API docs would help future users."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design — upstream Skia/Android font aliasing behavior",
+        "risk": "medium",
+        "confidence": 0.78,
+        "stateReason": "not_planned"
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with font name resolution issue on WASM",
+        "risk": "low",
+        "confidence": 0.65,
+        "linkedIssue": 1902
+      }
+    ]
+  }
+}
