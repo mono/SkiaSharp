@@ -1,0 +1,218 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3233,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-08-23T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "ExecutionEngineException crash when assigning SKGLView to ContentView.Content in a MAUI 9 project on Windows. MAUI 9 changed the default WindowsPackageType from MSIX to None (unpackaged), and the ANGLE OpenGL ES libraries that SKGLView depends on fail to initialize in unpackaged mode.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.92
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views.Maui",
+      "confidence": 0.9
+    },
+    "platforms": [
+      "os/Windows-WinUI"
+    ],
+    "backends": [
+      "backend/OpenGL"
+    ],
+    "tenets": [
+      "tenet/compatibility"
+    ],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "crash",
+      "errorMessage": "Exception of type 'System.ExecutionEngineException' was thrown.",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net9.0-windows"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a default MAUI 9 template project",
+        "Add SkiaSharp NuGet reference and call UseSkiaSharp() in MauiProgram",
+        "Create a class inheriting from ContentView that sets Content = new SKGLView()",
+        "Assign that class instance to MainPage Content",
+        "Run on Windows \u2014 application crashes with ExecutionEngineException"
+      ],
+      "environmentDetails": "Windows 11, Visual Studio (Windows), MAUI 9, SkiaSharp 3.116.1",
+      "relatedIssues": [
+        3113,
+        2968,
+        2648
+      ],
+      "repoLinks": [
+        {
+          "url": "https://github.com/pauldendulk/skiasharpcrash",
+          "description": "Minimal MAUI 9 repro project from reporter"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "3.116.1",
+        "3.116.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKGLView Windows handler uses ANGLE via AngleSwapChainPanel, which has not changed. The crash is triggered by MAUI 9's change to unpackaged mode, not a SkiaSharp code change."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.85,
+      "reason": "Reporter states it only occurs with MAUI 9, not MAUI 8. MAUI 9 changed the default WindowsPackageType from MSIX to None (unpackaged), which affects ANGLE library loading. The SkiaSharp code itself did not change."
+    }
+  },
+  "analysis": {
+    "summary": "SKGLView on Windows depends on ANGLE (OpenGL ES via Direct3D) through the AngleSwapChainPanel \u2192 GlesContext \u2192 EGL initialization chain. MAUI 9 changed the default Windows packaging from MSIX to unpackaged mode, which causes the ANGLE libraries (libEGL.dll, libGLESv2.dll) to fail to load or initialize, resulting in an ExecutionEngineException. This is the same root cause as #3113 and #2968.",
+    "rationale": "The reporter provides a minimal repro (ContentView subclass assigning SKGLView). The crash only occurs in MAUI 9 (not MAUI 8), and a community workaround of setting WindowsPackageType to MSIX confirms the issue is related to unpackaged mode. Three separate issues (#3233, #3113, #2968) all report SKGLView crashes on Windows MAUI with the common thread being unpackaged mode. The code path from SKGLViewHandler.Windows \u2192 MauiSKSwapChainPanel \u2192 AngleSwapChainPanel \u2192 GlesContext initializes ANGLE on the Loaded event, which requires the ANGLE DLLs to be loadable.",
+    "keySignals": [
+      {
+        "text": "It only occurs when creating a MAUI 9 project. Not when creating a MAUI 8 project.",
+        "source": "issue body",
+        "interpretation": "MAUI 9 changed default WindowsPackageType from MSIX to None \u2014 this is the trigger, not a SkiaSharp code change."
+      },
+      {
+        "text": "Exception of type 'System.ExecutionEngineException' was thrown.",
+        "source": "issue body",
+        "interpretation": "ExecutionEngineException with no stack trace suggests a fatal native failure during ANGLE/EGL initialization."
+      },
+      {
+        "text": "This is probably the same issue: #2968",
+        "source": "comment 3 (OP)",
+        "interpretation": "Reporter correctly identified #2968 as the same root cause \u2014 unpackaged WinUI SKGLView crashes."
+      },
+      {
+        "text": "fix this error by setting WindowsPackageType to MSIX",
+        "source": "comment 4 (TommiGustafsson-HMP)",
+        "interpretation": "Community-confirmed workaround proves the issue is caused by unpackaged mode, not a general SKGLView defect."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Windows.cs",
+        "lines": "7-13",
+        "finding": "Windows SKGLView handler creates MauiSKSwapChainPanel (inherits SKSwapChainPanel \u2192 AngleSwapChainPanel) as the platform view. The entire GL pipeline depends on ANGLE being available.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+        "lines": "124-135",
+        "finding": "OnLoaded creates a GlesContext which immediately calls InitializeDisplay() and Initialize() to set up ANGLE/EGL. If ANGLE libraries cannot be loaded in unpackaged mode, this fails fatally.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/GlesContext.cs",
+        "lines": "37-45",
+        "finding": "GlesContext constructor calls InitializeDisplay() then Initialize() \u2014 these P/Invoke into libEGL.dll. In unpackaged mode, the ANGLE DLLs may not be on the search path, causing a fatal crash rather than a catchable exception.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/GlesInterop/Egl.cs",
+        "lines": "16",
+        "finding": "Egl class P/Invokes into 'libEGL.dll' \u2014 this is the ANGLE library that must be deployed with the app. Unpackaged mode may not correctly resolve this DLL path.",
+        "relevance": "direct"
+      }
+    ],
+    "workarounds": [
+      "Set WindowsPackageType to MSIX in the .csproj to use packaged mode: <WindowsPackageType>MSIX</WindowsPackageType>",
+      "Use SKCanvasView instead of SKGLView to avoid the ANGLE dependency entirely (uses CPU rendering instead of GPU)"
+    ],
+    "nextQuestions": [
+      "Does the ANGLE DLL (libEGL.dll) get deployed to the output directory in unpackaged mode?",
+      "Is this a MAUI/WinUI issue with native DLL resolution in unpackaged apps, or a SkiaSharp packaging issue?",
+      "Should SkiaSharp add a fallback to SKCanvasView when ANGLE initialization fails?"
+    ],
+    "errorFingerprint": "ExecutionEngineException:SKGLView:Windows:unpackaged",
+    "resolution": {
+      "hypothesis": "MAUI 9 changed the default WindowsPackageType to None (unpackaged), and the ANGLE libraries required by SKGLView's OpenGL ES rendering path are not correctly resolved in unpackaged mode, causing an unrecoverable ExecutionEngineException during EGL initialization.",
+      "proposals": [
+        {
+          "title": "Use MSIX packaging mode",
+          "description": "Set WindowsPackageType to MSIX in the project file to restore packaged mode behavior where ANGLE DLLs are correctly deployed and resolved.",
+          "category": "workaround",
+          "codeSnippet": "<PropertyGroup>\n  <WindowsPackageType>MSIX</WindowsPackageType>\n</PropertyGroup>",
+          "confidence": 0.9,
+          "effort": "trivial",
+          "validated": "yes"
+        },
+        {
+          "title": "Use SKCanvasView instead of SKGLView",
+          "description": "Replace SKGLView with SKCanvasView to use CPU-based rendering, completely avoiding the ANGLE/OpenGL dependency. This trades GPU acceleration for compatibility.",
+          "category": "alternative",
+          "codeSnippet": "Content = new SKCanvasView(); // instead of new SKGLView()",
+          "confidence": 0.85,
+          "effort": "trivial",
+          "validated": "yes"
+        },
+        {
+          "title": "Fix ANGLE DLL resolution in unpackaged mode",
+          "description": "Investigate how ANGLE DLLs (libEGL.dll, libGLESv2.dll) are deployed and resolved in unpackaged WinUI apps. May require changes to the NuGet package to ensure the DLLs are on the DLL search path, or add pre-initialization checks in AngleSwapChainPanel to gracefully handle missing ANGLE.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "medium",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use MSIX packaging mode",
+      "recommendedReason": "Community-confirmed workaround with high confidence. Restores the exact packaging configuration that worked with MAUI 8. Requires minimal effort (one line in .csproj)."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "The root cause is understood at a high level (ANGLE DLL resolution in unpackaged mode), but a proper fix requires investigating whether SkiaSharp's NuGet packaging needs to change or whether MAUI/WinUI needs to be involved. Workarounds exist but don't fix the underlying issue for unpackaged deployments.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, MAUI views, Windows WinUI, OpenGL labels and partner tag",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views.Maui",
+          "os/Windows-WinUI",
+          "backend/OpenGL",
+          "tenet/compatibility",
+          "partner/maui"
+        ]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with #2968 (same root cause \u2014 unpackaged mode SKGLView crash)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 2968
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with #3113 (similar SKGLView crash on MAUI 9 Windows)",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3113
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with MSIX workaround and SKCanvasView alternative",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the clear repro project.\n\nThis looks related to MAUI 9 changing the default `WindowsPackageType` from MSIX to None (unpackaged). `SKGLView` on Windows uses ANGLE for OpenGL ES rendering, and the ANGLE libraries (`libEGL.dll`, `libGLESv2.dll`) don't resolve correctly in unpackaged mode \u2014 causing the fatal `ExecutionEngineException` during EGL initialization.\n\nHere's a workaround you can use while we investigate: add `<WindowsPackageType>MSIX</WindowsPackageType>` to your `.csproj`:\n\n```xml\n<PropertyGroup>\n  <WindowsPackageType>MSIX</WindowsPackageType>\n</PropertyGroup>\n```\n\nAlternatively, if you don't need GPU-accelerated rendering, you can use `SKCanvasView` instead of `SKGLView` \u2014 it uses CPU rendering and doesn't depend on ANGLE.\n\nThis appears to be the same underlying issue as #2968 and #3113."
+      }
+    ]
+  }
+}
