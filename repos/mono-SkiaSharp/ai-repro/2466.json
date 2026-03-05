@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2466,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-24T14:30:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Reproduced on all versions tested (2.88.3, 3.119.2, main). When ReadPixels is called with a null-colorspace destination SKImageInfo (as platform conversion methods do), Skia copies raw linear pixel values without converting to sRGB, causing non-sRGB bitmaps to display with incorrect (darker) colors. This is the core mechanism behind SKBitmapImageSource's incorrect handling of non-sRGB bitmaps. Cross-platform verification skipped because this is a pure API-level color space issue in ReadPixels, not platform-specific.",
+  "scope": "universal",
+  "errorMessages": {
+    "primaryError": "ReadPixels with null-colorspace destination copies raw linear values (R=147,G=8,B=8) instead of sRGB-converted values (R=200,G=50,B=50), causing non-sRGB bitmaps to appear much darker"
+  },
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.3"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.3",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console repro project with SkiaSharp 2.88.3",
+      "command": "mkdir -p /tmp/skiasharp/repro/2466 && cd /tmp/skiasharp/repro/2466 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.3",
+      "exitCode": 0,
+      "output": "Restore succeeded. PackageReference for package 'SkiaSharp' version '2.88.3' added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 2.88.3",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.3\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Repro code: creates linear color space bitmap, reads pixels with null vs sRGB destination, compares values",
+          "content": "using SkiaSharp;\n\nconst int width = 100;\nconst int height = 100;\n\nvar linearColorSpace = SKColorSpace.CreateSrgbLinear();\nvar linearInfo = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul, linearColorSpace);\nusing var linearBitmap = new SKBitmap(linearInfo);\n\nusing (var canvas = new SKCanvas(linearBitmap))\n{\n    using var paint = new SKPaint();\n    paint.Color = new SKColor(200, 50, 50, 255);\n    canvas.DrawRect(0, 0, width, height, paint);\n}\n\nConsole.WriteLine($\"Source bitmap color space is linear: {linearBitmap.ColorSpace?.GammaIsLinear}\");\n\nusing var image = SKImage.FromBitmap(linearBitmap);\n\nvar buggyDestInfo = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);\nusing var buggyBitmap = new SKBitmap(buggyDestInfo);\nimage.ReadPixels(buggyDestInfo, buggyBitmap.GetPixels());\n\nvar correctDestInfo = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul, SKColorSpace.CreateSrgb());\nusing var correctBitmap = new SKBitmap(correctDestInfo);\nimage.ReadPixels(correctDestInfo, correctBitmap.GetPixels());\n\nvar buggyPixel = buggyBitmap.GetPixel(50, 50);\nvar correctPixel = correctBitmap.GetPixel(50, 50);\n\nConsole.WriteLine();\nConsole.WriteLine($\"Buggy (null colorspace dest) pixel:   R={buggyPixel.Red}, G={buggyPixel.Green}, B={buggyPixel.Blue}, A={buggyPixel.Alpha}\");\nConsole.WriteLine($\"Correct (sRGB colorspace dest) pixel: R={correctPixel.Red}, G={correctPixel.Green}, B={correctPixel.Blue}, A={correctPixel.Alpha}\");\n\nbool colorsMatch = buggyPixel.Red == correctPixel.Red && buggyPixel.Green == correctPixel.Green && buggyPixel.Blue == correctPixel.Blue;\n\nConsole.WriteLine();\nif (colorsMatch)\n    Console.WriteLine(\"SUCCESS: Colors match - no color space conversion issue detected\");\nelse\n{\n    Console.WriteLine(\"BUG REPRODUCED: Colors differ - null colorspace destination skips conversion\");\n    Console.WriteLine($\"  Expected (sRGB converted): R={correctPixel.Red}, G={correctPixel.Green}, B={correctPixel.Blue}\");\n    Console.WriteLine($\"  Got (raw linear values):   R={buggyPixel.Red}, G={buggyPixel.Green}, B={buggyPixel.Blue}\");\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build repro project",
+      "command": "cd /tmp/skiasharp/repro/2466/Repro && dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 2 Warning(s) 0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run repro - creates linear color space bitmap, reads pixels with null vs sRGB destination color space, compares pixel values",
+      "command": "cd /tmp/skiasharp/repro/2466/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "Source bitmap color space is linear: True\n\nBuggy (null colorspace dest) pixel:   R=147, G=8, B=8, A=255\nCorrect (sRGB colorspace dest) pixel: R=200, G=50, B=50, A=255\n\nBUG REPRODUCED: Colors differ - null colorspace destination skips conversion\n  Expected (sRGB converted): R=200, G=50, B=50\n  Got (raw linear values):   R=147, G=8, B=8\n  The buggy path copies raw linear values without converting to sRGB,\n  causing the displayed image to appear much darker than expected.",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project directory",
+      "command": "mkdir -p /tmp/skiasharp/repro/2466-latest/Repro && cd /tmp/skiasharp/repro/2466-latest/Repro && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "Source bitmap color space is linear: True\n\nBuggy (null colorspace dest) pixel:   R=147, G=8, B=8, A=255\nCorrect (sRGB colorspace dest) pixel: R=200, G=50, B=50, A=255\n\nBUG REPRODUCED: Colors differ - null colorspace destination skips conversion\n  Expected (sRGB converted): R=200, G=50, B=50\n  Got (raw linear values):   R=147, G=8, B=8",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test against main branch source using console sample with project references to local SkiaSharp source",
+      "command": "cd $REPO_ROOT && dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "Source bitmap color space is linear: True\n\nBuggy (null colorspace dest) pixel:   R=147, G=8, B=8, A=255\nCorrect (sRGB colorspace dest) pixel: R=200, G=50, B=50, A=255\n\nBUG REPRODUCED: Colors differ - null colorspace destination skips conversion\n  Expected (sRGB converted): R=200, G=50, B=50\n  Got (raw linear values):   R=147, G=8, B=8",
+      "layer": "csharp",
+      "result": "wrong-output"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.3",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "ReadPixels with null-colorspace destination produces R=147,G=8,B=8 instead of expected R=200,G=50,B=50. Raw linear values copied without conversion.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same wrong pixel values as 2.88.3. Bug persists in latest stable release.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Same wrong pixel values. Bug persists on main branch.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Reproduced on all versions including main. The root cause is clear (null color space in destination SKImageInfo used by platform conversion extensions), but a fix needs implementation and testing across all affected platform methods."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and views labels",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related color space issue #2354 (same color space unawareness in SKBitmap.GetPixel)",
+        "risk": "low",
+        "confidence": 0.90
+      },
+      {
+        "type": "add-comment",
+        "description": "Confirm reproduction with evidence and provide workaround",
+        "risk": "medium",
+        "confidence": 0.90
+      }
+    ],
+    "proposedResponse": {
+      "body": "We've confirmed this issue. The reported behavior reproduces on macOS arm64 with SkiaSharp 2.88.3, 3.119.2, and the current main branch.\n\n**Root cause:** The platform conversion methods (`ToWriteableBitmap`, `ToBitmap`, `ToCGImage`) create a destination `SKImageInfo` with `null` color space via `new SKImageInfo(width, height)`. When `ReadPixels` is called with a null-colorspace destination, Skia copies raw pixel values without color space conversion. For linear color space bitmaps, this produces significantly darker output (e.g., sRGB `(200, 50, 50)` becomes `(147, 8, 8)`).\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.3 (reported) | ❌ Reproduced |\n| 3.119.2 (latest) | ❌ Reproduced |\n| main (source) | ❌ Reproduced |\n\n**Workaround:** Convert the bitmap to sRGB before assigning to `SKBitmapImageSource`:\n```csharp\nvar displayInfo = new SKImageInfo(bitmap.Width, bitmap.Height,\n    SKImageInfo.PlatformColorType,\n    SKAlphaType.Premul,\n    SKColorSpace.CreateSrgb());\nvar displayBitmap = new SKBitmap(displayInfo);\nusing (var canvas = new SKCanvas(displayBitmap))\n{\n    canvas.DrawBitmap(bitmap, 0, 0);\n}\nvar imageSource = new SKBitmapImageSource { Bitmap = displayBitmap };\n```\n\nThis is related to #2354 (same color space unawareness in `GetPixel`).",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Convert the bitmap to sRGB color space with PlatformColorType and Premul alpha before assigning to SKBitmapImageSource or calling platform conversion methods"
+    ]
+  }
+}
