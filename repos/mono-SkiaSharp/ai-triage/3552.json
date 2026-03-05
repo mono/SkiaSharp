@@ -1,0 +1,115 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3552,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-05T20:14:00Z"
+  },
+  "summary": "SkiaSharp GL rendering achieves <10 fps (default) or ~40 fps (with OpenGL flag tuning) on macOS compared to ~120 fps for equivalent native Skia C++ code, indicating a significant managed-to-native performance gap in the rendering pipeline.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.90 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.85 },
+    "platforms": ["os/macOS"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/performance"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "performance",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Clone the FastSkiaSharp benchmark repository",
+        "Run both the native C++ Skia benchmark and the SkiaSharp managed benchmark on macOS",
+        "Compare frame rates: native achieves ~120 fps, SkiaSharp achieves <10 fps by default"
+      ],
+      "environmentDetails": "macOS, SkiaSharp 3.116.0, Visual Studio Code",
+      "repoLinks": [
+        { "url": "https://github.com/wieslawsoltes/FastSkiaSharp", "description": "Original benchmark comparing SkiaSharp vs native Skia C++ rendering performance" },
+        { "url": "https://github.com/mattleibow/FastSkiaSharp/tree/main_119", "description": "Fork with Skia downgraded to match SkiaSharp's Skia version, isolating the managed overhead" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The SKGLView rendering pipeline and flush patterns have not changed substantially in recent releases. The architectural overhead is inherent to the current view implementation."
+    }
+  },
+  "analysis": {
+    "summary": "The performance gap between SkiaSharp and native Skia C++ stems from multiple factors in the macOS SKGLView rendering pipeline: a synchronous flush-and-submit pattern that drains the GPU pipeline every frame, 4x MSAA enabled by default in the pixel format, double-flush (canvas + context), and the inherent overhead of the managed-to-native boundary. The fork with downgraded Skia version isolates the managed overhead from Skia version differences.",
+    "rationale": "This is clearly a performance bug (type/bug) rather than a feature request because the expectation is that a thin wrapper should approach native performance. The reporter (a project collaborator) provides comprehensive benchmarks with both original and version-matched Skia, giving high confidence in the severity. The area is SkiaSharp.Views because the bottleneck is in the GL view rendering cycle, not in core SkiaSharp APIs.",
+    "keySignals": [
+      { "text": "C++ version achieves around 120 fps while the managed SkiaSharp code achieves less than 10 fps by default, and up to 40 fps with new OpenGL flags", "source": "issue body", "interpretation": "10-12x gap at default, 3x gap with tuning. The 'new OpenGL flags' partially help but a 3x gap remains, suggesting deeper architectural overhead." },
+      { "text": "Fork with downgraded Skia (same version as SkiaSharp)", "source": "issue body", "interpretation": "The version-matched fork isolates the performance gap to the managed wrapper and view infrastructure, ruling out Skia version differences as the sole cause." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs", "lines": "130-175", "finding": "DrawRect hot path: clears all buffers, conditionally recreates render target on size change, calls user OnPaintSurface, then performs triple flush: canvas.Flush(), context.Flush() (which calls gr_direct_context_flush_and_submit with submit=true), and OpenGLContext.FlushBuffer(). The context.Flush() default is synchronous submit which drains the GPU pipeline every frame.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs", "lines": "66-81", "finding": "Pixel format requests 4x MSAA (SampleBuffers=1, Samples=4), 24-bit depth, and 8-bit stencil. This is significantly heavier than typical native Skia benchmarks which often use no MSAA. The 4x MSAA could account for substantial GPU overhead.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/GRContext.cs", "lines": "140-148", "finding": "GRContext.Flush() calls Flush(true) by default, which invokes gr_direct_context_flush_and_submit(handle, synchronous=false). While not fully synchronous, the submit forces the GPU work to be enqueued immediately rather than batched.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/GRContextOptions.cs", "lines": "1-31", "finding": "GRContextOptions exposes AvoidStencilBuffers, RuntimeProgramCacheSize, AllowPathMaskCaching, and BufferMapThreshold. These are not used in SKGLView setup - the GRContext is created with default options via GRContext.CreateGl(glInterface) without passing any options.", "relevance": "related" }
+    ],
+    "nextQuestions": [
+      "What specific 'new OpenGL flags' improved performance from <10fps to ~40fps?",
+      "Does the native C++ benchmark use the same MSAA/stencil/depth configuration as SKGLView?",
+      "What is the profile breakdown - is the time spent in P/Invoke marshalling, GPU flush, or MSAA?",
+      "Would switching to Metal backend on macOS close the gap significantly?",
+      "Is the overhead primarily in the view infrastructure or also in individual draw call P/Invoke overhead?"
+    ],
+    "resolution": {
+      "hypothesis": "The performance gap is caused by a combination of heavyweight GL configuration (4x MSAA), synchronous flush-and-submit pattern, and potentially unoptimized GRContext options. The native benchmark likely uses a leaner GL configuration and more efficient frame submission.",
+      "proposals": [
+        {
+          "title": "Profile and compare GL configurations",
+          "description": "Compare the exact GL pixel format, MSAA, depth/stencil, and flush patterns between the native C++ benchmark and SKGLView. The native benchmark may use no MSAA, shallower depth buffer, and async flush. This investigation will identify which factor contributes most to the gap.",
+          "category": "investigation",
+          "confidence": 0.85,
+          "effort": "small"
+        },
+        {
+          "title": "Reduce default MSAA and optimize flush pattern",
+          "description": "SKGLView requests 4x MSAA by default which is expensive. Consider reducing to no MSAA or making it configurable. Additionally, the triple flush (canvas.Flush + context.Flush with submit + FlushBuffer) could be simplified - canvas.Flush may be redundant when context.Flush follows.",
+          "category": "fix",
+          "confidence": 0.70,
+          "effort": "medium"
+        },
+        {
+          "title": "Expose GRContextOptions in view creation",
+          "description": "Currently SKGLView creates GRContext with default options. Exposing GRContextOptions (AvoidStencilBuffers, BufferMapThreshold, etc.) would let users tune performance for their workload.",
+          "category": "fix",
+          "confidence": 0.60,
+          "effort": "small"
+        },
+        {
+          "title": "Consider Metal backend on macOS",
+          "description": "macOS has deprecated OpenGL in favor of Metal. A Metal-backed view may have lower overhead and better driver optimization than the legacy OpenGL path. This would be a larger effort but may fundamentally resolve the performance gap.",
+          "category": "alternative",
+          "confidence": 0.55,
+          "effort": "large"
+        }
+      ],
+      "recommendedProposal": "Profile and compare GL configurations",
+      "recommendedReason": "Before making code changes, we need to identify exactly which factors contribute most to the 3x remaining gap. The version-matched fork already isolates managed overhead, but we need to know if MSAA, flush pattern, or something else dominates."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Clear performance bug with comprehensive benchmarks from a project collaborator. Needs profiling to identify root causes before implementing fixes.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, macOS, OpenGL, and performance labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/macOS", "backend/OpenGL", "tenet/performance"]
+      }
+    ]
+  }
+}
