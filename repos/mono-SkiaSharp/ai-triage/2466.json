@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2466,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-24T12:00:00Z"
+  },
+  "summary": "SKBitmapImageSource and platform conversion extensions (ToBitmap, ToUIImage, ToWriteableBitmap) ignore the source bitmap's color space, causing non-sRGB bitmaps (e.g. linear) to display with incorrect colors on all platforms, with additional color type mismatches on Apple and Android.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.90 },
+    "platforms": ["os/Windows-Classic", "os/Windows-WinUI", "os/Android", "os/iOS", "os/macOS"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "errorType": "wrong-output",
+      "errorMessage": "Non-sRGB bitmaps display with incorrect colors (e.g. linear color space appears much darker)",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net7.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKBitmap with a non-sRGB color space (e.g. SKColorSpace.CreateSrgbLinear())",
+        "Assign it to SKBitmapImageSource.Bitmap in MAUI, or use the ToWriteableBitmap/ToBitmap/ToUIImage extension methods",
+        "Observe that the displayed image has incorrect colors (darker for linear color space)"
+      ],
+      "environmentDetails": "SkiaSharp 2.88.3, .NET 7.0.302, Visual Studio 2022 17.6.0, tested on Windows 11, Android, macOS, iOS",
+      "relatedIssues": [2354],
+      "repoLinks": [
+        { "url": "https://github.com/koszeggy/KGySoft.Drawing/tree/master/Examples/SkiaSharp_(Maui)", "description": "MAUI example application that demonstrates the issue (requires commenting out the workaround)" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["2.88.3"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The platform conversion extensions still create destination SKImageInfo with null color space. The code paths have not changed in current main branch."
+    }
+  },
+  "analysis": {
+    "summary": "All platform conversion methods (ToWriteableBitmap, ToBitmap, ToUIImage) create a destination SKImageInfo with null color space via 'new SKImageInfo(width, height)', so ReadPixels copies raw pixel values without color space conversion. Additionally, Apple's ToCGImage hardcodes RGBA premultiplied byte order regardless of the source bitmap's color type, and Android's ToBitmap preserves Argb4444 which has inconsistent behavior.",
+    "rationale": "This is clearly wrong output — the conversion extensions should produce visually correct results regardless of the source color space. The root cause is that the destination SKImageInfo.ColorSpace is null, which tells Skia to skip color space conversion in ReadPixels. On Apple, there is a secondary issue where ToCGImage copies raw bytes with a hardcoded pixel format assumption. Related to #2354 which reports the same color space unawareness in SKBitmap.GetPixel.",
+    "keySignals": [
+      { "text": "SKBitmapImageSource interprets every non-sRGB bitmaps incorrectly, ie. when SKBitmap.ColorSpace is not null, and the color space represents any other color space than sRGB", "source": "issue body", "interpretation": "Core color space conversion is missing in the bitmap-to-platform-image pipeline" },
+      { "text": "Using linear color space the result appears much darker", "source": "issue body", "interpretation": "Linear color values interpreted as sRGB — classic gamma mismatch from missing color space conversion" },
+      { "text": "macOS/iOS: Every color type is displayed incorrectly, except Bgra8888, even with sRGB color space", "source": "issue body", "interpretation": "Apple ToCGImage hardcodes RGBA premultiplied byte order, so only matching formats work" },
+      { "text": "Android: Argb4444 color type is displayed incorrectly even with sRGB color space", "source": "issue body", "interpretation": "Android Bitmap.Config.Argb4444 is deprecated and has inconsistent handling" }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WinUI/UWPExtensions.cs",
+        "lines": "102-106",
+        "finding": "ToWriteableBitmap(SKImage) creates 'new SKImageInfo(skiaImage.Width, skiaImage.Height)' which sets ColorSpace=null. ReadPixels with null destination color space skips color space conversion, copying raw linear pixel values into a buffer that the platform interprets as sRGB.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/AndroidExtensions.cs",
+        "lines": "143-173",
+        "finding": "ToBitmap(SKImage) creates 'new SKImageInfo(info.Width, info.Height)' with null color space. Also preserves Argb4444 color type for Android which has inconsistent behavior with the deprecated Bitmap.Config.Argb4444.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs",
+        "lines": "165-184",
+        "finding": "ToCGImage(SKBitmap) copies raw pixel bytes directly via CGDataProvider and hardcodes CGBitmapFlags.PremultipliedLast | ByteOrder32Big (RGBA premultiplied). No pixel format conversion or color space conversion is performed, so any bitmap with a non-RGBA color type or non-sRGB color space displays incorrectly.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.WPF/WPFExtensions.cs",
+        "lines": "68-83",
+        "finding": "WPF ToWriteableBitmap(SKImage) also creates 'new SKImageInfo(skiaImage.Width, skiaImage.Height)' with null color space, same root cause as WinUI.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImageInfo.cs",
+        "lines": "68-75",
+        "finding": "SKImageInfo(int width, int height) constructor sets ColorSpace=null. This is the root cause — all platform conversion methods use this constructor for the ReadPixels destination.",
+        "relevance": "direct"
+      }
+    ],
+    "nextQuestions": [
+      "Should the fix convert to sRGB in ReadPixels (by setting destination color space) or should it be done at the platform level?",
+      "For Apple, should ToCGImage go through ReadPixels to normalize pixel format, or should it map SKColorType to the correct CGBitmapFlags?",
+      "Is the Argb4444 issue on Android worth fixing given it's a deprecated format?"
+    ],
+    "resolution": {
+      "hypothesis": "The platform conversion methods do not specify a destination color space when calling ReadPixels, so Skia copies raw pixel values without color space conversion. For Apple, the ToCGImage method additionally hardcodes a pixel format that doesn't match non-RGBA bitmaps.",
+      "proposals": [
+        {
+          "title": "Set sRGB destination color space in ReadPixels calls",
+          "description": "In all platform ToWriteableBitmap/ToBitmap methods, change 'new SKImageInfo(width, height)' to 'new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, SKColorSpace.CreateSrgb())'. This tells Skia's ReadPixels to convert from the source color space to sRGB.",
+          "category": "fix",
+          "confidence": 0.85,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Normalize Apple ToCGImage through ReadPixels",
+          "description": "Rewrite ToCGImage(SKBitmap) to use ReadPixels into a normalized RGBA8888/Premul/sRGB buffer instead of copying raw bytes. This resolves both the color space issue and the pixel format mismatch on macOS/iOS.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "medium",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: manually convert bitmap before assigning to SKBitmapImageSource",
+          "description": "Convert the bitmap to sRGB with PlatformColorType and Premul alpha before display.",
+          "codeSnippet": "var displayInfo = new SKImageInfo(bitmap.Width, bitmap.Height,\n    SKImageInfo.PlatformColorType,\n    SKAlphaType.Premul,\n    SKColorSpace.CreateSrgb());\nvar displayBitmap = new SKBitmap(displayInfo);\nusing (var canvas = new SKCanvas(displayBitmap))\n{\n    canvas.DrawBitmap(bitmap, 0, 0);\n}\nvar imageSource = new SKBitmapImageSource { Bitmap = displayBitmap };",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "trivial",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Set sRGB destination color space in ReadPixels calls",
+      "recommendedReason": "Small change that fixes the root cause across all platforms by having Skia handle the color space conversion automatically during ReadPixels."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Well-documented bug with clear root cause in platform conversion extensions. Needs implementation and testing across all platforms.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views, and platform labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Windows-Classic", "os/Windows-WinUI", "os/Android", "os/iOS", "os/macOS"]
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference related color space issue #2354",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 2354
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, provide workaround, and explain root cause",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the thorough report with platform-specific details and screenshots.\n\nHere's a workaround you can use while we investigate: convert the bitmap to sRGB before assigning it to `SKBitmapImageSource`:\n\n```csharp\nvar displayInfo = new SKImageInfo(bitmap.Width, bitmap.Height,\n    SKImageInfo.PlatformColorType,\n    SKAlphaType.Premul,\n    SKColorSpace.CreateSrgb());\nvar displayBitmap = new SKBitmap(displayInfo);\nusing (var canvas = new SKCanvas(displayBitmap))\n{\n    canvas.DrawBitmap(bitmap, 0, 0);\n}\nvar imageSource = new SKBitmapImageSource { Bitmap = displayBitmap };\n```\n\nThe root cause is that the platform conversion methods (`ToWriteableBitmap`, `ToBitmap`, `ToUIImage`) create a destination `SKImageInfo` with no color space, so `ReadPixels` copies raw pixel values without color space conversion. On Apple, `ToCGImage` additionally hardcodes an RGBA pixel format assumption that doesn't match non-RGBA bitmaps, which explains the broader color type issues on macOS/iOS.\n\nThis is related to #2354 (same color space unawareness in `GetPixel`).\n\nNote: `SKBitmapImageSource` is MAUI-specific. For WPF, apply the same bitmap conversion before calling `ToWriteableBitmap()`."
+      }
+    ]
+  }
+}
