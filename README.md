@@ -112,3 +112,4 @@ docs-live/dashboard/ (GitHub Pages)
 |---------|------|---------|
 | SkiaSharp.Triage.Dashboard | `src/SkiaSharp.Triage.Dashboard/` | Blazor WASM app |
 | SkiaSharp.Triage.Cli | `src/SkiaSharp.Triage.Cli/` | CLI for data sync and generation |
+
