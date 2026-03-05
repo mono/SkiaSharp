@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3375,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T00:00:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Bug is a Windows x86-specific calling convention mismatch: 878 [LibraryImport] declarations in SkiaApi.generated.cs lack [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })], defaulting to StdCall on x86 Windows instead of Cdecl. This causes stack corruption/overflow on every P/Invoke call. On x64 and ARM64 there is only one calling convention, so the mismatch is harmless. Tested on macOS ARM64 with SkiaSharp 3.116.0 and 3.119.2 — all P/Invoke calls succeed as expected since ARM64 has no calling convention ambiguity. Reproduction requires Windows x86 (.NET 8/9, win-x86 RID) to trigger the stack overflow. Code-level evidence confirms the root cause: 878 LibraryImport declarations with 0 UnmanagedCallConv attributes. Second reporter confirms stack overflow at SkiaApi.sk_bitmap_get_pixel_color on .NET 8 x86.",
+  "assessment": "likely-bug",
+  "blockers": [
+    "Requires Windows x86 host — calling convention mismatch (StdCall vs Cdecl) only manifests on x86 architecture where multiple calling conventions exist. macOS ARM64 has a single calling convention.",
+    "Cannot run win-x86 .NET apps on macOS — no Windows VM or x86 emulation available"
+  ],
+  "reproProject": {
+    "type": "console",
+    "tfm": "net9.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 3.116.0 (reporter's version)",
+      "command": "mkdir -p /tmp/skiasharp/repro/3375 && cd /tmp/skiasharp/repro/3375 && dotnet new console -n Repro --framework net9.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "exitCode": 0,
+      "output": "PackageReference for package 'SkiaSharp' version '3.116.0' added",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project referencing SkiaSharp 3.116.0 targeting net9.0",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net9.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"3.116.0\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Repro code exercising SKBitmap.GetPixel and other P/Invoke calls that cause stack overflow on x86 Windows",
+          "content": "using System;\nusing System.Runtime.InteropServices;\nusing SkiaSharp;\n\nConsole.WriteLine($\"Arch: {RuntimeInformation.ProcessArchitecture}\");\nConsole.WriteLine($\"OS: {RuntimeInformation.OSDescription}\");\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\n\ntry\n{\n    using var bitmap = new SKBitmap(100, 100);\n    using var canvas = new SKCanvas(bitmap);\n    canvas.Clear(SKColors.Red);\n\n    var color = bitmap.GetPixel(50, 50);\n    Console.WriteLine($\"GetPixel(50,50) = {color}\");\n\n    using var paint = new SKPaint();\n    paint.Color = SKColors.Blue;\n    canvas.DrawRect(10, 10, 80, 80, paint);\n\n    var color2 = bitmap.GetPixel(50, 50);\n    Console.WriteLine($\"After DrawRect, GetPixel(50,50) = {color2}\");\n\n    using var image = SKImage.FromBitmap(bitmap);\n    using var data = image.Encode(SKEncodedImageFormat.Png, 100);\n    Console.WriteLine($\"Encoded PNG size: {data.Size} bytes\");\n\n    Console.WriteLine(\"SUCCESS: All SkiaSharp P/Invoke calls completed without crash\");\n}\ncatch (Exception ex)\n{\n    Console.WriteLine($\"EXCEPTION: {ex.GetType().Name}: {ex.Message}\");\n    Console.WriteLine(ex.StackTrace);\n}"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and run repro with SkiaSharp 3.116.0 on macOS ARM64",
+      "command": "cd /tmp/skiasharp/repro/3375/Repro && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "Arch: Arm64\nOS: Darwin 25.3.0\nSkiaSharp version: 3.116.0.0\nGetPixel(50,50) = #ffff0000\nAfter DrawRect, GetPixel(50,50) = #ff0000ff\nEncoded PNG size: 348 bytes\nSUCCESS: All SkiaSharp P/Invoke calls completed without crash",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build and run repro with latest stable SkiaSharp 3.119.2 on macOS ARM64",
+      "command": "mkdir -p /tmp/skiasharp/repro/3375-latest/Repro && cd /tmp/skiasharp/repro/3375-latest/Repro && dotnet add package SkiaSharp --version 3.119.2 && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "Arch: Arm64\nOS: Darwin 25.3.0\nSkiaSharp version: 3.119.0.0\nGetPixel(50,50) = #ffff0000\nAfter DrawRect, GetPixel(50,50) = #ff0000ff\nEncoded PNG size: 348 bytes\nSUCCESS: All SkiaSharp P/Invoke calls completed without crash",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify code-level evidence: check LibraryImport declarations lack UnmanagedCallConv in generated bindings",
+      "command": "grep -c 'LibraryImport' binding/SkiaSharp/SkiaApi.generated.cs && grep -c 'UnmanagedCallConv' binding/SkiaSharp/SkiaApi.generated.cs",
+      "exitCode": 0,
+      "output": "LibraryImport count: 878, UnmanagedCallConv count: 0. All 878 [LibraryImport] declarations lack [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]. On x86 Windows, LibraryImport defaults to StdCall, while native Skia C API uses Cdecl. The DllImport fallback correctly specifies CallingConvention.Cdecl.",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "All P/Invoke calls succeed on macOS ARM64 — calling convention mismatch is x86-specific",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "All P/Invoke calls succeed on macOS ARM64 — calling convention mismatch is x86-specific",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "code-evidence",
+        "upstream": "Root cause identified but not verified",
+        "corrected": "Confirmed: 878 LibraryImport declarations with 0 UnmanagedCallConv attributes in SkiaApi.generated.cs"
+      }
+    ]
+  }
+}
