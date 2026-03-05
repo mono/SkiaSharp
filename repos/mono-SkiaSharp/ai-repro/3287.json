@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3287,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T17:00:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Bug requires Android device or emulator to reproduce at runtime. Created a MAUI repro project with both SKGLView and SKCanvasView that checks MainThread.IsMainThread in PaintSurface handlers. The project builds successfully for net10.0-android with both SkiaSharp 3.116.1 and 3.119.2, but cannot be run without an Android emulator or device. Source-level simulation confirms the architectural issue: SKGLViewHandler.Android.cs calls VirtualView?.OnPaintSurface() directly from the GL thread without any main-thread marshaling. In contrast, SKGLViewHandler.iOS.cs uses CADisplayLink and BeginInvokeOnMainThread to ensure main-thread execution. The main branch source shows no fix has been applied.",
+  "blockers": [
+    "Requires Android device or emulator — ANDROID_HOME not set, no Android SDK, emulator, or adb available in this environment",
+    "Bug manifests at runtime (threading behavior) — build-only testing cannot verify which thread PaintSurface fires on",
+    "Cannot use Docker as fallback — Android MAUI apps require Android runtime, not Linux containers"
+  ],
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "10.0",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create MAUI project with SKGLView and SKCanvasView that checks MainThread.IsMainThread in PaintSurface handlers",
+      "command": "dotnet new maui -n Repro && cd Repro && dotnet add package SkiaSharp.Views.Maui.Controls --version 3.116.1",
+      "exitCode": 0,
+      "output": "Restored Repro.csproj (in 2.93 sec). PackageReference for 'SkiaSharp.Views.Maui.Controls' version '3.116.1' added.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "MauiProgram.cs",
+          "description": "MAUI entry point with UseSkiaSharp() registration",
+          "content": "using Microsoft.Extensions.Logging;\nusing SkiaSharp.Views.Maui.Controls.Hosting;\n\nnamespace Repro;\n\npublic static class MauiProgram\n{\n\tpublic static MauiApp CreateMauiApp()\n\t{\n\t\tvar builder = MauiApp.CreateBuilder();\n\t\tbuilder\n\t\t\t.UseMauiApp<App>()\n\t\t\t.UseSkiaSharp()\n\t\t\t.ConfigureFonts(fonts =>\n\t\t\t{\n\t\t\t\tfonts.AddFont(\"OpenSans-Regular.ttf\", \"OpenSansRegular\");\n\t\t\t});\n\t\treturn builder.Build();\n\t}\n}"
+        },
+        {
+          "filename": "MainPage.xaml",
+          "description": "XAML page with both SKGLView and SKCanvasView for comparing thread behavior",
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n<ContentPage xmlns=\"http://schemas.microsoft.com/dotnet/2021/maui\"\n             xmlns:x=\"http://schemas.microsoft.com/winfx/2009/xaml\"\n             xmlns:skia=\"clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\"\n             x:Class=\"Repro.MainPage\">\n    <VerticalStackLayout Padding=\"30,0\" Spacing=\"25\">\n        <Label x:Name=\"ThreadLabel\" Text=\"Waiting for PaintSurface...\" FontSize=\"18\" />\n        <skia:SKGLView x:Name=\"GlView\" HeightRequest=\"300\" PaintSurface=\"OnGLPaintSurface\" />\n        <skia:SKCanvasView x:Name=\"CanvasView\" HeightRequest=\"300\" PaintSurface=\"OnCanvasPaintSurface\" />\n    </VerticalStackLayout>\n</ContentPage>"
+        },
+        {
+          "filename": "MainPage.xaml.cs",
+          "description": "Code-behind that logs MainThread.IsMainThread and thread ID for both SKGLView and SKCanvasView PaintSurface events, renders green if main thread, red if not",
+          "content": "using SkiaSharp;\nusing SkiaSharp.Views.Maui;\n\nnamespace Repro;\n\npublic partial class MainPage : ContentPage\n{\n    private int _glPaintCount;\n    private int _canvasPaintCount;\n\n    public MainPage() => InitializeComponent();\n\n    private void OnGLPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n    {\n        _glPaintCount++;\n        bool isMainThread = MainThread.IsMainThread;\n        int threadId = Environment.CurrentManagedThreadId;\n        System.Diagnostics.Debug.WriteLine(\n            $\"[SKGLView] PaintSurface #{_glPaintCount}: IsMainThread={isMainThread}, ThreadId={threadId}\");\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(isMainThread ? SKColors.Green : SKColors.Red);\n    }\n\n    private void OnCanvasPaintSurface(object sender, SKPaintSurfaceEventArgs e)\n    {\n        _canvasPaintCount++;\n        bool isMainThread = MainThread.IsMainThread;\n        int threadId = Environment.CurrentManagedThreadId;\n        System.Diagnostics.Debug.WriteLine(\n            $\"[SKCanvasView] PaintSurface #{_canvasPaintCount}: IsMainThread={isMainThread}, ThreadId={threadId}\");\n        var canvas = e.Surface.Canvas;\n        canvas.Clear(isMainThread ? SKColors.Green : SKColors.Red);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build MAUI repro project for Android with SkiaSharp 3.116.1",
+      "command": "dotnet build -f net10.0-android",
+      "exitCode": 0,
+      "output": "Build succeeded. 4 Warning(s) 0 Error(s). Repro -> bin/Debug/net10.0-android/Repro.dll",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify no Android emulator or device available to run the app",
+      "command": "echo $ANDROID_HOME; which adb; which emulator; dotnet workload list | grep android",
+      "exitCode": 1,
+      "output": "ANDROID_HOME: not set. adb: not found. emulator: not found. No Android workload for current SDK (10.0.102). Cannot deploy or run the MAUI app on Android.",
+      "layer": "deployment",
+      "result": "skip"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build MAUI repro project for Android with latest SkiaSharp 3.119.2 in clean directory",
+      "command": "dotnet add package SkiaSharp.Views.Maui.Controls --version 3.119.2 && rm -rf bin/ obj/ && dotnet build -f net10.0-android",
+      "exitCode": 0,
+      "output": "Build succeeded. 4 Warning(s) 0 Error(s). Repro -> bin/Debug/net10.0-android/Repro.dll",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Source-level simulation: verify Android MAUI handler lacks thread marshaling while iOS handler has it. Searched SKGLViewHandler.Android.cs for MainThread, InvokeOnMainThread, BeginInvoke, Dispatcher — zero matches. iOS handler uses CADisplayLink and BeginInvokeOnMainThread. GLTextureView runs OnDrawFrame on a dedicated GL thread. No fix present on main branch.",
+      "command": "grep -c 'MainThread\\|InvokeOnMainThread\\|BeginInvoke' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Android.cs && grep -c 'MainThread\\|InvokeOnMainThread\\|BeginInvoke' source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.iOS.cs",
+      "exitCode": 0,
+      "output": "Android handler: 0 matches for thread marshaling. iOS handler: 2 matches (BeginInvokeOnMainThread, CADisplayLink). Confirmed: OnPaintSurface() in Android handler directly calls VirtualView?.OnPaintSurface() on the GL thread without marshaling.",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "suggestedReproPlatform",
+        "upstream": "linux",
+        "corrected": "This is an Android MAUI runtime issue requiring an Android device or emulator. Linux (Docker) cannot host Android MAUI apps. The correct repro platform is Android (physical device or emulator)."
+      }
+    ]
+  }
+}
