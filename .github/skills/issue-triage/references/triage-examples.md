@@ -15,89 +15,89 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
     "analyzedAt": "2026-02-08T15:00:00Z",
     "currentLabels": ["type/feature-request"]
   },
-  "summary": "Reporter describes a crash (ObjectDisposedException) when navigating away from a page containing SKCanvasView on Android 14 with net8.0-android and SkiaSharp 3.116.1. The crash occurs in OnDetachedFromWindow and does not happen on iOS.",
+  "summary": "Reporter describes a crash (NullReferenceException) when calling SKBitmap.Decode with a corrupted JPEG on iOS 18 with net9.0-ios and SkiaSharp 3.118.0. The crash occurs in the native codec path and does not happen with valid JPEGs or on Windows.",
   "classification": {
     "type": { "value": "type/bug", "confidence": 0.92 },
-    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.85 },
-    "platforms": ["os/Android"]
+    "area": { "value": "area/SkiaSharp", "confidence": 0.85 },
+    "platforms": ["os/iOS"]
   },
   "evidence": {
     "bugSignals": {
       "severity": "high",
       "regressionClaimed": true,
       "errorType": "crash",
-      "errorMessage": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow",
+      "errorMessage": "NullReferenceException at SKBitmap.Decode",
       "reproQuality": "complete",
-      "targetFrameworks": ["net8.0-android"]
+      "targetFrameworks": ["net9.0-ios"]
     },
     "reproEvidence": {
       "stepsToReproduce": [
-        "Create a MAUI app with SKCanvasView",
-        "Navigate away from the page containing the view",
-        "Observe crash on Android (works fine on iOS)"
+        "Create a .NET MAUI app with SKBitmap.Decode",
+        "Pass a truncated/corrupted JPEG file",
+        "Observe crash on iOS (returns null safely on Windows)"
       ],
-      "environmentDetails": "Android 14, net8.0-android, SkiaSharp 3.116.1",
+      "environmentDetails": "iOS 18.2, net9.0-ios, SkiaSharp 3.118.0",
       "relatedIssues": [1100, 1150],
       "repoLinks": [
-        { "url": "https://github.com/user/repro-android-crash", "description": "Minimal MAUI repro project" }
+        { "url": "https://github.com/user/repro-decode-crash", "description": "Minimal MAUI repro project" }
       ]
     },
     "versionAnalysis": {
-      "mentionedVersions": ["3.116.1"],
+      "mentionedVersions": ["3.118.0"],
       "currentRelevance": "likely",
-      "relevanceReason": "The disposal code path hasn't changed since 3.116.1."
+      "relevanceReason": "The codec error handling path hasn't changed since 3.118.0."
     },
     "regression": {
       "isRegression": true,
       "confidence": 0.80,
-      "reason": "Reporter states this worked in 2.88.x. View lifecycle code was rewritten for MAUI.",
+      "reason": "Reporter states this worked in 2.88.x. Codec initialization was refactored for v3.",
       "workedInVersion": "2.88.8",
-      "brokeInVersion": "3.116.1"
+      "brokeInVersion": "3.118.0"
     }
   },
   "analysis": {
-    "summary": "Crash in SKCanvasView disposal on Android. Stack trace points to native memory access after the surface was released.",
-    "rationale": "Reporter describes a crash with stack trace during a normal lifecycle event (view detachment). This is clearly broken behavior, not a usage question. The crash is in view disposal, not core drawing.",
+    "summary": "Crash in SKBitmap.Decode when input JPEG is corrupted. The native codec returns null but the managed wrapper doesn't check before accessing the result.",
+    "rationale": "Reporter describes a crash with stack trace during normal API usage. This is clearly broken behavior — a corrupted input should return null, not crash.",
     "keySignals": [
-      { "text": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow", "source": "issue body", "interpretation": "Native surface accessed after disposal — classic use-after-free." },
-      { "text": "Works fine on iOS, only crashes on Android", "source": "issue body", "interpretation": "Platform-specific lifecycle difference. Android detaches on different thread." },
-      { "text": "Worked in 2.88.8, broke after upgrading to 3.116.1", "source": "comment #2", "interpretation": "Regression — view lifecycle was rewritten for MAUI migration." }
+      { "text": "NullReferenceException at SKBitmap.Decode", "source": "issue body", "interpretation": "Native codec returns null for corrupted input, but managed code dereferences without null check." },
+      { "text": "Works fine on Windows, only crashes on iOS", "source": "issue body", "interpretation": "Platform-specific codec behavior — iOS may report errors differently than Windows." },
+      { "text": "Worked in 2.88.8, broke after upgrading to 3.118.0", "source": "comment #2", "interpretation": "Regression — codec initialization was refactored for v3." }
     ],
     "codeInvestigation": [
-      { "file": "source/SkiaSharp.Views.Maui/Platform/Android/SKCanvasView.cs", "lines": "45-78", "finding": "OnDetachedFromWindow disposes native surface without null-check — use-after-free if called on background thread", "relevance": "direct" },
-      { "file": "source/SkiaSharp.Views.Maui/Platform/iOS/SKCanvasView.cs", "lines": "52-70", "finding": "iOS equivalent checks IsDisposed before accessing surface — explains why iOS doesn't crash", "relevance": "related" }
+      { "file": "binding/SkiaSharp/SKBitmap.cs", "lines": "120-145", "finding": "Decode calls native function and dereferences result without null check — NRE if native returns null for bad input", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKCodec.cs", "lines": "80-95", "finding": "SKCodec.Create has proper null-check pattern — SKBitmap.Decode should follow the same pattern", "relevance": "related" }
     ],
-    "nextQuestions": ["Unclear if specific to Android 14+ or all versions", "Unknown if SKGLView has the same issue"],
+    "nextQuestions": ["Does this affect all corrupted formats or only JPEG?", "Is SKImage.FromEncodedData affected similarly?"],
     "resolution": {
-      "hypothesis": "Android detaches views on a different thread than iOS, causing use-after-free of the native surface.",
+      "hypothesis": "The native codec returns null for corrupted input on iOS, and the managed Decode method dereferences it without checking.",
       "proposals": [
-        { "title": "Add disposal guard", "description": "Add null/disposed check before accessing native surface in OnDetachedFromWindow.", "codeSnippet": "if (IsDisposed || _surface == null) return;", "confidence": 0.75, "effort": "small" },
-        { "title": "Synchronize with UI thread", "description": "Synchronize disposal with UI thread to ensure surface validity.", "confidence": 0.70, "effort": "medium" }
+        { "title": "Add null check after native decode", "description": "Check native return value before constructing managed SKBitmap. Return null for failed decodes.", "codeSnippet": "var handle = SkiaApi.sk_bitmap_decode(...); if (handle == IntPtr.Zero) return null;", "confidence": 0.85, "effort": "small" },
+        { "title": "Add try-catch with error info", "description": "Wrap native call in try-catch and include codec error details in exception.", "confidence": 0.70, "effort": "medium" }
       ],
-      "recommendedProposal": "Add disposal guard",
-      "recommendedReason": "Simpler fix with high confidence. Matches the pattern already used on iOS."
+      "recommendedProposal": "Add null check after native decode",
+      "recommendedReason": "Simpler fix with high confidence. Matches the pattern already used in SKCodec.Create."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.80,
-      "reason": "Real bug with stack trace, needs deeper investigation into Android lifecycle threading"
+      "reason": "Real bug with stack trace, needs deeper investigation into codec error handling"
     },
     "actions": [
       {
         "type": "update-labels",
-        "description": "Apply bug, views, android labels",
+        "description": "Apply bug, core, iOS labels",
         "risk": "low",
         "confidence": 0.95,
-        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Android"]
+        "labels": ["type/bug", "area/SkiaSharp", "os/iOS"]
       },
       {
         "type": "add-comment",
-        "description": "Post analysis response asking for Android version details",
+        "description": "Post analysis asking for additional format details",
         "risk": "high",
         "confidence": 0.80,
-        "comment": "Thanks for the detailed stack trace. This looks like a threading issue in Android's view lifecycle. Could you confirm which Android version(s) you're seeing this on?"
+        "comment": "Thanks for the detailed stack trace. This looks like a missing null check in the decode path when the codec encounters corrupted input. Could you confirm if this also happens with corrupted PNG files, or only JPEG?"
       }
     ]
   }
@@ -116,25 +116,25 @@ Question with resolution proposals, no bugSignals, close-with-docs action:
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-08T15:00:00Z"
   },
-  "summary": "How to load custom fonts in SkiaSharp on Linux",
+  "summary": "How to render text with a custom TrueType font on Android",
   "classification": {
     "type": { "value": "type/question", "confidence": 0.90 },
     "area": { "value": "area/SkiaSharp", "confidence": 0.80 },
-    "platforms": ["os/Linux"]
+    "platforms": ["os/Android"]
   },
   "evidence": {},
   "analysis": {
-    "summary": "User asking how to load custom fonts on Linux. Usage question — the API exists and works.",
-    "rationale": "Asking how to accomplish a task. No broken behavior described. Docs exist for SKTypeface.FromFile() and FromData().",
+    "summary": "User asking how to load and use custom fonts on Android. Usage question — the API exists and works.",
+    "rationale": "Asking how to accomplish a task. No broken behavior described. Docs exist for SKTypeface.FromFile() and FromStream().",
     "codeInvestigation": [
-      { "file": "binding/SkiaSharp/SKTypeface.cs", "lines": "45-62", "finding": "SKTypeface.FromFile() and FromData() are public, well-documented APIs — confirms this is a usage question", "relevance": "context" }
+      { "file": "binding/SkiaSharp/SKTypeface.cs", "lines": "45-62", "finding": "SKTypeface.FromFile() and FromStream() are public, well-documented APIs — confirms this is a usage question", "relevance": "context" }
     ],
-    "workarounds": ["Use SKTypeface.FromFile('/path/to/font.ttf')", "Embed font as resource and use SKTypeface.FromData(skData)"],
+    "workarounds": ["Use SKTypeface.FromFile('/path/to/font.ttf')", "Embed font as Android asset and use SKTypeface.FromStream(stream)"],
     "resolution": {
-      "hypothesis": "User wants to render text with a custom .ttf font on Linux.",
+      "hypothesis": "User wants to render text with a custom .ttf font on Android.",
       "proposals": [
         { "title": "Load font from file", "description": "Use SKTypeface.FromFile() to load font from path. Simplest approach.", "category": "fix", "confidence": 0.90, "effort": "trivial" },
-        { "title": "Embed font as resource", "description": "Embed font as resource and use SKTypeface.FromData() for portability.", "category": "alternative", "confidence": 0.90, "effort": "small" }
+        { "title": "Embed font as resource", "description": "Embed font as Android asset and use SKTypeface.FromStream() for portability.", "category": "alternative", "confidence": 0.90, "effort": "small" }
       ]
     }
   },
@@ -147,17 +147,17 @@ Question with resolution proposals, no bugSignals, close-with-docs action:
     "actions": [
       {
         "type": "update-labels",
-        "description": "Apply question and linux labels",
+        "description": "Apply question and android labels",
         "risk": "low",
         "confidence": 0.90,
-        "labels": ["type/question", "area/SkiaSharp", "os/Linux"]
+        "labels": ["type/question", "area/SkiaSharp", "os/Android"]
       },
       {
         "type": "add-comment",
         "description": "Post answer with font loading methods",
         "risk": "high",
         "confidence": 0.85,
-        "comment": "Use `SKTypeface.FromFile(\"/path/to/font.ttf\")` or embed the font as a resource and use `SKTypeface.FromData(skData)`. Both approaches work without fontconfig."
+        "comment": "Use `SKTypeface.FromFile(\"/path/to/font.ttf\")` or embed the font as an Android asset and use `SKTypeface.FromStream(stream)`. Both approaches work on Android."
       },
       {
         "type": "close-issue",
@@ -182,24 +182,24 @@ Duplicate with link-duplicate action and linkedIssue:
     "repo": "mono/SkiaSharp",
     "analyzedAt": "2026-02-08T15:00:00Z"
   },
-  "summary": "Duplicate of #1234 — same Android disposal crash",
+  "summary": "Duplicate of #1234 — same iOS decode crash with corrupted input",
   "classification": {
     "type": { "value": "type/bug", "confidence": 0.95 },
-    "area": { "value": "area/SkiaSharp.Views", "confidence": 0.95 },
-    "platforms": ["os/Android"]
+    "area": { "value": "area/SkiaSharp", "confidence": 0.95 },
+    "platforms": ["os/iOS"]
   },
   "evidence": {
     "bugSignals": {
       "severity": "high",
       "errorType": "crash",
-      "errorMessage": "ObjectDisposedException at SKCanvasView.OnDetachedFromWindow"
+      "errorMessage": "NullReferenceException at SKBitmap.Decode"
     }
   },
   "analysis": {
     "summary": "Identical stack trace and reproduction steps as #1234.",
     "rationale": "Same crash signature as #1234 — same component, same version, same stack trace.",
     "codeInvestigation": [
-      { "file": "source/SkiaSharp.Views.Maui/Platform/Android/SKCanvasView.cs", "lines": "45-78", "finding": "Same disposal code path as #1234 — confirms duplicate", "relevance": "direct" }
+      { "file": "binding/SkiaSharp/SKBitmap.cs", "lines": "120-145", "finding": "Same null-dereference code path as #1234 — confirms duplicate", "relevance": "direct" }
     ]
   },
   "output": {
@@ -214,7 +214,7 @@ Duplicate with link-duplicate action and linkedIssue:
         "description": "Apply labels",
         "risk": "low",
         "confidence": 0.95,
-        "labels": ["type/bug", "area/SkiaSharp.Views", "os/Android"]
+        "labels": ["type/bug", "area/SkiaSharp", "os/iOS"]
       },
       {
         "type": "link-duplicate",
