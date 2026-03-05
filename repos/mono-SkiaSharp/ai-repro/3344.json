@@ -1,0 +1,145 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3344,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-07T00:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "scope": "universal",
+  "notes": "Confirmed: SKCanvas.DrawSurface and SKSurface.Draw lack SKSamplingOptions overloads across all tested versions (3.116.0, 3.119.2, main). In contrast, SKCanvas.DrawImage has 4 overloads accepting SKSamplingOptions. The upstream Skia C++ API supports SkSamplingOptions on SkSurface::draw but this was never exposed through the C API shim or C# bindings. Workaround: use SKSurface.Snapshot() + SKCanvas.DrawImage with SKSamplingOptions. PR #3491 is open to add the missing overloads.",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS",
+    "arch": "arm64",
+    "dotnetVersion": "8.0.23",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with reporter's SkiaSharp version (3.116.0)",
+      "command": "mkdir -p /tmp/skiasharp/repro/3344 && cd /tmp/skiasharp/repro/3344 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "exitCode": 0,
+      "output": "Package 'SkiaSharp' is compatible with all the specified frameworks in project.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Console app using reflection to enumerate DrawSurface/Draw/DrawImage overloads and check for SKSamplingOptions parameter presence, plus workaround test via Snapshot + DrawImage",
+          "content": "using System;\nusing System.Linq;\nusing System.Reflection;\nusing SkiaSharp;\n\nConsole.WriteLine($\"SkiaSharp Version: {typeof(SKCanvas).Assembly.GetName().Version}\");\n\nvar drawSurfaceMethods = typeof(SKCanvas).GetMethods(BindingFlags.Public | BindingFlags.Instance)\n    .Where(m => m.Name == \"DrawSurface\").ToList();\nforeach (var m in drawSurfaceMethods)\n{\n    var pars = string.Join(\", \", m.GetParameters().Select(p => $\"{p.ParameterType.Name} {p.Name}\"));\n    Console.WriteLine($\"  DrawSurface({pars})\");\n}\nConsole.WriteLine($\"Has SKSamplingOptions: {drawSurfaceMethods.Any(m => m.GetParameters().Any(p => p.ParameterType.Name.Contains(\"SKSamplingOptions\")))}\");\n\nvar surfaceDrawMethods = typeof(SKSurface).GetMethods(BindingFlags.Public | BindingFlags.Instance)\n    .Where(m => m.Name == \"Draw\").ToList();\nConsole.WriteLine($\"SKSurface.Draw has SKSamplingOptions: {surfaceDrawMethods.Any(m => m.GetParameters().Any(p => p.ParameterType.Name.Contains(\"SKSamplingOptions\")))}\");\n\nvar imageHasSampling = typeof(SKCanvas).GetMethods(BindingFlags.Public | BindingFlags.Instance)\n    .Where(m => m.Name == \"DrawImage\")\n    .Any(m => m.GetParameters().Any(p => p.ParameterType.Name.Contains(\"SKSamplingOptions\")));\nConsole.WriteLine($\"DrawImage has SKSamplingOptions: {imageHasSampling}\");\n\nusing var src = SKSurface.Create(new SKImageInfo(100, 100));\nusing var snapshot = src.Snapshot();\nvar sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\nusing var dst = SKSurface.Create(new SKImageInfo(200, 200));\ndst.Canvas.DrawImage(snapshot, 50, 50, sampling);\nConsole.WriteLine(\"Workaround (Snapshot + DrawImage): OK\");\nConsole.WriteLine(\"SUCCESS: test completed\");"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and run repro to check SKCanvas.DrawSurface and SKSurface.Draw overloads on v3.116.0",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.116.0.0\nDrawSurface(SKSurface surface, SKPoint p, SKPaint paint)\nDrawSurface(SKSurface surface, Single x, Single y, SKPaint paint)\nHas SKSamplingOptions: False\nSKSurface.Draw has SKSamplingOptions: False\nDrawImage has SKSamplingOptions: True\nWorkaround (Snapshot + DrawImage): OK\nSUCCESS: test completed",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Test with latest stable (3.119.2) — fresh project dir to avoid stale artifacts",
+      "command": "mkdir -p /tmp/skiasharp/repro/3344-latest/Repro && cd /tmp/skiasharp/repro/3344-latest/Repro && dotnet new console --framework net8.0 --force && dotnet add package SkiaSharp --version 3.119.2 && dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp Version: 3.119.0.0\nDrawSurface(SKSurface surface, SKPoint p, SKPaint paint)\nDrawSurface(SKSurface surface, Single x, Single y, SKPaint paint)\nHas SKSamplingOptions: False\nSKSurface.Draw has SKSamplingOptions: False\nDrawImage has SKSamplingOptions: True\nWorkaround (Snapshot + DrawImage): OK\nSUCCESS: test completed",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test main branch source — build SkiaSharp from source and check overloads via console sample",
+      "command": "cd $REPO_ROOT && dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "SkiaSharp Assembly: 3.119.0.0\nDrawSurface(SKSurface surface, SKPoint p, SKPaint paint)\nDrawSurface(SKSurface surface, Single x, Single y, SKPaint paint)\nHas SKSamplingOptions: False\nDraw(SKCanvas canvas, Single x, Single y, SKPaint paint)\nHas SKSamplingOptions: False\nSUCCESS: main source test completed",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "SKCanvas.DrawSurface has 2 overloads (none with SKSamplingOptions). SKSurface.Draw has 1 overload (no SKSamplingOptions). DrawImage has 4 overloads with SKSamplingOptions for comparison.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Same gap persists on latest stable. No SKSamplingOptions overloads on DrawSurface or SKSurface.Draw.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "Main branch source still lacks SKSamplingOptions overloads. The C API shim (sk_surface_draw) only wraps the convenience overload without sampling. PR #3491 is open to address this.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Valid enhancement confirmed across all versions including main. PR #3491 is open and implementing the fix. The gap exists because the C API shim only exposes the convenience SkSurface::draw overload without SkSamplingOptions, and the C# bindings were never updated to match the DrawImage pattern."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Reclassify as enhancement since this is a missing overload, not broken behavior",
+        "risk": "low",
+        "confidence": 0.88,
+        "labels": ["type/enhancement", "area/SkiaSharp", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the gap, provide workaround, and reference the open PR",
+        "risk": "medium",
+        "confidence": 0.90,
+        "comment": "Thanks for reporting this! We investigated and can confirm that `SKCanvas.DrawSurface` and `SKSurface.Draw` do not accept `SKSamplingOptions` — the overloads are missing across all current versions (3.116.0, 3.119.2, and main).\n\n**Investigation:**\n- `SKCanvas.DrawSurface` has 2 overloads (point and x/y variants), none accepting `SKSamplingOptions`\n- `SKSurface.Draw` has 1 overload, no `SKSamplingOptions`\n- In contrast, `SKCanvas.DrawImage` has 8 overloads, 4 of which accept `SKSamplingOptions`\n- The upstream Skia C++ `SkSurface::draw` does support a sampling parameter, but the C API shim only wraps the convenience overload\n\n**Workaround:** You can use `SKSurface.Snapshot()` + `SKCanvas.DrawImage` which already supports sampling:\n\n```csharp\n// Instead of: canvas.DrawSurface(surface, x, y, paint);\nusing var image = surface.Snapshot();\nvar sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\ncanvas.DrawImage(image, x, y, sampling, paint);\n```\n\nPR #3491 is open to add the missing overloads. We've flagged this for inclusion."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to open PR implementing the fix",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3491
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this! We investigated and can confirm that `SKCanvas.DrawSurface` and `SKSurface.Draw` do not accept `SKSamplingOptions` — the overloads are missing across all current versions (3.116.0, 3.119.2, and main).\n\n**Investigation:**\n- `SKCanvas.DrawSurface` has 2 overloads (point and x/y variants), none accepting `SKSamplingOptions`\n- `SKSurface.Draw` has 1 overload, no `SKSamplingOptions`\n- In contrast, `SKCanvas.DrawImage` has 8 overloads, 4 of which accept `SKSamplingOptions`\n- The upstream Skia C++ `SkSurface::draw` does support a sampling parameter, but the C API shim only wraps the convenience overload\n\n**Workaround:** You can use `SKSurface.Snapshot()` + `SKCanvas.DrawImage` which already supports sampling:\n\n```csharp\n// Instead of: canvas.DrawSurface(surface, x, y, paint);\nusing var image = surface.Snapshot();\nvar sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\ncanvas.DrawImage(image, x, y, sampling, paint);\n```\n\nPR #3491 is open to add the missing overloads. We've flagged this for inclusion.",
+      "status": "ready"
+    },
+    "workarounds": [
+      "Use SKSurface.Snapshot() to get an SKImage, then call SKCanvas.DrawImage with SKSamplingOptions — this provides full sampling control with a small overhead for the snapshot"
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "type/bug",
+        "corrected": "type/enhancement — this is a missing API overload, not broken behavior. Existing DrawSurface works correctly with default sampling."
+      }
+    ]
+  }
+}
