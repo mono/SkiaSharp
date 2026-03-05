@@ -258,26 +258,17 @@ docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \
 2. If yes, the linker is silently failing → Check if library exists in sysroot
 3. If no, the GN configuration differs → Check `native/linux/build.cake` and `externals/skia/gn/skia.gni`
 
-### 5.2a For Performance Bugs: Systematic Profiling
+### 5.2a For Performance Bugs
 
 When the bug involves slow rendering, low FPS, or performance degradation:
 
-1. **Read [references/perf-investigation.md](references/perf-investigation.md)** — full methodology for phase profiling, isolation experiments, and AI model consultation
-2. **Establish baselines** — native C++ if available, or compare across SkiaSharp versions
-3. **Instrument per-phase timing** — render, flush, finish, swap using `Stopwatch`
-4. **Run isolation experiments** — change one variable at a time, maintain a debugging table
-5. **Consult AI models** — use 3 models via `task` tool with model overrides, require 2/3 consensus
+1. **Reproduce on the reporter's platform** — use the correct view type (e.g., `SKGLView`, `SKMetalView`, `SKCanvasView`) and backend, not a console app. Console apps bypass the view rendering pipeline and won't show the issue.
+2. **Establish baselines** — compare across SkiaSharp versions, or against a native C++ equivalent if available.
+3. **Profile per-phase** — break the frame into stages (render, flush, finish, swap) and time each with `Stopwatch`. The slowest phase points to the bottleneck.
+4. **Disable VSync** before any measurement — VSync caps frame rate to the display refresh rate, masking real performance differences.
+5. **Test multiple backends/platforms** — if the issue is on one backend (e.g., GL), compare against another (e.g., Metal or Raster) to isolate whether it's backend-specific or general.
 
-> ⚠️ Console apps are NOT sufficient for view rendering performance bugs. Use the actual view type (SKGLView, SKMetalView) from the correct platform.
-
-### 5.2b For macOS-Specific Issues: GL/Metal Diagnostics
-
-When the bug involves macOS rendering, GL context, Metal, or macOS-specific views:
-
-1. **Test both backends** — Metal and GL may behave differently
-2. **Check GL state** — `glGetIntegerv` values vs pixel format values (they can disagree on macOS; e.g., `GL_STENCIL_BITS` returns 0 for the default framebuffer even when 8 bits are allocated)
-3. **Disable VSync** before any timing measurement
-4. **Key source files:** `source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs`, `SKMetalView.cs`, and `externals/skia/tools/window/mac/GLWindowContext_mac.mm`
+For the full methodology (isolation experiments, debugging tables, AI model consultation), see [references/perf-investigation.md](references/perf-investigation.md).
 
 ### 5.3 For C# Issues: Locate the Code
 
