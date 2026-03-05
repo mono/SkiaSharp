@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3329,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-08-06T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Reporter expects SkiaSharp to auto-include SkiaSharp.NativeAssets.Linux as a dependency, similar to Win32 and macOS, but Linux native assets are intentionally excluded because there is no '-linux' TFM in .NET and users must choose between fontconfig and NoDependencies variants.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.75 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "platforms": ["os/Linux"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [119.0, 120.0).",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Reference SkiaSharp 3.119.0 without explicitly adding SkiaSharp.NativeAssets.Linux",
+        "Build and run on Linux (GitHub Actions CI runner)",
+        "Observe version mismatch error because old transitive NativeAssets.Linux 2.88.7 is resolved"
+      ],
+      "environmentDetails": "Linux runner in GitHub Actions CI, SkiaSharp 3.119.0",
+      "relatedIssues": [3117, 3238, 1073],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/discussions/3210", "description": "Discussion about Linux NativeAssets not being auto-included" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.0", "3.116.0", "2.88.7", "2.88.9", "2.88.1"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The design decision to exclude Linux NativeAssets from auto-inclusion is still current and intentional."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter's version mismatch error is caused by not explicitly referencing SkiaSharp.NativeAssets.Linux in their application project. An older v2.88.x Linux native assets package is being pulled in via a transitive dependency. SkiaSharp intentionally excludes Linux native assets from auto-inclusion because .NET has no '-linux' TFM and Linux has two variants (fontconfig vs NoDependencies) that the user must choose between. The reporter's suggested fix (adding a ProjectReference with Condition containing '-linux') would not work since no such TFM exists.",
+    "rationale": "Classified as type/bug because the reporter perceives the platform asymmetry as broken behavior, but the suggested action is close-as-by-design because the exclusion is intentional, well-documented, and has valid technical reasons. The macOS and Win32 assets are auto-included for non-platform TFMs because they have a single variant each, but Linux requires user choice between fontconfig and NoDependencies variants.",
+    "keySignals": [
+      { "text": "SkiaSharp references every other platform's native assets. So why does it not reference Linux?", "source": "comment 2 (OP)", "interpretation": "Reporter identifies the platform asymmetry but doesn't know the technical reason." },
+      { "text": "Linux having multiple distros, C libraries etc. and needing a mechanism with NuGet to support the different configurations", "source": "comment 3 (molesmoke)", "interpretation": "Community member correctly explains the design rationale." },
+      { "text": "The version of the native libSkiaSharp library (88.1) is incompatible", "source": "issue body", "interpretation": "Version mismatch confirms a stale transitive dependency is providing old Linux native assets instead of a matching version." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SkiaSharp.csproj", "lines": "13-20", "finding": "Auto-includes NativeAssets for Android, iOS, MacCatalyst, macOS, Tizen, tvOS, and Win32. macOS and Win32 also included for non-platform TFMs via '!$(TargetFramework.Contains('-'))' condition. No Linux reference exists.", "relevance": "direct" },
+      { "file": "documentation/packages.md", "lines": "26", "finding": "Explicitly documents: 'For Linux, WebAssembly, NanoServer, and WinUI you must add the NativeAssets package manually.' This confirms the exclusion is by design.", "relevance": "direct" },
+      { "file": "documentation/packages.md", "lines": "86-87", "finding": "Linux has two NativeAssets packages: NativeAssets.Linux (requires fontconfig) and NativeAssets.Linux.NoDependencies (minimal containers). This variant choice is the reason auto-inclusion is not feasible.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp.NativeAssets.Linux/SkiaSharp.NativeAssets.Linux.csproj", "finding": "Linux NativeAssets project exists and packages both glibc and musl variants for x64, x86, arm64, arm, riscv64, and loongarch64 architectures.", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Add explicit PackageReference to SkiaSharp.NativeAssets.Linux (or NoDependencies) with matching version in the application project",
+      "Use 'dotnet list package --include-transitive' to identify which dependency pulls in the old v2.88.x NativeAssets.Linux"
+    ],
+    "nextQuestions": [
+      "What transitive dependency is pulling in the old v2.88.x NativeAssets.Linux?",
+      "Is the reporter using NativeAssets.Linux or NativeAssets.Linux.NoDependencies?"
+    ],
+    "resolution": {
+      "hypothesis": "The reporter's project has a transitive dependency pulling in SkiaSharp.NativeAssets.Linux v2.88.x. Without an explicit PackageReference to the correct version, NuGet resolves to the older version. Adding an explicit reference to the matching version resolves the version mismatch.",
+      "proposals": [
+        {
+          "title": "Add explicit NativeAssets.Linux PackageReference",
+          "description": "Add a direct PackageReference to SkiaSharp.NativeAssets.Linux (or NoDependencies) in the application project with the same version as SkiaSharp. This overrides any transitive dependency and ensures version alignment.",
+          "category": "workaround",
+          "codeSnippet": "<PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"3.119.0\" />",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Diagnose transitive dependency source",
+          "description": "Run 'dotnet list package --include-transitive' to identify which package pulls in the old v2.88.x NativeAssets.Linux, then either update or pin that dependency.",
+          "category": "investigation",
+          "confidence": 0.85,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add explicit NativeAssets.Linux PackageReference",
+      "recommendedReason": "Simplest fix — one line in the csproj. Matches the documented guidance and resolves the version mismatch immediately."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.85,
+      "reason": "Linux NativeAssets exclusion from auto-inclusion is intentional, documented, and has valid technical reasons (no -linux TFM, multiple variants). The reporter's actual error is a transitive dependency version mismatch with a straightforward workaround.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, SkiaSharp, and Linux labels",
+        "risk": "low",
+        "confidence": 0.90,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Linux"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain by-design behavior and provide workaround",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for reporting this. The Linux NativeAssets exclusion from auto-inclusion is by design — unlike macOS and Windows, .NET doesn't have a `-linux` TFM, and Linux has two variants (`NativeAssets.Linux` with fontconfig for system font access, and `NativeAssets.Linux.NoDependencies` for minimal containers) that require an explicit choice.\n\nHere's a workaround you can use now: add a direct `PackageReference` to the Linux NativeAssets package in your **application** project with the matching version:\n\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux\" Version=\"3.119.0\" />\n```\n\nOr for minimal containers without fontconfig:\n\n```xml\n<PackageReference Include=\"SkiaSharp.NativeAssets.Linux.NoDependencies\" Version=\"3.119.0\" />\n```\n\nThe old v2.88.x version you're seeing is likely a transitive dependency from another package. You can identify it with `dotnet list package --include-transitive`. Adding the explicit reference above will override the transitive version.\n\nSee the [Linux Package Selection Guide](https://github.com/mono/SkiaSharp/blob/main/documentation/packages.md#linux-package-selection-guide) for details on choosing the right variant."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference discussion about Linux NativeAssets",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 3117
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design — behavior is intentional and documented",
+        "risk": "medium",
+        "confidence": 0.80,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
