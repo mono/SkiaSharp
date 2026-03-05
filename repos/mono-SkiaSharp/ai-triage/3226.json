@@ -1,0 +1,106 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3226,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-08-07T20:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Reporter claims SKMatrix44.Matrix property and implicit SKMatrix-to-SKMatrix44 operator produce incorrect matrix element ordering in SkiaSharp 3.0, but investigation shows the current implementation is correct per System.Numerics.Matrix4x4 row-vector conventions and existing tests pass.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.98 }
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "errorType": "wrong-output",
+      "errorMessage": "SKMatrix44.Matrix property passes parameters in wrong order",
+      "reproQuality": "none"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKMatrix44 with known values",
+        "Access the .Matrix property",
+        "Compare field ordering against expected Skia SkMatrix::get9() order"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, iOS, Visual Studio Code (macOS)",
+      "relatedIssues": [2778, 1330]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "2.88.9"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The Matrix property and implicit operator have not changed since 3.0 rewrite. The reporter's concern still applies to current code, but the behavior is correct."
+    }
+  },
+  "analysis": {
+    "summary": "The reporter believes SKMatrix44.Matrix and the implicit SKMatrix-to-SKMatrix44 operator transpose matrix elements incorrectly. However, the current implementation is correct. In SkiaSharp 3.0, SKMatrix44 is backed by System.Numerics.Matrix4x4 (row-vector convention, translation in last row), while Skia's SkM44 uses column-vector convention (translation in last column) with column-major storage. These two conventions share the same memory layout, so the reinterpret_cast between sk_matrix44_t and SkM44 works correctly. The Matrix property correctly transposes between row-vector (SKMatrix44) and column-vector (SKMatrix/Skia) conventions.",
+    "rationale": "The reporter assumed mRC field names follow row-major semantic convention matching Skia's SkMatrix::get9() order, but in SkiaSharp 3.0 they follow System.Numerics.Matrix4x4 convention. The tests TranslateConvertsToMatrix, ScaleConvertsToMatrix, RotationConvertsToMatrix, and ImplicitFromMatrix all validate the current implementation. Community member molesmoke independently confirmed correctness by testing Canvas.SetMatrix with the implicit operator. The reporter's suggested fix would place translation into perspective fields and break all canvas transforms.",
+    "keySignals": [
+      { "text": "The current Matrix property is passing in the parameters in the wrong order", "source": "issue body", "interpretation": "Reporter assumes mRC = row R, col C in Skia convention, but SKMatrix44 follows Matrix4x4 convention where translation is in last row (m30, m31)." },
+      { "text": "Canvas.SetMatrix uses the implicit operator if you provide it an SKMatrix, and it gives the output I expect", "source": "comment #5 (molesmoke)", "interpretation": "Practical demonstration that the current conversion is correct — canvas transforms work as expected." },
+      { "text": "both Skia and SkiaSharp sometimes use row-major and sometimes use column-major, perhaps that's a point of confusion here?", "source": "comment #7 (molesmoke)", "interpretation": "Correctly identifies the root cause of confusion: convention differences between Skia (column-vector, column-major storage) and System.Numerics (row-vector, row-major storage)." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKMatrix44.cs", "lines": "350-354", "finding": "Matrix property extracts m00,m10,m30,m01,m11,m31,m03,m13,m33 — correctly transposes from row-vector (Matrix4x4) to column-vector (SKMatrix) convention. Translation (m30,m31) maps to transX,transY.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKMatrix44.cs", "lines": "470-475", "finding": "Implicit operator SKMatrix44(SKMatrix) places TransX,TransY in m30,m31 — correctly maps column-vector SKMatrix to row-vector Matrix4x4 convention.", "relevance": "direct" },
+      { "file": "externals/skia/include/core/SkM44.h", "finding": "SkM44 uses column-major storage: fMat[c*4+r]. Constructor params are row-major visual order but stored column-major. Translation at fMat[12..14] = memory offset 12-14.", "relevance": "direct" },
+      { "file": "externals/skia/src/c/sk_types_priv.h", "lines": "158", "finding": "DEF_CLASS_MAP(SkM44, sk_matrix44_t, M44) — reinterpret_cast between sk_matrix44_t and SkM44. Memory layout must match: sk_matrix44_t.m30 = fMat[12] = SkM44.rc(0,3) = translation X.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKMatrix44.cs", "lines": "62-63", "finding": "CreateTranslation delegates to Matrix4x4.CreateTranslation, which puts translation in M41,M42,M43 (= m30,m31,m32). This matches fMat[12..14] via reinterpret_cast.", "relevance": "related" },
+      { "file": "tests/Tests/SkiaSharp/SKMatrix44Tests.cs", "lines": "86-91", "finding": "TranslateConvertsToMatrix test: SKMatrix44.CreateTranslation(10,20,30).Matrix matches SKMatrix.CreateTranslation(10,20) — confirms Matrix property correctly extracts translation.", "relevance": "direct" },
+      { "file": "tests/Tests/SkiaSharp/SKMatrix44Tests.cs", "lines": "113-118", "finding": "ImplicitFromMatrix test: round-trip SKMatrix→SKMatrix44→SKMatrix via .Matrix preserves all values. Also ScaleConvertsToMatrix and RotationConvertsToMatrix pass.", "relevance": "direct" }
+    ],
+    "resolution": {
+      "hypothesis": "The current implementation is correct. The reporter's confusion stems from the convention difference between Skia's SkM44 (column-vector, column-major storage) and System.Numerics.Matrix4x4 (row-vector, row-major storage). The mRC field names in SKMatrix44 follow the Matrix4x4 convention (row R, column C), not the SkM44 convention.",
+      "proposals": [
+        {
+          "title": "No code change needed — behavior is correct",
+          "description": "The Matrix property and implicit operator correctly handle the convention transposition between System.Numerics.Matrix4x4 (row-vector) and SKMatrix (column-vector, matching Skia's convention). The reporter's suggested fix would break canvas transforms by placing translation values into perspective fields.",
+          "category": "investigation",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "No code change needed — behavior is correct",
+      "recommendedReason": "Existing tests (TranslateConvertsToMatrix, ScaleConvertsToMatrix, RotationConvertsToMatrix, ImplicitFromMatrix) all pass. Community member independently confirmed canvas operations work correctly. Applying the reporter's fix would break Matrix4x4-to-SkM44 interop."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.90,
+      "reason": "Code investigation and existing tests confirm the Matrix property and implicit operator are correct. The apparent transposition is intentional, handling the convention difference between System.Numerics.Matrix4x4 and Skia's matrix conventions."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Confirm type/bug label, add area/SkiaSharp",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain that the behavior is correct per matrix convention differences",
+        "risk": "high",
+        "confidence": 0.90,
+        "comment": "Thanks for the detailed analysis of the matrix field ordering.\n\nThe current implementation is correct, though the reason is subtle. In SkiaSharp 3.0, `SKMatrix44` is backed by `System.Numerics.Matrix4x4`, which uses **row-vector** convention (translation in the last row: `M41`/`M42`/`M43`). Skia's `SkM44` uses **column-vector** convention (translation in the last column) with **column-major** memory storage. Despite the different conventions, both place translation at the same memory offsets (12–14), so the `reinterpret_cast` in the C API works correctly.\n\nThe `Matrix` property and implicit operator intentionally transpose between these two conventions. This is confirmed by:\n- Unit tests: `TranslateConvertsToMatrix`, `ScaleConvertsToMatrix`, `RotationConvertsToMatrix`, and `ImplicitFromMatrix` all pass\n- Practical usage: `Canvas.SetMatrix` with the implicit operator produces correct transforms (as @molesmoke demonstrated)\n\nAs @molesmoke noted, applying the suggested change would place translation values into perspective fields, breaking all canvas transforms.\n\nThe confusion likely comes from the `mRC` field naming — in `SKMatrix44` these follow `Matrix4x4` convention (row R, col C), which is the transpose of `SkM44`'s `rc(R,C)` accessor due to the column-major vs row-major storage difference."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design — matrix convention transposition is intentional and correct",
+        "risk": "medium",
+        "confidence": 0.88,
+        "stateReason": "not_planned"
+      },
+      {
+        "type": "link-related",
+        "description": "Link to SKMatrix44/Matrix4x4 conversion investigation issue",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 2778
+      }
+    ]
+  }
+}
