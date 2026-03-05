@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3130,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-17T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "SKCanvas.DrawText ignores SKPaint.IsAntialias property since version 3.116.0 — setting IsAntialias to false no longer disables text antialiasing, though directly setting SKFont.Edging to Alias works as a workaround.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.90 },
+    "platforms": ["os/Windows-Classic"],
+    "backends": ["backend/Raster"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "SKPaint.IsAntialias has no effect on DrawText — text remains antialiased regardless of the property value",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKPaint with IsAntialias = false and a TextSize set",
+        "Call SKCanvas.DrawText with this paint",
+        "Observe that text is rendered with antialiasing (smoothed edges) instead of aliased (jagged/pixelated)",
+        "Compare with SkiaSharp 2.88.9 where the same code produces correctly aliased text"
+      ],
+      "environmentDetails": "Windows 11, Visual Studio, SkiaSharp 3.116.0/3.116.1",
+      "relatedIssues": [1802, 1996],
+      "repoLinks": [
+        { "url": "https://github.com/meridaio/SkiaSharpTextAntialiasing", "description": "Minimal repro project demonstrating broken and working versions" }
+      ],
+      "screenshots": [
+        { "url": "https://github.com/user-attachments/assets/a5a60840-186e-4ef9-9ea3-307762f01ce4", "description": "Working (pre-3.116): IsAntialias=false produces aliased text" },
+        { "url": "https://github.com/user-attachments/assets/9125378f-59df-41e1-93bf-dc6ed743413b", "description": "Working (pre-3.116): IsAntialias=true produces antialiased text" },
+        { "url": "https://github.com/user-attachments/assets/53181c65-8eeb-4d95-8ece-33ac426e3d6d", "description": "Broken (3.116.x): IsAntialias=false still shows smoothed text" },
+        { "url": "https://github.com/user-attachments/assets/68275ef5-a74b-4fee-85e8-ca83180c5e71", "description": "Broken (3.116.x): IsAntialias=true looks similar to false" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "3.116.1", "3.119.0", "2.88.9"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "Confirmed still broken in 3.119.0 by a commenter (jswolf19, July 2025). The SkCompatPaint updateFontEdging mechanism exists but appears ineffective."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.90,
+      "reason": "Reporter provides screenshots showing correct behavior in pre-3.116.0 and broken behavior in 3.116.0+. A commenter confirms still broken in 3.119.0. The SkCompatPaint bridge layer was designed to preserve this behavior (PR #1802) but the edging update appears ineffective in text blob rendering.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "SKPaint.IsAntialias no longer controls text antialiasing in DrawText. The SkCompatPaint layer (added in PR #1802) correctly calls updateFontEdging() when setAntiAlias() is called, updating the embedded font's Edging to kAlias. However, the visual result in 3.116.0+ is incorrect — text appears antialiased regardless. Setting SKFont.Edging directly to Alias works, suggesting the issue is in how the embedded font's edging propagates through text blob creation or the rendering pipeline.",
+    "rationale": "Bug classification with high confidence: reporter provides side-by-side screenshots showing clear visual regression, a minimal repro project, and a community member confirms the issue persists in 3.119.0. The SkCompatPaint::updateFontEdging() mechanism is designed to handle exactly this case (PR #1802), but something in the chain between font edging update and text rendering is broken. This is area/SkiaSharp (not Views) because the issue is in core SKCanvas.DrawText + SKPaint interaction.",
+    "keySignals": [
+      { "text": "Prior to 3.116.0, setting this property to false produces [aliased text]", "source": "issue body", "interpretation": "Regression — behavior changed between 2.88.x and 3.116.0" },
+      { "text": "The SKPaint.IsAntialias property seems to have no effect on the SKCanvas.DrawText method", "source": "issue body", "interpretation": "Both true and false produce similar antialiased-looking output" },
+      { "text": "Setting SKFont.Edging to SKFontEdging.Alias appears to have the desired effect", "source": "comment by jswolf19", "interpretation": "Direct SKFont.Edging control works — the issue is in the bridge from SKPaint.IsAntialias to SKFont.Edging, not in the rendering pipeline itself" },
+      { "text": "This is still an issue in 3.119.0", "source": "comment by jswolf19", "interpretation": "Not yet fixed in latest version" }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKPaint.cs", "lines": "82-84", "finding": "IsAntialias setter calls sk_compatpaint_set_is_antialias (correct compat function). Getter calls sk_paint_is_antialias (reads base SkPaint flag). The C# bindings are correctly wired.", "relevance": "direct" },
+      { "file": "externals/skia/src/xamarin/SkCompatPaint.cpp", "lines": "84-96", "finding": "setAntiAlias() calls SkPaint::setAntiAlias(aa) then updateFontEdging(). updateFontEdging() reads isAntiAlias() and sets fFont.setEdging() to kAlias, kAntiAlias, or kSubpixelAntiAlias. This chain is correct in theory.", "relevance": "direct" },
+      { "file": "externals/skia/src/xamarin/sk_compatpaint.cpp", "lines": "50-52", "finding": "sk_compatpaint_get_font() returns pointer to internal fFont (no copy). The C# SKFont wrapper should reflect edging changes made by updateFontEdging().", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "604-660", "finding": "DrawText(string, float, float, SKPaint) calls paint.GetFont() to get the embedded font, then creates SKTextBlob.Create(text, font) and draws it. The font should carry the correct edging from updateFontEdging().", "relevance": "direct" }
+    ],
+    "workarounds": ["Set SKFont.Edging = SKFontEdging.Alias directly instead of relying on SKPaint.IsAntialias to control text antialiasing"],
+    "nextQuestions": [
+      "Does the text blob creation (allocRun) properly preserve the font's edging property in current Skia?",
+      "Is there a Skia version change that causes font edging to be overridden during text rendering?",
+      "Is the issue platform-independent or Windows-specific? (#1996 reports same on Linux)",
+      "Does the C# SKFont caching (??= pattern in GetFont) cause a stale state when IsAntialias is toggled?"
+    ],
+    "resolution": {
+      "hypothesis": "The SkCompatPaint.updateFontEdging() correctly sets the embedded font's edging, but somewhere between the font edging update and text blob rendering, the edging value is lost or overridden. Possible causes: (1) the text blob builder copies font data but drops/resets edging, (2) a newer Skia version handles kAlias differently, or (3) the C# GetFont() caching returns a wrapper that doesn't reflect native-side edging changes.",
+      "proposals": [
+        {
+          "title": "Use SKFont.Edging directly",
+          "description": "Instead of relying on SKPaint.IsAntialias, create an SKFont and set its Edging property directly to SKFontEdging.Alias, then use the DrawText overload that accepts an SKFont parameter.",
+          "category": "workaround",
+          "codeSnippet": "var font = new SKFont(paint.Typeface, paint.TextSize);\nfont.Edging = SKFontEdging.Alias;\ncanvas.DrawText(\"Hello\", x, y, font, paint);",
+          "confidence": 0.90,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Fix updateFontEdging propagation",
+          "description": "Debug the chain from SkCompatPaint::updateFontEdging() through text blob creation to find where font edging is lost. Likely requires stepping through native code to verify the edging value at each stage.",
+          "category": "investigation",
+          "confidence": 0.60,
+          "effort": "medium"
+        }
+      ],
+      "recommendedProposal": "Use SKFont.Edging directly",
+      "recommendedReason": "Confirmed working by commenter jswolf19. Trivial code change and the SKFont API is the modern recommended approach (SKPaint text properties are deprecated)."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.90,
+      "reason": "Real bug with complete repro, screenshots, and community confirmation in 3.119.0. Workaround exists but the underlying issue in the paint-to-font edging bridge needs debugging.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and area labels; add regression tenet",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge bug, provide workaround using SKFont.Edging directly",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed report and repro project.\n\nHere's a workaround you can use while we investigate: instead of relying on `SKPaint.IsAntialias`, set the font edging directly:\n\n```csharp\nvar font = new SKFont(paint.Typeface, paint.TextSize);\nfont.Edging = SKFontEdging.Alias;\ncanvas.DrawText(\"Hello\", x, y, font, paint);\n```\n\nAs @jswolf19 noted, `SKFont.Edging = SKFontEdging.Alias` produces the expected aliased rendering. The `SKPaint.IsAntialias` property should propagate to the font's edging automatically (this was the intent of an earlier fix), but something in that chain is broken since 3.116.0. We'll investigate the underlying cause."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to #1996 (same IsAntialias bug on Linux)",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 1996
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #1802 (the original fix for IsAntialias → Edging bridge)",
+        "risk": "low",
+        "confidence": 0.90,
+        "linkedIssue": 1802
+      }
+    ]
+  }
+}
