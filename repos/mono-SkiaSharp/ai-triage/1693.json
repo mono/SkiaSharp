@@ -1,0 +1,117 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1693,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-17T12:00:00Z"
+  },
+  "summary": "Reporter asks why SkiaSharp JPEG decode+encode is approximately 3x slower than raw libjpeg-turbo CLI tools (djpeg/cjpeg), providing benchmark code and timing comparisons.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.95 },
+    "tenets": ["tenet/performance"]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET console app with SkiaSharp",
+        "Load a JPEG file with SKData.Create and decode with SKBitmap.Decode",
+        "Re-encode with bitmap.Encode(SKEncodedImageFormat.Jpeg, 90)",
+        "Compare timings against djpeg/cjpeg CLI tools on the same file"
+      ],
+      "environmentDetails": "WSL2 and Windows, libjpeg-turbo CLI for comparison",
+      "codeSnippets": [
+        "using var data = SKData.Create(@\"/home/peter/photo.jpg\");\nSKBitmap bitmap = SKBitmap.Decode(data);\nvar outputData = bitmap.Encode(SKEncodedImageFormat.Jpeg, 90);"
+      ],
+      "relatedIssues": [2757]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The JPEG decode/encode path through Skia's codec layer has not fundamentally changed — the architectural overhead relative to raw libjpeg-turbo is inherent to how Skia processes images."
+    }
+  },
+  "analysis": {
+    "summary": "The performance gap is expected and inherent to Skia's architecture. SKBitmap.Decode goes through SKCodec which fully decodes JPEG to RGBA pixels (including YCbCr-to-RGBA color space conversion and alpha type management), whereas raw libjpeg-turbo djpeg can output in native YCbCr. Similarly, re-encoding requires RGBA-to-YCbCr conversion. The round-trip through RGBA is the primary source of overhead. The reporter confirmed in comments they switched to using libjpeg-turbo directly.",
+    "rationale": "Classified as question because the title explicitly says [QUESTION] and the body asks 'How is this possible?' — no broken behavior is reported. The performance difference is an expected consequence of Skia's full-pipeline image processing vs raw codec-level tools. Area is core SkiaSharp since this involves SKBitmap.Decode and Encode, not Views or platform-specific code.",
+    "keySignals": [
+      { "text": "[QUESTION] JPEG decoding and encoding 3x slower than libjpeg-turbo?", "source": "issue title", "interpretation": "Reporter frames this as a question, not a bug report." },
+      { "text": "Decoding took 308ms / Decoding + encoding took 738ms vs djpeg 162ms / djpeg+cjpeg 245ms", "source": "issue body", "interpretation": "~2-3x overhead confirms expected Skia pipeline cost over raw codec." },
+      { "text": "Because Skia uses libjpeg-turbo internally no?", "source": "issue body", "interpretation": "Reporter correctly identifies Skia uses libjpeg-turbo but doesn't account for the full RGBA pipeline overhead." },
+      { "text": "we decided to use libjpeg-turbo directly, because Skia is also too strict", "source": "comment by ziriax", "interpretation": "Reporter found their own solution — using libjpeg-turbo directly for their use case." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKBitmap.cs", "lines": "513-524", "finding": "SKBitmap.Decode(SKData) creates an SKCodec and calls codec.GetPixels() which fully decodes JPEG to RGBA bitmap — this includes YCbCr-to-RGBA conversion that raw libjpeg-turbo avoids when outputting raw data.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKBitmap.cs", "lines": "434-444", "finding": "Decode(SKCodec) forces alpha type from Unpremul to Premul, adding another conversion step during decode that raw libjpeg-turbo doesn't perform.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKBitmap.cs", "lines": "732-736", "finding": "bitmap.Encode calls PeekPixels() then pixmap.Encode() — the RGBA pixels must be converted back to YCbCr for JPEG encoding, adding overhead not present in direct cjpeg usage.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKPixmap.cs", "lines": "235-246", "finding": "SKPixmap.Encode dispatches to sk_jpegencoder_encode via the C API. The encoding itself uses libjpeg-turbo but operates on RGBA input requiring color space conversion.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Use libjpeg-turbo directly via P/Invoke or a .NET wrapper for JPEG-only transcode workloads where pixel manipulation is not needed.",
+      "For decode-only scenarios where full bitmap is not needed, use SKImage.FromEncodedData which defers pixel decoding until actually needed."
+    ],
+    "nextQuestions": [
+      "Whether Skia could be configured to use a faster color space conversion path for JPEG round-trips",
+      "Whether SKCodec could expose a transcode mode that avoids full RGBA materialization"
+    ],
+    "resolution": {
+      "hypothesis": "The 3x overhead comes from Skia's full RGBA pipeline (YCbCr→RGBA decode + RGBA→YCbCr encode) vs raw libjpeg-turbo which operates on native JPEG color space. This is by-design in Skia's architecture.",
+      "proposals": [
+        {
+          "title": "Use libjpeg-turbo directly",
+          "description": "For pure JPEG transcode workloads (decode then re-encode without pixel manipulation), use libjpeg-turbo directly via a .NET wrapper. This avoids the RGBA round-trip entirely. The reporter confirmed this approach works for their use case.",
+          "category": "alternative",
+          "confidence": 0.90,
+          "effort": "medium",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SKImage for lazy decode",
+          "description": "Replace SKBitmap.Decode with SKImage.FromEncodedData for decode-only scenarios. SKImage defers pixel decoding until needed, which can save time if pixels are not directly accessed. However, calling Encode on SKImage still triggers full rasterization via ToRasterImage(), so this only helps if the image is used without re-encoding.",
+          "category": "workaround",
+          "confidence": 0.65,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use libjpeg-turbo directly",
+      "recommendedReason": "The reporter's use case (JPEG transcode) doesn't require Skia's full rendering pipeline. Using libjpeg-turbo directly eliminates the RGBA round-trip that causes the 3x overhead. The reporter already validated this approach."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.85,
+      "reason": "This is a performance question with a clear architectural explanation. The overhead is inherent to Skia's RGBA pipeline and is by-design. The reporter already found a viable alternative (libjpeg-turbo directly). Related issue #2757 covers the same topic."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply question, SkiaSharp, and performance labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/question", "area/SkiaSharp", "tenet/performance"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post explanation of the performance difference with technical context",
+        "risk": "high",
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed benchmark and investigation.\n\nThe ~3x overhead is expected and comes from Skia's image processing pipeline. When you call `SKBitmap.Decode`, the JPEG data goes through `SKCodec` which fully decodes the pixels to RGBA format (including YCbCr-to-RGBA color space conversion). When you then call `Encode`, those RGBA pixels must be converted back to YCbCr for JPEG output. This double color-space conversion is the main overhead vs raw `djpeg`/`cjpeg`, which can operate in native JPEG color space.\n\nFor pure JPEG transcode workloads (decode → re-encode without pixel manipulation), using libjpeg-turbo directly — as you found — is the right approach. Skia's pipeline is designed for rendering and compositing, so the RGBA materialization is a fundamental part of its architecture.\n\nRelated: #2757 covers similar encode performance observations."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference encoding performance issue",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 2757
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as answered — performance difference is by-design and reporter found their solution",
+        "risk": "medium",
+        "confidence": 0.80
+      }
+    ]
+  }
+}
