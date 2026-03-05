@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3109,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T14:00:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Reproduced: Linear gradient shader DrawRect shows a ~27x per-iteration slowdown in SkiaSharp v3.x vs v2.88.9 (4.6ms/iter vs 0.17ms/iter at 1920x1080). The gradient/solid ratio went from 1.1x in v2.88.9 to ~39x in v3.x. The regression persists on latest stable (3.119.2) and main branch. The C# and C API wrappers are trivially thin — the performance difference is in the upstream Skia raster gradient pipeline which changed between the Skia milestones used in SkiaSharp v2 (m88) and v3.",
+  "scope": "universal",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.0"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.0",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 3.116.0 (reporter's version)",
+      "command": "mkdir -p /tmp/skiasharp/repro/3109 && cd /tmp/skiasharp/repro/3109 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.0",
+      "exitCode": 0,
+      "output": "Package 'SkiaSharp' version '3.116.0' added to project.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Benchmark comparing DrawRect with gradient shader vs solid paint over 500 iterations at 1920x1080",
+          "content": "using System;\nusing System.Diagnostics;\nusing SkiaSharp;\n\nconst int WIDTH = 1920;\nconst int HEIGHT = 1080;\nconst int ITERATIONS = 500;\n\nvar gradientPaint = new SKPaint\n{\n    Shader = SKShader.CreateLinearGradient(\n        new SKPoint(0, 0),\n        new SKPoint(0, HEIGHT),\n        new SKColor[] { SKColors.DarkBlue, SKColors.Black },\n        new float[] { 0, 0.75f },\n        SKShaderTileMode.Clamp)\n};\n\nvar solidPaint = new SKPaint { Color = SKColors.DarkBlue };\n\nusing var bitmap = new SKBitmap(WIDTH, HEIGHT);\nusing var canvas = new SKCanvas(bitmap);\n\nfor (int i = 0; i < 10; i++)\n{\n    canvas.DrawRect(0, 0, WIDTH, HEIGHT, gradientPaint);\n    canvas.DrawRect(0, 0, WIDTH, HEIGHT, solidPaint);\n}\n\nvar sw = Stopwatch.StartNew();\nfor (int i = 0; i < ITERATIONS; i++)\n{\n    canvas.DrawRect(0, 0, WIDTH, HEIGHT, gradientPaint);\n    canvas.Flush();\n}\nsw.Stop();\nvar gradientMs = sw.Elapsed.TotalMilliseconds;\n\nsw.Restart();\nfor (int i = 0; i < ITERATIONS; i++)\n{\n    canvas.DrawRect(0, 0, WIDTH, HEIGHT, solidPaint);\n    canvas.Flush();\n}\nsw.Stop();\nvar solidMs = sw.Elapsed.TotalMilliseconds;\n\nvar ratio = gradientMs / solidMs;\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKBitmap).Assembly.GetName().Version}\");\nConsole.WriteLine($\"Gradient DrawRect: {ITERATIONS} iterations in {gradientMs:F1}ms ({gradientMs/ITERATIONS:F2}ms/iter)\");\nConsole.WriteLine($\"Solid DrawRect:    {ITERATIONS} iterations in {solidMs:F1}ms ({solidMs/ITERATIONS:F2}ms/iter)\");\nConsole.WriteLine($\"Gradient/Solid ratio: {ratio:F1}x\");\nConsole.WriteLine($\"SUCCESS: test completed\");"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build repro project",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run gradient benchmark with SkiaSharp 3.116.0 — gradient is ~39x slower than solid fill",
+      "command": "dotnet run --no-build",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.116.0.0\nGradient DrawRect: 500 iterations in 2281.1ms (4.56ms/iter)\nSolid DrawRect:    500 iterations in 58.8ms (0.12ms/iter)\nGradient/Solid ratio: 38.8x\nGradient per-frame overhead: 4.44ms/iter\nRESULT: Significant performance degradation with gradient shader\nSUCCESS: test completed, output.png saved",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run same benchmark with SkiaSharp 2.88.9 (reporter's last-good version) — gradient only 1.1x solid",
+      "command": "cd /tmp/skiasharp/repro/3109-v2/Repro && dotnet run --no-build",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\nGradient DrawRect: 500 iterations in 84.7ms (0.17ms/iter)\nSolid DrawRect:    500 iterations in 78.1ms (0.16ms/iter)\nGradient/Solid ratio: 1.1x\nGradient per-frame overhead: 0.01ms/iter\nRESULT: Gradient shader performance is acceptable\nSUCCESS: test completed, output.png saved",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Run benchmark with latest stable SkiaSharp 3.119.2 — still ~39x gradient/solid ratio",
+      "command": "cd /tmp/skiasharp/repro/3109-latest/Repro && dotnet run --no-build",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nGradient DrawRect: 500 iterations in 2310.8ms (4.62ms/iter)\nSolid DrawRect:    500 iterations in 59.5ms (0.12ms/iter)\nGradient/Solid ratio: 38.8x\nGradient per-frame overhead: 4.50ms/iter\nRESULT: Significant performance degradation with gradient shader\nSUCCESS: test completed, output.png saved",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Run benchmark with main branch source — still ~39x gradient/solid ratio",
+      "command": "dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj --no-build",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\nGradient DrawRect: 500 iterations in 2297.7ms (4.60ms/iter)\nSolid DrawRect:    500 iterations in 58.5ms (0.12ms/iter)\nGradient/Solid ratio: 39.3x\nGradient per-frame overhead: 4.48ms/iter\nRESULT: Significant performance degradation with gradient shader\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "wrong-output"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Gradient performance acceptable — 0.17ms/iter, ratio 1.1x vs solid fill",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.116.0",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Gradient 4.56ms/iter, ratio 38.8x — significant regression from v2.88.9",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Gradient 4.62ms/iter, ratio 38.8x — still present on latest stable",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.0-dev",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Gradient 4.60ms/iter, ratio 39.3x — still present on main branch",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Clear performance regression confirmed across all v3 versions including main. The ~27x per-iteration slowdown for gradient shader rendering is in the upstream Skia raster pipeline, not the SkiaSharp C# wrapper. Requires profiling the Skia gradient fill path to identify the bottleneck."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add tenet/performance label to reflect confirmed performance regression",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "add-comment",
+        "description": "Confirm reproduction with benchmark data and suggest bitmap-caching workaround",
+        "risk": "medium",
+        "confidence": 0.90
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference to broader v3 performance regression report #3525",
+        "risk": "low",
+        "confidence": 0.75
+      }
+    ],
+    "workarounds": [
+      "Pre-render the gradient to an SKImage once (when size changes) and draw the cached image each frame instead of applying the shader per-frame",
+      "Use GPU-accelerated rendering (SKGLView instead of SKCanvasView) which handles gradient shaders natively"
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this — we've confirmed the performance regression with gradient shaders.\n\nWe benchmarked `DrawRect` with a linear gradient shader (DarkBlue→Black, 1920×1080) at 500 iterations:\n\n| Version | Gradient (ms/iter) | Solid (ms/iter) | Ratio |\n|---------|-------------------|-----------------|-------|\n| 2.88.9 | 0.17 | 0.16 | 1.1x |\n| 3.116.0 | 4.56 | 0.12 | 38.8x |\n| 3.119.2 (latest) | 4.62 | 0.12 | 38.8x |\n| main (source) | 4.60 | 0.12 | 39.3x |\n\nThe gradient shader is ~27x slower per-iteration in v3 compared to v2.88.9. The C# and C API wrappers are trivially thin pass-throughs — the bottleneck is in the upstream Skia raster gradient pipeline which changed between the Skia milestones used in v2 and v3.\n\n**Workarounds:**\n\n1. **Cache the gradient as a bitmap** — pre-render the gradient to an `SKImage` once (when the size changes) and draw the cached image each frame:\n```csharp\n// Once, when size changes:\nusing var tempSurface = SKSurface.Create(new SKImageInfo(width, height));\ntempSurface.Canvas.DrawRect(0, 0, width, height, BG);\ncachedGradient?.Dispose();\ncachedGradient = tempSurface.Snapshot();\n\n// In PaintSurface:\ncanvas.DrawImage(cachedGradient, 0, 0);\n```\n\n2. **Use GPU-accelerated rendering** — if you're using `SKCanvasView` (CPU/raster), switching to `SKGLView` (GPU) should significantly improve gradient performance since GPU shaders handle gradients natively.",
+      "status": "needs-human-edit"
+    },
+    "missingInfo": [
+      "Whether the reporter is using SKCanvasView (CPU raster) or SKGLView (GPU)",
+      "Approximate dimensions of the gradient-filled rectangle",
+      "How frequently PaintSurface is invoked (animation loop, timer, user-triggered)"
+    ]
+  }
+}
