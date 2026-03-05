@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2751,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T19:30:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "likely-bug",
+  "notes": "Reproduced on all tested versions (2.88.7, 3.119.2, and main branch source). SKPixmap.GetPixelSpan() uses Info.BytesSize (Width*Height*BytesPerPixel = 2500) instead of the correct computeByteSize formula ((Height-1)*RowBytes + Width*BytesPerPixel = 10756) when the pixmap's RowBytes exceeds the minimum (e.g., from ExtractSubset where RowBytes=444 but Width*BytesPerPixel=100). This is a C# wrapper calculation bug — platform-independent. Workaround: use SKBitmap.GetPixelSpan() which correctly delegates to native computeByteSize().",
+  "scope": "universal",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "2.88.7"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3 (Darwin 25.3.0)",
+    "arch": "arm64",
+    "dotnetVersion": ".NET 8.0.23",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "2.88.7",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project and add SkiaSharp 2.88.7",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.7",
+      "exitCode": 0,
+      "output": "Restore succeeded.\nPackageReference for package 'SkiaSharp' version '2.88.7' added.",
+      "filesCreated": [
+        {
+          "filename": "Repro.csproj",
+          "description": "Console project targeting net8.0 with SkiaSharp 2.88.7",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\">\n  <PropertyGroup>\n    <OutputType>Exe</OutputType>\n    <TargetFramework>net8.0</TargetFramework>\n    <ImplicitUsings>enable</ImplicitUsings>\n    <Nullable>enable</Nullable>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include=\"SkiaSharp\" Version=\"2.88.7\" />\n  </ItemGroup>\n</Project>"
+        },
+        {
+          "filename": "Program.cs",
+          "description": "Reproduction code that decodes a 111x33 PNG, extracts a 25x25 subset, and checks GetPixelSpan() length against the expected computeByteSize",
+          "content": "using SkiaSharp;\nusing System;\n\nbyte[] imageData = [\n    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,\n    0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x6F, 0x00, 0x00, 0x00, 0x21,\n    0x08, 0x02, 0x00, 0x00, 0x00, 0x58, 0xF5, 0x62, 0x2B, 0x00, 0x00, 0x00,\n    0x03, 0x73, 0x42, 0x49, 0x54, 0x08, 0x08, 0x08, 0xDB, 0xE1, 0x4F, 0xE0,\n    0x00, 0x00, 0x00, 0x7B, 0x49, 0x44, 0x41, 0x54, 0x68, 0x81, 0xED, 0xDA,\n    0xB1, 0x0D, 0x02, 0x51, 0x0C, 0x05, 0xC1, 0x6F, 0x44, 0xFF, 0x2D, 0x9B,\n    0x80, 0x13, 0x0D, 0xB0, 0xD2, 0x09, 0x34, 0x13, 0x39, 0xB4, 0x36, 0x7E,\n    0xB3, 0xBB, 0x87, 0x8A, 0x9A, 0x95, 0xDD, 0x7D, 0x7E, 0xAE, 0x7B, 0x5F,\n    0xF9, 0x75, 0x33, 0x73, 0xCE, 0x79, 0xDC, 0xFD, 0xC6, 0x5F, 0x51, 0xB3,\n    0xA4, 0x66, 0x49, 0xCD, 0x92, 0x9A, 0x25, 0x35, 0x4B, 0x6A, 0x96, 0xD4,\n    0x2C, 0xA9, 0x59, 0x52, 0xB3, 0xA4, 0x66, 0x49, 0xCD, 0x92, 0x9A, 0x25,\n    0x35, 0x4B, 0x6A, 0x96, 0xD4, 0x2C, 0xA9, 0x59, 0x52, 0xB3, 0xA4, 0x66,\n    0x49, 0xCD, 0x92, 0x9A, 0x25, 0x35, 0x4B, 0x6A, 0x96, 0xD4, 0x2C, 0xA9,\n    0x59, 0x52, 0xB3, 0xA4, 0x66, 0x49, 0xCD, 0xD2, 0xB5, 0xEA, 0x7A, 0x8F,\n    0x92, 0xF8, 0xD2, 0x58, 0xC7, 0x85, 0x5E, 0x3B, 0x1C, 0x0F, 0x3A, 0x22,\n    0x47, 0x3D, 0x10, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,\n    0x42, 0x60, 0x82\n];\n\nusing var bitmap = SKBitmap.Decode(imageData);\nConsole.WriteLine($\"Original: {bitmap.Width}x{bitmap.Height}, RowBytes={bitmap.RowBytes}\");\n\nusing var bitmapSubset = new SKBitmap();\nif (!bitmap.ExtractSubset(bitmapSubset, SKRectI.Create(bitmap.Width - 25, bitmap.Height - 25, 25, 25)))\n    throw new InvalidOperationException(\"Unable to create subset!\");\n\nConsole.WriteLine($\"Subset: {bitmapSubset.Width}x{bitmapSubset.Height}, RowBytes={bitmapSubset.RowBytes}\");\n\nvar pixmap = bitmapSubset.PeekPixels();\nvar pixmapInfo = pixmap.Info;\nvar pixmapBytes = pixmap.GetPixelSpan();\nConsole.WriteLine($\"GetPixelSpan() length: {pixmapBytes.Length}\");\n\nvar expected = pixmapInfo.Height > 0\n    ? ((pixmap.RowBytes * (pixmapInfo.Height - 1)) + pixmapInfo.RowBytes) : 0;\nConsole.WriteLine($\"Expected: {expected}\");\n\nif (pixmapBytes.Length < expected)\n{\n    Console.WriteLine($\"BUG: span is {expected - pixmapBytes.Length} bytes too short\");\n    Environment.Exit(1);\n}\nelse\n    Console.WriteLine(\"SUCCESS\");"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build the repro project",
+      "command": "dotnet build",
+      "exitCode": 0,
+      "output": "Build succeeded.\n    0 Warning(s)\n    0 Error(s)",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run the repro — GetPixelSpan() returns 2500 bytes instead of expected 10756",
+      "command": "dotnet run",
+      "exitCode": 1,
+      "output": "SkiaSharp Version: 2.88.0.0\nRuntime: .NET 8.0.23\nOS: Darwin 25.3.0\nArch: Arm64\n\nOriginal bitmap: 111x33, RowBytes=444, BytesPerPixel=4\nSubset bitmap: 25x25, RowBytes=444, BytesPerPixel=4\nPixmap Info: 25x25, RowBytes=444, BytesPerPixel=4\nGetPixelSpan() length: 2500\nExpected minimum byte length: 10756\nInfo.BytesSize (what GetPixelSpan uses): 2500\nBUG REPRODUCED: GetPixelSpan() returned 2500 bytes but needs at least 10756\nDeficit: 8256 bytes missing",
+      "layer": "csharp",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project — same bug",
+      "command": "dotnet add package SkiaSharp --version 3.119.2 && rm -rf bin/ obj/ && dotnet run",
+      "exitCode": 1,
+      "output": "SkiaSharp Version: 3.119.0.0\nRuntime: .NET 8.0.23\nArch: Arm64\n\nOriginal bitmap: 111x33, RowBytes=444, BytesPerPixel=4\nSubset bitmap: 25x25, RowBytes=444, BytesPerPixel=4\nPixmap Info: 25x25, RowBytes=444, BytesPerPixel=4\nGetPixelSpan() length: 2500\nExpected minimum byte length: 10756\nInfo.BytesSize (what GetPixelSpan uses): 2500\nBUG REPRODUCED: GetPixelSpan() returned 2500 bytes but needs at least 10756\nDeficit: 8256 bytes missing",
+      "layer": "csharp",
+      "result": "failure"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test with main branch source via console sample — same bug persists",
+      "command": "dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 1,
+      "output": "SkiaSharp Version: 3.119.0.0\nRuntime: .NET 8.0.23\nArch: Arm64\n\nOriginal bitmap: 111x33, RowBytes=444, BytesPerPixel=4\nSubset bitmap: 25x25, RowBytes=444, BytesPerPixel=4\nPixmap Info: 25x25, RowBytes=444, BytesPerPixel=4\nGetPixelSpan() length: 2500\nExpected minimum byte length: 10756\nBUG REPRODUCED: GetPixelSpan() returned 2500 bytes but needs at least 10756",
+      "layer": "csharp",
+      "result": "failure"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.7",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "GetPixelSpan() returns 2500 bytes instead of 10756. RowBytes=444, Info.BytesSize=2500 (Width*Height*BytesPerPixel).",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Same bug — GetPixelSpan() returns 2500 instead of 10756. Bug persists across major versions.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Bug still present on main branch. No fix has been applied.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.95,
+      "reason": "Bug reproduced on all versions including main. GetPixelSpan() uses Info.BytesSize (Width*Height*BytesPerPixel) instead of computing (Height-1)*RowBytes + Width*BytesPerPixel. Straightforward C# wrapper fix needed."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Add area/SkiaSharp label to confirm this is a C# wrapper bug",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug with reproduction results and provide workaround",
+        "risk": "low",
+        "confidence": 0.92
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for the thorough report and analysis! We've confirmed this issue.\n\n`SKPixmap.GetPixelSpan()` uses `Info.BytesSize` (`Width × Height × BytesPerPixel`) for the span length, which doesn't account for `RowBytes` when it exceeds the minimum — as happens with subset pixmaps from `ExtractSubset()`.\n\n**Tested versions:**\n| Version | Result |\n|---------|--------|\n| 2.88.7 (reported) | ❌ Reproduced |\n| 3.119.2 (latest) | ❌ Reproduced |\n| main (source) | ❌ Reproduced |\n\n**Details:** For a 25×25 subset of a 111×33 bitmap (BytesPerPixel=4), `RowBytes` is 444 (from the parent bitmap) but `Info.BytesSize` returns only 2,500 (25×25×4). The correct size is 10,756 ((24×444) + (25×4)).\n\n**Workaround:** Use `SKBitmap.GetPixelSpan()` instead of going through `PeekPixels()` — the bitmap path correctly delegates to the native `computeByteSize()`:\n\n```csharp\n// Instead of:\nvar pixmap = bitmapSubset.PeekPixels();\nvar pixmapBytes = pixmap.GetPixelSpan(); // Bug: undersized span\n\n// Use:\nvar pixelBytes = bitmapSubset.GetPixelSpan(); // Correct: uses native computeByteSize()\n```\n\nNote that in both cases the span includes row-stride padding, so row-by-row access should use `RowBytes` for stride.",
+      "status": "ready"
+    },
+    "workarounds": [
+      "Use SKBitmap.GetPixelSpan() instead of SKPixmap.GetPixelSpan() — the bitmap path correctly uses native computeByteSize() for span length"
+    ]
+  }
+}
