@@ -2,13 +2,12 @@
 name: issue-fix
 description: >
   Fix bugs in SkiaSharp C# bindings. Structured workflow for investigating, fixing,
-  and testing bug reports.
-  Triggers: Crash, exception, AccessViolationException, incorrect output, wrong behavior,
-  memory leak, disposal issues, "fails", "broken", "doesn't work", "investigate issue",
-  "fix issue", "look at #NNNN", "debug this", "why is this broken", segfault,
-  "undefined symbol", any GitHub issue number referencing a bug, or any request to
-  diagnose and fix SkiaSharp problems.
-  For adding new APIs, use `add-api` skill instead.
+  and testing bug reports. Use whenever someone reports something broken, crashing,
+  or behaving incorrectly — whether they describe a specific exception, reference a
+  GitHub issue number, or simply say "this doesn't work". Covers crashes, exceptions,
+  AccessViolationException, segfaults, undefined symbols, wrong output, memory leaks,
+  disposal issues, performance regressions, and any request to debug, investigate, or
+  fix a SkiaSharp problem. For adding new APIs, use `add-api` skill instead.
 ---
 
 # Bug Fix Skill
@@ -157,8 +156,9 @@ Search GitHub issues for:
 - [ ] Read ALL comments on the most relevant related issues
 - [ ] Updated PR with related issues and any diagnosis found
 
-**If a related issue already contains the root cause diagnosis, document it in the PR,
-but you MUST still proceed to Phase 4 (Reproduce) to validate the hypothesis.**
+**If a related issue already contains the root cause diagnosis, document it in the PR
+and still proceed to Phase 4 — community diagnoses can be workarounds rather than true fixes,
+and hypotheses need reproduction evidence.**
 
 ---
 
@@ -274,10 +274,10 @@ When the bug involves slow rendering, low FPS, or performance degradation:
 
 When the bug involves macOS rendering, GL context, Metal, or macOS-specific views:
 
-1. **Read [references/macos-diagnostics.md](references/macos-diagnostics.md)** — GL state queries, stencil trap, VSync control, Skia source locations
-2. **Test both backends** — Metal and GL may behave differently
-3. **Check GL state** — `glGetIntegerv` values vs pixel format values (they can disagree on macOS)
-4. **Disable VSync** before any timing measurement
+1. **Test both backends** — Metal and GL may behave differently
+2. **Check GL state** — `glGetIntegerv` values vs pixel format values (they can disagree on macOS; e.g., `GL_STENCIL_BITS` returns 0 for the default framebuffer even when 8 bits are allocated)
+3. **Disable VSync** before any timing measurement
+4. **Key source files:** `source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs`, `SKMetalView.cs`, and `externals/skia/tools/window/mac/GLWindowContext_mac.mm`
 
 ### 5.3 For C# Issues: Locate the Code
 
@@ -288,9 +288,7 @@ grep -r "sk_.*methodname" binding/SkiaSharp/
 
 ### 5.4 Workaround vs Root Cause
 
-> ⚠️ **CRITICAL: Don't mistake a workaround for the root cause fix.**
-
-**Example from #3369:**
+The most common investigation mistake is shipping a workaround instead of fixing the root cause. The #3369 example illustrates why this matters:
 - Symptom: `undefined symbol: uuid_generate_random` on ARM64
 - **Wrong fix (workaround):** Add `-luuid` to linker flags
 - **Root cause:** fontconfig wasn't being linked at all (broken symlink in sysroot)
@@ -362,7 +360,7 @@ Name: `Issue_NNNN_BriefDescription()`
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
-Tests MUST pass. Verify fix on original platform.
+All tests must pass — a fix that breaks existing tests isn't ready. Verify on the original platform.
 
 ### Performance Verification (for perf bugs only)
 

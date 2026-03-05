@@ -167,7 +167,7 @@ Use the `task` tool with agent_type="general-purpose" and model override:
 
 **Always disable VSync before measuring.** VSync caps frame rate to display refresh rate, making everything look the same.
 
-Each platform has its own VSync mechanism — see the platform-specific diagnostics reference for exact code (e.g., `macos-diagnostics.md` for macOS).
+Each platform has its own VSync mechanism. On macOS, disable via `NSOpenGLContext.setValues(0, forParameter: NSOpenGLCPSwapInterval)`.
 
 **Key indicator of VSync masking:** If all configurations show exactly 60fps or 120fps regardless of scene complexity → VSync is enabled.
 
