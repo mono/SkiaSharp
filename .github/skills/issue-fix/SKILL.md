@@ -186,7 +186,7 @@ If no `ai-repro` exists:
 
 ### 4.2 Docker Testing
 
-For cross-platform testing, see [references/docker-testing.md](references/docker-testing.md).
+For cross-platform testing, see [references/platform-docker.md](references/platform-docker.md).
 
 Example (adapt platform to match the issue):
 ```bash
