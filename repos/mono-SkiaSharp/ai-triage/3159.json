@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3159,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "SKBitmap.ScalePixels produces lower quality and larger file sizes when downscaling images in v3.x compared to v2.88.x, because the SKFilterQuality.High to SKSamplingOptions migration maps unconditionally to SKCubicResampler.Mitchell, which is only optimal for upscaling — Skia's old implementation internally switched to bilinear+mipmaps for downscaling.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.90 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.95 },
+    "platforms": ["os/Windows-Classic", "os/macOS"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "wrong-output",
+      "errorMessage": "Downsized image is larger and of inferior quality compared to v2.88.9",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net8.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Load a 1440x720 PNG image into SKBitmap",
+        "Create a destination bitmap at 480x240",
+        "Call bitmapSrc.ScalePixels(bitmapDst, new SKSamplingOptions(SKCubicResampler.Mitchell))",
+        "Encode result to WebP at quality 75",
+        "Compare output size and visual quality to v2.88.9 using SKFilterQuality.High"
+      ],
+      "environmentDetails": "Windows 11 24H2 and macOS 15.1.1, SkiaSharp 3.116.1",
+      "relatedIssues": [756, 2784, 1336],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/pull/2963", "description": "PR #2963: Add compatibility overloads for SKFilterQuality — added the ToSamplingOptions() compat layer" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0", "3.116.1", "2.88.9"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The ToSamplingOptions() extension method still unconditionally maps SKFilterQuality.High to SKCubicResampler.Mitchell without considering scale direction."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.92,
+      "reason": "Confirmed regression in the v2-to-v3 migration path. The old Skia kHigh_SkFilterQuality internally switched to bilinear+mipmaps for downscaling, but the new SkiaSharp compat shim maps it unconditionally to cubic Mitchell resampler, producing artifacts and larger output for downscaled images.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "The ToSamplingOptions() compatibility extension method in SKPaint.cs unconditionally maps SKFilterQuality.High to SKCubicResampler.Mitchell. In old Skia, kHigh_SkFilterQuality used cubic only for upscaling; for downscaling it internally fell back to kMedium (bilinear + mipmaps). The SkiaSharp compat layer doesn't replicate this direction-dependent behavior, causing quality regression and larger file sizes when downscaling. Community commenter @gnattu identified the root cause and workaround.",
+    "rationale": "Classified as type/bug because the migration path from SKFilterQuality.High produces measurably worse results for downscaling. The ToSamplingOptions() compat shim is a SkiaSharp abstraction that doesn't faithfully reproduce old behavior. The Obsolete attribute guidance misleads users into using Mitchell for all scale directions. Area is area/SkiaSharp since the bug is in core bitmap/pixmap scaling APIs, not views.",
+    "keySignals": [
+      { "text": "Bitmap downsizing using SKBitmap.ScalePixels in version 3.116.1 produces images of a larger size and of a lower quality compared to version 2.88.9", "source": "issue body", "interpretation": "Clear regression claim with before/after comparison images provided." },
+      { "text": "Although SKFilterQuality.High used to imply SKCubicResampler.Mitchell, but this is only the case for up-sampling. If you specified SKFilterQuality.High and you are actually down-sampling, skia would switch back to SKFilterQuality.Medium internally which does not use cubic resampler at all, but instead, a bilinear filter plus mipmaps", "source": "comment #1 by gnattu", "interpretation": "Root cause identified: leaky abstraction in old Skia that the compat layer doesn't replicate." },
+      { "text": "After changing our code to use new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) when downscaling, we are getting the results same as the old API", "source": "comment #1 by gnattu", "interpretation": "Community-validated workaround confirming the diagnosis." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKPaint.cs", "lines": "28-35", "finding": "ToSamplingOptions() maps SKFilterQuality.High unconditionally to new SKSamplingOptions(SKCubicResampler.Mitchell). No consideration of scale direction. This is the root cause — old Skia only used cubic for upscaling.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKBitmap.cs", "lines": "683-685", "finding": "The obsolete ScalePixels(SKBitmap, SKFilterQuality) overload delegates to ScalePixels(destination, quality.ToSamplingOptions()), meaning even users of the old API get the regression since ToSamplingOptions doesn't replicate old scale-direction-dependent behavior.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKPixmap.cs", "lines": "189-199", "finding": "SKPixmap.ScalePixels has the same obsolete-to-new delegation pattern. The actual native call is sk_pixmap_scale_pixels which passes the SKSamplingOptions directly to Skia.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "For downscaling, use new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) instead of SKCubicResampler.Mitchell",
+      "Check scale direction and select sampling accordingly: cubic Mitchell for upscaling, bilinear+mipmaps for downscaling"
+    ],
+    "nextQuestions": [
+      "Should ToSamplingOptions() be updated to document the downscaling caveat, or is a code fix appropriate?",
+      "Should SkiaSharp provide a helper method that selects direction-aware sampling automatically?"
+    ],
+    "resolution": {
+      "hypothesis": "The ToSamplingOptions() compat layer doesn't replicate Skia's old direction-dependent filter quality behavior. For downscaling, cubic resampling produces worse results than bilinear+mipmaps.",
+      "proposals": [
+        {
+          "title": "Use direction-aware sampling options",
+          "description": "When downscaling, use bilinear+mipmaps instead of cubic resampler. Check whether target dimensions are smaller than source and choose the appropriate SKSamplingOptions.",
+          "category": "workaround",
+          "codeSnippet": "bool isDownscaling = bitmapDst.Width < bitmapSrc.Width || bitmapDst.Height < bitmapSrc.Height;\nvar sampling = isDownscaling\n    ? new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)\n    : new SKSamplingOptions(SKCubicResampler.Mitchell);\nbitmapSrc.ScalePixels(bitmapDst, sampling);",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "yes"
+        },
+        {
+          "title": "Update migration documentation and Obsolete message",
+          "description": "Update the Obsolete attribute text on SKFilterQuality overloads to note that SKFilterQuality.High was direction-dependent and the replacement is not 1:1 for downscaling. Add migration guidance in docs.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "small",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use direction-aware sampling options",
+      "recommendedReason": "Community-validated workaround that matches old Skia behavior. Trivial code change for users. Documentation fix can follow independently."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.85,
+      "reason": "Workaround is clear and community-validated, but the ToSamplingOptions() compat method arguably has a bug — it doesn't replicate old behavior and even the deprecated API path silently regresses. Worth investigating whether to fix the compat layer or improve migration docs. Issue has 6 thumbs up indicating multiple affected users.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug and SkiaSharp labels (already has type/bug)",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the report, confirm root cause, and highlight the community workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the report and the comparison images.\n\n@gnattu's analysis is correct — the old `SKFilterQuality.High` was direction-dependent: cubic (Mitchell) for upscaling, bilinear+mipmaps for downscaling. The `ToSamplingOptions()` compatibility shim maps `High` unconditionally to `SKCubicResampler.Mitchell`, which isn't optimal for downscaling.\n\nHere's a workaround you can use now:\n\n```csharp\nbool isDownscaling = bitmapDst.Width < bitmapSrc.Width || bitmapDst.Height < bitmapSrc.Height;\nvar sampling = isDownscaling\n    ? new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)\n    : new SKSamplingOptions(SKCubicResampler.Mitchell);\nbitmapSrc.ScalePixels(bitmapDst, sampling);\n```\n\nWe'll look into improving the migration guidance and the compatibility layer to make this less of a gotcha."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #2963 which added the SKFilterQuality compat overloads",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 2963
+      }
+    ]
+  }
+}
