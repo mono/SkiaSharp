@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 2337,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T00:00:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Bug is in AngleSwapChainPanel.RenderFrame() (UWP/WinUI ANGLE view layer) where an empty SwapBuffers failure recovery block allows the render thread to silently stop after prolonged use. Reproduction requires a Windows host with UWP SDK and 8+ hours of continuous rendering with DrawInBackground=true. Console fallback is not viable — the bug is in platform-specific EGL/ANGLE swap chain infrastructure, not core SkiaSharp. Docker cannot run Windows GUI/UWP apps.",
+  "blockers": [
+    "Requires Windows host — bug is in UWP/WinUI AngleSwapChainPanel view layer with ANGLE/EGL rendering, not reproducible via console or Docker on macOS",
+    "Reproduction requires 8+ hours of continuous background rendering to trigger the device-lost event that exposes the empty SwapBuffers recovery block",
+    "Docker cannot run Windows GUI/UWP applications"
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Check host environment — macOS arm64, no Windows available",
+      "command": "uname -ms && sw_vers",
+      "exitCode": 0,
+      "output": "Darwin arm64\nProductName: macOS\nProductVersion: 26.3",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Verify Docker available but cannot run Windows GUI/UWP apps",
+      "command": "docker --version",
+      "exitCode": 0,
+      "output": "Docker version 28.1.1, build 4eba377",
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Verify AngleSwapChainPanel.cs exists with empty SwapBuffers recovery block confirming the reported code path",
+      "command": "grep -n 'SwapBuffers' source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+      "exitCode": 0,
+      "output": "225:\t\t\t\t\tglesContext.SwapBuffers();\n233:\t\t\tif (!glesContext.SwapBuffers())\n235:\t\t\t\t// The call to eglSwapBuffers might not be successful (i.e. due to Device Lost)",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Verify RenderLoop has no try-catch around RenderFrame — background thread exception kills it silently",
+      "command": "sed -n '284,305p' source/SkiaSharp.Views/SkiaSharp.Views.WinUI/AngleSwapChainPanel.cs",
+      "exitCode": 0,
+      "output": "private void RenderLoop(IAsyncAction action)\n{\n    while (action.Status == AsyncStatus.Started)\n    {\n        if (DrawInBackground)\n        {\n            // run on this background thread\n            RenderFrame();\n        }\n        ...\n    }\n}",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "N/A — platform blocker prevented testing",
+    "dockerUsed": false
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "suggestedReproPlatform",
+        "upstream": "windows",
+        "corrected": "Confirmed: Windows is required. macOS host cannot reproduce UWP ANGLE rendering bugs via any fallback (console, Docker)."
+      }
+    ]
+  }
+}
