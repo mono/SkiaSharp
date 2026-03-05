@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3287,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-22T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "SKGLView PaintSurface event fires on the GL thread instead of the main thread on Android in .NET MAUI, causing crashes when accessing UI properties. SKCanvasView and all other platforms (iOS, Windows, Xamarin Android) correctly fire on the main thread.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.92 },
+    "area": { "value": "area/SkiaSharp.Views.Maui", "confidence": 0.90 },
+    "platforms": ["os/Android"],
+    "backends": ["backend/OpenGL"],
+    "tenets": ["tenet/compatibility", "tenet/reliability"],
+    "partner": "partner/maui"
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": true,
+      "errorType": "platform-specific",
+      "errorMessage": "MainThread.IsMainThread returns false in SKGLView PaintSurface handler on Android",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net9.0-android"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a .NET MAUI app using SKGLView",
+        "In the PaintSurface event handler, check MainThread.IsMainThread",
+        "Run on Android device (Pixel 6a or Samsung SM-P615, Android 15)",
+        "Observe MainThread.IsMainThread returns false"
+      ],
+      "environmentDetails": "Android 15, .NET MAUI 9.0.50, SkiaSharp 3.116.1, Google Pixel 6a and Samsung SM-P615"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.1", "3.116.0", "2.88.9", "2.88.8"],
+      "workedIn": "2.88.9",
+      "brokeIn": "3.116.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The GLTextureView rendering architecture with dedicated GLThread has not changed. OnDrawFrame is still invoked on the GL thread with no marshaling to the main thread."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.75,
+      "reason": "Reporter states PaintSurface was always on the main thread in Xamarin with 2.88.x. The MAUI SKGLView uses GLTextureView which fires OnDrawFrame on a dedicated GL thread. However, the old Xamarin.Forms SKGLView likely had similar GL-thread behavior — the regression claim may reflect a behavioral difference between Xamarin.Forms and MAUI handler integration rather than a change in the native view itself.",
+      "workedInVersion": "2.88.9",
+      "brokeInVersion": "3.116.0"
+    }
+  },
+  "analysis": {
+    "summary": "SKGLTextureView on Android fires PaintSurface from a dedicated GL rendering thread (GLThread), not the main thread. This is by design in the OpenGL rendering pipeline — GLTextureView.GLThread.GuardedRun() calls renderer.OnDrawFrame(gl) on the GL thread (line 1033 of GLTextureView.cs). SKCanvasView works differently because it renders via Android's View.OnDraw() which is always called on the main thread. The MAUI handler (SKGLViewHandler.Android.cs) does not marshal the event back to the main thread before forwarding to the virtual view.",
+    "rationale": "Classified as type/bug because the inconsistency between SKGLView (GL thread) and SKCanvasView (main thread) on the same platform, and between Android SKGLView (GL thread) and other platform SKGLViews (main thread), creates a cross-cutting behavioral inconsistency that causes real crashes. Area is SkiaSharp.Views.Maui because the fix would be in the MAUI handler layer, not the native view. Severity is medium because a workaround exists (dispatching to main thread or using thread-safe wrappers).",
+    "keySignals": [
+      { "text": "SKGLView's PaintSurface method seems to be quite often on a thread other than the main thread", "source": "issue body", "interpretation": "The GL rendering thread fires the event — this is architecturally expected for GLTextureView but inconsistent with other views/platforms." },
+      { "text": "In Xamarin with SkiaSharp 2.88.8, the PaintSurface seemed to be always called from the main thread", "source": "issue body", "interpretation": "Regression claim. The Xamarin-era view may have marshaled to main thread or the reporter may not have noticed background-thread execution previously." },
+      { "text": "I fixed the code so that it uses thread-safe wrappers for the few things I need from the UI", "source": "comment by janne-hmp", "interpretation": "Reporter found a workaround: wrapping UI property access in thread-safe dispatchers." },
+      { "text": "MAUI iOS, MAUI Windows, and Xamarin Android all seem to work correctly by always using the main thread", "source": "comment by janne-hmp", "interpretation": "Android MAUI is the only platform exhibiting this behavior — confirms platform-specific inconsistency." }
+    ],
+    "codeInvestigation": [
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/GLTextureView.cs", "lines": "735-749, 1029-1033", "finding": "GLThread.Run() executes GuardedRun() on a dedicated thread. Line 1033 calls view.renderer.OnDrawFrame(gl) directly on the GL thread — this is the root cause of PaintSurface firing off the main thread.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureViewRenderer.cs", "lines": "43-92", "finding": "OnDrawFrame() creates SKPaintGLSurfaceEventArgs and calls OnPaintSurface(e) at line 92 — no thread marshaling occurs. The event propagates on whatever thread called OnDrawFrame (the GL thread).", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKGLTextureView.cs", "lines": "49-53", "finding": "PaintSurface event is raised at line 53 via Invoke — directly on the calling thread (GL thread), no marshaling to main thread.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Handlers/SKGLView/SKGLViewHandler.Android.cs", "lines": "85-103", "finding": "OnPaintSurface handler forwards to VirtualView.OnPaintSurface() without any main-thread dispatching. This is where marshaling could be added to fix the inconsistency.", "relevance": "direct" },
+      { "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/SKCanvasView.cs", "lines": "77-113", "finding": "SKCanvasView.OnDraw() is called by Android's View system on the main thread, then calls OnPaintSurface at line 113 — main thread is guaranteed by Android's View lifecycle, not by explicit marshaling.", "relevance": "related" }
+    ],
+    "workarounds": [
+      "Wrap UI property access inside the PaintSurface handler with MainThread.BeginInvokeOnMainThread() or use thread-safe wrappers",
+      "Use SKCanvasView instead of SKGLView to avoid GL-thread rendering (trades GPU acceleration for main-thread guarantee)"
+    ],
+    "nextQuestions": [
+      "Should the MAUI handler marshal PaintSurface to the main thread, or is GL-thread execution intentional for performance?",
+      "Did the old Xamarin.Forms SKGLView handler marshal to the main thread, or was the reporter's Xamarin code inadvertently thread-safe?",
+      "Would marshaling to main thread negate the performance benefit of GPU-accelerated rendering on a separate thread?"
+    ],
+    "resolution": {
+      "hypothesis": "The GLTextureView rendering pipeline on Android uses a dedicated GL thread for rendering. Unlike SKCanvasView (which hooks into Android's View.OnDraw main-thread lifecycle), SKGLView's PaintSurface fires from the GL thread. The MAUI handler does not marshal this back to the main thread, creating inconsistency with other platforms and with SKCanvasView.",
+      "proposals": [
+        {
+          "title": "Dispatch PaintSurface to main thread in MAUI handler",
+          "description": "In SKGLViewHandler.Android.cs, wrap the VirtualView?.OnPaintSurface() call with MainThread.InvokeOnMainThreadAsync() to ensure the event always fires on the main thread, matching all other platforms and SKCanvasView behavior.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Use thread-safe wrappers for UI access in PaintSurface",
+          "description": "In the PaintSurface handler, wrap any UI property access (IsVisible, Width, etc.) with MainThread.BeginInvokeOnMainThread() or cache the values on the main thread before rendering. The reporter has confirmed this approach works.",
+          "codeSnippet": "// Cache UI state on main thread before rendering\nprivate bool _isVisible;\nprivate void UpdateState() => _isVisible = myView.IsVisible;\n\n// In PaintSurface handler, use cached values\nvoid OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    if (!_isVisible) return;\n    // ... render using cached state\n}",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Use SKCanvasView instead of SKGLView",
+          "description": "Replace SKGLView with SKCanvasView to get main-thread-guaranteed PaintSurface events. This uses CPU rendering instead of GPU, which may be slower for complex scenes but eliminates the threading inconsistency entirely.",
+          "category": "alternative",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use thread-safe wrappers for UI access in PaintSurface",
+      "recommendedReason": "The reporter has already confirmed this workaround works. The proper fix (marshaling to main thread) requires design discussion about whether GL-thread execution is intentional for performance, so a workaround is best for now."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "The behavior is confirmed by code investigation — SKGLView on Android fires PaintSurface on the GL thread. The key question is whether this is intentional (performance optimization) or should be fixed to match all other platforms. Needs maintainer decision on threading contract for SKGLView.PaintSurface.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply bug, views-maui, android, and OpenGL labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Maui", "os/Android", "backend/OpenGL", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge threading inconsistency, provide workaround, explain root cause",
+        "risk": "high",
+        "confidence": 0.80,
+        "comment": "Thanks for the detailed report. This behavior is confirmed — `SKGLView` on Android uses a `GLTextureView` internally, which renders on a dedicated GL thread. The `PaintSurface` event fires from that thread, not the main thread. This differs from `SKCanvasView` (which hooks into Android's `View.OnDraw` main-thread lifecycle) and from `SKGLView` on other platforms.\n\nHere's a workaround you can use while we investigate: cache any UI state you need on the main thread, then read the cached values in `PaintSurface`:\n\n```csharp\nprivate bool _isVisible;\nprivate double _viewWidth;\n\n// Update on main thread (e.g., in property changed handler)\nvoid UpdateCachedState()\n{\n    _isVisible = myGLView.IsVisible;\n    _viewWidth = myGLView.Width;\n}\n\n// Safe to read cached values on GL thread\nvoid OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\n{\n    if (!_isVisible) return;\n    // Use _viewWidth instead of myGLView.Width\n}\n```\n\nAlternatively, switching to `SKCanvasView` guarantees main-thread execution, though it uses CPU rendering instead of GPU.\n\nThe fix would involve marshaling the event to the main thread in the MAUI handler, but we need to evaluate whether that would negate the performance benefit of GL-thread rendering."
+      }
+    ]
+  }
+}
