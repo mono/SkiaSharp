@@ -3,11 +3,11 @@ name: issue-fix
 description: >
   Fix bugs in SkiaSharp C# bindings. Structured workflow for investigating, fixing,
   and testing bug reports.
-  
   Triggers: Crash, exception, AccessViolationException, incorrect output, wrong behavior,
   memory leak, disposal issues, "fails", "broken", "doesn't work", "investigate issue",
-  "fix issue", "look at #NNNN", any GitHub issue number referencing a bug.
-  
+  "fix issue", "look at #NNNN", "debug this", "why is this broken", segfault,
+  "undefined symbol", any GitHub issue number referencing a bug, or any request to
+  diagnose and fix SkiaSharp problems.
   For adding new APIs, use `add-api` skill instead.
 ---
 
@@ -17,35 +17,23 @@ description: >
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
-## ⛔ MANDATORY FIRST STEPS (do not skip)
+## Before You Start
 
-1. Read THIS entire SKILL.md before any investigation
-2. Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fix JSON fields and enums
-3. Read [references/anti-patterns.md](references/anti-patterns.md) for critical rules
+Read these three files first — they define the output format and hard constraints:
 
-These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded.
-
-## ⛔ CRITICAL: SEQUENTIAL EXECUTION REQUIRED
-
-> **🛑 PHASES MUST BE EXECUTED IN STRICT ORDER. NO PARALLELIZATION. NO REORDERING.**
->
-> ```
-> Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9
-> ```
->
-> **STOP** at each phase gate. Do not proceed until gate criteria are met.
-> **Phases may be abbreviated** when `ai-triage/{n}.json` and/or `ai-repro/{n}.json` exist — but you must explicitly consume them and meet the gate with evidence (don’t redo the work).
-> **NEVER** say "in parallel" — phases are strictly sequential.
-> **NEVER** start *new* research (Phase 3) before PR exists (Phase 2).
-> **NEVER** use `store_memory` — fixes produce JSON artifacts and PRs, not memories.
-
----
+1. This SKILL.md (the workflow below)
+2. [references/schema-cheatsheet.md](references/schema-cheatsheet.md) — fix JSON fields and enums
+3. [references/anti-patterns.md](references/anti-patterns.md) — critical rules (the authoritative list)
 
 ## Workflow Overview
 
+Execute phases in order. Each gate must be met before advancing. Phases may be abbreviated when `ai-triage/{n}.json` or `ai-repro/{n}.json` already exist — consume them and meet the gate with evidence rather than redoing the work.
+
+The PR is created early (Phase 2) because it serves as the living document for the entire investigation — every finding, hypothesis, and result gets logged there in real time. Without it, work happens invisibly.
+
 ```
 1. Understand   → Fetch issue, consume ai-triage/ai-repro if present
-2. Create PR    → 🛑 STOP: Create PR before ANY *new* research
+2. Create PR    → Create PR as living investigation document
 3. Research     → Delta research (triage already did first-pass)
 4. Reproduce    → Prefer ai-repro project; Docker only if needed
 5. Investigate  → Root cause (guided by repro version matrix + triage codeInvestigation)
@@ -103,30 +91,11 @@ Extract (from issue + triage/repro if present):
 - [ ] Noted whether `ai-triage/NNNN.json` exists
 - [ ] Noted whether `ai-repro/NNNN.json` exists
 
-### ⛔ AFTER PHASE 1: STOP AND CREATE PR
-
-> **🛑 DO NOT search for related issues yet. DO NOT investigate yet.**
-> **🛑 Your ONLY next action is Phase 2: Create the Draft PR.**
-> 
-> The PR must exist BEFORE any research or investigation begins.
-
 ---
 
 ## Phase 2: Create Draft PR
 
-> 🛑 **THIS PHASE IS BLOCKING. Complete it before ANY other work.**
-> 
-> Do NOT:
-> - Search for related issues (that's Phase 3)
-> - Read comments on other issues (that's Phase 3)
-> - Look at code (that's Phase 5)
-> - Try to reproduce (that's Phase 4)
->
-> Do ONLY:
-> - Create branch
-> - Push empty commit
-> - Create draft PR with template
-> - Add "copilot" label
+Create the PR now — before any research or investigation. The PR is your living document where every finding gets recorded, making the process transparent and reviewable.
 
 ```bash
 git checkout -b dev/issue-NNNN-short-description
@@ -152,19 +121,11 @@ Create PR using investigation template from [references/pr-templates.md](referen
 - [ ] Draft PR opened with investigation template
 - [ ] "copilot" label added to PR
 
-### ⛔ AFTER PHASE 2: Verify PR exists before continuing
-
-> **🛑 STOP. Verify the PR URL exists before proceeding to Phase 3.**
-> 
-> Only after confirming the PR is created should you begin research.
-
 ---
 
 ## Phase 3: Research Related Issues (delta)
 
-> 🛑 **PREREQUISITE: Phase 2 must be complete. PR must exist.**
-> 
-> If you have not created the draft PR yet, STOP and go back to Phase 2.
+> **Prerequisite:** Phase 2 complete (PR exists to log findings into).
 
 If `ai-triage/NNNN.json` exists, it already contains:
 - related issues discovered during workaround/duplicate search
@@ -175,10 +136,7 @@ If `ai-triage/NNNN.json` exists, it already contains:
 - confirm/expand on the *most relevant* related issues (especially ones with diagnosis in comments)
 - run additional searches only if triage confidence is low, triage is stale, or repro contradicts triage
 
-> 🛑 **CRITICAL: This phase often SOLVES the bug.**
-> 
-> The community may have already diagnosed the root cause in issue comments.
-> READ ALL COMMENTS on the most relevant related issues before investigating yourself.
+This phase often solves the bug outright — the community may have already diagnosed the root cause in issue comments. Read all comments on the most relevant related issues before investigating yourself.
 
 Search GitHub issues for:
 - Same error message (e.g., `undefined symbol: uuid_generate_random`)
@@ -206,16 +164,9 @@ but you MUST still proceed to Phase 4 (Reproduce) to validate the hypothesis.**
 
 ## Phase 4: Reproduce (prefer ai-repro)
 
-> ⛔ **REPRODUCTION IS MANDATORY.**
->
-> This phase is satisfied either by:
-> - **Re-running** the minimal repro locally, OR
-> - **Consuming an existing** `ai-repro/NNNN.json` that already reproduced the issue on the relevant version/platform and includes the minimal repro source.
->
-> Even if you think you know the root cause from Phase 3:
-> - Community diagnosis could be a workaround, not the real fix
-> - The hypothesis could be wrong or incomplete
-> - You need evidence, not assumptions
+Reproduction is required even if Phase 3 found a likely root cause — community diagnosis could be a workaround rather than the real fix, and hypotheses need evidence. Satisfy this phase either by:
+- **Re-running** the minimal repro locally, OR
+- **Consuming** an existing `ai-repro/NNNN.json` that already reproduced the issue on the relevant version/platform
 
 If `ai-repro/NNNN.json` exists and `conclusion` is `reproduced`:
 - Rehydrate the repro source from `reproductionSteps[].filesCreated[].content` into a local folder (e.g., `/tmp/skiasharp/repro/NNNN/`) and run it.
@@ -458,29 +409,9 @@ Examples: [references/fix-examples.md](references/fix-examples.md)
 
 ### 1. Generate JSON
 
-Write to `/tmp/skiasharp/fix/{number}.json` — use this exact literal path, do NOT substitute `$TMPDIR` or any other variable:
+Write to `/tmp/skiasharp/fix/{number}.json` — use this exact literal path, do NOT substitute `$TMPDIR` or any other variable.
 
-- `meta`: schemaVersion `"1.0"`, number, repo, analyzedAt (ISO 8601 UTC)
-- `inputs`: `{ triageFile, reproFile }` — paths to upstream files consumed (if any)
-- `status`: `{ value, reason }` — `value` is one of `in-progress`, `fixed`, `cannot-fix`, `needs-info`, `duplicate`. `reason` is a required one-sentence explanation.
-- `summary`: one-paragraph description of what was fixed and how (include root cause, fix approach, and verification outcome; minLength 20)
-- `rootCause`: `{ category, area, description, confidence?, affectedFiles? }` — what was wrong and why
-  - `category`: one of `logic-error`, `memory-safety`, `threading`, `api-misuse`, `dependency`, `upstream-skia`, `missing-feature`, `other`
-  - `area`: one of `managed`, `binding`, `native`, `build`, `packaging`, `tests`, `docs`
-  - `confidence`: 0.0–1.0 (0.95+=verified, 0.80+=strong evidence, <0.80=hypothesis)
-- `changes`: `{ files: [{ path, changeType, summary }], breakingChange, risk }`
-  - `changeType`: one of `added`, `modified`, `removed`
-  - `risk`: one of `low`, `medium`, `high`
-- `tests`: `{ regressionTestAdded, testsAdded?, command?, result }`
-  - `result`: one of `passed`, `failed`, `not-run`
-  - `testsAdded`: `[{ file, name, description? }]`
-- `verification`: `{ reproScenario, method, notes? }` — did the repro scenario pass after the fix?
-  - `reproScenario`: one of `passed`, `failed`, `not-run`, `not-applicable`
-  - `method`: one of `automated-test`, `manual-repro`, `visual-inspection`, `code-review` (required)
-- `blockers`: string array — required when `status.value` is `cannot-fix` or `needs-info`. Each item is one actionable blocker.
-- `pr`: `{ number?, url, status }` — required when `status.value` is `fixed`
-- `feedback`: corrections to triage/repro findings (optional, see below)
-- `relatedIssues`: other issue numbers fixed or related — required (minItems 1) when `status.value` is `duplicate`
+Refer to [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for all required fields and enum values. Key top-level fields: `meta`, `status`, `summary`, `rootCause`, `changes`, `tests`, `verification`, and conditionally `pr`, `blockers`, `relatedIssues`, `feedback`.
 
 ### 2. Record upstream corrections
 
@@ -507,7 +438,7 @@ pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/skiasharp/fix/{numbe
   || python3 .github/skills/issue-fix/scripts/validate-fix.py /tmp/skiasharp/fix/{number}.json
 ```
 
-> **⚠️ NEVER use hand-rolled validation.** Always use the scripts above.
+> Always use the validation scripts — hand-checking fields is error-prone.
 
 ### 4. Persist
 
@@ -551,13 +482,4 @@ Before marking complete, verify ALL gates were passed:
 
 ## Anti-Patterns
 
-See [references/anti-patterns.md](references/anti-patterns.md) for the full list of critical rules.
-
-Key rules:
-- **#0**: Never use `store_memory` during fix
-- **#1**: Never skip validation script
-- **#2**: Never skip or reorder phases
-- **#3**: Never commit to protected branches
-- **#6**: Never confuse workaround with root cause
-
-For performance-specific anti-patterns, see rules #8–#11 in the anti-patterns doc.
+See [references/anti-patterns.md](references/anti-patterns.md) for the full list of critical rules (loaded at startup).

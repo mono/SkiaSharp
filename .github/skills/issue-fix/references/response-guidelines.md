@@ -2,37 +2,11 @@
 
 How to communicate fix findings on PRs and issues.
 
-## PR Description Structure
+## PR Templates
 
-Use this template for the PR body:
-
-```
-## Fix [short description]
-
-Fixes #NNNN
-
-### Problem
-[1-2 paragraphs: what's broken, who's affected, what symptoms]
-
-### Root Cause
-[1-2 paragraphs: the precise technical cause, with code references]
-
-### Fix
-[Brief description of the change, with before/after code if helpful]
-
-### Results
-[For functional bugs: "Bug no longer reproduces"]
-[For performance bugs: before/after table with metrics]
-
-### Testing
-- Build verified: [command]
-- Tests pass: [command + result]
-- Regression test added: [test name]
-- Manual verification: [what you checked]
-
-### What Changed
-- `path/to/file.cs` — [one-line description of change]
-```
+Use the templates in [pr-templates.md](pr-templates.md):
+- **Investigation template** — when creating the draft PR (Phase 2)
+- **Final template** — when rewriting the PR description (Phase 8)
 
 ## Issue Comment Structure (Summary)
 
