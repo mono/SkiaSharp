@@ -79,9 +79,10 @@ Also check: Docker (`docker --version`), Playwright MCP tools, GPU availability,
 |----------|---------|---------------|
 | 1 | Blazor, WASM, WebAssembly, SKHtmlCanvas, browser error | [platform-wasm-blazor.md](references/platform-wasm-blazor.md) |
 | 2 | WPF, WinForms, WinUI, UWP | [platform-windows-desktop.md](references/platform-windows-desktop.md) |
-| 3 | iOS, Android, MAUI, Xamarin | [platform-mobile.md](references/platform-mobile.md) |
-| 4 | Linux, Docker, container, NativeAssets.Linux | [platform-docker-linux.md](references/platform-docker-linux.md) |
-| 5 | (none) | [platform-console.md](references/platform-console.md) |
+| 3 | macOS, Mac Catalyst, SKGLView, SKMetalView, NSOpenGLView, MTKView | [platform-macos.md](references/platform-macos.md) |
+| 4 | iOS, Android, MAUI, Xamarin | [platform-mobile.md](references/platform-mobile.md) |
+| 5 | Linux, Docker, container, NativeAssets.Linux | [platform-docker-linux.md](references/platform-docker-linux.md) |
+| 6 | (none) | [platform-console.md](references/platform-console.md) |
 
 All platform files fall back to `platform-console.md` for core SkiaSharp bugs.
 
@@ -133,6 +134,11 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 > - **3D:** Cross-platform verification *(conditional — see table below)*
 >
 > **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. This applies to ALL conclusion types — bugs (`reproduced`/`not-reproduced`) AND enhancements (`confirmed`/`not-confirmed`). For enhancements: a feature may exist in one version but not another, or may have been removed. Version testing reveals this.
+
+> **⚠️ Performance bugs require measurements, not just pass/fail.** If the issue reports slow rendering,
+> low FPS, or performance degradation, see **Category 10: Performance** in [bug-categories.md](references/bug-categories.md).
+> Each reproduction step must include per-phase timing data in the step `output` field.
+> Console apps are NOT sufficient for view rendering performance bugs — use the correct platform file.
 
 ### 3A. Reproduce with reporter's version
 

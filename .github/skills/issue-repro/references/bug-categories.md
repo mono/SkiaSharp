@@ -13,7 +13,8 @@ instructions (how to create/build/run), see the `platform-*.md` files in this di
 7. [Enhancement / Feature Request](#7-enhancement--feature-request)
 8. [Platform Parity Gap](#8-platform-parity-gap)
 9. [Documentation Issue](#9-documentation-issue)
-10. [General Tips](#general-tips)
+10. [Performance / FPS Bugs](#10-performance--fps-bugs)
+11. [General Tips](#general-tips)
 
 **Constraints applying to ALL categories:**
 - No native rebuilds — use `dotnet cake --target=externals-download` only
@@ -347,3 +348,68 @@ Issue: "SKPaint.FilterQuality docs say it affects image scaling but it's depreca
 - Step 1: check API reference for SKPaint.FilterQuality → still documented as active
 - Step 2: check source code → marked `[Obsolete]` since v3.x
 - Conclusion: `confirmed`, assessment: `docs-gap`
+
+---
+
+## 10. Performance / FPS Bugs
+
+**Identification signals:** Slow rendering, low FPS, frame rate drop, performance degradation, jank, stutter, latency, "much slower than native," GPU bottleneck, frame time, rendering performance, "takes too long."
+
+### Strategy
+
+> ⚠️ **Console apps are NOT sufficient for view rendering performance bugs.** Console apps bypass the entire view rendering pipeline (SKGLView, SKMetalView, SKCanvasView). Use the correct platform file (e.g., platform-macos.md for macOS view bugs).
+
+1. **Establish a native baseline** if the reporter provides a native C++ benchmark:
+   ```bash
+   git clone <reporter-benchmark-repo> /tmp/skiasharp-perf/native
+   # Build and run with VSync disabled
+   ```
+   If no native baseline exists, compare across SkiaSharp versions (reporter's vs latest).
+
+2. **Build the equivalent C# benchmark** matching the reporter's setup (platform, backend, version).
+
+3. **Instrument with per-phase timing** — this is CRITICAL. Use `System.Diagnostics.Stopwatch` to measure each rendering phase separately:
+   - `render`: CPU-side draw calls (canvas.DrawX)
+   - `flush`: Skia command submission to GPU (canvas.Flush)
+   - `finish`: GPU drain (glFinish / commandBuffer.WaitUntilCompleted)
+   - `swap`: Buffer swap / present
+
+4. **Test at multiple complexity levels** (e.g., 1k, 5k, 9k, 40k elements) to distinguish constant overhead from O(n) scaling.
+
+5. **Test multiple backends** if relevant (Metal vs GL vs software).
+
+6. **Disable VSync** for accurate measurement. VSync caps frame rate to display refresh rate (60 or 120fps), masking real performance differences.
+
+7. **Statistical stability:** Record FPS only after 5+ consecutive frames within 10% variance. Discard first 10 frames (JIT warm-up).
+
+### Example: macOS GL Performance (#3525)
+
+```csharp
+// Per-phase timing pattern
+var sw = Stopwatch.StartNew();
+canvas.Clear(SKColors.White);
+foreach (var elem in elements)
+    canvas.DrawPath(elem.Path, elem.Paint);
+var renderMs = sw.Elapsed.TotalMilliseconds;
+sw.Restart();
+canvas.Flush();
+var flushMs = sw.Elapsed.TotalMilliseconds;
+Console.WriteLine($"render={renderMs:F1}ms flush={flushMs:F1}ms");
+```
+
+### Pitfalls
+- VSync masks real performance — always disable before measuring
+- Console rendering ≠ view rendering. They use different code paths
+- MSAA can change which Skia rendering path is active (TessellationPathRenderer vs DefaultPathRenderer)
+- `glGetIntegerv` may return incorrect values on some platforms (e.g., macOS stencil bits)
+- "120fps native" may be VSync-masked. Verify native numbers too
+
+### Conclusion
+- `reproduced`: Measurable performance gap confirmed (include fps/timing data in step notes)
+- `not-reproduced`: C# performance matches expectations (include comparative data)
+- Use `assessment: "likely-bug"` if the gap is clearly abnormal
+
+### Only bail when
+- No access to GPU or required platform
+- Reporter's benchmark requires proprietary tools/hardware unavailable
+- After 3+ substantially different measurement approaches show no gap

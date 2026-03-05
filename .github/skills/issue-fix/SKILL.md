@@ -17,6 +17,14 @@ description: >
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
+## ⛔ MANDATORY FIRST STEPS (do not skip)
+
+1. Read THIS entire SKILL.md before any investigation
+2. Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fix JSON fields and enums
+3. Read [references/anti-patterns.md](references/anti-patterns.md) for critical rules
+
+These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded.
+
 ## ⛔ CRITICAL: SEQUENTIAL EXECUTION REQUIRED
 
 > **🛑 PHASES MUST BE EXECUTED IN STRICT ORDER. NO PARALLELIZATION. NO REORDERING.**
@@ -299,6 +307,27 @@ docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \
 2. If yes, the linker is silently failing → Check if library exists in sysroot
 3. If no, the GN configuration differs → Check `native/linux/build.cake` and `externals/skia/gn/skia.gni`
 
+### 5.2a For Performance Bugs: Systematic Profiling
+
+When the bug involves slow rendering, low FPS, or performance degradation:
+
+1. **Read [references/perf-investigation.md](references/perf-investigation.md)** — full methodology for phase profiling, isolation experiments, and AI model consultation
+2. **Establish baselines** — native C++ if available, or compare across SkiaSharp versions
+3. **Instrument per-phase timing** — render, flush, finish, swap using `Stopwatch`
+4. **Run isolation experiments** — change one variable at a time, maintain a debugging table
+5. **Consult AI models** — use 3 models via `task` tool with model overrides, require 2/3 consensus
+
+> ⚠️ Console apps are NOT sufficient for view rendering performance bugs. Use the actual view type (SKGLView, SKMetalView) from the correct platform.
+
+### 5.2b For macOS-Specific Issues: GL/Metal Diagnostics
+
+When the bug involves macOS rendering, GL context, Metal, or macOS-specific views:
+
+1. **Read [references/macos-diagnostics.md](references/macos-diagnostics.md)** — GL state queries, stencil trap, VSync control, Skia source locations
+2. **Test both backends** — Metal and GL may behave differently
+3. **Check GL state** — `glGetIntegerv` values vs pixel format values (they can disagree on macOS)
+4. **Disable VSync** before any timing measurement
+
 ### 5.3 For C# Issues: Locate the Code
 
 ```bash
@@ -384,6 +413,16 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 
 Tests MUST pass. Verify fix on original platform.
 
+### Performance Verification (for perf bugs only)
+
+For performance fixes, running correctness tests is necessary but not sufficient. Also:
+
+1. Re-run the full benchmark matrix from Phase 5 with the fix applied
+2. Verify timing improvement at ALL complexity levels tested
+3. Verify no regression on other backends (e.g., Metal still works if you fixed GL)
+4. Compare against the native C++ baseline if one was established
+5. Record before/after/native comparison in the PR description
+
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Built successfully
 - [ ] All tests pass
@@ -394,6 +433,8 @@ Tests MUST pass. Verify fix on original platform.
 ## Phase 8: Finalize
 
 Rewrite PR description using final template from [references/pr-templates.md](references/pr-templates.md).
+
+For PR description and issue comment formatting, see [references/response-guidelines.md](references/response-guidelines.md).
 
 Link ALL fixed issues (including related issues that have the same root cause):
 ```markdown
@@ -510,10 +551,13 @@ Before marking complete, verify ALL gates were passed:
 
 ## Anti-Patterns
 
-See the triage and repro anti-patterns references for the full lists. Critical rules for fix:
+See [references/anti-patterns.md](references/anti-patterns.md) for the full list of critical rules.
 
-**#0 (CRITICAL):** NEVER use `store_memory`. Fixes produce JSON artifacts and PRs, not memories.
+Key rules:
+- **#0**: Never use `store_memory` during fix
+- **#1**: Never skip validation script
+- **#2**: Never skip or reorder phases
+- **#3**: Never commit to protected branches
+- **#6**: Never confuse workaround with root cause
 
-**#1 (CRITICAL):** NEVER skip the validation script. You MUST run `validate-fix.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the fix JSON is invalid.
-
-**#2 (CRITICAL):** NEVER skip phases or reorder them. Sequential execution is required — see the ⛔ block at the top.
+For performance-specific anti-patterns, see rules #8–#11 in the anti-patterns doc.

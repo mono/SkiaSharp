@@ -170,3 +170,126 @@ Based on a hypothetical issue.
 - **`verification.method` is `"code-review"`** — verified by reading upstream Skia source.
 - **`rootCause.area` is `"native"`** — correctly identifies the upstream layer.
 - **`relatedIssues`** links to the hypothetical upstream tracking issue.
+
+---
+
+## Example 3: Performance Bug Fix (status: "fixed")
+
+Based on #3525 — macOS GL rendering 15.6× slower than native C++.
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3525,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-05T12:00:00Z",
+    "inputs": {
+      "triageFile": "ai-triage/3525.json",
+      "reproFile": "ai-repro/3525.json"
+    }
+  },
+  "status": {
+    "value": "fixed"
+  },
+  "summary": "SKGLView reads stencil bits from glGetIntegerv (returns 0 on macOS) instead of NSOpenGLPixelFormat (returns 8). Without stencil, Skia disables TessellationPathRenderer and falls back to slow DefaultPathRenderer. Fix: read stencil from pixel format first, GL fallback second. Result: 5.3fps → 77-93fps (15.6× speedup).",
+  "rootCause": {
+    "category": "platform-quirk",
+    "area": "platform",
+    "description": "macOS glGetIntegerv(GL_STENCIL_BITS) returns 0 for default framebuffer even when pixel format allocates 8 stencil bits. SKGLView used this incorrect value in GRBackendRenderTarget, disabling Skia's fast TessellationPathRenderer.",
+    "confidence": 0.98,
+    "affectedFiles": [
+      "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs"
+    ]
+  },
+  "changes": {
+    "files": [
+      {
+        "path": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/macOS/SKGLView.cs",
+        "changeType": "modified",
+        "description": "Read stencil bits from NSOpenGLPixelFormat.GetValue() instead of glGetIntegerv, with GL fallback"
+      }
+    ],
+    "breakingChange": false,
+    "risk": "low"
+  },
+  "tests": {
+    "regressionTestAdded": false,
+    "testsAdded": [],
+    "command": "dotnet build source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj",
+    "result": "passed"
+  },
+  "verification": {
+    "reproScenario": "passed",
+    "method": "device",
+    "notes": "Benchmarked across 12 test apps at 4 complexity levels. GL went from 5.3fps to 77-93fps. Metal unchanged (still matches native). C# GL now 26-52% faster than native C++ GL."
+  },
+  "pr": {
+    "number": 3546,
+    "url": "https://github.com/mono/SkiaSharp/pull/3546",
+    "branch": "dev/fix-macos-gl-stencil-perf",
+    "title": "Fix macOS GL performance: read stencil bits from pixel format"
+  }
+}
+```
+
+**Key patterns for perf fixes:**
+- `rootCause.category: "platform-quirk"` — the bug is in macOS GL driver behavior
+- `verification.method: "device"` — performance was measured on real hardware
+- `verification.notes` includes before/after numbers with comparison to native baseline
+- `tests.regressionTestAdded: false` — performance test would need GPU, acceptable to skip
+
+---
+
+## Example 4: Needs-Info (status: "needs-info")
+
+Investigation couldn't reproduce the issue — need more information from reporter.
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 9999,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-01T10:00:00Z"
+  },
+  "status": {
+    "value": "needs-info"
+  },
+  "summary": "Cannot reproduce the reported crash in SKBitmap.Decode on macOS ARM64 with SkiaSharp 3.116.1 and .NET 10.0.102. Tested with 12 image formats including the reporter's HEIF sample. Need full exception stack trace and exact SDK version.",
+  "rootCause": {
+    "category": "other",
+    "area": "unknown",
+    "description": "Unable to determine root cause without reproduction. Reporter's stack trace was truncated at 3 frames, insufficient for diagnosis.",
+    "confidence": 0.3,
+    "affectedFiles": []
+  },
+  "changes": {
+    "files": [],
+    "breakingChange": false,
+    "risk": "low"
+  },
+  "tests": {
+    "regressionTestAdded": false,
+    "testsAdded": [],
+    "command": "dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj",
+    "result": "passed"
+  },
+  "verification": {
+    "reproScenario": "not-run",
+    "method": "console",
+    "notes": "All existing decode tests pass. Could not reproduce with any image format tested."
+  },
+  "blockers": [
+    "Full exception stack trace (not truncated)",
+    "Exact .NET SDK version from `dotnet --info`",
+    "Minimal reproduction project (uploaded as .zip)"
+  ]
+}
+```
+
+**Key patterns for needs-info:**
+- `blockers` is REQUIRED when status=needs-info — list exactly what's missing
+- `rootCause.confidence` is low (0.3) — honest about uncertainty
+- `verification.reproScenario: "not-run"` — couldn't reproduce, so couldn't verify
+- Tests still run to establish baseline health
