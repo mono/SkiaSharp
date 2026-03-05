@@ -1,0 +1,127 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3267,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-21T12:30:00Z"
+  },
+  "conclusion": "needs-platform",
+  "notes": "Verified via PE import table analysis that libSkiaSharp.dll gained hard d3d12.dll and D3DCOMPILER_47.dll imports in 3.119.0-preview.1.2 (absent in 3.118.0-preview.2.3). The dependency persists through 3.119.2 (latest stable) and main branch. However, the actual DLL load crash requires a Windows system without D3D12 (e.g., Windows 7 or certain Windows 10 configurations), which is not available on this macOS ARM64 host. The nanoserver build variant has SUPPORT_DIRECT3D=false and no d3d12 imports, confirming the flag is toggleable. The main branch build.cake still defaults SUPPORT_DIRECT3D to true with no /DELAYLOAD flags.",
+  "assessment": "likely-bug",
+  "blockers": [
+    "Requires Windows system without d3d12.dll (e.g., Windows 7 or Windows 10 without D3D12 drivers) to observe the actual native library load crash \u2014 current environment is macOS ARM64",
+    "Docker on macOS cannot run Windows containers"
+  ],
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console app with reporter's SkiaSharp version 3.119.0-preview.1.2",
+      "command": "mkdir -p /tmp/skiasharp/repro/3267 && cd /tmp/skiasharp/repro/3267 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.119.0-preview.1.2",
+      "exitCode": 0,
+      "output": "The template \"Console App\" was created successfully.\nPackageReference for package 'SkiaSharp' version '3.119.0-preview.1.2' added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "content": "using SkiaSharp;\n\nConsole.WriteLine(\"Before\");\nvar fontMgr = SKFontManager.Default;\nConsole.WriteLine($\"After - FontManager family count: {fontMgr.FontFamilyCount}\");\nConsole.WriteLine(\"SUCCESS: test completed\");",
+          "description": "Console app that loads native SkiaSharp library via SKFontManager.Default to trigger DLL dependency check"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and run console app on macOS ARM64 \u2014 native library loads successfully (macOS uses libSkiaSharp.dylib, no d3d12 dependency)",
+      "command": "cd /tmp/skiasharp/repro/3267/Repro && dotnet build && dotnet run",
+      "exitCode": 0,
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)\nBefore\nAfter - FontManager family count: 180\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Analyze PE import table of Windows x64 libSkiaSharp.dll from NuGet package 3.119.0-preview.1.2 \u2014 confirms hard d3d12.dll dependency",
+      "command": "python3 -c \"import pefile; pe = pefile.PE('$HOME/.nuget/packages/skiasharp.nativeassets.win32/3.119.0-preview.1.2/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
+      "exitCode": 0,
+      "output": "ole32.dll\nFONTSUB.dll\nUSER32.dll\nd3d12.dll\nD3DCOMPILER_47.dll\nKERNEL32.dll",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Analyze PE import table of Windows x64 libSkiaSharp.dll from NuGet package 3.118.0-preview.2.3 (last known good) \u2014 confirms NO d3d12.dll dependency",
+      "command": "python3 -c \"import pefile; pe = pefile.PE('$HOME/.nuget/packages/skiasharp.nativeassets.win32/3.118.0-preview.2.3/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
+      "exitCode": 0,
+      "output": "ole32.dll\nFONTSUB.dll\nUSER32.dll\nKERNEL32.dll",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Analyze PE import table of Windows x64 libSkiaSharp.dll from NuGet package 3.119.2 (latest stable) \u2014 d3d12.dll dependency still present",
+      "command": "python3 -c \"import pefile; pe = pefile.PE('$HOME/.nuget/packages/skiasharp.nativeassets.win32/3.119.2/runtimes/win-x64/native/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
+      "exitCode": 0,
+      "output": "ole32.dll\nFONTSUB.dll\nUSER32.dll\nd3d12.dll\nD3DCOMPILER_47.dll\nKERNEL32.dll",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Analyze PE import table of Windows x64 libSkiaSharp.dll from main branch (externals-download) \u2014 d3d12.dll dependency still present on main",
+      "command": "python3 -c \"import pefile; pe = pefile.PE('output/native/windows/x64/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
+      "exitCode": 0,
+      "output": "ole32.dll\nFONTSUB.dll\nUSER32.dll\nd3d12.dll\nD3DCOMPILER_47.dll\nKERNEL32.dll",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Verify nanoserver variant has no d3d12.dll dependency (SUPPORT_DIRECT3D=false) \u2014 confirms the flag works",
+      "command": "python3 -c \"import pefile; pe = pefile.PE('output/native/nanoserver/x64/libSkiaSharp.dll'); [print(e.dll.decode()) for e in pe.DIRECTORY_ENTRY_IMPORT]\"",
+      "exitCode": 0,
+      "output": "ole32.dll\nUSER32.dll\nKERNEL32.dll",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.0-preview.1.2",
+    "dockerUsed": false
+  },
+  "versionResults": [
+    {
+      "version": "3.118.0-preview.2.3",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "PE import analysis confirms no d3d12.dll dependency. Cannot runtime-test on macOS (need Windows without D3D12).",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.0-preview.1.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "PE import analysis confirms d3d12.dll is a hard dependency. macOS app runs fine (no d3d12 on macOS). Cannot trigger the DLL load crash without Windows.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "not-tested",
+      "notes": "PE import analysis confirms d3d12.dll dependency persists in latest stable. Cannot runtime-test the crash on macOS.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "not-tested",
+      "notes": "PE import analysis of downloaded Windows binary confirms d3d12.dll dependency persists on main. Build config still has SUPPORT_DIRECT3D defaulting to true.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  }
+}
