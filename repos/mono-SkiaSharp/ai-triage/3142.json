@@ -1,0 +1,170 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3142,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": [
+      "type/bug"
+    ]
+  },
+  "summary": "Reporter expects SKImage.Encode to work with BMP, GIF, ICO, WBMP, PKM, KTX, ASTC, DNG, HEIF, and AVIF formats, but Skia only implements encoders for JPEG, PNG, and WebP \u2014 all other formats return null by design.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.7
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "low",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "errorMessage": "SKImage.Encode returns null for unsupported formats (BMP, GIF, ICO, WBMP, PKM, KTX, ASTC, DNG, HEIF, AVIF)",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net8.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create an SKBitmap and draw on it",
+        "Convert to SKImage via SKImage.FromBitmap",
+        "Call image.Encode(SKEncodedImageFormat.Heif, 100)",
+        "Result is null; calling SaveTo on null throws NullReferenceException"
+      ],
+      "codeSnippets": [
+        "SKImage image = SKImage.FromBitmap(bitmap);\nSKData data = image.Encode(SKEncodedImageFormat.Heif, 100);\ndata.SaveTo(stream);"
+      ],
+      "environmentDetails": "Windows 10, .NET 8, SkiaSharp 2.88.8, Visual Studio 2022",
+      "relatedIssues": [
+        320
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "2.88.8"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "The encoding limitation is unchanged in current versions \u2014 SKPixmap.Encode still only supports JPEG, PNG, and WebP."
+    }
+  },
+  "analysis": {
+    "summary": "SKPixmap.Encode uses a switch expression that only handles JPEG, PNG, and WebP formats. All other SKEncodedImageFormat values hit the default case returning false, which surfaces as null from the public API. This is an upstream Skia limitation \u2014 Skia does not ship encoders for BMP, GIF, ICO, HEIF, AVIF, etc. The enum includes these values because Skia can decode them, not encode. Issue #320 reported the same for BMP in 2017 and maintainer @mattleibow confirmed Skia only compiles JPEG/PNG/WebP encoders.",
+    "rationale": "Classified as type/bug with low confidence because the behavior is by design (Skia limitation), but the SKEncodedImageFormat enum is misleading \u2014 it suggests encoding support for formats that only have decoders. The reporter's expectation is reasonable. Suggesting close-as-by-design since the fix would require Skia to add new encoders upstream, which is out of SkiaSharp's control.",
+    "keySignals": [
+      {
+        "text": "encountered an issue while converting to SKData for specific formats such as BMP, GIF, ICO, WBMP, PKM, KTX, ASTC, DNG, HEIF, and AVIF",
+        "source": "issue body",
+        "interpretation": "Reporter lists exactly the formats without Skia encoders."
+      },
+      {
+        "text": "This issue does not occur when using formats such as JPG, PNG, and WEBP",
+        "source": "issue body",
+        "interpretation": "These are the three formats that DO have encoders \u2014 confirms the known limitation."
+      },
+      {
+        "text": "This is not a bug. The encodings for those formats are not implemented by Skia.",
+        "source": "comment by nandor23",
+        "interpretation": "Community member correctly identified the root cause."
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPixmap.cs",
+        "lines": "235-246",
+        "finding": "The switch expression in Encode(SKWStream, SKEncodedImageFormat, int) only handles Jpeg, Png, and Webp. All other enum values fall through to '_ => false', returning null to callers.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKImage.cs",
+        "lines": "363-373",
+        "finding": "SKImage.Encode delegates to SKPixmap.Encode via PeekPixels(). When SKPixmap.Encode returns null, SKImage.Encode also returns null \u2014 the reporter then gets a NullReferenceException calling SaveTo on the null result.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "20588-20613",
+        "finding": "SKEncodedImageFormat enum lists 13 formats (Bmp through Avif), but only 3 have encoder implementations. The enum mirrors Skia's SkEncodedImageFormat which is used for both decoding and encoding identification.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKEncodedImageFormat.Png, Jpeg, or Webp instead \u2014 these are the only formats with encoder support",
+      "For BMP output, use a third-party library like BmpSharp to convert from PNG/raw pixel data"
+    ],
+    "resolution": {
+      "hypothesis": "Skia only includes encoders for JPEG, PNG, and WebP. The SKEncodedImageFormat enum contains values for formats that only have decoder support, making it misleading when used with Encode methods.",
+      "proposals": [
+        {
+          "title": "Use a supported encoding format",
+          "description": "Switch to SKEncodedImageFormat.Png, Jpeg, or Webp. These are the only three formats Skia implements encoders for. PNG is lossless, WebP supports both lossy and lossless, and JPEG is lossy.",
+          "category": "workaround",
+          "codeSnippet": "// Use PNG (lossless) instead of unsupported formats\nSKData data = image.Encode(SKEncodedImageFormat.Png, 100);\ndata.SaveTo(stream);",
+          "confidence": 0.95,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "Add null check before SaveTo",
+          "description": "Guard against null return from Encode to avoid NullReferenceException, and handle unsupported formats gracefully.",
+          "category": "workaround",
+          "codeSnippet": "SKData data = image.Encode(SKEncodedImageFormat.Heif, 100);\nif (data == null)\n    throw new NotSupportedException($\"Encoding to HEIF is not supported. Use PNG, JPEG, or WebP.\");",
+          "confidence": 0.9,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Use a supported encoding format",
+      "recommendedReason": "Simplest fix \u2014 just change the format enum. PNG is a drop-in replacement for most use cases requiring lossless output."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.88,
+      "reason": "Skia only implements JPEG/PNG/WebP encoders. This is a well-documented upstream limitation confirmed by maintainer on #320. The SKEncodedImageFormat enum is shared between decoding and encoding, which is misleading but by design."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply by-design and core area labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Explain by-design behavior and provide workaround",
+        "risk": "high",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed repro code.\n\nSkia only implements encoders for three formats: **JPEG**, **PNG**, and **WebP**. The other values in `SKEncodedImageFormat` (BMP, GIF, ICO, HEIF, AVIF, etc.) exist because Skia can *decode* those formats, but encoding support was never added upstream. When you call `Encode()` with an unsupported format, it returns `null` rather than throwing \u2014 which then causes a `NullReferenceException` on `SaveTo()`.\n\nAs a workaround, switch to a supported format:\n\n```csharp\nSKData data = image.Encode(SKEncodedImageFormat.Png, 100);\nif (data != null)\n    data.SaveTo(stream);\n```\n\nThis matches the findings on #320, where the maintainer confirmed the same limitation. As @nandor23 noted, this is an upstream Skia constraint rather than a SkiaSharp bug."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference #320 (identical BMP encoding issue from 2017)",
+        "risk": "low",
+        "confidence": 0.9,
+        "linkedIssue": 320
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as by-design (upstream Skia limitation)",
+        "risk": "medium",
+        "confidence": 0.85,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
