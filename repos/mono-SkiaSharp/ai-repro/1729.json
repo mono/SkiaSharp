@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 1729,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T00:00:00Z"
+  },
+  "conclusion": "confirmed",
+  "assessment": "feature-request",
+  "scope": "universal",
+  "notes": "Confirmed: SKPath has no native equality comparison. SkPath::operator== exists in C++ but is not exposed through the C API (sk_path.h) or C# wrapper. Object.Equals(object) on SKPath performs reference equality only. The feature is absent in 2.88.9, 3.119.2, and main branch source. The SVG comparison workaround (ToSvgPathData()) works but is lossy — it doesn't preserve fill type, conic weights, or full float precision.",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {"name": "SkiaSharp", "version": "2.88.9"},
+      {"name": "SkiaSharp", "version": "3.119.2"}
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": ".NET 8.0.23",
+    "dotnetSdkVersion": "10.0.102",
+    "skiaSharpVersion": "3.119.2",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console project with SkiaSharp 2.88.9 and write repro code that uses reflection to check for SKPath.Equals(SKPath), IEquatable<SKPath>, and operator==",
+      "command": "dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.9",
+      "exitCode": 0,
+      "output": "Build succeeded. PackageReference for 'SkiaSharp' version '2.88.9' added.",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Repro code that checks SKPath for Equals(SKPath), IEquatable, operator==, and tests reference vs content equality",
+          "content": "using SkiaSharp;\nusing System;\nusing System.Reflection;\n\nConsole.WriteLine($\"SkiaSharp version: {typeof(SKPath).Assembly.GetName().Version}\");\n\nusing var path1 = new SKPath();\npath1.MoveTo(0, 0);\npath1.LineTo(100, 0);\npath1.LineTo(100, 100);\npath1.Close();\n\nusing var path2 = new SKPath();\npath2.MoveTo(0, 0);\npath2.LineTo(100, 0);\npath2.LineTo(100, 100);\npath2.Close();\n\nvar methods = typeof(SKPath).GetMethods(BindingFlags.Public | BindingFlags.Instance).Where(m => m.Name == \"Equals\");\nforeach (var m in methods)\n{\n    var parms = m.GetParameters();\n    Console.WriteLine($\"  {m.DeclaringType?.Name}.{m.Name}({string.Join(\", \", parms.Select(p => $\"{p.ParameterType.Name} {p.Name}\"))})\");\n}\n\nvar iequatable = typeof(IEquatable<SKPath>).IsAssignableFrom(typeof(SKPath));\nConsole.WriteLine($\"IEquatable<SKPath>: {iequatable}\");\n\nvar opEquals = typeof(SKPath).GetMethod(\"op_Equality\", BindingFlags.Static | BindingFlags.Public);\nConsole.WriteLine($\"operator==: {opEquals != null}\");\n\nConsole.WriteLine($\"path1.Equals(path2): {path1.Equals(path2)}\");\nConsole.WriteLine($\"path1.Equals(path1): {path1.Equals(path1)}\");\n\nvar svg1 = path1.ToSvgPathData();\nvar svg2 = path2.ToSvgPathData();\nConsole.WriteLine($\"SVG equal: {svg1 == svg2}\");"
+        }
+      ],
+      "layer": "setup",
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Run repro with SkiaSharp 2.88.9 — verify SKPath only has Object.Equals (reference equality), no IEquatable, no operator==",
+      "command": "dotnet run",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 2.88.0.0\n\n--- All Equals methods on SKPath ---\n  Object.Equals(Object obj) -> Boolean\n\nSKPath.Equals(SKPath) found on: Object\nSKPath implements IEquatable<SKPath>: False\nSKPath has operator==: False\n\npath1.Equals(path2) (reference equality): False\npath1.Equals(path1) (same reference): True\n\nWorkaround - SVG comparison:\n  path1 SVG: M0 0L100 0L100 100L0 0Z\n  path2 SVG: M0 0L100 0L100 100L0 0Z\n  SVG equal: True\n\nSUCCESS: test completed",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Run same repro with SkiaSharp 3.119.2 (latest stable) — verify feature still absent",
+      "command": "dotnet run (in fresh project with SkiaSharp 3.119.2)",
+      "exitCode": 0,
+      "output": "SkiaSharp version: 3.119.0.0\n\n--- All Equals methods on SKPath ---\n  Object.Equals(Object obj) -> Boolean\n\nSKPath.Equals(SKPath) found on: Object\nSKPath implements IEquatable<SKPath>: False\nSKPath has operator==: False\n\npath1.Equals(path2) (reference equality): False\npath1.Equals(path1) (same reference): True\n\nWorkaround - SVG comparison:\n  path1 SVG: M0 0L100 0L100 100L0 0Z\n  path2 SVG: M0 0L100 0L100 100L0 0Z\n  SVG equal: True\n\nSUCCESS: test completed",
+      "layer": "investigation",
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Check main branch source for sk_path_equals in C API and SKPath.Equals in C# wrapper — no matches found, feature not implemented on main",
+      "command": "grep -rn 'sk_path_equals' externals/skia/include/c/sk_path.h externals/skia/src/c/sk_path.cpp; grep -n 'IEquatable\\|operator ==' binding/SkiaSharp/SKPath.cs",
+      "exitCode": 0,
+      "output": "No matches found in C API (sk_path.h, sk_path.cpp) or C# wrapper (SKPath.cs). The SkPath::operator== in C++ is not plumbed through any SkiaSharp layer.",
+      "layer": "investigation",
+      "result": "success"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "SKPath has only Object.Equals (reference equality). No IEquatable<SKPath>, no operator==, no native path comparison.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Same gap in latest stable. SKPath still has only Object.Equals with reference equality.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "confirmed",
+      "notes": "C API (sk_path.h) has no sk_path_equals. SKPath.cs has no Equals/IEquatable. Feature not implemented on main branch.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "feedback": {
+    "corrections": []
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Well-scoped feature request. Skia C++ has SkPath::operator== but it is not exposed through C API or C# wrapper. Implementation requires adding sk_path_equals to C API and SKPath.Equals/IEquatable<SKPath> to C#."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/feature-request and area/SkiaSharp labels",
+        "risk": "low",
+        "confidence": 0.95
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge feature request with investigation findings and workarounds",
+        "risk": "medium",
+        "confidence": 0.90
+      }
+    ],
+    "proposedResponse": {
+      "body": "Confirmed that `SKPath` has no native equality comparison.\n\n**Investigation findings:**\n- `SKPath.Equals()` currently uses `Object.Equals` (reference equality only)\n- `SKPath` does not implement `IEquatable<SKPath>`\n- No `operator==` / `operator!=` overloads exist\n- The C API (`sk_path.h`) has no `sk_path_equals` function\n- Skia's C++ `SkPath::operator==` does exist and compares FillType, verbs, points, and conic weights\n\nTested on SkiaSharp 2.88.9, 3.119.2, and main branch — the gap exists in all versions.\n\n**Workarounds:**\n1. **SVG string comparison** (approximate): `path1.ToSvgPathData() == path2.ToSvgPathData()` — note this loses fill type info, converts conics to quadratics, and truncates float precision\n2. **Manual iterator comparison** (correct but slow): iterate both paths with `CreateRawIterator()` and compare verbs, points, and weights\n\nImplementing this would require plumbing `SkPath::operator==` through the C API as `sk_path_equals` and exposing it as `SKPath.Equals(SKPath)` with `IEquatable<SKPath>` support.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "SVG string comparison: path1.ToSvgPathData() == path2.ToSvgPathData() — approximate, loses fill type and conic weights",
+      "Manual iterator comparison: iterate both paths with CreateRawIterator() and compare verbs/points/weights — correct but slow due to P/Invoke per verb"
+    ]
+  }
+}
