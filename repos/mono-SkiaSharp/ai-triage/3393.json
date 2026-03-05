@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3393,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-24T12:00:00Z",
+    "currentLabels": ["type/bug", "os/Android", "area/SkiaSharp", "tenet/reliability"]
+  },
+  "summary": "P/Invoke wrapper methods throughout SkiaSharp do not call GC.KeepAlive on reference-type parameters after native calls, allowing the GC to prematurely collect managed objects (and finalize their native handles) while native code is still operating on them — a race condition that can cause use-after-free crashes.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.98 },
+    "platforms": ["os/Android"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "Premature GC collection of managed objects during P/Invoke — use-after-free race condition",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net8.0-android"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Call a SkiaSharp method that passes managed object handles to P/Invoke (e.g., canvas.DrawPicture(picture))",
+        "Ensure the managed object is not referenced after the call site",
+        "Under GC pressure, the managed object may be collected during the P/Invoke call",
+        "The finalizer closes the native handle while native code is still using it"
+      ],
+      "environmentDetails": "SkiaSharp 3.116.0, .NET 8, Android (reported via Uno Platform)",
+      "relatedIssues": [3394],
+      "repoLinks": [
+        { "url": "https://github.com/unoplatform/uno/pull/21660", "description": "Uno Platform PR showing real-world Skia-related GC collection issue with DrawPicture" },
+        { "url": "https://github.com/dotnet/java-interop/issues/719", "description": "dotnet/java-interop issue demonstrating the same GC/finalizer race pattern" },
+        { "url": "https://learn.microsoft.com/en-us/archive/blogs/cbrumme/lifetime-gc-keepalive-handle-recycling", "description": "Chris Brumme blog post explaining the GC lifetime/KeepAlive/handle recycling problem" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.116.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "Only 14 GC.KeepAlive calls exist across 910+ P/Invoke call sites. The vast majority of wrapper methods remain unprotected."
+    }
+  },
+  "analysis": {
+    "summary": "The .NET GC can collect managed objects once they are no longer referenced in managed code, even during an instance method call. When SkiaSharp extracts a native handle (via .Handle) and passes it to a P/Invoke, the owning managed object becomes eligible for collection. If the finalizer runs and disposes the native handle while the P/Invoke is still executing, use-after-free occurs. PR #1258 (2020) added GC.KeepAlive in a handful of cases (14 calls total), but the vast majority of the 910+ P/Invoke call sites remain unprotected. PR #3394 is already open to address this systematically.",
+    "rationale": "This is a well-documented .NET runtime behavior confirmed by Chris Brumme's blog post and demonstrated in real-world code (Uno Platform PR #21660). The reporter (jonpryor) is a .NET runtime expert. The issue is clearly a bug — the current code has a race condition between the application and GC/finalizer threads. The scope is large (910+ P/Invoke calls, only 14 protected) making this a systematic codebase-wide issue, not a one-off fix.",
+    "keySignals": [
+      { "text": "Once we've extracted _handle from this, there are no further uses of this object. In other words, this can be collected even while you are executing an instance method on that object.", "source": "issue body (Chris Brumme blog quote)", "interpretation": "Authoritative explanation of the GC race condition from a .NET runtime engineer." },
+      { "text": "meaning once execution hits SkiaApi.sk_canvas_draw_picture(), nothing ensures that picture is kept alive. (Or canvas, for that matter!)", "source": "issue body", "interpretation": "Reporter correctly identifies both the parameter and this as vulnerable to premature collection." },
+      { "text": "This should be done for all public methods that invoke P/Invoke methods.", "source": "issue body", "interpretation": "Reporter requests a systematic audit, not just a point fix. Confirmed by the 14-vs-910 ratio." }
+    ],
+    "codeInvestigation": [
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "533-538", "finding": "DrawPicture passes picture.Handle and paint.Handle to sk_canvas_draw_picture but has no GC.KeepAlive for picture, paint, or this — exactly as reported.", "relevance": "direct" },
+      { "file": "binding/SkiaSharp/SKSurface.cs", "lines": "314-315", "finding": "ReadPixels has GC.KeepAlive(this) after its P/Invoke call — one of only 14 protected call sites. Confirms the pattern exists but was applied inconsistently.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/SKData.cs", "lines": "167-191", "finding": "SKData has 5 GC.KeepAlive calls protecting stream parameters in Create methods — shows the fix pattern is already established in the codebase.", "relevance": "related" },
+      { "file": "binding/SkiaSharp/SKCanvas.cs", "lines": "525-531", "finding": "DrawPicture overload with matrix also lacks GC.KeepAlive. SKCanvas has 67 P/Invoke calls total, none protected.", "relevance": "direct" }
+    ],
+    "workarounds": [
+      "Callers can add GC.KeepAlive(obj) after any SkiaSharp method call where the object might not be referenced afterward to prevent premature collection."
+    ],
+    "nextQuestions": [
+      "Should GC.KeepAlive(this) be added to all instance methods, or only where the caller might not hold a reference?",
+      "Can the code generator (utils/generate.ps1) be extended to automatically emit GC.KeepAlive for P/Invoke wrapper methods?",
+      "Is PR #3394 sufficient in scope, or does it need to cover all 910+ call sites?"
+    ],
+    "resolution": {
+      "hypothesis": "The .NET GC can collect managed objects once their handle is extracted for P/Invoke, before the native call returns. GC.KeepAlive must be called after every P/Invoke that uses handles from managed parameters.",
+      "proposals": [
+        {
+          "title": "Add GC.KeepAlive to all P/Invoke wrapper methods",
+          "description": "Systematically add GC.KeepAlive calls for all reference-type parameters (including this) after every P/Invoke call in the binding layer. PR #3394 is already open with an initial implementation.",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "large",
+          "validated": "untested"
+        },
+        {
+          "title": "Caller-side GC.KeepAlive workaround",
+          "description": "Callers can add GC.KeepAlive(picture) after calls like canvas.DrawPicture(picture) to prevent premature collection until the fix is merged.",
+          "codeSnippet": "canvas.DrawPicture(picture);\nGC.KeepAlive(picture);\nGC.KeepAlive(canvas);",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Extend code generator to emit GC.KeepAlive automatically",
+          "description": "Modify utils/generate.ps1 to automatically emit GC.KeepAlive calls in generated P/Invoke wrappers, preventing future regressions as new APIs are added.",
+          "category": "fix",
+          "confidence": 0.80,
+          "effort": "medium",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add GC.KeepAlive to all P/Invoke wrapper methods",
+      "recommendedReason": "PR #3394 is already open with an initial implementation. The systematic approach is necessary given the 910+ call sites. Caller-side workaround helps in the interim."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.95,
+      "reason": "Legitimate GC race condition confirmed by code investigation. PR #3394 is open but needs review for completeness given 910+ P/Invoke call sites. The scope and correctness of the fix needs investigation.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correct: type/bug, area/SkiaSharp, os/Android, tenet/reliability",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Android", "tenet/reliability"]
+      },
+      {
+        "type": "link-related",
+        "description": "Link to PR #3394 which addresses this issue",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3394
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, confirm the scope, and note the existing PR",
+        "risk": "high",
+        "confidence": 0.90,
+        "comment": "Thanks for the thorough write-up and the Chris Brumme reference — this is a real and well-documented .NET runtime behavior.\n\nCode investigation confirms the scope: only 14 `GC.KeepAlive` calls exist across 910+ P/Invoke call sites in the binding layer. The existing calls (in `SKSurface.ReadPixels`, `SKData.Create`, `SKImage`, `SKFontStyleSet`, `SKBitmap`, `SKTextBlob`) were added in PR #1258 (2020) but only for a handful of \"this\" and pixel-data cases.\n\nPR #3394 is open with an initial pass at adding `GC.KeepAlive` calls. The key question is whether it covers all call sites and whether the code generator (`utils/generate.ps1`) should be extended to emit these automatically for future APIs.\n\nIn the interim, callers can add `GC.KeepAlive()` after SkiaSharp method calls where the managed object might not be referenced afterward:\n\n```csharp\ncanvas.DrawPicture(picture);\nGC.KeepAlive(picture);\nGC.KeepAlive(canvas);\n```"
+      }
+    ]
+  }
+}
