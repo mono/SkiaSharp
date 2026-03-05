@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3159,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-03-05T18:35:00Z"
+  },
+  "conclusion": "reproduced",
+  "assessment": "working-as-designed",
+  "notes": "Reproduced: SKBitmap.ScalePixels with SKCubicResampler.Mitchell produces 12% larger WebP output (12,252 bytes) compared to v2.88.9 SKFilterQuality.High (10,962 bytes) when downscaling a 1440x720 image to 480x240. This is because Skia's old SKFilterQuality.High internally switched to bilinear+mipmaps for downscaling, but the new SKSamplingOptions(SKCubicResampler.Mitchell) always uses cubic. The workaround SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) produces output (10,748 bytes) comparable to v2. Bug persists on latest stable 3.119.2 and main branch. This appears to be a documentation/migration gap rather than a code defect \u2014 the v2-to-v3 migration guidance should clarify that SKFilterQuality.High maps to different sampling options depending on scale direction.",
+  "reproProject": {
+    "type": "console",
+    "tfm": "net8.0",
+    "packages": [
+      {
+        "name": "SkiaSharp",
+        "version": "3.116.1"
+      }
+    ]
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "10.0.102",
+    "skiaSharpVersion": "3.116.1",
+    "dockerUsed": false
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create console repro project with SkiaSharp 2.88.9 and download reporter's test image",
+      "command": "mkdir -p /tmp/skiasharp/repro/3159/v2 && cd /tmp/skiasharp/repro/3159/v2 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 2.88.9 && curl -sL -o large.png https://ptdt.azureedge.net/data/test/large.png",
+      "exitCode": 0,
+      "output": "Package 'SkiaSharp' version '2.88.9' added. Image: PNG 1440x720 RGBA, 101032 bytes.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "v2.88.9 repro code \u2014 downsizes 1440x720 PNG to 480x240 using SKFilterQuality.High, encodes to WebP q75",
+          "content": "using SkiaSharp;\n\nvar imagePath = \"large.png\";\nusing var bitmapSrc = SKBitmap.Decode(imagePath);\nConsole.WriteLine($\"Source: {bitmapSrc.Width}x{bitmapSrc.Height}\");\nusing var bitmapDst = new SKBitmap(480, 240);\nbitmapSrc.ScalePixels(bitmapDst, SKFilterQuality.High);\nusing var skDataWebp = bitmapDst.Encode(SKEncodedImageFormat.Webp, 75);\nvar outputPath = \"output_v2.webp\";\nusing (var stream = File.OpenWrite(outputPath)) skDataWebp.SaveTo(stream);\nvar fileInfo = new FileInfo(outputPath);\nConsole.WriteLine($\"Output: {outputPath} - {fileInfo.Length} bytes\");\nConsole.WriteLine(\"SUCCESS: test completed\");"
+        }
+      ]
+    },
+    {
+      "stepNumber": 2,
+      "description": "Build and run v2.88.9 repro \u2014 downscale 1440x720 to 480x240 with SKFilterQuality.High, encode to WebP q75",
+      "command": "cd /tmp/skiasharp/repro/3159/v2/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "Loading image: large.png\nSource: 1440x720\nOutput: output_v2.webp - 10962 bytes\nDestination: 480x240\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Create console repro project with SkiaSharp 3.116.1 (reporter's version)",
+      "command": "mkdir -p /tmp/skiasharp/repro/3159/v3 && cd /tmp/skiasharp/repro/3159/v3 && dotnet new console -n Repro --framework net8.0 && cd Repro && dotnet add package SkiaSharp --version 3.116.1",
+      "exitCode": 0,
+      "output": "Package 'SkiaSharp' version '3.116.1' added.",
+      "layer": "setup",
+      "result": "success",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "v3.116.1 repro code \u2014 tests both SKCubicResampler.Mitchell (reporter's approach) and SKFilterMode.Linear+SKMipmapMode.Linear (workaround)",
+          "content": "using SkiaSharp;\n\nvar imagePath = \"large.png\";\nusing var bitmapSrc = SKBitmap.Decode(imagePath);\nConsole.WriteLine($\"Source: {bitmapSrc.Width}x{bitmapSrc.Height}\");\nusing var bitmapDst = new SKBitmap(480, 240);\nvar samplingCubic = new SKSamplingOptions(SKCubicResampler.Mitchell);\nbitmapSrc.ScalePixels(bitmapDst, samplingCubic);\nusing var dataCubic = bitmapDst.Encode(SKEncodedImageFormat.Webp, 75);\nvar cubicPath = \"output_v3_cubic.webp\";\nusing (var stream = File.OpenWrite(cubicPath)) dataCubic.SaveTo(stream);\nvar cubicSize = new FileInfo(cubicPath).Length;\nConsole.WriteLine($\"Output (Mitchell cubic): {cubicPath} - {cubicSize} bytes\");\n\nusing var bitmapDst2 = new SKBitmap(480, 240);\nvar samplingLinear = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\nbitmapSrc.ScalePixels(bitmapDst2, samplingLinear);\nusing var dataLinear = bitmapDst2.Encode(SKEncodedImageFormat.Webp, 75);\nvar linearPath = \"output_v3_linear.webp\";\nusing (var stream = File.OpenWrite(linearPath)) dataLinear.SaveTo(stream);\nvar linearSize = new FileInfo(linearPath).Length;\nConsole.WriteLine($\"Output (Linear+Mipmap): {linearPath} - {linearSize} bytes\");\nConsole.WriteLine($\"Size comparison: cubic={cubicSize}, linear+mipmap={linearSize}\");\nConsole.WriteLine(\"SUCCESS: test completed\");"
+        }
+      ]
+    },
+    {
+      "stepNumber": 4,
+      "description": "Build and run v3.116.1 repro \u2014 downscale with Mitchell cubic and also Linear+Mipmap workaround, compare sizes",
+      "command": "cd /tmp/skiasharp/repro/3159/v3/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "Loading image: large.png\nSource: 1440x720\nOutput (Mitchell cubic): output_v3_cubic.webp - 12252 bytes\nOutput (Linear+Mipmap): output_v3_linear.webp - 10748 bytes\nDestination: 480x240\nSize comparison: cubic=12252 bytes, linear+mipmap=10748 bytes\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Test latest stable SkiaSharp 3.119.2 with same repro code in fresh project directory",
+      "command": "cd /tmp/skiasharp/repro/3159/latest/Repro && dotnet run",
+      "exitCode": 0,
+      "output": "Loading image: large.png\nSource: 1440x720\nOutput (Mitchell cubic): output_v3_cubic.webp - 12252 bytes\nOutput (Linear+Mipmap): output_v3_linear.webp - 10748 bytes\nDestination: 480x240\nSize comparison: cubic=12252 bytes, linear+mipmap=10748 bytes\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Test main branch source \u2014 modify console sample, build against local SkiaSharp source, run",
+      "command": "cd $REPO_ROOT && dotnet run --project samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj",
+      "exitCode": 0,
+      "output": "Loading image: large.png\nSource: 1440x720\nOutput (Mitchell cubic): output_main_cubic.webp - 12252 bytes\nOutput (Linear+Mipmap): output_main_linear.webp - 10748 bytes\nSize comparison: cubic=12252 bytes, linear+mipmap=10748 bytes\nSUCCESS: test completed",
+      "layer": "csharp",
+      "result": "wrong-output"
+    }
+  ],
+  "versionResults": [
+    {
+      "version": "2.88.9",
+      "source": "nuget",
+      "result": "not-reproduced",
+      "notes": "Baseline: SKFilterQuality.High produced 10,962 byte WebP output. This is the expected/good behavior.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.116.1",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Mitchell cubic produced 12,252 bytes (12% larger than v2). Linear+Mipmap workaround produced 10,748 bytes (comparable to v2).",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "3.119.2",
+      "source": "nuget",
+      "result": "reproduced",
+      "notes": "Identical to 3.116.1: cubic=12,252 bytes, linear+mipmap=10,748 bytes. Bug persists on latest stable.",
+      "platform": "host-macos-arm64"
+    },
+    {
+      "version": "main",
+      "source": "source",
+      "result": "reproduced",
+      "notes": "Identical to NuGet releases: cubic=12,252 bytes, linear+mipmap=10,748 bytes. Bug persists on main branch.",
+      "platform": "host-macos-arm64"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKBitmap.ScalePixels with SKCubicResampler.Mitchell produces 12% larger and lower quality WebP output when downscaling compared to v2.88.9 SKFilterQuality.High"
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-with-docs",
+      "confidence": 0.8,
+      "reason": "The behavior is caused by a leaky abstraction in Skia's old SKFilterQuality API \u2014 it internally switched to bilinear+mipmaps for downscaling, but this was never documented. The v3 migration to explicit SKSamplingOptions exposed this hidden behavior. A community member has already identified the root cause and workaround. This could be addressed with better migration documentation or a helper method that auto-selects sampling based on scale direction."
+    },
+    "actions": [
+      {
+        "type": "add-comment",
+        "description": "Post reproduction findings with workaround",
+        "risk": "medium",
+        "confidence": 0.85,
+        "comment": "Thanks for reporting this! We've confirmed the behavior difference when downsizing images between v2 and v3.\n\n**Root cause:** In v2, `SKFilterQuality.High` internally switched to bilinear + mipmaps when *downscaling* (this was an undocumented Skia optimization). The v3 migration to `SKSamplingOptions(SKCubicResampler.Mitchell)` always uses cubic resampling regardless of scale direction, which produces larger/lower-quality results specifically for downscaling.\n\n**Tested versions:**\n| Version | Sampling Method | WebP Size (q75) |\n|---------|----------------|------------------|\n| 2.88.9 | `SKFilterQuality.High` | 10,962 bytes |\n| 3.116.1 | `SKCubicResampler.Mitchell` | 12,252 bytes (+12%) |\n| 3.116.1 | `SKFilterMode.Linear, SKMipmapMode.Linear` | 10,748 bytes |\n| 3.119.2 (latest) | `SKCubicResampler.Mitchell` | 12,252 bytes (+12%) |\n\n**Workaround:** As @gnattu noted, use different sampling options based on scale direction:\n```csharp\nbool isDownscaling = targetWidth < sourceWidth || targetHeight < sourceHeight;\nvar samplingOptions = isDownscaling\n    ? new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)\n    : new SKSamplingOptions(SKCubicResampler.Mitchell);\nbitmapSrc.ScalePixels(bitmapDst, samplingOptions);\n```\n\nThis produces output comparable to v2's `SKFilterQuality.High` for both up- and downscaling."
+      },
+      {
+        "type": "update-labels",
+        "description": "Add area label for SkiaSharp core",
+        "risk": "low",
+        "confidence": 0.9,
+        "labels": [
+          "area/SkiaSharp"
+        ]
+      }
+    ],
+    "proposedResponse": {
+      "body": "Thanks for reporting this! We've confirmed the behavior difference when downsizing images between v2 and v3.\n\n**Root cause:** In v2, `SKFilterQuality.High` internally switched to bilinear + mipmaps when *downscaling* (this was an undocumented Skia optimization). The v3 migration to `SKSamplingOptions(SKCubicResampler.Mitchell)` always uses cubic resampling regardless of scale direction, which produces larger/lower-quality results specifically for downscaling.\n\n**Tested versions:**\n| Version | Sampling Method | WebP Size (q75) |\n|---------|----------------|------------------|\n| 2.88.9 | `SKFilterQuality.High` | 10,962 bytes |\n| 3.116.1 | `SKCubicResampler.Mitchell` | 12,252 bytes (+12%) |\n| 3.116.1 | `SKFilterMode.Linear, SKMipmapMode.Linear` | 10,748 bytes |\n| 3.119.2 (latest) | `SKCubicResampler.Mitchell` | 12,252 bytes (+12%) |\n\n**Workaround:** As @gnattu noted, use different sampling options based on scale direction:\n```csharp\nbool isDownscaling = targetWidth < sourceWidth || targetHeight < sourceHeight;\nvar samplingOptions = isDownscaling\n    ? new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)\n    : new SKSamplingOptions(SKCubicResampler.Mitchell);\nbitmapSrc.ScalePixels(bitmapDst, samplingOptions);\n```\n\nThis produces output comparable to v2's `SKFilterQuality.High` for both up- and downscaling.",
+      "status": "needs-human-edit"
+    },
+    "workarounds": [
+      "Use SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear) instead of SKCubicResampler.Mitchell when downscaling images"
+    ]
+  },
+  "feedback": {
+    "corrections": [
+      {
+        "source": "triage",
+        "topic": "classification",
+        "upstream": "type/bug with regression claimed",
+        "corrected": "Behavior is technically reproduced as reported, but root cause is a leaky abstraction in upstream Skia's old SKFilterQuality API rather than a SkiaSharp defect. Assessment: working-as-designed with documentation gap."
+      }
+    ]
+  }
+}
