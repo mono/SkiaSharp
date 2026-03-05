@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3288,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-07-25T12:00:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "Misfiled issue: reporter is using the skia-canvas Node.js npm package (JavaScript ctx.measureText API), not SkiaSharp (.NET). Reporter confirmed filing in the wrong repo.",
+  "classification": {
+    "type": { "value": "type/question", "confidence": 0.95 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.60 }
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Reporter uses skia-canvas npm package v2.0.2 (Node.js), not SkiaSharp",
+        "Reporter calls ctx.measureText(fullText, 952) — JavaScript Canvas API, not SkiaSharp API",
+        "No C# code provided — only template placeholders",
+        "Reporter commented: 'Sorry, I just sent wrong place'"
+      ],
+      "environmentDetails": "skia-canvas npm package ^2.0.2, VS Code on macOS"
+    }
+  },
+  "analysis": {
+    "summary": "This issue is about the skia-canvas npm package (a Node.js library), not SkiaSharp (a .NET library). The reporter uses ctx.measureText() which is a JavaScript Canvas API, not SkiaSharp's SKFont.MeasureText() or SKPaint.MeasureText(). The reporter confirmed the mistake in a follow-up comment.",
+    "rationale": "The issue references 'skia-canvas' version '^2.0.2' (an npm package), uses JavaScript API ctx.measureText(), provides no C# code, and the reporter self-identified filing in the wrong repo. This is not actionable for SkiaSharp.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKFont.cs",
+        "lines": "269-340",
+        "finding": "SkiaSharp's MeasureText API is SKFont.MeasureText(string) returning float, completely different from the JavaScript ctx.measureText() the reporter uses. Confirms this is a different project.",
+        "relevance": "context"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPaint.cs",
+        "lines": "285-321",
+        "finding": "SKPaint.MeasureText overloads also use .NET types (string, ReadOnlySpan, IntPtr). No overlap with the JavaScript API described in the issue.",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      { "text": "\"skia-canvas\": \"^2.0.2\"", "source": "issue body", "interpretation": "skia-canvas is a Node.js npm package, not SkiaSharp" },
+      { "text": "ctx.measureText(fullText, 952)", "source": "issue body", "interpretation": "JavaScript Canvas API call, not SkiaSharp API" },
+      { "text": "Sorry , I just sent wrong place", "source": "comment by chriswang-", "interpretation": "Reporter acknowledges filing in the wrong repository" }
+    ]
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "close-as-by-design",
+      "confidence": 0.95,
+      "reason": "Issue is about skia-canvas (Node.js npm package), not SkiaSharp (.NET). Reporter confirmed misfiling."
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Remove type/bug, apply type/question",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/question", "area/SkiaSharp"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Redirect reporter to the correct repository",
+        "risk": "low",
+        "confidence": 0.95,
+        "comment": "Thanks for the follow-up — no worries! As you noted, this issue is about the [skia-canvas](https://github.com/nicestflame/skia-canvas) Node.js package, not SkiaSharp (.NET). You'll want to file this in the skia-canvas repository instead.\n\nClosing as misfiled."
+      },
+      {
+        "type": "close-issue",
+        "description": "Close as misfiled — not a SkiaSharp issue",
+        "risk": "medium",
+        "confidence": 0.95,
+        "stateReason": "not_planned"
+      }
+    ]
+  }
+}
