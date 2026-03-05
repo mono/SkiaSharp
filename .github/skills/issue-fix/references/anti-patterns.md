@@ -32,7 +32,7 @@ If you modified any file in `externals/skia/src/c/` or `externals/skia/include/c
 Performance bugs involving views (SKGLView, SKMetalView, SKCanvasView) CANNOT be reproduced in a console app. Console apps bypass the entire view rendering pipeline. Use the correct platform file from the repro skill.
 
 ### #9: ❌ Never record timing with VSync enabled
-VSync caps frame rate to display refresh (60fps or 120fps), masking real performance. Always disable VSync before measuring. The "120fps" in issue #3525 was VSync-masked — real native performance was 61fps.
+VSync caps frame rate to display refresh (60fps or 120fps), masking real performance. Always disable VSync before measuring. If all configurations show exactly 60fps or 120fps regardless of scene complexity, VSync is almost certainly enabled.
 
 ### #10: ❌ Never investigate without a debugging table
 For any non-trivial investigation (especially performance), maintain a table of experiments: what changed → what resulted → what it proves. This prevents circular investigation and makes the process reviewable.

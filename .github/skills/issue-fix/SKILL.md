@@ -288,11 +288,11 @@ grep -r "sk_.*methodname" binding/SkiaSharp/
 
 ### 5.4 Workaround vs Root Cause
 
-The most common investigation mistake is shipping a workaround instead of fixing the root cause. The #3369 example illustrates why this matters:
-- Symptom: `undefined symbol: uuid_generate_random` on ARM64
-- **Wrong fix (workaround):** Add `-luuid` to linker flags
-- **Root cause:** fontconfig wasn't being linked at all (broken symlink in sysroot)
-- **Correct fix:** Add the fontconfig runtime library to the cross-compile sysroot
+The most common investigation mistake is shipping a workaround instead of fixing the root cause. Example:
+- Symptom: `undefined symbol: foo_function` on ARM64 but not x64
+- **Wrong fix (workaround):** Add `-lfoo` to linker flags
+- **Root cause:** A dependency library wasn't being linked at all (broken symlink in cross-compile sysroot)
+- **Correct fix:** Add the missing library to the sysroot so the linker resolves it naturally
 
 **How to tell the difference:**
 - If your fix adds something NEW to compensate → probably a workaround
@@ -387,8 +387,8 @@ For PR description and issue comment formatting, see [references/response-guidel
 
 Link ALL fixed issues (including related issues that have the same root cause):
 ```markdown
-Fixes #3369
-Fixes #3272
+Fixes #NNNN
+Fixes #MMMM
 ```
 
 Mark PR as ready for review (remove draft status).

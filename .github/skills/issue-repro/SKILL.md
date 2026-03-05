@@ -213,7 +213,7 @@ Some bugs live in framework-specific code (MAUI views, WPF handlers, Uno control
 
 **Recording:** Set `reproProject.type: "simulation"` in the JSON. The triage's `classifiedPlatform` vs repro's `type: "simulation"` shows the gap clearly.
 
-**Example:** Opus reproduced SKXamlCanvas NRE (#3430) by extracting the resize handler logic into a console app, feeding 73 dimension combinations, and confirming 100% NRE rate when width/height were 0.
+**Example:** A view-layer NRE was reproduced by extracting the resize handler logic into a console app, feeding many dimension combinations, and confirming 100% NRE rate when width/height were 0.
 
 ---
 
