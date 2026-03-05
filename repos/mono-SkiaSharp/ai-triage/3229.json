@@ -1,0 +1,148 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3229,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2025-09-12T12:00:00Z",
+    "currentLabels": ["type/bug", "os/Linux", "area/libSkiaSharp.native", "tenet/reliability"]
+  },
+  "summary": "libSkiaSharp.so has an undefined symbol FT_Get_BDF_Property at runtime on Linux ARM64 and RISC-V64 because the bundled static FreeType build (BUILD.gn) omits ftbdf.c while TT_CONFIG_OPTION_BDF is enabled in ftoption.h, and the version script hides all non-sk_*/gr_* symbols preventing runtime resolution from system freetype.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/libSkiaSharp.native", "confidence": 0.98 },
+    "platforms": ["os/Linux"],
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "crash",
+      "errorMessage": "symbol lookup error: libSkiaSharp.so: undefined symbol: FT_Get_BDF_Property",
+      "reproQuality": "complete",
+      "targetFrameworks": ["net9.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Build a .NET application referencing SkiaSharp 3.119.0-preview.1.2 or 3.119.0",
+        "Deploy to Linux ARM64 or RISC-V64 (e.g., Raspberry Pi, QEMU riscv64)",
+        "Run the application — crashes immediately with symbol lookup error for FT_Get_BDF_Property"
+      ],
+      "environmentDetails": "Reported on: RISC-V64 QEMU (AOSC OS), Raspberry Pi 3/4/5 (Debian Bookworm ARM64), various ARM64 Linux distros. System freetype versions 2.13-2.14. SkiaSharp 3.119.0-preview.1.2 and 3.119.0.",
+      "relatedIssues": [3272, 3436, 3369],
+      "repoLinks": [
+        { "url": "https://github.com/4Darmygeometry/SteamTools", "description": "Reporter's application that triggers the crash" },
+        { "url": "https://github.com/linuxserver/docker-jellyfin/issues/298", "description": "Downstream Jellyfin Docker issue for same symptom on Pi5" },
+        { "url": "https://github.com/unoplatform/uno/issues/20429", "description": "Downstream Uno Platform issue on RPi CM4" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.0-preview.1.2", "3.119.0"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The freetype2 BUILD.gn still does not include ftbdf.c. No PR has addressed this specific symbol. PR #3494 (merged) fixed a related but distinct fontconfig linking issue."
+    },
+    "fixStatus": {
+      "likelyFixed": false,
+      "confidence": 0.95,
+      "reason": "ftbdf.c is still absent from externals/skia/third_party/freetype2/BUILD.gn sources list on the main branch. PR #3494 fixed fontconfig sysroot linking but not the missing BDF symbol.",
+      "relatedPRs": [3221, 3482, 3492, 3494]
+    }
+  },
+  "analysis": {
+    "summary": "The bundled static FreeType build omits ftbdf.c from its sources in BUILD.gn, but the configuration header ftoption.h enables TT_CONFIG_OPTION_BDF. This causes code in the truetype/SFNT driver to reference FT_Get_BDF_Property, which is defined only in ftbdf.c. The resulting libSkiaSharp.so has an undefined symbol. On x64, the system freetype loaded by fontconfig may resolve it at runtime. On ARM64/RISC-V64, the symbol resolution fails — likely due to different dynamic linker behavior, older system freetype versions, or the version script (local: *) preventing resolution from external libraries.",
+    "rationale": "This is clearly a native build bug — the library ships with an unresolved symbol. Multiple reporters across different ARM64 devices (RPi 3/4/5/CM4, Jellyfin Docker) and RISC-V64 confirm the issue. The community-discovered LD_PRELOAD workaround confirms the symbol exists in system freetype but isn't resolved by default. Labels are already correct.",
+    "keySignals": [
+      { "text": "libSkiaSharp.so: undefined symbol: FT_Get_BDF_Property", "source": "issue body", "interpretation": "FT_Get_BDF_Property is referenced but not defined in the statically-linked freetype within libSkiaSharp.so." },
+      { "text": "it's not specific to riscv64. you will find the same issue with x86_64 etc. with same (new) version of fontconfig.", "source": "comment 4 (kasperk81)", "interpretation": "The symbol mismatch is architecture-independent but manifests more on arm64/riscv64 due to distro/freetype version differences." },
+      { "text": "LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libfreetype.so.6", "source": "comment 17 (marioleed)", "interpretation": "Forcing system freetype to load resolves the missing symbol, confirming it's a build-time omission in the bundled freetype." },
+      { "text": "I ran into both of these errors: uuid_generate_random and FT_Get_BDF_Property", "source": "comment 17 (marioleed)", "interpretation": "Multiple undefined symbols suggest the native build has several missing dependencies for arm64." }
+    ],
+    "codeInvestigation": [
+      { "file": "externals/skia/third_party/freetype2/BUILD.gn", "lines": "68-96", "finding": "The sources list includes many freetype .c files but does NOT include '../externals/freetype/src/base/ftbdf.c' which defines FT_Get_BDF_Property.", "relevance": "direct" },
+      { "file": "externals/skia/third_party/freetype2/include/freetype-android/freetype/config/ftoption.h", "finding": "TT_CONFIG_OPTION_BDF is #defined (enabled), causing the truetype/SFNT driver to compile code paths that call FT_Get_BDF_Property.", "relevance": "direct" },
+      { "file": "externals/skia/third_party/externals/freetype/src/base/ftbdf.c", "finding": "This file defines FT_Get_BDF_Property (FT_EXPORT_DEF) but is not compiled into the build.", "relevance": "direct" },
+      { "file": "native/linux/libSkiaSharp/libSkiaSharp.map", "finding": "Version script exports only sk_*/gr_*/skottie_*/sksg_*/skresources_* symbols. All freetype symbols (including FT_Get_BDF_Property) are marked local, preventing runtime resolution from system freetype.", "relevance": "related" },
+      { "file": "native/linux/build.cake", "lines": "91-92", "finding": "skia_use_system_freetype2=false confirms freetype is statically linked from source, not using system library.", "relevance": "context" }
+    ],
+    "workarounds": [
+      "Set LD_PRELOAD to system libfreetype: export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libfreetype.so.6",
+      "Install system freetype and fontconfig packages: sudo apt-get install -y libuuid1 libfreetype6 libharfbuzz0b libfontconfig1"
+    ],
+    "nextQuestions": [
+      "Does adding ftbdf.c to BUILD.gn sources resolve the symbol without side effects?",
+      "Are there other missing freetype source files that could cause similar undefined symbols?",
+      "Should the uuid_generate_random issue (comment 17) be tracked separately or as part of this fix?"
+    ],
+    "errorFingerprint": "libSkiaSharp.so:undefined_symbol:FT_Get_BDF_Property",
+    "resolution": {
+      "hypothesis": "The freetype2 BUILD.gn is missing ftbdf.c from its sources list. Since TT_CONFIG_OPTION_BDF is enabled in ftoption.h, the compiled freetype code references FT_Get_BDF_Property but the function is never defined, leaving an unresolved symbol in libSkiaSharp.so.",
+      "proposals": [
+        {
+          "title": "Add ftbdf.c to freetype BUILD.gn",
+          "description": "Add '../externals/freetype/src/base/ftbdf.c' to the sources array in externals/skia/third_party/freetype2/BUILD.gn to include the FT_Get_BDF_Property implementation in the static freetype build.",
+          "category": "fix",
+          "confidence": 0.90,
+          "effort": "trivial",
+          "validated": "untested"
+        },
+        {
+          "title": "LD_PRELOAD system freetype workaround",
+          "description": "Set LD_PRELOAD to force-load system freetype before libSkiaSharp.so. This allows the dynamic linker to resolve FT_Get_BDF_Property from the system library.",
+          "codeSnippet": "export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libfreetype.so.6\ndotnet run",
+          "category": "workaround",
+          "confidence": 0.85,
+          "effort": "trivial",
+          "validated": "yes"
+        },
+        {
+          "title": "Disable TT_CONFIG_OPTION_BDF",
+          "description": "Undefine TT_CONFIG_OPTION_BDF in ftoption.h to remove the dependency on FT_Get_BDF_Property entirely. This disables BDF table support in SFNT fonts but may be acceptable since BDF fonts are rarely used.",
+          "category": "alternative",
+          "confidence": 0.75,
+          "effort": "trivial",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Add ftbdf.c to freetype BUILD.gn",
+      "recommendedReason": "Most correct fix — includes the missing source file so all BDF-related symbols are defined. Trivial one-line change in BUILD.gn with no expected side effects. The LD_PRELOAD workaround is confirmed working for immediate relief."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.92,
+      "reason": "Root cause is identified (missing ftbdf.c in BUILD.gn) with a clear fix path. Needs native rebuild and verification on ARM64/RISC-V64 to confirm.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Labels are already correct — no changes needed",
+        "risk": "low",
+        "confidence": 0.98,
+        "labels": ["type/bug", "area/libSkiaSharp.native", "os/Linux", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis with LD_PRELOAD workaround and root cause",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the report. We've traced this to the bundled FreeType build — the source file `ftbdf.c` (which defines `FT_Get_BDF_Property`) is not included in the static FreeType compilation, even though BDF support is enabled in the configuration headers.\n\nHere's a workaround you can use while we investigate a proper fix:\n\n```bash\n# Find your system freetype path\nldconfig -p | grep freetype\n\n# Set LD_PRELOAD to load system freetype before libSkiaSharp.so\nexport LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libfreetype.so.6\ndotnet run\n```\n\nFor a systemd service, add to your `[Service]` section:\n```ini\nEnvironment=LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libfreetype.so.6\n```\n\nIf you also hit `undefined symbol: uuid_generate_random`, install libuuid: `sudo apt-get install -y libuuid1`.\n\nThe fix on the SkiaSharp side would be adding the missing source file to the FreeType build configuration."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with ARM64 undefined symbol issue",
+        "risk": "low",
+        "confidence": 0.85,
+        "linkedIssue": 3272
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference with ARM64 crash issue",
+        "risk": "low",
+        "confidence": 0.80,
+        "linkedIssue": 3369
+      }
+    ]
+  }
+}
