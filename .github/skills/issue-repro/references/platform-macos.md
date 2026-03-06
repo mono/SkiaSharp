@@ -60,10 +60,11 @@ open -n ./bin/Release/net10.0-macos/osx-arm64/Repro.app
 
 **Add SkiaSharp views** to the window in your `AppDelegate.DidFinishLaunching`:
 ```csharp
-// In DidFinishLaunching, add the appropriate view to your window:
-_window.ContentView = new SKCanvasView(frame);  // Software
-// or: new SKMetalView(frame);  // Metal
-// or: new SKGLView(frame);     // OpenGL
+// In DidFinishLaunching, add the appropriate view to your window.
+// ⚠️ MATCH THE REPORTER'S BACKEND — do not substitute one for another.
+_window.ContentView = new SKGLView(frame);     // OpenGL — use if reporter uses SKGLView
+// or: new SKMetalView(frame);  // Metal — use if reporter uses SKMetalView
+// or: new SKCanvasView(frame); // Software — use if reporter uses SKCanvasView
 ```
 
 ## Backend-Specific Templates

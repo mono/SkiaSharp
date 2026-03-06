@@ -24,12 +24,15 @@ removed, but still demonstrating the performance gap. The minimal repro must use
 rendering mode** as the reported issue:
 
 - **GPU issue** (SKGLView, SKMetalView, "slow rendering in my app") → standalone GPU app, no
-  framework (no Avalonia, no MAUI, no WPF). Use SKGLView or SKMetalView directly.
+  framework (no Avalonia, no MAUI, no WPF). **Match the reporter's exact backend:** if they use
+  SKGLView (OpenGL), your repro uses SKGLView. If they use SKMetalView (Metal), use SKMetalView.
+  OpenGL and Metal are different code paths — switching backends invalidates the comparison.
 - **CPU issue** (SKSurface.Create raster, "image processing is slow", "encoding takes too long")
   → console app with CPU raster surface is correct.
 
-The key rule: **stay in the reporter's rendering mode.** GPU bugs need GPU repros. CPU bugs need
-CPU repros. Crossing modes proves nothing — GPU and CPU use entirely different Skia code paths.
+The key rule: **stay in the reporter's rendering mode AND backend.** GPU bugs need GPU repros
+with the same backend (GL→GL, Metal→Metal). CPU bugs need CPU repros. Crossing modes or
+backends proves nothing — they use entirely different Skia code paths.
 
 ## Follow SKILL.md Phase 3 with these additions
 

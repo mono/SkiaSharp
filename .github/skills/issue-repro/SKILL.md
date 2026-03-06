@@ -116,7 +116,7 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/skiasharp/repro/` only. If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
 7. **Run the reporter's code first.** Run what they provide before creating your own repro. Run BOTH sides of any comparison — measure numbers yourself, never use the reporter's claimed numbers.
 8. **Reproduce, don't hypothesize.** Let data speak, not triage theories. If you're building something the reporter didn't describe, you're experimenting — stop and go back to their code.
-9. **Match the reporter's conditions.** Same rendering mode, same data, same API, same platform. Do NOT create a simpler test with a different rendering mode to "isolate variables."
+9. **Match the reporter's conditions.** Same rendering backend (GL→GL, Metal→Metal), same data, same API, same platform. Do NOT switch backends or create a simpler test with a different rendering mode to "isolate variables."
 
 **Intermittent bugs:** If results are inconsistent, run 3–5 times. Reproduced ≥1 time → `reproduced` with note "Intermittent: X/Y runs". Never reproduced after 5 → `not-reproduced`.
 
@@ -194,7 +194,7 @@ that reproduces the issue with the least possible code.
 **Use the platform file from Phase 2.4** to create the project. The platform determines the
 app type:
 - Core API bug (SKBitmap, SKCanvas, SKPath) → console app ([platform-console.md](references/platform-console.md))
-- GPU rendering bug → GPU app with SKGLView/SKMetalView ([platform-macos.md](references/platform-macos.md), etc.)
+- GPU rendering bug → GPU app matching reporter's backend: SKGLView for OpenGL, SKMetalView for Metal ([platform-macos.md](references/platform-macos.md))
 - WASM bug → Blazor app ([platform-wasm-blazor.md](references/platform-wasm-blazor.md))
 - Build/deployment bug → your repro IS the build attempt (same as 3B)
 
