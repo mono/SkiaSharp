@@ -1,16 +1,16 @@
 ﻿using Android.App;
 using Android.OS;
 using AndroidX.AppCompat.App;
-
-using SkiaSharp;
-using SkiaSharp.Views.Android;
+using AndroidX.DrawerLayout.Widget;
+using Google.Android.Material.Navigation;
 
 namespace SkiaSharpSample
 {
-	[Activity(MainLauncher = true)]
-	public class MainActivity : AppCompatActivity
+	[Activity(Label = "SkiaSharp", MainLauncher = true, Theme = "@style/Theme.AppCompat.Light.NoActionBar")]
+	public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
 	{
-		private SKCanvasView skiaView;
+		private DrawerLayout drawerLayout;
+		private ActionBarDrawerToggle toggle;
 
 		protected override void OnCreate(Bundle savedInstanceState)
 		{
@@ -18,44 +18,42 @@ namespace SkiaSharpSample
 
 			SetContentView(Resource.Layout.main);
 
-			skiaView = FindViewById<SKCanvasView>(Resource.Id.skiaView);
+			var toolbar = FindViewById<AndroidX.AppCompat.Widget.Toolbar>(Resource.Id.toolbar);
+			SetSupportActionBar(toolbar);
+
+			drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
+			toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, 0, 0);
+			drawerLayout.AddDrawerListener(toggle);
+			toggle.SyncState();
+
+			var navView = FindViewById<NavigationView>(Resource.Id.nav_view);
+			navView.SetNavigationItemSelectedListener(this);
+
+			if (savedInstanceState == null)
+				ShowFragment(new CpuFragment());
 		}
 
-		protected override void OnResume()
+		public bool OnNavigationItemSelected(Android.Views.IMenuItem item)
 		{
-			base.OnResume();
-
-			skiaView.PaintSurface += OnPaintSurface;
-		}
-
-		protected override void OnPause()
-		{
-			skiaView.PaintSurface -= OnPaintSurface;
-
-			base.OnPause();
-		}
-
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
-		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
-
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
-
-			// draw some text
-			using var paint = new SKPaint
+			AndroidX.Fragment.App.Fragment fragment = item.ItemId switch
 			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill,
+				Resource.Id.nav_cpu => new CpuFragment(),
+				Resource.Id.nav_gpu_surface => new GpuSurfaceFragment(),
+				Resource.Id.nav_gpu_texture => new GpuTextureFragment(),
+				Resource.Id.nav_drawing => new DrawingFragment(),
+				_ => new CpuFragment()
 			};
-			using var font = new SKFont
-			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+
+			ShowFragment(fragment);
+			drawerLayout.CloseDrawers();
+			return true;
+		}
+
+		private void ShowFragment(AndroidX.Fragment.App.Fragment fragment)
+		{
+			SupportFragmentManager.BeginTransaction()
+				.Replace(Resource.Id.content_frame, fragment)
+				.Commit();
 		}
 	}
 }
