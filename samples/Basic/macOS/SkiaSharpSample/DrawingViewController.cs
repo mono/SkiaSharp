@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using AppKit;
 using CoreGraphics;
+using Foundation;
 using SkiaSharp;
 using SkiaSharp.Views.Mac;
 
 namespace SkiaSharpSample
 {
+	[Register("DrawingViewController")]
 	public class DrawingViewController : NSViewController
 	{
 		static readonly SKColor[] palette =
@@ -23,35 +25,42 @@ namespace SkiaSharpSample
 		SKPath? currentPath;
 		int colorIndex;
 		float brushSize = 4f;
-		SKCanvasView? canvasView;
 
-		public override void LoadView()
+		[Outlet]
+		SKCanvasView? skiaView { get; set; }
+
+		public DrawingViewController(IntPtr handle) : base(handle) { }
+
+		public override void ViewDidLoad()
 		{
-			var container = new NSView();
+			base.ViewDidLoad();
 
-			canvasView = new SKCanvasView { IgnorePixelScaling = true };
-			canvasView.TranslatesAutoresizingMaskIntoConstraints = false;
-			canvasView.PaintSurface += OnPaintSurface;
-			container.AddSubview(canvasView);
+			if (skiaView != null)
+			{
+				skiaView.IgnorePixelScaling = true;
+				skiaView.PaintSurface += OnPaintSurface;
+				skiaView.TranslatesAutoresizingMaskIntoConstraints = false;
+			}
 
 			var toolbar = CreateToolbar();
 			toolbar.TranslatesAutoresizingMaskIntoConstraints = false;
-			container.AddSubview(toolbar);
+			View.AddSubview(toolbar);
 
-			NSLayoutConstraint.ActivateConstraints(new[]
+			if (skiaView != null)
 			{
-				canvasView.LeadingAnchor.ConstraintEqualTo(container.LeadingAnchor),
-				canvasView.TrailingAnchor.ConstraintEqualTo(container.TrailingAnchor),
-				canvasView.TopAnchor.ConstraintEqualTo(container.TopAnchor),
-				canvasView.BottomAnchor.ConstraintEqualTo(toolbar.TopAnchor),
+				NSLayoutConstraint.ActivateConstraints(new[]
+				{
+					skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+					skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+					skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
+					skiaView.BottomAnchor.ConstraintEqualTo(toolbar.TopAnchor),
 
-				toolbar.LeadingAnchor.ConstraintEqualTo(container.LeadingAnchor),
-				toolbar.TrailingAnchor.ConstraintEqualTo(container.TrailingAnchor),
-				toolbar.BottomAnchor.ConstraintEqualTo(container.BottomAnchor),
-				toolbar.HeightAnchor.ConstraintEqualTo(40),
-			});
-
-			View = container;
+					toolbar.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+					toolbar.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+					toolbar.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
+					toolbar.HeightAnchor.ConstraintEqualTo(40),
+				});
+			}
 		}
 
 		NSView CreateToolbar()
@@ -86,7 +95,7 @@ namespace SkiaSharpSample
 				btn.Activated += (s, e) =>
 				{
 					colorIndex = idx;
-					canvasView!.NeedsDisplay = true;
+					skiaView!.NeedsDisplay = true;
 				};
 				stack.AddArrangedSubview(btn);
 			}
@@ -132,7 +141,7 @@ namespace SkiaSharpSample
 			clearBtn.Activated += (s, e) =>
 			{
 				strokes.Clear();
-				canvasView!.NeedsDisplay = true;
+				skiaView!.NeedsDisplay = true;
 			};
 			stack.AddArrangedSubview(clearBtn);
 
@@ -150,21 +159,21 @@ namespace SkiaSharpSample
 
 		public override void MouseDown(NSEvent theEvent)
 		{
-			if (canvasView == null) return;
+			if (skiaView == null) return;
 			var pt = CanvasPoint(theEvent);
 			if (pt == null) return;
 			currentPath = new SKPath();
 			currentPath.MoveTo(pt.Value);
-			canvasView.NeedsDisplay = true;
+			skiaView.NeedsDisplay = true;
 		}
 
 		public override void MouseDragged(NSEvent theEvent)
 		{
-			if (currentPath == null || canvasView == null) return;
+			if (currentPath == null || skiaView == null) return;
 			var pt = CanvasPoint(theEvent);
 			if (pt == null) return;
 			currentPath.LineTo(pt.Value);
-			canvasView.NeedsDisplay = true;
+			skiaView.NeedsDisplay = true;
 		}
 
 		public override void MouseUp(NSEvent theEvent)
@@ -177,21 +186,21 @@ namespace SkiaSharpSample
 				Width = brushSize,
 			});
 			currentPath = null;
-			canvasView!.NeedsDisplay = true;
+			skiaView!.NeedsDisplay = true;
 		}
 
 		public override void ScrollWheel(NSEvent theEvent)
 		{
 			brushSize = Math.Clamp(brushSize + (float)theEvent.ScrollingDeltaY * 0.5f, 1f, 50f);
-			canvasView!.NeedsDisplay = true;
+			skiaView!.NeedsDisplay = true;
 		}
 
 		SKPoint? CanvasPoint(NSEvent theEvent)
 		{
-			if (canvasView == null) return null;
-			var loc = canvasView.ConvertPointFromView(theEvent.LocationInWindow, null);
+			if (skiaView == null) return null;
+			var loc = skiaView.ConvertPointFromView(theEvent.LocationInWindow, null);
 			// NSView origin is bottom-left; SkiaSharp canvas origin is top-left
-			return new SKPoint((float)loc.X, (float)(canvasView.Bounds.Height - loc.Y));
+			return new SKPoint((float)loc.X, (float)(skiaView.Bounds.Height - loc.Y));
 		}
 
 		void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)

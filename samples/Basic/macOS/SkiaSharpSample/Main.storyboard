@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="wc-main">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22505"/>
+    </dependencies>
+    <scenes>
+        <!-- Application Scene -->
+        <scene sceneID="sce-app">
+            <objects>
+                <application id="app-main" sceneMemberID="viewController">
+                    <menu key="mainMenu" title="Main Menu" systemMenu="main" id="mnu-main">
+                        <items>
+                            <menuItem title="SkiaSharp" id="mi-app-1">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="SkiaSharp" systemMenu="apple" id="sm-app-1">
+                                    <items>
+                                        <menuItem title="About SkiaSharp" id="mi-about-1">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="orderFrontStandardAboutPanel:" target="fr-app" id="act-about"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="mi-sep-1"/>
+                                        <menuItem title="Quit SkiaSharp" keyEquivalent="q" id="mi-quit-1">
+                                            <connections>
+                                                <action selector="terminate:" target="fr-app" id="act-quit"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="Window" id="mi-win-1">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Window" systemMenu="window" id="sm-win-1">
+                                    <items>
+                                        <menuItem title="Minimize" keyEquivalent="m" id="mi-min-1">
+                                            <connections>
+                                                <action selector="performMiniaturize:" target="fr-app" id="act-min"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Zoom" id="mi-zoom-1">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="performZoom:" target="fr-app" id="act-zoom"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="mi-sep-2"/>
+                                        <menuItem title="Bring All to Front" id="mi-bring-1">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="arrangeInFront:" target="fr-app" id="act-bring"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                        </items>
+                    </menu>
+                    <connections>
+                        <outlet property="delegate" destination="del-main" id="cn-del"/>
+                    </connections>
+                </application>
+                <customObject id="del-main" userLabel="AppDelegate" customClass="AppDelegate"/>
+                <customObject id="fr-app" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="75" y="0"/>
+        </scene>
+
+        <!-- Window Controller Scene -->
+        <scene sceneID="sce-wc">
+            <objects>
+                <windowController id="wc-main" sceneMemberID="viewController">
+                    <window key="window" title="SkiaSharp on macOS" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="win-main">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="196" y="240" width="1024" height="768"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
+                    </window>
+                    <connections>
+                        <segue destination="svc-main" kind="relationship" relationship="window.shadowedContentViewController" id="seg-wc-svc"/>
+                    </connections>
+                </windowController>
+                <customObject id="fr-wc" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="400" y="0"/>
+        </scene>
+
+        <!-- NSSplitViewController Scene -->
+        <scene sceneID="sce-svc">
+            <objects>
+                <splitViewController id="svc-main" sceneMemberID="viewController">
+                    <splitView key="splitView" vertical="YES" dividerStyle="thin" id="sv-main">
+                        <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                    </splitView>
+                    <connections>
+                        <segue destination="vc-side" kind="relationship" relationship="splitItems" id="seg-svi-side"/>
+                        <segue destination="vc-cpu" kind="relationship" relationship="splitItems" id="seg-svi-cpu"/>
+                    </connections>
+                </splitViewController>
+                <customObject id="fr-svc" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="400" y="300"/>
+        </scene>
+
+        <!-- Sidebar ViewController Scene -->
+        <scene sceneID="sce-side">
+            <objects>
+                <viewController id="vc-side" customClass="SidebarViewController" sceneMemberID="viewController">
+                    <view key="view" id="v-side">
+                        <rect key="frame" x="0.0" y="0.0" width="200" height="768"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <scrollView hasVerticalScroller="YES" borderType="none" id="scr-side">
+                                <rect key="frame" x="0.0" y="0.0" width="200" height="768"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <clipView key="contentView" id="clip-side">
+                                    <rect key="frame" x="0.0" y="0.0" width="200" height="768"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <tableView verticalHuggingPriority="750" allowsTypeSelect="NO" style="sourceList" id="tv-side">
+                                            <rect key="frame" x="0.0" y="0.0" width="200" height="768"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
+                                            <tableColumns>
+                                                <tableColumn identifier="Title" width="196" minWidth="40" maxWidth="1000" id="col-side">
+                                                    <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" title="Pages"/>
+                                                    <textFieldCell key="dataCell" lineBreakMode="truncatingTail" id="tfc-side"/>
+                                                </tableColumn>
+                                            </tableColumns>
+                                        </tableView>
+                                    </subviews>
+                                </clipView>
+                            </scrollView>
+                        </subviews>
+                    </view>
+                    <connections>
+                        <outlet property="tableView" destination="tv-side" id="cn-tv"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-side" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="0" y="300"/>
+        </scene>
+
+        <!-- CPU ViewController Scene -->
+        <scene sceneID="sce-cpu">
+            <objects>
+                <viewController id="vc-cpu" customClass="CpuViewController" sceneMemberID="viewController" storyboardIdentifier="CpuVC">
+                    <view key="view" id="v-cpu">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view id="skv-cpu" customClass="SKCanvasView" customModule="SkiaSharp.Views.Mac">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </subviews>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="skv-cpu" id="cn-cpu"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-cpu" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="800" y="300"/>
+        </scene>
+
+        <!-- GPU OpenGL ViewController Scene -->
+        <scene sceneID="sce-gl">
+            <objects>
+                <viewController id="vc-gl" customClass="GpuGLViewController" sceneMemberID="viewController" storyboardIdentifier="GpuGLVC">
+                    <view key="view" id="v-gl">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view id="skv-gl" customClass="SKGLView" customModule="SkiaSharp.Views.Mac">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </subviews>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="skv-gl" id="cn-gl"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-gl" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="800" y="600"/>
+        </scene>
+
+        <!-- GPU Metal ViewController Scene -->
+        <scene sceneID="sce-mtl">
+            <objects>
+                <viewController id="vc-mtl" customClass="GpuMetalViewController" sceneMemberID="viewController" storyboardIdentifier="GpuMetalVC">
+                    <view key="view" id="v-mtl">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view id="skv-mtl" customClass="SKMetalView" customModule="SkiaSharp.Views.Mac">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </subviews>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="skv-mtl" id="cn-mtl"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-mtl" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="800" y="900"/>
+        </scene>
+
+        <!-- Drawing ViewController Scene -->
+        <scene sceneID="sce-drw">
+            <objects>
+                <viewController id="vc-drw" customClass="DrawingViewController" sceneMemberID="viewController" storyboardIdentifier="DrawingVC">
+                    <view key="view" id="v-drw">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view id="skv-drw" customClass="SKCanvasView" customModule="SkiaSharp.Views.Mac">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="400"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </subviews>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="skv-drw" id="cn-drw"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-drw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="800" y="1200"/>
+        </scene>
+    </scenes>
+</document>

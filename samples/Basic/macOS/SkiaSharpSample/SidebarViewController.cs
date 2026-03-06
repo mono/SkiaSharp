@@ -4,10 +4,9 @@ using Foundation;
 
 namespace SkiaSharpSample
 {
+	[Register("SidebarViewController")]
 	public class SidebarViewController : NSViewController
 	{
-		public event Action<string>? PageSelected;
-
 		static readonly (string Id, string Title)[] pages =
 		{
 			("cpu", "CPU Canvas"),
@@ -16,30 +15,41 @@ namespace SkiaSharpSample
 			("drawing", "Drawing"),
 		};
 
-		NSTableView? tableView;
+		[Outlet]
+		NSTableView? tableView { get; set; }
 
-		public override void LoadView()
+		public SidebarViewController(IntPtr handle) : base(handle) { }
+
+		public override void ViewDidLoad()
 		{
-			tableView = new NSTableView
+			base.ViewDidLoad();
+
+			if (tableView != null)
 			{
-				Style = NSTableViewStyle.SourceList,
+				tableView.HeaderView = null;
+				tableView.DataSource = new SidebarDataSource();
+				tableView.Delegate = new SidebarDelegate(OnPageSelected);
+				tableView.SelectRow(0, false);
+			}
+		}
+
+		void OnPageSelected(string pageId)
+		{
+			if (ParentViewController is not NSSplitViewController splitVC || Storyboard == null)
+				return;
+
+			var identifier = pageId switch
+			{
+				"cpu" => "CpuVC",
+				"gpu-gl" => "GpuGLVC",
+				"gpu-metal" => "GpuMetalVC",
+				"drawing" => "DrawingVC",
+				_ => "CpuVC"
 			};
 
-			var column = new NSTableColumn("Title") { Title = "Pages" };
-			tableView.AddColumn(column);
-			tableView.HeaderView = null;
-
-			tableView.DataSource = new SidebarDataSource();
-			tableView.Delegate = new SidebarDelegate(id => PageSelected?.Invoke(id));
-
-			var scrollView = new NSScrollView
-			{
-				DocumentView = tableView,
-				HasVerticalScroller = true,
-			};
-			View = scrollView;
-
-			tableView.SelectRow(0, false);
+			var vc = Storyboard.InstantiateControllerWithIdentifier(identifier) as NSViewController;
+			if (vc != null && splitVC.SplitViewItems.Length > 1)
+				splitVC.SplitViewItems[1].ViewController = vc;
 		}
 
 		class SidebarDataSource : NSTableViewDataSource

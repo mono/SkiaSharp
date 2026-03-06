@@ -1,10 +1,12 @@
 using System;
 using AppKit;
+using Foundation;
 using SkiaSharp;
 using SkiaSharp.Views.Mac;
 
 namespace SkiaSharpSample
 {
+	[Register("GpuGLViewController")]
 	public class GpuGLViewController : NSViewController
 	{
 		const string sksl = @"
@@ -78,7 +80,9 @@ namespace SkiaSharpSample
 			}
 		";
 
-		SKGLView? skiaView;
+		[Outlet]
+		SKGLView? skiaView { get; set; }
+
 		NSTimer? timer;
 		readonly SKRuntimeShaderBuilder builder = SKRuntimeEffect.BuildShader(sksl);
 		readonly long startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -92,11 +96,13 @@ namespace SkiaSharpSample
 		readonly long[] tickList = new long[100];
 		long lastTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-		public override void LoadView()
+		public GpuGLViewController(IntPtr handle) : base(handle) { }
+
+		public override void ViewDidLoad()
 		{
-			skiaView = new SKGLView();
-			skiaView.PaintSurface += OnPaintSurface;
-			View = skiaView;
+			base.ViewDidLoad();
+			if (skiaView != null)
+				skiaView.PaintSurface += OnPaintSurface;
 		}
 
 		public override void ViewDidAppear()
