@@ -107,10 +107,40 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void CanConstructRectWithRadii()
+		public void CanConstructRectWithRadiiArray()
 		{
 			var rect = SKRect.Create(10, 10, 100, 100);
 			var radii = new[]
+			{
+				new SKPoint(1, 2),
+				new SKPoint(3, 4),
+				new SKPoint(5, 6),
+				new SKPoint(7, 8)
+			};
+
+			var rrect = new SKRoundRect();
+			rrect.SetRectRadii(rect, radii);
+
+			Assert.NotNull(rrect);
+			Assert.True(rrect.IsValid);
+
+			Assert.Equal(SKRoundRectType.Complex, rrect.Type);
+
+			Assert.Equal(100f, rrect.Width);
+			Assert.Equal(100f, rrect.Height);
+			Assert.Equal(rect, rrect.Rect);
+
+			Assert.Equal(radii[0], rrect.GetRadii(SKRoundRectCorner.UpperLeft));
+			Assert.Equal(radii[1], rrect.GetRadii(SKRoundRectCorner.UpperRight));
+			Assert.Equal(radii[2], rrect.GetRadii(SKRoundRectCorner.LowerRight));
+			Assert.Equal(radii[3], rrect.GetRadii(SKRoundRectCorner.LowerLeft));
+		}
+
+		[SkippableFact]
+		public void CanConstructRectWithRadiiSpan()
+		{
+			var rect = SKRect.Create(10, 10, 100, 100);
+			Span<SKPoint> radii = stackalloc[]
 			{
 				new SKPoint(1, 2),
 				new SKPoint(3, 4),
