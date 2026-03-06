@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -437,7 +438,48 @@ namespace SkiaSharp
 		private static SKImageFilter CreateShader (SKShader? shader, bool dither, SKRect* cropRect) =>
 			GetObject (SkiaApi.sk_imagefilter_new_shader (shader?.Handle ?? IntPtr.Zero, dither, cropRect));
 
-		//
+		// CreateRuntimeShader
+		public static SKImageFilter CreateRuntimeShader (SKRuntimeShaderBuilder builder, string childShaderName, SKImageFilter? input) =>
+			CreateRuntimeShader (builder, 0f, childShaderName, input);
+
+		public static SKImageFilter CreateRuntimeShader (SKRuntimeShaderBuilder builder, float maxSampleRadius, string childShaderName, SKImageFilter? input) =>
+			CreateRuntimeShader (builder, maxSampleRadius, [childShaderName], [input]);
+
+		public static SKImageFilter CreateRuntimeShader (SKRuntimeShaderBuilder builder, float maxSampleRadius, string[] childShaderNames, SKImageFilter?[] inputs)
+		{
+			SKImageFilter result;
+			IntPtr runtimeShaderBuilder;
+
+			using var childrenHandles = Utils.RentHandlesArray (builder.Children.ToArray (), true);
+			fixed (IntPtr* childrenHandlesPtr = childrenHandles) {
+				runtimeShaderBuilder = SkiaApi.sk_runtimeshaderbuilder_new (builder.Effect.Handle, builder.Uniforms.ToData ().Handle, childrenHandlesPtr, (IntPtr)builder.Children.Count);
+			}
+
+			using var inputsHandles = Utils.RentHandlesArray (inputs, true);
+			using var childShaderNamesHandles = Utils.RentArray<IntPtr> (inputs.Length, true);
+			var gcHandles = new GCHandle[childShaderNames.Length];
+
+			try {
+				for (int i = 0; i < childShaderNames.Length; i++) {
+					var handle = GCHandle.Alloc (StringUtilities.GetEncodedText (childShaderNames[i], SKTextEncoding.Utf8), GCHandleType.Pinned);
+					childShaderNamesHandles[i] = handle.AddrOfPinnedObject ();
+				}
+
+				fixed (IntPtr* inputsHandlesPtr = inputsHandles) {
+					fixed (IntPtr* childShaderNamesHandlesPtr = childShaderNamesHandles) {
+						result = GetObject (SkiaApi.sk_imagefilter_new_runtime_shader (runtimeShaderBuilder, maxSampleRadius, (void**)childShaderNamesHandlesPtr, inputsHandlesPtr, childShaderNames.Length));
+					}
+				}
+			} finally {
+				SkiaApi.sk_runtimeshaderbuilder_destructor (runtimeShaderBuilder);
+				foreach (var handle in gcHandles) {
+					if (handle.IsAllocated) {
+						handle.Free ();
+					}
+				}
+			}
+			return result;
+		}
 
 		internal static SKImageFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKImageFilter (h, o));
