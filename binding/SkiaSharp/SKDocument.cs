@@ -139,12 +139,12 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			using var title = SKString.Create (metadata.Title);
-			using var author = SKString.Create (metadata.Author);
-			using var subject = SKString.Create (metadata.Subject);
-			using var keywords = SKString.Create (metadata.Keywords);
-			using var creator = SKString.Create (metadata.Creator);
-			using var producer = SKString.Create (metadata.Producer);
+			using var title = SKString.Create (metadata.Title.AsSpan ());
+			using var author = SKString.Create (metadata.Author.AsSpan ());
+			using var subject = SKString.Create (metadata.Subject.AsSpan ());
+			using var keywords = SKString.Create (metadata.Keywords.AsSpan ());
+			using var creator = SKString.Create (metadata.Creator.AsSpan ());
+			using var producer = SKString.Create (metadata.Producer.AsSpan ());
 
 			var cmetadata = new SKDocumentPdfMetadataInternal {
 				fTitle = title?.Handle ?? IntPtr.Zero,
