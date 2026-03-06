@@ -16,27 +16,50 @@
 
     <div class="overlay-toolbar">
         <div class="swatch-row">
-            @foreach (var (name, color) in colors)
+            @foreach (var (name, darkName, color, darkColor) in colors)
             {
-                <div class="color-swatch @(currentColor == color ? "selected" : "")"
-                     style="background:@name"
-                     @onclick="() => SetColor(color)" />
+                var c = _isDarkMode ? darkColor : color;
+                var css = _isDarkMode ? darkName : name;
+                <div class="color-swatch @(currentColor == c ? "selected" : "")"
+                     style="background:@css"
+                     @onclick="() => SetColor(c)" />
             }
         </div>
-        <input type="range" class="brush-slider" min="1" max="50" step="0.5"
-               value="@brushSize" @oninput="OnSliderInput" />
+        <div class="slider-row">
+            <input type="range" class="brush-slider" min="1" max="50" step="0.5"
+                   value="@brushSize" @oninput="OnSliderInput" />
+            <span class="size-label">@($"{brushSize:F0}")</span>
+        </div>
     </div>
 
 </div>
 
 @code {
 
+    [CascadingParameter(Name = "IsDarkMode")]
+    bool _isDarkMode { get; set; }
+
+    bool _prevDarkMode;
     SKCanvasView skiaView = null!;
     float brushSize = 25f;
     SKColor currentColor = SKColors.Black;
     List<DrawingStroke> strokes = [];
     DrawingStroke? currentStroke = null;
     SKPoint lastPoint;
+
+    protected override void OnParametersSet()
+    {
+        if (_prevDarkMode != _isDarkMode)
+        {
+            _prevDarkMode = _isDarkMode;
+            // Swap the default color when toggling themes
+            if (_isDarkMode && currentColor == SKColors.Black)
+                currentColor = SKColors.White;
+            else if (!_isDarkMode && currentColor == SKColors.White)
+                currentColor = SKColors.Black;
+            skiaView?.Invalidate();
+        }
+    }
 
     // The paint that is reused for drawing strokes.
     readonly SKPaint strokePaint = new()
@@ -47,23 +70,24 @@
         StrokeJoin = SKStrokeJoin.Round,
     };
 
-    // The available brush colors with their CSS names.
-    static readonly (string Name, SKColor Color)[] colors =
+    // Colors with light and dark variants — black swaps to white in dark mode.
+    static readonly (string Name, string DarkName, SKColor Color, SKColor DarkColor)[] colors =
     {
-        ("black", SKColors.Black),
-        ("red", SKColors.Red),
-        ("blue", SKColors.Blue),
-        ("green", SKColors.Green),
-        ("orange", SKColors.Orange),
-        ("purple", SKColors.Purple),
+        ("black", "white", SKColors.Black, SKColors.White),
+        ("red", "red", SKColors.Red, SKColors.Red),
+        ("#2196F3", "#2196F3", new SKColor(0x21, 0x96, 0xF3), new SKColor(0x21, 0x96, 0xF3)),
+        ("green", "green", SKColors.Green, SKColors.Green),
+        ("orange", "orange", SKColors.Orange, SKColors.Orange),
+        ("#9C27B0", "#CE93D8", new SKColor(0x9C, 0x27, 0xB0), new SKColor(0xCE, 0x93, 0xD8)),
     };
+
+    SKColor CanvasBackground => _isDarkMode ? new SKColor(0x12, 0x12, 0x18) : SKColors.White;
 
     void OnPaintSurface(SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
 
-        // Clear to white before drawing the strokes.
-        canvas.Clear(SKColors.White);
+        canvas.Clear(CanvasBackground);
 
         // Draw completed strokes.
         foreach (var stroke in strokes)
