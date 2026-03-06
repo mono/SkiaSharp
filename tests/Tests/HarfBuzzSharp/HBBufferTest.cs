@@ -296,5 +296,81 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(28u, buffer.GlyphInfos[3].Codepoint);
 			}
 		}
+
+		// Buffer.CreateSimilar tests (added in HarfBuzz 3.4.0)
+
+		[SkippableFact]
+		public void CreateSimilarCreatesNewBuffer()
+		{
+			using (var original = new Buffer())
+			{
+				original.Direction = Direction.RightToLeft;
+				original.Script = Script.Arabic;
+				original.Language = new Language("ar");
+				original.ClusterLevel = ClusterLevel.MonotoneGraphemes;
+				original.ContentType = ContentType.Unicode;
+
+				using (var similar = Buffer.CreateSimilar(original))
+				{
+					Assert.NotNull(similar);
+					Assert.NotSame(original, similar);
+					Assert.NotEqual(original.Handle, similar.Handle);
+
+					// Verify that properties are NOT copied
+					Assert.Equal(ContentType.Invalid, similar.ContentType);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void CreateSimilarPreservesClusterLevel()
+		{
+			using (var original = new Buffer())
+			{
+				// CreateSimilar copies: flags, cluster_level, replacement, invisible, not_found, unicode
+				// It does NOT copy: Direction, Script, Language, content
+				original.ClusterLevel = ClusterLevel.MonotoneGraphemes;
+
+				using (var similar = Buffer.CreateSimilar(original))
+				{
+					// ClusterLevel should be copied
+					Assert.Equal(ClusterLevel.MonotoneGraphemes, similar.ClusterLevel);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void CreateSimilarDoesNotCopyDirectionScriptLanguage()
+		{
+			using (var original = new Buffer())
+			{
+				original.Direction = Direction.RightToLeft;
+				original.Script = Script.Arabic;
+				original.Language = new Language("ar");
+
+				using (var similar = Buffer.CreateSimilar(original))
+				{
+					// Direction, Script, Language are NOT copied by CreateSimilar
+					Assert.Equal(Direction.Invalid, similar.Direction);
+					Assert.Equal(Script.Invalid, similar.Script);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void CreateSimilarDoesNotCopyContent()
+		{
+			using (var original = new Buffer())
+			{
+				original.Direction = Direction.LeftToRight;
+				original.AddUtf8("Hello");
+
+				using (var similar = Buffer.CreateSimilar(original))
+				{
+					// Content should NOT be copied
+					Assert.Equal(0, similar.Length);
+				}
+			}
+		}
 	}
 }

@@ -32,6 +32,24 @@ namespace HarfBuzzSharp
 
 		public string Name { get; }
 
+		/// <summary>
+		/// Checks whether this language matches a specific language.
+		/// </summary>
+		/// <remarks>
+		/// Checks whether this language matches the specified language.
+		/// When checking for a match, a language that matches the prefix
+		/// (including the region subtag) will be considered a match.
+		/// For example, "en-us" matches "en" (since "en" is a prefix of "en-us").
+		/// </remarks>
+		/// <param name="specific">The language to check against</param>
+		/// <returns>True if this language matches the specific language</returns>
+		public bool Matches (Language specific)
+		{
+			if (specific == null)
+				throw new ArgumentNullException (nameof (specific));
+			return HarfBuzzApi.hb_language_matches (Handle, specific.Handle);
+		}
+
 		public override string ToString () => Name;
 
 		public override bool Equals (object obj) =>
