@@ -118,6 +118,12 @@ public sealed partial class DrawingPage : Page
 		skiaView.ReleasePointerCapture(e.Pointer);
 	}
 
+	private void OnPointerExited(object? sender, PointerRoutedEventArgs e)
+	{
+		isCursorOver = false;
+		skiaView.Invalidate();
+	}
+
 	private void OnPointerWheelChanged(object? sender, PointerRoutedEventArgs e)
 	{
 		var point = e.GetCurrentPoint(skiaView);

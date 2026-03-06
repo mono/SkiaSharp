@@ -118,7 +118,7 @@ half4 main(float2 fragCoord) {
 		{
 			var fps = frameCount / (elapsed - lastFpsTime);
 			if (fpsText != null)
-				fpsText.Text = $"FPS: {fps:F0}";
+				DispatcherQueue.TryEnqueue(() => fpsText.Text = $"FPS: {fps:F0}");
 			frameCount = 0;
 			lastFpsTime = elapsed;
 		}
