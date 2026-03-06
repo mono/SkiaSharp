@@ -48,7 +48,9 @@ main branch). NuGet packages match what real users have.
 
 Missing workloads, `sudo` prompts, Docker timeouts, and missing Playwright are fixable — not
 blockers. Install what's missing, use user-local installs instead of `sudo`, retry Docker with
-longer timeouts. Setup failures mean `needs-platform`, not `not-reproduced`. Only conclude
+longer timeouts. **Network operations (git clone, git-sync-deps, package restore) may be slow —
+retry 2-3 times before declaring failure.** Native builds (Skia, GN/Ninja) can take 15+ minutes;
+that's normal. Setup failures mean `needs-platform`, not `not-reproduced`. Only conclude
 `needs-platform` when the platform itself is genuinely unavailable.
 
 ### 7. Pre-emptive version or TFM assumptions

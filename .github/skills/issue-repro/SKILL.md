@@ -56,7 +56,15 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
 
 ### 1. Classify
 
-Read [references/bug-categories.md](references/bug-categories.md) to classify the issue type and determine the reproduction strategy. That file covers bugs (Sections 1–6), enhancements (Section 7), platform parity gaps (Section 8), and documentation issues (Section 9) — including which conclusion values and `layer` to use for each.
+Classify the issue type and read the matching category file for reproduction strategy:
+
+| If the issue describes... | Category file | Conclusion type |
+|--------------------------|---------------|-----------------|
+| Wrong output, crash, exception, broken behavior | [category-bugs.md](references/category-bugs.md) | `reproduced` / `not-reproduced` |
+| Missing feature, new API request, docs gap | [category-features.md](references/category-features.md) | `confirmed` / `not-confirmed` |
+| Slow rendering, low FPS, performance regression | [category-performance.md](references/category-performance.md) | either (see file) |
+
+Read the matching file for signals, goal, strategy, and pitfalls specific to the issue type.
 
 ### 2. Extract reporter's version & TFM
 
@@ -84,7 +92,7 @@ Also check: Docker (`docker --version`), Playwright MCP tools, GPU availability,
 | 5 | Linux, Docker, container, NativeAssets.Linux | [platform-docker-linux.md](references/platform-docker-linux.md) |
 | 6 | (none) | [platform-console.md](references/platform-console.md) |
 
-All platform files fall back to `platform-console.md` for core SkiaSharp bugs.
+Core SkiaSharp bugs (no platform signals) use `platform-console.md`. **Exception:** GPU/view performance bugs must use the GPU platform file — console apps test a different code path.
 
 **Tie-breaking:** If multiple platform signals (e.g., "WASM + WPF"), use the highest priority. If reporter says "works on X, fails on Y", reproduce on Y first, test X in Phase 3D.
 
@@ -136,10 +144,10 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 >
 > **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. This applies to ALL conclusion types — bugs (`reproduced`/`not-reproduced`) AND enhancements (`confirmed`/`not-confirmed`). For enhancements: a feature may exist in one version but not another, or may have been removed. Version testing reveals this.
 
-> **⚠️ Performance bugs have additional requirements.** See **Category 10: Performance** in
-> [bug-categories.md](references/bug-categories.md). Key differences: you must run BOTH sides of any
-> comparison yourself (Rule 7), per-phase timing is required in step output, VSync must be disabled,
-> and console apps are NOT valid substitutes for GPU view rendering (Rule 9).
+> **⚠️ Performance bugs have additional requirements.** See
+> [category-performance.md](references/category-performance.md). Key points: you must measure
+> BOTH sides of any comparison yourself (Rule 7) — without a baseline, "slow" is meaningless.
+> Your standalone repro must match the reporter's rendering mode (GPU→GPU, CPU→CPU).
 
 ### 3A. Reproduce with reporter's version
 

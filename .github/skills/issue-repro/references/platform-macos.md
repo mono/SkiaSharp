@@ -130,7 +130,7 @@ Common build errors:
 ## Iterate
 
 - If the bug doesn't reproduce with SKCanvasView (software), try SKGLView (GL) or SKMetalView (Metal)
-- For performance issues, see **Category 10: Performance** in bug-categories.md for measurement methodology
+- For performance issues, see [category-performance.md](category-performance.md) for measurement methodology
 
 ## Conclusion Mapping
 
