@@ -95,7 +95,7 @@ namespace SkiaSharpSample
 				btn.Activated += (s, e) =>
 				{
 					colorIndex = idx;
-					skiaView!.NeedsDisplay = true;
+					skiaView?.NeedsDisplay = true;
 				};
 				stack.AddArrangedSubview(btn);
 			}
@@ -140,8 +140,12 @@ namespace SkiaSharpSample
 			};
 			clearBtn.Activated += (s, e) =>
 			{
+				foreach (var stroke in strokes)
+					stroke.Path.Dispose();
 				strokes.Clear();
-				skiaView!.NeedsDisplay = true;
+				currentPath?.Dispose();
+				currentPath = null;
+				skiaView?.NeedsDisplay = true;
 			};
 			stack.AddArrangedSubview(clearBtn);
 
@@ -186,13 +190,13 @@ namespace SkiaSharpSample
 				Width = brushSize,
 			});
 			currentPath = null;
-			skiaView!.NeedsDisplay = true;
+			skiaView?.NeedsDisplay = true;
 		}
 
 		public override void ScrollWheel(NSEvent theEvent)
 		{
 			brushSize = Math.Clamp(brushSize + (float)theEvent.ScrollingDeltaY * 0.5f, 1f, 50f);
-			skiaView!.NeedsDisplay = true;
+			skiaView?.NeedsDisplay = true;
 		}
 
 		SKPoint? CanvasPoint(NSEvent theEvent)
