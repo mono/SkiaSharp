@@ -70,18 +70,19 @@
         StrokeJoin = SKStrokeJoin.Round,
     };
 
-    // Colors with light and dark variants — black swaps to white in dark mode.
+    // Colors with light and dark variants — brighter in dark mode for visibility.
+    // Matches the Android Material 3 drawing palette.
     static readonly (string Name, string DarkName, SKColor Color, SKColor DarkColor)[] colors =
     {
-        ("black", "white", SKColors.Black, SKColors.White),
-        ("red", "red", SKColors.Red, SKColors.Red),
-        ("#2196F3", "#2196F3", new SKColor(0x21, 0x96, 0xF3), new SKColor(0x21, 0x96, 0xF3)),
-        ("green", "green", SKColors.Green, SKColors.Green),
-        ("orange", "orange", SKColors.Orange, SKColors.Orange),
-        ("#9C27B0", "#CE93D8", new SKColor(0x9C, 0x27, 0xB0), new SKColor(0xCE, 0x93, 0xD8)),
+        ("#000000", "#FFFFFF",  new SKColor(0x00, 0x00, 0x00), new SKColor(0xFF, 0xFF, 0xFF)),
+        ("#E53935", "#EF5350",  new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+        ("#1E88E5", "#42A5F5",  new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+        ("#43A047", "#66BB6A",  new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+        ("#FB8C00", "#FFA726",  new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+        ("#8E24AA", "#AB47BC",  new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
     };
 
-    SKColor CanvasBackground => _isDarkMode ? new SKColor(0x12, 0x12, 0x18) : SKColors.White;
+    SKColor CanvasBackground => _isDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 
     void OnPaintSurface(SKPaintSurfaceEventArgs e)
     {
