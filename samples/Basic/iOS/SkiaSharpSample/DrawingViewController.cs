@@ -3,6 +3,7 @@ using SkiaSharp.Views.iOS;
 
 namespace SkiaSharpSample;
 
+[Register("DrawingViewController")]
 public class DrawingViewController : UIViewController
 {
 	private readonly record struct Stroke(SKPath Path, SKColor Color, float Width);
@@ -23,19 +24,24 @@ public class DrawingViewController : UIViewController
 	private float brushSize = 4f;
 	private bool isDrawing;
 
-	private SKCanvasView? skiaView;
+	[Outlet]
+	SKCanvasView? skiaView { get; set; }
+
 	private UILabel? brushLabel;
 	private UIView? selectedSwatch;
 
-	public override void LoadView()
-	{
-		var container = new UIView { BackgroundColor = UIColor.SystemBackground };
+	public DrawingViewController(IntPtr handle) : base(handle) { }
 
-		// Canvas
-		skiaView = new SKCanvasView { TranslatesAutoresizingMaskIntoConstraints = false };
+	public override void ViewDidLoad()
+	{
+		base.ViewDidLoad();
+		Title = "Drawing";
+		View!.BackgroundColor = UIColor.SystemBackground;
+
+		// Switch storyboard view to Auto Layout so we can position the toolbar
+		skiaView!.TranslatesAutoresizingMaskIntoConstraints = false;
 		skiaView.IgnorePixelScaling = true;
 		skiaView.PaintSurface += OnPaintSurface;
-		container.AddSubview(skiaView);
 
 		// Bottom toolbar
 		var toolbar = new UIView
@@ -43,7 +49,7 @@ public class DrawingViewController : UIViewController
 			TranslatesAutoresizingMaskIntoConstraints = false,
 			BackgroundColor = UIColor.SecondarySystemBackground,
 		};
-		container.AddSubview(toolbar);
+		View.AddSubview(toolbar);
 
 		var stack = new UIStackView
 		{
@@ -103,14 +109,14 @@ public class DrawingViewController : UIViewController
 		// Layout
 		NSLayoutConstraint.ActivateConstraints(new[]
 		{
-			skiaView.LeadingAnchor.ConstraintEqualTo(container.LeadingAnchor),
-			skiaView.TrailingAnchor.ConstraintEqualTo(container.TrailingAnchor),
-			skiaView.TopAnchor.ConstraintEqualTo(container.TopAnchor),
+			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
 			skiaView.BottomAnchor.ConstraintEqualTo(toolbar.TopAnchor),
 
-			toolbar.LeadingAnchor.ConstraintEqualTo(container.LeadingAnchor),
-			toolbar.TrailingAnchor.ConstraintEqualTo(container.TrailingAnchor),
-			toolbar.BottomAnchor.ConstraintEqualTo(container.SafeAreaLayoutGuide.BottomAnchor),
+			toolbar.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+			toolbar.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+			toolbar.BottomAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.BottomAnchor),
 			toolbar.HeightAnchor.ConstraintEqualTo(52),
 
 			stack.LeadingAnchor.ConstraintEqualTo(toolbar.LeadingAnchor, 16),
@@ -122,9 +128,6 @@ public class DrawingViewController : UIViewController
 		var pinch = new UIPinchGestureRecognizer(HandlePinch);
 		pinch.CancelsTouchesInView = false;
 		skiaView.AddGestureRecognizer(pinch);
-
-		View = container;
-		Title = "Drawing";
 	}
 
 	private void SelectColor(SKColor color, UIView swatch)

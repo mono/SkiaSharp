@@ -7,24 +7,11 @@ public class AppDelegate : UIApplicationDelegate
 
 	public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
 	{
-		Window = new UIWindow(UIScreen.MainScreen.Bounds);
+		// The storyboard creates the UISplitViewController automatically via UIMainStoryboardFile.
+		// Configure display mode so the sidebar stays visible on wide screens.
+		if (Window?.RootViewController is UISplitViewController splitVC)
+			splitVC.PreferredDisplayMode = UISplitViewControllerDisplayMode.OneBesideSecondary;
 
-		var splitVC = new UISplitViewController(UISplitViewControllerStyle.DoubleColumn);
-		splitVC.PreferredDisplayMode = UISplitViewControllerDisplayMode.OneBesideSecondary;
-		splitVC.PreferredSplitBehavior = UISplitViewControllerSplitBehavior.Tile;
-
-		var sidebarVC = new SidebarViewController();
-		splitVC.SetViewController(sidebarVC, UISplitViewControllerColumn.Primary);
-
-		var cpuVC = new CpuViewController();
-		var navVC = new UINavigationController(cpuVC);
-		splitVC.SetViewController(navVC, UISplitViewControllerColumn.Secondary);
-
-		// On compact width (iPhone), show the canvas first
-		splitVC.Show(UISplitViewControllerColumn.Secondary);
-
-		Window.RootViewController = splitVC;
-		Window.MakeKeyAndVisible();
 		return true;
 	}
 }
