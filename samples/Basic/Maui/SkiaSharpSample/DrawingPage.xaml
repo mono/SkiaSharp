@@ -1,0 +1,26 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="SkiaSharpSample.DrawingPage"
+             Title="Drawing">
+
+    <Grid RowDefinitions="*,Auto">
+        <skia:SKCanvasView x:Name="skiaView"
+                           PaintSurface="OnPaintSurface"
+                           EnableTouchEvents="True"
+                           Touch="OnTouch" />
+
+        <HorizontalStackLayout Grid.Row="1" Spacing="8" Padding="8"
+                               HorizontalOptions="Center">
+            <Button BackgroundColor="Black" WidthRequest="40" HeightRequest="40" CornerRadius="20" Clicked="OnColorClicked" />
+            <Button BackgroundColor="Red" WidthRequest="40" HeightRequest="40" CornerRadius="20" Clicked="OnColorClicked" />
+            <Button BackgroundColor="Blue" WidthRequest="40" HeightRequest="40" CornerRadius="20" Clicked="OnColorClicked" />
+            <Button BackgroundColor="Green" WidthRequest="40" HeightRequest="40" CornerRadius="20" Clicked="OnColorClicked" />
+            <Button BackgroundColor="Orange" WidthRequest="40" HeightRequest="40" CornerRadius="20" Clicked="OnColorClicked" />
+            <Button BackgroundColor="Purple" WidthRequest="40" HeightRequest="40" CornerRadius="20" Clicked="OnColorClicked" />
+            <Button Text="Clear" Clicked="OnClearClicked" />
+            <Label x:Name="brushLabel" Text="Brush: 8px" VerticalOptions="Center" />
+        </HorizontalStackLayout>
+    </Grid>
+
+</ContentPage>
