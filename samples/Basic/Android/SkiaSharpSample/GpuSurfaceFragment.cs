@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Android.OS;
 using Android.Views;
 using AndroidX.Fragment.App;
