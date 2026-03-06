@@ -6,7 +6,7 @@ using Google.Android.Material.Navigation;
 
 namespace SkiaSharpSample
 {
-	[Activity(Label = "SkiaSharp", MainLauncher = true, Theme = "@style/Theme.AppCompat.Light.NoActionBar")]
+	[Activity(Label = "SkiaSharp", MainLauncher = true, Theme = "@style/Theme.SkiaSharpSample")]
 	public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener
 	{
 		private DrawerLayout drawerLayout;
@@ -18,7 +18,7 @@ namespace SkiaSharpSample
 
 			SetContentView(Resource.Layout.main);
 
-			var toolbar = FindViewById<AndroidX.AppCompat.Widget.Toolbar>(Resource.Id.toolbar);
+			var toolbar = FindViewById<Google.Android.Material.AppBar.MaterialToolbar>(Resource.Id.toolbar);
 			SetSupportActionBar(toolbar);
 
 			drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);

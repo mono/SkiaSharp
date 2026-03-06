@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Android.Graphics;
+using Android.Graphics.Drawables;
 using Android.OS;
 using Android.Views;
-using Android.Widget;
 using AndroidX.Fragment.App;
+using Google.Android.Material.Button;
 
 using SkiaSharp;
 using SkiaSharp.Views.Android;
@@ -13,131 +14,96 @@ namespace SkiaSharpSample
 {
 	public class DrawingFragment : Fragment
 	{
-		private static readonly (string Name, SKColor SkColor, Color ViewColor)[] ColorOptions = new[]
+		private static readonly (int ViewId, SKColor SkColor)[] ColorOptions = new[]
 		{
-			("Black", SKColors.Black, Color.Black),
-			("Red", new SKColor(0xE5, 0x39, 0x35), Color.Rgb(0xE5, 0x39, 0x35)),
-			("Blue", new SKColor(0x1E, 0x88, 0xE5), Color.Rgb(0x1E, 0x88, 0xE5)),
-			("Green", new SKColor(0x43, 0xA0, 0x47), Color.Rgb(0x43, 0xA0, 0x47)),
-			("Orange", new SKColor(0xFB, 0x8C, 0x00), Color.Rgb(0xFB, 0x8C, 0x00)),
-			("Purple", new SKColor(0x8E, 0x24, 0xAA), Color.Rgb(0x8E, 0x24, 0xAA)),
+			(Resource.Id.colorBlack, SKColors.Black),
+			(Resource.Id.colorRed, new SKColor(0xE5, 0x39, 0x35)),
+			(Resource.Id.colorBlue, new SKColor(0x1E, 0x88, 0xE5)),
+			(Resource.Id.colorGreen, new SKColor(0x43, 0xA0, 0x47)),
+			(Resource.Id.colorOrange, new SKColor(0xFB, 0x8C, 0x00)),
+			(Resource.Id.colorPurple, new SKColor(0x8E, 0x24, 0xAA)),
 		};
 
 		private SKCanvasView skiaView;
+		private View selectedSwatch;
+		private Android.Widget.SeekBar brushSlider;
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 		private SKPath currentPath;
 		private SKColor currentColor = SKColors.Black;
-		private float brushSize = 6f;
+
+		private float BrushSize => brushSlider?.Progress + 1 ?? 6f;
 
 		public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 		{
-			var root = new LinearLayout(Context)
-			{
-				Orientation = Orientation.Vertical,
-				LayoutParameters = new ViewGroup.LayoutParams(
-					ViewGroup.LayoutParams.MatchParent,
-					ViewGroup.LayoutParams.MatchParent),
-			};
+			var view = inflater.Inflate(Resource.Layout.fragment_drawing, container, false);
 
-			var inflated = inflater.Inflate(Resource.Layout.fragment_drawing, root, false);
-			skiaView = inflated.FindViewById<SKCanvasView>(Resource.Id.skiaView);
-			skiaView.LayoutParameters = new LinearLayout.LayoutParams(
-				ViewGroup.LayoutParams.MatchParent, 0, 1f);
+			skiaView = view.FindViewById<SKCanvasView>(Resource.Id.skiaView);
 			skiaView.PaintSurface += OnPaintSurface;
 			skiaView.Touch += OnTouch;
-			root.AddView(skiaView);
 
-			var toolbar = CreateToolbar();
-			root.AddView(toolbar);
-
-			return root;
-		}
-
-		private View CreateToolbar()
-		{
-			var scroll = new HorizontalScrollView(Context)
+			// Wire up color swatches
+			foreach (var (viewId, skColor) in ColorOptions)
 			{
-				LayoutParameters = new LinearLayout.LayoutParams(
-					ViewGroup.LayoutParams.MatchParent,
-					ViewGroup.LayoutParams.WrapContent),
-			};
-			scroll.SetBackgroundColor(Color.Rgb(245, 245, 245));
-			scroll.SetPadding(8, 8, 8, 8);
-
-			var row = new LinearLayout(Context)
-			{
-				Orientation = Orientation.Horizontal,
-				LayoutParameters = new ViewGroup.LayoutParams(
-					ViewGroup.LayoutParams.WrapContent,
-					ViewGroup.LayoutParams.WrapContent),
-			};
-
-			var dp8 = (int)(8 * Resources.DisplayMetrics.Density);
-			var btnHeight = (int)(40 * Resources.DisplayMetrics.Density);
-			var btnWidth = (int)(56 * Resources.DisplayMetrics.Density);
-
-			foreach (var (name, skColor, viewColor) in ColorOptions)
-			{
-				var btn = new Button(Context)
-				{
-					Text = "",
-					LayoutParameters = new LinearLayout.LayoutParams(btnWidth, btnHeight)
-					{
-						RightMargin = dp8 / 2,
-					},
-				};
-				btn.SetBackgroundColor(viewColor);
+				var swatch = view.FindViewById<View>(viewId);
 				var captured = skColor;
-				btn.Click += (s, e) => currentColor = captured;
-				row.AddView(btn);
+				swatch.Click += (s, e) =>
+				{
+					currentColor = captured;
+					SetSelectedSwatch(swatch);
+				};
 			}
 
-			var sizeSmall = CreateTextButton("S", () => brushSize = 3f);
-			var sizeMedium = CreateTextButton("M", () => brushSize = 6f);
-			var sizeLarge = CreateTextButton("L", () => brushSize = 12f);
-			row.AddView(sizeSmall);
-			row.AddView(sizeMedium);
-			row.AddView(sizeLarge);
+			// Select first swatch by default
+			selectedSwatch = view.FindViewById<View>(Resource.Id.colorBlack);
+			SetSelectedSwatch(selectedSwatch);
 
-			var clearBtn = CreateTextButton("Clear", () =>
+			// Brush size slider
+			brushSlider = view.FindViewById<Android.Widget.SeekBar>(Resource.Id.brushSlider);
+
+			// Clear button
+			var clearBtn = view.FindViewById<MaterialButton>(Resource.Id.btnClear);
+			clearBtn.Click += (s, e) =>
 			{
 				foreach (var (path, _, _) in strokes)
 					path.Dispose();
 				strokes.Clear();
 				currentPath?.Dispose();
 				currentPath = null;
-				skiaView.Invalidate();
-			});
-			row.AddView(clearBtn);
+				skiaView?.Invalidate();
+			};
 
-			scroll.AddView(row);
-			return scroll;
+			return view;
 		}
 
-		private Button CreateTextButton(string text, Action onClick)
+		private void SetSelectedSwatch(View swatch)
 		{
-			var dp8 = (int)(8 * Resources.DisplayMetrics.Density);
-			var btnHeight = (int)(40 * Resources.DisplayMetrics.Density);
+			// Remove border from previous selection
+			if (selectedSwatch != null)
+				selectedSwatch.Background = selectedSwatch.Background is LayerDrawable
+					? ((LayerDrawable)selectedSwatch.Background).GetDrawable(0)
+					: selectedSwatch.Background;
 
-			var btn = new Button(Context)
-			{
-				Text = text,
-				LayoutParameters = new LinearLayout.LayoutParams(
-					ViewGroup.LayoutParams.WrapContent, btnHeight)
-				{
-					RightMargin = dp8 / 2,
-				},
-			};
-			btn.SetBackgroundColor(Color.Rgb(120, 120, 120));
-			btn.SetTextColor(Color.White);
-			btn.Click += (s, e) => onClick();
-			return btn;
+			// Add selection ring
+			var bg = swatch.Background;
+			var ring = new GradientDrawable();
+			ring.SetShape(ShapeType.Rectangle);
+			ring.SetStroke(4, Color.White);
+			ring.SetCornerRadius(2);
+			var outer = new GradientDrawable();
+			outer.SetShape(ShapeType.Rectangle);
+			outer.SetStroke(3, Color.DarkGray);
+			outer.SetCornerRadius(2);
+			swatch.Background = new LayerDrawable(new Drawable[] { bg, ring, outer });
+			selectedSwatch = swatch;
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
 			var canvas = e.Surface.Canvas;
 			canvas.Clear(SKColors.White);
+
+			if (skiaView.Width <= 0 || skiaView.Height <= 0)
+				return;
 
 			using var paint = new SKPaint
 			{
@@ -161,7 +127,7 @@ namespace SkiaSharpSample
 			if (currentPath != null)
 			{
 				paint.Color = currentColor;
-				paint.StrokeWidth = brushSize;
+				paint.StrokeWidth = BrushSize;
 				canvas.DrawPath(currentPath, paint);
 			}
 		}
@@ -186,7 +152,7 @@ namespace SkiaSharpSample
 				case MotionEventActions.Cancel:
 					if (currentPath != null)
 					{
-						strokes.Add((currentPath, currentColor, brushSize));
+						strokes.Add((currentPath, currentColor, BrushSize));
 						currentPath = null;
 						skiaView.Invalidate();
 					}
