@@ -96,12 +96,16 @@ half4 main(float2 fragCoord) {
 			var height = e.BackendRenderTarget.Height;
 
 			if (effect == null)
-				effect = SKRuntimeEffect.BuildShader(SkslSource).Effect;
-
-			if (effect == null)
 			{
-				canvas.Clear(SKColors.Magenta);
-				return;
+				try
+				{
+					effect = SKRuntimeEffect.BuildShader(SkslSource).Effect;
+				}
+				catch (Exception)
+				{
+					canvas.Clear(SKColors.Magenta);
+					return;
+				}
 			}
 
 			var uniforms = new SKRuntimeEffectUniforms(effect)

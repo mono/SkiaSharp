@@ -45,6 +45,7 @@ namespace SkiaSharpSample
 			};
 
 			ShowFragment(fragment);
+			item.SetChecked(true);
 			drawerLayout.CloseDrawers();
 			return true;
 		}
