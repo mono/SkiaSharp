@@ -106,9 +106,9 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions. Stale native binaries look like version differences but are caching bugs.
 5. **Honesty over completion.** `not-reproduced` and `needs-platform` are VALID SUCCESS conclusions. Reporting inability to reproduce is correct behavior, NOT failure. NEVER invent output you did not observe from an actual command execution.
 6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/skiasharp/repro/` only. If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
-7. **Run the reporter's code first.** Run what they provide before creating your own repro. Run BOTH sides of any comparison.
-8. **Reproduce, don't hypothesize.** Let data speak, not triage theories. If you're building something the reporter didn't describe, you're experimenting.
-9. **Match the reporter's conditions.** Same rendering mode, same data, same API, same platform. Change as little as possible.
+7. **Run the reporter's code first.** Run what they provide before creating your own repro. Run BOTH sides of any comparison — measure numbers yourself, never use the reporter's claimed numbers.
+8. **Reproduce, don't hypothesize.** Let data speak, not triage theories. If you're building something the reporter didn't describe, you're experimenting — stop and go back to their code.
+9. **Match the reporter's conditions.** Same rendering mode, same data, same API, same platform. Do NOT create a simpler test with a different rendering mode to "isolate variables."
 
 **Intermittent bugs:** If results are inconsistent, run 3–5 times. Reproduced ≥1 time → `reproduced` with note "Intermittent: X/Y runs". Never reproduced after 5 → `not-reproduced`.
 

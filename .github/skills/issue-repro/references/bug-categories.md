@@ -357,9 +357,14 @@ Issue: "SKPaint.FilterQuality docs say it affects image scaling but it's depreca
 
 ### Strategy
 
-SKILL.md Rules 9–11 apply with particular force here. The most common performance repro failure
+SKILL.md Rules 7–9 apply with particular force here. The most common performance repro failure
 is violating Rule 9 (mismatched conditions) — e.g., comparing CPU rendering to GPU rendering, or
 comparing a console app to a GPU view.
+
+> ⛔ **NEVER create a CPU raster console benchmark as a substitute for a GPU rendering benchmark.**
+> If you find yourself creating `SKSurface.Create` with a raster backend to test a GPU performance
+> issue, you are violating Rule 9. CPU raster and GPU views use entirely different Skia code paths.
+> The numbers are not comparable and prove nothing about the reported GPU issue.
 
 > ⚠️ **Console apps are NOT sufficient for view rendering performance bugs.** Console apps bypass
 > the entire view rendering pipeline (SKGLView, SKMetalView, SKCanvasView). Use the correct
@@ -369,17 +374,25 @@ Follow these steps IN ORDER:
 
 1. **Run the reporter's baseline (the "fast" side).** (Rule 7) If the reporter provides a native
    C++ benchmark or alternative implementation, BUILD AND RUN IT on your machine. Do not use the
-   reporter's claimed numbers. If you cannot build the baseline (missing deps), record as a
-   blocker — do not substitute claimed numbers.
+   reporter's claimed numbers — you must measure them yourself. If the reporter provides build
+   instructions (GN, CMake, Ninja, etc.), follow them. If you cannot build the baseline after
+   genuine effort (missing toolchain, missing deps), record it as a blocker in the JSON notes —
+   do NOT substitute the reporter's claimed numbers and do NOT create an alternative benchmark.
 
 2. **Run the reporter's test (the "slow" side).** (Rule 7) Build and run the reporter's
    SkiaSharp benchmark with their exact version, platform, and configuration. The rendering
    mode, backend, and scene complexity MUST match the baseline (Rule 9).
 
+> 🛑 **STOP after Steps 1-2.** You now have first-party data for both sides of the comparison.
+> If you could not run Step 1 (baseline), note the gap in your JSON. Do NOT proceed to create
+> substitute benchmarks that use a different rendering mode — proceed to Step 3 instead.
+
 3. **Create a minimal SkiaSharp repro** that removes framework variables. If the reporter uses
    a framework (Avalonia, MAUI, WPF), create a raw SkiaSharp app using the platform's GPU view
    directly (e.g., SKGLView on macOS — see platform-macos.md). Use the same rendering scene.
    This isolates whether the gap is in SkiaSharp or the framework integration.
+   **🛑 The minimal repro MUST use a GPU view (SKGLView, SKMetalView) for GPU performance bugs.
+   Do NOT create a CPU raster console app — it tests a completely different code path.**
 
 4. **If you must change rendering mode, change BOTH sides.** (Rule 9) If you cannot run GPU,
    force both the baseline AND the test to CPU raster. Compare CPU-to-CPU. State what you
