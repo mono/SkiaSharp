@@ -7,6 +7,7 @@ namespace SkiaSharpSample;
 
 #pragma warning disable CA1422 // SKGLView uses deprecated GLKit
 
+[Register("GpuGLViewController")]
 public class GpuGLViewController : UIViewController
 {
 	private const string ShaderSource = @"
@@ -67,7 +68,9 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-	private SKGLView? skiaView;
+	[Outlet]
+	SKGLView? skiaView { get; set; }
+
 	private CADisplayLink? displayLink;
 	private SKRuntimeShaderBuilder? shaderBuilder;
 	private long startTime;
@@ -82,14 +85,16 @@ half4 main(float2 fragCoord) {
 	private int frameCount;
 	private double lastFpsUpdate;
 
-	public override void LoadView()
+	public GpuGLViewController(IntPtr handle) : base(handle) { }
+
+	public override void ViewDidLoad()
 	{
-		var container = new UIView { BackgroundColor = UIColor.Black };
+		base.ViewDidLoad();
+		Title = "GPU (OpenGL)";
 
-		skiaView = new SKGLView { TranslatesAutoresizingMaskIntoConstraints = false };
-		skiaView.PaintSurface += OnPaintSurface;
-		container.AddSubview(skiaView);
+		skiaView!.PaintSurface += OnPaintSurface;
 
+		// FPS label added programmatically on top of the storyboard layout
 		fpsLabel = new UILabel
 		{
 			TranslatesAutoresizingMaskIntoConstraints = false,
@@ -98,21 +103,13 @@ half4 main(float2 fragCoord) {
 			Font = UIFont.MonospacedSystemFontOfSize(14, UIFontWeight.Regular),
 			BackgroundColor = UIColor.FromWhiteAlpha(0, 0.5f),
 		};
-		container.AddSubview(fpsLabel);
+		View!.AddSubview(fpsLabel);
 
 		NSLayoutConstraint.ActivateConstraints(new[]
 		{
-			skiaView.LeadingAnchor.ConstraintEqualTo(container.LeadingAnchor),
-			skiaView.TrailingAnchor.ConstraintEqualTo(container.TrailingAnchor),
-			skiaView.TopAnchor.ConstraintEqualTo(container.TopAnchor),
-			skiaView.BottomAnchor.ConstraintEqualTo(container.BottomAnchor),
-
-			fpsLabel.TopAnchor.ConstraintEqualTo(container.SafeAreaLayoutGuide.TopAnchor, 8),
-			fpsLabel.TrailingAnchor.ConstraintEqualTo(container.SafeAreaLayoutGuide.TrailingAnchor, -8),
+			fpsLabel.TopAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TopAnchor, 8),
+			fpsLabel.TrailingAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TrailingAnchor, -8),
 		});
-
-		View = container;
-		Title = "GPU (OpenGL)";
 	}
 
 	public override void ViewDidAppear(bool animated)

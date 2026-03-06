@@ -3,6 +3,7 @@ using SkiaSharp.Views.iOS;
 
 namespace SkiaSharpSample;
 
+[Register("GpuMetalViewController")]
 public class GpuMetalViewController : UIViewController
 {
 	private const string ShaderSource = @"
@@ -63,7 +64,9 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-	private SKMetalView? skiaView;
+	[Outlet]
+	SKMetalView? skiaView { get; set; }
+
 	private SKRuntimeShaderBuilder? shaderBuilder;
 	private long startTime;
 
@@ -77,16 +80,18 @@ half4 main(float2 fragCoord) {
 	private int frameCount;
 	private double lastFpsUpdate;
 
-	public override void LoadView()
-	{
-		var container = new UIView { BackgroundColor = UIColor.Black };
+	public GpuMetalViewController(IntPtr handle) : base(handle) { }
 
-		skiaView = new SKMetalView { TranslatesAutoresizingMaskIntoConstraints = false };
-		skiaView.PaintSurface += OnPaintSurface;
+	public override void ViewDidLoad()
+	{
+		base.ViewDidLoad();
+		Title = "GPU (Metal)";
+
+		skiaView!.PaintSurface += OnPaintSurface;
 		skiaView.Paused = true;
 		skiaView.EnableSetNeedsDisplay = false;
-		container.AddSubview(skiaView);
 
+		// FPS label added programmatically on top of the storyboard layout
 		fpsLabel = new UILabel
 		{
 			TranslatesAutoresizingMaskIntoConstraints = false,
@@ -95,21 +100,13 @@ half4 main(float2 fragCoord) {
 			Font = UIFont.MonospacedSystemFontOfSize(14, UIFontWeight.Regular),
 			BackgroundColor = UIColor.FromWhiteAlpha(0, 0.5f),
 		};
-		container.AddSubview(fpsLabel);
+		View!.AddSubview(fpsLabel);
 
 		NSLayoutConstraint.ActivateConstraints(new[]
 		{
-			skiaView.LeadingAnchor.ConstraintEqualTo(container.LeadingAnchor),
-			skiaView.TrailingAnchor.ConstraintEqualTo(container.TrailingAnchor),
-			skiaView.TopAnchor.ConstraintEqualTo(container.TopAnchor),
-			skiaView.BottomAnchor.ConstraintEqualTo(container.BottomAnchor),
-
-			fpsLabel.TopAnchor.ConstraintEqualTo(container.SafeAreaLayoutGuide.TopAnchor, 8),
-			fpsLabel.TrailingAnchor.ConstraintEqualTo(container.SafeAreaLayoutGuide.TrailingAnchor, -8),
+			fpsLabel.TopAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TopAnchor, 8),
+			fpsLabel.TrailingAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TrailingAnchor, -8),
 		});
-
-		View = container;
-		Title = "GPU (Metal)";
 	}
 
 	public override void ViewDidAppear(bool animated)

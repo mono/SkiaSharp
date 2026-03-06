@@ -3,14 +3,19 @@ using SkiaSharp.Views.iOS;
 
 namespace SkiaSharpSample;
 
+[Register("CpuViewController")]
 public class CpuViewController : UIViewController
 {
-	public override void LoadView()
+	[Outlet]
+	SKCanvasView skiaView { get; set; } = null!;
+
+	public CpuViewController(IntPtr handle) : base(handle) { }
+
+	public override void ViewDidLoad()
 	{
-		var skiaView = new SKCanvasView();
-		skiaView.PaintSurface += OnPaintSurface;
-		View = skiaView;
+		base.ViewDidLoad();
 		Title = "CPU Canvas";
+		skiaView.PaintSurface += OnPaintSurface;
 	}
 
 	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)

@@ -1,14 +1,17 @@
 ﻿namespace SkiaSharpSample;
 
+[Register("SidebarViewController")]
 public class SidebarViewController : UITableViewController
 {
-	static readonly (string Id, string Title)[] pages =
+	static readonly (string StoryboardId, string Title)[] pages =
 	{
-		("cpu", "CPU Canvas"),
-		("gpu-gl", "GPU (OpenGL)"),
-		("gpu-metal", "GPU (Metal)"),
-		("drawing", "Drawing"),
+		("CpuVC", "CPU Canvas"),
+		("GpuGLVC", "GPU (OpenGL)"),
+		("GpuMetalVC", "GPU (Metal)"),
+		("DrawingVC", "Drawing"),
 	};
+
+	public SidebarViewController(IntPtr handle) : base(handle) { }
 
 	public override void ViewDidLoad()
 	{
@@ -31,20 +34,8 @@ public class SidebarViewController : UITableViewController
 	{
 		tableView.DeselectRow(indexPath, true);
 
-		UIViewController vc = pages[indexPath.Row].Id switch
-		{
-			"cpu" => new CpuViewController(),
-			"gpu-gl" => new GpuGLViewController(),
-			"gpu-metal" => new GpuMetalViewController(),
-			"drawing" => new DrawingViewController(),
-			_ => new CpuViewController(),
-		};
-
-		if (SplitViewController is UISplitViewController splitVC)
-		{
-			var navVC = new UINavigationController(vc);
-			splitVC.SetViewController(navVC, UISplitViewControllerColumn.Secondary);
-			splitVC.Show(UISplitViewControllerColumn.Secondary);
-		}
+		var vc = Storyboard!.InstantiateViewController(pages[indexPath.Row].StoryboardId);
+		var navVC = new UINavigationController(vc);
+		ShowDetailViewController(navVC, this);
 	}
 }
