@@ -8,14 +8,6 @@ public sealed partial class CpuPage : Page
 	public CpuPage()
 	{
 		InitializeComponent();
-
-		// TODO: workaround for SKXamlCanvas not loading from XAML
-		if (Content is not SKXamlCanvas)
-		{
-			var skiaCanvas = new SKXamlCanvas();
-			skiaCanvas.PaintSurface += OnPaintSurface;
-			Content = skiaCanvas;
-		}
 	}
 
 	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
