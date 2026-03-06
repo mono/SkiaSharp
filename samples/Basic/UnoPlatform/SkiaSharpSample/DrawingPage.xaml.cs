@@ -25,22 +25,6 @@ public sealed partial class DrawingPage : Page
 	public DrawingPage()
 	{
 		InitializeComponent();
-
-		// TODO: workaround for SKXamlCanvas not loading from XAML
-		if (skiaView == null)
-		{
-			skiaView = new SKXamlCanvas();
-			skiaView.PaintSurface += OnPaintSurface;
-			skiaView.PointerPressed += OnPointerPressed;
-			skiaView.PointerMoved += OnPointerMoved;
-			skiaView.PointerReleased += OnPointerReleased;
-			skiaView.PointerWheelChanged += OnPointerWheelChanged;
-
-			if (Content is Grid grid)
-				grid.Children.Insert(0, skiaView);
-			else
-				Content = skiaView;
-		}
 	}
 
 	private void OnColorClicked(object? sender, RoutedEventArgs e)

@@ -75,21 +75,6 @@ half4 main(float2 fragCoord) {
 	{
 		InitializeComponent();
 
-		// TODO: workaround for SKSwapChainPanel not loading from XAML
-		if (skiaView == null)
-		{
-			skiaView = new SKSwapChainPanel { EnableRenderLoop = true };
-			skiaView.PaintSurface += OnPaintSurface;
-			skiaView.PointerPressed += OnPointerPressed;
-			skiaView.PointerMoved += OnPointerMoved;
-			skiaView.PointerReleased += OnPointerReleased;
-
-			if (Content is Grid grid)
-				grid.Children.Insert(0, skiaView);
-			else
-				Content = skiaView;
-		}
-
 		stopwatch.Start();
 	}
 
