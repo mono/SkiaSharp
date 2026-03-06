@@ -11,12 +11,17 @@ namespace SkiaSharpSample;
 public class CpuFragment : Fragment
 {
 	private SKCanvasView skiaView;
+	private SKTypeface notoSans;
 
 	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		var view = inflater.Inflate(Resource.Layout.fragment_cpu, container, false);
 		skiaView = view.FindViewById<SKCanvasView>(Resource.Id.skiaView);
 		skiaView.PaintSurface += OnPaintSurface;
+
+		using var stream = Context.Assets.Open("Fonts/NotoSans-Regular.ttf");
+		notoSans = SKTypeface.FromStream(stream);
+
 		return view;
 	}
 
@@ -54,7 +59,7 @@ public class CpuFragment : Fragment
 		}
 
 		using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-		using var font = new SKFont { Size = 48 };
+		using var font = new SKFont(notoSans, 48);
 		canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 	}
 
@@ -65,6 +70,8 @@ public class CpuFragment : Fragment
 			skiaView.PaintSurface -= OnPaintSurface;
 			skiaView = null;
 		}
+		notoSans?.Dispose();
+		notoSans = null;
 		base.OnDestroyView();
 	}
 }
