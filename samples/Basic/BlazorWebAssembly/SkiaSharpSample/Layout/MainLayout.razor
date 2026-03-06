@@ -1,22 +1,13 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="app-layout">
-    <header class="app-header">
-        <span class="app-title">SkiaSharp</span>
-        <nav class="app-nav">
-            <NavLink class="nav-tab" href="" Match="NavLinkMatch.All">
-                <span class="nav-icon">⊡</span> CPU
-            </NavLink>
-            <NavLink class="nav-tab" href="gpu">
-                <span class="nav-icon">◈</span> GPU
-            </NavLink>
-            <NavLink class="nav-tab" href="drawing">
-                <span class="nav-icon">✎</span> Drawing
-            </NavLink>
-        </nav>
-        <a class="about-link" href="https://github.com/mono/SkiaSharp" target="_blank">GitHub</a>
-    </header>
-    <main class="app-content">
-        @Body
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <article class="content">
+            @Body
+        </article>
     </main>
 </div>
