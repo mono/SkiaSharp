@@ -1,24 +1,21 @@
 @page "/"
 
+@implements IAsyncDisposable
+@inject HttpClient Http
+
 @* Home Page
    Demonstrates basic SKCanvasView usage with gradients, shapes, and text.
    Shows SKShader.CreateRadialGradient, DrawCircle, DrawText, and SKFont. *@
 
-<h1>SkiaSharp</h1>
-
-<p>
-    SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on 
-    Google's Skia Graphics Library, providing comprehensive 2D rendering 
-    across mobile, server, and desktop.
-</p>
-
-<div class="canvas-container border rounded p-2">
+<div class="canvas-container">
 
     <SKCanvasView OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true" />
 
 </div>
 
 @code {
+
+    SKTypeface? notoSans;
 
     // The paint that is reused for drawing circles.
     readonly SKPaint circlePaint = new()
@@ -52,11 +49,18 @@
         Style = SKPaintStyle.Fill
     };
 
-    // The font for drawing the centered text.
-    readonly SKFont textFont = new()
+    protected override async Task OnInitializedAsync()
     {
-        Size = 48
-    };
+        var fontBytes = await Http.GetByteArrayAsync("fonts/NotoSans-Regular.ttf");
+        using var stream = new MemoryStream(fontBytes);
+        notoSans = SKTypeface.FromStream(stream);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        notoSans?.Dispose();
+        return ValueTask.CompletedTask;
+    }
 
     void OnPaintSurface(SKPaintSurfaceEventArgs e)
     {
@@ -94,13 +98,14 @@
                 circlePaint);
         }
 
-        // Draw centered "SkiaSharp" text
+        // Draw centered "SkiaSharp" text with Noto Sans font
+        using var font = new SKFont(notoSans, width * 0.12f);
         canvas.DrawText(
             "SkiaSharp",
             center.X,
-            center.Y + textFont.Size / 3f,
+            center.Y + font.Size / 3f,
             SKTextAlign.Center,
-            textFont,
+            font,
             textPaint);
     }
 }

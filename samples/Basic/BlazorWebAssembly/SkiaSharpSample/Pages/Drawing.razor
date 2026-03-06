@@ -6,21 +6,13 @@
    Shows multi-stroke drawing with color picker and on-demand rendering
    via manual Invalidate() (no render loop). *@
 
-<h1>Drawing Canvas</h1>
-
-<p>
-    Draw with touch or mouse. Use the scroll wheel to change brush size.
-</p>
-
-<div class="canvas-container border rounded p-2" @onwheel="OnWheel" @onwheel:preventDefault>
+<div class="canvas-container" @onwheel="OnWheel" @onwheel:preventDefault>
 
     <SKCanvasView @ref="skiaView"
                   OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
                   @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp" />
 
-    <div class="overlay-info">
-        Brush: @(brushSize.ToString("F2"))px
-    </div>
+    <button class="clear-btn" @onclick="ClearCanvas">Clear</button>
 
     <div class="overlay-toolbar">
         @foreach (var (name, color) in colors)
@@ -29,7 +21,9 @@
                  style="background:@name"
                  @onclick="() => SetColor(color)" />
         }
-        <button class="btn btn-outline-light btn-sm" @onclick="ClearCanvas">Clear</button>
+        <div class="toolbar-divider"></div>
+        <input type="range" class="brush-slider" min="1" max="50" step="0.5"
+               value="@brushSize" @oninput="OnSliderInput" />
     </div>
 
 </div>
@@ -131,6 +125,15 @@
         brushSize -= (float)(e.DeltaY / 100.0);
         brushSize = Math.Clamp(brushSize, 1f, 50f);
         StateHasChanged();
+    }
+
+    void OnSliderInput(ChangeEventArgs e)
+    {
+        if (float.TryParse(e.Value?.ToString(), out var val))
+        {
+            brushSize = val;
+            StateHasChanged();
+        }
     }
 
     void SetColor(SKColor color)
