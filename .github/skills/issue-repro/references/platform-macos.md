@@ -22,6 +22,10 @@ Also use when triage JSON has `classification.platforms` containing `os/macOS` o
 
 ## Create Project
 
+> **⚠️ ALWAYS use `dotnet new macos`.** Do NOT create .csproj and .cs files manually — the
+> template generates essential Info.plist, entitlements, and app bundle structure. Without
+> these, the app may build but render a blank screen.
+
 ```bash
 mkdir -p /tmp/skiasharp/repro/{number} && cd /tmp/skiasharp/repro/{number}
 dotnet new macos -n Repro --framework net10.0-macos
@@ -124,7 +128,10 @@ Common build errors:
 ./bin/Release/net10.0-macos/osx-arm64/Repro.app/Contents/MacOS/Repro
 ```
 
-**Visual verification:** If the bug is visual, take a screenshot to verify rendering. Log key metrics to stdout.
+**🛑 Visual validation is MANDATORY for rendering/GPU bugs.** Before accepting ANY measurements:
+1. Take a screenshot of the running app to confirm content is rendering
+2. If the screen is blank or only shows the background color, your app is broken — fix it before measuring
+3. FPS numbers from a non-rendering app are worthless (120fps on a blank screen ≠ fast rendering)
 
 **For GPU bugs:** Test both Metal and GL backends. If one works and the other doesn't, that's a critical signal — note the backend in the conclusion.
 

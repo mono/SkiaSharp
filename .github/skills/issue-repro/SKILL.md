@@ -191,8 +191,12 @@ This is the core deliverable. The reporter's code is evidence, but you can't tru
 have added framework overhead, debug settings, or other variables. Create your own minimal app
 that reproduces the issue with the least possible code.
 
-**Use the platform file from Phase 2.4** to create the project. The platform determines the
-app type:
+**Use the platform file from Phase 2.4** to create the project — follow its **Create Project**
+section (e.g., `dotnet new macos`, `dotnet new console`). Do NOT create project files manually;
+templates generate essential files (Info.plist, entitlements, bundle structure) that are required
+for the app to render and run correctly.
+
+The platform determines the app type:
 - Core API bug (SKBitmap, SKCanvas, SKPath) → console app ([platform-console.md](references/platform-console.md))
 - GPU rendering bug → GPU app matching reporter's backend: SKGLView for OpenGL, SKMetalView for Metal ([platform-macos.md](references/platform-macos.md))
 - WASM bug → Blazor app ([platform-wasm-blazor.md](references/platform-wasm-blazor.md))
@@ -201,6 +205,16 @@ app type:
 If the reporter uses a framework (Avalonia, MAUI, WPF) but the bug might be in core SkiaSharp,
 strip the framework. Your repro should use SkiaSharp directly — the platform's native view, not
 a framework wrapper. This isolates whether the bug is in SkiaSharp or the framework integration.
+
+> **🛑 Validate your repro produces visible output.** Before accepting ANY measurements or
+> concluding the issue reproduced/didn't reproduce, confirm the app actually works:
+> - **Rendering bugs:** Take a screenshot or save a frame to PNG. If the screen is blank,
+>   your repro is broken — fix it before measuring anything.
+> - **Performance bugs:** Confirm content is visually rendering before accepting FPS numbers.
+>   120fps on a blank screen means your drawing code isn't executing, not that it's fast.
+> - **Crash/exception bugs:** The crash itself is the validation.
+> - **API bugs:** Check the output value/file/behavior matches what you expect for the
+>   non-buggy case first.
 
 > **Performance bugs:** Read [category-performance.md](references/category-performance.md) for
 > additional guidance — instrument with per-phase timing, disable VSync, and see the platform

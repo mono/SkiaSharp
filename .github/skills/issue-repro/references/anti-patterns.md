@@ -77,7 +77,15 @@ Never use echo/print statements to simulate command output, claim "reproduced" f
 analysis without executing the code, or report environment details you didn't actually check. If
 you cannot run it, report `needs-platform`.
 
-### 10. Mismarking step results
+### 10. Accepting measurements without visual validation
+
+Before accepting ANY FPS, timing, or rendering measurements, confirm the app is actually rendering
+content. Take a screenshot, save a frame to PNG, or check pixel values. High FPS on a blank screen
+means your drawing code isn't executing — not that SkiaSharp is fast. This commonly happens when
+project files are created manually instead of using `dotnet new` templates (missing Info.plist,
+bundle structure, etc.).
+
+### 11. Mismarking step results
 
 A step's `result` records the **technical outcome**, not whether it matched your expectation.
 A build that fails is `result: "failure"` even if that failure confirms the bug.
@@ -93,7 +101,7 @@ A build that fails is `result: "failure"` even if that failure confirms the bug.
 
 ## Conclusions & Output
 
-### 11. Wrong conclusion type
+### 12. Wrong conclusion type
 
 Use `reproduced`/`not-reproduced` for **bugs** and `confirmed`/`not-confirmed` for
 **enhancements and feature requests**. "Reproduced" means "reported misbehavior was observed" —

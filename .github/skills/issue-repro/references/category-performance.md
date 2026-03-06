@@ -50,6 +50,11 @@ genuine blocker when the toolchain is truly unavailable, not when something is s
 
 ### In Phase 3C (your minimal repro)
 
+> **🛑 Validate rendering BEFORE measuring.** Take a screenshot or log pixel values to confirm
+> your app is actually drawing content. FPS on a blank screen is meaningless — it means your
+> drawing code isn't executing, not that SkiaSharp is fast. This commonly happens when macOS
+> apps are created without `dotnet new macos` (missing Info.plist/bundle structure).
+
 Your observable is **timing or FPS** instead of crash or bad image. Add per-phase instrumentation
 to your standalone repro with `System.Diagnostics.Stopwatch`:
 
