@@ -16,7 +16,6 @@ namespace SkiaSharpSample
 			var win = new MainWindow();
 			app.AddWindow(win);
 
-			win.Show();
 			Application.Run();
 		}
 	}
