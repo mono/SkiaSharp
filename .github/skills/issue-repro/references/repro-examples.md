@@ -5,52 +5,50 @@ Each example conforms to [`repro-schema.json`](repro-schema.json).
 
 ## Contents
 1. [Example 1: C# API Bug — `reproduced`](#example-1-c-api-bug--reproduced)
-2. [Example 2: WASM/Blazor Bug — `reproduced` with cross-platform verification](#example-2-wasmblazor-bug--reproduced-with-cross-platform-verification)
+2. [Example 2: Platform-Specific Bug — `reproduced` with cross-platform verification](#example-2-platform-specific-bug--reproduced-with-cross-platform-verification)
 3. [Example 3: Enhancement — `confirmed` (feature missing)](#example-3-enhancement--confirmed-feature-missing)
 
 ---
 
 ## Example 1: C# API Bug — `reproduced`
 
-**Scenario:** `SKMatrix.MapRect` normalizes the output rect, sorting coordinates so that
-`Left < Right` and `Top < Bottom`. This discards negative scaling information — a matrix
-that flips an axis produces a rect identical to one that doesn't.
-
-Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
+**Scenario:** `SKPath.Op` returns an empty path instead of the correct union when one of the
+input paths contains a zero-length line segment. The operation silently succeeds but produces
+an incorrect result.
 
 ```json
 {
   "meta": {
     "schemaVersion": "1.0",
-    "number": 2997,
+    "number": 1501,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-06-20T14:32:00Z"
+    "analyzedAt": "2026-01-20T14:32:00Z"
   },
   "conclusion": "reproduced",
-  "notes": "Confirmed: SKMatrix.MapRect normalizes the output rect by sorting its coordinates. When a matrix contains a negative X-scale (e.g. ScaleX = -1), the mapped rect has Left/Right swapped back to ascending order, losing the sign of the scale. Reproduced on both 2.88.9 (reporter's version) and latest 3.116.1. The bug persists across all tested versions.",
-  "reproductionTime": "~10 minutes",
+  "notes": "Confirmed: SKPath.Op with SKPathOp.Union produces an empty path when one input contains a degenerate line segment (zero-length MoveTo+LineTo). Reproduced on both 2.88.9 and 3.118.0. The bug persists across all tested versions.",
+  "reproductionTime": "~8 minutes",
   "inputs": {
-    "triageFile": "ai-triage/2997.json"
+    "triageFile": "ai-triage/1501.json"
   },
   "versionResults": [
     {
       "version": "2.88.9",
       "source": "nuget",
       "result": "reproduced",
-      "platform": "host-macos-arm64",
+      "platform": "host-windows-x64",
       "notes": "Reporter's version. Bug confirmed."
     },
     {
-      "version": "3.116.1",
+      "version": "3.118.0",
       "source": "nuget",
       "result": "reproduced",
-      "platform": "host-macos-arm64",
+      "platform": "host-windows-x64",
       "notes": "Latest stable. Bug still present."
     }
   ],
   "reproProject": {
     "type": "console",
-    "tfm": "net8.0",
+    "tfm": "net9.0",
     "packages": [
       { "name": "SkiaSharp", "version": "2.88.9" }
     ]
@@ -58,22 +56,22 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create a standalone console project with the reporter's SkiaSharp version (2.88.9).",
+      "description": "Create a standalone console project with the reporter's SkiaSharp version.",
       "layer": "setup",
-      "command": "dotnet new console -n Repro2997 && cd Repro2997 && dotnet add package SkiaSharp --version 2.88.9",
-      "output": "The template \"Console App\" was created successfully.\n  Determining projects to restore...\n  Restored Repro2997.csproj.",
+      "command": "dotnet new console -n ReproPathOp && cd ReproPathOp && dotnet add package SkiaSharp --version 2.88.9",
+      "output": "The template \"Console App\" was created successfully.\n  Determining projects to restore...\n  Restored ReproPathOp.csproj.",
       "exitCode": 0,
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Write a program that creates an SKMatrix with negative X-scale (-2, 1), maps SKRect(0, 0, 1, 1), and prints the resulting rect. If the bug exists, the output rect will be normalized (Left=-2, Right=0) instead of preserving the flip (Left=0, Right=-2).",
+      "description": "Write a program that creates two paths (one with a degenerate segment), performs SKPath.Op union, and checks the result bounds.",
       "layer": "csharp",
       "filesCreated": [
         {
           "filename": "Program.cs",
-          "description": "Console app that creates SKMatrix.CreateScale(-2, 1), calls MapRect on unit rect, prints Left/Top/Right/Bottom values.",
-          "content": "using SkiaSharp;\n\nvar matrix = SKMatrix.CreateScale(-2, 1);\nvar source = new SKRect(0, 0, 1, 1);\nvar mapped = matrix.MapRect(source);\n\nConsole.WriteLine($\"Matrix: ScaleX={matrix.ScaleX}, ScaleY={matrix.ScaleY}\");\nConsole.WriteLine($\"Input:  SKRect({source.Left}, {source.Top}, {source.Right}, {source.Bottom})\");\nConsole.WriteLine($\"Output: SKRect({mapped.Left}, {mapped.Top}, {mapped.Right}, {mapped.Bottom})\");\nConsole.WriteLine($\"Expected Left=0, Right=-2 (preserve flip)\");\nConsole.WriteLine(mapped.Left == 0 && mapped.Right == -2 ? \"PASS\" : \"BUG: MapRect normalized the rect\");"
+          "description": "Console app that creates two SKPaths, one with a zero-length LineTo, performs Op(Union), and prints result bounds.",
+          "content": "using SkiaSharp;\n\nvar path1 = new SKPath();\npath1.AddRect(SKRect.Create(10, 10, 100, 100));\n\nvar path2 = new SKPath();\npath2.MoveTo(50, 50);\npath2.LineTo(50, 50); // degenerate zero-length segment\npath2.AddRect(SKRect.Create(50, 50, 100, 100));\n\nvar result = path1.Op(path2, SKPathOp.Union);\nConsole.WriteLine($\"Result bounds: {result.Bounds}\");\nConsole.WriteLine($\"Result isEmpty: {result.IsEmpty}\");\nConsole.WriteLine(result.IsEmpty ? \"BUG: Union produced empty path\" : \"PASS\");"
         }
       ],
       "exitCode": 0,
@@ -81,31 +79,31 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
     },
     {
       "stepNumber": 3,
-      "description": "Run the reproduction. Expected Left=0 and Right=-2 but got Left=-2 and Right=0, confirming the normalization bug.",
+      "description": "Run the reproduction. Expected a non-empty union but got an empty path.",
       "layer": "csharp",
-      "command": "dotnet run --project Repro2997",
-      "output": "Matrix: ScaleX=-2, ScaleY=1\nInput:  SKRect(0, 0, 1, 1)\nOutput: SKRect(-2, 0, 0, 1)\nExpected Left=0, Right=-2 (preserve flip) but got Left=-2, Right=0 (normalized)\nBUG: MapRect returns sorted rect, losing negative scale orientation",
+      "command": "dotnet run --project ReproPathOp",
+      "output": "Result bounds: {0, 0, 0, 0}\nResult isEmpty: True\nBUG: Union produced empty path",
       "exitCode": 1,
       "result": "failure"
     },
     {
       "stepNumber": 4,
-      "description": "Create a fresh project with latest stable (3.116.1) and run to check if fixed.",
+      "description": "Test with latest stable (3.118.0) to check if already fixed.",
       "layer": "setup",
-      "command": "cd .. && dotnet new console -n Repro2997-latest && cd Repro2997-latest && dotnet add package SkiaSharp --version 3.116.1 && cp ../Repro2997/Program.cs . && dotnet run",
-      "output": "Same result on 3.116.1 — MapRect still normalizes output rect.",
+      "command": "cd .. && dotnet new console -n ReproPathOp-latest && cd ReproPathOp-latest && dotnet add package SkiaSharp --version 3.118.0 && cp ../ReproPathOp/Program.cs . && dotnet run",
+      "output": "Same result on 3.118.0 — Op(Union) still produces empty path with degenerate segment.",
       "exitCode": 1,
       "result": "failure"
     }
   ],
   "errorMessages": {
-    "primaryError": "MapRect normalizes output rect, losing negative scale orientation"
+    "primaryError": "SKPath.Op(Union) produces empty path when input contains degenerate line segment"
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.85,
-      "reason": "Reproduced on both the reporter's version and latest stable; MapRect returns a normalized rect that loses flip orientation (Left/Right ordering)."
+      "reason": "Reproduced on both the reporter's version and latest stable; Op(Union) incorrectly produces empty path for valid input."
     },
     "actions": [
       {
@@ -113,21 +111,21 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
         "description": "Post reproduction findings and version matrix",
         "risk": "high",
         "confidence": 0.85,
-        "comment": "Reproduced on 2.88.9 and 3.116.1 with a minimal console app. With `SKMatrix.CreateScale(-2, 1)` mapping `SKRect(0,0,1,1)`, the mapped rect is normalized (Left=-2, Right=0) instead of preserving the flip (Left=0, Right=-2)."
+        "comment": "Reproduced on 2.88.9 and 3.118.0 with a minimal console app. When one input path contains a zero-length LineTo segment, Op(Union) returns an empty path instead of the correct union."
       }
     ],
     "proposedResponse": {
       "status": "ready",
-      "summary": "Reproduced SKMatrix.MapRect normalization behavior on 2.88.9 and 3.116.1.",
-      "body": "I was able to reproduce this on both 2.88.9 and 3.116.1 with a minimal console app. With `SKMatrix.CreateScale(-2, 1)` mapping `SKRect(0,0,1,1)`, the mapped rect is normalized (Left=-2, Right=0) instead of preserving the flip (Left=0, Right=-2).\n\nVersions tested:\n- 2.88.9: reproduced\n- 3.116.1: reproduced"
+      "summary": "Reproduced SKPath.Op(Union) empty result bug on 2.88.9 and 3.118.0.",
+      "body": "I was able to reproduce this on both 2.88.9 and 3.118.0 with a minimal console app. When one path contains a degenerate zero-length LineTo, `SKPath.Op(SKPathOp.Union)` returns an empty path.\n\nVersions tested:\n- 2.88.9: reproduced\n- 3.118.0: reproduced"
     }
   },
   "environment": {
-    "os": "macOS 15.3",
-    "arch": "arm64",
-    "dotnetVersion": "10.0.2",
-    "dotnetSdkVersion": "10.0.100",
-    "skiaSharpVersion": "2.88.9 (reporter), 3.116.1 (latest)",
+    "os": "Windows 11",
+    "arch": "x64",
+    "dotnetVersion": "9.0.200",
+    "dotnetSdkVersion": "9.0.200",
+    "skiaSharpVersion": "2.88.9 (reporter), 3.118.0 (latest)",
     "dockerUsed": false
   }
 }
@@ -136,237 +134,238 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
 ### Why this is `reproduced`
 
 - The conclusion is `reproduced` because the bug manifests as a **numerically wrong return
-  value** from a C# API call (the rect coordinates are incorrect).
+  value** from a C# API call (the path operation returns incorrect results).
 - Step 3 has `result: "failure"` — the assertion fails, satisfying the schema constraint
   that `reproduced` requires at least one step with `failure` or `wrong-output`.
-- The reproduction is isolated to a minimal C# console app calling `SKMatrix.MapRect`, making it easy to debug in the fix step.
+- The reproduction is isolated to a minimal C# console app, making it easy to debug in the fix step.
 
 ---
 
-## Example 2: WASM/Blazor Bug — `reproduced` with cross-platform verification
+## Example 2: Platform-Specific Bug — `reproduced` with cross-platform verification
 
-**Scenario:** SkiaSharp 3.119.2-preview.1 crashes at runtime in Blazor WASM with
-`TypeInitializationException` on .NET 10. Build succeeds — the bug only manifests in
-the browser. Cross-platform verification shows it's WASM-specific (console works fine).
-
-Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
+**Scenario:** SKCanvas.DrawText renders garbled Unicode on Linux when the system has no
+matching font installed. The same code works on Windows and macOS because those systems
+have broader font fallback chains. Build succeeds — the bug only manifests at runtime.
 
 ```json
 {
   "meta": {
     "schemaVersion": "1.0",
-    "number": 3422,
+    "number": 2502,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-06-15T14:30:00Z"
+    "analyzedAt": "2026-02-15T14:30:00Z"
   },
   "inputs": {
-    "triageFile": "ai-triage/3422.json"
+    "triageFile": "ai-triage/2502.json"
   },
   "conclusion": "reproduced",
-  "scope": "platform-specific/wasm",
-  "notes": "TypeInitializationException in browser console when using SkiaSharp 3.119.2-preview.1 on .NET 10 Blazor WASM. Build succeeds but runtime crashes. 3.116.1 (stable) works perfectly — this is a regression in 3.118+ preview WASM native binaries. Cross-platform verification: console app works fine, confirming WASM-specific issue.",
+  "scope": "platform-specific/linux",
+  "notes": "SKCanvas.DrawText renders replacement characters for CJK text on Ubuntu 22.04 minimal Docker image. The same code renders correctly on Windows and macOS. Root cause is likely fontconfig not finding a CJK fallback font. Reproduced on 3.116.1 and 3.118.0.",
   "assessment": "likely-bug",
-  "reproductionTime": "~12 minutes",
+  "reproductionTime": "~15 minutes",
   "versionResults": [
     {
-      "version": "3.119.2-preview.1",
+      "version": "3.118.0",
       "source": "nuget",
       "result": "reproduced",
-      "platform": "wasm-blazor",
-      "notes": "TypeInitializationException in browser console"
+      "platform": "docker-linux-x64",
+      "notes": "Replacement characters rendered instead of CJK glyphs"
     },
     {
       "version": "3.116.1",
       "source": "nuget",
-      "result": "not-reproduced",
-      "platform": "wasm-blazor",
-      "notes": "Canvas renders correctly, SUCCESS in console"
+      "result": "reproduced",
+      "platform": "docker-linux-x64",
+      "notes": "Same behavior on previous stable"
     },
     {
-      "version": "3.119.2-preview.1",
+      "version": "3.118.0",
       "source": "nuget",
       "result": "not-reproduced",
-      "platform": "host-macos-arm64",
-      "notes": "Cross-platform: console app works fine with same version"
+      "platform": "host-windows-x64",
+      "notes": "Cross-platform: Windows renders CJK text correctly with same version"
     }
   ],
   "reproProject": {
-    "type": "blazor-wasm",
-    "tfm": "net10.0",
-    "packages": [{ "name": "SkiaSharp.Views.Blazor", "version": "3.119.2-preview.1" }]
+    "type": "console",
+    "tfm": "net9.0",
+    "packages": [{ "name": "SkiaSharp", "version": "3.118.0" }]
   },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor",
+      "description": "Create console project with SkiaSharp and native Linux binaries",
       "layer": "setup",
-      "command": "dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.2-preview.1",
+      "command": "dotnet new console -n ReproCJK && cd ReproCJK && dotnet add package SkiaSharp --version 3.118.0 && dotnet add package SkiaSharp.NativeAssets.Linux --version 3.118.0",
       "exitCode": 0,
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Build with WasmBuildNative",
-      "layer": "deployment",
-      "command": "dotnet build",
+      "description": "Write program that renders CJK text to a PNG and checks pixel content",
+      "layer": "csharp",
+      "filesCreated": [
+        {
+          "filename": "Program.cs",
+          "description": "Renders CJK text to bitmap, saves as PNG, checks if non-white pixels exist in text region.",
+          "content": "using SkiaSharp;\nvar info = new SKImageInfo(200, 50);\nusing var bmp = new SKBitmap(info);\nusing var canvas = new SKCanvas(bmp);\ncanvas.Clear(SKColors.White);\nusing var paint = new SKPaint { Color = SKColors.Black, TextSize = 24 };\ncanvas.DrawText(\"CJK Test\", 10, 35, paint);\nusing var img = SKImage.FromBitmap(bmp);\nusing var data = img.Encode(SKEncodedImageFormat.Png, 100);\nusing var fs = File.OpenWrite(\"output.png\");\ndata.SaveTo(fs);\nConsole.WriteLine(bmp.GetPixel(15, 25) != SKColors.White ? \"PASS: text rendered\" : \"BUG: text not rendered (replacement chars)\");"
+        }
+      ],
       "exitCode": 0,
-      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Serve and check browser console with Playwright",
+      "description": "Run in Docker (Ubuntu minimal) — expect garbled output",
       "layer": "csharp",
-      "command": "dotnet run --urls http://localhost:5111",
-      "output": "Error: [TypeInitialization_Type, SKObject]",
+      "command": "docker run --rm -v $(pwd):/app -w /app mcr.microsoft.com/dotnet/sdk:9.0 dotnet run",
+      "output": "BUG: text not rendered (replacement chars)",
+      "exitCode": 1,
       "result": "failure"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Run on Windows host — expect correct rendering",
+      "layer": "csharp",
+      "command": "dotnet run",
+      "output": "PASS: text rendered",
+      "exitCode": 0,
+      "result": "success"
     }
   ],
   "errorMessages": {
-    "primaryError": "TypeInitialization_Type, SKObject",
-    "additionalErrors": ["crit: Microsoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100]"]
+    "primaryError": "CJK text renders as replacement characters on Linux without matching fonts installed"
   },
   "environment": {
-    "os": "macOS",
-    "arch": "arm64",
-    "dotnetVersion": "10.0.2",
-    "dotnetSdkVersion": "10.0.100",
-    "skiaSharpVersion": "3.119.2-preview.1",
-    "dockerUsed": false
+    "os": "Ubuntu 22.04 (Docker)",
+    "arch": "x64",
+    "dotnetVersion": "9.0.200",
+    "dotnetSdkVersion": "9.0.200",
+    "skiaSharpVersion": "3.118.0",
+    "dockerUsed": true
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.85,
-      "reason": "Reproduced in Blazor WASM runtime (browser console) on 3.119.2-preview.1, while 3.116.1 is not reproduced; likely WASM-specific regression."
+      "reason": "Reproduced on Linux Docker, not on Windows; likely fontconfig fallback issue."
     },
     "actions": [
       {
         "type": "add-comment",
-        "description": "Post reproduction findings and version/platform matrix",
+        "description": "Post reproduction findings and platform matrix",
         "risk": "high",
         "confidence": 0.85,
-        "comment": "Reproduced on Blazor WASM with 3.119.2-preview.1: runtime TypeInitializationException appears in the browser console (build succeeds). 3.116.1 stable does not reproduce. A console app on macOS with 3.119.2-preview.1 also does not reproduce, suggesting a WASM-specific regression."
+        "comment": "Reproduced on Ubuntu 22.04 Docker with 3.118.0: CJK text renders as replacement characters. Same code renders correctly on Windows. This appears to be a fontconfig fallback issue on minimal Linux installations."
       }
     ],
     "proposedResponse": {
       "status": "ready",
-      "summary": "Reproduced WASM-only runtime crash on 3.119.2-preview.1; 3.116.1 is OK.",
-      "body": "I was able to reproduce this in a Blazor WASM app on 3.119.2-preview.1: the project builds, but at runtime the browser console shows a `TypeInitializationException` (`TypeInitialization_Type, SKObject`).\n\nVersion/platform matrix:\n- 3.119.2-preview.1 (wasm-blazor): reproduced\n- 3.116.1 (wasm-blazor): not reproduced\n- 3.119.2-preview.1 (host macOS console): not reproduced\n\nThis looks like a WASM-specific regression introduced in the preview builds (3.118+)."
+      "summary": "Reproduced Linux-only CJK rendering issue on 3.118.0; Windows works fine.",
+      "body": "I was able to reproduce this on Ubuntu 22.04 minimal Docker with 3.118.0: CJK text renders as replacement characters.\n\nPlatform matrix:\n- 3.118.0 (Docker Linux x64): reproduced\n- 3.116.1 (Docker Linux x64): reproduced\n- 3.118.0 (Windows x64): not reproduced\n\nThis appears to be a fontconfig fallback issue — minimal Linux installations lack matching fonts."
     }
-  },
-  "feedback": {
-    "corrections": [
-      {
-        "source": "triage",
-        "topic": "root-cause",
-        "upstream": "Triage concluded: SkiaSharp doesn't officially support .NET 10",
-        "corrected": "net8.0 libraries are forward-compatible with net10.0 via TFM fallback. 3.116.1 works on net10.0. The real bug is a regression in 3.118+ preview WASM native binaries."
-      }
-    ]
   }
 }
 ```
 
-### Why this is a good WASM reproduction
+### Why this is a good cross-platform reproduction
 
-- **Did not stop at build success** — build passed but the bug is runtime-only in browser.
-- **Used Playwright** to navigate, read browser console errors, and verify.
-- **Tested multiple versions** — found 3.116.1 works, proving it's a 3.118+ regression.
-- **Cross-platform verification** — console app works fine → `scope: "platform-specific/wasm"`.
-- **Corrected triage** — triage wrongly blamed missing net10.0 TFM; repro proved forward-compat works.
-- **`scope` field** gives the fix skill an immediate signal: look at WASM native binaries, not TFM support.
+- **Cross-platform verification** — Windows works, Linux doesn't → `scope: "platform-specific/linux"`.
+- **Docker for reproducibility** — uses a standard Docker image for consistent Linux environment.
+- **Tested multiple versions** — 3.116.1 and 3.118.0 both fail, not a regression.
+- **Visual bug detected programmatically** — pixel check instead of visual inspection.
+- **`scope` field** gives the fix skill a signal: look at Linux font fallback, not general text rendering.
 
 ---
 
-## Example 3: Enhancement — Confirmed (feature missing)
+## Example 3: Enhancement — `confirmed` (feature missing)
 
-Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
+**Scenario:** "Add touch/stylus pressure sensitivity to Android SKCanvasView"
 
 ```json
 {
   "meta": {
     "schemaVersion": "1.0",
-    "number": 3540,
+    "number": 3503,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-15T10:00:00Z"
+    "analyzedAt": "2026-03-01T10:00:00Z"
   },
   "conclusion": "confirmed",
-  "notes": "The SKTouchAction.WheelChanged enum value exists and is implemented on WPF, WinForms, and Blazor, but the GTK3 SKDrawingArea does not subscribe to GDK scroll events. The shared infrastructure is in place — this is a gap in the GTK3 platform implementation.",
+  "notes": "The SKTouchEventArgs class has a Pressure property, but the Android SKCanvasView touch handler does not read MotionEvent.GetPressure() and always passes 1.0f. The shared infrastructure is in place — this is a gap in the Android platform implementation.",
   "reproductionTime": "~10 minutes",
   "inputs": {
-    "triageFile": "ai-triage/3540.json"
+    "triageFile": "ai-triage/3503.json"
   },
   "assessment": "feature-request",
-  "scope": "platform-specific/linux",
+  "scope": "platform-specific/android",
   "environment": {
-    "os": "Ubuntu 22.04 LTS",
-    "arch": "x64",
-    "dotnetVersion": "8.0.400",
-    "skiaSharpVersion": "3.116.1",
+    "os": "Android 14",
+    "arch": "arm64",
+    "dotnetVersion": "9.0.200",
+    "skiaSharpVersion": "3.118.0",
     "dockerUsed": false
   },
   "reproductionSteps": [
     {
       "stepNumber": 1,
-      "description": "Create a GTK3 project that attempts to use wheel events",
+      "description": "Create an Android project that uses SkiaSharp touch events",
       "layer": "setup",
-      "command": "dotnet new console -n WheelTest && cd WheelTest && dotnet add package SkiaSharp.Views.Gtk3 --version 3.116.1",
+      "command": "dotnet new android -n PressureTest && cd PressureTest && dotnet add package SkiaSharp.Views.Maui --version 3.118.0",
       "output": "Project created and package added successfully",
       "exitCode": 0,
       "result": "success"
     },
     {
       "stepNumber": 2,
-      "description": "Search for scroll/wheel event handling in GTK3 SKDrawingArea",
+      "description": "Search for pressure reading in Android touch handler",
       "layer": "investigation",
-      "command": "grep -rn 'ScrollEvent\\|WheelEvent\\|WheelChanged' source/SkiaSharp.Views/SkiaSharp.Views.Gtk/",
+      "command": "grep -rn 'GetPressure\\|Pressure\\|pressure' source/SkiaSharp.Views/SkiaSharp.Views/Platform/Android/",
       "output": "No matches found",
       "exitCode": 0,
       "result": "success"
     },
     {
       "stepNumber": 3,
-      "description": "Verify SKTouchAction.WheelChanged enum exists in shared infrastructure",
+      "description": "Verify SKTouchEventArgs.Pressure property exists in shared code",
       "layer": "investigation",
-      "command": "grep -rn 'WheelChanged' binding/SkiaSharp/",
-      "output": "Found SKTouchAction.WheelChanged in SKTouchAction.cs:28",
+      "command": "grep -rn 'Pressure' binding/SkiaSharp/SKTouchEventArgs.cs",
+      "output": "Found Pressure property at line 42, default value 1.0f",
       "exitCode": 0,
       "result": "success"
     },
     {
       "stepNumber": 4,
-      "description": "Check if other platforms implement wheel support for comparison",
+      "description": "Check if iOS or other platforms implement pressure for comparison",
       "layer": "investigation",
-      "command": "grep -rn 'WheelChanged' source/SkiaSharp.Views/",
-      "output": "Found in Blazor (SKTouchInterop.ts:150), WPF (SKElement.cs:89), WinForms (SKControl.cs:67). Not found in GTK3.",
+      "command": "grep -rn 'GetPressure\\|Force\\|pressure' source/SkiaSharp.Views/SkiaSharp.Views/Platform/",
+      "output": "Found in iOS (SKCanvasView.cs:95 — reads Touch.Force). Not found in Android or UWP.",
       "exitCode": 0,
       "result": "success"
     }
   ],
   "versionResults": [
     {
+      "version": "3.118.0",
+      "source": "nuget",
+      "result": "confirmed",
+      "notes": "Android touch handler does not read MotionEvent.GetPressure(). Pressure always reported as 1.0f.",
+      "platform": "host-macos-arm64"
+    },
+    {
       "version": "3.116.1",
       "source": "nuget",
       "result": "confirmed",
-      "notes": "Reporter's version. GTK3 SKDrawingArea does not subscribe to GDK scroll events. WheelChanged enum exists in shared code but is not wired up in GTK3 view.",
-      "platform": "host-linux-x64"
-    },
-    {
-      "version": "3.119.0-preview.1.2",
-      "source": "nuget",
-      "result": "confirmed",
-      "notes": "Latest stable. Same gap — no wheel event handling in GTK3 view.",
-      "platform": "host-linux-x64"
+      "notes": "Same gap in previous version.",
+      "platform": "host-macos-arm64"
     }
   ],
   "reproProject": {
     "type": "console",
-    "tfm": "net8.0",
+    "tfm": "net9.0-android",
     "packages": [
       {
-        "name": "SkiaSharp.Views.Gtk3",
-        "version": "3.116.1"
+        "name": "SkiaSharp.Views.Maui",
+        "version": "3.118.0"
       }
     ]
   },
@@ -374,12 +373,12 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.90,
-      "reason": "Feature gap confirmed — GTK3 SKDrawingArea lacks wheel/scroll event handling despite shared infrastructure existing. Needs implementation."
+      "reason": "Feature gap confirmed — Android touch handler lacks pressure reading despite shared infrastructure existing."
     },
     "actions": [],
     "proposedResponse": {
       "status": "ready",
-      "body": "Thanks for the suggestion! We investigated and can confirm that wheel/scroll event support is not currently implemented in the GTK3 `SKDrawingArea`.\n\nThe shared `SKTouchAction.WheelChanged` enum value exists and is already implemented on WPF, WinForms, and Blazor — so the infrastructure is in place. The GTK3 view just needs to subscribe to GDK scroll events and route them through the existing touch handler.\n\nWe've flagged this for implementation."
+      "body": "We investigated and can confirm that touch pressure is not currently forwarded from Android's `MotionEvent.GetPressure()` to `SKTouchEventArgs.Pressure`.\n\nThe shared `SKTouchEventArgs.Pressure` property exists and iOS already reads `Touch.Force` — so the infrastructure is in place. The Android touch handler just needs to call `MotionEvent.GetPressure()` and pass it through.\n\nFlagged for implementation."
     }
   }
 }
@@ -388,14 +387,14 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
 ### Why this is a good enhancement confirmation
 
 - **Used `confirmed` not `not-reproduced`** — semantically correct for verifying a feature gap.
-- **Created a project** — demonstrates the gap is real, not just a source reading.
-- **Version testing** — confirmed the gap exists on both reporter's version and latest, proving it's not already fixed.
-- **Scope set** — `platform-specific/linux` signals the gap is GTK3-only (other platforms have wheel support).
-- **Noted related infrastructure** — WheelChanged enum and other platform implementations help the fix skill.
+- **Created a project** — demonstrates the gap is real, not just source reading.
+- **Version testing** — confirmed the gap on both reporter's version and latest, proving it's not already fixed.
+- **Scope set** — `platform-specific/android` signals the gap is Android-only.
+- **Noted related infrastructure** — Pressure property and iOS implementation help the fix skill.
 - **Assessment `feature-request`** — correctly classifies the type of confirmation.
 
 ---
 
-> **Note:** Examples 1 and 2 omit a Phase 3C step (testing against the `main` branch) for brevity.
+> **Note:** Example 1 omits a step testing against the `main` branch for brevity.
 > In real reproductions, always include a main-branch test step when a locally-built SkiaSharp
 > is available. See the SKILL.md Phase 3C instructions.

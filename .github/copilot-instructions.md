@@ -343,6 +343,10 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 
 > **🛑 NEVER SKIP READING SKILL.md:** Skills exist because project-specific procedures differ from general patterns. Your assumptions about how to perform a task are likely WRONG. The skill file is the source of truth — read it, follow it exactly.
 
+> **🛑 NEVER use `store_memory` during skill execution.** Skills produce structured JSON artifacts
+> (triage, repro, fix), not memories. Storing unverified observations from an investigation as
+> permanent facts pollutes all future sessions with potentially wrong information.
+
 > **CRITICAL:** Classify based on what the ISSUE describes, not what the USER says.
 > - User says "investigate" but issue says "crash" → It's a bug → invoke `issue-fix`
 > - User says "look at" but issue says "add support for" → It's new API → invoke `add-api`
