@@ -296,6 +296,8 @@ half4 main(float2 fragCoord) {
 
 		private void ShowDrawingPage()
 		{
+			ClearDrawing();
+
 			var box = new Box(window)
 			{
 				IsHorizontal = false,
@@ -386,7 +388,7 @@ half4 main(float2 fragCoord) {
 			using var paint = new SKPaint
 			{
 				IsAntialias = true,
-				Style = SKPaintStyle.Stroke,
+				Style = SKPaintStyle.StrokeAndFill,
 				StrokeCap = SKStrokeCap.Round,
 				StrokeJoin = SKStrokeJoin.Round,
 			};
@@ -413,9 +415,16 @@ half4 main(float2 fragCoord) {
 		private void OnBackButtonPressed(object sender, EventArgs e)
 		{
 			if (naviframe.TopItem != mainNaviItem)
+			{
+				ClearDrawing();
+				shaderEffect?.Dispose();
+				shaderEffect = null;
 				naviframe.Pop();
+			}
 			else
+			{
 				Exit();
+			}
 		}
 	}
 }
