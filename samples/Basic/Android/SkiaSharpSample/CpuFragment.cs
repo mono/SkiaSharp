@@ -14,9 +14,10 @@ namespace SkiaSharpSample
 
 		public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 		{
-			skiaView = new SKCanvasView(Context);
+			var view = inflater.Inflate(Resource.Layout.fragment_cpu, container, false);
+			skiaView = view.FindViewById<SKCanvasView>(Resource.Id.skiaView);
 			skiaView.PaintSurface += OnPaintSurface;
-			return skiaView;
+			return view;
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)

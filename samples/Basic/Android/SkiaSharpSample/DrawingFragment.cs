@@ -39,11 +39,10 @@ namespace SkiaSharpSample
 					ViewGroup.LayoutParams.MatchParent),
 			};
 
-			skiaView = new SKCanvasView(Context)
-			{
-				LayoutParameters = new LinearLayout.LayoutParams(
-					ViewGroup.LayoutParams.MatchParent, 0, 1f),
-			};
+			var inflated = inflater.Inflate(Resource.Layout.fragment_drawing, root, false);
+			skiaView = inflated.FindViewById<SKCanvasView>(Resource.Id.skiaView);
+			skiaView.LayoutParameters = new LinearLayout.LayoutParams(
+				ViewGroup.LayoutParams.MatchParent, 0, 1f);
 			skiaView.PaintSurface += OnPaintSurface;
 			skiaView.Touch += OnTouch;
 			root.AddView(skiaView);
