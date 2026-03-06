@@ -14,14 +14,14 @@ namespace SkiaSharpSample
 {
 	public class DrawingFragment : Fragment
 	{
-		private static readonly (int ViewId, SKColor SkColor)[] ColorOptions = new[]
+		private static readonly int[] SwatchIds = new[]
 		{
-			(Resource.Id.colorBlack, SKColors.Black),
-			(Resource.Id.colorRed, new SKColor(0xE5, 0x39, 0x35)),
-			(Resource.Id.colorBlue, new SKColor(0x1E, 0x88, 0xE5)),
-			(Resource.Id.colorGreen, new SKColor(0x43, 0xA0, 0x47)),
-			(Resource.Id.colorOrange, new SKColor(0xFB, 0x8C, 0x00)),
-			(Resource.Id.colorPurple, new SKColor(0x8E, 0x24, 0xAA)),
+			Resource.Id.colorBlack,
+			Resource.Id.colorRed,
+			Resource.Id.colorBlue,
+			Resource.Id.colorGreen,
+			Resource.Id.colorOrange,
+			Resource.Id.colorPurple,
 		};
 
 		private SKCanvasView skiaView;
@@ -30,6 +30,7 @@ namespace SkiaSharpSample
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 		private SKPath currentPath;
 		private SKColor currentColor = SKColors.Black;
+		private SKColor canvasBackground = SKColors.White;
 
 		private float BrushSize => brushSlider?.Progress + 1 ?? 6f;
 
@@ -37,15 +38,33 @@ namespace SkiaSharpSample
 		{
 			var view = inflater.Inflate(Resource.Layout.fragment_drawing, container, false);
 
+			// Resolve theme surface color for canvas background
+			var typedValue = new Android.Util.TypedValue();
+			if (Context.Theme.ResolveAttribute(Resource.Attribute.colorSurface, typedValue, true))
+			{
+				var c = new Color(typedValue.Data);
+				canvasBackground = new SKColor((byte)c.R, (byte)c.G, (byte)c.B, (byte)c.A);
+			}
+
+			// Resolve theme onSurface color as default drawing color
+			if (Context.Theme.ResolveAttribute(Resource.Attribute.colorOnSurface, typedValue, true))
+			{
+				var c = new Color(typedValue.Data);
+				currentColor = new SKColor((byte)c.R, (byte)c.G, (byte)c.B, (byte)c.A);
+			}
+
 			skiaView = view.FindViewById<SKCanvasView>(Resource.Id.skiaView);
 			skiaView.PaintSurface += OnPaintSurface;
 			skiaView.Touch += OnTouch;
 
-			// Wire up color swatches
-			foreach (var (viewId, skColor) in ColorOptions)
+			// Wire up color swatches — resolve SKColor from each swatch's background
+			foreach (var viewId in SwatchIds)
 			{
 				var swatch = view.FindViewById<View>(viewId);
-				var captured = skColor;
+				var bgColor = swatch.Background is ColorDrawable cd
+					? new SKColor((byte)cd.Color.R, (byte)cd.Color.G, (byte)cd.Color.B)
+					: SKColors.Black;
+				var captured = bgColor;
 				swatch.Click += (s, e) =>
 				{
 					currentColor = captured;
@@ -100,7 +119,7 @@ namespace SkiaSharpSample
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
 			var canvas = e.Surface.Canvas;
-			canvas.Clear(SKColors.White);
+			canvas.Clear(canvasBackground);
 
 			if (skiaView.Width <= 0 || skiaView.Height <= 0)
 				return;
