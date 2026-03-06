@@ -80,11 +80,25 @@ half4 main(float2 fragCoord) {
 		}
 
 		skiaView!.EnableSetNeedsDisplay = false;
-		skiaView.Paused = false;
+		skiaView.Paused = true;
 		skiaView.PreferredFramesPerSecond = 60;
 		skiaView.PaintSurface += OnPaintSurface;
 
 		stopwatch.Start();
+	}
+
+	public override void ViewDidAppear(bool animated)
+	{
+		base.ViewDidAppear(animated);
+		if (skiaView != null)
+			skiaView.Paused = false;
+	}
+
+	public override void ViewWillDisappear(bool animated)
+	{
+		base.ViewWillDisappear(animated);
+		if (skiaView != null)
+			skiaView.Paused = true;
 	}
 
 	void ShowError(string message)
