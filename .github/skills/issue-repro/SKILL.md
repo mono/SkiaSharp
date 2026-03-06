@@ -144,10 +144,10 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 >
 > **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. This applies to ALL conclusion types — bugs (`reproduced`/`not-reproduced`) AND enhancements (`confirmed`/`not-confirmed`). For enhancements: a feature may exist in one version but not another, or may have been removed. Version testing reveals this.
 
-> **⚠️ Performance bugs have additional requirements.** See
-> [category-performance.md](references/category-performance.md). Key points: you must measure
-> BOTH sides of any comparison yourself (Rule 7) — without a baseline, "slow" is meaningless.
-> Your standalone repro must match the reporter's rendering mode (GPU→GPU, CPU→CPU).
+> **⚠️ Performance bugs REPLACE the standard Phase 3 flow.** See
+> [category-performance.md](references/category-performance.md) and follow its Phase 3A–3D
+> ordering instead. Key requirement: after running the reporter's code (3A-3B), you MUST create
+> your own standalone repro (3C) using the same rendering mode — this is your independent proof.
 
 ### 3A. Reproduce with reporter's version
 

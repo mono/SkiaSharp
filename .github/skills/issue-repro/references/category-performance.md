@@ -33,10 +33,13 @@ CPU repros. Crossing modes proves nothing — GPU and CPU use entirely different
 
 ## Strategy
 
-SKILL.md Rules 7–9 apply with particular force here. Follow these steps IN ORDER:
+SKILL.md Rules 7–9 apply with particular force here. Performance reproduction **replaces**
+SKILL.md's standard Phase 3A/3B/3C flow with its own ordering. Do not follow the standard
+version-based phases — follow these steps instead.
 
-### Step 1: Build and run the reporter's baseline (the "fast" side)
+### Phase 3A: Measure both sides of the reporter's comparison
 
+**Step 1 — Build and run the reporter's baseline (the "fast" side).**
 If the reporter provides a native C++ benchmark or alternative implementation, BUILD AND RUN IT
 on your machine. Follow their build instructions (GN, CMake, Ninja, etc.).
 
@@ -47,49 +50,60 @@ because a step takes a while. Record the FPS/timing you observe.
 **Without this number, you cannot quantify the gap.** If you only measure the "slow" side, you
 haven't reproduced a performance issue — you've just confirmed the reporter's code runs.
 
-### Step 2: Build and run the reporter's test (the "slow" side)
-
+**Step 2 — Build and run the reporter's test (the "slow" side).**
 Build and run the reporter's SkiaSharp benchmark with their exact version, platform, and
 configuration. The rendering mode, backend, and scene complexity MUST match the baseline
 (Rule 9). Record your FPS/timing.
 
 Now you have both sides of the comparison measured by you.
 
-### Step 3: Create YOUR standalone repro
+### Phase 3B: Test reporter's code on latest SkiaSharp
 
-This is the critical step — it's your independent reproduction free from the reporter's code.
-Who knows what the reporter has added in their project — extra layers, framework overhead,
-debug settings, unrelated processing. Your job is to strip all of that away and reproduce
-the gap with the minimum possible code.
+Same as standard 3B — run the reporter's SkiaSharp benchmark with the latest stable release in
+a clean project directory. Record whether the gap changes.
 
-**For GPU performance bugs:** Create a raw SkiaSharp app using the platform's GPU view directly
-(e.g., SKGLView on macOS — see platform-macos.md). Render the same scene. No framework
-(Avalonia, MAUI, WPF). **This standalone GPU app IS your minimal repro.**
+### Phase 3C: Create YOUR standalone repro (MANDATORY — do not skip)
+
+This is the most important step. The reporter's code is evidence, but it's not YOUR reproduction.
+Their project may have framework overhead, debug settings, or other variables. You need your own
+minimal app that demonstrates the gap independently.
+
+**For GPU performance bugs:**
+
+1. Read [platform-macos.md](platform-macos.md) (or the relevant platform file)
+2. Create a new macOS/Windows/Linux GPU app using the platform file's "Create Project" steps
+3. Add an SKGLView or SKMetalView using the "Backend-Specific Templates" from the platform file
+4. Put the reporter's drawing scene in the PaintSurface handler
+5. Add FPS measurement and per-phase timing (see below)
+6. Build and run it — this standalone GPU app IS your minimal repro
+
+Example for macOS GPU:
+```bash
+mkdir -p /tmp/skiasharp/repro/{number}-standalone && cd /tmp/skiasharp/repro/{number}-standalone
+dotnet new macos -n GpuRepro --framework net10.0-macos
+cd GpuRepro
+dotnet add package SkiaSharp.Views --version {reporter_version}
+```
+Then in AppDelegate.cs, create an SKGLView with the drawing scene (see platform-macos.md for
+the full template).
 
 **For CPU performance bugs:** Create a console app with `SKSurface.Create` raster and the same
-workload. This IS correct for CPU issues.
+workload. Console IS correct for CPU issues.
 
-This step tells you whether the gap is in SkiaSharp itself or in the reporter's framework
-integration. If your standalone app is fast but the reporter's framework app is slow, the
-bottleneck is in the framework layer, not SkiaSharp.
+**What this tells you:** If your standalone GPU app is also slow → the gap is in SkiaSharp's GPU
+rendering. If it's fast → the gap is in the reporter's framework integration (Avalonia, MAUI,
+etc.), not SkiaSharp.
 
-### Step 4: Instrument with per-phase timing
+### Phase 3D: Instrument your standalone repro
 
-Add `System.Diagnostics.Stopwatch` instrumentation to your standalone repro:
+Add `System.Diagnostics.Stopwatch` to your standalone repro to identify WHERE the time goes:
 
 - `render`: CPU-side draw calls (canvas.DrawX)
 - `flush`: Skia command submission to GPU (canvas.Flush / context.Flush)
 - `finish`: GPU drain (glFinish / commandBuffer.WaitUntilCompleted)
 - `swap`: Buffer swap / present
 
-This identifies WHERE the time goes — rendering, GPU submission, or presentation.
-
-### Step 5: Disable VSync
-
-VSync caps frame rate to display refresh rate (60 or 120fps), masking real performance
-differences. Always disable before measuring.
-
-### Step 6: Statistical stability
+Disable VSync before measuring — it caps frame rate to 60/120fps, masking real differences.
 
 Record FPS only after 5+ consecutive frames within 10% variance. Discard first 10 frames
 (JIT warm-up).
