@@ -1,17 +1,58 @@
 ﻿@inherits LayoutComponentBase
 
-<FluentLayout>
-    <FluentHeader>
-        SkiaSharp
-    </FluentHeader>
-    <FluentStack Orientation="Orientation.Horizontal" Style="height: calc(100vh - 50px);">
-        <FluentNavMenu Width="220" Title="Navigation">
-            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new FluentRegularIcons.Size20.DesktopMac())">CPU</FluentNavLink>
-            <FluentNavLink Href="/gpu" Icon="@(new FluentRegularIcons.Size20.DeveloperBoard())">GPU</FluentNavLink>
-            <FluentNavLink Href="/drawing" Icon="@(new FluentRegularIcons.Size20.PaintBrush())">Drawing</FluentNavLink>
-        </FluentNavMenu>
-        <FluentBodyContent Style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
-            @Body
-        </FluentBodyContent>
-    </FluentStack>
-</FluentLayout>
+<MudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_isDarkMode" Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-2">SkiaSharp</MudText>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always"
+               Breakpoint="Breakpoint.Md" Elevation="2" Variant="@DrawerVariant.Responsive">
+        <MudNavMenu Rounded="true" Margin="Margin.Normal" Color="Color.Primary">
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Computer">CPU</MudNavLink>
+            <MudNavLink Href="/gpu" Icon="@Icons.Material.Filled.DeveloperBoard">GPU</MudNavLink>
+            <MudNavLink Href="/drawing" Icon="@Icons.Material.Filled.Brush">Drawing</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Class="d-flex flex-column" Style="height: 100vh; overflow: hidden;">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+    bool _isDarkMode;
+    MudThemeProvider _themeProvider = null!;
+
+    readonly MudTheme _theme = new()
+    {
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "12px",
+        },
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isDarkMode = await _themeProvider.GetSystemDarkModeAsync();
+            await _themeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
+            StateHasChanged();
+        }
+    }
+
+    Task OnSystemPreferenceChanged(bool isDark)
+    {
+        _isDarkMode = isDark;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+}
