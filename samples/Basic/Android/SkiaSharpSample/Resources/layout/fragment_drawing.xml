@@ -10,6 +10,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Floating Clear button — top right -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnClear"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
+        android:elevation="6dp"
+        android:text="Clear"
+        android:textAllCaps="false"
+        android:textSize="12sp"
+        app:cornerRadius="18dp" />
+
     <!-- Floating toolbox pill -->
     <LinearLayout
         android:id="@+id/toolbox"
@@ -59,36 +74,16 @@
 
         </LinearLayout>
 
-        <!-- Brush size + clear row -->
-        <LinearLayout
+        <!-- Brush size slider -->
+        <com.google.android.material.slider.Slider
+            android:id="@+id/brushSlider"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="4dp">
-
-            <com.google.android.material.slider.Slider
-                android:id="@+id/brushSlider"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:valueFrom="1"
-                android:valueTo="30"
-                android:value="6"
-                app:tickVisible="false" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnClear"
-                style="@style/Widget.Material3.Button.TonalButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Clear"
-                android:textAllCaps="false"
-                android:textSize="12sp"
-                app:cornerRadius="18dp" />
-
-        </LinearLayout>
+            android:layout_marginTop="4dp"
+            android:valueFrom="1"
+            android:valueTo="30"
+            android:value="6"
+            app:tickVisible="false" />
 
     </LinearLayout>
 
