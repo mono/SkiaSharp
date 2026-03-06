@@ -6,124 +6,224 @@ namespace SkiaSharpSample;
 [Register("DrawingViewController")]
 public class DrawingViewController : UIViewController
 {
+	private readonly record struct Stroke(SKPath Path, SKColor Color, float Width);
+
+	private static readonly (string Name, SKColor Light, SKColor Dark)[] colorPalette =
+	{
+		("Black", SKColors.Black, SKColors.White),
+		("Red", new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+		("Blue", new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+		("Green", new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+		("Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+		("Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+	};
+
+	private readonly List<Stroke> strokes = new();
+	private SKPath? currentPath;
+	private SKColor currentColor;
+	private float brushSize = 4f;
+	private bool isDrawing;
+
 	[Outlet]
 	SKCanvasView? skiaView { get; set; }
 
-	readonly List<List<SKPoint>> completedStrokes = new();
-	List<SKPoint>? currentStroke;
-
-	readonly (SKColor Light, SKColor Dark)[] strokeColors =
-	{
-		(new(0x20, 0x60, 0xE0), new(0x42, 0xA5, 0xF5)),  // Blue
-		(new(0xE0, 0x40, 0x40), new(0xEF, 0x53, 0x50)),  // Red
-		(new(0x40, 0xB0, 0x40), new(0x66, 0xBB, 0x6A)),  // Green
-		(new(0xE0, 0x90, 0x20), new(0xFF, 0xA7, 0x26)),  // Orange
-		(new(0x90, 0x40, 0xD0), new(0xAB, 0x47, 0xBC)),  // Purple
-	};
+	private UILabel? brushLabel;
+	private UIView? selectedSwatch;
+	private readonly List<(UIView View, SKColor Light, SKColor Dark)> swatchViews = new();
 
 	bool IsDarkMode => TraitCollection.UserInterfaceStyle == UIUserInterfaceStyle.Dark;
 	SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
+	SKColor CurrentColor => currentColor;
 
-	public DrawingViewController(IntPtr handle)
-		: base(handle)
+	public DrawingViewController(IntPtr handle) : base(handle)
 	{
+		currentColor = SKColors.Black;
 	}
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
+		Title = "Drawing";
+		View!.BackgroundColor = UIColor.SystemBackground;
 
-		NavigationItem.RightBarButtonItem = new UIBarButtonItem(
-			UIBarButtonSystemItem.Trash,
-			(s, e) =>
+		currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
+
+		skiaView!.TranslatesAutoresizingMaskIntoConstraints = false;
+		skiaView.IgnorePixelScaling = true;
+		skiaView.PaintSurface += OnPaintSurface;
+
+		// Bottom toolbar
+		var toolbar = new UIView
+		{
+			TranslatesAutoresizingMaskIntoConstraints = false,
+			BackgroundColor = UIColor.SecondarySystemBackground,
+		};
+		View.AddSubview(toolbar);
+
+		var stack = new UIStackView
+		{
+			TranslatesAutoresizingMaskIntoConstraints = false,
+			Axis = UILayoutConstraintAxis.Horizontal,
+			Spacing = 8,
+			Alignment = UIStackViewAlignment.Center,
+		};
+		toolbar.AddSubview(stack);
+
+		// Color swatches
+		foreach (var (name, light, dark) in colorPalette)
+		{
+			var color = IsDarkMode ? dark : light;
+			var swatch = new UIView
 			{
-				completedStrokes.Clear();
-				currentStroke = null;
-				skiaView?.SetNeedsDisplay();
-			});
+				BackgroundColor = new UIColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f, 1f),
+			};
+			swatch.Layer.CornerRadius = 16;
+			swatch.TranslatesAutoresizingMaskIntoConstraints = false;
+			swatch.WidthAnchor.ConstraintEqualTo(32).Active = true;
+			swatch.HeightAnchor.ConstraintEqualTo(32).Active = true;
 
-		skiaView!.PaintSurface += OnPaintSurface;
+			var capturedLight = light;
+			var capturedDark = dark;
+			var tap = new UITapGestureRecognizer(() =>
+			{
+				currentColor = IsDarkMode ? capturedDark : capturedLight;
+				UpdateSwatchSelection(swatch);
+			});
+			swatch.AddGestureRecognizer(tap);
+			swatch.UserInteractionEnabled = true;
+			stack.AddArrangedSubview(swatch);
+			swatchViews.Add((swatch, light, dark));
+
+			if (name == "Black")
+			{
+				swatch.Layer.BorderWidth = 3;
+				swatch.Layer.BorderColor = UIColor.SystemBlue.CGColor;
+				selectedSwatch = swatch;
+			}
+		}
+
+		// Flexible spacer
+		var spacer = new UIView();
+		spacer.SetContentHuggingPriority(1, UILayoutConstraintAxis.Horizontal);
+		stack.AddArrangedSubview(spacer);
+
+		// Brush size label
+		brushLabel = new UILabel
+		{
+			Text = $"{brushSize:F0}px",
+			Font = UIFont.MonospacedDigitSystemFontOfSize(14, UIFontWeight.Regular),
+			TextColor = UIColor.Label,
+		};
+		stack.AddArrangedSubview(brushLabel);
+
+		// Clear button
+		var clearBtn = new UIButton(UIButtonType.System);
+		clearBtn.SetImage(UIImage.GetSystemImage("trash"), UIControlState.Normal);
+		clearBtn.TouchUpInside += (_, _) => ClearCanvas();
+		stack.AddArrangedSubview(clearBtn);
+
+		// Layout
+		NSLayoutConstraint.ActivateConstraints(new[]
+		{
+			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
+			skiaView.BottomAnchor.ConstraintEqualTo(toolbar.TopAnchor),
+
+			toolbar.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+			toolbar.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+			toolbar.BottomAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.BottomAnchor),
+			toolbar.HeightAnchor.ConstraintEqualTo(52),
+
+			stack.LeadingAnchor.ConstraintEqualTo(toolbar.LeadingAnchor, 16),
+			stack.TrailingAnchor.ConstraintEqualTo(toolbar.TrailingAnchor, -16),
+			stack.CenterYAnchor.ConstraintEqualTo(toolbar.CenterYAnchor),
+		});
+
+		// Pinch gesture for brush size
+		var pinch = new UIPinchGestureRecognizer(HandlePinch);
+		pinch.CancelsTouchesInView = false;
+		skiaView.AddGestureRecognizer(pinch);
 	}
 
-	void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+	private void UpdateSwatchSelection(UIView swatch)
+	{
+		if (selectedSwatch != null)
+			selectedSwatch.Layer.BorderWidth = 0;
+		swatch.Layer.BorderWidth = 3;
+		swatch.Layer.BorderColor = UIColor.SystemBlue.CGColor;
+		selectedSwatch = swatch;
+	}
+
+	private void UpdateSwatchColors()
+	{
+		foreach (var (view, light, dark) in swatchViews)
+		{
+			var c = IsDarkMode ? dark : light;
+			view.BackgroundColor = new UIColor(c.Red / 255f, c.Green / 255f, c.Blue / 255f, 1f);
+		}
+	}
+
+	private void HandlePinch(UIPinchGestureRecognizer gesture)
+	{
+		if (gesture.State == UIGestureRecognizerState.Changed)
+		{
+			brushSize = Math.Clamp(brushSize * (float)gesture.Scale, 1f, 50f);
+			gesture.Scale = 1;
+			brushLabel!.Text = $"{brushSize:F0}px";
+			skiaView?.SetNeedsDisplay();
+		}
+	}
+
+	private void ClearCanvas()
+	{
+		foreach (var stroke in strokes)
+			stroke.Path.Dispose();
+		strokes.Clear();
+
+		currentPath?.Dispose();
+		currentPath = null;
+		isDrawing = false;
+
+		skiaView?.SetNeedsDisplay();
+	}
+
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var info = e.Info;
 		canvas.Clear(CanvasBackground);
-
-		float scaleX = info.Width / (float)skiaView!.Bounds.Width;
-		float scaleY = info.Height / (float)skiaView.Bounds.Height;
-
-		// Hint text when empty
-		if (completedStrokes.Count == 0 && currentStroke == null)
-		{
-			using var hintPaint = new SKPaint
-			{
-				Color = IsDarkMode ? new SKColor(0x66, 0x66, 0x66) : new SKColor(0xAA, 0xAA, 0xAA),
-				IsAntialias = true,
-			};
-			using var hintFont = new SKFont { Size = 32 };
-			canvas.DrawText("Touch or click and drag to draw",
-				new SKPoint(info.Width / 2f, info.Height / 2f),
-				SKTextAlign.Center, hintFont, hintPaint);
-		}
 
 		using var paint = new SKPaint
 		{
 			IsAntialias = true,
 			Style = SKPaintStyle.Stroke,
-			StrokeWidth = 4,
 			StrokeCap = SKStrokeCap.Round,
 			StrokeJoin = SKStrokeJoin.Round,
 		};
 
-		// Draw completed strokes
-		for (int i = 0; i < completedStrokes.Count; i++)
+		foreach (var stroke in strokes)
 		{
-			var (light, dark) = strokeColors[i % strokeColors.Length];
-			paint.Color = IsDarkMode ? dark : light;
-			DrawStroke(canvas, completedStrokes[i], paint, scaleX, scaleY);
+			paint.Color = stroke.Color;
+			paint.StrokeWidth = stroke.Width;
+			canvas.DrawPath(stroke.Path, paint);
 		}
 
-		// Draw current stroke
-		if (currentStroke is { Count: >= 2 })
+		if (currentPath != null)
 		{
-			var (light, dark) = strokeColors[completedStrokes.Count % strokeColors.Length];
-			paint.Color = IsDarkMode ? dark : light;
-			DrawStroke(canvas, currentStroke, paint, scaleX, scaleY);
-		}
-
-		// Stroke counter
-		int total = completedStrokes.Count + (currentStroke != null ? 1 : 0);
-		if (total > 0)
-		{
-			using var counterPaint = new SKPaint
-			{
-				Color = IsDarkMode ? new SKColor(0x99, 0x99, 0x99) : new SKColor(0x66, 0x66, 0x66),
-				IsAntialias = true,
-			};
-			using var counterFont = new SKFont { Size = 24 };
-			canvas.DrawText($"{completedStrokes.Count} stroke{(completedStrokes.Count == 1 ? "" : "s")}",
-				new SKPoint(20, info.Height - 20), SKTextAlign.Left, counterFont, counterPaint);
+			paint.Color = currentColor;
+			paint.StrokeWidth = brushSize;
+			canvas.DrawPath(currentPath, paint);
 		}
 	}
 
-	static void DrawStroke(SKCanvas canvas, List<SKPoint> points, SKPaint paint, float scaleX, float scaleY)
+	public override void ViewWillDisappear(bool animated)
 	{
-		if (points.Count < 2)
-			return;
-
-		using var path = new SKPath();
-		var first = points[0];
-		path.MoveTo(first.X * scaleX, first.Y * scaleY);
-
-		for (int i = 1; i < points.Count; i++)
-		{
-			var pt = points[i];
-			path.LineTo(pt.X * scaleX, pt.Y * scaleY);
-		}
-
-		canvas.DrawPath(path, paint);
+		base.ViewWillDisappear(animated);
+		foreach (var stroke in strokes)
+			stroke.Path.Dispose();
+		strokes.Clear();
+		currentPath?.Dispose();
+		currentPath = null;
 	}
 
 	public override void TouchesBegan(NSSet touches, UIEvent? evt)
@@ -131,8 +231,10 @@ public class DrawingViewController : UIViewController
 		base.TouchesBegan(touches, evt);
 		if (touches.AnyObject is UITouch touch && skiaView != null)
 		{
+			isDrawing = true;
 			var loc = touch.LocationInView(skiaView);
-			currentStroke = new List<SKPoint> { new((float)loc.X, (float)loc.Y) };
+			currentPath = new SKPath();
+			currentPath.MoveTo((float)loc.X, (float)loc.Y);
 			skiaView.SetNeedsDisplay();
 		}
 	}
@@ -140,10 +242,10 @@ public class DrawingViewController : UIViewController
 	public override void TouchesMoved(NSSet touches, UIEvent? evt)
 	{
 		base.TouchesMoved(touches, evt);
-		if (touches.AnyObject is UITouch touch && skiaView != null && currentStroke != null)
+		if (isDrawing && currentPath != null && touches.AnyObject is UITouch touch && skiaView != null)
 		{
 			var loc = touch.LocationInView(skiaView);
-			currentStroke.Add(new SKPoint((float)loc.X, (float)loc.Y));
+			currentPath.LineTo((float)loc.X, (float)loc.Y);
 			skiaView.SetNeedsDisplay();
 		}
 	}
@@ -151,20 +253,21 @@ public class DrawingViewController : UIViewController
 	public override void TouchesEnded(NSSet touches, UIEvent? evt)
 	{
 		base.TouchesEnded(touches, evt);
-		FinishStroke();
+		if (isDrawing && currentPath != null)
+		{
+			isDrawing = false;
+			strokes.Add(new Stroke(currentPath, currentColor, brushSize));
+			currentPath = null;
+			skiaView?.SetNeedsDisplay();
+		}
 	}
 
 	public override void TouchesCancelled(NSSet touches, UIEvent? evt)
 	{
 		base.TouchesCancelled(touches, evt);
-		FinishStroke();
-	}
-
-	void FinishStroke()
-	{
-		if (currentStroke is { Count: >= 2 })
-			completedStrokes.Add(currentStroke);
-		currentStroke = null;
+		currentPath?.Dispose();
+		currentPath = null;
+		isDrawing = false;
 		skiaView?.SetNeedsDisplay();
 	}
 
@@ -172,6 +275,13 @@ public class DrawingViewController : UIViewController
 	{
 		base.TraitCollectionDidChange(previousTraitCollection);
 		if (previousTraitCollection?.UserInterfaceStyle != TraitCollection.UserInterfaceStyle)
+		{
+			if (currentColor == SKColors.Black && IsDarkMode)
+				currentColor = SKColors.White;
+			else if (currentColor == SKColors.White && !IsDarkMode)
+				currentColor = SKColors.Black;
+			UpdateSwatchColors();
 			skiaView?.SetNeedsDisplay();
+		}
 	}
 }

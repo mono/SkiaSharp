@@ -33,6 +33,7 @@ namespace SkiaSharpSample
 		};
 
 		private Border? selectedColorBorder;
+		private readonly Microsoft.Win32.UserPreferenceChangedEventHandler themeChangedHandler;
 
 		static bool IsDarkMode
 		{
@@ -64,14 +65,19 @@ namespace SkiaSharpSample
 			SkCanvas.MouseWheel += OnMouseWheel;
 			SkCanvas.MouseLeave += OnMouseLeave;
 
-			Microsoft.Win32.SystemEvents.UserPreferenceChanged += (s, e) =>
+			themeChangedHandler = (s, e) =>
 			{
-				if (currentColor == SKColors.Black && IsDarkMode)
-					currentColor = SKColors.White;
-				else if (currentColor == SKColors.White && !IsDarkMode)
-					currentColor = SKColors.Black;
-				SkCanvas.InvalidateVisual();
+				Dispatcher.BeginInvoke(() =>
+				{
+					if (currentColor == SKColors.Black && IsDarkMode)
+						currentColor = SKColors.White;
+					else if (currentColor == SKColors.White && !IsDarkMode)
+						currentColor = SKColors.Black;
+					SkCanvas.InvalidateVisual();
+				});
 			};
+			Microsoft.Win32.SystemEvents.UserPreferenceChanged += themeChangedHandler;
+			Unloaded += (s, e) => Microsoft.Win32.SystemEvents.UserPreferenceChanged -= themeChangedHandler;
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)

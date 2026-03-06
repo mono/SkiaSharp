@@ -34,8 +34,6 @@ namespace SkiaSharpSample
 		{
 			InitializeComponent();
 			currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
-			if (Application.Current != null)
-				Application.Current.RequestedThemeChanged += OnThemeChanged;
 		}
 
 		void OnThemeChanged(object sender, AppThemeChangedEventArgs e)
@@ -46,6 +44,20 @@ namespace SkiaSharpSample
 			else if (currentColor == SKColors.White && !IsDarkMode)
 				currentColor = SKColors.Black;
 			skiaView.InvalidateSurface();
+		}
+
+		protected override void OnDisappearing()
+		{
+			base.OnDisappearing();
+			if (Application.Current != null)
+				Application.Current.RequestedThemeChanged -= OnThemeChanged;
+		}
+
+		protected override void OnAppearing()
+		{
+			base.OnAppearing();
+			if (Application.Current != null)
+				Application.Current.RequestedThemeChanged += OnThemeChanged;
 		}
 
 		private void OnTouch(object sender, SKTouchEventArgs e)
