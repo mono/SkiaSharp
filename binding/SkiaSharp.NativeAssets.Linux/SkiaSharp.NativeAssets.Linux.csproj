@@ -19,6 +19,9 @@
     <PackageFile Include="..\..\output\native\alpine\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\alpine\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-riscv64\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\alpine\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-loongarch64\native\%(Filename)%(Extension)" />
+    <!-- Bionic -->
+    <PackageFile Include="..\..\output\native\bionic\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\bionic\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-arm64\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
