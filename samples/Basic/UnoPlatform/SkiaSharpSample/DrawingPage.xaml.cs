@@ -1,0 +1,146 @@
+﻿using SkiaSharp;
+using SkiaSharp.Views.Windows;
+
+namespace SkiaSharpSample;
+
+public sealed partial class DrawingPage : Page
+{
+	private static readonly Dictionary<string, SKColor> ColorMap = new()
+	{
+		["Black"] = SKColors.Black,
+		["Red"] = new SKColor(0xE5, 0x39, 0x35),
+		["Blue"] = new SKColor(0x1E, 0x88, 0xE5),
+		["Green"] = new SKColor(0x43, 0xA0, 0x47),
+		["Orange"] = new SKColor(0xFB, 0x8C, 0x00),
+		["Purple"] = new SKColor(0x8E, 0x24, 0xAA),
+	};
+
+	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
+	private SKPath? currentPath;
+	private SKColor currentColor = SKColors.Black;
+	private float brushSize = 4f;
+	private SKPoint cursorPosition;
+	private bool isCursorOver;
+
+	public DrawingPage()
+	{
+		InitializeComponent();
+
+		// TODO: workaround for SKXamlCanvas not loading from XAML
+		if (skiaView == null)
+		{
+			skiaView = new SKXamlCanvas();
+			skiaView.PaintSurface += OnPaintSurface;
+			skiaView.PointerPressed += OnPointerPressed;
+			skiaView.PointerMoved += OnPointerMoved;
+			skiaView.PointerReleased += OnPointerReleased;
+			skiaView.PointerWheelChanged += OnPointerWheelChanged;
+
+			if (Content is Grid grid)
+				grid.Children.Insert(0, skiaView);
+			else
+				Content = skiaView;
+		}
+	}
+
+	private void OnColorClicked(object? sender, RoutedEventArgs e)
+	{
+		if (sender is Button btn && btn.Tag is string tag && ColorMap.TryGetValue(tag, out var color))
+			currentColor = color;
+	}
+
+	private void OnClearClicked(object? sender, RoutedEventArgs e)
+	{
+		foreach (var (path, _, _) in strokes)
+			path.Dispose();
+		strokes.Clear();
+		currentPath?.Dispose();
+		currentPath = null;
+		skiaView.Invalidate();
+	}
+
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+	{
+		var canvas = e.Surface.Canvas;
+		canvas.Clear(SKColors.White);
+
+		using var paint = new SKPaint
+		{
+			IsAntialias = true,
+			Style = SKPaintStyle.Stroke,
+			StrokeCap = SKStrokeCap.Round,
+			StrokeJoin = SKStrokeJoin.Round,
+		};
+
+		float sx = (float)e.Info.Width / (float)skiaView.ActualWidth;
+		float sy = (float)e.Info.Height / (float)skiaView.ActualHeight;
+		canvas.Scale(sx, sy);
+
+		foreach (var (path, color, strokeWidth) in strokes)
+		{
+			paint.Color = color;
+			paint.StrokeWidth = strokeWidth;
+			canvas.DrawPath(path, paint);
+		}
+
+		if (currentPath != null)
+		{
+			paint.Color = currentColor;
+			paint.StrokeWidth = brushSize;
+			canvas.DrawPath(currentPath, paint);
+		}
+
+		if (isCursorOver)
+		{
+			using var indicatorPaint = new SKPaint
+			{
+				IsAntialias = true,
+				Style = SKPaintStyle.Stroke,
+				Color = currentColor.WithAlpha(128),
+				StrokeWidth = 1.5f,
+			};
+			canvas.DrawCircle(cursorPosition.X, cursorPosition.Y, brushSize / 2f, indicatorPaint);
+		}
+	}
+
+	private void OnPointerPressed(object? sender, PointerRoutedEventArgs e)
+	{
+		var point = e.GetCurrentPoint(skiaView);
+		currentPath = new SKPath();
+		currentPath.MoveTo((float)point.Position.X, (float)point.Position.Y);
+		cursorPosition = new SKPoint((float)point.Position.X, (float)point.Position.Y);
+		isCursorOver = true;
+		skiaView.CapturePointer(e.Pointer);
+		skiaView.Invalidate();
+	}
+
+	private void OnPointerMoved(object? sender, PointerRoutedEventArgs e)
+	{
+		var point = e.GetCurrentPoint(skiaView);
+		cursorPosition = new SKPoint((float)point.Position.X, (float)point.Position.Y);
+		isCursorOver = true;
+		currentPath?.LineTo((float)point.Position.X, (float)point.Position.Y);
+		skiaView.Invalidate();
+	}
+
+	private void OnPointerReleased(object? sender, PointerRoutedEventArgs e)
+	{
+		if (currentPath != null)
+		{
+			strokes.Add((currentPath, currentColor, brushSize));
+			currentPath = null;
+			skiaView.Invalidate();
+		}
+		skiaView.ReleasePointerCapture(e.Pointer);
+	}
+
+	private void OnPointerWheelChanged(object? sender, PointerRoutedEventArgs e)
+	{
+		var point = e.GetCurrentPoint(skiaView);
+		var delta = point.Properties.MouseWheelDelta;
+		brushSize = Math.Max(1f, Math.Min(50f, brushSize + (delta > 0 ? 1f : -1f)));
+		if (brushText != null)
+			brushText.Text = $"Brush: {brushSize:F0}px";
+		skiaView.Invalidate();
+	}
+}
