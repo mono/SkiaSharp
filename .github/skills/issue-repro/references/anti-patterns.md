@@ -21,6 +21,10 @@ If the reporter provides both sides of a comparison (working native app + broken
 v2 code + v3 code, valid input + corrupt input), run BOTH on your machine. Don't take claimed
 numbers on faith and don't run only the failing side. (Rule 7)
 
+**Example:** Reporter says "native C++ runs at 120fps, SkiaSharp runs at 8fps" and provides a
+native C++ benchmark project. You skip building native C++ and use "120fps" from the issue text.
+That's using the reporter's claimed number — you must build it and measure your own number.
+
 ### 3. Mismatched comparison conditions
 
 Never compare across different rendering modes (GPU vs CPU), different backends (GL vs Metal), or

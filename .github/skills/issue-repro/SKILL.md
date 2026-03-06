@@ -167,10 +167,14 @@ Some reporters provide both sides of a comparison — working code alongside bro
 - An older SkiaSharp version that works, alongside a newer one that doesn't
 - A different platform where it works, alongside one where it fails
 
-If the reporter provides a baseline, **build and run it yourself** (Rule 7). Record your own
-measurements. Don't use the reporter's claimed numbers. If the baseline requires building native
-code (GN, CMake, Ninja), follow the instructions — these builds may be slow (10-20 min). Be
-patient, retry on network timeouts.
+> **🛑 If the reporter provides a baseline, you MUST build and run it yourself** (Rule 7).
+> Record YOUR OWN measurements. The reporter's claimed numbers (e.g., "120fps") are NOT your
+> baseline — your measured numbers are. Using claimed numbers instead of measuring is a Rule 7
+> violation, not a shortcut.
+
+If the baseline requires building native code (GN, CMake, Ninja), follow the build instructions.
+These builds may be slow (10-20 min for dependency sync, 15+ min for compilation). Be patient,
+retry on network timeouts. Do NOT skip the baseline because it's slow to build.
 
 If no baseline is provided, skip to 3B.
 
