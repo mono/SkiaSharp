@@ -1,0 +1,39 @@
+﻿<div class="nav-header">
+    <span class="nav-brand">SkiaSharp</span>
+    <button class="nav-toggler" @onclick="ToggleNavMenu">
+        <span class="toggler-icon">☰</span>
+    </button>
+</div>
+
+<nav class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <div class="nav-item">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <span class="nav-icon">⊡</span> CPU
+        </NavLink>
+    </div>
+    <div class="nav-item">
+        <NavLink class="nav-link" href="gpu">
+            <span class="nav-icon">◈</span> GPU
+        </NavLink>
+    </div>
+    <div class="nav-item">
+        <NavLink class="nav-link" href="drawing">
+            <span class="nav-icon">✎</span> Drawing
+        </NavLink>
+    </div>
+</nav>
+
+<div class="nav-footer">
+    <a href="https://github.com/mono/SkiaSharp" target="_blank">GitHub</a>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "nav-menu collapse" : "nav-menu";
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
