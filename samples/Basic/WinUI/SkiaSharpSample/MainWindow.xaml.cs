@@ -15,7 +15,6 @@ namespace SkiaSharpSample
 		private void OnNavViewLoaded(object sender, RoutedEventArgs e)
 		{
 			NavView.SelectedItem = NavView.MenuItems[0];
-			ContentFrame.Navigate(typeof(CpuPage));
 		}
 
 		private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
