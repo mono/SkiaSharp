@@ -136,22 +136,17 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 
 ## Phase 3 — Reproduce
 
-> **Overview — you will test up to 4 configurations:**
-> - **3A:** Reporter's version on primary platform *(always)*
-> - **3B:** Latest stable release *(always)*
-> - **3C:** Main branch source *(MANDATORY if 3B still reproduced)*
-> - **3D:** Cross-platform verification *(conditional — see table below)*
+> **Overview — 5 steps in order:**
+> - **3A:** Run the reporter's baseline, if provided *(native C++, working version, etc.)*
+> - **3B:** Run the reporter's broken code *(always)*
+> - **3C:** Create YOUR minimal repro *(always — this is the core deliverable)*
+> - **3D:** Test your repro across versions *(reporter's → latest → main)*
+> - **3E:** Cross-platform verification *(conditional)*
 >
-> **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. This applies to ALL conclusion types — bugs (`reproduced`/`not-reproduced`) AND enhancements (`confirmed`/`not-confirmed`). For enhancements: a feature may exist in one version but not another, or may have been removed. Version testing reveals this.
+> **🛑 MINIMUM 2 VERSIONS REQUIRED in 3D.** You must test at least the reporter's version AND
+> latest stable. Single-version reproductions are incomplete and will fail schema validation.
 
-> **⚠️ Performance bugs REPLACE the standard Phase 3 flow.** See
-> [category-performance.md](references/category-performance.md) and follow its Phase 3A–3D
-> ordering instead. Key requirement: after running the reporter's code (3A-3B), you MUST create
-> your own standalone repro (3C) using the same rendering mode — this is your independent proof.
-
-### 3A. Reproduce with reporter's version
-
-Follow the platform file from Phase 2.4. For each step, capture:
+For each step, capture:
 
 | Field | Limit |
 |-------|-------|
@@ -162,31 +157,73 @@ Follow the platform file from Phase 2.4. For each step, capture:
 | `layer` | `setup` / `csharp` / `c-api` / `native` / `deployment` / `investigation` |
 | `result` | `success` / `failure` / `wrong-output` / `skip` |
 
-**Step `result` = what actually happened** (technical outcome), not whether it was expected. A build that fails is `result: "failure"` even if that confirms the bug. See [references/anti-patterns.md](references/anti-patterns.md) for details.
+**Step `result` = what actually happened** (technical outcome), not whether it was expected. A build that fails is `result: "failure"` even if that confirms the bug.
 
-> **Note:** Use `layer: "investigation"` for source-code analysis steps in enhancement confirmations (grep, file reading). See Phase 2.1 for the full enhancement flow.
+### 3A. Run the reporter's baseline (if provided)
+
+Some reporters provide both sides of a comparison — working code alongside broken code. Examples:
+- Native C++ that renders correctly, alongside C# that renders incorrectly
+- Native C++ at 120fps, alongside SkiaSharp at 8fps
+- An older SkiaSharp version that works, alongside a newer one that doesn't
+- A different platform where it works, alongside one where it fails
+
+If the reporter provides a baseline, **build and run it yourself** (Rule 7). Record your own
+measurements. Don't use the reporter's claimed numbers. If the baseline requires building native
+code (GN, CMake, Ninja), follow the instructions — these builds may be slow (10-20 min). Be
+patient, retry on network timeouts.
+
+If no baseline is provided, skip to 3B.
+
+### 3B. Run the reporter's broken code
+
+Run the reporter's code or project as-is with their exact version and configuration. This
+verifies what they described. Record the observable: crash, wrong output, slow FPS, build error,
+missing feature — whatever the issue reports.
 
 **Push hard.** Don't bail early. Only conclude `not-reproduced` after genuinely exhausting approaches.
 
-### 3B. Test on latest release
+> **Note:** Use `layer: "investigation"` for source-code analysis steps in enhancement
+> confirmations (grep, file reading).
 
-> **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/skiasharp/repro/{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results (Key Rule 4).
+### 3C. Create YOUR minimal repro
 
-Use the same platform strategy from 3A with the latest stable SkiaSharp. Record in `versionResults`.
+This is the core deliverable. The reporter's code is evidence, but you can't trust it — they may
+have added framework overhead, debug settings, or other variables. Create your own minimal app
+that reproduces the issue with the least possible code.
 
-### 3C. Test on main branch (if reproduced on latest)
+**Use the platform file from Phase 2.4** to create the project. The platform determines the
+app type:
+- Core API bug (SKBitmap, SKCanvas, SKPath) → console app ([platform-console.md](references/platform-console.md))
+- GPU rendering bug → GPU app with SKGLView/SKMetalView ([platform-macos.md](references/platform-macos.md), etc.)
+- WASM bug → Blazor app ([platform-wasm-blazor.md](references/platform-wasm-blazor.md))
+- Build/deployment bug → your repro IS the build attempt (same as 3B)
 
-> **🛑 Do NOT skip when reproduced on latest.** If the bug reproduces on the latest stable release, testing main is MANDATORY — it tells us whether a fix exists but hasn't been released.
+If the reporter uses a framework (Avalonia, MAUI, WPF) but the bug might be in core SkiaSharp,
+strip the framework. Your repro should use SkiaSharp directly — the platform's native view, not
+a framework wrapper. This isolates whether the bug is in SkiaSharp or the framework integration.
 
-1. Bootstrap: `[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download`
-2. **Build & run the platform-appropriate sample** under `samples/Basic/<platform>/`. Each platform file has a "Main Source Testing (Phase 3C)" section — follow it.
-3. Record result. If fixed on main but not released, note the version gap.
+> **Performance bugs:** Read [category-performance.md](references/category-performance.md) for
+> additional guidance — instrument with per-phase timing, disable VSync, and see the platform
+> file for backend-specific templates (SKGLView, SKMetalView).
 
-> **Clean up:** Revert sample file changes with `git checkout -- samples/`.
+### 3D. Test your repro across versions
 
-### 3D. Cross-platform verification (conditional)
+Run YOUR minimal repro (from 3C) with multiple SkiaSharp versions:
 
-| Primary result | Run 3D? |
+1. **Reporter's version** — does your minimal repro show the same issue?
+2. **Latest stable release** — is it fixed? Use a fresh project directory or `rm -rf bin/ obj/`
+   between versions (Key Rule 4).
+3. **Main branch (MANDATORY if reproduced on latest)** — is a fix unreleased?
+   - Bootstrap: `[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download`
+   - Build & run the platform-appropriate sample under `samples/Basic/<platform>/`. Each platform
+     file has a "Main Source Testing (Phase 3C)" section — follow it.
+   - Clean up: `git checkout -- samples/`
+
+Record each version in `versionResults`.
+
+### 3E. Cross-platform verification (conditional)
+
+| Primary result | Run 3E? |
 |----------------|---------|
 | `reproduced` (platform-specific) | **Yes** — test alternative platform |
 | `not-reproduced` + reporter on different platform | **Yes** |
@@ -221,8 +258,6 @@ Some bugs live in framework-specific code (MAUI views, WPF handlers, Uno control
 **How to simulate:** Extract the suspect code path into a standalone console app. Model the framework inputs (e.g., resize events, binding updates) and verify the logic path triggers the bug.
 
 **Recording:** Set `reproProject.type: "simulation"` in the JSON. The triage's `classifiedPlatform` vs repro's `type: "simulation"` shows the gap clearly.
-
-**Example:** A view-layer NRE was reproduced by extracting the resize handler logic into a console app, feeding many dimension combinations, and confirming 100% NRE rate when width/height were 0.
 
 ---
 

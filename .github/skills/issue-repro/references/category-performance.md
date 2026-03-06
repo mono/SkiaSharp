@@ -31,91 +31,36 @@ rendering mode** as the reported issue:
 The key rule: **stay in the reporter's rendering mode.** GPU bugs need GPU repros. CPU bugs need
 CPU repros. Crossing modes proves nothing — GPU and CPU use entirely different Skia code paths.
 
-## Strategy
+## Follow SKILL.md Phase 3 with these additions
 
-SKILL.md Rules 7–9 apply with particular force here. Performance reproduction **replaces**
-SKILL.md's standard Phase 3A/3B/3C flow with its own ordering. Do not follow the standard
-version-based phases — follow these steps instead.
+Performance bugs follow the same Phase 3A–3E flow as all other bugs. The additions below apply
+on top of the universal flow.
 
-### Phase 3A: Measure both sides of the reporter's comparison
+### In Phase 3A (baseline)
 
-**Step 1 — Build and run the reporter's baseline (the "fast" side).**
-If the reporter provides a native C++ benchmark or alternative implementation, BUILD AND RUN IT
-on your machine. Follow their build instructions (GN, CMake, Ninja, etc.).
+The reporter's baseline is especially important for performance — it's the "fast" side of the
+comparison. Without it, you have no way to quantify the gap.
 
-These builds can be slow — Skia dependency syncs (`git-sync-deps`) may take 10-20 minutes and
-native compilation may take longer. Be patient, retry on network timeouts, and don't give up
-because a step takes a while. Record the FPS/timing you observe.
+Baseline builds (native C++, GN/Ninja) can be slow. Skia dependency syncs may take 10-20
+minutes and compilation may take longer. Be patient, retry on network timeouts. Only record a
+genuine blocker when the toolchain is truly unavailable, not when something is slow.
 
-**Without this number, you cannot quantify the gap.** If you only measure the "slow" side, you
-haven't reproduced a performance issue — you've just confirmed the reporter's code runs.
+### In Phase 3C (your minimal repro)
 
-**Step 2 — Build and run the reporter's test (the "slow" side).**
-Build and run the reporter's SkiaSharp benchmark with their exact version, platform, and
-configuration. The rendering mode, backend, and scene complexity MUST match the baseline
-(Rule 9). Record your FPS/timing.
-
-Now you have both sides of the comparison measured by you.
-
-### Phase 3B: Test reporter's code on latest SkiaSharp
-
-Same as standard 3B — run the reporter's SkiaSharp benchmark with the latest stable release in
-a clean project directory. Record whether the gap changes.
-
-### Phase 3C: Create YOUR standalone repro (MANDATORY — do not skip)
-
-This is the most important step. The reporter's code is evidence, but it's not YOUR reproduction.
-Their project may have framework overhead, debug settings, or other variables. You need your own
-minimal app that demonstrates the gap independently.
-
-**For GPU performance bugs:**
-
-1. Read [platform-macos.md](platform-macos.md) (or the relevant platform file)
-2. Create a new macOS/Windows/Linux GPU app using the platform file's "Create Project" steps
-3. Add an SKGLView or SKMetalView using the "Backend-Specific Templates" from the platform file
-4. Put the reporter's drawing scene in the PaintSurface handler
-5. Add FPS measurement and per-phase timing (see below)
-6. Build and run it — this standalone GPU app IS your minimal repro
-
-Example for macOS GPU:
-```bash
-mkdir -p /tmp/skiasharp/repro/{number}-standalone && cd /tmp/skiasharp/repro/{number}-standalone
-dotnet new macos -n GpuRepro --framework net10.0-macos
-cd GpuRepro
-dotnet add package SkiaSharp.Views --version {reporter_version}
-```
-Then in AppDelegate.cs, create an SKGLView with the drawing scene (see platform-macos.md for
-the full template).
-
-**For CPU performance bugs:** Create a console app with `SKSurface.Create` raster and the same
-workload. Console IS correct for CPU issues.
-
-**What this tells you:** If your standalone GPU app is also slow → the gap is in SkiaSharp's GPU
-rendering. If it's fast → the gap is in the reporter's framework integration (Avalonia, MAUI,
-etc.), not SkiaSharp.
-
-### Phase 3D: Instrument your standalone repro
-
-Add `System.Diagnostics.Stopwatch` to your standalone repro to identify WHERE the time goes:
+Your observable is **timing or FPS** instead of crash or bad image. Add per-phase instrumentation
+to your standalone repro with `System.Diagnostics.Stopwatch`:
 
 - `render`: CPU-side draw calls (canvas.DrawX)
 - `flush`: Skia command submission to GPU (canvas.Flush / context.Flush)
 - `finish`: GPU drain (glFinish / commandBuffer.WaitUntilCompleted)
 - `swap`: Buffer swap / present
 
-Disable VSync before measuring — it caps frame rate to 60/120fps, masking real differences.
+**Disable VSync** before measuring — it caps frame rate to 60/120fps, masking real differences.
 
-Record FPS only after 5+ consecutive frames within 10% variance. Discard first 10 frames
-(JIT warm-up).
+**Statistical stability:** Record FPS only after 5+ consecutive frames within 10% variance.
+Discard first 10 frames (JIT warm-up).
 
-## Timeouts and retries
-
-Network operations (git clone, git-sync-deps, package restore) may be slow. Retry 2-3 times
-before considering a step failed. Native builds (Skia via GN/Ninja) can take 15+ minutes on
-first build — that's normal. Only record a genuine blocker when the toolchain or platform is
-truly unavailable, not when something is slow.
-
-## Example: Per-phase timing
+### Example: Per-phase timing
 
 ```csharp
 // In an SKGLView.PaintSurface handler (GPU) or with SKSurface.Create (CPU)
