@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using Gdk;
 using Gtk;
 using SkiaSharp;
@@ -20,8 +22,6 @@ namespace SkiaSharpSample
 			("Purple", new SKColor(0x8E, 0x24, 0xAA)),
 		};
 
-		private readonly Stack stack;
-
 		// Drawing page state
 		private SKDrawingArea drawingSkiaView;
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
@@ -37,38 +37,64 @@ namespace SkiaSharpSample
 			SetDefaultSize(1024, 768);
 			DeleteEvent += (s, e) => Application.Quit();
 
-			var hbox = new HBox();
+			// Load layout from the embedded Glade resource
+			var builder = new Builder();
+			var assembly = Assembly.GetExecutingAssembly();
+			using (var stream = assembly.GetManifestResourceStream("SkiaSharpSample.MainWindow.glade"))
+			using (var reader = new StreamReader(stream))
+			{
+				builder.AddFromString(reader.ReadToEnd());
+			}
 
-			stack = new Stack();
-			stack.TransitionType = StackTransitionType.Crossfade;
-			stack.TransitionDuration = 300;
+			var rootBox = (Box)builder.GetObject("rootBox");
 
-			var sidebar = new StackSidebar();
-			sidebar.Stack = stack;
-			sidebar.WidthRequest = 200;
+			// CPU Page: insert SKDrawingArea into the placeholder container
+			var cpuPage = (Box)builder.GetObject("cpuPage");
+			var cpuSkiaView = new SKDrawingArea();
+			cpuSkiaView.PaintSurface += OnCpuPaintSurface;
+			cpuPage.PackStart(cpuSkiaView, true, true, 0);
 
-			// CPU Page
-			var cpuPage = CreateCpuPage();
-			stack.AddTitled(cpuPage, "cpu", "CPU Canvas");
+			// Drawing Page: insert SKDrawingArea into the placeholder container
+			var drawingCanvasContainer = (Box)builder.GetObject("drawingCanvasContainer");
+			drawingSkiaView = new SKDrawingArea();
+			drawingSkiaView.PaintSurface += OnDrawingPaintSurface;
+			drawingSkiaView.AddEvents(
+				(int)(EventMask.ButtonPressMask |
+				      EventMask.ButtonReleaseMask |
+				      EventMask.PointerMotionMask |
+				      EventMask.ScrollMask |
+				      EventMask.EnterNotifyMask |
+				      EventMask.LeaveNotifyMask));
+			drawingSkiaView.ButtonPressEvent += OnDrawingButtonPress;
+			drawingSkiaView.ButtonReleaseEvent += OnDrawingButtonRelease;
+			drawingSkiaView.MotionNotifyEvent += OnDrawingMotionNotify;
+			drawingSkiaView.ScrollEvent += OnDrawingScroll;
+			drawingSkiaView.EnterNotifyEvent += (s, e) => { isCursorOver = true; };
+			drawingSkiaView.LeaveNotifyEvent += (s, e) => { isCursorOver = false; drawingSkiaView.QueueDraw(); };
+			drawingCanvasContainer.PackStart(drawingSkiaView, true, true, 0);
 
-			// Drawing Page
-			var drawingPage = CreateDrawingPage();
-			stack.AddTitled(drawingPage, "drawing", "Drawing");
+			// Connect color buttons defined in the Glade file
+			foreach (var (name, color) in ColorOptions)
+			{
+				var btn = (Button)builder.GetObject($"btn{name}");
+				var provider = new CssProvider();
+				provider.LoadFromData(
+					$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}");
+				btn.StyleContext.AddProvider(provider, StyleProviderPriority.Application);
+				var capturedColor = color;
+				btn.Clicked += (s, e) => currentColor = capturedColor;
+			}
 
-			hbox.PackStart(sidebar, false, false, 0);
-			hbox.PackStart(stack, true, true, 0);
+			// Connect clear button
+			var clearBtn = (Button)builder.GetObject("btnClear");
+			var clearProvider = new CssProvider();
+			clearProvider.LoadFromData(
+				"button { background: rgb(120,120,120); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }");
+			clearBtn.StyleContext.AddProvider(clearProvider, StyleProviderPriority.Application);
+			clearBtn.Clicked += OnClearClicked;
 
-			Add(hbox);
+			Add(rootBox);
 			ShowAll();
-		}
-
-		// --- CPU Page ---
-
-		private Widget CreateCpuPage()
-		{
-			var skiaView = new SKDrawingArea();
-			skiaView.PaintSurface += OnCpuPaintSurface;
-			return skiaView;
 		}
 
 		private void OnCpuPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -107,54 +133,6 @@ namespace SkiaSharpSample
 			using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
 			using var font = new SKFont { Size = 48 };
 			canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
-		}
-
-		// --- Drawing Page ---
-
-		private Widget CreateDrawingPage()
-		{
-			var vbox = new VBox();
-
-			drawingSkiaView = new SKDrawingArea();
-			drawingSkiaView.PaintSurface += OnDrawingPaintSurface;
-			drawingSkiaView.AddEvents(
-				(int)(EventMask.ButtonPressMask |
-				      EventMask.ButtonReleaseMask |
-				      EventMask.PointerMotionMask |
-				      EventMask.ScrollMask |
-				      EventMask.EnterNotifyMask |
-				      EventMask.LeaveNotifyMask));
-			drawingSkiaView.ButtonPressEvent += OnDrawingButtonPress;
-			drawingSkiaView.ButtonReleaseEvent += OnDrawingButtonRelease;
-			drawingSkiaView.MotionNotifyEvent += OnDrawingMotionNotify;
-			drawingSkiaView.ScrollEvent += OnDrawingScroll;
-			drawingSkiaView.EnterNotifyEvent += (s, e) => { isCursorOver = true; };
-			drawingSkiaView.LeaveNotifyEvent += (s, e) => { isCursorOver = false; drawingSkiaView.QueueDraw(); };
-			vbox.PackStart(drawingSkiaView, true, true, 0);
-
-			var toolbar = new HBox();
-			toolbar.HeightRequest = 40;
-			foreach (var (name, color) in ColorOptions)
-			{
-				var btn = new Button(name);
-				var provider = new CssProvider();
-				provider.LoadFromData(
-					$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}");
-				btn.StyleContext.AddProvider(provider, StyleProviderPriority.Application);
-				var capturedColor = color;
-				btn.Clicked += (s, e) => currentColor = capturedColor;
-				toolbar.PackStart(btn, false, false, 2);
-			}
-			var clearBtn = new Button("Clear");
-			var clearProvider = new CssProvider();
-			clearProvider.LoadFromData(
-				"button { background: rgb(120,120,120); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }");
-			clearBtn.StyleContext.AddProvider(clearProvider, StyleProviderPriority.Application);
-			clearBtn.Clicked += OnClearClicked;
-			toolbar.PackStart(clearBtn, false, false, 2);
-			vbox.PackStart(toolbar, false, false, 4);
-
-			return vbox;
 		}
 
 		private void OnDrawingPaintSurface(object sender, SKPaintSurfaceEventArgs e)
