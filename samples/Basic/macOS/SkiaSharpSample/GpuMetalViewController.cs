@@ -1,10 +1,12 @@
 using System;
 using AppKit;
+using Foundation;
 using SkiaSharp;
 using SkiaSharp.Views.Mac;
 
 namespace SkiaSharpSample
 {
+	[Register("GpuMetalViewController")]
 	public class GpuMetalViewController : NSViewController
 	{
 		const string sksl = @"
@@ -78,7 +80,9 @@ namespace SkiaSharpSample
 			}
 		";
 
-		SKMetalView? skiaView;
+		[Outlet]
+		SKMetalView? skiaView { get; set; }
+
 		readonly SKRuntimeShaderBuilder builder = SKRuntimeEffect.BuildShader(sksl);
 		readonly long startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		readonly SKPaint shaderPaint = new();
@@ -91,14 +95,18 @@ namespace SkiaSharpSample
 		readonly long[] tickList = new long[100];
 		long lastTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-		public override void LoadView()
+		public GpuMetalViewController(IntPtr handle) : base(handle) { }
+
+		public override void ViewDidLoad()
 		{
-			skiaView = new SKMetalView();
-			skiaView.Paused = false;
-			skiaView.EnableSetNeedsDisplay = false;
-			skiaView.PreferredFramesPerSecond = 60;
-			skiaView.PaintSurface += OnPaintSurface;
-			View = skiaView;
+			base.ViewDidLoad();
+			if (skiaView != null)
+			{
+				skiaView.Paused = false;
+				skiaView.EnableSetNeedsDisplay = false;
+				skiaView.PreferredFramesPerSecond = 60;
+				skiaView.PaintSurface += OnPaintSurface;
+			}
 		}
 
 		public override void ViewWillDisappear()

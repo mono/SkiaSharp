@@ -1,17 +1,27 @@
 using System;
 using AppKit;
+using Foundation;
 using SkiaSharp;
 using SkiaSharp.Views.Mac;
 
 namespace SkiaSharpSample
 {
+	[Register("CpuViewController")]
 	public class CpuViewController : NSViewController
 	{
-		public override void LoadView()
+		[Outlet]
+		SKCanvasView? skiaView { get; set; }
+
+		public CpuViewController(IntPtr handle) : base(handle) { }
+
+		public override void ViewDidLoad()
 		{
-			var skiaView = new SKCanvasView { IgnorePixelScaling = true };
-			skiaView.PaintSurface += OnPaintSurface;
-			View = skiaView;
+			base.ViewDidLoad();
+			if (skiaView != null)
+			{
+				skiaView.IgnorePixelScaling = true;
+				skiaView.PaintSurface += OnPaintSurface;
+			}
 		}
 
 		void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
