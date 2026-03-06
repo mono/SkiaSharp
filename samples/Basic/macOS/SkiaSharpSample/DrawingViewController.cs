@@ -11,20 +11,27 @@ namespace SkiaSharpSample
 	[Register("DrawingViewController")]
 	public class DrawingViewController : NSViewController
 	{
-		static readonly SKColor[] palette =
+		static readonly (SKColor Light, SKColor Dark)[] palette =
 		{
-			SKColors.Black,
-			new SKColor(0xFFE53935),  // red
-			new SKColor(0xFF1E88E5),  // blue
-			new SKColor(0xFF43A047),  // green
-			new SKColor(0xFFFF8F00),  // amber
-			new SKColor(0xFF8E24AA),  // purple
+			(SKColors.Black, SKColors.White),
+			(new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),  // red
+			(new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),  // blue
+			(new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),  // green
+			(new SKColor(0xFF, 0x8F, 0x00), new SKColor(0xFF, 0xA7, 0x26)),  // amber
+			(new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),  // purple
 		};
 
 		readonly List<Stroke> strokes = new();
+		readonly List<NSButton> paletteButtons = new();
 		SKPath? currentPath;
 		int colorIndex;
 		float brushSize = 4f;
+
+		bool IsDarkMode =>
+			NSApplication.SharedApplication.EffectiveAppearance.Name.ToString()
+				.Contains("Dark", StringComparison.OrdinalIgnoreCase);
+		SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
+		SKColor ResolveColor(SKColor light, SKColor dark) => IsDarkMode ? dark : light;
 
 		[Outlet]
 		SKCanvasView? skiaView { get; set; }
@@ -80,7 +87,8 @@ namespace SkiaSharpSample
 			for (int i = 0; i < palette.Length; i++)
 			{
 				var idx = i;
-				var color = palette[i];
+				var (light, dark) = palette[i];
+				var resolved = ResolveColor(light, dark);
 				var btn = new NSButton
 				{
 					Title = "",
@@ -88,7 +96,7 @@ namespace SkiaSharpSample
 					WantsLayer = true,
 					Bordered = false,
 				};
-				btn.Layer!.BackgroundColor = new CGColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f);
+				btn.Layer!.BackgroundColor = new CGColor(resolved.Red / 255f, resolved.Green / 255f, resolved.Blue / 255f);
 				btn.Layer.CornerRadius = 4;
 				btn.WidthAnchor.ConstraintEqualTo(28).Active = true;
 				btn.HeightAnchor.ConstraintEqualTo(28).Active = true;
@@ -98,6 +106,7 @@ namespace SkiaSharpSample
 					skiaView?.NeedsDisplay = true;
 				};
 				stack.AddArrangedSubview(btn);
+				paletteButtons.Add(btn);
 			}
 
 			var separator = new NSView();
@@ -183,10 +192,11 @@ namespace SkiaSharpSample
 		public override void MouseUp(NSEvent theEvent)
 		{
 			if (currentPath == null) return;
+			var (light, dark) = palette[colorIndex];
 			strokes.Add(new Stroke
 			{
 				Path = currentPath,
-				Color = palette[colorIndex],
+				Color = ResolveColor(light, dark),
 				Width = brushSize,
 			});
 			currentPath = null;
@@ -209,8 +219,16 @@ namespace SkiaSharpSample
 
 		void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 		{
+			// Update palette button colors for current appearance
+			for (int i = 0; i < paletteButtons.Count && i < palette.Length; i++)
+			{
+				var (l, d) = palette[i];
+				var c = ResolveColor(l, d);
+				paletteButtons[i].Layer!.BackgroundColor = new CGColor(c.Red / 255f, c.Green / 255f, c.Blue / 255f);
+			}
+
 			var canvas = e.Surface.Canvas;
-			canvas.Clear(SKColors.White);
+			canvas.Clear(CanvasBackground);
 
 			using var paint = new SKPaint
 			{
@@ -231,7 +249,8 @@ namespace SkiaSharpSample
 			// Draw current in-progress stroke
 			if (currentPath != null)
 			{
-				paint.Color = palette[colorIndex];
+				var (cl, cd) = palette[colorIndex];
+				paint.Color = ResolveColor(cl, cd);
 				paint.StrokeWidth = brushSize;
 				canvas.DrawPath(currentPath, paint);
 			}
@@ -241,7 +260,7 @@ namespace SkiaSharpSample
 			{
 				using var textPaint = new SKPaint
 				{
-					Color = new SKColor(0, 0, 0, 80),
+					Color = IsDarkMode ? new SKColor(255, 255, 255, 80) : new SKColor(0, 0, 0, 80),
 					IsAntialias = true,
 				};
 				using var font = new SKFont { Size = 20 };

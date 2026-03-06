@@ -10,22 +10,38 @@ namespace SkiaSharpSample
 {
 	public class MainWindow : ApplicationWindow
 	{
-		private static readonly (string ButtonId, string Name, SKColor Color)[] ColorOptions = new[]
+		private static readonly (string ButtonId, string Name, SKColor Light, SKColor Dark)[] ColorOptions = new[]
 		{
-			("btnBlack", "Black", SKColors.Black),
-			("btnRed", "Red", new SKColor(0xE5, 0x39, 0x35)),
-			("btnBlue", "Blue", new SKColor(0x1E, 0x88, 0xE5)),
-			("btnGreen", "Green", new SKColor(0x43, 0xA0, 0x47)),
-			("btnOrange", "Orange", new SKColor(0xFB, 0x8C, 0x00)),
-			("btnPurple", "Purple", new SKColor(0x8E, 0x24, 0xAA)),
+			("btnBlack", "Black", SKColors.Black, SKColors.White),
+			("btnRed", "Red", new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+			("btnBlue", "Blue", new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+			("btnGreen", "Green", new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+			("btnOrange", "Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+			("btnPurple", "Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
 		};
+
+		private static bool IsDarkMode
+		{
+			get
+			{
+				var settings = Gtk.Settings.GetDefault();
+				if (settings == null)
+					return false;
+				if (settings.GtkApplicationPreferDarkTheme)
+					return true;
+				var themeName = settings.GtkThemeName;
+				return themeName?.Contains("dark", StringComparison.OrdinalIgnoreCase) ?? false;
+			}
+		}
+
+		private static SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 
 		// Drawing page state
 		private SKDrawingArea drawingSkiaView;
 		private Label brushSizeLabel;
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 		private SKPath currentPath;
-		private SKColor currentColor = SKColors.Black;
+		private SKColor currentColor;
 		private float brushSize = 4f;
 		private SKPoint cursorPosition;
 		private bool isCursorOver;
@@ -37,6 +53,7 @@ namespace SkiaSharpSample
 			Application = app;
 			Title = "SkiaSharp on Gtk4";
 			SetDefaultSize(1024, 768);
+			currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
 
 			// Load layout from the .ui file (editable in GNOME Builder / Cambalache)
 			var uiPath = Path.Combine(AppContext.BaseDirectory, "MainWindow.ui");
@@ -79,16 +96,17 @@ namespace SkiaSharpSample
 
 		private void SetupColorButtons(Builder builder)
 		{
-			foreach (var (buttonId, name, color) in ColorOptions)
+			foreach (var (buttonId, name, light, dark) in ColorOptions)
 			{
 				var btn = (Button)builder.GetObject(buttonId);
 				var provider = new CssProvider();
 				provider.LoadFromData(
-					$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}",
+					$"button {{ background: rgb({light.Red},{light.Green},{light.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}",
 					-1);
 				btn.GetStyleContext().AddProvider(provider, 600);
-				var capturedColor = color;
-				btn.OnClicked += (sender, args) => currentColor = capturedColor;
+				var capturedLight = light;
+				var capturedDark = dark;
+				btn.OnClicked += (sender, args) => currentColor = IsDarkMode ? capturedDark : capturedLight;
 			}
 		}
 
@@ -175,7 +193,7 @@ namespace SkiaSharpSample
 		private void OnDrawingPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
 			var canvas = e.Surface.Canvas;
-			canvas.Clear(SKColors.White);
+			canvas.Clear(CanvasBackground);
 
 			using var paint = new SKPaint
 			{

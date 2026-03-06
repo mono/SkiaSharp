@@ -15,28 +15,46 @@ namespace SkiaSharpSample
 
 		private readonly List<Stroke> strokes = new();
 		private SKPath? currentPath;
-		private SKColor currentColor = SKColors.Black;
+		private SKColor currentColor;
 		private float brushSize = 4f;
 		private float cursorX;
 		private float cursorY;
 		private bool isDrawing;
 		private double dpiScale = 1.0;
 
-		private readonly Dictionary<string, SKColor> colorMap = new()
+		private static readonly Dictionary<string, (SKColor Light, SKColor Dark)> colorMap = new()
 		{
-			["Black"] = SKColors.Black,
-			["Red"] = new SKColor(0xE5, 0x39, 0x35),
-			["Blue"] = new SKColor(0x1E, 0x88, 0xE5),
-			["Green"] = new SKColor(0x43, 0xA0, 0x47),
-			["Orange"] = new SKColor(0xFB, 0x8C, 0x00),
-			["Purple"] = new SKColor(0x8E, 0x24, 0xAA),
+			["Black"] = (SKColors.Black, SKColors.White),
+			["Red"] = (new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+			["Blue"] = (new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+			["Green"] = (new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+			["Orange"] = (new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+			["Purple"] = (new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
 		};
 
 		private Border? selectedColorBorder;
 
+		static bool IsDarkMode
+		{
+			get
+			{
+				try
+				{
+					using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+						@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+					return key?.GetValue("AppsUseLightTheme") is int i && i == 0;
+				}
+				catch { return false; }
+			}
+		}
+
+		SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
+		static SKColor ResolveColor((SKColor Light, SKColor Dark) pair) => IsDarkMode ? pair.Dark : pair.Light;
+
 		public DrawingPage()
 		{
 			InitializeComponent();
+			currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
 
 			selectedColorBorder = ColorBlack;
 
@@ -45,12 +63,21 @@ namespace SkiaSharpSample
 			SkCanvas.MouseUp += OnMouseUp;
 			SkCanvas.MouseWheel += OnMouseWheel;
 			SkCanvas.MouseLeave += OnMouseLeave;
+
+			Microsoft.Win32.SystemEvents.UserPreferenceChanged += (s, e) =>
+			{
+				if (currentColor == SKColors.Black && IsDarkMode)
+					currentColor = SKColors.White;
+				else if (currentColor == SKColors.White && !IsDarkMode)
+					currentColor = SKColors.Black;
+				SkCanvas.InvalidateVisual();
+			};
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
 			var canvas = e.Surface.Canvas;
-			canvas.Clear(SKColors.White);
+			canvas.Clear(CanvasBackground);
 
 			// Capture DPI scale for coordinate conversion
 			var source = PresentationSource.FromVisual(this);
@@ -147,9 +174,9 @@ namespace SkiaSharpSample
 			if (sender is not Border border || border.Tag is not string colorName)
 				return;
 
-			if (colorMap.TryGetValue(colorName, out var color))
+			if (colorMap.TryGetValue(colorName, out var pair))
 			{
-				currentColor = color;
+				currentColor = ResolveColor(pair);
 
 				// Update selection highlight
 				if (selectedColorBorder != null)

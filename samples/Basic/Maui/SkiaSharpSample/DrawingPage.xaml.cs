@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Maui;
+using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using SkiaSharp;
@@ -9,14 +12,40 @@ namespace SkiaSharpSample
 {
 	public partial class DrawingPage : ContentPage
 	{
+		static readonly (SKColor Light, SKColor Dark)[] colorPalette =
+		{
+			(SKColors.Black, SKColors.White),
+			(new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+			(new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+			(new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+			(new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+			(new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+		};
+
 		readonly List<(SKPath Path, SKColor Color, float Width)> strokes = new();
 		SKPath? currentPath;
-		SKColor currentColor = SKColors.Black;
+		SKColor currentColor;
 		float brushSize = 8f;
+
+		bool IsDarkMode => Application.Current?.RequestedTheme == AppTheme.Dark;
+		SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 
 		public DrawingPage()
 		{
 			InitializeComponent();
+			currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
+			if (Application.Current != null)
+				Application.Current.RequestedThemeChanged += OnThemeChanged;
+		}
+
+		void OnThemeChanged(object sender, AppThemeChangedEventArgs e)
+		{
+			// Swap black/white when theme changes
+			if (currentColor == SKColors.Black && IsDarkMode)
+				currentColor = SKColors.White;
+			else if (currentColor == SKColors.White && !IsDarkMode)
+				currentColor = SKColors.Black;
+			skiaView.InvalidateSurface();
 		}
 
 		private void OnTouch(object sender, SKTouchEventArgs e)
@@ -58,7 +87,7 @@ namespace SkiaSharpSample
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
 			var canvas = e.Surface.Canvas;
-			canvas.Clear(SKColors.White);
+			canvas.Clear(CanvasBackground);
 
 			using var paint = new SKPaint
 			{
@@ -87,11 +116,14 @@ namespace SkiaSharpSample
 		{
 			if (sender is Button btn && btn.BackgroundColor is Color mauiColor)
 			{
-				currentColor = new SKColor(
+				var light = new SKColor(
 					(byte)(mauiColor.Red * 255),
 					(byte)(mauiColor.Green * 255),
-					(byte)(mauiColor.Blue * 255),
-					(byte)(mauiColor.Alpha * 255));
+					(byte)(mauiColor.Blue * 255));
+				var entry = colorPalette.FirstOrDefault(p => p.Light == light);
+				currentColor = entry.Light != default
+					? (IsDarkMode ? entry.Dark : entry.Light)
+					: light;
 			}
 		}
 
