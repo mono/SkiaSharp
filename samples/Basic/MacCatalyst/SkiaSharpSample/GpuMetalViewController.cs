@@ -4,6 +4,7 @@ using SkiaSharp.Views.iOS;
 
 namespace SkiaSharpSample;
 
+[Register("GpuMetalViewController")]
 public class GpuMetalViewController : UIViewController
 {
 	const string SkslSource = @"
@@ -45,7 +46,9 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-	SKMetalView? metalView;
+	[Outlet]
+	SKMetalView? skiaView { get; set; }
+
 	SKRuntimeShaderBuilder? shaderBuilder;
 	readonly Stopwatch stopwatch = new();
 
@@ -57,16 +60,14 @@ half4 main(float2 fragCoord) {
 	double lastFpsTime;
 	double currentFps;
 
-	public GpuMetalViewController()
+	public GpuMetalViewController(IntPtr handle)
+		: base(handle)
 	{
-		Title = "GPU (Metal)";
 	}
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
-
-		View!.BackgroundColor = UIColor.SystemBackground;
 
 		try
 		{
@@ -78,23 +79,10 @@ half4 main(float2 fragCoord) {
 			return;
 		}
 
-		metalView = new SKMetalView
-		{
-			TranslatesAutoresizingMaskIntoConstraints = false,
-			EnableSetNeedsDisplay = false,
-			Paused = false,
-			FrameInterval = 1,
-		};
-		metalView.PaintSurface += OnPaintSurface;
-
-		View.AddSubview(metalView);
-		NSLayoutConstraint.ActivateConstraints(new[]
-		{
-			metalView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-			metalView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-			metalView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
-			metalView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
-		});
+		skiaView!.EnableSetNeedsDisplay = false;
+		skiaView.Paused = false;
+		skiaView.PreferredFramesPerSecond = 60;
+		skiaView.PaintSurface += OnPaintSurface;
 
 		stopwatch.Start();
 	}
@@ -194,11 +182,11 @@ half4 main(float2 fragCoord) {
 
 	void UpdateTouch(NSSet touches)
 	{
-		if (touches.AnyObject is not UITouch touch || metalView == null)
+		if (touches.AnyObject is not UITouch touch || skiaView == null)
 			return;
 
-		var loc = touch.LocationInView(metalView);
-		var scale = metalView.ContentScaleFactor;
+		var loc = touch.LocationInView(skiaView);
+		var scale = skiaView.ContentScaleFactor;
 		touchX = (float)(loc.X * scale);
 		touchY = (float)(loc.Y * scale);
 		touchActive = 1f;

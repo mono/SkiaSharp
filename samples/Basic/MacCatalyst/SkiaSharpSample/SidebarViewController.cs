@@ -1,20 +1,20 @@
 namespace SkiaSharpSample;
 
+[Register("SidebarViewController")]
 public class SidebarViewController : UITableViewController
 {
-	readonly (string Id, string Title)[] pages =
+	readonly (string StoryboardId, string Title)[] pages =
 	{
-		("cpu", "CPU Canvas"),
-		("gpu-metal", "GPU (Metal)"),
-		("drawing", "Drawing"),
+		("CpuViewController", "CPU Canvas"),
+		("GpuMetalViewController", "GPU (Metal)"),
+		("DrawingViewController", "Drawing"),
 	};
 
 	const string CellId = "SidebarCell";
 
-	public SidebarViewController()
-		: base(UITableViewStyle.InsetGrouped)
+	public SidebarViewController(IntPtr handle)
+		: base(handle)
 	{
-		Title = "SkiaSharp";
 	}
 
 	public override void ViewDidLoad()
@@ -39,11 +39,11 @@ public class SidebarViewController : UITableViewController
 		var config = UIListContentConfiguration.SidebarCellConfiguration;
 		config.Text = page.Title;
 
-		var imageName = page.Id switch
+		var imageName = page.StoryboardId switch
 		{
-			"cpu" => "cpu",
-			"gpu-metal" => "gpu",
-			"drawing" => "pencil.tip",
+			"CpuViewController" => "cpu",
+			"GpuMetalViewController" => "gpu",
+			"DrawingViewController" => "pencil.tip",
 			_ => "circle"
 		};
 		config.Image = UIImage.GetSystemImage(imageName);
@@ -55,14 +55,7 @@ public class SidebarViewController : UITableViewController
 	public override void RowSelected(UITableView tableView, NSIndexPath indexPath)
 	{
 		var page = pages[indexPath.Row];
-		UIViewController vc = page.Id switch
-		{
-			"cpu" => new CpuViewController(),
-			"gpu-metal" => new GpuMetalViewController(),
-			"drawing" => new DrawingViewController(),
-			_ => new CpuViewController()
-		};
-
+		var vc = Storyboard!.InstantiateViewController(page.StoryboardId);
 		var navVC = new UINavigationController(vc);
 
 		if (SplitViewController is UISplitViewController splitVC)
