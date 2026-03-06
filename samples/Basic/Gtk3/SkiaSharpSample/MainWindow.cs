@@ -213,9 +213,18 @@ namespace SkiaSharpSample
 		[GLib.ConnectBefore]
 		private void OnDrawingScroll(object sender, ScrollEventArgs e)
 		{
-			brushSize = Math.Max(1f, Math.Min(50f,
-				brushSize + (e.Event.Direction == ScrollDirection.Up ? 1f : -1f)));
-			drawingSkiaView.QueueDraw();
+			bool scrollUp;
+			if (e.Event.Direction == Gdk.ScrollDirection.Smooth)
+				scrollUp = e.Event.DeltaY < 0;
+			else
+				scrollUp = e.Event.Direction == Gdk.ScrollDirection.Up;
+
+			if (scrollUp)
+				brushSize = Math.Min(brushSize + 1, 50);
+			else
+				brushSize = Math.Max(brushSize - 1, 1);
+
+			drawingSkiaView?.QueueDraw();
 		}
 
 		private void OnClearClicked(object sender, EventArgs e)
