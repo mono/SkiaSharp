@@ -42,6 +42,11 @@ namespace SkiaSharpSample
 					}
 					break;
 
+				case SKTouchAction.Cancelled:
+					currentPath?.Dispose();
+					currentPath = null;
+					break;
+
 				case SKTouchAction.WheelChanged:
 					brushSize = Math.Clamp(brushSize + e.WheelDelta, 1f, 100f);
 					brushLabel.Text = $"Brush: {brushSize:F0}px";

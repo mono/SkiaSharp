@@ -121,7 +121,8 @@ half4 main(float2 fragCoord) {
 			};
 			builder.Uniforms["iTouchActive"] = touchActive;
 
-			shaderPaint.Shader = builder.Build();
+			using var shader = builder.Build();
+			shaderPaint.Shader = shader;
 			canvas.DrawRect(0, 0, width, height, shaderPaint);
 
 			UpdateFps();
