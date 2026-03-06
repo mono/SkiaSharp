@@ -30,19 +30,26 @@
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 8px;
+    flex-direction: column;
     align-items: center;
+    gap: 12px;
     z-index: 1;
     background: var(--pill-bg);
     border: 1px solid var(--pill-border);
     border-radius: 28px;
-    padding: 12px 20px;
+    padding: 14px 24px;
     backdrop-filter: blur(8px);
 }
 
+.swatch-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
 .color-swatch {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     cursor: pointer;
     border: 2px solid transparent;
@@ -59,15 +66,9 @@
     box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
 }
 
-.toolbar-divider {
-    width: 1px;
-    height: 24px;
-    background: rgba(255,255,255,0.2);
-    margin: 0 4px;
-}
-
 .brush-slider {
-    width: 100px;
+    width: 100%;
+    min-width: 200px;
     accent-color: white;
     cursor: pointer;
 }
