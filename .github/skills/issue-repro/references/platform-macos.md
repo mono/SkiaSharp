@@ -23,8 +23,7 @@ Also use when triage JSON has `classification.platforms` containing `os/macOS` o
 ## Create Project
 
 > **⚠️ ALWAYS use `dotnet new macos`.** Do NOT create .csproj and .cs files manually — the
-> template generates essential Info.plist, entitlements, and app bundle structure. Without
-> these, the app may build but render a blank screen.
+> template generates a properly structured app that doesn't need hacks to launch.
 
 ```bash
 mkdir -p /tmp/skiasharp/repro/{number} && cd /tmp/skiasharp/repro/{number}

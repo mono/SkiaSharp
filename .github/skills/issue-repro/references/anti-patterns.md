@@ -81,9 +81,7 @@ you cannot run it, report `needs-platform`.
 
 Before accepting ANY FPS, timing, or rendering measurements, confirm the app is actually rendering
 content. Take a screenshot, save a frame to PNG, or check pixel values. High FPS on a blank screen
-means your drawing code isn't executing — not that SkiaSharp is fast. This commonly happens when
-project files are created manually instead of using `dotnet new` templates (missing Info.plist,
-bundle structure, etc.).
+means your drawing code isn't executing — not that SkiaSharp is fast.
 
 ### 11. Mismarking step results
 
