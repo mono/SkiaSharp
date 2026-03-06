@@ -357,32 +357,56 @@ Issue: "SKPaint.FilterQuality docs say it affects image scaling but it's depreca
 
 ### Strategy
 
-> ⚠️ **Console apps are NOT sufficient for view rendering performance bugs.** Console apps bypass the entire view rendering pipeline (SKGLView, SKMetalView, SKCanvasView). Use the correct platform file (e.g., platform-macos.md for macOS view bugs).
+SKILL.md Rules 9–11 apply with particular force here. The most common performance repro failure
+is violating Rule 9 (mismatched conditions) — e.g., comparing CPU rendering to GPU rendering, or
+comparing a console app to a GPU view.
 
-1. **Establish a native baseline** if the reporter provides a native C++ benchmark:
-   ```bash
-   git clone <reporter-benchmark-repo> /tmp/skiasharp-perf/native
-   # Build and run with VSync disabled
-   ```
-   If no native baseline exists, compare across SkiaSharp versions (reporter's vs latest).
+> ⚠️ **Console apps are NOT sufficient for view rendering performance bugs.** Console apps bypass
+> the entire view rendering pipeline (SKGLView, SKMetalView, SKCanvasView). Use the correct
+> platform file (e.g., platform-macos.md for macOS view bugs).
 
-2. **Build the equivalent C# benchmark** matching the reporter's setup (platform, backend, version).
+Follow these steps IN ORDER:
 
-3. **Instrument with per-phase timing** — this is CRITICAL. Use `System.Diagnostics.Stopwatch` to measure each rendering phase separately:
+1. **Run the reporter's baseline (the "fast" side).** (Rule 7) If the reporter provides a native
+   C++ benchmark or alternative implementation, BUILD AND RUN IT on your machine. Do not use the
+   reporter's claimed numbers. If you cannot build the baseline (missing deps), record as a
+   blocker — do not substitute claimed numbers.
+
+2. **Run the reporter's test (the "slow" side).** (Rule 7) Build and run the reporter's
+   SkiaSharp benchmark with their exact version, platform, and configuration. The rendering
+   mode, backend, and scene complexity MUST match the baseline (Rule 9).
+
+3. **Create a minimal SkiaSharp repro** that removes framework variables. If the reporter uses
+   a framework (Avalonia, MAUI, WPF), create a raw SkiaSharp app using the platform's GPU view
+   directly (e.g., SKGLView on macOS — see platform-macos.md). Use the same rendering scene.
+   This isolates whether the gap is in SkiaSharp or the framework integration.
+
+4. **If you must change rendering mode, change BOTH sides.** (Rule 9) If you cannot run GPU,
+   force both the baseline AND the test to CPU raster. Compare CPU-to-CPU. State what you
+   measured and why. A cross-mode comparison (GPU baseline vs CPU test) is invalid data.
+   **Caveat:** If the bug is GPU-specific (e.g., "slow GL rendering"), CPU-to-CPU results may
+   not exhibit it. If the gap disappears under CPU, conclude `needs-platform` or `needs-hardware`
+   with a note explaining the mode limitation — do NOT report `not-reproduced`.
+
+5. **Instrument with per-phase timing** — CRITICAL for performance bugs. Use
+   `System.Diagnostics.Stopwatch` to measure each rendering phase separately:
    - `render`: CPU-side draw calls (canvas.DrawX)
    - `flush`: Skia command submission to GPU (canvas.Flush)
    - `finish`: GPU drain (glFinish / commandBuffer.WaitUntilCompleted)
    - `swap`: Buffer swap / present
 
-4. **Test at multiple complexity levels** (e.g., 1k, 5k, 9k, 40k elements) to distinguish constant overhead from O(n) scaling.
+6. **Test at multiple complexity levels** (e.g., 1k, 5k, 9k, 40k elements) to distinguish
+   constant overhead from O(n) scaling.
 
-5. **Test multiple backends** if relevant (Metal vs GL vs software).
+7. **Test multiple backends** if relevant (Metal vs GL vs software).
 
-6. **Disable VSync** for accurate measurement. VSync caps frame rate to display refresh rate (60 or 120fps), masking real performance differences.
+8. **Disable VSync** for accurate measurement. VSync caps frame rate to display refresh rate
+   (60 or 120fps), masking real performance differences.
 
-7. **Statistical stability:** Record FPS only after 5+ consecutive frames within 10% variance. Discard first 10 frames (JIT warm-up).
+9. **Statistical stability:** Record FPS only after 5+ consecutive frames within 10% variance.
+   Discard first 10 frames (JIT warm-up).
 
-### Example: macOS GL Performance (#3525)
+### Example: Rendering Performance
 
 ```csharp
 // Per-phase timing pattern
@@ -400,8 +424,6 @@ Console.WriteLine($"render={renderMs:F1}ms flush={flushMs:F1}ms");
 ### Pitfalls
 - VSync masks real performance — always disable before measuring
 - Console rendering ≠ view rendering. They use different code paths
-- MSAA can change which Skia rendering path is active (TessellationPathRenderer vs DefaultPathRenderer)
-- `glGetIntegerv` may return incorrect values on some platforms (e.g., macOS stencil bits)
 - "120fps native" may be VSync-masked. Verify native numbers too
 
 ### Conclusion

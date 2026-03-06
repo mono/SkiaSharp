@@ -1,63 +1,99 @@
-# Anti-Patterns (Full Reference)
+# Repro Anti-Patterns
 
-The critical rules are in SKILL.md. This file has the complete list with examples.
+❌ **NEVER do these during reproduction.** Key Rules in SKILL.md are the primary principles —
+this file provides concrete examples of violations and additional patterns.
 
-## Step Result Decision Table
+---
+
+## Methodology
+
+### 1. Hypothesis-driven experiment design
+
+Don't build custom experiments to confirm a triage hypothesis. Triage provides educated guesses —
+your job is to reproduce what the reporter described, not validate a theory. (Rule 8)
+
+**Example:** Triage says "P/Invoke overhead," so you create a CPU-only microbenchmark instead of
+running the reporter's GPU benchmark. That's not reproduction — it's speculation.
+
+### 2. Skipping the reporter's provided baseline
+
+If the reporter provides both sides of a comparison (working native app + broken SkiaSharp app,
+v2 code + v3 code, valid input + corrupt input), run BOTH on your machine. Don't take claimed
+numbers on faith and don't run only the failing side. (Rule 7)
+
+### 3. Mismatched comparison conditions
+
+Never compare across different rendering modes (GPU vs CPU), different backends (GL vs Metal), or
+different input types. If you can't match conditions, change BOTH sides to match. (Rule 9)
+
+**Example:** Measuring SkiaSharp at 33fps on CPU raster and native Skia at 120fps on GPU, then
+claiming "3.6x P/Invoke overhead." The mode difference explains the entire gap.
+
+### 4. Giving up too early
+
+Try multiple approaches, versions, and platforms before concluding `not-reproduced`. If the first
+attempt fails, change something meaningful — a different platform, version, or API approach.
+Retrying the same thing with the same variables isn't persistence, it's stubbornness.
+
+### 5. Building from source first
+
+Always start with NuGet packages. Building SkiaSharp from source is only for Phase 3C (testing
+main branch). NuGet packages match what real users have.
+
+---
+
+## Environment & Versions
+
+### 6. Abandoning on environment issues
+
+Missing workloads, `sudo` prompts, Docker timeouts, and missing Playwright are fixable — not
+blockers. Install what's missing, use user-local installs instead of `sudo`, retry Docker with
+longer timeouts. Setup failures mean `needs-platform`, not `not-reproduced`. Only conclude
+`needs-platform` when the platform itself is genuinely unavailable.
+
+### 7. Pre-emptive version or TFM assumptions
+
+.NET is forward-compatible — a `net8.0` library works on `net10.0` apps via NuGet TFM fallback.
+Never claim "doesn't support .NET X" without actually testing. Inspect the nupkg metadata before
+claiming incompatibility.
+
+**Exception:** Platform-specific TFMs (e.g., `net8.0-ios`) where platform-specific native assets
+are required.
+
+### 8. Skipping Docker for Linux bugs
+
+If the issue involves Linux and you're not on Linux, try Docker before concluding
+`needs-platform`. Docker is readily available and handles most Linux reproduction scenarios.
+
+---
+
+## Verification
+
+### 9. Fabricating output or evidence
+
+Never use echo/print statements to simulate command output, claim "reproduced" from static code
+analysis without executing the code, or report environment details you didn't actually check. If
+you cannot run it, report `needs-platform`.
+
+### 10. Mismarking step results
+
+A step's `result` records the **technical outcome**, not whether it matched your expectation.
+A build that fails is `result: "failure"` even if that failure confirms the bug.
 
 | You Run | What Happens | Step Result | Why |
 |---------|--------------|-------------|-----|
 | `dotnet build` | Build succeeds, exits 0 | `success` | Command succeeded |
 | `dotnet build` | Build fails with CS0117 | `failure` | Command failed |
-| `dotnet build` (reporter said it fails) | Build fails with CS0117 | **`failure`** | Command still failed — matching the report doesn't change the technical outcome |
+| `dotnet build` (reporter said it fails) | Build fails with CS0117 | **`failure`** | Matching the report doesn't change the technical outcome |
 | Render image | Exits 0 but pixels wrong | `wrong-output` | Process succeeded, output incorrect |
 
-## Full Anti-Pattern List
+---
 
-1. **Inline binary content.** Use `artifacts` array with URLs, not inline data.
-2. **Unlimited output.** Truncate: 2KB success, 4KB failure, 50 lines stack trace.
-3. **Source code investigation.** Stop at "did it reproduce." Fixes are `issue-fix`'s job.
-4. **Prompting the user.** Auto-proceed with logged warning. Skill must be non-interactive.
-5. **Absolute paths in output.** Redact `/Users/{name}/` → `$HOME/`.
-6. **Giving up too early.** Try multiple approaches, versions, platforms before `not-reproduced`.
-7. **Building from source first.** Start with NuGet packages. Source is Phase 3C only.
-8. **Editorial judgment in conclusion.** `reproduced` = reported behavior occurred, even if by-design.
-9. **Mismarking step results.** `result` = technical outcome, not expectation match.
-10. **Pre-emptive version assumptions.** Inspect the nupkg before claiming incompatibility.
-11. **Abandoning on environment issues.** Missing workloads, sudo prompts are fixable — not blockers.
-12. **Skipping Docker for Linux bugs.** Try Docker before concluding `needs-platform`.
-13. **Assuming TFM incompatibility.** .NET is forward-compatible. `net8.0` works on `net10.0`.
-14. **Stopping at build success for WASM.** Serve the app, check browser console with Playwright.
-15. **Retrying without changing variables.** Change platform, version, or approach — not retry count.
-16. **Setup failures ≠ "not reproduced."** Docker timeout, missing Playwright = blocker, not conclusion.
-17. **Testing WASM for every bug.** Only when issue signals suggest browser/web.
-18. **Silently skipping cross-platform.** Record why in `notes`, set `scope` to `"unknown"`.
-19. **Reusing build artifacts across versions.** Fresh project dirs or `rm -rf bin/ obj/` between versions.
+## Conclusions & Output
 
-## Output Limits
+### 11. Wrong conclusion type
 
-See SKILL.md for the authoritative output limits table.
-
-| Field | Max Size |
-|-------|----------|
-| `reproductionSteps[].output` (success) | 2KB |
-| `reproductionSteps[].output` (failure) | 4KB |
-| `errorMessages.stackTrace` | 5KB / 50 lines |
-| File content | Inline for small source files; omit binaries |
-
-**Redaction:** `/Users/{name}/` → `$HOME/`, tokens → `[REDACTED]`
-
-## Additional Anti-Patterns
-
-20. **Never use `sudo`.** If a command requires `sudo`, find an alternative. `sudo` prompts for a password interactively, which blocks the session indefinitely. Use user-local installs, Docker, or different approaches.
-
-21. **No repo markdown artifacts.** NEVER create markdown summary files (e.g., `REPRO_SUMMARY.md`, `COMPLETION_REPORT.md`) in the repository working tree. All working files belong in the session workspace (`~/.copilot/session-state/`). Clean up any accidentally created files before persisting.
-
-22. **Fabricating output or evidence.** NEVER use echo/print statements to simulate command output, claim "reproduced" from static code analysis without executing the code, or report environment details (OS version, SDK version) without actually running the diagnostic commands. If you cannot run it, report `needs-platform`.
-
-23. **Modifying product source during repro.** Reproduction ONLY creates new test projects in `/tmp/skiasharp/repro/`. NEVER edit `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source — that is the `issue-fix` skill's job. Revert immediately if done accidentally.
-
-24. **Skipping validation.** NEVER skip the validation script (`validate-repro.ps1` / `validate-repro.py`). NEVER assume the JSON is valid without running it. NEVER persist to the data cache without seeing ✅ from the validator. Mentally reviewing the JSON is not a substitute for the script.
-
-25. **Using `reproduced`/`not-reproduced` for non-bug issues.** For enhancements, feature requests, and documentation issues, use `confirmed`/`not-confirmed` instead. `reproduced` means "reported misbehavior was observed" — it doesn't make sense for "the feature is missing."
-
-26. **Using `confirmed`/`not-confirmed` for bugs.** For bugs, always use `reproduced`/`not-reproduced`. `confirmed` means "reporter's non-bug claim was verified" — it doesn't apply to behavioral bugs.
+Use `reproduced`/`not-reproduced` for **bugs** and `confirmed`/`not-confirmed` for
+**enhancements and feature requests**. "Reproduced" means "reported misbehavior was observed" —
+it doesn't apply to "the feature is missing." And vice versa: `confirmed` means "reporter's
+non-bug claim was verified" — it doesn't apply to behavioral bugs.

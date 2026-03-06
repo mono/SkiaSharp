@@ -102,12 +102,13 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 
 1. **Source code investigation.** Stop at "did it reproduce." Root cause is the `issue-fix` skill's job.
 2. **Editorial judgment in conclusion.** If the reported behavior occurred, it's `reproduced` — even if by-design.
-3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.
-4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions.
+3. **Build ≠ runtime.** Many bugs manifest at runtime. For WASM: serve and check browser console. For rendering: inspect the output. Build success is a step, not a conclusion.
+4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions. Stale native binaries look like version differences but are caching bugs.
 5. **Honesty over completion.** `not-reproduced` and `needs-platform` are VALID SUCCESS conclusions. Reporting inability to reproduce is correct behavior, NOT failure. NEVER invent output you did not observe from an actual command execution.
 6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/skiasharp/repro/` only. If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
-7. **NEVER use `store_memory`.** Reproduction produces JSON artifacts, not memories. Storing unverified observations as permanent facts pollutes all future sessions.
-8. **NEVER skip validation.** You MUST run `validate-repro.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the reproduction is invalid.
+7. **Run the reporter's code first.** Run what they provide before creating your own repro. Run BOTH sides of any comparison.
+8. **Reproduce, don't hypothesize.** Let data speak, not triage theories. If you're building something the reporter didn't describe, you're experimenting.
+9. **Match the reporter's conditions.** Same rendering mode, same data, same API, same platform. Change as little as possible.
 
 **Intermittent bugs:** If results are inconsistent, run 3–5 times. Reproduced ≥1 time → `reproduced` with note "Intermittent: X/Y runs". Never reproduced after 5 → `not-reproduced`.
 
@@ -135,10 +136,10 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 >
 > **🛑 MINIMUM 2 VERSIONS REQUIRED.** You must test at least the reporter's version (3A) AND latest stable (3B). Single-version reproductions are incomplete and will fail schema validation. This applies to ALL conclusion types — bugs (`reproduced`/`not-reproduced`) AND enhancements (`confirmed`/`not-confirmed`). For enhancements: a feature may exist in one version but not another, or may have been removed. Version testing reveals this.
 
-> **⚠️ Performance bugs require measurements, not just pass/fail.** If the issue reports slow rendering,
-> low FPS, or performance degradation, see **Category 10: Performance** in [bug-categories.md](references/bug-categories.md).
-> Each reproduction step must include per-phase timing data in the step `output` field.
-> Console apps are NOT sufficient for view rendering performance bugs — use the correct platform file.
+> **⚠️ Performance bugs have additional requirements.** See **Category 10: Performance** in
+> [bug-categories.md](references/bug-categories.md). Key differences: you must run BOTH sides of any
+> comparison yourself (Rule 7), per-phase timing is required in step output, VSync must be disabled,
+> and console apps are NOT valid substitutes for GPU view rendering (Rule 9).
 
 ### 3A. Reproduce with reporter's version
 
@@ -161,7 +162,7 @@ Follow the platform file from Phase 2.4. For each step, capture:
 
 ### 3B. Test on latest release
 
-> **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/skiasharp/repro/{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results. See [references/anti-patterns.md](references/anti-patterns.md) #7.
+> **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/skiasharp/repro/{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results (Key Rule 4).
 
 Use the same platform strategy from 3A with the latest stable SkiaSharp. Record in `versionResults`.
 

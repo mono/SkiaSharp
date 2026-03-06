@@ -4,9 +4,6 @@ Critical rules for the issue-fix skill. Violating any of these produces invalid 
 
 ## Critical Rules
 
-### #0: ❌ Never use `store_memory`
-Fixes produce JSON artifacts + PRs, not memories. Unverified observations from a fix investigation pollute all future sessions with potentially wrong information.
-
 ### #1: ❌ Never skip validation
 You MUST run `validate-fix.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is NOT validation. If you haven't seen ✅ from the script, the fix JSON is invalid.
 
