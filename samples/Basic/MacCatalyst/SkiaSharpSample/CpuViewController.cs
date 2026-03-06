@@ -6,8 +6,7 @@ namespace SkiaSharpSample;
 [Register("CpuViewController")]
 public class CpuViewController : UIViewController
 {
-	[Outlet]
-	SKCanvasView? skiaView { get; set; }
+	SKCanvasView? skiaView;
 
 	public CpuViewController(IntPtr handle)
 		: base(handle)
@@ -17,7 +16,18 @@ public class CpuViewController : UIViewController
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
-		skiaView!.PaintSurface += OnPaintSurface;
+
+		skiaView = new SKCanvasView { TranslatesAutoresizingMaskIntoConstraints = false };
+		View!.AddSubview(skiaView);
+		NSLayoutConstraint.ActivateConstraints(new[]
+		{
+			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
+			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+			skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
+		});
+
+		skiaView.PaintSurface += OnPaintSurface;
 	}
 
 	void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)

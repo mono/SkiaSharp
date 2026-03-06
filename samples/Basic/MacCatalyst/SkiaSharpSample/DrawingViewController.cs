@@ -24,8 +24,7 @@ public class DrawingViewController : UIViewController
 	private float brushSize = 4f;
 	private bool isDrawing;
 
-	[Outlet]
-	SKCanvasView? skiaView { get; set; }
+	private SKCanvasView? skiaView;
 
 	private UILabel? brushLabel;
 	private UIView? selectedSwatch;
@@ -48,8 +47,12 @@ public class DrawingViewController : UIViewController
 
 		currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
 
-		skiaView!.TranslatesAutoresizingMaskIntoConstraints = false;
-		skiaView.IgnorePixelScaling = true;
+		skiaView = new SKCanvasView
+		{
+			TranslatesAutoresizingMaskIntoConstraints = false,
+			IgnorePixelScaling = true,
+		};
+		View.AddSubview(skiaView);
 		skiaView.PaintSurface += OnPaintSurface;
 
 		// Bottom toolbar
@@ -125,9 +128,9 @@ public class DrawingViewController : UIViewController
 		// Layout
 		NSLayoutConstraint.ActivateConstraints(new[]
 		{
+			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
 			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
 			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
 			skiaView.BottomAnchor.ConstraintEqualTo(toolbar.TopAnchor),
 
 			toolbar.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
