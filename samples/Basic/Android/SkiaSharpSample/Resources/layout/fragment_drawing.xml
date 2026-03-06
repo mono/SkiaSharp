@@ -1,97 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <SkiaSharp.Views.Android.SKCanvasView
         android:id="@+id/skiaView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="match_parent" />
 
-    <com.google.android.material.divider.MaterialDivider
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <!-- Color palette row -->
+    <!-- Floating toolbox pill -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/toolbox"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:orientation="vertical"
         android:gravity="center"
-        android:paddingTop="8dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:background="?attr/colorSurface">
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:background="@drawable/toolbox_background"
+        android:elevation="6dp">
 
-        <View android:id="@+id/colorBlack"
-            android:layout_width="36dp" android:layout_height="36dp"
-            android:layout_margin="4dp"
-            android:background="@color/draw_black" />
-        <View android:id="@+id/colorRed"
-            android:layout_width="36dp" android:layout_height="36dp"
-            android:layout_margin="4dp"
-            android:background="@color/draw_red" />
-        <View android:id="@+id/colorBlue"
-            android:layout_width="36dp" android:layout_height="36dp"
-            android:layout_margin="4dp"
-            android:background="@color/draw_blue" />
-        <View android:id="@+id/colorGreen"
-            android:layout_width="36dp" android:layout_height="36dp"
-            android:layout_margin="4dp"
-            android:background="@color/draw_green" />
-        <View android:id="@+id/colorOrange"
-            android:layout_width="36dp" android:layout_height="36dp"
-            android:layout_margin="4dp"
-            android:background="@color/draw_orange" />
-        <View android:id="@+id/colorPurple"
-            android:layout_width="36dp" android:layout_height="36dp"
-            android:layout_margin="4dp"
-            android:background="@color/draw_purple" />
+        <!-- Color palette row -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <View android:id="@+id/colorBlack"
+                android:layout_width="32dp" android:layout_height="32dp"
+                android:layout_margin="4dp"
+                android:background="@color/draw_black" />
+            <View android:id="@+id/colorRed"
+                android:layout_width="32dp" android:layout_height="32dp"
+                android:layout_margin="4dp"
+                android:background="@color/draw_red" />
+            <View android:id="@+id/colorBlue"
+                android:layout_width="32dp" android:layout_height="32dp"
+                android:layout_margin="4dp"
+                android:background="@color/draw_blue" />
+            <View android:id="@+id/colorGreen"
+                android:layout_width="32dp" android:layout_height="32dp"
+                android:layout_margin="4dp"
+                android:background="@color/draw_green" />
+            <View android:id="@+id/colorOrange"
+                android:layout_width="32dp" android:layout_height="32dp"
+                android:layout_margin="4dp"
+                android:background="@color/draw_orange" />
+            <View android:id="@+id/colorPurple"
+                android:layout_width="32dp" android:layout_height="32dp"
+                android:layout_margin="4dp"
+                android:background="@color/draw_purple" />
+
+        </LinearLayout>
+
+        <!-- Brush size + clear row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="4dp">
+
+            <SeekBar
+                android:id="@+id/brushSlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:min="1"
+                android:max="30"
+                android:progress="6" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnClear"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Clear"
+                android:textAllCaps="false"
+                android:textSize="12sp"
+                app:cornerRadius="18dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Brush size slider + clear -->
-    <LinearLayout
-        android:id="@+id/bottomControls"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="8dp"
-        android:background="?attr/colorSurface">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Size"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="14sp" />
-
-        <SeekBar
-            android:id="@+id/brushSlider"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:min="1"
-            android:max="30"
-            android:progress="6" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnClear"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Clear"
-            android:textAllCaps="false" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</FrameLayout>

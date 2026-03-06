@@ -2,16 +2,17 @@
 using System.Diagnostics;
 using Android.OS;
 using Android.Views;
+using Android.Widget;
 using AndroidX.Fragment.App;
 
 using SkiaSharp;
 using SkiaSharp.Views.Android;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public class GpuSurfaceFragment : Fragment
 {
-	public class GpuSurfaceFragment : Fragment
-	{
-		private const string SkslSource = @"
+	private const string SkslSource = @"
 uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
@@ -67,117 +68,105 @@ half4 main(float2 fragCoord) {
     return half4(clamp(result, 0.0, 1.0), 1.0);
 }";
 
-		private SKGLSurfaceView skiaView;
-		private SKRuntimeEffect effect;
-		private readonly Stopwatch stopwatch = new Stopwatch();
+	private SKGLSurfaceView skiaView;
+	private TextView fpsLabel;
+	private SKRuntimeEffect effect;
+	private readonly Stopwatch stopwatch = new Stopwatch();
 
-		private int frameCount;
-		private double lastFpsTime;
-		private string fpsText = "FPS: --";
-		private float touchX;
-		private float touchY;
-		private float touchActive;
+	private int frameCount;
+	private double lastFpsTime;
+	private string fpsText = "FPS: --";
+	private float touchX;
+	private float touchY;
+	private float touchActive;
 
-		public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	{
+		var view = inflater.Inflate(Resource.Layout.fragment_gpu_surface, container, false);
+		skiaView = view.FindViewById<SKGLSurfaceView>(Resource.Id.skiaView);
+		fpsLabel = view.FindViewById<TextView>(Resource.Id.fpsLabel);
+		skiaView.PaintSurface += OnPaintSurface;
+		skiaView.Touch += OnTouch;
+		skiaView.RenderMode = Android.Opengl.Rendermode.Continuously;
+
+		stopwatch.Start();
+		return view;
+	}
+
+	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+	{
+		var canvas = e.Surface.Canvas;
+		var width = e.BackendRenderTarget.Width;
+		var height = e.BackendRenderTarget.Height;
+
+		if (effect == null)
 		{
-			var view = inflater.Inflate(Resource.Layout.fragment_gpu_surface, container, false);
-			skiaView = view.FindViewById<SKGLSurfaceView>(Resource.Id.skiaView);
-			skiaView.PaintSurface += OnPaintSurface;
-			skiaView.Touch += OnTouch;
-			skiaView.RenderMode = Android.Opengl.Rendermode.Continuously;
-
-			stopwatch.Start();
-			return view;
+			try
+			{
+				effect = SKRuntimeEffect.BuildShader(SkslSource).Effect;
+			}
+			catch (Exception)
+			{
+				canvas.Clear(SKColors.Magenta);
+				return;
+			}
 		}
 
-		private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+		var uniforms = new SKRuntimeEffectUniforms(effect)
 		{
-			var canvas = e.Surface.Canvas;
-			var width = e.BackendRenderTarget.Width;
-			var height = e.BackendRenderTarget.Height;
+			["iTime"] = (float)stopwatch.Elapsed.TotalSeconds,
+			["iResolution"] = new[] { (float)width, (float)height },
+			["iTouchPos"] = new[] { touchX, touchY },
+			["iTouchActive"] = touchActive,
+		};
 
-			if (effect == null)
-			{
-				try
+		using var shader = effect.ToShader(uniforms);
+		using var paint = new SKPaint { Shader = shader };
+		canvas.DrawRect(0, 0, width, height, paint);
+
+		frameCount++;
+		var elapsed = stopwatch.Elapsed.TotalSeconds;
+		if (elapsed - lastFpsTime >= 0.5)
+		{
+			var fps = frameCount / (elapsed - lastFpsTime);
+			fpsText = $"FPS: {fps:F0}";
+			frameCount = 0;
+			lastFpsTime = elapsed;
+			Activity?.RunOnUiThread(() => fpsLabel.Text = fpsText);
+		}
+	}
+
+	private void OnTouch(object sender, View.TouchEventArgs e)
+	{
+		switch (e.Event.Action)
+		{
+			case MotionEventActions.Down:
+			case MotionEventActions.Move:
+				touchActive = 1f;
+				if (skiaView.Width > 0 && skiaView.Height > 0)
 				{
-					effect = SKRuntimeEffect.BuildShader(SkslSource).Effect;
+					touchX = e.Event.GetX() / skiaView.Width;
+					touchY = e.Event.GetY() / skiaView.Height;
 				}
-				catch (Exception)
-				{
-					canvas.Clear(SKColors.Magenta);
-					return;
-				}
-			}
-
-			var uniforms = new SKRuntimeEffectUniforms(effect)
-			{
-				["iTime"] = (float)stopwatch.Elapsed.TotalSeconds,
-				["iResolution"] = new[] { (float)width, (float)height },
-				["iTouchPos"] = new[] { touchX, touchY },
-				["iTouchActive"] = touchActive,
-			};
-
-			using var shader = effect.ToShader(uniforms);
-			using var paint = new SKPaint { Shader = shader };
-			canvas.DrawRect(0, 0, width, height, paint);
-
-			DrawFps(canvas);
+				break;
+			case MotionEventActions.Up:
+			case MotionEventActions.Cancel:
+				touchActive = 0f;
+				break;
 		}
+		e.Handled = true;
+	}
 
-		private void DrawFps(SKCanvas canvas)
+	public override void OnDestroyView()
+	{
+		if (skiaView != null)
 		{
-			frameCount++;
-			var elapsed = stopwatch.Elapsed.TotalSeconds;
-			if (elapsed - lastFpsTime >= 0.5)
-			{
-				var fps = frameCount / (elapsed - lastFpsTime);
-				fpsText = $"FPS: {fps:F0}";
-				frameCount = 0;
-				lastFpsTime = elapsed;
-			}
-
-			using var bgPaint = new SKPaint { Color = new SKColor(0, 0, 0, 160) };
-			using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-			using var font = new SKFont { Size = 32 };
-
-			font.MeasureText(fpsText, out var bounds, textPaint);
-			var pad = 12f;
-			canvas.DrawRoundRect(pad, pad, bounds.Width + pad * 2, bounds.Height + pad * 2, 8, 8, bgPaint);
-			canvas.DrawText(fpsText, pad * 2, pad + bounds.Height + pad / 2, font, textPaint);
+			skiaView.PaintSurface -= OnPaintSurface;
+			skiaView.Touch -= OnTouch;
+			skiaView = null;
 		}
-
-		private void OnTouch(object sender, View.TouchEventArgs e)
-		{
-			switch (e.Event.Action)
-			{
-				case MotionEventActions.Down:
-				case MotionEventActions.Move:
-					touchActive = 1f;
-					if (skiaView.Width > 0 && skiaView.Height > 0)
-					{
-						touchX = e.Event.GetX() / skiaView.Width;
-						touchY = e.Event.GetY() / skiaView.Height;
-					}
-					break;
-				case MotionEventActions.Up:
-				case MotionEventActions.Cancel:
-					touchActive = 0f;
-					break;
-			}
-			e.Handled = true;
-		}
-
-		public override void OnDestroyView()
-		{
-			if (skiaView != null)
-			{
-				skiaView.PaintSurface -= OnPaintSurface;
-				skiaView.Touch -= OnTouch;
-				skiaView = null;
-			}
-			effect?.Dispose();
-			effect = null;
-			base.OnDestroyView();
-		}
+		effect?.Dispose();
+		effect = null;
+		base.OnDestroyView();
 	}
 }
