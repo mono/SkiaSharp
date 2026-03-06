@@ -4,6 +4,7 @@ using SkiaSharp.Views.tvOS;
 
 namespace SkiaSharpSample;
 
+[Register("GpuMetalViewController")]
 public class GpuMetalViewController : UIViewController
 {
 	private const string ShaderSource = @"
@@ -48,9 +49,13 @@ half4 main(float2 fragCoord) {
     return half4(half3(col), 1.0);
 }";
 
-	private SKMetalView? metalView;
+	[Outlet]
+	SKMetalView skiaView { get; set; } = null!;
+
 	private readonly Stopwatch stopwatch = new();
 	private SKRuntimeEffect? shaderEffect;
+
+	public GpuMetalViewController(IntPtr handle) : base(handle) { }
 
 	public override void ViewDidLoad()
 	{
@@ -60,13 +65,8 @@ half4 main(float2 fragCoord) {
 		if (errors != null)
 			Console.WriteLine($"Shader compile error: {errors}");
 
-		metalView = new SKMetalView(View!.Bounds)
-		{
-			AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
-			PreferredFramesPerSecond = 60,
-		};
-		metalView.PaintSurface += OnPaintSurface;
-		View.AddSubview(metalView);
+		skiaView.PreferredFramesPerSecond = 60;
+		skiaView.PaintSurface += OnPaintSurface;
 
 		stopwatch.Start();
 	}
@@ -74,14 +74,14 @@ half4 main(float2 fragCoord) {
 	public override void ViewWillDisappear(bool animated)
 	{
 		base.ViewWillDisappear(animated);
-		metalView!.Paused = true;
+		skiaView.Paused = true;
 		stopwatch.Stop();
 	}
 
 	public override void ViewWillAppear(bool animated)
 	{
 		base.ViewWillAppear(animated);
-		metalView!.Paused = false;
+		skiaView.Paused = false;
 		stopwatch.Start();
 	}
 

@@ -3,21 +3,20 @@ using SkiaSharp.Views.tvOS;
 
 namespace SkiaSharpSample;
 
+[Register("CpuViewController")]
 public class CpuViewController : UIViewController
 {
-	private SKCanvasView? canvasView;
+	[Outlet]
+	SKCanvasView skiaView { get; set; } = null!;
+
+	public CpuViewController(IntPtr handle) : base(handle) { }
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
 
-		canvasView = new SKCanvasView(View!.Bounds)
-		{
-			AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
-			IgnorePixelScaling = true
-		};
-		canvasView.PaintSurface += OnPaintSurface;
-		View.AddSubview(canvasView);
+		skiaView.IgnorePixelScaling = true;
+		skiaView.PaintSurface += OnPaintSurface;
 	}
 
 	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)

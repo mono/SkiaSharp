@@ -6,6 +6,7 @@ using SkiaSharp.Views.tvOS;
 
 namespace SkiaSharpSample;
 
+[Register("GpuGLViewController")]
 public class GpuGLViewController : UIViewController
 {
 	private const string ShaderSource = @"
@@ -50,10 +51,14 @@ half4 main(float2 fragCoord) {
     return half4(half3(col), 1.0);
 }";
 
-	private SKGLView? glView;
+	[Outlet]
+	SKGLView skiaView { get; set; } = null!;
+
 	private CADisplayLink? displayLink;
 	private readonly Stopwatch stopwatch = new();
 	private SKRuntimeEffect? shaderEffect;
+
+	public GpuGLViewController(IntPtr handle) : base(handle) { }
 
 	public override void ViewDidLoad()
 	{
@@ -63,17 +68,9 @@ half4 main(float2 fragCoord) {
 		if (errors != null)
 			Console.WriteLine($"Shader compile error: {errors}");
 
-#pragma warning disable CA1422 // Validate platform compatibility
-		glView = new SKGLView(View!.Bounds)
-		{
-			AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight
-		};
-#pragma warning restore CA1422
+		skiaView.PaintSurface += OnPaintSurface;
 
-		glView.PaintSurface += OnPaintSurface;
-		View.AddSubview(glView);
-
-		displayLink = CADisplayLink.Create(() => glView.Display());
+		displayLink = CADisplayLink.Create(() => skiaView.Display());
 		displayLink.PreferredFramesPerSecond = 60;
 		displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
 
@@ -91,9 +88,9 @@ half4 main(float2 fragCoord) {
 	public override void ViewWillAppear(bool animated)
 	{
 		base.ViewWillAppear(animated);
-		if (displayLink == null && glView != null)
+		if (displayLink == null)
 		{
-			displayLink = CADisplayLink.Create(() => glView.Display());
+			displayLink = CADisplayLink.Create(() => skiaView.Display());
 			displayLink.PreferredFramesPerSecond = 60;
 			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
 		}
