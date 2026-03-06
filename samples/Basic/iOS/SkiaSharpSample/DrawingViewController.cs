@@ -192,6 +192,16 @@ public class DrawingViewController : UIViewController
 		}
 	}
 
+	public override void ViewWillDisappear(bool animated)
+	{
+		base.ViewWillDisappear(animated);
+		foreach (var stroke in strokes)
+			stroke.Path.Dispose();
+		strokes.Clear();
+		currentPath?.Dispose();
+		currentPath = null;
+	}
+
 	public override void TouchesBegan(NSSet touches, UIEvent? evt)
 	{
 		base.TouchesBegan(touches, evt);
