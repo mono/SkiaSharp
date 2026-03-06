@@ -3,9 +3,11 @@ using SkiaSharp.Views.iOS;
 
 namespace SkiaSharpSample;
 
+[Register("DrawingViewController")]
 public class DrawingViewController : UIViewController
 {
-	SKCanvasView? skiaView;
+	[Outlet]
+	SKCanvasView? skiaView { get; set; }
 
 	readonly List<List<SKPoint>> completedStrokes = new();
 	List<SKPoint>? currentStroke;
@@ -19,16 +21,14 @@ public class DrawingViewController : UIViewController
 		new(0x90, 0x40, 0xD0),
 	};
 
-	public DrawingViewController()
+	public DrawingViewController(IntPtr handle)
+		: base(handle)
 	{
-		Title = "Drawing";
 	}
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
-
-		View!.BackgroundColor = UIColor.SystemBackground;
 
 		NavigationItem.RightBarButtonItem = new UIBarButtonItem(
 			UIBarButtonSystemItem.Trash,
@@ -39,21 +39,7 @@ public class DrawingViewController : UIViewController
 				skiaView?.SetNeedsDisplay();
 			});
 
-		skiaView = new SKCanvasView
-		{
-			BackgroundColor = UIColor.White,
-			TranslatesAutoresizingMaskIntoConstraints = false,
-		};
-		skiaView.PaintSurface += OnPaintSurface;
-
-		View.AddSubview(skiaView);
-		NSLayoutConstraint.ActivateConstraints(new[]
-		{
-			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
-			skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
-		});
+		skiaView!.PaintSurface += OnPaintSurface;
 	}
 
 	void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)

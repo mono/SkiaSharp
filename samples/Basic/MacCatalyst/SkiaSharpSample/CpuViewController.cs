@@ -3,36 +3,21 @@ using SkiaSharp.Views.iOS;
 
 namespace SkiaSharpSample;
 
+[Register("CpuViewController")]
 public class CpuViewController : UIViewController
 {
-	SKCanvasView? skiaView;
+	[Outlet]
+	SKCanvasView? skiaView { get; set; }
 
-	public CpuViewController()
+	public CpuViewController(IntPtr handle)
+		: base(handle)
 	{
-		Title = "CPU Canvas";
 	}
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
-
-		View!.BackgroundColor = UIColor.SystemBackground;
-
-		skiaView = new SKCanvasView
-		{
-			BackgroundColor = UIColor.White,
-			TranslatesAutoresizingMaskIntoConstraints = false,
-		};
-		skiaView.PaintSurface += OnPaintSurface;
-
-		View.AddSubview(skiaView);
-		NSLayoutConstraint.ActivateConstraints(new[]
-		{
-			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
-			skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
-		});
+		skiaView!.PaintSurface += OnPaintSurface;
 	}
 
 	void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
