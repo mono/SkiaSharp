@@ -1,5 +1,5 @@
 # Arguments:
-#   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
+#   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 10.0 | * ]
 #   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-alpine-linux-musleabihf | aarch64-alpine-linux-musl | riscv64-alpine-linux-musl | loongarch64-alpine-linux-musl ]
 
@@ -59,7 +59,7 @@ RUN . /etc/skia-env \
         add fontconfig-dev build-base linux-headers
 
 # Install the .NET SDK
-ARG DOTNET_SDK_VERSION=8.0
+ARG DOTNET_SDK_VERSION=10.0
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0
+FROM mcr.microsoft.com/dotnet/sdk:10.0
 
 # Arguments:
 #   EMSCRIPTEN_VERSION   - the version of the emscripten SDK                [ 3.1.34 | * ]

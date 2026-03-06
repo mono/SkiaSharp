@@ -1,5 +1,5 @@
 # Arguments:
-#   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
+#   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 10.0 | * ]
 #   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
 
 FROM arm64v8/debian:10
@@ -17,7 +17,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the .NET SDK
-ARG DOTNET_SDK_VERSION=8.0
+ARG DOTNET_SDK_VERSION=10.0
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \

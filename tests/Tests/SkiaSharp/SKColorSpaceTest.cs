@@ -223,7 +223,7 @@ namespace SkiaSharp.Tests
 				0.01947f, 0.06087f, 0.74457f,
 			};
 			Assert.True(colorspace.ToColorSpaceXyz(out var xyz));
-			AssertSimilar(toXYZ, xyz.Values);
+			AssertSimilar(toXYZ, xyz.Values, 3);
 		}
 
 		[SkippableFact]

@@ -1,61 +1,71 @@
 Param(
-  [string] $SourceUrl = '',
-  [string] $InstallDir = '',
-  [string] $Tizen = '',
-  [boolean] $IsPreview = $false
+  # Tizen version in "BAND/VERSION" format, e.g., "10.0.100/10.0.123"
+  [string] $Tizen = ''
 )
 
 $ErrorActionPreference = 'Stop'
 
-if (!$Tizen) {
-  $Tizen = '<latest>'
-}
-
-$feed1 = 'https://api.nuget.org/v3/index.json'
-$feed2 = 'https://api.nuget.org/v3/index.json'
-$feed3 = 'https://api.nuget.org/v3/index.json'
-if ($IsPreview) {
-  $feed1 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json'
-  $feed2 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json'
-  $feed3 = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json'
-}
-
-$Workloads = 'android','macos','wasm-tools'
-if (!$IsLinux) {
-  $Workloads += 'ios','tvos','maccatalyst','maui'
-}
-if ($IsPreview) {
-  $Workloads += 'wasm-tools-net7'
+# Parse Tizen parameter (format: BAND/VERSION)
+if ($Tizen -and $Tizen -ne '<latest>') {
+  $parts = $Tizen -split '/'
+  if ($parts.Length -ne 2) {
+    Write-Host "##[error]Tizen parameter must be in BAND/VERSION format (e.g., 10.0.100/10.0.123)"
+    exit 1
+  }
+  $TizenBand = $parts[0]
+  $TizenVersion = $parts[1]
 } else {
-  $Workloads += 'wasm-tools-net6'
+  $TizenBand = ''
+  $TizenVersion = ''
 }
 
-if ($SourceUrl) {
-  $Rollback = '--from-rollback-file',"$SourceUrl"
-} elseif ($IsPreview) {
-  Write-Error "A preview workload install was requested, but no rollback file was provided. Specify the -SourceUrl."
-  exit 1
+# Force manifest update mode — .NET 10 defaults to workload-set mode which
+# auto-downloads a workload set from NuGet and ignores individually installed
+# workloads (like Samsung Tizen). Manifest mode lets all workloads coexist.
+Write-Host "Configuring workload update mode to 'manifests'..."
+& dotnet workload config --update-mode manifests
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+# Install Tizen manifest if specified
+if ($TizenBand -and $TizenVersion) {
+  Write-Host "Installing Tizen manifest ($TizenBand/$TizenVersion)..."
+  
+  # Get dotnet root (resolve symlinks on Linux/macOS)
+  $dotnetPath = (Get-Command dotnet).Source
+  if ($IsLinux -or $IsMacOS) {
+    $dotnetRoot = & readlink -f $dotnetPath | Split-Path
+  } else {
+    $dotnetRoot = Split-Path $dotnetPath
+  }
+  
+  $manifestDir = Join-Path $dotnetRoot "sdk-manifests" $TizenBand "samsung.net.sdk.tizen"
+  $manifestName = "samsung.net.sdk.tizen.manifest-$TizenBand"
+  $manifestUrl = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/$($manifestName.ToLower())/$TizenVersion/$($manifestName.ToLower()).$TizenVersion.nupkg"
+  
+  Write-Host "  Downloading from $manifestUrl"
+  New-Item -ItemType Directory -Force './output/tmp' | Out-Null
+  Invoke-WebRequest $manifestUrl -OutFile './output/tmp/tizen-manifest.nupkg'
+  
+  Write-Host "  Extracting to $manifestDir"
+  New-Item -ItemType Directory -Force $manifestDir | Out-Null
+  Expand-Archive -Path './output/tmp/tizen-manifest.nupkg' -DestinationPath './output/tmp/tizen-manifest' -Force
+  Copy-Item -Force './output/tmp/tizen-manifest/data/*' $manifestDir/
 }
 
-Write-Host "Installing .NET workloads..."
-& dotnet workload install `
-  @Workloads `
-  @Rollback `
-  --source https://api.nuget.org/v3/index.json `
-  --source $feed1 `
-  --source $feed2 `
-  --source $feed3 `
-  --skip-sign-check `
-  --verbosity diagnostic
-
-Write-Host "Installing Tizen workloads..."
-New-Item -ItemType Directory -Force './output/tmp' | Out-Null
-if ($IsLinux -or $IsMacOS) {
-  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.sh' -OutFile './output/tmp/workload-install.sh'
-  bash output/tmp/workload-install.sh --version "$Tizen"
+# Build workload list
+$Workloads = @('android', 'macos', 'wasm-tools')
+if ($TizenBand) {
+  $Workloads = @('tizen') + $Workloads
+}
+if ($IsLinux) {
+  $Workloads += @('maui-android')
 } else {
-  Invoke-WebRequest 'https://raw.githubusercontent.com/Samsung/Tizen.NET/main/workload/scripts/workload-install.ps1' -OutFile './output/tmp/workload-install.ps1'
-  ./output/tmp/workload-install.ps1 -Version "$Tizen"
+  $Workloads += @('ios', 'tvos', 'maccatalyst', 'maui')
 }
 
-exit $LASTEXITCODE
+Write-Host "Installing workloads: $($Workloads -join ', ')..."
+& dotnet workload install @Workloads --skip-sign-check
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+Write-Host "Installed workloads:"
+& dotnet workload list
