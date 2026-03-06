@@ -61,33 +61,22 @@ open -n ./bin/Release/net10.0-macos/osx-arm64/Repro.app
 
 **Code signing** — For local testing, add `<EnableCodeSigning>false</EnableCodeSigning>` to skip signing errors.
 
-**Add SkiaSharp views** to the window in your `AppDelegate.DidFinishLaunching`:
+**Add SkiaSharp views** to the window in your `AppDelegate.DidFinishLaunching`. Use whichever
+view the **reporter** uses — do NOT choose a different backend:
+
+| Reporter uses... | You use |
+|-----------------|---------|
+| `SKGLView`, OpenGL, `NSOpenGLView` | `SKGLView` |
+| `SKMetalView`, Metal, `MTKView` | `SKMetalView` |
+| `SKCanvasView`, software, CPU | `SKCanvasView` |
+| Not stated / unclear | Ask or match the reporter's framework's default |
+
+## Backend Templates
+
+Reference implementations — pick the one matching the reporter's backend:
+
 ```csharp
-// In DidFinishLaunching, add the appropriate view to your window.
-// ⚠️ MATCH THE REPORTER'S BACKEND — do not substitute one for another.
-_window.ContentView = new SKGLView(frame);     // OpenGL — use if reporter uses SKGLView
-// or: new SKMetalView(frame);  // Metal — use if reporter uses SKMetalView
-// or: new SKCanvasView(frame); // Software — use if reporter uses SKCanvasView
-```
-
-## Backend-Specific Templates
-
-Use these when the bug involves rendering output or GPU behavior — test multiple backends to isolate whether the issue is backend-specific.
-
-### Metal Backend (SKMetalView)
-```csharp
-var metalView = new SKMetalView(frame);
-metalView.PaintSurface += (s, e) =>
-{
-    var canvas = e.Surface.Canvas;
-    canvas.Clear(SKColors.White);
-    // Reporter's drawing code here
-};
-_window.ContentView = metalView;
-```
-
-### OpenGL Backend (SKGLView)
-```csharp
+// === OpenGL (SKGLView) ===
 var glView = new SKGLView(frame);
 glView.PaintSurface += (s, e) =>
 {
@@ -96,10 +85,18 @@ glView.PaintSurface += (s, e) =>
     // Reporter's drawing code here
 };
 _window.ContentView = glView;
-```
 
-### Software Backend (SKCanvasView)
-```csharp
+// === Metal (SKMetalView) ===
+var metalView = new SKMetalView(frame);
+metalView.PaintSurface += (s, e) =>
+{
+    var canvas = e.Surface.Canvas;
+    canvas.Clear(SKColors.White);
+    // Reporter's drawing code here
+};
+_window.ContentView = metalView;
+
+// === Software (SKCanvasView) ===
 var canvasView = new SKCanvasView(frame);
 canvasView.PaintSurface += (s, e) =>
 {
@@ -108,6 +105,7 @@ canvasView.PaintSurface += (s, e) =>
     // Reporter's drawing code here
 };
 _window.ContentView = canvasView;
+```
 ```
 
 ## Build
@@ -132,11 +130,13 @@ Common build errors:
 2. If the screen is blank or only shows the background color, your app is broken — fix it before measuring
 3. FPS numbers from a non-rendering app are worthless (120fps on a blank screen ≠ fast rendering)
 
-**For GPU bugs:** Test both Metal and GL backends. If one works and the other doesn't, that's a critical signal — note the backend in the conclusion.
+**For GPU bugs:** After reproducing on the reporter's backend, optionally test the other backend
+too. If one works and the other doesn't, that's a critical signal — note the backend in the
+conclusion.
 
 ## Iterate
 
-- If the bug doesn't reproduce with SKCanvasView (software), try SKGLView (GL) or SKMetalView (Metal)
+- If the bug doesn't reproduce on the reporter's backend, try the alternative (GL ↔ Metal)
 - For performance issues, see [category-performance.md](category-performance.md) for measurement methodology
 
 ## Conclusion Mapping
