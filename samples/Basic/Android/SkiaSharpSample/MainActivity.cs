@@ -3,17 +3,13 @@ using Android.OS;
 using Android.Views;
 using AndroidX.AppCompat.App;
 using AndroidX.Core.View;
-using AndroidX.DrawerLayout.Widget;
-using Google.Android.Material.Navigation;
+using Google.Android.Material.BottomNavigation;
 
 namespace SkiaSharpSample
 {
 	[Activity(Label = "SkiaSharp", MainLauncher = true, Theme = "@style/Theme.SkiaSharpSample")]
-	public class MainActivity : AppCompatActivity, NavigationView.IOnNavigationItemSelectedListener, IOnApplyWindowInsetsListener
+	public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelectedListener, IOnApplyWindowInsetsListener
 	{
-		private DrawerLayout drawerLayout;
-		private ActionBarDrawerToggle toggle;
-
 		protected override void OnCreate(Bundle savedInstanceState)
 		{
 			base.OnCreate(savedInstanceState);
@@ -25,16 +21,12 @@ namespace SkiaSharpSample
 			var toolbar = FindViewById<Google.Android.Material.AppBar.MaterialToolbar>(Resource.Id.toolbar);
 			SetSupportActionBar(toolbar);
 
-			drawerLayout = FindViewById<DrawerLayout>(Resource.Id.drawer_layout);
-			toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, 0, 0);
-			drawerLayout.AddDrawerListener(toggle);
-			toggle.SyncState();
+			var bottomNav = FindViewById<BottomNavigationView>(Resource.Id.bottom_nav);
+			bottomNav.SetOnItemSelectedListener(this);
 
-			var navView = FindViewById<NavigationView>(Resource.Id.nav_view);
-			navView.SetNavigationItemSelectedListener(this);
-
-			var contentFrame = FindViewById<View>(Resource.Id.content_frame);
-			ViewCompat.SetOnApplyWindowInsetsListener(contentFrame, this);
+			// Apply top status bar inset to the AppBarLayout
+			var appBar = FindViewById<View>(Resource.Id.appbar);
+			ViewCompat.SetOnApplyWindowInsetsListener(appBar, this);
 
 			if (savedInstanceState == null)
 				ShowFragment(new CpuFragment());
@@ -43,11 +35,11 @@ namespace SkiaSharpSample
 		public WindowInsetsCompat OnApplyWindowInsets(View v, WindowInsetsCompat insets)
 		{
 			var bars = insets.GetInsets(WindowInsetsCompat.Type.SystemBars());
-			v.SetPadding(0, 0, 0, bars.Bottom);
+			v.SetPadding(0, bars.Top, 0, 0);
 			return insets;
 		}
 
-		public bool OnNavigationItemSelected(Android.Views.IMenuItem item)
+		public bool OnNavigationItemSelected(IMenuItem item)
 		{
 			AndroidX.Fragment.App.Fragment fragment = item.ItemId switch
 			{
@@ -59,8 +51,6 @@ namespace SkiaSharpSample
 			};
 
 			ShowFragment(fragment);
-			item.SetChecked(true);
-			drawerLayout.CloseDrawers();
 			return true;
 		}
 
