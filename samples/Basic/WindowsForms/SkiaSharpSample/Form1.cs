@@ -1,38 +1,42 @@
-﻿using System.Windows.Forms;
-
-using SkiaSharp;
-using SkiaSharp.Views.Desktop;
+using System;
+using System.Windows.Forms;
 
 namespace SkiaSharpSample
 {
 	public partial class Form1 : Form
 	{
+		private UserControl currentPage;
+
 		public Form1()
 		{
 			InitializeComponent();
+
+			sidebarList.SelectedIndexChanged += OnSidebarSelectionChanged;
+			sidebarList.SelectedIndex = 0;
 		}
 
-		private void skiaView_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		private void OnSidebarSelectionChanged(object sender, EventArgs e)
 		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
+			if (sidebarList.SelectedIndex < 0)
+				return;
 
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
+			currentPage?.Dispose();
+			contentPanel.Controls.Clear();
 
-			// draw some text
-			using var paint = new SKPaint
+			currentPage = sidebarList.SelectedIndex switch
 			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill
+				0 => new CpuPage(),
+				1 => new GpuPage(),
+				2 => new DrawingPage(),
+				_ => null,
 			};
-			using var font = new SKFont
+
+			if (currentPage != null)
 			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+				currentPage.Dock = DockStyle.Fill;
+				contentPanel.Controls.Add(currentPage);
+			}
 		}
 	}
 }
+
