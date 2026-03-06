@@ -8,7 +8,7 @@ using SkiaSharp.Views.Desktop;
 
 namespace SkiaSharpSample
 {
-	public class GpuPage : UserControl
+	public partial class GpuPage : UserControl
 	{
 		private const string SkslSource = @"
 uniform float iTime;
@@ -66,9 +66,6 @@ half4 main(float2 fragCoord) {
     return half4(clamp(result, 0.0, 1.0), 1.0);
 }";
 
-		private readonly SKGLControl glControl;
-		private readonly Label fpsLabel;
-		private readonly Timer animationTimer;
 		private readonly Stopwatch stopwatch;
 
 		private SKRuntimeEffect effect;
@@ -82,32 +79,16 @@ half4 main(float2 fragCoord) {
 		{
 			stopwatch = new Stopwatch();
 
-			glControl = new SKGLControl { Dock = DockStyle.Fill };
-			glControl.PaintSurface += OnPaintSurface;
-			glControl.MouseDown += OnMouseDown;
-			glControl.MouseMove += OnMouseMove;
-			glControl.MouseUp += OnMouseUp;
+			InitializeComponent();
 
-			fpsLabel = new Label
-			{
-				AutoSize = true,
-				Text = "FPS: --",
-				ForeColor = Color.White,
-				BackColor = Color.FromArgb(128, 0, 0, 0),
-				Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-				Location = new Point(8, 8),
-				Padding = new Padding(4),
-			};
-
-			Controls.Add(fpsLabel);
-			Controls.Add(glControl);
 			fpsLabel.BringToFront();
-
-			animationTimer = new Timer { Interval = 16 };
-			animationTimer.Tick += (s, e) => glControl.Invalidate();
 			animationTimer.Start();
-
 			stopwatch.Start();
+		}
+
+		private void OnAnimationTick(object sender, EventArgs e)
+		{
+			glControl.Invalidate();
 		}
 
 		private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
@@ -181,21 +162,5 @@ half4 main(float2 fragCoord) {
 			}
 		}
 
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing)
-			{
-				animationTimer.Stop();
-				animationTimer.Dispose();
-				glControl.PaintSurface -= OnPaintSurface;
-				glControl.MouseDown -= OnMouseDown;
-				glControl.MouseMove -= OnMouseMove;
-				glControl.MouseUp -= OnMouseUp;
-				glControl.Dispose();
-				fpsLabel.Dispose();
-				effect?.Dispose();
-			}
-			base.Dispose(disposing);
-		}
 	}
 }

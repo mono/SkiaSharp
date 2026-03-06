@@ -6,15 +6,11 @@ using SkiaSharp.Views.Desktop;
 
 namespace SkiaSharpSample
 {
-	public class CpuPage : UserControl
+	public partial class CpuPage : UserControl
 	{
-		private readonly SKControl skiaView;
-
 		public CpuPage()
 		{
-			skiaView = new SKControl { Dock = DockStyle.Fill };
-			skiaView.PaintSurface += OnPaintSurface;
-			Controls.Add(skiaView);
+			InitializeComponent();
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -55,14 +51,5 @@ namespace SkiaSharpSample
 			canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 		}
 
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing)
-			{
-				skiaView.PaintSurface -= OnPaintSurface;
-				skiaView.Dispose();
-			}
-			base.Dispose(disposing);
-		}
 	}
 }

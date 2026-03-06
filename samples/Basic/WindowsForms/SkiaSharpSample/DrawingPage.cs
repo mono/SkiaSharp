@@ -8,7 +8,7 @@ using SkiaSharp.Views.Desktop;
 
 namespace SkiaSharpSample
 {
-	public class DrawingPage : UserControl
+	public partial class DrawingPage : UserControl
 	{
 		private static readonly (string Name, SKColor Color)[] ColorOptions = new[]
 		{
@@ -20,8 +20,6 @@ namespace SkiaSharpSample
 			("Purple", new SKColor(0x8E, 0x24, 0xAA)),
 		};
 
-		private readonly SKControl skiaView;
-		private readonly FlowLayoutPanel toolbar;
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 		private SKPath currentPath;
 		private SKColor currentColor = SKColors.Black;
@@ -31,15 +29,7 @@ namespace SkiaSharpSample
 
 		public DrawingPage()
 		{
-			toolbar = new FlowLayoutPanel
-			{
-				Dock = DockStyle.Top,
-				Height = 40,
-				FlowDirection = FlowDirection.LeftToRight,
-				WrapContents = false,
-				Padding = new Padding(4, 4, 4, 0),
-				BackColor = Color.FromArgb(245, 245, 245),
-			};
+			InitializeComponent();
 
 			foreach (var (name, color) in ColorOptions)
 			{
@@ -50,7 +40,7 @@ namespace SkiaSharpSample
 					Height = 30,
 					FlatStyle = FlatStyle.Flat,
 					BackColor = Color.FromArgb(color.Red, color.Green, color.Blue),
-					ForeColor = name == "Black" ? Color.White : Color.White,
+					ForeColor = Color.White,
 					Font = new Font("Segoe UI", 8f, FontStyle.Bold),
 					Tag = color,
 				};
@@ -72,18 +62,6 @@ namespace SkiaSharpSample
 			clearBtn.FlatAppearance.BorderSize = 0;
 			clearBtn.Click += OnClearClick;
 			toolbar.Controls.Add(clearBtn);
-
-			skiaView = new SKControl { Dock = DockStyle.Fill };
-			skiaView.PaintSurface += OnPaintSurface;
-			skiaView.MouseDown += OnMouseDown;
-			skiaView.MouseMove += OnMouseMove;
-			skiaView.MouseUp += OnMouseUp;
-			skiaView.MouseWheel += OnMouseWheel;
-			skiaView.MouseEnter += (s, e) => { isCursorOver = true; };
-			skiaView.MouseLeave += (s, e) => { isCursorOver = false; skiaView.Invalidate(); };
-
-			Controls.Add(skiaView);
-			Controls.Add(toolbar);
 		}
 
 		private void OnColorClick(object sender, EventArgs e)
@@ -182,22 +160,15 @@ namespace SkiaSharpSample
 			skiaView.Invalidate();
 		}
 
-		protected override void Dispose(bool disposing)
+		private void OnMouseEnter(object sender, EventArgs e)
 		{
-			if (disposing)
-			{
-				skiaView.PaintSurface -= OnPaintSurface;
-				skiaView.MouseDown -= OnMouseDown;
-				skiaView.MouseMove -= OnMouseMove;
-				skiaView.MouseUp -= OnMouseUp;
-				skiaView.MouseWheel -= OnMouseWheel;
-				skiaView.Dispose();
-				toolbar.Dispose();
-				foreach (var (path, _, _) in strokes)
-					path.Dispose();
-				currentPath?.Dispose();
-			}
-			base.Dispose(disposing);
+			isCursorOver = true;
+		}
+
+		private void OnMouseLeave(object sender, EventArgs e)
+		{
+			isCursorOver = false;
+			skiaView.Invalidate();
 		}
 	}
 }
