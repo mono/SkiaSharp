@@ -72,7 +72,7 @@ half4 main(float2 fragCoord) {
 
 		displayLink = CADisplayLink.Create(() => skiaView.Display());
 		displayLink.PreferredFramesPerSecond = 60;
-		displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
+		displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Common);
 
 		stopwatch.Start();
 	}
@@ -92,7 +92,7 @@ half4 main(float2 fragCoord) {
 		{
 			displayLink = CADisplayLink.Create(() => skiaView.Display());
 			displayLink.PreferredFramesPerSecond = 60;
-			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Default);
+			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Common);
 		}
 		stopwatch.Start();
 	}
