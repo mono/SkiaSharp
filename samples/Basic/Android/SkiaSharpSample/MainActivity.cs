@@ -5,60 +5,59 @@ using AndroidX.AppCompat.App;
 using AndroidX.Core.View;
 using Google.Android.Material.BottomNavigation;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+[Activity(Label = "SkiaSharp", MainLauncher = true, Theme = "@style/Theme.SkiaSharpSample")]
+public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelectedListener, IOnApplyWindowInsetsListener
 {
-	[Activity(Label = "SkiaSharp", MainLauncher = true, Theme = "@style/Theme.SkiaSharpSample")]
-	public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelectedListener, IOnApplyWindowInsetsListener
+	protected override void OnCreate(Bundle savedInstanceState)
 	{
-		protected override void OnCreate(Bundle savedInstanceState)
+		base.OnCreate(savedInstanceState);
+
+		WindowCompat.SetDecorFitsSystemWindows(Window, false);
+
+		SetContentView(Resource.Layout.main);
+
+		var toolbar = FindViewById<Google.Android.Material.AppBar.MaterialToolbar>(Resource.Id.toolbar);
+		SetSupportActionBar(toolbar);
+
+		var bottomNav = FindViewById<BottomNavigationView>(Resource.Id.bottom_nav);
+		bottomNav.SetOnItemSelectedListener(this);
+
+		// Apply top status bar inset to the AppBarLayout
+		var appBar = FindViewById<View>(Resource.Id.appbar);
+		ViewCompat.SetOnApplyWindowInsetsListener(appBar, this);
+
+		if (savedInstanceState == null)
+			ShowFragment(new CpuFragment());
+	}
+
+	public WindowInsetsCompat OnApplyWindowInsets(View v, WindowInsetsCompat insets)
+	{
+		var bars = insets.GetInsets(WindowInsetsCompat.Type.SystemBars());
+		v.SetPadding(0, bars.Top, 0, 0);
+		return insets;
+	}
+
+	public bool OnNavigationItemSelected(IMenuItem item)
+	{
+		AndroidX.Fragment.App.Fragment fragment = item.ItemId switch
 		{
-			base.OnCreate(savedInstanceState);
+			Resource.Id.nav_cpu => new CpuFragment(),
+			Resource.Id.nav_gpu_surface => new GpuSurfaceFragment(),
+			Resource.Id.nav_gpu_texture => new GpuTextureFragment(),
+			Resource.Id.nav_drawing => new DrawingFragment(),
+			_ => new CpuFragment()
+		};
 
-			WindowCompat.SetDecorFitsSystemWindows(Window, false);
+		ShowFragment(fragment);
+		return true;
+	}
 
-			SetContentView(Resource.Layout.main);
-
-			var toolbar = FindViewById<Google.Android.Material.AppBar.MaterialToolbar>(Resource.Id.toolbar);
-			SetSupportActionBar(toolbar);
-
-			var bottomNav = FindViewById<BottomNavigationView>(Resource.Id.bottom_nav);
-			bottomNav.SetOnItemSelectedListener(this);
-
-			// Apply top status bar inset to the AppBarLayout
-			var appBar = FindViewById<View>(Resource.Id.appbar);
-			ViewCompat.SetOnApplyWindowInsetsListener(appBar, this);
-
-			if (savedInstanceState == null)
-				ShowFragment(new CpuFragment());
-		}
-
-		public WindowInsetsCompat OnApplyWindowInsets(View v, WindowInsetsCompat insets)
-		{
-			var bars = insets.GetInsets(WindowInsetsCompat.Type.SystemBars());
-			v.SetPadding(0, bars.Top, 0, 0);
-			return insets;
-		}
-
-		public bool OnNavigationItemSelected(IMenuItem item)
-		{
-			AndroidX.Fragment.App.Fragment fragment = item.ItemId switch
-			{
-				Resource.Id.nav_cpu => new CpuFragment(),
-				Resource.Id.nav_gpu_surface => new GpuSurfaceFragment(),
-				Resource.Id.nav_gpu_texture => new GpuTextureFragment(),
-				Resource.Id.nav_drawing => new DrawingFragment(),
-				_ => new CpuFragment()
-			};
-
-			ShowFragment(fragment);
-			return true;
-		}
-
-		private void ShowFragment(AndroidX.Fragment.App.Fragment fragment)
-		{
-			SupportFragmentManager.BeginTransaction()
-				.Replace(Resource.Id.content_frame, fragment)
-				.Commit();
-		}
+	private void ShowFragment(AndroidX.Fragment.App.Fragment fragment)
+	{
+		SupportFragmentManager.BeginTransaction()
+			.Replace(Resource.Id.content_frame, fragment)
+			.Commit();
 	}
 }
