@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Gtk;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -9,14 +10,14 @@ namespace SkiaSharpSample
 {
 	public class MainWindow : ApplicationWindow
 	{
-		private static readonly (string Name, SKColor Color)[] ColorOptions = new[]
+		private static readonly (string ButtonId, string Name, SKColor Color)[] ColorOptions = new[]
 		{
-			("Black", SKColors.Black),
-			("Red", new SKColor(0xE5, 0x39, 0x35)),
-			("Blue", new SKColor(0x1E, 0x88, 0xE5)),
-			("Green", new SKColor(0x43, 0xA0, 0x47)),
-			("Orange", new SKColor(0xFB, 0x8C, 0x00)),
-			("Purple", new SKColor(0x8E, 0x24, 0xAA)),
+			("btnBlack", "Black", SKColors.Black),
+			("btnRed", "Red", new SKColor(0xE5, 0x39, 0x35)),
+			("btnBlue", "Blue", new SKColor(0x1E, 0x88, 0xE5)),
+			("btnGreen", "Green", new SKColor(0x43, 0xA0, 0x47)),
+			("btnOrange", "Orange", new SKColor(0xFB, 0x8C, 0x00)),
+			("btnPurple", "Purple", new SKColor(0x8E, 0x24, 0xAA)),
 		};
 
 		// Drawing page state
@@ -37,39 +38,96 @@ namespace SkiaSharpSample
 			Title = "SkiaSharp on Gtk4";
 			SetDefaultSize(1024, 768);
 
-			var box = Box.New(Orientation.Horizontal, 0);
+			// Load layout from the .ui file (editable in GNOME Builder / Cambalache)
+			var uiPath = Path.Combine(AppContext.BaseDirectory, "MainWindow.ui");
+			var builder = Builder.NewFromFile(uiPath);
 
-			var stack = Stack.New();
-			stack.TransitionType = StackTransitionType.Crossfade;
-			stack.TransitionDuration = 300;
-			stack.Hexpand = true;
+			var rootBox = (Box)builder.GetObject("rootBox");
+			Child = rootBox;
 
-			var sidebar = StackSidebar.New();
-			sidebar.Stack = stack;
-			sidebar.WidthRequest = 200;
+			// CPU page — inject SKDrawingArea into the placeholder container
+			var cpuContainer = (Box)builder.GetObject("cpuContainer");
+			var cpuSkiaView = new SKDrawingArea();
+			cpuSkiaView.PaintSurface += OnCpuPaintSurface;
+			cpuContainer.Append(cpuSkiaView);
 
-			// CPU Page
-			var cpuPage = CreateCpuPage();
-			stack.AddTitled(cpuPage, "cpu", "CPU Canvas");
+			// Drawing page — inject SKDrawingArea into the placeholder container
+			var drawingContainer = (Box)builder.GetObject("drawingContainer");
+			drawingSkiaView = new SKDrawingArea();
+			drawingSkiaView.Vexpand = true;
+			drawingSkiaView.PaintSurface += OnDrawingPaintSurface;
+			drawingContainer.Append(drawingSkiaView);
 
-			// Drawing Page
-			var drawingPage = CreateDrawingPage();
-			stack.AddTitled(drawingPage, "drawing", "Drawing");
+			SetupDrawingGestures();
+			SetupColorButtons(builder);
 
-			box.Append(sidebar);
-			box.Append(stack);
+			// Clear button
+			var clearBtn = (Button)builder.GetObject("btnClear");
+			var clearProvider = new CssProvider();
+			clearProvider.LoadFromData(
+				"button { background: rgb(120,120,120); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }",
+				-1);
+			clearBtn.GetStyleContext().AddProvider(clearProvider, 600);
+			clearBtn.OnClicked += OnClearClicked;
 
-			Child = box;
+			// Brush size label
+			brushSizeLabel = (Label)builder.GetObject("brushSizeLabel");
 		}
 
-		// --- CPU Page ---
-
-		private Widget CreateCpuPage()
+		private void SetupColorButtons(Builder builder)
 		{
-			var skiaView = new SKDrawingArea();
-			skiaView.PaintSurface += OnCpuPaintSurface;
-			return skiaView;
+			foreach (var (buttonId, name, color) in ColorOptions)
+			{
+				var btn = (Button)builder.GetObject(buttonId);
+				var provider = new CssProvider();
+				provider.LoadFromData(
+					$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}",
+					-1);
+				btn.GetStyleContext().AddProvider(provider, 600);
+				var capturedColor = color;
+				btn.OnClicked += (sender, args) => currentColor = capturedColor;
+			}
 		}
+
+		private void SetupDrawingGestures()
+		{
+			var dragGesture = GestureDrag.New();
+			dragGesture.OnDragBegin += OnDragBegin;
+			dragGesture.OnDragUpdate += OnDragUpdate;
+			dragGesture.OnDragEnd += OnDragEnd;
+			drawingSkiaView.AddController(dragGesture);
+
+			var motionController = EventControllerMotion.New();
+			motionController.OnEnter += (sender, args) =>
+			{
+				isCursorOver = true;
+				cursorPosition = new SKPoint((float)args.X, (float)args.Y);
+			};
+			motionController.OnLeave += (sender, args) =>
+			{
+				isCursorOver = false;
+				drawingSkiaView.QueueDraw();
+			};
+			motionController.OnMotion += (sender, args) =>
+			{
+				cursorPosition = new SKPoint((float)args.X, (float)args.Y);
+				if (currentPath == null)
+					drawingSkiaView.QueueDraw();
+			};
+			drawingSkiaView.AddController(motionController);
+
+			var scrollController = EventControllerScroll.New(EventControllerScrollFlags.Vertical);
+			scrollController.OnScroll += (sender, args) =>
+			{
+				brushSize = Math.Max(1f, Math.Min(50f, brushSize + (args.Dy < 0 ? 1f : -1f)));
+				brushSizeLabel.SetLabel($"Brush: {brushSize:0}px");
+				drawingSkiaView.QueueDraw();
+				return false;
+			};
+			drawingSkiaView.AddController(scrollController);
+		}
+
+		// --- CPU Page Painting ---
 
 		private void OnCpuPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
@@ -109,90 +167,7 @@ namespace SkiaSharpSample
 			canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 		}
 
-		// --- Drawing Page ---
-
-		private Widget CreateDrawingPage()
-		{
-			var vbox = Box.New(Orientation.Vertical, 0);
-
-			drawingSkiaView = new SKDrawingArea();
-			drawingSkiaView.Vexpand = true;
-			drawingSkiaView.PaintSurface += OnDrawingPaintSurface;
-
-			// GTK4 gesture controllers
-			var dragGesture = GestureDrag.New();
-			dragGesture.OnDragBegin += OnDragBegin;
-			dragGesture.OnDragUpdate += OnDragUpdate;
-			dragGesture.OnDragEnd += OnDragEnd;
-			drawingSkiaView.AddController(dragGesture);
-
-			var motionController = EventControllerMotion.New();
-			motionController.OnEnter += (sender, args) =>
-			{
-				isCursorOver = true;
-				cursorPosition = new SKPoint((float)args.X, (float)args.Y);
-			};
-			motionController.OnLeave += (sender, args) =>
-			{
-				isCursorOver = false;
-				drawingSkiaView.QueueDraw();
-			};
-			motionController.OnMotion += (sender, args) =>
-			{
-				cursorPosition = new SKPoint((float)args.X, (float)args.Y);
-				if (currentPath == null)
-					drawingSkiaView.QueueDraw();
-			};
-			drawingSkiaView.AddController(motionController);
-
-			var scrollController = EventControllerScroll.New(EventControllerScrollFlags.Vertical);
-			scrollController.OnScroll += (sender, args) =>
-			{
-				brushSize = Math.Max(1f, Math.Min(50f, brushSize + (args.Dy < 0 ? 1f : -1f)));
-				brushSizeLabel.SetLabel($"Brush: {brushSize:0}px");
-				drawingSkiaView.QueueDraw();
-			};
-			drawingSkiaView.AddController(scrollController);
-
-			vbox.Append(drawingSkiaView);
-
-			// Toolbar
-			var toolbar = Box.New(Orientation.Horizontal, 8);
-			toolbar.MarginStart = 4;
-			toolbar.MarginEnd = 4;
-			toolbar.MarginTop = 4;
-			toolbar.MarginBottom = 4;
-
-			foreach (var (name, color) in ColorOptions)
-			{
-				var btn = Button.NewWithLabel(name);
-				var provider = new CssProvider();
-				provider.LoadFromData(
-					$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}",
-					-1);
-				btn.GetStyleContext().AddProvider(provider, 600);
-				var capturedColor = color;
-				btn.OnClicked += (sender, args) => currentColor = capturedColor;
-				toolbar.Append(btn);
-			}
-
-			var clearBtn = Button.NewWithLabel("Clear");
-			var clearProvider = new CssProvider();
-			clearProvider.LoadFromData(
-				"button { background: rgb(120,120,120); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }",
-				-1);
-			clearBtn.GetStyleContext().AddProvider(clearProvider, 600);
-			clearBtn.OnClicked += OnClearClicked;
-			toolbar.Append(clearBtn);
-
-			brushSizeLabel = Label.New($"Brush: {brushSize:0}px");
-			brushSizeLabel.MarginStart = 12;
-			toolbar.Append(brushSizeLabel);
-
-			vbox.Append(toolbar);
-
-			return vbox;
-		}
+		// --- Drawing Page Painting ---
 
 		private void OnDrawingPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
