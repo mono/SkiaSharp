@@ -48,12 +48,15 @@ namespace SkiaSharpSample
 			// CPU page — inject SKDrawingArea into the placeholder container
 			var cpuContainer = (Box)builder.GetObject("cpuContainer");
 			var cpuSkiaView = new SKDrawingArea();
+			cpuSkiaView.Hexpand = true;
+			cpuSkiaView.Vexpand = true;
 			cpuSkiaView.PaintSurface += OnCpuPaintSurface;
 			cpuContainer.Append(cpuSkiaView);
 
 			// Drawing page — inject SKDrawingArea into the placeholder container
 			var drawingContainer = (Box)builder.GetObject("drawingContainer");
 			drawingSkiaView = new SKDrawingArea();
+			drawingSkiaView.Hexpand = true;
 			drawingSkiaView.Vexpand = true;
 			drawingSkiaView.PaintSurface += OnDrawingPaintSurface;
 			drawingContainer.Append(drawingSkiaView);
