@@ -8,19 +8,21 @@ public class DrawingViewController : UIViewController
 {
 	private readonly record struct Stroke(SKPath Path, SKColor Color, float Width);
 
-	private static readonly (string Name, SKColor Color)[] colorPalette =
+	private static readonly (string Name, SKColor Light, SKColor Dark)[] colorPalette =
 	{
-		("Black", SKColors.Black),
-		("Red", new SKColor(0xE5, 0x39, 0x35)),
-		("Blue", new SKColor(0x1E, 0x88, 0xE5)),
-		("Green", new SKColor(0x43, 0xA0, 0x47)),
-		("Orange", new SKColor(0xFB, 0x8C, 0x00)),
-		("Purple", new SKColor(0x8E, 0x24, 0xAA)),
+		("Black", SKColors.Black, SKColors.White),
+		("Red", new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+		("Blue", new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+		("Green", new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+		("Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+		("Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
 	};
 
 	private readonly List<Stroke> strokes = new();
+	private readonly List<(UIView Swatch, SKColor Light, SKColor Dark)> swatchViews = new();
 	private SKPath? currentPath;
-	private SKColor currentColor = SKColors.Black;
+	private SKColor currentColorLight = SKColors.Black;
+	private SKColor currentColorDark = SKColors.White;
 	private float brushSize = 4f;
 	private bool isDrawing;
 
@@ -29,6 +31,11 @@ public class DrawingViewController : UIViewController
 
 	private UILabel? brushLabel;
 	private UIView? selectedSwatch;
+
+	bool IsDarkMode => TraitCollection.UserInterfaceStyle == UIUserInterfaceStyle.Dark;
+	SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
+	SKColor ResolveColor(SKColor light, SKColor dark) => IsDarkMode ? dark : light;
+	SKColor CurrentColor => ResolveColor(currentColorLight, currentColorDark);
 
 	public DrawingViewController(IntPtr handle) : base(handle) { }
 
@@ -61,22 +68,25 @@ public class DrawingViewController : UIViewController
 		toolbar.AddSubview(stack);
 
 		// Color swatches
-		foreach (var (name, color) in colorPalette)
+		foreach (var (name, light, dark) in colorPalette)
 		{
+			var resolved = ResolveColor(light, dark);
 			var swatch = new UIView
 			{
-				BackgroundColor = new UIColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f, 1f),
+				BackgroundColor = new UIColor(resolved.Red / 255f, resolved.Green / 255f, resolved.Blue / 255f, 1f),
 			};
 			swatch.Layer.CornerRadius = 16;
 			swatch.TranslatesAutoresizingMaskIntoConstraints = false;
 			swatch.WidthAnchor.ConstraintEqualTo(32).Active = true;
 			swatch.HeightAnchor.ConstraintEqualTo(32).Active = true;
 
-			var capturedColor = color;
-			var tap = new UITapGestureRecognizer(() => SelectColor(capturedColor, swatch));
+			var capturedLight = light;
+			var capturedDark = dark;
+			var tap = new UITapGestureRecognizer(() => SelectColor(capturedLight, capturedDark, swatch));
 			swatch.AddGestureRecognizer(tap);
 			swatch.UserInteractionEnabled = true;
 			stack.AddArrangedSubview(swatch);
+			swatchViews.Add((swatch, light, dark));
 
 			if (name == "Black")
 			{
@@ -130,9 +140,10 @@ public class DrawingViewController : UIViewController
 		skiaView.AddGestureRecognizer(pinch);
 	}
 
-	private void SelectColor(SKColor color, UIView swatch)
+	private void SelectColor(SKColor light, SKColor dark, UIView swatch)
 	{
-		currentColor = color;
+		currentColorLight = light;
+		currentColorDark = dark;
 		if (selectedSwatch != null)
 			selectedSwatch.Layer.BorderWidth = 0;
 		swatch.Layer.BorderWidth = 3;
@@ -167,7 +178,7 @@ public class DrawingViewController : UIViewController
 	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		canvas.Clear(SKColors.White);
+		canvas.Clear(CanvasBackground);
 
 		using var paint = new SKPaint
 		{
@@ -186,9 +197,28 @@ public class DrawingViewController : UIViewController
 
 		if (currentPath != null)
 		{
-			paint.Color = currentColor;
+			paint.Color = CurrentColor;
 			paint.StrokeWidth = brushSize;
 			canvas.DrawPath(currentPath, paint);
+		}
+	}
+
+	public override void TraitCollectionDidChange(UITraitCollection? previousTraitCollection)
+	{
+		base.TraitCollectionDidChange(previousTraitCollection);
+		if (previousTraitCollection?.UserInterfaceStyle != TraitCollection.UserInterfaceStyle)
+		{
+			UpdateSwatchColors();
+			skiaView?.SetNeedsDisplay();
+		}
+	}
+
+	private void UpdateSwatchColors()
+	{
+		foreach (var (swatch, light, dark) in swatchViews)
+		{
+			var resolved = ResolveColor(light, dark);
+			swatch.BackgroundColor = new UIColor(resolved.Red / 255f, resolved.Green / 255f, resolved.Blue / 255f, 1f);
 		}
 	}
 
@@ -232,7 +262,7 @@ public class DrawingViewController : UIViewController
 		if (isDrawing && currentPath != null)
 		{
 			isDrawing = false;
-			strokes.Add(new Stroke(currentPath, currentColor, brushSize));
+			strokes.Add(new Stroke(currentPath, CurrentColor, brushSize));
 			currentPath = null;
 			skiaView?.SetNeedsDisplay();
 		}

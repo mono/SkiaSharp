@@ -12,21 +12,33 @@ namespace SkiaSharpSample
 {
 	public class MainWindow : Gtk.Window
 	{
-		private static readonly (string Name, SKColor Color)[] ColorOptions = new[]
+		private static readonly (string Name, SKColor Light, SKColor Dark)[] ColorOptions = new[]
 		{
-			("Black", SKColors.Black),
-			("Red", new SKColor(0xE5, 0x39, 0x35)),
-			("Blue", new SKColor(0x1E, 0x88, 0xE5)),
-			("Green", new SKColor(0x43, 0xA0, 0x47)),
-			("Orange", new SKColor(0xFB, 0x8C, 0x00)),
-			("Purple", new SKColor(0x8E, 0x24, 0xAA)),
+			("Black", SKColors.Black, SKColors.White),
+			("Red", new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+			("Blue", new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+			("Green", new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+			("Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+			("Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
 		};
+
+		private static bool IsDarkMode
+		{
+			get
+			{
+				var settings = Gtk.Settings.Default;
+				return settings?.ApplicationPreferDarkTheme == true ||
+				       (settings?.ThemeName?.Contains("dark", StringComparison.OrdinalIgnoreCase) ?? false);
+			}
+		}
+
+		private static SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 
 		// Drawing page state
 		private SKDrawingArea drawingSkiaView;
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 		private SKPath currentPath;
-		private SKColor currentColor = SKColors.Black;
+		private SKColor currentColor;
 		private float brushSize = 4f;
 		private SKPoint cursorPosition;
 		private bool isCursorOver;
@@ -34,6 +46,7 @@ namespace SkiaSharpSample
 		public MainWindow()
 			: base("SkiaSharp on Gtk3")
 		{
+			currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
 			SetDefaultSize(1024, 768);
 			DeleteEvent += (s, e) => Application.Quit();
 
@@ -74,15 +87,16 @@ namespace SkiaSharpSample
 			drawingCanvasContainer.PackStart(drawingSkiaView, true, true, 0);
 
 			// Connect color buttons defined in the Glade file
-			foreach (var (name, color) in ColorOptions)
+			foreach (var (name, light, dark) in ColorOptions)
 			{
 				var btn = (Button)builder.GetObject($"btn{name}");
 				var provider = new CssProvider();
 				provider.LoadFromData(
-					$"button {{ background: rgb({color.Red},{color.Green},{color.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}");
+					$"button {{ background: rgb({light.Red},{light.Green},{light.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}");
 				btn.StyleContext.AddProvider(provider, StyleProviderPriority.Application);
-				var capturedColor = color;
-				btn.Clicked += (s, e) => currentColor = capturedColor;
+				var capturedLight = light;
+				var capturedDark = dark;
+				btn.Clicked += (s, e) => currentColor = IsDarkMode ? capturedDark : capturedLight;
 			}
 
 			// Connect clear button
@@ -138,7 +152,7 @@ namespace SkiaSharpSample
 		private void OnDrawingPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
 			var canvas = e.Surface.Canvas;
-			canvas.Clear(SKColors.White);
+			canvas.Clear(CanvasBackground);
 
 			using var paint = new SKPaint
 			{

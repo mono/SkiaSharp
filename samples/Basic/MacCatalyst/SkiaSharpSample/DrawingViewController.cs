@@ -12,14 +12,17 @@ public class DrawingViewController : UIViewController
 	readonly List<List<SKPoint>> completedStrokes = new();
 	List<SKPoint>? currentStroke;
 
-	readonly SKColor[] strokeColors =
+	readonly (SKColor Light, SKColor Dark)[] strokeColors =
 	{
-		new(0x20, 0x60, 0xE0),
-		new(0xE0, 0x40, 0x40),
-		new(0x40, 0xB0, 0x40),
-		new(0xE0, 0x90, 0x20),
-		new(0x90, 0x40, 0xD0),
+		(new(0x20, 0x60, 0xE0), new(0x42, 0xA5, 0xF5)),  // Blue
+		(new(0xE0, 0x40, 0x40), new(0xEF, 0x53, 0x50)),  // Red
+		(new(0x40, 0xB0, 0x40), new(0x66, 0xBB, 0x6A)),  // Green
+		(new(0xE0, 0x90, 0x20), new(0xFF, 0xA7, 0x26)),  // Orange
+		(new(0x90, 0x40, 0xD0), new(0xAB, 0x47, 0xBC)),  // Purple
 	};
+
+	bool IsDarkMode => TraitCollection.UserInterfaceStyle == UIUserInterfaceStyle.Dark;
+	SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 
 	public DrawingViewController(IntPtr handle)
 		: base(handle)
@@ -46,7 +49,7 @@ public class DrawingViewController : UIViewController
 	{
 		var canvas = e.Surface.Canvas;
 		var info = e.Info;
-		canvas.Clear(SKColors.White);
+		canvas.Clear(CanvasBackground);
 
 		float scaleX = info.Width / (float)skiaView!.Bounds.Width;
 		float scaleY = info.Height / (float)skiaView.Bounds.Height;
@@ -56,7 +59,7 @@ public class DrawingViewController : UIViewController
 		{
 			using var hintPaint = new SKPaint
 			{
-				Color = new SKColor(0xAA, 0xAA, 0xAA),
+				Color = IsDarkMode ? new SKColor(0x66, 0x66, 0x66) : new SKColor(0xAA, 0xAA, 0xAA),
 				IsAntialias = true,
 			};
 			using var hintFont = new SKFont { Size = 32 };
@@ -77,14 +80,16 @@ public class DrawingViewController : UIViewController
 		// Draw completed strokes
 		for (int i = 0; i < completedStrokes.Count; i++)
 		{
-			paint.Color = strokeColors[i % strokeColors.Length];
+			var (light, dark) = strokeColors[i % strokeColors.Length];
+			paint.Color = IsDarkMode ? dark : light;
 			DrawStroke(canvas, completedStrokes[i], paint, scaleX, scaleY);
 		}
 
 		// Draw current stroke
 		if (currentStroke is { Count: >= 2 })
 		{
-			paint.Color = strokeColors[completedStrokes.Count % strokeColors.Length];
+			var (light, dark) = strokeColors[completedStrokes.Count % strokeColors.Length];
+			paint.Color = IsDarkMode ? dark : light;
 			DrawStroke(canvas, currentStroke, paint, scaleX, scaleY);
 		}
 
@@ -94,7 +99,7 @@ public class DrawingViewController : UIViewController
 		{
 			using var counterPaint = new SKPaint
 			{
-				Color = new SKColor(0x66, 0x66, 0x66),
+				Color = IsDarkMode ? new SKColor(0x99, 0x99, 0x99) : new SKColor(0x66, 0x66, 0x66),
 				IsAntialias = true,
 			};
 			using var counterFont = new SKFont { Size = 24 };
@@ -161,5 +166,12 @@ public class DrawingViewController : UIViewController
 			completedStrokes.Add(currentStroke);
 		currentStroke = null;
 		skiaView?.SetNeedsDisplay();
+	}
+
+	public override void TraitCollectionDidChange(UITraitCollection? previousTraitCollection)
+	{
+		base.TraitCollectionDidChange(previousTraitCollection);
+		if (previousTraitCollection?.UserInterfaceStyle != TraitCollection.UserInterfaceStyle)
+			skiaView?.SetNeedsDisplay();
 	}
 }

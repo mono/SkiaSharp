@@ -25,18 +25,36 @@ namespace SkiaSharpSample
 		private int drawingColorIndex;
 		private SKCanvasView drawingCanvas;
 
-		private static readonly SKColor[] StrokeColors =
+		private static readonly (SKColor Light, SKColor Dark)[] StrokeColorPalette =
 		{
-			SKColors.Black,
-			new SKColor(0xE5, 0x39, 0x35),
-			new SKColor(0x1E, 0x88, 0xE5),
-			new SKColor(0x43, 0xA0, 0x47),
-			new SKColor(0xFB, 0x8C, 0x00),
-			new SKColor(0x8E, 0x24, 0xAA),
+			(SKColors.Black, SKColors.White),
+			(new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+			(new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+			(new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+			(new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+			(new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
 		};
 
 		private static readonly string[] StrokeColorNames =
 			{ "Black", "Red", "Blue", "Green", "Orange", "Purple" };
+
+		private static bool IsDarkMode
+		{
+			get
+			{
+				try
+				{
+					var profile = Elementary.GetProfile();
+					return profile?.Contains("dark", StringComparison.OrdinalIgnoreCase) ?? false;
+				}
+				catch { return false; }
+			}
+		}
+
+		private static SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
+
+		private SKColor GetStrokeColor(int index) =>
+			IsDarkMode ? StrokeColorPalette[index].Dark : StrokeColorPalette[index].Light;
 
 		public static void Main(string[] args)
 		{
@@ -325,7 +343,7 @@ half4 main(float2 fragCoord) {
 			var colorBtn = new Button(window) { Text = "Color: Black" };
 			colorBtn.Clicked += (s, e) =>
 			{
-				drawingColorIndex = (drawingColorIndex + 1) % StrokeColors.Length;
+				drawingColorIndex = (drawingColorIndex + 1) % StrokeColorPalette.Length;
 				colorBtn.Text = $"Color: {StrokeColorNames[drawingColorIndex]}";
 			};
 			colorBtn.Show();
@@ -353,7 +371,7 @@ half4 main(float2 fragCoord) {
 			{
 				currentDrawingPath = new SKPath();
 				currentDrawingPath.MoveTo(data.X2, data.Y2);
-				drawingStrokes.Add((currentDrawingPath, StrokeColors[drawingColorIndex], 4f));
+				drawingStrokes.Add((currentDrawingPath, GetStrokeColor(drawingColorIndex), 4f));
 			});
 
 			gestureLayer.SetMomentumCallback(GestureLayer.GestureState.Move, data =>
@@ -372,7 +390,7 @@ half4 main(float2 fragCoord) {
 			{
 				var dotPath = new SKPath();
 				dotPath.AddCircle(data.X, data.Y, 4);
-				drawingStrokes.Add((dotPath, StrokeColors[drawingColorIndex], 4f));
+				drawingStrokes.Add((dotPath, GetStrokeColor(drawingColorIndex), 4f));
 				drawingCanvas.Invalidate();
 			});
 
@@ -383,7 +401,7 @@ half4 main(float2 fragCoord) {
 		private void OnPaintDrawing(object sender, SKPaintSurfaceEventArgs e)
 		{
 			var canvas = e.Surface.Canvas;
-			canvas.Clear(SKColors.White);
+			canvas.Clear(CanvasBackground);
 
 			using var paint = new SKPaint
 			{
