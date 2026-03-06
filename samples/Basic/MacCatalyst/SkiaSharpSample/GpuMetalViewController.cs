@@ -46,8 +46,7 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-	[Outlet]
-	SKMetalView? skiaView { get; set; }
+	SKMetalView? skiaView;
 
 	SKRuntimeShaderBuilder? shaderBuilder;
 	readonly Stopwatch stopwatch = new();
@@ -79,7 +78,17 @@ half4 main(float2 fragCoord) {
 			return;
 		}
 
-		skiaView!.EnableSetNeedsDisplay = false;
+		skiaView = new SKMetalView { TranslatesAutoresizingMaskIntoConstraints = false };
+		View!.AddSubview(skiaView);
+		NSLayoutConstraint.ActivateConstraints(new[]
+		{
+			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
+			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+			skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
+		});
+
+		skiaView.EnableSetNeedsDisplay = false;
 		skiaView.Paused = true;
 		skiaView.PreferredFramesPerSecond = 60;
 		skiaView.PaintSurface += OnPaintSurface;
