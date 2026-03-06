@@ -22,7 +22,8 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="12dp"
         android:background="@drawable/toolbox_background"
-        android:elevation="6dp">
+        android:elevation="6dp"
+        android:theme="@style/ThemeOverlay.Material3.Dark">
 
         <!-- Color palette row -->
         <LinearLayout
@@ -34,27 +35,27 @@
             <View android:id="@+id/colorBlack"
                 android:layout_width="32dp" android:layout_height="32dp"
                 android:layout_margin="4dp"
-                android:background="@color/draw_black" />
+                android:background="@drawable/swatch_black" />
             <View android:id="@+id/colorRed"
                 android:layout_width="32dp" android:layout_height="32dp"
                 android:layout_margin="4dp"
-                android:background="@color/draw_red" />
+                android:background="@drawable/swatch_red" />
             <View android:id="@+id/colorBlue"
                 android:layout_width="32dp" android:layout_height="32dp"
                 android:layout_margin="4dp"
-                android:background="@color/draw_blue" />
+                android:background="@drawable/swatch_blue" />
             <View android:id="@+id/colorGreen"
                 android:layout_width="32dp" android:layout_height="32dp"
                 android:layout_margin="4dp"
-                android:background="@color/draw_green" />
+                android:background="@drawable/swatch_green" />
             <View android:id="@+id/colorOrange"
                 android:layout_width="32dp" android:layout_height="32dp"
                 android:layout_margin="4dp"
-                android:background="@color/draw_orange" />
+                android:background="@drawable/swatch_orange" />
             <View android:id="@+id/colorPurple"
                 android:layout_width="32dp" android:layout_height="32dp"
                 android:layout_margin="4dp"
-                android:background="@color/draw_purple" />
+                android:background="@drawable/swatch_purple" />
 
         </LinearLayout>
 
@@ -66,15 +67,16 @@
             android:gravity="center_vertical"
             android:layout_marginTop="4dp">
 
-            <SeekBar
+            <com.google.android.material.slider.Slider
                 android:id="@+id/brushSlider"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:min="1"
-                android:max="30"
-                android:progress="6" />
+                android:valueFrom="1"
+                android:valueTo="30"
+                android:value="6"
+                app:tickVisible="false" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnClear"

@@ -26,13 +26,13 @@ public class DrawingFragment : Fragment
 
 	private SKCanvasView skiaView;
 	private View selectedSwatch;
-	private Android.Widget.SeekBar brushSlider;
+	private Google.Android.Material.Slider.Slider brushSlider;
 	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 	private SKPath currentPath;
 	private SKColor currentColor = SKColors.Black;
 	private SKColor canvasBackground = SKColors.White;
 
-	private float BrushSize => brushSlider?.Progress + 1 ?? 6f;
+	private float BrushSize => brushSlider?.Value ?? 6f;
 
 	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
@@ -61,9 +61,17 @@ public class DrawingFragment : Fragment
 		foreach (var viewId in SwatchIds)
 		{
 			var swatch = view.FindViewById<View>(viewId);
-			var bgColor = swatch.Background is ColorDrawable cd
-				? new SKColor((byte)cd.Color.R, (byte)cd.Color.G, (byte)cd.Color.B)
-				: SKColors.Black;
+			SKColor bgColor = SKColors.Black;
+			if (OperatingSystem.IsAndroidVersionAtLeast(24)
+				&& swatch.Background is GradientDrawable gd && gd.Color != null)
+			{
+				var c = new Color(gd.Color.DefaultColor);
+				bgColor = new SKColor((byte)c.R, (byte)c.G, (byte)c.B);
+			}
+			else if (swatch.Background is ColorDrawable cd)
+			{
+				bgColor = new SKColor((byte)cd.Color.R, (byte)cd.Color.G, (byte)cd.Color.B);
+			}
 			var captured = bgColor;
 			swatch.Click += (s, e) =>
 			{
@@ -77,7 +85,7 @@ public class DrawingFragment : Fragment
 		SetSelectedSwatch(selectedSwatch);
 
 		// Brush size slider
-		brushSlider = view.FindViewById<Android.Widget.SeekBar>(Resource.Id.brushSlider);
+		brushSlider = view.FindViewById<Google.Android.Material.Slider.Slider>(Resource.Id.brushSlider);
 
 		// Clear button
 		var clearBtn = view.FindViewById<MaterialButton>(Resource.Id.btnClear);
@@ -96,23 +104,18 @@ public class DrawingFragment : Fragment
 
 	private void SetSelectedSwatch(View swatch)
 	{
-		// Remove border from previous selection
+		// Reset previous selection
 		if (selectedSwatch != null)
-			selectedSwatch.Background = selectedSwatch.Background is LayerDrawable
-				? ((LayerDrawable)selectedSwatch.Background).GetDrawable(0)
-				: selectedSwatch.Background;
+		{
+			selectedSwatch.ScaleX = 1.0f;
+			selectedSwatch.ScaleY = 1.0f;
+			selectedSwatch.Elevation = 0;
+		}
 
-		// Add selection ring
-		var bg = swatch.Background;
-		var ring = new GradientDrawable();
-		ring.SetShape(ShapeType.Rectangle);
-		ring.SetStroke(4, Color.White);
-		ring.SetCornerRadius(2);
-		var outer = new GradientDrawable();
-		outer.SetShape(ShapeType.Rectangle);
-		outer.SetStroke(3, Color.DarkGray);
-		outer.SetCornerRadius(2);
-		swatch.Background = new LayerDrawable(new Drawable[] { bg, ring, outer });
+		// Highlight selected with scale and elevation
+		swatch.ScaleX = 1.3f;
+		swatch.ScaleY = 1.3f;
+		swatch.Elevation = 8;
 		selectedSwatch = swatch;
 	}
 
