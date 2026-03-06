@@ -1,13 +1,17 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <article class="content">
+<FluentLayout>
+    <FluentHeader>
+        SkiaSharp
+    </FluentHeader>
+    <FluentStack Orientation="Orientation.Horizontal" Style="height: calc(100vh - 50px);">
+        <FluentNavMenu Width="220" Title="Navigation">
+            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new FluentRegularIcons.Size20.DesktopMac())">CPU</FluentNavLink>
+            <FluentNavLink Href="/gpu" Icon="@(new FluentRegularIcons.Size20.DeveloperBoard())">GPU</FluentNavLink>
+            <FluentNavLink Href="/drawing" Icon="@(new FluentRegularIcons.Size20.PaintBrush())">Drawing</FluentNavLink>
+        </FluentNavMenu>
+        <FluentBodyContent Style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
             @Body
-        </article>
-    </main>
-</div>
+        </FluentBodyContent>
+    </FluentStack>
+</FluentLayout>
