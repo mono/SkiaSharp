@@ -26,8 +26,7 @@ public class DrawingViewController : UIViewController
 	private float brushSize = 4f;
 	private bool isDrawing;
 
-	[Outlet]
-	SKCanvasView? skiaView { get; set; }
+	private SKCanvasView? skiaView;
 
 	private UILabel? brushLabel;
 	private UIView? selectedSwatch;
@@ -37,7 +36,7 @@ public class DrawingViewController : UIViewController
 	SKColor ResolveColor(SKColor light, SKColor dark) => IsDarkMode ? dark : light;
 	SKColor CurrentColor => ResolveColor(currentColorLight, currentColorDark);
 
-	public DrawingViewController(IntPtr handle) : base(handle) { }
+	public DrawingViewController() : base() { }
 
 	public override void ViewDidLoad()
 	{
@@ -45,8 +44,11 @@ public class DrawingViewController : UIViewController
 		Title = "Drawing";
 		View!.BackgroundColor = UIColor.SystemBackground;
 
-		// Switch storyboard view to Auto Layout so we can position the toolbar
-		skiaView!.TranslatesAutoresizingMaskIntoConstraints = false;
+		skiaView = new SKCanvasView();
+		skiaView.TranslatesAutoresizingMaskIntoConstraints = false;
+		View.AddSubview(skiaView);
+
+		// Configure canvas view with Auto Layout so we can position the toolbar
 		skiaView.IgnorePixelScaling = true;
 		skiaView.PaintSurface += OnPaintSurface;
 
@@ -105,7 +107,7 @@ public class DrawingViewController : UIViewController
 		brushLabel = new UILabel
 		{
 			Text = $"{brushSize:F0}px",
-			Font = UIFont.MonospacedSystemFontOfSize(14, UIFontWeight.Regular),
+			Font = UIFont.MonospacedDigitSystemFontOfSize(14, UIFontWeight.Regular),
 			TextColor = UIColor.Label,
 		};
 		stack.AddArrangedSubview(brushLabel);
