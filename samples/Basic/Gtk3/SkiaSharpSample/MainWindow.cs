@@ -36,6 +36,7 @@ namespace SkiaSharpSample
 
 		// Drawing page state
 		private SKDrawingArea drawingSkiaView;
+		private Label brushSizeLabel;
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 		private SKPath currentPath;
 		private SKColor currentColor;
@@ -106,6 +107,9 @@ namespace SkiaSharpSample
 				"button { background: rgb(120,120,120); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }");
 			clearBtn.StyleContext.AddProvider(clearProvider, StyleProviderPriority.Application);
 			clearBtn.Clicked += OnClearClicked;
+
+			// Brush size label
+			brushSizeLabel = (Label)builder.GetObject("brushSizeLabel");
 
 			Add(rootBox);
 			ShowAll();
@@ -238,6 +242,7 @@ namespace SkiaSharpSample
 			else
 				brushSize = Math.Max(brushSize - 1, 1);
 
+			brushSizeLabel.Text = $"Brush: {brushSize:0}px";
 			drawingSkiaView?.QueueDraw();
 		}
 
