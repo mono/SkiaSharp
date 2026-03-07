@@ -77,7 +77,15 @@ namespace SkiaSharpSample
 				});
 			};
 			Microsoft.Win32.SystemEvents.UserPreferenceChanged += themeChangedHandler;
-			Unloaded += (s, e) => Microsoft.Win32.SystemEvents.UserPreferenceChanged -= themeChangedHandler;
+			Unloaded += (s, e) =>
+		{
+			Microsoft.Win32.SystemEvents.UserPreferenceChanged -= themeChangedHandler;
+			SkCanvas.MouseDown -= OnMouseDown;
+			SkCanvas.MouseMove -= OnMouseMove;
+			SkCanvas.MouseUp -= OnMouseUp;
+			SkCanvas.MouseWheel -= OnMouseWheel;
+			SkCanvas.MouseLeave -= OnMouseLeave;
+		};
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)

@@ -152,7 +152,7 @@ half4 main(float2 fragCoord) {
 
 			MainThread.BeginInvokeOnMainThread(() =>
 			{
-				fpsLabel.Text = $"{fps:F0} FPS";
+				fpsLabel.Text = $"FPS: {fps:F0}";
 			});
 		}
 	}

@@ -118,6 +118,10 @@ half4 main(float2 fragCoord) {
 			renderTimer = null;
 			stopwatch.Stop();
 
+			GlView.MouseDown -= OnMouseDown;
+			GlView.MouseMove -= OnMouseMove;
+			GlView.MouseUp -= OnMouseUp;
+
 			shaderBuilder?.Dispose();
 			shaderBuilder = null;
 		}
