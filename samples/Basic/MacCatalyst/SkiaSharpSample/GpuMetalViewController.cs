@@ -152,7 +152,10 @@ half4 main(float2 fragCoord) {
 		base.ViewWillDisappear(animated);
 
 		if (skiaView != null)
+		{
+			skiaView.PaintSurface -= OnPaintSurface;
 			skiaView.Paused = true;
+		}
 
 		shaderBuilder?.Dispose();
 		shaderBuilder = null;

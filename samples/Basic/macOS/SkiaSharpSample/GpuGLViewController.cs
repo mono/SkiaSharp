@@ -118,6 +118,8 @@ namespace SkiaSharpSample
 		public override void ViewWillDisappear()
 		{
 			base.ViewWillDisappear();
+			if (skiaView != null)
+				skiaView.PaintSurface -= OnPaintSurface;
 			timer?.Invalidate();
 			timer = null;
 		}

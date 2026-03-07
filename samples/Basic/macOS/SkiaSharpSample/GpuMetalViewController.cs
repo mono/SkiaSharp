@@ -113,7 +113,10 @@ namespace SkiaSharpSample
 		{
 			base.ViewWillDisappear();
 			if (skiaView != null)
+			{
+				skiaView.PaintSurface -= OnPaintSurface;
 				skiaView.Paused = true;
+			}
 		}
 
 		public override void MouseDown(NSEvent theEvent) => UpdateTouch(theEvent, true);
