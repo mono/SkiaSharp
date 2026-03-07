@@ -32,7 +32,7 @@ public class DrawingFragment : Fragment
 	private SKColor currentColor = SKColors.Black;
 	private SKColor canvasBackground = SKColors.White;
 
-	private float BrushSize => brushSlider?.Value ?? 6f;
+	private float BrushSize => brushSlider?.Value ?? 4f;
 
 	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
