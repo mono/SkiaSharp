@@ -42,7 +42,7 @@ public class SidebarViewController : UITableViewController
 		var imageName = page.StoryboardId switch
 		{
 			"CpuViewController" => "cpu",
-			"GpuMetalViewController" => "gpu",
+			"GpuMetalViewController" => "square.stack.3d.up",
 			"DrawingViewController" => "pencil.tip",
 			_ => "circle"
 		};
