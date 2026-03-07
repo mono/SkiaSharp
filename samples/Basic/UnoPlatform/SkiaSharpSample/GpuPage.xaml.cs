@@ -104,10 +104,10 @@ half4 main(float2 fragCoord) {
 			return;
 		}
 
-		shaderBuilder["iTime"] = (float)stopwatch.Elapsed.TotalSeconds;
-		shaderBuilder["iResolution"] = new float[] { (float)width, (float)height };
-		shaderBuilder["iTouchPos"] = new float[] { touchX, touchY };
-		shaderBuilder["iTouchActive"] = touchActive;
+		shaderBuilder.Uniforms["iTime"] = (float)stopwatch.Elapsed.TotalSeconds;
+		shaderBuilder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
+		shaderBuilder.Uniforms["iTouchPos"] = new float[] { touchX, touchY };
+		shaderBuilder.Uniforms["iTouchActive"] = touchActive;
 
 		using var shader = shaderBuilder.Build();
 		using var paint = new SKPaint { Shader = shader };

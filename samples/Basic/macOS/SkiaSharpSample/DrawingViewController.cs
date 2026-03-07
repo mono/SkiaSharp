@@ -103,7 +103,7 @@ namespace SkiaSharpSample
 				btn.Activated += (s, e) =>
 				{
 					colorIndex = idx;
-					skiaView?.NeedsDisplay = true;
+					if (skiaView != null) skiaView.NeedsDisplay = true;
 				};
 				stack.AddArrangedSubview(btn);
 				paletteButtons.Add(btn);
@@ -154,7 +154,7 @@ namespace SkiaSharpSample
 				strokes.Clear();
 				currentPath?.Dispose();
 				currentPath = null;
-				skiaView?.NeedsDisplay = true;
+				if (skiaView != null) skiaView.NeedsDisplay = true;
 			};
 			stack.AddArrangedSubview(clearBtn);
 
@@ -207,13 +207,13 @@ namespace SkiaSharpSample
 				Width = brushSize,
 			});
 			currentPath = null;
-			skiaView?.NeedsDisplay = true;
+			if (skiaView != null) skiaView.NeedsDisplay = true;
 		}
 
 		public override void ScrollWheel(NSEvent theEvent)
 		{
 			brushSize = Math.Clamp(brushSize + (float)theEvent.ScrollingDeltaY * 0.5f, 1f, 50f);
-			skiaView?.NeedsDisplay = true;
+			if (skiaView != null) skiaView.NeedsDisplay = true;
 		}
 
 		SKPoint? CanvasPoint(NSEvent theEvent)
