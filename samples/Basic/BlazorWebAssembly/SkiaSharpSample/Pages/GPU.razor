@@ -1,4 +1,5 @@
 @page "/gpu"
+@implements IDisposable
 
 @* GPU Canvas Demo
    Demonstrates SKGLView with EnableRenderLoop for continuous animation,
@@ -13,7 +14,7 @@
               @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp" />
 
     <div class="overlay-stats">
-        @($"{displayFps:F2}") fps
+        FPS: @($"{displayFps:F0}")
     </div>
 
 </div>
@@ -204,5 +205,11 @@
         if (++tickIndex == tickList.Length)
             tickIndex = 0;
         return 1000.0 / ((double)tickSum / tickList.Length);
+    }
+
+    public void Dispose()
+    {
+        builder?.Dispose();
+        shaderPaint?.Dispose();
     }
 }

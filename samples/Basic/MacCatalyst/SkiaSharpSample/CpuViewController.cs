@@ -33,65 +33,41 @@ public class CpuViewController : UIViewController
 	void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var info = e.Info;
+		var width = e.Info.Width;
+		var height = e.Info.Height;
+		var center = new SKPoint(width / 2f, height / 2f);
+		var radius = Math.Max(width, height) / 2f;
+
 		canvas.Clear(SKColors.White);
 
-		float cx = info.Width / 2f;
-		float cy = info.Height / 2f;
-		float radius = Math.Min(info.Width, info.Height) * 0.4f;
-
-		// Background gradient
-		using var gradientPaint = new SKPaint { IsAntialias = true };
-		using var shader = SKShader.CreateRadialGradient(
-			new SKPoint(cx, cy), radius,
+		// Background radial gradient
+		using var bgShader = SKShader.CreateRadialGradient(
+			center, radius,
 			new[] { new SKColor(0x44, 0x88, 0xFF), new SKColor(0x88, 0x33, 0xCC) },
 			SKShaderTileMode.Clamp);
-		gradientPaint.Shader = shader;
-		canvas.DrawCircle(cx, cy, radius, gradientPaint);
+		using var bgPaint = new SKPaint { IsAntialias = true, Shader = bgShader };
+		canvas.DrawRect(0, 0, width, height, bgPaint);
 
-		// Orbiting circles
-		using var circlePaint = new SKPaint
+		// Semi-transparent circles
+		var circles = new[]
 		{
-			IsAntialias = true,
-			Style = SKPaintStyle.Fill,
+			(0.2f, 0.3f, 0.10f, new SKColor(0xFF, 0x4D, 0x66, 0xCC)),
+			(0.75f, 0.25f, 0.08f, new SKColor(0x4D, 0xB3, 0xFF, 0xCC)),
+			(0.15f, 0.7f, 0.07f, new SKColor(0xFF, 0x99, 0x1A, 0xCC)),
+			(0.8f, 0.7f, 0.12f, new SKColor(0x66, 0xFF, 0xB3, 0xCC)),
+			(0.5f, 0.15f, 0.06f, new SKColor(0xB3, 0x4D, 0xFF, 0xCC)),
+			(0.4f, 0.8f, 0.09f, new SKColor(0xFF, 0xE6, 0x33, 0xCC)),
 		};
-		var colors = new SKColor[]
+		using var circlePaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
+		foreach (var (xf, yf, rf, color) in circles)
 		{
-			new(0xFF, 0x60, 0x60, 0xCC),
-			new(0x60, 0xFF, 0x60, 0xCC),
-			new(0xFF, 0xFF, 0x60, 0xCC),
-			new(0xFF, 0x60, 0xFF, 0xCC),
-			new(0x60, 0xFF, 0xFF, 0xCC),
-		};
-		for (int i = 0; i < colors.Length; i++)
-		{
-			float angle = (float)(i * 2 * Math.PI / colors.Length);
-			float orbitRadius = radius * 0.65f;
-			float x = cx + orbitRadius * (float)Math.Cos(angle);
-			float y = cy + orbitRadius * (float)Math.Sin(angle);
-
-			circlePaint.Color = colors[i];
-			canvas.DrawCircle(x, y, radius * 0.15f, circlePaint);
+			circlePaint.Color = color;
+			canvas.DrawCircle(xf * width, yf * height, rf * Math.Min(width, height), circlePaint);
 		}
 
-		// Center text
-		using var textPaint = new SKPaint
-		{
-			Color = SKColors.White,
-			IsAntialias = true,
-		};
-		using var font = new SKFont { Size = radius * 0.2f };
-		canvas.DrawText("CPU Canvas", new SKPoint(cx, cy + font.Size * 0.35f),
-			SKTextAlign.Center, font, textPaint);
-
-		// Label
-		using var labelFont = new SKFont { Size = 28 };
-		using var labelPaint = new SKPaint
-		{
-			Color = new SKColor(0x33, 0x33, 0x33),
-			IsAntialias = true,
-		};
-		canvas.DrawText("SkiaSharp · Mac Catalyst", new SKPoint(cx, info.Height - 40),
-			SKTextAlign.Center, labelFont, labelPaint);
+		// Centered "SkiaSharp" text
+		using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
+		using var font = new SKFont { Size = 48 };
+		canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 	}
 }

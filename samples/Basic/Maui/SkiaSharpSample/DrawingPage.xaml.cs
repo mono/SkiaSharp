@@ -25,7 +25,7 @@ namespace SkiaSharpSample
 		readonly List<(SKPath Path, SKColor Color, float Width)> strokes = new();
 		SKPath? currentPath;
 		SKColor currentColor;
-		float brushSize = 8f;
+		float brushSize = 4f;
 
 		bool IsDarkMode => Application.Current?.RequestedTheme == AppTheme.Dark;
 		SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
@@ -89,7 +89,7 @@ namespace SkiaSharpSample
 					break;
 
 				case SKTouchAction.WheelChanged:
-					brushSize = Math.Clamp(brushSize + e.WheelDelta, 1f, 100f);
+					brushSize = Math.Clamp(brushSize + e.WheelDelta, 1f, 50f);
 					brushLabel.Text = $"Brush: {brushSize:F0}px";
 					break;
 			}

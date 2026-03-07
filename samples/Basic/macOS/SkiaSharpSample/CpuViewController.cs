@@ -29,45 +29,40 @@ namespace SkiaSharpSample
 			var canvas = e.Surface.Canvas;
 			var width = e.Info.Width;
 			var height = e.Info.Height;
-			var cx = width / 2f;
-			var cy = height / 2f;
-			var radius = Math.Min(width, height) * 0.4f;
+			var center = new SKPoint(width / 2f, height / 2f);
+			var radius = Math.Max(width, height) / 2f;
 
 			canvas.Clear(SKColors.White);
 
-			// Radial gradient background
-			using var gradientPaint = new SKPaint();
-			using var shader = SKShader.CreateRadialGradient(
-				new SKPoint(cx, cy), radius,
+			// Background radial gradient
+			using var bgShader = SKShader.CreateRadialGradient(
+				center, radius,
 				new[] { new SKColor(0x44, 0x88, 0xFF), new SKColor(0x88, 0x33, 0xCC) },
-				null, SKShaderTileMode.Clamp);
-			gradientPaint.Shader = shader;
-			canvas.DrawCircle(cx, cy, radius, gradientPaint);
+				SKShaderTileMode.Clamp);
+			using var bgPaint = new SKPaint { IsAntialias = true, Shader = bgShader };
+			canvas.DrawRect(0, 0, width, height, bgPaint);
 
-			// Decorative concentric circles
-			using var circlePaint = new SKPaint
+			// Semi-transparent circles
+			var circles = new[]
 			{
-				IsAntialias = true,
-				Style = SKPaintStyle.Stroke,
-				StrokeWidth = 2,
-				Color = new SKColor(255, 255, 255, 100),
+				(0.2f, 0.3f, 0.10f, new SKColor(0xFF, 0x4D, 0x66, 0xCC)),
+				(0.75f, 0.25f, 0.08f, new SKColor(0x4D, 0xB3, 0xFF, 0xCC)),
+				(0.15f, 0.7f, 0.07f, new SKColor(0xFF, 0x99, 0x1A, 0xCC)),
+				(0.8f, 0.7f, 0.12f, new SKColor(0x66, 0xFF, 0xB3, 0xCC)),
+				(0.5f, 0.15f, 0.06f, new SKColor(0xB3, 0x4D, 0xFF, 0xCC)),
+				(0.4f, 0.8f, 0.09f, new SKColor(0xFF, 0xE6, 0x33, 0xCC)),
 			};
-			for (int i = 1; i <= 5; i++)
-				canvas.DrawCircle(cx, cy, radius * i / 5f, circlePaint);
-
-			// Title text
-			using var textPaint = new SKPaint
+			using var circlePaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
+			foreach (var (xf, yf, rf, color) in circles)
 			{
-				Color = SKColors.White,
-				IsAntialias = true,
-			};
-			using var font = new SKFont { Size = 36 };
-			canvas.DrawText("SkiaSharp", new SKPoint(cx, cy), SKTextAlign.Center, font, textPaint);
+				circlePaint.Color = color;
+				canvas.DrawCircle(xf * width, yf * height, rf * Math.Min(width, height), circlePaint);
+			}
 
-			// Subtitle
-			using var subtitleFont = new SKFont { Size = 16 };
-			textPaint.Color = new SKColor(255, 255, 255, 180);
-			canvas.DrawText("CPU Canvas", new SKPoint(cx, cy + 30), SKTextAlign.Center, subtitleFont, textPaint);
+			// Centered "SkiaSharp" text
+			using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
+			using var font = new SKFont { Size = 48 };
+			canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 		}
 	}
 }

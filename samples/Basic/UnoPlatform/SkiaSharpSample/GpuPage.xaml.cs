@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Microsoft.UI.Xaml.Input;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
 
@@ -76,6 +77,14 @@ half4 main(float2 fragCoord) {
 		InitializeComponent();
 
 		stopwatch.Start();
+		Unloaded += OnUnloaded;
+	}
+
+	private void OnUnloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+	{
+		stopwatch.Stop();
+		effect?.Dispose();
+		effect = null;
 	}
 
 	private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
