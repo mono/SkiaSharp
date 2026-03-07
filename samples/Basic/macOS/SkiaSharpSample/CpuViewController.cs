@@ -9,10 +9,13 @@ namespace SkiaSharpSample
 	[Register("CpuViewController")]
 	public class CpuViewController : NSViewController
 	{
-		[Outlet]
-		SKCanvasView? skiaView { get; set; }
+		SKCanvasView? skiaView;
 
-		public CpuViewController(IntPtr handle) : base(handle) { }
+		public override void LoadView()
+		{
+			skiaView = new SKCanvasView();
+			View = skiaView;
+		}
 
 		public override void ViewDidLoad()
 		{

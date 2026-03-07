@@ -33,10 +33,14 @@ namespace SkiaSharpSample
 		SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 		SKColor ResolveColor(SKColor light, SKColor dark) => IsDarkMode ? dark : light;
 
-		[Outlet]
-		SKCanvasView? skiaView { get; set; }
+		SKCanvasView? skiaView;
 
-		public DrawingViewController(IntPtr handle) : base(handle) { }
+		public override void LoadView()
+		{
+			View = new NSView();
+			skiaView = new SKCanvasView { TranslatesAutoresizingMaskIntoConstraints = false };
+			View.AddSubview(skiaView);
+		}
 
 		public override void ViewDidLoad()
 		{
@@ -46,7 +50,6 @@ namespace SkiaSharpSample
 			{
 				skiaView.IgnorePixelScaling = true;
 				skiaView.PaintSurface += OnPaintSurface;
-				skiaView.TranslatesAutoresizingMaskIntoConstraints = false;
 			}
 
 			var toolbar = CreateToolbar();
