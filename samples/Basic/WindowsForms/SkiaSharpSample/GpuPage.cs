@@ -68,7 +68,7 @@ half4 main(float2 fragCoord) {
 
 		private readonly Stopwatch stopwatch;
 
-		private SKRuntimeEffect effect;
+		private SKRuntimeShaderBuilder shaderBuilder;
 		private int frameCount;
 		private double lastFpsTime;
 		private float touchX;
@@ -97,26 +97,23 @@ half4 main(float2 fragCoord) {
 			var width = e.BackendRenderTarget.Width;
 			var height = e.BackendRenderTarget.Height;
 
-			if (effect == null)
+			if (shaderBuilder == null)
 			{
-				effect = SKRuntimeEffect.BuildShader(SkslSource).Effect;
+				shaderBuilder = SKRuntimeEffect.BuildShader(SkslSource);
 			}
 
-			if (effect == null)
+			if (shaderBuilder == null)
 			{
 				canvas.Clear(SKColors.Magenta);
 				return;
 			}
 
-			var uniforms = new SKRuntimeEffectUniforms(effect)
-			{
-				["iTime"] = (float)stopwatch.Elapsed.TotalSeconds,
-				["iResolution"] = new[] { (float)width, (float)height },
-				["iTouchPos"] = new[] { touchX, touchY },
-				["iTouchActive"] = touchActive,
-			};
+			shaderBuilder["iTime"] = (float)stopwatch.Elapsed.TotalSeconds;
+			shaderBuilder["iResolution"] = new float[] { (float)width, (float)height };
+			shaderBuilder["iTouchPos"] = new float[] { touchX, touchY };
+			shaderBuilder["iTouchActive"] = touchActive;
 
-			using var shader = effect.ToShader(uniforms);
+			using var shader = shaderBuilder.Build();
 			using var paint = new SKPaint { Shader = shader };
 			canvas.DrawRect(0, 0, width, height, paint);
 
@@ -160,6 +157,17 @@ half4 main(float2 fragCoord) {
 				touchX = (float)e.X / glControl.Width;
 				touchY = (float)e.Y / glControl.Height;
 			}
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				animationTimer?.Stop();
+				shaderBuilder?.Dispose();
+				shaderBuilder = null;
+			}
+			base.Dispose(disposing);
 		}
 
 	}
