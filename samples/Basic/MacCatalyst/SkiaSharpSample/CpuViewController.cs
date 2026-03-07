@@ -44,7 +44,7 @@ public class CpuViewController : UIViewController
 		using var gradientPaint = new SKPaint { IsAntialias = true };
 		using var shader = SKShader.CreateRadialGradient(
 			new SKPoint(cx, cy), radius,
-			new[] { new SKColor(0x40, 0x80, 0xFF), new SKColor(0x00, 0x20, 0x80) },
+			new[] { new SKColor(0x44, 0x88, 0xFF), new SKColor(0x88, 0x33, 0xCC) },
 			SKShaderTileMode.Clamp);
 		gradientPaint.Shader = shader;
 		canvas.DrawCircle(cx, cy, radius, gradientPaint);

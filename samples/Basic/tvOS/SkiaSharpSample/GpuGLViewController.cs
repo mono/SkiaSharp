@@ -16,40 +16,46 @@ uniform float2 iResolution;
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
     float aspect = iResolution.x / iResolution.y;
-    uv.x *= aspect;
-
-    float cx = aspect * 0.5;
-    float cy = 0.5;
-
-    float2 c1 = float2(cx + 0.25 * cos(iTime * 0.7), cy + 0.25 * sin(iTime * 0.9));
-    float2 c2 = float2(cx + 0.25 * sin(iTime * 0.8), cy + 0.25 * cos(iTime * 0.6));
-    float2 c3 = float2(cx + 0.20 * cos(iTime * 1.1 + 2.0), cy + 0.20 * sin(iTime * 0.7 + 1.0));
-    float2 c4 = float2(cx + 0.15 * sin(iTime * 0.5 + 3.0), cy + 0.15 * cos(iTime * 1.3 + 2.0));
-
+    float2 st = float2(uv.x * aspect, uv.y);
+    float t = iTime;
     float field = 0.0;
-    field += 0.015 / (dot(uv - c1, uv - c1) + 0.0001);
-    field += 0.015 / (dot(uv - c2, uv - c2) + 0.0001);
-    field += 0.010 / (dot(uv - c3, uv - c3) + 0.0001);
-    field += 0.008 / (dot(uv - c4, uv - c4) + 0.0001);
-
-    float3 col = float3(0.02, 0.02, 0.05);
-
-    if (field > 2.5) {
-        float t = clamp((field - 2.5) / 8.0, 0.0, 1.0);
-        float3 a = float3(0.05, 0.25, 0.6);
-        float3 b = float3(0.8, 0.1, 0.4);
-        float3 c_col = float3(1.0, 0.8, 0.3);
-        col = mix(a, b, smoothstep(0.0, 0.5, t));
-        col = mix(col, c_col, smoothstep(0.5, 1.0, t));
+    float3 weighted = float3(0.0);
+    float3 colors[6];
+    colors[0] = float3(1.0, 0.3, 0.4);
+    colors[1] = float3(0.3, 0.7, 1.0);
+    colors[2] = float3(1.0, 0.6, 0.1);
+    colors[3] = float3(0.4, 1.0, 0.7);
+    colors[4] = float3(0.7, 0.3, 1.0);
+    colors[5] = float3(1.0, 0.9, 0.2);
+    for (int i = 0; i < 6; i++) {
+        float fi = float(i);
+        float phase = fi * 1.047;
+        float speed = 0.3 + fi * 0.07;
+        float2 center = float2(
+            aspect * 0.5 + 0.4 * sin(t * speed + phase) * cos(t * speed * 0.6 + fi),
+            0.5 + 0.4 * cos(t * speed * 0.8 + phase * 1.3) * sin(t * speed * 0.4 + fi * 0.7)
+        );
+        float2 d = st - center;
+        float r = length(d);
+        float strength = 0.030 / (r * r + 0.002);
+        field += strength;
+        weighted += colors[i] * strength;
     }
-
-    if (field > 2.0 && field < 3.0) {
-        float glow = smoothstep(2.0, 2.5, field) * smoothstep(3.0, 2.5, field);
-        col += float3(0.1, 0.2, 0.5) * glow;
-    }
-
-    return half4(half3(col), 1.0);
-}";
+    float3 blobColor = weighted / max(field, 0.001);
+    float edge = smoothstep(5.0, 8.0, field);
+    float innerGlow = smoothstep(8.0, 20.0, field) * 0.3;
+    float3 bg = float3(0.03, 0.02, 0.08);
+    bg += float3(0.02, 0.01, 0.03) * sin(t * 0.2 + uv.y * 3.0);
+    float halo = smoothstep(3.0, 5.0, field) * (1.0 - edge);
+    float3 result = bg;
+    result += blobColor * halo * 0.4;
+    result = mix(result, blobColor * (1.0 + innerGlow), edge);
+    float2 vc = uv - 0.5;
+    float vignette = 1.0 - dot(vc, vc) * 0.8;
+    result *= vignette;
+    return half4(clamp(result, 0.0, 1.0), 1.0);
+}
+";
 
 	[Outlet]
 	SKGLView skiaView { get; set; } = null!;

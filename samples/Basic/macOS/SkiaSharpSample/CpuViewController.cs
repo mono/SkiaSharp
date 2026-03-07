@@ -39,7 +39,7 @@ namespace SkiaSharpSample
 			using var gradientPaint = new SKPaint();
 			using var shader = SKShader.CreateRadialGradient(
 				new SKPoint(cx, cy), radius,
-				new[] { new SKColor(0xFF4FC3F7), new SKColor(0xFF0D47A1) },
+				new[] { new SKColor(0x44, 0x88, 0xFF), new SKColor(0x88, 0x33, 0xCC) },
 				null, SKShaderTileMode.Clamp);
 			gradientPaint.Shader = shader;
 			canvas.DrawCircle(cx, cy, radius, gradientPaint);
