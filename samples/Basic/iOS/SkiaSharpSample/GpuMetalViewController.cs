@@ -64,8 +64,7 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-	[Outlet]
-	SKMetalView? skiaView { get; set; }
+	private SKMetalView? skiaView;
 
 	private SKRuntimeShaderBuilder? shaderBuilder;
 	private long startTime;
@@ -80,14 +79,19 @@ half4 main(float2 fragCoord) {
 	private int frameCount;
 	private double lastFpsUpdate;
 
-	public GpuMetalViewController(IntPtr handle) : base(handle) { }
+	public GpuMetalViewController() : base() { }
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
 		Title = "GPU (Metal)";
 
-		skiaView!.PaintSurface += OnPaintSurface;
+		View!.BackgroundColor = UIColor.Black;
+		skiaView = new SKMetalView(View.Bounds);
+		skiaView.AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
+		View.AddSubview(skiaView);
+
+		skiaView.PaintSurface += OnPaintSurface;
 		skiaView.Paused = true;
 		skiaView.EnableSetNeedsDisplay = false;
 
@@ -97,7 +101,7 @@ half4 main(float2 fragCoord) {
 			TranslatesAutoresizingMaskIntoConstraints = false,
 			Text = "FPS: --",
 			TextColor = UIColor.White,
-			Font = UIFont.MonospacedSystemFontOfSize(14, UIFontWeight.Regular),
+			Font = UIFont.MonospacedDigitSystemFontOfSize(14, UIFontWeight.Regular),
 			BackgroundColor = UIColor.FromWhiteAlpha(0, 0.5f),
 		};
 		View!.AddSubview(fpsLabel);

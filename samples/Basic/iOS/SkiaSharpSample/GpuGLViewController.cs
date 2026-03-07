@@ -68,8 +68,7 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-	[Outlet]
-	SKGLView? skiaView { get; set; }
+	private SKGLView? skiaView;
 
 	private CADisplayLink? displayLink;
 	private SKRuntimeShaderBuilder? shaderBuilder;
@@ -85,14 +84,19 @@ half4 main(float2 fragCoord) {
 	private int frameCount;
 	private double lastFpsUpdate;
 
-	public GpuGLViewController(IntPtr handle) : base(handle) { }
+	public GpuGLViewController() : base() { }
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
 		Title = "GPU (OpenGL)";
 
-		skiaView!.PaintSurface += OnPaintSurface;
+		View!.BackgroundColor = UIColor.Black;
+		skiaView = new SKGLView(View.Bounds);
+		skiaView.AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
+		View.AddSubview(skiaView);
+
+		skiaView.PaintSurface += OnPaintSurface;
 
 		// FPS label added programmatically on top of the storyboard layout
 		fpsLabel = new UILabel
@@ -100,7 +104,7 @@ half4 main(float2 fragCoord) {
 			TranslatesAutoresizingMaskIntoConstraints = false,
 			Text = "FPS: --",
 			TextColor = UIColor.White,
-			Font = UIFont.MonospacedSystemFontOfSize(14, UIFontWeight.Regular),
+			Font = UIFont.MonospacedDigitSystemFontOfSize(14, UIFontWeight.Regular),
 			BackgroundColor = UIColor.FromWhiteAlpha(0, 0.5f),
 		};
 		View!.AddSubview(fpsLabel);

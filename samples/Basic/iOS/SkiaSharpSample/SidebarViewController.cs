@@ -3,21 +3,32 @@
 [Register("SidebarViewController")]
 public class SidebarViewController : UITableViewController
 {
-	static readonly (string StoryboardId, string Title)[] pages =
+	static readonly (Func<UIViewController> Factory, string Title)[] pages =
 	{
-		("CpuVC", "CPU Canvas"),
-		("GpuGLVC", "GPU (OpenGL)"),
-		("GpuMetalVC", "GPU (Metal)"),
-		("DrawingVC", "Drawing"),
+		(() => new CpuViewController(), "CPU Canvas"),
+		(() => new GpuGLViewController(), "GPU (OpenGL)"),
+		(() => new GpuMetalViewController(), "GPU (Metal)"),
+		(() => new DrawingViewController(), "Drawing"),
 	};
 
-	public SidebarViewController(IntPtr handle) : base(handle) { }
+	readonly UISplitViewController splitVC;
+
+	public SidebarViewController(UISplitViewController splitVC) : base(UITableViewStyle.InsetGrouped)
+	{
+		this.splitVC = splitVC;
+	}
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
 		Title = "SkiaSharp";
 		TableView.RegisterClassForCellReuse(typeof(UITableViewCell), "cell");
+
+		// Auto-select first row
+		TableView.SelectRow(
+			NSIndexPath.FromRowSection(0, 0),
+			false,
+			UITableViewScrollPosition.None);
 	}
 
 	public override nint RowsInSection(UITableView tableView, nint section) => pages.Length;
@@ -32,10 +43,8 @@ public class SidebarViewController : UITableViewController
 
 	public override void RowSelected(UITableView tableView, NSIndexPath indexPath)
 	{
-		tableView.DeselectRow(indexPath, true);
-
-		var vc = Storyboard!.InstantiateViewController(pages[indexPath.Row].StoryboardId);
+		var vc = pages[indexPath.Row].Factory();
 		var navVC = new UINavigationController(vc);
-		ShowDetailViewController(navVC, this);
+		splitVC.SetViewController(navVC, UISplitViewControllerColumn.Secondary);
 	}
 }

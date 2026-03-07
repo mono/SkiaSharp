@@ -6,16 +6,18 @@ namespace SkiaSharpSample;
 [Register("CpuViewController")]
 public class CpuViewController : UIViewController
 {
-	[Outlet]
-	SKCanvasView skiaView { get; set; } = null!;
-
-	public CpuViewController(IntPtr handle) : base(handle) { }
+	public CpuViewController() : base() { }
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
 		Title = "CPU Canvas";
+		View!.BackgroundColor = UIColor.SystemBackground;
+
+		var skiaView = new SKCanvasView(View.Bounds);
+		skiaView.AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
 		skiaView.PaintSurface += OnPaintSurface;
+		View.AddSubview(skiaView);
 	}
 
 	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
