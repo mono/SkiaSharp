@@ -222,6 +222,8 @@ public class DrawingViewController : UIViewController
 	public override void ViewWillDisappear(bool animated)
 	{
 		base.ViewWillDisappear(animated);
+		if (skiaView != null)
+			skiaView.PaintSurface -= OnPaintSurface;
 		foreach (var stroke in strokes)
 			stroke.Path.Dispose();
 		strokes.Clear();

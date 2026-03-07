@@ -24,6 +24,13 @@ namespace SkiaSharpSample
 			}
 		}
 
+		public override void ViewWillDisappear()
+		{
+			base.ViewWillDisappear();
+			if (skiaView != null)
+				skiaView.PaintSurface -= OnPaintSurface;
+		}
+
 		void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 		{
 			var canvas = e.Surface.Canvas;

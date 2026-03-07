@@ -170,6 +170,13 @@ namespace SkiaSharpSample
 			return toolbar;
 		}
 
+		public override void ViewWillDisappear()
+		{
+			base.ViewWillDisappear();
+			if (skiaView != null)
+				skiaView.PaintSurface -= OnPaintSurface;
+		}
+
 		public override void MouseDown(NSEvent theEvent)
 		{
 			if (skiaView == null) return;
