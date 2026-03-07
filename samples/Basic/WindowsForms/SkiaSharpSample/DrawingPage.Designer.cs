@@ -33,6 +33,7 @@
 		{
 			this.skiaView = new SkiaSharp.Views.Desktop.SKControl();
 			this.toolbar = new System.Windows.Forms.FlowLayoutPanel();
+			this.brushLabel = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// skiaView
@@ -76,6 +77,7 @@
 		#endregion
 
 		private System.Windows.Forms.FlowLayoutPanel toolbar;
+		private System.Windows.Forms.Label brushLabel;
 		private SkiaSharp.Views.Desktop.SKControl skiaView;
 	}
 }

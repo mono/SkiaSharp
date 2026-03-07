@@ -162,7 +162,7 @@ namespace SkiaSharpSample
 			canvas.DrawRect(8, 8, 90, 22, bgPaint);
 			using var fpsPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
 			using var fpsFont = new SKFont { Size = 14 };
-			canvas.DrawText($"{fps:F1} fps (GL)", new SKPoint(12, 24), SKTextAlign.Left, fpsFont, fpsPaint);
+			canvas.DrawText($"FPS: {fps:F0} (GL)", new SKPoint(12, 24), SKTextAlign.Left, fpsFont, fpsPaint);
 		}
 
 		double GetCurrentFPS()

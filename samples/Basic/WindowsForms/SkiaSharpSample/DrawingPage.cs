@@ -80,6 +80,12 @@ namespace SkiaSharpSample
 			clearBtn.FlatAppearance.BorderSize = 0;
 			clearBtn.Click += OnClearClick;
 			toolbar.Controls.Add(clearBtn);
+
+			brushLabel.Text = $"Brush: {brushSize:F0}px";
+			brushLabel.AutoSize = true;
+			brushLabel.Font = new Font("Segoe UI", 9f);
+			brushLabel.Padding = new Padding(8, 6, 0, 0);
+			toolbar.Controls.Add(brushLabel);
 		}
 
 		private void OnColorClick(object sender, EventArgs e)
@@ -175,6 +181,7 @@ namespace SkiaSharpSample
 		private void OnMouseWheel(object sender, MouseEventArgs e)
 		{
 			brushSize = Math.Max(1f, Math.Min(50f, brushSize + (e.Delta > 0 ? 1f : -1f)));
+			brushLabel.Text = $"Brush: {brushSize:F0}px";
 			skiaView.Invalidate();
 		}
 
