@@ -15,10 +15,25 @@ namespace SkiaSharpSample
 			("drawing", "Drawing"),
 		};
 
-		[Outlet]
-		NSTableView? tableView { get; set; }
+		NSTableView? tableView;
 
-		public SidebarViewController(IntPtr handle) : base(handle) { }
+		public Action<NSViewController>? OnPageChanged { get; set; }
+
+		public override void LoadView()
+		{
+			tableView = new NSTableView
+			{
+				AllowsTypeSelect = false,
+			};
+			tableView.AddColumn(new NSTableColumn("Title"));
+
+			View = new NSScrollView
+			{
+				HasVerticalScroller = true,
+				BorderType = NSBorderType.NoBorder,
+				DocumentView = tableView,
+			};
+		}
 
 		public override void ViewDidLoad()
 		{
@@ -35,21 +50,16 @@ namespace SkiaSharpSample
 
 		void OnPageSelected(string pageId)
 		{
-			if (ParentViewController is not NSSplitViewController splitVC || Storyboard == null)
-				return;
-
-			var identifier = pageId switch
+			NSViewController vc = pageId switch
 			{
-				"cpu" => "CpuVC",
-				"gpu-gl" => "GpuGLVC",
-				"gpu-metal" => "GpuMetalVC",
-				"drawing" => "DrawingVC",
-				_ => "CpuVC"
+				"cpu" => new CpuViewController(),
+				"gpu-gl" => new GpuGLViewController(),
+				"gpu-metal" => new GpuMetalViewController(),
+				"drawing" => new DrawingViewController(),
+				_ => new CpuViewController()
 			};
 
-			var vc = Storyboard.InstantiateControllerWithIdentifier(identifier) as NSViewController;
-			if (vc != null && splitVC.SplitViewItems.Length > 1)
-				splitVC.SplitViewItems[1].ViewController = vc;
+			OnPageChanged?.Invoke(vc);
 		}
 
 		class SidebarDataSource : NSTableViewDataSource

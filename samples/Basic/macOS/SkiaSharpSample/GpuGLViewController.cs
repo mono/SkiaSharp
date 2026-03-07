@@ -80,8 +80,7 @@ namespace SkiaSharpSample
 			}
 		";
 
-		[Outlet]
-		SKGLView? skiaView { get; set; }
+		SKGLView? skiaView;
 
 		NSTimer? timer;
 		readonly SKRuntimeShaderBuilder builder = SKRuntimeEffect.BuildShader(sksl);
@@ -96,7 +95,11 @@ namespace SkiaSharpSample
 		readonly long[] tickList = new long[100];
 		long lastTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-		public GpuGLViewController(IntPtr handle) : base(handle) { }
+		public override void LoadView()
+		{
+			skiaView = new SKGLView();
+			View = skiaView;
+		}
 
 		public override void ViewDidLoad()
 		{

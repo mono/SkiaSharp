@@ -80,8 +80,7 @@ namespace SkiaSharpSample
 			}
 		";
 
-		[Outlet]
-		SKMetalView? skiaView { get; set; }
+		SKMetalView? skiaView;
 
 		readonly SKRuntimeShaderBuilder builder = SKRuntimeEffect.BuildShader(sksl);
 		readonly long startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -95,7 +94,11 @@ namespace SkiaSharpSample
 		readonly long[] tickList = new long[100];
 		long lastTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-		public GpuMetalViewController(IntPtr handle) : base(handle) { }
+		public override void LoadView()
+		{
+			skiaView = new SKMetalView();
+			View = skiaView;
+		}
 
 		public override void ViewDidLoad()
 		{
