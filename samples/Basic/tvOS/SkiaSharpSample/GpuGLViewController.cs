@@ -12,6 +12,8 @@ public class GpuGLViewController : UIViewController
 	private const string ShaderSource = @"
 uniform float iTime;
 uniform float2 iResolution;
+uniform float2 iTouchPos;
+uniform float iTouchActive;
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -40,6 +42,14 @@ half4 main(float2 fragCoord) {
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
         weighted += colors[i] * strength;
+    }
+    if (iTouchActive > 0.5) {
+        float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
+        float2 d = st - touchSt;
+        float r = length(d);
+        float strength = 0.050 / (r * r + 0.002);
+        field += strength;
+        weighted += float3(1.0, 0.95, 0.9) * strength;
     }
     float3 blobColor = weighted / max(field, 0.001);
     float edge = smoothstep(5.0, 8.0, field);
@@ -121,6 +131,8 @@ half4 main(float2 fragCoord) {
 		var uniforms = new SKRuntimeEffectUniforms(shaderEffect);
 		uniforms["iTime"] = elapsed;
 		uniforms["iResolution"] = new float[] { info.Width, info.Height };
+		uniforms["iTouchPos"] = new float[] { 0f, 0f };
+		uniforms["iTouchActive"] = 0f;
 
 		using var shader = shaderEffect.ToShader(uniforms);
 		using var paint = new SKPaint { Shader = shader };

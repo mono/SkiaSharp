@@ -50,7 +50,7 @@ namespace SkiaSharpSample
 
 			// Centered "SkiaSharp" text
 			using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-			using var font = new SKFont { Size = 48 };
+			using var font = new SKFont { Size = width * 0.12f };
 			canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 		}
 	}
