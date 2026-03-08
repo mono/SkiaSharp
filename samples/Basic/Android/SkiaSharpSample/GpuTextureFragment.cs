@@ -98,16 +98,7 @@ half4 main(float2 fragCoord) {
 		var width = e.BackendRenderTarget.Width;
 		var height = e.BackendRenderTarget.Height;
 
-		SKRuntimeShaderBuilder builder;
-		try
-		{
-			builder = shaderBuilder.Value;
-		}
-		catch
-		{
-			canvas.Clear(SKColors.Magenta);
-			return;
-		}
+		var builder = shaderBuilder.Value;
 
 		builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
 		builder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
