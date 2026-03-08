@@ -1,56 +1,161 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="216">
-    <device id="retina4_7" orientation="portrait">
-        <adaptation id="fullscreen"/>
-    </device>
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="spv-01-001">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
-        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21679"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
-        <scene sceneID="tne-QT-ifu">
+        <!--Split View Controller-->
+        <scene sceneID="spv-sc-001">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
-                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
-                    </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <subviews>
-                            <view contentMode="scaleToFill" id="199" customClass="SKCanvasView" translatesAutoresizingMaskIntoConstraints="NO" fixedFrame="YES">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <autoresizingMask key="autoresizingMask" heightSizable="YES" widthSizable="YES"/>
-                            </view>
-                        </subviews>
-                    </view>
-                    <navigationItem title="SkiaSharp Sample" id="287" key="navigationItem"/>
+                <splitViewController id="spv-01-001" sceneMemberID="viewController" storyboardIdentifier="SplitVC">
                     <connections>
-                        <outlet property="skiaView" destination="199" id="name-outlet-199"/>
+                        <segue destination="nav-sb-001" kind="relationship" relationship="masterViewControllers" id="seg-ms-001"/>
+                        <segue destination="nav-dt-001" kind="relationship" relationship="detailViewControllers" id="seg-dt-001"/>
                     </connections>
-                </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                </splitViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="spv-fr-001" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="205" y="-45"/>
+            <point key="canvasLocation" x="0" y="0"/>
         </scene>
-        <scene sceneID="215">
+
+        <!--Sidebar Navigation Controller-->
+        <scene sceneID="nav-sb-sc1">
             <objects>
-                <navigationController id="216" sceneMemberID="viewController">
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="218">
-                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                    </navigationBar>
+                <navigationController id="nav-sb-001" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="nav-sb-bar"/>
                     <connections>
-                        <segue id="288" destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController"/>
+                        <segue destination="sdb-vc-001" kind="relationship" relationship="rootViewController" id="seg-sb-001"/>
                     </connections>
                 </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="219" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="nav-sb-fr1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-296" y="-46"/>
+            <point key="canvasLocation" x="-800" y="0"/>
+        </scene>
+
+        <!--Sidebar View Controller-->
+        <scene sceneID="sdb-sc-001">
+            <objects>
+                <tableViewController id="sdb-vc-001" customClass="SidebarViewController" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" id="sdb-tv-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </tableView>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="sdb-fr-001" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-800" y="800"/>
+        </scene>
+
+        <!--Detail Navigation Controller (default, wraps CPU)-->
+        <scene sceneID="nav-dt-sc1">
+            <objects>
+                <navigationController id="nav-dt-001" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="nav-dt-bar"/>
+                    <connections>
+                        <segue destination="cpu-vc-001" kind="relationship" relationship="rootViewController" id="seg-dt-rt1"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="nav-dt-fr1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="800" y="0"/>
+        </scene>
+
+        <!--CPU View Controller-->
+        <scene sceneID="cpu-sc-001">
+            <objects>
+                <viewController id="cpu-vc-001" customClass="CpuViewController" sceneMemberID="viewController" storyboardIdentifier="CpuVC">
+                    <view key="view" contentMode="scaleToFill" id="cpu-vw-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" id="cpu-sk-001" customClass="SKCanvasView" customModule="SkiaSharp.Views.iOS">
+                                <rect key="frame" x="0" y="0" width="393" height="852"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="cpu-sk-001" id="cpu-ol-001"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="cpu-fr-001" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="800" y="800"/>
+        </scene>
+
+        <!--GPU GL View Controller-->
+        <scene sceneID="ggl-sc-001">
+            <objects>
+                <viewController id="ggl-vc-001" customClass="GpuGLViewController" sceneMemberID="viewController" storyboardIdentifier="GpuGLVC">
+                    <view key="view" contentMode="scaleToFill" id="ggl-vw-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" id="ggl-sk-001" customClass="SKGLView" customModule="SkiaSharp.Views.iOS">
+                                <rect key="frame" x="0" y="0" width="393" height="852"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="ggl-sk-001" id="ggl-ol-001"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ggl-fr-001" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1600" y="0"/>
+        </scene>
+
+        <!--GPU Metal View Controller-->
+        <scene sceneID="gmt-sc-001">
+            <objects>
+                <viewController id="gmt-vc-001" customClass="GpuMetalViewController" sceneMemberID="viewController" storyboardIdentifier="GpuMetalVC">
+                    <view key="view" contentMode="scaleToFill" id="gmt-vw-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" id="gmt-sk-001" customClass="SKMetalView" customModule="SkiaSharp.Views.iOS">
+                                <rect key="frame" x="0" y="0" width="393" height="852"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="gmt-sk-001" id="gmt-ol-001"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gmt-fr-001" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1600" y="800"/>
+        </scene>
+
+        <!--Drawing View Controller-->
+        <scene sceneID="drw-sc-001">
+            <objects>
+                <viewController id="drw-vc-001" customClass="DrawingViewController" sceneMemberID="viewController" storyboardIdentifier="DrawingVC">
+                    <view key="view" contentMode="scaleToFill" id="drw-vw-001">
+                        <rect key="frame" x="0" y="0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" id="drw-sk-001" customClass="SKCanvasView" customModule="SkiaSharp.Views.iOS">
+                                <rect key="frame" x="0" y="0" width="393" height="852"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="drw-sk-001" id="drw-ol-001"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="drw-fr-001" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2400" y="0"/>
         </scene>
     </scenes>
 </document>

@@ -1,0 +1,199 @@
+@page "/drawing"
+@implements IDisposable
+
+@* Drawing Canvas Demo
+   Demonstrates SKCanvasView with pointer events, wheel delta for
+   brush size control, and basic stroke rendering.
+   Shows multi-stroke drawing with color picker and on-demand rendering
+   via manual Invalidate() (no render loop). *@
+
+<div class="canvas-container" @onwheel="OnWheel" @onwheel:preventDefault>
+
+    <SKCanvasView @ref="skiaView"
+                  OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true"
+                  @onpointerdown="OnPointerDown" @onpointermove="OnPointerMove" @onpointerup="OnPointerUp" />
+
+    <button class="clear-btn" @onclick="ClearCanvas">Clear</button>
+
+    <div class="overlay-toolbar">
+        <div class="swatch-row">
+            @foreach (var (name, darkName, color, darkColor) in colors)
+            {
+                var c = _isDarkMode ? darkColor : color;
+                var css = _isDarkMode ? darkName : name;
+                <div class="color-swatch @(currentColor == c ? "selected" : "")"
+                     style="background:@css"
+                     @onclick="() => SetColor(c)" />
+            }
+        </div>
+        <div class="slider-row">
+            <input type="range" class="brush-slider" min="1" max="50" step="0.5"
+                   value="@brushSize" @oninput="OnSliderInput" />
+            <span class="size-label">@($"{brushSize:F0}")</span>
+        </div>
+    </div>
+
+</div>
+
+@code {
+
+    [CascadingParameter(Name = "IsDarkMode")]
+    bool _isDarkMode { get; set; }
+
+    bool _prevDarkMode;
+    SKCanvasView skiaView = null!;
+    float brushSize = 4f;
+    SKColor currentColor = SKColors.Black;
+    List<DrawingStroke> strokes = [];
+    DrawingStroke? currentStroke = null;
+    SKPoint lastPoint;
+
+    protected override void OnParametersSet()
+    {
+        if (_prevDarkMode != _isDarkMode)
+        {
+            _prevDarkMode = _isDarkMode;
+            // Swap the default color when toggling themes
+            if (_isDarkMode && currentColor == SKColors.Black)
+                currentColor = SKColors.White;
+            else if (!_isDarkMode && currentColor == SKColors.White)
+                currentColor = SKColors.Black;
+            skiaView?.Invalidate();
+        }
+    }
+
+    // The paint that is reused for drawing strokes.
+    readonly SKPaint strokePaint = new()
+    {
+        IsAntialias = true,
+        Style = SKPaintStyle.Stroke,
+        StrokeCap = SKStrokeCap.Round,
+        StrokeJoin = SKStrokeJoin.Round,
+    };
+
+    // Colors with light and dark variants — brighter in dark mode for visibility.
+    // Matches the Android Material 3 drawing palette.
+    static readonly (string Name, string DarkName, SKColor Color, SKColor DarkColor)[] colors =
+    {
+        ("#000000", "#FFFFFF",  new SKColor(0x00, 0x00, 0x00), new SKColor(0xFF, 0xFF, 0xFF)),
+        ("#E53935", "#EF5350",  new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+        ("#1E88E5", "#42A5F5",  new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+        ("#43A047", "#66BB6A",  new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+        ("#FB8C00", "#FFA726",  new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+        ("#8E24AA", "#AB47BC",  new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+    };
+
+    SKColor CanvasBackground => _isDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
+
+    void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+
+        canvas.Clear(CanvasBackground);
+
+        // Draw completed strokes.
+        foreach (var stroke in strokes)
+        {
+            strokePaint.Color = stroke.Color;
+            strokePaint.StrokeWidth = stroke.StrokeWidth;
+            canvas.DrawPath(stroke.Path, strokePaint);
+        }
+
+        // Draw in-progress stroke.
+        if (currentStroke is not null)
+        {
+            strokePaint.Color = currentStroke.Color;
+            strokePaint.StrokeWidth = currentStroke.StrokeWidth;
+            canvas.DrawPath(currentStroke.Path, strokePaint);
+        }
+
+        // Brush size indicator at last pointer position.
+        strokePaint.Color = SKColors.Gray;
+        strokePaint.StrokeWidth = 1;
+        canvas.DrawCircle(lastPoint, brushSize / 2f, strokePaint);
+    }
+
+    void OnPointerDown(PointerEventArgs e)
+    {
+        if (!e.IsPrimary)
+            return;
+        lastPoint = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        currentStroke = new DrawingStroke(new(), currentColor, brushSize);
+        currentStroke.Path.MoveTo(lastPoint);
+        skiaView.Invalidate();
+    }
+
+    void OnPointerMove(PointerEventArgs e)
+    {
+        if (!e.IsPrimary)
+            return;
+        lastPoint = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        if (currentStroke is not null)
+            currentStroke.Path.LineTo(lastPoint);
+        skiaView.Invalidate();
+    }
+
+    void OnPointerUp(PointerEventArgs e)
+    {
+        if (!e.IsPrimary)
+            return;
+        if (currentStroke is not null)
+        {
+            strokes.Add(currentStroke);
+            currentStroke = null;
+            skiaView.Invalidate();
+        }
+    }
+
+    void OnWheel(WheelEventArgs e)
+    {
+        // DeltaY > 0 = scroll down = decrease brush size; DeltaY < 0 = scroll up = increase.
+        // Normalize ~100 CSS pixels per notch to ~1px brush change per notch.
+        brushSize -= (float)(e.DeltaY / 100.0);
+        brushSize = Math.Clamp(brushSize, 1f, 50f);
+        StateHasChanged();
+    }
+
+    void OnSliderInput(ChangeEventArgs e)
+    {
+        if (float.TryParse(e.Value?.ToString(), out var val))
+        {
+            brushSize = val;
+            StateHasChanged();
+        }
+    }
+
+    void SetColor(SKColor color)
+    {
+        currentColor = color;
+        skiaView.Invalidate();
+        StateHasChanged();
+    }
+
+    void ClearCanvas()
+    {
+        foreach (var stroke in strokes)
+        {
+            stroke.Path.Dispose();
+        }
+        strokes.Clear();
+        currentStroke?.Path.Dispose();
+        currentStroke = null;
+        skiaView.Invalidate();
+        StateHasChanged();
+    }
+
+    // Represents a single drawing stroke with its path, color, and width.
+    // Path is owned — callers must dispose when removing strokes.
+    record DrawingStroke(SKPath Path, SKColor Color, float StrokeWidth = 4);
+
+    public void Dispose()
+    {
+        foreach (var stroke in strokes)
+            stroke.Path.Dispose();
+        strokes.Clear();
+        currentStroke?.Path.Dispose();
+        currentStroke = null;
+        strokePaint?.Dispose();
+    }
+}

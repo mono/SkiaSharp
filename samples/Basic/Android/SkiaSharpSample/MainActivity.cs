@@ -1,61 +1,63 @@
 ﻿using Android.App;
 using Android.OS;
+using Android.Views;
 using AndroidX.AppCompat.App;
+using AndroidX.Core.View;
+using Google.Android.Material.BottomNavigation;
 
-using SkiaSharp;
-using SkiaSharp.Views.Android;
+namespace SkiaSharpSample;
 
-namespace SkiaSharpSample
+[Activity(Label = "SkiaSharp", MainLauncher = true, Theme = "@style/Theme.SkiaSharpSample")]
+public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelectedListener, IOnApplyWindowInsetsListener
 {
-	[Activity(MainLauncher = true)]
-	public class MainActivity : AppCompatActivity
+	protected override void OnCreate(Bundle savedInstanceState)
 	{
-		private SKCanvasView skiaView;
+		base.OnCreate(savedInstanceState);
 
-		protected override void OnCreate(Bundle savedInstanceState)
+		WindowCompat.SetDecorFitsSystemWindows(Window, false);
+
+		SetContentView(Resource.Layout.main);
+
+		var toolbar = FindViewById<Google.Android.Material.AppBar.MaterialToolbar>(Resource.Id.toolbar);
+		SetSupportActionBar(toolbar);
+
+		var bottomNav = FindViewById<BottomNavigationView>(Resource.Id.bottom_nav);
+		bottomNav.SetOnItemSelectedListener(this);
+
+		// Apply top status bar inset to the AppBarLayout
+		var appBar = FindViewById<View>(Resource.Id.appbar);
+		ViewCompat.SetOnApplyWindowInsetsListener(appBar, this);
+
+		if (savedInstanceState == null)
+			ShowFragment(new CpuFragment());
+	}
+
+	public WindowInsetsCompat OnApplyWindowInsets(View v, WindowInsetsCompat insets)
+	{
+		var bars = insets.GetInsets(WindowInsetsCompat.Type.SystemBars());
+		v.SetPadding(0, bars.Top, 0, 0);
+		return insets;
+	}
+
+	public bool OnNavigationItemSelected(IMenuItem item)
+	{
+		AndroidX.Fragment.App.Fragment fragment = item.ItemId switch
 		{
-			base.OnCreate(savedInstanceState);
+			Resource.Id.nav_cpu => new CpuFragment(),
+			Resource.Id.nav_gpu_surface => new GpuSurfaceFragment(),
+			Resource.Id.nav_gpu_texture => new GpuTextureFragment(),
+			Resource.Id.nav_drawing => new DrawingFragment(),
+			_ => new CpuFragment()
+		};
 
-			SetContentView(Resource.Layout.main);
+		ShowFragment(fragment);
+		return true;
+	}
 
-			skiaView = FindViewById<SKCanvasView>(Resource.Id.skiaView);
-		}
-
-		protected override void OnResume()
-		{
-			base.OnResume();
-
-			skiaView.PaintSurface += OnPaintSurface;
-		}
-
-		protected override void OnPause()
-		{
-			skiaView.PaintSurface -= OnPaintSurface;
-
-			base.OnPause();
-		}
-
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
-		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
-
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
-
-			// draw some text
-			using var paint = new SKPaint
-			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill,
-			};
-			using var font = new SKFont
-			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
-		}
+	private void ShowFragment(AndroidX.Fragment.App.Fragment fragment)
+	{
+		SupportFragmentManager.BeginTransaction()
+			.Replace(Resource.Id.content_frame, fragment)
+			.Commit();
 	}
 }

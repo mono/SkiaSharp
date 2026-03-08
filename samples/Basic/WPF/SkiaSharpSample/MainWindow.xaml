@@ -4,10 +4,57 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SkiaSharpSample"
-        xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
         mc:Ignorable="d"
-        Title="SkiaSharp Sample" Height="350" Width="525" Icon="/icon.ico">
+        Title="SkiaSharp Sample" Height="600" Width="900" Icon="/icon.ico">
     <Grid>
-        <skia:SKElement PaintSurface="OnPaintSurface" IgnorePixelScaling="True" />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="#2D2D30">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="SkiaSharp"
+                           Foreground="#CCCCCC" FontSize="18" FontWeight="SemiBold"
+                           Margin="16,16,16,12" />
+                <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0"
+                         SelectionChanged="OnNavSelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Foreground" Value="#CCCCCC" />
+                            <Setter Property="FontSize" Value="14" />
+                            <Setter Property="Padding" Value="16,10" />
+                            <Setter Property="Cursor" Value="Hand" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" Padding="{TemplateBinding Padding}"
+                                                Background="Transparent">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#3E3E42" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#007ACC" />
+                                                <Setter Property="Foreground" Value="White" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBoxItem Content="CPU Canvas" IsSelected="True" />
+                    <ListBoxItem Content="GPU (OpenGL)" />
+                    <ListBoxItem Content="Drawing" />
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Content area -->
+        <ContentControl x:Name="PageContent" Grid.Column="1" />
     </Grid>
 </Window>

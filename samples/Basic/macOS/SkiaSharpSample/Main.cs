@@ -7,7 +7,10 @@ namespace SkiaSharpSample
 		static void Main(string[] args)
 		{
 			NSApplication.Init();
-			NSApplication.Main(args);
+			var app = NSApplication.SharedApplication;
+			app.ActivationPolicy = NSApplicationActivationPolicy.Regular;
+			app.Delegate = new AppDelegate();
+			app.Run();
 		}
 	}
 }

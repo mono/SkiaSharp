@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="split-vc">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23503"/>
+    </dependencies>
+    <scenes>
+        <!--Split View Controller-->
+        <scene sceneID="split-scene">
+            <objects>
+                <splitViewController id="split-vc" sceneMemberID="viewController">
+                    <connections>
+                        <segue destination="sidebar-nav" kind="relationship" relationship="masterViewController" id="seg-master"/>
+                        <segue destination="detail-nav" kind="relationship" relationship="detailViewController" id="seg-detail"/>
+                    </connections>
+                </splitViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="split-fr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="0" y="0"/>
+        </scene>
+        <!--Sidebar Navigation Controller-->
+        <scene sceneID="sidebar-nav-scene">
+            <objects>
+                <navigationController id="sidebar-nav" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="sidebar-navbar">
+                        <rect key="frame" x="0" y="0" width="375" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="sidebar-vc" kind="relationship" relationship="rootViewController" id="seg-sidebar-root"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="sidebar-nav-fr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-400" y="300"/>
+        </scene>
+        <!--Sidebar View Controller-->
+        <scene sceneID="sidebar-scene">
+            <objects>
+                <tableViewController id="sidebar-vc" customClass="SidebarViewController" sceneMemberID="viewController" title="SkiaSharp">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="insetGrouped" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" estimatedSectionHeaderHeight="28" sectionFooterHeight="28" estimatedSectionFooterHeight="28" id="sidebar-tv">
+                        <rect key="frame" x="0" y="0" width="375" height="812"/>
+                        <color key="backgroundColor" systemColor="systemGroupedBackgroundColor"/>
+                    </tableView>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="sidebar-fr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-800" y="300"/>
+        </scene>
+        <!--Detail Navigation Controller-->
+        <scene sceneID="detail-nav-scene">
+            <objects>
+                <navigationController id="detail-nav" sceneMemberID="viewController">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="detail-navbar">
+                        <rect key="frame" x="0" y="0" width="375" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="cpu-vc" kind="relationship" relationship="rootViewController" id="seg-detail-root"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="detail-nav-fr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="400" y="0"/>
+        </scene>
+        <!--Cpu View Controller-->
+        <scene sceneID="cpu-scene">
+            <objects>
+                <viewController storyboardIdentifier="CpuViewController" id="cpu-vc" customClass="CpuViewController" sceneMemberID="viewController" title="CPU Canvas">
+                    <view key="view" contentMode="scaleToFill" id="cpu-root-view">
+                        <rect key="frame" x="0" y="0" width="375" height="812"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="cpu-safe"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="cpu-fr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="400" y="300"/>
+        </scene>
+        <!--Gpu Metal View Controller-->
+        <scene sceneID="gpu-scene">
+            <objects>
+                <viewController storyboardIdentifier="GpuMetalViewController" id="gpu-vc" customClass="GpuMetalViewController" sceneMemberID="viewController" title="GPU (Metal)">
+                    <view key="view" contentMode="scaleToFill" id="gpu-root-view">
+                        <rect key="frame" x="0" y="0" width="375" height="812"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="gpu-safe"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="gpu-fr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="400" y="600"/>
+        </scene>
+        <!--Drawing View Controller-->
+        <scene sceneID="drawing-scene">
+            <objects>
+                <viewController storyboardIdentifier="DrawingViewController" id="drawing-vc" customClass="DrawingViewController" sceneMemberID="viewController" title="Drawing">
+                    <view key="view" contentMode="scaleToFill" id="drawing-root-view">
+                        <rect key="frame" x="0" y="0" width="375" height="812"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <viewLayoutGuide key="safeArea" id="drawing-safe"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="drawing-fr" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="400" y="900"/>
+        </scene>
+    </scenes>
+</document>
