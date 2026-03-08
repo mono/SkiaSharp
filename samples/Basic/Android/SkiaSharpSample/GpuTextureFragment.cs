@@ -17,6 +17,7 @@ uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
 uniform float iTouchActive;
+uniform float3 iColors[6];
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -25,13 +26,6 @@ half4 main(float2 fragCoord) {
     float t = iTime;
     float field = 0.0;
     float3 weighted = float3(0.0);
-    float3 colors[6];
-    colors[0] = float3(1.0, 0.3, 0.4);
-    colors[1] = float3(0.3, 0.7, 1.0);
-    colors[2] = float3(1.0, 0.6, 0.1);
-    colors[3] = float3(0.4, 1.0, 0.7);
-    colors[4] = float3(0.7, 0.3, 1.0);
-    colors[5] = float3(1.0, 0.9, 0.2);
     for (int i = 0; i < 6; i++) {
         float fi = float(i);
         float phase = fi * 1.047;
@@ -43,7 +37,7 @@ half4 main(float2 fragCoord) {
         float r = length(d);
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
-        weighted += colors[i] * strength;
+        weighted += iColors[i] * strength;
     }
     if (iTouchActive > 0.5) {
         float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
@@ -68,14 +62,23 @@ half4 main(float2 fragCoord) {
     return half4(clamp(result, 0.0, 1.0), 1.0);
 }";
 
+	static readonly float[] blobColors =
+	{
+		1.0f, 0.3f, 0.4f,   // rose
+		0.3f, 0.7f, 1.0f,   // sky blue
+		1.0f, 0.6f, 0.1f,   // amber
+		0.4f, 1.0f, 0.7f,   // mint
+		0.7f, 0.3f, 1.0f,   // violet
+		1.0f, 0.9f, 0.2f,   // yellow
+	};
+
+	private readonly Stopwatch stopwatch = new();
+
 	private SKGLTextureView skiaView;
 	private TextView fpsLabel;
-	private SKRuntimeShaderBuilder shaderBuilder;
-	private readonly Stopwatch stopwatch = new Stopwatch();
-
+	private Lazy<SKRuntimeShaderBuilder> shaderBuilder;
 	private int frameCount;
 	private double lastFpsTime;
-	private string fpsText = "FPS: --";
 	private float touchX;
 	private float touchY;
 	private float touchActive;
@@ -88,6 +91,7 @@ half4 main(float2 fragCoord) {
 		skiaView.PaintSurface += OnPaintSurface;
 		skiaView.Touch += OnTouch;
 
+		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
 		stopwatch.Start();
 		return view;
 	}
@@ -98,37 +102,36 @@ half4 main(float2 fragCoord) {
 		var width = e.BackendRenderTarget.Width;
 		var height = e.BackendRenderTarget.Height;
 
-		if (shaderBuilder == null)
+		SKRuntimeShaderBuilder builder;
+		try
 		{
-			try
-			{
-				shaderBuilder = SKRuntimeEffect.BuildShader(SkslSource);
-			}
-			catch (Exception)
-			{
-				canvas.Clear(SKColors.Magenta);
-				return;
-			}
+			builder = shaderBuilder.Value;
+		}
+		catch
+		{
+			canvas.Clear(SKColors.Magenta);
+			return;
 		}
 
-		shaderBuilder.Uniforms["iTime"] = (float)stopwatch.Elapsed.TotalSeconds;
-		shaderBuilder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
-		shaderBuilder.Uniforms["iTouchPos"] = new float[] { touchX, touchY };
-		shaderBuilder.Uniforms["iTouchActive"] = touchActive;
+		builder.Uniforms["iTime"] = (float)stopwatch.Elapsed.TotalSeconds;
+		builder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
+		builder.Uniforms["iTouchPos"] = new float[] { touchX, touchY };
+		builder.Uniforms["iTouchActive"] = touchActive;
+		builder.Uniforms["iColors"] = blobColors;
 
-		using var shader = shaderBuilder.Build();
+		using var shader = builder.Build();
 		using var paint = new SKPaint { Shader = shader };
 		canvas.DrawRect(0, 0, width, height, paint);
 
+		// FPS counter
 		frameCount++;
 		var elapsed = stopwatch.Elapsed.TotalSeconds;
 		if (elapsed - lastFpsTime >= 0.5)
 		{
 			var fps = frameCount / (elapsed - lastFpsTime);
-			fpsText = $"FPS: {fps:F0}";
 			frameCount = 0;
 			lastFpsTime = elapsed;
-			Activity?.RunOnUiThread(() => fpsLabel.Text = fpsText);
+			Activity?.RunOnUiThread(() => fpsLabel.Text = $"FPS: {fps:F0}");
 		}
 	}
 
@@ -161,7 +164,8 @@ half4 main(float2 fragCoord) {
 			skiaView.Touch -= OnTouch;
 			skiaView = null;
 		}
-		shaderBuilder?.Dispose();
+		if (shaderBuilder?.IsValueCreated == true)
+			shaderBuilder.Value.Dispose();
 		shaderBuilder = null;
 		base.OnDestroyView();
 	}
