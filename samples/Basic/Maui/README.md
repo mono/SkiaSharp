@@ -41,6 +41,24 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width via a MAUI `Slider` control.
 
+## Running the Sample
+
+Build and run for a specific platform:
+
+```bash
+dotnet build -f net8.0-maccatalyst
+dotnet build -f net8.0-android
+dotnet build -f net8.0-ios
+```
+
+To start on a different page, change `DefaultPage` in `App.xaml.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+```
+
+Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
 ## Screenshots
 
 | CPU | GPU | Drawing |

@@ -30,6 +30,22 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
 - **`EventControllerScroll`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Running the Sample
+
+Build and run (Linux):
+
+```bash
+dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
+```
+
+To start on a different page, change `DefaultPage` in `MainWindow.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.Drawing;
+```
+
+Available pages: `Cpu` (default), `Drawing`
+
 ## Screenshots
 
 | CPU | Drawing |

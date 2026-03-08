@@ -39,3 +39,19 @@ A freehand drawing canvas with a cycling color palette and touch-based input.
 - **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from touch events.
 - **`GestureLayer`** — Tizen gesture API for tracking press, move, and release.
 - **Color palette** — Six selectable colors cycled via a button.
+
+## Running the Sample
+
+Build:
+
+```bash
+dotnet build -f net8.0-tizen
+```
+
+To start on a different page, change `DefaultPage` in `App.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+```
+
+Available pages: `Cpu` (default), `Gpu`

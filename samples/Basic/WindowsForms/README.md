@@ -40,3 +40,19 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
 - **Windows Forms mouse events** — `MouseDown`, `MouseMove`, `MouseUp` for pointer tracking.
 - **`MouseWheel`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
+
+## Running the Sample
+
+Build and run (Windows only):
+
+```bash
+dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
+```
+
+To start on a different page, change `DefaultPage` in `Form1.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+```
+
+Available pages: `Cpu` (default), `Gpu`, `Drawing`

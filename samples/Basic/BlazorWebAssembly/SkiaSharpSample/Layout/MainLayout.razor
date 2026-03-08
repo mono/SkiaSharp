@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
 
 <MudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_isDarkMode" Theme="_theme" />
 <MudPopoverProvider />
@@ -82,6 +83,16 @@
         {
             _isDarkMode = await _themeProvider.GetSystemDarkModeAsync();
             await _themeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
+
+            var route = Program.DefaultPage switch
+            {
+                SamplePage.Gpu => "/gpu",
+                SamplePage.Drawing => "/drawing",
+                _ => null,
+            };
+            if (route is not null)
+                Navigation.NavigateTo(route);
+
             StateHasChanged();
         }
     }

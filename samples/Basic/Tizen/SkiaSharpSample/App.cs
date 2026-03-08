@@ -10,6 +10,8 @@ namespace SkiaSharpSample
 {
 	public class App : CoreUIApplication
 	{
+		public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 		// Static data shared across pages
 		private static readonly SKColor[] gradientColors =
 		{
@@ -118,6 +120,9 @@ namespace SkiaSharpSample
 			conformant.SetContent(naviframe);
 
 			ShowMainMenu();
+
+			if (DefaultPage == SamplePage.Gpu)
+				ShowGpuPage();
 		}
 
 		private void ShowMainMenu()

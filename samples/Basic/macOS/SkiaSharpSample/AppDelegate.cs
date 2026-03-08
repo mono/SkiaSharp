@@ -8,6 +8,8 @@ namespace SkiaSharpSample
 	[Register(nameof(AppDelegate))]
 	public class AppDelegate : NSApplicationDelegate
 	{
+		public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 		NSWindow? window;
 
 		public override void DidFinishLaunching(NSNotification notification)
@@ -32,7 +34,13 @@ namespace SkiaSharpSample
 			var sidebarView = sidebar.View;
 			sidebarView.Frame = new CGRect(0, 0, 200, window.ContentView.Bounds.Height);
 
-			var content = new CpuViewController();
+			NSViewController content = DefaultPage switch
+			{
+				SamplePage.GpuGL => new GpuGLViewController(),
+				SamplePage.GpuMetal => new GpuMetalViewController(),
+				SamplePage.Drawing => new DrawingViewController(),
+				_ => new CpuViewController(),
+			};
 			var contentView = content.View;
 			contentView.Frame = new CGRect(200, 0, window.ContentView.Bounds.Width - 200, window.ContentView.Bounds.Height);
 

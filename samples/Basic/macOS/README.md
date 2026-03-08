@@ -52,6 +52,23 @@ A freehand drawing canvas with a color palette, brush size control via scroll wh
 - **Scroll wheel** — Brush size adjustment via `ScrollWheel` event.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Running the Sample
+
+Build and run:
+
+```bash
+dotnet build -f net8.0-macos
+dotnet run -f net8.0-macos
+```
+
+To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+```
+
+Available pages: `Cpu` (default), `GpuGL`, `GpuMetal`, `Drawing`
+
 ## Screenshots
 
 | CPU | GPU (OpenGL) | GPU (Metal) | Drawing |

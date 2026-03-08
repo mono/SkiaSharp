@@ -37,3 +37,19 @@ A real-time animated shader running at full frame rate on the GPU via Apple's Me
 - **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with an FPS counter overlay.
+
+## Running the Sample
+
+Build and deploy to a simulator or device:
+
+```bash
+dotnet build -f net8.0-tvos
+```
+
+To start on a different tab, change `DefaultPage` in `AppDelegate.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+```
+
+Available pages: `Cpu` (default), `GpuGL`, `GpuMetal`

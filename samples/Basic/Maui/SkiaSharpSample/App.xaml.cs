@@ -5,6 +5,8 @@ namespace SkiaSharpSample
 {
 	public partial class App : Application
 	{
+		public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 		public App()
 		{
 			InitializeComponent();

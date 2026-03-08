@@ -24,9 +24,9 @@ public class SidebarViewController : UITableViewController
 		Title = "SkiaSharp";
 		TableView.RegisterClassForCellReuse(typeof(UITableViewCell), "cell");
 
-		// Auto-select first row
+		// Auto-select the default page
 		TableView.SelectRow(
-			NSIndexPath.FromRowSection(0, 0),
+			NSIndexPath.FromRowSection((int)AppDelegate.DefaultPage, 0),
 			false,
 			UITableViewScrollPosition.None);
 	}

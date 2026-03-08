@@ -41,6 +41,23 @@ A freehand drawing canvas with a color palette, brush size control via pinch ges
 - **`UIPinchGestureRecognizer`** — Pinch gesture to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Running the Sample
+
+Build and run:
+
+```bash
+dotnet build -f net8.0-maccatalyst
+dotnet run -f net8.0-maccatalyst
+```
+
+To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+```
+
+Available pages: `Cpu` (default), `GpuMetal`, `Drawing`
+
 ## Screenshots
 
 | CPU | GPU (Metal) | Drawing |

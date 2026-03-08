@@ -52,6 +52,22 @@ A freehand drawing canvas with a floating toolbox for choosing colors and brush 
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width (1–50px) via a Material 3 slider.
 
+## Running the Sample
+
+Build and deploy to a connected device or emulator:
+
+```bash
+dotnet build -t:Install -f net8.0-android
+```
+
+To start on a different page, change `DefaultPage` in `MainActivity.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.GpuSurface;
+```
+
+Available pages: `Cpu` (default), `GpuSurface`, `GpuTexture`, `Drawing`
+
 ## Screenshots
 
 | CPU | GPU (Surface) | GPU (Texture) | Drawing |

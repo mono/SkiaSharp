@@ -6,6 +6,8 @@ namespace SkiaSharpSample
 {
 	public sealed partial class MainWindow : Window
 	{
+		public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -14,7 +16,7 @@ namespace SkiaSharpSample
 
 		private void OnNavViewLoaded(object sender, RoutedEventArgs e)
 		{
-			NavView.SelectedItem = NavView.MenuItems[0];
+			NavView.SelectedItem = NavView.MenuItems[(int)DefaultPage];
 		}
 
 		private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)

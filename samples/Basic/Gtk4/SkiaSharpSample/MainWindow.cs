@@ -10,6 +10,8 @@ namespace SkiaSharpSample
 {
 	public class MainWindow : ApplicationWindow
 	{
+		public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 		private static readonly SKColor[] gradientColors =
 		{
 			new SKColor(0x44, 0x88, 0xFF),
@@ -108,6 +110,10 @@ namespace SkiaSharpSample
 
 			// Brush size label
 			brushSizeLabel = (Label)builder.GetObject("brushSizeLabel");
+
+			var contentStack = (Stack)builder.GetObject("contentStack");
+			if (DefaultPage == SamplePage.Drawing)
+				contentStack.SetVisibleChildName("drawing");
 		}
 
 		private void SetupColorButtons(Builder builder)

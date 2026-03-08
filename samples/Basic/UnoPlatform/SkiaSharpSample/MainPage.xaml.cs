@@ -2,6 +2,8 @@
 
 public sealed partial class MainPage : Page
 {
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 	public MainPage()
 	{
 		InitializeComponent();
@@ -11,7 +13,7 @@ public sealed partial class MainPage : Page
 
 	private void OnNavViewLoaded(object sender, RoutedEventArgs e)
 	{
-		NavView.SelectedItem = NavView.MenuItems[0];
+		NavView.SelectedItem = NavView.MenuItems[(int)DefaultPage];
 	}
 
 	private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)

@@ -40,3 +40,19 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **WPF mouse events** — `MouseDown`, `MouseMove`, `MouseUp` for pointer tracking.
 - **`MouseWheel`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
+
+## Running the Sample
+
+Build and run:
+
+```bash
+dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
+```
+
+To start on a different page, change `DefaultPage` in `MainWindow.xaml.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+```
+
+Available pages: `Cpu` (default), `Gpu`, `Drawing`

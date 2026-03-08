@@ -44,7 +44,7 @@ namespace SkiaSharpSample
 				tableView.HeaderView = null;
 				tableView.DataSource = new SidebarDataSource();
 				tableView.Delegate = new SidebarDelegate(OnPageSelected);
-				tableView.SelectRow(0, false);
+				tableView.SelectRow((int)AppDelegate.DefaultPage, false);
 			}
 		}
 

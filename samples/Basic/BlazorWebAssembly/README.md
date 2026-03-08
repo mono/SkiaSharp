@@ -41,6 +41,24 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width via a MudBlazor slider.
 
+## Running the Sample
+
+Build and run:
+
+```bash
+dotnet run --project SkiaSharpSample/SkiaSharpSample.csproj
+```
+
+Then open `http://localhost:5000` in a browser.
+
+To start on a different page, change `DefaultPage` in `Program.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+```
+
+Available pages: `Cpu` (default), `Gpu`, `Drawing`
+
 ## Screenshots
 
 | CPU | GPU | Drawing |

@@ -10,6 +10,11 @@ namespace SkiaSharpSample;
 [Activity(Label = "SkiaSharp", MainLauncher = true, Theme = "@style/Theme.SkiaSharpSample")]
 public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelectedListener, IOnApplyWindowInsetsListener
 {
+	/// <summary>
+	/// Change this to start the app on a different page.
+	/// </summary>
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 	protected override void OnCreate(Bundle savedInstanceState)
 	{
 		base.OnCreate(savedInstanceState);
@@ -29,7 +34,15 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 		ViewCompat.SetOnApplyWindowInsetsListener(appBar, this);
 
 		if (savedInstanceState == null)
-			ShowFragment(new CpuFragment());
+		{
+			bottomNav.SelectedItemId = DefaultPage switch
+			{
+				SamplePage.GpuSurface => Resource.Id.nav_gpu_surface,
+				SamplePage.GpuTexture => Resource.Id.nav_gpu_texture,
+				SamplePage.Drawing => Resource.Id.nav_drawing,
+				_ => Resource.Id.nav_cpu,
+			};
+		}
 	}
 
 	public WindowInsetsCompat OnApplyWindowInsets(View v, WindowInsetsCompat insets)

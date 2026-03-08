@@ -22,11 +22,16 @@ public class SidebarViewController : UITableViewController
 		base.ViewDidLoad();
 		TableView.RegisterClassForCellReuse(typeof(UITableViewCell), CellId);
 
-		// Select the first row by default
+		// Select the default page
+		var defaultIndex = (int)AppDelegate.DefaultPage;
 		TableView.SelectRow(
-			NSIndexPath.FromRowSection(0, 0),
+			NSIndexPath.FromRowSection(defaultIndex, 0),
 			false,
 			UITableViewScrollPosition.None);
+
+		// Navigate to the default page
+		if (defaultIndex != 0)
+			RowSelected(TableView, NSIndexPath.FromRowSection(defaultIndex, 0));
 	}
 
 	public override nint RowsInSection(UITableView tableView, nint section) => pages.Length;

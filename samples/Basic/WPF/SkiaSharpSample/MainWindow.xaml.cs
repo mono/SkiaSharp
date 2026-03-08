@@ -7,9 +7,12 @@ namespace SkiaSharpSample
 	{
 		private readonly UserControl?[] pages = new UserControl?[3];
 
+		public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 		public MainWindow()
 		{
 			InitializeComponent();
+			NavList.SelectedIndex = (int)DefaultPage;
 		}
 
 		private void OnNavSelectionChanged(object sender, SelectionChangedEventArgs e)

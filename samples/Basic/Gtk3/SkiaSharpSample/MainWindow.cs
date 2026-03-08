@@ -12,6 +12,8 @@ namespace SkiaSharpSample
 {
 	public class MainWindow : Gtk.Window
 	{
+		public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 		private static readonly SKColor[] gradientColors =
 		{
 			new SKColor(0x44, 0x88, 0xFF),
@@ -129,6 +131,10 @@ namespace SkiaSharpSample
 
 			Add(rootBox);
 			ShowAll();
+
+			var contentStack = (Stack)builder.GetObject("contentStack");
+			if (DefaultPage == SamplePage.Drawing)
+				contentStack.VisibleChildName = "drawing";
 		}
 
 		private void OnCpuPaintSurface(object sender, SKPaintSurfaceEventArgs e)

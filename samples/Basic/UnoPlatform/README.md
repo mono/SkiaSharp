@@ -40,3 +40,19 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Pointer events** — `PointerPressed`, `PointerMoved`, `PointerReleased` for cross-device input.
 - **`PointerWheelChanged`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
+
+## Running the Sample
+
+Build and run the desktop target:
+
+```bash
+dotnet run --project SkiaSharpSample.Desktop/SkiaSharpSample.Desktop.csproj
+```
+
+To start on a different page, change `DefaultPage` in `MainPage.xaml.cs`:
+
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
+```
+
+Available pages: `Cpu` (default), `Gpu`, `Drawing`

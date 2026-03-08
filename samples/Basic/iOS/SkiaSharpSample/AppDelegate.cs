@@ -3,6 +3,8 @@
 [Register(nameof(AppDelegate))]
 public class AppDelegate : UIApplicationDelegate
 {
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 	public override UIWindow? Window { get; set; }
 
 	public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
@@ -16,7 +18,14 @@ public class AppDelegate : UIApplicationDelegate
 		var sidebar = new SidebarViewController(splitVC);
 		splitVC.SetViewController(new UINavigationController(sidebar), UISplitViewControllerColumn.Primary);
 
-		splitVC.SetViewController(new UINavigationController(new CpuViewController()), UISplitViewControllerColumn.Secondary);
+		UIViewController initialVC = DefaultPage switch
+		{
+			SamplePage.GpuGL => new GpuGLViewController(),
+			SamplePage.GpuMetal => new GpuMetalViewController(),
+			SamplePage.Drawing => new DrawingViewController(),
+			_ => new CpuViewController(),
+		};
+		splitVC.SetViewController(new UINavigationController(initialVC), UISplitViewControllerColumn.Secondary);
 
 		Window.RootViewController = splitVC;
 		Window.MakeKeyAndVisible();
