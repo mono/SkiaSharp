@@ -2,6 +2,10 @@
 
 Demonstrates using SkiaSharp in a Docker container.
 
+## Requirements
+
+- [Docker](https://docs.docker.com/get-docker/)
+
 ## Running the Sample
 
 Build and run:

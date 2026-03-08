@@ -41,6 +41,11 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width via a MAUI `Slider` control.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- MAUI workload: `dotnet workload install maui`
+
 ## Running the Sample
 
 Build and run for a specific platform:

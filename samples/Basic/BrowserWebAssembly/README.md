@@ -2,6 +2,11 @@
 
 Demonstrates using SkiaSharp in the browser via WebAssembly.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- WebAssembly tools workload: `dotnet workload install wasm-tools`
+
 ## Running the Sample
 
 Build and run:

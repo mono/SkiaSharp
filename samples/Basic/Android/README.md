@@ -52,6 +52,11 @@ A freehand drawing canvas with a floating toolbox for choosing colors and brush 
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width (1–50px) via a Material 3 slider.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- Android workload: `dotnet workload install android`
+
 ## Running the Sample
 
 Build and deploy to a connected device or emulator:

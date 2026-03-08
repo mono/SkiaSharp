@@ -41,6 +41,11 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Brush size** — Adjustable stroke width via a MudBlazor slider.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- WebAssembly tools workload: `dotnet workload install wasm-tools`
+
 ## Running the Sample
 
 Build and run:

@@ -41,6 +41,11 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **`MouseWheel`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- Windows 10 (build 19041 or later)
+
 ## Running the Sample
 
 Build and run:

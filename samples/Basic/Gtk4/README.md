@@ -30,6 +30,14 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
 - **`EventControllerScroll`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- GTK 4 and libadwaita development libraries:
+  - **macOS:** `brew install gtk4 libadwaita`
+  - **Ubuntu/Debian:** `sudo apt-get install libgtk-4-dev libadwaita-1-dev`
+  - **Fedora:** `sudo dnf install gtk4-devel libadwaita-devel`
+
 ## Running the Sample
 
 Build and run (Linux):

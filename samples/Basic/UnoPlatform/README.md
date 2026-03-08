@@ -41,6 +41,12 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **`PointerWheelChanged`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- Uno Platform workload: `dotnet workload install uno-platform`
+- Platform-specific workloads for target platforms (e.g., `android`, `ios`, `maccatalyst`, `wasm-tools`)
+
 ## Running the Sample
 
 Build and run the desktop target:

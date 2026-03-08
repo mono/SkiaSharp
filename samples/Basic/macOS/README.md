@@ -52,6 +52,12 @@ A freehand drawing canvas with a color palette, brush size control via scroll wh
 - **Scroll wheel** — Brush size adjustment via `ScrollWheel` event.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- macOS with [Xcode](https://developer.apple.com/xcode/) installed
+- macOS workload: `dotnet workload install macos`
+
 ## Running the Sample
 
 Build and run:

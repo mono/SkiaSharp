@@ -52,6 +52,12 @@ A freehand drawing canvas with a color palette, brush size control via pinch ges
 - **`UIPinchGestureRecognizer`** — Pinch gesture to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- macOS with [Xcode](https://developer.apple.com/xcode/) installed
+- iOS workload: `dotnet workload install ios`
+
 ## Running the Sample
 
 Build and deploy to a simulator or device:

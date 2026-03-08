@@ -40,6 +40,11 @@ A freehand drawing canvas with a cycling color palette and touch-based input.
 - **`GestureLayer`** — Tizen gesture API for tracking press, move, and release.
 - **Color palette** — Six selectable colors cycled via a button.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- Tizen workload: `dotnet workload install tizen`
+
 ## Running the Sample
 
 Build:

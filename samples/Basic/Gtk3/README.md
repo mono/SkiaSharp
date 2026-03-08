@@ -30,6 +30,14 @@ A freehand drawing canvas with a color palette, brush size label, and clear butt
 - **`EventControllerScroll`** — Scroll wheel to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- GTK 3 development libraries:
+  - **macOS:** `brew install gtk+3`
+  - **Ubuntu/Debian:** `sudo apt-get install libgtk-3-dev`
+  - **Fedora:** `sudo dnf install gtk3-devel`
+
 ## Running the Sample
 
 Build and run (Linux):

@@ -38,6 +38,12 @@ A real-time animated shader running at full frame rate on the GPU via Apple's Me
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with an FPS counter overlay.
 
+## Requirements
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- macOS with [Xcode](https://developer.apple.com/xcode/) installed
+- tvOS workload: `dotnet workload install tvos`
+
 ## Running the Sample
 
 Build and deploy to a simulator or device:
