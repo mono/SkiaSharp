@@ -25,7 +25,7 @@ A real-time animated shader running at full frame rate on the GPU via OpenGL ES 
 **Features:**
 
 - **`SKGLSurfaceView`** — Hardware-accelerated canvas backed by OpenGL ES through the Tizen EFL graphics stack.
-- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
+- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.CreateShader` and rendered via `ToShader`.
 - **Render loop** — Continuous animation with an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform via Tizen `GestureLayer`.
 
