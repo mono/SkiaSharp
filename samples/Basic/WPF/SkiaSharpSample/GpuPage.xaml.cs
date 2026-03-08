@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,11 +11,12 @@ namespace SkiaSharpSample
 {
 	public partial class GpuPage : UserControl
 	{
-		private const string ShaderSource = @"
+		private const string SkslSource = @"
 uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
 uniform float iTouchActive;
+uniform float3 iColors[6];
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -25,13 +25,6 @@ half4 main(float2 fragCoord) {
     float t = iTime;
     float field = 0.0;
     float3 weighted = float3(0.0);
-    float3 colors[6];
-    colors[0] = float3(1.0, 0.3, 0.4);
-    colors[1] = float3(0.3, 0.7, 1.0);
-    colors[2] = float3(1.0, 0.6, 0.1);
-    colors[3] = float3(0.4, 1.0, 0.7);
-    colors[4] = float3(0.7, 0.3, 1.0);
-    colors[5] = float3(1.0, 0.9, 0.2);
     for (int i = 0; i < 6; i++) {
         float fi = float(i);
         float phase = fi * 1.047;
@@ -44,7 +37,7 @@ half4 main(float2 fragCoord) {
         float r = length(d);
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
-        weighted += colors[i] * strength;
+        weighted += iColors[i] * strength;
     }
     if (iTouchActive > 0.5) {
         float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
@@ -70,23 +63,28 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-		private SKRuntimeShaderBuilder? shaderBuilder;
-		private readonly Stopwatch stopwatch = new();
+		static readonly float[] blobColors =
+		{
+			1.0f, 0.3f, 0.4f,   // rose
+			0.3f, 0.7f, 1.0f,   // sky blue
+			1.0f, 0.6f, 0.1f,   // amber
+			0.4f, 1.0f, 0.7f,   // mint
+			0.7f, 0.3f, 1.0f,   // violet
+			1.0f, 0.9f, 0.2f,   // yellow
+		};
+
+		private readonly FpsCounter fpsCounter = new();
+
+		private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
 		private DispatcherTimer? renderTimer;
-
-		// Mouse interaction
-		private float touchX;
-		private float touchY;
-		private float touchActive;
-
-		// FPS tracking
-		private int frameCount;
-		private double fpsAccumulator;
-		private double lastFpsUpdate;
+		private SKPoint touchPos;
+		private bool touchActive;
 
 		public GpuPage()
 		{
 			InitializeComponent();
+
+			shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
 
 			GlView.MouseDown += OnMouseDown;
 			GlView.MouseMove += OnMouseMove;
@@ -95,17 +93,7 @@ half4 main(float2 fragCoord) {
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
-			try
-			{
-				shaderBuilder = SKRuntimeEffect.BuildShader(ShaderSource);
-			}
-			catch (Exception ex)
-			{
-				System.Diagnostics.Debug.WriteLine($"Shader compilation failed: {ex.Message}");
-				return;
-			}
-
-			stopwatch.Start();
+			fpsCounter.Start();
 
 			renderTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
 			renderTimer.Tick += (_, _) => GlView.InvalidateVisual();
@@ -116,13 +104,14 @@ half4 main(float2 fragCoord) {
 		{
 			renderTimer?.Stop();
 			renderTimer = null;
-			stopwatch.Stop();
+			fpsCounter.Stop();
 
 			GlView.MouseDown -= OnMouseDown;
 			GlView.MouseMove -= OnMouseMove;
 			GlView.MouseUp -= OnMouseUp;
 
-			shaderBuilder?.Dispose();
+			if (shaderBuilder?.IsValueCreated == true)
+				shaderBuilder.Value.Dispose();
 			shaderBuilder = null;
 		}
 
@@ -134,40 +123,27 @@ half4 main(float2 fragCoord) {
 
 			canvas.Clear(SKColors.Black);
 
-			if (shaderBuilder == null)
-				return;
+			var builder = shaderBuilder!.Value;
 
-			var time = (float)stopwatch.Elapsed.TotalSeconds;
+			builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
+			builder.Uniforms["iResolution"] = new float[] { width, height };
+			builder.Uniforms["iTouchPos"] = new float[] { touchPos.X, touchPos.Y };
+			builder.Uniforms["iTouchActive"] = touchActive ? 1f : 0f;
+			builder.Uniforms["iColors"] = blobColors;
 
-			shaderBuilder.Uniforms["iTime"] = time;
-			shaderBuilder.Uniforms["iResolution"] = new float[] { width, height };
-			shaderBuilder.Uniforms["iTouchPos"] = new float[] { touchX, touchY };
-			shaderBuilder.Uniforms["iTouchActive"] = touchActive;
-
-			using var shader = shaderBuilder.Build();
+			using var shader = builder.Build();
 			using var paint = new SKPaint { Shader = shader };
 			canvas.DrawRect(0, 0, width, height, paint);
 
-			UpdateFps(time);
-		}
-
-		private void UpdateFps(float currentTime)
-		{
-			frameCount++;
-			if (currentTime - lastFpsUpdate >= 1.0)
-			{
-				var fps = frameCount / (currentTime - lastFpsUpdate);
+			if (fpsCounter.Tick() is double fps)
 				Dispatcher.BeginInvoke(() => FpsText.Text = $"FPS: {fps:F0}");
-				frameCount = 0;
-				lastFpsUpdate = currentTime;
-			}
 		}
 
 		private void OnMouseDown(object sender, MouseButtonEventArgs e)
 		{
 			if (e.LeftButton == MouseButtonState.Pressed)
 			{
-				touchActive = 1f;
+				touchActive = true;
 				UpdateTouchPosition(e.GetPosition(GlView));
 				GlView.CaptureMouse();
 			}
@@ -181,7 +157,7 @@ half4 main(float2 fragCoord) {
 
 		private void OnMouseUp(object sender, MouseButtonEventArgs e)
 		{
-			touchActive = 0f;
+			touchActive = false;
 			GlView.ReleaseMouseCapture();
 		}
 
@@ -190,10 +166,7 @@ half4 main(float2 fragCoord) {
 			var w = GlView.ActualWidth;
 			var h = GlView.ActualHeight;
 			if (w > 0 && h > 0)
-			{
-				touchX = (float)(pos.X / w);
-				touchY = (float)(pos.Y / h);
-			}
+				touchPos = new SKPoint((float)(pos.X / w), (float)(pos.Y / h));
 		}
 	}
 }

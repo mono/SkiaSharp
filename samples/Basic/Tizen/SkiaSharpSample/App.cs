@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using ElmSharp;
 using Tizen.Applications;
 
@@ -11,19 +10,32 @@ namespace SkiaSharpSample
 {
 	public class App : CoreUIApplication
 	{
-		private Window window;
-		private Naviframe naviframe;
-		private NaviItem mainNaviItem;
+		// Static data shared across pages
+		private static readonly SKColor[] gradientColors =
+		{
+			new SKColor(0x44, 0x88, 0xFF),
+			new SKColor(0x88, 0x33, 0xCC),
+		};
 
-		// GPU page state
-		private readonly Stopwatch gpuStopwatch = new Stopwatch();
-		private SKRuntimeEffect shaderEffect;
+		private static readonly (float X, float Y, float R, SKColor Color)[] circles =
+		{
+			(0.20f, 0.30f, 0.10f, new SKColor(0xFF, 0x4D, 0x66, 0xCC)),
+			(0.75f, 0.25f, 0.08f, new SKColor(0x4D, 0xB3, 0xFF, 0xCC)),
+			(0.15f, 0.70f, 0.07f, new SKColor(0xFF, 0x99, 0x1A, 0xCC)),
+			(0.80f, 0.70f, 0.12f, new SKColor(0x66, 0xFF, 0xB3, 0xCC)),
+			(0.50f, 0.15f, 0.06f, new SKColor(0xB3, 0x4D, 0xFF, 0xCC)),
+			(0.40f, 0.80f, 0.09f, new SKColor(0xFF, 0xE6, 0x33, 0xCC)),
+		};
 
-		// Drawing page state
-		private readonly List<(SKPath Path, SKColor Color, float Width)> drawingStrokes = new();
-		private SKPath currentDrawingPath;
-		private int drawingColorIndex;
-		private SKCanvasView drawingCanvas;
+		private static readonly float[] blobColors =
+		{
+			1.0f, 0.3f, 0.4f,    // hot pink
+			0.3f, 0.7f, 1.0f,    // sky blue
+			1.0f, 0.6f, 0.1f,    // orange
+			0.4f, 1.0f, 0.7f,    // mint
+			0.7f, 0.3f, 1.0f,    // purple
+			1.0f, 0.9f, 0.2f,    // yellow
+		};
 
 		private static readonly (SKColor Light, SKColor Dark)[] StrokeColorPalette =
 		{
@@ -52,6 +64,23 @@ namespace SkiaSharpSample
 		}
 
 		private static SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
+
+		// Readonly instance fields
+		private readonly FpsCounter fpsCounter = new();
+		private readonly List<(SKPath Path, SKColor Color, float Width)> drawingStrokes = new();
+
+		// Instance fields
+		private Window window;
+		private Naviframe naviframe;
+		private NaviItem mainNaviItem;
+
+		// GPU page state
+		private Lazy<SKRuntimeShaderBuilder> shaderBuilder;
+
+		// Drawing page state
+		private SKPath currentDrawingPath;
+		private int drawingColorIndex;
+		private SKCanvasView drawingCanvas;
 
 		private SKColor GetStrokeColor(int index) =>
 			IsDarkMode ? StrokeColorPalette[index].Dark : StrokeColorPalette[index].Light;
@@ -169,23 +198,11 @@ namespace SkiaSharpSample
 
 			// Radial gradient background
 			using var bgShader = SKShader.CreateRadialGradient(
-				center, radius,
-				new[] { new SKColor(0x44, 0x88, 0xFF), new SKColor(0x88, 0x33, 0xCC) },
-				SKShaderTileMode.Clamp);
+				center, radius, gradientColors, SKShaderTileMode.Clamp);
 			using var bgPaint = new SKPaint { IsAntialias = true, Shader = bgShader };
 			canvas.DrawRect(0, 0, width, height, bgPaint);
 
 			// Decorative circles at normalized positions
-			var circles = new[]
-			{
-				(0.20f, 0.30f, 0.10f, new SKColor(0xFF, 0x4D, 0x66, 0xCC)),
-				(0.75f, 0.25f, 0.08f, new SKColor(0x4D, 0xB3, 0xFF, 0xCC)),
-				(0.15f, 0.70f, 0.07f, new SKColor(0xFF, 0x99, 0x1A, 0xCC)),
-				(0.80f, 0.70f, 0.12f, new SKColor(0x66, 0xFF, 0xB3, 0xCC)),
-				(0.50f, 0.15f, 0.06f, new SKColor(0xB3, 0x4D, 0xFF, 0xCC)),
-				(0.40f, 0.80f, 0.09f, new SKColor(0xFF, 0xE6, 0x33, 0xCC)),
-			};
-
 			using var circlePaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
 			foreach (var (xf, yf, rf, color) in circles)
 			{
@@ -207,6 +224,7 @@ uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
 uniform float iTouchActive;
+uniform float3 iColors[6];
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -215,13 +233,6 @@ half4 main(float2 fragCoord) {
     float t = iTime;
     float field = 0.0;
     float3 weighted = float3(0.0);
-    float3 colors[6];
-    colors[0] = float3(1.0, 0.3, 0.4);
-    colors[1] = float3(0.3, 0.7, 1.0);
-    colors[2] = float3(1.0, 0.6, 0.1);
-    colors[3] = float3(0.4, 1.0, 0.7);
-    colors[4] = float3(0.7, 0.3, 1.0);
-    colors[5] = float3(1.0, 0.9, 0.2);
     for (int i = 0; i < 6; i++) {
         float fi = float(i);
         float phase = fi * 1.047;
@@ -233,7 +244,7 @@ half4 main(float2 fragCoord) {
         float r = length(d);
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
-        weighted += colors[i] * strength;
+        weighted += iColors[i] * strength;
     }
     if (iTouchActive > 0.5) {
         float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
@@ -275,7 +286,8 @@ half4 main(float2 fragCoord) {
 			glView.PaintSurface += OnPaintGpuSurface;
 			glView.Show();
 
-			gpuStopwatch.Restart();
+			shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(MetaballShaderSource));
+			fpsCounter.Start();
 			naviframe.Push(glView, "GPU (GL)");
 		}
 
@@ -285,23 +297,18 @@ half4 main(float2 fragCoord) {
 			var width = e.BackendRenderTarget.Width;
 			var height = e.BackendRenderTarget.Height;
 
-			if (shaderEffect == null)
-			{
-				shaderEffect = SKRuntimeEffect.CreateShader(MetaballShaderSource, out var errors)
-					?? throw new InvalidOperationException($"Shader compilation failed: {errors}");
-			}
+			var builder = shaderBuilder.Value;
+			builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
+			builder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
+			builder.Uniforms["iTouchPos"] = new float[] { 0f, 0f };
+			builder.Uniforms["iTouchActive"] = 0f;
+			builder.Uniforms["iColors"] = blobColors;
 
-			var uniforms = new SKRuntimeEffectUniforms(shaderEffect)
-			{
-				["iTime"] = (float)gpuStopwatch.Elapsed.TotalSeconds,
-				["iResolution"] = new[] { (float)width, (float)height },
-				["iTouchPos"] = new[] { 0f, 0f },
-				["iTouchActive"] = 0f,
-			};
-
-			using var shader = shaderEffect.ToShader(uniforms);
+			using var shader = builder.Build();
 			using var paint = new SKPaint { Shader = shader };
 			canvas.DrawRect(0, 0, width, height, paint);
+
+			fpsCounter.Tick();
 		}
 
 		private void ShowFallbackPage(string title, string message)
@@ -447,8 +454,10 @@ half4 main(float2 fragCoord) {
 			if (naviframe.TopItem != mainNaviItem)
 			{
 				ClearDrawing();
-				shaderEffect?.Dispose();
-				shaderEffect = null;
+				if (shaderBuilder?.IsValueCreated == true)
+					shaderBuilder.Value.Dispose();
+				shaderBuilder = null;
+				fpsCounter.Stop();
 				naviframe.Pop();
 			}
 			else

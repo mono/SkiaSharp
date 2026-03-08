@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using CoreAnimation;
-using Foundation;
+﻿using CoreAnimation;
 using SkiaSharp;
 using SkiaSharp.Views.tvOS;
 
@@ -9,11 +7,12 @@ namespace SkiaSharpSample;
 [Register("GpuGLViewController")]
 public class GpuGLViewController : UIViewController
 {
-	private const string ShaderSource = @"
+private const string ShaderSource = @"
 uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
 uniform float iTouchActive;
+uniform float3 iColors[6];
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -22,13 +21,6 @@ half4 main(float2 fragCoord) {
     float t = iTime;
     float field = 0.0;
     float3 weighted = float3(0.0);
-    float3 colors[6];
-    colors[0] = float3(1.0, 0.3, 0.4);
-    colors[1] = float3(0.3, 0.7, 1.0);
-    colors[2] = float3(1.0, 0.6, 0.1);
-    colors[3] = float3(0.4, 1.0, 0.7);
-    colors[4] = float3(0.7, 0.3, 1.0);
-    colors[5] = float3(1.0, 0.9, 0.2);
     for (int i = 0; i < 6; i++) {
         float fi = float(i);
         float phase = fi * 1.047;
@@ -41,7 +33,7 @@ half4 main(float2 fragCoord) {
         float r = length(d);
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
-        weighted += colors[i] * strength;
+        weighted += iColors[i] * strength;
     }
     if (iTouchActive > 0.5) {
         float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
@@ -67,91 +59,101 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-	[Outlet]
-	SKGLView skiaView { get; set; } = null!;
+static readonly float[] blobColors =
+{
+1.0f, 0.3f, 0.4f,   // rose
+0.3f, 0.7f, 1.0f,   // sky blue
+1.0f, 0.6f, 0.1f,   // amber
+0.4f, 1.0f, 0.7f,   // mint
+0.7f, 0.3f, 1.0f,   // violet
+1.0f, 0.9f, 0.2f,   // yellow
+};
 
-	private CADisplayLink? displayLink;
-	private readonly Stopwatch stopwatch = new();
-	private SKRuntimeEffect? shaderEffect;
+private readonly FpsCounter fpsCounter = new();
 
-	public GpuGLViewController(IntPtr handle) : base(handle) { }
+[Outlet]
+SKGLView skiaView { get; set; } = null!;
 
-	public override void ViewDidLoad()
-	{
-		base.ViewDidLoad();
+private CADisplayLink? displayLink;
+private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
 
-		shaderEffect = SKRuntimeEffect.CreateShader(ShaderSource, out var errors);
-		if (errors != null)
-			Console.WriteLine($"Shader compile error: {errors}");
+public GpuGLViewController(IntPtr handle) : base(handle) { }
 
-		skiaView.PaintSurface += OnPaintSurface;
+public override void ViewDidLoad()
+{
+base.ViewDidLoad();
 
-		displayLink = CADisplayLink.Create(() => skiaView.Display());
-		displayLink.PreferredFramesPerSecond = 60;
-		displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Common);
+shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
+fpsCounter.Start();
 
-		stopwatch.Start();
-	}
+skiaView.PaintSurface += OnPaintSurface;
 
-	public override void ViewWillDisappear(bool animated)
-	{
-		base.ViewWillDisappear(animated);
+displayLink = CADisplayLink.Create(() => skiaView.Display());
+displayLink.PreferredFramesPerSecond = 60;
+displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Common);
+}
 
-		if (skiaView != null)
-			skiaView.PaintSurface -= OnPaintSurface;
+public override void ViewWillDisappear(bool animated)
+{
+base.ViewWillDisappear(animated);
 
-		displayLink?.Invalidate();
-		displayLink = null;
-		stopwatch.Stop();
-	}
+if (skiaView != null)
+skiaView.PaintSurface -= OnPaintSurface;
 
-	public override void ViewWillAppear(bool animated)
-	{
-		base.ViewWillAppear(animated);
-		if (displayLink == null)
-		{
-			displayLink = CADisplayLink.Create(() => skiaView.Display());
-			displayLink.PreferredFramesPerSecond = 60;
-			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Common);
-		}
-		stopwatch.Start();
-	}
+displayLink?.Invalidate();
+displayLink = null;
+fpsCounter.Stop();
+}
 
-	private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
-	{
-		var canvas = e.Surface.Canvas;
-		var info = e.Info;
-		canvas.Clear(SKColors.Black);
+public override void ViewWillAppear(bool animated)
+{
+base.ViewWillAppear(animated);
+if (displayLink == null)
+{
+displayLink = CADisplayLink.Create(() => skiaView.Display());
+displayLink.PreferredFramesPerSecond = 60;
+displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoopMode.Common);
+}
+fpsCounter.Start();
+}
 
-		if (shaderEffect == null)
-			return;
+private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
+{
+var canvas = e.Surface.Canvas;
+var info = e.Info;
+canvas.Clear(SKColors.Black);
 
-		float elapsed = (float)stopwatch.Elapsed.TotalSeconds;
+if (shaderBuilder == null)
+return;
 
-		var uniforms = new SKRuntimeEffectUniforms(shaderEffect);
-		uniforms["iTime"] = elapsed;
-		uniforms["iResolution"] = new float[] { info.Width, info.Height };
-		uniforms["iTouchPos"] = new float[] { 0f, 0f };
-		uniforms["iTouchActive"] = 0f;
+var builder = shaderBuilder.Value;
 
-		using var shader = shaderEffect.ToShader(uniforms);
-		using var paint = new SKPaint { Shader = shader };
-		canvas.DrawRect(SKRect.Create(info.Width, info.Height), paint);
+builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
+builder.Uniforms["iResolution"] = new float[] { info.Width, info.Height };
+builder.Uniforms["iTouchPos"] = new float[] { 0f, 0f };
+builder.Uniforms["iTouchActive"] = 0f;
+builder.Uniforms["iColors"] = blobColors;
 
-		// Label
-		using var textPaint = new SKPaint { Color = new SKColor(255, 255, 255, 180), IsAntialias = true };
-		using var font = new SKFont { Size = 36 };
-		canvas.DrawText("GPU \u2014 OpenGL ES", new SKPoint(info.Width / 2f, info.Height - 60), SKTextAlign.Center, font, textPaint);
-	}
+using var shader = builder.Build();
+using var paint = new SKPaint { Shader = shader };
+canvas.DrawRect(SKRect.Create(info.Width, info.Height), paint);
 
-	protected override void Dispose(bool disposing)
-	{
-		if (disposing)
-		{
-			displayLink?.Invalidate();
-			displayLink = null;
-			shaderEffect?.Dispose();
-		}
-		base.Dispose(disposing);
-	}
+// Label
+using var textPaint = new SKPaint { Color = new SKColor(255, 255, 255, 180), IsAntialias = true };
+using var font = new SKFont { Size = 36 };
+canvas.DrawText("GPU \u2014 OpenGL ES", new SKPoint(info.Width / 2f, info.Height - 60), SKTextAlign.Center, font, textPaint);
+}
+
+protected override void Dispose(bool disposing)
+{
+if (disposing)
+{
+displayLink?.Invalidate();
+displayLink = null;
+if (shaderBuilder?.IsValueCreated == true)
+shaderBuilder.Value.Dispose();
+shaderBuilder = null;
+}
+base.Dispose(disposing);
+}
 }

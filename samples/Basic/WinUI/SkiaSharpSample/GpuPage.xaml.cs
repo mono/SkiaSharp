@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Microsoft.UI.Xaml.Controls;
+﻿using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
@@ -13,6 +12,7 @@ uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
 uniform float iTouchActive;
+uniform float3 iColors[6];
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -21,13 +21,6 @@ half4 main(float2 fragCoord) {
     float t = iTime;
     float field = 0.0;
     float3 weighted = float3(0.0);
-    float3 colors[6];
-    colors[0] = float3(1.0, 0.3, 0.4);
-    colors[1] = float3(0.3, 0.7, 1.0);
-    colors[2] = float3(1.0, 0.6, 0.1);
-    colors[3] = float3(0.4, 1.0, 0.7);
-    colors[4] = float3(0.7, 0.3, 1.0);
-    colors[5] = float3(1.0, 0.9, 0.2);
     for (int i = 0; i < 6; i++) {
         float fi = float(i);
         float phase = fi * 1.047;
@@ -39,7 +32,7 @@ half4 main(float2 fragCoord) {
         float r = length(d);
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
-        weighted += colors[i] * strength;
+        weighted += iColors[i] * strength;
     }
     if (iTouchActive > 0.5) {
         float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
@@ -64,26 +57,38 @@ half4 main(float2 fragCoord) {
     return half4(clamp(result, 0.0, 1.0), 1.0);
 }";
 
-		private readonly Stopwatch stopwatch = new Stopwatch();
+		static readonly float[] blobColors =
+		{
+			1.0f, 0.3f, 0.4f,   // rose
+			0.3f, 0.7f, 1.0f,   // sky blue
+			1.0f, 0.6f, 0.1f,   // amber
+			0.4f, 1.0f, 0.7f,   // mint
+			0.7f, 0.3f, 1.0f,   // violet
+			1.0f, 0.9f, 0.2f,   // yellow
+		};
 
-		private SKRuntimeShaderBuilder shaderBuilder;
-		private int frameCount;
-		private double lastFpsTime;
-		private float touchX;
-		private float touchY;
-		private float touchActive;
+		private readonly FpsCounter fpsCounter = new();
+
+		private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
+		private SKPoint touchPos;
+		private bool touchActive;
 
 		public GpuPage()
 		{
 			InitializeComponent();
-			stopwatch.Start();
+
+			shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
+			fpsCounter.Start();
+
 			Unloaded += OnUnloaded;
 		}
 
 		private void OnUnloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
 		{
-			stopwatch.Stop();
-			shaderBuilder?.Dispose();
+			fpsCounter.Stop();
+
+			if (shaderBuilder?.IsValueCreated == true)
+				shaderBuilder.Value.Dispose();
 			shaderBuilder = null;
 		}
 
@@ -93,58 +98,38 @@ half4 main(float2 fragCoord) {
 			var width = e.BackendRenderTarget.Width;
 			var height = e.BackendRenderTarget.Height;
 
-			if (shaderBuilder == null)
-			{
-				shaderBuilder = SKRuntimeEffect.BuildShader(SkslSource);
-			}
+			var builder = shaderBuilder!.Value;
 
-			if (shaderBuilder == null)
-			{
-				canvas.Clear(SKColors.Magenta);
-				return;
-			}
+			builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
+			builder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
+			builder.Uniforms["iTouchPos"] = new float[] { touchPos.X, touchPos.Y };
+			builder.Uniforms["iTouchActive"] = touchActive ? 1f : 0f;
+			builder.Uniforms["iColors"] = blobColors;
 
-			shaderBuilder.Uniforms["iTime"] = (float)stopwatch.Elapsed.TotalSeconds;
-			shaderBuilder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
-			shaderBuilder.Uniforms["iTouchPos"] = new float[] { touchX, touchY };
-			shaderBuilder.Uniforms["iTouchActive"] = touchActive;
-
-			using var shader = shaderBuilder.Build();
+			using var shader = builder.Build();
 			using var paint = new SKPaint { Shader = shader };
 			canvas.DrawRect(0, 0, width, height, paint);
 
-			UpdateFps();
-		}
-
-		private void UpdateFps()
-		{
-			frameCount++;
-			var elapsed = stopwatch.Elapsed.TotalSeconds;
-			if (elapsed - lastFpsTime >= 0.5)
-			{
-				var fps = frameCount / (elapsed - lastFpsTime);
+			if (fpsCounter.Tick() is double fps)
 				DispatcherQueue.TryEnqueue(() => fpsText.Text = $"FPS: {fps:F0}");
-				frameCount = 0;
-				lastFpsTime = elapsed;
-			}
 		}
 
 		private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
 		{
-			touchActive = 1f;
+			touchActive = true;
 			UpdateTouchPosition(e);
 			skiaView.CapturePointer(e.Pointer);
 		}
 
 		private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
 		{
-			if (touchActive > 0.5f)
+			if (touchActive)
 				UpdateTouchPosition(e);
 		}
 
 		private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
 		{
-			touchActive = 0f;
+			touchActive = false;
 			skiaView.ReleasePointerCapture(e.Pointer);
 		}
 
@@ -154,10 +139,7 @@ half4 main(float2 fragCoord) {
 			var w = skiaView.ActualWidth;
 			var h = skiaView.ActualHeight;
 			if (w > 0 && h > 0)
-			{
-				touchX = (float)(point.Position.X / w);
-				touchY = (float)(point.Position.Y / h);
-			}
+				touchPos = new SKPoint((float)(point.Position.X / w), (float)(point.Position.Y / h));
 		}
 	}
 }

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 
@@ -18,22 +17,18 @@ namespace SkiaSharpSample.Controllers
 
 		// GET api/images
 		[HttpGet]
-		public ActionResult<IEnumerable<string>> Get()
+		public IActionResult Get()
 		{
-			using (var image = CreateImage("SkiaSharp"))
-			{
-				return File(image.ToArray(), "image/png");
-			}
+			using var image = CreateImage("SkiaSharp");
+			return File(image.ToArray(), "image/png");
 		}
 
-		// GET api/image/text
+		// GET api/images/text
 		[HttpGet("{text}")]
-		public ActionResult<string> Get(string text)
+		public IActionResult Get(string text)
 		{
-			using (var image = CreateImage(text ?? "SkiaSharp"))
-			{
-				return File(image.ToArray(), "image/png");
-			}
+			using var image = CreateImage(text ?? "SkiaSharp");
+			return File(image.ToArray(), "image/png");
 		}
 
 		private SKData CreateImage(string text)
@@ -42,32 +37,31 @@ namespace SkiaSharpSample.Controllers
 
 			// create a surface
 			var info = new SKImageInfo(256, 256);
-			using (var surface = SKSurface.Create(info))
+			using var surface = SKSurface.Create(info);
+
+			// get the canvas and properties
+			var canvas = surface.Canvas;
+
+			// make sure the canvas is blank
+			canvas.Clear(SKColors.White);
+
+			// draw some text
+			using var paint = new SKPaint
 			{
-				// the the canvas and properties
-				var canvas = surface.Canvas;
+				Color = SKColors.Black,
+				IsAntialias = true,
+				Style = SKPaintStyle.Fill
+			};
+			using var font = new SKFont
+			{
+				Size = 24
+			};
+			var coord = new SKPoint(info.Width / 2, (info.Height + font.Size) / 2);
+			canvas.DrawText(text, coord, SKTextAlign.Center, font, paint);
 
-				// make sure the canvas is blank
-				canvas.Clear(SKColors.White);
-
-				// draw some text
-				var paint = new SKPaint
-				{
-					Color = SKColors.Black,
-					IsAntialias = true,
-					Style = SKPaintStyle.Fill,
-					TextAlign = SKTextAlign.Center,
-					TextSize = 24
-				};
-				var coord = new SKPoint(info.Width / 2, (info.Height + paint.TextSize) / 2);
-				canvas.DrawText(text, coord, paint);
-
-				// retrieve the encoded image
-				using (var image = surface.Snapshot())
-				{
-					return image.Encode(SKEncodedImageFormat.Png, 100);
-				}
-			}
+			// retrieve the encoded image
+			using var image = surface.Snapshot();
+			return image.Encode(SKEncodedImageFormat.Png, 100);
 		}
 	}
 }

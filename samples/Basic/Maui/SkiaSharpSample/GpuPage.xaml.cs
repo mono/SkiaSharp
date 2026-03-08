@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
@@ -10,11 +6,12 @@ namespace SkiaSharpSample
 {
 	public partial class GpuPage : ContentPage
 	{
-		const string sksl = @"
+		const string SkslSource = @"
 uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
 uniform float iTouchActive;
+uniform float3 iColors[6];
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -23,13 +20,6 @@ half4 main(float2 fragCoord) {
     float t = iTime;
     float field = 0.0;
     float3 weighted = float3(0.0);
-    float3 colors[6];
-    colors[0] = float3(1.0, 0.3, 0.4);
-    colors[1] = float3(0.3, 0.7, 1.0);
-    colors[2] = float3(1.0, 0.6, 0.1);
-    colors[3] = float3(0.4, 1.0, 0.7);
-    colors[4] = float3(0.7, 0.3, 1.0);
-    colors[5] = float3(1.0, 0.9, 0.2);
     for (int i = 0; i < 6; i++) {
         float fi = float(i);
         float phase = fi * 1.047;
@@ -41,7 +31,7 @@ half4 main(float2 fragCoord) {
         float r = length(d);
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
-        weighted += colors[i] * strength;
+        weighted += iColors[i] * strength;
     }
     if (iTouchActive > 0.5) {
         float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
@@ -67,21 +57,28 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-		readonly SKRuntimeShaderBuilder builder = SKRuntimeEffect.BuildShader(sksl);
+		static readonly float[] blobColors =
+		{
+			1.0f, 0.3f, 0.4f,   // rose
+			0.3f, 0.7f, 1.0f,   // sky blue
+			1.0f, 0.6f, 0.1f,   // amber
+			0.4f, 1.0f, 0.7f,   // mint
+			0.7f, 0.3f, 1.0f,   // violet
+			1.0f, 0.9f, 0.2f,   // yellow
+		};
+
+		readonly FpsCounter fpsCounter = new();
 		readonly SKPaint shaderPaint = new();
-		readonly Stopwatch stopwatch = Stopwatch.StartNew();
 
-		// FPS tracking
-		readonly Queue<long> frameTicks = new();
-		long lastFpsUpdate;
-
-		// Touch state
-		float touchX, touchY;
-		float touchActive;
+		Lazy<SKRuntimeShaderBuilder> shaderBuilder;
+		SKPoint touchPos;
+		bool touchActive;
 
 		public GpuPage()
 		{
 			InitializeComponent();
+			shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
+			fpsCounter.Start();
 		}
 
 		private void OnTouch(object sender, SKTouchEventArgs e)
@@ -89,17 +86,15 @@ half4 main(float2 fragCoord) {
 			switch (e.ActionType)
 			{
 				case SKTouchAction.Pressed:
-					touchActive = 1f;
-					touchX = e.Location.X;
-					touchY = e.Location.Y;
+					touchActive = true;
+					touchPos = new SKPoint(e.Location.X, e.Location.Y);
 					break;
 				case SKTouchAction.Moved:
-					touchX = e.Location.X;
-					touchY = e.Location.Y;
+					touchPos = new SKPoint(e.Location.X, e.Location.Y);
 					break;
 				case SKTouchAction.Released:
 				case SKTouchAction.Cancelled:
-					touchActive = 0f;
+					touchActive = false;
 					break;
 			}
 			e.Handled = true;
@@ -111,49 +106,26 @@ half4 main(float2 fragCoord) {
 			var info = e.Info;
 			var width = (float)info.Width;
 			var height = (float)info.Height;
-			var elapsed = (float)stopwatch.Elapsed.TotalSeconds;
 
-			builder.Uniforms["iTime"] = elapsed;
+			var builder = shaderBuilder.Value;
+
+			builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
 			builder.Uniforms["iResolution"] = new float[] { width, height };
-			builder.Uniforms["iTouchPos"] = new float[]
-			{
-				touchActive > 0 ? touchX / width : -1f,
-				touchActive > 0 ? touchY / height : -1f
-			};
-			builder.Uniforms["iTouchActive"] = touchActive;
+			builder.Uniforms["iTouchPos"] = new float[] { touchPos.X / width, touchPos.Y / height };
+			builder.Uniforms["iTouchActive"] = touchActive ? 1f : 0f;
+			builder.Uniforms["iColors"] = blobColors;
 
 			using var shader = builder.Build();
 			shaderPaint.Shader = shader;
 			canvas.DrawRect(0, 0, width, height, shaderPaint);
 
-			UpdateFps();
-		}
-
-		private void UpdateFps()
-		{
-			var now = stopwatch.ElapsedMilliseconds;
-			frameTicks.Enqueue(now);
-			while (frameTicks.Count > 100)
-				frameTicks.Dequeue();
-
-			if (now - lastFpsUpdate < 250)
-				return;
-			lastFpsUpdate = now;
-
-			if (frameTicks.Count < 2)
-				return;
-
-			var ticks = frameTicks.ToArray();
-			var span = ticks[ticks.Length - 1] - ticks[0];
-			if (span <= 0)
-				return;
-
-			var fps = (ticks.Length - 1) * 1000.0 / span;
-
-			MainThread.BeginInvokeOnMainThread(() =>
+			if (fpsCounter.Tick() is double fps)
 			{
-				fpsLabel.Text = $"FPS: {fps:F0}";
-			});
+				Dispatcher.Dispatch(() =>
+				{
+					fpsLabel.Text = $"FPS: {fps:F0}";
+				});
+			}
 		}
 	}
 }

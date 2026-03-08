@@ -7,7 +7,7 @@ namespace SkiaSharpSample
 {
 	public partial class CpuPage : ContentPage
 	{
-		readonly (float xf, float yf, float rf, SKColor color)[] circles =
+		static readonly (float xf, float yf, float rf, SKColor color)[] circles =
 		{
 			(0.2f, 0.3f, 0.10f, new SKColor(0xFF, 0x4D, 0x66, 0xCC)),
 			(0.75f, 0.25f, 0.08f, new SKColor(0x4D, 0xB3, 0xFF, 0xCC)),
@@ -17,27 +17,10 @@ namespace SkiaSharpSample
 			(0.4f, 0.8f, 0.09f, new SKColor(0xFF, 0xE6, 0x33, 0xCC)),
 		};
 
-		readonly SKPaint bgPaint = new()
+		static readonly SKColor[] gradientColors =
 		{
-			IsAntialias = true
-		};
-
-		readonly SKPaint circlePaint = new()
-		{
-			IsAntialias = true,
-			Style = SKPaintStyle.Fill
-		};
-
-		readonly SKPaint textPaint = new()
-		{
-			Color = SKColors.White,
-			IsAntialias = true,
-			Style = SKPaintStyle.Fill
-		};
-
-		readonly SKFont textFont = new()
-		{
-			Size = 48 // Updated in OnPaintSurface to be responsive
+			new SKColor(0x44, 0x88, 0xFF),
+			new SKColor(0x88, 0x33, 0xCC),
 		};
 
 		public CpuPage()
@@ -56,17 +39,11 @@ namespace SkiaSharpSample
 			canvas.Clear(SKColors.White);
 
 			using var bgShader = SKShader.CreateRadialGradient(
-				center,
-				radius,
-				new[]
-				{
-					new SKColor(0x44, 0x88, 0xFF),
-					new SKColor(0x88, 0x33, 0xCC)
-				},
-				SKShaderTileMode.Clamp);
-			bgPaint.Shader = bgShader;
+				center, radius, gradientColors, SKShaderTileMode.Clamp);
+			using var bgPaint = new SKPaint { IsAntialias = true, Shader = bgShader };
 			canvas.DrawRect(0, 0, width, height, bgPaint);
 
+			using var circlePaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
 			foreach (var (xf, yf, rf, color) in circles)
 			{
 				circlePaint.Color = color;
@@ -77,7 +54,8 @@ namespace SkiaSharpSample
 					circlePaint);
 			}
 
-			textFont.Size = width * 0.12f;
+			using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
+			using var textFont = new SKFont { Size = width * 0.12f };
 			canvas.DrawText(
 				"SkiaSharp",
 				center.X,

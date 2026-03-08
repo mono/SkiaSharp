@@ -6,11 +6,12 @@ namespace SkiaSharpSample;
 [Register("GpuMetalViewController")]
 public class GpuMetalViewController : UIViewController
 {
-	private const string ShaderSource = @"
+private const string ShaderSource = @"
 uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
 uniform float iTouchActive;
+uniform float3 iColors[6];
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -19,13 +20,6 @@ half4 main(float2 fragCoord) {
     float t = iTime;
     float field = 0.0;
     float3 weighted = float3(0.0);
-    float3 colors[6];
-    colors[0] = float3(1.0, 0.3, 0.4);
-    colors[1] = float3(0.3, 0.7, 1.0);
-    colors[2] = float3(1.0, 0.6, 0.1);
-    colors[3] = float3(0.4, 1.0, 0.7);
-    colors[4] = float3(0.7, 0.3, 1.0);
-    colors[5] = float3(1.0, 0.9, 0.2);
     for (int i = 0; i < 6; i++) {
         float fi = float(i);
         float phase = fi * 1.047;
@@ -38,7 +32,7 @@ half4 main(float2 fragCoord) {
         float r = length(d);
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
-        weighted += colors[i] * strength;
+        weighted += iColors[i] * strength;
     }
     if (iTouchActive > 0.5) {
         float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
@@ -64,176 +58,161 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-	private SKMetalView? skiaView;
+static readonly float[] blobColors =
+{
+1.0f, 0.3f, 0.4f,   // rose
+0.3f, 0.7f, 1.0f,   // sky blue
+1.0f, 0.6f, 0.1f,   // amber
+0.4f, 1.0f, 0.7f,   // mint
+0.7f, 0.3f, 1.0f,   // violet
+1.0f, 0.9f, 0.2f,   // yellow
+};
 
-	private SKRuntimeShaderBuilder? shaderBuilder;
-	private long startTime;
+private readonly FpsCounter fpsCounter = new();
 
-	// Touch interaction
-	private float touchX;
-	private float touchY;
-	private float touchActive;
+private SKMetalView? skiaView;
+private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
+private SKPoint touchPos;
+private bool touchActive;
+private UILabel? fpsLabel;
 
-	// FPS tracking
-	private UILabel? fpsLabel;
-	private int frameCount;
-	private double lastFpsUpdate;
+public GpuMetalViewController(IntPtr handle)
+: base(handle)
+{
+}
 
-	public GpuMetalViewController(IntPtr handle)
-		: base(handle)
-	{
-	}
+public override void ViewDidLoad()
+{
+base.ViewDidLoad();
 
-	public override void ViewDidLoad()
-	{
-		base.ViewDidLoad();
+View!.BackgroundColor = UIColor.Black;
 
-		View!.BackgroundColor = UIColor.Black;
+skiaView = new SKMetalView { TranslatesAutoresizingMaskIntoConstraints = false };
+View.AddSubview(skiaView);
+NSLayoutConstraint.ActivateConstraints(new[]
+{
+skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
+skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
+});
 
-		skiaView = new SKMetalView { TranslatesAutoresizingMaskIntoConstraints = false };
-		View.AddSubview(skiaView);
-		NSLayoutConstraint.ActivateConstraints(new[]
-		{
-			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
-			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-			skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
-		});
+skiaView.PaintSurface += OnPaintSurface;
+skiaView.Paused = true;
+skiaView.EnableSetNeedsDisplay = false;
 
-		skiaView.PaintSurface += OnPaintSurface;
-		skiaView.Paused = true;
-		skiaView.EnableSetNeedsDisplay = false;
+// FPS label
+fpsLabel = new UILabel
+{
+TranslatesAutoresizingMaskIntoConstraints = false,
+Text = "FPS: --",
+TextColor = UIColor.White,
+Font = UIFont.MonospacedDigitSystemFontOfSize(14, UIFontWeight.Regular),
+BackgroundColor = UIColor.FromWhiteAlpha(0, 0.5f),
+};
+View.AddSubview(fpsLabel);
 
-		// FPS label
-		fpsLabel = new UILabel
-		{
-			TranslatesAutoresizingMaskIntoConstraints = false,
-			Text = "FPS: --",
-			TextColor = UIColor.White,
-			Font = UIFont.MonospacedDigitSystemFontOfSize(14, UIFontWeight.Regular),
-			BackgroundColor = UIColor.FromWhiteAlpha(0, 0.5f),
-		};
-		View.AddSubview(fpsLabel);
+NSLayoutConstraint.ActivateConstraints(new[]
+{
+fpsLabel.TopAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TopAnchor, 8),
+fpsLabel.TrailingAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TrailingAnchor, -8),
+});
+}
 
-		NSLayoutConstraint.ActivateConstraints(new[]
-		{
-			fpsLabel.TopAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TopAnchor, 8),
-			fpsLabel.TrailingAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TrailingAnchor, -8),
-		});
-	}
+public override void ViewDidAppear(bool animated)
+{
+base.ViewDidAppear(animated);
 
-	public override void ViewDidAppear(bool animated)
-	{
-		base.ViewDidAppear(animated);
+shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
+fpsCounter.Start();
 
-		try
-		{
-			shaderBuilder = SKRuntimeEffect.BuildShader(ShaderSource);
-		}
-		catch (Exception ex)
-		{
-			System.Diagnostics.Debug.WriteLine($"Shader compilation failed: {ex.Message}");
-			return;
-		}
+if (skiaView != null)
+{
+skiaView.Paused = false;
+skiaView.EnableSetNeedsDisplay = false;
+}
+}
 
-		startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-		frameCount = 0;
-		lastFpsUpdate = 0;
+public override void ViewWillDisappear(bool animated)
+{
+base.ViewWillDisappear(animated);
 
-		if (skiaView != null)
-		{
-			skiaView.Paused = false;
-			skiaView.EnableSetNeedsDisplay = false;
-		}
-	}
+if (skiaView != null)
+{
+skiaView.PaintSurface -= OnPaintSurface;
+skiaView.Paused = true;
+}
 
-	public override void ViewWillDisappear(bool animated)
-	{
-		base.ViewWillDisappear(animated);
+fpsCounter.Stop();
 
-		if (skiaView != null)
-		{
-			skiaView.PaintSurface -= OnPaintSurface;
-			skiaView.Paused = true;
-		}
+if (shaderBuilder?.IsValueCreated == true)
+shaderBuilder.Value.Dispose();
+shaderBuilder = null;
+}
 
-		shaderBuilder?.Dispose();
-		shaderBuilder = null;
-	}
+private void OnPaintSurface(object? sender, SKPaintMetalSurfaceEventArgs e)
+{
+var canvas = e.Surface.Canvas;
+var width = e.BackendRenderTarget.Width;
+var height = e.BackendRenderTarget.Height;
 
-	private void OnPaintSurface(object? sender, SKPaintMetalSurfaceEventArgs e)
-	{
-		var canvas = e.Surface.Canvas;
-		var width = e.BackendRenderTarget.Width;
-		var height = e.BackendRenderTarget.Height;
+canvas.Clear(SKColors.Black);
 
-		canvas.Clear(SKColors.Black);
+if (shaderBuilder == null)
+return;
 
-		if (shaderBuilder == null)
-			return;
+var builder = shaderBuilder.Value;
 
-		var time = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000f;
+builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
+builder.Uniforms["iResolution"] = new float[] { width, height };
+builder.Uniforms["iTouchPos"] = new float[] { touchPos.X, touchPos.Y };
+builder.Uniforms["iTouchActive"] = touchActive ? 1f : 0f;
+builder.Uniforms["iColors"] = blobColors;
 
-		shaderBuilder.Uniforms["iTime"] = time;
-		shaderBuilder.Uniforms["iResolution"] = new float[] { width, height };
-		shaderBuilder.Uniforms["iTouchPos"] = new float[] { touchX, touchY };
-		shaderBuilder.Uniforms["iTouchActive"] = touchActive;
+using var shader = builder.Build();
+using var paint = new SKPaint { Shader = shader };
+canvas.DrawRect(0, 0, width, height, paint);
 
-		using var shader = shaderBuilder.Build();
-		using var paint = new SKPaint { Shader = shader };
-		canvas.DrawRect(0, 0, width, height, paint);
+if (fpsCounter.Tick() is double fps)
+{
+InvokeOnMainThread(() =>
+{
+if (fpsLabel != null)
+fpsLabel.Text = $"FPS: {fps:F0}";
+});
+}
+}
 
-		UpdateFps(time);
-	}
+public override void TouchesBegan(NSSet touches, UIEvent? evt)
+{
+base.TouchesBegan(touches, evt);
+if (touches.AnyObject is UITouch touch && skiaView != null)
+{
+var loc = touch.LocationInView(skiaView);
+touchPos = new SKPoint((float)(loc.X / skiaView.Bounds.Width), (float)(loc.Y / skiaView.Bounds.Height));
+touchActive = true;
+}
+}
 
-	private void UpdateFps(float currentTime)
-	{
-		frameCount++;
-		if (currentTime - lastFpsUpdate >= 1.0)
-		{
-			var fps = frameCount / (currentTime - lastFpsUpdate);
-			InvokeOnMainThread(() =>
-			{
-				if (fpsLabel != null)
-					fpsLabel.Text = $"FPS: {fps:F0}";
-			});
-			frameCount = 0;
-			lastFpsUpdate = currentTime;
-		}
-	}
+public override void TouchesMoved(NSSet touches, UIEvent? evt)
+{
+base.TouchesMoved(touches, evt);
+if (touches.AnyObject is UITouch touch && skiaView != null)
+{
+var loc = touch.LocationInView(skiaView);
+touchPos = new SKPoint((float)(loc.X / skiaView.Bounds.Width), (float)(loc.Y / skiaView.Bounds.Height));
+}
+}
 
-	public override void TouchesBegan(NSSet touches, UIEvent? evt)
-	{
-		base.TouchesBegan(touches, evt);
-		if (touches.AnyObject is UITouch touch && skiaView != null)
-		{
-			var loc = touch.LocationInView(skiaView);
-			touchX = (float)(loc.X / skiaView.Bounds.Width);
-			touchY = (float)(loc.Y / skiaView.Bounds.Height);
-			touchActive = 1f;
-		}
-	}
+public override void TouchesEnded(NSSet touches, UIEvent? evt)
+{
+base.TouchesEnded(touches, evt);
+touchActive = false;
+}
 
-	public override void TouchesMoved(NSSet touches, UIEvent? evt)
-	{
-		base.TouchesMoved(touches, evt);
-		if (touches.AnyObject is UITouch touch && skiaView != null)
-		{
-			var loc = touch.LocationInView(skiaView);
-			touchX = (float)(loc.X / skiaView.Bounds.Width);
-			touchY = (float)(loc.Y / skiaView.Bounds.Height);
-		}
-	}
-
-	public override void TouchesEnded(NSSet touches, UIEvent? evt)
-	{
-		base.TouchesEnded(touches, evt);
-		touchActive = 0f;
-	}
-
-	public override void TouchesCancelled(NSSet touches, UIEvent? evt)
-	{
-		base.TouchesCancelled(touches, evt);
-		touchActive = 0f;
-	}
+public override void TouchesCancelled(NSSet touches, UIEvent? evt)
+{
+base.TouchesCancelled(touches, evt);
+touchActive = false;
+}
 }

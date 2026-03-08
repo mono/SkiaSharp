@@ -31,6 +31,7 @@
         uniform float2 iResolution;   // canvas size in pixels
         uniform float2 iTouchPos;     // touch position normalized 0..1
         uniform float iTouchActive;   // 1.0 when touching, 0.0 otherwise
+        uniform float3 iColors[6];    // blob color palette
 
         half4 main(float2 fragCoord) {
             // Convert pixel coords to normalized UV and aspect-corrected coords
@@ -43,15 +44,6 @@
             // 'weighted' tracks color contribution weighted by field strength.
             float field = 0.0;
             float3 weighted = float3(0.0);
-
-            // Color palette for the 6 orbiting blobs
-            float3 colors[6];
-            colors[0] = float3(1.0, 0.3, 0.4);    // hot pink
-            colors[1] = float3(0.3, 0.7, 1.0);    // sky blue
-            colors[2] = float3(1.0, 0.6, 0.1);    // orange
-            colors[3] = float3(0.4, 1.0, 0.7);    // mint
-            colors[4] = float3(0.7, 0.3, 1.0);    // purple
-            colors[5] = float3(1.0, 0.9, 0.2);    // yellow
 
             // Each blob orbits on a Lissajous curve with unique phase and speed
             for (int i = 0; i < 6; i++) {
@@ -70,7 +62,7 @@
                 float r = length(d);
                 float strength = 0.030 / (r * r + 0.002);
                 field += strength;
-                weighted += colors[i] * strength;
+                weighted += iColors[i] * strength;
             }
 
             // Touch interaction: add an extra, larger blob at the touch position
@@ -112,35 +104,44 @@
         }
     ";
 
+    static readonly float[] blobColors =
+    {
+        1.0f, 0.3f, 0.4f,    // hot pink
+        0.3f, 0.7f, 1.0f,    // sky blue
+        1.0f, 0.6f, 0.1f,    // orange
+        0.4f, 1.0f, 0.7f,    // mint
+        0.7f, 0.3f, 1.0f,    // purple
+        1.0f, 0.9f, 0.2f,    // yellow
+    };
+
     // SKRuntimeShaderBuilder: compiled once via BuildShader(), then reused.
     // Each frame we update uniforms and call Build() to get a new SKShader.
-    readonly SKRuntimeShaderBuilder builder = SKRuntimeEffect.BuildShader(sksl);
-    readonly long startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    Lazy<SKRuntimeShaderBuilder> shaderBuilder = new(() => SKRuntimeEffect.BuildShader(sksl));
+
+    readonly FpsCounter fpsCounter = new();
 
     // The paint that is reused for drawing the shader quad.
     readonly SKPaint shaderPaint = new();
 
     // Touch state passed to the shader as uniforms.
-    float touchX = -1f, touchY = -1f;
-    float touchActive = 0f;
-    // FPS display value, updated ~4Hz.
-    double displayFps;
-    long lastUiUpdate;
+    SKPoint touchPos;
+    bool touchActive;
 
-    // Rolling average FPS calculation.
-    int tickIndex = 0;
-    long tickSum = 0;
-    long[] tickList = new long[100];
-    long lastTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    // FPS display value, updated each sampling interval.
+    double displayFps;
+
+    protected override void OnInitialized()
+    {
+        fpsCounter.Start();
+    }
 
     // Handle pointer down: start tracking touch position.
     void OnPointerDown(PointerEventArgs e)
     {
         if (!e.IsPrimary)
             return;
-        touchX = (float)e.OffsetX;
-        touchY = (float)e.OffsetY;
-        touchActive = 1f;
+        touchPos = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        touchActive = true;
     }
 
     // Handle pointer move: update touch position while pointer is pressed.
@@ -148,8 +149,7 @@
     {
         if (!e.IsPrimary || e.Buttons == 0)
             return;
-        touchX = (float)e.OffsetX;
-        touchY = (float)e.OffsetY;
+        touchPos = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
     }
 
     // Handle pointer up: clear touch state.
@@ -157,7 +157,7 @@
     {
         if (!e.IsPrimary)
             return;
-        touchActive = 0f;
+        touchActive = false;
     }
 
     // Called every frame by SKGLView's render loop.
@@ -168,14 +168,15 @@
         var height = e.Info.Height;
 
         // Update uniforms — no allocations, reuses the builder's internal storage.
-        var elapsed = (float)(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - startTime) / 1000f;
-        builder.Uniforms["iTime"] = elapsed;
+        var builder = shaderBuilder.Value;
+        builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
         builder.Uniforms["iResolution"] = new float[] { width, height };
         builder.Uniforms["iTouchPos"] = new float[] {
-            touchActive > 0 ? touchX / width : -1f,
-            touchActive > 0 ? touchY / height : -1f
+            touchActive ? touchPos.X / width : -1f,
+            touchActive ? touchPos.Y / height : -1f
         };
-        builder.Uniforms["iTouchActive"] = touchActive;
+        builder.Uniforms["iTouchActive"] = touchActive ? 1f : 0f;
+        builder.Uniforms["iColors"] = blobColors;
 
         // Build() creates a shader from cached effect + current uniforms.
         // Draw a full-screen quad to run the shader on every pixel.
@@ -183,33 +184,17 @@
         shaderPaint.Shader = shader;
         canvas.DrawRect(0, 0, width, height, shaderPaint);
 
-        displayFps = GetCurrentFPS();
-
-        // Throttle Blazor UI updates to ~4Hz for the FPS counter.
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        if (now - lastUiUpdate > 250)
+        if (fpsCounter.Tick() is double fps)
         {
-            lastUiUpdate = now;
+            displayFps = fps;
             _ = InvokeAsync(StateHasChanged);
         }
     }
 
-    double GetCurrentFPS()
-    {
-        var newTick = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var delta = newTick - lastTick;
-        lastTick = newTick;
-        tickSum -= tickList[tickIndex];
-        tickSum += delta;
-        tickList[tickIndex] = delta;
-        if (++tickIndex == tickList.Length)
-            tickIndex = 0;
-        return 1000.0 / ((double)tickSum / tickList.Length);
-    }
-
     public void Dispose()
     {
-        builder?.Dispose();
+        if (shaderBuilder?.IsValueCreated == true)
+            shaderBuilder.Value.Dispose();
         shaderPaint?.Dispose();
     }
 }

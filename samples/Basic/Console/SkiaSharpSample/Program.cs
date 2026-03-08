@@ -12,11 +12,11 @@ namespace SkiaSharpSample
 			Console.WriteLine("Hello World!");
 			Console.WriteLine("Your platform color type is " + SKImageInfo.PlatformColorType);
 
-			// crate a surface
+			// create a surface
 			var info = new SKImageInfo(256, 256);
 			using var surface = SKSurface.Create(info);
 
-			// the the canvas and properties
+			// get the canvas and properties
 			var canvas = surface.Canvas;
 
 			// make sure the canvas is blank

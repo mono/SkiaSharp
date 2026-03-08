@@ -32,7 +32,7 @@ namespace SkiaSharpSample.Controllers
 			var info = new SKImageInfo(512, 512);
 			using var surface = SKSurface.Create(info);
 
-			// the the canvas and properties
+			// get the canvas and properties
 			var canvas = surface.Canvas;
 
 			// make sure the canvas is blank

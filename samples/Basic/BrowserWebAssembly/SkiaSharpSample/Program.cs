@@ -4,11 +4,11 @@ using SkiaSharp;
 Console.WriteLine("Hello, Browser!");
 Console.WriteLine("Your platform color type is " + SKImageInfo.PlatformColorType);
 
-// crate a surface
+// create a surface
 var info = new SKImageInfo(256, 256);
 using var bitmap = new SKBitmap(info);
 
-// the the canvas and properties
+// get the canvas and properties
 using var canvas = new SKCanvas(bitmap);
 
 // make sure the canvas is blank
