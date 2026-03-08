@@ -8,12 +8,18 @@ namespace SkiaSharpSample
 	[Register(nameof(AppDelegate))]
 	public class AppDelegate : NSApplicationDelegate
 	{
+		NSWindow? window;
+
 		public override void DidFinishLaunching(NSNotification notification)
 		{
-			// The window and menu bar are loaded from Main.storyboard.
-			// We just need to add the split view content to the storyboard-created window.
-			var window = NSApplication.SharedApplication.KeyWindow
-				?? NSApplication.SharedApplication.MainWindow;
+			// The menu bar is loaded from Main.storyboard via NSMainStoryboardFile.
+			// Create the window programmatically for the SkiaSharp content.
+			var style = NSWindowStyle.Titled | NSWindowStyle.Closable | NSWindowStyle.Miniaturizable | NSWindowStyle.Resizable;
+			window = new NSWindow(new CGRect(196, 240, 1024, 768), style, NSBackingStore.Buffered, false)
+			{
+				Title = "SkiaSharp on macOS",
+				MinSize = new CGSize(600, 400),
+			};
 
 			var splitView = new NSSplitView(window.ContentView!.Bounds)
 			{
@@ -44,6 +50,9 @@ namespace SkiaSharpSample
 				splitView.AddSubview(newView);
 				splitView.AdjustSubviews();
 			};
+
+			window.Center();
+			window.MakeKeyAndOrderFront(this);
 		}
 
 		public override bool ApplicationShouldTerminateAfterLastWindowClosed(NSApplication sender) => true;
