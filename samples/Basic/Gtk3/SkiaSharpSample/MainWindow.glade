@@ -4,6 +4,13 @@
      custom SkiaSharp types; placeholder GtkBox containers are used instead. -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
+  <object class="GtkAdjustment" id="brushAdjustment">
+    <property name="lower">1</property>
+    <property name="upper">50</property>
+    <property name="value">4</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">5</property>
+  </object>
   <object class="GtkBox" id="rootBox">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -12,7 +19,6 @@
       <object class="GtkStackSidebar" id="sidebar">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="width-request">200</property>
         <property name="stack">contentStack</property>
       </object>
       <packing>
@@ -56,92 +62,96 @@
                 <property name="position">0</property>
               </packing>
             </child>
-            <!-- Toolbar with color and clear buttons -->
+            <!-- Toolbar: colors | slider | clear -->
             <child>
               <object class="GtkBox" id="drawingToolbar">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="orientation">horizontal</property>
-                <property name="spacing">4</property>
-                <property name="height-request">40</property>
+                <property name="spacing">6</property>
+                <property name="margin-start">8</property>
+                <property name="margin-end">8</property>
+                <property name="margin-top">6</property>
+                <property name="margin-bottom">6</property>
+                <!-- Color swatch buttons -->
                 <child>
                   <object class="GtkButton" id="btnBlack">
-                    <property name="label">Black</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">2</property>
-                    <property name="position">0</property>
+                    <property name="fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="btnRed">
-                    <property name="label">Red</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">2</property>
-                    <property name="position">1</property>
+                    <property name="fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="btnBlue">
-                    <property name="label">Blue</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">2</property>
-                    <property name="position">2</property>
+                    <property name="fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="btnGreen">
-                    <property name="label">Green</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">2</property>
-                    <property name="position">3</property>
+                    <property name="fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="btnOrange">
-                    <property name="label">Orange</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">2</property>
-                    <property name="position">4</property>
+                    <property name="fill">False</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="btnPurple">
-                    <property name="label">Purple</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">2</property>
-                    <property name="position">5</property>
+                    <property name="fill">False</property>
                   </packing>
                 </child>
+                <!-- Brush size slider -->
+                <child>
+                  <object class="GtkScale" id="brushScale">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="orientation">horizontal</property>
+                    <property name="width-request">150</property>
+                    <property name="draw-value">True</property>
+                    <property name="value-pos">right</property>
+                    <property name="round-digits">0</property>
+                    <property name="adjustment">brushAdjustment</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                  </packing>
+                </child>
+                <!-- Clear button on right -->
                 <child>
                   <object class="GtkButton" id="btnClear">
                     <property name="label">Clear</property>
@@ -150,29 +160,14 @@
                   </object>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">2</property>
-                    <property name="position">6</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="brushSizeLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="label">Brush: 4px</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="padding">6</property>
-                    <property name="position">7</property>
+                    <property name="fill">False</property>
+                    <property name="pack-type">end</property>
                   </packing>
                 </child>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="padding">4</property>
                 <property name="position">1</property>
               </packing>
             </child>

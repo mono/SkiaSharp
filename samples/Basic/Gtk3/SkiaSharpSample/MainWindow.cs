@@ -54,12 +54,12 @@ namespace SkiaSharpSample
 
 		// Drawing page state
 		private SKDrawingArea drawingSkiaView;
-		private Label brushSizeLabel;
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 		private SKPath currentPath;
 		private SKColor currentColor;
 		private float brushSize = 4f;
 		private SKPoint cursorPosition;
+		private Scale brushScale;
 		private bool isCursorOver;
 
 		public MainWindow()
@@ -105,13 +105,14 @@ namespace SkiaSharpSample
 			drawingSkiaView.LeaveNotifyEvent += (s, e) => { isCursorOver = false; drawingSkiaView.QueueDraw(); };
 			drawingCanvasContainer.PackStart(drawingSkiaView, true, true, 0);
 
-			// Connect color buttons defined in the Glade file
+			// Connect color buttons as small colored swatches
 			foreach (var (name, light, dark) in ColorOptions)
 			{
 				var btn = (Button)builder.GetObject($"btn{name}");
+				btn.Relief = ReliefStyle.None;
 				var provider = new CssProvider();
 				provider.LoadFromData(
-					$"button {{ background: rgb({light.Red},{light.Green},{light.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}");
+					$"button {{ background: rgb({light.Red},{light.Green},{light.Blue}); min-width: 28px; min-height: 28px; padding: 0; border-radius: 14px; border: 2px solid rgba(0,0,0,0.2); }}");
 				btn.StyleContext.AddProvider(provider, StyleProviderPriority.Application);
 				var capturedLight = light;
 				var capturedDark = dark;
@@ -120,14 +121,15 @@ namespace SkiaSharpSample
 
 			// Connect clear button
 			var clearBtn = (Button)builder.GetObject("btnClear");
-			var clearProvider = new CssProvider();
-			clearProvider.LoadFromData(
-				"button { background: rgb(120,120,120); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }");
-			clearBtn.StyleContext.AddProvider(clearProvider, StyleProviderPriority.Application);
 			clearBtn.Clicked += OnClearClicked;
 
-			// Brush size label
-			brushSizeLabel = (Label)builder.GetObject("brushSizeLabel");
+			// Connect brush size slider
+			brushScale = (Scale)builder.GetObject("brushScale");
+			brushScale.ValueChanged += (s, e) =>
+			{
+				brushSize = (float)brushScale.Value;
+				drawingSkiaView?.QueueDraw();
+			};
 
 			Add(rootBox);
 			ShowAll();
@@ -267,7 +269,7 @@ namespace SkiaSharpSample
 			else
 				brushSize = Math.Max(brushSize - 1, 1);
 
-			brushSizeLabel.Text = $"Brush: {brushSize:0}px";
+			brushScale.Value = brushSize;
 			drawingSkiaView?.QueueDraw();
 		}
 
