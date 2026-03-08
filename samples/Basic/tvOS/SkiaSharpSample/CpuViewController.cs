@@ -62,10 +62,10 @@ public class CpuViewController : UIViewController
 			canvas.DrawCircle(xf * width, yf * height, rf * Math.Min(width, height), circlePaint);
 		}
 
-		// Centered "CPU Canvas" text
+		// Centered "SkiaSharp" text
 		using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-		using var font = new SKFont { Size = 64 };
-		canvas.DrawText("CPU Canvas", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
+		using var font = new SKFont { Size = width * 0.12f };
+		canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 
 		// Platform label
 		using var labelFont = new SKFont { Size = 28 };

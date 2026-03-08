@@ -37,7 +37,7 @@ namespace SkiaSharpSample
 
 		readonly SKFont textFont = new()
 		{
-			Size = 48
+			Size = 48 // Updated in OnPaintSurface to be responsive
 		};
 
 		public CpuPage()
@@ -77,6 +77,7 @@ namespace SkiaSharpSample
 					circlePaint);
 			}
 
+			textFont.Size = width * 0.12f;
 			canvas.DrawText(
 				"SkiaSharp",
 				center.X,

@@ -195,7 +195,7 @@ namespace SkiaSharpSample
 
 			// Centered title text
 			using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-			using var font = new SKFont { Size = 48 };
+			using var font = new SKFont { Size = width * 0.12f };
 			canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f,
 				SKTextAlign.Center, font, textPaint);
 		}
@@ -205,6 +205,8 @@ namespace SkiaSharpSample
 		private const string MetaballShaderSource = @"
 uniform float iTime;
 uniform float2 iResolution;
+uniform float2 iTouchPos;
+uniform float iTouchActive;
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
@@ -232,6 +234,14 @@ half4 main(float2 fragCoord) {
         float strength = 0.030 / (r * r + 0.002);
         field += strength;
         weighted += colors[i] * strength;
+    }
+    if (iTouchActive > 0.5) {
+        float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
+        float2 d = st - touchSt;
+        float r = length(d);
+        float strength = 0.050 / (r * r + 0.002);
+        field += strength;
+        weighted += float3(1.0, 0.95, 0.9) * strength;
     }
     float3 blobColor = weighted / max(field, 0.001);
     float edge = smoothstep(5.0, 8.0, field);
@@ -285,6 +295,8 @@ half4 main(float2 fragCoord) {
 			{
 				["iTime"] = (float)gpuStopwatch.Elapsed.TotalSeconds,
 				["iResolution"] = new[] { (float)width, (float)height },
+				["iTouchPos"] = new[] { 0f, 0f },
+				["iTouchActive"] = 0f,
 			};
 
 			using var shader = shaderEffect.ToShader(uniforms);
@@ -406,7 +418,7 @@ half4 main(float2 fragCoord) {
 			using var paint = new SKPaint
 			{
 				IsAntialias = true,
-				Style = SKPaintStyle.StrokeAndFill,
+				Style = SKPaintStyle.Stroke,
 				StrokeCap = SKStrokeCap.Round,
 				StrokeJoin = SKStrokeJoin.Round,
 			};
