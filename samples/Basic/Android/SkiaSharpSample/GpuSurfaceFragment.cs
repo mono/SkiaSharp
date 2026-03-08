@@ -76,8 +76,7 @@ half4 main(float2 fragCoord) {
 	private SKGLSurfaceView skiaView;
 	private TextView fpsLabel;
 	private Lazy<SKRuntimeShaderBuilder> shaderBuilder;
-	private float touchX;
-	private float touchY;
+	private SKPoint touchPos;
 	private float touchActive;
 
 	public override View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
@@ -113,7 +112,7 @@ half4 main(float2 fragCoord) {
 
 		builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
 		builder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
-		builder.Uniforms["iTouchPos"] = new float[] { touchX, touchY };
+		builder.Uniforms["iTouchPos"] = new float[] { touchPos.X, touchPos.Y };
 		builder.Uniforms["iTouchActive"] = touchActive;
 		builder.Uniforms["iColors"] = blobColors;
 
@@ -133,10 +132,7 @@ half4 main(float2 fragCoord) {
 			case MotionEventActions.Move:
 				touchActive = 1f;
 				if (skiaView.Width > 0 && skiaView.Height > 0)
-				{
-					touchX = e.Event.GetX() / skiaView.Width;
-					touchY = e.Event.GetY() / skiaView.Height;
-				}
+					touchPos = new SKPoint(e.Event.GetX() / skiaView.Width, e.Event.GetY() / skiaView.Height);
 				break;
 			case MotionEventActions.Up:
 			case MotionEventActions.Cancel:
