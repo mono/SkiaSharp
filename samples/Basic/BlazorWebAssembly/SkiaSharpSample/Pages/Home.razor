@@ -52,6 +52,7 @@
 
         canvas.Clear(SKColors.White);
 
+        // Background gradient
         using var shader = SKShader.CreateRadialGradient(center, radius, gradientColors, SKShaderTileMode.Clamp);
         using var bgPaint = new SKPaint
         {
@@ -60,6 +61,7 @@
         };
         canvas.DrawRect(0, 0, width, height, bgPaint);
 
+        // Circles
         using var circlePaint = new SKPaint
         {
             IsAntialias = true,
@@ -71,6 +73,7 @@
             canvas.DrawCircle(x * width, y * height, r * Math.Min(width, height), circlePaint);
         }
 
+        // Centered text
         using var textPaint = new SKPaint
         {
             Color = SKColors.White,
