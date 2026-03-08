@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
@@ -72,13 +71,11 @@ half4 main(float2 fragCoord) {
 		1.0f, 0.9f, 0.2f,   // yellow
 	};
 
-	private readonly Stopwatch stopwatch = new();
+	private readonly FpsCounter fpsCounter = new();
 
 	private SKGLTextureView skiaView;
 	private TextView fpsLabel;
 	private Lazy<SKRuntimeShaderBuilder> shaderBuilder;
-	private int frameCount;
-	private double lastFpsTime;
 	private float touchX;
 	private float touchY;
 	private float touchActive;
@@ -92,7 +89,7 @@ half4 main(float2 fragCoord) {
 		skiaView.Touch += OnTouch;
 
 		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
-		stopwatch.Start();
+		fpsCounter.Start();
 		return view;
 	}
 
@@ -113,7 +110,7 @@ half4 main(float2 fragCoord) {
 			return;
 		}
 
-		builder.Uniforms["iTime"] = (float)stopwatch.Elapsed.TotalSeconds;
+		builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
 		builder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
 		builder.Uniforms["iTouchPos"] = new float[] { touchX, touchY };
 		builder.Uniforms["iTouchActive"] = touchActive;
@@ -123,16 +120,8 @@ half4 main(float2 fragCoord) {
 		using var paint = new SKPaint { Shader = shader };
 		canvas.DrawRect(0, 0, width, height, paint);
 
-		// FPS counter
-		frameCount++;
-		var elapsed = stopwatch.Elapsed.TotalSeconds;
-		if (elapsed - lastFpsTime >= 0.5)
-		{
-			var fps = frameCount / (elapsed - lastFpsTime);
-			frameCount = 0;
-			lastFpsTime = elapsed;
+		if (fpsCounter.Tick() is double fps)
 			Activity?.RunOnUiThread(() => fpsLabel.Text = $"FPS: {fps:F0}");
-		}
 	}
 
 	private void OnTouch(object sender, View.TouchEventArgs e)
