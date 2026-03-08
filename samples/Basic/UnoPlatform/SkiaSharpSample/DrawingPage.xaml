@@ -4,24 +4,116 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:skia="using:SkiaSharp.Views.Windows">
 
-    <Grid RowDefinitions="*,Auto">
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ToolboxPanel.Orientation" Value="Vertical" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="600" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ToolboxPanel.Orientation" Value="Horizontal" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
         <skia:SKXamlCanvas x:Name="skiaView" PaintSurface="OnPaintSurface"
                            PointerPressed="OnPointerPressed"
                            PointerMoved="OnPointerMoved"
                            PointerReleased="OnPointerReleased"
                            PointerWheelChanged="OnPointerWheelChanged"
                            PointerExited="OnPointerExited" />
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Padding="8"
-                    HorizontalAlignment="Center">
-            <Button Background="Black" Width="40" Height="40" Click="OnColorClicked" Tag="Black" />
-            <Button Background="Red" Width="40" Height="40" Click="OnColorClicked" Tag="Red" />
-            <Button Background="Blue" Width="40" Height="40" Click="OnColorClicked" Tag="Blue" />
-            <Button Background="Green" Width="40" Height="40" Click="OnColorClicked" Tag="Green" />
-            <Button Background="Orange" Width="40" Height="40" Click="OnColorClicked" Tag="Orange" />
-            <Button Background="Purple" Width="40" Height="40" Click="OnColorClicked" Tag="Purple" />
-            <Button Content="Clear" Click="OnClearClicked" />
-            <TextBlock x:Name="brushText" Text="Brush: 4px" VerticalAlignment="Center" />
-        </StackPanel>
+
+        <!-- Floating Clear button — top-right -->
+        <Button Content="Clear"
+                Click="OnClearClicked"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,12,12,0"
+                Foreground="White"
+                FontSize="13"
+                Padding="16,6"
+                CornerRadius="16">
+            <Button.Background>
+                <SolidColorBrush Color="#1E1E1E" Opacity="0.8" />
+            </Button.Background>
+        </Button>
+
+        <!-- Floating toolbox — bottom-center overlay -->
+        <Border x:Name="ToolboxBorder"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Margin="0,0,0,16"
+                CornerRadius="24"
+                Padding="20,14">
+            <Border.Background>
+                <SolidColorBrush Color="#1E1E1E" Opacity="0.8" />
+            </Border.Background>
+            <StackPanel x:Name="ToolboxPanel" Orientation="Horizontal" Spacing="14">
+                <!-- Color swatches -->
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Button Click="OnColorClicked" Tag="Black" Padding="0" MinWidth="0" MinHeight="0"
+                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
+                        <Button.Background>
+                            <SolidColorBrush Color="Black" />
+                        </Button.Background>
+                    </Button>
+                    <Button Click="OnColorClicked" Tag="Red" Padding="0" MinWidth="0" MinHeight="0"
+                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
+                        <Button.Background>
+                            <SolidColorBrush Color="#E53935" />
+                        </Button.Background>
+                    </Button>
+                    <Button Click="OnColorClicked" Tag="Blue" Padding="0" MinWidth="0" MinHeight="0"
+                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
+                        <Button.Background>
+                            <SolidColorBrush Color="#1E88E5" />
+                        </Button.Background>
+                    </Button>
+                    <Button Click="OnColorClicked" Tag="Green" Padding="0" MinWidth="0" MinHeight="0"
+                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
+                        <Button.Background>
+                            <SolidColorBrush Color="#43A047" />
+                        </Button.Background>
+                    </Button>
+                    <Button Click="OnColorClicked" Tag="Orange" Padding="0" MinWidth="0" MinHeight="0"
+                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
+                        <Button.Background>
+                            <SolidColorBrush Color="#FB8C00" />
+                        </Button.Background>
+                    </Button>
+                    <Button Click="OnColorClicked" Tag="Purple" Padding="0" MinWidth="0" MinHeight="0"
+                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
+                        <Button.Background>
+                            <SolidColorBrush Color="#8E24AA" />
+                        </Button.Background>
+                    </Button>
+                </StackPanel>
+
+                <!-- Brush size slider + label -->
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <Slider x:Name="brushSlider"
+                            Minimum="1" Maximum="50" Value="4"
+                            Width="160"
+                            VerticalAlignment="Center"
+                            ValueChanged="OnSliderValueChanged" />
+                    <TextBlock x:Name="brushText" Text="4"
+                               Foreground="White" FontSize="13"
+                               VerticalAlignment="Center"
+                               Width="24" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
     </Grid>
 
 </Page>

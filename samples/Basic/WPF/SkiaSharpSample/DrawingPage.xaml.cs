@@ -173,8 +173,17 @@ namespace SkiaSharpSample
 		private void OnMouseWheel(object sender, MouseWheelEventArgs e)
 		{
 			brushSize = Math.Clamp(brushSize + (e.Delta > 0 ? 1f : -1f), 1f, 50f);
-			BrushSizeText.Text = $"Brush: {brushSize:F0}px";
+			BrushSizeText.Text = $"{brushSize:F0}px";
+			BrushSlider.Value = brushSize;
 			SkCanvas.InvalidateVisual();
+		}
+
+		private void OnBrushSizeChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+			brushSize = (float)e.NewValue;
+			if (BrushSizeText != null)
+				BrushSizeText.Text = $"{brushSize:F0}px";
+			SkCanvas?.InvalidateVisual();
 		}
 
 		private void OnMouseLeave(object sender, MouseEventArgs e)
@@ -195,8 +204,7 @@ namespace SkiaSharpSample
 				// Update selection highlight
 				if (selectedColorBorder != null)
 					selectedColorBorder.BorderBrush = System.Windows.Media.Brushes.Transparent;
-				border.BorderBrush = new System.Windows.Media.SolidColorBrush(
-					System.Windows.Media.Color.FromRgb(0x00, 0x7A, 0xCC));
+				border.BorderBrush = System.Windows.Media.Brushes.White;
 				selectedColorBorder = border;
 			}
 		}

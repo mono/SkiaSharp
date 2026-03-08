@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
 
@@ -21,6 +22,7 @@ namespace SkiaSharpSample
 		};
 
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
+		private Border selectedColorBorder;
 		private SKPath currentPath;
 		private SKColor currentColor;
 		private float brushSize = 4f;
@@ -35,6 +37,7 @@ namespace SkiaSharpSample
 		{
 			InitializeComponent();
 			currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
+			selectedColorBorder = ColorBlack;
 
 			ActualThemeChanged += (s, e) =>
 			{
@@ -46,10 +49,20 @@ namespace SkiaSharpSample
 			};
 		}
 
-		private void OnColorClicked(object sender, RoutedEventArgs e)
+		private void OnColorTapped(object sender, TappedRoutedEventArgs e)
 		{
-			if (sender is Button btn && btn.Tag is string tag && ColorMap.TryGetValue(tag, out var pair))
+			if (sender is not Border border || border.Tag is not string tag)
+				return;
+
+			if (ColorMap.TryGetValue(tag, out var pair))
+			{
 				currentColor = ResolveColor(pair);
+
+				if (selectedColorBorder != null)
+					selectedColorBorder.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+				border.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
+				selectedColorBorder = border;
+			}
 		}
 
 		private void OnClearClicked(object sender, RoutedEventArgs e)
@@ -142,8 +155,17 @@ namespace SkiaSharpSample
 			var point = e.GetCurrentPoint(skiaView);
 			var delta = point.Properties.MouseWheelDelta;
 			brushSize = Math.Max(1f, Math.Min(50f, brushSize + (delta > 0 ? 1f : -1f)));
-			brushText.Text = $"Brush: {brushSize:F0}px";
+			brushText.Text = $"{brushSize:F0}px";
+			BrushSlider.Value = brushSize;
 			skiaView.Invalidate();
+		}
+
+		private void OnBrushSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+		{
+			brushSize = (float)e.NewValue;
+			if (brushText != null)
+				brushText.Text = $"{brushSize:F0}px";
+			skiaView?.Invalidate();
 		}
 	}
 }

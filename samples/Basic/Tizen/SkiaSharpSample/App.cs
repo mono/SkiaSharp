@@ -82,6 +82,7 @@ namespace SkiaSharpSample
 		// Drawing page state
 		private SKPath currentDrawingPath;
 		private int drawingColorIndex;
+		private float drawingBrushSize = 4f;
 		private SKCanvasView drawingCanvas;
 
 		private SKColor GetStrokeColor(int index) =>
@@ -360,32 +361,7 @@ half4 main(float2 fragCoord) {
 			};
 			box.Show();
 
-			// Toolbar
-			var toolbar = new Box(window)
-			{
-				IsHorizontal = true,
-				AlignmentX = -1,
-				WeightX = 1,
-			};
-			toolbar.Show();
-
-			var clearBtn = new Button(window) { Text = "Clear" };
-			clearBtn.Clicked += (s, e) => ClearDrawing();
-			clearBtn.Show();
-			toolbar.PackEnd(clearBtn);
-
-			var colorBtn = new Button(window) { Text = "Color: Black" };
-			colorBtn.Clicked += (s, e) =>
-			{
-				drawingColorIndex = (drawingColorIndex + 1) % StrokeColorPalette.Length;
-				colorBtn.Text = $"Color: {StrokeColorNames[drawingColorIndex]}";
-			};
-			colorBtn.Show();
-			toolbar.PackEnd(colorBtn);
-
-			box.PackEnd(toolbar);
-
-			// Canvas
+			// Canvas fills most of the space
 			drawingCanvas = new SKCanvasView(window)
 			{
 				IgnorePixelScaling = true,
@@ -405,7 +381,7 @@ half4 main(float2 fragCoord) {
 			{
 				currentDrawingPath = new SKPath();
 				currentDrawingPath.MoveTo(data.X2, data.Y2);
-				drawingStrokes.Add((currentDrawingPath, GetStrokeColor(drawingColorIndex), 4f));
+				drawingStrokes.Add((currentDrawingPath, GetStrokeColor(drawingColorIndex), drawingBrushSize));
 			});
 
 			gestureLayer.SetMomentumCallback(GestureLayer.GestureState.Move, data =>
@@ -423,12 +399,91 @@ half4 main(float2 fragCoord) {
 			gestureLayer.SetTapCallback(GestureLayer.GestureType.Tap, GestureLayer.GestureState.End, data =>
 			{
 				var dotPath = new SKPath();
-				dotPath.AddCircle(data.X, data.Y, 4);
-				drawingStrokes.Add((dotPath, GetStrokeColor(drawingColorIndex), 4f));
+				dotPath.AddCircle(data.X, data.Y, drawingBrushSize);
+				drawingStrokes.Add((dotPath, GetStrokeColor(drawingColorIndex), drawingBrushSize));
 				drawingCanvas.Invalidate();
 			});
 
 			box.PackEnd(drawingCanvas);
+
+			// ---- Toolbar at bottom: colors row + brush size row ----
+
+			// Color row with 6 color buttons + Clear
+			var colorRow = new Box(window)
+			{
+				IsHorizontal = true,
+				AlignmentX = -1,
+				WeightX = 1,
+			};
+			colorRow.Show();
+
+			for (int i = 0; i < StrokeColorPalette.Length; i++)
+			{
+				var colorIndex = i;
+				var btn = new Button(window)
+				{
+					Text = StrokeColorNames[i],
+					MinimumWidth = 80,
+					MinimumHeight = 50,
+					AlignmentX = -1,
+					WeightX = 1,
+				};
+				btn.Clicked += (s, e) =>
+				{
+					drawingColorIndex = colorIndex;
+				};
+				btn.Show();
+				colorRow.PackEnd(btn);
+			}
+
+			var clearBtn = new Button(window)
+			{
+				Text = "Clear",
+				MinimumWidth = 80,
+				MinimumHeight = 50,
+			};
+			clearBtn.Clicked += (s, e) => ClearDrawing();
+			clearBtn.Show();
+			colorRow.PackEnd(clearBtn);
+
+			box.PackEnd(colorRow);
+
+			// Brush size row with slider + label
+			var sizeRow = new Box(window)
+			{
+				IsHorizontal = true,
+				AlignmentX = -1,
+				WeightX = 1,
+			};
+			sizeRow.Show();
+
+			var sizeLabel = new Label(window)
+			{
+				Text = $"<font_size=20>Brush: {drawingBrushSize:F0}px</font_size>",
+				MinimumWidth = 140,
+			};
+			sizeLabel.Show();
+			sizeRow.PackEnd(sizeLabel);
+
+			var slider = new Slider(window)
+			{
+				Minimum = 1,
+				Maximum = 50,
+				Value = drawingBrushSize,
+				IsIndicatorVisible = true,
+				AlignmentX = -1,
+				WeightX = 1,
+			};
+			slider.ValueChanged += (s, e) =>
+			{
+				drawingBrushSize = (float)slider.Value;
+				sizeLabel.Text = $"<font_size=20>Brush: {drawingBrushSize:F0}px</font_size>";
+			};
+			slider.Show();
+			sizeRow.PackEnd(slider);
+
+			box.PackEnd(sizeRow);
+
 			naviframe.Push(box, "Drawing");
 		}
 

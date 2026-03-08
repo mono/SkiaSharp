@@ -29,6 +29,7 @@ public class DrawingViewController : UIViewController
 	private SKCanvasView? skiaView;
 
 	private UILabel? brushLabel;
+	private UISlider? brushSlider;
 	private UIView? selectedSwatch;
 
 	bool IsDarkMode => TraitCollection.UserInterfaceStyle == UIUserInterfaceStyle.Dark;
@@ -44,32 +45,81 @@ public class DrawingViewController : UIViewController
 		Title = "Drawing";
 		View!.BackgroundColor = UIColor.SystemBackground;
 
+		// Full-screen canvas
 		skiaView = new SKCanvasView();
 		skiaView.TranslatesAutoresizingMaskIntoConstraints = false;
-		View.AddSubview(skiaView);
-
-		// Configure canvas view with Auto Layout so we can position the toolbar
 		skiaView.IgnorePixelScaling = true;
 		skiaView.PaintSurface += OnPaintSurface;
+		View.AddSubview(skiaView);
 
-		// Bottom toolbar
-		var toolbar = new UIView
+		NSLayoutConstraint.ActivateConstraints(new[]
+		{
+			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
+			skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
+		});
+
+		// Floating Clear button (top-right, translucent pill)
+		var clearBtn = new UIButton(UIButtonType.System);
+		clearBtn.SetTitle("Clear", UIControlState.Normal);
+		clearBtn.SetTitleColor(UIColor.White, UIControlState.Normal);
+		clearBtn.TitleLabel!.Font = UIFont.SystemFontOfSize(15, UIFontWeight.Medium);
+		clearBtn.BackgroundColor = UIColor.FromWhiteAlpha(0, 0.5f);
+		clearBtn.Layer.CornerRadius = 18;
+		clearBtn.ContentEdgeInsets = new UIEdgeInsets(8, 16, 8, 16);
+		clearBtn.TranslatesAutoresizingMaskIntoConstraints = false;
+		clearBtn.TouchUpInside += (_, _) => ClearCanvas();
+		View.AddSubview(clearBtn);
+
+		NSLayoutConstraint.ActivateConstraints(new[]
+		{
+			clearBtn.TopAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TopAnchor, 12),
+			clearBtn.TrailingAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.TrailingAnchor, -12),
+			clearBtn.HeightAnchor.ConstraintEqualTo(36),
+		});
+
+		// Floating toolbox (centered at bottom)
+		var blurEffect = UIBlurEffect.FromStyle(UIBlurEffectStyle.SystemUltraThinMaterialDark);
+		var toolbox = new UIVisualEffectView(blurEffect);
+		toolbox.TranslatesAutoresizingMaskIntoConstraints = false;
+		toolbox.Layer.CornerRadius = 24;
+		toolbox.ClipsToBounds = true;
+		View.AddSubview(toolbox);
+
+		NSLayoutConstraint.ActivateConstraints(new[]
+		{
+			toolbox.CenterXAnchor.ConstraintEqualTo(View.CenterXAnchor),
+			toolbox.BottomAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.BottomAnchor, -16),
+		});
+
+		// Vertical content stack: Row 1 = swatches, Row 2 = slider + label
+		var contentStack = new UIStackView
 		{
 			TranslatesAutoresizingMaskIntoConstraints = false,
-			BackgroundColor = UIColor.SecondarySystemBackground,
-		};
-		View.AddSubview(toolbar);
-
-		var stack = new UIStackView
-		{
-			TranslatesAutoresizingMaskIntoConstraints = false,
-			Axis = UILayoutConstraintAxis.Horizontal,
-			Spacing = 8,
+			Axis = UILayoutConstraintAxis.Vertical,
+			Spacing = 10,
 			Alignment = UIStackViewAlignment.Center,
 		};
-		toolbar.AddSubview(stack);
+		toolbox.ContentView.AddSubview(contentStack);
 
-		// Color swatches
+		NSLayoutConstraint.ActivateConstraints(new[]
+		{
+			contentStack.LeadingAnchor.ConstraintEqualTo(toolbox.ContentView.LeadingAnchor, 16),
+			contentStack.TrailingAnchor.ConstraintEqualTo(toolbox.ContentView.TrailingAnchor, -16),
+			contentStack.TopAnchor.ConstraintEqualTo(toolbox.ContentView.TopAnchor, 12),
+			contentStack.BottomAnchor.ConstraintEqualTo(toolbox.ContentView.BottomAnchor, -12),
+		});
+
+		// Row 1: Color swatches
+		var swatchRow = new UIStackView
+		{
+			Axis = UILayoutConstraintAxis.Horizontal,
+			Spacing = 10,
+			Alignment = UIStackViewAlignment.Center,
+		};
+		contentStack.AddArrangedSubview(swatchRow);
+
 		foreach (var (name, light, dark) in colorPalette)
 		{
 			var resolved = ResolveColor(light, dark);
@@ -87,7 +137,7 @@ public class DrawingViewController : UIViewController
 			var tap = new UITapGestureRecognizer(() => SelectColor(capturedLight, capturedDark, swatch));
 			swatch.AddGestureRecognizer(tap);
 			swatch.UserInteractionEnabled = true;
-			stack.AddArrangedSubview(swatch);
+			swatchRow.AddArrangedSubview(swatch);
 			swatchViews.Add((swatch, light, dark));
 
 			if (name == "Black")
@@ -98,45 +148,40 @@ public class DrawingViewController : UIViewController
 			}
 		}
 
-		// Flexible spacer
-		var spacer = new UIView();
-		spacer.SetContentHuggingPriority(1, UILayoutConstraintAxis.Horizontal);
-		stack.AddArrangedSubview(spacer);
+		// Row 2: Slider + label
+		var sliderRow = new UIStackView
+		{
+			Axis = UILayoutConstraintAxis.Horizontal,
+			Spacing = 8,
+			Alignment = UIStackViewAlignment.Center,
+		};
+		contentStack.AddArrangedSubview(sliderRow);
 
-		// Brush size label
+		brushSlider = new UISlider
+		{
+			MinValue = 1,
+			MaxValue = 50,
+			Value = brushSize,
+			TranslatesAutoresizingMaskIntoConstraints = false,
+		};
+		brushSlider.WidthAnchor.ConstraintEqualTo(180).Active = true;
+		brushSlider.ValueChanged += (_, _) =>
+		{
+			brushSize = brushSlider.Value;
+			brushLabel!.Text = $"{brushSize:F0}px";
+			skiaView?.SetNeedsDisplay();
+		};
+		sliderRow.AddArrangedSubview(brushSlider);
+
 		brushLabel = new UILabel
 		{
 			Text = $"{brushSize:F0}px",
 			Font = UIFont.MonospacedDigitSystemFontOfSize(14, UIFontWeight.Regular),
-			TextColor = UIColor.Label,
+			TextColor = UIColor.White,
 		};
-		stack.AddArrangedSubview(brushLabel);
+		sliderRow.AddArrangedSubview(brushLabel);
 
-		// Clear button
-		var clearBtn = new UIButton(UIButtonType.System);
-		clearBtn.SetImage(UIImage.GetSystemImage("trash"), UIControlState.Normal);
-		clearBtn.TouchUpInside += (_, _) => ClearCanvas();
-		stack.AddArrangedSubview(clearBtn);
-
-		// Layout
-		NSLayoutConstraint.ActivateConstraints(new[]
-		{
-			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
-			skiaView.BottomAnchor.ConstraintEqualTo(toolbar.TopAnchor),
-
-			toolbar.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-			toolbar.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-			toolbar.BottomAnchor.ConstraintEqualTo(View.SafeAreaLayoutGuide.BottomAnchor),
-			toolbar.HeightAnchor.ConstraintEqualTo(52),
-
-			stack.LeadingAnchor.ConstraintEqualTo(toolbar.LeadingAnchor, 16),
-			stack.TrailingAnchor.ConstraintEqualTo(toolbar.TrailingAnchor, -16),
-			stack.CenterYAnchor.ConstraintEqualTo(toolbar.CenterYAnchor),
-		});
-
-		// Pinch gesture for brush size
+		// Pinch gesture for brush size (in addition to slider)
 		var pinch = new UIPinchGestureRecognizer(HandlePinch);
 		pinch.CancelsTouchesInView = false;
 		skiaView.AddGestureRecognizer(pinch);
@@ -160,6 +205,7 @@ public class DrawingViewController : UIViewController
 			brushSize = Math.Clamp(brushSize * (float)gesture.Scale, 1f, 50f);
 			gesture.Scale = 1;
 			brushLabel!.Text = $"{brushSize:F0}px";
+			brushSlider!.Value = brushSize;
 			skiaView?.SetNeedsDisplay();
 		}
 	}

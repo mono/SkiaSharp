@@ -4,23 +4,57 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:skia="using:SkiaSharp.Views.Windows">
 
-    <Grid RowDefinitions="*,Auto">
+    <Grid>
+        <!-- Canvas fills everything -->
         <skia:SKXamlCanvas x:Name="skiaView" PaintSurface="OnPaintSurface"
                            PointerPressed="OnPointerPressed"
                            PointerMoved="OnPointerMoved"
                            PointerReleased="OnPointerReleased"
                            PointerWheelChanged="OnPointerWheelChanged" />
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" Padding="8"
-                    HorizontalAlignment="Center">
-            <Button Background="Black" Width="40" Height="40" Click="OnColorClicked" Tag="Black" />
-            <Button Background="Red" Width="40" Height="40" Click="OnColorClicked" Tag="Red" />
-            <Button Background="Blue" Width="40" Height="40" Click="OnColorClicked" Tag="Blue" />
-            <Button Background="Green" Width="40" Height="40" Click="OnColorClicked" Tag="Green" />
-            <Button Background="Orange" Width="40" Height="40" Click="OnColorClicked" Tag="Orange" />
-            <Button Background="Purple" Width="40" Height="40" Click="OnColorClicked" Tag="Purple" />
-            <Button Content="Clear" Click="OnClearClicked" />
-            <TextBlock x:Name="brushText" Text="Brush: 4px" VerticalAlignment="Center" />
-        </StackPanel>
+
+        <!-- Clear button top-right -->
+        <Button Content="Clear" Click="OnClearClicked"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,12,12,0" Padding="16,6"
+                Foreground="White" FontWeight="SemiBold"
+                Background="#CC1E1E1E" CornerRadius="16"
+                BorderThickness="0" />
+
+        <!-- Floating toolbox bottom-center -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Margin="0,0,0,16" CornerRadius="24"
+                Padding="20,12"
+                Background="#CC1E1E1E">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border x:Name="ColorBlack" Width="32" Height="32" Background="Black"
+                        BorderBrush="White" BorderThickness="2" CornerRadius="16"
+                        Tapped="OnColorTapped" Tag="Black" />
+                <Border x:Name="ColorRed" Width="32" Height="32" Background="#E53935"
+                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
+                        Tapped="OnColorTapped" Tag="Red" />
+                <Border x:Name="ColorBlue" Width="32" Height="32" Background="#1E88E5"
+                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
+                        Tapped="OnColorTapped" Tag="Blue" />
+                <Border x:Name="ColorGreen" Width="32" Height="32" Background="#43A047"
+                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
+                        Tapped="OnColorTapped" Tag="Green" />
+                <Border x:Name="ColorOrange" Width="32" Height="32" Background="#FB8C00"
+                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
+                        Tapped="OnColorTapped" Tag="Orange" />
+                <Border x:Name="ColorPurple" Width="32" Height="32" Background="#8E24AA"
+                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
+                        Tapped="OnColorTapped" Tag="Purple" />
+
+                <Border Width="1" Background="#55FFFFFF" Margin="6,4" />
+
+                <Slider x:Name="BrushSlider" Minimum="1" Maximum="50" Value="4"
+                        Width="120" VerticalAlignment="Center"
+                        ValueChanged="OnBrushSizeChanged" />
+                <TextBlock x:Name="brushText" Text="4px"
+                           Foreground="White" VerticalAlignment="Center"
+                           FontSize="12" Margin="4,0,0,0" />
+            </StackPanel>
+        </Border>
     </Grid>
 
 </Page>

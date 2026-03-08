@@ -90,7 +90,8 @@ namespace SkiaSharpSample
 
 				case SKTouchAction.WheelChanged:
 					brushSize = Math.Clamp(brushSize + e.WheelDelta, 1f, 50f);
-					brushLabel.Text = $"Brush: {brushSize:F0}px";
+					brushSlider.Value = brushSize;
+					brushLabel.Text = $"{brushSize:F0}";
 					break;
 			}
 			e.Handled = true;
@@ -137,6 +138,12 @@ namespace SkiaSharpSample
 					? (IsDarkMode ? entry.Dark : entry.Light)
 					: light;
 			}
+		}
+
+		private void OnSliderValueChanged(object sender, ValueChangedEventArgs e)
+		{
+			brushSize = (float)e.NewValue;
+			brushLabel.Text = $"{brushSize:F0}";
 		}
 
 		private void OnClearClicked(object sender, EventArgs e)

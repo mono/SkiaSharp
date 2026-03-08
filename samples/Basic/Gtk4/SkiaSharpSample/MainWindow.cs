@@ -28,14 +28,14 @@ namespace SkiaSharpSample
 			new SKColor(0x88, 0x33, 0xCC),
 		};
 
-		private static readonly (string ButtonId, string Name, SKColor Light, SKColor Dark)[] ColorOptions = new[]
+		private static readonly (string Name, SKColor Light, SKColor Dark)[] ColorOptions = new[]
 		{
-			("btnBlack", "Black", SKColors.Black, SKColors.White),
-			("btnRed", "Red", new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
-			("btnBlue", "Blue", new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
-			("btnGreen", "Green", new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
-			("btnOrange", "Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
-			("btnPurple", "Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+			("Black", SKColors.Black, SKColors.White),
+			("Red", new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+			("Blue", new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+			("Green", new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+			("Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+			("Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
 		};
 
 		private static bool IsDarkMode
@@ -56,6 +56,7 @@ namespace SkiaSharpSample
 
 		// Drawing page state
 		private SKDrawingArea drawingSkiaView;
+		private Scale brushScale;
 		private Label brushSizeLabel;
 		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
 		private SKPath currentPath;
@@ -97,39 +98,75 @@ namespace SkiaSharpSample
 			drawingContainer.Append(drawingSkiaView);
 
 			SetupDrawingGestures();
-			SetupColorButtons(builder);
-
-			// Clear button
-			var clearBtn = (Button)builder.GetObject("btnClear");
-			var clearProvider = new CssProvider();
-			clearProvider.LoadFromData(
-				"button { background: rgb(120,120,120); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }",
-				-1);
-			clearBtn.GetStyleContext().AddProvider(clearProvider, 600);
-			clearBtn.OnClicked += OnClearClicked;
-
-			// Brush size label
-			brushSizeLabel = (Label)builder.GetObject("brushSizeLabel");
+			SetupDrawingToolbox(builder);
 
 			var contentStack = (Stack)builder.GetObject("contentStack");
 			if (DefaultPage == SamplePage.Drawing)
 				contentStack.SetVisibleChildName("drawing");
 		}
 
-		private void SetupColorButtons(Builder builder)
+		private void SetupDrawingToolbox(Builder builder)
 		{
-			foreach (var (buttonId, name, light, dark) in ColorOptions)
+			var drawingToolbox = (Box)builder.GetObject("drawingToolbox");
+
+			// Create circular color swatch buttons
+			foreach (var (name, light, dark) in ColorOptions)
 			{
-				var btn = (Button)builder.GetObject(buttonId);
+				var btn = Button.New();
 				var provider = new CssProvider();
 				provider.LoadFromData(
-					$"button {{ background: rgb({light.Red},{light.Green},{light.Blue}); color: white; font-weight: bold; font-size: 9pt; min-width: 70px; border: none; }}",
+					$"button {{ background: rgb({light.Red},{light.Green},{light.Blue}); min-width: 28px; min-height: 28px; padding: 0; border-radius: 14px; border: 2px solid rgba(0,0,0,0.2); }}",
 					-1);
 				btn.GetStyleContext().AddProvider(provider, 600);
 				var capturedLight = light;
 				var capturedDark = dark;
 				btn.OnClicked += (sender, args) => currentColor = IsDarkMode ? capturedDark : capturedLight;
+				drawingToolbox.Append(btn);
 			}
+
+			// Brush size slider
+			brushScale = Scale.NewWithRange(Orientation.Horizontal, 1, 50, 1);
+			brushScale.SetValue(brushSize);
+			brushScale.DrawValue = false;
+			brushScale.SetSizeRequest(120, -1);
+			var scaleProvider = new CssProvider();
+			scaleProvider.LoadFromData(
+				"scale { min-height: 20px; } " +
+				"scale trough { background: rgba(255,255,255,0.3); border-radius: 4px; min-height: 4px; } " +
+				"scale slider { background: white; border-radius: 8px; min-width: 16px; min-height: 16px; }",
+				-1);
+			brushScale.GetStyleContext().AddProvider(scaleProvider, 600);
+			var adj = brushScale.GetAdjustment();
+			adj.OnValueChanged += (s, a) =>
+			{
+				brushSize = (float)brushScale.GetValue();
+				brushSizeLabel.SetLabel($"{brushSize:0}px");
+				drawingSkiaView.QueueDraw();
+			};
+			drawingToolbox.Append(brushScale);
+
+			// Brush size label
+			brushSizeLabel = Label.New($"{brushSize:0}px");
+			var labelProvider = new CssProvider();
+			labelProvider.LoadFromData("label { color: white; font-size: 11px; }", -1);
+			brushSizeLabel.GetStyleContext().AddProvider(labelProvider, 600);
+			drawingToolbox.Append(brushSizeLabel);
+
+			// Floating clear button (top-right overlay)
+			var clearBtn = (Button)builder.GetObject("btnClear");
+			clearBtn.OnClicked += OnClearClicked;
+			var clearCss = new CssProvider();
+			clearCss.LoadFromData(
+				"button { background-color: rgba(30, 30, 30, 0.6); border-radius: 18px; padding: 6px 16px; color: white; border: none; }",
+				-1);
+			clearBtn.GetStyleContext().AddProvider(clearCss, 600);
+
+			// Translucent dark background for the floating toolbox
+			var toolboxCss = new CssProvider();
+			toolboxCss.LoadFromData(
+				"box { background-color: rgba(30, 30, 30, 0.8); border-radius: 24px; padding: 12px 20px; }",
+				-1);
+			drawingToolbox.GetStyleContext().AddProvider(toolboxCss, 600);
 		}
 
 		private void SetupDrawingGestures()
@@ -162,9 +199,8 @@ namespace SkiaSharpSample
 			var scrollController = EventControllerScroll.New(EventControllerScrollFlags.Vertical);
 			scrollController.OnScroll += (sender, args) =>
 			{
-				brushSize = Math.Max(1f, Math.Min(50f, brushSize + (args.Dy < 0 ? 1f : -1f)));
-				brushSizeLabel.SetLabel($"Brush: {brushSize:0}px");
-				drawingSkiaView.QueueDraw();
+				var newSize = Math.Max(1f, Math.Min(50f, brushSize + (args.Dy < 0 ? 1f : -1f)));
+				brushScale.SetValue(newSize);
 				return false;
 			};
 			drawingSkiaView.AddController(scrollController);

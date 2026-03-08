@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using Microsoft.UI.Xaml.Controls.Primitives;
+using SkiaSharp;
 using SkiaSharp.Views.Windows;
 
 namespace SkiaSharpSample;
@@ -143,8 +144,15 @@ public sealed partial class DrawingPage : Page
 		var point = e.GetCurrentPoint(skiaView);
 		var delta = point.Properties.MouseWheelDelta;
 		brushSize = Math.Max(1f, Math.Min(50f, brushSize + (delta > 0 ? 1f : -1f)));
-		if (brushText != null)
-			brushText.Text = $"Brush: {brushSize:F0}px";
+		brushSlider.Value = brushSize;
+		brushText.Text = $"{brushSize:F0}";
 		skiaView.Invalidate();
+	}
+
+	private void OnSliderValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+	{
+		brushSize = (float)e.NewValue;
+		if (brushText != null)
+			brushText.Text = $"{brushSize:F0}";
 	}
 }

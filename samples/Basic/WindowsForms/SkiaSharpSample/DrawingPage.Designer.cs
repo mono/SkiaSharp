@@ -32,17 +32,15 @@
 		private void InitializeComponent()
 		{
 			this.skiaView = new SkiaSharp.Views.Desktop.SKControl();
-			this.toolbar = new System.Windows.Forms.FlowLayoutPanel();
-			this.brushLabel = new System.Windows.Forms.Label();
 			this.SuspendLayout();
 			// 
 			// skiaView
 			// 
 			this.skiaView.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.skiaView.Location = new System.Drawing.Point(0, 40);
+			this.skiaView.Location = new System.Drawing.Point(0, 0);
 			this.skiaView.Name = "skiaView";
-			this.skiaView.Size = new System.Drawing.Size(800, 560);
-			this.skiaView.TabIndex = 1;
+			this.skiaView.Size = new System.Drawing.Size(800, 600);
+			this.skiaView.TabIndex = 0;
 			this.skiaView.PaintSurface += new System.EventHandler<SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs>(this.OnPaintSurface);
 			this.skiaView.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnMouseDown);
 			this.skiaView.MouseMove += new System.Windows.Forms.MouseEventHandler(this.OnMouseMove);
@@ -51,24 +49,11 @@
 			this.skiaView.MouseEnter += new System.EventHandler(this.OnMouseEnter);
 			this.skiaView.MouseLeave += new System.EventHandler(this.OnMouseLeave);
 			// 
-			// toolbar
-			// 
-			this.toolbar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(245)))), ((int)(((byte)(245)))));
-			this.toolbar.Dock = System.Windows.Forms.DockStyle.Top;
-			this.toolbar.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
-			this.toolbar.Location = new System.Drawing.Point(0, 0);
-			this.toolbar.Name = "toolbar";
-			this.toolbar.Padding = new System.Windows.Forms.Padding(4, 4, 4, 0);
-			this.toolbar.Size = new System.Drawing.Size(800, 40);
-			this.toolbar.TabIndex = 0;
-			this.toolbar.WrapContents = false;
-			// 
 			// DrawingPage
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.Controls.Add(this.skiaView);
-			this.Controls.Add(this.toolbar);
 			this.Name = "DrawingPage";
 			this.Size = new System.Drawing.Size(800, 600);
 			this.ResumeLayout(false);
@@ -76,8 +61,6 @@
 
 		#endregion
 
-		private System.Windows.Forms.FlowLayoutPanel toolbar;
-		private System.Windows.Forms.Label brushLabel;
 		private SkiaSharp.Views.Desktop.SKControl skiaView;
 	}
 }

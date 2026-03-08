@@ -38,63 +38,34 @@
             <property name="name">drawing</property>
             <property name="title">Drawing</property>
             <property name="child">
-              <object class="GtkBox" id="drawingPageBox">
-                <property name="orientation">vertical</property>
+              <object class="GtkOverlay" id="drawingOverlay">
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <!-- Main child: canvas placeholder -->
                 <child>
                   <object class="GtkBox" id="drawingContainer">
                     <property name="hexpand">True</property>
                     <property name="vexpand">True</property>
                   </object>
                 </child>
-                <child>
-                  <object class="GtkBox" id="toolbar">
+                <!-- Overlay: Clear button floating top-right -->
+                <child type="overlay">
+                  <object class="GtkButton" id="btnClear">
+                    <property name="label">Clear</property>
+                    <property name="halign">end</property>
+                    <property name="valign">start</property>
+                    <property name="margin-top">12</property>
+                    <property name="margin-end">12</property>
+                  </object>
+                </child>
+                <!-- Overlay: Floating toolbox centered at bottom -->
+                <child type="overlay">
+                  <object class="GtkBox" id="drawingToolbox">
                     <property name="orientation">horizontal</property>
-                    <property name="spacing">8</property>
-                    <property name="margin-start">4</property>
-                    <property name="margin-end">4</property>
-                    <property name="margin-top">4</property>
-                    <property name="margin-bottom">4</property>
-                    <child>
-                      <object class="GtkButton" id="btnBlack">
-                        <property name="label">Black</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="btnRed">
-                        <property name="label">Red</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="btnBlue">
-                        <property name="label">Blue</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="btnGreen">
-                        <property name="label">Green</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="btnOrange">
-                        <property name="label">Orange</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="btnPurple">
-                        <property name="label">Purple</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="btnClear">
-                        <property name="label">Clear</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="brushSizeLabel">
-                        <property name="label">Brush: 4px</property>
-                        <property name="margin-start">12</property>
-                      </object>
-                    </child>
+                    <property name="spacing">14</property>
+                    <property name="halign">center</property>
+                    <property name="valign">end</property>
+                    <property name="margin-bottom">16</property>
                   </object>
                 </child>
               </object>

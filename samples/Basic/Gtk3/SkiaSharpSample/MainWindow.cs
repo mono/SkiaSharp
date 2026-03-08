@@ -60,6 +60,7 @@ namespace SkiaSharpSample
 		private float brushSize = 4f;
 		private SKPoint cursorPosition;
 		private Scale brushScale;
+		private Label brushSizeLabel;
 		private bool isCursorOver;
 
 		public MainWindow()
@@ -105,10 +106,11 @@ namespace SkiaSharpSample
 			drawingSkiaView.LeaveNotifyEvent += (s, e) => { isCursorOver = false; drawingSkiaView.QueueDraw(); };
 			drawingCanvasContainer.PackStart(drawingSkiaView, true, true, 0);
 
-			// Connect color buttons as small colored swatches
+			// Floating toolbox: create color swatch buttons in code
+			var drawingToolbox = (Box)builder.GetObject("drawingToolbox");
 			foreach (var (name, light, dark) in ColorOptions)
 			{
-				var btn = (Button)builder.GetObject($"btn{name}");
+				var btn = new Button();
 				btn.Relief = ReliefStyle.None;
 				var provider = new CssProvider();
 				provider.LoadFromData(
@@ -117,19 +119,48 @@ namespace SkiaSharpSample
 				var capturedLight = light;
 				var capturedDark = dark;
 				btn.Clicked += (s, e) => currentColor = IsDarkMode ? capturedDark : capturedLight;
+				drawingToolbox.PackStart(btn, false, false, 0);
 			}
 
-			// Connect clear button
-			var clearBtn = (Button)builder.GetObject("btnClear");
-			clearBtn.Clicked += OnClearClicked;
-
-			// Connect brush size slider
-			brushScale = (Scale)builder.GetObject("brushScale");
+			// Brush size slider (created in code for the floating toolbox)
+			var adjustment = new Adjustment(brushSize, 1, 50, 1, 5, 0);
+			brushScale = new Scale(Orientation.Horizontal, adjustment);
+			brushScale.WidthRequest = 120;
+			brushScale.DrawValue = false;
+			var scaleProvider = new CssProvider();
+			scaleProvider.LoadFromData(
+				"scale { min-height: 20px; } " +
+				"scale trough { background: rgba(255,255,255,0.3); border-radius: 4px; min-height: 4px; } " +
+				"scale slider { background: white; border-radius: 8px; min-width: 16px; min-height: 16px; }");
+			brushScale.StyleContext.AddProvider(scaleProvider, StyleProviderPriority.Application);
 			brushScale.ValueChanged += (s, e) =>
 			{
 				brushSize = (float)brushScale.Value;
+				brushSizeLabel.Text = $"{brushSize:0}px";
 				drawingSkiaView?.QueueDraw();
 			};
+			drawingToolbox.PackStart(brushScale, false, false, 0);
+
+			// Brush size label
+			brushSizeLabel = new Label($"{brushSize:0}px");
+			var labelProvider = new CssProvider();
+			labelProvider.LoadFromData("label { color: white; font-size: 11px; }");
+			brushSizeLabel.StyleContext.AddProvider(labelProvider, StyleProviderPriority.Application);
+			drawingToolbox.PackStart(brushSizeLabel, false, false, 0);
+
+			// Floating clear button (top-right overlay)
+			var clearBtn = (Button)builder.GetObject("btnClear");
+			clearBtn.Clicked += OnClearClicked;
+			var clearProvider = new CssProvider();
+			clearProvider.LoadFromData(
+				"button { background-color: rgba(30, 30, 30, 0.6); border-radius: 18px; padding: 6px 16px; color: white; border: none; }");
+			clearBtn.StyleContext.AddProvider(clearProvider, StyleProviderPriority.Application);
+
+			// Translucent dark background for the floating toolbox
+			var toolboxProvider = new CssProvider();
+			toolboxProvider.LoadFromData(
+				"box { background-color: rgba(30, 30, 30, 0.8); border-radius: 24px; padding: 12px 20px; }");
+			drawingToolbox.StyleContext.AddProvider(toolboxProvider, StyleProviderPriority.Application);
 
 			Add(rootBox);
 			ShowAll();

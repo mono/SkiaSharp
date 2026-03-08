@@ -22,7 +22,10 @@ namespace SkiaSharpSample
 		};
 
 		readonly List<Stroke> strokes = new();
-		readonly List<NSButton> paletteButtons = new();
+		readonly List<NSView> paletteSwatches = new();
+		NSView? selectedSwatch;
+		NSTextField? sizeLabel;
+		NSSlider? sizeSlider;
 		SKPath? currentPath;
 		int colorIndex;
 		float brushSize = 4f;
@@ -46,110 +49,32 @@ namespace SkiaSharpSample
 		{
 			base.ViewDidLoad();
 
-			if (skiaView != null)
+			if (skiaView == null) return;
+
+			skiaView.IgnorePixelScaling = true;
+			skiaView.PaintSurface += OnPaintSurface;
+
+			// Full-screen canvas
+			NSLayoutConstraint.ActivateConstraints(new[]
 			{
-				skiaView.IgnorePixelScaling = true;
-				skiaView.PaintSurface += OnPaintSurface;
-			}
+				skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
+				skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
+				skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
+				skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
+			});
 
-			var toolbar = CreateToolbar();
-			toolbar.TranslatesAutoresizingMaskIntoConstraints = false;
-			View.AddSubview(toolbar);
-
-			if (skiaView != null)
-			{
-				NSLayoutConstraint.ActivateConstraints(new[]
-				{
-					skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-					skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-					skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
-					skiaView.BottomAnchor.ConstraintEqualTo(toolbar.TopAnchor),
-
-					toolbar.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-					toolbar.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-					toolbar.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
-					toolbar.HeightAnchor.ConstraintEqualTo(40),
-				});
-			}
-		}
-
-		NSView CreateToolbar()
-		{
-			var toolbar = new NSView();
-			toolbar.WantsLayer = true;
-			toolbar.Layer!.BackgroundColor = NSColor.WindowBackground.CGColor;
-
-			var stack = new NSStackView
-			{
-				Orientation = NSUserInterfaceLayoutOrientation.Horizontal,
-				Spacing = 6,
-				EdgeInsets = new NSEdgeInsets(4, 8, 4, 8),
-				TranslatesAutoresizingMaskIntoConstraints = false,
-			};
-
-			for (int i = 0; i < palette.Length; i++)
-			{
-				var idx = i;
-				var (light, dark) = palette[i];
-				var resolved = ResolveColor(light, dark);
-				var btn = new NSButton
-				{
-					Title = "",
-					BezelStyle = NSBezelStyle.SmallSquare,
-					WantsLayer = true,
-					Bordered = false,
-				};
-				btn.Layer!.BackgroundColor = new CGColor(resolved.Red / 255f, resolved.Green / 255f, resolved.Blue / 255f);
-				btn.Layer.CornerRadius = 4;
-				btn.WidthAnchor.ConstraintEqualTo(28).Active = true;
-				btn.HeightAnchor.ConstraintEqualTo(28).Active = true;
-				btn.Activated += (s, e) =>
-				{
-					colorIndex = idx;
-					if (skiaView != null) skiaView.NeedsDisplay = true;
-				};
-				stack.AddArrangedSubview(btn);
-				paletteButtons.Add(btn);
-			}
-
-			var separator = new NSView();
-			separator.WidthAnchor.ConstraintEqualTo(1).Active = true;
-			separator.WantsLayer = true;
-			separator.Layer!.BackgroundColor = NSColor.Separator.CGColor;
-			stack.AddArrangedSubview(separator);
-
-			var sizeLabel = new NSTextField
-			{
-				StringValue = $"Size: {brushSize:F0}",
-				Editable = false,
-				Bordered = false,
-				DrawsBackground = false,
-			};
-			stack.AddArrangedSubview(sizeLabel);
-
-			var sizeSlider = new NSSlider
-			{
-				MinValue = 1,
-				MaxValue = 50,
-				DoubleValue = brushSize,
-			};
-			sizeSlider.WidthAnchor.ConstraintEqualTo(120).Active = true;
-			sizeSlider.Activated += (s, e) =>
-			{
-				brushSize = (float)sizeSlider.DoubleValue;
-				sizeLabel.StringValue = $"Size: {brushSize:F0}";
-			};
-			stack.AddArrangedSubview(sizeSlider);
-
-			var spacer = new NSView();
-			stack.AddArrangedSubview(spacer);
-			spacer.SetContentHuggingPriorityForOrientation(1, NSLayoutConstraintOrientation.Horizontal);
-
+			// Floating Clear button (top-right, translucent pill)
 			var clearBtn = new NSButton
 			{
 				Title = "Clear",
 				BezelStyle = NSBezelStyle.Rounded,
+				WantsLayer = true,
+				TranslatesAutoresizingMaskIntoConstraints = false,
 			};
+			clearBtn.Layer!.BackgroundColor = new CGColor(0, 0, 0, 0.5f);
+			clearBtn.Layer.CornerRadius = 14;
+			clearBtn.ContentTintColor = NSColor.White;
+			clearBtn.Bordered = false;
 			clearBtn.Activated += (s, e) =>
 			{
 				foreach (var stroke in strokes)
@@ -157,20 +82,137 @@ namespace SkiaSharpSample
 				strokes.Clear();
 				currentPath?.Dispose();
 				currentPath = null;
-				if (skiaView != null) skiaView.NeedsDisplay = true;
+				skiaView.NeedsDisplay = true;
 			};
-			stack.AddArrangedSubview(clearBtn);
+			View.AddSubview(clearBtn);
 
-			toolbar.AddSubview(stack);
 			NSLayoutConstraint.ActivateConstraints(new[]
 			{
-				stack.LeadingAnchor.ConstraintEqualTo(toolbar.LeadingAnchor),
-				stack.TrailingAnchor.ConstraintEqualTo(toolbar.TrailingAnchor),
-				stack.TopAnchor.ConstraintEqualTo(toolbar.TopAnchor),
-				stack.BottomAnchor.ConstraintEqualTo(toolbar.BottomAnchor),
+				clearBtn.TopAnchor.ConstraintEqualTo(View.TopAnchor, 12),
+				clearBtn.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor, -12),
+				clearBtn.HeightAnchor.ConstraintEqualTo(28),
+				clearBtn.WidthAnchor.ConstraintGreaterThanOrEqualTo(60),
 			});
 
-			return toolbar;
+			// Floating toolbox (centered at bottom)
+			var toolbox = new NSVisualEffectView
+			{
+				BlendingMode = NSVisualEffectBlendingMode.WithinWindow,
+				Material = NSVisualEffectMaterial.HudWindow,
+				State = NSVisualEffectState.Active,
+				WantsLayer = true,
+				TranslatesAutoresizingMaskIntoConstraints = false,
+			};
+			toolbox.Layer!.CornerRadius = 24;
+			toolbox.Layer.MasksToBounds = true;
+			View.AddSubview(toolbox);
+
+			NSLayoutConstraint.ActivateConstraints(new[]
+			{
+				toolbox.CenterXAnchor.ConstraintEqualTo(View.CenterXAnchor),
+				toolbox.BottomAnchor.ConstraintEqualTo(View.BottomAnchor, -16),
+			});
+
+			// Horizontal stack: [swatches] [separator] [slider] [label]
+			var stack = new NSStackView
+			{
+				Orientation = NSUserInterfaceLayoutOrientation.Horizontal,
+				Spacing = 10,
+				EdgeInsets = new NSEdgeInsets(10, 16, 10, 16),
+				TranslatesAutoresizingMaskIntoConstraints = false,
+			};
+			toolbox.AddSubview(stack);
+
+			NSLayoutConstraint.ActivateConstraints(new[]
+			{
+				stack.LeadingAnchor.ConstraintEqualTo(toolbox.LeadingAnchor),
+				stack.TrailingAnchor.ConstraintEqualTo(toolbox.TrailingAnchor),
+				stack.TopAnchor.ConstraintEqualTo(toolbox.TopAnchor),
+				stack.BottomAnchor.ConstraintEqualTo(toolbox.BottomAnchor),
+			});
+
+			// Color swatches (circular, 32pt)
+			for (int i = 0; i < palette.Length; i++)
+			{
+				var idx = i;
+				var (light, dark) = palette[i];
+				var resolved = ResolveColor(light, dark);
+				var swatch = new NSView
+				{
+					WantsLayer = true,
+					TranslatesAutoresizingMaskIntoConstraints = false,
+				};
+				swatch.Layer!.BackgroundColor = new CGColor(resolved.Red / 255f, resolved.Green / 255f, resolved.Blue / 255f);
+				swatch.Layer.CornerRadius = 16;
+				swatch.WidthAnchor.ConstraintEqualTo(32).Active = true;
+				swatch.HeightAnchor.ConstraintEqualTo(32).Active = true;
+
+				var click = new NSClickGestureRecognizer(() =>
+				{
+					colorIndex = idx;
+					UpdateSwatchSelection(swatch);
+					skiaView.NeedsDisplay = true;
+				});
+				swatch.AddGestureRecognizer(click);
+
+				stack.AddArrangedSubview(swatch);
+				paletteSwatches.Add(swatch);
+
+				if (i == 0)
+				{
+					swatch.Layer.BorderWidth = 3;
+					swatch.Layer.BorderColor = NSColor.SystemBlue.CGColor;
+					selectedSwatch = swatch;
+				}
+			}
+
+			// Separator
+			var separator = new NSView
+			{
+				WantsLayer = true,
+				TranslatesAutoresizingMaskIntoConstraints = false,
+			};
+			separator.Layer!.BackgroundColor = NSColor.Separator.CGColor;
+			separator.WidthAnchor.ConstraintEqualTo(1).Active = true;
+			separator.HeightAnchor.ConstraintEqualTo(24).Active = true;
+			stack.AddArrangedSubview(separator);
+
+			// Brush size slider
+			sizeSlider = new NSSlider
+			{
+				MinValue = 1,
+				MaxValue = 50,
+				DoubleValue = brushSize,
+				TranslatesAutoresizingMaskIntoConstraints = false,
+			};
+			sizeSlider.WidthAnchor.ConstraintEqualTo(120).Active = true;
+			sizeSlider.Activated += (s, e) =>
+			{
+				brushSize = (float)sizeSlider!.DoubleValue;
+				sizeLabel!.StringValue = $"{brushSize:F0}px";
+			};
+			stack.AddArrangedSubview(sizeSlider);
+
+			// Size label
+			sizeLabel = new NSTextField
+			{
+				StringValue = $"{brushSize:F0}px",
+				Editable = false,
+				Bordered = false,
+				DrawsBackground = false,
+				TextColor = NSColor.White,
+				Font = NSFont.MonospacedDigitSystemFontOfSize(13, NSFontWeight.Regular),
+			};
+			stack.AddArrangedSubview(sizeLabel);
+		}
+
+		void UpdateSwatchSelection(NSView swatch)
+		{
+			if (selectedSwatch != null)
+				selectedSwatch.Layer!.BorderWidth = 0;
+			swatch.Layer!.BorderWidth = 3;
+			swatch.Layer.BorderColor = NSColor.SystemBlue.CGColor;
+			selectedSwatch = swatch;
 		}
 
 		public override void ViewWillDisappear()
@@ -216,6 +258,8 @@ namespace SkiaSharpSample
 		public override void ScrollWheel(NSEvent theEvent)
 		{
 			brushSize = Math.Clamp(brushSize + (float)theEvent.ScrollingDeltaY * 0.5f, 1f, 50f);
+			sizeSlider!.DoubleValue = brushSize;
+			sizeLabel!.StringValue = $"{brushSize:F0}px";
 			if (skiaView != null) skiaView.NeedsDisplay = true;
 		}
 
@@ -229,12 +273,12 @@ namespace SkiaSharpSample
 
 		void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 		{
-			// Update palette button colors for current appearance
-			for (int i = 0; i < paletteButtons.Count && i < palette.Length; i++)
+			// Update palette swatch colors for current appearance
+			for (int i = 0; i < paletteSwatches.Count && i < palette.Length; i++)
 			{
 				var (l, d) = palette[i];
 				var c = ResolveColor(l, d);
-				paletteButtons[i].Layer!.BackgroundColor = new CGColor(c.Red / 255f, c.Green / 255f, c.Blue / 255f);
+				paletteSwatches[i].Layer!.BackgroundColor = new CGColor(c.Red / 255f, c.Green / 255f, c.Blue / 255f);
 			}
 
 			var canvas = e.Surface.Canvas;
@@ -263,20 +307,6 @@ namespace SkiaSharpSample
 				paint.Color = ResolveColor(cl, cd);
 				paint.StrokeWidth = brushSize;
 				canvas.DrawPath(currentPath, paint);
-			}
-
-			// Hint text when empty
-			if (strokes.Count == 0 && currentPath == null)
-			{
-				using var textPaint = new SKPaint
-				{
-					Color = IsDarkMode ? new SKColor(255, 255, 255, 80) : new SKColor(0, 0, 0, 80),
-					IsAntialias = true,
-				};
-				using var font = new SKFont { Size = 20 };
-				canvas.DrawText("Draw here — use scroll wheel to change brush size",
-					new SKPoint(e.Info.Width / 2f, e.Info.Height / 2f),
-					SKTextAlign.Center, font, textPaint);
 			}
 		}
 
