@@ -51,3 +51,9 @@ A freehand drawing canvas with a color palette, brush size control via scroll wh
 - **`NSEvent`** — Mouse tracking for press, drag, and release across the canvas.
 - **Scroll wheel** — Brush size adjustment via `ScrollWheel` event.
 - **Color palette** — Six selectable colors with dark/light mode variants.
+
+## Screenshots
+
+| CPU | GPU (OpenGL) | GPU (Metal) | Drawing |
+|-----|-------------|-------------|---------|
+| ![CPU](screenshots/cpu-light.png) | ![GPU GL](screenshots/gpu-gl-light.png) | ![GPU Metal](screenshots/gpu-metal-light.png) | ![Drawing](screenshots/drawing-light.png) |
