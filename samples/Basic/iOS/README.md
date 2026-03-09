@@ -1,10 +1,10 @@
 # SkiaSharp iOS Sample
 
-Demonstrates all SkiaSharp iOS view types with a `UISplitViewController` sidebar, system dark/light mode support, and touch interaction.
+Demonstrates all SkiaSharp iOS view types with a `UITabBarController`, storyboard-driven views, system dark/light mode support, and touch interaction.
 
 ## Sample Pages
 
-This sample shows how to integrate SkiaSharp views into an iOS app using storyboards and `UIViewController` subclasses. Each view type can be placed in a storyboard scene and configured in Interface Builder. Navigation uses the modern `UISplitViewController` sidebar pattern.
+This sample shows how to integrate SkiaSharp views into an iOS app using storyboards and `UIViewController` subclasses. Each view type is placed in a storyboard scene and configured in Interface Builder — view controllers only contain event wiring and paint logic. Navigation uses a `UITabBarController` with SF Symbol tab icons.
 
 ### CPU
 
@@ -16,7 +16,6 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 - **`SKShader`** — Radial gradient background created with `SKShader.CreateRadialGradient`.
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
-- **`SKTypeface`** — Custom font loaded from the app bundle via `SKTypeface.FromStream`.
 
 ### GPU (OpenGL)
 
@@ -26,7 +25,7 @@ A real-time animated shader running at full frame rate on the GPU via OpenGL ES,
 
 - **`SKGLView`** — Hardware-accelerated canvas backed by GLKit's `GLKView`, using OpenGL ES for rendering.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation with an FPS counter overlay.
+- **Render loop** — Continuous animation driven by `CADisplayLink` with an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform via `UITouch` events.
 
 ### GPU (Metal)
@@ -37,7 +36,7 @@ A real-time animated shader running at full frame rate on the GPU via Apple's Me
 
 - **`SKMetalView`** — Hardware-accelerated canvas backed by Metal, Apple's modern low-level GPU API.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation with an FPS counter overlay.
+- **Render loop** — Continuous animation with `MTKView` pause/resume lifecycle and an FPS counter overlay.
 - **Touch interaction** — Touch position is passed as a shader uniform via `UITouch` events.
 
 ### Drawing
@@ -47,10 +46,10 @@ A freehand drawing canvas with a color palette, brush size control via pinch ges
 **Features:**
 
 - **`SKCanvasView`** — Software-rendered canvas invalidated on demand after each stroke or clear.
-- **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from touch events.
-- **`UITouch`** — Touch tracking for press, move, and release across the canvas.
+- **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` via `UIPanGestureRecognizer`.
 - **`UIPinchGestureRecognizer`** — Pinch gesture to adjust brush size.
 - **Color palette** — Six selectable colors with dark/light mode variants.
+- **Floating toolbox** — Blur-effect toolbar with swatch row, slider, and clear button.
 
 ## Requirements
 
@@ -63,19 +62,27 @@ A freehand drawing canvas with a color palette, brush size control via pinch ges
 Build and deploy to a simulator or device:
 
 ```bash
-dotnet build -f net8.0-ios
+dotnet build -t:Run
 ```
 
-To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
+To start on a specific page, pass a launch argument:
 
-```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
+```bash
+xcrun simctl launch <device-udid> com.companyname.skiasharpsample -page GpuMetal
 ```
 
 Available pages: `Cpu` (default), `GpuGL`, `GpuMetal`, `Drawing`
 
 ## Screenshots
 
+### Light Mode
+
 | CPU | GPU (OpenGL) | GPU (Metal) | Drawing |
 |---|---|---|---|
-| <img src="screenshots/cpu.png" width="250" alt="CPU"> | <img src="screenshots/gpu-gl.png" width="250" alt="GPU OpenGL"> | <img src="screenshots/gpu-metal.png" width="250" alt="GPU Metal"> | <img src="screenshots/drawing.png" width="250" alt="Drawing"> |
+| <img src="screenshots/cpu.png" width="200" alt="CPU"> | <img src="screenshots/gpu-gl.png" width="200" alt="GPU OpenGL"> | <img src="screenshots/gpu-metal.png" width="200" alt="GPU Metal"> | <img src="screenshots/drawing.png" width="200" alt="Drawing"> |
+
+### Dark Mode
+
+| CPU | GPU (OpenGL) | GPU (Metal) | Drawing |
+|---|---|---|---|
+| <img src="screenshots/cpu-dark.png" width="200" alt="CPU Dark"> | <img src="screenshots/gpu-gl-dark.png" width="200" alt="GPU OpenGL Dark"> | <img src="screenshots/gpu-metal-dark.png" width="200" alt="GPU Metal Dark"> | <img src="screenshots/drawing-dark.png" width="200" alt="Drawing Dark"> |

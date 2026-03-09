@@ -3,33 +3,25 @@
 [Register(nameof(AppDelegate))]
 public class AppDelegate : UIApplicationDelegate
 {
-	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
-
 	public override UIWindow? Window { get; set; }
 
 	public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
 	{
-		Window = new UIWindow(UIScreen.MainScreen.Bounds);
-
-		var splitVC = new UISplitViewController(UISplitViewControllerStyle.DoubleColumn);
-		splitVC.PreferredDisplayMode = UISplitViewControllerDisplayMode.OneBesideSecondary;
-		splitVC.PreferredPrimaryColumnWidthFraction = (nfloat)0.3;
-
-		var sidebar = new SidebarViewController(splitVC);
-		splitVC.SetViewController(new UINavigationController(sidebar), UISplitViewControllerColumn.Primary);
-
-		UIViewController initialVC = DefaultPage switch
+		// Support selecting a tab via launch argument: -page Cpu|GpuGL|GpuMetal|Drawing
+		var args = NSProcessInfo.ProcessInfo.Arguments;
+		for (int i = 0; i < args.Length - 1; i++)
 		{
-			SamplePage.GpuGL => new GpuGLViewController(),
-			SamplePage.GpuMetal => new GpuMetalViewController(),
-			SamplePage.Drawing => new DrawingViewController(),
-			_ => new CpuViewController(),
-		};
-		splitVC.SetViewController(new UINavigationController(initialVC), UISplitViewControllerColumn.Secondary);
-
-		Window.RootViewController = splitVC;
-		Window.MakeKeyAndVisible();
-
+			if (args[i] == "-page" && Enum.TryParse<SamplePage>(args[i + 1], true, out var page))
+			{
+				// Defer so the storyboard tab bar controller is fully loaded
+				NSRunLoop.Main.BeginInvokeOnMainThread(() =>
+				{
+					if (Window?.RootViewController is UITabBarController tabs)
+						tabs.SelectedIndex = (nint)(int)page;
+				});
+				break;
+			}
+		}
 		return true;
 	}
 }
