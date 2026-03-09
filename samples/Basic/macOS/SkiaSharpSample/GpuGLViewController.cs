@@ -1,14 +1,16 @@
 using AppKit;
+using CoreGraphics;
 using Foundation;
+using ObjCRuntime;
 using SkiaSharp;
 using SkiaSharp.Views.Mac;
 
-namespace SkiaSharpSample
-{
+namespace SkiaSharpSample;
+
 [Register("GpuGLViewController")]
 public class GpuGLViewController : NSViewController
 {
-const string ShaderSource = @"
+	const string ShaderSource = @"
 uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
@@ -71,106 +73,108 @@ result *= vignette;
 return half4(clamp(result, 0.0, 1.0), 1.0);
 }
 ";
+	static readonly float[] blobColors =
+	{
+		1.0f, 0.3f, 0.4f,   // rose
+		0.3f, 0.7f, 1.0f,   // sky blue
+		1.0f, 0.6f, 0.1f,   // amber
+		0.4f, 1.0f, 0.7f,   // mint
+		0.7f, 0.3f, 1.0f,   // violet
+		1.0f, 0.9f, 0.2f,   // yellow
+	};
 
-static readonly float[] blobColors =
-{
-1.0f, 0.3f, 0.4f,   // rose
-0.3f, 0.7f, 1.0f,   // sky blue
-1.0f, 0.6f, 0.1f,   // amber
-0.4f, 1.0f, 0.7f,   // mint
-0.7f, 0.3f, 1.0f,   // violet
-1.0f, 0.9f, 0.2f,   // yellow
-};
+	readonly FpsCounter fpsCounter = new();
 
-readonly FpsCounter fpsCounter = new();
+	[Outlet("skiaView")]
+	SKGLView skiaView { get; set; } = null!;
 
-SKGLView? skiaView;
-NSTimer? timer;
-Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
-SKPoint touchPos = new(-1f, -1f);
-bool touchActive;
-double lastFps;
+	[Outlet("fpsLabel")]
+	NSTextField fpsLabel { get; set; } = null!;
 
-public override void LoadView()
-{
-skiaView = new SKGLView();
-View = skiaView;
-}
+	NSTimer? timer;
+	Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
+	SKPoint touchPos = new(-1f, -1f);
+	bool touchActive;
+	double lastFps;
 
-public override void ViewDidLoad()
-{
-base.ViewDidLoad();
-shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
-fpsCounter.Start();
-if (skiaView != null)
-skiaView.PaintSurface += OnPaintSurface;
-}
+	public GpuGLViewController(NativeHandle handle) : base(handle) { }
 
-public override void ViewDidAppear()
-{
-base.ViewDidAppear();
-timer = NSTimer.CreateRepeatingScheduledTimer(1.0 / 60.0, _ =>
-{
-if (skiaView != null)
-skiaView.NeedsDisplay = true;
-});
-}
+	public override void ViewDidLoad()
+	{
+		base.ViewDidLoad();
+		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
+		fpsCounter.Start();
+		skiaView.PaintSurface += OnPaintSurface;
 
-public override void ViewWillDisappear()
-{
-base.ViewWillDisappear();
-if (skiaView != null)
-skiaView.PaintSurface -= OnPaintSurface;
-timer?.Invalidate();
-timer = null;
-fpsCounter.Stop();
-if (shaderBuilder?.IsValueCreated == true)
-shaderBuilder.Value.Dispose();
-shaderBuilder = null;
-}
+		// Style FPS label as pill
+		fpsLabel.WantsLayer = true;
+		fpsLabel.Layer!.BackgroundColor = new CGColor(0f, 0f, 0f, 0.5f);
+		fpsLabel.Layer.CornerRadius = 12;
+		fpsLabel.Layer.BorderWidth = 1;
+		fpsLabel.Layer.BorderColor = new CGColor(1f, 1f, 1f, 0.2f);
+		fpsLabel.TextColor = NSColor.White;
+		fpsLabel.DrawsBackground = false;
+		fpsLabel.Editable = false;
+		fpsLabel.Bezeled = false;
+	}
 
-public override void MouseDown(NSEvent theEvent) => UpdateTouch(theEvent, true);
-public override void MouseDragged(NSEvent theEvent) => UpdateTouch(theEvent, true);
-public override void MouseUp(NSEvent theEvent) => UpdateTouch(theEvent, false);
+	public override void ViewDidAppear()
+	{
+		base.ViewDidAppear();
+		timer = NSTimer.CreateRepeatingScheduledTimer(1.0 / 60.0, _ =>
+		{
+			skiaView.NeedsDisplay = true;
+		});
+	}
 
-void UpdateTouch(NSEvent theEvent, bool active)
-{
-touchActive = active;
-if (!active || View == null) return;
-var loc = View.ConvertPointFromView(theEvent.LocationInWindow, null);
-touchPos = new SKPoint((float)(loc.X / View.Bounds.Width), (float)(1.0 - loc.Y / View.Bounds.Height));
-}
+	public override void ViewWillDisappear()
+	{
+		base.ViewWillDisappear();
+		skiaView.PaintSurface -= OnPaintSurface;
+		timer?.Invalidate();
+		timer = null;
+		fpsCounter.Stop();
+		if (shaderBuilder?.IsValueCreated == true)
+			shaderBuilder.Value.Dispose();
+		shaderBuilder = null;
+	}
 
-void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
-{
-var canvas = e.Surface.Canvas;
-var width = e.Info.Width;
-var height = e.Info.Height;
+	public override void MouseDown(NSEvent theEvent) => UpdateTouch(theEvent, true);
+	public override void MouseDragged(NSEvent theEvent) => UpdateTouch(theEvent, true);
+	public override void MouseUp(NSEvent theEvent) => UpdateTouch(theEvent, false);
 
-if (shaderBuilder == null)
-return;
+	void UpdateTouch(NSEvent theEvent, bool active)
+	{
+		touchActive = active;
+		if (!active || View == null) return;
+		var loc = View.ConvertPointFromView(theEvent.LocationInWindow, null);
+		touchPos = new SKPoint((float)(loc.X / View.Bounds.Width), (float)(1.0 - loc.Y / View.Bounds.Height));
+	}
 
-var builder = shaderBuilder.Value;
+	void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
+	{
+		var canvas = e.Surface.Canvas;
+		var width = e.Info.Width;
+		var height = e.Info.Height;
 
-builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
-builder.Uniforms["iResolution"] = new float[] { width, height };
-builder.Uniforms["iTouchPos"] = new float[] { touchPos.X, touchPos.Y };
-builder.Uniforms["iTouchActive"] = touchActive ? 1f : 0f;
-builder.Uniforms["iColors"] = blobColors;
+		if (shaderBuilder == null)
+			return;
 
-using var shader = builder.Build();
-using var paint = new SKPaint { Shader = shader };
-canvas.DrawRect(0, 0, width, height, paint);
+		var builder = shaderBuilder.Value;
 
-if (fpsCounter.Tick() is double fps)
-lastFps = fps;
+		builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
+		builder.Uniforms["iResolution"] = new float[] { width, height };
+		builder.Uniforms["iTouchPos"] = new float[] { touchPos.X, touchPos.Y };
+		builder.Uniforms["iTouchActive"] = touchActive ? 1f : 0f;
+		builder.Uniforms["iColors"] = blobColors;
 
-// FPS overlay
-using var bgPaint = new SKPaint { Color = new SKColor(0, 0, 0, 128) };
-canvas.DrawRect(8, 8, 90, 22, bgPaint);
-using var fpsPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-using var fpsFont = new SKFont { Size = 14 };
-canvas.DrawText($"FPS: {lastFps:F0} (GL)", new SKPoint(12, 24), SKTextAlign.Left, fpsFont, fpsPaint);
-}
-}
+		using var shader = builder.Build();
+		using var paint = new SKPaint { Shader = shader };
+		canvas.DrawRect(0, 0, width, height, paint);
+
+		if (fpsCounter.Tick() is double fps)
+			lastFps = fps;
+
+		BeginInvokeOnMainThread(() => fpsLabel.StringValue = $"  FPS: {lastFps:F0} (GL)  ");
+	}
 }

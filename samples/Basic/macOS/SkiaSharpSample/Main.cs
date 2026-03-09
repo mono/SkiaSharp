@@ -1,16 +1,12 @@
-﻿using AppKit;
+using AppKit;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+static class MainClass
 {
-	static class MainClass
+	static void Main(string[] args)
 	{
-		static void Main(string[] args)
-		{
-			NSApplication.Init();
-			var app = NSApplication.SharedApplication;
-			app.ActivationPolicy = NSApplicationActivationPolicy.Regular;
-			app.Delegate = new AppDelegate();
-			app.Run();
-		}
+		NSApplication.Init();
+		NSApplication.Main(args);
 	}
 }
