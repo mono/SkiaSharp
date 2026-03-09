@@ -24,7 +24,9 @@
                 FontSize="13" />
 
         <!-- Floating toolbox — bottom-center overlay -->
-        <Border HorizontalOptions="Center"
+        <!-- Floating toolbox — bottom-center overlay -->
+        <Border x:Name="toolboxBorder"
+                HorizontalOptions="Center"
                 VerticalOptions="End"
                 Margin="0,0,0,16"
                 StrokeShape="RoundRectangle 24"
@@ -32,12 +34,7 @@
                 BackgroundColor="#CC1E1E1E"
                 Padding="20,14"
                 InputTransparent="False">
-            <StackLayout Spacing="12">
-                <StackLayout.Orientation>
-                    <OnIdiom x:TypeArguments="StackOrientation"
-                             Phone="Vertical"
-                             Default="Horizontal" />
-                </StackLayout.Orientation>
+            <StackLayout x:Name="toolboxStack" Orientation="Horizontal" Spacing="12">
 
                 <!-- Color swatches -->
                 <FlexLayout Direction="Row" JustifyContent="Center" Wrap="NoWrap" AlignItems="Center">
@@ -71,6 +68,27 @@
                            VerticalOptions="Center"
                            WidthRequest="24" />
                 </StackLayout>
+
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="AdaptiveStates">
+                        <VisualState x:Name="Narrow">
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="0" />
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter TargetName="toolboxStack" Property="StackLayout.Orientation" Value="Vertical" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Wide">
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="600" />
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter TargetName="toolboxStack" Property="StackLayout.Orientation" Value="Horizontal" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
             </StackLayout>
         </Border>
     </Grid>
