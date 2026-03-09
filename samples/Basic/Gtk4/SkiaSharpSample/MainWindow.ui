@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  SkiaSharp GTK4 Sample – MainWindow layout
-  This file can be opened in GNOME Builder or Cambalache.
-  SKDrawingArea is a custom widget, so placeholder GtkBox
-  containers are used here; the actual SkiaSharp canvases
-  are added in code.
+  SkiaSharp GTK4 Sample – MainWindow layout (shell only)
+  Pages are self-contained widgets added to the stack in code.
 -->
 <interface>
   <requires lib="gtk" version="4.0"/>
@@ -21,57 +18,6 @@
         <property name="hexpand">True</property>
         <property name="transition-type">crossfade</property>
         <property name="transition-duration">300</property>
-        <child>
-          <object class="GtkStackPage">
-            <property name="name">cpu</property>
-            <property name="title">CPU Canvas</property>
-            <property name="child">
-              <object class="GtkBox" id="cpuContainer">
-                <property name="hexpand">True</property>
-                <property name="vexpand">True</property>
-              </object>
-            </property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkStackPage">
-            <property name="name">drawing</property>
-            <property name="title">Drawing</property>
-            <property name="child">
-              <object class="GtkOverlay" id="drawingOverlay">
-                <property name="hexpand">True</property>
-                <property name="vexpand">True</property>
-                <!-- Main child: canvas placeholder -->
-                <child>
-                  <object class="GtkBox" id="drawingContainer">
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">True</property>
-                  </object>
-                </child>
-                <!-- Overlay: Clear button floating top-right -->
-                <child type="overlay">
-                  <object class="GtkButton" id="btnClear">
-                    <property name="label">Clear</property>
-                    <property name="halign">end</property>
-                    <property name="valign">start</property>
-                    <property name="margin-top">12</property>
-                    <property name="margin-end">12</property>
-                  </object>
-                </child>
-                <!-- Overlay: Floating toolbox centered at bottom -->
-                <child type="overlay">
-                  <object class="GtkBox" id="drawingToolbox">
-                    <property name="orientation">horizontal</property>
-                    <property name="spacing">14</property>
-                    <property name="halign">center</property>
-                    <property name="valign">end</property>
-                    <property name="margin-bottom">16</property>
-                  </object>
-                </child>
-              </object>
-            </property>
-          </object>
-        </child>
       </object>
     </child>
   </object>
