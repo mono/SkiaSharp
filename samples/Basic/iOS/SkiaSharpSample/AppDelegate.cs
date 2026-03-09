@@ -3,24 +3,22 @@
 [Register(nameof(AppDelegate))]
 public class AppDelegate : UIApplicationDelegate
 {
+	/// <summary>
+	/// Change this to start the app on a different page.
+	/// </summary>
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
 	public override UIWindow? Window { get; set; }
 
 	public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
 	{
-		// Support selecting a tab via launch argument: -page Cpu|GpuGL|GpuMetal|Drawing
-		var args = NSProcessInfo.ProcessInfo.Arguments;
-		for (int i = 0; i < args.Length - 1; i++)
+		if (DefaultPage != SamplePage.Cpu)
 		{
-			if (args[i] == "-page" && Enum.TryParse<SamplePage>(args[i + 1], true, out var page))
+			NSRunLoop.Main.BeginInvokeOnMainThread(() =>
 			{
-				// Defer so the storyboard tab bar controller is fully loaded
-				NSRunLoop.Main.BeginInvokeOnMainThread(() =>
-				{
-					if (Window?.RootViewController is UITabBarController tabs)
-						tabs.SelectedIndex = (nint)(int)page;
-				});
-				break;
-			}
+				if (Window?.RootViewController is UITabBarController tabs)
+					tabs.SelectedIndex = (nint)(int)DefaultPage;
+			});
 		}
 		return true;
 	}

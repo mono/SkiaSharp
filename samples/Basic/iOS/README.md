@@ -65,10 +65,10 @@ Build and deploy to a simulator or device:
 dotnet build -t:Run
 ```
 
-To start on a specific page, pass a launch argument:
+To start on a different page, change `DefaultPage` in `AppDelegate.cs`:
 
-```bash
-xcrun simctl launch <device-udid> com.companyname.skiasharpsample -page GpuMetal
+```csharp
+public static SamplePage DefaultPage { get; set; } = SamplePage.GpuMetal;
 ```
 
 Available pages: `Cpu` (default), `GpuGL`, `GpuMetal`, `Drawing`
