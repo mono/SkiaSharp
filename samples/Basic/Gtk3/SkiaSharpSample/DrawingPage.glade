@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Drawing page: GtkOverlay floats a translucent toolbox and clear
+     button over the canvas. The SKDrawingArea is inserted into
+     drawingCanvas in code; color swatches and slider are added
+     to drawingToolbox in code (styled via CssProvider). -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <object class="GtkOverlay" id="drawingOverlay">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <!-- Main child: canvas placeholder -->
+    <child>
+      <object class="GtkBox" id="drawingCanvas">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+      </object>
+    </child>
+    <!-- Overlay: Clear button — top-right -->
+    <child type="overlay">
+      <object class="GtkButton" id="btnClear">
+        <property name="visible">True</property>
+        <property name="can-focus">True</property>
+        <property name="label">Clear</property>
+        <property name="halign">end</property>
+        <property name="valign">start</property>
+        <property name="margin-top">12</property>
+        <property name="margin-end">12</property>
+      </object>
+    </child>
+    <!-- Overlay: Floating toolbox — bottom-center -->
+    <child type="overlay">
+      <object class="GtkBox" id="drawingToolbox">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="orientation">horizontal</property>
+        <property name="spacing">14</property>
+        <property name="halign">center</property>
+        <property name="valign">end</property>
+        <property name="margin-bottom">16</property>
+      </object>
+    </child>
+  </object>
+</interface>
