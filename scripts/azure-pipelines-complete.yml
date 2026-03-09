@@ -75,8 +75,10 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: ubuntu-24.04
-        os: linux
+        vmImage: macos-15
+        os: macos
+      parameters:
+        installXcode: false
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self

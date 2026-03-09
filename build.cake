@@ -341,13 +341,12 @@ Task ("tests-android")
             properties: new Dictionary<string, string> {
                 { "TargetFramework", tfm },
                 { "RuntimeIdentifier", rid },
-                { "TestingMode", "NonInteractiveVisual" },
             });
     }
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.Android/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/devicerunners-android.cake", "Default", new Dictionary<string, string> {
+    RunCake ("./scripts/cake/xharness-android.cake", "Default", new Dictionary<string, string> {
         { "app", MakeAbsolute (app).FullPath },
         { "results", MakeAbsolute (results).FullPath },
     });
@@ -374,13 +373,12 @@ Task ("tests-ios")
             properties: new Dictionary<string, string> {
                 { "TargetFramework", tfm },
                 { "RuntimeIdentifier", rid },
-                { "TestingMode", "NonInteractiveVisual" },
             });
     }
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/devicerunners-apple.cake", "Default", new Dictionary<string, string> {
+    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
         { "app", MakeAbsolute (app).FullPath },
         { "results", MakeAbsolute (results).FullPath },
     });
@@ -407,13 +405,12 @@ Task ("tests-maccatalyst")
             properties: new Dictionary<string, string> {
                 { "TargetFramework", tfm },
                 { "RuntimeIdentifier", rid },
-                { "TestingMode", "NonInteractiveVisual" },
             });
     }
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
-    RunCake ("./scripts/cake/devicerunners-apple.cake", "Default", new Dictionary<string, string> {
+    RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {
         { "app", MakeAbsolute (app).FullPath },
         { "results", MakeAbsolute (results).FullPath },
         { "device", "maccatalyst" },
