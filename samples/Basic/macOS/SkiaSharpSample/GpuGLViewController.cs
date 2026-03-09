@@ -92,7 +92,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	NSTextField fpsLabel { get; set; } = null!;
 
 	NSTimer? timer;
-	Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
+	readonly Lazy<SKRuntimeShaderBuilder> shaderBuilder = new(() => SKRuntimeEffect.BuildShader(ShaderSource));
 	SKPoint touchPos = new(-1f, -1f);
 	bool touchActive;
 	double lastFps;
@@ -119,7 +119,6 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	public override void ViewDidAppear()
 	{
 		base.ViewDidAppear();
-		shaderBuilder ??= new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
 		fpsCounter.Start();
 		timer?.Invalidate();
 		timer = NSTimer.CreateRepeatingScheduledTimer(1.0 / 60.0, _ =>
@@ -153,9 +152,6 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		var canvas = e.Surface.Canvas;
 		var width = e.Info.Width;
 		var height = e.Info.Height;
-
-		if (shaderBuilder == null)
-			return;
 
 		var builder = shaderBuilder.Value;
 
