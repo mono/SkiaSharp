@@ -203,21 +203,29 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_linux
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|android (macOS)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|android (Linux)
           parameters:
-            name: tests_android_macos
-            displayName: Android (macOS)
+            name: tests_android_linux
+            displayName: Android (Linux)
             buildAgent: ${{ parameters.buildAgentAndroidTests }}
             target: tests-android
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
+            installXcode: false
             requiredArtifacts:
               - name: native
             preBuildSteps:
-              - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
-                displayName: Install the Android emulator
-              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
-                displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
+              - script: |
+                  echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+                  sudo udevadm control --reload-rules
+                  sudo udevadm trigger --name-match=kvm
+                displayName: Enable KVM for Android emulator
+              - script: |
+                  sudo rm -rf /usr/local/lib/android/sdk/ndk
+                  sudo rm -rf /usr/share/dotnet/shared/Microsoft.AspNetCore.App
+                  sudo rm -rf /opt/hostedtoolcache/CodeQL
+                  df -h
+                displayName: Free disk space for emulator
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Android test results
@@ -236,7 +244,7 @@ stages:
             displayName: iOS (macOS)
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-ios
-            additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
             requiredArtifacts:
               - name: native
@@ -249,9 +257,9 @@ stages:
                 inputs:
                   testResultsFormat: xUnit
                   testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
-                  testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
+                  testRunTitle: 'iOS Tests'
             publishArtifacts:
-              - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
+              - name: testlogs_ios
                 always: true
                 path: 'output/logs/testlogs'
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|maccatalyst (macOS)

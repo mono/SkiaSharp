@@ -5,15 +5,15 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 var TEST_APP = Argument("app", EnvironmentVariable("ANDROID_TEST_APP") ?? "");
 var TEST_RESULTS = Argument("results", EnvironmentVariable("ANDROID_TEST_RESULTS") ?? "");
 var TEST_DEVICE = Argument("device", EnvironmentVariable("ANDROID_TEST_DEVICE") ?? "android-emulator-64");
-var TEST_VERSION = Argument("deviceVersion", EnvironmentVariable("ANDROID_TEST_DEVICE_VERSION") ?? "34");
-var TEST_APP_PACKAGE_NAME = Argument("package", EnvironmentVariable("ANDROID_TEST_APP_PACKAGE_NAME") ?? "");
-var TEST_APP_INSTRUMENTATION = Argument("instrumentation", EnvironmentVariable("ANDROID_TEST_APP_INSTRUMENTATION") ?? "devicerunners.xharness.maui.XHarnessInstrumentation");
+var TEST_VERSION = Argument("deviceVersion", EnvironmentVariable("ANDROID_TEST_DEVICE_VERSION") ?? "36");
+var TEST_CONNECTION_TIMEOUT = Argument("connectionTimeout", EnvironmentVariable("ANDROID_TEST_CONNECTION_TIMEOUT") ?? "120");
 
-// other
+// emulator config
 var ANDROID_AVD = "DEVICE_TESTS_EMULATOR";
 var DEVICE_NAME = Argument("skin", EnvironmentVariable("ANDROID_TEST_SKIN") ?? "Nexus 5X");
 var DEVICE_ID = "";
 var DEVICE_ARCH = "";
+var EMULATOR_GPU = Argument("gpu", EnvironmentVariable("ANDROID_EMULATOR_GPU") ?? "swiftshader_indirect");
 
 if (string.IsNullOrEmpty(TEST_APP)) {
     throw new Exception("A path to a test app is required.");
@@ -38,7 +38,7 @@ Setup(context =>
     // determine the device characteristics
     {
         var working = TEST_DEVICE.Trim().ToLower();
-        var api = 34;
+        var api = 36;
         // version
         if (working.IndexOf("_") is int idx && idx > 0) {
             api = int.Parse(working.Substring(idx + 1));
@@ -79,13 +79,17 @@ Setup(context =>
 
     Information("Test Device ID: {0}", DEVICE_ID);
 
+    // install the required SDK packages
+    Information("Installing Android SDK packages...");
+    DotNetTool($"android sdk install --package \"platform-tools\" --package \"emulator\" --package \"{DEVICE_ID}\"");
+
     // create the new AVD
     Information("Creating AVD: {0}...", ANDROID_AVD);
-    DotNetTool($"android avd create --name \"{ANDROID_AVD}\" --sdk \"{DEVICE_ID}\" --device \"{DEVICE_NAME}\" --force");
+    DotNetTool($"android avd create --name \"{ANDROID_AVD}\" --sdk \"{DEVICE_ID}\" --force");
 
-    // start the emulator (only wait 5 mins)
+    // start the emulator
     Information("Starting Emulator: {0}...", ANDROID_AVD);
-    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --timeout 300");
+    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --no-window --gpu {EMULATOR_GPU} --no-snapshot --no-audio --no-boot-anim --wait --no-animations --cpu-threshold 3 --response-threshold 5");
 
     // show running emulator information
     Information("Emulator started:");
@@ -101,54 +105,31 @@ Teardown(context =>
 
     TakeSnapshot(TEST_RESULTS, "teardown");
 
+    // capture logcat
+    try {
+        DotNetTool($"android device logcat --output \"{TEST_RESULTS}/logcat.txt\"");
+    } catch {
+        Warning("Failed to capture logcat.");
+    }
+
     // cleanup the emulator
-    DotNetTool($"android avd delete --name \"{ANDROID_AVD}\"");
+    DotNetTool($"android avd delete --name \"{ANDROID_AVD}\" --force");
 });
 
 Task("Default")
     .Does(() =>
 {
-    if (string.IsNullOrEmpty(TEST_APP_PACKAGE_NAME)) {
-        var appFile = (FilePath)TEST_APP;
-        appFile = appFile.GetFilenameWithoutExtension();
-        TEST_APP_PACKAGE_NAME = appFile.FullPath.Replace("-Signed", "");
-    }
-    if (string.IsNullOrEmpty(TEST_APP_INSTRUMENTATION)) {
-        TEST_APP_INSTRUMENTATION = TEST_APP_PACKAGE_NAME + ".TestInstrumentation";
-    }
-
     Information("Test App: {0}", TEST_APP);
-    Information("Test App Package Name: {0}", TEST_APP_PACKAGE_NAME);
-    Information("Test App Instrumentation: {0}", TEST_APP_INSTRUMENTATION);
     Information("Test Results Directory: {0}", TEST_RESULTS);
 
     TakeSnapshot(TEST_RESULTS, "starting-tests");
 
-    var complete = false;
-    System.Threading.Tasks.Task.Run(() => {
-        while (!complete) {
-            TakeSnapshot(TEST_RESULTS, "running-tests");
-            System.Threading.Thread.Sleep(5000);
-        }
-    });
-
-    DotNetTool("xharness android test " +
-        $"--app=\"{TEST_APP}\" " +
-        $"--package-name=\"{TEST_APP_PACKAGE_NAME}\" " +
-        $"--instrumentation=\"{TEST_APP_INSTRUMENTATION}\" " +
-        $"--output-directory=\"{TEST_RESULTS}\" " +
-        $"--timeout=00:15:00 " +
-        $"--launch-timeout=00:05:00 " +
-        $"--verbosity=\"Debug\" ");
-
-    complete = true;
+    DotNetTool("device-runners android test " +
+        $"--app \"{TEST_APP}\" " +
+        $"--results-directory \"{TEST_RESULTS}\" " +
+        $"--connection-timeout {TEST_CONNECTION_TIMEOUT}");
 
     TakeSnapshot(TEST_RESULTS, "finished-tests");
-
-    var failed = XmlPeek($"{TEST_RESULTS}/TestResults.xml", "/assemblies/assembly[@failed > 0 or @errors > 0]/@failed");
-    if (!string.IsNullOrEmpty(failed)) {
-        throw new Exception($"At least {failed} test(s) failed.");
-    }
 });
 
 RunTarget(TARGET);
