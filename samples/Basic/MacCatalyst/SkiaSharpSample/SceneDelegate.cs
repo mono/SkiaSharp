@@ -9,12 +9,10 @@ public class SceneDelegate : UIResponder, IUIWindowSceneDelegate
 	[Export("scene:willConnectToSession:options:")]
 	public void WillConnect(UIScene scene, UISceneSession session, UISceneConnectionOptions options)
 	{
-		// The storyboard creates the window and root view controller automatically.
-		// Configure split view controller display properties.
-		if (Window?.RootViewController is UISplitViewController splitVC)
+		if (AppDelegate.DefaultPage != SamplePage.Cpu &&
+			Window?.RootViewController is UITabBarController tabs)
 		{
-			splitVC.PreferredDisplayMode = UISplitViewControllerDisplayMode.OneBesideSecondary;
-			splitVC.PrimaryBackgroundStyle = UISplitViewControllerBackgroundStyle.Sidebar;
+			tabs.SelectedIndex = (nint)(int)AppDelegate.DefaultPage;
 		}
 	}
 }

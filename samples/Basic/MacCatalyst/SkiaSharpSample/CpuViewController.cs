@@ -1,3 +1,4 @@
+using ObjCRuntime;
 using SkiaSharp;
 using SkiaSharp.Views.iOS;
 
@@ -22,38 +23,24 @@ public class CpuViewController : UIViewController
 		new SKColor(0x88, 0x33, 0xCC),
 	};
 
-	SKCanvasView? skiaView;
+	[Outlet("skiaView")]
+	SKCanvasView skiaView { get; set; } = null!;
 
-	public CpuViewController(IntPtr handle)
-		: base(handle)
-	{
-	}
+	public CpuViewController(NativeHandle handle) : base(handle) { }
 
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
-
-		skiaView = new SKCanvasView { TranslatesAutoresizingMaskIntoConstraints = false };
-		View!.AddSubview(skiaView);
-		NSLayoutConstraint.ActivateConstraints(new[]
-		{
-			skiaView.TopAnchor.ConstraintEqualTo(View.TopAnchor),
-			skiaView.LeadingAnchor.ConstraintEqualTo(View.LeadingAnchor),
-			skiaView.TrailingAnchor.ConstraintEqualTo(View.TrailingAnchor),
-			skiaView.BottomAnchor.ConstraintEqualTo(View.BottomAnchor),
-		});
-
 		skiaView.PaintSurface += OnPaintSurface;
 	}
 
-	public override void ViewWillDisappear(bool animated)
+	public override void ViewDidAppear(bool animated)
 	{
-		base.ViewWillDisappear(animated);
-		if (skiaView != null)
-			skiaView.PaintSurface -= OnPaintSurface;
+		base.ViewDidAppear(animated);
+		skiaView.SetNeedsDisplay();
 	}
 
-	void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
 		var width = e.Info.Width;
@@ -63,33 +50,18 @@ public class CpuViewController : UIViewController
 
 		canvas.Clear(SKColors.White);
 
-		// Background gradient
 		using var shader = SKShader.CreateRadialGradient(center, radius, gradientColors, SKShaderTileMode.Clamp);
-		using var bgPaint = new SKPaint
-		{
-			IsAntialias = true,
-			Shader = shader,
-		};
+		using var bgPaint = new SKPaint { IsAntialias = true, Shader = shader };
 		canvas.DrawRect(0, 0, width, height, bgPaint);
 
-		// Circles
-		using var circlePaint = new SKPaint
-		{
-			IsAntialias = true,
-			Style = SKPaintStyle.Fill,
-		};
+		using var circlePaint = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Fill };
 		foreach (var (x, y, r, color) in circles)
 		{
 			circlePaint.Color = color;
 			canvas.DrawCircle(x * width, y * height, r * Math.Min(width, height), circlePaint);
 		}
 
-		// Centered text
-		using var textPaint = new SKPaint
-		{
-			Color = SKColors.White,
-			IsAntialias = true,
-		};
+		using var textPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
 		using var font = new SKFont { Size = width * 0.12f };
 		canvas.DrawText("SkiaSharp", center.X, center.Y + font.Size / 3f, SKTextAlign.Center, font, textPaint);
 	}
