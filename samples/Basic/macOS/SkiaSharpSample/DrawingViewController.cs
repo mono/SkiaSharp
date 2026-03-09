@@ -123,12 +123,6 @@ public class DrawingViewController : NSViewController
 		selectedSwatch = swatch;
 	}
 
-	public override void ViewWillDisappear()
-	{
-		base.ViewWillDisappear();
-		skiaView.PaintSurface -= OnPaintSurface;
-	}
-
 	public override void MouseDown(NSEvent theEvent)
 	{
 		var pt = CanvasPoint(theEvent);

@@ -102,8 +102,6 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
-		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
-		fpsCounter.Start();
 		skiaView.PaintSurface += OnPaintSurface;
 
 		// Style FPS label as pill
@@ -121,6 +119,9 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	public override void ViewDidAppear()
 	{
 		base.ViewDidAppear();
+		shaderBuilder ??= new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
+		fpsCounter.Start();
+		timer?.Invalidate();
 		timer = NSTimer.CreateRepeatingScheduledTimer(1.0 / 60.0, _ =>
 		{
 			skiaView.NeedsDisplay = true;
@@ -130,13 +131,9 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	public override void ViewWillDisappear()
 	{
 		base.ViewWillDisappear();
-		skiaView.PaintSurface -= OnPaintSurface;
 		timer?.Invalidate();
 		timer = null;
 		fpsCounter.Stop();
-		if (shaderBuilder?.IsValueCreated == true)
-			shaderBuilder.Value.Dispose();
-		shaderBuilder = null;
 	}
 
 	public override void MouseDown(NSEvent theEvent) => UpdateTouch(theEvent, true);

@@ -101,12 +101,10 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	public override void ViewDidLoad()
 	{
 		base.ViewDidLoad();
-		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
-		fpsCounter.Start();
-		skiaView.Paused = false;
+		skiaView.PaintSurface += OnPaintSurface;
+		skiaView.Paused = true;
 		skiaView.EnableSetNeedsDisplay = false;
 		skiaView.PreferredFramesPerSecond = 60;
-		skiaView.PaintSurface += OnPaintSurface;
 
 		// Style FPS label as pill
 		fpsLabel.WantsLayer = true;
@@ -120,15 +118,19 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		fpsLabel.Bezeled = false;
 	}
 
+	public override void ViewDidAppear()
+	{
+		base.ViewDidAppear();
+		shaderBuilder ??= new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
+		fpsCounter.Start();
+		skiaView.Paused = false;
+	}
+
 	public override void ViewWillDisappear()
 	{
 		base.ViewWillDisappear();
-		skiaView.PaintSurface -= OnPaintSurface;
 		skiaView.Paused = true;
 		fpsCounter.Stop();
-		if (shaderBuilder?.IsValueCreated == true)
-			shaderBuilder.Value.Dispose();
-		shaderBuilder = null;
 	}
 
 	public override void MouseDown(NSEvent theEvent) => UpdateTouch(theEvent, true);
