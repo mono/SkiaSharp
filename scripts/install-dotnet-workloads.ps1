@@ -1,6 +1,8 @@
 Param(
   # Tizen version in "BAND/VERSION" format, e.g., "10.0.100/10.0.123"
-  [string] $Tizen = ''
+  [string] $Tizen = '',
+  # Override the default workloads (comma-separated, e.g. "android,maui-android")
+  [string] $Workloads = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -53,18 +55,22 @@ if ($TizenBand -and $TizenVersion) {
 }
 
 # Build workload list
-$Workloads = @('android', 'macos', 'wasm-tools')
-if ($TizenBand) {
-  $Workloads = @('tizen') + $Workloads
-}
-if ($IsLinux) {
-  $Workloads += @('maui-android')
+if ($Workloads) {
+  $WorkloadList = $Workloads -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 } else {
-  $Workloads += @('ios', 'tvos', 'maccatalyst', 'maui')
+  $WorkloadList = @('android', 'macos', 'wasm-tools')
+  if ($TizenBand) {
+    $WorkloadList = @('tizen') + $WorkloadList
+  }
+  if ($IsLinux) {
+    $WorkloadList += @('maui-android')
+  } else {
+    $WorkloadList += @('ios', 'tvos', 'maccatalyst', 'maui')
+  }
 }
 
-Write-Host "Installing workloads: $($Workloads -join ', ')..."
-& dotnet workload install @Workloads --skip-sign-check
+Write-Host "Installing workloads: $($WorkloadList -join ', ')..."
+& dotnet workload install @WorkloadList --skip-sign-check
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Installed workloads:"
