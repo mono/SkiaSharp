@@ -128,12 +128,14 @@
 
   <!-- .NET MAUI -->
   <PropertyGroup>
-    <MauiTargetFrameworksPlatformCurrent>$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksPlatformCurrent>
+    <MauiTargetFrameworksPlatformCurrent Condition="$(IsLinux)">$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksPlatformCurrent>
     <MauiTargetFrameworksPlatformCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</MauiTargetFrameworksPlatformCurrent>
     <MauiTargetFrameworksCurrent>$(TFMCurrent);$(MauiTargetFrameworksPlatformCurrent)</MauiTargetFrameworksCurrent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMPrevious)' != ''">
-    <MauiTargetFrameworksPlatformPrevious>$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksPlatformPrevious>
+    <MauiTargetFrameworksPlatformPrevious Condition="!$(IsLinux)">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksPlatformPrevious>
+    <MauiTargetFrameworksPlatformPrevious Condition="$(IsLinux)">$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksPlatformPrevious>
     <MauiTargetFrameworksPlatformPrevious Condition="$(IsWindows)">$(MauiTargetFrameworksPlatformPrevious);$(TFMPrevious)-windows$(TPVWindowsPrevious)</MauiTargetFrameworksPlatformPrevious>
     <MauiTargetFrameworksPrevious>$(TFMPrevious);$(MauiTargetFrameworksPlatformPrevious)</MauiTargetFrameworksPrevious>
   </PropertyGroup>
@@ -143,11 +145,13 @@
 
   <!-- .NET MAUI Apps (no TPV) -->
   <PropertyGroup>
-    <MauiTargetFrameworksAppCurrent>$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksAppCurrent>
+    <MauiTargetFrameworksAppCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksAppCurrent>
+    <MauiTargetFrameworksAppCurrent Condition="$(IsLinux)">$(TFMCurrent)-android$(TPVAndroidCurrent)</MauiTargetFrameworksAppCurrent>
     <MauiTargetFrameworksAppCurrent Condition="$(IsWindows)">$(MauiTargetFrameworksAppCurrent);$(TFMCurrent)-windows$(TPVWindowsCurrent)</MauiTargetFrameworksAppCurrent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TFMPrevious)' != ''">
-    <MauiTargetFrameworksAppPrevious>$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksAppPrevious>
+    <MauiTargetFrameworksAppPrevious Condition="!$(IsLinux)">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksAppPrevious>
+    <MauiTargetFrameworksAppPrevious Condition="$(IsLinux)">$(TFMPrevious)-android$(TPVAndroidPrevious)</MauiTargetFrameworksAppPrevious>
     <MauiTargetFrameworksAppPrevious Condition="$(IsWindows)">$(MauiTargetFrameworksAppPrevious);$(TFMPrevious)-windows$(TPVWindowsPrevious)</MauiTargetFrameworksAppPrevious>
   </PropertyGroup>
 
