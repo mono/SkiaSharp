@@ -70,16 +70,29 @@ half4 main(float2 fragCoord) {
 
 		readonly FpsCounter fpsCounter = new();
 		readonly SKPaint shaderPaint = new();
+		readonly Lazy<SKRuntimeShaderBuilder> shaderBuilder = new(() => SKRuntimeEffect.BuildShader(SkslSource));
 
-		Lazy<SKRuntimeShaderBuilder> shaderBuilder;
 		SKPoint touchPos;
 		bool touchActive;
 
 		public GpuPage()
 		{
 			InitializeComponent();
-			shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
+		}
+
+		protected override void OnAppearing()
+		{
+			base.OnAppearing();
 			fpsCounter.Start();
+			fpsLabel.Text = "FPS: --";
+			skiaView.HasRenderLoop = true;
+		}
+
+		protected override void OnDisappearing()
+		{
+			base.OnDisappearing();
+			skiaView.HasRenderLoop = false;
+			fpsCounter.Stop();
 		}
 
 		private void OnTouch(object sender, SKTouchEventArgs e)

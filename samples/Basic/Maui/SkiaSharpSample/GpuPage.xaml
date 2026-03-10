@@ -5,24 +5,25 @@
              Title="GPU">
 
     <Grid>
-        <skia:SKGLView PaintSurface="OnPaintSurface"
-                       HasRenderLoop="True"
+        <skia:SKGLView x:Name="skiaView"
+                       PaintSurface="OnPaintSurface"
+                       HasRenderLoop="False"
                        EnableTouchEvents="True"
                        Touch="OnTouch" />
 
-        <!-- FPS pill overlay — top-right -->
-        <Border HorizontalOptions="End"
+        <!-- FPS pill overlay — centered top -->
+        <Border HorizontalOptions="Center"
                 VerticalOptions="Start"
-                Margin="0,12,12,0"
+                Margin="0,8,0,0"
                 StrokeShape="RoundRectangle 12"
-                Stroke="#33FFFFFF"
+                Stroke="#44FFFFFF"
                 StrokeThickness="1"
-                BackgroundColor="#80000000"
-                Padding="8,4">
+                BackgroundColor="#AA000000"
+                Padding="12,6">
             <Label x:Name="fpsLabel"
-                   Text=""
+                   Text="FPS: --"
                    TextColor="White"
-                   FontSize="13" />
+                   FontSize="14" />
         </Border>
     </Grid>
 
