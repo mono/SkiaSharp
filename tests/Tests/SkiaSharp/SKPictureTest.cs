@@ -109,5 +109,30 @@ namespace SkiaSharp.Tests
 
 			Assert.True(picture.ApproximateBytesUsed > 0);
 		}
+
+		[SkippableFact]
+		public void EncodesImageIntoPicture()
+		{
+			// create an image
+			using var sourceBitmap = CreateTestBitmap();
+
+			// create a picture that has an image in it
+			using var picRecorder = new SKPictureRecorder();
+			using var picCanvas = picRecorder.BeginRecording(SKRect.Create(0, 0, 40, 40));
+			picCanvas.DrawBitmap(sourceBitmap, 0, 0);
+			using var picture = picRecorder.EndRecording();
+
+			// serialize and then deserialize the picture
+			using var serialized = picture.Serialize();
+			using var deserialized = SKPicture.Deserialize(serialized);
+
+			// draw the picture into a new bitmap
+			using var desBitmap = new SKBitmap(40, 40);
+			using var destCanvas = new SKCanvas(desBitmap);
+			destCanvas.DrawPicture(deserialized);
+
+			// make sure the bitmap made it through the serialization
+			ValidateTestBitmap(desBitmap);
+		}
 	}
 }

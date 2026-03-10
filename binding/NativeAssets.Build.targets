@@ -25,32 +25,31 @@
     </ItemGroup>
   </Target>
 
-  <PropertyGroup Condition="'$(IsWindowsNativeAssets)' == 'true'">
+  <PropertyGroup Condition="'$(IsNativeAssetsProject)' == 'true'">
     <IncludeBuildOutput>true</IncludeBuildOutput>
     <IncludeSymbols>true</IncludeSymbols>
     <BuildOutputTargetFolder>runtimes</BuildOutputTargetFolder>
-    <ExcludeSymbolsFromPackage>false</ExcludeSymbolsFromPackage>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(IsWindowsNativeAssets)' == 'true'">
-    <_NativeWindowsPackageFileToUse Include="@(NativeWindowsPackageFile->HasMetadata('Folder'))" />
-    <_NativeWindowsPackageFileWithNoFolder Include="@(NativeWindowsPackageFile)" />
-    <_NativeWindowsPackageFileWithNoFolder Remove="@(_NativeWindowsPackageFileToUse)" />
-    <_NativeWindowsPackageFileToUse Include="@(_NativeWindowsPackageFileWithNoFolder)" Folder="native" />
-    <None Include="@(_NativeWindowsPackageFileToUse)" Link="runtimes\%(RuntimeIdentifier)\%(Folder)\%(Filename)%(Extension)" />
+  <ItemGroup Condition="'$(IsNativeAssetsProject)' == 'true'">
+    <_NativeAssetPackageFileToUse Include="@(NativeAssetPackageFile->HasMetadata('Folder'))" />
+    <_NativeAssetPackageFileWithNoFolder Include="@(NativeAssetPackageFile)" />
+    <_NativeAssetPackageFileWithNoFolder Remove="@(_NativeAssetPackageFileToUse)" />
+    <_NativeAssetPackageFileToUse Include="@(_NativeAssetPackageFileWithNoFolder)" Folder="native" />
+    <None Include="@(_NativeAssetPackageFileToUse)" Link="runtimes\%(RuntimeIdentifier)\%(Folder)\%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <Target Name="_IncludeRuntimesPackageFiles" BeforeTargets="_GetPackageFiles" Condition="'$(IsWindowsNativeAssets)' == 'true'">
+  <Target Name="_IncludeRuntimesPackageFiles" BeforeTargets="_GetPackageFiles" Condition="'$(IsNativeAssetsProject)' == 'true'">
     <ItemGroup>
-      <_CompletedNativeWindowsPackageFile
-          Include="@(_NativeWindowsPackageFileToUse)" 
-          TargetFramework="%(RuntimeIdentifier)"
-          TargetPath="%(Folder)\%(Filename)%(Extension)" 
+      <_CompletedNativeAssetPackageFile
+          Include="@(_NativeAssetPackageFileToUse)" 
+          TargetFramework="$(TFMCurrent)"
+          TargetPath="..\%(RuntimeIdentifier)\%(Folder)\%(Filename)%(Extension)" 
           PackagePath="runtimes\%(RuntimeIdentifier)\%(Folder)\%(Filename)%(Extension)" />
       <_BuildOutputInPackage Remove="@(_BuildOutputInPackage)" />
-      <_BuildOutputInPackage Include="@(_CompletedNativeWindowsPackageFile)" Condition="'%(Extension)' != '.pdb'" />
+      <_BuildOutputInPackage Include="@(_CompletedNativeAssetPackageFile)" Condition="'%(Extension)' != '.pdb' and '%(Extension)' != '.dbg'" />
       <_TargetPathsToSymbols Remove="@(_TargetPathsToSymbols)" />
-      <_TargetPathsToSymbols Include="@(_CompletedNativeWindowsPackageFile)" Condition="'%(Extension)' == '.pdb'" />
+      <_TargetPathsToSymbols Include="@(_CompletedNativeAssetPackageFile)" Condition="'%(Extension)' == '.pdb' or '%(Extension)' == '.dbg'" />
     </ItemGroup>
   </Target>
 

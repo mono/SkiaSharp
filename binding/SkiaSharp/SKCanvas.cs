@@ -51,6 +51,7 @@ namespace SkiaSharp
 
 		// Save*
 
+#nullable enable
 		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)
@@ -58,18 +59,21 @@ namespace SkiaSharp
 			return SkiaApi.sk_canvas_save (Handle);
 		}
 
-		public int SaveLayer (SKRect limit, SKPaint paint)
-		{
-			return SkiaApi.sk_canvas_save_layer (Handle, &limit, paint == null ? IntPtr.Zero : paint.Handle);
-		}
+		public int SaveLayer (SKRect limit, SKPaint? paint) =>
+			SkiaApi.sk_canvas_save_layer (Handle, &limit, paint?.Handle ?? IntPtr.Zero);
+	
+		public int SaveLayer (SKPaint? paint) =>
+			SkiaApi.sk_canvas_save_layer (Handle, null, paint?.Handle ?? IntPtr.Zero);
 
-		public int SaveLayer (SKPaint paint)
+		public int SaveLayer (in SKCanvasSaveLayerRec rec)
 		{
-			return SkiaApi.sk_canvas_save_layer (Handle, null, paint == null ? IntPtr.Zero : paint.Handle);
+			var native = rec.ToNative ();
+			return SkiaApi.sk_canvas_save_layer_rec (Handle, &native);
 		}
 
 		public int SaveLayer () =>
-			SaveLayer (null);
+			SkiaApi.sk_canvas_save_layer (Handle, null, IntPtr.Zero);
+#nullable disable
 
 		// DrawColor
 
@@ -1074,10 +1078,32 @@ namespace SkiaSharp
 		/// </summary>
 		public void Restore ()
 		{
-			if (canvas != null) {
+			// canvas can be GC-ed before us
+			if (canvas != null && canvas.Handle != IntPtr.Zero) {
 				canvas.RestoreToCount (saveCount);
-				canvas = null;
 			}
+			canvas = null;
 		}
 	}
+
+#nullable enable
+	public unsafe struct SKCanvasSaveLayerRec
+	{
+		public SKRect? Bounds { readonly get; set; }
+
+		public SKPaint? Paint { readonly get; set; }
+
+		public SKImageFilter? Backdrop { readonly get; set; }
+
+		public SKCanvasSaveLayerRecFlags Flags { readonly get; set; }
+
+		internal readonly SKCanvasSaveLayerRecNative ToNative () =>
+			new SKCanvasSaveLayerRecNative {
+				fBounds = Bounds is { } bounds ? &bounds : (SKRect*)null,
+				fPaint = Paint?.Handle ?? IntPtr.Zero,
+				fBackdrop = Backdrop?.Handle ?? IntPtr.Zero,
+				fFlags = Flags
+			};
+	}
+#nullable disable
 }

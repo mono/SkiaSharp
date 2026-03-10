@@ -139,7 +139,7 @@ namespace SkiaSharp.Tests
 			return recorder.EndRecording();
 		}
 
-		private static void DrawTestBitmap(SKCanvas canvas, int width, int height, byte alpha = 255)
+		protected static void DrawTestBitmap(SKCanvas canvas, int width, int height, byte alpha = 255)
 		{
 			using var paint = new SKPaint();
 

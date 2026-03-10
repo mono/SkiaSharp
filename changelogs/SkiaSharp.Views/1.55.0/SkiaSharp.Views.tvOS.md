@@ -67,7 +67,7 @@ public interface ISKGLLayerDelegate {
 #### New Type: SkiaSharp.Views.tvOS.SKCanvasLayer
 
 ```csharp
-public class SKCanvasLayer : CoreAnimation.CALayer {
+public class SKCanvasLayer : CoreAnimation.CALayer, CoreAnimation.ICAMediaTiming, Foundation.INSCoding, Foundation.INSObjectProtocol, Foundation.INSSecureCoding, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKCanvasLayer ();
 	// properties
@@ -85,7 +85,7 @@ public class SKCanvasLayer : CoreAnimation.CALayer {
 #### New Type: SkiaSharp.Views.tvOS.SKCanvasView
 
 ```csharp
-public class SKCanvasView : UIKit.UIView, System.ComponentModel.IComponent, System.IDisposable {
+public class SKCanvasView : UIKit.UIView, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.Collections.IEnumerable, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject>, UIKit.IUIAccessibilityIdentification, UIKit.IUIAppearance, UIKit.IUIAppearanceContainer, UIKit.IUICoordinateSpace, UIKit.IUIDynamicItem, UIKit.IUIFocusEnvironment, UIKit.IUIFocusItem, UIKit.IUIFocusItemContainer, UIKit.IUIResponderStandardEditActions, UIKit.IUITraitEnvironment, UIKit.IUIUserActivityRestoring {
 	// constructors
 	public SKCanvasView ();
 	public SKCanvasView (CoreGraphics.CGRect frame);
@@ -106,7 +106,7 @@ public class SKCanvasView : UIKit.UIView, System.ComponentModel.IComponent, Syst
 #### New Type: SkiaSharp.Views.tvOS.SKGLLayer
 
 ```csharp
-public class SKGLLayer : CoreAnimation.CAEAGLLayer {
+public class SKGLLayer : CoreAnimation.CAEAGLLayer, CoreAnimation.ICAMediaTiming, Foundation.INSCoding, Foundation.INSObjectProtocol, Foundation.INSSecureCoding, ObjCRuntime.INativeObject, OpenGLES.IEAGLDrawable, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKGLLayer ();
 	// properties
@@ -125,7 +125,7 @@ public class SKGLLayer : CoreAnimation.CAEAGLLayer {
 #### New Type: SkiaSharp.Views.tvOS.SKGLView
 
 ```csharp
-public class SKGLView : GLKit.GLKView, GLKit.IGLKViewDelegate, ObjCRuntime.INativeObject, System.ComponentModel.IComponent, System.IDisposable {
+public class SKGLView : GLKit.GLKView, CoreAnimation.ICALayerDelegate, Foundation.INSCoding, Foundation.INSObjectProtocol, GLKit.IGLKViewDelegate, ObjCRuntime.INativeObject, System.Collections.IEnumerable, System.ComponentModel.IComponent, System.IDisposable, System.IEquatable<Foundation.NSObject>, UIKit.IUIAccessibilityIdentification, UIKit.IUIAppearance, UIKit.IUIAppearanceContainer, UIKit.IUICoordinateSpace, UIKit.IUIDynamicItem, UIKit.IUIFocusEnvironment, UIKit.IUIFocusItem, UIKit.IUIFocusItemContainer, UIKit.IUIResponderStandardEditActions, UIKit.IUITraitEnvironment, UIKit.IUIUserActivityRestoring {
 	// constructors
 	public SKGLView ();
 	public SKGLView (CoreGraphics.CGRect frame);

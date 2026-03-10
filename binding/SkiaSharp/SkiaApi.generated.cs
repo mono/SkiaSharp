@@ -9,8 +9,14 @@ using System.Runtime.CompilerServices;
 
 #region Class declarations
 
+using d3d_alloc_t = System.IntPtr;
+using d3d_d12_command_queue_t = System.IntPtr;
+using d3d_d12_device_t = System.IntPtr;
+using d3d_d12_resource_t = System.IntPtr;
+using d3d_dxgi_adapter_t = System.IntPtr;
 using gr_backendrendertarget_t = System.IntPtr;
 using gr_backendtexture_t = System.IntPtr;
+using gr_d3d_memory_allocator_t = System.IntPtr;
 using gr_direct_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
 using gr_recording_context_t = System.IntPtr;
@@ -268,6 +274,25 @@ namespace SkiaSharp
 			(gr_backendrendertarget_is_valid_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_is_valid> ("gr_backendrendertarget_is_valid")).Invoke (rendertarget);
 		#endif
 
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_direct3d(int width, int height, const gr_d3d_textureresourceinfo_t* d3dInfo)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		}
+		private static Delegates.gr_backendrendertarget_new_direct3d gr_backendrendertarget_new_direct3d_delegate;
+		internal static gr_backendrendertarget_t gr_backendrendertarget_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo) =>
+			(gr_backendrendertarget_new_direct3d_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_direct3d> ("gr_backendrendertarget_new_direct3d")).Invoke (width, height, d3dInfo);
+		#endif
+
 		// gr_backendrendertarget_t* gr_backendrendertarget_new_gl(int width, int height, int samples, int stencils, const gr_gl_framebufferinfo_t* glInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -465,6 +490,25 @@ namespace SkiaSharp
 		private static Delegates.gr_backendtexture_is_valid gr_backendtexture_is_valid_delegate;
 		internal static bool gr_backendtexture_is_valid (gr_backendtexture_t texture) =>
 			(gr_backendtexture_is_valid_delegate ??= GetSymbol<Delegates.gr_backendtexture_is_valid> ("gr_backendtexture_is_valid")).Invoke (texture);
+		#endif
+
+		// gr_backendtexture_t* gr_backendtexture_new_direct3d(int width, int height, const gr_d3d_textureresourceinfo_t* d3dInfo)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo);
+		}
+		private static Delegates.gr_backendtexture_new_direct3d gr_backendtexture_new_direct3d_delegate;
+		internal static gr_backendtexture_t gr_backendtexture_new_direct3d (Int32 width, Int32 height, GRD3DTextureResourceInfoNative* d3dInfo) =>
+			(gr_backendtexture_new_direct3d_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_direct3d> ("gr_backendtexture_new_direct3d")).Invoke (width, height, d3dInfo);
 		#endif
 
 		// gr_backendtexture_t* gr_backendtexture_new_gl(int width, int height, bool mipmapped, const gr_gl_textureinfo_t* glInfo)
@@ -715,6 +759,44 @@ namespace SkiaSharp
 		private static Delegates.gr_direct_context_is_abandoned gr_direct_context_is_abandoned_delegate;
 		internal static bool gr_direct_context_is_abandoned (gr_direct_context_t context) =>
 			(gr_direct_context_is_abandoned_delegate ??= GetSymbol<Delegates.gr_direct_context_is_abandoned> ("gr_direct_context_is_abandoned")).Invoke (context);
+		#endif
+
+		// gr_direct_context_t* gr_direct_context_make_direct3d(const gr_d3d_backendcontext_t d3dBackendContext)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext);
+		}
+		private static Delegates.gr_direct_context_make_direct3d gr_direct_context_make_direct3d_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_direct3d (GRD3DBackendContextNative d3dBackendContext) =>
+			(gr_direct_context_make_direct3d_delegate ??= GetSymbol<Delegates.gr_direct_context_make_direct3d> ("gr_direct_context_make_direct3d")).Invoke (d3dBackendContext);
+		#endif
+
+		// gr_direct_context_t* gr_direct_context_make_direct3d_with_options(const gr_d3d_backendcontext_t d3dBackendContext, const gr_context_options_t* options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options);
+		}
+		private static Delegates.gr_direct_context_make_direct3d_with_options gr_direct_context_make_direct3d_with_options_delegate;
+		internal static gr_direct_context_t gr_direct_context_make_direct3d_with_options (GRD3DBackendContextNative d3dBackendContext, GRContextOptionsNative* options) =>
+			(gr_direct_context_make_direct3d_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_direct3d_with_options> ("gr_direct_context_make_direct3d_with_options")).Invoke (d3dBackendContext, options);
 		#endif
 
 		// gr_direct_context_t* gr_direct_context_make_gl(const gr_glinterface_t* glInterface)
@@ -3088,6 +3170,25 @@ namespace SkiaSharp
 			(sk_canvas_save_layer_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer> ("sk_canvas_save_layer")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
+		// int sk_canvas_save_layer_rec(sk_canvas_t* ccanvas, const sk_canvas_savelayerrec_t* crec)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec);
+		}
+		private static Delegates.sk_canvas_save_layer_rec sk_canvas_save_layer_rec_delegate;
+		internal static Int32 sk_canvas_save_layer_rec (sk_canvas_t ccanvas, SKCanvasSaveLayerRecNative* crec) =>
+			(sk_canvas_save_layer_rec_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer_rec> ("sk_canvas_save_layer_rec")).Invoke (ccanvas, crec);
+		#endif
+
 		// void sk_canvas_scale(sk_canvas_t* ccanvas, float sx, float sy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -3865,6 +3966,44 @@ namespace SkiaSharp
 			(sk_colorfilter_new_high_contrast_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_high_contrast> ("sk_colorfilter_new_high_contrast")).Invoke (config);
 		#endif
 
+		// sk_colorfilter_t* sk_colorfilter_new_hsla_matrix(const float[20] array = 20)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_hsla_matrix (Single* array);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_hsla_matrix (Single* array);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_hsla_matrix (Single* array);
+		}
+		private static Delegates.sk_colorfilter_new_hsla_matrix sk_colorfilter_new_hsla_matrix_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_hsla_matrix (Single* array) =>
+			(sk_colorfilter_new_hsla_matrix_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_hsla_matrix> ("sk_colorfilter_new_hsla_matrix")).Invoke (array);
+		#endif
+
+		// sk_colorfilter_t* sk_colorfilter_new_lerp(float weight, sk_colorfilter_t* filter0, sk_colorfilter_t* filter1)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1);
+		}
+		private static Delegates.sk_colorfilter_new_lerp sk_colorfilter_new_lerp_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_lerp (Single weight, sk_colorfilter_t filter0, sk_colorfilter_t filter1) =>
+			(sk_colorfilter_new_lerp_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_lerp> ("sk_colorfilter_new_lerp")).Invoke (weight, filter0, filter1);
+		#endif
+
 		// sk_colorfilter_t* sk_colorfilter_new_lighting(sk_color_t mul, sk_color_t add)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -3882,6 +4021,25 @@ namespace SkiaSharp
 		private static Delegates.sk_colorfilter_new_lighting sk_colorfilter_new_lighting_delegate;
 		internal static sk_colorfilter_t sk_colorfilter_new_lighting (UInt32 mul, UInt32 add) =>
 			(sk_colorfilter_new_lighting_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_lighting> ("sk_colorfilter_new_lighting")).Invoke (mul, add);
+		#endif
+
+		// sk_colorfilter_t* sk_colorfilter_new_linear_to_srgb_gamma()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_linear_to_srgb_gamma ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_linear_to_srgb_gamma ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_linear_to_srgb_gamma ();
+		}
+		private static Delegates.sk_colorfilter_new_linear_to_srgb_gamma sk_colorfilter_new_linear_to_srgb_gamma_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_linear_to_srgb_gamma () =>
+			(sk_colorfilter_new_linear_to_srgb_gamma_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_linear_to_srgb_gamma> ("sk_colorfilter_new_linear_to_srgb_gamma")).Invoke ();
 		#endif
 
 		// sk_colorfilter_t* sk_colorfilter_new_luma_color()
@@ -3920,6 +4078,25 @@ namespace SkiaSharp
 		private static Delegates.sk_colorfilter_new_mode sk_colorfilter_new_mode_delegate;
 		internal static sk_colorfilter_t sk_colorfilter_new_mode (UInt32 c, SKBlendMode mode) =>
 			(sk_colorfilter_new_mode_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_mode> ("sk_colorfilter_new_mode")).Invoke (c, mode);
+		#endif
+
+		// sk_colorfilter_t* sk_colorfilter_new_srgb_to_linear_gamma()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_srgb_to_linear_gamma ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_srgb_to_linear_gamma ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_srgb_to_linear_gamma ();
+		}
+		private static Delegates.sk_colorfilter_new_srgb_to_linear_gamma sk_colorfilter_new_srgb_to_linear_gamma_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_srgb_to_linear_gamma () =>
+			(sk_colorfilter_new_srgb_to_linear_gamma_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_srgb_to_linear_gamma> ("sk_colorfilter_new_srgb_to_linear_gamma")).Invoke ();
 		#endif
 
 		// sk_colorfilter_t* sk_colorfilter_new_table(const uint8_t[256] table = 256)
@@ -16392,6 +16569,25 @@ namespace SkiaSharp
 			(sk_typeface_get_kerning_pair_adjustments_delegate ??= GetSymbol<Delegates.sk_typeface_get_kerning_pair_adjustments> ("sk_typeface_get_kerning_pair_adjustments")).Invoke (typeface, glyphs, count, adjustments);
 		#endif
 
+		// sk_string_t* sk_typeface_get_post_script_name(const sk_typeface_t* typeface)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_string_t sk_typeface_get_post_script_name (sk_typeface_t typeface);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_string_t sk_typeface_get_post_script_name (sk_typeface_t typeface);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_string_t sk_typeface_get_post_script_name (sk_typeface_t typeface);
+		}
+		private static Delegates.sk_typeface_get_post_script_name sk_typeface_get_post_script_name_delegate;
+		internal static sk_string_t sk_typeface_get_post_script_name (sk_typeface_t typeface) =>
+			(sk_typeface_get_post_script_name_delegate ??= GetSymbol<Delegates.sk_typeface_get_post_script_name> ("sk_typeface_get_post_script_name")).Invoke (typeface);
+		#endif
+
 		// size_t sk_typeface_get_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void* data)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -17409,6 +17605,108 @@ namespace SkiaSharp {
 
 	}
 
+	// gr_d3d_backendcontext_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRD3DBackendContextNative : IEquatable<GRD3DBackendContextNative> {
+		// public d3d_dxgi_adapter_t* fAdapter
+		public d3d_dxgi_adapter_t fAdapter;
+
+		// public d3d_d12_device_t* fDevice
+		public d3d_d12_device_t fDevice;
+
+		// public d3d_d12_command_queue_t* fQueue
+		public d3d_d12_command_queue_t fQueue;
+
+		// public gr_d3d_memory_allocator_t* fMemoryAllocator
+		public gr_d3d_memory_allocator_t fMemoryAllocator;
+
+		// public bool fProtectedContext
+		public Byte fProtectedContext;
+
+		public readonly bool Equals (GRD3DBackendContextNative obj) =>
+#pragma warning disable CS8909
+			fAdapter == obj.fAdapter && fDevice == obj.fDevice && fQueue == obj.fQueue && fMemoryAllocator == obj.fMemoryAllocator && fProtectedContext == obj.fProtectedContext;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRD3DBackendContextNative f && Equals (f);
+
+		public static bool operator == (GRD3DBackendContextNative left, GRD3DBackendContextNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRD3DBackendContextNative left, GRD3DBackendContextNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fAdapter);
+			hash.Add (fDevice);
+			hash.Add (fQueue);
+			hash.Add (fMemoryAllocator);
+			hash.Add (fProtectedContext);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_d3d_textureresourceinfo_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRD3DTextureResourceInfoNative : IEquatable<GRD3DTextureResourceInfoNative> {
+		// public d3d_d12_resource_t* fResource
+		public d3d_d12_resource_t fResource;
+
+		// public d3d_alloc_t* fAlloc
+		public d3d_alloc_t fAlloc;
+
+		// public uint32_t fResourceState
+		public UInt32 fResourceState;
+
+		// public uint32_t fFormat
+		public UInt32 fFormat;
+
+		// public uint32_t fSampleCount
+		public UInt32 fSampleCount;
+
+		// public uint32_t fLevelCount
+		public UInt32 fLevelCount;
+
+		// public unsigned int fSampleQualityPattern
+		public UInt32 fSampleQualityPattern;
+
+		// public bool fProtected
+		public Byte fProtected;
+
+		public readonly bool Equals (GRD3DTextureResourceInfoNative obj) =>
+#pragma warning disable CS8909
+			fResource == obj.fResource && fAlloc == obj.fAlloc && fResourceState == obj.fResourceState && fFormat == obj.fFormat && fSampleCount == obj.fSampleCount && fLevelCount == obj.fLevelCount && fSampleQualityPattern == obj.fSampleQualityPattern && fProtected == obj.fProtected;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRD3DTextureResourceInfoNative f && Equals (f);
+
+		public static bool operator == (GRD3DTextureResourceInfoNative left, GRD3DTextureResourceInfoNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRD3DTextureResourceInfoNative left, GRD3DTextureResourceInfoNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fResource);
+			hash.Add (fAlloc);
+			hash.Add (fResourceState);
+			hash.Add (fFormat);
+			hash.Add (fSampleCount);
+			hash.Add (fLevelCount);
+			hash.Add (fSampleQualityPattern);
+			hash.Add (fProtected);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// gr_gl_framebufferinfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GRGlFramebufferInfo : IEquatable<GRGlFramebufferInfo> {
@@ -17932,6 +18230,47 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_canvas_savelayerrec_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKCanvasSaveLayerRecNative : IEquatable<SKCanvasSaveLayerRecNative> {
+		// public sk_rect_t* fBounds
+		public SKRect* fBounds;
+
+		// public sk_paint_t* fPaint
+		public sk_paint_t fPaint;
+
+		// public sk_imagefilter_t* fBackdrop
+		public sk_imagefilter_t fBackdrop;
+
+		// public sk_canvas_savelayerrec_flags_t fFlags
+		public SKCanvasSaveLayerRecFlags fFlags;
+
+		public readonly bool Equals (SKCanvasSaveLayerRecNative obj) =>
+#pragma warning disable CS8909
+			fBounds == obj.fBounds && fPaint == obj.fPaint && fBackdrop == obj.fBackdrop && fFlags == obj.fFlags;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKCanvasSaveLayerRecNative f && Equals (f);
+
+		public static bool operator == (SKCanvasSaveLayerRecNative left, SKCanvasSaveLayerRecNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKCanvasSaveLayerRecNative left, SKCanvasSaveLayerRecNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fBounds);
+			hash.Add (fPaint);
+			hash.Add (fBackdrop);
+			hash.Add (fFlags);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_codec_frameinfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKCodecFrameInfo : IEquatable<SKCodecFrameInfo> {
@@ -18373,6 +18712,63 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_document_pdf_datetime_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKTimeDateTimeInternal : IEquatable<SKTimeDateTimeInternal> {
+		// public int16_t fTimeZoneMinutes
+		public Int16 fTimeZoneMinutes;
+
+		// public uint16_t fYear
+		public UInt16 fYear;
+
+		// public uint8_t fMonth
+		public Byte fMonth;
+
+		// public uint8_t fDayOfWeek
+		public Byte fDayOfWeek;
+
+		// public uint8_t fDay
+		public Byte fDay;
+
+		// public uint8_t fHour
+		public Byte fHour;
+
+		// public uint8_t fMinute
+		public Byte fMinute;
+
+		// public uint8_t fSecond
+		public Byte fSecond;
+
+		public readonly bool Equals (SKTimeDateTimeInternal obj) =>
+#pragma warning disable CS8909
+			fTimeZoneMinutes == obj.fTimeZoneMinutes && fYear == obj.fYear && fMonth == obj.fMonth && fDayOfWeek == obj.fDayOfWeek && fDay == obj.fDay && fHour == obj.fHour && fMinute == obj.fMinute && fSecond == obj.fSecond;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKTimeDateTimeInternal f && Equals (f);
+
+		public static bool operator == (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fTimeZoneMinutes);
+			hash.Add (fYear);
+			hash.Add (fMonth);
+			hash.Add (fDayOfWeek);
+			hash.Add (fDay);
+			hash.Add (fHour);
+			hash.Add (fMinute);
+			hash.Add (fSecond);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_document_pdf_metadata_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKDocumentPdfMetadataInternal : IEquatable<SKDocumentPdfMetadataInternal> {
@@ -18394,10 +18790,10 @@ namespace SkiaSharp {
 		// public sk_string_t* fProducer
 		public sk_string_t fProducer;
 
-		// public sk_time_datetime_t* fCreation
+		// public sk_document_pdf_datetime_t* fCreation
 		public SKTimeDateTimeInternal* fCreation;
 
-		// public sk_time_datetime_t* fModified
+		// public sk_document_pdf_datetime_t* fModified
 		public SKTimeDateTimeInternal* fModified;
 
 		// public float fRasterDPI
@@ -19879,63 +20275,6 @@ namespace SkiaSharp {
 
 	}
 
-	// sk_time_datetime_t
-	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe partial struct SKTimeDateTimeInternal : IEquatable<SKTimeDateTimeInternal> {
-		// public int16_t fTimeZoneMinutes
-		public Int16 fTimeZoneMinutes;
-
-		// public uint16_t fYear
-		public UInt16 fYear;
-
-		// public uint8_t fMonth
-		public Byte fMonth;
-
-		// public uint8_t fDayOfWeek
-		public Byte fDayOfWeek;
-
-		// public uint8_t fDay
-		public Byte fDay;
-
-		// public uint8_t fHour
-		public Byte fHour;
-
-		// public uint8_t fMinute
-		public Byte fMinute;
-
-		// public uint8_t fSecond
-		public Byte fSecond;
-
-		public readonly bool Equals (SKTimeDateTimeInternal obj) =>
-#pragma warning disable CS8909
-			fTimeZoneMinutes == obj.fTimeZoneMinutes && fYear == obj.fYear && fMonth == obj.fMonth && fDayOfWeek == obj.fDayOfWeek && fDay == obj.fDay && fHour == obj.fHour && fMinute == obj.fMinute && fSecond == obj.fSecond;
-#pragma warning restore CS8909
-
-		public readonly override bool Equals (object obj) =>
-			obj is SKTimeDateTimeInternal f && Equals (f);
-
-		public static bool operator == (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
-			left.Equals (right);
-
-		public static bool operator != (SKTimeDateTimeInternal left, SKTimeDateTimeInternal right) =>
-			!left.Equals (right);
-
-		public readonly override int GetHashCode ()
-		{
-			var hash = new HashCode ();
-			hash.Add (fTimeZoneMinutes);
-			hash.Add (fYear);
-			hash.Add (fMonth);
-			hash.Add (fDayOfWeek);
-			hash.Add (fDay);
-			hash.Add (fHour);
-			hash.Add (fMinute);
-			hash.Add (fSecond);
-			return hash.ToHashCode ();
-		}
-
-	}
-
 	// sk_webpencoder_options_t
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKWebpEncoderOptions : IEquatable<SKWebpEncoderOptions> {
@@ -20101,6 +20440,18 @@ namespace SkiaSharp {
 		Inner = 3,
 	}
 
+	// sk_canvas_savelayerrec_flags_t
+	public enum SKCanvasSaveLayerRecFlags {
+		// NONE_SK_CANVAS_SAVELAYERREC_FLAGS = 0
+		None = 0,
+		// PRESERVE_LCD_TEXT_SK_CANVAS_SAVELAYERREC_FLAGS = 1 << 1
+		PreserveLcdText = 2,
+		// INITIALIZE_WITH_PREVIOUS_SK_CANVAS_SAVELAYERREC_FLAGS = 1 << 2
+		InitializeWithPrevious = 4,
+		// F16_COLOR_TYPE_SK_CANVAS_SAVELAYERREC_FLAGS = 1 << 4
+		F16ColorType = 16,
+	}
+
 	// sk_clipop_t
 	public enum SKClipOperation {
 		// DIFFERENCE_SK_CLIPOP = 0
@@ -20205,30 +20556,32 @@ namespace SkiaSharp {
 		Bgr101010x = 10,
 		// BGR_101010X_XR_SK_COLORTYPE = 11
 		Bgr101010xXr = 11,
-		// GRAY_8_SK_COLORTYPE = 12
-		Gray8 = 12,
-		// RGBA_F16_NORM_SK_COLORTYPE = 13
-		RgbaF16Norm = 13,
-		// RGBA_F16_SK_COLORTYPE = 14
-		RgbaF16 = 14,
-		// RGBA_F32_SK_COLORTYPE = 15
-		RgbaF32 = 15,
-		// R8G8_UNORM_SK_COLORTYPE = 16
-		R8g8Unorm = 16,
-		// A16_FLOAT_SK_COLORTYPE = 17
-		A16Float = 17,
-		// R16G16_FLOAT_SK_COLORTYPE = 18
-		R16g16Float = 18,
-		// A16_UNORM_SK_COLORTYPE = 19
-		A16Unorm = 19,
-		// R16G16_UNORM_SK_COLORTYPE = 20
-		R16g16Unorm = 20,
-		// R16G16B16A16_UNORM_SK_COLORTYPE = 21
-		R16g16b16a16Unorm = 21,
-		// SRGBA_8888_SK_COLORTYPE = 22
-		Srgba8888 = 22,
-		// R8_UNORM_SK_COLORTYPE = 23
-		R8Unorm = 23,
+		// RGBA_10X6_SK_COLORTYPE = 12
+		Rgba10x6 = 12,
+		// GRAY_8_SK_COLORTYPE = 13
+		Gray8 = 13,
+		// RGBA_F16_NORM_SK_COLORTYPE = 14
+		RgbaF16Norm = 14,
+		// RGBA_F16_SK_COLORTYPE = 15
+		RgbaF16 = 15,
+		// RGBA_F32_SK_COLORTYPE = 16
+		RgbaF32 = 16,
+		// R8G8_UNORM_SK_COLORTYPE = 17
+		R8g8Unorm = 17,
+		// A16_FLOAT_SK_COLORTYPE = 18
+		A16Float = 18,
+		// R16G16_FLOAT_SK_COLORTYPE = 19
+		R16g16Float = 19,
+		// A16_UNORM_SK_COLORTYPE = 20
+		A16Unorm = 20,
+		// R16G16_UNORM_SK_COLORTYPE = 21
+		R16g16Unorm = 21,
+		// R16G16B16A16_UNORM_SK_COLORTYPE = 22
+		R16g16b16a16Unorm = 22,
+		// SRGBA_8888_SK_COLORTYPE = 23
+		Srgba8888 = 23,
+		// R8_UNORM_SK_COLORTYPE = 24
+		R8Unorm = 24,
 	}
 
 	// sk_encoded_image_format_t

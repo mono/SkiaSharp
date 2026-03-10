@@ -689,5 +689,59 @@ namespace SkiaSharp.Tests
 			canvas.DrawPoint(0, 0, color);
 			Assert.Equal(color, bmp.GetPixel(0, 0));
 		}
+
+		[SkippableFact]
+		public void SaveLayerRecWithPaintIsCorrect()
+		{
+			using var bmp = new SKBitmap(100, 100);
+			using var canvas = new SKCanvas(bmp);
+			canvas.Clear(SKColors.Green);
+
+			var rec = new SKCanvasSaveLayerRec
+			{
+				Paint = new SKPaint
+				{
+					BlendMode = SKBlendMode.Plus
+				},
+				Flags = SKCanvasSaveLayerRecFlags.InitializeWithPrevious
+			};
+			canvas.SaveLayer(rec);
+
+			using var paint = new SKPaint
+			{
+				BlendMode = SKBlendMode.Clear
+			};
+			canvas.DrawCircle(50, 50, 40, paint);
+
+			canvas.Restore();
+
+			Assert.Equal(SKColors.Green, bmp.GetPixel(50, 50));
+			Assert.Equal(SKColors.Green, bmp.GetPixel(15, 50));
+			Assert.Equal((SKColor)0xFF00FF00, bmp.GetPixel(15, 15));
+		}
+
+		[SkippableFact]
+		public void SaveLayerRecWithImageFilterIsCorrect()
+		{
+			using var bmp = new SKBitmap(80, 80);
+			using var canvas = new SKCanvas(bmp);
+			canvas.Clear(SKColors.White);
+
+			canvas.DrawCircle(10, 10, 10, new SKPaint { Color = SKColors.Red });
+
+			var rec = new SKCanvasSaveLayerRec
+			{
+				Backdrop = SKImageFilter.CreateMatrix(SKMatrix.CreateScale(4, 4), SKSamplingOptions.Default),
+			};
+			canvas.SaveLayer(rec);
+
+			canvas.DrawCircle(40, 40, 10, new SKPaint { Color = SKColors.Green });
+
+			canvas.Restore();
+
+			Assert.Equal(SKColors.Red, bmp.GetPixel(25, 40));
+			Assert.Equal(SKColors.Red, bmp.GetPixel(40, 25));
+			Assert.Equal(SKColors.Green, bmp.GetPixel(40, 40));
+		}
 	}
 }

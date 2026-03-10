@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 if ($IsLinux -or $IsMacOS) {
-    Write-Host "Not supported yet."
+    df -h
 } else {
     Get-Volume
 }

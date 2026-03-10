@@ -1,14 +1,15 @@
 export class SizeWatcher {
     static observe(element, elementId, callback) {
-        if (!element || !callback)
+        if ((!element && !elementId) || !callback)
             return;
         //console.info(`Adding size watcher observation with callback ${callback._id}...`);
         SizeWatcher.init();
+        element = element || document.querySelector('[' + elementId + ']');
         const watcherElement = element;
         watcherElement.SizeWatcher = {
             callback: callback
         };
-        SizeWatcher.elements[elementId] = element;
+        SizeWatcher.elements.set(elementId, element);
         SizeWatcher.observer.observe(element);
         SizeWatcher.invoke(element);
     }
@@ -16,8 +17,8 @@ export class SizeWatcher {
         if (!elementId || !SizeWatcher.observer)
             return;
         //console.info('Removing size watcher observation...');
-        const element = SizeWatcher.elements[elementId];
-        SizeWatcher.elements.delete(elementId);
+        const element = SizeWatcher.elements.get(elementId);
+        const removed = SizeWatcher.elements.delete(elementId);
         SizeWatcher.observer.unobserve(element);
     }
     static init() {
@@ -36,6 +37,12 @@ export class SizeWatcher {
         const instance = watcherElement.SizeWatcher;
         if (!instance || !instance.callback)
             return;
-        return instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
+        if (typeof instance.callback === 'function') {
+            instance.callback(element.clientWidth, element.clientHeight);
+        }
+        else {
+            instance.callback.invokeMethod('Invoke', element.clientWidth, element.clientHeight);
+        }
     }
 }
+//# sourceMappingURL=SizeWatcher.js.map

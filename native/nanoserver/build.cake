@@ -11,6 +11,7 @@ Task("libSkiaSharp")
         { "variant", "nanoserver" },
         { "gnArgs", "extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ]" },
         { "arch", "x64" },
+        { "supportDirect3D", "false" },
     });
 
     DotNetTool("nano-api-scan " + OUTPUT_PATH.CombineWithFilePath("nanoserver/x64/libSkiaSharp.dll").FullPath);

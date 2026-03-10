@@ -1,10 +1,12 @@
-﻿#if __IOS__ || __MACOS__
+﻿#if __IOS__ || __MACOS__ || __TVOS__
 using System;
 
 #if __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __MACOS__
 namespace SkiaSharp.Views.Mac
+#elif __TVOS__
+namespace SkiaSharp.Views.tvOS
 #endif
 {
 	public class SKPaintMetalSurfaceEventArgs : EventArgs

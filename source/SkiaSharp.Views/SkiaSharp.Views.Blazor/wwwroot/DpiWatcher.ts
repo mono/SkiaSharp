@@ -1,14 +1,16 @@
 ﻿
+type DpiWatcherCallback = DotNet.DotNetObjectReference | ((lastDpi: number, currentDpi: number) => void);
+
 export class DpiWatcher {
 	static lastDpi: number;
 	static timerId: number;
-	static callback: DotNet.DotNetObjectReference;
+	static callback: DpiWatcherCallback;
 
 	public static getDpi() {
 		return window.devicePixelRatio;
 	}
 
-	public static start(callback: DotNet.DotNetObjectReference): number {
+	public static start(callback: DpiWatcherCallback): number {
 		//console.info(`Starting DPI watcher with callback ${callback._id}...`);
 
 		DpiWatcher.lastDpi = window.devicePixelRatio;
@@ -35,7 +37,11 @@ export class DpiWatcher {
 		DpiWatcher.lastDpi = currentDpi;
 
 		if (Math.abs(lastDpi - currentDpi) > 0.001) {
-			DpiWatcher.callback.invokeMethod('Invoke', lastDpi, currentDpi);
+			if (typeof DpiWatcher.callback === 'function') {
+				DpiWatcher.callback(lastDpi, currentDpi);
+			} else {
+				DpiWatcher.callback.invokeMethod('Invoke', lastDpi, currentDpi);
+			}
 		}
 	}
 }

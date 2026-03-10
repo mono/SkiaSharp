@@ -33,13 +33,16 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		public static void OnInvalidateSurface(SKGLViewHandler handler, ISKGLView view, object? args)
 		{
+			if (handler?.PlatformView == null)
+				return;
+
 			if (!handler.PlatformView.EnableRenderLoop)
 				handler.PlatformView.Invalidate();
 		}
 
 		public static void MapIgnorePixelScaling(SKGLViewHandler handler, ISKGLView view)
 		{
-			if (handler.PlatformView is not MauiSKSwapChainPanel pv)
+			if (handler?.PlatformView is not MauiSKSwapChainPanel pv)
 				return;
 
 			pv.IgnorePixelScaling = view.IgnorePixelScaling;
@@ -48,12 +51,15 @@ namespace SkiaSharp.Views.Maui.Handlers
 
 		public static void MapHasRenderLoop(SKGLViewHandler handler, ISKGLView view)
 		{
+			if (handler?.PlatformView == null)
+				return;
+
 			handler.PlatformView.EnableRenderLoop = view.HasRenderLoop;
 		}
 
 		public static void MapEnableTouchEvents(SKGLViewHandler handler, ISKGLView view)
 		{
-			if (handler.PlatformView == null)
+			if (handler?.PlatformView == null)
 				return;
 
 			handler.touchHandler ??= new SKTouchHandler(

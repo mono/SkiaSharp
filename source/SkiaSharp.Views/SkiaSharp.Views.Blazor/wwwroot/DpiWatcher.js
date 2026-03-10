@@ -21,7 +21,13 @@ export class DpiWatcher {
         const lastDpi = DpiWatcher.lastDpi;
         DpiWatcher.lastDpi = currentDpi;
         if (Math.abs(lastDpi - currentDpi) > 0.001) {
-            DpiWatcher.callback.invokeMethod('Invoke', lastDpi, currentDpi);
+            if (typeof DpiWatcher.callback === 'function') {
+                DpiWatcher.callback(lastDpi, currentDpi);
+            }
+            else {
+                DpiWatcher.callback.invokeMethod('Invoke', lastDpi, currentDpi);
+            }
         }
     }
 }
+//# sourceMappingURL=DpiWatcher.js.map

@@ -42,9 +42,9 @@ public static GRContext Create (GRBackend backend, IntPtr backendContext, GRCont
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use Create(GRBackend, GRGlInterface) instead.")]
  public static GRContext Create (GRBackend backend, IntPtr backendContext);
- [Obsolete ()]
+ [Obsolete ("Use GetMaxSurfaceSampleCount(SKColorType) instead.")]
  public int GetRecommendedSampleCount (GRPixelConfig config, float dpi);
 ```
 
@@ -133,9 +133,9 @@ Modified fields:
 Obsoleted constructors:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo) instead.")]
  public SKBitmap (SKImageInfo info, SKColorTable ctable);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo, SKBitmapAllocFlags) instead.")]
  public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags);
 ```
 
@@ -148,28 +148,28 @@ public SKBitmap (SKImageInfo info, SKBitmapAllocFlags flags);
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported.")]
  public SKColorTable ColorTable { get; }
 ```
 
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
  public SKPMColor GetIndex8Color (int x, int y);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int) instead.")]
  public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
  public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context);
- [Obsolete ()]
+ [Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
  public bool Resize (SKBitmap dst, SKBitmapResizeMethod method);
- [Obsolete ()]
+ [Obsolete ("Use Resize(SKImageInfo, SKFilterQuality) instead.")]
  public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method);
- [Obsolete ()]
+ [Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
  public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported.")]
  public void SetColorTable (SKColorTable ct);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use SetPixels(IntPtr) instead.")]
  public void SetPixels (IntPtr pixels, SKColorTable ct);
 ```
 
@@ -207,7 +207,7 @@ public SKEncodedInfo EncodedInfo { get; }
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use EncodedOrigin instead.")]
  public SKCodecOrigin Origin { get; }
 ```
 
@@ -220,25 +220,25 @@ public SKEncodedOrigin EncodedOrigin { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")]
  public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKColorTable colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")]
  public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, IntPtr colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")]
  public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")]
  public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
  public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
  public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
  public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
  public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")]
  public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")]
  public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);
 ```
 
@@ -370,7 +370,7 @@ Modified methods:
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
  public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi);
 ```
 
@@ -485,31 +485,31 @@ Obsoleted methods:
 ```diff
  [Obsolete ()]
  public SKData Encode (SKPixelSerializer serializer);
- [Obsolete ()]
+ [Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
  public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
  public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
  public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha);
- [Obsolete ()]
+ [Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
  public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha);
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use FromPixelCopy(SKImageInfo, IntPtr, int) instead.")]
  public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable);
- [Obsolete ()]
+ [Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
  public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
  public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
  public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha);
- [Obsolete ()]
+ [Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
  public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha);
- [Obsolete ()]
+ [Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.")]
  public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc);
- [Obsolete ()]
+ [Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.")]
  public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc);
- [Obsolete ()]
+ [Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
  public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext);
- [Obsolete ()]
+ [Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
  public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext);
 ```
 
@@ -551,9 +551,9 @@ public static SKImageFilter CreatePictureForLocalspace (SKPicture picture, SKRec
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use CreateMerge(SKImageFilter[], SKImageFilter.CropRect) instead.")]
  public static SKImageFilter CreateMerge (SKImageFilter[] filters, SKBlendMode[] modes, SKImageFilter.CropRect cropRect);
- [Obsolete ()]
+ [Obsolete ("Use CreateMerge(SKImageFilter, SKImageFilter, SKImageFilter.CropRect) instead.")]
  public static SKImageFilter CreateMerge (SKImageFilter first, SKImageFilter second, SKBlendMode mode, SKImageFilter.CropRect cropRect);
 ```
 
@@ -634,9 +634,9 @@ public static const int TableMaxLength;
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use CreateBlur(SKBlurStyle, float) instead.")]
  public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKBlurMaskFilterFlags flags);
- [Obsolete ()]
+ [Obsolete ("Use CreateBlur(SKBlurStyle, float, SKRect) instead.")]
  public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags);
 ```
 
@@ -758,7 +758,7 @@ protected virtual bool OnUseEncodedData (IntPtr data, IntPtr length);
 Obsoleted constructors:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use SKPixmap(SKImageInfo, IntPtr, int) instead.")]
  public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable);
 ```
 
@@ -777,7 +777,7 @@ public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes);
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported.")]
  public SKColorTable ColorTable { get; }
 ```
 
@@ -792,9 +792,9 @@ public SKSizeI Size { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use Reset(SKImageInfo, IntPtr, int) instead.")]
  public void Reset (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable);
- [Obsolete ()]
+ [Obsolete ("Use ScalePixels(SKPixmap, SKFilterQuality) instead.")]
  public static bool Resize (SKPixmap dst, SKPixmap src, SKBitmapResizeMethod method);
 ```
 
@@ -906,7 +906,7 @@ public bool ReadUInt32 (out uint buffer);
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use SurfaceProperties instead.")]
  public SKSurfaceProps SurfaceProps { get; }
 ```
 
@@ -919,41 +919,41 @@ public SKSurfaceProperties SurfaceProperties { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
  public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
  public static SKSurface Create (GRContext context, GRBackendTextureDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
  public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
  public static SKSurface Create (SKImageInfo info, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use Create(SKPixmap, SKSurfaceProperties) instead.")]
  public static SKSurface Create (SKPixmap pixmap, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use Create(SKImageInfo, IntPtr, rowBytes, SKSurfaceProperties) instead.")]
  public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use Create(SKImageInfo) instead.")]
  public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType);
- [Obsolete ()]
+ [Obsolete ("Use Create(GRContext, bool, SKImageInfo, int, SKSurfaceProperties) instead.")]
  public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
  public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use Create(SKImageInfo, IntPtr, int) instead.")]
  public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes);
- [Obsolete ()]
+ [Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
  public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
  public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
  public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc);
- [Obsolete ()]
+ [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props);
- [Obsolete ()]
+ [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props);
 ```
 
@@ -1004,7 +1004,7 @@ public static SKSurface CreateNull (int width, int height);
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use FontWeight and FontSlant instead.")]
  public SKTypefaceStyle Style { get; }
 ```
 
@@ -1018,11 +1018,11 @@ public SKFontStyle FontStyle { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(string, out ushort[]) instead.")]
  public int CharsToGlyphs (string chars, out ushort[] glyphs);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(IntPtr, int, SKEncoding, out ushort[]) instead.")]
  public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort[] glyphs);
- [Obsolete ()]
+ [Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
  public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style);
  [Obsolete ()]
  public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style);
@@ -1090,7 +1090,7 @@ public static byte[] GetEncodedText (string text, SKEncoding encoding);
 public class GRBackendRenderTarget : SkiaSharp.SKObject, System.IDisposable {
 	// constructors
 
-	[Obsolete]
+	[Obsolete ("Use GRBackendRenderTarget(int, int, int, int, GRGlFramebufferInfo) instead.")]
 public GRBackendRenderTarget (GRBackend backend, GRBackendRenderTargetDesc desc);
 	public GRBackendRenderTarget (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo);
 	// properties
@@ -1115,10 +1115,10 @@ public GRBackendRenderTarget (GRBackend backend, GRBackendRenderTargetDesc desc)
 public class GRBackendTexture : SkiaSharp.SKObject, System.IDisposable {
 	// constructors
 
-	[Obsolete]
+	[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
 public GRBackendTexture (GRBackendTextureDesc desc);
 
-	[Obsolete]
+	[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
 public GRBackendTexture (GRGlBackendTextureDesc desc);
 	public GRBackendTexture (int width, int height, bool mipmapped, GRGlTextureInfo glInfo);
 	// properties

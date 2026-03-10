@@ -25,15 +25,6 @@ Modified properties:
 ```
 
 
-#### Type Changed: SkiaSharp.Views.UWP.SKSwapChainPanel
-
-Removed method:
-
-```csharp
-protected override Windows.Foundation.Size ArrangeOverride (Windows.Foundation.Size finalSize);
-```
-
-
 #### Removed Type SkiaSharp.Views.UWP.GlesBackingOption
 #### Removed Type SkiaSharp.Views.UWP.GlesContext
 #### Removed Type SkiaSharp.Views.UWP.GlesDepthFormat

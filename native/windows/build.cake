@@ -8,8 +8,28 @@ string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
 bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
 
+string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
+bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
+
+var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
+
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/msbuild.cake"
+
+string GetSpectreLibPath(string arch)
+{
+    // Normalize architecture names to match spectre lib directory structure
+    var spectreArch = arch.ToLower() switch {
+        "win32" => "x86",
+        _ => arch.ToLower()
+    };
+
+    var spectrePaths = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/lib/spectre/{spectreArch}");
+    if (spectrePaths.Count == 0) {
+        throw new Exception($"Could not find spectre library path for {spectreArch}, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+    }
+    return spectrePaths.First().FullPath;
+}
 
 string VARIANT = BUILD_VARIANT ?? "windows";
 
@@ -35,6 +55,7 @@ Task("libSkiaSharp")
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
         var win_vcvars_version = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"win_vcvars_version='{VC_TOOLSET_VERSION}' ";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
+        var spectreLibPath = GetSpectreLibPath(arch);
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='win'" +
@@ -52,16 +73,18 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
+            $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
             clang +
             win_vcvars_version +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}' ] " +
             ADDITIONAL_GN_ARGS);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.dll"), outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.pdb"), outDir);
+        CheckWindowsDependencies($"{outDir}/libSkiaSharp.dll", excluded: VERIFY_EXCLUDED);
     }
 });
 
@@ -83,6 +106,7 @@ Task("libHarfBuzzSharp")
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.dll", outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.pdb", outDir);
+        CheckWindowsDependencies($"{outDir}/libHarfBuzzSharp.dll", excluded: VERIFY_EXCLUDED);
     }
 });
 

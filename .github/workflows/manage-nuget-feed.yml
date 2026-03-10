@@ -1,0 +1,231 @@
+name: Manage NuGet Feed
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/manage-nuget-feed.ps1'
+      - '.github/workflows/manage-nuget-feed.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode'
+        required: true
+        default: 'parallel-underscore'
+        type: choice
+        options:
+          - parallel-underscore    # Run all _* packages in parallel
+          - parallel-all           # Run all packages (underscore + regular) in parallel
+          - single                 # Run single filter (use package_filter)
+      package_filter:
+        description: 'Regex filter (only for "single" mode, e.g., "^SkiaSharp$")'
+        required: false
+        default: ''
+      move_phase:
+        description: 'Move phase for underscore packages'
+        required: true
+        default: 'CopyOnly'
+        type: choice
+        options:
+          - CopyOnly
+          - DeleteOnly
+          - All
+      skip_move_operations:
+        description: 'Skip move operations (only delete bad versions)'
+        required: false
+        type: boolean
+        default: false
+      skip_delete_operations:
+        description: 'Skip delete operations (only move packages)'
+        required: false
+        type: boolean
+        default: false
+      verify_before_delete:
+        description: 'Verify package exists in destination before deleting from source'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  # Parallel jobs for underscore packages (move to archive feed)
+  manage-underscore-packages:
+    if: inputs.mode == 'parallel-underscore' || inputs.mode == 'parallel-all' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - name: _NativeAssets
+            filter: "^_NativeAssets$"
+          - name: _NativeAssets.alpine
+            filter: "^_NativeAssets\\.alpine$"
+          - name: _NativeAssets.alpinenodeps
+            filter: "^_NativeAssets\\.alpinenodeps$"
+          - name: _NativeAssets.android
+            filter: "^_NativeAssets\\.android$"
+          - name: _NativeAssets.ios
+            filter: "^_NativeAssets\\.ios$"
+          - name: _NativeAssets.iossimulator
+            filter: "^_NativeAssets\\.iossimulator$"
+          - name: _NativeAssets.linux
+            filter: "^_NativeAssets\\.linux$"
+          - name: _NativeAssets.linuxnodeps
+            filter: "^_NativeAssets\\.linuxnodeps$"
+          - name: _NativeAssets.maccatalyst
+            filter: "^_NativeAssets\\.maccatalyst$"
+          - name: _NativeAssets.nanoserver
+            filter: "^_NativeAssets\\.nanoserver$"
+          - name: _NativeAssets.osx
+            filter: "^_NativeAssets\\.osx$"
+          - name: _NativeAssets.tizen
+            filter: "^_NativeAssets\\.tizen$"
+          - name: _NativeAssets.tvos
+            filter: "^_NativeAssets\\.tvos$"
+          - name: _NativeAssets.uwp
+            filter: "^_NativeAssets\\.uwp$"
+          - name: _NativeAssets.wasm
+            filter: "^_NativeAssets\\.wasm$"
+          - name: _NativeAssets.watchos
+            filter: "^_NativeAssets\\.watchos$"
+          - name: _NativeAssets.windows
+            filter: "^_NativeAssets\\.windows$"
+          - name: _NativeAssets.winui
+            filter: "^_NativeAssets\\.winui$"
+          - name: _NuGets
+            filter: "^_NuGets$"
+          - name: _NuGetsPreview
+            filter: "^_NuGetsPreview$"
+          - name: _Symbols
+            filter: "^_Symbols$"
+          - name: _SymbolsPreview
+            filter: "^_SymbolsPreview$"
+
+    name: "${{ matrix.package.name }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run feed management
+        shell: pwsh
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          $params = @{
+            Organization = "xamarin"
+            Project = "public"
+            SourceFeed = "SkiaSharp"
+            DestinationFeed = "SkiaSharp-CI"
+            PackageFilter = "${{ matrix.package.filter }}"
+          }
+
+          $movePhase = "${{ inputs.move_phase }}"
+          $params.MovePhase = if ($movePhase) { $movePhase } else { "CopyOnly" }
+          $params.Execute = $true  # Always execute in CI
+
+          if ("${{ inputs.skip_move_operations }}" -eq "true") { $params.SkipMoveOperations = $true }
+          if ("${{ inputs.skip_delete_operations }}" -eq "true") { $params.SkipDeleteOperations = $true }
+          if ("${{ inputs.verify_before_delete }}" -eq "true") { $params.VerifyBeforeDelete = $true }
+
+          Write-Host "Running ${{ matrix.package.name }} with parameters:"
+          $params | Format-Table -AutoSize
+          ./scripts/manage-nuget-feed.ps1 @params
+
+  # Parallel jobs for regular packages (delete bad versions only, no move)
+  manage-regular-packages:
+    if: inputs.mode == 'parallel-all'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - name: SkiaSharp
+            filter: "^SkiaSharp$"
+          - name: SkiaSharp-NativeAssets
+            filter: "^SkiaSharp\\.NativeAssets\\."
+          - name: SkiaSharp-Views
+            filter: "^SkiaSharp\\.Views\\."
+          - name: SkiaSharp-Other
+            filter: "^SkiaSharp\\.(?!NativeAssets|Views)"
+          - name: HarfBuzzSharp
+            filter: "^HarfBuzzSharp"
+
+    name: "${{ matrix.package.name }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run feed management
+        shell: pwsh
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          $params = @{
+            Organization = "xamarin"
+            Project = "public"
+            SourceFeed = "SkiaSharp"
+            DestinationFeed = "SkiaSharp-CI"
+            PackageFilter = "${{ matrix.package.filter }}"
+            SkipMoveOperations = $true  # Regular packages don't move
+          }
+
+          if ("${{ inputs.skip_delete_operations }}" -eq "true") { $params.SkipDeleteOperations = $true }
+          $params.Execute = $true  # Always execute in CI
+
+          Write-Host "Running ${{ matrix.package.name }} with parameters:"
+          $params | Format-Table -AutoSize
+          ./scripts/manage-nuget-feed.ps1 @params
+
+  # Single package mode (manual filter)
+  manage-single:
+    if: inputs.mode == 'single' && inputs.package_filter != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run feed management script
+        shell: pwsh
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          $params = @{
+            Organization = "xamarin"
+            Project = "public"
+            SourceFeed = "SkiaSharp"
+            DestinationFeed = "SkiaSharp-CI"
+          }
+
+          # Add optional parameters (with defaults for PR triggers where inputs are empty)
+          $packageFilter = "${{ inputs.package_filter }}"
+          if ($packageFilter) {
+            $params.PackageFilter = $packageFilter
+          }
+
+          $movePhase = "${{ inputs.move_phase }}"
+          if ($movePhase) {
+            $params.MovePhase = $movePhase
+          } else {
+            $params.MovePhase = "CopyOnly"  # Default for PR triggers
+          }
+
+          if ("${{ inputs.skip_move_operations }}" -eq "true") {
+            $params.SkipMoveOperations = $true
+          }
+
+          if ("${{ inputs.skip_delete_operations }}" -eq "true") {
+            $params.SkipDeleteOperations = $true
+          }
+
+          if ("${{ inputs.verify_before_delete }}" -eq "true") {
+            $params.VerifyBeforeDelete = $true
+          }
+
+          $params.Execute = $true
+
+          Write-Host "Running with parameters:"
+          $params | Format-Table -AutoSize
+
+          ./scripts/manage-nuget-feed.ps1 @params

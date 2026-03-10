@@ -12,9 +12,11 @@ namespace SkiaSharp
 
 		public SKAutoCoInitialize()
 		{
+#if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
 			if (PlatformConfiguration.IsWindows)
 				hResult = CoInitializeEx(IntPtr.Zero, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 			else
+#endif
 				hResult = S_OK;
 		}
 
@@ -24,8 +26,10 @@ namespace SkiaSharp
 		{
 			if (hResult >= 0)
 			{
+#if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
 				if (PlatformConfiguration.IsWindows)
 					CoUninitialize();
+#endif
 
 				hResult = -1;
 			}
@@ -41,6 +45,7 @@ namespace SkiaSharp
 		private const uint COINIT_DISABLE_OLE1DDE = 0x4;
 		private const uint COINIT_SPEED_OVER_MEMORY = 0x8;
 
+#if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)
 #if USE_LIBRARY_IMPORT
 		[LibraryImport("ole32.dll", SetLastError = true)]
 		private static partial long CoInitializeEx(IntPtr pvReserved, uint dwCoInit);
@@ -51,6 +56,7 @@ namespace SkiaSharp
 		private static extern long CoInitializeEx([In, Optional] IntPtr pvReserved, [In] uint dwCoInit);
 		[DllImport("ole32.dll", CharSet = CharSet.Ansi, SetLastError = true, CallingConvention = CallingConvention.StdCall)]
 		private static extern void CoUninitialize();
+#endif
 #endif
 	}
 }

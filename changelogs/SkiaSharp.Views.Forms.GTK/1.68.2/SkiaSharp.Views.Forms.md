@@ -108,7 +108,7 @@ public class SKCanvasView : Xamarin.Forms.View, ISKCanvasViewController, System.
 #### New Type: SkiaSharp.Views.Forms.SKCanvasViewRenderer
 
 ```csharp
-public class SKCanvasViewRenderer : SkiaSharp.Views.Forms.SKCanvasViewRendererBase`2[SkiaSharp.Views.Forms.SKCanvasView,SkiaSharp.Views.Gtk.SKWidget], Atk.Implementor, GLib.IWrapper, System.Collections.IEnumerable, System.IDisposable, Xamarin.Forms.IEffectControlProvider, Xamarin.Forms.IRegisterable, Xamarin.Forms.Platform.GTK.IVisualElementRenderer, Xamarin.Forms.Platform.GTK.IVisualNativeElementRenderer {
+public class SKCanvasViewRenderer : SkiaSharp.Views.Forms.SKCanvasViewRendererBase`2[SkiaSharp.Views.Forms.SKCanvasView,SkiaSharp.Views.Gtk.SKWidget], Xamarin.Forms.IRegisterable {
 	// constructors
 	public SKCanvasViewRenderer ();
 }
@@ -117,7 +117,7 @@ public class SKCanvasViewRenderer : SkiaSharp.Views.Forms.SKCanvasViewRendererBa
 #### New Type: SkiaSharp.Views.Forms.SKCanvasViewRendererBase`2
 
 ```csharp
-public abstract class SKCanvasViewRendererBase`2 : Xamarin.Forms.Platform.GTK.ViewRenderer`2[TFormsView,TNativeView], Atk.Implementor, GLib.IWrapper, System.Collections.IEnumerable, System.IDisposable, Xamarin.Forms.IEffectControlProvider, Xamarin.Forms.IRegisterable, Xamarin.Forms.Platform.GTK.IVisualElementRenderer, Xamarin.Forms.Platform.GTK.IVisualNativeElementRenderer {
+public abstract class SKCanvasViewRendererBase`2 : Xamarin.Forms.Platform.GTK.ViewRenderer`2[TFormsView,TNativeView] {
 	// constructors
 	protected SKCanvasViewRendererBase`2 ();
 	// methods
@@ -201,7 +201,7 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget);
 
-	[Obsolete]
+	[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
 	// properties
@@ -209,7 +209,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 	public SkiaSharp.SKColorType ColorType { get; }
 	public SkiaSharp.GRSurfaceOrigin Origin { get; }
 
-	[Obsolete]
+	[Obsolete ("Use BackendRenderTarget instead.")]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }

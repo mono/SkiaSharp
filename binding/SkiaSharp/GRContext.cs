@@ -63,6 +63,21 @@ namespace SkiaSharp
 			}
 		}
 
+		public static GRContext CreateDirect3D (GRD3DBackendContext backendContext) =>
+			CreateDirect3D (backendContext, null);
+
+		public static GRContext CreateDirect3D (GRD3DBackendContext backendContext, GRContextOptions options)
+		{
+			if (backendContext == null)
+				throw new ArgumentNullException (nameof (backendContext));
+			if (options == null) {
+				return GetObject (SkiaApi.gr_direct_context_make_direct3d (backendContext.ToNative ()));
+			} else {
+				var opts = options.ToNative ();
+				return GetObject (SkiaApi.gr_direct_context_make_direct3d_with_options (backendContext.ToNative (), &opts));
+			}
+		}
+
 		// CreateMetal
 
 		public static GRContext CreateMetal (GRMtlBackendContext backendContext) =>

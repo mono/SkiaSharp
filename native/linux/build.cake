@@ -12,6 +12,11 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() 
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
+var VERIFY_INCLUDED = Argument("verifyIncluded", Argument("verifyincluded", ""))
+    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+var VERIFY_GLIBC_MAX = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
+
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
@@ -29,24 +34,13 @@ if (!string.IsNullOrEmpty(CXX))
 if (!string.IsNullOrEmpty(AR))
     COMPILERS += $"ar='{AR}' ";
 
-void CheckDeps(FilePath so)
+void CheckDeps(FilePath so, bool checkIncluded = true)
 {
-    if (VERIFY_EXCLUDED == null || VERIFY_EXCLUDED.Length == 0)
-        return;
-
-    Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
-
-    RunProcess("readelf", $"-d {so}", out var stdout);
-    Information(String.Join(Environment.NewLine + "    ", stdout));
-
-    var needed = stdout
-        .Where(l => l.Contains("(NEEDED)"))
-        .ToList();
-
-    foreach (var exclude in VERIFY_EXCLUDED) {
-        if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
-            throw new Exception($"{so} contained a dependency on {exclude}.");
-    }
+    CheckLinuxDependencies(
+        so,
+        excluded: VERIFY_EXCLUDED,
+        included: checkIncluded ? VERIFY_INCLUDED : null,
+        maxGlibc: string.IsNullOrEmpty(VERIFY_GLIBC_MAX) ? null : VERIFY_GLIBC_MAX);
 }
 
 Task("libSkiaSharp")
@@ -54,6 +48,17 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
+    // patch the gclient_paths.py for Python 3.7
+    {
+        var gclient = DEPOT_PATH.CombineWithFilePath("gclient_paths.py");
+        var contents = System.IO.File.ReadAllText(gclient.FullPath);
+        var newContents = contents
+            .Replace("@functools.lru_cache", "@functools.lru_cache()")
+            .Replace("@functools.lru_cache()()", "@functools.lru_cache()");
+        if (contents != newContents)
+            System.IO.File.WriteAllText(gclient.FullPath, newContents);
+    }
+
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
@@ -67,6 +72,13 @@ Task("libSkiaSharp")
         var wordSizeDefine = VARIANT.ToLower().StartsWith("alpine")
             ? $", '-D__WORDSIZE={wordSize}'"
             : $"";
+
+        // Architecture-specific Spectre mitigation flags
+        var spectreFlags = arch switch {
+            "x64" or "x86" => ", '-mretpoline'",
+            "arm" or "arm64" => ", '-mharden-sls=all'",
+            _ => ""  // RISC-V, LoongArch - no standard flags yet
+        };
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
@@ -85,7 +97,7 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' {wordSizeDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
@@ -129,7 +141,7 @@ Task("libHarfBuzzSharp")
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
 
-        CheckDeps(so);
+        CheckDeps(so, checkIncluded: false); // HarfBuzz doesn't need fontconfig
     }
 });
 

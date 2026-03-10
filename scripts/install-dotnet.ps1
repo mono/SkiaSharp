@@ -11,9 +11,9 @@ if (Test-Path $dotnetDll) {
   Write-Host ".NET already installed."
 } else {
   if ($IsMacOS -or $IsLinux) {
-    $url = "https://dot.net/v1/dotnet-install.sh"
+    $url = "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh"
   } else {
-    $url = "https://dot.net/v1/dotnet-install.ps1"
+    $url = "https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.ps1"
   }
 
   Write-Host "Downloading .NET Installer..."

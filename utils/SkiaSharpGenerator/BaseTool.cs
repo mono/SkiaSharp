@@ -50,6 +50,32 @@ namespace SkiaSharpGenerator
 
 			var options = new CppParserOptions();
 
+			if (OperatingSystem.IsMacOS())
+			{
+				Log?.LogVerbose("Looking for Clang include folder...");
+
+				var root = "/Library/Developer/CommandLineTools/usr/lib/clang/";
+				if (Directory.Exists(root))
+				{
+					var version = Directory.GetDirectories(root)
+						.OrderByDescending(d => Version.TryParse(Path.GetFileName(d), out var v) ? v : new Version(0, 0, 0))
+						.FirstOrDefault();
+					if (version is not null)
+					{
+						Log?.LogVerbose($"Found Clang include folder: {version}");
+						options.IncludeFolders.Add(Path.Combine(root, version, "include"));
+					}
+					else
+					{
+						Log?.LogWarning("Clang versioned include folder not found, parsing may fail.");
+					}
+				}
+				else
+				{
+					Log?.LogWarning("Clang include folder not found, parsing may fail.");
+				}
+			}
+
 			foreach (var header in config.IncludeDirs)
 			{
 				var path = Path.Combine(SkiaRoot, header);

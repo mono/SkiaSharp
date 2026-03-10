@@ -56,6 +56,15 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void TestPostScriptName()
+		{
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "CourierNew.ttf")))
+			{
+				Assert.Equal("CourierNewPSMT", typeface.PostScriptName);
+			}
+		}
+
+		[SkippableFact]
 		public void CanReadNonASCIIFile()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "上田雅美.ttf")))

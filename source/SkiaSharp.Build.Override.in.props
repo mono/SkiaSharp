@@ -1,8 +1,58 @@
 <Project>
+  <!--
+    To customize your local build:
+    1. Copy this file to: SkiaSharp.Build.Override.props (remove ".in" from name)
+    2. Uncomment and modify the settings you want to change
+    3. The override file is gitignored, so your settings won't be committed
+    
+    Build Modes:
+    - CI builds: All platforms enabled (controlled by IsCI=true)
+    - Local builds: Core platforms only (Android, iOS, MacCatalyst, Windows)
+    - Custom: Set BuildEverything=true or enable specific platforms below
+  -->
 
   <PropertyGroup>
-    <BuildEverything>true</BuildEverything>
-    <NoWarn>$(NoWarn);CA1422;CA1416;CS1591;CS8632</NoWarn>
+    <!--
+      Build Everything Mode:
+      - Set to true to build ALL platforms locally (same as CI).
+      - This requires all workloads to be installed.
+    -->
+    <!-- <BuildEverything>true</BuildEverything> -->
+
+
+    <!--
+      Optional Platform Support:
+      - These platforms are disabled by default for local builds.
+      - Enable them if you have the workloads installed and need to test.
+      
+      Install workloads with:
+        dotnet workload install maui        (includes iOS, Android, MacCatalyst)
+        dotnet workload install tvos        (for tvOS support)
+        dotnet workload install macos       (for macOS desktop support)
+        dotnet workload install tizen       (for Tizen support - Samsung)
+    -->
+    <!-- <IsNetTizenSupported>true</IsNetTizenSupported> -->
+    <!-- <IsNetTVOSSupported>true</IsNetTVOSSupported> -->
+    <!-- <IsNetMacOSSupported>true</IsNetMacOSSupported> -->
+
+
+    <!--
+      Disable Core Platforms:
+      - You can also DISABLE core platforms if you don't need them.
+      - Useful for faster builds when working on specific platforms.
+    -->
+    <!-- <IsNetAndroidSupported>false</IsNetAndroidSupported> -->
+    <!-- <IsNetiOSSupported>false</IsNetiOSSupported> -->
+    <!-- <IsNetMacCatalystSupported>false</IsNetMacCatalystSupported> -->
+    <!-- <IsNetWindowsSupported>false</IsNetWindowsSupported> -->
+
+
+    <!--
+      Suppress Warnings:
+      - Add any warning codes you want to suppress during builds.
+      - Default suppressions are already set in SkiaSharp.Build.props.
+    -->
+    <!-- <NoWarn>$(NoWarn);CS1591;CS8632</NoWarn> -->
   </PropertyGroup>
 
 </Project>

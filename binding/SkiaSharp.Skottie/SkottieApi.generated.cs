@@ -10,8 +10,14 @@ using SkiaSharp.Skottie;
 
 #region Class declarations
 
+using d3d_alloc_t = System.IntPtr;
+using d3d_d12_command_queue_t = System.IntPtr;
+using d3d_d12_device_t = System.IntPtr;
+using d3d_d12_resource_t = System.IntPtr;
+using d3d_dxgi_adapter_t = System.IntPtr;
 using gr_backendrendertarget_t = System.IntPtr;
 using gr_backendtexture_t = System.IntPtr;
+using gr_d3d_memory_allocator_t = System.IntPtr;
 using gr_direct_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
 using gr_recording_context_t = System.IntPtr;

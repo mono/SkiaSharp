@@ -1,6 +1,3 @@
-#addin nuget:?package=Cake.Android.Adb&version=3.2.0
-#addin nuget:?package=Cake.Android.AvdManager&version=2.2.0
-
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 
 #load "shared.cake"
@@ -27,46 +24,7 @@ if (string.IsNullOrEmpty(TEST_RESULTS)) {
 Information("Test Results Directory: {0}", TEST_RESULTS);
 CleanDir(TEST_RESULTS);
 
-// set up env
-var ANDROID_SDK_ROOT = Argument("android", EnvironmentVariable("ANDROID_SDK_ROOT") ?? EnvironmentVariable("ANDROID_SDK_HOME"));
-if (string.IsNullOrEmpty(ANDROID_SDK_ROOT)) {
-    throw new Exception("Environment variable 'ANDROID_SDK_ROOT' must be set to the Android SDK root.");
-}
-System.Environment.SetEnvironmentVariable("PATH",
-    $"{ANDROID_SDK_ROOT}/cmdline-tools/latest/bin" + System.IO.Path.PathSeparator +
-    $"{ANDROID_SDK_ROOT}/platform-tools" + System.IO.Path.PathSeparator +
-    $"{ANDROID_SDK_ROOT}/emulator" + System.IO.Path.PathSeparator +
-    $"{ANDROID_SDK_ROOT}/tools/bin" + System.IO.Path.PathSeparator +
-    EnvironmentVariable("PATH"));
-
-Information("Android SDK Root: {0}", ANDROID_SDK_ROOT);
-Information("PATH: {0}", EnvironmentVariable("PATH"));
-
-var bat = IsRunningOnWindows() ? ".bat" : "";
-var exe = IsRunningOnWindows() ? ".exe" : "";
-var avdSettings = new AndroidAvdManagerToolSettings {
-    SdkRoot = ANDROID_SDK_ROOT,
-    ToolPath = $"{ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/avdmanager{bat}"
-};
-var adbSettings = new AdbToolSettings {
-    SdkRoot = ANDROID_SDK_ROOT,
-    ToolPath = $"{ANDROID_SDK_ROOT}/platform-tools/adb{exe}"
-};
-var emuSettings = new AndroidEmulatorToolSettings {
-    SdkRoot = ANDROID_SDK_ROOT,
-    ToolPath = $"{ANDROID_SDK_ROOT}/emulator/emulator{exe}",
-    Verbose = true,
-    ArgumentCustomization = args => args.Append(
-        "-no-boot-anim " +
-        "-no-snapshot " +
-        "-gpu host " +
-        "-no-audio " +
-        "-camera-back none " +
-        "-camera-front none " +
-        "-qemu -m 2048")
-};
-
-AndroidEmulatorProcess emulatorProcess = null;
+var usingEmulator = true;
 
 Setup(context =>
 {
@@ -80,7 +38,6 @@ Setup(context =>
     // determine the device characteristics
     {
         var working = TEST_DEVICE.Trim().ToLower();
-        var emulator = true;
         var api = 34;
         // version
         if (working.IndexOf("_") is int idx && idx > 0) {
@@ -93,81 +50,59 @@ Setup(context =>
             throw new Exception("Unexpected platform (expected: android) in device: " + TEST_DEVICE);
         // device/emulator
         if (parts[1] == "device")
-            emulator = false;
+            usingEmulator = false;
         else if (parts[1] != "emulator" && parts[1] != "simulator")
             throw new Exception("Unexpected device type (expected: device|emulator) in device: " + TEST_DEVICE);
         // arch/bits
         if (parts[2] == "32") {
-            if (emulator)
+            if (usingEmulator)
                 DEVICE_ARCH = "x86";
             else
                 DEVICE_ARCH = "armeabi-v7a";
         } else if (parts[2] == "64") {
             if (RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
                 DEVICE_ARCH = "arm64-v8a";
-            else if (emulator)
+            else if (usingEmulator)
                 DEVICE_ARCH = "x86_64";
             else
                 DEVICE_ARCH = "arm64-v8a";
         }
         DEVICE_ID = $"system-images;android-{api};google_apis;{DEVICE_ARCH}";
+    }
 
-        // we are not using a virtual device, so quit
-        if (!emulator)
-            return;
+    // we are not using a virtual device, so quit
+    if (!usingEmulator) {
+        Information("Using a physical device:");
+        DotNetTool("android device list");
+        return;
     }
 
     Information("Test Device ID: {0}", DEVICE_ID);
 
-    // delete the AVD first, if it exists
-    Information("Deleting AVD if exists: {0}...", ANDROID_AVD);
-    try { AndroidAvdDelete(ANDROID_AVD, avdSettings); }
-    catch { }
-
     // create the new AVD
     Information("Creating AVD: {0}...", ANDROID_AVD);
-    AndroidAvdCreate(ANDROID_AVD, DEVICE_ID, DEVICE_NAME, force: true, settings: avdSettings);
+    DotNetTool($"android avd create --name \"{ANDROID_AVD}\" --sdk \"{DEVICE_ID}\" --device \"{DEVICE_NAME}\" --force");
 
-    // start the emulator
+    // start the emulator (only wait 5 mins)
     Information("Starting Emulator: {0}...", ANDROID_AVD);
-    emulatorProcess = AndroidEmulatorStart(ANDROID_AVD, emuSettings);
+    DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --timeout 300");
 
-    // wait for it to finish booting (4 mins)
-    var waited = 0;
-    var interval = 10;
-    var totalMins = 4;
-    var total = 60 * totalMins / interval;
-    while (AdbShell("getprop sys.boot_completed", adbSettings).FirstOrDefault() != "1") {
-        TakeSnapshot(TEST_RESULTS, $"boot-{waited:000}");
-        System.Threading.Thread.Sleep(interval * 1000);
-        Information("Wating {0}/{1} seconds for the emulator to boot up.", waited * interval, total);
-        if (waited++ > total)
-            break;
-    }
+    // show running emulator information
+    Information("Emulator started:");
+    DotNetTool("android device list");
     TakeSnapshot(TEST_RESULTS, "boot-complete");
-    Information("Waited {0} seconds for the emulator to boot up.", waited);
 });
 
 Teardown(context =>
 {
-    TakeSnapshot(TEST_RESULTS, "teardown");
-
     // no virtual device was used
-    if (emulatorProcess == null)
+    if (!usingEmulator)
         return;
 
-    // stop and cleanup the emulator
-    AdbEmuKill(adbSettings);
+    TakeSnapshot(TEST_RESULTS, "teardown");
 
-    System.Threading.Thread.Sleep(5000);
-
-    // kill the process if it has not already exited
-    try { emulatorProcess.Kill(); }
-    catch { }
-
-    // delete the AVD
-    try { AndroidAvdDelete(ANDROID_AVD, avdSettings); }
-    catch { }
+    // cleanup the emulator
+    DotNetTool($"android avd delete --name \"{ANDROID_AVD}\"");
 });
 
 Task("Default")

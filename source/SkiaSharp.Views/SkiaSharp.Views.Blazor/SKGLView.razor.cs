@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -7,6 +8,7 @@ using SkiaSharp.Views.Blazor.Internal;
 
 namespace SkiaSharp.Views.Blazor
 {
+	[SupportedOSPlatform("browser")]
 	public partial class SKGLView : IDisposable
 	{
 		private SKHtmlCanvasInterop interop = null!;

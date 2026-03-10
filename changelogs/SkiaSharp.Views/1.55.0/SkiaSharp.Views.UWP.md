@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.Views.UWP.AngleSwapChainPanel
 
 ```csharp
-public class AngleSwapChainPanel : Windows.UI.Xaml.Controls.SwapChainPanel {
+public class AngleSwapChainPanel : Windows.UI.Xaml.Controls.SwapChainPanel, Windows.UI.Composition.IAnimationObject, Windows.UI.Composition.IVisualElement {
 	// constructors
 	public AngleSwapChainPanel ();
 	// properties
@@ -129,7 +129,7 @@ public class SKPaintSurfaceEventArgs : System.EventArgs {
 #### New Type: SkiaSharp.Views.UWP.SKSwapChainPanel
 
 ```csharp
-public class SKSwapChainPanel : SkiaSharp.Views.UWP.AngleSwapChainPanel {
+public class SKSwapChainPanel : SkiaSharp.Views.UWP.AngleSwapChainPanel, Windows.UI.Composition.IAnimationObject, Windows.UI.Composition.IVisualElement {
 	// constructors
 	public SKSwapChainPanel ();
 	// properties
@@ -146,7 +146,7 @@ public class SKSwapChainPanel : SkiaSharp.Views.UWP.AngleSwapChainPanel {
 #### New Type: SkiaSharp.Views.UWP.SKXamlCanvas
 
 ```csharp
-public class SKXamlCanvas : Windows.UI.Xaml.Controls.Canvas {
+public class SKXamlCanvas : Windows.UI.Xaml.Controls.Canvas, Windows.UI.Composition.IAnimationObject, Windows.UI.Composition.IVisualElement {
 	// constructors
 	public SKXamlCanvas ();
 	// properties

@@ -30,7 +30,7 @@ Modified properties:
 Obsoleted constructors:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
  public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 ```
 
@@ -44,7 +44,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use BackendRenderTarget instead.")]
  public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 ```
 
