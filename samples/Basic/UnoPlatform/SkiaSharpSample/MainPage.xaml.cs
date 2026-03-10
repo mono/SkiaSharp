@@ -2,8 +2,6 @@
 
 public sealed partial class MainPage : Page
 {
-	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
-
 	public MainPage()
 	{
 		InitializeComponent();
@@ -13,7 +11,12 @@ public sealed partial class MainPage : Page
 
 	private void OnNavViewLoaded(object sender, RoutedEventArgs e)
 	{
-		NavView.SelectedItem = NavView.MenuItems[(int)DefaultPage];
+		// Hide GPU tab on platforms where SKSwapChainPanel is unsupported
+		if (!IsGpuSupported())
+		{
+			NavView.MenuItems.RemoveAt(1);
+		}
+		NavView.SelectedItem = NavView.MenuItems[0];
 	}
 
 	private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -29,5 +32,23 @@ public sealed partial class MainPage : Page
 			};
 			ContentFrame.Navigate(pageType);
 		}
+	}
+
+	private static bool IsGpuSupported()
+	{
+#if __MACCATALYST__
+		return false;
+#else
+		try
+		{
+			return !SkiaSharp.Views.Windows.SKSwapChainPanel.RaiseOnUnsupported ||
+			       OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() ||
+			       OperatingSystem.IsWindows();
+		}
+		catch
+		{
+			return false;
+		}
+#endif
 	}
 }

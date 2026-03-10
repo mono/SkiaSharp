@@ -43,9 +43,9 @@ public sealed partial class DrawingPage : Page
 		};
 	}
 
-	private void OnColorClicked(object? sender, RoutedEventArgs e)
+	private void OnColorTapped(object? sender, TappedRoutedEventArgs e)
 	{
-		if (sender is Button btn && btn.Tag is string tag && ColorMap.TryGetValue(tag, out var pair))
+		if (sender is Border border && border.Tag is string tag && ColorMap.TryGetValue(tag, out var pair))
 			currentColor = ResolveColor(pair);
 	}
 

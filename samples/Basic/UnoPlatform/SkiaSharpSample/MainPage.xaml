@@ -2,18 +2,36 @@
     x:Class="SkiaSharpSample.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:SkiaSharpSample">
+    xmlns:local="using:SkiaSharpSample"
+    xmlns:toolkit="using:Uno.UI.Toolkit">
 
-    <NavigationView x:Name="NavView"
-                    IsBackButtonVisible="Collapsed"
-                    SelectionChanged="NavView_SelectionChanged"
-                    PaneDisplayMode="Left">
-        <NavigationView.MenuItems>
-            <NavigationViewItem Content="CPU Canvas" Tag="cpu" />
-            <NavigationViewItem Content="GPU (ANGLE)" Tag="gpu" />
-            <NavigationViewItem Content="Drawing" Tag="drawing" />
-        </NavigationView.MenuItems>
-        <Frame x:Name="ContentFrame" />
-    </NavigationView>
+    <Grid toolkit:VisibleBoundsPadding.PaddingMask="Top">
+        <NavigationView x:Name="NavView"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="False"
+                        SelectionChanged="NavView_SelectionChanged"
+                        PaneDisplayMode="LeftCompact"
+                        OpenPaneLength="200"
+                        CompactPaneLength="48">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="CPU" Tag="cpu">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Calculator" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="GPU" Tag="gpu">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Video" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Drawing" Tag="drawing">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Edit" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <Frame x:Name="ContentFrame" />
+        </NavigationView>
+    </Grid>
 
 </Page>

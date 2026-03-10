@@ -17,6 +17,19 @@
     <ApplicationVersion>1</ApplicationVersion>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- We use project references for SkiaSharp, not the NuGet packages that Uno SDK adds implicitly -->
+    <UnoDisableLottieSkiaVersionCheck>true</UnoDisableLottieSkiaVersionCheck>
+  </PropertyGroup>
+
+  <!--
+    The Uno SDK implicitly adds SkiaSharp.Views.Uno.WinUI for desktop/wasm.
+    Exclude all assets so our project references take precedence.
+  -->
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp.Views.Uno.WinUI" Version="2.88.9" ExcludeAssets="all" PrivateAssets="all" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />

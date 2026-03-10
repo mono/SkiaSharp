@@ -27,6 +27,8 @@
         </VisualStateManager.VisualStateGroups>
 
         <skia:SKXamlCanvas x:Name="skiaView" PaintSurface="OnPaintSurface"
+                           Background="Transparent"
+                           ManipulationMode="All"
                            PointerPressed="OnPointerPressed"
                            PointerMoved="OnPointerMoved"
                            PointerReleased="OnPointerReleased"
@@ -61,42 +63,18 @@
             <StackPanel x:Name="ToolboxPanel" Orientation="Horizontal" Spacing="14">
                 <!-- Color swatches -->
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Button Click="OnColorClicked" Tag="Black" Padding="0" MinWidth="0" MinHeight="0"
-                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
-                        <Button.Background>
-                            <SolidColorBrush Color="Black" />
-                        </Button.Background>
-                    </Button>
-                    <Button Click="OnColorClicked" Tag="Red" Padding="0" MinWidth="0" MinHeight="0"
-                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
-                        <Button.Background>
-                            <SolidColorBrush Color="#E53935" />
-                        </Button.Background>
-                    </Button>
-                    <Button Click="OnColorClicked" Tag="Blue" Padding="0" MinWidth="0" MinHeight="0"
-                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
-                        <Button.Background>
-                            <SolidColorBrush Color="#1E88E5" />
-                        </Button.Background>
-                    </Button>
-                    <Button Click="OnColorClicked" Tag="Green" Padding="0" MinWidth="0" MinHeight="0"
-                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
-                        <Button.Background>
-                            <SolidColorBrush Color="#43A047" />
-                        </Button.Background>
-                    </Button>
-                    <Button Click="OnColorClicked" Tag="Orange" Padding="0" MinWidth="0" MinHeight="0"
-                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
-                        <Button.Background>
-                            <SolidColorBrush Color="#FB8C00" />
-                        </Button.Background>
-                    </Button>
-                    <Button Click="OnColorClicked" Tag="Purple" Padding="0" MinWidth="0" MinHeight="0"
-                            Width="36" Height="36" CornerRadius="18" BorderThickness="0">
-                        <Button.Background>
-                            <SolidColorBrush Color="#8E24AA" />
-                        </Button.Background>
-                    </Button>
+                    <Border Tapped="OnColorTapped" Tag="Black" Width="36" Height="36"
+                            CornerRadius="18" Background="Black" />
+                    <Border Tapped="OnColorTapped" Tag="Red" Width="36" Height="36"
+                            CornerRadius="18" Background="#E53935" />
+                    <Border Tapped="OnColorTapped" Tag="Blue" Width="36" Height="36"
+                            CornerRadius="18" Background="#1E88E5" />
+                    <Border Tapped="OnColorTapped" Tag="Green" Width="36" Height="36"
+                            CornerRadius="18" Background="#43A047" />
+                    <Border Tapped="OnColorTapped" Tag="Orange" Width="36" Height="36"
+                            CornerRadius="18" Background="#FB8C00" />
+                    <Border Tapped="OnColorTapped" Tag="Purple" Width="36" Height="36"
+                            CornerRadius="18" Background="#8E24AA" />
                 </StackPanel>
 
                 <!-- Brush size slider + label -->
