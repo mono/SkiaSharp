@@ -74,7 +74,7 @@ if ($Workloads) {
 }
 
 Write-Host "Installing workloads: $($WorkloadList -join ', ')..."
-& dotnet workload install @WorkloadList --skip-sign-check --skip-manifest-update
+& dotnet workload install @WorkloadList --skip-sign-check
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Installed workloads:"
