@@ -89,6 +89,16 @@ Setup(context =>
     Information("Listing AVDs after creation:");
     DotNetTool("android avd list");
 
+    // Ensure the emulator can find the AVD — avdmanager on Linux may use
+    // ~/.config/.android/avd/ (XDG) while the emulator looks in ~/.android/avd/
+    var xdgAvdPath = System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        ".config", ".android", "avd");
+    if (System.IO.Directory.Exists(xdgAvdPath)) {
+        Information("Setting ANDROID_AVD_HOME={0}", xdgAvdPath);
+        Environment.SetEnvironmentVariable("ANDROID_AVD_HOME", xdgAvdPath);
+    }
+
     // start the emulator (only wait 5 mins)
     Information("Starting Emulator: {0}...", ANDROID_AVD);
     DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --timeout 300");
