@@ -373,7 +373,7 @@ Task ("tests-ios")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net10.0-ios26.0";
+    var tfm = "net10.0-ios26.2";
     var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
@@ -405,7 +405,7 @@ Task ("tests-maccatalyst")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net10.0-maccatalyst26.0";
+    var tfm = "net10.0-maccatalyst26.2";
     var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
 
