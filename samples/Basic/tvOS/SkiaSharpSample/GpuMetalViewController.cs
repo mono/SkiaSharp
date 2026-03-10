@@ -6,11 +6,9 @@ namespace SkiaSharpSample;
 [Register("GpuMetalViewController")]
 public class GpuMetalViewController : UIViewController
 {
-private const string ShaderSource = @"
+	private const string ShaderSource = @"
 uniform float iTime;
 uniform float2 iResolution;
-uniform float2 iTouchPos;
-uniform float iTouchActive;
 uniform float3 iColors[6];
 
 half4 main(float2 fragCoord) {
@@ -34,14 +32,6 @@ half4 main(float2 fragCoord) {
         field += strength;
         weighted += iColors[i] * strength;
     }
-    if (iTouchActive > 0.5) {
-        float2 touchSt = float2(iTouchPos.x * aspect, iTouchPos.y);
-        float2 d = st - touchSt;
-        float r = length(d);
-        float strength = 0.050 / (r * r + 0.002);
-        field += strength;
-        weighted += float3(1.0, 0.95, 0.9) * strength;
-    }
     float3 blobColor = weighted / max(field, 0.001);
     float edge = smoothstep(5.0, 8.0, field);
     float innerGlow = smoothstep(8.0, 20.0, field) * 0.3;
@@ -58,89 +48,76 @@ half4 main(float2 fragCoord) {
 }
 ";
 
-static readonly float[] blobColors =
-{
-1.0f, 0.3f, 0.4f,   // rose
-0.3f, 0.7f, 1.0f,   // sky blue
-1.0f, 0.6f, 0.1f,   // amber
-0.4f, 1.0f, 0.7f,   // mint
-0.7f, 0.3f, 1.0f,   // violet
-1.0f, 0.9f, 0.2f,   // yellow
-};
+	static readonly float[] blobColors =
+	{
+		1.0f, 0.3f, 0.4f,
+		0.3f, 0.7f, 1.0f,
+		1.0f, 0.6f, 0.1f,
+		0.4f, 1.0f, 0.7f,
+		0.7f, 0.3f, 1.0f,
+		1.0f, 0.9f, 0.2f,
+	};
 
-private readonly FpsCounter fpsCounter = new();
+	private readonly FpsCounter fpsCounter = new();
+	private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
 
-[Outlet]
-SKMetalView skiaView { get; set; } = null!;
+	[Outlet]
+	SKMetalView skiaView { get; set; } = null!;
 
-private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
+	public GpuMetalViewController(IntPtr handle) : base(handle) { }
 
-public GpuMetalViewController(IntPtr handle) : base(handle) { }
+	public override void ViewDidLoad()
+	{
+		base.ViewDidLoad();
+		skiaView.PaintSurface += OnPaintSurface;
+	}
 
-public override void ViewDidLoad()
-{
-base.ViewDidLoad();
+	public override void ViewDidAppear(bool animated)
+	{
+		base.ViewDidAppear(animated);
 
-shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
-fpsCounter.Start();
+		shaderBuilder ??= new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(ShaderSource));
+		fpsCounter.Start();
+		skiaView.PreferredFramesPerSecond = 60;
+		skiaView.Paused = false;
+	}
 
-skiaView.PreferredFramesPerSecond = 60;
-skiaView.PaintSurface += OnPaintSurface;
-}
+	public override void ViewWillDisappear(bool animated)
+	{
+		base.ViewWillDisappear(animated);
 
-public override void ViewWillDisappear(bool animated)
-{
-base.ViewWillDisappear(animated);
+		skiaView.Paused = true;
+		fpsCounter.Stop();
+	}
 
-if (skiaView != null)
-skiaView.PaintSurface -= OnPaintSurface;
+	private void OnPaintSurface(object? sender, SKPaintMetalSurfaceEventArgs e)
+	{
+		var canvas = e.Surface.Canvas;
+		var info = e.Info;
+		canvas.Clear(SKColors.Black);
 
-skiaView.Paused = true;
-fpsCounter.Stop();
-}
+		if (shaderBuilder == null)
+			return;
 
-public override void ViewWillAppear(bool animated)
-{
-base.ViewWillAppear(animated);
-skiaView.Paused = false;
-fpsCounter.Start();
-}
+		var builder = shaderBuilder.Value;
 
-private void OnPaintSurface(object? sender, SKPaintMetalSurfaceEventArgs e)
-{
-var canvas = e.Surface.Canvas;
-var info = e.Info;
-canvas.Clear(SKColors.Black);
+		builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
+		builder.Uniforms["iResolution"] = new float[] { info.Width, info.Height };
+		builder.Uniforms["iColors"] = blobColors;
 
-if (shaderBuilder == null)
-return;
+		using var shader = builder.Build();
+		using var paint = new SKPaint { Shader = shader };
+		canvas.DrawRect(SKRect.Create(info.Width, info.Height), paint);
+	}
 
-var builder = shaderBuilder.Value;
-
-builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
-builder.Uniforms["iResolution"] = new float[] { info.Width, info.Height };
-builder.Uniforms["iTouchPos"] = new float[] { 0f, 0f };
-builder.Uniforms["iTouchActive"] = 0f;
-builder.Uniforms["iColors"] = blobColors;
-
-using var shader = builder.Build();
-using var paint = new SKPaint { Shader = shader };
-canvas.DrawRect(SKRect.Create(info.Width, info.Height), paint);
-
-// Label
-using var textPaint = new SKPaint { Color = new SKColor(255, 255, 255, 180), IsAntialias = true };
-using var font = new SKFont { Size = 36 };
-canvas.DrawText("GPU \u2014 Metal", new SKPoint(info.Width / 2f, info.Height - 60), SKTextAlign.Center, font, textPaint);
-}
-
-protected override void Dispose(bool disposing)
-{
-if (disposing)
-{
-if (shaderBuilder?.IsValueCreated == true)
-shaderBuilder.Value.Dispose();
-shaderBuilder = null;
-}
-base.Dispose(disposing);
-}
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing)
+		{
+			if (shaderBuilder?.IsValueCreated == true)
+				shaderBuilder.Value.Dispose();
+			shaderBuilder = null;
+		}
+		base.Dispose(disposing);
+	}
 }

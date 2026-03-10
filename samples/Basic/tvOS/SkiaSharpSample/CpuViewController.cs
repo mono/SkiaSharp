@@ -35,12 +35,10 @@ public class CpuViewController : UIViewController
 		skiaView.PaintSurface += OnPaintSurface;
 	}
 
-	public override void ViewWillDisappear(bool animated)
+	public override void ViewWillAppear(bool animated)
 	{
-		base.ViewWillDisappear(animated);
-
-		if (skiaView != null)
-			skiaView.PaintSurface -= OnPaintSurface;
+		base.ViewWillAppear(animated);
+		skiaView?.SetNeedsDisplay();
 	}
 
 	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)

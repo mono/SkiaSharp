@@ -9,6 +9,8 @@ public class AppDelegate : UIApplicationDelegate
 
 	public override bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
 	{
+		UITabBar.Appearance.BackgroundColor = UIColor.Clear;
+
 		if (Window?.RootViewController is UITabBarController tabBarController)
 			tabBarController.SelectedIndex = (int)DefaultPage;
 
