@@ -91,6 +91,7 @@
     <FullFrameworkTargetFrameworks>net462</FullFrameworkTargetFrameworks>
     <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;$(FullFrameworkTargetFrameworks);$(TFMCurrent)</BasicTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</PlatformTargetFrameworksCurrent>
+    <PlatformTargetFrameworksCurrent Condition="$(IsLinux)">$(TFMCurrent)-android$(TPVAndroidCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tizen$(TPVTizenCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-tvos$(TPVtvOSCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</PlatformTargetFrameworksCurrent>
@@ -99,6 +100,7 @@
   <PropertyGroup Condition="'$(TFMPrevious)' != ''">
     <BasicTargetFrameworksPrevious>$(TFMPrevious)</BasicTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="!$(IsLinux)">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</PlatformTargetFrameworksPrevious>
+    <PlatformTargetFrameworksPrevious Condition="$(IsLinux)">$(TFMPrevious)-android$(TPVAndroidPrevious)</PlatformTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(PlatformTargetFrameworksPrevious);$(TFMPrevious)-tizen$(TPVTizenPrevious)</PlatformTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(PlatformTargetFrameworksPrevious);$(TFMPrevious)-tvos$(TPVtvOSPrevious)</PlatformTargetFrameworksPrevious>
     <PlatformTargetFrameworksPrevious Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(PlatformTargetFrameworksPrevious);$(TFMPrevious)-macos$(TPVmacOSPrevious)</PlatformTargetFrameworksPrevious>
