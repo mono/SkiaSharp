@@ -145,7 +145,10 @@ To create a new library:
 1. Create project folder in `source/`
 2. Set required properties: `TargetFrameworks`, `RootNamespace`, `PackagingGroup`
 3. Add version entry to `scripts/VERSIONS.txt`
-4. Build and verify output in `output/` directory
+4. Add entry to `build.cake` `SUPPORTED_NUGETS` dictionary (required for sample packaging)
+5. Build and verify output in `output/` directory
+
+> **⚠️ Dual Registration:** New NuGet package IDs must be registered in **both** `scripts/VERSIONS.txt` (nuget type) AND `build.cake` `SUPPORTED_NUGETS`. Missing either causes the `CreateSamplesDirectory` task to fail when converting `ProjectReference` to `PackageReference` in output samples.
 
 ## Related Documentation
 

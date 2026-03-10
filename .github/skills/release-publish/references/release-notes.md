@@ -76,7 +76,7 @@ Annotate GitHub release notes with platform and community emojis.
 ### 1. Get Release Body
 
 ```bash
-gh release view {tag} --json body -q '.body' > /tmp/release-body.md
+gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/release-body.md
 ```
 
 ### 2. Analyze Each PR
@@ -135,7 +135,7 @@ Format all items: `* {platform}{❤️} Description...`
 ### 4. Update Release
 
 ```bash
-gh release edit {tag} --notes-file /tmp/release-body.md
+gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md
 ```
 
 ---

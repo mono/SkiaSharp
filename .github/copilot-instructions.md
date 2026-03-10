@@ -263,6 +263,8 @@ ThreadLocal<SKPaint> paint = new(() => new SKPaint());
 | Using default parameters in public APIs | ABI breaking |
 | **Skipping failing tests** | **Unacceptable — tests must pass** |
 | **Using `externals-download` after C API changes** | **Causes `EntryPointNotFoundException`** |
+| Passing `fixed` pointers to native objects that outlive the block | GC moves memory → corruption. Use `GCHandle.Alloc(Pinned)` or `Marshal.AllocCoTaskMem` |
+| Testing WASM version changes without cleaning `bin/obj/_framework` | Stale cached native `.wasm` files produce false results |
 
 ---
 
@@ -342,7 +344,7 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 > **🛑 NEVER SKIP READING SKILL.md:** Skills exist because project-specific procedures differ from general patterns. Your assumptions about how to perform a task are likely WRONG. The skill file is the source of truth — read it, follow it exactly.
 
 > **CRITICAL:** Classify based on what the ISSUE describes, not what the USER says.
-> - User says "investigate" but issue says "crash" → It's a bug → invoke `bug-fix`
+> - User says "investigate" but issue says "crash" → It's a bug → invoke `issue-fix`
 > - User says "look at" but issue says "add support for" → It's new API → invoke `add-api`
 >
 > **What's NOT allowed:** Investigating (running Docker, searching code, downloading 
@@ -352,8 +354,9 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 
 | Task | Skill | Triggers |
 |------|-------|----------|
-| Triage issue | `triage-issue` | "triage #NNNN", "triage issue", "classify issue", "analyze issue" |
-| Fix bug | `bug-fix` | "investigate #NNNN", "fix issue", crash, exception, "undefined symbol", incorrect output, wrong behavior, memory leak, "fails", "broken", "doesn't work" |
+| Triage issue | `issue-triage` | "triage #NNNN", "triage issue", "classify issue", "analyze issue" |
+| Reproduce bug | `issue-repro` | "repro #NNNN", "reproduce #NNNN", "reproduce issue", "try to reproduce", "can you reproduce", "create reproduction" |
+| Fix bug | `issue-fix` | "investigate #NNNN", "fix issue", crash, exception, hard crash, segfault, "undefined symbol", AccessViolationException, incorrect output, wrong behavior, memory leak, disposal issues, "fails", "broken", "doesn't work" |
 | Add new API | `add-api` | "expose", "wrap method", issue requests new functionality |
 | Update dependency | `native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `api-docs` | "document", "fill in missing docs" |
@@ -361,6 +364,18 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 | Start release | `release-branch` | "release now", "start release X" |
 | Test release | `release-testing` | "test the release", "verify packages" |
 | Publish release | `release-publish` | "push to nuget", "tag release" |
+
+### Issue Pipeline (3 steps)
+
+The first three skills form a pipeline. Each can run standalone, but they work best in sequence:
+
+| Step | Skill | Produces | Schema |
+|------|-------|----------|--------|
+| 1 | `issue-triage` | `ai-triage/{n}.json` | Triage |
+| 2 | `issue-repro` | `ai-repro/{n}.json` | Repro |
+| 3 | `issue-fix` | `ai-fix/{n}.json` + PR | Fix |
+
+See [documentation/issue-pipeline.md](documentation/issue-pipeline.md) for handoff contracts and feedback loop.
 
 ### When NOT to Use Skills
 
@@ -376,13 +391,14 @@ Work directly for:
 
 | If Issue Contains... | Type | Skill |
 |---------------------|------|-------|
-| "triage", "classify", "analyze issue" | Triage | `triage-issue` |
-| "crash", "exception", "wrong", "fails", "broken", "hard crash", "segfault", "undefined symbol", "AccessViolation" | Bug | `bug-fix` |
-| "add", "expose", "missing", "support", "new method", "feature request" | New API | `add-api` |
+| "triage", "classify", "analyze issue" | Triage | `issue-triage` |
+| "repro", "reproduce", "reproduction", "try to reproduce" | Reproduction | `issue-repro` |
+| "crash", "exception", "wrong", "fails", "broken", "hard crash", "segfault", "undefined symbol", "AccessViolation" | Bug | `issue-fix` |
+| "add", "expose", "missing API", "missing method", "support", "new method", "feature request" | New API | `add-api` |
 | "docs", "documentation", "XML", "comments" | Docs | `api-docs` |
 | CVE, security, vulnerability | Security | `security-audit` then `native-dependency-update` |
 
-**Ambiguous cases:** If unclear, ask: "Does the user report something that doesn't match expected behavior?" If yes → `bug-fix`. If no → work directly or ask for clarification.
+**Ambiguous cases:** If unclear, ask: "Does the user report something that doesn't match expected behavior?" If yes → `issue-fix`. If no → work directly or ask for clarification.
 
 ### If a Skill Fails
 
