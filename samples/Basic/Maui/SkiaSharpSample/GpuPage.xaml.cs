@@ -83,14 +83,42 @@ half4 main(float2 fragCoord) {
 		protected override void OnAppearing()
 		{
 			base.OnAppearing();
-			fpsCounter.Start();
-			fpsLabel.Text = "FPS: --";
-			skiaView.HasRenderLoop = true;
+			StartAnimation();
 		}
 
 		protected override void OnDisappearing()
 		{
 			base.OnDisappearing();
+			StopAnimation();
+		}
+
+		protected override void OnNavigatedTo(NavigatedToEventArgs args)
+		{
+			base.OnNavigatedTo(args);
+			StartAnimation();
+		}
+
+		protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+		{
+			base.OnNavigatedFrom(args);
+			StopAnimation();
+		}
+
+		void StartAnimation()
+		{
+			// Force-restart: toggle off then on to re-arm the native render loop
+			// after Shell navigation detaches/reattaches the native GL view
+			skiaView.HasRenderLoop = false;
+			fpsCounter.Start();
+			fpsLabel.Text = "FPS: --";
+			Dispatcher.Dispatch(() =>
+			{
+				skiaView.HasRenderLoop = true;
+			});
+		}
+
+		void StopAnimation()
+		{
 			skiaView.HasRenderLoop = false;
 			fpsCounter.Stop();
 		}

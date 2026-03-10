@@ -34,60 +34,43 @@
                 BackgroundColor="#CC1E1E1E"
                 Padding="16,12"
                 InputTransparent="False">
-            <StackLayout Orientation="{OnIdiom Phone=Vertical, Default=Horizontal}" Spacing="12">
+            <Grid x:Name="toolboxGrid" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="8">
 
                 <!-- Color swatches -->
-                <FlexLayout x:Name="swatchContainer" Direction="Row" JustifyContent="Center" Wrap="NoWrap" AlignItems="Center">
-                    <Border StyleClass="swatch" StrokeShape="RoundRectangle 20" Padding="0" BackgroundColor="Transparent"
-                            Stroke="{x:Static Colors.DodgerBlue}" StrokeThickness="3" WidthRequest="40" HeightRequest="40">
-                        <Button BackgroundColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}"
-                                WidthRequest="34" HeightRequest="34" CornerRadius="17"
-                                Clicked="OnColorClicked" BorderWidth="0" Padding="0"
-                                HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-                    <Border StyleClass="swatch" StrokeShape="RoundRectangle 20" Padding="0" BackgroundColor="Transparent"
-                            Stroke="Transparent" StrokeThickness="3" WidthRequest="40" HeightRequest="40" Margin="6,0,0,0">
-                        <Button BackgroundColor="{AppThemeBinding Light=#E53935, Dark=#EF5350}"
-                                WidthRequest="34" HeightRequest="34" CornerRadius="17"
-                                Clicked="OnColorClicked" BorderWidth="0" Padding="0"
-                                HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-                    <Border StyleClass="swatch" StrokeShape="RoundRectangle 20" Padding="0" BackgroundColor="Transparent"
-                            Stroke="Transparent" StrokeThickness="3" WidthRequest="40" HeightRequest="40" Margin="6,0,0,0">
-                        <Button BackgroundColor="{AppThemeBinding Light=#1E88E5, Dark=#42A5F5}"
-                                WidthRequest="34" HeightRequest="34" CornerRadius="17"
-                                Clicked="OnColorClicked" BorderWidth="0" Padding="0"
-                                HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-                    <Border StyleClass="swatch" StrokeShape="RoundRectangle 20" Padding="0" BackgroundColor="Transparent"
-                            Stroke="Transparent" StrokeThickness="3" WidthRequest="40" HeightRequest="40" Margin="6,0,0,0">
-                        <Button BackgroundColor="{AppThemeBinding Light=#43A047, Dark=#66BB6A}"
-                                WidthRequest="34" HeightRequest="34" CornerRadius="17"
-                                Clicked="OnColorClicked" BorderWidth="0" Padding="0"
-                                HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-                    <Border StyleClass="swatch" StrokeShape="RoundRectangle 20" Padding="0" BackgroundColor="Transparent"
-                            Stroke="Transparent" StrokeThickness="3" WidthRequest="40" HeightRequest="40" Margin="6,0,0,0">
-                        <Button BackgroundColor="{AppThemeBinding Light=#FB8C00, Dark=#FFA726}"
-                                WidthRequest="34" HeightRequest="34" CornerRadius="17"
-                                Clicked="OnColorClicked" BorderWidth="0" Padding="0"
-                                HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-                    <Border StyleClass="swatch" StrokeShape="RoundRectangle 20" Padding="0" BackgroundColor="Transparent"
-                            Stroke="Transparent" StrokeThickness="3" WidthRequest="40" HeightRequest="40" Margin="6,0,0,0">
-                        <Button BackgroundColor="{AppThemeBinding Light=#8E24AA, Dark=#AB47BC}"
-                                WidthRequest="34" HeightRequest="34" CornerRadius="17"
-                                Clicked="OnColorClicked" BorderWidth="0" Padding="0"
-                                HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-                </FlexLayout>
+                <Grid x:Name="swatchGrid" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8"
+                      Grid.Row="0" Grid.Column="0">
+                    <Button BackgroundColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="DodgerBlue" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="0" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#E53935, Dark=#EF5350}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="1" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#1E88E5, Dark=#42A5F5}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="2" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#43A047, Dark=#66BB6A}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="3" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#FB8C00, Dark=#FFA726}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="4" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#8E24AA, Dark=#AB47BC}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="5" />
+                </Grid>
 
                 <!-- Brush size slider + label -->
-                <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="8"
-                             VerticalOptions="Center">
+                <Grid x:Name="sliderGrid" ColumnDefinitions="*,Auto" ColumnSpacing="8"
+                      VerticalOptions="Center" Grid.Row="0" Grid.Column="1">
                     <Slider x:Name="brushSlider"
                             Minimum="1" Maximum="50" Value="4"
-                            WidthRequest="160"
+                            WidthRequest="140"
                             MinimumTrackColor="White"
                             MaximumTrackColor="#66FFFFFF"
                             ThumbColor="White"
@@ -96,9 +79,34 @@
                     <Label x:Name="brushLabel" Text="4"
                            TextColor="White" FontSize="13"
                            VerticalOptions="Center"
-                           WidthRequest="24" />
-                </StackLayout>
-            </StackLayout>
+                           Grid.Column="1" WidthRequest="24" />
+                </Grid>
+
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="AdaptiveStates">
+                        <VisualState x:Name="Narrow">
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="0" />
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter TargetName="sliderGrid" Property="Grid.Row" Value="1" />
+                                <Setter TargetName="sliderGrid" Property="Grid.Column" Value="0" />
+                                <Setter TargetName="sliderGrid" Property="HorizontalOptions" Value="Center" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Wide">
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="600" />
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter TargetName="sliderGrid" Property="Grid.Row" Value="0" />
+                                <Setter TargetName="sliderGrid" Property="Grid.Column" Value="1" />
+                                <Setter TargetName="sliderGrid" Property="HorizontalOptions" Value="Fill" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+            </Grid>
         </Border>
     </Grid>
 

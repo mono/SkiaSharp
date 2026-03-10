@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Maui;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
@@ -29,16 +28,16 @@ namespace SkiaSharpSample
 		bool IsDarkMode => Application.Current?.RequestedTheme == AppTheme.Dark;
 		SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
 
-		Border? selectedSwatchBorder;
+		Button? selectedSwatch;
 
 		public DrawingPage()
 		{
 			InitializeComponent();
 			currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
 
-			// First swatch border is pre-selected in XAML (Stroke=DodgerBlue)
-			if (swatchContainer.Children.Count > 0 && swatchContainer.Children[0] is Border firstBorder)
-				selectedSwatchBorder = firstBorder;
+			// First swatch is pre-selected in XAML (BorderColor=DodgerBlue)
+			if (swatchGrid.Children.Count > 0 && swatchGrid.Children[0] is Button firstBtn)
+				selectedSwatch = firstBtn;
 		}
 
 		void OnThemeChanged(object sender, AppThemeChangedEventArgs e)
@@ -132,18 +131,18 @@ namespace SkiaSharpSample
 
 		private void OnColorClicked(object sender, EventArgs e)
 		{
-			if (sender is Button btn && btn.Parent is Border border && border.Parent is Layout parent)
+			if (sender is Button btn && btn.Parent is Layout parent)
 			{
-				var index = parent.Children.IndexOf(border);
+				var index = parent.Children.IndexOf(btn);
 				if (index >= 0 && index < colorPalette.Length)
 				{
 					var (light, dark) = colorPalette[index];
 					currentColor = IsDarkMode ? dark : light;
 
-					if (selectedSwatchBorder != null)
-						selectedSwatchBorder.Stroke = Colors.Transparent;
-					border.Stroke = Colors.DodgerBlue;
-					selectedSwatchBorder = border;
+					if (selectedSwatch != null)
+						selectedSwatch.BorderColor = Colors.Transparent;
+					btn.BorderColor = Colors.DodgerBlue;
+					selectedSwatch = btn;
 				}
 			}
 		}
