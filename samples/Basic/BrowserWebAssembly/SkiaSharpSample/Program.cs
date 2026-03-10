@@ -17,13 +17,13 @@ canvas.Clear(SKColors.White);
 // draw some text
 using var paint = new SKPaint
 {
-    Color = SKColors.Black,
-    IsAntialias = true,
-    Style = SKPaintStyle.Fill
+	Color = SKColors.Black,
+	IsAntialias = true,
+	Style = SKPaintStyle.Fill
 };
 using var font = new SKFont
 {
-    Size = 24
+	Size = 24
 };
 var coord = new SKPoint(info.Width / 2, (info.Height + font.Size) / 2);
 canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
@@ -33,6 +33,6 @@ Renderer.Render(info.Width, info.Height, bitmap.GetPixelSpan());
 
 partial class Renderer
 {
-    [JSImport("renderer.render", "main.js")]
-    internal static partial void Render(int width, int height, [JSMarshalAs<JSType.MemoryView>] Span<byte> buffer);
+	[JSImport("renderer.render", "main.js")]
+	internal static partial void Render(int width, int height, [JSMarshalAs<JSType.MemoryView>] Span<byte> buffer);
 }

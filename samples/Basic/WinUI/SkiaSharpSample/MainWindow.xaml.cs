@@ -2,36 +2,35 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public sealed partial class MainWindow : Window
 {
-	public sealed partial class MainWindow : Window
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
+	public MainWindow()
 	{
-		public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+		InitializeComponent();
+		NavView.Loaded += OnNavViewLoaded;
+	}
 
-		public MainWindow()
-		{
-			InitializeComponent();
-			NavView.Loaded += OnNavViewLoaded;
-		}
+	private void OnNavViewLoaded(object sender, RoutedEventArgs e)
+	{
+		NavView.SelectedItem = NavView.MenuItems[(int)DefaultPage];
+	}
 
-		private void OnNavViewLoaded(object sender, RoutedEventArgs e)
+	private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+	{
+		if (args.SelectedItem is NavigationViewItem item)
 		{
-			NavView.SelectedItem = NavView.MenuItems[(int)DefaultPage];
-		}
-
-		private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-		{
-			if (args.SelectedItem is NavigationViewItem item)
+			Type pageType = item.Tag?.ToString() switch
 			{
-				Type pageType = item.Tag?.ToString() switch
-				{
-					"cpu" => typeof(CpuPage),
-					"gpu" => typeof(GpuPage),
-					"drawing" => typeof(DrawingPage),
-					_ => typeof(CpuPage),
-				};
-				ContentFrame.Navigate(pageType);
-			}
+				"cpu" => typeof(CpuPage),
+				"gpu" => typeof(GpuPage),
+				"drawing" => typeof(DrawingPage),
+				_ => typeof(CpuPage),
+			};
+			ContentFrame.Navigate(pageType);
 		}
 	}
 }

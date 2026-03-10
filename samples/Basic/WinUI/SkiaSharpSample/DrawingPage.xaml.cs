@@ -7,165 +7,164 @@ using Microsoft.UI.Xaml.Media;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public sealed partial class DrawingPage : Page
 {
-	public sealed partial class DrawingPage : Page
+	private static readonly Dictionary<string, (SKColor Light, SKColor Dark)> ColorMap = new()
 	{
-		private static readonly Dictionary<string, (SKColor Light, SKColor Dark)> ColorMap = new()
+		["Black"] = (SKColors.Black, SKColors.White),
+		["Red"] = (new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+		["Blue"] = (new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+		["Green"] = (new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+		["Orange"] = (new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+		["Purple"] = (new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+	};
+
+	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
+	private Border selectedColorBorder;
+	private SKPath currentPath;
+	private SKColor currentColor;
+	private float brushSize = 4f;
+	private SKPoint cursorPosition;
+	private bool isCursorOver;
+
+	bool IsDarkMode => ActualTheme == ElementTheme.Dark;
+	SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
+	SKColor ResolveColor((SKColor Light, SKColor Dark) pair) => IsDarkMode ? pair.Dark : pair.Light;
+
+	public DrawingPage()
+	{
+		InitializeComponent();
+		currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
+		selectedColorBorder = ColorBlack;
+
+		ActualThemeChanged += (s, e) =>
 		{
-			["Black"] = (SKColors.Black, SKColors.White),
-			["Red"] = (new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
-			["Blue"] = (new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
-			["Green"] = (new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
-			["Orange"] = (new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
-			["Purple"] = (new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+			if (currentColor == SKColors.Black && IsDarkMode)
+				currentColor = SKColors.White;
+			else if (currentColor == SKColors.White && !IsDarkMode)
+				currentColor = SKColors.Black;
+			skiaView.Invalidate();
+		};
+	}
+
+	private void OnColorTapped(object sender, TappedRoutedEventArgs e)
+	{
+		if (sender is not Border border || border.Tag is not string tag)
+			return;
+
+		if (ColorMap.TryGetValue(tag, out var pair))
+		{
+			currentColor = ResolveColor(pair);
+
+			if (selectedColorBorder != null)
+				selectedColorBorder.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+			border.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
+			selectedColorBorder = border;
+		}
+	}
+
+	private void OnClearClicked(object sender, RoutedEventArgs e)
+	{
+		foreach (var (path, _, _) in strokes)
+			path.Dispose();
+		strokes.Clear();
+		currentPath?.Dispose();
+		currentPath = null;
+		skiaView.Invalidate();
+	}
+
+	private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+	{
+		var canvas = e.Surface.Canvas;
+		canvas.Clear(CanvasBackground);
+
+		using var paint = new SKPaint
+		{
+			IsAntialias = true,
+			Style = SKPaintStyle.Stroke,
+			StrokeCap = SKStrokeCap.Round,
+			StrokeJoin = SKStrokeJoin.Round,
 		};
 
-		private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
-		private Border selectedColorBorder;
-		private SKPath currentPath;
-		private SKColor currentColor;
-		private float brushSize = 4f;
-		private SKPoint cursorPosition;
-		private bool isCursorOver;
+		float sx = (float)e.Info.Width / (float)skiaView.ActualWidth;
+		float sy = (float)e.Info.Height / (float)skiaView.ActualHeight;
+		canvas.Scale(sx, sy);
 
-		bool IsDarkMode => ActualTheme == ElementTheme.Dark;
-		SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
-		SKColor ResolveColor((SKColor Light, SKColor Dark) pair) => IsDarkMode ? pair.Dark : pair.Light;
-
-		public DrawingPage()
+		foreach (var (path, color, strokeWidth) in strokes)
 		{
-			InitializeComponent();
-			currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
-			selectedColorBorder = ColorBlack;
-
-			ActualThemeChanged += (s, e) =>
-			{
-				if (currentColor == SKColors.Black && IsDarkMode)
-					currentColor = SKColors.White;
-				else if (currentColor == SKColors.White && !IsDarkMode)
-					currentColor = SKColors.Black;
-				skiaView.Invalidate();
-			};
+			paint.Color = color;
+			paint.StrokeWidth = strokeWidth;
+			canvas.DrawPath(path, paint);
 		}
 
-		private void OnColorTapped(object sender, TappedRoutedEventArgs e)
+		if (currentPath != null)
 		{
-			if (sender is not Border border || border.Tag is not string tag)
-				return;
-
-			if (ColorMap.TryGetValue(tag, out var pair))
-			{
-				currentColor = ResolveColor(pair);
-
-				if (selectedColorBorder != null)
-					selectedColorBorder.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-				border.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
-				selectedColorBorder = border;
-			}
+			paint.Color = currentColor;
+			paint.StrokeWidth = brushSize;
+			canvas.DrawPath(currentPath, paint);
 		}
 
-		private void OnClearClicked(object sender, RoutedEventArgs e)
+		if (isCursorOver)
 		{
-			foreach (var (path, _, _) in strokes)
-				path.Dispose();
-			strokes.Clear();
-			currentPath?.Dispose();
-			currentPath = null;
-			skiaView.Invalidate();
-		}
-
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
-		{
-			var canvas = e.Surface.Canvas;
-			canvas.Clear(CanvasBackground);
-
-			using var paint = new SKPaint
+			using var indicatorPaint = new SKPaint
 			{
 				IsAntialias = true,
 				Style = SKPaintStyle.Stroke,
-				StrokeCap = SKStrokeCap.Round,
-				StrokeJoin = SKStrokeJoin.Round,
+				Color = currentColor.WithAlpha(128),
+				StrokeWidth = 1.5f,
 			};
-
-			float sx = (float)e.Info.Width / (float)skiaView.ActualWidth;
-			float sy = (float)e.Info.Height / (float)skiaView.ActualHeight;
-			canvas.Scale(sx, sy);
-
-			foreach (var (path, color, strokeWidth) in strokes)
-			{
-				paint.Color = color;
-				paint.StrokeWidth = strokeWidth;
-				canvas.DrawPath(path, paint);
-			}
-
-			if (currentPath != null)
-			{
-				paint.Color = currentColor;
-				paint.StrokeWidth = brushSize;
-				canvas.DrawPath(currentPath, paint);
-			}
-
-			if (isCursorOver)
-			{
-				using var indicatorPaint = new SKPaint
-				{
-					IsAntialias = true,
-					Style = SKPaintStyle.Stroke,
-					Color = currentColor.WithAlpha(128),
-					StrokeWidth = 1.5f,
-				};
-				canvas.DrawCircle(cursorPosition.X, cursorPosition.Y, brushSize / 2f, indicatorPaint);
-			}
+			canvas.DrawCircle(cursorPosition.X, cursorPosition.Y, brushSize / 2f, indicatorPaint);
 		}
+	}
 
-		private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
+	private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
+	{
+		var point = e.GetCurrentPoint(skiaView);
+		currentPath = new SKPath();
+		currentPath.MoveTo((float)point.Position.X, (float)point.Position.Y);
+		cursorPosition = new SKPoint((float)point.Position.X, (float)point.Position.Y);
+		isCursorOver = true;
+		skiaView.CapturePointer(e.Pointer);
+		skiaView.Invalidate();
+	}
+
+	private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
+	{
+		var point = e.GetCurrentPoint(skiaView);
+		cursorPosition = new SKPoint((float)point.Position.X, (float)point.Position.Y);
+		isCursorOver = true;
+		currentPath?.LineTo((float)point.Position.X, (float)point.Position.Y);
+		skiaView.Invalidate();
+	}
+
+	private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
+	{
+		if (currentPath != null)
 		{
-			var point = e.GetCurrentPoint(skiaView);
-			currentPath = new SKPath();
-			currentPath.MoveTo((float)point.Position.X, (float)point.Position.Y);
-			cursorPosition = new SKPoint((float)point.Position.X, (float)point.Position.Y);
-			isCursorOver = true;
-			skiaView.CapturePointer(e.Pointer);
+			strokes.Add((currentPath, currentColor, brushSize));
+			currentPath = null;
 			skiaView.Invalidate();
 		}
+		skiaView.ReleasePointerCapture(e.Pointer);
+	}
 
-		private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
-		{
-			var point = e.GetCurrentPoint(skiaView);
-			cursorPosition = new SKPoint((float)point.Position.X, (float)point.Position.Y);
-			isCursorOver = true;
-			currentPath?.LineTo((float)point.Position.X, (float)point.Position.Y);
-			skiaView.Invalidate();
-		}
+	private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+	{
+		var point = e.GetCurrentPoint(skiaView);
+		var delta = point.Properties.MouseWheelDelta;
+		brushSize = Math.Max(1f, Math.Min(50f, brushSize + (delta > 0 ? 1f : -1f)));
+		brushText.Text = $"{brushSize:F0}px";
+		BrushSlider.Value = brushSize;
+		skiaView.Invalidate();
+	}
 
-		private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
-		{
-			if (currentPath != null)
-			{
-				strokes.Add((currentPath, currentColor, brushSize));
-				currentPath = null;
-				skiaView.Invalidate();
-			}
-			skiaView.ReleasePointerCapture(e.Pointer);
-		}
-
-		private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
-		{
-			var point = e.GetCurrentPoint(skiaView);
-			var delta = point.Properties.MouseWheelDelta;
-			brushSize = Math.Max(1f, Math.Min(50f, brushSize + (delta > 0 ? 1f : -1f)));
+	private void OnBrushSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
+	{
+		brushSize = (float)e.NewValue;
+		if (brushText != null)
 			brushText.Text = $"{brushSize:F0}px";
-			BrushSlider.Value = brushSize;
-			skiaView.Invalidate();
-		}
-
-		private void OnBrushSizeChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
-		{
-			brushSize = (float)e.NewValue;
-			if (brushText != null)
-				brushText.Text = $"{brushSize:F0}px";
-			skiaView?.Invalidate();
-		}
+		skiaView?.Invalidate();
 	}
 }
