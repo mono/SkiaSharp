@@ -21,41 +21,19 @@ if ($Tizen -and $Tizen -ne '<latest>') {
   $TizenVersion = ''
 }
 
-# Use workload-set mode — global.json pins the workload version to ensure
-# reproducible builds. The workloadVersion in global.json determines which
-# manifest versions are used for all Microsoft workloads.
-Write-Host "Configuring workload update mode to 'workload-set'..."
-& dotnet workload config --update-mode workload-set
+# Use manifest mode — workload-set mode has a package naming bug in .NET 10 SDK
+# where it looks for microsoft.net.workloads.{version} instead of the published
+# Microsoft.NET.Workloads.{band}. We use --skip-manifest-update to prevent
+# auto-updating to newer manifests that may have broken dependencies.
+# The SDK ships with known-good bundled manifest versions.
+Write-Host "Configuring workload update mode to 'manifests'..."
+& dotnet workload config --update-mode manifests
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Build workload list (Microsoft workloads only — Tizen is installed separately)
-if ($Workloads) {
-  $WorkloadList = $Workloads -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
-  # Separate tizen from the list if present
-  $HasTizen = $WorkloadList -contains 'tizen'
-  $WorkloadList = $WorkloadList | Where-Object { $_ -ne 'tizen' }
-} else {
-  $HasTizen = [bool]$TizenBand
-  $WorkloadList = @('android', 'macos', 'wasm-tools')
-  if ($IsLinux) {
-    $WorkloadList += @('maui-android')
-  } else {
-    $WorkloadList += @('ios', 'tvos', 'maccatalyst', 'maui')
-  }
-}
-
-# Step 1: Install Microsoft workloads using the pinned workload set
-if ($WorkloadList.Count -gt 0) {
-  Write-Host "Installing Microsoft workloads: $($WorkloadList -join ', ')..."
-  & dotnet workload install @WorkloadList --skip-sign-check
-  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-}
-
-# Step 2: Install Tizen separately — Tizen is a third-party workload from
-# Samsung that is not included in the official workload sets. We install
-# the manifest manually and then install the workload after all Microsoft
-# workloads are in place.
-if ($HasTizen -and $TizenBand -and $TizenVersion) {
+# Install Tizen manifest if specified — Tizen is a third-party workload from
+# Samsung that is not included in any official feed, so we install its manifest
+# manually before installing workloads.
+if ($TizenBand -and $TizenVersion) {
   Write-Host "Installing Tizen manifest ($TizenBand/$TizenVersion)..."
 
   # Get dotnet root (resolve symlinks on Linux/macOS)
@@ -78,11 +56,26 @@ if ($HasTizen -and $TizenBand -and $TizenVersion) {
   New-Item -ItemType Directory -Force $manifestDir | Out-Null
   Expand-Archive -Path './output/tmp/tizen-manifest.nupkg' -DestinationPath './output/tmp/tizen-manifest' -Force
   Copy-Item -Force './output/tmp/tizen-manifest/data/*' $manifestDir/
-
-  Write-Host "Installing Tizen workload..."
-  & dotnet workload install tizen --skip-sign-check --skip-manifest-update
-  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
+
+# Build workload list
+if ($Workloads) {
+  $WorkloadList = $Workloads -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+} else {
+  $WorkloadList = @('android', 'macos', 'wasm-tools')
+  if ($TizenBand) {
+    $WorkloadList = @('tizen') + $WorkloadList
+  }
+  if ($IsLinux) {
+    $WorkloadList += @('maui-android')
+  } else {
+    $WorkloadList += @('ios', 'tvos', 'maccatalyst', 'maui')
+  }
+}
+
+Write-Host "Installing workloads: $($WorkloadList -join ', ')..."
+& dotnet workload install @WorkloadList --skip-sign-check --skip-manifest-update
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Installed workloads:"
 & dotnet workload list
