@@ -21,51 +21,22 @@ if ($Tizen -and $Tizen -ne '<latest>') {
   $TizenVersion = ''
 }
 
-# Use manifest mode with --skip-manifest-update to use the manifests bundled
-# with the SDK version. This prevents auto-updating to newer manifests that
-# may have broken dependencies (e.g., iOS 26.2.10217 referencing a non-existent
-# net9.0_26.2 Windows SDK pack). The SDK 10.0.103 ships with known-good
-# manifest versions (iOS/MacCatalyst 26.2.10197, Android 36.1.30, etc.).
-Write-Host "Configuring workload update mode to 'manifests'..."
-& dotnet workload config --update-mode manifests
+# Use workload-set mode — global.json pins the workload version to ensure
+# reproducible builds. The workloadVersion in global.json determines which
+# manifest versions are used for all Microsoft workloads.
+Write-Host "Configuring workload update mode to 'workload-set'..."
+& dotnet workload config --update-mode workload-set
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Install Tizen manifest if specified — Tizen is a third-party workload from
-# Samsung that is not included in the official workload sets, so we install
-# its manifest manually before installing workloads.
-if ($TizenBand -and $TizenVersion) {
-  Write-Host "Installing Tizen manifest ($TizenBand/$TizenVersion)..."
-  
-  # Get dotnet root (resolve symlinks on Linux/macOS)
-  $dotnetPath = (Get-Command dotnet).Source
-  if ($IsLinux -or $IsMacOS) {
-    $dotnetRoot = & readlink -f $dotnetPath | Split-Path
-  } else {
-    $dotnetRoot = Split-Path $dotnetPath
-  }
-  
-  $manifestDir = Join-Path $dotnetRoot "sdk-manifests" $TizenBand "samsung.net.sdk.tizen"
-  $manifestName = "samsung.net.sdk.tizen.manifest-$TizenBand"
-  $manifestUrl = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/$($manifestName.ToLower())/$TizenVersion/$($manifestName.ToLower()).$TizenVersion.nupkg"
-  
-  Write-Host "  Downloading from $manifestUrl"
-  New-Item -ItemType Directory -Force './output/tmp' | Out-Null
-  Invoke-WebRequest $manifestUrl -OutFile './output/tmp/tizen-manifest.nupkg'
-  
-  Write-Host "  Extracting to $manifestDir"
-  New-Item -ItemType Directory -Force $manifestDir | Out-Null
-  Expand-Archive -Path './output/tmp/tizen-manifest.nupkg' -DestinationPath './output/tmp/tizen-manifest' -Force
-  Copy-Item -Force './output/tmp/tizen-manifest/data/*' $manifestDir/
-}
-
-# Build workload list
+# Build workload list (Microsoft workloads only — Tizen is installed separately)
 if ($Workloads) {
   $WorkloadList = $Workloads -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+  # Separate tizen from the list if present
+  $HasTizen = $WorkloadList -contains 'tizen'
+  $WorkloadList = $WorkloadList | Where-Object { $_ -ne 'tizen' }
 } else {
+  $HasTizen = [bool]$TizenBand
   $WorkloadList = @('android', 'macos', 'wasm-tools')
-  if ($TizenBand) {
-    $WorkloadList = @('tizen') + $WorkloadList
-  }
   if ($IsLinux) {
     $WorkloadList += @('maui-android')
   } else {
@@ -73,9 +44,45 @@ if ($Workloads) {
   }
 }
 
-Write-Host "Installing workloads: $($WorkloadList -join ', ')..."
-& dotnet workload install @WorkloadList --skip-sign-check --skip-manifest-update
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+# Step 1: Install Microsoft workloads using the pinned workload set
+if ($WorkloadList.Count -gt 0) {
+  Write-Host "Installing Microsoft workloads: $($WorkloadList -join ', ')..."
+  & dotnet workload install @WorkloadList --skip-sign-check
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
+# Step 2: Install Tizen separately — Tizen is a third-party workload from
+# Samsung that is not included in the official workload sets. We install
+# the manifest manually and then install the workload after all Microsoft
+# workloads are in place.
+if ($HasTizen -and $TizenBand -and $TizenVersion) {
+  Write-Host "Installing Tizen manifest ($TizenBand/$TizenVersion)..."
+
+  # Get dotnet root (resolve symlinks on Linux/macOS)
+  $dotnetPath = (Get-Command dotnet).Source
+  if ($IsLinux -or $IsMacOS) {
+    $dotnetRoot = & readlink -f $dotnetPath | Split-Path
+  } else {
+    $dotnetRoot = Split-Path $dotnetPath
+  }
+
+  $manifestDir = Join-Path $dotnetRoot "sdk-manifests" $TizenBand "samsung.net.sdk.tizen"
+  $manifestName = "samsung.net.sdk.tizen.manifest-$TizenBand"
+  $manifestUrl = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/$($manifestName.ToLower())/$TizenVersion/$($manifestName.ToLower()).$TizenVersion.nupkg"
+
+  Write-Host "  Downloading from $manifestUrl"
+  New-Item -ItemType Directory -Force './output/tmp' | Out-Null
+  Invoke-WebRequest $manifestUrl -OutFile './output/tmp/tizen-manifest.nupkg'
+
+  Write-Host "  Extracting to $manifestDir"
+  New-Item -ItemType Directory -Force $manifestDir | Out-Null
+  Expand-Archive -Path './output/tmp/tizen-manifest.nupkg' -DestinationPath './output/tmp/tizen-manifest' -Force
+  Copy-Item -Force './output/tmp/tizen-manifest/data/*' $manifestDir/
+
+  Write-Host "Installing Tizen workload..."
+  & dotnet workload install tizen --skip-sign-check --skip-manifest-update
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
 
 Write-Host "Installed workloads:"
 & dotnet workload list
