@@ -81,7 +81,13 @@ Setup(context =>
 
     // create the new AVD
     Information("Creating AVD: {0}...", ANDROID_AVD);
+    Information("  SDK: {0}", DEVICE_ID);
+    Information("  Device: {0}", DEVICE_NAME);
     DotNetTool($"android avd create --name \"{ANDROID_AVD}\" --sdk \"{DEVICE_ID}\" --device \"{DEVICE_NAME}\" --force");
+
+    // verify the AVD was created
+    Information("Listing AVDs after creation:");
+    DotNetTool("android avd list");
 
     // start the emulator (only wait 5 mins)
     Information("Starting Emulator: {0}...", ANDROID_AVD);
