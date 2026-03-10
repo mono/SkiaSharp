@@ -334,6 +334,16 @@ Task ("tests-android")
     var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
 
+    Information ("=== Android Test Build Configuration ===");
+    Information ("  Project:       {0}", csproj);
+    Information ("  Configuration: {0}", configuration);
+    Information ("  TFM:           {0}", tfm);
+    Information ("  RID:           {0}", rid);
+    Information ("  App Path:      {0}", app);
+    Information ("  OS:            {0}", RuntimeInformation.OSDescription);
+    Information ("  Arch:          {0}", RuntimeInformation.ProcessArchitecture);
+    Information ("========================================");
+
     // build the app
     if (!SKIP_BUILD) {
         RunDotNetBuild (csproj,
