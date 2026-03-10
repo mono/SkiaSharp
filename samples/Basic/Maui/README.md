@@ -66,6 +66,14 @@ Available pages: `Cpu` (default), `Gpu`, `Drawing`
 
 ## Screenshots
 
+### Light Mode
+
 | CPU | GPU | Drawing |
 |---|---|---|
-| <img src="screenshots/cpu.png" width="300" alt="CPU"> | <img src="screenshots/gpu.png" width="300" alt="GPU"> | <img src="screenshots/drawing.png" width="300" alt="Drawing"> |
+| <img src="screenshots/cpu-light.png" width="300" alt="CPU"> | <img src="screenshots/gpu-light.png" width="300" alt="GPU"> | <img src="screenshots/drawing-light.png" width="300" alt="Drawing"> |
+
+### Dark Mode
+
+| CPU | GPU | Drawing |
+|---|---|---|
+| <img src="screenshots/cpu-dark.png" width="300" alt="CPU Dark"> | <img src="screenshots/gpu-dark.png" width="300" alt="GPU Dark"> | <img src="screenshots/drawing-dark.png" width="300" alt="Drawing Dark"> |

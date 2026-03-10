@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Maui;
 using Microsoft.Maui.ApplicationModel;
 using Microsoft.Maui.Controls;
-using Microsoft.Maui.Graphics;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 
@@ -127,16 +125,14 @@ namespace SkiaSharpSample
 
 		private void OnColorClicked(object sender, EventArgs e)
 		{
-			if (sender is Button btn && btn.BackgroundColor is Color mauiColor)
+			if (sender is Button btn && btn.Parent is Layout parent)
 			{
-				var light = new SKColor(
-					(byte)(mauiColor.Red * 255),
-					(byte)(mauiColor.Green * 255),
-					(byte)(mauiColor.Blue * 255));
-				var entry = colorPalette.FirstOrDefault(p => p.Light == light);
-				currentColor = entry.Light != default
-					? (IsDarkMode ? entry.Dark : entry.Light)
-					: light;
+				var index = parent.Children.IndexOf(btn);
+				if (index >= 0 && index < colorPalette.Length)
+				{
+					var (light, dark) = colorPalette[index];
+					currentColor = IsDarkMode ? dark : light;
+				}
 			}
 		}
 
