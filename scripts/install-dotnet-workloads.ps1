@@ -21,14 +21,16 @@ if ($Tizen -and $Tizen -ne '<latest>') {
   $TizenVersion = ''
 }
 
-# Force manifest update mode — .NET 10 defaults to workload-set mode which
-# auto-downloads a workload set from NuGet and ignores individually installed
-# workloads (like Samsung Tizen). Manifest mode lets all workloads coexist.
-Write-Host "Configuring workload update mode to 'manifests'..."
-& dotnet workload config --update-mode manifests
+# Use workload-set mode — global.json pins the workload version to ensure
+# reproducible builds. The workloadVersion in global.json determines which
+# manifest versions are used for all Microsoft workloads.
+Write-Host "Configuring workload update mode to 'workload-set'..."
+& dotnet workload config --update-mode workload-set
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Install Tizen manifest if specified
+# Install Tizen manifest if specified — Tizen is a third-party workload from
+# Samsung that is not included in the official workload sets, so we install
+# its manifest manually before installing workloads.
 if ($TizenBand -and $TizenVersion) {
   Write-Host "Installing Tizen manifest ($TizenBand/$TizenVersion)..."
   
