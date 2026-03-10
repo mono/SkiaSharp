@@ -21,11 +21,13 @@ if ($Tizen -and $Tizen -ne '<latest>') {
   $TizenVersion = ''
 }
 
-# Use workload-set mode — global.json pins the workload version to ensure
-# reproducible builds. The workloadVersion in global.json determines which
-# manifest versions are used for all Microsoft workloads.
-Write-Host "Configuring workload update mode to 'workload-set'..."
-& dotnet workload config --update-mode workload-set
+# Use manifest mode with --skip-manifest-update to use the manifests bundled
+# with the SDK version. This prevents auto-updating to newer manifests that
+# may have broken dependencies (e.g., iOS 26.2.10217 referencing a non-existent
+# net9.0_26.2 Windows SDK pack). The SDK 10.0.103 ships with known-good
+# manifest versions (iOS/MacCatalyst 26.2.10197, Android 36.1.30, etc.).
+Write-Host "Configuring workload update mode to 'manifests'..."
+& dotnet workload config --update-mode manifests
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Install Tizen manifest if specified — Tizen is a third-party workload from
@@ -72,7 +74,7 @@ if ($Workloads) {
 }
 
 Write-Host "Installing workloads: $($WorkloadList -join ', ')..."
-& dotnet workload install @WorkloadList --skip-sign-check
+& dotnet workload install @WorkloadList --skip-sign-check --skip-manifest-update
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Installed workloads:"
