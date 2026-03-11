@@ -21,15 +21,6 @@ if ($Tizen -and $Tizen -ne '<latest>') {
   $TizenVersion = ''
 }
 
-# Use manifest mode — workload-set mode has a package naming bug in .NET 10 SDK
-# where it looks for microsoft.net.workloads.{version} instead of the published
-# Microsoft.NET.Workloads.{band}. We use --skip-manifest-update to prevent
-# auto-updating to newer manifests that may have broken dependencies.
-# The SDK ships with known-good bundled manifest versions.
-Write-Host "Configuring workload update mode to 'manifests'..."
-& dotnet workload config --update-mode manifests
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 # Install Tizen manifest if specified — Tizen is a third-party workload from
 # Samsung that is not included in any official feed, so we install its manifest
 # manually before installing workloads.

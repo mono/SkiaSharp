@@ -89,22 +89,11 @@ Setup(context =>
     Information("Listing AVDs after creation:");
     DotNetTool("android avd list");
 
-    // Ensure the emulator can find the AVD — avdmanager on Linux may use
-    // ~/.config/.android/avd/ (XDG) while the emulator looks in ~/.android/avd/
-    var xdgAvdPath = System.IO.Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".config", ".android", "avd");
-    if (System.IO.Directory.Exists(xdgAvdPath)) {
-        Information("Setting ANDROID_AVD_HOME={0}", xdgAvdPath);
-        Environment.SetEnvironmentVariable("ANDROID_AVD_HOME", xdgAvdPath);
-    }
-
-    // Reduce userdata partition size to fit on CI agents with limited disk space
-    var avdDir = System.IO.Path.Combine(
-        xdgAvdPath ?? System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android", "avd"),
-        ANDROID_AVD + ".avd");
-    var configIni = System.IO.Path.Combine(avdDir, "config.ini");
+    // Reduce userdata partition size to fit on CI agents with limited disk space.
+    // No CLI flag exists for this — config.ini editing is the only way.
+    var avdHome = Environment.GetEnvironmentVariable("ANDROID_AVD_HOME")
+        ?? System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android", "avd");
+    var configIni = System.IO.Path.Combine(avdHome, ANDROID_AVD + ".avd", "config.ini");
     if (System.IO.File.Exists(configIni)) {
         System.IO.File.AppendAllText(configIni, "\ndisk.dataPartition.size=4096M\n");
         Information("Reduced userdata partition to 4096M in: {0}", configIni);
