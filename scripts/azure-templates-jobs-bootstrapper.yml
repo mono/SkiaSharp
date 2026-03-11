@@ -24,7 +24,6 @@ parameters:
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installTizenSdk: true                         # whether or not to install the Tizen SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
-  installPreviewVs: false                       # whether or not to install the preview VS (deprecated: use DOTNET_VERSION directly for preview SDKs)
   installDotNet: true                           # whether or not to install the dotnet SDK
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
@@ -208,12 +207,6 @@ jobs:
           - pwsh: dotnet --info
             displayName: Display all the .NET information
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
-          # install VS
-          - ${{ if eq(parameters.installPreviewVs, 'true') }}:
-            - pwsh: .\scripts\install-vs.ps1 -Version $(VISUAL_STUDIO_VERSION)
-              displayName: Install Visual Studio $(VISUAL_STUDIO_VERSION)
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''), ne(variables.VISUAL_STUDIO_VERSION, ''))
           # install workloads
           - pwsh: .\scripts\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}"
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
