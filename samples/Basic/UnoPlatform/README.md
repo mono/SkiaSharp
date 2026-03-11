@@ -45,6 +45,12 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **Color palette** — Six selectable colors with dark/light mode variants.
 - **Responsive layout** — Toolbox adapts between vertical and horizontal orientation based on window width.
 
+## Screenshots
+
+| CPU | GPU | Drawing |
+|---|---|---|
+| <img src="screenshots/cpu.png" width="250" alt="CPU"> | <img src="screenshots/gpu.png" width="250" alt="GPU"> | <img src="screenshots/drawing.png" width="250" alt="Drawing"> |
+
 ## Requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
