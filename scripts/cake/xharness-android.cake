@@ -99,6 +99,19 @@ Setup(context =>
         Environment.SetEnvironmentVariable("ANDROID_AVD_HOME", xdgAvdPath);
     }
 
+    // Reduce userdata partition size to fit on CI agents with limited disk space
+    var avdDir = System.IO.Path.Combine(
+        xdgAvdPath ?? System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android", "avd"),
+        ANDROID_AVD + ".avd");
+    var configIni = System.IO.Path.Combine(avdDir, "config.ini");
+    if (System.IO.File.Exists(configIni)) {
+        System.IO.File.AppendAllText(configIni, "\ndisk.dataPartition.size=4096M\n");
+        Information("Reduced userdata partition to 4096M in: {0}", configIni);
+    } else {
+        Warning("AVD config.ini not found at: {0}", configIni);
+    }
+
     // start the emulator (only wait 5 mins)
     Information("Starting Emulator: {0}...", ANDROID_AVD);
     DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --timeout 300");

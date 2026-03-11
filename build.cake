@@ -420,12 +420,26 @@ Task ("tests-maccatalyst")
     }
 
     // debug: list app bundle contents to find Info.plist location
-    if (DirectoryExists (app.FullPath)) {
-        Information ("App bundle contents:");
-        foreach (var f in GetFiles ($"{app}/**/*"))
-            Information ("  {0}", f.FullPath.Substring (MakeAbsolute (app).FullPath.Length));
+    var appAbsPath = MakeAbsolute (app).FullPath;
+    Information ("Looking for app bundle at: {0}", appAbsPath);
+    StartProcess ("ls", new ProcessSettings {
+        Arguments = $"-la \"{System.IO.Path.GetDirectoryName (appAbsPath)}\"",
+    });
+    if (System.IO.Directory.Exists (appAbsPath)) {
+        Information ("App bundle exists, listing contents:");
+        StartProcess ("find", new ProcessSettings {
+            Arguments = $"\"{appAbsPath}\" -name \"Info.plist\"",
+        });
+        StartProcess ("ls", new ProcessSettings {
+            Arguments = $"-laR \"{appAbsPath}\"",
+        });
+    } else if (System.IO.File.Exists (appAbsPath)) {
+        Warning ("App bundle path exists but is a FILE, not a directory");
     } else {
-        Warning ("App bundle not found at: {0}", app);
+        Warning ("App bundle not found. Searching for .app in output:");
+        StartProcess ("find", new ProcessSettings {
+            Arguments = $"\"{System.IO.Path.GetDirectoryName (appAbsPath)}\" -maxdepth 2 -name \"*.app\" -o -name \"Info.plist\"",
+        });
     }
 
     // run the tests
