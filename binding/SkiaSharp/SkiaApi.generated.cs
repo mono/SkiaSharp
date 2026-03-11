@@ -17929,23 +17929,11 @@ namespace SkiaSharp {
 		// public uint32_t fGraphicsQueueIndex
 		public UInt32 fGraphicsQueueIndex;
 
-		// public uint32_t fMinAPIVersion
-		public UInt32 fMinAPIVersion;
-
-		// public uint32_t fInstanceVersion
-		public UInt32 fInstanceVersion;
-
 		// public uint32_t fMaxAPIVersion
 		public UInt32 fMaxAPIVersion;
 
-		// public uint32_t fExtensions
-		public UInt32 fExtensions;
-
 		// public const gr_vk_extensions_t* fVkExtensions
 		public gr_vk_extensions_t fVkExtensions;
-
-		// public uint32_t fFeatures
-		public UInt32 fFeatures;
 
 		// public const vk_physical_device_features_t* fDeviceFeatures
 		public vk_physical_device_features_t fDeviceFeatures;
@@ -17966,15 +17954,12 @@ namespace SkiaSharp {
 		// public void* fGetProcUserData
 		public void* fGetProcUserData;
 
-		// public bool fOwnsInstanceAndDevice
-		public Byte fOwnsInstanceAndDevice;
-
 		// public bool fProtectedContext
 		public Byte fProtectedContext;
 
 		public readonly bool Equals (GRVkBackendContextNative obj) =>
 #pragma warning disable CS8909
-			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMinAPIVersion == obj.fMinAPIVersion && fInstanceVersion == obj.fInstanceVersion && fMaxAPIVersion == obj.fMaxAPIVersion && fExtensions == obj.fExtensions && fVkExtensions == obj.fVkExtensions && fFeatures == obj.fFeatures && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fOwnsInstanceAndDevice == obj.fOwnsInstanceAndDevice && fProtectedContext == obj.fProtectedContext;
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fVkExtensions == obj.fVkExtensions && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -17994,18 +17979,13 @@ namespace SkiaSharp {
 			hash.Add (fDevice);
 			hash.Add (fQueue);
 			hash.Add (fGraphicsQueueIndex);
-			hash.Add (fMinAPIVersion);
-			hash.Add (fInstanceVersion);
 			hash.Add (fMaxAPIVersion);
-			hash.Add (fExtensions);
 			hash.Add (fVkExtensions);
-			hash.Add (fFeatures);
 			hash.Add (fDeviceFeatures);
 			hash.Add (fDeviceFeatures2);
 			hash.Add (fMemoryAllocator);
 			hash.Add (fGetProc);
 			hash.Add (fGetProcUserData);
-			hash.Add (fOwnsInstanceAndDevice);
 			hash.Add (fProtectedContext);
 			return hash.ToHashCode ();
 		}
@@ -18199,9 +18179,34 @@ namespace SkiaSharp {
 			set => fFormatFeatures = value;
 		}
 
+		// public struct { uint32_t r, g, b, a } fComponents (VkComponentMapping)
+		private UInt32 fComponentsR;
+		public UInt32 ComponentsR {
+			readonly get => fComponentsR;
+			set => fComponentsR = value;
+		}
+
+		private UInt32 fComponentsG;
+		public UInt32 ComponentsG {
+			readonly get => fComponentsG;
+			set => fComponentsG = value;
+		}
+
+		private UInt32 fComponentsB;
+		public UInt32 ComponentsB {
+			readonly get => fComponentsB;
+			set => fComponentsB = value;
+		}
+
+		private UInt32 fComponentsA;
+		public UInt32 ComponentsA {
+			readonly get => fComponentsA;
+			set => fComponentsA = value;
+		}
+
 		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
 #pragma warning disable CS8909
-			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fFormatFeatures == obj.fFormatFeatures;
+			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fFormatFeatures == obj.fFormatFeatures && fComponentsR == obj.fComponentsR && fComponentsG == obj.fComponentsG && fComponentsB == obj.fComponentsB && fComponentsA == obj.fComponentsA;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -18225,6 +18230,10 @@ namespace SkiaSharp {
 			hash.Add (fChromaFilter);
 			hash.Add (fForceExplicitReconstruction);
 			hash.Add (fFormatFeatures);
+			hash.Add (fComponentsR);
+			hash.Add (fComponentsG);
+			hash.Add (fComponentsB);
+			hash.Add (fComponentsA);
 			return hash.ToHashCode ();
 		}
 
@@ -19180,6 +19189,12 @@ namespace SkiaSharp {
 
 		// public const char* fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
+
+		// public int32_t fOrigin (SkEncodedOrigin value, 0 = not set)
+		private readonly Int32 fOrigin;
+
+		// public bool fHasOrigin
+		private readonly Byte fHasOrigin;
 
 		public readonly bool Equals (SKJpegEncoderOptions obj) =>
 #pragma warning disable CS8909
@@ -20556,32 +20571,36 @@ namespace SkiaSharp {
 		Bgr101010x = 10,
 		// BGR_101010X_XR_SK_COLORTYPE = 11
 		Bgr101010xXr = 11,
-		// RGBA_10X6_SK_COLORTYPE = 12
-		Rgba10x6 = 12,
-		// GRAY_8_SK_COLORTYPE = 13
-		Gray8 = 13,
-		// RGBA_F16_NORM_SK_COLORTYPE = 14
-		RgbaF16Norm = 14,
-		// RGBA_F16_SK_COLORTYPE = 15
-		RgbaF16 = 15,
-		// RGBA_F32_SK_COLORTYPE = 16
-		RgbaF32 = 16,
-		// R8G8_UNORM_SK_COLORTYPE = 17
-		R8g8Unorm = 17,
-		// A16_FLOAT_SK_COLORTYPE = 18
-		A16Float = 18,
-		// R16G16_FLOAT_SK_COLORTYPE = 19
-		R16g16Float = 19,
-		// A16_UNORM_SK_COLORTYPE = 20
-		A16Unorm = 20,
-		// R16G16_UNORM_SK_COLORTYPE = 21
-		R16g16Unorm = 21,
-		// R16G16B16A16_UNORM_SK_COLORTYPE = 22
-		R16g16b16a16Unorm = 22,
-		// SRGBA_8888_SK_COLORTYPE = 23
-		Srgba8888 = 23,
-		// R8_UNORM_SK_COLORTYPE = 24
-		R8Unorm = 24,
+		// BGRA_10101010_XR_SK_COLORTYPE = 12 (NEW in m132)
+		Bgra10101010Xr = 12,
+		// RGBA_10X6_SK_COLORTYPE = 13
+		Rgba10x6 = 13,
+		// GRAY_8_SK_COLORTYPE = 14
+		Gray8 = 14,
+		// RGBA_F16_NORM_SK_COLORTYPE = 15
+		RgbaF16Norm = 15,
+		// RGBA_F16_SK_COLORTYPE = 16
+		RgbaF16 = 16,
+		// RGB_F16F16F16X_SK_COLORTYPE = 17 (NEW in m132)
+		RgbF16F16F16x = 17,
+		// RGBA_F32_SK_COLORTYPE = 18
+		RgbaF32 = 18,
+		// R8G8_UNORM_SK_COLORTYPE = 19
+		R8g8Unorm = 19,
+		// A16_FLOAT_SK_COLORTYPE = 20
+		A16Float = 20,
+		// R16G16_FLOAT_SK_COLORTYPE = 21
+		R16g16Float = 21,
+		// A16_UNORM_SK_COLORTYPE = 22
+		A16Unorm = 22,
+		// R16G16_UNORM_SK_COLORTYPE = 23
+		R16g16Unorm = 23,
+		// R16G16B16A16_UNORM_SK_COLORTYPE = 24
+		R16g16b16a16Unorm = 24,
+		// SRGBA_8888_SK_COLORTYPE = 25
+		Srgba8888 = 25,
+		// R8_UNORM_SK_COLORTYPE = 26
+		R8Unorm = 26,
 	}
 
 	// sk_encoded_image_format_t
