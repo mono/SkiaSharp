@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Threading;
@@ -37,9 +37,17 @@ namespace SkiaSharp
 		}
 
 		protected SKAbstractManagedStream (bool owns)
+			: this (owns, true)
+		{
+		}
+
+		/// <param name="owns">Whether this object owns the native handle.</param>
+		/// <param name="weak">If true, native code holds a weak reference (allows GC).
+		/// If false, native code holds a strong reference (prevents GC until Destroy).</param>
+		private protected SKAbstractManagedStream (bool owns, bool weak)
 			: base (IntPtr.Zero, owns)
 		{
-			var ctx = DelegateProxies.CreateUserData (this, true);
+			var ctx = DelegateProxies.CreateUserData (this, weak);
 			Handle = SkiaApi.sk_managedstream_new ((void*)ctx);
 		}
 

@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.IO;
@@ -11,10 +11,6 @@ namespace SkiaSharp
 
 		private bool isAsEnd;
 		private bool disposeStream;
-		private bool wasCopied;
-
-		private WeakReference parent;
-		private WeakReference child;
 
 		public SKManagedStream (Stream managedStream)
 			: this (managedStream, false)
@@ -23,6 +19,13 @@ namespace SkiaSharp
 
 		public SKManagedStream (Stream managedStream, bool disposeManagedStream)
 			: base (true)
+		{
+			stream = managedStream ?? throw new ArgumentNullException (nameof (managedStream));
+			disposeStream = disposeManagedStream;
+		}
+
+		private SKManagedStream (Stream managedStream, bool disposeManagedStream, bool weak)
+			: base (true, weak)
 		{
 			stream = managedStream ?? throw new ArgumentNullException (nameof (managedStream));
 			disposeStream = disposeManagedStream;
@@ -56,28 +59,6 @@ namespace SkiaSharp
 
 		protected override void DisposeManaged ()
 		{
-			var childStream = child?.Target as SKManagedStream;
-			var parentStream = parent?.Target as SKManagedStream;
-
-			if (childStream != null && parentStream != null) {
-				// remove this stream from the list by connecting the parent with the child
-				childStream.parent = parent;
-				parentStream.child = child;
-			} else if (childStream != null) {
-				// transfer ownership to child
-				childStream.parent = null;
-			} else if (parentStream != null) {
-				// transfer ownership back to parent
-				parentStream.child = null;
-				parentStream.wasCopied = false;
-				parentStream.disposeStream = disposeStream;
-
-				disposeStream = false;
-			}
-
-			parent = null;
-			child = null;
-
 			if (disposeStream && stream != null) {
 				stream.Dispose ();
 				stream = null;
@@ -113,15 +94,11 @@ namespace SkiaSharp
 
 		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
-			VerifyOriginal ();
-
 			return OnReadManagedStream (buffer, size);
 		}
 
 		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
-			VerifyOriginal ();
-
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
@@ -133,8 +110,6 @@ namespace SkiaSharp
 
 		protected internal override bool OnIsAtEnd ()
 		{
-			VerifyOriginal ();
-
 			if (!stream.CanSeek) {
 				return isAsEnd;
 			}
@@ -143,22 +118,16 @@ namespace SkiaSharp
 
 		protected internal override bool OnHasPosition ()
 		{
-			VerifyOriginal ();
-
 			return stream.CanSeek;
 		}
 
 		protected internal override bool OnHasLength ()
 		{
-			VerifyOriginal ();
-
 			return stream.CanSeek;
 		}
 
 		protected internal override bool OnRewind ()
 		{
-			VerifyOriginal ();
-
 			if (!stream.CanSeek) {
 				return false;
 			}
@@ -168,8 +137,6 @@ namespace SkiaSharp
 
 		protected internal override IntPtr OnGetPosition ()
 		{
-			VerifyOriginal ();
-
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
@@ -178,8 +145,6 @@ namespace SkiaSharp
 
 		protected internal override IntPtr OnGetLength ()
 		{
-			VerifyOriginal ();
-
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
@@ -188,8 +153,6 @@ namespace SkiaSharp
 
 		protected internal override bool OnSeek (IntPtr position)
 		{
-			VerifyOriginal ();
-
 			if (!stream.CanSeek) {
 				return false;
 			}
@@ -199,8 +162,6 @@ namespace SkiaSharp
 
 		protected internal override bool OnMove (int offset)
 		{
-			VerifyOriginal ();
-
 			if (!stream.CanSeek) {
 				return false;
 			}
@@ -210,46 +171,52 @@ namespace SkiaSharp
 
 		protected internal override IntPtr OnCreateNew ()
 		{
-			VerifyOriginal ();
-
 			return IntPtr.Zero;
+		}
+
+		private byte[] ReadStreamFully ()
+		{
+			var pos = stream.Position;
+			stream.Position = 0;
+
+			byte[] data;
+			if (stream is MemoryStream ms) {
+				data = ms.ToArray ();
+			} else {
+				using var copy = new MemoryStream ();
+				stream.CopyTo (copy);
+				data = copy.ToArray ();
+			}
+
+			stream.Position = pos;
+			return data;
 		}
 
 		protected internal override IntPtr OnDuplicate ()
 		{
-			VerifyOriginal ();
-
 			if (!stream.CanSeek)
 				return IntPtr.Zero;
 
-			var newStream = new SKManagedStream (stream, disposeStream);
-			newStream.parent = new WeakReference (this);
+			var data = ReadStreamFully ();
+			var newManaged = new MemoryStream (data, 0, data.Length, false, true);
+			newManaged.Position = 0;
 
-			wasCopied = true;
-			disposeStream = false;
-			child = new WeakReference (newStream);
-
-			stream.Position = 0;
-
+			var newStream = new SKManagedStream (newManaged, true, weak: false);
 			return newStream.Handle;
 		}
 
 		protected internal override IntPtr OnFork ()
 		{
-			VerifyOriginal ();
+			if (!stream.CanSeek)
+				return IntPtr.Zero;
 
-			var newStream = new SKManagedStream (stream, disposeStream);
+			var pos = stream.Position;
+			var data = ReadStreamFully ();
+			var newManaged = new MemoryStream (data, 0, data.Length, false, true);
+			newManaged.Position = pos;
 
-			wasCopied = true;
-			disposeStream = false;
-
+			var newStream = new SKManagedStream (newManaged, true, weak: false);
 			return newStream.Handle;
-		}
-
-		private void VerifyOriginal ()
-		{
-			if (wasCopied)
-				throw new InvalidOperationException ("This stream was duplicated or forked and cannot be read anymore.");
 		}
 	}
 }

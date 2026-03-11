@@ -57,7 +57,6 @@ Task("libSkiaSharp")
             $"skia_use_icu=false " +
             $"skia_use_metal=true " +
             $"skia_use_piex=true " +
-            $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_libjpeg_turbo=false " +
             $"skia_use_system_libpng=false " +

@@ -88,6 +88,6 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m119**](https://github.com/google/skia/tree/chrome/m119)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m119)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m119...mono:skiasharp)  
+What version are we on? [**m132**](https://github.com/google/skia/tree/chrome/m132)
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m132)
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m132...mono:skiasharp)  
