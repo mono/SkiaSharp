@@ -493,7 +493,10 @@ namespace SkiaSharp.Tests
 			using var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, fontfile));
 			font.Typeface = typeface;
 
-			Assert.Same(typeface, font.Typeface);
+			if (typeface != null)
+				Assert.Same(typeface, font.Typeface);
+			else
+				Assert.NotNull(font.Typeface); // null typeface falls back to platform default
 		}
 	}
 }

@@ -33,32 +33,50 @@ namespace SkiaSharp.Resources
 
 	public sealed class DataUriResourceProvider : ResourceProvider
 	{
-		public DataUriResourceProvider (bool preDecode = false)
-			: this (null, preDecode)
+		[Obsolete ("Use the overload that takes an ImageDecodeStrategy instead.")]
+		public DataUriResourceProvider (bool preDecode)
+			: this (null, preDecode ? ImageDecodeStrategy.PreDecode : ImageDecodeStrategy.LazyDecode)
 		{
 		}
 
-		public DataUriResourceProvider (ResourceProvider? fallbackProvider, bool preDecode = false)
-			: base (Create (fallbackProvider, preDecode), true)
+		[Obsolete ("Use the overload that takes an ImageDecodeStrategy instead.")]
+		public DataUriResourceProvider (ResourceProvider? fallbackProvider, bool preDecode)
+			: this (fallbackProvider, preDecode ? ImageDecodeStrategy.PreDecode : ImageDecodeStrategy.LazyDecode)
+		{
+		}
+
+		public DataUriResourceProvider (ImageDecodeStrategy strategy = ImageDecodeStrategy.LazyDecode)
+			: this (null, strategy)
+		{
+		}
+
+		public DataUriResourceProvider (ResourceProvider? fallbackProvider, ImageDecodeStrategy strategy = ImageDecodeStrategy.LazyDecode)
+			: base (Create (fallbackProvider, strategy), true)
 		{
 			Referenced (this, fallbackProvider);
 		}
 
-		private static IntPtr Create (ResourceProvider? fallbackProvider, bool preDecode = false) =>
-			ResourcesApi.skresources_data_uri_resource_provider_proxy_make (fallbackProvider?.Handle ?? IntPtr.Zero, preDecode);
+		private static IntPtr Create (ResourceProvider? fallbackProvider, ImageDecodeStrategy strategy) =>
+			ResourcesApi.skresources_data_uri_resource_provider_proxy_make2 (fallbackProvider?.Handle ?? IntPtr.Zero, strategy);
 	}
 
 	public sealed class FileResourceProvider : ResourceProvider
 	{
-		public FileResourceProvider (string baseDirectory, bool preDecode = false)
-			: base (Create (baseDirectory, preDecode), true)
+		[Obsolete ("Use the overload that takes an ImageDecodeStrategy instead.")]
+		public FileResourceProvider (string baseDirectory, bool preDecode)
+			: this (baseDirectory, preDecode ? ImageDecodeStrategy.PreDecode : ImageDecodeStrategy.LazyDecode)
 		{
 		}
 
-		private static IntPtr Create (string baseDirectory, bool preDecode)
+		public FileResourceProvider (string baseDirectory, ImageDecodeStrategy strategy = ImageDecodeStrategy.LazyDecode)
+			: base (Create (baseDirectory, strategy), true)
+		{
+		}
+
+		private static IntPtr Create (string baseDirectory, ImageDecodeStrategy strategy)
 		{
 			using var baseDir = new SKString(baseDirectory ?? throw new ArgumentNullException (nameof (baseDirectory)));
-			return ResourcesApi.skresources_file_resource_provider_make (baseDir.Handle, preDecode);
+			return ResourcesApi.skresources_file_resource_provider_make2 (baseDir.Handle, strategy);
 		}
 	}
 }
