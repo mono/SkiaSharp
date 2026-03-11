@@ -419,6 +419,15 @@ Task ("tests-maccatalyst")
             });
     }
 
+    // debug: list app bundle contents to find Info.plist location
+    if (DirectoryExists (app.FullPath)) {
+        Information ("App bundle contents:");
+        foreach (var f in GetFiles ($"{app}/**/*"))
+            Information ("  {0}", f.FullPath.Substring (MakeAbsolute (app).FullPath.Length));
+    } else {
+        Warning ("App bundle not found at: {0}", app);
+    }
+
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
     RunCake ("./scripts/cake/xharness-apple.cake", "Default", new Dictionary<string, string> {

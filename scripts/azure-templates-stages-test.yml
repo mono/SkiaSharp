@@ -218,6 +218,10 @@ stages:
             preBuildSteps:
               - script: |
                   sudo rm -rf /usr/local/lib/android/sdk/ndk
+                  sudo rm -rf /usr/local/lib/android/sdk/cmake
+                  sudo rm -rf /usr/local/lib/android/sdk/build-tools/33.*
+                  sudo rm -rf /usr/local/lib/android/sdk/build-tools/34.*
+                  sudo rm -rf /usr/local/lib/android/sdk/platforms/android-3[0-4]
                   df -h /
                 displayName: Free disk space for emulator
               - script: |
