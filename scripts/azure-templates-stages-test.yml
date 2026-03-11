@@ -231,8 +231,6 @@ stages:
                 displayName: Enable KVM for Android emulator
               - script: |
                   mkdir -p "$HOME/.android/avd"
-                  echo "ANDROID_AVD_HOME=$HOME/.android/avd" >> "$GITHUB_ENV"
-                  echo "ANDROID_EMULATOR_HOME=$HOME/.android" >> "$GITHUB_ENV"
                   echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
                   echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
                 displayName: Set Android AVD home (fix XDG path mismatch)
