@@ -12,7 +12,15 @@
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
+    <!-- Preserve xunit assemblies from trimming to avoid MissingMethodException on device -->
+    <TrimmerDefaultAction>link</TrimmerDefaultAction>
   </PropertyGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="xunit.assert" />
+    <TrimmerRootAssembly Include="xunit.core" />
+    <TrimmerRootAssembly Include="xunit.execution.dotnet" />
+  </ItemGroup>
 
   <PropertyGroup>
     <ApplicationTitle>SkiaSharp Tests</ApplicationTitle>
