@@ -208,7 +208,7 @@ jobs:
             displayName: Display all the .NET information
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           # install workloads
-          - pwsh: .\scripts\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}"
+          - pwsh: .\scripts\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             retryCountOnTaskFailure: 3
             displayName: Install the .NET workloads
