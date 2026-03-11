@@ -7,14 +7,6 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-# Use manifest mode — workload-set mode resolves to the latest workload set
-# version (e.g., 10.0.104) which may reference packages not yet mirrored to
-# the dnceng feeds. Manifest mode uses the SDK's bundled manifests which only
-# reference packages that were available at SDK release time.
-Write-Host "Configuring workload update mode to 'manifests'..."
-& dotnet workload config --update-mode manifests
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
 # Parse Tizen parameter (format: BAND/VERSION)
 if ($Tizen -and $Tizen -ne '<latest>') {
   $parts = $Tizen -split '/'
@@ -73,7 +65,7 @@ if ($Workloads) {
 }
 
 Write-Host "Installing workloads: $($WorkloadList -join ', ')..."
-& dotnet workload install @WorkloadList --skip-manifest-update --skip-sign-check
+& dotnet workload install @WorkloadList --skip-sign-check
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Installed workloads:"
