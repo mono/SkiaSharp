@@ -10,15 +10,17 @@
     <Title>SkiaSharp for ASP.NET Blazor</Title>
     <PackageDescription>SkiaSharp for ASP.NET Blazor is a set of views that can be used to draw on the screen.</PackageDescription>
     <PackageTags>aspnet;blazor;web</PackageTags>
-    <!-- Block TypeScript compilation during MSBuild to avoid race with .NET 10 static web assets compression.
-         The JS files in wwwroot are pre-compiled and checked into git. Run tsc manually when changing .ts files. -->
-    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
 
   <PropertyGroup>
     <TypeScriptTarget>es2015</TypeScriptTarget>
     <TypeScriptModuleKind>es2015</TypeScriptModuleKind>
     <TypeScriptNoImplicitAny>True</TypeScriptNoImplicitAny>
+    <!-- Redirect TypeScript output to a per-TFM intermediate directory to avoid a race condition
+         where multi-TFM builds delete/rewrite the shared wwwroot/*.js files while another TFM's
+         static web asset compression is reading them. Uses BaseIntermediateOutputPath + Configuration
+         + TargetFramework because IntermediateOutputPath is not yet set during property evaluation. -->
+    <TypeScriptOutDir>$(BaseIntermediateOutputPath)$(Configuration)/$(TargetFramework)/ts</TypeScriptOutDir>
   </PropertyGroup>
 
   <ItemGroup>
