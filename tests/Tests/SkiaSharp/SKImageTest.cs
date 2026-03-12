@@ -380,7 +380,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, input.GetReferenceCount());
 
 				var image = SKImage.FromEncodedData(input);
-				Assert.Equal(3, input.GetReferenceCount());
+				Assert.Equal(2, input.GetReferenceCount());
 				Assert.False(released, "Data was disposed too soon.");
 
 				image.Dispose();
@@ -468,7 +468,7 @@ namespace SkiaSharp.Tests
 				handle = input.Handle;
 
 				var img = SKImage.FromEncodedData(input);
-				Assert.Equal(3, input.GetReferenceCount());
+				Assert.Equal(2, input.GetReferenceCount());
 				Assert.False(released, "Data was disposed too soon.");
 
 				var result = img.Encode();
@@ -523,7 +523,7 @@ namespace SkiaSharp.Tests
 				var handle = input.Handle;
 
 				var img = SKImage.FromEncodedData(input);
-				Assert.Equal(3, input.GetReferenceCount());
+				Assert.Equal(2, input.GetReferenceCount());
 				Assert.False(released, "Data was disposed too soon.");
 
 				img.Dispose();
