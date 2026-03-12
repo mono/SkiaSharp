@@ -19,12 +19,6 @@ When user claims `NoDependencies` but error shows `libfontconfig.so.1`:
 
 `NoDependencies` has **zero** external deps. Any dependency error PROVES a different binary was loaded. This is the #1 AI misdiagnosis — never dismiss dependency errors when `NoDependencies` is referenced.
 
-### Issue Lessons
-
-| Issue | Pattern | Learning |
-|-------|---------|----------|
-| #3386 | NoDependencies + fontconfig error | .NET Aspire / Azure Container Apps deployed wrong binary despite correct PackageReference. Workaround: switch to `NativeAssets.Linux` + install fontconfig. |
-
 ## Platform Quirks
 
 ### Linux

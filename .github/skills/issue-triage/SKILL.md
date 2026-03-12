@@ -3,9 +3,10 @@ name: issue-triage
 description: >-
   Triage a SkiaSharp GitHub issue or PR into structured JSON with classification
   (type, area, platform, severity), suggested response, and automatable actions.
-  Triggers: "triage #123", "triage issue", "classify issue", "analyze issue",
-  "what's this issue about". Also triggered when an issue number is given after
-  the issue-triage skill is already mentioned.
+  Use whenever someone asks to triage, classify, categorize, or analyze a GitHub
+  issue — including "triage #123", "what kind of issue is this", "what should we
+  do about #NNNN", "analyze this issue", "sort this bug report", or any request
+  to understand and categorize an issue before investigation begins.
 ---
 
 # Triage Issue
@@ -14,22 +15,22 @@ description: >-
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
-## ⛔ MANDATORY FIRST STEPS (do not skip)
+## Before You Start
 
-1. Read THIS entire SKILL.md before any investigation
-2. Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
-3. Read [references/anti-patterns.md](references/anti-patterns.md) for critical rules
+Read these files first — they define the output format and hard constraints:
 
-These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded.
+1. This SKILL.md (the workflow below)
+2. [references/schema-cheatsheet.md](references/schema-cheatsheet.md) — required fields and enums
+3. [references/anti-patterns.md](references/anti-patterns.md) — critical rules (the authoritative list)
 
 > **Quick flow:**
 > 1. Setup cache worktree
 > 2. Load issue data (cache first, GitHub API fallback)
-> 3. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [labels](references/labels.md), [triage-examples](references/triage-examples.md), [anti-patterns](references/anti-patterns.md)
+> 3. Investigate code — **READ-ONLY, never edit source files**
 > 4. Create brief plan (5-10 lines)
-> 5. Investigate code — **READ-ONLY, never edit source files**
-> 6. Generate JSON
-> 7. Validate with script
+> 5. Read [labels](references/labels.md) + [examples](references/triage-examples.md), then classify and generate JSON
+> 6. Search for workarounds, validate any code snippets
+> 7. Validate JSON with script
 > 8. Persist to data-cache
 
 ### Data sources
@@ -88,13 +89,13 @@ pwsh .github/skills/issue-triage/scripts/issue-to-markdown.ps1 $CACHE/github/ite
 
 If fetched via API, work directly from the `gh` output (skip the script).
 
-### 3. Code Investigation (MANDATORY)
+### 3. Code Investigation
 
 > **Scope: READ code, don't WRITE code.** Grep, read files, trace call chains. Never create files, compile, or execute.
 
-**Before ANY classification**, search the source code for the types, methods, APIs, or behaviors mentioned in the issue. Read the relevant files. Record every finding in `analysis.codeInvestigation` as `{file, finding, relevance}` (with optional `lines`).
+Code investigation grounds the triage in reality rather than surface-level pattern matching. Without reading the actual source, you'll misclassify "works as designed" bugs and miss already-fixed issues. Search for the types, methods, or APIs mentioned in the issue and record findings in `analysis.codeInvestigation` as `{file, finding, relevance}` (with optional `lines`).
 
-**Do NOT classify until you have examined source code.** For bugs, include at least one `codeInvestigation` entry. Close-* actions should include at least two.
+For bugs, include at least one `codeInvestigation` entry. Close-* actions should include at least two — the higher bar is because closing an issue on wrong evidence is worse than leaving it open.
 
 **Steps:**
 1. Grep for the types/methods/APIs mentioned in the issue
@@ -124,39 +125,25 @@ If fetched via API, work directly from the `gh` output (skip the script).
 
 ---
 
-> **Pre-flight — confirm before analyzing:**
->
-> - [ ] Cache worktree is set up and pulled
-> - [ ] Issue data loaded (cache JSON or GitHub API)
-> - [ ] Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
-> - [ ] Read [references/labels.md](references/labels.md) for valid label values
-> - [ ] Read [references/triage-examples.md](references/triage-examples.md) for calibration
-> - [ ] Read [references/anti-patterns.md](references/anti-patterns.md) — at least the critical rules
-> - [ ] Created a brief plan (5-10 lines: what to investigate, what type you suspect)
->
-> **Reminder:** Triage is READ-ONLY. Do NOT edit any source files (.cs, .cpp, .csproj, .json).
+### ✅ GATE: Do not proceed until you have:
+- [ ] Cache worktree set up and pulled
+- [ ] Issue data loaded (cache JSON or GitHub API)
+- [ ] Code investigation done (at least one `codeInvestigation` entry)
+- [ ] Brief plan created (5-10 lines: what to investigate, what type you suspect)
+
+---
 
 ## Phase 3 — Analyze
 
 ### First triage in session
 
-Read [references/labels.md](references/labels.md) for valid label values and cardinality, [references/triage-examples.md](references/triage-examples.md) for calibration, and [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields.
+Read [references/labels.md](references/labels.md) for valid label values, [references/triage-examples.md](references/triage-examples.md) for calibration examples, and [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields.
 
 ### Classify and generate JSON
 
 Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate the JSON. Write to `/tmp/skiasharp/triage/{number}.json` — use this exact literal path, do NOT substitute `$TMPDIR` or any other variable.
 
-> **⚠️ Schema Compliance:**
->
-> 1. **Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md)** — This is the authoritative source for structure, fields, and enums.
-> 2. **Review [references/labels.md](references/labels.md)** — Use only valid label values.
-> 3. **Follow these critical constraints:**
->    - `meta.schemaVersion` must be `"1.0"`
->    - **Optional fields:** OMIT entirely if not applicable. Do NOT set to `null`.
->    - **String Arrays:** `platforms`, `backends`, `tenets` are simple string arrays (no confidence wrapper).
->    - **Investigation:** `analysis.codeInvestigation` is MANDATORY. At least one entry for bugs, two for close-* actions.
->    - **Rationale:** `analysis.rationale` is a single summary string (not per-field).
->    - **Validation:** No extra properties allowed (`additionalProperties: false`).
+> **Schema:** Follow [references/schema-cheatsheet.md](references/schema-cheatsheet.md) exactly — it covers required fields, enum values, and common mistakes. Key gotchas: `platforms`/`backends`/`tenets` are plain string arrays (not `{value, confidence}` objects), optional fields should be omitted entirely (never `null`), and `additionalProperties: false` is enforced at every level.
 
 #### JSON Groups Overview
 
@@ -202,8 +189,7 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contain
 
 ## Phase 4 — Validate
 
-> **🛑 PHASE GATE: You CANNOT proceed to Phase 5 without passing validation.**
-> **Skipping validation = INVALID triage. The task is incomplete.**
+Validation catches schema errors that cause downstream pipeline failures — the repro and fix skills parse this JSON programmatically, so a malformed triage breaks the entire chain.
 
 ```bash
 # Try pwsh first, fall back to python3
@@ -215,20 +201,17 @@ pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/tria
 - **Exit 1** = ❌ fix the errors listed in the output, then re-run. Repeat up to 3 times.
 - **Exit 2** = fatal error, stop and report
 
-> **⚠️ NEVER hand-roll your own validation. NEVER assume it passes. RUN THE SCRIPT.**
+> Always use the validation scripts — hand-checking fields is error-prone and misses schema constraints.
 
 ---
 
 ## Phase 5 — Persist & Present
 
-> **🛑 PHASE GATE: Phase 4 validator MUST have printed ✅ before you reach this step.**
-> **If you have not run the validation script, GO BACK and run it now.**
+> **Prerequisite:** Phase 4 validator printed ✅.
 
 ### 1. Persist
 
-> **🛑 MANDATORY: Use the persist script. NEVER manually `cp`, `git add`, `git commit`, or `git push`.**
-> The script handles copying, committing, and pushing with retry logic. Manual git commands
-> will leave unpushed commits that are lost when the runner shuts down.
+Use the persist script — it handles copying, committing, and pushing with retry logic. Manual git commands risk leaving unpushed commits that are lost when the runner shuts down.
 
 ```bash
 pwsh .github/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{number}.json
@@ -260,19 +243,27 @@ Actions:
   - **Note:** For platform-independent API bugs (e.g., SVG output, stream handling), prefer `linux` even if the reporter tests on other platforms.
 - If repro already exists and reproduces: next step is **issue-fix** (consume both JSONs).
 
-If `add-comment` exists, show `comment` in a copy-paste block. **⚠️ NEVER post via GitHub API.**
+If `add-comment` exists, show `comment` in a copy-paste block. Comments are never posted automatically — always present them for human review.
+
+---
+
+## Error Recovery
+
+| Issue | Recovery |
+|-------|----------|
+| Cache worktree missing/corrupt | `git worktree remove .data-cache && git worktree add .data-cache docs-data-cache` |
+| Issue not in cache | Fall back to `gh issue view` or GitHub MCP tools |
+| Validation fails (Exit 1) | Fix the listed errors, re-run. Up to 3 retries before stopping. |
+| Validation fatal (Exit 2) | Stop and report — likely a schema version mismatch |
+| Persist script fails | Check branch is up-to-date, retry. If push conflict, pull and retry. |
+| Can't classify type | Default to `type/bug` with low confidence + `request-info` action |
+| Workaround validation agents timeout | Set `validated: "untested"` and proceed |
 
 ---
 
 ## Anti-Patterns
 
-See [references/anti-patterns.md](references/anti-patterns.md) — **read this file on first triage in session**.
-
-**#0 (CRITICAL):** Triage is READ-ONLY. If you edit a source file during triage, you have FAILED. See the anti-patterns reference for the full list.
-
-**#1 (CRITICAL):** NEVER use `store_memory` during triage. Triage produces JSON artifacts, not memories. Storing unverified facts pollutes all future sessions.
-
-**#2 (CRITICAL):** NEVER skip the validation script. You MUST run `validate-triage.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the triage is invalid.
+See [references/anti-patterns.md](references/anti-patterns.md) for the full list of critical rules (loaded at startup).
 
 ---
 
