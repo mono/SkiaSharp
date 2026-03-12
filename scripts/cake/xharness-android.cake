@@ -89,6 +89,20 @@ Setup(context =>
     Information("Listing AVDs after creation:");
     DotNetTool("android avd list");
 
+    // Reduce userdata partition size via config.ini to fit on CI agents with limited disk space.
+    // The --partition-size flag alone doesn't override the system image default (7373 MB for API 36).
+    var avdHome = Environment.GetEnvironmentVariable("ANDROID_AVD_HOME")
+        ?? System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".android", "avd");
+    var configIni = System.IO.Path.Combine(avdHome, ANDROID_AVD + ".avd", "config.ini");
+    if (System.IO.File.Exists(configIni)) {
+        System.IO.File.AppendAllText(configIni, "\ndisk.dataPartition.size=2048M\n");
+        Information("Set userdata partition to 2048M in: {0}", configIni);
+        Information("config.ini contents:");
+        Information(System.IO.File.ReadAllText(configIni));
+    } else {
+        Warning("AVD config.ini not found at: {0}", configIni);
+    }
+
     // start the emulator (only wait 5 mins)
     Information("Starting Emulator: {0}...", ANDROID_AVD);
     DotNetTool($"android avd start --name \"{ANDROID_AVD}\" --gpu guest --wait-boot --no-window --no-snapshot --no-audio --no-boot-anim --camera-back none --camera-front none --partition-size 2048 --timeout 300");
