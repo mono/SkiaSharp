@@ -368,20 +368,31 @@ Always document which milestones were crossed in the PR description.
 
 | Repository | File | Change |
 |-----------|------|--------|
-| mono/skia | `DEPS` | Merge conflict resolution |
+| mono/skia | `DEPS` | Merge conflict resolution — restore custom dependency hashes |
 | mono/skia | `include/core/SkMilestone.h` | New milestone number (from upstream) |
 | mono/skia | `include/c/sk_types.h` | Enum/type updates |
-| mono/skia | `src/c/*.cpp` | C API fixes for new C++ APIs |
+| mono/skia | `include/c/sk_typeface.h` | Remove dead factory declarations |
+| mono/skia | `include/c/skresources_resource_provider.h` | New function declarations (e.g. enum-based) |
+| mono/skia | `src/c/sk_typeface.cpp` | Platform font manager, typeface C API |
+| mono/skia | `src/c/sk_font.cpp` | Null typeface → default interception |
+| mono/skia | `src/c/gr_context.cpp` | Ganesh namespace migrations |
+| mono/skia | `src/c/sk_image.cpp` | Mipmapped enum updates |
+| mono/skia | `src/c/sk_types_priv.h` | Type mapping macro fixes (DEF_MAP) |
 | mono/skia | `src/c/sk_enums.cpp` | Enum mapping updates |
+| mono/skia | `src/c/skresources_resource_provider.cpp` | Bool→enum wrapper functions |
+| mono/skia | `src/xamarin/SkCompatPaint.cpp` | Default typeface for internal SkFont |
 | mono/SkiaSharp | `externals/skia` | Submodule pointer |
 | mono/SkiaSharp | `scripts/VERSIONS.txt` | All version numbers |
 | mono/SkiaSharp | `cgmanifest.json` | Security tracking |
 | mono/SkiaSharp | `scripts/azure-pipelines-variables.yml` | CI config |
 | mono/SkiaSharp | `binding/SkiaSharp/SkiaApi.generated.cs` | Regenerated |
+| mono/SkiaSharp | `binding/SkiaSharp/SKTypeface.cs` | [Obsolete] redirects to SKFontManager |
 | mono/SkiaSharp | `binding/SkiaSharp/Definitions.cs` | Type definitions |
 | mono/SkiaSharp | `binding/SkiaSharp/EnumMappings.cs` | Enum mappings |
-| mono/SkiaSharp | `binding/libSkiaSharp.json` | Type config |
-| mono/SkiaSharp | `tests/Tests/SkiaSharp/*.cs` | Test updates |
+| mono/SkiaSharp | `binding/SkiaSharp.Resources/ResourceProvider.cs` | New enum overloads, [Obsolete] on bool |
+| mono/SkiaSharp | `binding/SkiaSharp.Resources/ResourcesApi.generated.cs` | Regenerated |
+| mono/SkiaSharp | `binding/libSkiaSharp.json` | Remove dead type mappings |
+| mono/SkiaSharp | `tests/Tests/SkiaSharp/*.cs` | Test updates for changed behavior |
 
 ---
 
@@ -391,7 +402,17 @@ Hard-won findings from past Skia milestone updates. Check these proactively — 
 
 ### 1. `DEF_STRUCT_MAP` vs Type Aliases
 
-When upstream changes a C++ type from a `struct` to a `using` alias (e.g., `GrVkYcbcrConversionInfo` → `using VulkanYcbcrConversionInfo`), the `DEF_STRUCT_MAP` macro in `sk_types_priv.h` forward-declares `struct X`, which conflicts with the alias. Fix by switching to `DEF_MAP_WITH_NS(namespace, ActualType, CType)` and wrapping in the appropriate platform guard (e.g., `#if SK_VULKAN`).
+When upstream changes a C++ type from a `struct` to a `using` alias (e.g., `GrVkYcbcrConversionInfo` → `using VulkanYcbcrConversionInfo`), the `DEF_STRUCT_MAP` macro in `sk_types_priv.h` forward-declares `struct X`, which conflicts with the alias. Fix by switching to `DEF_MAP` (not `DEF_STRUCT_MAP`) and wrapping in the appropriate platform guard (e.g., `#if defined(SK_VULKAN)`).
+
+```cpp
+// ❌ WRONG — DEF_STRUCT_MAP forward-declares struct, conflicts with using alias
+DEF_STRUCT_MAP(GrVkYcbcrConversionInfo, gr_vk_ycbcrconversioninfo_t, GrVkYcbcrConversionInfo)
+
+// ✅ CORRECT — DEF_MAP with platform guard
+#if defined(SK_VULKAN)
+DEF_MAP(GrVkYcbcrConversionInfo, gr_vk_ycbcrconversioninfo_t, GrVkYcbcrConversionInfo)
+#endif
+```
 
 ### 2. `git-sync-deps` emsdk Failure
 
@@ -401,9 +422,19 @@ Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since Sk
 
 Upstream may introduce defines like `SK_DEFAULT_TYPEFACE_IS_EMPTY` and `SK_DISABLE_LEGACY_DEFAULT_TYPEFACE` that break SkiaSharp's C API, which still relies on legacy typeface/fontmgr APIs. Comment these defines out in `BUILD.gn` when they cause compilation errors in the C API shim layer.
 
-### 4. Custom Patches May Partially Survive Merges
+### 4. Custom Patches: No More Upstream Header Modifications
 
-SkiaSharp adds custom methods to upstream headers (e.g., `SkTypeface::RefDefault()`, `SkTypeface::UniqueID()`, `SkFontMgr::MakeDefault()`). After an upstream merge, implementations in `.cpp` files may survive but header declarations can be silently removed by upstream changes. Always verify that header declarations in `include/` still match the implementations in `src/`.
+**Policy (established during m122 update):** Do NOT add custom methods to upstream Skia headers
+(`include/core/SkTypeface.h`, `include/core/SkFontMgr.h`, etc.). Previous milestones added
+`SkTypeface::RefDefault()`, `SkTypeface::UniqueID()`, `SkFontMgr::MakeDefault()` to upstream
+headers — these invariably break on merge because upstream modifies the same files.
+
+**Instead:** Implement all custom behavior in the C API layer (`src/c/`) using platform-specific
+`#ifdef` blocks. For example, the default font manager singleton is implemented entirely in
+`sk_typeface.cpp` using `create_platform_fontmgr()` — not by patching upstream code.
+
+After any upstream merge, **always verify** that no stale custom declarations leaked back into
+upstream headers. Search for: `RefDefault`, `UniqueID`, `MakeDefault` in `include/core/`.
 
 ### 5. Version Compatibility After `VERSIONS.txt` Update
 
@@ -421,6 +452,215 @@ HarfBuzz generated bindings may fail due to system header issues (`inttypes.h` n
 
 Upstream may add new C API functions (e.g., `sk_surface_draw_with_sampling`) that weren't in the previous milestone. The regeneration step (`pwsh ./utils/generate.ps1`) picks these up automatically. Always review the diff of `*.generated.cs` files for new functions that may need corresponding C# wrappers in `binding/SkiaSharp/`.
 
+### 9. C API Has NO ABI Compatibility — Remove Dead Code
+
+The C API (`src/c/`, `include/c/`) has **NO ABI compatibility** guarantee. If upstream removes a
+C++ function that a C API function wraps, **delete the C API function entirely**. Do NOT stub it
+with a `return nullptr` or `return false` — dead stubs are useless and confusing. The C# side
+should redirect to the replacement API using `[Obsolete]` annotations and then call the new
+underlying function.
+
+```csharp
+// ✅ CORRECT — redirect in C#, not a dead C stub
+[Obsolete("Use SKFontManager.Default.CreateTypeface(data, index) instead.")]
+public static SKTypeface FromData(SKData data, int index = 0)
+{
+    if (data == null) throw new ArgumentNullException(nameof(data));
+    return SKFontManager.Default.CreateTypeface(data, index);
+}
+```
+
+### 10. SkFont Null Typeface = Empty Typeface (m122+)
+
+Starting in m122, `SkFont(nullptr)` creates a font with the "empty" typeface that **draws nothing**.
+This breaks all text rendering when no explicit typeface is set. The fix is in the C API layer:
+
+- **`sk_font.cpp`**: Intercept null typeface in `sk_font_new`, `sk_font_new_with_values`, and
+  `sk_font_set_typeface` — substitute the platform default typeface.
+- **`SkCompatPaint.cpp`** (`src/xamarin/`): Also has its own internal `SkFont` member that must be
+  initialized with the default typeface.
+- **`sk_font_get_typeface()`**: Must compare against `SkTypeface::MakeEmpty()` singleton and return
+  null to C# when the font has the empty typeface (preserving the C# expectation that no-typeface = null).
+
+Both `sk_font.cpp` and `SkCompatPaint.cpp` need an `extern` declaration for the shared singleton
+accessor:
+
+```cpp
+// At the top of sk_font.cpp and SkCompatPaint.cpp:
+extern sk_sp<SkFontMgr> skiasharp_ref_default_fontmgr();
+
+static sk_sp<SkTypeface> get_default_typeface() {
+    auto fontmgr = skiasharp_ref_default_fontmgr();
+    return fontmgr->matchFamilyStyle(nullptr, SkFontStyle::Normal());
+}
+```
+
+### 11. Platform-Specific Font Manager Selection
+
+The C API implements a platform default font manager in `sk_typeface.cpp` via
+`create_platform_fontmgr()`. This is a critical function — getting it wrong means text rendering
+breaks on that platform. Here is the COMPLETE platform mapping:
+
+```cpp
+static sk_sp<SkFontMgr> create_platform_fontmgr() {
+#if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
+    return SkFontMgr_New_CoreText(nullptr);
+#elif defined(SK_BUILD_FOR_WIN)
+    return SkFontMgr_New_DirectWrite();
+#elif defined(SK_BUILD_FOR_ANDROID)
+    return SkFontMgr_New_Android(nullptr);
+#elif defined(SK_FONTMGR_FONTCONFIG_AVAILABLE)
+    return SkFontMgr_New_FontConfig(nullptr);
+#elif defined(SK_FONTMGR_FREETYPE_EMBEDDED_AVAILABLE)
+    return SkFontMgr_New_Custom_Embedded(&SK_EMBEDDED_FONTS);
+#else
+    return SkFontMgr::RefEmpty();
+#endif
+}
+```
+
+#### ⚠️ WASM Font Manager — Critical Details
+
+WASM uses the **embedded** font manager (`SK_FONTMGR_FREETYPE_EMBEDDED_AVAILABLE`), NOT the
+empty one. The WASM build has specific font manager settings in `native/wasm/build.cake`:
+
+```
+skia_enable_fontmgr_custom_directory=false
+skia_enable_fontmgr_custom_empty=false
+skia_enable_fontmgr_custom_embedded=true   ← THIS ONE
+skia_enable_fontmgr_empty=false
+```
+
+The WASM build also embeds **NotoMono-Regular.ttf** into the binary as a fallback font:
+
+```bash
+# In native/wasm/build.cake (~line 92):
+embed_resources.py --name SK_EMBEDDED_FONTS \
+  --input modules/canvaskit/fonts/NotoMono-Regular.ttf \
+  --output NotoMono-Regular.ttf.cpp --align 4
+```
+
+This generates an `extern "C" const SkEmbeddedResourceHeader SK_EMBEDDED_FONTS` symbol.
+
+**Why each alternative is WRONG for WASM:**
+
+| Alternative | Problem |
+|------------|---------|
+| `SkFontMgr::RefEmpty()` | `onMakeFromData()` returns nullptr — can't create typefaces from font data AT ALL |
+| `SkFontMgr_New_Custom_Data({})` | No built-in fonts — text draws nothing unless fonts explicitly registered first |
+| `SkFontMgr_New_Custom_Empty()` | Not linked — `skia_enable_fontmgr_custom_empty=false` in WASM build |
+
+**`SkFontMgr_New_Custom_Embedded(&SK_EMBEDDED_FONTS)` is the ONLY correct choice** because it:
+1. Includes NotoMono as a fallback font (text renders without explicit font registration)
+2. Supports `onMakeFromData()` / `onMakeFromStreamIndex()` via FreeType (runtime font loading works)
+3. Is actually linked in the WASM build
+
+Since `SkFontMgr_New_Custom_Embedded` has no public header, it requires forward declarations
+in `sk_typeface.cpp`:
+
+```cpp
+#elif defined(SK_FONTMGR_FREETYPE_EMBEDDED_AVAILABLE)
+struct SkEmbeddedResource { const uint8_t* data; size_t size; };
+struct SkEmbeddedResourceHeader { const SkEmbeddedResource* entries; int count; };
+extern "C" const SkEmbeddedResourceHeader SK_EMBEDDED_FONTS;
+SK_API sk_sp<SkFontMgr> SkFontMgr_New_Custom_Embedded(const SkEmbeddedResourceHeader*);
+#endif
+```
+
+#### Auditing Platform Font Manager Coverage
+
+When updating `create_platform_fontmgr()`, always verify which font managers are linked per
+platform by checking the `native/*/build.cake` files:
+
+```bash
+grep -rn "fontmgr" native/*/build.cake
+```
+
+Key things to check:
+- Which `skia_enable_fontmgr_*` flags are set per platform
+- Whether the platform links a custom font manager (embedded, directory, empty)
+- Whether the `#ifdef` guards in `create_platform_fontmgr()` match what's actually linked
+
+### 12. Upstream DEPS Reverts Custom Dependency Bumps
+
+When merging upstream, the `DEPS` file will revert any custom dependency version bumps that
+SkiaSharp has made (e.g., libwebp, brotli, zlib, libpng, freetype, harfbuzz, libjpeg-turbo,
+expat). After resolving DEPS merge conflicts:
+
+1. Check `cgmanifest.json` for the expected dependency versions
+2. Verify each custom hash in DEPS matches what SkiaSharp expects
+3. Run `python3 tools/git-sync-deps` to ensure all deps fetch correctly
+
+### 13. Ganesh Namespace Migration Pattern
+
+Upstream is gradually moving Ganesh APIs from global `Gr*` prefixes to namespaced functions.
+Watch for these patterns during updates:
+
+```cpp
+// Before (may break across milestones)
+GrDirectContext::MakeGL(...)
+GrDirectContext::MakeVulkan(...)
+GrMipMapped → GrMipmapped
+
+// After (new namespace)
+GrDirectContexts::MakeGL(...)      // include/gpu/ganesh/gl/GrGLDirectContext.h
+GrDirectContexts::MakeVulkan(...)  // include/gpu/ganesh/vk/GrVkDirectContext.h
+skgpu::Mipmapped                   // include/gpu/GpuTypes.h
+```
+
+Update the C API files (`gr_context.cpp`, `sk_image.cpp`) to use the new namespaces and headers.
+
+### 14. SKTypeface Factory Migration (m122+)
+
+In m122, upstream removed direct typeface creation methods from `SkTypeface` (e.g.,
+`SkTypeface::MakeFromFile`, `SkTypeface::MakeFromData`). These are now only available via
+`SkFontMgr::makeFromFile()`, `SkFontMgr::makeFromData()`, etc.
+
+**C API:** Remove dead factory functions from `sk_typeface.h` / `sk_typeface.cpp`. Also remove
+mappings from `binding/libSkiaSharp.json`.
+
+**C# approach:**
+- Mark all `SKTypeface.FromFile`, `FromStream`, `FromData`, `FromFamilyName`, `CreateDefault`
+  as `[Obsolete("Use SKFontManager.Default.XYZ instead.")]`
+- Redirect each method body to `SKFontManager.Default.CreateTypeface(...)` or
+  `SKFontManager.Default.MatchFamily(...)`
+- The static `SKTypeface.Default` property should use
+  `SKFontManager.Default.MatchFamily(null)` instead of the removed `sk_typeface_ref_default()`
+
+**Static initialization order matters:** `SKObject.EnsureStaticInstanceAreInitialized()` calls
+`SKFontManager` before `SKTypeface` — so `SKFontManager.Default` is available when
+`SKTypeface`'s static constructor runs.
+
+### 15. skresources Bool → Enum Migration Pattern
+
+When upstream changes a `bool` parameter to an `enum` (e.g., `skresources::ImageDecodeStrategy`),
+the right approach is:
+
+1. **C API:** Add a real enum to `sk_types.h`, create new `_make2` functions with the enum
+   parameter, keep the old bool functions as thin wrappers delegating to the new ones
+2. **C#:** Auto-generate the enum via `pwsh ./utils/generate.ps1`, add new constructors using
+   the enum, mark bool overloads as `[Obsolete]`
+3. **Do NOT** just change the bool to an int — use a proper typed enum
+
+### 16. Static Initialization and Singleton Patterns
+
+When the C API needs a shared singleton (e.g., the default font manager), use a static local
+variable in a named function that can be `extern`-declared from other translation units:
+
+```cpp
+// In sk_typeface.cpp — the DEFINITION
+sk_sp<SkFontMgr> skiasharp_ref_default_fontmgr() {
+    static sk_sp<SkFontMgr> singleton = create_platform_fontmgr();
+    return singleton;
+}
+
+// In sk_font.cpp and SkCompatPaint.cpp — extern DECLARATION
+extern sk_sp<SkFontMgr> skiasharp_ref_default_fontmgr();
+```
+
+This pattern is thread-safe (C++11 guarantees) and avoids duplication. The singleton is created
+on first access and lives for the process lifetime.
+
 ---
 
 ## Troubleshooting
@@ -432,3 +672,7 @@ Upstream may add new C API functions (e.g., `sk_surface_draw_with_sampling`) tha
 | Merge conflict in DEPS | Both forks updated deps independently | Keep our DEPS pins, accept upstream structure |
 | `LNK2001 unresolved external` | C function name mismatch | Verify C API function names match exactly |
 | Build fails after merge | Missing `#include` for moved headers | Check upstream header relocation notes |
+| Text draws nothing on WASM | Wrong font manager (RefEmpty/Custom_Data) | Must use `SkFontMgr_New_Custom_Embedded(&SK_EMBEDDED_FONTS)` |
+| Text draws nothing everywhere | Null typeface = empty typeface (m122+) | Intercept null in `sk_font.cpp` + `SkCompatPaint.cpp` → substitute default |
+| `SkFontMgr_New_Custom_Empty` link error | `skia_enable_fontmgr_custom_empty=false` | Check platform's build.cake for which fontmgrs are linked |
+| GC-dependent tests flaky in full suite | GC pressure delays collection | Pre-existing — passes in isolation, not a regression |
