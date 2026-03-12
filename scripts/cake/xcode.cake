@@ -4,6 +4,12 @@ void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, Dic
 {
     var dir = project.GetDirectory();
 
+    string destination = null;
+    if (arch.Contains("=")) {
+        destination = arch;
+        arch = null;
+    }
+
     var settings = new XCodeBuildSettings {
         Project = project.FullPath,
         Scheme = scheme,
@@ -18,6 +24,9 @@ void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, Dic
             { "BUILD_LIBRARIES_FOR_DISTRIBUTION", "YES" },
         },
     };
+    if (destination != null) {
+        settings.ArgumentCustomization = args => args.Append($"-destination \"{destination}\"");
+    }
     if (properties != null) {
         foreach (var prop in properties) {
             settings.BuildSettings[prop.Key] = prop.Value;
@@ -74,6 +83,21 @@ void RunLipo(FilePath output, FilePath[] inputs)
     });
 }
 
+void RunXCodeBuildCreateXCFramework(DirectoryPath output, (DirectoryPath Framework, DirectoryPath Symbols)[] items)
+{
+    if (!IsRunningOnMacOs())
+        throw new InvalidOperationException("xcodebuild is only available on macOS.");
+
+    DeleteDir(output);
+
+    var itemsStrings = items.Select(i => $"-framework \"{i.Framework}\" -debug-symbols \"{i.Symbols}\"");
+    var itemsString = string.Join(" ", itemsStrings);
+
+    RunProcess("xcodebuild", new ProcessSettings {
+        Arguments = $"-create-xcframework {itemsString} -output \"{output}\"",
+    });
+}
+
 void CreateFatDylib(DirectoryPath archives)
 {
     var libName = archives.GetDirectoryName();
@@ -82,6 +106,21 @@ void CreateFatDylib(DirectoryPath archives)
     RunLipo($"{archives}.dylib", binaries);
 
     StripSign($"{archives}.dylib");
+}
+
+void CreateXCFramework(DirectoryPath directory)
+{
+    var libName = directory.GetDirectoryName();
+
+    var archives = GetDirectories($"{directory}/*.xcarchive");
+    var items = archives.Select(a => (
+        Framework: GetDirectories($"{a}/Products/Library/Frameworks/{libName}.framework").First(),
+        Symbols: GetDirectories($"{a}/dSYMs/{libName}.framework.dSYM").First()
+    )).ToArray();
+
+    RunXCodeBuildCreateXCFramework($"{directory}.xcframework", items);
+
+    RunZip($"{directory}.xcframework");
 }
 
 void CreateFatFramework(DirectoryPath archives)
