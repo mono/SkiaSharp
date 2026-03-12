@@ -61,15 +61,15 @@ namespace SkiaSharp.Tests
 
 			static byte[] ComputeThumbnail(string fileName)
 			{
-				using var bitmap = SKBitmap.Decode(fileName);
-				using var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType);
+				var ms = new MemoryStream();
+				var bitmap = SKBitmap.Decode(fileName);
+				var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType);
 
 				bitmap.ScalePixels(scaledBitmap, new SKSamplingOptions(SKCubicResampler.Mitchell));
 
-				using var image = SKImage.FromBitmap(scaledBitmap);
-				using var data = image.Encode(SKEncodedImageFormat.Png, 80);
+				var image = SKImage.FromBitmap(scaledBitmap);
+				var data = image.Encode(SKEncodedImageFormat.Png, 80);
 
-				var ms = new MemoryStream();
 				data.SaveTo(ms);
 
 				return ms.ToArray();
