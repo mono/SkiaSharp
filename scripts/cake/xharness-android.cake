@@ -97,11 +97,6 @@ Setup(context =>
     Information("Emulator started:");
     DotNetTool("android device list");
 
-    // Disable package verifier to speed up APK installation on CI
-    Information("Disabling package verifier...");
-    DotNetTool("android adb -- shell settings put global package_verifier_enable 0");
-    DotNetTool("android adb -- shell settings put global verifier_verify_adb_installs 0");
-
     TakeSnapshot(TEST_RESULTS, "boot-complete");
 });
 
