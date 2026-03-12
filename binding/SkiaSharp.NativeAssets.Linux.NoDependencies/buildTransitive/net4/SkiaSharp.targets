@@ -49,6 +49,14 @@
             <Dir>musl-loongarch64\</Dir>
         </_NativeSkiaSharpFile>
 
+        <!-- Bionic -->
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-bionic-x64\native\libSkiaSharp*.so">
+            <Dir>bionic-x64\</Dir>
+        </_NativeSkiaSharpFile>
+        <_NativeSkiaSharpFile Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-bionic-arm64\native\libSkiaSharp*.so">
+            <Dir>bionic-arm64\</Dir>
+        </_NativeSkiaSharpFile>
+
         <!-- include everything -->
         <Content Include="@(_NativeSkiaSharpFile)">
             <Link>%(Dir)%(Filename)%(Extension)</Link>
