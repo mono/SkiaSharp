@@ -283,7 +283,7 @@ Task ("tests-netcore")
 
     var failedTests = 0;
 
-    var tfm = "net8.0";
+    var tfm = "net10.0";
     var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
     if (SUPPORT_VULKAN)
         testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");
@@ -331,9 +331,19 @@ Task ("tests-android")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Release";
-    var tfm = "net8.0-android";
+    var tfm = "net10.0-android36.0";
     var rid = "android-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
     FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/com.companyname.SkiaSharpTests-Signed.apk";
+
+    Information ("=== Android Test Build Configuration ===");
+    Information ("  Project:       {0}", csproj);
+    Information ("  Configuration: {0}", configuration);
+    Information ("  TFM:           {0}", tfm);
+    Information ("  RID:           {0}", rid);
+    Information ("  App Path:      {0}", app);
+    Information ("  OS:            {0}", RuntimeInformation.OSDescription);
+    Information ("  Arch:          {0}", RuntimeInformation.ProcessArchitecture);
+    Information ("========================================");
 
     // build the app
     if (!SKIP_BUILD) {
@@ -363,9 +373,9 @@ Task ("tests-ios")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net8.0-ios";
+    var tfm = "net10.0-ios26.2";
     var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
 
     // package the app
     if (!SKIP_BUILD) {
@@ -376,6 +386,13 @@ Task ("tests-ios")
                 { "RuntimeIdentifier", rid },
             });
     }
+
+    // find the .app bundle (name may differ from AssemblyName in .NET 10)
+    var appBundles = GetDirectories ($"{outputDir}/*.app");
+    if (!appBundles.Any ())
+        throw new Exception ($"No .app bundle found in {outputDir}");
+    var app = appBundles.First ();
+    Information ("Found app bundle: {0}", app);
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
@@ -395,9 +412,9 @@ Task ("tests-maccatalyst")
 
     FilePath csproj = "./tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
     var configuration = "Debug";
-    var tfm = "net8.0-maccatalyst";
+    var tfm = "net10.0-maccatalyst26.2";
     var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
 
     // package the app
     if (!SKIP_BUILD) {
@@ -408,6 +425,13 @@ Task ("tests-maccatalyst")
                 { "RuntimeIdentifier", rid },
             });
     }
+
+    // find the .app bundle (name may differ from AssemblyName in .NET 10)
+    var appBundles = GetDirectories ($"{outputDir}/*.app");
+    if (!appBundles.Any ())
+        throw new Exception ($"No .app bundle found in {outputDir}");
+    var app = appBundles.First ();
+    Information ("Found app bundle: {0}", app);
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";

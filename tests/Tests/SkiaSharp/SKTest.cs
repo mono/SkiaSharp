@@ -187,14 +187,12 @@ namespace SkiaSharp.Tests
 
 		protected static void AssertSimilar(ReadOnlySpan<float> expected, ReadOnlySpan<float> actual, int precision = PRECISION)
 		{
-			var pow = Math.Pow(10, precision);
-
 			var eTrimmed = expected.ToArray()
-				.Select(v => (int)(v * pow) / pow)
+				.Select(v => Math.Round(v, precision))
 				.ToArray();
 
 			var aTrimmed = actual.ToArray()
-				.Select(v => (int)(v * pow) / pow)
+				.Select(v => Math.Round(v, precision))
 				.ToArray();
 
 			Assert.Equal(eTrimmed, aTrimmed);
