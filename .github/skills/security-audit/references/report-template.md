@@ -1,6 +1,6 @@
 # Security Audit Report Template
 
-Templates for formatting security audit findings.
+Templates for formatting security audit findings. All dependencies — including Skia core — use the same format.
 
 ## Summary Section
 
@@ -8,7 +8,7 @@ Templates for formatting security audit findings.
 ## Security Audit Report
 
 **Date:** {date}
-**Audited:** mono/SkiaSharp native dependencies
+**Audited:** mono/SkiaSharp native dependencies (including Skia core)
 
 ### Summary
 
@@ -23,20 +23,35 @@ Templates for formatting security audit findings.
 
 ## Detailed Findings
 
-Use **separate tables per item** to avoid terminal wrapping issues:
+Use **separate tables per item** to avoid terminal wrapping issues.
+All dependencies — Skia core and third-party — are listed together, sorted by priority:
 
 ```markdown
-### 1. ✅ libexpat — Ready to merge
+### 1. 🔴 skia — Needs attention
 
 | Field | Value |
 |-------|-------|
-| Issues | #3389, #3425 |
-| CVEs | CVE-2025-59375 (HIGH 7.5), CVE-2024-50602 (Medium 5.9) |
-| Current | 2.7.3 |
-| Latest | 2.7.3 |
-| PR | #3458 (CI passing) |
+| Issues | None |
+| CVEs | CVE-2024-1283 (CRITICAL 9.8), CVE-2025-0436 (HIGH 8.8), +7 more |
+| Current | chrome/m119 |
+| Min fix | chrome/m121 (for CRITICAL), chrome/m145 (for all) |
+| NVD query | `keywordSearch=Skia` — 111 total, 9 potentially affected |
 
-**Action:** Merge when CI passes
+**Chrome-versioned CVEs (fix milestone > m119):**
+
+| CVE | Fixed In | Severity | Description |
+|-----|----------|----------|-------------|
+| CVE-2024-1283 | m121 | CRITICAL 9.8 | Heap buffer overflow in Skia |
+| CVE-2025-0436 | m132 | HIGH 8.8 | Integer overflow in Skia |
+
+**Non-Chrome CVEs (manual review needed):**
+
+| CVE | Severity | Description | Assessment |
+|-----|----------|-------------|------------|
+| CVE-2025-32318 | HIGH 8.8 | Heap buffer overflow in Skia | ⚠️ Needs review |
+| CVE-2025-48630 | N/A | SkiaRenderEngine.cpp | ⚪ Android-only |
+
+**Action:** Merge newer upstream milestone (minimum m121 for CRITICAL fix)
 
 ---
 
@@ -55,7 +70,21 @@ Use **separate tables per item** to avoid terminal wrapping issues:
 
 ---
 
-### 3. 🆕 brotli — Undiscovered CVE
+### 3. ✅ libexpat — Ready to merge
+
+| Field | Value |
+|-------|-------|
+| Issues | #3389, #3425 |
+| CVEs | CVE-2025-59375 (HIGH 7.5), CVE-2024-50602 (Medium 5.9) |
+| Current | 2.7.3 |
+| Latest | 2.7.3 |
+| PR | #3458 (CI passing) |
+
+**Action:** Merge when CI passes
+
+---
+
+### 4. 🆕 brotli — Undiscovered CVE
 
 | Field | Value |
 |-------|-------|
@@ -70,7 +99,7 @@ Use **separate tables per item** to avoid terminal wrapping issues:
 
 ---
 
-### 4. ⚪ zlib (MiniZip) — False positive
+### 5. ⚪ zlib (MiniZip) — False positive
 
 | Field | Value |
 |-------|-------|
@@ -82,6 +111,18 @@ Use **separate tables per item** to avoid terminal wrapping issues:
 
 **Action:** Close issue with explanation
 ```
+
+### Skia-Specific Formatting Notes
+
+Skia CVEs use the same entry format as other dependencies, with two additions:
+- **Chrome-versioned CVEs table** — Shows the milestone gap (fix milestone vs our fork milestone)
+- **Non-Chrome CVEs table** — Shows CVEs that need manual review for reachability
+- **Assessment guidance for each CVE:**
+  - Check if the affected file/function exists in `externals/skia/` at the fork's commit
+  - Check if the code path is reachable through SkiaSharp's C API
+  - Android `SkiaRenderEngine` CVEs are typically false positives for SkiaSharp
+
+---
 
 ## Status Legend
 
@@ -95,13 +136,15 @@ Use **separate tables per item** to avoid terminal wrapping issues:
 
 ## Priority Order
 
-Report findings in this order:
+Report findings in this order, regardless of whether the dependency is Skia core or third-party:
 
 1. **🔴 User-reported + no PR** → Users are waiting
 2. **✅ User-reported + PR ready** → Quick wins
 3. **🟡 User-reported + PR needs work** → Unblock these
 4. **🆕 Undiscovered CVEs** → Proactive fixes
 5. **⚪ False positives** → Close with explanation
+
+Within each priority level, sort by severity (CRITICAL > HIGH > MEDIUM > LOW).
 
 ## Recommendations Section
 
@@ -110,8 +153,9 @@ End the report with specific next steps:
 ```markdown
 ### Next Steps
 
-1. **Merge PR #3458** — libexpat update is ready
-2. **Update libwebp PR** — Current targets 1.4.0, latest is 1.6.0
-3. **Create PR for libpng** — Run: `bump libpng to 1.6.44`
-4. **Close #3285** — zlib/MiniZip CVE is false positive
+1. **Merge upstream Skia m121** — Fixes CRITICAL CVE-2024-1283
+2. **Merge PR #3458** — libexpat update is ready
+3. **Update libwebp PR** — Current targets 1.4.0, latest is 1.6.0
+4. **Create PR for libpng** — Run: `bump libpng to 1.6.44`
+5. **Close #3285** — zlib/MiniZip CVE is false positive
 ```

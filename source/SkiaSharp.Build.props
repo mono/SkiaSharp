@@ -86,6 +86,12 @@
     <TPVWindowsCurrent>10.0.19041.0</TPVWindowsCurrent>
   </PropertyGroup>
 
+  <!-- MAUI Package Versions (must match installed workload versions per TFM) -->
+  <PropertyGroup>
+    <MauiVersion Condition="$(TargetFramework.StartsWith('net10'))">10.0.20</MauiVersion>
+    <MauiVersion Condition="$(TargetFramework.StartsWith('net9'))">9.0.120</MauiVersion>
+  </PropertyGroup>
+
   <!-- .NET Standard, .NET Framework and .NET -->
   <PropertyGroup>
     <FullFrameworkTargetFrameworks>net462</FullFrameworkTargetFrameworks>

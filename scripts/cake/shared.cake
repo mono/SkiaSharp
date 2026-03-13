@@ -137,7 +137,7 @@ void CleanDir(DirectoryPath dir)
 
 void TakeSnapshot(DirectoryPath output, string name)
 {
-    if (IsRunningOnWindows())
+    if (!IsRunningOnMacOs())
         return;
 
     var fname = $"screenshot-{DateTime.Now:yyyyMMdd_hhmmss}-{name}.jpg";

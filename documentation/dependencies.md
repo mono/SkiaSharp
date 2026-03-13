@@ -18,6 +18,7 @@ SkiaSharp uses only a subset of Skia's dependencies. Unused dependencies are com
 
 | Dependency | Purpose | CVE Name | Platforms |
 |------------|---------|----------|-----------|
+| **skia** | 2D graphics engine (core) | skia (via NVD keyword search) | All |
 | **libpng** | PNG codec | libpng | All |
 | **zlib** | Compression | zlib | All |
 | **libjpeg-turbo** | JPEG codec | libjpeg-turbo | All |
@@ -72,6 +73,7 @@ Enables Microsoft Component Governance CVE detection.
 
 | DEPS Name | cgmanifest Name | Upstream |
 |-----------|-----------------|----------|
+| skia (core) | `skia` | github.com/google/skia |
 | libpng | `libpng` | github.com/glennrp/libpng |
 | zlib | `zlib` | github.com/madler/zlib |
 | libjpeg-turbo | `libjpeg-turbo` | github.com/libjpeg-turbo/libjpeg-turbo |
@@ -82,6 +84,73 @@ Enables Microsoft Component Governance CVE detection.
 | brotli | `brotli` | github.com/google/brotli |
 | wuffs | `wuffs` | github.com/google/wuffs-mirror-release-c |
 | dng_sdk | `dng_sdk` | android.googlesource.com/.../dng_sdk |
+
+---
+
+## Skia — Special CVE Tracking Notes
+
+Skia is the core dependency and has its own CVEs (integer overflows, heap buffer overflows, etc.). Unlike third-party dependencies, Skia CVEs require special tracking because they are **invisible to Component Governance**:
+
+1. **No standalone CPE** — Skia CVEs are filed under `cpe:2.3:a:google:chrome`, not `skia`
+2. **Fork URL mismatch** — cgmanifest references `mono/skia.git`, not upstream
+3. **No package ecosystem** — GitHub Advisory DB has no Skia package mapping
+
+### How to Query Skia CVEs
+
+Query the **NVD API** directly (same as any other dependency's CVE lookup):
+
+```
+GET https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=Skia
+```
+
+This returns all CVEs mentioning "Skia" in their description. To determine which affect us:
+
+1. Extract the Chrome `versionEndExcluding` from each CVE's CPE configuration
+2. Map Chrome major version to Skia milestone (Chrome 132.x = m132)
+3. Compare against SkiaSharp's `chrome_milestone` from cgmanifest.json
+4. Flag CVEs where the fix milestone > our milestone as **potentially affected**
+5. CVEs without Chrome version info (e.g., Android-specific) are flagged for **manual review**
+
+### cgmanifest.json Fields
+
+The Skia entry in cgmanifest.json includes custom fields for version tracking:
+
+```json
+{
+  "component": {
+    "type": "other",
+    "other": {
+      "name": "skia",
+      "version": "chrome/m119",
+      "downloadUrl": "https://github.com/google/skia"
+    }
+  },
+  "chrome_milestone": 119,
+  "upstream_merge_commit": "fcb55886b914028a99f35fb0ba28e66ff82027e3"
+}
+```
+
+| Field | Purpose |
+|-------|---------|
+| `chrome_milestone` | Integer milestone number — used to filter NVD results |
+| `upstream_merge_commit` | SHA of the upstream `chrome/mNNN` branch tip that was merged into the fork |
+
+### When to Update
+
+Update these fields whenever merging new upstream Skia code:
+
+```bash
+# After merging upstream/chrome/m125 into the fork:
+# 1. Update cgmanifest.json chrome_milestone to 125
+# 2. Update upstream_merge_commit to the tip of upstream/chrome/m125
+# 3. Update version to "chrome/m125"
+```
+
+### Skia-Specific False Positives
+
+- **Not all CVEs are exploitable through SkiaSharp's API surface.** Chrome exposes Skia via HTML Canvas, SVG, etc. SkiaSharp exposes a different subset. Each CVE needs manual assessment of whether the vulnerable code path is reachable.
+- **Android-specific CVEs** (e.g., in `SkiaRenderEngine.cpp`) generally don't affect SkiaSharp.
+- **NVD enrichment can lag** — CVEs may appear days after the Chrome release.
 
 ---
 

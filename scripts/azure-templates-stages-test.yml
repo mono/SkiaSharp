@@ -218,6 +218,10 @@ stages:
             preBuildSteps:
               - script: |
                   sudo rm -rf /usr/local/lib/android/sdk/ndk
+                  sudo rm -rf /usr/local/lib/android/sdk/cmake
+                  sudo rm -rf /usr/local/lib/android/sdk/build-tools/33.*
+                  sudo rm -rf /usr/local/lib/android/sdk/build-tools/34.*
+                  sudo rm -rf /usr/local/lib/android/sdk/platforms/android-3[0-4]
                   df -h /
                 displayName: Free disk space for emulator
               - script: |
@@ -225,6 +229,11 @@ stages:
                   sudo udevadm control --reload-rules
                   sudo udevadm trigger --name-match=kvm
                 displayName: Enable KVM for Android emulator
+              - script: |
+                  mkdir -p "$HOME/.android/avd"
+                  echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
+                  echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
+                displayName: Set Android AVD home (fix XDG path mismatch)
               - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
               - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"

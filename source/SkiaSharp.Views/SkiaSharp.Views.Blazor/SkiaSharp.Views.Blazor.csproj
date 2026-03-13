@@ -19,6 +19,11 @@
     <TypeScriptTarget>es2015</TypeScriptTarget>
     <TypeScriptModuleKind>es2015</TypeScriptModuleKind>
     <TypeScriptNoImplicitAny>True</TypeScriptNoImplicitAny>
+    <!-- Redirect TypeScript output to a per-TFM intermediate directory to avoid a race condition
+         where multi-TFM builds delete/rewrite the shared wwwroot/*.js files while another TFM's
+         static web asset compression is reading them. Uses BaseIntermediateOutputPath + Configuration
+         + TargetFramework because IntermediateOutputPath is not yet set during property evaluation. -->
+    <TypeScriptOutDir>$(BaseIntermediateOutputPath)$(Configuration)/$(TargetFramework)/ts</TypeScriptOutDir>
   </PropertyGroup>
 
   <ItemGroup>

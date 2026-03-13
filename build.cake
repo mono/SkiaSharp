@@ -375,7 +375,7 @@ Task ("tests-ios")
     var configuration = "Debug";
     var tfm = "net10.0-ios26.2";
     var rid = "iossimulator-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
 
     // package the app
     if (!SKIP_BUILD) {
@@ -386,6 +386,13 @@ Task ("tests-ios")
                 { "RuntimeIdentifier", rid },
             });
     }
+
+    // find the .app bundle (name may differ from AssemblyName in .NET 10)
+    var appBundles = GetDirectories ($"{outputDir}/*.app");
+    if (!appBundles.Any ())
+        throw new Exception ($"No .app bundle found in {outputDir}");
+    var app = appBundles.First ();
+    Information ("Found app bundle: {0}", app);
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.iOS/{DATE_TIME_STR}";
@@ -407,7 +414,7 @@ Task ("tests-maccatalyst")
     var configuration = "Debug";
     var tfm = "net10.0-maccatalyst26.2";
     var rid = "maccatalyst-" + RuntimeInformation.ProcessArchitecture.ToString ().ToLower ();
-    FilePath app = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}/SkiaSharp.Tests.Devices.app";
+    var outputDir = $"./tests/SkiaSharp.Tests.Devices/bin/{configuration}/{tfm}/{rid}";
 
     // package the app
     if (!SKIP_BUILD) {
@@ -418,6 +425,13 @@ Task ("tests-maccatalyst")
                 { "RuntimeIdentifier", rid },
             });
     }
+
+    // find the .app bundle (name may differ from AssemblyName in .NET 10)
+    var appBundles = GetDirectories ($"{outputDir}/*.app");
+    if (!appBundles.Any ())
+        throw new Exception ($"No .app bundle found in {outputDir}");
+    var app = appBundles.First ();
+    Information ("Found app bundle: {0}", app);
 
     // run the tests
     DirectoryPath results = $"./output/logs/testlogs/SkiaSharp.Tests.Devices.MacCatalyst/{DATE_TIME_STR}";
