@@ -135,15 +135,4 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 			touchPos = new SKPoint((float)e.X / glControl.Width, (float)e.Y / glControl.Height);
 	}
 
-	protected override void Dispose(bool disposing)
-	{
-		if (disposing)
-		{
-			animationTimer?.Stop();
-			if (shaderBuilder?.IsValueCreated == true)
-				shaderBuilder.Value.Dispose();
-			shaderBuilder = null;
-		}
-		base.Dispose(disposing);
-	}
 }

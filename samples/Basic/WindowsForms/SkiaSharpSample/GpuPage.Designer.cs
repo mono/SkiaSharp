@@ -17,6 +17,9 @@
 			{
 				animationTimer.Stop();
 				animationTimer.Dispose();
+				if (shaderBuilder?.IsValueCreated == true)
+					shaderBuilder.Value.Dispose();
+				shaderBuilder = null;
 				effect?.Dispose();
 				components?.Dispose();
 			}
