@@ -74,7 +74,7 @@ public class App : CoreUIApplication
 	// Instance fields
 	private Window window;
 	private Naviframe naviframe;
-	private NaviItem mainNaviItem;
+	private int navDepth;
 
 	// GPU page state
 	private Lazy<SKRuntimeShaderBuilder> shaderBuilder;
@@ -177,7 +177,7 @@ public class App : CoreUIApplication
 		btn3.Show();
 		box.PackEnd(btn3);
 
-		mainNaviItem = naviframe.Push(box, "SkiaSharp");
+		naviframe.Push(box, "SkiaSharp");
 	}
 
 	// ===== Page 1: CPU Canvas =====
@@ -190,6 +190,7 @@ public class App : CoreUIApplication
 		skiaView.Show();
 
 		naviframe.Push(skiaView, "CPU Canvas");
+		navDepth++;
 	}
 
 	private void OnPaintCpuCanvas(object sender, SKPaintSurfaceEventArgs e)
@@ -305,6 +306,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(MetaballShaderSource));
 		fpsCounter.Start();
 		naviframe.Push(glView, "GPU (GL)");
+		navDepth++;
 	}
 
 	private void OnPaintGpuSurface(object sender, SKPaintGLSurfaceEventArgs e)
@@ -343,6 +345,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		};
 		skiaView.Show();
 		naviframe.Push(skiaView, title);
+		navDepth++;
 	}
 
 	// ===== Page 3: Drawing =====
@@ -485,6 +488,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		box.PackEnd(sizeRow);
 
 		naviframe.Push(box, "Drawing");
+		navDepth++;
 	}
 
 	private void OnPaintDrawing(object sender, SKPaintSurfaceEventArgs e)
@@ -521,7 +525,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 
 	private void OnBackButtonPressed(object sender, EventArgs e)
 	{
-		if (naviframe.TopItem != mainNaviItem)
+		if (navDepth > 0)
 		{
 			ClearDrawing();
 			if (shaderBuilder?.IsValueCreated == true)
@@ -529,6 +533,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 			shaderBuilder = null;
 			fpsCounter.Stop();
 			naviframe.Pop();
+			navDepth--;
 		}
 		else
 		{
