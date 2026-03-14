@@ -20,7 +20,6 @@
 				if (shaderBuilder?.IsValueCreated == true)
 					shaderBuilder.Value.Dispose();
 				shaderBuilder = null;
-				effect?.Dispose();
 				components?.Dispose();
 			}
 			base.Dispose(disposing);
