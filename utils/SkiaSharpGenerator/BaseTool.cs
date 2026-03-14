@@ -74,6 +74,59 @@ namespace SkiaSharpGenerator
 				{
 					Log?.LogWarning("Clang include folder not found, parsing may fail.");
 				}
+
+				// Add SDK include path for #include_next to work with inttypes.h
+				var sdkPaths = new[]
+				{
+					"/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+					"/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include"
+				};
+				foreach (var sdkPath in sdkPaths)
+				{
+					if (Directory.Exists(sdkPath))
+					{
+						Log?.LogVerbose($"Found SDK include folder: {sdkPath}");
+						options.SystemIncludeFolders.Add(sdkPath);
+						break;
+					}
+				}
+			}
+			else if (OperatingSystem.IsLinux())
+			{
+				// Common Linux system include paths
+				var linuxIncludePaths = new[]
+				{
+					"/usr/include",
+					"/usr/local/include"
+				};
+				foreach (var includePath in linuxIncludePaths)
+				{
+					if (Directory.Exists(includePath))
+					{
+						options.SystemIncludeFolders.Add(includePath);
+					}
+				}
+			}
+			else if (OperatingSystem.IsWindows())
+			{
+				// On Windows, MSVC include paths are typically auto-detected by libclang
+				// but we can add common paths if needed
+				var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+				var windowsKitInclude = Path.Combine(programFiles, "Windows Kits", "10", "Include");
+				if (Directory.Exists(windowsKitInclude))
+				{
+					var versions = Directory.GetDirectories(windowsKitInclude)
+						.OrderByDescending(d => d)
+						.FirstOrDefault();
+					if (versions is not null)
+					{
+						var ucrtPath = Path.Combine(versions, "ucrt");
+						if (Directory.Exists(ucrtPath))
+						{
+							options.SystemIncludeFolders.Add(ucrtPath);
+						}
+					}
+				}
 			}
 
 			foreach (var header in config.IncludeDirs)
@@ -139,9 +192,9 @@ namespace SkiaSharpGenerator
 
 				// standard types:
 				{ "bool",                 nameof(Byte) },
-				{ "char",                 "/* char */ void" },
-				{ "unsigned char",        "/* unsigned char */ void" },
-				{ "signed char",          "/* signed char */ void" },
+				{ "char",                 "/* char */ void" },  // kept as void for string pointers; explicit int8_t/signed char uses SByte
+				{ "unsigned char",        nameof(Byte) },
+				{ "signed char",          nameof(SByte) },
 				{ "short",                nameof(Int16) },
 				{ "short int",            nameof(Int16) },
 				{ "signed short",         nameof(Int16) },
@@ -159,8 +212,12 @@ namespace SkiaSharpGenerator
 				{ "long long int",        nameof(Int64) },
 				{ "signed long",          nameof(Int64) },
 				{ "signed long int",      nameof(Int64) },
+				{ "signed long long",     nameof(Int64) },
+				{ "signed long long int", nameof(Int64) },
 				{ "unsigned long",        nameof(UInt64) },
 				{ "unsigned long int",    nameof(UInt64) },
+				{ "unsigned long long",   nameof(UInt64) },
+				{ "unsigned long long int", nameof(UInt64) },
 				{ "float",                nameof(Single) },
 				{ "double",               nameof(Double) },
 				// TODO: long double, wchar_t ?
@@ -313,8 +370,9 @@ namespace SkiaSharpGenerator
 		{
 			var typeName = type.GetDisplayName();
 
-			// remove the const
+			// remove the const (both prefix "const " and suffix " const")
 			typeName = typeName.Replace("const ", "");
+			typeName = typeName.Replace(" const", "");
 
 			// replace the [] with a *
 			int start;
@@ -323,6 +381,10 @@ namespace SkiaSharpGenerator
 				var end = typeName.IndexOf("]");
 				typeName = typeName[..start] + "*" + typeName[(end + 1)..];
 			}
+
+			// CppAst 0.24+ adds spaces around pointers (e.g., "hb_blob_t *" instead of "hb_blob_t*")
+			// Normalize by removing spaces before asterisks to match our type mappings
+			typeName = typeName.Replace(" *", "*");
 
 			return typeName;
 		}
