@@ -58,8 +58,9 @@
     </TizenTpkFiles>
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))">
-    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libSkiaSharp.framework" Kind="Framework" />
+  <ItemGroup Condition="$(TargetFramework.Contains('-tvos')) and '$(RuntimeIdentifier)' != ''">
+    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvossimulator\libSkiaSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
+    <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libSkiaSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'">
