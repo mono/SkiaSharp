@@ -155,6 +155,25 @@ namespace SkiaSharp
 			(skresources_data_uri_resource_provider_proxy_make_delegate ??= GetSymbol<Delegates.skresources_data_uri_resource_provider_proxy_make> ("skresources_data_uri_resource_provider_proxy_make")).Invoke (rp, predecode);
 		#endif
 
+		// skresources_resource_provider_t* skresources_data_uri_resource_provider_proxy_make2(skresources_resource_provider_t* rp, skresources_image_decode_strategy_t strategy)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skresources_resource_provider_t skresources_data_uri_resource_provider_proxy_make2 (skresources_resource_provider_t rp, ImageDecodeStrategy strategy);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern skresources_resource_provider_t skresources_data_uri_resource_provider_proxy_make2 (skresources_resource_provider_t rp, ImageDecodeStrategy strategy);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate skresources_resource_provider_t skresources_data_uri_resource_provider_proxy_make2 (skresources_resource_provider_t rp, ImageDecodeStrategy strategy);
+		}
+		private static Delegates.skresources_data_uri_resource_provider_proxy_make2 skresources_data_uri_resource_provider_proxy_make2_delegate;
+		internal static skresources_resource_provider_t skresources_data_uri_resource_provider_proxy_make2 (skresources_resource_provider_t rp, ImageDecodeStrategy strategy) =>
+			(skresources_data_uri_resource_provider_proxy_make2_delegate ??= GetSymbol<Delegates.skresources_data_uri_resource_provider_proxy_make2> ("skresources_data_uri_resource_provider_proxy_make2")).Invoke (rp, strategy);
+		#endif
+
 		// skresources_resource_provider_t* skresources_file_resource_provider_make(sk_string_t* base_dir, bool predecode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -172,6 +191,25 @@ namespace SkiaSharp
 		private static Delegates.skresources_file_resource_provider_make skresources_file_resource_provider_make_delegate;
 		internal static skresources_resource_provider_t skresources_file_resource_provider_make (sk_string_t base_dir, [MarshalAs (UnmanagedType.I1)] bool predecode) =>
 			(skresources_file_resource_provider_make_delegate ??= GetSymbol<Delegates.skresources_file_resource_provider_make> ("skresources_file_resource_provider_make")).Invoke (base_dir, predecode);
+		#endif
+
+		// skresources_resource_provider_t* skresources_file_resource_provider_make2(sk_string_t* base_dir, skresources_image_decode_strategy_t strategy)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial skresources_resource_provider_t skresources_file_resource_provider_make2 (sk_string_t base_dir, ImageDecodeStrategy strategy);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern skresources_resource_provider_t skresources_file_resource_provider_make2 (sk_string_t base_dir, ImageDecodeStrategy strategy);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate skresources_resource_provider_t skresources_file_resource_provider_make2 (sk_string_t base_dir, ImageDecodeStrategy strategy);
+		}
+		private static Delegates.skresources_file_resource_provider_make2 skresources_file_resource_provider_make2_delegate;
+		internal static skresources_resource_provider_t skresources_file_resource_provider_make2 (sk_string_t base_dir, ImageDecodeStrategy strategy) =>
+			(skresources_file_resource_provider_make2_delegate ??= GetSymbol<Delegates.skresources_file_resource_provider_make2> ("skresources_file_resource_provider_make2")).Invoke (base_dir, strategy);
 		#endif
 
 		// void skresources_resource_provider_delete(skresources_resource_provider_t* instance)
@@ -325,6 +363,17 @@ namespace SkiaSharp
 #endregion
 
 #region Enums
+
+namespace SkiaSharp.Resources {
+
+	// skresources_image_decode_strategy_t
+	public enum ImageDecodeStrategy {
+		// SKRESOURCES_IMAGE_DECODE_STRATEGY_LAZY_DECODE = 0
+		LazyDecode = 0,
+		// SKRESOURCES_IMAGE_DECODE_STRATEGY_PRE_DECODE = 1
+		PreDecode = 1,
+	}
+}
 
 #endregion
 

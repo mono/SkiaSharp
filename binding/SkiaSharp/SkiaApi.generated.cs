@@ -15142,6 +15142,25 @@ namespace SkiaSharp
 			(sk_surface_draw_delegate ??= GetSymbol<Delegates.sk_surface_draw> ("sk_surface_draw")).Invoke (surface, canvas, x, y, paint);
 		#endif
 
+		// void sk_surface_draw_with_sampling(sk_surface_t* surface, sk_canvas_t* canvas, float x, float y, const sk_sampling_options_t* sampling, const sk_paint_t* paint)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_surface_draw_with_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_surface_draw_with_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_surface_draw_with_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
+		}
+		private static Delegates.sk_surface_draw_with_sampling sk_surface_draw_with_sampling_delegate;
+		internal static void sk_surface_draw_with_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint) =>
+			(sk_surface_draw_with_sampling_delegate ??= GetSymbol<Delegates.sk_surface_draw_with_sampling> ("sk_surface_draw_with_sampling")).Invoke (surface, canvas, x, y, sampling, paint);
+		#endif
+
 		// sk_canvas_t* sk_surface_get_canvas(sk_surface_t*)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -16357,101 +16376,6 @@ namespace SkiaSharp
 			(sk_typeface_count_tables_delegate ??= GetSymbol<Delegates.sk_typeface_count_tables> ("sk_typeface_count_tables")).Invoke (typeface);
 		#endif
 
-		// sk_typeface_t* sk_typeface_create_default()
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_default ();
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_default ();
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_default ();
-		}
-		private static Delegates.sk_typeface_create_default sk_typeface_create_default_delegate;
-		internal static sk_typeface_t sk_typeface_create_default () =>
-			(sk_typeface_create_default_delegate ??= GetSymbol<Delegates.sk_typeface_create_default> ("sk_typeface_create_default")).Invoke ();
-		#endif
-
-		// sk_typeface_t* sk_typeface_create_from_data(sk_data_t* data, int index)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
-		}
-		private static Delegates.sk_typeface_create_from_data sk_typeface_create_from_data_delegate;
-		internal static sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index) =>
-			(sk_typeface_create_from_data_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_data> ("sk_typeface_create_from_data")).Invoke (data, index);
-		#endif
-
-		// sk_typeface_t* sk_typeface_create_from_file(const char* path, int index)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
-		}
-		private static Delegates.sk_typeface_create_from_file sk_typeface_create_from_file_delegate;
-		internal static sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index) =>
-			(sk_typeface_create_from_file_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_file> ("sk_typeface_create_from_file")).Invoke (path, index);
-		#endif
-
-		// sk_typeface_t* sk_typeface_create_from_name(const char* familyName, const sk_fontstyle_t* style)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style);
-		}
-		private static Delegates.sk_typeface_create_from_name sk_typeface_create_from_name_delegate;
-		internal static sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style) =>
-			(sk_typeface_create_from_name_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_name> ("sk_typeface_create_from_name")).Invoke (familyName, style);
-		#endif
-
-		// sk_typeface_t* sk_typeface_create_from_stream(sk_stream_asset_t* stream, int index)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
-		}
-		private static Delegates.sk_typeface_create_from_stream sk_typeface_create_from_stream_delegate;
-		internal static sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index) =>
-			(sk_typeface_create_from_stream_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_stream> ("sk_typeface_create_from_stream")).Invoke (stream, index);
-		#endif
-
 		// sk_string_t* sk_typeface_get_family_name(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -16703,25 +16627,6 @@ namespace SkiaSharp
 		private static Delegates.sk_typeface_open_stream sk_typeface_open_stream_delegate;
 		internal static sk_stream_asset_t sk_typeface_open_stream (sk_typeface_t typeface, Int32* ttcIndex) =>
 			(sk_typeface_open_stream_delegate ??= GetSymbol<Delegates.sk_typeface_open_stream> ("sk_typeface_open_stream")).Invoke (typeface, ttcIndex);
-		#endif
-
-		// sk_typeface_t* sk_typeface_ref_default()
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_ref_default ();
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_ref_default ();
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_ref_default ();
-		}
-		private static Delegates.sk_typeface_ref_default sk_typeface_ref_default_delegate;
-		internal static sk_typeface_t sk_typeface_ref_default () =>
-			(sk_typeface_ref_default_delegate ??= GetSymbol<Delegates.sk_typeface_ref_default> ("sk_typeface_ref_default")).Invoke ();
 		#endif
 
 		// uint16_t sk_typeface_unichar_to_glyph(const sk_typeface_t* typeface, const int32_t unichar)

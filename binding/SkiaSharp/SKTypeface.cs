@@ -19,7 +19,10 @@ namespace SkiaSharp
 			//       instances are created before any access is made to them.
 			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
 
-			defaultTypeface = new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ());
+			// Use SKFontManager.Default to get the default typeface since SkTypeface::RefDefault()
+			// was removed in Skia m120+. The font manager's MatchFamily(null) returns the platform default.
+			defaultTypeface = new SKTypefaceStatic (SkiaApi.sk_fontmgr_match_family_style (
+				SKFontManager.Default.Handle, IntPtr.Zero, SKFontStyle.Normal.Handle));
 		}
 
 		internal static void EnsureStaticInstanceAreInitialized ()
@@ -40,37 +43,38 @@ namespace SkiaSharp
 
 		public static SKTypeface Default => defaultTypeface;
 
+		[Obsolete ("Use SKFontManager.Default.MatchFamily(null) instead.")]
 		public static SKTypeface CreateDefault ()
 		{
-			return GetObject (SkiaApi.sk_typeface_create_default ());
+			var tf = SKFontManager.Default.MatchFamily (null);
+			return tf;
 		}
 
 		// FromFamilyName
 
+		[Obsolete ("Use SKFontManager.Default.MatchFamily(familyName, style) instead.")]
 		public static SKTypeface FromFamilyName (string familyName, int weight, int width, SKFontStyleSlant slant)
 		{
 			return FromFamilyName (familyName, new SKFontStyle (weight, width, slant));
 		}
 
+		[Obsolete ("Use SKFontManager.Default.MatchFamily(familyName) instead.")]
 		public static SKTypeface FromFamilyName (string familyName)
 		{
 			return FromFamilyName (familyName, SKFontStyle.Normal);
 		}
 
+		[Obsolete ("Use SKFontManager.Default.MatchFamily(familyName, style) instead.")]
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyle style)
 		{
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull:true);
-			fixed (byte* familyNamePointer = familyNameUtf8ByteList)
-			{
-				var tf = GetObject (SkiaApi.sk_typeface_create_from_name (new IntPtr (familyNamePointer), style.Handle));
-				tf?.PreventPublicDisposal ();
-				return tf;
-			}
+			var tf = SKFontManager.Default.MatchFamily (familyName, style);
+			return tf;
 		}
 
+		[Obsolete ("Use SKFontManager.Default.MatchFamily(familyName, style) instead.")]
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
 		{
 			return FromFamilyName (familyName, (int)weight, (int)width, slant);
@@ -78,46 +82,40 @@ namespace SkiaSharp
 
 		// From*
 
+		[Obsolete ("Use SKFontManager.Default.CreateTypeface(path, index) instead.")]
 		public static SKTypeface FromFile (string path, int index = 0)
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 
-			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8, true);
-			fixed (byte* u = utf8path) {
-				return GetObject (SkiaApi.sk_typeface_create_from_file (u, index));
-			}
+			return SKFontManager.Default.CreateTypeface (path, index);
 		}
 
+		[Obsolete ("Use SKFontManager.Default.CreateTypeface(stream, index) instead.")]
 		public static SKTypeface FromStream (Stream stream, int index = 0)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return FromStream (new SKManagedStream (stream, true), index);
+			return SKFontManager.Default.CreateTypeface (stream, index);
 		}
 
+		[Obsolete ("Use SKFontManager.Default.CreateTypeface(stream, index) instead.")]
 		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			if (stream is SKManagedStream managed) {
-				stream = managed.ToMemoryStream ();
-				managed.Dispose ();
-			}
-
-			var typeface = GetObject (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
-			stream.RevokeOwnership (typeface);
-			return typeface;
+			return SKFontManager.Default.CreateTypeface (stream, index);
 		}
 
+		[Obsolete ("Use SKFontManager.Default.CreateTypeface(data, index) instead.")]
 		public static SKTypeface FromData (SKData data, int index = 0)
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return GetObject (SkiaApi.sk_typeface_create_from_data (data.Handle, index));
+			return SKFontManager.Default.CreateTypeface (data, index);
 		}
 
 		// Properties
