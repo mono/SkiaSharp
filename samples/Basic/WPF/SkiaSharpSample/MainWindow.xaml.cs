@@ -1,38 +1,37 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 
-using SkiaSharp;
-using SkiaSharp.Views.Desktop;
+namespace SkiaSharpSample;
 
-namespace SkiaSharpSample
+public partial class MainWindow : Window
 {
-	public partial class MainWindow : Window
+	private readonly UserControl?[] pages = new UserControl?[3];
+
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
+	public MainWindow()
 	{
-		public MainWindow()
+		InitializeComponent();
+		NavList.SelectedIndex = (int)DefaultPage;
+	}
+
+	private void OnNavSelectionChanged(object sender, SelectionChangedEventArgs e)
+	{
+		if (NavList == null || PageContent == null)
+			return;
+
+		var index = NavList.SelectedIndex;
+		if (index < 0 || index >= pages.Length)
+			return;
+
+		pages[index] ??= index switch
 		{
-			InitializeComponent();
-		}
+			0 => new CpuPage(),
+			1 => new GpuPage(),
+			2 => new DrawingPage(),
+			_ => null
+		};
 
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
-		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
-
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
-
-			// draw some text
-			using var paint = new SKPaint
-			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill
-			};
-			using var font = new SKFont
-			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
-		}
+		PageContent.Content = pages[index];
 	}
 }

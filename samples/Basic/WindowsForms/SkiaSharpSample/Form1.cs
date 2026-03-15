@@ -1,38 +1,42 @@
-﻿using System.Windows.Forms;
+using System;
+using System.Windows.Forms;
 
-using SkiaSharp;
-using SkiaSharp.Views.Desktop;
+namespace SkiaSharpSample;
 
-namespace SkiaSharpSample
+public partial class Form1 : Form
 {
-	public partial class Form1 : Form
+	private UserControl currentPage;
+
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
+	public Form1()
 	{
-		public Form1()
+		InitializeComponent();
+
+		sidebarList.SelectedIndexChanged += OnSidebarSelectionChanged;
+		sidebarList.SelectedIndex = (int)DefaultPage;
+	}
+
+	private void OnSidebarSelectionChanged(object sender, EventArgs e)
+	{
+		if (sidebarList.SelectedIndex < 0)
+			return;
+
+		currentPage?.Dispose();
+		contentPanel.Controls.Clear();
+
+		currentPage = sidebarList.SelectedIndex switch
 		{
-			InitializeComponent();
-		}
+			0 => new CpuPage(),
+			1 => new GpuPage(),
+			2 => new DrawingPage(),
+			_ => null,
+		};
 
-		private void skiaView_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		if (currentPage != null)
 		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
-
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
-
-			// draw some text
-			using var paint = new SKPaint
-			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill
-			};
-			using var font = new SKFont
-			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+			currentPage.Dock = DockStyle.Fill;
+			contentPanel.Controls.Add(currentPage);
 		}
 	}
 }

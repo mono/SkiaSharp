@@ -5,10 +5,19 @@
     xmlns:local="using:SkiaSharpSample"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:skia="using:SkiaSharp.Views.Windows"
     mc:Ignorable="d"
     Title="SkiaSharp Sample">
 
-    <skia:SKXamlCanvas PaintSurface="OnPaintSurface" IgnorePixelScaling="True" />
+    <NavigationView x:Name="NavView"
+                    IsBackButtonVisible="Collapsed"
+                    SelectionChanged="NavView_SelectionChanged"
+                    PaneDisplayMode="Left">
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="CPU Canvas" Tag="cpu" Icon="Home" />
+            <NavigationViewItem Content="GPU (ANGLE)" Tag="gpu" Icon="Play" />
+            <NavigationViewItem Content="Drawing" Tag="drawing" Icon="Edit" />
+        </NavigationView.MenuItems>
+        <Frame x:Name="ContentFrame" />
+    </NavigationView>
 
 </Window>

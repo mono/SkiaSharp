@@ -2,13 +2,12 @@
 
 using SkiaSharp;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+class Program
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Platform Color Type: " + SKImageInfo.PlatformColorType);
-        }
-    }
+	static void Main(string[] args)
+	{
+		Console.WriteLine("Platform Color Type: " + SKImageInfo.PlatformColorType);
+	}
 }

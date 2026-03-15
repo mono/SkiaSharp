@@ -1,46 +1,54 @@
-﻿using SkiaSharp;
-using SkiaSharp.Views.Windows;
-
-namespace SkiaSharpSample;
+﻿namespace SkiaSharpSample;
 
 public sealed partial class MainPage : Page
 {
 	public MainPage()
 	{
 		InitializeComponent();
-
-		// TODO: workaround for this not loading from XAML
-		if (Content is not SKXamlCanvas skiaCanvas)
-		{
-			skiaCanvas = new SKXamlCanvas();
-			skiaCanvas.PaintSurface += OnPaintSurface;
-			skiaCanvas.IgnorePixelScaling = true;
-			Content = skiaCanvas;
-		}
-
+		NavView.Loaded += OnNavViewLoaded;
 		InitializeVersionsContextMenu();
 	}
 
-	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+	private void OnNavViewLoaded(object sender, RoutedEventArgs e)
 	{
-		// the the canvas and properties
-		var canvas = e.Surface.Canvas;
-
-		// make sure the canvas is blank
-		canvas.Clear(SKColors.White);
-
-		// draw some text
-		using var paint = new SKPaint
+		// Hide GPU tab on platforms where SKSwapChainPanel is unsupported
+		if (!IsGpuSupported())
 		{
-			Color = SKColors.Black,
-			IsAntialias = true,
-			Style = SKPaintStyle.Fill
-		};
-		using var font = new SKFont
+			NavView.MenuItems.RemoveAt(1);
+		}
+		NavView.SelectedItem = NavView.MenuItems[0];
+	}
+
+	private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+	{
+		if (args.SelectedItem is NavigationViewItem item)
 		{
-			Size = 24
-		};
-		var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-		canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+			Type pageType = item.Tag?.ToString() switch
+			{
+				"cpu" => typeof(CpuPage),
+				"gpu" => typeof(GpuPage),
+				"drawing" => typeof(DrawingPage),
+				_ => typeof(CpuPage),
+			};
+			ContentFrame.Navigate(pageType);
+		}
+	}
+
+	private static bool IsGpuSupported()
+	{
+#if __MACCATALYST__
+		return false;
+#else
+		try
+		{
+			return !SkiaSharp.Views.Windows.SKSwapChainPanel.RaiseOnUnsupported ||
+			       OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() ||
+			       OperatingSystem.IsWindows();
+		}
+		catch
+		{
+			return false;
+		}
+#endif
 	}
 }
