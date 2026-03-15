@@ -41,6 +41,8 @@ namespace SkiaSharp.Views.Gtk
 
 			surface.Canvas.Flush();
 
+			// Flush any existing Cairo snapshots before marking dirty
+			pix.Flush();
 			pix.MarkDirty();
 
 			// swap R and B
