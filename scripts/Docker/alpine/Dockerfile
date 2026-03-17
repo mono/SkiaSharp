@@ -4,7 +4,7 @@
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-alpine-linux-musleabihf | aarch64-alpine-linux-musl | riscv64-alpine-linux-musl | loongarch64-alpine-linux-musl ]
 
 # Use --platform flag when building to select architecture
-FROM debian:12
+FROM mcr.microsoft.com/mirror/docker/library/debian:12
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64

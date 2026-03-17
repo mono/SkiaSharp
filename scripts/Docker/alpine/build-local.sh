@@ -8,4 +8,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 ARCH="${1:-arm}"
 
-$DIR/../../_clang-cross-common.sh "$DIR" "$ARCH" "musl" "alpine"
+$DIR/../_clang-cross-common.sh "$DIR" "$ARCH" "musl" "alpine"
