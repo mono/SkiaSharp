@@ -1,12 +1,16 @@
 # Arguments:
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 10.0 | * ]
-#   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 12 | * ]
+#   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 8 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu ]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 ]
 
 # Use --platform flag when building to select architecture
-FROM debian:11
+FROM mcr.microsoft.com/mirror/docker/library/debian:10
+
+# Switch to archives
+RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list && \
+    sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
@@ -23,14 +27,14 @@ RUN case ${BUILD_ARCH} in \
     && echo "export TOOLCHAIN_ARCH_TARGET=${TOOLCHAIN_ARCH_TARGET}" >> /etc/skia-env
 
 # Install the required packages
-ARG LLVM_VERSION=19
+ARG LLVM_VERSION=13
 RUN apt-get update \
     && apt-get install -y \
-        curl python3 git clang-${LLVM_VERSION} ninja-build xz-utils \
+        curl python3 git clang-${LLVM_VERSION} lld-${LLVM_VERSION} ninja-build xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install the cross-compilation GCC toolchain
-ARG TOOLCHAIN_VERSION=12
+ARG TOOLCHAIN_VERSION=8
 RUN . /etc/skia-env \
     && apt-get update \
     && apt-get install -y \
@@ -53,11 +57,11 @@ RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
-         riscv64) FC_VERSION=2.15.0-2.3 ; FC_DEV_PKG=libfontconfig-dev  ; FC_RT_PKG=libfontconfig1 ;; \
-         *)       FC_VERSION=2.13.1-4.2 ; FC_DEV_PKG=libfontconfig1-dev ; FC_RT_PKG=libfontconfig1 ;; \
+         riscv64) FC_VERSION=2.15.0-2.3 ; FC_DEV_PKG=libfontconfig-dev  ; FC_RT_PKG=libfontconfig1 ; APT_REPO=http://deb.debian.org/debian     ;; \
+         *)       FC_VERSION=2.13.1-2   ; FC_DEV_PKG=libfontconfig1-dev ; FC_RT_PKG=libfontconfig1 ; APT_REPO=http://archive.debian.org/debian ;; \
        esac \
     && TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
-    && FC_DEV_URL=http://deb.debian.org/debian/pool/main/f/fontconfig/${FC_DEV_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && FC_DEV_URL=${APT_REPO}/pool/main/f/fontconfig/${FC_DEV_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
     && echo "Downloading fontconfig-dev from $FC_DEV_URL" \
     && curl $FC_DEV_URL -L -o libfontconfig-dev.deb \
     && ar vx libfontconfig-dev.deb \
@@ -65,7 +69,7 @@ RUN . /etc/skia-env \
     && cp -R usr/lib/*/* /usr/${TOOLCHAIN_ARCH}/lib/ \
     && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/ \
     && rm -rf *.deb *.tar* debian-binary usr \
-    && FC_RT_URL=http://deb.debian.org/debian/pool/main/f/fontconfig/${FC_RT_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && FC_RT_URL=${APT_REPO}/pool/main/f/fontconfig/${FC_RT_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
     && echo "Downloading fontconfig runtime from $FC_RT_URL" \
     && curl $FC_RT_URL -L -o libfontconfig1.deb \
     && ar vx libfontconfig1.deb \
