@@ -1,54 +1,46 @@
-﻿namespace SkiaSharpSample;
+﻿using SkiaSharp;
+using SkiaSharp.Views.Windows;
+
+namespace SkiaSharpSample;
 
 public sealed partial class MainPage : Page
 {
 	public MainPage()
 	{
 		InitializeComponent();
-		NavView.Loaded += OnNavViewLoaded;
+
+		// TODO: workaround for this not loading from XAML
+		if (Content is not SKXamlCanvas skiaCanvas)
+		{
+			skiaCanvas = new SKXamlCanvas();
+			skiaCanvas.PaintSurface += OnPaintSurface;
+			skiaCanvas.IgnorePixelScaling = true;
+			Content = skiaCanvas;
+		}
+
 		InitializeVersionsContextMenu();
 	}
 
-	private void OnNavViewLoaded(object sender, RoutedEventArgs e)
+	private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
 	{
-		// Hide GPU tab on platforms where SKSwapChainPanel is unsupported
-		if (!IsGpuSupported())
-		{
-			NavView.MenuItems.RemoveAt(1);
-		}
-		NavView.SelectedItem = NavView.MenuItems[0];
-	}
+		// the the canvas and properties
+		var canvas = e.Surface.Canvas;
 
-	private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-	{
-		if (args.SelectedItem is NavigationViewItem item)
-		{
-			Type pageType = item.Tag?.ToString() switch
-			{
-				"cpu" => typeof(CpuPage),
-				"gpu" => typeof(GpuPage),
-				"drawing" => typeof(DrawingPage),
-				_ => typeof(CpuPage),
-			};
-			ContentFrame.Navigate(pageType);
-		}
-	}
+		// make sure the canvas is blank
+		canvas.Clear(SKColors.White);
 
-	private static bool IsGpuSupported()
-	{
-#if __MACCATALYST__
-		return false;
-#else
-		try
+		// draw some text
+		using var paint = new SKPaint
 		{
-			return !SkiaSharp.Views.Windows.SKSwapChainPanel.RaiseOnUnsupported ||
-			       OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() ||
-			       OperatingSystem.IsWindows();
-		}
-		catch
+			Color = SKColors.Black,
+			IsAntialias = true,
+			Style = SKPaintStyle.Fill
+		};
+		using var font = new SKFont
 		{
-			return false;
-		}
-#endif
+			Size = 24
+		};
+		var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
+		canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
 	}
 }
