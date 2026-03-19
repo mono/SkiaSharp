@@ -167,8 +167,9 @@
   <PropertyGroup>
     <UnoTargetFrameworksReference>$(TFMCurrent)</UnoTargetFrameworksReference>
     <UnoTargetFrameworksReference Condition="'$(TFMPrevious)' != ''">$(UnoTargetFrameworksReference);$(TFMPrevious)</UnoTargetFrameworksReference>
-    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</UnoTargetFrameworksCurrent>
-    <UnoTargetFrameworksPrevious Condition="!$(IsLinux) and '$(TFMPrevious)' != ''">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious);$(TFMPrevious)-macos$(TPVmacOSPrevious)</UnoTargetFrameworksPrevious>
+    <!-- Note: Uno 6.x dropped net*-macos TFM; macOS desktop now uses Skia renderer via plain net* TFM -->
+    <UnoTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</UnoTargetFrameworksCurrent>
+    <UnoTargetFrameworksPrevious Condition="!$(IsLinux) and '$(TFMPrevious)' != ''">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</UnoTargetFrameworksPrevious>
     <UnoTargetFrameworks>$(UnoTargetFrameworksReference);$(UnoTargetFrameworksCurrent);$(UnoTargetFrameworksPrevious);$(WindowsTargetFrameworks)</UnoTargetFrameworks>
   </PropertyGroup>
 
