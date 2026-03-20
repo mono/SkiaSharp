@@ -2,12 +2,12 @@
   "meta": {
     "schemaVersion": "1.0",
     "skiaPrNumber": 170,
-    "skiasharpPrNumber": 3560,
+    "skiasharpPrNumber": null,
     "repo": "mono/skia",
     "upstreamBranch": "chrome/m122",
-    "analyzedAt": "2026-03-20T19:37:37Z",
+    "analyzedAt": "2026-03-20T21:06:16Z",
     "shas": {
-      "prHead": "20a88acfac628aad823a7047e0cf742478db2ee7",
+      "prHead": "186c2c901a8a46dd98a6d001a6c94f52c0c0fa70",
       "base": "9065669a615daa6493594ada3255833fe34466b3",
       "upstream": "256631b5cc1d91e84811e2ded209d999515618f1"
     }
@@ -39,8 +39,8 @@
   "custom_preservation": {
     "status": "PASS",
     "files": {
-      "base_count": 88,
-      "head_count": 88,
+      "base_count": 97,
+      "head_count": 97,
       "deleted": [],
       "added": []
     },
@@ -56,7 +56,7 @@
         "base_version": "2169a0849e3df4e2133b728dec67d3b16bd30263",
         "head_version": "4cfc176e3242b4dbdfd3f6c5680c5d8f2cb7db45",
         "upstream_version": "4cfc176e3242b4dbdfd3f6c5680c5d8f2cb7db45",
-        "notes": "PR regressed to upstream version \u2014 base had custom pin (possibly security fix)"
+        "notes": "PR regressed to upstream version — base had custom pin (possibly security fix)"
       }
     ],
     "regressions": [
@@ -66,7 +66,7 @@
         "base_version": "2169a0849e3df4e2133b728dec67d3b16bd30263",
         "head_version": "4cfc176e3242b4dbdfd3f6c5680c5d8f2cb7db45",
         "upstream_version": "4cfc176e3242b4dbdfd3f6c5680c5d8f2cb7db45",
-        "notes": "PR regressed to upstream version \u2014 base had custom pin (possibly security fix)"
+        "notes": "PR regressed to upstream version — base had custom pin (possibly security fix)"
       }
     ],
     "suspicious_urls": []
@@ -74,62 +74,5 @@
   "risk_assessment": "HIGH",
   "human_review_files": [
     "170-custom.diff"
-  ],
-  "companion_pr": {
-    "pr_number": 3560,
-    "files_changed": 29,
-    "generated_files_skipped": [
-      "binding/SkiaSharp/SkiaApi.generated.cs"
-    ],
-    "findings": [
-      {
-        "file": "binding/SkiaSharp/Definitions.cs",
-        "finding": "Added SKColorType.Bgra10101010Xr (25) and RgbF16F16F16x (26) with correct BytesPerPixel=8, BitShift=3, AlphaType mappings. Added fOrigin/fHasOrigin to SKJpegEncoderOptions (EXIF). All additions are ABI-safe."
-      },
-      {
-        "file": "binding/SkiaSharp/EnumMappings.cs",
-        "finding": "Bidirectional SKColorType<->SKColorTypeNative mappings added for both new color types. Correct and complete."
-      },
-      {
-        "file": "binding/SkiaSharp/GRDefinitions.cs",
-        "finding": "ToGlSizedFormat for new color types returns 0 (unsupported in GL). Matches upstream behavior."
-      },
-      {
-        "file": "binding/SkiaSharp/SKAbstractManagedStream.cs",
-        "finding": "Added private protected ctor(bool owns, bool weak) controlling native reference strength. Enables GC-safe native-owned streams. Memory management pattern is correct."
-      },
-      {
-        "file": "binding/SkiaSharp/SKManagedStream.cs",
-        "finding": "BEHAVIORAL CHANGE: Removed parent/child WeakReference chain and VerifyOriginal(). OnDuplicate/OnFork now create independent MemoryStream copies via ReadStreamFully(). Original stream stays readable after duplication. Simpler, eliminates use-after-dispose risks. Breaking vs m119 but intentional for m132."
-      },
-      {
-        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
-        "finding": "SKIPPED (generated file validated in Phase 2). Note: Phase 2 found FAIL \u2014 mismatches between regenerated and PR versions."
-      },
-      {
-        "file": "native/*/build.cake",
-        "finding": "Removed one build flag line from all 8 platform build.cake files. Build config change consistent with m132 upstream changes."
-      },
-      {
-        "file": "tests/Tests/SkiaSharp/SKManagedStreamTest.cs",
-        "finding": "Major test refactoring (72+/82-) matching new duplicate/fork semantics. Tests verify original remains readable after duplication, multiple duplicates from same parent, and independent copy behavior."
-      },
-      {
-        "file": "tests/Tests/SkiaSharp/SKFontManagerTest.cs",
-        "finding": "Updated for woff2 behavioral change: m132 may return typeface with empty FamilyName. Tests adapted to check for non-null result with possible empty name."
-      },
-      {
-        "file": "tests/Tests/SkiaSharp/SKBitmapTest.cs",
-        "finding": "Updated color type count assertions to include new Bgra10101010Xr and RgbF16F16F16x types."
-      },
-      {
-        "file": "changelogs/SkiaSharp/3.132.0/SkiaSharp.md",
-        "finding": "Comprehensive changelog documenting all API additions, removals, behavioral changes, and struct layout changes. Well documented."
-      },
-      {
-        "file": "externals/skia",
-        "finding": "Submodule pointer updated \u2014 should point to the mono/skia PR #170 head commit."
-      }
-    ]
-  }
+  ]
 }
