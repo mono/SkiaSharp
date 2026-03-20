@@ -1,0 +1,455 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "skiaPrNumber": 170,
+    "skiasharpPrNumber": 3560,
+    "repo": "mono/skia",
+    "upstreamBranch": "chrome/m122",
+    "analyzedAt": "2026-03-20T15:50:37Z",
+    "shas": {
+      "prHead": "20a88acfac628aad823a7047e0cf742478db2ee7",
+      "base": "9065669a615daa6493594ada3255833fe34466b3",
+      "upstream": "256631b5cc1d91e84811e2ded209d999515618f1"
+    }
+  },
+  "generated_files": {
+    "status": "FAIL",
+    "checked": [
+      "binding/SkiaSharp/SkiaApi.generated.cs",
+      "binding/SkiaSharp.Skottie/SkottieApi.generated.cs",
+      "binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs",
+      "binding/SkiaSharp.Resources/ResourcesApi.generated.cs",
+      "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs"
+    ],
+    "mismatches": [
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "diff_summary": "PR has sk_surface_draw_with_sampling (removed by regeneration); regeneration adds sk_typeface_create_default and other new functions. 133 lines differ. Indicates C API headers in PR don't match latest generator output."
+      },
+      {
+        "file": "binding/SkiaSharp.Resources/ResourcesApi.generated.cs",
+        "diff_summary": "PR has skresources_data_uri_resource_provider_proxy_make2, skresources_file_resource_provider_make2, and ImageDecodeStrategy enum (52 lines differ). These use the new skresources_image_decode_strategy_t type. Regeneration does not produce these \u2014 C header may be incomplete."
+      },
+      {
+        "file": "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs",
+        "diff_summary": "PR version has hb_draw_funcs_t and hb_paint_funcs_t using directives; regeneration produces different output with 2912 lines of diff. Likely different harfbuzz header version between PR and regenerated."
+      }
+    ]
+  },
+  "upstream_integrity": {
+    "status": "WARN",
+    "expected_changes": [
+      {
+        "file": "BUILD.gn",
+        "category": "expected-build"
+      },
+      {
+        "file": "gn/BUILDCONFIG.gn",
+        "category": "expected-build"
+      },
+      {
+        "file": "gn/core.gni",
+        "category": "expected-build"
+      },
+      {
+        "file": "gn/find_msvc.py",
+        "category": "expected-build"
+      },
+      {
+        "file": "gn/find_winsdk.py",
+        "category": "expected-build"
+      },
+      {
+        "file": "gn/get_vcvars_version.py",
+        "category": "expected-build"
+      },
+      {
+        "file": "gn/lowest_version_dir.py",
+        "category": "expected-build"
+      },
+      {
+        "file": "DEPS",
+        "category": "expected-deps"
+      },
+      {
+        "file": "modules/skresources/BUILD.gn",
+        "category": "expected-build"
+      },
+      {
+        "file": "third_party/brotli/BUILD.gn",
+        "category": "expected-build"
+      },
+      {
+        "file": "third_party/expat/include/expat_config/expat_config.h",
+        "category": "expected-build"
+      },
+      {
+        "file": "third_party/freetype2/BUILD.gn",
+        "category": "expected-build"
+      },
+      {
+        "file": "third_party/libwebp/BUILD.gn",
+        "category": "expected-build"
+      },
+      {
+        "file": "third_party/zlib/BUILD.gn",
+        "category": "expected-build"
+      },
+      {
+        "file": "bazel/deps.bzl",
+        "category": "expected-build"
+      }
+    ],
+    "unexpected_changes": [
+      {
+        "file": "include/core/SkFont.h",
+        "category": "unexpected",
+        "reason": "Fork patch: adds default typeface factory for C API compatibility after upstream removed SkTypeface::MakeDefault"
+      },
+      {
+        "file": "include/core/SkRefCnt.h",
+        "category": "unexpected",
+        "reason": "Fork patch: adds ref-counting helpers needed by C API shim"
+      },
+      {
+        "file": "include/core/SkTextBlob.h",
+        "category": "unexpected",
+        "reason": "Fork patch: exposes text blob builder helpers for C API"
+      },
+      {
+        "file": "include/docs/SkXPSDocument.h",
+        "category": "unexpected",
+        "reason": "Fork patch: Windows XPS document support for C API"
+      },
+      {
+        "file": "include/utils/SkTextUtils.h",
+        "category": "unexpected",
+        "reason": "Fork patch: text utility functions for C API"
+      },
+      {
+        "file": "src/core/SkFont.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: implements default typeface factory and font manager singleton for C API"
+      },
+      {
+        "file": "src/core/SkBlitter_ARGB32.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: ARGB32 blitter fix"
+      },
+      {
+        "file": "src/core/SkM44.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: minor matrix fix"
+      },
+      {
+        "file": "src/core/SkTextBlob.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: text blob builder helpers"
+      },
+      {
+        "file": "src/gpu/ganesh/gl/mac/GrGLMakeNativeInterface_mac.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: macOS GL interface creation for SkiaSharp"
+      },
+      {
+        "file": "src/gpu/ganesh/gl/win/GrGLMakeNativeInterface_win.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Windows GL interface creation for SkiaSharp"
+      },
+      {
+        "file": "src/gpu/ganesh/gl/iOS/GrGLMakeNativeInterface_iOS.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: iOS GL interface for SkiaSharp"
+      },
+      {
+        "file": "src/gpu/ganesh/gl/egl/GrGLMakeEGLInterface.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: EGL interface creation"
+      },
+      {
+        "file": "src/gpu/ganesh/gl/webgl/GrGLMakeNativeInterface_webgl.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: WebGL interface for WASM"
+      },
+      {
+        "file": "src/gpu/ganesh/ops/DashOp.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Ganesh ops build fix"
+      },
+      {
+        "file": "src/gpu/ganesh/ops/DrawAtlasOp.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Ganesh ops build fix"
+      },
+      {
+        "file": "src/gpu/ganesh/ops/GrMeshDrawOp.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Ganesh mesh draw op fix"
+      },
+      {
+        "file": "src/gpu/ganesh/ops/LatticeOp.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Ganesh lattice op fix"
+      },
+      {
+        "file": "src/gpu/ganesh/ops/RegionOp.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Ganesh region op fix"
+      },
+      {
+        "file": "src/opts/SkBlitRow_opts.h",
+        "category": "unexpected",
+        "reason": "Fork patch: blit row optimization fix"
+      },
+      {
+        "file": "src/ports/SkFontMgr_win_dw.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: DirectWrite font manager for C API after upstream factory removal"
+      },
+      {
+        "file": "src/ports/SkOSFile_win.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Windows file operations"
+      },
+      {
+        "file": "src/ports/SkOSLibrary_win.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Windows library loading"
+      },
+      {
+        "file": "src/ports/SkRemotableFontMgr_win_dw.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Windows remote font manager"
+      },
+      {
+        "file": "src/sksl/codegen/SkSLRasterPipelineBuilder.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: SkSL raster pipeline build fix"
+      },
+      {
+        "file": "src/sksl/codegen/SkSLRasterPipelineBuilder.h",
+        "category": "unexpected",
+        "reason": "Fork patch: SkSL raster pipeline header"
+      },
+      {
+        "file": "src/utils/SkCustomTypeface.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: custom typeface for default font"
+      },
+      {
+        "file": "src/utils/SkTextUtils.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: text utility implementations"
+      },
+      {
+        "file": "src/utils/win/SkDWrite.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: DirectWrite utilities"
+      },
+      {
+        "file": "src/utils/win/SkHRESULT.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: HRESULT handling"
+      },
+      {
+        "file": "src/xps/SkXPSDevice.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: XPS device support"
+      },
+      {
+        "file": "src/xps/SkXPSDocument.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: XPS document support"
+      },
+      {
+        "file": "modules/skottie/src/text/TextShaper.cpp",
+        "category": "unexpected",
+        "reason": "Fork patch: Skottie text shaper for default font manager"
+      }
+    ]
+  },
+  "custom_preservation": {
+    "status": "PASS",
+    "files": {
+      "base_count": 88,
+      "head_count": 88,
+      "deleted": [],
+      "added": []
+    },
+    "focused_diff_lines": 370,
+    "focused_diff_path": "170-custom.diff"
+  },
+  "deps_audit": {
+    "status": "REVIEW_REQUIRED",
+    "changes": [
+      {
+        "name": "abseil-cpp",
+        "change_type": "version_bump",
+        "base_version": "cb436cf0142b",
+        "head_version": "334aca32051e",
+        "upstream_version": "334aca32051e"
+      },
+      {
+        "name": "angle2",
+        "change_type": "version_bump",
+        "base_version": "1cab871c2207",
+        "head_version": "c6fbf93decba",
+        "upstream_version": "c6fbf93decba"
+      },
+      {
+        "name": "dawn",
+        "change_type": "version_bump",
+        "base_version": "a42cebae4e42",
+        "head_version": "5b45794c2c24",
+        "upstream_version": "5b45794c2c24"
+      },
+      {
+        "name": "icu4x",
+        "change_type": "new",
+        "head_version": "4f8163548968",
+        "upstream_version": "4f8163548968",
+        "notes": "New dependency added matching upstream m122"
+      },
+      {
+        "name": "jinja2",
+        "change_type": "version_bump",
+        "base_version": "515dd10de9bf",
+        "head_version": "e2d024354e11",
+        "upstream_version": "e2d024354e11"
+      },
+      {
+        "name": "libavif",
+        "change_type": "version_bump",
+        "base_version": "f49462dc9378",
+        "head_version": "55aab4ac0607",
+        "upstream_version": "55aab4ac0607"
+      },
+      {
+        "name": "libgav1",
+        "change_type": "version_bump",
+        "base_version": "0fb779c1e169",
+        "head_version": "5cf722e65901",
+        "upstream_version": "5cf722e65901"
+      },
+      {
+        "name": "markupsafe",
+        "change_type": "version_bump",
+        "base_version": "006709ba3ed8",
+        "head_version": "0bad08bb207b",
+        "upstream_version": "0bad08bb207b"
+      },
+      {
+        "name": "spirv-cross",
+        "change_type": "version_bump",
+        "base_version": "6e1fb9b09efa",
+        "head_version": "b82536766d1b",
+        "upstream_version": "b82536766d1b"
+      },
+      {
+        "name": "spirv-headers",
+        "change_type": "version_bump",
+        "base_version": "79743b899fde",
+        "head_version": "7b0309708da5",
+        "upstream_version": "7b0309708da5"
+      },
+      {
+        "name": "spirv-tools",
+        "change_type": "version_bump",
+        "base_version": "1bc0e6f59abc",
+        "head_version": "3e6bdd0f9965",
+        "upstream_version": "3e6bdd0f9965"
+      },
+      {
+        "name": "swiftshader",
+        "change_type": "version_bump",
+        "base_version": "7f4d495c89c2",
+        "head_version": "328e794f0c8b",
+        "upstream_version": "328e794f0c8b"
+      },
+      {
+        "name": "vulkan-deps",
+        "change_type": "version_bump",
+        "base_version": "1e40b8e966f5",
+        "head_version": "4307b0183c9e",
+        "upstream_version": "4307b0183c9e"
+      },
+      {
+        "name": "vulkan-headers",
+        "change_type": "version_bump",
+        "base_version": "7e691380166f",
+        "head_version": "217e93c664ec",
+        "upstream_version": "217e93c664ec"
+      },
+      {
+        "name": "vulkan-tools",
+        "change_type": "version_bump",
+        "base_version": "3a19c1973f0e",
+        "head_version": "7c6d640a5ca3",
+        "upstream_version": "7c6d640a5ca3"
+      },
+      {
+        "name": "vulkan-utility-libraries",
+        "change_type": "version_bump",
+        "base_version": "2169a0849e3d",
+        "head_version": "4cfc176e3242",
+        "upstream_version": "4cfc176e3242"
+      },
+      {
+        "name": "vulkanmemoryallocator",
+        "change_type": "version_bump",
+        "base_version": "c788c52156f3",
+        "head_version": "a6bfc237255a",
+        "upstream_version": "a6bfc237255a"
+      }
+    ],
+    "regressions": [],
+    "suspicious_urls": []
+  },
+  "risk_assessment": "HIGH",
+  "human_review_files": [
+    "170-custom.diff",
+    "170.json",
+    "170.md"
+  ],
+  "companion_pr": {
+    "pr_number": 3560,
+    "files_changed": 29,
+    "generated_files_skipped": [
+      "binding/SkiaSharp/SkiaApi.generated.cs"
+    ],
+    "findings": [
+      {
+        "file": "binding/SkiaSharp/Definitions.cs",
+        "finding": "Adds Bgra10101010Xr and RgbF16F16F16x color types with correct bytes-per-pixel (8) and bit-shift (3). Alpha type classification is correct: Bgra10101010Xr supports alpha, RgbF16F16F16x is opaque. Also adds fOrigin/fHasOrigin fields to SKJpegEncoderOptions."
+      },
+      {
+        "file": "binding/SkiaSharp/EnumMappings.cs",
+        "finding": "Correctly maps new Bgra10101010Xr and RgbF16F16F16x color types between public and native enums."
+      },
+      {
+        "file": "binding/SkiaSharp/GRDefinitions.cs",
+        "finding": "New color types return GL sized format 0 (unsupported in GL). Correct \u2014 these are likely Metal/Vulkan-only formats."
+      },
+      {
+        "file": "binding/SkiaSharp/SKManagedStream.cs",
+        "finding": "Major refactor: removes parent/child WeakReference chain and VerifyOriginal() checks. OnDuplicate/OnFork now copy stream data to independent MemoryStreams with weak:false (preventing GC). This is a safer pattern but changes semantics \u2014 duplicated streams are now independent copies. The weak:false parameter in the constructor ensures native code holds a strong reference to prevent premature GC of duplicated streams."
+      },
+      {
+        "file": "binding/SkiaSharp/SKAbstractManagedStream.cs",
+        "finding": "Adds private protected constructor with 'weak' parameter controlling whether DelegateProxies creates a weak or strong reference. Good pattern for stream ownership."
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKManagedStreamTest.cs",
+        "finding": "Tests rewritten to match new stream semantics. Tests verify duplicate/fork create independent copies. Good coverage of the behavioral change."
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKFontTest.cs",
+        "finding": "Adds test verifying default font behavior with new typeface factory."
+      },
+      {
+        "file": "tests/Tests/SkiaSharp/SKFontManagerTest.cs",
+        "finding": "Adds tests for new font manager singleton behavior after upstream factory removal."
+      }
+    ]
+  }
+}
