@@ -20,37 +20,42 @@
         <!-- Floating toolbox bottom-center -->
         <Border HorizontalAlignment="Center" VerticalAlignment="Bottom"
                 Margin="0,0,0,16" CornerRadius="24"
-                Padding="20,12"
+                BorderBrush="#44FFFFFF" BorderThickness="1"
+                Padding="16,12"
                 Background="#CC1E1E1E">
-            <StackPanel Orientation="Horizontal">
-                <Border x:Name="ColorBlack" Width="32" Height="32" Background="Black"
-                        BorderBrush="White" BorderThickness="2" CornerRadius="16"
-                        Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Black" />
-                <Border x:Name="ColorRed" Width="32" Height="32" Background="#E53935"
-                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
-                        Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Red" />
-                <Border x:Name="ColorBlue" Width="32" Height="32" Background="#1E88E5"
-                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
-                        Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Blue" />
-                <Border x:Name="ColorGreen" Width="32" Height="32" Background="#43A047"
-                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
-                        Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Green" />
-                <Border x:Name="ColorOrange" Width="32" Height="32" Background="#FB8C00"
-                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
-                        Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Orange" />
-                <Border x:Name="ColorPurple" Width="32" Height="32" Background="#8E24AA"
-                        BorderBrush="Transparent" BorderThickness="2" CornerRadius="16"
-                        Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Purple" />
+            <WrapPanel x:Name="ToolboxPanel" Orientation="Horizontal">
+                <!-- Color swatches -->
+                <StackPanel x:Name="SwatchPanel" Orientation="Horizontal" Margin="0,0,8,0">
+                    <Border x:Name="ColorBlack" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="DodgerBlue" BorderThickness="3"
+                            Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Black" />
+                    <Border x:Name="ColorRed" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Red" />
+                    <Border x:Name="ColorBlue" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Blue" />
+                    <Border x:Name="ColorGreen" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Green" />
+                    <Border x:Name="ColorOrange" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Orange" />
+                    <Border x:Name="ColorPurple" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Margin="4,0" Cursor="Hand" MouseDown="OnColorPick" Tag="Purple" />
+                </StackPanel>
 
-                <Border Width="1" Background="#55FFFFFF" Margin="10,4" />
-
-                <Slider x:Name="BrushSlider" Minimum="1" Maximum="50" Value="4"
-                        Width="120" VerticalAlignment="Center"
-                        ValueChanged="OnBrushSizeChanged" Margin="4,0" />
-                <TextBlock x:Name="BrushSizeText" Text="4px"
-                           Foreground="White" VerticalAlignment="Center"
-                           FontSize="12" Margin="6,0,0,0" />
-            </StackPanel>
+                <!-- Brush size slider + label -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Slider x:Name="BrushSlider" Minimum="1" Maximum="50" Value="4"
+                            Width="140" VerticalAlignment="Center"
+                            ValueChanged="OnBrushSizeChanged" />
+                    <TextBlock x:Name="BrushSizeText" Text="4"
+                               Foreground="White" VerticalAlignment="Center"
+                               FontSize="13" Margin="8,0,0,0" Width="24" />
+                </StackPanel>
+            </WrapPanel>
         </Border>
     </Grid>
 </UserControl>

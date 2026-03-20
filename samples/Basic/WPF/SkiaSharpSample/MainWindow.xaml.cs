@@ -1,37 +1,33 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace SkiaSharpSample;
 
 public partial class MainWindow : Window
 {
-	private readonly UserControl?[] pages = new UserControl?[3];
-
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
 	public MainWindow()
 	{
 		InitializeComponent();
-		NavList.SelectedIndex = (int)DefaultPage;
+		TabNav.SelectedIndex = (int)DefaultPage;
 	}
 
-	private void OnNavSelectionChanged(object sender, SelectionChangedEventArgs e)
+	private void OnTabSelectionChanged(object sender, SelectionChangedEventArgs e)
 	{
-		if (NavList == null || PageContent == null)
+		if (TabNav?.SelectedItem is not TabItem tab)
 			return;
 
-		var index = NavList.SelectedIndex;
-		if (index < 0 || index >= pages.Length)
+		if (tab.Content != null)
 			return;
 
-		pages[index] ??= index switch
+		tab.Content = tab.Tag?.ToString() switch
 		{
-			0 => new CpuPage(),
-			1 => new GpuPage(),
-			2 => new DrawingPage(),
-			_ => null
+			"cpu" => new CpuPage(),
+			"gpu" => new GpuPage(),
+			"drawing" => new DrawingPage(),
+			_ => new CpuPage(),
 		};
-
-		PageContent.Content = pages[index];
 	}
 }

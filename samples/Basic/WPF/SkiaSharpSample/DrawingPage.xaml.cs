@@ -13,27 +13,26 @@ public partial class DrawingPage : UserControl
 {
 	private readonly record struct Stroke(SKPath Path, SKColor Color, float Width);
 
-	private readonly List<Stroke> strokes = new();
-	private SKPath? currentPath;
-	private SKColor currentColor;
-	private float brushSize = 4f;
-	private float cursorX;
-	private float cursorY;
-	private bool isDrawing;
-	private double dpiScale = 1.0;
-
-	private static readonly Dictionary<string, (SKColor Light, SKColor Dark)> colorMap = new()
+	static readonly (string Tag, SKColor Light, SKColor Dark)[] colorPalette =
 	{
-		["Black"] = (SKColors.Black, SKColors.White),
-		["Red"] = (new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
-		["Blue"] = (new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
-		["Green"] = (new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
-		["Orange"] = (new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
-		["Purple"] = (new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+		("Black",  SKColors.Black, SKColors.White),
+		("Red",    new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+		("Blue",   new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+		("Green",  new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+		("Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+		("Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
 	};
 
-	private Border? selectedColorBorder;
-	private readonly Microsoft.Win32.UserPreferenceChangedEventHandler themeChangedHandler;
+	readonly List<Stroke> strokes = new();
+	SKPath? currentPath;
+	SKColor currentColor;
+	float brushSize = 4f;
+	float cursorX;
+	float cursorY;
+	bool isDrawing;
+	double dpiScale = 1.0;
+	Border? selectedColorBorder;
+	readonly Microsoft.Win32.UserPreferenceChangedEventHandler themeChangedHandler;
 
 	static bool IsDarkMode
 	{
@@ -50,7 +49,6 @@ public partial class DrawingPage : UserControl
 	}
 
 	SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
-	static SKColor ResolveColor((SKColor Light, SKColor Dark) pair) => IsDarkMode ? pair.Dark : pair.Light;
 
 	public DrawingPage()
 	{
@@ -73,19 +71,42 @@ public partial class DrawingPage : UserControl
 					currentColor = SKColors.White;
 				else if (currentColor == SKColors.White && !IsDarkMode)
 					currentColor = SKColors.Black;
+				ApplySwatchColors();
 				SkCanvas.InvalidateVisual();
 			});
 		};
 		Microsoft.Win32.SystemEvents.UserPreferenceChanged += themeChangedHandler;
+
+		Loaded += (s, e) => ApplySwatchColors();
 		Unloaded += (s, e) =>
+		{
+			Microsoft.Win32.SystemEvents.UserPreferenceChanged -= themeChangedHandler;
+			SkCanvas.MouseDown -= OnMouseDown;
+			SkCanvas.MouseMove -= OnMouseMove;
+			SkCanvas.MouseUp -= OnMouseUp;
+			SkCanvas.MouseWheel -= OnMouseWheel;
+			SkCanvas.MouseLeave -= OnMouseLeave;
+		};
+	}
+
+	void ApplySwatchColors()
 	{
-		Microsoft.Win32.SystemEvents.UserPreferenceChanged -= themeChangedHandler;
-		SkCanvas.MouseDown -= OnMouseDown;
-		SkCanvas.MouseMove -= OnMouseMove;
-		SkCanvas.MouseUp -= OnMouseUp;
-		SkCanvas.MouseWheel -= OnMouseWheel;
-		SkCanvas.MouseLeave -= OnMouseLeave;
-	};
+		foreach (var child in SwatchPanel.Children)
+		{
+			if (child is Border border && border.Tag is string tag)
+			{
+				foreach (var (pTag, light, dark) in colorPalette)
+				{
+					if (pTag == tag)
+					{
+						var color = IsDarkMode ? dark : light;
+						border.Background = new System.Windows.Media.SolidColorBrush(
+							System.Windows.Media.Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue));
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -173,7 +194,7 @@ public partial class DrawingPage : UserControl
 	private void OnMouseWheel(object sender, MouseWheelEventArgs e)
 	{
 		brushSize = Math.Clamp(brushSize + (e.Delta > 0 ? 1f : -1f), 1f, 50f);
-		BrushSizeText.Text = $"{brushSize:F0}px";
+		BrushSizeText.Text = $"{brushSize:F0}";
 		BrushSlider.Value = brushSize;
 		SkCanvas.InvalidateVisual();
 	}
@@ -182,7 +203,7 @@ public partial class DrawingPage : UserControl
 	{
 		brushSize = (float)e.NewValue;
 		if (BrushSizeText != null)
-			BrushSizeText.Text = $"{brushSize:F0}px";
+			BrushSizeText.Text = $"{brushSize:F0}";
 		SkCanvas?.InvalidateVisual();
 	}
 
@@ -194,18 +215,21 @@ public partial class DrawingPage : UserControl
 
 	private void OnColorPick(object sender, MouseButtonEventArgs e)
 	{
-		if (sender is not Border border || border.Tag is not string colorName)
+		if (sender is not Border border || border.Tag is not string tag)
 			return;
 
-		if (colorMap.TryGetValue(colorName, out var pair))
+		foreach (var (pTag, light, dark) in colorPalette)
 		{
-			currentColor = ResolveColor(pair);
+			if (pTag == tag)
+			{
+				currentColor = IsDarkMode ? dark : light;
 
-			// Update selection highlight
-			if (selectedColorBorder != null)
-				selectedColorBorder.BorderBrush = System.Windows.Media.Brushes.Transparent;
-			border.BorderBrush = System.Windows.Media.Brushes.White;
-			selectedColorBorder = border;
+				if (selectedColorBorder != null)
+					selectedColorBorder.BorderBrush = System.Windows.Media.Brushes.Transparent;
+				border.BorderBrush = System.Windows.Media.Brushes.DodgerBlue;
+				selectedColorBorder = border;
+				break;
+			}
 		}
 	}
 

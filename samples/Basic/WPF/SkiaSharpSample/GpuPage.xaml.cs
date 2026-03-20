@@ -73,18 +73,17 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		1.0f, 0.9f, 0.2f,   // yellow
 	};
 
-	private readonly FpsCounter fpsCounter = new();
+	readonly FpsCounter fpsCounter = new();
+	readonly SKPaint shaderPaint = new();
+	readonly Lazy<SKRuntimeShaderBuilder> shaderBuilder = new(() => SKRuntimeEffect.BuildShader(SkslSource));
 
-	private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
-	private DispatcherTimer? renderTimer;
-	private SKPoint touchPos;
-	private bool touchActive;
+	DispatcherTimer? renderTimer;
+	SKPoint touchPos;
+	bool touchActive;
 
 	public GpuPage()
 	{
 		InitializeComponent();
-
-		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
 
 		GlView.MouseDown += OnMouseDown;
 		GlView.MouseMove += OnMouseMove;
@@ -93,26 +92,33 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 
 	private void OnLoaded(object sender, RoutedEventArgs e)
 	{
-		fpsCounter.Start();
+		StartAnimation();
+	}
 
+	private void OnUnloaded(object sender, RoutedEventArgs e)
+	{
+		StopAnimation();
+
+		GlView.MouseDown -= OnMouseDown;
+		GlView.MouseMove -= OnMouseMove;
+		GlView.MouseUp -= OnMouseUp;
+	}
+
+	void StartAnimation()
+	{
+		renderTimer?.Stop();
+		fpsCounter.Start();
+		FpsText.Text = "FPS: --";
 		renderTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
 		renderTimer.Tick += (_, _) => GlView.InvalidateVisual();
 		renderTimer.Start();
 	}
 
-	private void OnUnloaded(object sender, RoutedEventArgs e)
+	void StopAnimation()
 	{
 		renderTimer?.Stop();
 		renderTimer = null;
 		fpsCounter.Stop();
-
-		GlView.MouseDown -= OnMouseDown;
-		GlView.MouseMove -= OnMouseMove;
-		GlView.MouseUp -= OnMouseUp;
-
-		if (shaderBuilder?.IsValueCreated == true)
-			shaderBuilder.Value.Dispose();
-		shaderBuilder = null;
 	}
 
 	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
@@ -121,9 +127,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		var width = e.BackendRenderTarget.Width;
 		var height = e.BackendRenderTarget.Height;
 
-		canvas.Clear(SKColors.Black);
-
-		var builder = shaderBuilder!.Value;
+		var builder = shaderBuilder.Value;
 
 		builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
 		builder.Uniforms["iResolution"] = new float[] { width, height };
@@ -132,8 +136,8 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		builder.Uniforms["iColors"] = blobColors;
 
 		using var shader = builder.Build();
-		using var paint = new SKPaint { Shader = shader };
-		canvas.DrawRect(0, 0, width, height, paint);
+		shaderPaint.Shader = shader;
+		canvas.DrawRect(0, 0, width, height, shaderPaint);
 
 		if (fpsCounter.Tick() is double fps)
 			Dispatcher.BeginInvoke(() => FpsText.Text = $"FPS: {fps:F0}");

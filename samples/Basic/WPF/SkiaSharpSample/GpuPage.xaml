@@ -5,14 +5,21 @@
              Loaded="OnLoaded" Unloaded="OnUnloaded">
     <Grid>
         <skia:SKGLElement x:Name="GlView" PaintSurface="OnPaintSurface" />
-        <TextBlock x:Name="FpsText" Text="FPS: --"
-                   Foreground="White" FontSize="14" FontFamily="Consolas"
-                   HorizontalAlignment="Right" VerticalAlignment="Top"
-                   Margin="0,8,12,0"
-                   IsHitTestVisible="False">
-            <TextBlock.Effect>
-                <DropShadowEffect ShadowDepth="1" BlurRadius="3" Color="Black" Opacity="0.8" />
-            </TextBlock.Effect>
-        </TextBlock>
+
+        <!-- FPS pill overlay — centered top -->
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Margin="0,8,0,0"
+                CornerRadius="12"
+                BorderBrush="#44FFFFFF"
+                BorderThickness="1"
+                Background="#AA000000"
+                Padding="12,6"
+                IsHitTestVisible="False">
+            <TextBlock x:Name="FpsText"
+                       Text="FPS: --"
+                       Foreground="White"
+                       FontSize="14" />
+        </Border>
     </Grid>
 </UserControl>
