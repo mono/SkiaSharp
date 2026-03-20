@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -31,6 +31,10 @@ public sealed partial class MainWindow : Window
 				_ => typeof(CpuPage),
 			};
 			ContentFrame.Navigate(pageType);
+
+			// Clear back stack so previous pages get Unloaded
+			// (stops GPU render loop when switching tabs)
+			ContentFrame.BackStack.Clear();
 		}
 	}
 }

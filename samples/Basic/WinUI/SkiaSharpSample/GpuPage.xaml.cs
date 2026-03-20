@@ -1,4 +1,6 @@
-﻿using Microsoft.UI.Xaml.Controls;
+﻿using System;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
@@ -7,7 +9,7 @@ namespace SkiaSharpSample;
 
 public sealed partial class GpuPage : Page
 {
-	private const string SkslSource = @"
+	const string SkslSource = @"
 uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
@@ -67,48 +69,62 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		1.0f, 0.9f, 0.2f,   // yellow
 	};
 
-	private readonly FpsCounter fpsCounter = new();
+	readonly FpsCounter fpsCounter = new();
+	readonly SKPaint shaderPaint = new();
+	readonly Lazy<SKRuntimeShaderBuilder> shaderBuilder = new(() => SKRuntimeEffect.BuildShader(SkslSource));
 
-	private Lazy<SKRuntimeShaderBuilder>? shaderBuilder;
-	private SKPoint touchPos;
-	private bool touchActive;
+	SKPoint touchPos;
+	bool touchActive;
 
 	public GpuPage()
 	{
 		InitializeComponent();
-
-		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
-		fpsCounter.Start();
-
-		Unloaded += OnUnloaded;
 	}
 
-	private void OnUnloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+	private void OnLoaded(object sender, RoutedEventArgs e)
 	{
-		fpsCounter.Stop();
+		StartAnimation();
+	}
 
-		if (shaderBuilder?.IsValueCreated == true)
-			shaderBuilder.Value.Dispose();
-		shaderBuilder = null;
+	private void OnUnloaded(object sender, RoutedEventArgs e)
+	{
+		StopAnimation();
+	}
+
+	void StartAnimation()
+	{
+		skiaView.EnableRenderLoop = false;
+		fpsCounter.Start();
+		fpsText.Text = "FPS: --";
+		DispatcherQueue.TryEnqueue(() =>
+		{
+			skiaView.EnableRenderLoop = true;
+		});
+	}
+
+	void StopAnimation()
+	{
+		skiaView.EnableRenderLoop = false;
+		fpsCounter.Stop();
 	}
 
 	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
-		var width = e.BackendRenderTarget.Width;
-		var height = e.BackendRenderTarget.Height;
+		var width = (float)e.BackendRenderTarget.Width;
+		var height = (float)e.BackendRenderTarget.Height;
 
-		var builder = shaderBuilder!.Value;
+		var builder = shaderBuilder.Value;
 
 		builder.Uniforms["iTime"] = fpsCounter.ElapsedSeconds;
-		builder.Uniforms["iResolution"] = new float[] { (float)width, (float)height };
+		builder.Uniforms["iResolution"] = new float[] { width, height };
 		builder.Uniforms["iTouchPos"] = new float[] { touchPos.X, touchPos.Y };
 		builder.Uniforms["iTouchActive"] = touchActive ? 1f : 0f;
 		builder.Uniforms["iColors"] = blobColors;
 
 		using var shader = builder.Build();
-		using var paint = new SKPaint { Shader = shader };
-		canvas.DrawRect(0, 0, width, height, paint);
+		shaderPaint.Shader = shader;
+		canvas.DrawRect(0, 0, width, height, shaderPaint);
 
 		if (fpsCounter.Tick() is double fps)
 			DispatcherQueue.TryEnqueue(() => fpsText.Text = $"FPS: {fps:F0}");
@@ -133,7 +149,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		skiaView.ReleasePointerCapture(e.Pointer);
 	}
 
-	private void UpdateTouchPosition(PointerRoutedEventArgs e)
+	void UpdateTouchPosition(PointerRoutedEventArgs e)
 	{
 		var point = e.GetCurrentPoint(skiaView);
 		var w = skiaView.ActualWidth;

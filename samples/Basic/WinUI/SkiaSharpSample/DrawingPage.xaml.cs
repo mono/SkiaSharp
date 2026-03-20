@@ -11,27 +11,26 @@ namespace SkiaSharpSample;
 
 public sealed partial class DrawingPage : Page
 {
-	private static readonly Dictionary<string, (SKColor Light, SKColor Dark)> ColorMap = new()
+	static readonly (string Tag, SKColor Light, SKColor Dark)[] colorPalette =
 	{
-		["Black"] = (SKColors.Black, SKColors.White),
-		["Red"] = (new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
-		["Blue"] = (new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
-		["Green"] = (new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
-		["Orange"] = (new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
-		["Purple"] = (new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
+		("Black",  SKColors.Black, SKColors.White),
+		("Red",    new SKColor(0xE5, 0x39, 0x35), new SKColor(0xEF, 0x53, 0x50)),
+		("Blue",   new SKColor(0x1E, 0x88, 0xE5), new SKColor(0x42, 0xA5, 0xF5)),
+		("Green",  new SKColor(0x43, 0xA0, 0x47), new SKColor(0x66, 0xBB, 0x6A)),
+		("Orange", new SKColor(0xFB, 0x8C, 0x00), new SKColor(0xFF, 0xA7, 0x26)),
+		("Purple", new SKColor(0x8E, 0x24, 0xAA), new SKColor(0xAB, 0x47, 0xBC)),
 	};
 
-	private readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
-	private Border selectedColorBorder;
-	private SKPath currentPath;
-	private SKColor currentColor;
-	private float brushSize = 4f;
-	private SKPoint cursorPosition;
-	private bool isCursorOver;
+	readonly List<(SKPath Path, SKColor Color, float StrokeWidth)> strokes = new();
+	Border? selectedColorBorder;
+	SKPath? currentPath;
+	SKColor currentColor;
+	float brushSize = 4f;
+	SKPoint cursorPosition;
+	bool isCursorOver;
 
 	bool IsDarkMode => ActualTheme == ElementTheme.Dark;
 	SKColor CanvasBackground => IsDarkMode ? new SKColor(0x11, 0x13, 0x18) : SKColors.White;
-	SKColor ResolveColor((SKColor Light, SKColor Dark) pair) => IsDarkMode ? pair.Dark : pair.Light;
 
 	public DrawingPage()
 	{
@@ -39,14 +38,44 @@ public sealed partial class DrawingPage : Page
 		currentColor = IsDarkMode ? SKColors.White : SKColors.Black;
 		selectedColorBorder = ColorBlack;
 
-		ActualThemeChanged += (s, e) =>
+		ActualThemeChanged += OnThemeChanged;
+		Loaded += OnLoaded;
+	}
+
+	void OnLoaded(object sender, RoutedEventArgs e)
+	{
+		ApplySwatchColors();
+	}
+
+	void OnThemeChanged(FrameworkElement sender, object args)
+	{
+		if (currentColor == SKColors.Black && IsDarkMode)
+			currentColor = SKColors.White;
+		else if (currentColor == SKColors.White && !IsDarkMode)
+			currentColor = SKColors.Black;
+
+		ApplySwatchColors();
+		skiaView.Invalidate();
+	}
+
+	void ApplySwatchColors()
+	{
+		foreach (var child in swatchPanel.Children)
 		{
-			if (currentColor == SKColors.Black && IsDarkMode)
-				currentColor = SKColors.White;
-			else if (currentColor == SKColors.White && !IsDarkMode)
-				currentColor = SKColors.Black;
-			skiaView.Invalidate();
-		};
+			if (child is Border border && border.Tag is string tag)
+			{
+				foreach (var (pTag, light, dark) in colorPalette)
+				{
+					if (pTag == tag)
+					{
+						var color = IsDarkMode ? dark : light;
+						border.Background = new SolidColorBrush(
+							Windows.UI.Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue));
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	private void OnColorTapped(object sender, TappedRoutedEventArgs e)
@@ -54,14 +83,18 @@ public sealed partial class DrawingPage : Page
 		if (sender is not Border border || border.Tag is not string tag)
 			return;
 
-		if (ColorMap.TryGetValue(tag, out var pair))
+		foreach (var (pTag, light, dark) in colorPalette)
 		{
-			currentColor = ResolveColor(pair);
+			if (pTag == tag)
+			{
+				currentColor = IsDarkMode ? dark : light;
 
-			if (selectedColorBorder != null)
-				selectedColorBorder.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-			border.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.White);
-			selectedColorBorder = border;
+				if (selectedColorBorder != null)
+					selectedColorBorder.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+				border.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.DodgerBlue);
+				selectedColorBorder = border;
+				break;
+			}
 		}
 	}
 
@@ -154,8 +187,8 @@ public sealed partial class DrawingPage : Page
 	{
 		var point = e.GetCurrentPoint(skiaView);
 		var delta = point.Properties.MouseWheelDelta;
-		brushSize = Math.Max(1f, Math.Min(50f, brushSize + (delta > 0 ? 1f : -1f)));
-		brushText.Text = $"{brushSize:F0}px";
+		brushSize = Math.Clamp(brushSize + (delta > 0 ? 1f : -1f), 1f, 50f);
+		brushText.Text = $"{brushSize:F0}";
 		BrushSlider.Value = brushSize;
 		skiaView.Invalidate();
 	}
@@ -164,7 +197,7 @@ public sealed partial class DrawingPage : Page
 	{
 		brushSize = (float)e.NewValue;
 		if (brushText != null)
-			brushText.Text = $"{brushSize:F0}px";
+			brushText.Text = $"{brushSize:F0}";
 		skiaView?.Invalidate();
 	}
 }
