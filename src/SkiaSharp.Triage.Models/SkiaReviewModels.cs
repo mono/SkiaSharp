@@ -6,12 +6,13 @@ namespace SkiaSharp.Triage.Models;
 
 public record SkiaReviewReport(
     SkiaReviewMeta Meta,
+    string Summary,
+    List<string> Recommendations,
     [property: JsonPropertyName("generated_files")] GeneratedFilesCheck GeneratedFiles,
     [property: JsonPropertyName("upstream_integrity")] SourceIntegrity UpstreamIntegrity,
     [property: JsonPropertyName("interop_integrity")] SourceIntegrity InteropIntegrity,
     [property: JsonPropertyName("deps_audit")] DepsAudit DepsAudit,
     [property: JsonPropertyName("risk_assessment")] SkiaRiskAssessment RiskAssessment,
-    [property: JsonPropertyName("human_review_files")] List<string>? HumanReviewFiles = null,
     [property: JsonPropertyName("companion_pr")] CompanionPr? CompanionPr = null
 );
 
@@ -38,6 +39,8 @@ public record SkiaReviewShas(
 
 public record GeneratedFilesCheck(
     GeneratedFilesStatus Status,
+    string Summary,
+    List<string> Recommendations,
     List<string> Checked,
     List<GeneratedFileMismatch>? Mismatches = null
 );
@@ -51,6 +54,8 @@ public record GeneratedFileMismatch(
 
 public record SourceIntegrity(
     SkiaReviewStatus Status,
+    string Summary,
+    List<string> Recommendations,
     List<SourceFileAdded> Added,
     List<SourceFileRemoved> Removed,
     List<SourceFileChanged> Changed,
@@ -73,13 +78,16 @@ public record SourceFileChanged(
     string Path,
     string Summary,
     [property: JsonPropertyName("old_diff")] string? OldDiff = null,
-    [property: JsonPropertyName("new_diff")] string? NewDiff = null
+    [property: JsonPropertyName("new_diff")] string? NewDiff = null,
+    [property: JsonPropertyName("patch_diff")] string? PatchDiff = null
 );
 
 // ── DEPS Audit ───────────────────────────────────────────────────
 
 public record DepsAudit(
     SkiaReviewStatus Status,
+    string Summary,
+    List<string> Recommendations,
     List<DepAdded> Added,
     List<DepRemoved> Removed,
     List<DepChanged> Changed,
@@ -112,6 +120,13 @@ public record DepChanged(
 // ── Companion PR (optional) ──────────────────────────────────────
 
 public record CompanionPr(
-    [property: JsonPropertyName("skiasharpPrNumber")] int SkiasharpPrNumber,
-    string? Summary = null
+    [property: JsonPropertyName("pr_number")] int PrNumber,
+    [property: JsonPropertyName("files_changed")] int? FilesChanged = null,
+    [property: JsonPropertyName("generated_files_skipped")] List<string>? GeneratedFilesSkipped = null,
+    List<CompanionPrFinding>? Findings = null
+);
+
+public record CompanionPrFinding(
+    string File,
+    string Finding
 );
