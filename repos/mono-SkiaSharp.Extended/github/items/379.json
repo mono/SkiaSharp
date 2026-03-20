@@ -1,0 +1,28 @@
+{
+  "number": 379,
+  "type": "pr",
+  "state": "open",
+  "title": "Add DeepZoom static preview services and samples",
+  "body": "## Summary\n\nExtracts the core DeepZoom static rendering system. This is the minimal set of services needed to load and render Deep Zoom collections and images without gestures, animations, or custom controls.\n\n## What\u0027s included\n\n- **DeepZoom collection/image source parsers** \u2014 DZC/DZI XML parsing (\u0060SKDeepZoomCollectionSource\u0060, \u0060SKDeepZoomImageSource\u0060)\n- **Tile infrastructure** \u2014 cache (\u0060SKDeepZoomTileCache\u0060), scheduler (\u0060SKDeepZoomTileScheduler\u0060), and HTTP/file fetchers\n- **Controller** (\u0060SKDeepZoomController\u0060) \u2014 orchestrates loading and delegates to tile services\n- **Viewport** (\u0060SKDeepZoomViewport\u0060) \u2014 centered-fit geometry (aspect ratio preserved, no cropping/stretching)\n- **Renderer** (\u0060SKDeepZoomRenderer\u0060) \u2014 draws best-resolution tiles onto \u0060SKCanvas\u0060\n- **436 unit tests** in a dedicated \u0060SkiaSharp.Extended.DeepZoom.Tests\u0060 project\n- **Blazor sample page** (\u0060Pages/DeepZoom.razor\u0060) \u2014 minimal static preview using \u0060SKCanvasView\u0060\n- **MAUI sample page** (\u0060Demos/DeepZoom/DeepZoomPage\u0060) \u2014 same concept, uses app-package assets\n- **Documentation** \u2014 \u0060deep-zoom.md\u0060, \u0060deep-zoom-blazor.md\u0060, \u0060deep-zoom-maui.md\u0060\n\n## What\u0027s NOT included (intentionally)\n\n- \u274C No gesture system (\u0060SKGestureTracker\u0060, \u0060SKGestureDetector\u0060, etc.)\n- \u274C No animation system (\u0060SKAnimationSpring\u0060, \u0060SKAnimationTimer\u0060, etc.)\n- \u274C No custom MAUI \u0060SKDeepZoomView\u0060 control\n- \u274C No user interaction beyond canvas size\n\n## Architecture\n\nThe sample page passes a URI to \u0060SKDeepZoomController\u0060, which loads the DZI/DZC, manages tiles, and fires \u0060InvalidateRequired\u0060 when new tiles are ready. On each paint, the page calls \u0060SetControlSize()\u0060 then \u0060Render()\u0060. The only input is the canvas size \u2014 the image is always centered-fit.\n\n## Tests\n\n\u0060\u0060\u0060\ndotnet test tests/SkiaSharp.Extended.DeepZoom.Tests/  # 436 pass\ndotnet test tests/SkiaSharp.Extended.Tests/           # 188 pass (unchanged from main)\ndotnet build samples/SkiaSharpDemo.Blazor/            # Build succeeded\n\u0060\u0060\u0060\n\nRelated: #378",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-13T03:48:55",
+  "updatedAt": "2026-03-20T13:30:43",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "feature/deep-zoom-static-preview",
+  "additions": 13891,
+  "deletions": 10,
+  "changedFiles": 80,
+  "commits": 82,
+  "reviews": []
+}

@@ -1,0 +1,29 @@
+{
+  "number": 380,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add reusable DZI tile generator script",
+  "body": "## DZI Tile Generator\n\nA reusable .NET 10 file-based app (\u0060scripts/generate-dzi.cs\u0060) that generates Deep Zoom Image (DZI) tile pyramids from any source image using SkiaSharp.\n\n### Usage\n\n\u0060\u0060\u0060bash\ndotnet run --file scripts/generate-dzi.cs -- \u003Cinput-image\u003E \u003Coutput.dzi\u003E [options]\n\n# Example \u2014 generate from a JPEG with JPEG tiles:\ndotnet run --file scripts/generate-dzi.cs -- myphoto.jpg output/myphoto.dzi --format jpg --quality 85\n\n# Example \u2014 PNG tiles with overlap:\ndotnet run --file scripts/generate-dzi.cs -- gigapixel.tiff output/gigapixel.dzi --tile-size 256 --overlap 1\n\u0060\u0060\u0060\n\n### Options\n\n| Option | Default | Description |\n|---|---|---|\n| \u0060--tile-size\u0060 | 256 | Tile size in pixels |\n| \u0060--overlap\u0060 | 1 | Tile overlap in pixels |\n| \u0060--format\u0060 | png | Output format: \u0060png\u0060 or \u0060jpg\u0060 |\n| \u0060--quality\u0060 | 90 | JPEG quality (1\u2013100) |\n\n### How it works\n\n- Computes \u0060maxLevel = ceil(log2(max(width, height)))\u0060  \n- Generates all levels 0 \u2192 maxLevel (level 0 is 1\u00D71, each level doubles)\n- Writes tile files to \u0060{output}_files/{level}/{col}_{row}.{format}\u0060\n- Writes DZI XML descriptor at the output path\n\n### Requirements\n\n- .NET 10 SDK (uses file-based apps feature)\n- SkiaSharp is auto-restored via the \u0060#:package\u0060 directive \u2014 no project file needed",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-14T08:57:29",
+  "updatedAt": "2026-03-14T15:56:38",
+  "closedAt": "2026-03-14T15:56:38",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "feature/dzi-generator-script",
+  "additions": 161,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

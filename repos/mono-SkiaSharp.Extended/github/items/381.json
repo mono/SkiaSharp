@@ -1,0 +1,29 @@
+{
+  "number": 381,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add DZI generator scripts and 16-level testgrid (32768\u00D732768)",
+  "body": "## Summary\n\nAdds two reusable .NET 10 file-based app scripts for working with Deep Zoom Images, and regenerates the testgrid collection at full 16-level resolution.\n\n## Scripts\n\n### \u0060scripts/generate-dzi.cs\u0060\nGeneral-purpose DZI tile generator that takes any source image and slices it into a Deep Zoom pyramid.\n- Supports \u0060--tile-size\u0060, \u0060--overlap\u0060, \u0060--format\u0060 (png/jpg), \u0060--quality\u0060 options\n- Usage: \u0060dotnet run scripts/generate-dzi.cs -- source.png output/ --tile-size 256 --overlap 1\u0060\n\n### \u0060scripts/generate-testgrid.cs\u0060\nProcedural test-grid generator \u2014 creates a 32768\u00D732768 DZI (16 levels) **without** a source image. Each tile is drawn directly from a 64\u00D764 coloured grid formula, so memory usage stays tiny even at gigapixel scale.\n- Usage: \u0060dotnet run scripts/generate-testgrid.cs\u0060 (writes to \u0060resources/collections/testgrid/\u0060)\n\n## Testgrid\n\n| Property | Old | New |\n|---|---|---|\n| Image size | 8192\u00D78192 | 32768\u00D732768 |\n| Levels | 13 (0-12) | **16 (0-15)** |\n| Tile size | 256px | 256px |\n| Overlap | 0px | **1px** |\n| Total tiles | ~1365 | 21,853 |\n\nCloses #380 (superseded by this PR which includes both the script and regenerated assets).",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-14T15:56:29",
+  "updatedAt": "2026-03-15T15:51:40",
+  "closedAt": "2026-03-15T15:51:40",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "feature/testgrid-16-levels",
+  "additions": 335,
+  "deletions": 2,
+  "changedFiles": 21856,
+  "commits": 1,
+  "reviews": []
+}

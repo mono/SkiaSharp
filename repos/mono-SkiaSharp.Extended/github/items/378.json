@@ -1,0 +1,28 @@
+{
+  "number": 378,
+  "type": "pr",
+  "state": "open",
+  "title": "Extract static DeepZoom rendering system from PR #378",
+  "body": "## Summary\n\nExtracts the minimal static DeepZoom rendering system -- just the core services needed to load and render Deep Zoom collections without gestures, animations, or custom controls.\n\n## What\u0027s Included\n- **DeepZoom services**: Collection loading, image metadata, tile loaders/fetchers\n- **454 DeepZoom tests** -- all passing\n- **Blazor sample page** (\u0060Pages/DeepZoom.razor\u0060) -- minimal static preview using \u0060SKCanvasView\u0060\n- **MAUI sample page** (\u0060Demos/DeepZoom/DeepZoomPage\u0060) -- minimal static preview using \u0060SKCanvasView\u0060\n- **Documentation** -- \u0060deep-zoom.md\u0060, \u0060deep-zoom-blazor.md\u0060, \u0060deep-zoom-maui.md\u0060\n\n## What\u0027s NOT Included (deferred)\n- No custom controls (\u0060SKDeepZoomView\u0060)\n- No gesture system (\u0060SKGestureTracker\u0060)\n- No animations (\u0060SKAnimationSpring\u0060)\n- No user interaction beyond view size\n\n## Architecture\nSample pages pass a collection URI to \u0060SKDeepZoomController\u0060, which delegates to tile services. A renderer draws the best-resolution tiles onto a plain \u0060SKCanvasView\u0060, centered and fit-to-size. The only input is the canvas size.\n\n## Test Results\n- 911 tests pass (454 DeepZoom \u002B 457 Extended)\n- Blazor sample: 0 errors\n- MAUI sample: 0 errors",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-06T02:43:07",
+  "updatedAt": "2026-03-13T03:36:58",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "feature/deep-zoom-on-gestures",
+  "additions": 19687,
+  "deletions": 1,
+  "changedFiles": 100,
+  "commits": 130,
+  "reviews": []
+}

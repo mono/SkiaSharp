@@ -1,7 +1,7 @@
 {
   "number": 374,
   "type": "pr",
-  "state": "open",
+  "state": "closed",
   "title": "Add image comparison metrics, tolerance, options pattern, and difference image generation",
   "body": "## Summary\n\nAdds standard image comparison metrics, tolerance-based comparison, an extensible options pattern (\u0060SKPixelComparerOptions\u0060), alpha channel comparison, and per-channel difference image generation to \u0060SKPixelComparer\u0060.\n\n## New metrics on \u0060SKPixelComparisonResult\u0060\n\n- \u0060SumSquaredError\u0060 (long) \u2014 \u03A3(\u0394R\u00B2 \u002B \u0394G\u00B2 \u002B \u0394B\u00B2)\n- \u0060MeanAbsoluteError\u0060 \u2014 per-channel MAE, range [0, 255]\n- \u0060MeanSquaredError\u0060 \u2014 per-channel MSE\n- \u0060RootMeanSquaredError\u0060 \u2014 RMSE (the metric MAUI\u0027s \u0060MagickNetVisualComparer\u0060 uses)\n- \u0060NormalizedRootMeanSquaredError\u0060 \u2014 RMSE / 255, range [0, 1] for threshold checks\n- \u0060PeakSignalToNoiseRatio\u0060 \u2014 PSNR in dB\n- \u0060ChannelCount\u0060 \u2014 3 (RGB) or 4 (RGBA), used to normalize MAE/MSE\n\n## SKPixelComparerOptions\n\nExtensible options class replacing boolean parameters:\n\n\u0060\u0060\u0060csharp\nvar options = new SKPixelComparerOptions\n{\n    TolerancePerChannel = true,  // Check each channel independently (default)\n    CompareAlpha = true          // Include alpha in comparison (default: false)\n};\nvar result = SKPixelComparer.Compare(expected, actual, options);\n\u0060\u0060\u0060\n\nOptions work with all comparison modes (base, tolerance, mask) and all input types (file paths, \u0060SKImage\u0060, \u0060SKBitmap\u0060, \u0060SKPixmap\u0060).\n\n## Tolerance-based comparison\n\nLike ImageMagick\u0027s \u0060fuzz\u0060 \u2014 a uniform per-pixel threshold without needing a full mask image:\n\n\u0060\u0060\u0060csharp\nvar result = SKPixelComparer.Compare(expected, actual, tolerance: 10);\n\u0060\u0060\u0060\n\n## Per-channel difference image\n\n\u0060GenerateDifferenceImage\u0060 produces actual RGB difference values per pixel (vs. the binary B/W \u0060GenerateDifferenceMask\u0060):\n\n\u0060\u0060\u0060csharp\nusing var diff = SKPixelComparer.GenerateDifferenceImage(expected, actual);\n\u0060\u0060\u0060\n\n## Bug fixes\n\n- **Premultiplied alpha**: \u0060GetNormalizedBitmap\u0060 now uses \u0060SKAlphaType.Unpremul\u0060 so semi-transparent pixels have correct RGB values\n- **Platform color type**: Diff images are built in BGRA8888 (matching \u0060SKColor\u0060 memory layout) then converted to platform default via canvas draw\n- **Resource leak**: \u0060resultBitmap\u0060 in \u0060GenerateDifferenceMask\u0060/\u0060GenerateDifferenceImage\u0060 is now properly disposed\n- **Divide-by-zero**: Metrics return 0 when \u0060TotalPixels\u0060 is 0\n\n## Other changes\n\n- Nullable annotations enabled (\u0060#nullable enable\u0060) on all comparer files\n- \u0060Compare(SKImage, SKImage)\u0060 and \u0060Compare(SKImage, SKImage, options)\u0060 delegate to the tolerance overload (no duplicated loops)\n- Full XML documentation on all public APIs\n- Comprehensive user-facing docs at \u0060docs/docs/pixel-comparer.md\u0060\n\n## Backward compatibility\n\n- Existing \u0060SKPixelComparisonResult\u0060 constructors preserved (3-param and 4-param chain to new 5-param with \u0060channelCount: 3\u0060)\n- All original \u0060Compare\u0060 method signatures unchanged\n\n## Blazor sample\n\nThe Pixel Comparer demo page showcases metrics display, tolerance slider, and difference image visualization with responsive layout.\n\n\u003Cimg src=\u0022https://github.com/user-attachments/assets/c5765be8-73cb-4163-9f2b-1276a995eceb\u0022\u003E\n\n## Tests\n\n188 tests across 8 focused test files:\n\n| File | Tests | Coverage |\n|------|-------|----------|\n| SKPixelComparerCompareTest | 19 | Base comparison, metrics, null args, file overloads |\n| SKPixelComparerToleranceTest | 16 | Tolerance, per-channel, boundary, max value |\n| SKPixelComparerMaskTest | 9 | Mask comparison, bitmap/pixmap overloads, dimension mismatch |\n| SKPixelComparerOptionsTest | 9 | Options pattern, CompareAlpha, semi-transparent premul |\n| SKPixelComparerDifferenceImageTest | 7 | Per-channel diff, null args, size validation |\n| SKPixelComparerDifferenceMaskTest | 3 | Binary mask, null args, size validation |\n| SKColorLayoutTest | 4 | Platform color type, encode roundtrip verification |\n| BlurHash tests | 121 | Pre-existing (unchanged) |\n",
   "author": {
@@ -20,19 +20,20 @@
     }
   ],
   "createdAt": "2026-03-03T23:07:10",
-  "updatedAt": "2026-03-05T02:39:43",
+  "updatedAt": "2026-03-05T20:56:07",
+  "closedAt": "2026-03-05T20:56:02",
   "commentCount": 17,
   "reactionCount": 0,
   "draft": false,
-  "mergeable": true,
-  "merged": false,
-  "mergeableState": "blocked",
+  "merged": true,
+  "mergedAt": "2026-03-05T20:56:02",
+  "mergeableState": "unknown",
   "baseBranch": "main",
   "headBranch": "copilot/explore-pixel-comparer-libraries",
-  "additions": 1854,
-  "deletions": 152,
+  "additions": 1858,
+  "deletions": 154,
   "changedFiles": 13,
-  "commits": 22,
+  "commits": 23,
   "reviews": [
     {
       "author": "copilot-pull-request-reviewer[bot]",
