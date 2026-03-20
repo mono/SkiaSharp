@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 
@@ -11,7 +10,7 @@ namespace SkiaSharpSample;
 
 public partial class GpuPage : UserControl
 {
-	private const string SkslSource = @"
+	const string SkslSource = @"
 uniform float iTime;
 uniform float2 iResolution;
 uniform float2 iTouchPos;
@@ -84,21 +83,19 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 	public GpuPage()
 	{
 		InitializeComponent();
-
-		GlView.MouseDown += OnMouseDown;
-		GlView.MouseMove += OnMouseMove;
-		GlView.MouseUp += OnMouseUp;
 	}
 
 	private void OnLoaded(object sender, RoutedEventArgs e)
 	{
+		GlView.MouseDown += OnMouseDown;
+		GlView.MouseMove += OnMouseMove;
+		GlView.MouseUp += OnMouseUp;
 		StartAnimation();
 	}
 
 	private void OnUnloaded(object sender, RoutedEventArgs e)
 	{
 		StopAnimation();
-
 		GlView.MouseDown -= OnMouseDown;
 		GlView.MouseMove -= OnMouseMove;
 		GlView.MouseUp -= OnMouseUp;
@@ -121,7 +118,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		fpsCounter.Stop();
 	}
 
-	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
+	void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
 		var width = e.BackendRenderTarget.Width;
@@ -143,7 +140,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 			Dispatcher.BeginInvoke(() => FpsText.Text = $"FPS: {fps:F0}");
 	}
 
-	private void OnMouseDown(object sender, MouseButtonEventArgs e)
+	void OnMouseDown(object sender, MouseButtonEventArgs e)
 	{
 		if (e.LeftButton == MouseButtonState.Pressed)
 		{
@@ -153,19 +150,19 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		}
 	}
 
-	private void OnMouseMove(object sender, MouseEventArgs e)
+	void OnMouseMove(object sender, MouseEventArgs e)
 	{
 		if (e.LeftButton == MouseButtonState.Pressed)
 			UpdateTouchPosition(e.GetPosition(GlView));
 	}
 
-	private void OnMouseUp(object sender, MouseButtonEventArgs e)
+	void OnMouseUp(object sender, MouseButtonEventArgs e)
 	{
 		touchActive = false;
 		GlView.ReleaseMouseCapture();
 	}
 
-	private void UpdateTouchPosition(Point pos)
+	void UpdateTouchPosition(Point pos)
 	{
 		var w = GlView.ActualWidth;
 		var h = GlView.ActualHeight;

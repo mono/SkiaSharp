@@ -4,7 +4,9 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF">
     <Grid>
         <!-- Canvas fills everything -->
-        <skia:SKElement x:Name="SkCanvas" PaintSurface="OnPaintSurface" IgnorePixelScaling="True" />
+        <Border x:Name="CanvasBorder" Background="Transparent">
+            <skia:SKElement x:Name="SkCanvas" PaintSurface="OnPaintSurface" IgnorePixelScaling="True" />
+        </Border>
 
         <!-- Clear button top-right -->
         <Border HorizontalAlignment="Right" VerticalAlignment="Top"
