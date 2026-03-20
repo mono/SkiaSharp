@@ -1,0 +1,29 @@
+{
+  "number": 111,
+  "type": "pr",
+  "state": "closed",
+  "title": "DEPS: commented out obviously unneeded dependencies for Linux-only build, ~5GiB in total",
+  "body": "**Description of Change**\r\n\r\ndo not needlessly download ~5GiB of data that is not actually needed\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [* ] Rebased on top of \u0060skiasharp\u0060 at time of PR\r\n- [* ] Changes adhere to coding standard\r\n- [ ] Updated documentation - https://github.com/mono/SkiaSharp/wiki/Building-on-Linux should be updated\r\n\r\nEDIT: it seems these dependencies are in fact needed for a general build.\r\nthe pull request now instead adds a new DEPS file in build/linux-self-hosted/DEPS.\r\n\r\nif https://github.com/mono/SkiaSharp/wiki/Building-on-Linux is updated to add\r\n\u0060cp build/linux-self-hosted/DEPS DEPS\u0060 before \u0060python tools/git-sync-deps\u0060, this will\r\nsave downloading ~5GiB of unused dependencies",
+  "author": {
+    "login": "Mis012",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-09-02T21:18:22",
+  "updatedAt": "2025-03-04T14:52:54",
+  "closedAt": "2025-03-04T14:52:53",
+  "commentCount": 9,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "skiasharp",
+  "headBranch": "cull-deps",
+  "additions": 81,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

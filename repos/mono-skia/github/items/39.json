@@ -1,0 +1,35 @@
+{
+  "number": 39,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add masking support to C API",
+  "body": "## This PR adds basic API\u0027s for the SkMask class as well as blitting SkBitmaps with those masks.\r\n\r\n**Why?**\r\n[Blitting](https://en.wikipedia.org/wiki/Bit_blit) is necessary to support legacy specifications that do not support alpha channels natively.\r\nA workaround for this was to load the image and the mask into SkBitmaps and apply the mask using a blend mode. \r\n\r\nUnfortunately this workaround has a couple drawbacks:\r\n\r\n1. It wraps the mask in functionality it was not meant to have.\r\n2. It inflates the size of 1 bit per pixel stencil masks (SkBitmap does not support 1bpp color spaces).\r\n\r\n**What\u0027s been done:**\r\n\r\n- SkMask exposed.\r\n- A function to blit a bitmap given a mask has been exposed.\r\n\r\n**What\u0027s left to do:**\r\n- Add full support for masks with 3D color spaces.\r\n- Expose functionality for blitting with the SkShaderBlitter descendants.\r\n- Expose SkAAClip ([background info on this](http://neugierig.org/software/chromium/notes/2010/07/clipping.html)).\r\n",
+  "author": {
+    "login": "Tylerflick",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-12-12T23:36:29",
+  "updatedAt": "2017-01-09T22:55:34",
+  "closedAt": "2017-01-09T22:55:34",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "merged": false,
+  "mergeableState": "dirty",
+  "baseBranch": "xamarin-mobile-bindings",
+  "headBranch": "masking-support",
+  "additions": 169,
+  "deletions": 1,
+  "changedFiles": 8,
+  "commits": 13,
+  "reviews": [
+    {
+      "author": "Tylerflick",
+      "state": "COMMENTED",
+      "submittedAt": "2016-12-12T23:37:41"
+    }
+  ]
+}

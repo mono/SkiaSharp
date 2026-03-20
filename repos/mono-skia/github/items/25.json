@@ -1,0 +1,29 @@
+{
+  "number": 25,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix a bug where skia binaries are built with asserts even in Release, 15Mo instead of 5Mo DLL",
+  "body": "Hi there! \uD83D\uDE04 \n\nWhile toying with SkiaSharp, I discovered that the \u0060libSkiaSharp.dll\u0060 was 15Mo \uD83D\uDE31 \n\nThe SK_DEBUG=1 was set for the Release config (at least on msvc). Resulting in a DLL/LIB bloated with many asserts (15Mo instead of 5Mo), most likely also slower. Haven\u0027t checked if it affects also the others gyp generators/platforms.\n\nThe bug took me a while to find, because it is deeply nested into gyp and is caused by the skia config \u0022Release_Developer\u0022 which is getting incorrectly merged by gyp into the \u0022Release\u0022 config (and the \u0060Release_Developer\u0060 has the SK_DEBUG=1 set)\n\ngyp and specifically the function [\u0060_GetConfigurationAndPlatform\u0060 in \u0060msvc.py\u0060](https://chromium.googlesource.com/external/gyp/\u002B/702ac58e477214c635d9b541932e75a95d349352/pylib/gyp/generator/msvs.py#2645) is expecting a single _ to separate from the optional platform (x64). \n\nIt looks like gyp projects should not use any \u0060_\u0060 in their configuration names (apart for the optional platform overrides)\n\nSorry If I\u0027m using the \u0060xamarin-mobile-bindings\u0060 branch, let me know which branch is better.\n\nI will report this to skia bug tracker after.\n",
+  "author": {
+    "login": "xoofx",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-10-10T11:35:25",
+  "updatedAt": "2016-10-10T16:31:49",
+  "closedAt": "2016-10-10T16:31:41",
+  "commentCount": 3,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2016-10-10T16:31:40",
+  "mergeableState": "unknown",
+  "baseBranch": "xamarin-mobile-bindings",
+  "headBranch": "fix_gyp_msvs_config_bug",
+  "additions": 3,
+  "deletions": 3,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": []
+}

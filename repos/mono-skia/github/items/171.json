@@ -1,0 +1,28 @@
+{
+  "number": 171,
+  "type": "pr",
+  "state": "open",
+  "title": "Bump to google/chrome/m132 (milestone 132)",
+  "body": "**Description of Change**\r\n\r\n\u003C!--\r\n    Describe your changes here.\r\n--\u003E\r\nThis PR bumps SkiaSharp\u0027s skia to milestone 132. I\u0027ve tried to keep the changes minimal to aid the review. Primarily, there\u0027s a merge commit from the skiasharp branch into google/chrome/m132. I\u0027ve tried to keep the final version as close as possible to upstream, which wasn\u0027t that hard because the upstream changes from M119 to M132 don\u0027t seem to affect the C API too much. After the merge there is a commit to adjust the C API (mostly changes to how objects are constructed and some namespace changes, etc.). Further commits are further adjustments to fix the build and whatnot.\r\n\r\nAlthough the PR looks big, it can straightforwardly be reviewed by diffing the head of the PR branch against \u0060google/chrome/m132\u0060 and \u0060skiasharp\u0060 (obviously, \u0060skiasharp\u0060 will have additional commits since this PR is published, so actually don\u0027t use the most up-to-date \u0060skiasharp\u0060, but the last \u0060skiasharp\u0060 commit included in this PR). Compare the PR branch against \u0060skiasharp\u0060 for the C API parts (e.g. include/c, src/c, etc.) and against  \u0060google/chrome/m132\u0060 for everything else.\r\n\r\n**SkiaSharp Issue**\r\n\r\n\u003C!--\r\n    Provide links to SkiaSharp issues here.\r\n    Ensure that a GitHub issue was created for your feature or bug fix before sending PR.\r\n--\u003E\r\n\r\nRelated to https://github.com/mono/SkiaSharp/issues/\u003Cissue-number\u003E\r\n\r\n**API Changes**\r\n\u0060sk_colortype_t\u0060 now has \u0060BGRA_10101010_XR_SK_COLORTYPE\u0060 and \u0060RGB_F16F16F16X_SK_COLORTYPE\u0060.\r\n\u0060gr_vk_backendcontext_t\u0060, \u0060gr_vk_ycbcrconversioninfo_t\u0060 and \u0060sk_jpegencoder_options_t\u0060 have some field adjustments to match changes in upstream.\r\n\r\nNow, this doesn\u0027t matter for SkiaSharp\u0027s C# bindings, but Milestone 122 has made changes to SkFontMgr, such as removing \u0060SkFontMgr::RefDefault()\u0060, so some changes were made to accomodate that, included in \u0060sk_default_fontmgr.h\u0060 and \u0060sk_default_fontmgr.cpp\u0060.\r\n\r\n\r\n**Behavioral Changes**\r\n\r\n\u003C!--\r\n    Describe any non-bug related behavioral changes that may change how users app behaves\r\n    when upgrading to this version of the codebase.\r\n--\u003E\r\n\r\n**Required SkiaSharp PR**\r\n\r\nRequires https://github.com/mono/SkiaSharp/pull/3560\r\n\r\n\u003C!--\r\n    Replace this with the full URL to the skia PR.\r\n--\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Rebased on top of \u0060skiasharp\u0060 at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "ramezgerges",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-12T23:52:53",
+  "updatedAt": "2026-03-13T00:04:31",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "skiasharp",
+  "headBranch": "xamarin-m132",
+  "additions": 471206,
+  "deletions": 219304,
+  "changedFiles": 6615,
+  "commits": 4984,
+  "reviews": []
+}

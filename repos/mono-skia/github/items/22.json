@@ -1,0 +1,29 @@
+{
+  "number": 22,
+  "type": "pr",
+  "state": "closed",
+  "title": "SkPDF: Glyph validation change",
+  "body": "[cherry-pick https://skia.googlesource.com/skia.git/\u002B/4871f22 to m54]\n\nInstead of mapping invaid glyphIDs to zero or maxGlyphID,\ndon\u0027t draw them at all.\n\nValidate glyphs when glyph is written, not ahead of time.\n\nDon\u0027t allocate array to copy user-provided glyphs.\n\nEasy early exit from SkPDFDevice::internalDrawText()\n    GlyphPositioner::flush() called ~GlyphPositioner()\n    SkScopeExit class now exists.\n\nAssume SkTypeface\\* pointers are now never null in more\nplaces.\n\nprecalculate alignmentFactor to clean up code.\n\nSkPDFDevice::updateFont must be called with validated\nglyphID.  Skip bad glyphs to make this true.\n\nSkPDFDevice::updateFont always succeeds.\n\nSkPDFFont::GetFontResource always succeeds (preconditions are\nasserted).  If GetMetrics fails, don\u0027t call GetFontResource.\n\nSkPDFFont::glyphsToPDFFontEncodingCount() becomes\nSkPDFFont::countStretch() and is inlined.\n\nSkPDFFont::glyphsToPDFFontEncoding now works one Glyph at a\ntime and is inlined.\n\nSkPDFFont::noteGlyphUsage() operates one glyph at a time.\n\nAdd SkScopeExit.h; also a unit test for it.\n\nSkPostConfig: Fix SK_UNUSED for Win32.\n\nNo public API changes.\nTBR=reed@google.com\n\nBUG=625995\n\nGOLD_TRYBOT_URL= https://gold.skia.org/search?issue=2278703002\n\nReview-Url: https://codereview.chromium.org/2278703002\nNOTREECHECKS=true\nNOTRY=true\nNOPRESUBMIT=true\n\nReview-Url: https://codereview.chromium.org/2302353002\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-09-03T15:23:43",
+  "updatedAt": "2016-09-03T15:23:52",
+  "closedAt": "2016-09-03T15:23:52",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2016-09-03T15:23:52",
+  "mergeableState": "unknown",
+  "baseBranch": "xamarin-mobile-bindings",
+  "headBranch": "chrome/m54",
+  "additions": 243,
+  "deletions": 200,
+  "changedFiles": 7,
+  "commits": 1,
+  "reviews": []
+}

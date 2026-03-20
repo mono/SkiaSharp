@@ -1,0 +1,29 @@
+{
+  "number": 123,
+  "type": "pr",
+  "state": "closed",
+  "title": "Expose SkBlender",
+  "body": "**Description of Change**\r\n\r\nAdds a new type \u0060SkBlender\u0060 and usages of that type to the C API.\r\n\r\n**SkiaSharp Issue**\r\n\r\n\u003C!--\r\n    Provide links to SkiaSharp issues here.\r\n    Ensure that a GitHub issue was created for your feature or bug fix before sending PR.\r\n--\u003E\r\n\r\nRelated to https://github.com/mono/SkiaSharp/pull/2830\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cpp\r\n// sk_blender_t\r\nvoid sk_blender_ref(sk_blender_t* blender);\r\nvoid sk_blender_unref(sk_blender_t* blender);\r\nsk_blender_t* sk_blender_new_mode(sk_blendmode_t mode);\r\nsk_blender_t* sk_blender_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePremul);\r\n\r\n// sk_imagefilter_t\r\nsk_imagefilter_t* sk_imagefilter_new_blender(sk_blender_t* blender, const sk_imagefilter_t* background, const sk_imagefilter_t* foreground, const sk_rect_t* cropRect);\r\n\r\n// sk_paint_t\r\nvoid sk_paint_set_blender(sk_paint_t* paint, sk_blender_t* blender);\r\nsk_blender_t* sk_paint_get_blender(sk_paint_t* cpaint);\r\n\r\n// sk_runtimeeffect_t\r\nsk_runtimeeffect_t* sk_runtimeeffect_make_for_blender(sk_string_t* sksl, sk_string_t* error);\r\nsk_blender_t* sk_runtimeeffect_make_blender(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount);\r\n\r\n// sk_shader_t\r\nsk_shader_t* sk_shader_new_blender(sk_blender_t* blender, const sk_shader_t* dst, const sk_shader_t* src);\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!--\r\n    Describe any non-bug related behavioral changes that may change how users app behaves\r\n    when upgrading to this version of the codebase.\r\n--\u003E\r\n\r\n**Required SkiaSharp PR**\r\n\r\nRequires https://github.com/mono/SkiaSharp/pull/2830\r\n\r\n\u003C!--\r\n    Replace this with the full URL to the skia PR.\r\n--\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Rebased on top of \u0060skiasharp\u0060 at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-04-14T21:46:18",
+  "updatedAt": "2024-04-15T21:49:49",
+  "closedAt": "2024-04-15T21:49:46",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2024-04-15T21:49:46",
+  "mergeableState": "unknown",
+  "baseBranch": "skiasharp",
+  "headBranch": "dev/blender",
+  "additions": 103,
+  "deletions": 0,
+  "changedFiles": 14,
+  "commits": 1,
+  "reviews": []
+}

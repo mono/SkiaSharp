@@ -1,0 +1,29 @@
+{
+  "number": 151,
+  "type": "pr",
+  "state": "closed",
+  "title": "Enable GL on Windows ARM",
+  "body": "**Description of Change**\r\n\r\n\r\nThis PR just removes the code that prevents OpenGL from working on Windows ARM. \r\n\r\nThis was initially done in https://github.com/mono/skia/commit/0c75727f0148cafc6653d7d94b3633889ffde7db. The reason for this was there was no OpenGL on ARM. However, recently, there is a way: https://apps.microsoft.com/detail/9nqpsl29bfff\r\n\r\nThe reason we can just remove this code is because we don\u0027t actually link with opengl32 directly and instead load it at runtime. \r\n\r\n**SkiaSharp Issue**\r\n\r\nRelated to https://github.com/mono/SkiaSharp/issues/3155\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\r\n**Required SkiaSharp PR**\r\n\r\nRequires https://github.com/mono/SkiaSharp/pull/3189\r\n\r\n\u003C!--\r\n    Replace this with the full URL to the skia PR.\r\n--\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Rebased on top of \u0060skiasharp\u0060 at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-03-07T16:57:46",
+  "updatedAt": "2025-03-07T16:57:57",
+  "closedAt": "2025-03-07T16:57:53",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2025-03-07T16:57:53",
+  "mergeableState": "unknown",
+  "baseBranch": "skiasharp",
+  "headBranch": "dev/windows-arm-opengl",
+  "additions": 1,
+  "deletions": 9,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": []
+}

@@ -1,0 +1,29 @@
+{
+  "number": 132,
+  "type": "pr",
+  "state": "closed",
+  "title": "Cherry-pick upsteam bug fix to expose codec registration methods",
+  "body": "**Description of Change**\r\n\r\nCherry pick of google/skia@ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf\r\n\r\nThis commit exports \u0060SkCodec::Register\u0060 from the library. The method accepts a C\u002B\u002B object so can\u0027t be easily wrapped in C#, but exposing it costs nothing and does at least enable users of SkiaSharp to register codecs by creating a native library. We want to do exactly this in our product.\r\n\r\n**SkiaSharp Issue**\r\n\r\nFixes mono/skiasharp#2992\r\n\r\n**API Changes**\r\n\r\nAdded:\r\n- \u0060SkCodec::Register\u0060\r\n- \u0060SKCodec::Decoder\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required SkiaSharp PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Rebased on top of \u0060skiasharp\u0060 at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n",
+  "author": {
+    "login": "TomEdwardsEnscape",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-09-25T09:56:43",
+  "updatedAt": "2024-10-29T16:36:41",
+  "closedAt": "2024-10-29T16:36:40",
+  "commentCount": 3,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "skiasharp",
+  "headBranch": "skiasharp",
+  "additions": 23,
+  "deletions": 3,
+  "changedFiles": 21,
+  "commits": 1,
+  "reviews": []
+}

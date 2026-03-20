@@ -1,0 +1,50 @@
+{
+  "number": 130,
+  "type": "pr",
+  "state": "closed",
+  "title": "Export sk_canvas_save_layer_rec to expose SkCanvas::SaveLayerRec functionality",
+  "body": "**Description of Change**\r\n\r\nExport sk_canvas_save_layer_rec to expose SkCanvas::SaveLayerRec functionality\r\n\r\n**SkiaSharp Issue**\r\n\r\nRelated to https://github.com/mono/SkiaSharp/issues/2773\r\n\r\n**API Changes**\r\n\r\nAdded: \r\n\r\n\u0060\u0060\u0060cpp\r\nSK_C_API int sk_canvas_save_layer_rec(sk_canvas_t* ccanvas, const sk_canvas_savelayerrec_t* crec);\r\n\r\ntypedef enum {\r\n    NONE_SK_CANVAS_SAVELAYERREC_FLAGS                     = 0,\r\n    PRESERVE_LCD_TEXT_SK_CANVAS_SAVELAYERREC_FLAGS        = 1 \u003C\u003C 1,\r\n    INITIALIZE_WITH_PREVIOUS_SK_CANVAS_SAVELAYERREC_FLAGS = 1 \u003C\u003C 2,\r\n    F16_COLOR_TYPE_SK_CANVAS_SAVELAYERREC_FLAGS           = 1 \u003C\u003C 4,\r\n} sk_canvas_savelayerrec_flags_t;\r\n\r\ntypedef struct {\r\n    sk_rect_t* fBounds;\r\n    sk_paint_t* fPaint;\r\n    sk_imagefilter_t* fBackdrop;\r\n    sk_canvas_savelayerrec_flags_t fFlags;\r\n} sk_canvas_savelayerrec_t;\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required SkiaSharp PR**\r\n\r\nRequires https://github.com/mono/SkiaSharp/pull/2962\r\n\r\n**PR Checklist**\r\n\r\n- [x] Rebased on top of \u0060skiasharp\u0060 at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "ahmed605",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-07-30T19:53:49",
+  "updatedAt": "2025-03-04T13:03:57",
+  "closedAt": "2025-03-04T13:03:56",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2025-03-04T13:03:56",
+  "mergeableState": "unknown",
+  "baseBranch": "skiasharp",
+  "headBranch": "skiasharp",
+  "additions": 33,
+  "deletions": 0,
+  "changedFiles": 5,
+  "commits": 5,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-20T03:16:23"
+    },
+    {
+      "author": "ahmed605",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-20T06:35:52"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-20T12:30:19"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-20T12:38:48"
+    }
+  ]
+}

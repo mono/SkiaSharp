@@ -1,0 +1,29 @@
+{
+  "number": 129,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add R-Tree overload of beginRecording",
+  "body": "**Description of Change**\r\n\r\nAdd the R-Tree overload of \u0060SkPicture::beginRecording\u0060. \r\n\r\nOnly the construction and destruction of the sole implementation of \u0060SkBBHFactory\u0060 (the \u0060SkRTreeFactory\u0060 class) is exposed. This is really an opaque type in skia and clients would create their own implementations if they wanted. However, this PR does not provide the API to do this since it is fairly complicated and not many use cases. It can be added later.\r\n\r\n**SkiaSharp Issue**\r\n\r\n\u003C!--\r\n    Provide links to SkiaSharp issues here.\r\n    Ensure that a GitHub issue was created for your feature or bug fix before sending PR.\r\n--\u003E\r\n\r\nRelated to https://github.com/mono/SkiaSharp/issues/2372\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cpp\r\nsk_canvas_t* sk_picture_recorder_begin_recording_with_bbox_hierarchy(sk_picture_recorder_t*, const sk_rect_t*, sk_bbh_factory_t*);\r\n\r\nsk_rtree_factory_t* sk_rtree_factory_new(void);\r\nvoid sk_rtree_factory_delete(sk_rtree_factory_t*);\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!--\r\n    Describe any non-bug related behavioral changes that may change how users app behaves\r\n    when upgrading to this version of the codebase.\r\n--\u003E\r\n\r\n**Required SkiaSharp PR**\r\n\r\nRequires https://github.com/mono/SkiaSharp/pull/2889\r\n\r\n\u003C!--\r\n    Replace this with the full URL to the skia PR.\r\n--\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Rebased on top of \u0060skiasharp\u0060 at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-06-04T13:50:04",
+  "updatedAt": "2024-06-05T19:10:51",
+  "closedAt": "2024-06-05T19:10:46",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2024-06-05T19:10:46",
+  "mergeableState": "unknown",
+  "baseBranch": "skiasharp",
+  "headBranch": "dev/rtree",
+  "additions": 43,
+  "deletions": 0,
+  "changedFiles": 4,
+  "commits": 3,
+  "reviews": []
+}

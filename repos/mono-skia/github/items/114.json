@@ -1,0 +1,29 @@
+{
+  "number": 114,
+  "type": "pr",
+  "state": "closed",
+  "title": "Bind Skottie\u0027s Animation Builder",
+  "body": "**Description of Change**\r\n\r\nThis PR adds a few of the essential APIs to enable loading embedded files in the Lottie animation. Currently, there is just the support for file-based and data URI-based assets.\r\n\r\n**SkiaSharp Issue**\r\n\r\nRelated to https://github.com/mono/SkiaSharp/issues/2173\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cpp\r\ntypedef enum {\r\n    NONE_SKOTTIE_ANIMATION_BUILDER_FLAGS = 0,\r\n    DEFER_IMAGE_LOADING_SKOTTIE_ANIMATION_BUILDER_FLAGS = 0x01,\r\n    PREFER_EMBEDDED_FONTS_SKOTTIE_ANIMATION_BUILDER_FLAGS = 0x02,\r\n} skottie_animation_builder_flags_t;\r\n\r\ntypedef struct {\r\n    float fTotalLoadTimeMS;\r\n    float fJsonParseTimeMS;\r\n    float fSceneParseTimeMS;\r\n    size_t fJsonSize;\r\n    size_t fAnimatorCount;\r\n} skottie_animation_builder_stats_t;\r\n\r\nSK_C_API skottie_animation_builder_t* skottie_animation_builder_new(skottie_animation_builder_flags_t flags);\r\nSK_C_API void skottie_animation_builder_delete(skottie_animation_builder_t *instance);\r\nSK_C_API void skottie_animation_builder_get_stats(skottie_animation_builder_t* instance, skottie_animation_builder_stats_t* stats);\r\nSK_C_API void skottie_animation_builder_set_resource_provider(skottie_animation_builder_t* instance, skottie_resource_provider_t* resourceProvider);\r\nSK_C_API void skottie_animation_builder_set_font_manager(skottie_animation_builder_t* instance, sk_fontmgr_t* fontManager);\r\nSK_C_API skottie_animation_t* skottie_animation_builder_make_from_stream(skottie_animation_builder_t* instance, sk_stream_t* stream);\r\nSK_C_API skottie_animation_t* skottie_animation_builder_make_from_file(skottie_animation_builder_t* instance, const char* path);\r\nSK_C_API skottie_animation_t* skottie_animation_builder_make_from_string(skottie_animation_builder_t* instance, const char* data, size_t length);\r\nSK_C_API skottie_animation_t* skottie_animation_builder_make_from_data(skottie_animation_builder_t* instance, const char* data, size_t length);\r\n\r\nSK_C_API void skresources_resource_provider_ref(skresources_resource_provider_t* instance);\r\nSK_C_API void skresources_resource_provider_unref(skresources_resource_provider_t* instance);\r\nSK_C_API void skresources_resource_provider_delete(skresources_resource_provider_t *instance);\r\nSK_C_API sk_data_t* skresources_resource_provider_load(skresources_resource_provider_t *instance, const char* path, const char* name);\r\nSK_C_API skresources_image_asset_t* skresources_resource_provider_load_image_asset(skresources_resource_provider_t *instance, const char* path, const char* name, const char* id);\r\nSK_C_API skresources_external_track_asset_t* skresources_resource_provider_load_audio_asset(skresources_resource_provider_t *instance, const char* path, const char* name, const char* id);\r\nSK_C_API sk_typeface_t* skresources_resource_provider_load_typeface(skresources_resource_provider_t *instance, const char* name, const char* url);\r\nSK_C_API skresources_resource_provider_t* skresources_file_resource_provider_make(sk_string_t* base_dir, bool predecode);\r\nSK_C_API skresources_resource_provider_t* skresources_caching_resource_provider_proxy_make(skresources_resource_provider_t* rp);\r\nSK_C_API skresources_resource_provider_t* skresources_data_uri_resource_provider_proxy_make(skresources_resource_provider_t* rp, bool predecode);\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!--\r\n    Describe any non-bug related behavioral changes that may change how users app behaves\r\n    when upgrading to this version of the codebase.\r\n--\u003E\r\n\r\n**Required SkiaSharp PR**\r\n\r\nRequires https://github.com/mono/SkiaSharp/pull/2630\r\n\r\n\u003C!--\r\n    Replace this with the full URL to the skia PR.\r\n--\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Rebased on top of \u0060skiasharp\u0060 at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-09-22T16:39:48",
+  "updatedAt": "2024-02-18T10:00:41",
+  "closedAt": "2024-02-18T10:00:37",
+  "commentCount": 1,
+  "reactionCount": 4,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2024-02-18T10:00:37",
+  "mergeableState": "unknown",
+  "baseBranch": "skiasharp",
+  "headBranch": "dev/skottie-animation-builder",
+  "additions": 218,
+  "deletions": 16,
+  "changedFiles": 12,
+  "commits": 3,
+  "reviews": []
+}
