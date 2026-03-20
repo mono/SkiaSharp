@@ -34,10 +34,19 @@ public partial class DrawingPage : UserControl
 	Border? selectedColorBorder;
 	readonly Microsoft.Win32.UserPreferenceChangedEventHandler themeChangedHandler;
 
-	static bool IsDarkMode
+	bool IsDarkMode
 	{
 		get
 		{
+			var window = Window.GetWindow(this);
+			if (window != null)
+			{
+				var mode = window.ThemeMode;
+				if (mode == ThemeMode.Dark) return true;
+				if (mode == ThemeMode.Light) return false;
+			}
+
+			// System mode or no window yet — check registry
 			try
 			{
 				using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
