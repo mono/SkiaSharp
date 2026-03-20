@@ -5,7 +5,8 @@
     "skiasharpPrNumber": null,
     "repo": "mono/skia",
     "upstreamBranch": "chrome/m122",
-    "analyzedAt": "2026-03-20T21:06:16Z",
+    "oldUpstreamBranch": "chrome/m119",
+    "analyzedAt": "2026-03-20T19:39:13Z",
     "shas": {
       "prHead": "186c2c901a8a46dd98a6d001a6c94f52c0c0fa70",
       "base": "9065669a615daa6493594ada3255833fe34466b3",
@@ -13,28 +14,43 @@
     }
   },
   "generated_files": {
-    "status": "FAIL",
+    "status": "PASS",
     "checked": [
       "binding/SkiaSharp/SkiaApi.generated.cs",
       "binding/SkiaSharp.Skottie/SkottieApi.generated.cs",
       "binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs",
       "binding/SkiaSharp.Resources/ResourcesApi.generated.cs"
     ],
-    "mismatches": [
-      {
-        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
-        "diff_summary": "...iaApi.generated.cs => gen-SkiaApi.generated.cs} | 133 +++------------------\n 1 file changed, 19 insertions(+), 114 deletions(-)"
-      },
-      {
-        "file": "binding/SkiaSharp.Resources/ResourcesApi.generated.cs",
-        "diff_summary": "....generated.cs => gen-ResourcesApi.generated.cs} | 49 ++++++++++++++++++++++\n 1 file changed, 49 insertions(+)"
-      }
-    ]
+    "mismatches": []
   },
   "upstream_integrity": {
-    "status": "PASS",
-    "expected_changes": [],
-    "unexpected_changes": []
+    "status": "FAIL",
+    "new_modifications": [
+      "include/core/SkBitmap.h",
+      "modules/skottie/src/text/TextShaper.cpp",
+      "src/gpu/ganesh/ops/DashOp.cpp",
+      "src/gpu/ganesh/ops/DrawAtlasOp.cpp",
+      "src/gpu/ganesh/ops/GrMeshDrawOp.cpp",
+      "src/gpu/ganesh/ops/LatticeOp.cpp",
+      "src/gpu/ganesh/ops/RegionOp.cpp",
+      "src/sksl/codegen/SkSLRasterPipelineBuilder.cpp",
+      "src/sksl/codegen/SkSLRasterPipelineBuilder.h",
+      "src/utils/SkCustomTypeface.cpp"
+    ],
+    "lost_patches": [
+      "gn/skia/BUILD.gn",
+      "gn/toolchain/BUILD.gn",
+      "gn/utils.gni",
+      "include/core/SkFontMgr.h",
+      "include/core/SkTypeface.h",
+      "src/core/SkTypeface.cpp",
+      "src/gpu/ganesh/gl/glx/GrGLMakeGLXInterface.cpp",
+      "src/gpu/ganesh/GrDirectContext.cpp",
+      "src/ports/SkFontMgr_fontconfig.cpp",
+      "src/utils/win/SkWGL_win.cpp",
+      "tools/git-sync-deps"
+    ],
+    "pre_existing_count": 52
   },
   "custom_preservation": {
     "status": "PASS",
@@ -56,7 +72,7 @@
         "base_version": "2169a0849e3df4e2133b728dec67d3b16bd30263",
         "head_version": "4cfc176e3242b4dbdfd3f6c5680c5d8f2cb7db45",
         "upstream_version": "4cfc176e3242b4dbdfd3f6c5680c5d8f2cb7db45",
-        "notes": "PR regressed to upstream version — base had custom pin (possibly security fix)"
+        "notes": "Version regressed to upstream value — verify no security patches lost"
       }
     ],
     "regressions": [
@@ -66,13 +82,15 @@
         "base_version": "2169a0849e3df4e2133b728dec67d3b16bd30263",
         "head_version": "4cfc176e3242b4dbdfd3f6c5680c5d8f2cb7db45",
         "upstream_version": "4cfc176e3242b4dbdfd3f6c5680c5d8f2cb7db45",
-        "notes": "PR regressed to upstream version — base had custom pin (possibly security fix)"
+        "notes": "Version regressed to upstream value — verify no security patches lost"
       }
     ],
     "suspicious_urls": []
   },
   "risk_assessment": "HIGH",
   "human_review_files": [
-    "170-custom.diff"
+    "170-custom.diff",
+    "170.json",
+    "170.md"
   ]
 }
