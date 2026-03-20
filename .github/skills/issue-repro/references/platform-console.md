@@ -15,6 +15,9 @@ core SkiaSharp, SKBitmap, SKCanvas, SKPaint, SKImage, SKPath, SKMatrix, SKCodec,
 
 Also use as **fallback** when a platform-specific file reports `needs-platform` — many
 platform-reported bugs are actually in core SkiaSharp and reproducible in a console app.
+**Exception:** GPU/view **performance** bugs must NOT fall back here. Console apps use CPU
+raster, which is a completely different Skia code path from GPU rendering. Use the GPU
+platform file (platform-macos.md, platform-windows-desktop.md, etc.) for GPU perf issues.
 
 ## Prerequisites
 
