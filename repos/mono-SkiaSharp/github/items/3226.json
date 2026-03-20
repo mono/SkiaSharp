@@ -21,7 +21,7 @@
   "commentCount": 8,
   "reactionCount": 0,
   "engagement": {
-    "syncedAt": "2026-02-06T13:25:32.7114267Z",
+    "syncedAt": "2026-03-20T22:11:21.8539525Z",
     "reactions": [],
     "comments": [
       {
@@ -71,6 +71,13 @@
         "author": "molesmoke",
         "body": "AFAICT, \u0060SkMatrix::get9\u0060 wasn\u0027t used in 2.88.9 for conversions (although the conversion was performed natively).\n\nI don\u0027t mind helping out, but could you perhaps provide the additional details that bug reports requests? What you did, what happened, what you expected? That way we could eliminate API usage and/or expectations being at fault. I note that both Skia and SkiaSharp sometimes use row-major and sometimes use column-major, perhaps that\u0027s a point of confusion here?\n\nI provided a reasonably straightforward method for you to be able to verify that your suggested changes would make transforms give incorrect output without needing to compile SkiaSharp. Did you try it out? If so, what were your results?\n",
         "createdAt": "2025-08-07T23:12:00",
+        "reactions": []
+      },
+      {
+        "id": 4100360599,
+        "author": "mlancione",
+        "body": "@molesmoke Thanks for the feedback and help.\n\nAfter more testing and reviewing the feedback, I now agree there\u0027s no bug in SKMatrix44.Matrix or the implicit operators in SkiaSharp 3.0\u002B.\n\nI initially compared the field order directly to Skia\u0027s native SkM44::asM33() / get9() without accounting for the row-vector convention in System.Numerics.Matrix4x4 (translation in last row) vs. Skia\u0027s column-vector convention.\n\nThe issue can be closed.",
+        "createdAt": "2026-03-20T18:58:59",
         "reactions": []
       }
     ]

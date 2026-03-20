@@ -42,27 +42,27 @@
     }
   ],
   "engagement": {
-    "syncedAt": "2026-02-06T13:26:03.1701965Z",
+    "syncedAt": "2026-03-20T22:11:37.2900748Z",
     "reactions": [
       {
         "user": "janusw",
         "content": "hooray",
-        "createdAt": "2026-02-06T13:26:03.1702014Z"
+        "createdAt": "2026-03-20T22:11:37.2901091Z"
       },
       {
         "user": "inforithmics",
         "content": "hooray",
-        "createdAt": "2026-02-06T13:26:03.1702019Z"
+        "createdAt": "2026-03-20T22:11:37.2901098Z"
       },
       {
         "user": "TrianecT-Wouter",
         "content": "hooray",
-        "createdAt": "2026-02-06T13:26:03.1702022Z"
+        "createdAt": "2026-03-20T22:11:37.2901101Z"
       },
       {
         "user": "pauldendulk",
         "content": "hooray",
-        "createdAt": "2026-02-06T13:26:03.1702025Z"
+        "createdAt": "2026-03-20T22:11:37.2901105Z"
       }
     ],
     "comments": [
@@ -82,9 +82,62 @@
           {
             "user": "lukexgraham",
             "content": "\u002B1",
-            "createdAt": "2026-02-06T13:26:03.1199938Z"
+            "createdAt": "2026-03-20T22:11:35.8110614Z"
           }
         ]
+      },
+      {
+        "id": 4028096534,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-03-10T02:04:46",
+        "reactions": []
+      },
+      {
+        "id": 4028096822,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines will not run the associated pipelines, because the pull request was updated after the run command was issued. Review the pull request again and issue a new run command.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-03-10T02:04:53",
+        "reactions": []
+      },
+      {
+        "id": 4028105333,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-03-10T02:08:10",
+        "reactions": []
+      },
+      {
+        "id": 4028105627,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-03-10T02:08:16",
+        "reactions": []
+      },
+      {
+        "id": 4028257639,
+        "author": "mattleibow",
+        "body": "## \u2705 Review: Ready to Merge\n\n**PR #3076 -- Fixed SKGLView on Android not being rendered when using a TabBar**\n\n5 independent AI model reviews (Claude Opus, Claude Sonnet, Gemini Pro, GPT-5.3 Codex) unanimously found **no bugs, race conditions, or correctness issues**. The fix is minimal, correct, and directly addresses the rendering regression.\n\n**CI Status:** CLA \u2705 passed | Azure DevOps build \u26A0\uFE0F pending at review time -- no PR-specific failures observed\n\n**Recommendation: \u2705 Approve**\n\n---\n\n\u003Cdetails\u003E\n\u003Csummary\u003E\uD83D\uDCCB Detailed Analysis (click to expand)\u003C/summary\u003E\n\n### What the Fix Does\n\nThe \u0060GLThread\u0060 constructor now receives the current view\u0027s \u0060Width\u0060/\u0060Height\u0060 so that when a tab is re-visited (view re-attached with unchanged dimensions), the render thread starts with non-zero initial dimensions and \u0060ReadyToDraw()\u0060 unblocks immediately -- without waiting for an \u0060OnLayoutChange\u0060 that never fires because the size hasn\u0027t changed.\n\n### Scenario Analysis\n\n| Scenario | Result |\n|----------|--------|\n| **Tab re-visited with same-sized view (the bug case)** | \u2705 Fixed: \u0060Width\u0060/\u0060Height\u0060 \u003E 0 passed in, \u0060ReadyToDraw()\u0060 unblocked |\n| **\u0060SetRenderer\u0060 called before layout (\u0060Width=0, Height=0\u0060)** | \u2705 No regression: identical behavior to before the fix |\n| **\u0060surfaceSizeChanged = true\u0060 with non-zero initial size** | \u2705 Correct: \u0060OnSurfaceChanged\u0060 called with proper dimensions on first render |\n| **Thread safety of initial \u0060width\u0060/\u0060height\u0060 values** | \u2705 Safe: fields set before \u0060glThread.Start()\u0060, happens-before guaranteed |\n| **Double-resize if \u0060OnLayoutChange\u0060 also fires** | \u2705 Harmless: redundant pulse, at most one extra \u0060OnSurfaceChanged\u0060 with correct dims |\n\n### Thread Safety Deep-Dive\n\n- The constructor sets \u0060width\u0060/\u0060height\u0060 fields **before** \u0060glThread.Start()\u0060 is called, establishing a happens-before relationship per the .NET memory model\n- All subsequent writes to \u0060width\u0060/\u0060height\u0060 (via \u0060OnWindowResize\u0060) are protected by \u0060lock(threadManager)\u0060, the same lock the GL thread holds when reading them\n- \u0060OnDetachedFromWindow\u0060 calls \u0060RequestExitAndWait()\u0060 which blocks until the old thread exits -- no overlap between old and new \u0060GLThread\u0060 instances\n\n### First Render Path Analysis\n\nOn first draw, the GL thread hits both:\n2. The \u0060surfaceSizeChanged\u0060 branch (~line 940): captures \u0060w = width, h = height\u0060\n\nThese two branches are additive, not conflicting. \u0060OnSurfaceChanged\u0060 receives the correct non-zero dimensions on first render.\n\n### Test Coverage\n\nNo new tests added (PR checklist confirms this). This is acceptable -- the fix addresses an Android-specific rendering lifecycle issue involving tab switching that would require an instrumented MAUI app on a real device to test. The change is a 2-line constructor parameter addition with straightforward logic.\n\n### Consensus\n\nAll 5 review models independently returned **no findings**. Zero issues flagged across all severity levels (Critical, Moderate, Minor).\n\n\u003C/details\u003E",
+        "createdAt": "2026-03-10T02:55:17",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "hooray",
+            "createdAt": "2026-03-20T22:11:37.0180339Z"
+          },
+          {
+            "user": "janusw",
+            "content": "\u002B1",
+            "createdAt": "2026-03-20T22:11:37.0180344Z"
+          }
+        ]
+      },
+      {
+        "id": 4030942659,
+        "author": "mattleibow",
+        "body": "Device test added in #3554 that **proves this fix works**.\n\n- **Without this fix**: test fails with \u0060got 0x0\u0060 (GLThread starts with zero dimensions)\n- **With this fix**: test passes \u2714 (~1600ms)\n\nThe test uses native Android \u0060RemoveView()\u0060/\u0060AddView()\u0060 \u002B reflection to read \u0060GLThread.width\u0060/\u0060height\u0060 immediately after \u0060OnAttachedToWindow()\u0060 fires \u2014 before any async \u0060OnLayoutChange\u0060 callback can mask the bug. This is the exact window that causes the real tab-bar rendering failure.",
+        "createdAt": "2026-03-10T12:12:44",
+        "reactions": []
       }
     ]
   }
