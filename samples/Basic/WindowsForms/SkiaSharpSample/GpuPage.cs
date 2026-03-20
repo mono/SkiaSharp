@@ -83,6 +83,9 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		fpsLabel.BringToFront();
 		animationTimer.Start();
 		fpsCounter.Start();
+
+		Resize += (_, _) => fpsLabel.Left = (Width - fpsLabel.Width) / 2;
+		Load += (_, _) => fpsLabel.Left = (Width - fpsLabel.Width) / 2;
 	}
 
 	private void OnAnimationTick(object sender, EventArgs e)

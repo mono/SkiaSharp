@@ -53,14 +53,15 @@
 			// 
 			// fpsLabel
 			// 
+			this.fpsLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
 			this.fpsLabel.AutoSize = true;
-			this.fpsLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-			this.fpsLabel.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+			this.fpsLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(170)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+			this.fpsLabel.Font = new System.Drawing.Font("Segoe UI", 10F);
 			this.fpsLabel.ForeColor = System.Drawing.Color.White;
-			this.fpsLabel.Location = new System.Drawing.Point(8, 8);
+			this.fpsLabel.Location = new System.Drawing.Point(370, 8);
 			this.fpsLabel.Name = "fpsLabel";
-			this.fpsLabel.Padding = new System.Windows.Forms.Padding(4);
-			this.fpsLabel.Size = new System.Drawing.Size(60, 31);
+			this.fpsLabel.Padding = new System.Windows.Forms.Padding(12, 6, 12, 6);
+			this.fpsLabel.Size = new System.Drawing.Size(80, 35);
 			this.fpsLabel.TabIndex = 1;
 			this.fpsLabel.Text = "FPS: --";
 			// 

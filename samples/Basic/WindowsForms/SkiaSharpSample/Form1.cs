@@ -1,42 +1,41 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace SkiaSharpSample;
 
 public partial class Form1 : Form
 {
-	private UserControl currentPage;
-
 	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
 	public Form1()
 	{
 		InitializeComponent();
-
-		sidebarList.SelectedIndexChanged += OnSidebarSelectionChanged;
-		sidebarList.SelectedIndex = (int)DefaultPage;
+		Shown += (_, _) =>
+		{
+			tabControl.SelectedIndex = (int)DefaultPage;
+			// Force content creation even if index was already 0
+			OnTabSelectionChanged(tabControl, EventArgs.Empty);
+		};
 	}
 
-	private void OnSidebarSelectionChanged(object sender, EventArgs e)
+	void OnTabSelectionChanged(object sender, EventArgs e)
 	{
-		if (sidebarList.SelectedIndex < 0)
+		if (tabControl.SelectedTab is not TabPage tab)
 			return;
 
-		currentPage?.Dispose();
-		contentPanel.Controls.Clear();
+		if (tab.Controls.Count > 0)
+			return;
 
-		currentPage = sidebarList.SelectedIndex switch
+		UserControl page = tab.Tag?.ToString() switch
 		{
-			0 => new CpuPage(),
-			1 => new GpuPage(),
-			2 => new DrawingPage(),
-			_ => null,
+			"cpu" => new CpuPage(),
+			"gpu" => new GpuPage(),
+			"drawing" => new DrawingPage(),
+			_ => new CpuPage(),
 		};
 
-		if (currentPage != null)
-		{
-			currentPage.Dock = DockStyle.Fill;
-			contentPanel.Controls.Add(currentPage);
-		}
+		page.Dock = DockStyle.Fill;
+		tab.Controls.Add(page);
+		page.Invalidate();
 	}
 }
