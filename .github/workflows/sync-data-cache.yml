@@ -473,11 +473,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set +e
           dotnet run --project src/SkiaSharp.Triage.Cli -- sync github \
             --cache-path .data-cache \
             --repo mono/skia \
             --items-only \
             --quiet
+          EXIT_CODE=$?
+          set -e
+          if [ $EXIT_CODE -eq 2 ]; then
+            echo "All items synced!"
+          elif [ $EXIT_CODE -eq 1 ]; then
+            echo "Rate limit hit - will resume next run"
+          elif [ $EXIT_CODE -ne 0 ]; then
+            echo "Sync failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
 
       - name: Push changes
         if: inputs.source != 'nuget'
