@@ -20,7 +20,7 @@ else
         <a href="skia-updates" class="btn-back">← Back to Skia Updates</a>
     </div>
 
-    <!-- Header matching triage detail pattern -->
+    <!-- Header -->
     <div class="triage-detail-header triage-detail-header-minimal">
         <div class="detail-title-row">
             <a href="https://github.com/@_review.Meta.Repo/pull/@_review.Meta.SkiaPrNumber" target="_blank" rel="noopener noreferrer" class="issue-link-lg">#@_review.Meta.SkiaPrNumber</a>
@@ -30,9 +30,6 @@ else
             <span class="badge-risk badge-risk-@_review.RiskAssessment.ToString().ToLower()">
                 @_review.RiskAssessment Risk
             </span>
-            <span class="skia-check @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "check-pass" : "check-fail")">
-                @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "✓" : "✗") Generated Files
-            </span>
             <span class="detail-meta-text">
                 @FormatBranch(_review.Meta.OldUpstreamBranch) → @FormatBranch(_review.Meta.UpstreamBranch)
                 · Analyzed: @_review.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
@@ -41,331 +38,422 @@ else
         </div>
     </div>
 
-    @if (_indexEntry?.PrState is not null)
-    {
-        <div class="quick-facts-row">
+    <!-- Quick Facts -->
+    <div class="quick-facts-row">
+        @if (_indexEntry?.PrState is not null)
+        {
             <div class="qf-group">
                 <span class="qf-label">State</span>
                 <span class="label label-@_indexEntry.PrState">@_indexEntry.PrState</span>
             </div>
+        }
+        <div class="qf-group">
+            <span class="qf-label">Generated</span>
+            <span class="section-status @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "status-pass" : "status-fail")">
+                @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "✓ PASS" : "✗ FAIL")
+            </span>
+        </div>
+        <div class="qf-group">
+            <span class="qf-label">Upstream</span>
+            <span class="section-status @(_review.UpstreamIntegrity.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
+                @(_review.UpstreamIntegrity.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
+            </span>
+        </div>
+        <div class="qf-group">
+            <span class="qf-label">Interop</span>
+            <span class="section-status @(_review.InteropIntegrity.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
+                @(_review.InteropIntegrity.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
+            </span>
+        </div>
+        <div class="qf-group">
+            <span class="qf-label">DEPS</span>
+            <span class="section-status @(_review.DepsAudit.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
+                @(_review.DepsAudit.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
+            </span>
+        </div>
+        @if (_review.Meta.SkiasharpPrNumber is not null)
+        {
             <div class="qf-group">
-                <span class="qf-label">Upstream</span>
-                <span class="label">@FormatBranch(_review.Meta.OldUpstreamBranch) → @FormatBranch(_review.Meta.UpstreamBranch)</span>
+                <span class="qf-label">Companion</span>
+                <a href="https://github.com/mono/SkiaSharp/pull/@_review.Meta.SkiasharpPrNumber" target="_blank" rel="noopener noreferrer" class="label">
+                    SkiaSharp #@_review.Meta.SkiasharpPrNumber
+                </a>
             </div>
-            @if (_review.Meta.SkiasharpPrNumber is not null)
-            {
-                <div class="qf-group">
-                    <span class="qf-label">Companion PR</span>
-                    <a href="https://github.com/mono/SkiaSharp/pull/@_review.Meta.SkiasharpPrNumber" target="_blank" rel="noopener noreferrer" class="label">
-                        SkiaSharp #@_review.Meta.SkiasharpPrNumber
-                    </a>
+        }
+    </div>
+
+    <!-- Tabs -->
+    <div class="content-tabs">
+        <button type="button" class="content-tab @(_activeTab == "overview" ? "active" : "")" @onclick='() => _activeTab = "overview"'>
+            Overview
+        </button>
+        <button type="button" class="content-tab @(_activeTab == "generated" ? "active" : "")" @onclick='() => _activeTab = "generated"'>
+            Generated Files
+        </button>
+        <button type="button" class="content-tab @(_activeTab == "upstream" ? "active" : "")" @onclick='() => _activeTab = "upstream"'>
+            Upstream (@(_review.UpstreamIntegrity.Added.Count + _review.UpstreamIntegrity.Removed.Count + _review.UpstreamIntegrity.Changed.Count))
+        </button>
+        <button type="button" class="content-tab @(_activeTab == "interop" ? "active" : "")" @onclick='() => _activeTab = "interop"'>
+            Interop (@_review.InteropIntegrity.Changed.Count)
+        </button>
+        <button type="button" class="content-tab @(_activeTab == "deps" ? "active" : "")" @onclick='() => _activeTab = "deps"'>
+            DEPS (@(_review.DepsAudit.Added.Count + _review.DepsAudit.Changed.Count))
+        </button>
+        @if (_review.HumanReviewFiles is { Count: > 0 })
+        {
+            <button type="button" class="content-tab @(_activeTab == "artifacts" ? "active" : "")" @onclick='() => _activeTab = "artifacts"'>
+                Artifacts (@_review.HumanReviewFiles.Count)
+            </button>
+        }
+    </div>
+
+    <!-- Tab: Overview -->
+    @if (_activeTab == "overview")
+    {
+        <div class="section-card">
+            <h3 class="section-title">Change Summary</h3>
+            <p>
+                This review covers the Skia upstream merge from
+                <strong>@_review.Meta.OldUpstreamBranch</strong> to <strong>@_review.Meta.UpstreamBranch</strong>.
+            </p>
+
+            <div class="overview-grid">
+                <div class="overview-item @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "ov-pass" : "ov-fail")">
+                    <div class="ov-header">
+                        <span class="section-status @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "status-pass" : "status-fail")">
+                            @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "✓ PASS" : "✗ FAIL")
+                        </span>
+                        Generated Files
+                    </div>
+                    <div class="ov-detail">@_review.GeneratedFiles.Checked.Count files verified</div>
+                    @if (_review.GeneratedFiles.Mismatches is { Count: > 0 })
+                    {
+                        <div class="ov-detail count-removed">@_review.GeneratedFiles.Mismatches.Count mismatches</div>
+                    }
                 </div>
+
+                @{ var us = _review.UpstreamIntegrity; }
+                <div class="overview-item @(us.Status == SkiaReviewStatus.Pass ? "ov-pass" : "ov-review")">
+                    <div class="ov-header">
+                        <span class="section-status @(us.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
+                            @(us.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
+                        </span>
+                        Upstream Integrity
+                    </div>
+                    <div class="ov-detail">
+                        @if (us.Added.Count > 0) { <span class="count-added">+@us.Added.Count</span> }
+                        @if (us.Removed.Count > 0) { <span class="count-removed">-@us.Removed.Count</span> }
+                        @if (us.Changed.Count > 0) { <span class="count-changed">~@us.Changed.Count</span> }
+                        <span class="count-unchanged">@us.Unchanged unchanged</span>
+                    </div>
+                </div>
+
+                @{ var ip = _review.InteropIntegrity; }
+                <div class="overview-item @(ip.Status == SkiaReviewStatus.Pass ? "ov-pass" : "ov-review")">
+                    <div class="ov-header">
+                        <span class="section-status @(ip.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
+                            @(ip.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
+                        </span>
+                        Interop Integrity
+                    </div>
+                    <div class="ov-detail">
+                        @if (ip.Added.Count > 0) { <span class="count-added">+@ip.Added.Count</span> }
+                        @if (ip.Removed.Count > 0) { <span class="count-removed">-@ip.Removed.Count</span> }
+                        @if (ip.Changed.Count > 0) { <span class="count-changed">~@ip.Changed.Count</span> }
+                        <span class="count-unchanged">@ip.Unchanged unchanged</span>
+                    </div>
+                </div>
+
+                <div class="overview-item @(_review.DepsAudit.Status == SkiaReviewStatus.Pass ? "ov-pass" : "ov-review")">
+                    <div class="ov-header">
+                        <span class="section-status @(_review.DepsAudit.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
+                            @(_review.DepsAudit.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
+                        </span>
+                        DEPS Audit
+                    </div>
+                    <div class="ov-detail">
+                        @if (_review.DepsAudit.Added.Count > 0) { <span class="count-added">+@_review.DepsAudit.Added.Count</span> }
+                        @if (_review.DepsAudit.Removed.Count > 0) { <span class="count-removed">-@_review.DepsAudit.Removed.Count</span> }
+                        @if (_review.DepsAudit.Changed.Count > 0) { <span class="count-changed">~@_review.DepsAudit.Changed.Count</span> }
+                        <span class="count-unchanged">@_review.DepsAudit.Unchanged unchanged</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="section-title">Commit SHAs</h3>
+            <div class="skia-shas">
+                <span><strong>PR Head:</strong> <code>@Truncate(_review.Meta.Shas.PrHead)</code></span>
+                <span><strong>Base:</strong> <code>@Truncate(_review.Meta.Shas.Base)</code></span>
+                <span><strong>Upstream:</strong> <code>@Truncate(_review.Meta.Shas.Upstream)</code></span>
+            </div>
+        </div>
+    }
+
+    <!-- Tab: Generated Files -->
+    @if (_activeTab == "generated")
+    {
+        <div class="section-card">
+            <div class="tab-section-header">
+                <span class="section-status @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "status-pass" : "status-fail")">
+                    @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "✓ PASS" : "✗ FAIL")
+                </span>
+                <h3 class="section-title">Generated Files Check</h3>
+            </div>
+            <p>Verified @_review.GeneratedFiles.Checked.Count P/Invoke binding files match independent regeneration:</p>
+            <ul class="skia-file-list">
+                @foreach (var file in _review.GeneratedFiles.Checked)
+                {
+                    <li><code>@file</code></li>
+                }
+            </ul>
+            @if (_review.GeneratedFiles.Mismatches is { Count: > 0 })
+            {
+                <h4>⚠️ Mismatches</h4>
+                @foreach (var mismatch in _review.GeneratedFiles.Mismatches)
+                {
+                    <div class="skia-mismatch">
+                        <code>@mismatch.File</code>
+                        <pre class="file-content">@mismatch.DiffSummary</pre>
+                    </div>
+                }
             }
         </div>
     }
 
-    <!-- SHAs -->
-    <div class="skia-shas">
-        <span><strong>PR Head:</strong> <code>@Truncate(_review.Meta.Shas.PrHead)</code></span>
-        <span><strong>Base:</strong> <code>@Truncate(_review.Meta.Shas.Base)</code></span>
-        <span><strong>Upstream:</strong> <code>@Truncate(_review.Meta.Shas.Upstream)</code></span>
-    </div>
-
-    <!-- Generated Files Check -->
-    <div class="skia-section">
-        <div class="skia-section-header" @onclick="() => _showGenerated = !_showGenerated">
-            <h2>
-                <span class="section-status @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "status-pass" : "status-fail")">
-                    @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "✓ PASS" : "✗ FAIL")
+    <!-- Tab: Upstream Integrity -->
+    @if (_activeTab == "upstream")
+    {
+        var usTab = _review.UpstreamIntegrity;
+        <div class="section-card">
+            <div class="tab-section-header">
+                <span class="section-status @(usTab.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
+                    @(usTab.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
                 </span>
-                Generated Files
-            </h2>
-            <span class="expand-toggle">@(_showGenerated ? "▼" : "▶")</span>
-        </div>
-        @if (_showGenerated)
-        {
-            <div class="skia-section-body">
-                <p><strong>Checked @_review.GeneratedFiles.Checked.Count files:</strong></p>
-                <ul class="skia-file-list">
-                    @foreach (var file in _review.GeneratedFiles.Checked)
-                    {
-                        <li><code>@file</code></li>
-                    }
-                </ul>
-                @if (_review.GeneratedFiles.Mismatches is { Count: > 0 })
-                {
-                    <h3>⚠️ Mismatches</h3>
-                    @foreach (var mismatch in _review.GeneratedFiles.Mismatches)
-                    {
-                        <div class="skia-mismatch">
-                            <code>@mismatch.File</code>
-                            <pre class="file-content">@mismatch.DiffSummary</pre>
-                        </div>
-                    }
-                }
+                <h3 class="section-title">Upstream Integrity</h3>
+                <span class="skia-section-counts">
+                    @if (usTab.Added.Count > 0) { <span class="count-added">+@usTab.Added.Count added</span> }
+                    @if (usTab.Removed.Count > 0) { <span class="count-removed">-@usTab.Removed.Count removed</span> }
+                    @if (usTab.Changed.Count > 0) { <span class="count-changed">~@usTab.Changed.Count changed</span> }
+                    @if (usTab.Unchanged > 0) { <span class="count-unchanged">@usTab.Unchanged unchanged</span> }
+                </span>
             </div>
-        }
-    </div>
-
-    <!-- Upstream Integrity -->
-    <div class="skia-section">
-        <div class="skia-section-header" @onclick="() => _showUpstream = !_showUpstream">
-            <h2>
-                <span class="section-status @(_review.UpstreamIntegrity.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
-                    @(_review.UpstreamIntegrity.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
-                </span>
-                Upstream Integrity
-            </h2>
-            <span class="skia-section-counts">
-                @{ var us = _review.UpstreamIntegrity; }
-                @if (us.Added.Count > 0) { <span class="count-added">+@us.Added.Count added</span> }
-                @if (us.Removed.Count > 0) { <span class="count-removed">-@us.Removed.Count removed</span> }
-                @if (us.Changed.Count > 0) { <span class="count-changed">~@us.Changed.Count changed</span> }
-                @if (us.Unchanged > 0) { <span class="count-unchanged">@us.Unchanged unchanged</span> }
-            </span>
-            <span class="expand-toggle">@(_showUpstream ? "▼" : "▶")</span>
-        </div>
-        @if (_showUpstream)
-        {
-            <div class="skia-section-body">
-                @if (us.Added.Count > 0)
+            <p>Files <em>outside</em> interop directories that differ from upstream. These are high-risk — upstream code should rarely be modified.</p>
+            @if (usTab.Added.Count > 0)
+            {
+                <h4 class="change-category cat-added">Added (@usTab.Added.Count)</h4>
+                @foreach (var file in usTab.Added)
                 {
-                    <h3 class="change-category cat-added">Added (@us.Added.Count)</h3>
-                    @foreach (var file in us.Added)
-                    {
-                        <div class="skia-file-entry file-added">
-                            <div class="file-path"><code>@file.Path</code></div>
-                            <div class="file-summary">@file.Summary</div>
-                            @if (file.Diff is not null)
-                            {
-                                <button class="btn-diff" @onclick='() => ToggleDiff("us-a-" + file.Path)'>
-                                    @(_expandedDiffs.Contains("us-a-" + file.Path) ? "Hide diff" : "Show diff")
-                                </button>
-                                @if (_expandedDiffs.Contains("us-a-" + file.Path))
-                                {
-                                    <pre class="file-content">@file.Diff</pre>
-                                }
-                            }
-                        </div>
-                    }
-                }
-                @if (us.Removed.Count > 0)
-                {
-                    <h3 class="change-category cat-removed">Removed (@us.Removed.Count)</h3>
-                    @foreach (var file in us.Removed)
-                    {
-                        <div class="skia-file-entry file-removed">
-                            <div class="file-path"><code>@file.Path</code></div>
-                            <div class="file-summary">@file.Summary</div>
-                            @if (file.Diff is not null)
-                            {
-                                <button class="btn-diff" @onclick='() => ToggleDiff("us-r-" + file.Path)'>
-                                    @(_expandedDiffs.Contains("us-r-" + file.Path) ? "Hide diff" : "Show diff")
-                                </button>
-                                @if (_expandedDiffs.Contains("us-r-" + file.Path))
-                                {
-                                    <pre class="file-content">@file.Diff</pre>
-                                }
-                            }
-                        </div>
-                    }
-                }
-                @if (us.Changed.Count > 0)
-                {
-                    <h3 class="change-category cat-changed">Changed (@us.Changed.Count)</h3>
-                    @foreach (var file in us.Changed)
-                    {
-                        <div class="skia-file-entry file-changed">
-                            <div class="file-path"><code>@file.Path</code></div>
-                            <div class="file-summary">@file.Summary</div>
-                            <button class="btn-diff" @onclick='() => ToggleDiff("us-c-" + file.Path)'>
-                                @(_expandedDiffs.Contains("us-c-" + file.Path) ? "Hide diffs" : "Show diffs")
+                    <div class="skia-file-entry file-added">
+                        <div class="file-path"><code>@file.Path</code></div>
+                        <div class="file-summary">@file.Summary</div>
+                        @if (file.Diff is not null)
+                        {
+                            <button class="btn-diff" @onclick='() => ToggleDiff("us-a-" + file.Path)'>
+                                @(_expandedDiffs.Contains("us-a-" + file.Path) ? "Hide diff" : "Show diff")
                             </button>
-                            @if (_expandedDiffs.Contains("us-c-" + file.Path))
+                            @if (_expandedDiffs.Contains("us-a-" + file.Path))
                             {
-                                @if (file.OldDiff is not null)
-                                {
-                                    <div class="diff-label">Old patch:</div>
-                                    <pre class="file-content">@file.OldDiff</pre>
-                                }
-                                @if (file.NewDiff is not null)
-                                {
-                                    <div class="diff-label">New patch:</div>
-                                    <pre class="file-content">@file.NewDiff</pre>
-                                }
+                                <pre class="file-content">@file.Diff</pre>
                             }
-                        </div>
-                    }
+                        }
+                    </div>
                 }
-            </div>
-        }
-    </div>
-
-    <!-- Interop Integrity -->
-    <div class="skia-section">
-        <div class="skia-section-header" @onclick="() => _showInterop = !_showInterop">
-            <h2>
-                <span class="section-status @(_review.InteropIntegrity.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
-                    @(_review.InteropIntegrity.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
-                </span>
-                Interop Integrity
-            </h2>
-            <span class="skia-section-counts">
-                @{ var ip = _review.InteropIntegrity; }
-                @if (ip.Added.Count > 0) { <span class="count-added">+@ip.Added.Count added</span> }
-                @if (ip.Removed.Count > 0) { <span class="count-removed">-@ip.Removed.Count removed</span> }
-                @if (ip.Changed.Count > 0) { <span class="count-changed">~@ip.Changed.Count changed</span> }
-                @if (ip.Unchanged > 0) { <span class="count-unchanged">@ip.Unchanged unchanged</span> }
-            </span>
-            <span class="expand-toggle">@(_showInterop ? "▼" : "▶")</span>
-        </div>
-        @if (_showInterop)
-        {
-            <div class="skia-section-body">
-                @if (ip.Added.Count > 0)
+            }
+            @if (usTab.Removed.Count > 0)
+            {
+                <h4 class="change-category cat-removed">Removed (@usTab.Removed.Count)</h4>
+                @foreach (var file in usTab.Removed)
                 {
-                    <h3 class="change-category cat-added">Added (@ip.Added.Count)</h3>
-                    @foreach (var file in ip.Added)
-                    {
-                        <div class="skia-file-entry file-added">
-                            <div class="file-path"><code>@file.Path</code></div>
-                            <div class="file-summary">@file.Summary</div>
-                        </div>
-                    }
-                }
-                @if (ip.Removed.Count > 0)
-                {
-                    <h3 class="change-category cat-removed">Removed (@ip.Removed.Count)</h3>
-                    @foreach (var file in ip.Removed)
-                    {
-                        <div class="skia-file-entry file-removed">
-                            <div class="file-path"><code>@file.Path</code></div>
-                            <div class="file-summary">@file.Summary</div>
-                        </div>
-                    }
-                }
-                @if (ip.Changed.Count > 0)
-                {
-                    <h3 class="change-category cat-changed">Changed (@ip.Changed.Count)</h3>
-                    @foreach (var file in ip.Changed)
-                    {
-                        <div class="skia-file-entry file-changed">
-                            <div class="file-path"><code>@file.Path</code></div>
-                            <div class="file-summary">@file.Summary</div>
-                            <button class="btn-diff" @onclick='() => ToggleDiff("ip-c-" + file.Path)'>
-                                @(_expandedDiffs.Contains("ip-c-" + file.Path) ? "Hide diffs" : "Show diffs")
+                    <div class="skia-file-entry file-removed">
+                        <div class="file-path"><code>@file.Path</code></div>
+                        <div class="file-summary">@file.Summary</div>
+                        @if (file.Diff is not null)
+                        {
+                            <button class="btn-diff" @onclick='() => ToggleDiff("us-r-" + file.Path)'>
+                                @(_expandedDiffs.Contains("us-r-" + file.Path) ? "Hide diff" : "Show diff")
                             </button>
-                            @if (_expandedDiffs.Contains("ip-c-" + file.Path))
+                            @if (_expandedDiffs.Contains("us-r-" + file.Path))
                             {
-                                @if (file.OldDiff is not null)
-                                {
-                                    <div class="diff-label">Old patch:</div>
-                                    <pre class="file-content">@file.OldDiff</pre>
-                                }
-                                @if (file.NewDiff is not null)
-                                {
-                                    <div class="diff-label">New patch:</div>
-                                    <pre class="file-content">@file.NewDiff</pre>
-                                }
+                                <pre class="file-content">@file.Diff</pre>
                             }
-                        </div>
-                    }
+                        }
+                    </div>
                 }
-            </div>
-        }
-    </div>
+            }
+            @if (usTab.Changed.Count > 0)
+            {
+                <h4 class="change-category cat-changed">Changed (@usTab.Changed.Count)</h4>
+                @foreach (var file in usTab.Changed)
+                {
+                    <div class="skia-file-entry file-changed">
+                        <div class="file-path"><code>@file.Path</code></div>
+                        <div class="file-summary">@file.Summary</div>
+                        <button class="btn-diff" @onclick='() => ToggleDiff("us-c-" + file.Path)'>
+                            @(_expandedDiffs.Contains("us-c-" + file.Path) ? "Hide diffs" : "Show diffs")
+                        </button>
+                        @if (_expandedDiffs.Contains("us-c-" + file.Path))
+                        {
+                            @if (file.OldDiff is not null)
+                            {
+                                <div class="diff-label">Old patch:</div>
+                                <pre class="file-content">@file.OldDiff</pre>
+                            }
+                            @if (file.NewDiff is not null)
+                            {
+                                <div class="diff-label">New patch:</div>
+                                <pre class="file-content">@file.NewDiff</pre>
+                            }
+                        }
+                    </div>
+                }
+            }
+        </div>
+    }
 
-    <!-- DEPS Audit -->
-    <div class="skia-section">
-        <div class="skia-section-header" @onclick="() => _showDeps = !_showDeps">
-            <h2>
+    <!-- Tab: Interop Integrity -->
+    @if (_activeTab == "interop")
+    {
+        var ipTab = _review.InteropIntegrity;
+        <div class="section-card">
+            <div class="tab-section-header">
+                <span class="section-status @(ipTab.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
+                    @(ipTab.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
+                </span>
+                <h3 class="section-title">Interop Integrity</h3>
+                <span class="skia-section-counts">
+                    @if (ipTab.Added.Count > 0) { <span class="count-added">+@ipTab.Added.Count added</span> }
+                    @if (ipTab.Removed.Count > 0) { <span class="count-removed">-@ipTab.Removed.Count removed</span> }
+                    @if (ipTab.Changed.Count > 0) { <span class="count-changed">~@ipTab.Changed.Count changed</span> }
+                    @if (ipTab.Unchanged > 0) { <span class="count-unchanged">@ipTab.Unchanged unchanged</span> }
+                </span>
+            </div>
+            <p>Files in <code>include/c/</code>, <code>include/xamarin/</code>, <code>src/c/</code>, <code>src/xamarin/</code> — the SkiaSharp C API layer. Changes here are expected during Skia bumps.</p>
+            @if (ipTab.Added.Count > 0)
+            {
+                <h4 class="change-category cat-added">Added (@ipTab.Added.Count)</h4>
+                @foreach (var file in ipTab.Added)
+                {
+                    <div class="skia-file-entry file-added">
+                        <div class="file-path"><code>@file.Path</code></div>
+                        <div class="file-summary">@file.Summary</div>
+                    </div>
+                }
+            }
+            @if (ipTab.Removed.Count > 0)
+            {
+                <h4 class="change-category cat-removed">Removed (@ipTab.Removed.Count)</h4>
+                @foreach (var file in ipTab.Removed)
+                {
+                    <div class="skia-file-entry file-removed">
+                        <div class="file-path"><code>@file.Path</code></div>
+                        <div class="file-summary">@file.Summary</div>
+                    </div>
+                }
+            }
+            @if (ipTab.Changed.Count > 0)
+            {
+                <h4 class="change-category cat-changed">Changed (@ipTab.Changed.Count)</h4>
+                @foreach (var file in ipTab.Changed)
+                {
+                    <div class="skia-file-entry file-changed">
+                        <div class="file-path"><code>@file.Path</code></div>
+                        <div class="file-summary">@file.Summary</div>
+                        <button class="btn-diff" @onclick='() => ToggleDiff("ip-c-" + file.Path)'>
+                            @(_expandedDiffs.Contains("ip-c-" + file.Path) ? "Hide diffs" : "Show diffs")
+                        </button>
+                        @if (_expandedDiffs.Contains("ip-c-" + file.Path))
+                        {
+                            @if (file.OldDiff is not null)
+                            {
+                                <div class="diff-label">Old patch:</div>
+                                <pre class="file-content">@file.OldDiff</pre>
+                            }
+                            @if (file.NewDiff is not null)
+                            {
+                                <div class="diff-label">New patch:</div>
+                                <pre class="file-content">@file.NewDiff</pre>
+                            }
+                        }
+                    </div>
+                }
+            }
+        </div>
+    }
+
+    <!-- Tab: DEPS Audit -->
+    @if (_activeTab == "deps")
+    {
+        <div class="section-card">
+            <div class="tab-section-header">
                 <span class="section-status @(_review.DepsAudit.Status == SkiaReviewStatus.Pass ? "status-pass" : "status-review")">
                     @(_review.DepsAudit.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
                 </span>
-                DEPS Audit
-            </h2>
-            <span class="skia-section-counts">
-                @if (_review.DepsAudit.Added.Count > 0) { <span class="count-added">+@_review.DepsAudit.Added.Count</span> }
-                @if (_review.DepsAudit.Removed.Count > 0) { <span class="count-removed">-@_review.DepsAudit.Removed.Count</span> }
-                @if (_review.DepsAudit.Changed.Count > 0) { <span class="count-changed">~@_review.DepsAudit.Changed.Count</span> }
-                @if (_review.DepsAudit.Unchanged > 0) { <span class="count-unchanged">@_review.DepsAudit.Unchanged unchanged</span> }
-            </span>
-            <span class="expand-toggle">@(_showDeps ? "▼" : "▶")</span>
-        </div>
-        @if (_showDeps)
-        {
-            <div class="skia-section-body">
-                @if (_review.DepsAudit.Added.Count > 0)
-                {
-                    <h3 class="change-category cat-added">Added (@_review.DepsAudit.Added.Count)</h3>
-                    @foreach (var dep in _review.DepsAudit.Added)
-                    {
-                        <div class="skia-dep-entry dep-added">
-                            <div class="dep-name">@dep.Name</div>
-                            <div class="dep-summary">@dep.Summary</div>
-                            @if (dep.Url is not null)
-                            {
-                                <div class="dep-detail"><code>@dep.Url</code></div>
-                            }
-                            @if (dep.Revision is not null)
-                            {
-                                <div class="dep-detail">Revision: <code>@Truncate(dep.Revision)</code></div>
-                            }
-                        </div>
-                    }
-                }
-                @if (_review.DepsAudit.Removed.Count > 0)
-                {
-                    <h3 class="change-category cat-removed">Removed (@_review.DepsAudit.Removed.Count)</h3>
-                    @foreach (var dep in _review.DepsAudit.Removed)
-                    {
-                        <div class="skia-dep-entry dep-removed">
-                            <div class="dep-name">@dep.Name</div>
-                            <div class="dep-summary">@dep.Summary</div>
-                        </div>
-                    }
-                }
-                @if (_review.DepsAudit.Changed.Count > 0)
-                {
-                    <h3 class="change-category cat-changed">Changed (@_review.DepsAudit.Changed.Count)</h3>
-                    @foreach (var dep in _review.DepsAudit.Changed)
-                    {
-                        <div class="skia-dep-entry dep-changed">
-                            <div class="dep-name">@dep.Name</div>
-                            <div class="dep-summary">@dep.Summary</div>
-                            @if (dep.OldRevision is not null && dep.NewRevision is not null)
-                            {
-                                <div class="dep-detail">
-                                    <code>@Truncate(dep.OldRevision)</code> →
-                                    <code>@Truncate(dep.NewRevision)</code>
-                                </div>
-                            }
-                        </div>
-                    }
-                }
+                <h3 class="section-title">DEPS Audit</h3>
+                <span class="skia-section-counts">
+                    @if (_review.DepsAudit.Added.Count > 0) { <span class="count-added">+@_review.DepsAudit.Added.Count</span> }
+                    @if (_review.DepsAudit.Removed.Count > 0) { <span class="count-removed">-@_review.DepsAudit.Removed.Count</span> }
+                    @if (_review.DepsAudit.Changed.Count > 0) { <span class="count-changed">~@_review.DepsAudit.Changed.Count</span> }
+                    @if (_review.DepsAudit.Unchanged > 0) { <span class="count-unchanged">@_review.DepsAudit.Unchanged unchanged</span> }
+                </span>
             </div>
-        }
-    </div>
-
-    <!-- Human Review Files -->
-    @if (_review.HumanReviewFiles is { Count: > 0 })
-    {
-        <div class="skia-section">
-            <div class="skia-section-header" @onclick="() => _showFiles = !_showFiles">
-                <h2>📁 Review Artifacts (@_review.HumanReviewFiles.Count files)</h2>
-                <span class="expand-toggle">@(_showFiles ? "▼" : "▶")</span>
-            </div>
-            @if (_showFiles)
+            <p>Third-party dependency changes in the DEPS file. The fork pins custom security revisions, so all changes require review.</p>
+            @if (_review.DepsAudit.Added.Count > 0)
             {
-                <div class="skia-section-body">
-                    <ul class="skia-file-list">
-                        @foreach (var file in _review.HumanReviewFiles)
-                        {
-                            <li><code>@file</code></li>
-                        }
-                    </ul>
-                </div>
+                <h4 class="change-category cat-added">Added (@_review.DepsAudit.Added.Count)</h4>
+                @foreach (var dep in _review.DepsAudit.Added)
+                {
+                    <div class="skia-dep-entry dep-added">
+                        <div class="dep-name">@dep.Name</div>
+                        <div class="dep-summary">@dep.Summary</div>
+                        @if (dep.Url is not null) { <div class="dep-detail"><code>@dep.Url</code></div> }
+                        @if (dep.Revision is not null) { <div class="dep-detail">Revision: <code>@Truncate(dep.Revision)</code></div> }
+                    </div>
+                }
             }
+            @if (_review.DepsAudit.Removed.Count > 0)
+            {
+                <h4 class="change-category cat-removed">Removed (@_review.DepsAudit.Removed.Count)</h4>
+                @foreach (var dep in _review.DepsAudit.Removed)
+                {
+                    <div class="skia-dep-entry dep-removed">
+                        <div class="dep-name">@dep.Name</div>
+                        <div class="dep-summary">@dep.Summary</div>
+                    </div>
+                }
+            }
+            @if (_review.DepsAudit.Changed.Count > 0)
+            {
+                <h4 class="change-category cat-changed">Changed (@_review.DepsAudit.Changed.Count)</h4>
+                @foreach (var dep in _review.DepsAudit.Changed)
+                {
+                    <div class="skia-dep-entry dep-changed">
+                        <div class="dep-name">@dep.Name</div>
+                        <div class="dep-summary">@dep.Summary</div>
+                        @if (dep.OldRevision is not null && dep.NewRevision is not null)
+                        {
+                            <div class="dep-detail">
+                                <code>@Truncate(dep.OldRevision)</code> →
+                                <code>@Truncate(dep.NewRevision)</code>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    }
+
+    <!-- Tab: Artifacts -->
+    @if (_activeTab == "artifacts" && _review.HumanReviewFiles is { Count: > 0 })
+    {
+        <div class="section-card">
+            <h3 class="section-title">Review Artifacts</h3>
+            <p>Diff files generated during the review process (@_review.HumanReviewFiles.Count files):</p>
+            <ul class="skia-file-list">
+                @foreach (var file in _review.HumanReviewFiles)
+                {
+                    <li><code>@file</code></li>
+                }
+            </ul>
         </div>
     }
 }
@@ -376,11 +464,7 @@ else
     private SkiaReviewReport? _review;
     private SkiaReviewIndexEntry? _indexEntry;
     private bool _loading = true;
-    private bool _showGenerated = true;
-    private bool _showUpstream;
-    private bool _showInterop;
-    private bool _showDeps;
-    private bool _showFiles;
+    private string _activeTab = "overview";
 
     private readonly HashSet<string> _expandedDiffs = [];
 
