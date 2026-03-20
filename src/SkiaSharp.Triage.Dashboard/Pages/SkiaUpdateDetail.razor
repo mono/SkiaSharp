@@ -20,32 +20,49 @@ else
         <a href="skia-updates" class="btn-back">← Back to Skia Updates</a>
     </div>
 
-    <!-- Header -->
-    <div class="skia-detail-header">
+    <!-- Header matching triage detail pattern -->
+    <div class="triage-detail-header triage-detail-header-minimal">
         <div class="detail-title-row">
-            <a href="https://github.com/@_review.Meta.Repo/pull/@_review.Meta.SkiaPrNumber" target="_blank" rel="noopener noreferrer" class="issue-link-lg">
-                #@_review.Meta.SkiaPrNumber
-            </a>
-            <h1>Skia Update: @FormatBranch(_review.Meta.OldUpstreamBranch) → @FormatBranch(_review.Meta.UpstreamBranch)</h1>
+            <a href="https://github.com/@_review.Meta.Repo/pull/@_review.Meta.SkiaPrNumber" target="_blank" rel="noopener noreferrer" class="issue-link-lg">#@_review.Meta.SkiaPrNumber</a>
+            <h1>@(_indexEntry?.PrTitle ?? $"Skia Update: {FormatBranch(_review.Meta.OldUpstreamBranch)} → {FormatBranch(_review.Meta.UpstreamBranch)}")</h1>
         </div>
         <div class="detail-header-meta">
             <span class="badge-risk badge-risk-@_review.RiskAssessment.ToString().ToLower()">
                 @_review.RiskAssessment Risk
             </span>
+            <span class="skia-check @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "check-pass" : "check-fail")">
+                @(_review.GeneratedFiles.Status == GeneratedFilesStatus.Pass ? "✓" : "✗") Generated Files
+            </span>
             <span class="detail-meta-text">
-                Analyzed: @_review.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
+                @FormatBranch(_review.Meta.OldUpstreamBranch) → @FormatBranch(_review.Meta.UpstreamBranch)
+                · Analyzed: @_review.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
                 · <a href="https://github.com/@_review.Meta.Repo" target="_blank" rel="noopener noreferrer">@_review.Meta.Repo</a>
             </span>
-            @if (_review.Meta.SkiasharpPrNumber is not null)
-            {
-                <span class="detail-meta-text">
-                    · Companion: <a href="https://github.com/mono/SkiaSharp/pull/@_review.Meta.SkiasharpPrNumber" target="_blank" rel="noopener noreferrer">
-                        SkiaSharp #@_review.Meta.SkiasharpPrNumber
-                    </a>
-                </span>
-            }
         </div>
     </div>
+
+    @if (_indexEntry?.PrState is not null)
+    {
+        <div class="quick-facts-row">
+            <div class="qf-group">
+                <span class="qf-label">State</span>
+                <span class="label label-@_indexEntry.PrState">@_indexEntry.PrState</span>
+            </div>
+            <div class="qf-group">
+                <span class="qf-label">Upstream</span>
+                <span class="label">@FormatBranch(_review.Meta.OldUpstreamBranch) → @FormatBranch(_review.Meta.UpstreamBranch)</span>
+            </div>
+            @if (_review.Meta.SkiasharpPrNumber is not null)
+            {
+                <div class="qf-group">
+                    <span class="qf-label">Companion PR</span>
+                    <a href="https://github.com/mono/SkiaSharp/pull/@_review.Meta.SkiasharpPrNumber" target="_blank" rel="noopener noreferrer" class="label">
+                        SkiaSharp #@_review.Meta.SkiasharpPrNumber
+                    </a>
+                </div>
+            }
+        </div>
+    }
 
     <!-- SHAs -->
     <div class="skia-shas">
@@ -357,6 +374,7 @@ else
     [Parameter] public int Number { get; set; }
 
     private SkiaReviewReport? _review;
+    private SkiaReviewIndexEntry? _indexEntry;
     private bool _loading = true;
     private bool _showGenerated = true;
     private bool _showUpstream;
@@ -368,7 +386,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _review = await DataService.GetSkiaReviewDetailAsync(Number);
+        var reviewTask = DataService.GetSkiaReviewDetailAsync(Number);
+        var indexTask = DataService.GetSkiaUpdatesAsync();
+        await Task.WhenAll(reviewTask, indexTask);
+        _review = reviewTask.Result;
+        var index = indexTask.Result;
+        _indexEntry = index?.Reviews.FirstOrDefault(r => r.PrNumber == Number);
         _loading = false;
     }
 

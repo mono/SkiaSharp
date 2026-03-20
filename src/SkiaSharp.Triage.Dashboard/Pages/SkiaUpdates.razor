@@ -62,53 +62,41 @@ else
         <div class="skia-reviews-list">
             @foreach (var review in _filtered)
             {
-                <a href="skia-updates/@review.PrNumber" class="skia-review-card">
-                    <div class="skia-review-header">
-                        <span class="skia-pr-number">#@review.PrNumber</span>
-                        <span class="skia-branch-transition">
+                <a href="skia-updates/@review.PrNumber" class="skia-review-row @GetRiskClass(review.RiskAssessment)">
+                    <span class="row-number">#@review.PrNumber</span>
+                    <span class="row-body">
+                        <span class="row-title">@(review.PrTitle ?? $"Skia Update: {FormatBranch(review.OldUpstreamBranch)} → {FormatBranch(review.UpstreamBranch)}")</span>
+                        <span class="row-summary">
                             @FormatBranch(review.OldUpstreamBranch) → @FormatBranch(review.UpstreamBranch)
-                        </span>
-                        <span class="badge-risk badge-risk-@review.RiskAssessment.ToString().ToLower()">
-                            @review.RiskAssessment
-                        </span>
-                    </div>
-                    @if (review.PrTitle is not null)
-                    {
-                        <div class="skia-review-title">@review.PrTitle</div>
-                    }
-                    <div class="skia-review-checks">
-                        <span class="skia-check @(review.GeneratedFilesStatus == GeneratedFilesStatus.Pass ? "check-pass" : "check-fail")">
-                            @(review.GeneratedFilesStatus == GeneratedFilesStatus.Pass ? "✓" : "✗") Generated
-                        </span>
-                        <span class="skia-check @(review.UpstreamIntegrityStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
-                            @(review.UpstreamIntegrityStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") Upstream
-                            @if (review.UpstreamAddedCount + review.UpstreamRemovedCount + review.UpstreamChangedCount > 0)
+                            · Analyzed @review.AnalyzedAt.ToString("yyyy-MM-dd")
+                            @if (review.SkiasharpPrNumber is not null)
                             {
-                                <span class="check-count">(@(review.UpstreamAddedCount + review.UpstreamRemovedCount + review.UpstreamChangedCount))</span>
+                                <text> · Companion SkiaSharp PR #@review.SkiasharpPrNumber</text>
                             }
                         </span>
-                        <span class="skia-check @(review.InteropIntegrityStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
-                            @(review.InteropIntegrityStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") Interop
-                            @if (review.InteropChangedCount > 0)
-                            {
-                                <span class="check-count">(@review.InteropChangedCount)</span>
-                            }
+                        <span class="row-meta">
+                            <span class="badge-risk badge-risk-@review.RiskAssessment.ToString().ToLower()">
+                                @review.RiskAssessment
+                            </span>
+                            <span class="skia-check @(review.GeneratedFilesStatus == GeneratedFilesStatus.Pass ? "check-pass" : "check-fail")">
+                                @(review.GeneratedFilesStatus == GeneratedFilesStatus.Pass ? "✓" : "✗") Generated
+                            </span>
+                            <span class="skia-check @(review.UpstreamIntegrityStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
+                                @(review.UpstreamIntegrityStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") Upstream
+                                @{ var uTotal = review.UpstreamAddedCount + review.UpstreamRemovedCount + review.UpstreamChangedCount; }
+                                @if (uTotal > 0) { <text> (@uTotal)</text> }
+                            </span>
+                            <span class="skia-check @(review.InteropIntegrityStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
+                                @(review.InteropIntegrityStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") Interop
+                                @if (review.InteropChangedCount > 0) { <text> (@review.InteropChangedCount)</text> }
+                            </span>
+                            <span class="skia-check @(review.DepsAuditStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
+                                @(review.DepsAuditStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") DEPS
+                                @{ var dTotal = review.DepsAddedCount + review.DepsChangedCount; }
+                                @if (dTotal > 0) { <text> (@dTotal)</text> }
+                            </span>
                         </span>
-                        <span class="skia-check @(review.DepsAuditStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
-                            @(review.DepsAuditStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") DEPS
-                            @if (review.DepsAddedCount + review.DepsChangedCount > 0)
-                            {
-                                <span class="check-count">(@(review.DepsAddedCount + review.DepsChangedCount))</span>
-                            }
-                        </span>
-                    </div>
-                    <div class="skia-review-meta">
-                        Analyzed @review.AnalyzedAt.ToString("yyyy-MM-dd")
-                        @if (review.SkiasharpPrNumber is not null)
-                        {
-                            <span>· Companion SkiaSharp PR #@review.SkiasharpPrNumber</span>
-                        }
-                    </div>
+                    </span>
                 </a>
             }
         </div>
@@ -141,6 +129,14 @@ else
             _ => _data.Reviews.ToList()
         };
     }
+
+    private static string GetRiskClass(SkiaRiskAssessment risk) => risk switch
+    {
+        SkiaRiskAssessment.High => "risk-high",
+        SkiaRiskAssessment.Medium => "risk-medium",
+        SkiaRiskAssessment.Low => "risk-low",
+        _ => ""
+    };
 
     private static string FormatBranch(string branch) =>
         branch.StartsWith("chrome/") ? branch["chrome/".Length..] : branch;
