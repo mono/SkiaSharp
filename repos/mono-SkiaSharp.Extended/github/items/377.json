@@ -35,8 +35,37 @@
   "commits": 4,
   "reviews": [],
   "engagement": {
-    "syncedAt": "2026-03-04T20:47:43.6161493Z",
+    "syncedAt": "2026-03-20T22:10:42.4087211Z",
     "reactions": [],
-    "comments": []
+    "comments": [
+      {
+        "id": 4016157412,
+        "author": "mattleibow",
+        "body": "@copilot let\u0027s drop the gl selection stuff. We can add it later. Let\u0027s focus on the animation view and get that ready. ",
+        "createdAt": "2026-03-07T10:06:40",
+        "reactions": []
+      },
+      {
+        "id": 4016163053,
+        "author": "mattleibow",
+        "body": "@copilot look at the Maui animated view and add the debug overlay and fps. You may need to move some utils out of the Maui lib into the base lib. ",
+        "createdAt": "2026-03-07T10:10:20",
+        "reactions": []
+      },
+      {
+        "id": 4016174843,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot let\u0027s drop the gl selection stuff. We can add it later. Let\u0027s focus on the animation view and get that ready. \n\nDone in 8376df2. Dropped all GL/\u0060UseGL\u0060 code from \u0060SKAnimatedSurfaceView\u0060, the sample, tests, and docs. The component is now canvas-only with a clean \u0060PeriodicTimer\u0060 animation loop.\n\n![Animated Surface](https://github.com/user-attachments/assets/80176fab-bab5-4307-a324-b34f020afd2f)",
+        "createdAt": "2026-03-07T10:16:15",
+        "reactions": []
+      },
+      {
+        "id": 4016219649,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot look at the Maui animated view and add the debug overlay and fps. You may need to move some utils out of the Maui lib into the base lib. \n\nDone in c779d11. \u0060SKFrameCounter\u0060 has been moved from the MAUI lib into the base \u0060SkiaSharp.Extended\u0060 lib (\u0060Internals/SKFrameCounter.cs\u0060) with \u0060InternalsVisibleTo\u0060 for both MAUI and Blazor. The Blazor \u0060SKAnimatedSurfaceView\u0060 now uses it for delta tracking and exposes a \u0060#if DEBUG\u0060 FPS overlay drawn after the user\u0027s paint callback \u2014 matching the MAUI pattern (\u0060WriteDebugStatus($\u0022FPS: {frameCounter.Rate:0.0}\u0022)\u0060):\n\n![FPS overlay showing 62.5](https://github.com/user-attachments/assets/c4b2ac16-0316-4b0a-a13b-931a554046f0)",
+        "createdAt": "2026-03-07T10:38:10",
+        "reactions": []
+      }
+    ]
   }
 }
