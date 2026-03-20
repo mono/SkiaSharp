@@ -1,0 +1,29 @@
+{
+  "number": 3548,
+  "type": "pr",
+  "state": "closed",
+  "title": "Make skill action schemas automation-ready with required data fields",
+  "body": "Follows up on #3547. Makes both triage and repro action schemas fully automatable.\n\n### Problem\n\nThe repro skill produces hollow actions \u2014 e.g. \u0060update-labels\u0060 with no \u0060labels\u0060 array, \u0060add-comment\u0060 with no \u0060comment\u0060 text. An automation runner can\u0027t execute these.\n\nAdditionally, both schemas were missing fields needed for certain action types (\u0060close-issue\u0060 had no \u0060stateReason\u0060, \u0060convert-to-discussion\u0060 had no \u0060category\u0060, etc).\n\n### Changes\n\n**Both JSON schemas** (\u0060triage-schema.json\u0060 \u002B \u0060repro-schema.json\u0060):\n- Added \u0060stateReason\u0060 (\u0060completed\u0060|\u0060not_planned\u0060) for \u0060close-issue\u0060\n- Added \u0060category\u0060 for \u0060convert-to-discussion\u0060\n- Added \u0060milestone\u0060 for \u0060set-milestone\u0060\n- Removed \u0060update-project\u0060 (not automatable \u2014 requires project board IDs)\n\n**Both cheatsheets**:\n- Updated action type table with required fields for every action type\n- Repro cheatsheet: added **Action Data Requirements** section preventing hollow actions\n\n### Action field requirements\n\n| Type | Required Fields |\n|------|----------------|\n| \u0060update-labels\u0060 | \u0060labels\u0060 (string array) |\n| \u0060add-comment\u0060 | \u0060comment\u0060 (markdown string) |\n| \u0060close-issue\u0060 | \u0060stateReason\u0060 (\u0060completed\u0060 or \u0060not_planned\u0060) |\n| \u0060link-related\u0060 | \u0060linkedIssue\u0060 (integer) |\n| \u0060link-duplicate\u0060 | \u0060linkedIssue\u0060 (integer) |\n| \u0060convert-to-discussion\u0060 | \u0060category\u0060 (string) |\n| \u0060set-milestone\u0060 | \u0060milestone\u0060 (string) |",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-05T14:45:17",
+  "updatedAt": "2026-03-05T14:53:30",
+  "closedAt": "2026-03-05T14:53:27",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-05T14:53:27",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/dynamic-comment-risk-skills",
+  "additions": 93,
+  "deletions": 18,
+  "changedFiles": 4,
+  "commits": 2,
+  "reviews": []
+}

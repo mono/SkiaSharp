@@ -1,0 +1,28 @@
+{
+  "number": 3554,
+  "type": "pr",
+  "state": "open",
+  "title": "tests: Add device test proving SKGLView renders after reattach (validates #3076)",
+  "body": "## Summary\n\nThis PR adds an Android device test that **proves** the fix in PR #3076 works:\n- **Without** the fix: test **fails** with \u0060got 0x0\u0060\n- **With** the fix: test **passes** \u2714\n\nThe fix itself lives in **#3076** (by @SimonvBez). This PR contains only the test.\n\n## Test: \u0060GLThreadHasCorrectDimensionsAfterReattach\u0060\n\n**File:** \u0060tests/SkiaSharp.Tests.Devices/Tests/Maui/SKGLViewTests.cs\u0060\n\n### The Bug (issue #2550)\n\nWhen \u0060SKGLView\u0060 is placed on a MAUI \u0060TabBar\u0060 tab, switching away and back causes it to stop rendering. Root cause:\n\n\u0060OnAttachedToWindow()\u0060 creates \u0060new GLThread(weakRef)\u0060 with \u0060width=0, height=0\u0060. Because the view\u0027s bounds haven\u0027t changed, Android never fires \u0060OnLayoutChange\u0060 again \u2014 so \u0060GLThread.OnWindowResize()\u0060 is never called. \u0060IsReadyToDraw()\u0060 keeps returning \u0060false\u0060 (requires \u0060width \u003E 0 \u0026\u0026 height \u003E 0\u0060), so the view never renders.\n\n### How the test works\n\n1. Attaches the view and waits for first render (precondition)\n2. Uses **native Android** \u0060RemoveView()\u0060/\u0060AddView()\u0060 to detach and reattach \u2014 bypassing MAUI\u0027s handler lifecycle (which would recreate the view)\n3. Reads \u0060GLThread.width\u0060/\u0060height\u0060 via **reflection immediately after** \u0060AddView()\u0060 \u2014 before any async \u0060OnLayoutChange\u0060 callback can supply dimensions\n4. Asserts dimensions are \u0060\u003E 0\u0060\n\nThis captures the raw state \u0060OnAttachedToWindow()\u0060 sets, which is exactly the window where the bug lives in the real tab-bar scenario.\n\n### Before/After Results (on \u0060emulator-5554\u0060)\n\n**Without fix (#3076 not applied):**\n\u0060\u0060\u0060\n\u26D4 GLThread dimensions should be positive immediately after OnAttachedToWindow, got 0x0.\n   Expected: True\n   Actual:   False\n\u0060\u0060\u0060\n\n**With fix (#3076 applied):**\n\u0060\u0060\u0060\n\u2714 Success! 1606.2943 ms\n\u0060\u0060\u0060\n\n## Related\n- Fixes #2550\n- Validates fix in #3076\n- Possibly also fixes #2445",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-10T03:27:19",
+  "updatedAt": "2026-03-10T17:40:42",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "dev/issue-2550-skglview-android-reattach-fix",
+  "additions": 166,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

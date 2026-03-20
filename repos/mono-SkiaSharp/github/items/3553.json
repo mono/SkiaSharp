@@ -1,0 +1,28 @@
+{
+  "number": 3553,
+  "type": "pr",
+  "state": "open",
+  "title": "Update all Basic samples to multi-page layouts with designer support",
+  "body": "## Summary\n\nUpdate all 14 Basic samples to demonstrate multiple rendering modes with proper designer/layout file support.\n\n### Pages per sample:\n- **CPU Canvas**: Radial gradient background \u002B colored circles \u002B centered \u0022SkiaSharp\u0022 text\n- **GPU** (1 page per backend): SkSL metaball shader with touch/mouse interaction \u002B FPS overlay\n- **Drawing**: Multi-stroke canvas with color picker \u002B brush sizing (where input is supported)\n\n### Navigation:\nEach platform uses its idiomatic navigation pattern (sidebar, drawer, tabs, flyout).\n\n### Designer support:\nEvery sample uses the platform\u0027s native layout/designer system:\n- **Android**: XML layout files (\u0060Resources/layout/\u0060)\n- **iOS/macOS/tvOS/MacCatalyst**: Storyboards with SkiaSharp views as custom classes\n- **WPF/WinUI/MAUI/UnoPlatform**: XAML with SkiaSharp views declared in markup\n- **WindowsForms**: \u0060.Designer.cs\u0060 files with SKControl/SKGLControl\n- **Gtk3**: \u0060.glade\u0060 file for GTK Builder\n- **Gtk4**: \u0060.ui\u0060 file for GTK4 Builder\n- **Blazor**: \u0060.razor\u0060 component markup\n- **Tizen**: ElmSharp (no visual designer available)\n\n### Platform matrix:\n\n| Sample | Pages | GPU Backends | Drawing | Designer |\n|--------|:-----:|:------------|:-------:|:--------:|\n| Android | 4 | SurfaceView, TextureView | \u2705 | XML layouts |\n| iOS | 4 | GL, Metal | \u2705 | Storyboard |\n| macOS | 4 | GL, Metal | \u2705 | Storyboard |\n| tvOS | 3 | GL, Metal | \u274C (Siri Remote) | Storyboard |\n| MacCatalyst | 3 | Metal | \u2705 | Storyboard |\n| MAUI | 3 | SKGLView | \u2705 | XAML |\n| WPF | 3 | OpenGL | \u2705 | XAML |\n| WinUI | 3 | ANGLE/DirectX | \u2705 | XAML |\n| WinForms | 3 | OpenGL | \u2705 | .Designer.cs |\n| UnoPlatform | 3 | ANGLE/DirectX | \u2705 | XAML |\n| Blazor | 3 | WebGL | \u2705 | .razor |\n| Tizen | 3 | GL ES | \u2705 | Code |\n| Gtk3 | 2 | \u2014 | \u2705 | .glade |\n| Gtk4 | 2 | \u2014 | \u2705 | .ui |\n\nRef: Cherry-picked from PR #3541 for Blazor sample.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-06T18:33:27",
+  "updatedAt": "2026-03-20T20:47:57",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "samples",
+  "additions": 11959,
+  "deletions": 1662,
+  "changedFiles": 279,
+  "commits": 214,
+  "reviews": []
+}

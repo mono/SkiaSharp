@@ -1,0 +1,29 @@
+{
+  "number": 3563,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix tvOS NativeReference targets to split device/simulator frameworks",
+  "body": "## Problem\n\ntvOS builds targeting the **tvOS Simulator** fail at link time with architecture mismatch errors. The native framework included during build is the **device** framework (arm64 compiled for tvOS), but the simulator expects binaries compiled for the tvOS Simulator platform (x86_64 and/or arm64 with simulator platform tag).\n\n### Root Cause\n\nBoth \u0060IncludeNativeAssets.SkiaSharp.targets\u0060 and \u0060IncludeNativeAssets.HarfBuzzSharp.targets\u0060 had a single \u0060NativeReference\u0060 for all tvOS builds:\n\n\u0060\u0060\u0060xml\n\u003CItemGroup Condition=\u0022$(TargetFramework.Contains(\u0027-tvos\u0027))\u0022\u003E\n  \u003CNativeReference Include=\u0022...\\output\\native\\tvos\\libSkiaSharp.framework\u0022 Kind=\u0022Framework\u0022 /\u003E\n\u003C/ItemGroup\u003E\n\u0060\u0060\u0060\n\nThis means building for \u0060tvossimulator-arm64\u0060 or \u0060tvossimulator-x86_64\u0060 would link against the device framework, which has the wrong Mach-O platform load command (LC_BUILD_VERSION with platform=tvos instead of platform=tvossimulator). The linker rejects this with errors like:\n\n\u003E **ld: building for tvOS Simulator, but linking in object file built for tvOS**\n\n### The Fix\n\nSplit the tvOS \u0060ItemGroup\u0060 to conditionally select the correct framework based on \u0060RuntimeIdentifier\u0060, matching the **existing iOS pattern** exactly:\n\n\u0060\u0060\u0060xml\n\u003CItemGroup Condition=\u0022$(TargetFramework.Contains(\u0027-tvos\u0027)) and \u0027$(RuntimeIdentifier)\u0027 != \u0027\u0027\u0022\u003E\n  \u003CNativeReference Include=\u0022...tvossimulator\\libSkiaSharp.framework\u0022 Kind=\u0022Framework\u0022\n                   Condition=\u0022$(RuntimeIdentifier.StartsWith(\u0027tvossimulator\u0027))\u0022 /\u003E\n  \u003CNativeReference Include=\u0022...tvos\\libSkiaSharp.framework\u0022 Kind=\u0022Framework\u0022\n\u003C/ItemGroup\u003E\n\u0060\u0060\u0060\n\n### Why the \u0060RuntimeIdentifier != \u0027\u0027\u0060 guard?\n\nMSBuild evaluates \u0060ItemGroup\u0060 conditions during the outer build (before RID dispatch) when \u0060RuntimeIdentifier\u0060 is empty. Without this guard, both \u0060NativeReference\u0060 items would be evaluated with an empty RID \u2014\n\nThis is the same guard used by the iOS targets.\n\n### Files Changed\n\n| File | Change |\n|------|--------|\n| \u0060binding/IncludeNativeAssets.SkiaSharp.targets\u0060 | Split tvOS NativeReference into simulator/device |\n| \u0060binding/IncludeNativeAssets.HarfBuzzSharp.targets\u0060 | Same split for HarfBuzzSharp |\n\n### Comparison with iOS (already correct)\n\nThe iOS targets already follow this pattern \u2014 this PR simply brings tvOS into alignment:\n\n\u0060\u0060\u0060xml\n\u003CItemGroup Condition=\u0022$(TargetFramework.Contains(\u0027-ios\u0027)) and \u0027$(RuntimeIdentifier)\u0027 != \u0027\u0027\u0022\u003E\n  \u003CNativeReference Include=\u0022...iossimulator\\libSkiaSharp.framework\u0022 Condition=\u0022$(RuntimeIdentifier.StartsWith(\u0027iossimulator\u0027))\u0022 /\u003E\n\u003C/ItemGroup\u003E\n\u0060\u0060\u0060\n\n### Context\n\nThis is a companion fix to #3561 which added the tvOS simulator native build pipeline. That PR produces separate \u0060tvos/\u0060 and \u0060tvossimulator/\u0060 framework directories \u2014 this PR ensures MSBuild selects the right one at build time.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-15T19:50:04",
+  "updatedAt": "2026-03-15T19:52:41",
+  "closedAt": "2026-03-15T19:52:39",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-15T19:52:39",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-tvos-simulator-native-assets",
+  "additions": 6,
+  "deletions": 4,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": []
+}

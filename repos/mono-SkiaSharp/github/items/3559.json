@@ -1,0 +1,28 @@
+{
+  "number": 3559,
+  "type": "pr",
+  "state": "open",
+  "title": "Bump skia to milestone 122",
+  "body": "## Bump Skia to Chrome Milestone 122\n\nUpdate Skia from m119 to m122 (3-milestone jump: m120\u2192m121\u2192m122).\n\n### Changes\n\n**C# Wrapper (\u0060binding/SkiaSharp/\u0060)**:\n- \u0060SKTypeface.CreateDefault\u0060, \u0060FromFamilyName\u0060, \u0060FromFile\u0060, \u0060FromStream\u0060, \u0060FromData\u0060 \u2014 marked \u0060[Obsolete]\u0060, redirected to \u0060SKFontManager.Default\u0060 methods\n- \u0060SKTypeface.Default\u0060 static initializer \u2014 uses \u0060SKFontManager.Default.MatchFamily(null)\u0060 instead of removed \u0060sk_typeface_ref_default\u0060\n- New binding: \u0060sk_surface_draw_with_sampling\u0060 (from upstream)\n\n**Version Updates**:\n- \u0060scripts/VERSIONS.txt\u0060: milestone 122, soname 122.0.0, assembly 3.122.0.0, nuget 3.122.0\n- \u0060cgmanifest.json\u0060: chrome_milestone \u2192 122\n\n**Tests**:\n- Updated \u0060CanSetTypefacesWithoutCrashing\u0060 tests \u2014 null typeface now falls back to platform default instead of staying null (m122 behavior)\n- All 5,346 tests pass (0 failures, 5 platform-specific skips)\n\n### Companion PR\nSubmodule: mono/skia#170\n\n### Migration Guide for Users\n\n\u0060\u0060\u0060csharp\n// Before (deprecated)\nvar typeface = SKTypeface.FromFamilyName(\u0022Arial\u0022);\n\n// After (recommended)\nvar typeface = SKFontManager.Default.MatchFamily(\u0022Arial\u0022);\n\n// Before (deprecated)\nvar typeface = SKTypeface.FromFile(\u0022font.ttf\u0022);\n\n// After (recommended)\nvar typeface = SKFontManager.Default.CreateTypeface(\u0022font.ttf\u0022);\n\u0060\u0060\u0060",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-11T23:19:55",
+  "updatedAt": "2026-03-20T19:04:32",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "dev/update-skia-m122",
+  "additions": 439,
+  "deletions": 204,
+  "changedFiles": 12,
+  "commits": 5,
+  "reviews": []
+}

@@ -1,0 +1,29 @@
+{
+  "number": 3564,
+  "type": "pr",
+  "state": "closed",
+  "title": "Simplify Docker build infrastructure and switch to MCR mirrors",
+  "body": "## Summary\n\nFixes the SkiaSharp-Native CI failure caused by Docker Hub being unreachable from 1ES hosted agents (\u0060dial tcp 192.0.2.4:443: i/o timeout\u0060).\n\n## Changes\n\n- **Switch all base images to MCR mirrors** (\u0060mcr.microsoft.com/mirror/docker/library/\u0060) to fix connectivity\n- **Consolidate from 10 Dockerfiles \u2192 4**: \u0060debian/10\u0060, \u0060debian/13\u0060, \u0060musl\u0060, \u0060wasm\u0060\n- **Delete 6 unused Dockerfiles**: alpine/amd64, alpine/arm64v8, debian/arm64v8, debian/amd64, debian/clang-cross/11, debian/clang-cross/12\n- **Flatten directory structure**: remove \u0060clang-cross/\u0060 nesting\n- **Rename \u0060alpine\u0060 variant \u2192 \u0060musl\u0060** throughout (cake, YAML, csproj) \u2014 NuGet RIDs already say \u0060linux-musl-*\u0060\n- **Move x64 to cross-compile path** via debian/10 (same as other arches)\n\n## Docker structure (before \u2192 after)\n\n\u0060\u0060\u0060\nBefore (10 Dockerfiles):           After (4 Dockerfiles):\n\u251C\u2500\u2500 alpine/amd64/         \u274C       \u251C\u2500\u2500 musl/              (debian:12 \u2192 musl cross)\n\u251C\u2500\u2500 alpine/arm64v8/       \u274C       \u251C\u2500\u2500 debian/10/         (LLVM 13, GCC 8)\n\u251C\u2500\u2500 alpine/clang-cross/   \u2192 musl/  \u251C\u2500\u2500 debian/13/         (LLVM 19, GCC 14)\n\u251C\u2500\u2500 debian/amd64/         \u274C       \u2514\u2500\u2500 wasm/              (dotnet sdk)\n\u251C\u2500\u2500 debian/arm64v8/       \u274C\n\u251C\u2500\u2500 debian/clang-cross/10 \u2192 debian/10\n\u251C\u2500\u2500 debian/clang-cross/11 \u274C\n\u251C\u2500\u2500 debian/clang-cross/12 \u274C\n\u251C\u2500\u2500 debian/clang-cross/13 \u2192 debian/13\n\u2514\u2500\u2500 wasm/                 (unchanged)\n\u0060\u0060\u0060\n\n## Known issue\n\n\u0060debian:13\u0060 is **not yet available on MCR**. Loongarch64 builds will remain broken until the mirror is requested. All other Linux jobs should be unblocked.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-17T18:26:48",
+  "updatedAt": "2026-03-18T21:04:03",
+  "closedAt": "2026-03-18T21:04:01",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-18T21:04:01",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-docker-mcr-mirrors",
+  "additions": 40,
+  "deletions": 374,
+  "changedFiles": 29,
+  "commits": 1,
+  "reviews": []
+}

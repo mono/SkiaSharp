@@ -1,0 +1,29 @@
+{
+  "number": 3561,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix tvOS: split device/simulator native builds to match iOS pattern",
+  "body": "## Fix tvOS native build: split device/simulator and fix GN args\n\n### Problem\n\nThe tvOS native build had three interconnected issues preventing tvOS simulator apps from working:\n\n1. **Combined device\u002Bsimulator output** \u2014 All tvOS builds output to a single \u0060output/native/tvos/\u0060 directory, mixing device (arm64) and simulator (x86_64) archives. The NuGet package only contained \u0060runtimes/tvos/\u0060 with no \u0060runtimes/tvossimulator/\u0060 entry, so .NET could not resolve native libraries for the simulator.\n\n2. **Missing arm64 simulator build** \u2014 Only x86_64 simulator was built. Apple Silicon Macs running the tvOS simulator need arm64 simulator binaries.\n\n3. **Wrong GN arg for min deployment target** \u2014 The GnNinja call used \u0060min_ios_version\u0060 instead of \u0060min_tvos_version\u0060. Since Skia only reads \u0060min_tvos_version\u0060 when \u0060target_os=\u0027tvos\u0027\u0060, the arg was silently ignored and Skia fell back to its default of 9.0 instead of the intended 11.0.\n\n### Fix\n\nMirrors the existing iOS pattern (\u0060native/ios/build.cake\u0060) which already correctly separates device and simulator:\n\n**\u0060native/tvos/build.cake\u0060:**\n- Split \u0060OUTPUT_PATH\u0060 from \u0060output/native/tvos\u0060 \u2192 \u0060output/native\u0060 (with \u0060tvos/\u0060 and \u0060tvossimulator/\u0060 subdirs)\n- Added \u0060appletvsimulator arm64\u0060 build for Apple Silicon simulator support\n- Added \u0060ios_use_simulator\u0060 GN flag for simulator builds\n- Added \u0060SKIA_PLATFORM\u0060 override to \u0060RunXCodeBuild\u0060 for libSkiaSharp (selects correct Skia static lib path)\n- Changed \u0060min_ios_version\u0060 \u2192 \u0060min_tvos_version\u0060 (Skia has separate GN args per platform)\n- SafeCopy simulator x86_64 archive to \u0060tvos/\u0060 dir (backward-compat fat framework, same as iOS)\n\n**\u0060native/tvos/libSkiaSharp/libSkiaSharp.xcodeproj/project.pbxproj\u0060:**\n- Added \u0060SKIA_PLATFORM = tvos\u0060 as default build setting (overridden by build.cake at build time)\n- Changed \u0060LIBRARY_SEARCH_PATHS\u0060 from hardcoded \u0060skia/out/tvos/$(ARCHS)\u0060 to \u0060skia/out/$(SKIA_PLATFORM)/$(ARCHS)\u0060\n\n**\u0060binding/SkiaSharp.NativeAssets.tvOS/\u0060 and \u0060binding/HarfBuzzSharp.NativeAssets.tvOS/\u0060:**\n- Added \u0060runtimes/tvossimulator/native/\u0060 PackageFile entries to include simulator frameworks in NuGet\n\n### Design notes\n\n**Why \u0060SKIA_PLATFORM = tvos\u0060 in the xcodeproj?**\nThis is a *default* value, not a hardcode. \u0060build.cake\u0060 overrides it at build time via \u0060RunXCodeBuild\u0060 properties \u2014 passing \u0060tvos\u0060 for device builds and \u0060tvossimulator\u0060 for simulator builds. The default just ensures the project opens correctly in Xcode without the build script. This is identical to how iOS does it (\u0060SKIA_PLATFORM = ios\u0060 default, overridden to \u0060iossimulator\u0060).\n\n**Why doesn\u0027t HarfBuzz need \u0060SKIA_PLATFORM\u0060?**\nOnly \u0060libSkiaSharp.xcodeproj\u0060 has \u0060LIBRARY_SEARCH_PATHS\u0060 pointing to \u0060skia/out/$(SKIA_PLATFORM)/$(ARCHS)\u0060 because it links against Skia\u0027s static libraries. HarfBuzz is self-contained \u2014 it doesn\u0027t reference any Skia output paths, so it doesn\u0027t need the variable.\n\n**Why copy simulator x86_64 into the device (\u0060tvos/\u0060) directory?**\nThis creates a legacy-style fat framework with device arm64 \u002B simulator x86_64 for backward compatibility. iOS does the exact same thing. The proper simulator-only framework lives in \u0060tvossimulator/\u0060. .NET runtime selection picks the correct directory (\u0060tvos/\u0060 for device, \u0060tvossimulator/\u0060 for simulator).\n\n**Why \u0060min_tvos_version\u0060 instead of \u0060min_ios_version\u0060?**\nSkia\u0027s GN build system has separate deployment target args per platform: \u0060min_ios_version\u0060, \u0060min_tvos_version\u0060, \u0060min_maccatalyst_version\u0060. When \u0060target_os=\u0027tvos\u0027\u0060, only \u0060min_tvos_version\u0060 is read (for \u0060-mtvos-version-min\u0060 and \u0060-target\u0060 flags). The old code passed \u0060min_ios_version\u0060 which was silently ignored, causing tvOS to build with Skia\u0027s default of 9.0. The Xcode framework build was already using 11.0 (via \u0060TVOS_DEPLOYMENT_TARGET\u0060), so this fix makes GnNinja consistent with Xcode.\n\n### Verification\n\nCI build verified:\n- \u2705 Native artifacts: \u0060tvos/\u0060 (arm64\u002Bx86_64 fat) and \u0060tvossimulator/\u0060 (arm64\u002Bx86_64 fat) frameworks present\n- \u2705 NuGet packages: both \u0060runtimes/tvos/\u0060 and \u0060runtimes/tvossimulator/\u0060 included\n- \u2705 All other platforms unaffected (Windows, Linux, WASM, macOS, iOS all green)\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-13T17:16:10",
+  "updatedAt": "2026-03-14T08:52:27",
+  "closedAt": "2026-03-14T08:52:25",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-14T08:52:25",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-tvos-simulator-native-assets",
+  "additions": 33,
+  "deletions": 9,
+  "changedFiles": 4,
+  "commits": 2,
+  "reviews": []
+}

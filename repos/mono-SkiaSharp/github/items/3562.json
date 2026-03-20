@@ -1,0 +1,29 @@
+{
+  "number": 3562,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix Cairo assertion crash in GTK4 SKDrawingArea",
+  "body": "## Problem\n\n\u0060SKDrawingArea\u0060 in \u0060SkiaSharp.Views.Gtk4\u0060 can crash with a Cairo assertion failure (SIGABRT) during repeated draw cycles.\n\n### Root Cause\n\nThe \u0060OnDrawFunc\u0060 method writes pixel data via Skia into a shared \u0060Cairo.ImageSurface\u0060 buffer, then calls \u0060pix.MarkDirty()\u0060 to tell Cairo the pixels have changed. However, it was **missing** a \u0060pix.Flush()\u0060 call before \u0060MarkDirty()\u0060.\n\nCairo internally snapshots surfaces during \u0060SetSourceSurface\u0060/\u0060Paint\u0060 operations. When \u0060MarkDirty()\u0060 is called while a snapshot still holds a reference to the underlying data, Cairo\u0027s snapshot-COW (copy-on-write) mechanism triggers an assertion or produces corrupted rendering.\n\n### The Fix\n\nAdd \u0060pix.Flush()\u0060 immediately before \u0060pix.MarkDirty()\u0060. This follows the [documented Cairo pattern](https://www.cairographics.org/manual/cairo-cairo-surface-t.html#cairo-surface-mark-dirty) for external pixel modification:\n\n\u0060\u0060\u0060\ncairo_surface_flush(surface);     // complete any pending reads from snapshots\n// ... modify pixel data externally (via Skia) ...\ncairo_surface_mark_dirty(surface); // notify Cairo that pixels changed\n\u0060\u0060\u0060\n\n### Before (crashes)\n\u0060\u0060\u0060csharp\nsurface.Canvas.Flush();\npix.MarkDirty();  // \u274C snapshot may still reference the data\n\u0060\u0060\u0060\n\n### After (correct)\n\u0060\u0060\u0060csharp\nsurface.Canvas.Flush();\npix.Flush();      // \u2705 release snapshot references first\npix.MarkDirty();\n\u0060\u0060\u0060\n\n### How to Reproduce\n\nThe crash occurs on repeated redraws of an \u0060SKDrawingArea\u0060 in a GTK4 application, particularly noticeable when the draw function is called in rapid succession (e.g., animations or interactive drawing). The SIGABRT comes from Cairo\u0027s internal \u0060_cairo_surface_begin_modification\u0060 assertion.\n\n### Notes\n\n- This is a one-line fix with no behavioral change other than preventing the crash\n- The GTK3 \u0060SKDrawingArea\u0060 does not have this issue because it uses a different drawing path (\u0060ExposeEvent\u0060 \u2192 \u0060Pixbuf\u0060)\n- Discovered while testing the GTK4 sample application\u0027s drawing page",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-15T19:48:03",
+  "updatedAt": "2026-03-15T19:53:17",
+  "closedAt": "2026-03-15T19:53:15",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-15T19:53:15",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-gtk4-cairo-assertion-crash",
+  "additions": 2,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

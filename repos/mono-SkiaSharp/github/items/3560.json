@@ -1,0 +1,33 @@
+{
+  "number": 3560,
+  "type": "pr",
+  "state": "open",
+  "title": "Bump SkiaSharp to milestone 132",
+  "body": "**Description of Change**\r\n\r\n\u003C!-- Describe your changes here. --\u003E\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\n### Type Changed: SkiaSharp.SKColorType\r\n\r\nAdded values:\r\n\r\n\u0060\u0060\u0060csharp\r\nBgra10101010Xr = 25,\r\nRgbF16F16F16x = 26,\r\n\u0060\u0060\u0060\r\n\r\nBoth are 8 bytes/pixel. \u0060Bgra10101010Xr\u0060 accepts any alpha type; \u0060RgbF16F16F16x\u0060 is opaque-only.\r\nNeither supports GL backend (\u0060ToGlSizedFormat\u0060 returns 0) or pixel color readback.\r\n\r\nAll existing \u0060SKColorTypeNative\u0060 enum indices shifted: e.g. \u0060Rgba10x6\u0060 moved from native index 12 to 13, \u0060Gray8\u0060 from 13 to 14, etc.\r\n\r\n### Type Changed: SkiaSharp.SKJpegEncoderOptions\r\n\r\nAdded internal fields for EXIF orientation support (new in Skia m132):\r\n\r\n\u0060\u0060\u0060csharp\r\nint fOrigin;    // SkEncodedOrigin value (0 = not set)\r\nbool fHasOrigin; // whether fOrigin is set\r\n\u0060\u0060\u0060\r\n\r\nThese are initialized to default in both constructors but not yet exposed as public properties.\r\n\r\n### Type Changed: SkiaSharp.GRVkBackendContextNative\r\n\r\nRemoved fields (upstream \u0060GrVkBackendContext\u0060 \u2192 \u0060skgpu::VulkanBackendContext\u0060):\r\n\r\n\u0060\u0060\u0060csharp\r\n// Removed:\r\npublic UInt32 fMinAPIVersion;\r\npublic UInt32 fInstanceVersion;\r\npublic UInt32 fExtensions;\r\npublic UInt32 fFeatures;\r\npublic Byte fOwnsInstanceAndDevice;\r\n\u0060\u0060\u0060\r\n\r\n### Type Changed: SkiaSharp.GrVkYcbcrConversionInfo\r\n\r\nAdded VkComponentMapping fields (upstream \u0060GrVkYcbcrConversionInfo\u0060 \u2192 \u0060skgpu::VulkanYcbcrConversionInfo\u0060):\r\n\r\n\u0060\u0060\u0060csharp\r\npublic UInt32 ComponentsR;\r\npublic UInt32 ComponentsG;\r\npublic UInt32 ComponentsB;\r\npublic UInt32 ComponentsA;\r\n\u0060\u0060\u0060\r\n\r\n### Type Changed: SkiaSharp.SKManagedStream\r\n\r\nMajor refactoring of \u0060Duplicate()\u0060 and \u0060Fork()\u0060 semantics:\r\n\r\n- **Removed**: Parent/child weak reference chain (\u0060wasCopied\u0060, \u0060parent\u0060, \u0060child\u0060 fields)\r\n- **Removed**: \u0060VerifyOriginal()\u0060 \u2014 calling stream methods after duplication no longer throws \u0060InvalidOperationException\u0060\r\n- **Added**: \u0060ReadStreamFully()\u0060 private helper that reads the entire stream into a byte array\r\n- **Added**: Private constructor with \u0060weak\u0060 parameter for GC-safe native-owned streams\r\n- \u0060OnDuplicate()\u0060 now creates an independent \u0060MemoryStream\u0060 copy positioned at 0\r\n- \u0060OnFork()\u0060 now creates an independent \u0060MemoryStream\u0060 copy at the current position\r\n- Original stream remains fully readable after duplication/forking\r\n- Multiple duplicates can be created from the same parent\r\n\r\n### Type Changed: SkiaSharp.SKAbstractManagedStream\r\n\r\n- Added \u0060private protected\u0060 constructor overload: \u0060SKAbstractManagedStream(bool owns, bool weak)\u0060 to control whether native code holds a weak or strong reference\r\n\r\n**Behavioral Changes**\r\n\r\n#### SKManagedStream Duplicate/Fork Semantics\r\n\r\n| Behavior | m119 | m132 |\r\n|----------|------|------|\r\n| Original readable after \u0060Duplicate()\u0060 | No (\u0060InvalidOperationException\u0060) | **Yes** |\r\n| Multiple duplicates from same parent | No (exception on second) | **Yes** |\r\n| Duplicate/fork data sharing | Shared underlying stream | **Independent MemoryStream copy** |\r\n| Child survives parent dispose | Via ownership transfer chain | **Yes** (independent copy) |\r\n\r\n#### woff2 Typeface Loading\r\n\r\n- m119: \u0060SKTypeface.FromFile(\u0022file.woff2\u0022)\u0060 returned a typeface with a valid FamilyName, or null\r\n- m132: May return a non-null typeface with **empty FamilyName**; \u0060paint.Typeface\u0060/\u0060font.Typeface\u0060 getter returns a non-null default typeface rather than null\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "ramezgerges",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-03-12T23:52:50",
+  "updatedAt": "2026-03-12T23:53:59",
+  "commentCount": 1,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": false,
+  "merged": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 334,
+  "deletions": 266,
+  "changedFiles": 29,
+  "commits": 4,
+  "reviews": []
+}

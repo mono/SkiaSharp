@@ -1,0 +1,28 @@
+{
+  "number": 3549,
+  "type": "pr",
+  "state": "open",
+  "title": "Update issue-repro and issue-fix skills for performance investigations",
+  "body": "## Update AI skills for performance investigations\n\nMotivated by the #3525 investigation (macOS GL stencil bug, PR #3546) which revealed that both skills had no support for performance bug reproduction or investigation.\n\n### Knowledge separation: General \u2192 Performance \u2192 macOS\n\n| Layer | Repro skill | Fix skill |\n|-------|-------------|-----------|\n| **General** | \u2014 | schema-cheatsheet.md, anti-patterns.md, response-guidelines.md, expanded examples |\n| **Performance** | Category 10 in bug-categories.md | perf-investigation.md |\n| **macOS** | platform-macos.md | macos-diagnostics.md |\n\n### Repro skill changes (3 files)\n- **New \u0060platform-macos.md\u0060** \u2014 macOS GUI app reproduction templates (Metal/GL backends, NSApplication gotchas, run binary directly vs \u0060open -n\u0060, Phase 3C guidance)\n- **Category 10 in \u0060bug-categories.md\u0060** \u2014 Performance bugs: native baselines, per-phase Stopwatch instrumentation, multi-complexity testing, VSync control, statistical stability\n- **SKILL.md routing** \u2014 macOS at priority 3, performance note in Phase 3\n\n### Fix skill changes \u2014 General parity (4 new \u002B 2 updated files)\n- **New \u0060schema-cheatsheet.md\u0060** \u2014 quick-reference for fix JSON fields (triage/repro had this, fix didn\u0027t)\n- **New \u0060anti-patterns.md\u0060** \u2014 12 numbered rules including #3525 learnings (triage has 9, fix had 2 inline)\n- **New \u0060response-guidelines.md\u0060** \u2014 PR description template, issue comment structure, perf results tables\n- **Updated \u0060fix-examples.md\u0060** \u2014 added Example 3 (perf fix #3525) and Example 4 (needs-info)\n- **Updated \u0060SKILL.md\u0060** \u2014 mandatory reads section, expanded Phase 5 (perf \u002B macOS routing), Phase 7 (perf verification), Phase 8 (response guidelines), anti-patterns reference\n\n### Fix skill changes \u2014 Performance \u002B macOS (2 new files)\n- **New \u0060perf-investigation.md\u0060** \u2014 full methodology: phase profiling, isolation experiments (one variable at a time), native baselines, AI model consultation protocol (3 models, 2/3 consensus), debugging tables, statistical requirements\n- **New \u0060macos-diagnostics.md\u0060** \u2014 GL stencil trap (the #3525 root cause pattern), VSync P/Invoke, NSOpenGLContext setup, Metal vs GL switching, Skia source reading locations\n\n### What this enables\nNext time someone reports \u0022SkiaSharp is slow\u0022 or \u0022macOS rendering has low FPS\u0022:\n- **Repro skill** will create actual GUI app benchmarks (not console apps), measure per-phase timing, and produce quantitative evidence\n- **Fix skill** will follow a systematic profiling \u2192 isolation \u2192 AI consultation pipeline instead of guessing",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-05T15:16:05",
+  "updatedAt": "2026-03-06T14:23:48",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "dev/skill-perf-investigation",
+  "additions": 1750,
+  "deletions": 826,
+  "changedFiles": 21,
+  "commits": 20,
+  "reviews": []
+}
