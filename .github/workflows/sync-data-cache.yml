@@ -22,6 +22,7 @@ on:
           - all
           - mono/SkiaSharp
           - mono/SkiaSharp.Extended
+          - mono/skia
         default: all
       reset:
         description: 'Reset cache (delete all data and start fresh)'
@@ -48,7 +49,7 @@ jobs:
   # Sync SkiaSharp (main repo)
   # ============================================================
   sync-skiasharp:
-    if: inputs.repo != 'mono/SkiaSharp.Extended'
+    if: inputs.repo != 'mono/SkiaSharp.Extended' && inputs.repo != 'mono/skia'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -258,7 +259,7 @@ jobs:
   # Sync SkiaSharp.Extended (parallel job)
   # ============================================================
   sync-extended:
-    if: inputs.repo != 'mono/SkiaSharp'
+    if: inputs.repo != 'mono/SkiaSharp' && inputs.repo != 'mono/skia'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -433,3 +434,64 @@ jobs:
             
             BATCH=$((BATCH + 1))
           done
+
+  # ============================================================
+  # Sync Skia (mono/skia fork - items only, no engagement)
+  # ============================================================
+  sync-skia:
+    needs: [sync-skiasharp]
+    if: ${{ !cancelled() && inputs.repo != 'mono/SkiaSharp' && inputs.repo != 'mono/SkiaSharp.Extended' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout docs-dashboard (for CLI code)
+        uses: actions/checkout@v4
+        with:
+          ref: docs-dashboard
+
+      - name: Checkout docs-data-cache
+        uses: actions/checkout@v4
+        with:
+          ref: docs-data-cache
+          path: .data-cache
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Configure git
+        working-directory: .data-cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync GitHub items
+        if: inputs.source != 'nuget'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet run --project src/SkiaSharp.Triage.Cli -- sync github \
+            --cache-path .data-cache \
+            --repo mono/skia \
+            --items-only \
+            --quiet
+
+      - name: Push changes
+        if: inputs.source != 'nuget'
+        working-directory: .data-cache
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync: Skia items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            for i in 1 2 3 4 5; do
+              git push && break
+              echo "Push failed, rebasing (attempt $i)..."
+              git pull --rebase
+              sleep $((i * 2))
+            done
+          fi

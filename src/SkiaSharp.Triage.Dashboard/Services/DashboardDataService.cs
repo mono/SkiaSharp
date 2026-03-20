@@ -61,4 +61,19 @@ public class DashboardDataService(HttpClient http)
             return null;
         }
     }
+
+    public async Task<SkiaUpdatesIndex?> GetSkiaUpdatesAsync() =>
+        await http.GetFromJsonAsync<SkiaUpdatesIndex>("data/skia-updates.json", JsonOptions);
+
+    public async Task<SkiaReviewReport?> GetSkiaReviewDetailAsync(int number)
+    {
+        try
+        {
+            return await http.GetFromJsonAsync<SkiaReviewReport>($"data/skia-reviews/{number}.json", TriageJsonOptions.Default);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
 }

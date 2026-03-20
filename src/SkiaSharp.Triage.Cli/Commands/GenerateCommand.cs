@@ -47,6 +47,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         await GenerateCommunityStatsAsync(rootCache, config, repoKeys, settings);
         await GenerateTrendDataAsync(rootCache, config, repoKeys, settings);
         await GenerateTriageAsync(rootCache, config, repoKeys, settings);
+        await GenerateSkiaReviewsAsync(rootCache, config, repoKeys, settings);
 
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("[green]✓ All dashboard files generated[/]");
@@ -993,6 +994,139 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             AnsiConsole.MarkupLine($"[green]  ✓ {indexPath} ({indexEntries.Count} entries, {triageNumbers.Count} triage, {reproNumbers.Count} repro)[/]");
             AnsiConsole.MarkupLine($"[green]  ✓ {triageOutputDir}/ ({triageNumbers.Count} files)[/]");
             AnsiConsole.MarkupLine($"[green]  ✓ {reproOutputDir}/ ({reproNumbers.Count} files)[/]");
+        }
+    }
+
+    private async Task GenerateSkiaReviewsAsync(CacheService rootCache, DashboardConfig config, List<string> repoKeys, GenerateSettings settings)
+    {
+        if (!settings.Quiet)
+            AnsiConsole.MarkupLine("\n[bold]Generating skia-updates data...[/]");
+
+        var indexEntries = new List<SkiaReviewIndexEntry>();
+        var reviewOutputDir = Path.Combine(settings.OutputDir, "skia-reviews");
+        CleanDirectory(reviewOutputDir);
+
+        int highRisk = 0, mediumRisk = 0, lowRisk = 0;
+        int genFailed = 0, upstreamChanges = 0, interopChanges = 0, depsChanges = 0;
+
+        foreach (var repoKey in repoKeys)
+        {
+            var cache = string.IsNullOrEmpty(repoKey) ? rootCache : rootCache.ForRepo(repoKey);
+            var repoConfig = GetRepoConfig(config, repoKey);
+
+            var reviewDir = cache.AiReviewPath;
+            if (!Directory.Exists(reviewDir))
+                continue;
+
+            // Build PR lookup from GitHub index
+            var index = await cache.LoadGitHubIndexAsync();
+            var prByNumber = index.Items
+                .Where(i => i.Type == "pr")
+                .ToDictionary(i => i.Number);
+
+            foreach (var file in Directory.GetFiles(reviewDir, "*.json"))
+            {
+                try
+                {
+                    var json = await File.ReadAllTextAsync(file);
+                    var review = JsonSerializer.Deserialize<SkiaReviewReport>(json, TriageJsonOptions.Default);
+                    if (review is null) continue;
+
+                    if (review.Meta.SchemaVersion is not "1.0")
+                    {
+                        if (!settings.Quiet)
+                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: schema {review.Meta.SchemaVersion} (need 1.0)[/]");
+                        continue;
+                    }
+
+                    var prNumber = review.Meta.SkiaPrNumber;
+
+                    // Write detail file
+                    var detailPath = Path.Combine(reviewOutputDir, $"{prNumber}.json");
+                    await File.WriteAllTextAsync(detailPath, JsonSerializer.Serialize(review, TriageJsonOptions.Default));
+
+                    // Look up PR info
+                    string? prTitle = null, prState = null, prUrl = null;
+                    if (prByNumber.TryGetValue(prNumber, out var prItem))
+                    {
+                        prTitle = prItem.Title;
+                        prState = prItem.State;
+                        prUrl = $"https://github.com/{repoConfig?.FullName ?? review.Meta.Repo}/pull/{prNumber}";
+                    }
+                    else
+                    {
+                        prUrl = $"https://github.com/{review.Meta.Repo}/pull/{prNumber}";
+                    }
+
+                    // Stats
+                    switch (review.RiskAssessment)
+                    {
+                        case SkiaRiskAssessment.High: highRisk++; break;
+                        case SkiaRiskAssessment.Medium: mediumRisk++; break;
+                        case SkiaRiskAssessment.Low: lowRisk++; break;
+                    }
+                    if (review.GeneratedFiles.Status == GeneratedFilesStatus.Fail) genFailed++;
+                    if (review.UpstreamIntegrity.Status == SkiaReviewStatus.ReviewRequired) upstreamChanges++;
+                    if (review.InteropIntegrity.Status == SkiaReviewStatus.ReviewRequired) interopChanges++;
+                    if (review.DepsAudit.Status == SkiaReviewStatus.ReviewRequired) depsChanges++;
+
+                    indexEntries.Add(new SkiaReviewIndexEntry(
+                        PrNumber: prNumber,
+                        UpstreamBranch: review.Meta.UpstreamBranch,
+                        OldUpstreamBranch: review.Meta.OldUpstreamBranch,
+                        AnalyzedAt: review.Meta.AnalyzedAt,
+                        RiskAssessment: review.RiskAssessment,
+                        GeneratedFilesStatus: review.GeneratedFiles.Status,
+                        UpstreamIntegrityStatus: review.UpstreamIntegrity.Status,
+                        InteropIntegrityStatus: review.InteropIntegrity.Status,
+                        DepsAuditStatus: review.DepsAudit.Status,
+                        UpstreamAddedCount: review.UpstreamIntegrity.Added.Count,
+                        UpstreamRemovedCount: review.UpstreamIntegrity.Removed.Count,
+                        UpstreamChangedCount: review.UpstreamIntegrity.Changed.Count,
+                        InteropChangedCount: review.InteropIntegrity.Changed.Count,
+                        DepsAddedCount: review.DepsAudit.Added.Count,
+                        DepsChangedCount: review.DepsAudit.Changed.Count,
+                        PrTitle: prTitle,
+                        PrState: prState,
+                        PrUrl: prUrl,
+                        SkiasharpPrNumber: review.Meta.SkiasharpPrNumber
+                    ));
+                }
+                catch (Exception ex)
+                {
+                    if (!settings.Quiet)
+                        AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping review {Path.GetFileName(file)}: {ex.Message}[/]");
+                }
+            }
+        }
+
+        // Sort by analyzed date descending (newest first)
+        indexEntries.Sort((a, b) => b.AnalyzedAt.CompareTo(a.AnalyzedAt));
+
+        var total = indexEntries.Count;
+        var skiaIndex = new SkiaUpdatesIndex(
+            GeneratedAt: DateTime.UtcNow,
+            TotalCount: total,
+            Summary: new SkiaUpdatesSummary(
+                Total: total,
+                HighRisk: highRisk,
+                MediumRisk: mediumRisk,
+                LowRisk: lowRisk,
+                GeneratedFilesFailed: genFailed,
+                UpstreamChanges: upstreamChanges,
+                InteropChanges: interopChanges,
+                DepsChanges: depsChanges
+            ),
+            Reviews: indexEntries
+        );
+
+        var indexPath = Path.Combine(settings.OutputDir, "skia-updates.json");
+        await File.WriteAllTextAsync(indexPath, JsonSerializer.Serialize(skiaIndex, TriageJsonOptions.Default));
+
+        if (!settings.Quiet)
+        {
+            AnsiConsole.MarkupLine($"[green]  ✓ {indexPath} ({total} reviews)[/]");
+            AnsiConsole.MarkupLine($"[green]  ✓ {reviewOutputDir}/ ({total} files)[/]");
         }
     }
 }

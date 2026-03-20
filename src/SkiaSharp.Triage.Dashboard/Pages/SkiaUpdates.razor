@@ -1,0 +1,147 @@
+@page "/skia-updates"
+@inject DashboardDataService DataService
+
+<PageTitle>Skia Updates - SkiaSharp Dashboard</PageTitle>
+
+<h1>Skia Updates</h1>
+<p class="subtitle">AI-powered review of Skia upstream merge PRs</p>
+
+@if (_loading)
+{
+    <p><em>Loading Skia update data...</em></p>
+}
+else if (_data is null)
+{
+    <p>No Skia update data available.</p>
+}
+else
+{
+    <!-- Summary Cards -->
+    <div class="triage-summary">
+        <div class="triage-card @(_selectedRisk == "all" ? "selected" : "")" @onclick='() => FilterByRisk("all")'>
+            <span class="triage-count">@_data.TotalCount</span>
+            <span class="triage-label">Total Reviews</span>
+        </div>
+        <div class="triage-card skia-risk-high @(_selectedRisk == "high" ? "selected" : "")" @onclick='() => FilterByRisk("high")'>
+            <span class="triage-count">@_data.Summary.HighRisk</span>
+            <span class="triage-label">High Risk</span>
+        </div>
+        <div class="triage-card skia-risk-medium @(_selectedRisk == "medium" ? "selected" : "")" @onclick='() => FilterByRisk("medium")'>
+            <span class="triage-count">@_data.Summary.MediumRisk</span>
+            <span class="triage-label">Medium Risk</span>
+        </div>
+        <div class="triage-card skia-risk-low @(_selectedRisk == "low" ? "selected" : "")" @onclick='() => FilterByRisk("low")'>
+            <span class="triage-count">@_data.Summary.LowRisk</span>
+            <span class="triage-label">Low Risk</span>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats-row">
+        @if (_data.Summary.GeneratedFilesFailed > 0)
+        {
+            <span class="quick-stat qs-danger">⚠️ @_data.Summary.GeneratedFilesFailed generated file failures</span>
+        }
+        @if (_data.Summary.UpstreamChanges > 0)
+        {
+            <span class="quick-stat qs-warning">🔍 @_data.Summary.UpstreamChanges with upstream changes</span>
+        }
+        @if (_data.Summary.DepsChanges > 0)
+        {
+            <span class="quick-stat qs-info">📦 @_data.Summary.DepsChanges with dependency changes</span>
+        }
+    </div>
+
+    <!-- Reviews List -->
+    @if (_filtered.Count == 0)
+    {
+        <p class="no-results">No reviews match the current filter.</p>
+    }
+    else
+    {
+        <div class="skia-reviews-list">
+            @foreach (var review in _filtered)
+            {
+                <a href="skia-updates/@review.PrNumber" class="skia-review-card">
+                    <div class="skia-review-header">
+                        <span class="skia-pr-number">#@review.PrNumber</span>
+                        <span class="skia-branch-transition">
+                            @FormatBranch(review.OldUpstreamBranch) → @FormatBranch(review.UpstreamBranch)
+                        </span>
+                        <span class="badge-risk badge-risk-@review.RiskAssessment.ToString().ToLower()">
+                            @review.RiskAssessment
+                        </span>
+                    </div>
+                    @if (review.PrTitle is not null)
+                    {
+                        <div class="skia-review-title">@review.PrTitle</div>
+                    }
+                    <div class="skia-review-checks">
+                        <span class="skia-check @(review.GeneratedFilesStatus == GeneratedFilesStatus.Pass ? "check-pass" : "check-fail")">
+                            @(review.GeneratedFilesStatus == GeneratedFilesStatus.Pass ? "✓" : "✗") Generated
+                        </span>
+                        <span class="skia-check @(review.UpstreamIntegrityStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
+                            @(review.UpstreamIntegrityStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") Upstream
+                            @if (review.UpstreamAddedCount + review.UpstreamRemovedCount + review.UpstreamChangedCount > 0)
+                            {
+                                <span class="check-count">(@(review.UpstreamAddedCount + review.UpstreamRemovedCount + review.UpstreamChangedCount))</span>
+                            }
+                        </span>
+                        <span class="skia-check @(review.InteropIntegrityStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
+                            @(review.InteropIntegrityStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") Interop
+                            @if (review.InteropChangedCount > 0)
+                            {
+                                <span class="check-count">(@review.InteropChangedCount)</span>
+                            }
+                        </span>
+                        <span class="skia-check @(review.DepsAuditStatus == SkiaReviewStatus.Pass ? "check-pass" : "check-review")">
+                            @(review.DepsAuditStatus == SkiaReviewStatus.Pass ? "✓" : "⚠") DEPS
+                            @if (review.DepsAddedCount + review.DepsChangedCount > 0)
+                            {
+                                <span class="check-count">(@(review.DepsAddedCount + review.DepsChangedCount))</span>
+                            }
+                        </span>
+                    </div>
+                    <div class="skia-review-meta">
+                        Analyzed @review.AnalyzedAt.ToString("yyyy-MM-dd")
+                        @if (review.SkiasharpPrNumber is not null)
+                        {
+                            <span>· Companion SkiaSharp PR #@review.SkiasharpPrNumber</span>
+                        }
+                    </div>
+                </a>
+            }
+        </div>
+    }
+}
+
+@code {
+    private SkiaUpdatesIndex? _data;
+    private List<SkiaReviewIndexEntry> _filtered = [];
+    private bool _loading = true;
+    private string _selectedRisk = "all";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _data = await DataService.GetSkiaUpdatesAsync();
+        _filtered = _data?.Reviews ?? [];
+        _loading = false;
+    }
+
+    private void FilterByRisk(string risk)
+    {
+        _selectedRisk = risk;
+        if (_data is null) return;
+
+        _filtered = risk switch
+        {
+            "high" => _data.Reviews.Where(r => r.RiskAssessment == SkiaRiskAssessment.High).ToList(),
+            "medium" => _data.Reviews.Where(r => r.RiskAssessment == SkiaRiskAssessment.Medium).ToList(),
+            "low" => _data.Reviews.Where(r => r.RiskAssessment == SkiaRiskAssessment.Low).ToList(),
+            _ => _data.Reviews.ToList()
+        };
+    }
+
+    private static string FormatBranch(string branch) =>
+        branch.StartsWith("chrome/") ? branch["chrome/".Length..] : branch;
+}

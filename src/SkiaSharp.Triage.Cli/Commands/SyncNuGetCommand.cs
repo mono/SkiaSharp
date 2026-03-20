@@ -26,7 +26,7 @@ public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
             return 1;
         }
 
-        if (repoConfig.Nuget is null)
+        if (repoConfig.Nuget is null || repoConfig.Nuget.Source == "none")
         {
             if (!settings.Quiet)
                 AnsiConsole.MarkupLine($"[yellow]No NuGet config for {owner}/{name}, skipping[/]");
