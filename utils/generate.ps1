@@ -32,7 +32,7 @@ foreach ($proj in $projects) {
     $root = $proj.Root;
     $filename = Split-Path $output -Leaf
 
-    $cmd = "dotnet run --no-build --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/$json --root $root --output binding/$output"
+    $cmd = "dotnet run --no-build --no-launch-profile --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/$json --root $root --output binding/$output"
     Write-Host $cmd
     Invoke-Expression $cmd
     if (!$?) {
