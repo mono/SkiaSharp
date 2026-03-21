@@ -1032,30 +1032,30 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                     var review = JsonSerializer.Deserialize<SkiaReviewReport>(json, TriageJsonOptions.Default);
                     if (review is null) continue;
 
-                    if (review.Meta.SchemaVersion is not "1.0")
+                    if (review.SchemaVersion is not "1.0")
                     {
                         if (!settings.Quiet)
-                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: schema {review.Meta.SchemaVersion} (need 1.0)[/]");
+                            AnsiConsole.MarkupLine($"[yellow]  ⚠ Skipping {Path.GetFileName(file)}: schema {review.SchemaVersion} (need 1.0)[/]");
                         continue;
                     }
 
-                    var prNumber = review.Meta.SkiaPrNumber;
+                    var prNumber = review.Meta.PrNumber;
 
                     // Write detail file
                     var detailPath = Path.Combine(reviewOutputDir, $"{prNumber}.json");
                     await File.WriteAllTextAsync(detailPath, JsonSerializer.Serialize(review, TriageJsonOptions.Default));
 
                     // Look up PR info
-                    string? prTitle = null, prState = null, prUrl = null;
+                    string? prTitle = review.Meta.PrTitle, prState = review.Meta.PrState, prUrl = null;
                     if (prByNumber.TryGetValue(prNumber, out var prItem))
                     {
-                        prTitle = prItem.Title;
-                        prState = prItem.State;
-                        prUrl = $"https://github.com/{repoConfig?.FullName ?? review.Meta.Repo}/pull/{prNumber}";
+                        prTitle ??= prItem.Title;
+                        prState ??= prItem.State;
+                        prUrl = $"https://github.com/{repoConfig?.FullName ?? "mono/skia"}/pull/{prNumber}";
                     }
                     else
                     {
-                        prUrl = $"https://github.com/{review.Meta.Repo}/pull/{prNumber}";
+                        prUrl = $"https://github.com/{repoConfig?.FullName ?? "mono/skia"}/pull/{prNumber}";
                     }
 
                     // Stats
@@ -1072,9 +1072,9 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
 
                     indexEntries.Add(new SkiaReviewIndexEntry(
                         PrNumber: prNumber,
-                        UpstreamBranch: review.Meta.UpstreamBranch,
+                        UpstreamBranch: review.Meta.NewUpstreamBranch,
                         OldUpstreamBranch: review.Meta.OldUpstreamBranch,
-                        AnalyzedAt: review.Meta.AnalyzedAt,
+                        AnalyzedAt: review.Meta.Timestamp,
                         RiskAssessment: review.RiskAssessment,
                         GeneratedFilesStatus: review.GeneratedFiles.Status,
                         UpstreamIntegrityStatus: review.UpstreamIntegrity.Status,
@@ -1089,7 +1089,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                         PrTitle: prTitle,
                         PrState: prState,
                         PrUrl: prUrl,
-                        SkiasharpPrNumber: review.Meta.SkiasharpPrNumber
+                        SkiasharpPrNumber: ParseCompanionPrNumber(review.Meta.CompanionPr)
                     ));
                 }
                 catch (Exception ex)
@@ -1128,6 +1128,15 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             AnsiConsole.MarkupLine($"[green]  ✓ {indexPath} ({total} reviews)[/]");
             AnsiConsole.MarkupLine($"[green]  ✓ {reviewOutputDir}/ ({total} files)[/]");
         }
+    }
+
+    private static int? ParseCompanionPrNumber(string? companionPr)
+    {
+        if (companionPr is null) return null;
+        var hashIdx = companionPr.LastIndexOf('#');
+        if (hashIdx >= 0 && int.TryParse(companionPr[(hashIdx + 1)..], out var num))
+            return num;
+        return null;
     }
 }
 

@@ -5,6 +5,7 @@ namespace SkiaSharp.Triage.Models;
 // ── Root ─────────────────────────────────────────────────────────
 
 public record SkiaReviewReport(
+    [property: JsonPropertyName("schema_version")] string SchemaVersion,
     SkiaReviewMeta Meta,
     string Summary,
     List<string> Recommendations,
@@ -12,27 +13,23 @@ public record SkiaReviewReport(
     [property: JsonPropertyName("upstream_integrity")] SourceIntegrity UpstreamIntegrity,
     [property: JsonPropertyName("interop_integrity")] SourceIntegrity InteropIntegrity,
     [property: JsonPropertyName("deps_audit")] DepsAudit DepsAudit,
-    [property: JsonPropertyName("risk_assessment")] SkiaRiskAssessment RiskAssessment,
-    [property: JsonPropertyName("companion_pr")] CompanionPr? CompanionPr = null
+    [property: JsonPropertyName("risk_assessment")] SkiaRiskAssessment RiskAssessment
 );
 
 // ── Meta ─────────────────────────────────────────────────────────
 
 public record SkiaReviewMeta(
-    [property: JsonPropertyName("schemaVersion")] string SchemaVersion,
-    [property: JsonPropertyName("skiaPrNumber")] int SkiaPrNumber,
-    [property: JsonPropertyName("skiasharpPrNumber")] int? SkiasharpPrNumber,
-    string Repo,
-    [property: JsonPropertyName("upstreamBranch")] string UpstreamBranch,
-    [property: JsonPropertyName("oldUpstreamBranch")] string OldUpstreamBranch,
-    [property: JsonPropertyName("analyzedAt")] DateTime AnalyzedAt,
-    SkiaReviewShas Shas
-);
-
-public record SkiaReviewShas(
-    [property: JsonPropertyName("prHead")] string PrHead,
-    string Base,
-    string Upstream
+    [property: JsonPropertyName("pr_number")] int PrNumber,
+    [property: JsonPropertyName("pr_title")] string? PrTitle,
+    [property: JsonPropertyName("pr_state")] string? PrState,
+    [property: JsonPropertyName("pr_author")] string? PrAuthor,
+    [property: JsonPropertyName("old_upstream_branch")] string OldUpstreamBranch,
+    [property: JsonPropertyName("new_upstream_branch")] string NewUpstreamBranch,
+    [property: JsonPropertyName("base_sha")] string BaseSha,
+    [property: JsonPropertyName("pr_head_sha")] string PrHeadSha,
+    [property: JsonPropertyName("upstream_sha")] string UpstreamSha,
+    DateTime Timestamp,
+    [property: JsonPropertyName("companion_pr")] string? CompanionPr = null
 );
 
 // ── Generated Files ──────────────────────────────────────────────
@@ -117,16 +114,3 @@ public record DepChanged(
     [property: JsonPropertyName("new_revision")] string? NewRevision = null
 );
 
-// ── Companion PR (optional) ──────────────────────────────────────
-
-public record CompanionPr(
-    [property: JsonPropertyName("pr_number")] int PrNumber,
-    [property: JsonPropertyName("files_changed")] int? FilesChanged = null,
-    [property: JsonPropertyName("generated_files_skipped")] List<string>? GeneratedFilesSkipped = null,
-    List<CompanionPrFinding>? Findings = null
-);
-
-public record CompanionPrFinding(
-    string File,
-    string Finding
-);
