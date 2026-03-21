@@ -1,0 +1,370 @@
+diff --git a/include/c/sk_typeface.h b/include/c/sk_typeface.h
+index 5cf2dca694..e70b443ed1 100644
+--- a/include/c/sk_typeface.h
++++ b/include/c/sk_typeface.h
+@@ -22,12 +22,6 @@ SK_C_API int sk_typeface_get_font_weight(const sk_typeface_t* typeface);
+ SK_C_API int sk_typeface_get_font_width(const sk_typeface_t* typeface);
+ SK_C_API sk_font_style_slant_t sk_typeface_get_font_slant(const sk_typeface_t* typeface);
+ SK_C_API bool sk_typeface_is_fixed_pitch(const sk_typeface_t* typeface);
+-SK_C_API sk_typeface_t* sk_typeface_create_default(void);
+-SK_C_API sk_typeface_t* sk_typeface_ref_default(void);
+-SK_C_API sk_typeface_t* sk_typeface_create_from_name(const char* familyName, const sk_fontstyle_t* style);
+-SK_C_API sk_typeface_t* sk_typeface_create_from_file(const char* path, int index);
+-SK_C_API sk_typeface_t* sk_typeface_create_from_stream(sk_stream_asset_t* stream, int index);
+-SK_C_API sk_typeface_t* sk_typeface_create_from_data(sk_data_t* data, int index);
+ SK_C_API void sk_typeface_unichars_to_glyphs(const sk_typeface_t* typeface, const int32_t unichars[], int count, uint16_t glyphs[]);
+ SK_C_API uint16_t sk_typeface_unichar_to_glyph(const sk_typeface_t* typeface, const int32_t unichar);
+ SK_C_API int sk_typeface_count_glyphs(const sk_typeface_t* typeface);
+diff --git a/include/c/sk_types.h b/include/c/sk_types.h
+index dab0ae3b53..024c9b3d37 100644
+--- a/include/c/sk_types.h
++++ b/include/c/sk_types.h
+@@ -1129,6 +1129,11 @@ typedef struct skresources_external_track_asset_t skresources_external_track_ass
+ 
+ typedef struct skresources_resource_provider_t skresources_resource_provider_t;
+ 
++typedef enum {
++    SKRESOURCES_IMAGE_DECODE_STRATEGY_LAZY_DECODE,
++    SKRESOURCES_IMAGE_DECODE_STRATEGY_PRE_DECODE,
++} skresources_image_decode_strategy_t;
++
+ SK_C_PLUS_PLUS_END_GUARD
+ 
+ typedef struct d3d_dxgi_adapter_t d3d_dxgi_adapter_t;
+diff --git a/include/c/skresources_resource_provider.h b/include/c/skresources_resource_provider.h
+index 31f738a079..2af6b86e98 100644
+--- a/include/c/skresources_resource_provider.h
++++ b/include/c/skresources_resource_provider.h
+@@ -24,8 +24,10 @@ SK_C_API skresources_external_track_asset_t* skresources_resource_provider_load_
+ SK_C_API sk_typeface_t* skresources_resource_provider_load_typeface(skresources_resource_provider_t *instance, const char* name, const char* url);
+ 
+ SK_C_API skresources_resource_provider_t* skresources_file_resource_provider_make(sk_string_t* base_dir, bool predecode);
++SK_C_API skresources_resource_provider_t* skresources_file_resource_provider_make2(sk_string_t* base_dir, skresources_image_decode_strategy_t strategy);
+ SK_C_API skresources_resource_provider_t* skresources_caching_resource_provider_proxy_make(skresources_resource_provider_t* rp);
+ SK_C_API skresources_resource_provider_t* skresources_data_uri_resource_provider_proxy_make(skresources_resource_provider_t* rp, bool predecode);
++SK_C_API skresources_resource_provider_t* skresources_data_uri_resource_provider_proxy_make2(skresources_resource_provider_t* rp, skresources_image_decode_strategy_t strategy);
+ 
+ SK_C_PLUS_PLUS_END_GUARD
+ 
+diff --git a/src/c/gr_context.cpp b/src/c/gr_context.cpp
+index 32aa466dab..bf0646d553 100644
+--- a/src/c/gr_context.cpp
++++ b/src/c/gr_context.cpp
+@@ -9,8 +9,11 @@
+ 
+ #include "include/core/SkImage.h"
+ #include "include/core/SkSurface.h"
++#include "include/gpu/GpuTypes.h"
+ #include "include/gpu/ganesh/gl/GrGLBackendSurface.h"
++#include "include/gpu/ganesh/gl/GrGLDirectContext.h"
+ #include "include/gpu/ganesh/vk/GrVkBackendSurface.h"
++#include "include/gpu/ganesh/vk/GrVkDirectContext.h"
+ 
+ #include "include/c/gr_context.h"
+ 
+@@ -49,7 +52,7 @@ gr_direct_context_t* gr_recording_context_get_direct_context(gr_recording_contex
+ // GrDirectContext
+ 
+ gr_direct_context_t* gr_direct_context_make_gl(const gr_glinterface_t* glInterface) {
+-    return SK_ONLY_GPU(ToGrDirectContext(GrDirectContext::MakeGL(sk_ref_sp(AsGrGLInterface(glInterface))).release()), nullptr);
++    return SK_ONLY_GPU(ToGrDirectContext(GrDirectContexts::MakeGL(sk_ref_sp(AsGrGLInterface(glInterface))).release()), nullptr);
+ }
+ 
+ gr_direct_context_t* gr_direct_context_make_gl_with_options(const gr_glinterface_t* glInterface, const gr_context_options_t* options) {
+@@ -58,11 +61,11 @@ gr_direct_context_t* gr_direct_context_make_gl_with_options(const gr_glinterface
+         if (options) {
+             opts = AsGrContextOptions(options);
+         })
+-    return SK_ONLY_GPU(ToGrDirectContext(GrDirectContext::MakeGL(sk_ref_sp(AsGrGLInterface(glInterface)), opts).release()), nullptr);
++    return SK_ONLY_GPU(ToGrDirectContext(GrDirectContexts::MakeGL(sk_ref_sp(AsGrGLInterface(glInterface)), opts).release()), nullptr);
+ }
+ 
+ gr_direct_context_t* gr_direct_context_make_vulkan(const gr_vk_backendcontext_t vkBackendContext) {
+-    return SK_ONLY_VULKAN(ToGrDirectContext(GrDirectContext::MakeVulkan(AsGrVkBackendContext(&vkBackendContext)).release()), nullptr);
++    return SK_ONLY_VULKAN(ToGrDirectContext(GrDirectContexts::MakeVulkan(AsGrVkBackendContext(&vkBackendContext)).release()), nullptr);
+ }
+ 
+ gr_direct_context_t* gr_direct_context_make_vulkan_with_options(const gr_vk_backendcontext_t vkBackendContext, const gr_context_options_t* options) {
+@@ -71,7 +74,7 @@ gr_direct_context_t* gr_direct_context_make_vulkan_with_options(const gr_vk_back
+         if (options) {
+             opts = AsGrContextOptions(options);
+         })
+-    return SK_ONLY_VULKAN(ToGrDirectContext(GrDirectContext::MakeVulkan(AsGrVkBackendContext(&vkBackendContext), opts).release()), nullptr);
++    return SK_ONLY_VULKAN(ToGrDirectContext(GrDirectContexts::MakeVulkan(AsGrVkBackendContext(&vkBackendContext), opts).release()), nullptr);
+ }
+ 
+ gr_direct_context_t* gr_direct_context_make_metal(void* device, void* queue) {
+@@ -234,7 +237,7 @@ bool gr_vk_extensions_has_extension(gr_vk_extensions_t* extensions, const char*
+ // GrBackendTexture
+ 
+ gr_backendtexture_t* gr_backendtexture_new_gl(int width, int height, bool mipmapped, const gr_gl_textureinfo_t* glInfo) {
+-    return SK_ONLY_GPU(ToGrBackendTexture(new GrBackendTexture(GrBackendTextures::MakeGL(width, height, (GrMipMapped)mipmapped, *AsGrGLTextureInfo(glInfo)))), nullptr);
++    return SK_ONLY_GPU(ToGrBackendTexture(new GrBackendTexture(GrBackendTextures::MakeGL(width, height, (skgpu::Mipmapped)mipmapped, *AsGrGLTextureInfo(glInfo)))), nullptr);
+ }
+ 
+ gr_backendtexture_t* gr_backendtexture_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkInfo) {
+@@ -242,7 +245,7 @@ gr_backendtexture_t* gr_backendtexture_new_vulkan(int width, int height, const g
+ }
+ 
+ gr_backendtexture_t* gr_backendtexture_new_metal(int width, int height, bool mipmapped, const gr_mtl_textureinfo_t* mtlInfo) {
+-    return SK_ONLY_METAL(ToGrBackendTexture(new GrBackendTexture(width, height, (GrMipMapped)mipmapped, AsGrMtlTextureInfo(mtlInfo))), nullptr);
++    return SK_ONLY_METAL(ToGrBackendTexture(new GrBackendTexture(width, height, (skgpu::Mipmapped)mipmapped, AsGrMtlTextureInfo(mtlInfo))), nullptr);
+ }
+ 
+ gr_backendtexture_t* gr_backendtexture_new_direct3d(int width, int height, const gr_d3d_textureresourceinfo_t* d3dInfo) {
+diff --git a/src/c/sk_font.cpp b/src/c/sk_font.cpp
+index 6222dcff0d..386c760a3f 100644
+--- a/src/c/sk_font.cpp
++++ b/src/c/sk_font.cpp
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include "include/core/SkFont.h"
++#include "include/core/SkFontMgr.h"
+ #include "include/core/SkTypeface.h"
+ #include "include/utils/SkTextUtils.h"
+ 
+@@ -15,14 +16,25 @@
+ 
+ #include "src/c/sk_types_priv.h"
+ 
++// Returns the platform default typeface via the shared font manager singleton.
++// In Skia m122+, SkFont(nullptr) creates an empty typeface that draws nothing.
++// SkiaSharp preserves the legacy behavior where null means "platform default".
++extern sk_sp<SkFontMgr> skiasharp_ref_default_fontmgr();
++
++static sk_sp<SkTypeface> get_default_typeface() {
++    auto mgr = skiasharp_ref_default_fontmgr();
++    return mgr ? mgr->matchFamilyStyle(nullptr, SkFontStyle()) : nullptr;
++}
++
+ // sk_font_t
+ 
+ sk_font_t* sk_font_new(void) {
+-    return ToFont(new SkFont());
++    return ToFont(new SkFont(get_default_typeface()));
+ }
+ 
+ sk_font_t* sk_font_new_with_values(sk_typeface_t* typeface, float size, float scaleX, float skewX) {
+-    return ToFont(new SkFont(sk_ref_sp(AsTypeface(typeface)), size, scaleX, skewX));
++    sk_sp<SkTypeface> tf = typeface ? sk_ref_sp(AsTypeface(typeface)) : get_default_typeface();
++    return ToFont(new SkFont(std::move(tf), size, scaleX, skewX));
+ }
+ 
+ void sk_font_delete(sk_font_t* font) {
+@@ -94,11 +106,16 @@ void sk_font_set_hinting(sk_font_t* font, sk_font_hinting_t value) {
+ }
+ 
+ sk_typeface_t* sk_font_get_typeface(const sk_font_t* font) {
+-    return ToTypeface(AsFont(font)->refTypeface().release());
++    auto tf = AsFont(font)->refTypeface();
++    if (tf == SkTypeface::MakeEmpty()) {
++        return nullptr;
++    }
++    return ToTypeface(tf.release());
+ }
+ 
+ void sk_font_set_typeface(sk_font_t* font, sk_typeface_t* value) {
+-    AsFont(font)->setTypeface(sk_ref_sp(AsTypeface(value)));
++    sk_sp<SkTypeface> tf = value ? sk_ref_sp(AsTypeface(value)) : get_default_typeface();
++    AsFont(font)->setTypeface(std::move(tf));
+ }
+ 
+ float sk_font_get_size(const sk_font_t* font) {
+diff --git a/src/c/sk_image.cpp b/src/c/sk_image.cpp
+index f0018369d8..38a1fc45be 100644
+--- a/src/c/sk_image.cpp
++++ b/src/c/sk_image.cpp
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include "include/core/SkImage.h"
++#include "include/gpu/GpuTypes.h"
+ #include "include/gpu/ganesh/SkImageGanesh.h"
+ #include "include/core/SkPicture.h"
+ 
+@@ -148,7 +149,7 @@ sk_image_t* sk_image_make_subset(const sk_image_t* cimage, gr_direct_context_t*
+ }
+ 
+ sk_image_t* sk_image_make_texture_image(const sk_image_t* cimage, gr_direct_context_t* context, bool mipmapped, bool budgeted) {
+-    return ToImage(SkImages::TextureFromImage(AsGrDirectContext(context), AsImage(cimage), (GrMipMapped)mipmapped, (skgpu::Budgeted)budgeted).release());
++    return ToImage(SkImages::TextureFromImage(AsGrDirectContext(context), AsImage(cimage), (skgpu::Mipmapped)mipmapped, (skgpu::Budgeted)budgeted).release());
+ }
+ 
+ sk_image_t* sk_image_make_non_texture_image(const sk_image_t* cimage) {
+diff --git a/src/c/sk_typeface.cpp b/src/c/sk_typeface.cpp
+index 2aac4e363e..48e2bb3358 100644
+--- a/src/c/sk_typeface.cpp
++++ b/src/c/sk_typeface.cpp
+@@ -14,6 +14,25 @@
+ 
+ #include <memory>
+ 
++#if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
++#include "include/ports/SkFontMgr_mac_ct.h"
++#elif defined(SK_BUILD_FOR_WIN)
++#include "include/ports/SkTypeface_win.h"
++#elif defined(SK_BUILD_FOR_ANDROID)
++#include "include/ports/SkFontMgr_android.h"
++#elif defined(SK_FONTMGR_FONTCONFIG_AVAILABLE)
++#include "include/ports/SkFontMgr_fontconfig.h"
++#elif defined(SK_FONTMGR_FREETYPE_EMBEDDED_AVAILABLE)
++// Forward-declare the embedded font manager factory and resource header.
++// The header struct is defined in SkFontMgr_custom_embedded.cpp (no public header).
++// SK_EMBEDDED_FONTS is generated by tools/embed_resources.py at build time
++// (e.g. NotoMono-Regular.ttf on WASM).
++struct SkEmbeddedResource { const uint8_t* data; size_t size; };
++struct SkEmbeddedResourceHeader { const SkEmbeddedResource* entries; int count; };
++extern "C" const SkEmbeddedResourceHeader SK_EMBEDDED_FONTS;
++SK_API sk_sp<SkFontMgr> SkFontMgr_New_Custom_Embedded(const SkEmbeddedResourceHeader*);
++#endif
++
+ #include "include/c/sk_typeface.h"
+ 
+ #include "src/c/sk_types_priv.h"
+@@ -45,31 +64,6 @@ bool sk_typeface_is_fixed_pitch(const sk_typeface_t* typeface) {
+     return AsTypeface(typeface)->isFixedPitch();
+ }
+ 
+-sk_typeface_t* sk_typeface_create_default(void) {
+-    return ToTypeface(SkTypeface::MakeDefault().release());
+-}
+-
+-sk_typeface_t* sk_typeface_ref_default(void) {
+-    return ToTypeface(SkTypeface::RefDefault().release());
+-}
+-
+-sk_typeface_t* sk_typeface_create_from_name(const char* familyName, const sk_fontstyle_t* style) {
+-    return ToTypeface(SkTypeface::MakeFromName(familyName, *AsFontStyle(style)).release());
+-}
+-
+-sk_typeface_t* sk_typeface_create_from_file(const char* path, int index) {
+-    return ToTypeface(SkTypeface::MakeFromFile(path, index).release());
+-}
+-
+-sk_typeface_t* sk_typeface_create_from_stream(sk_stream_asset_t* stream, int index) {
+-    std::unique_ptr<SkStreamAsset> skstream(AsStreamAsset(stream));
+-    return ToTypeface(SkTypeface::MakeFromStream(std::move(skstream), index).release());
+-}
+-
+-sk_typeface_t* sk_typeface_create_from_data(sk_data_t* data, int index) {
+-    return ToTypeface(SkTypeface::MakeFromData(sk_ref_sp(AsData(data)), index).release());
+-}
+-
+ void sk_typeface_unichars_to_glyphs(const sk_typeface_t* typeface, const int32_t unichars[], int count, uint16_t glyphs[]) {
+     AsTypeface(typeface)->unicharsToGlyphs(unichars, count, glyphs);
+ }
+@@ -129,12 +123,41 @@ sk_stream_asset_t* sk_typeface_open_stream(const sk_typeface_t* typeface, int* t
+ 
+ // font manager
+ 
++static sk_sp<SkFontMgr> create_platform_fontmgr() {
++#if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
++    return SkFontMgr_New_CoreText(nullptr);
++#elif defined(SK_BUILD_FOR_WIN)
++    return SkFontMgr_New_DirectWrite();
++#elif defined(SK_BUILD_FOR_ANDROID)
++    return SkFontMgr_New_Android(nullptr);
++#elif defined(SK_FONTMGR_FONTCONFIG_AVAILABLE)
++    return SkFontMgr_New_FontConfig(nullptr);
++#elif defined(SK_FONTMGR_FREETYPE_EMBEDDED_AVAILABLE)
++    // WASM (and other embedded platforms) use the embedded font manager with
++    // fonts compiled into the binary (e.g. NotoMono-Regular.ttf). This provides
++    // a fallback font for text rendering without requiring explicit font registration,
++    // and also supports creating additional typefaces from data/streams via FreeType.
++    return SkFontMgr_New_Custom_Embedded(&SK_EMBEDDED_FONTS);
++#else
++    return SkFontMgr::RefEmpty();
++#endif
++}
++
+ sk_fontmgr_t* sk_fontmgr_create_default(void) {
+-    return ToFontMgr(SkFontMgr::MakeDefault().release());
++    return ToFontMgr(create_platform_fontmgr().release());
++}
++
++// Shared accessor for the default font manager singleton, used by sk_font.cpp
++// to provide platform default typeface when null is passed (Skia m122+ behavior change).
++sk_sp<SkFontMgr> skiasharp_ref_default_fontmgr() {
++    static sk_sp<SkFontMgr> singleton = create_platform_fontmgr();
++    return singleton;
+ }
+ 
+ sk_fontmgr_t* sk_fontmgr_ref_default(void) {
+-    return ToFontMgr(SkFontMgr::RefDefault().release());
++    auto mgr = skiasharp_ref_default_fontmgr();
++    mgr->ref();
++    return ToFontMgr(mgr.get());
+ }
+ 
+ void sk_fontmgr_unref(sk_fontmgr_t* fontmgr) {
+diff --git a/src/c/sk_types_priv.h b/src/c/sk_types_priv.h
+index c060eceba5..6d1a2d7efc 100644
+--- a/src/c/sk_types_priv.h
++++ b/src/c/sk_types_priv.h
+@@ -182,8 +182,10 @@ DEF_STRUCT_MAP(GrGLTextureInfo, gr_gl_textureinfo_t, GrGLTextureInfo)
+ DEF_STRUCT_MAP(GrGLFramebufferInfo, gr_gl_framebufferinfo_t, GrGLFramebufferInfo)
+ DEF_STRUCT_MAP(GrGLInterface, gr_glinterface_t, GrGLInterface)
+ 
+-DEF_STRUCT_MAP(GrVkYcbcrConversionInfo, gr_vk_ycbcrconversioninfo_t, GrVkYcbcrConversionInfo)
++#if defined(SK_VULKAN)
++DEF_MAP(GrVkYcbcrConversionInfo, gr_vk_ycbcrconversioninfo_t, GrVkYcbcrConversionInfo)
+ DEF_STRUCT_MAP(GrVkImageInfo, gr_vk_imageinfo_t, GrVkImageInfo)
++#endif
+ 
+ DEF_STRUCT_MAP(GrD3DBackendContext, gr_d3d_backendcontext_t, GrD3DBackendContext)
+ DEF_STRUCT_MAP(GrD3DTextureResourceInfo, gr_d3d_textureresourceinfo_t, GrD3DTextureResourceInfo)
+diff --git a/src/c/skresources_resource_provider.cpp b/src/c/skresources_resource_provider.cpp
+index 0051006157..707d1e5102 100644
+--- a/src/c/skresources_resource_provider.cpp
++++ b/src/c/skresources_resource_provider.cpp
+@@ -27,11 +27,21 @@ sk_typeface_t* skresources_resource_provider_load_typeface(skresources_resource_
+ }
+ 
+ skresources_resource_provider_t* skresources_file_resource_provider_make(sk_string_t* base_dir, bool predecode){
+-    return ToSkResourcesResourceProvider(skresources::FileResourceProvider::Make(AsString(*base_dir), predecode).release());
++    return skresources_file_resource_provider_make2(base_dir,
++        predecode ? SKRESOURCES_IMAGE_DECODE_STRATEGY_PRE_DECODE : SKRESOURCES_IMAGE_DECODE_STRATEGY_LAZY_DECODE);
++}
++skresources_resource_provider_t* skresources_file_resource_provider_make2(sk_string_t* base_dir, skresources_image_decode_strategy_t strategy){
++    return ToSkResourcesResourceProvider(skresources::FileResourceProvider::Make(AsString(*base_dir),
++        (skresources::ImageDecodeStrategy)strategy).release());
+ }
+ skresources_resource_provider_t* skresources_caching_resource_provider_proxy_make(skresources_resource_provider_t* rp) {
+     return ToSkResourcesResourceProvider(skresources::CachingResourceProvider::Make(sk_ref_sp(AsSkResourcesResourceProvider(rp))).release());
+ }
+ skresources_resource_provider_t* skresources_data_uri_resource_provider_proxy_make(skresources_resource_provider_t* rp, bool predecode) {
+-    return ToSkResourcesResourceProvider(skresources::DataURIResourceProviderProxy::Make(sk_ref_sp(AsSkResourcesResourceProvider(rp)), predecode).release());
++    return skresources_data_uri_resource_provider_proxy_make2(rp,
++        predecode ? SKRESOURCES_IMAGE_DECODE_STRATEGY_PRE_DECODE : SKRESOURCES_IMAGE_DECODE_STRATEGY_LAZY_DECODE);
++}
++skresources_resource_provider_t* skresources_data_uri_resource_provider_proxy_make2(skresources_resource_provider_t* rp, skresources_image_decode_strategy_t strategy) {
++    return ToSkResourcesResourceProvider(skresources::DataURIResourceProviderProxy::Make(
++        sk_ref_sp(AsSkResourcesResourceProvider(rp)), (skresources::ImageDecodeStrategy)strategy).release());
+ }
+diff --git a/src/xamarin/SkCompatPaint.cpp b/src/xamarin/SkCompatPaint.cpp
+index cb70c4e2d1..7e22c1a8cf 100644
+--- a/src/xamarin/SkCompatPaint.cpp
++++ b/src/xamarin/SkCompatPaint.cpp
+@@ -8,11 +8,20 @@
+ 
+ #include "include/core/SkPaint.h"
+ #include "include/core/SkFont.h"
++#include "include/core/SkFontMgr.h"
+ #include "include/utils/SkTextUtils.h"
+ #include "include/xamarin/SkCompatPaint.h"
+ 
++// Shared font manager singleton from sk_typeface.cpp
++extern sk_sp<SkFontMgr> skiasharp_ref_default_fontmgr();
++
++static sk_sp<SkTypeface> get_default_typeface_for_paint() {
++    auto mgr = skiasharp_ref_default_fontmgr();
++    return mgr ? mgr->matchFamilyStyle(nullptr, SkFontStyle()) : nullptr;
++}
++
+ SkCompatPaint::SkCompatPaint()
+-    : fFont(SkFont())
++    : fFont(SkFont(get_default_typeface_for_paint()))
+     , fTextAlign(SkTextUtils::Align::kLeft_Align)
+     , fTextEncoding(SkTextEncoding::kUTF8)
+     , fFilterQuality(SkFilterQuality::None)
