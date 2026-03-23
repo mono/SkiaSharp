@@ -19,7 +19,10 @@ namespace SkiaSharp
 
 		// Create*
 
-		public static SKRuntimeEffect CreateShader (string sksl, out string errors)
+		public static SKRuntimeEffect CreateShader (string sksl, out string errors) =>
+			CreateShader (sksl.AsSpan (), out errors);
+
+		public static SKRuntimeEffect CreateShader (ReadOnlySpan<char> sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
@@ -30,7 +33,10 @@ namespace SkiaSharp
 			return effect;
 		}
 
-		public static SKRuntimeEffect CreateColorFilter (string sksl, out string errors)
+		public static SKRuntimeEffect CreateColorFilter (string sksl, out string errors) =>
+			CreateColorFilter (sksl.AsSpan (), out errors);
+
+		public static SKRuntimeEffect CreateColorFilter (ReadOnlySpan<char> sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
@@ -41,7 +47,10 @@ namespace SkiaSharp
 			return effect;
 		}
 
-		public static SKRuntimeEffect CreateBlender (string sksl, out string errors)
+		public static SKRuntimeEffect CreateBlender (string sksl, out string errors) =>
+			CreateBlender (sksl.AsSpan (), out errors);
+
+		public static SKRuntimeEffect CreateBlender (ReadOnlySpan<char> sksl, out string errors)
 		{
 			using var s = new SKString (sksl);
 			using var errorString = new SKString ();
@@ -54,21 +63,30 @@ namespace SkiaSharp
 
 		// Build*
 
-		public static SKRuntimeShaderBuilder BuildShader (string sksl)
+		public static SKRuntimeShaderBuilder BuildShader (string sksl) =>
+			BuildShader (sksl.AsSpan ());
+
+		public static SKRuntimeShaderBuilder BuildShader (ReadOnlySpan<char> sksl)
 		{
 			var effect = CreateShader (sksl, out var errors);
 			ValidateResult (effect, errors);
 			return new SKRuntimeShaderBuilder (effect);
 		}
 
-		public static SKRuntimeColorFilterBuilder BuildColorFilter (string sksl)
+		public static SKRuntimeColorFilterBuilder BuildColorFilter (string sksl) =>
+			BuildColorFilter (sksl.AsSpan ());
+
+		public static SKRuntimeColorFilterBuilder BuildColorFilter (ReadOnlySpan<char> sksl)
 		{
 			var effect = CreateColorFilter (sksl, out var errors);
 			ValidateResult (effect, errors);
 			return new SKRuntimeColorFilterBuilder (effect);
 		}
 
-		public static SKRuntimeBlenderBuilder BuildBlender (string sksl)
+		public static SKRuntimeBlenderBuilder BuildBlender (string sksl) =>
+			BuildBlender (sksl.AsSpan ());
+
+		public static SKRuntimeBlenderBuilder BuildBlender (ReadOnlySpan<char> sksl)
 		{
 			var effect = CreateBlender (sksl, out var errors);
 			ValidateResult (effect, errors);
@@ -518,11 +536,21 @@ namespace SkiaSharp
 
 		public static implicit operator SKRuntimeEffectUniform (float[][] value)
 		{
-			var floats = new List<float> ();
-			foreach (var array in value) {
-				floats.AddRange (array);
+			var totalLength = 0;
+			foreach (var f in value) {
+				totalLength += f.Length;
 			}
-			return floats.ToArray ();
+
+			var floats = new float[totalLength];
+
+			var offset = 0;
+			foreach (var f in value)
+			{
+				Array.Copy (f, 0, floats, offset, f.Length);
+				offset += f.Length;
+			}
+
+			return floats;
 		}
 
 		public static implicit operator SKRuntimeEffectUniform (SKMatrix value) => value.Values;

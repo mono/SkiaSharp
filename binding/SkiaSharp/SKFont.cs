@@ -188,11 +188,11 @@ namespace SkiaSharp
 		internal ushort[] GetGlyphs (void* text, int length, SKTextEncoding encoding)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
-				return new ushort[0];
+				return Array.Empty<ushort> ();
 
 			var n = CountGlyphs (text, length, encoding);
 			if (n <= 0)
-				return new ushort[0];
+				return Array.Empty<ushort> ();
 
 			var glyphs = new ushort[n];
 			GetGlyphs (text, length, encoding, glyphs);
@@ -232,7 +232,10 @@ namespace SkiaSharp
 			ContainsGlyphs (GetGlyphs (text, length, encoding));
 
 		private bool ContainsGlyphs (ushort[] glyphs) =>
-			Array.IndexOf (glyphs, (ushort)0) == -1;
+			ContainsGlyphs (glyphs.AsSpan ());
+
+		private bool ContainsGlyphs (ReadOnlySpan<ushort> glyphs) =>
+			glyphs.IndexOf ((ushort)0) == -1;
 
 		// CountGlyphs
 
@@ -433,11 +436,11 @@ namespace SkiaSharp
 		internal SKPoint[] GetGlyphPositions (void* text, int length, SKTextEncoding encoding, SKPoint origin)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
-				return new SKPoint[0];
+				return Array.Empty<SKPoint> ();
 
 			var n = CountGlyphs (text, length, encoding);
 			if (n <= 0)
-				return new SKPoint[0];
+				return Array.Empty<SKPoint> ();
 
 			var positions = new SKPoint[n];
 			GetGlyphPositions (text, length, encoding, positions, origin);
@@ -523,11 +526,11 @@ namespace SkiaSharp
 		internal float[] GetGlyphOffsets (void* text, int length, SKTextEncoding encoding, float origin)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
-				return new float[0];
+				return Array.Empty<float> ();
 
 			var n = CountGlyphs (text, length, encoding);
 			if (n <= 0)
-				return new float[0];
+				return Array.Empty<float> ();
 
 			var offsets = new float[n];
 			GetGlyphOffsets (text, length, encoding, offsets, origin);
@@ -633,11 +636,11 @@ namespace SkiaSharp
 		internal float[] GetGlyphWidths (void* text, int length, SKTextEncoding encoding, SKPaint paint)
 		{
 			if (!ValidateTextArgs (text, length, encoding))
-				return new float[0];
+				return Array.Empty<float> ();
 
 			var n = CountGlyphs (text, length, encoding);
 			if (n <= 0)
-				return new float[0];
+				return Array.Empty<float> ();
 
 			var widths = new float[n];
 			GetGlyphWidths (text, length, encoding, widths, Span<SKRect>.Empty, paint);
@@ -647,14 +650,14 @@ namespace SkiaSharp
 		internal float[] GetGlyphWidths (void* text, int length, SKTextEncoding encoding, out SKRect[] bounds, SKPaint paint)
 		{
 			if (!ValidateTextArgs (text, length, encoding)) {
-				bounds = new SKRect[0];
-				return new float[0];
+				bounds = Array.Empty<SKRect> ();
+				return Array.Empty<float> ();
 			}
 
 			var n = CountGlyphs (text, length, encoding);
 			if (n <= 0) {
-				bounds = new SKRect[0];
-				return new float[0];
+				bounds = Array.Empty<SKRect> ();
+				return Array.Empty<float> ();
 			}
 
 			bounds = new SKRect[n];
