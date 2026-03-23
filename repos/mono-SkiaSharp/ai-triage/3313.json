@@ -3,12 +3,12 @@
     "schemaVersion": "1.0",
     "number": 3313,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-22T12:00:00Z",
+    "analyzedAt": "2026-03-23T21:58:20Z",
     "currentLabels": ["type/bug"]
   },
-  "summary": "SKCanvasView in Blazor WASM shows severe performance degradation (120fps to sub-20fps) when drawing a scaled SKImage, because the raster backend performs CPU-based image scaling in WASM; SKGLView handles it fine via GPU hardware acceleration.",
+  "summary": "SKCanvasView in Blazor WASM shows severe performance degradation (120fps to sub-20fps) when drawing a scaled SKImage, because Skia's raster engine must perform per-pixel resampling in WASM which is much slower than native CPU or GPU-accelerated rendering via SKGLView.",
   "classification": {
-    "type": { "value": "type/bug", "confidence": 0.85 },
+    "type": { "value": "type/bug", "confidence": 0.88 },
     "area": { "value": "area/SkiaSharp.Views.Blazor", "confidence": 0.95 },
     "platforms": ["os/WASM"],
     "backends": ["backend/Raster"],
@@ -19,105 +19,136 @@
       "severity": "medium",
       "regressionClaimed": false,
       "errorType": "performance",
-      "errorMessage": "FPS drops from 120 to sub-20 when drawing scaled SKImage in SKCanvasView",
+      "errorMessage": "FPS drops from 120fps to sub-20fps when drawing a scaled SKImage in SKCanvasView on Blazor WASM",
       "reproQuality": "complete",
       "targetFrameworks": ["net8.0"]
     },
     "reproEvidence": {
       "stepsToReproduce": [
         "Create a Blazor WASM app with SKCanvasView",
-        "Load a 786x1090 SKImage",
-        "Draw it at 1:1 size (786x1090 rect) — observe 120fps",
-        "Draw it scaled to 800x800 rect — observe ~50fps",
-        "Draw it scaled to 1600x1600 rect — observe ~12fps",
-        "Or use canvas.Scale(2) before drawing at original rect — observe ~10fps"
+        "Load an SKImage (786x1090 pixels)",
+        "Draw the image at 1:1 size (786x1090 rect) — observe 120fps",
+        "Draw the image in an 800x800 rect (slight scale) — observe ~50fps",
+        "Draw the image in a 1600x1600 rect (2x scale) — observe ~12fps",
+        "Apply canvas.Scale(2) before drawing at original size — observe ~10fps"
       ],
-      "environmentDetails": "SkiaSharp 3.119.0, macOS Apple M2 Pro, Chrome/Firefox/Safari, Blazor WASM",
+      "environmentDetails": "macOS with Apple M2 Pro, confirmed in Chrome/Firefox/Safari, SkiaSharp 3.119.0",
       "screenshots": [
         { "url": "https://github.com/user-attachments/assets/085a25a2-0300-4adc-8c6d-343d8e88d898", "description": "800x800 rect: ~50fps" },
         { "url": "https://github.com/user-attachments/assets/1cd90261-e281-4d8b-9109-605a28980f6f", "description": "1600x1600 rect: ~12fps" },
         { "url": "https://github.com/user-attachments/assets/835f2669-29da-40dc-aa22-98ed79a458f9", "description": "786x1090 rect (1:1): 120fps" },
-        { "url": "https://github.com/user-attachments/assets/5a247fb0-7463-4f0d-a424-4f7e0e5bf2b7", "description": "canvas.Scale(2) + original rect: ~10fps" }
+        { "url": "https://github.com/user-attachments/assets/5a247fb0-7463-4f0d-a424-4f7e0e5bf2b7", "description": "canvas.Scale(2) with 786x1090 rect: ~10fps" }
+      ],
+      "codeSnippets": [
+        "using (new SKAutoCanvasRestore(canvas))\n{\n    canvas.ResetMatrix();\n    canvas.Scale(2);\n    canvas.DrawImage(image.Image, new SKRect(0,0, 786, 1090), SKSamplingOptions.Default, theme.BitmapPaint);\n}"
       ]
     },
     "versionAnalysis": {
       "mentionedVersions": ["3.119.0"],
       "currentRelevance": "likely",
-      "relevanceReason": "The Blazor SKCanvasView raster rendering path has not changed — it still uses CPU-based SKSurface.Create with putImageData transfer every frame."
+      "relevanceReason": "The Blazor SKCanvasView rendering pipeline (raster → putImageData) has not changed since 3.119.0. The core performance characteristic — CPU raster resampling in WASM — is architectural."
     }
   },
   "analysis": {
-    "summary": "SKCanvasView in Blazor uses a raster (CPU) rendering backend. Every frame, it creates an in-memory pixel buffer via SKSurface.Create(), invokes the user's paint callback, then transfers the entire pixel buffer to the HTML canvas via putImageData(). When the user draws a scaled image, Skia's raster backend must perform CPU-based pixel sampling/interpolation for every output pixel — in WASM, this is orders of magnitude slower than GPU-accelerated texture sampling (which SKGLView uses via WebGL). The performance drop is proportional to the scaling factor because more output pixels require more CPU sampling work.",
-    "rationale": "Classified as type/bug because the performance degradation is severe enough to be unusable (120fps to 10fps) for a basic drawing operation. The area is SkiaSharp.Views.Blazor because the issue is specific to the Blazor raster rendering path. The root cause is architectural — SKCanvasView uses CPU raster rendering, not GPU — but the severity warrants investigation into whether optimizations (e.g., canvas drawImage scaling, offscreen bitmap, or createImageBitmap) could improve the JS transfer path.",
+    "summary": "SKCanvasView in Blazor uses CPU raster rendering: Skia draws to a pinned byte array, then putImageData transfers the pixels to an HTML canvas element. When drawing a scaled image, Skia's raster engine must perform bilinear/bicubic interpolation for every output pixel in WASM, which is significantly slower than native CPU execution. At 1:1 scale, no resampling is needed (direct pixel copy), explaining the 120fps baseline. SKGLView avoids this entirely by using WebGL for GPU-accelerated rendering. This is an inherent limitation of CPU raster rendering in WASM, not a bug in SkiaSharp's Blazor integration code itself.",
+    "rationale": "Classified as type/bug because the user reports a dramatic and measurable performance difference that makes scaled image rendering unusable in SKCanvasView on WASM, despite working well on native platforms (iOS/Android). While the root cause is architectural (CPU raster in WASM is slow for resampling), the severity is significant enough to warrant investigation — there may be optimization opportunities such as leveraging WASM SIMD for resampling, or recommending SKGLView as the primary Blazor canvas. Area is SkiaSharp.Views.Blazor since the issue is specific to the Blazor SKCanvasView rendering pipeline.",
     "keySignals": [
-      { "text": "SKCanvasView is smooth [for DrawLine] ... This does not appear to be an issue with SKGLView", "source": "issue body", "interpretation": "Reporter chose SKCanvasView because SKGLView has separate DrawLine issues — they cannot simply switch." },
-      { "text": "When drawing exactly in a 786x1090 Rect, we get the solid 120fps", "source": "issue body", "interpretation": "1:1 drawing is fast — confirms the bottleneck is image scaling, not buffer transfer or general rendering." },
-      { "text": "I've tried experimenting with different SKSamplingOptions, but none improve it", "source": "issue body", "interpretation": "Sampling quality options have minimal impact — the CPU cost is dominated by per-pixel memory access patterns in the raster backend, not filter complexity." },
-      { "text": "we had similar issue on Android but that was when we had a High filter quality", "source": "issue body", "interpretation": "Android had a similar issue resolved by filter quality change — but in WASM raster mode, even low-quality filters are CPU-bound." }
+      { "text": "120fps down to sub 20fps when drawing just a single image", "source": "issue body", "interpretation": "6-10x performance drop from a single DrawImage call with scaling — severe degradation." },
+      { "text": "This does not appear to be an issue with SKGLView", "source": "issue body", "interpretation": "Confirms GPU-accelerated path handles scaling efficiently — isolates the problem to the raster pipeline." },
+      { "text": "When drawing exactly in a 786x1090 Rect, we get the solid 120fps", "source": "issue body", "interpretation": "1:1 pixel copy (no resampling) is fast — the bottleneck is exclusively in Skia's image resampling code running in WASM." },
+      { "text": "I've tried experimenting with different SKSamplingOptions, but none improve it", "source": "issue body", "interpretation": "Even nearest-neighbor sampling doesn't help enough, suggesting the overhead is in the resampling dispatch itself or WASM memory access patterns." },
+      { "text": "We are porting over logic that we run fine on iOS and Android", "source": "issue body", "interpretation": "Same code performs well on native platforms — this is a WASM-specific performance gap." }
     ],
     "codeInvestigation": [
-      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs", "lines": "95-108", "finding": "SKCanvasView creates a CPU raster surface via SKSurface.Create(info, pixelsHandle.AddrOfPinnedObject(), info.RowBytes) on every frame. After the paint callback, it calls interop.PutImageData() to copy the entire pixel buffer to the HTML canvas. All image scaling is done in software.", "relevance": "direct" },
-      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs", "lines": "99-155", "finding": "SKGLView uses GRContext.CreateGl() and SKSurface.Create(context, renderTarget, ...) for GPU-backed rendering via WebGL. Image scaling is hardware-accelerated. This explains why SKGLView handles the same workload fine.", "relevance": "related" },
-      { "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts", "lines": "186-207", "finding": "putImageData() creates a Uint8ClampedArray view into WASM linear memory and calls ctx.putImageData(). The full pixel buffer (width*height*4 bytes) is transferred every frame. At 1600x1600, this is ~10MB per frame.", "relevance": "direct" }
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+        "lines": "87-108",
+        "finding": "OnRenderFrame creates a raster SKSurface from a pinned byte array and calls PutImageData to transfer pixels to the HTML canvas. All drawing — including image resampling — is done by Skia's CPU raster engine in WASM before the pixel transfer. The putImageData call itself is efficient (direct memory view), so the bottleneck is Skia's per-pixel resampling computation.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/wwwroot/SKHtmlCanvas.ts",
+        "lines": "186-204",
+        "finding": "putImageData creates a Uint8ClampedArray view directly over WASM HEAPU8 memory (no copy), constructs ImageData, and calls ctx.putImageData. This is the most efficient raster-to-canvas transfer method available. The performance issue is upstream of this transfer — in Skia's raster draw call.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs",
+        "lines": "110-124",
+        "finding": "CreateBitmap allocates the pixel buffer at DPI-scaled dimensions: (width*dpi, height*dpi). On a 2x DPI display, an 800x800 CSS canvas becomes 1600x1600 pixels — quadrupling the resampling work. This compounds the scaling cost for high-DPI displays.",
+        "relevance": "related"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views.Blazor/SKGLView.razor.cs",
+        "finding": "SKGLView uses WebGL GPU rendering via GRContext, bypassing CPU raster entirely. Image scaling is handled by GPU hardware, explaining why the reporter sees no performance issue with SKGLView.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Use SKGLView instead of SKCanvasView for GPU-accelerated image scaling (reporter confirms this works)",
+      "Pre-scale the SKImage to the exact target dimensions once and cache it, then draw at 1:1 scale",
+      "Set IgnorePixelScaling=true to render at logical (CSS) resolution instead of physical (DPI-scaled) resolution, reducing total pixel count"
     ],
     "nextQuestions": [
-      "Could the putImageData path be optimized to use createImageBitmap + drawImage with browser-native scaling, avoiding per-pixel CPU scaling in Skia?",
-      "What specific issues does the reporter experience with SKGLView and DrawLine? Is that a separate bug that should be fixed?",
-      "Would WASM SIMD be enabled in the current Skia build, and if not, could enabling it improve raster scaling performance?"
+      "What specific issues does the reporter experience with SKGLView that prevent them from using it?",
+      "Would WASM SIMD optimizations in Skia's raster image resampling improve performance significantly?",
+      "Does setting SKSamplingOptions to nearest-neighbor (no interpolation) provide any measurable improvement?",
+      "What is the canvas DPI factor on the reporter's M2 Pro — if 2x, the effective rendering is 4x the pixel count"
     ],
     "resolution": {
-      "hypothesis": "The raster backend in WASM performs CPU-based pixel sampling for image scaling, which is inherently slow without GPU acceleration. The performance is proportional to the output pixel count.",
+      "hypothesis": "Skia's CPU raster image resampling is computationally expensive in WASM due to per-pixel interpolation calculations. At native execution speed this is fast, but WASM runs at roughly 50-80% of native throughput with poor cache locality for large image buffers. Combined with high-DPI scaling (2x on Retina displays), the effective pixel count makes real-time resampling infeasible for the raster backend.",
       "proposals": [
         {
-          "title": "Pre-scale the image at load time",
-          "description": "Instead of scaling the image on every frame, pre-render it at the target display size once and cache the result. Draw the pre-scaled image at 1:1 in the paint callback, avoiding per-frame CPU scaling. Null-check SKSurface.Create() return value, and dispose the cached image when no longer needed.",
+          "title": "Pre-scale image to target dimensions",
+          "description": "Create a pre-scaled SKImage at the desired output dimensions once, then draw it at 1:1 scale in OnPaintSurface. This moves the expensive resampling out of the render loop.",
           "category": "workaround",
-          "codeSnippet": "// Once at load time (not per frame) — pre-scale to target display size\nvar targetWidth = 1600;\nvar targetHeight = 1600;\nusing var scaledSurface = SKSurface.Create(new SKImageInfo(targetWidth, targetHeight));\nif (scaledSurface == null)\n    return; // native allocation failed\nscaledSurface.Canvas.DrawImage(originalImage,\n    new SKRect(0, 0, targetWidth, targetHeight),\n    SKSamplingOptions.Default);\nvar preScaledImage = scaledSurface.Snapshot();\n// Cache preScaledImage — dispose it when the target size changes or on component disposal\n\n// Per frame in OnPaintSurface — draw at 1:1, no scaling needed\ncanvas.DrawImage(preScaledImage, 0, 0);",
-          "confidence": 0.85,
-          "effort": "small",
-          "validated": "yes"
-        },
-        {
-          "title": "Switch to SKGLView for image-heavy rendering",
-          "description": "SKGLView uses WebGL for GPU-accelerated rendering. Image scaling is handled by hardware texture sampling, which is orders of magnitude faster. The reporter mentions DrawLine issues with SKGLView — those should be investigated as a separate bug.",
-          "category": "alternative",
-          "confidence": 0.75,
+          "codeSnippet": "// Cache as a field — dispose when target size changes or component disposes\nprivate SKImage? _scaledImage;\n\nprivate void UpdateScaledImage(SKImage originalImage, int targetWidth, int targetHeight)\n{\n    _scaledImage?.Dispose();\n    using var surface = SKSurface.Create(new SKImageInfo(targetWidth, targetHeight));\n    if (surface == null) return;\n    surface.Canvas.DrawImage(originalImage, SKRect.Create(targetWidth, targetHeight));\n    _scaledImage = surface.Snapshot();\n}\n\n// In OnPaintSurface, draw the cached image at 1:1 (no per-frame resampling):\nif (_scaledImage != null)\n    canvas.DrawImage(_scaledImage, SKRect.Create(targetWidth, targetHeight));",
+          "confidence": 0.80,
           "effort": "small",
           "validated": "untested"
         },
         {
-          "title": "Investigate browser-native scaling in putImageData path",
-          "description": "The current putImageData path transfers raw pixels. An alternative would be to render at a smaller resolution and let the browser scale the canvas element via CSS or use createImageBitmap + drawImage for GPU-assisted upscaling. This would require changes to SKHtmlCanvas.ts.",
+          "title": "Switch to SKGLView",
+          "description": "Use SKGLView instead of SKCanvasView for GPU-accelerated rendering. Image scaling is handled by WebGL hardware and does not suffer from CPU raster resampling overhead. The reporter confirms SKGLView handles scaled images fine, though they report unrelated issues with DrawLine performance on SKGLView.",
+          "category": "alternative",
+          "confidence": 0.90,
+          "effort": "small",
+          "validated": "untested"
+        },
+        {
+          "title": "Investigate WASM raster optimization",
+          "description": "Profile Skia's raster image resampling path in WASM to identify whether SIMD optimizations are active and if memory access patterns can be improved. Check if the WASM build enables SkOpts SIMD specializations for image scaling.",
           "category": "investigation",
           "confidence": 0.50,
-          "effort": "medium",
+          "effort": "large",
           "validated": "untested"
         }
       ],
-      "recommendedProposal": "Pre-scale the image at load time",
-      "recommendedReason": "Avoids per-frame CPU scaling entirely with minimal code change. The reporter's use case (single cached image at fixed scale) is ideal for this approach."
+      "recommendedProposal": "Pre-scale image to target dimensions",
+      "recommendedReason": "Directly addresses the bottleneck by moving resampling out of the render loop. Small effort, high confidence, and works with the existing SKCanvasView without requiring a switch to SKGLView (which the reporter has other issues with)."
     }
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
-      "confidence": 0.80,
-      "reason": "Real performance issue with clear repro data. The root cause is architectural (CPU raster vs GPU) but warrants investigation into whether the Blazor raster path can be optimized (e.g., browser-native scaling, smaller render target + CSS upscale)."
+      "confidence": 0.82,
+      "reason": "Real performance issue with clear measurements. While the root cause is architectural (CPU raster in WASM), there may be optimization opportunities in Skia's WASM build. Workarounds exist (pre-scaling, SKGLView) but the reporter's use case warrants investigation into whether the raster path can be improved.",
+      "suggestedReproPlatform": "linux"
     },
     "actions": [
       {
         "type": "update-labels",
-        "description": "Apply bug, Blazor views, WASM, raster, performance labels",
+        "description": "Apply bug, Blazor views, WASM, and performance labels",
         "risk": "low",
         "confidence": 0.95,
-        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM", "backend/Raster", "tenet/performance"]
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM", "tenet/performance"]
       },
       {
         "type": "add-comment",
-        "description": "Post analysis with pre-scaling workaround and explanation of raster vs GL performance difference",
+        "description": "Acknowledge the issue, provide pre-scaling workaround, and ask about SKGLView issues",
         "risk": "medium",
-        "confidence": 0.80,
-        "comment": "Thanks for the detailed benchmarks and screenshots — very helpful for diagnosis.\n\nThe root cause is that `SKCanvasView` in Blazor uses a CPU raster backend. Every frame, Skia does all image scaling in software (per-pixel sampling in WASM), then transfers the full pixel buffer to the HTML canvas via `putImageData`. With GPU-backed `SKGLView`, the same scaling is hardware-accelerated, which is why it handles this fine.\n\nHere's a workaround you can use while we investigate: pre-scale the image once at load time instead of scaling on every frame.\n\n```csharp\n// Once at load time — pre-scale to target display size\nvar targetWidth = 1600;\nvar targetHeight = 1600;\nusing var scaledSurface = SKSurface.Create(new SKImageInfo(targetWidth, targetHeight));\nif (scaledSurface == null)\n    return; // native allocation failed\nscaledSurface.Canvas.DrawImage(originalImage,\n    new SKRect(0, 0, targetWidth, targetHeight),\n    SKSamplingOptions.Default);\nvar preScaledImage = scaledSurface.Snapshot();\n// Cache preScaledImage — dispose when target size changes or on component disposal\n\n// Per frame in OnPaintSurface — draw at 1:1\ncanvas.DrawImage(preScaledImage, 0, 0);\n```\n\nIf the target size changes, regenerate the pre-scaled image (and dispose the old one). This avoids per-frame CPU scaling entirely.\n\nYou also mentioned issues with `SKGLView` and `DrawLine` calls. Would you be able to file a separate issue for that? Fixing the GL path may be the better long-term solution for image-heavy rendering in Blazor."
+        "confidence": 0.85,
+        "comment": "Thanks for the detailed FPS measurements and screenshots — they clearly isolate the problem.\n\nThis is a known limitation of SKCanvasView in Blazor: it uses Skia's CPU raster engine to draw into a byte buffer, which is then transferred to the HTML canvas via `putImageData`. Image resampling (scaling) is computationally expensive in this path, especially in WASM where CPU throughput is lower than native. SKGLView avoids this entirely by using WebGL for GPU-accelerated rendering.\n\nHere's a workaround you can use while we investigate: pre-scale the image to your target dimensions once (outside the render loop), then draw the pre-scaled image at 1:1 in `OnPaintSurface`:\n\n```csharp\n// Cache as a field — dispose when target size changes or component disposes\nprivate SKImage? _scaledImage;\n\nprivate void UpdateScaledImage(SKImage originalImage, int targetWidth, int targetHeight)\n{\n    _scaledImage?.Dispose();\n    using var surface = SKSurface.Create(new SKImageInfo(targetWidth, targetHeight));\n    if (surface == null) return;\n    surface.Canvas.DrawImage(originalImage, SKRect.Create(targetWidth, targetHeight));\n    _scaledImage = surface.Snapshot();\n}\n\n// In OnPaintSurface, draw the cached image at 1:1 (no per-frame resampling):\nif (_scaledImage != null)\n    canvas.DrawImage(_scaledImage, SKRect.Create(targetWidth, targetHeight));\n```\n\nThis moves the expensive resampling out of the per-frame render path. Call `UpdateScaledImage` once when the image loads or the target size changes. Remember to dispose `_scaledImage` when the component disposes.\n\nYou mentioned SKGLView has issues with DrawLine performance — would you be able to share more details on that? If we can resolve those issues, SKGLView would be the better choice for your use case since it handles scaling natively via GPU hardware."
       }
     ]
   }

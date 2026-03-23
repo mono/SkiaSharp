@@ -3,140 +3,135 @@
     "schemaVersion": "1.0",
     "number": 3313,
     "repo": "mono/SkiaSharp",
-    "analyzedAt": "2025-07-22T16:00:00Z"
+    "analyzedAt": "2026-03-23T22:55:00Z"
   },
   "conclusion": "reproduced",
+  "notes": "Reproduced: SKCanvasView in Blazor WASM shows severe performance degradation when drawing a scaled SKImage. At DPI=2 (1596x1596 canvas), 1:1 drawing takes ~1.2ms/frame while any scaled drawing takes ~42ms/frame — a 35x slowdown. This matches the reporter's observation of 120fps dropping to sub-20fps. Cross-platform verification confirms this is dramatically worse on WASM: native macOS ARM64 takes 1.6ms for scaled draws (26-27x faster than WASM for the same operation). The scaling penalty exists on native too (0.38ms vs 1.57ms, ~4x), but WASM amplifies it by an additional 26x factor.",
   "assessment": "likely-bug",
-  "notes": "Reproduced severe performance degradation in SKCanvasView raster backend when drawing scaled images in Blazor WASM. Drawing a 786x1090 image at 1:1 takes <1ms, but scaling to 1600x1600 or using canvas.Scale(2) takes ~38ms per frame (42x slowdown). The degradation is proportional to output pixel count. Main branch (Debug build, net8.0) shows ~50ms for all modes with no scaling variance, but this is likely due to Debug overhead masking the scaling cost rather than a fix. Root cause is CPU-based image scaling in the raster backend.",
   "scope": "platform-specific/wasm",
-  "reproProject": {
-    "type": "blazor-wasm",
-    "tfm": "net10.0",
-    "packages": [
-      {
-        "name": "SkiaSharp.Views.Blazor",
-        "version": "3.119.0"
-      }
-    ]
+  "reproductionTime": "~20 minutes",
+  "inputs": {
+    "triageFile": "ai-triage/3313.json"
   },
-  "environment": {
-    "os": "macOS 26.3",
-    "arch": "arm64",
-    "dotnetVersion": "10.0",
-    "dotnetSdkVersion": "10.0.102",
-    "skiaSharpVersion": "3.119.0",
-    "dockerUsed": false
-  },
-  "reproductionSteps": [
-    {
-      "stepNumber": 1,
-      "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor 3.119.0 and WasmBuildNative=true",
-      "command": "dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.0",
-      "exitCode": 0,
-      "output": "Restore succeeded. PackageReference for package 'SkiaSharp.Views.Blazor' version '3.119.0' added.",
-      "filesCreated": [
-        {
-          "filename": "Pages/Home.razor",
-          "description": "Blazor page with SKCanvasView benchmark: creates 786x1090 test image, measures per-frame DrawImage timing across 4 modes (1:1, scaled-800, scaled-1600, scale-2x) with 20 measured frames per mode"
-        }
-      ],
-      "layer": "setup",
-      "result": "success"
-    },
-    {
-      "stepNumber": 2,
-      "description": "Build Blazor WASM project with native compilation",
-      "command": "dotnet build",
-      "exitCode": 0,
-      "output": "Build succeeded with 2 warning(s) in 16.0s (CS0618 obsolete API warnings only)",
-      "layer": "csharp",
-      "result": "success"
-    },
-    {
-      "stepNumber": 3,
-      "description": "Serve app and run benchmark via Playwright — SkiaSharp 3.119.0. Measured per-frame DrawImage time across 4 scaling modes.",
-      "command": "dotnet run --urls http://localhost:5111 --no-build",
-      "exitCode": 0,
-      "output": "Mode: 1:1            Avg:     0.89ms  Min:     0.00ms  Max:     2.00ms  Frames: 9   EstFPS: 1125\nMode: scaled-800     Avg:     9.62ms  Min:     9.00ms  Max:    11.00ms  Frames: 13  EstFPS: 104\nMode: scaled-1600    Avg:    38.06ms  Min:    37.00ms  Max:    41.00ms  Frames: 18  EstFPS: 26.3\nMode: scale-2x       Avg:    37.53ms  Min:    37.00ms  Max:    38.00ms  Frames: 19  EstFPS: 26.6",
-      "layer": "csharp",
-      "result": "wrong-output"
-    },
-    {
-      "stepNumber": 4,
-      "description": "Test with latest stable SkiaSharp 3.119.2 in fresh project directory",
-      "command": "mkdir /tmp/skiasharp/repro/3313-latest && dotnet new blazorwasm + dotnet add package SkiaSharp.Views.Blazor --version 3.119.2 + dotnet build + dotnet run",
-      "exitCode": 0,
-      "output": "Mode: 1:1            Avg:     0.67ms  Min:     0.00ms  Max:     1.00ms  Frames: 9   EstFPS: 1500\nMode: scaled-800     Avg:     9.53ms  Min:     9.00ms  Max:    10.00ms  Frames: 15  EstFPS: 104.9\nMode: scaled-1600    Avg:    37.89ms  Min:    37.00ms  Max:    40.00ms  Frames: 19  EstFPS: 26.4\nMode: scale-2x       Avg:    36.75ms  Min:    36.00ms  Max:    37.00ms  Frames: 20  EstFPS: 27.2",
-      "layer": "csharp",
-      "result": "wrong-output"
-    },
-    {
-      "stepNumber": 5,
-      "description": "Test with main branch source (Debug build, net8.0 via global.json) using Blazor sample with project references",
-      "command": "dotnet build samples/Basic/BlazorWebAssembly/SkiaSharpSample/SkiaSharpSample.csproj + dotnet run --urls http://localhost:5199",
-      "exitCode": 0,
-      "output": "Mode: 1:1            Avg:    50.85ms  Min:    49.00ms  Max:    55.00ms  Frames: 13  EstFPS: 19.7\nMode: scaled-800     Avg:    51.05ms  Min:    50.00ms  Max:    54.00ms  Frames: 19  EstFPS: 19.6\nMode: scaled-1600    Avg:    50.74ms  Min:    50.00ms  Max:    52.00ms  Frames: 19  EstFPS: 19.7\nMode: scale-2x       Avg:    50.55ms  Min:    49.00ms  Max:    58.00ms  Frames: 20  EstFPS: 19.8",
-      "layer": "csharp",
-      "result": "success"
-    }
-  ],
   "versionResults": [
     {
       "version": "3.119.0",
       "source": "nuget",
       "result": "reproduced",
-      "notes": "1:1=0.89ms, scaled-800=9.62ms (10x slower), scaled-1600=38.06ms (42x slower), scale-2x=37.53ms (42x slower)",
-      "platform": "host-macos-arm64"
+      "platform": "wasm-blazor",
+      "notes": "Reporter's version. Scaled image draw ~42ms/frame (24 FPS) vs 1:1 draw ~1.2ms/frame (833 FPS) on 1596x1596 canvas in Chrome."
     },
     {
-      "version": "3.119.2",
+      "version": "3.119.0",
       "source": "nuget",
-      "result": "reproduced",
-      "notes": "1:1=0.67ms, scaled-800=9.53ms (14x slower), scaled-1600=37.89ms (56x slower), scale-2x=36.75ms (55x slower). Same scaling degradation as 3.119.0.",
-      "platform": "host-macos-arm64"
-    },
-    {
-      "version": "main",
-      "source": "source",
       "result": "not-reproduced",
-      "notes": "All modes ~50ms with no scaling variance. However, this is a Debug build on net8.0 (vs Release NuGet on net10.0), so the ~50ms baseline overhead likely masks the scaling cost. Result is inconclusive for fix verification.",
-      "platform": "host-macos-arm64"
+      "platform": "host-macos-arm64",
+      "notes": "Cross-platform: native macOS console test shows scaled draw at 1.57ms/frame — usable performance. WASM is 26-27x slower for the same operation."
     }
   ],
-  "feedback": {
-    "corrections": [
-      {
-        "source": "triage",
-        "topic": "evidence",
-        "upstream": "targetFrameworks: net8.0",
-        "corrected": "Reporter uses SkiaSharp 3.119.0 on Blazor WASM. TFM not specified in issue, tested with net10.0 which is forward-compatible."
-      }
+  "reproProject": {
+    "type": "blazor-wasm",
+    "tfm": "net9.0",
+    "packages": [
+      { "name": "SkiaSharp.Views.Blazor", "version": "3.119.0" }
     ]
+  },
+  "reproductionSteps": [
+    {
+      "stepNumber": 1,
+      "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor 3.119.0 and WasmBuildNative enabled",
+      "layer": "setup",
+      "command": "dotnet new blazorwasm -n Repro --framework net9.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.0",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 2,
+      "description": "Write reproduction page with SKCanvasView in EnableRenderLoop mode, creating a 786x1090 test image and drawing it in multiple scale modes (1:1, scaled-2x, canvas.Scale(2)), measuring per-frame render time via Stopwatch",
+      "layer": "csharp",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 3,
+      "description": "Build Blazor WASM project with native compilation",
+      "layer": "deployment",
+      "command": "dotnet build",
+      "output": "Build succeeded. 0 Warning(s) 0 Error(s)",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 4,
+      "description": "Serve app and verify in Chrome via Playwright MCP. Default mode (scaled-2x) shows ~42ms/frame (24 FPS) on 1596x1596 canvas. Browser console confirms: PERF: mode=scaled-2x frameMs=42.0 avgMs=42.0 fps=24 canvas=1596x1596",
+      "layer": "csharp",
+      "output": "PERF: mode=scaled-2x frameMs=42.0 avgMs=42.0 fps=24 canvas=1596x1596",
+      "exitCode": 0,
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 5,
+      "description": "Switch to 1:1 mode (draw image at exact 786x1090 dimensions). Console shows ~1.2ms/frame (833 FPS) — 35x faster than scaled mode. This confirms the reporter's observation that 1:1 drawing is fast while any scaling tanks performance.",
+      "layer": "csharp",
+      "output": "PERF: mode=1to1 frameMs=1.2 avgMs=1.2 fps=833 canvas=1596x1596",
+      "exitCode": 0,
+      "result": "success"
+    },
+    {
+      "stepNumber": 6,
+      "description": "Switch to canvas-scale-2x mode (canvas.Scale(2) then draw at original 786x1090 rect — reporter's exact scenario). Shows ~42.9ms/frame (23 FPS), matching reporter's observation of sub-20fps with canvas.Scale(2).",
+      "layer": "csharp",
+      "output": "PERF: mode=canvas-scale-2x frameMs=42.9 avgMs=42.9 fps=23 canvas=1596x1596",
+      "exitCode": 0,
+      "result": "wrong-output"
+    },
+    {
+      "stepNumber": 7,
+      "description": "Cross-platform verification: run same DrawImage operations natively on macOS ARM64 console app. Results: 1:1=0.38ms, scaled-2x=1.57ms, canvas-scale-2x=1.63ms. Native is 26-27x faster for scaled draws, confirming the performance issue is WASM-specific amplification.",
+      "layer": "csharp",
+      "command": "dotnet run -c Release (console app with same draw operations)",
+      "output": "1:1 draw: 0.38ms avg\\nscaled-2x draw: 1.57ms avg\\ncanvas-scale-2x draw: 1.63ms avg\\nPlatform: Darwin Arm64",
+      "exitCode": 0,
+      "result": "success"
+    }
+  ],
+  "errorMessages": {
+    "primaryError": "SKCanvasView scaled image drawing takes ~42ms/frame (24 FPS) in Blazor WASM vs ~1.6ms/frame natively — 26-27x performance degradation making scaled rendering unusable"
+  },
+  "environment": {
+    "os": "macOS 26.3",
+    "arch": "arm64",
+    "dotnetVersion": "9.0.12",
+    "dotnetSdkVersion": "9.0.310",
+    "skiaSharpVersion": "3.119.0",
+    "dockerUsed": false
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.90,
-      "reason": "Confirmed severe performance degradation (42x) in SKCanvasView raster backend when scaling images in WASM. Reproduces on latest stable 3.119.2. The root cause is architectural (CPU-based image scaling) but may be improvable through JS interop optimizations."
+      "reason": "Reproduced with clear quantitative evidence. Scaled image drawing in Blazor WASM SKCanvasView is 26-27x slower than native, making it unusable at ~24 FPS. The 35x gap between 1:1 and scaled within WASM suggests the bottleneck is in Skia's raster resampling path running in WASM. Needs investigation into whether WASM SIMD optimizations or alternative rendering strategies can close this gap."
     },
     "actions": [
       {
         "type": "update-labels",
-        "description": "Apply platform and area labels confirmed by reproduction",
+        "description": "Apply performance and WASM labels",
         "risk": "low",
-        "confidence": 0.95
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/SkiaSharp.Views.Blazor", "os/WASM", "tenet/performance"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post reproduction findings with measured data",
+        "risk": "low",
+        "confidence": 0.90,
+        "comment": "We reproduced this with a minimal Blazor WASM app on SkiaSharp 3.119.0. Drawing a 786x1090 SKImage into a 1596x1596 canvas (DPI=2):\n\n| Mode | WASM (Chrome) | Native (macOS ARM64) | WASM slowdown |\n|------|--------------|---------------------|---------------|\n| 1:1 | 1.2ms (833 FPS) | 0.38ms | 3x |\n| scaled-2x | 42ms (24 FPS) | 1.57ms | 27x |\n| canvas.Scale(2) | 43ms (23 FPS) | 1.63ms | 26x |\n\nThe scaling penalty exists on native too (~4x), but WASM amplifies it by an additional 26x factor. We're investigating optimization opportunities in the WASM raster path."
       }
     ],
     "proposedResponse": {
-      "body": "Thanks for the detailed benchmarks and screenshots — very helpful for diagnosis.\n\nWe've confirmed this issue. Testing with a 786x1090 test image in a Blazor WASM app:\n\n| Mode | SkiaSharp 3.119.0 | SkiaSharp 3.119.2 |\n|------|-------------------|-------------------|\n| 1:1 (786x1090) | **0.89ms** (~1125 FPS) | **0.67ms** (~1500 FPS) |\n| Scaled to 800x800 | **9.62ms** (~104 FPS) | **9.53ms** (~105 FPS) |\n| Scaled to 1600x1600 | **38.06ms** (~26 FPS) | **37.89ms** (~26 FPS) |\n| canvas.Scale(2) | **37.53ms** (~27 FPS) | **36.75ms** (~27 FPS) |\n\nThe performance degradation is proportional to the output pixel count — a ~42x slowdown from 1:1 to 1600x1600. This matches your observations.\n\nThe root cause is that `SKCanvasView` uses a CPU raster backend in WASM. All image scaling is performed in software per-pixel, which is orders of magnitude slower than the GPU-accelerated texture sampling that `SKGLView` uses via WebGL.\n\n**Workaround — pre-scale the image at load time:**\n\n```csharp\n// Once at load time — not per frame\nvar targetWidth = 1600;\nvar targetHeight = 1600;\nusing var scaledSurface = SKSurface.Create(new SKImageInfo(targetWidth, targetHeight));\nif (scaledSurface != null)\n{\n    scaledSurface.Canvas.DrawImage(originalImage,\n        new SKRect(0, 0, targetWidth, targetHeight),\n        SKSamplingOptions.Default);\n    preScaledImage = scaledSurface.Snapshot();\n}\n\n// Per frame — draw at 1:1, no scaling needed\ncanvas.DrawImage(preScaledImage, 0, 0);\n```\n\nRegenerate the pre-scaled image when the target size changes, and dispose the old one.\n\nYou also mentioned `SKGLView` has issues with `DrawLine` calls — could you file a separate issue for that? Fixing the GL path may be the better long-term solution for image-heavy rendering.",
-      "status": "needs-human-edit"
-    },
-    "workarounds": [
-      "Pre-scale the image at load time to the target display size, then draw at 1:1 in the paint callback to avoid per-frame CPU scaling",
-      "Use SKGLView instead of SKCanvasView for image-heavy rendering (if DrawLine issues can be worked around)"
-    ],
-    "missingInfo": [
-      "What specific issues does the reporter experience with SKGLView and DrawLine calls? A separate issue would help track that."
-    ]
+      "status": "ready",
+      "summary": "Reproduced: SKCanvasView scaled image drawing is 26-27x slower on WASM than native, making it unusable for real-time rendering.",
+      "body": "We reproduced this with a minimal Blazor WASM app on SkiaSharp 3.119.0. Drawing a 786x1090 SKImage into a 1596x1596 canvas (DPI=2):\n\n| Mode | WASM (Chrome) | Native (macOS ARM64) | WASM slowdown |\n|------|--------------|---------------------|---------------|\n| 1:1 | 1.2ms (833 FPS) | 0.38ms | 3x |\n| scaled-2x | 42ms (24 FPS) | 1.57ms | 27x |\n| canvas.Scale(2) | 43ms (23 FPS) | 1.63ms | 26x |\n\nThe scaling penalty exists on native too (~4x slower than 1:1), but WASM amplifies it by an additional 26x factor, matching your observation of 120fps dropping to sub-20fps.\n\nWe're investigating optimization opportunities in the WASM raster path."
+    }
   }
 }
