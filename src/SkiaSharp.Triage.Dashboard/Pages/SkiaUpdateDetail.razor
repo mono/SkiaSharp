@@ -23,16 +23,16 @@ else
     <!-- Header -->
     <div class="triage-detail-header triage-detail-header-minimal">
         <div class="detail-title-row">
-            <a href="https://github.com/mono/skia/pull/@_review.Meta.PrNumber" target="_blank" rel="noopener noreferrer" class="issue-link-lg">#@_review.Meta.PrNumber</a>
-            <h1>@(_review.Meta.PrTitle ?? _indexEntry?.PrTitle ?? $"Skia Update: {FormatBranch(_review.Meta.OldUpstreamBranch)} → {FormatBranch(_review.Meta.NewUpstreamBranch)}")</h1>
+            <a href="https://github.com/mono/skia/pull/@_review.Meta.SkiaPrNumber" target="_blank" rel="noopener noreferrer" class="issue-link-lg">#@_review.Meta.SkiaPrNumber</a>
+            <h1>@(_indexEntry?.PrTitle ?? $"Skia Update: {FormatBranch(_review.Meta.OldUpstreamBranch)} → {FormatBranch(_review.Meta.UpstreamBranch)}")</h1>
         </div>
         <div class="detail-header-meta">
             <span class="badge-risk badge-risk-@_review.RiskAssessment.ToString().ToLower()">
                 @_review.RiskAssessment Risk
             </span>
             <span class="detail-meta-text">
-                @FormatBranch(_review.Meta.OldUpstreamBranch) → @FormatBranch(_review.Meta.NewUpstreamBranch)
-                · Analyzed: @_review.Meta.Timestamp.ToString("yyyy-MM-dd HH:mm UTC")
+                @FormatBranch(_review.Meta.OldUpstreamBranch) → @FormatBranch(_review.Meta.UpstreamBranch)
+                · Analyzed: @_review.Meta.AnalyzedAt.ToString("yyyy-MM-dd HH:mm UTC")
                 · <a href="https://github.com/mono/skia" target="_blank" rel="noopener noreferrer">mono/skia</a>
             </span>
         </div>
@@ -71,12 +71,12 @@ else
                 @(_review.DepsAudit.Status == SkiaReviewStatus.Pass ? "✓ PASS" : "⚠ REVIEW")
             </span>
         </div>
-        @if (ParseCompanionPrNumber(_review.Meta.CompanionPr) is { } companionNum)
+        @if (_review.CompanionPr is not null)
         {
             <div class="qf-group">
                 <span class="qf-label">Companion</span>
-                <a href="https://github.com/mono/SkiaSharp/pull/@companionNum" target="_blank" rel="noopener noreferrer" class="label">
-                    SkiaSharp #@companionNum
+                <a href="https://github.com/mono/SkiaSharp/pull/@_review.CompanionPr.PrNumber" target="_blank" rel="noopener noreferrer" class="label">
+                    SkiaSharp #@_review.CompanionPr.PrNumber
                 </a>
             </div>
         }
@@ -99,7 +99,7 @@ else
         <button type="button" class="content-tab @(_activeTab == "deps" ? "active" : "")" @onclick='() => _activeTab = "deps"'>
             DEPS (@(_review.DepsAudit.Added.Count + _review.DepsAudit.Changed.Count))
         </button>
-        @if (_review.Meta.CompanionPr is not null)
+        @if (_review.CompanionPr is not null)
         {
             <button type="button" class="content-tab @(_activeTab == "companion" ? "active" : "")" @onclick='() => _activeTab = "companion"'>
                 Companion PR
@@ -133,7 +133,7 @@ else
 
             <p>
                 This review covers the Skia upstream merge from
-                <strong>@_review.Meta.OldUpstreamBranch</strong> to <strong>@_review.Meta.NewUpstreamBranch</strong>.
+                <strong>@_review.Meta.OldUpstreamBranch</strong> to <strong>@_review.Meta.UpstreamBranch</strong>.
             </p>
 
             <div class="overview-grid">
@@ -201,9 +201,9 @@ else
 
             <h3 class="section-title">Commit SHAs</h3>
             <div class="skia-shas">
-                <span><strong>PR Head:</strong> <code>@Truncate(_review.Meta.PrHeadSha)</code></span>
-                <span><strong>Base:</strong> <code>@Truncate(_review.Meta.BaseSha)</code></span>
-                <span><strong>Upstream:</strong> <code>@Truncate(_review.Meta.UpstreamSha)</code></span>
+                <span><strong>PR Head:</strong> <code>@Truncate(_review.Meta.Shas.PrHead)</code></span>
+                <span><strong>Base:</strong> <code>@Truncate(_review.Meta.Shas.Base)</code></span>
+                <span><strong>Upstream:</strong> <code>@Truncate(_review.Meta.Shas.Upstream)</code></span>
             </div>
         </div>
     }
@@ -552,26 +552,46 @@ else
     }
 
     <!-- Tab: Companion PR -->
-    @if (_activeTab == "companion" && _review.Meta.CompanionPr is not null)
+    @if (_activeTab == "companion" && _review.CompanionPr is not null)
     {
-        var companionPrNumber = ParseCompanionPrNumber(_review.Meta.CompanionPr);
         <div class="section-card">
-            <h3 class="section-title">Companion PR</h3>
+            <h3 class="section-title">Companion SkiaSharp PR</h3>
             <div class="quick-facts-row">
                 <div class="qf-group">
                     <span class="qf-label">PR</span>
-                    @if (companionPrNumber is not null)
-                    {
-                        <a href="https://github.com/mono/SkiaSharp/pull/@companionPrNumber" target="_blank" rel="noopener noreferrer" class="label">
-                            @_review.Meta.CompanionPr
-                        </a>
-                    }
-                    else
-                    {
-                        <span class="label">@_review.Meta.CompanionPr</span>
-                    }
+                    <a href="https://github.com/mono/SkiaSharp/pull/@_review.CompanionPr.PrNumber" target="_blank" rel="noopener noreferrer" class="label">
+                        SkiaSharp #@_review.CompanionPr.PrNumber
+                    </a>
                 </div>
+                @if (_review.CompanionPr.FilesChanged is not null)
+                {
+                    <div class="qf-group">
+                        <span class="qf-label">Files Changed</span>
+                        <span class="label">@_review.CompanionPr.FilesChanged</span>
+                    </div>
+                }
             </div>
+            @if (_review.CompanionPr.GeneratedFilesSkipped is { Count: > 0 })
+            {
+                <h4>Generated Files Skipped</h4>
+                <ul class="skia-file-list">
+                    @foreach (var file in _review.CompanionPr.GeneratedFilesSkipped)
+                    {
+                        <li><code>@file</code></li>
+                    }
+                </ul>
+            }
+            @if (_review.CompanionPr.Findings is { Count: > 0 })
+            {
+                <h4>Findings (@_review.CompanionPr.Findings.Count)</h4>
+                @foreach (var finding in _review.CompanionPr.Findings)
+                {
+                    <div class="skia-file-entry file-changed">
+                        <div class="file-path"><code>@finding.File</code></div>
+                        <div class="file-summary">@finding.Finding</div>
+                    </div>
+                }
+            }
         </div>
     }
 }
@@ -602,15 +622,6 @@ else
 
     private static string Truncate(string sha) =>
         sha.Length > 12 ? sha[..12] : sha;
-
-    private static int? ParseCompanionPrNumber(string? companionPr)
-    {
-        if (companionPr is null) return null;
-        var hashIdx = companionPr.LastIndexOf('#');
-        if (hashIdx >= 0 && int.TryParse(companionPr[(hashIdx + 1)..], out var num))
-            return num;
-        return null;
-    }
 
     private void ToggleDiff(string key)
     {

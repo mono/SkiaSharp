@@ -5,31 +5,34 @@ namespace SkiaSharp.Triage.Models;
 // ── Root ─────────────────────────────────────────────────────────
 
 public record SkiaReviewReport(
-    [property: JsonPropertyName("schema_version")] string SchemaVersion,
     SkiaReviewMeta Meta,
     string Summary,
     List<string> Recommendations,
-    [property: JsonPropertyName("generated_files")] GeneratedFilesCheck GeneratedFiles,
-    [property: JsonPropertyName("upstream_integrity")] SourceIntegrity UpstreamIntegrity,
-    [property: JsonPropertyName("interop_integrity")] SourceIntegrity InteropIntegrity,
-    [property: JsonPropertyName("deps_audit")] DepsAudit DepsAudit,
-    [property: JsonPropertyName("risk_assessment")] SkiaRiskAssessment RiskAssessment
+    GeneratedFilesCheck GeneratedFiles,
+    SourceIntegrity UpstreamIntegrity,
+    SourceIntegrity InteropIntegrity,
+    DepsAudit DepsAudit,
+    SkiaRiskAssessment RiskAssessment,
+    CompanionPr? CompanionPr = null
 );
 
 // ── Meta ─────────────────────────────────────────────────────────
 
 public record SkiaReviewMeta(
-    [property: JsonPropertyName("pr_number")] int PrNumber,
-    [property: JsonPropertyName("pr_title")] string? PrTitle,
-    [property: JsonPropertyName("pr_state")] string? PrState,
-    [property: JsonPropertyName("pr_author")] string? PrAuthor,
-    [property: JsonPropertyName("old_upstream_branch")] string OldUpstreamBranch,
-    [property: JsonPropertyName("new_upstream_branch")] string NewUpstreamBranch,
-    [property: JsonPropertyName("base_sha")] string BaseSha,
-    [property: JsonPropertyName("pr_head_sha")] string PrHeadSha,
-    [property: JsonPropertyName("upstream_sha")] string UpstreamSha,
-    DateTime Timestamp,
-    [property: JsonPropertyName("companion_pr")] string? CompanionPr = null
+    string SchemaVersion,
+    int SkiaPrNumber,
+    int? SkiasharpPrNumber,
+    string Repo,
+    string UpstreamBranch,
+    string OldUpstreamBranch,
+    DateTime AnalyzedAt,
+    SkiaReviewShas Shas
+);
+
+public record SkiaReviewShas(
+    string PrHead,
+    string Base,
+    string Upstream
 );
 
 // ── Generated Files ──────────────────────────────────────────────
@@ -44,7 +47,7 @@ public record GeneratedFilesCheck(
 
 public record GeneratedFileMismatch(
     string File,
-    [property: JsonPropertyName("diff_summary")] string DiffSummary
+    string DiffSummary
 );
 
 // ── Source Integrity (upstream + interop share the same shape) ────
@@ -74,9 +77,9 @@ public record SourceFileRemoved(
 public record SourceFileChanged(
     string Path,
     string Summary,
-    [property: JsonPropertyName("old_diff")] string? OldDiff = null,
-    [property: JsonPropertyName("new_diff")] string? NewDiff = null,
-    [property: JsonPropertyName("patch_diff")] string? PatchDiff = null
+    string? OldDiff = null,
+    string? NewDiff = null,
+    string? PatchDiff = null
 );
 
 // ── DEPS Audit ───────────────────────────────────────────────────
@@ -108,9 +111,22 @@ public record DepRemoved(
 public record DepChanged(
     string Name,
     string Summary,
-    [property: JsonPropertyName("old_url")] string? OldUrl = null,
-    [property: JsonPropertyName("old_revision")] string? OldRevision = null,
-    [property: JsonPropertyName("new_url")] string? NewUrl = null,
-    [property: JsonPropertyName("new_revision")] string? NewRevision = null
+    string? OldUrl = null,
+    string? OldRevision = null,
+    string? NewUrl = null,
+    string? NewRevision = null
 );
 
+// ── Companion PR ─────────────────────────────────────────────────
+
+public record CompanionPr(
+    int PrNumber,
+    int? FilesChanged = null,
+    List<string>? GeneratedFilesSkipped = null,
+    List<CompanionPrFinding>? Findings = null
+);
+
+public record CompanionPrFinding(
+    string File,
+    string Finding
+);
