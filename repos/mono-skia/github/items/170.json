@@ -3,7 +3,7 @@
   "type": "pr",
   "state": "open",
   "title": "Update skia to milestone 122",
-  "body": "## Update Skia to Chrome Milestone 122\n\nSequential merge of upstream chrome/m120 \u2192 m121 \u2192 m122 into the skiasharp branch.\n\n### Breaking changes addressed in C API shim:\n\n- **Typeface factories removed** (m120): \u0060SkTypeface::MakeDefault/RefDefault/MakeFromName/File/Stream/Data\u0060 \u2014 C API stubs return nullptr; behavior moved to font manager\n- **Font manager factories removed** (m122): \u0060SkFontMgr::RefDefault/MakeDefault/Factory\u0060 \u2014 implemented platform-specific singleton (\u0060SkFontMgr_New_CoreText\u0060, \u0060SkFontMgr_New_DirectWrite\u0060, etc.)\n- **Empty typeface default** (m122): \u0060SkFont(nullptr)\u0060 now creates empty typeface \u2014 C API intercepts null to provide platform default via shared font manager singleton\n- **GPU namespace moves** (m120/m122): \u0060GrDirectContext::MakeGL/MakeVulkan\u0060 \u2192 \u0060GrDirectContexts::MakeGL/MakeVulkan\u0060\n- **Mipmap type aliases removed** (m121): \u0060GrMipmapped\u0060 \u2192 \u0060skgpu::Mipmapped\u0060\n- **VK type change** (m122): \u0060GrVkYcbcrConversionInfo\u0060 from struct to type alias \u2014 \u0060DEF_STRUCT_MAP\u0060 \u2192 \u0060DEF_MAP\u0060 with \u0060SK_VULKAN\u0060 guard\n- **Resource provider API** (m122): \u0060skresources\u0060 bool \u2192 \u0060ImageDecodeStrategy\u0060 enum\n- **SkCompatPaint** (m122): Updated constructor to use default typeface instead of empty\n\n### Custom dependency pins restored:\nUpstream m122 DEPS reverted our security bumps. Restored: libwebp 1.6.0, brotli 1.2.0, zlib, libpng, freetype, harfbuzz, libjpeg-turbo, expat.\n\n### Companion PR:\nmono/SkiaSharp \u2014 will link once created",
+  "body": "## Update Skia to Chrome Milestone 122\r\n\r\nSequential merge of upstream chrome/m120 \u2192 m121 \u2192 m122 into the skiasharp branch.\r\n\r\n### Breaking changes addressed in C API shim:\r\n\r\n- **Typeface factories removed** (m120): \u0060SkTypeface::MakeDefault/RefDefault/MakeFromName/File/Stream/Data\u0060 \u2014 C API stubs return nullptr; behavior moved to font manager\r\n- **Font manager factories removed** (m122): \u0060SkFontMgr::RefDefault/MakeDefault/Factory\u0060 \u2014 implemented platform-specific singleton (\u0060SkFontMgr_New_CoreText\u0060, \u0060SkFontMgr_New_DirectWrite\u0060, etc.)\r\n- **Empty typeface default** (m122): \u0060SkFont(nullptr)\u0060 now creates empty typeface \u2014 C API intercepts null to provide platform default via shared font manager singleton\r\n- **GPU namespace moves** (m120/m122): \u0060GrDirectContext::MakeGL/MakeVulkan\u0060 \u2192 \u0060GrDirectContexts::MakeGL/MakeVulkan\u0060\r\n- **Mipmap type aliases removed** (m121): \u0060GrMipmapped\u0060 \u2192 \u0060skgpu::Mipmapped\u0060\r\n- **VK type change** (m122): \u0060GrVkYcbcrConversionInfo\u0060 from struct to type alias \u2014 \u0060DEF_STRUCT_MAP\u0060 \u2192 \u0060DEF_MAP\u0060 with \u0060SK_VULKAN\u0060 guard\r\n- **Resource provider API** (m122): \u0060skresources\u0060 bool \u2192 \u0060ImageDecodeStrategy\u0060 enum\r\n- **SkCompatPaint** (m122): Updated constructor to use default typeface instead of empty\r\n\r\n### Custom dependency pins restored:\r\nUpstream m122 DEPS reverted our security bumps. Restored: libwebp 1.6.0, brotli 1.2.0, zlib, libpng, freetype, harfbuzz, libjpeg-turbo, expat.\r\n\r\n### Companion PR:\r\nmono/SkiaSharp#3559",
   "author": {
     "login": "mattleibow",
     "type": "User"
@@ -11,8 +11,8 @@
   "labels": [],
   "assignees": [],
   "createdAt": "2026-03-11T23:19:28",
-  "updatedAt": "2026-03-20T19:04:35",
-  "commentCount": 1,
+  "updatedAt": "2026-03-23T18:46:47",
+  "commentCount": 2,
   "reactionCount": 0,
   "draft": false,
   "mergeable": true,
