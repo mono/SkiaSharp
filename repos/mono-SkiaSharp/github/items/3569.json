@@ -1,0 +1,29 @@
+{
+  "number": 3569,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix generate.ps1 error propagation",
+  "body": "## Problem\n\n\u0060utils/generate.ps1\u0060 uses \u0060Invoke-Expression\u0060 \u002B \u0060$?\u0060 to run the generator and check for errors. This silently swallows non-zero exit codes \u2014 if the generator crashes (e.g., CppAst parse failure on bad struct definitions), the script continues and exits 0.\n\n## Fix\n\n- Replace \u0060Invoke-Expression\u0060 with splatted args array (\u0060$runArgs\u0060) and direct invocation via \u0060\u0026 dotnet @runArgs\u0060\n- Continue through all projects to report ALL failures, then exit 1 at the end\n- Single \u0060$runArgs\u0060 array used for both display (\u0060Write-Host\u0060) and execution (no duplication)\n\n## Testing\n\nVerified on macOS:\n- \u2705 Good code (skiasharp base): exits 0, generation succeeds\n- \u2705 Bad code (PR 171 with broken structs): exits 1, reports \u0060ERROR: Generation failed for libSkiaSharp.json with exit code 1\u0060",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-23T18:12:15",
+  "updatedAt": "2026-03-23T18:13:07",
+  "closedAt": "2026-03-23T18:13:04",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-23T18:13:04",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-generate-exit-code",
+  "additions": 18,
+  "deletions": 5,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

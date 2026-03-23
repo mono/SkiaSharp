@@ -1,0 +1,29 @@
+{
+  "number": 3568,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix generator: add macOS SDK system includes for CppAst",
+  "body": "## Description\n\nFix the SkiaSharp P/Invoke generator (CppAst-based) to work on macOS by properly configuring system include paths.\n\n## Changes\n\n- **\u0060BaseTool.cs\u0060**: Use \u0060SystemIncludeFolders\u0060 instead of \u0060IncludeFolders\u0060 for clang headers (fixes \u0060#include_next\u0060 resolution). Auto-detect macOS SDK path via \u0060xcrun --show-sdk-path\u0060 with fallback to CommandLineTools default.\n- **\u0060launchSettings.json\u0060**: Fix trailing comma (invalid JSON).\n- **\u0060generate.ps1\u0060**: Minor path fix.\n\n## Problem\n\nThe generator failed with:\n\u0060\u0060\u0060\nERROR: \u0027inttypes.h\u0027 file not found at .../clang/.../include/inttypes.h\n\u0060\u0060\u0060\n\nCppAst\u0027s clang headers use \u0060#include_next\u0060 to chain to system headers, but the SDK include path wasn\u0027t configured.\n\n## PR Checklist\n\n- [x] Has tests (verified generator runs successfully)\n- [x] Changes adhere to coding standard",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-21T22:09:13",
+  "updatedAt": "2026-03-23T15:35:45",
+  "closedAt": "2026-03-23T15:35:43",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-03-23T15:35:43",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-generator",
+  "additions": 42,
+  "deletions": 3,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}

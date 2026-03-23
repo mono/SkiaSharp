@@ -1,0 +1,34 @@
+{
+  "number": 3567,
+  "type": "pr",
+  "state": "open",
+  "title": "Add review-skia-update skill and unify persist pattern",
+  "body": "## Summary\n\nAdds the \u0060review-skia-update\u0060 skill for reviewing Skia upstream merge PRs in \u0060mono/skia\u0060. Also updates the issue pipeline skills (\u0060issue-triage\u0060, \u0060issue-repro\u0060, \u0060issue-fix\u0060) with persist scripts and unified output patterns.\n\n## review-skia-update Skill\n\nAnalyzes a Skia upstream merge PR and produces a structured, schema-validated JSON report. Reduces 100K\u2013500K line diffs to focused, human-reviewable artifacts.\n\n### Architecture\n\n4 phases \u2014 mechanical work is scripted (Python), judgment work is AI:\n\n| Phase | What | How |\n|-------|------|-----|\n| **1. Orchestrator** | Fetch metadata, checkout both PRs, run generator, source integrity, DEPS audit | \u0060run_review.py\u0060 |\n| **2. Summaries** | Write factual summaries for each change, build JSON report | AI reads \u0060raw-results.json\u0060 |\n| **3. C# Review** | Review companion SkiaSharp PR (hand-written wrappers, ABI, tests) | AI reads checked-out files |\n| **4. Validate \u0026 Persist** | Schema validation \u002B copy to \u0060output/ai/\u0060 | \u0060validate-skia-review.ps1\u0060 \u002B \u0060persist-skia-review.ps1\u0060 |\n\n### Scripts\n\n- \u0060run_review.py\u0060 \u2014 orchestrator (imports check scripts as modules)\n- \u0060check_generated_files.py\u0060 \u2014 runs \u0060pwsh generate.ps1\u0060, verifies output via \u0060git diff\u0060\n- \u0060check_source.py\u0060 \u2014 diff-of-diffs for upstream \u002B interop integrity\n- \u0060check_deps.py\u0060 \u2014 DEPS parsing and comparison\n- \u0060validate-skia-review.ps1\u0060 / \u0060.py\u0060 \u2014 JSON schema validation\n- \u0060persist-skia-review.ps1\u0060 \u2014 copy to \u0060output/ai/\u0060\n\n### Key design decisions\n\n- **Orchestrator handles checkout**: Both SkiaSharp companion PR and skia submodule checked out in Phase 1\n- **Both PRs required**: A Skia update always has a companion SkiaSharp PR \u2014 no optional fallback\n- **No-retry policy**: Generator check runs once \u2014 FAIL is FAIL (prevents agents from re-running for a different result)\n- **Generator output captured**: \u0060generator-output.log\u0060 as proof of execution\n- **Schema-validated**: \u0060additionalProperties: false\u0060 throughout, typed companion PR findings\n- **Phase gates**: Validation and persist follow the proven issue-triage/repro/fix pattern with stop signs\n\n### Evaluation results\n\nTested with PR #170 (m122, good generator) and PR #171 (m132, bad generator structs) \u2014 3 serial runs each:\n\n| PR | Gen Status | Consistency |\n|----|-----------|-------------|\n| 170 | PASS \u2705 | 3/3 identical results |\n| 171 | FAIL \u2705 | 3/3 identical results |\n\nAll runs: summaries present on all items, diffs included in JSON, 0 absolute paths, companion PR reviewed.\n\n## Other changes\n\n- **\u0060utils/generate.ps1\u0060**: Replace \u0060Invoke-Expression\u0060 with splatted args array for proper exit code propagation (also in #3569)\n- **\u0060scripts/persist-to-cache.ps1\u0060**: Shared script for pushing \u0060output/ai/\u0060 to the data-cache branch\n- **Issue pipeline skills**: Add persist scripts, update SKILL.md with unified output patterns",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-03-21T21:20:40",
+  "updatedAt": "2026-03-23T23:03:58",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "dev/review-skia-update-skill",
+  "additions": 2051,
+  "deletions": 170,
+  "changedFiles": 27,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-03-23T22:00:19"
+    }
+  ]
+}
