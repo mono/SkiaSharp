@@ -14,6 +14,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void StrokePropertyValuesAreCorrect()
 		{
 			var paint = new SKPaint();

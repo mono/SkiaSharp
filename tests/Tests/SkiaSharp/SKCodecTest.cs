@@ -165,6 +165,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateStreamCodec()
 		{
 			var stream = new SKFileStream(Path.Combine(PathToImages, "color-wheel.png"));

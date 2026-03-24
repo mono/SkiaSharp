@@ -221,6 +221,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanDrawText()
 		{
 			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
@@ -254,6 +255,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanvasCanDrawRoundRect()
 		{
 			using (var canvas = new SKNWayCanvas(100, 100))

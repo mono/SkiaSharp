@@ -354,26 +354,26 @@ New functions from upstream changes are usually additive and can be deferred.
 ### Phase 9: Build & Test
 
 ```bash
-# Build native
+# Build native (this also runs git-sync-deps)
 dotnet cake --target=externals-macos --arch=arm64
 
-# Build C# — MUST use --no-incremental after VERSIONS.txt changes
-# (without this, stale version constants cause "incompatible native library" at runtime)
-dotnet build binding/SkiaSharp/SkiaSharp.csproj --no-incremental
+# Build C#
+dotnet build binding/SkiaSharp/SkiaSharp.csproj
 
-# Copy native libs to test output (required for local testing)
-cp output/native/osx/libSkiaSharp.dylib tests/SkiaSharp.Tests.Console/bin/Debug/net*/
-cp output/native/osx/libHarfBuzzSharp.dylib tests/SkiaSharp.Tests.Console/bin/Debug/net*/
-
-# Run tests — MUST include platform filter to avoid test host crashes
-# (SkipOn traits only work in MAUI device runners, not console runner)
+# Run smoke tests first — fast verification that native interop works
+# (version compatibility, basic drawing, image loading, fonts, codecs)
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
-  --filter "SkipOn!=macOS" --no-build
+  --filter "Category=Smoke"
+
+# Run full test suite
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
+> ⚠️ If the version compatibility smoke test fails with "incompatible native library",
+> you missed a version update — go back to Phase 6 and verify ALL version lines.
+> Do NOT work around this with `--no-incremental` or by copying native libs manually.
+
 > 🛑 **GATE**: All tests pass. Do NOT skip failing tests. Do NOT proceed with failures.
-> Pre-existing failures (failing on `main` too) are acceptable — verify by running
-> the same test against `main` branch.
 
 ### Phase 10: Create PRs
 
@@ -501,9 +501,9 @@ Upstream may introduce defines like `SK_DEFAULT_TYPEFACE_IS_EMPTY` and `SK_DISAB
 
 SkiaSharp adds custom methods to upstream headers (e.g., `SkTypeface::RefDefault()`, `SkTypeface::UniqueID()`, `SkFontMgr::MakeDefault()`). After an upstream merge, implementations in `.cpp` files may survive but header declarations can be silently removed by upstream changes. Always verify that header declarations in `include/` still match the implementations in `src/`.
 
-### 5. Version Compatibility After `VERSIONS.txt` Update
+### 5. Version Compatibility Errors Mean You Missed a Step
 
-The C# `SkiaSharpVersion` class auto-generates version constants from build targets. After updating `VERSIONS.txt`, you must rebuild with `--no-incremental` to pick up new version numbers. Without this, you'll get `InvalidOperationException: The version of the native libSkiaSharp library (X) is incompatible` at runtime.
+If you get `InvalidOperationException: The version of the native libSkiaSharp library (X) is incompatible`, this means the native milestone and C# expected milestone don't match. This is always caused by an incomplete Phase 6 (VERSIONS.txt not fully updated) or a stale build. Go back and fix the root cause — do NOT work around it with `--no-incremental` or by manually copying native libraries.
 
 ### 6. Test Runner Filtering for Platform-Specific Tests
 
