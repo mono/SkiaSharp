@@ -8,6 +8,9 @@ on:
       - 'release/**'
     paths:
       - 'samples/**'
+  pull_request:
+    paths:
+      - 'samples/**'
   release:
     types:
       - published
@@ -21,6 +24,11 @@ on:
         description: 'Git SHA of the commit to build samples from (leave empty to use the default branch HEAD)'
         required: false
         default: ''
+      dry_run:
+        description: 'Dry run — generate samples but do not push to the samples branch'
+        required: false
+        default: 'false'
+        type: boolean
 
 permissions:
   contents: write
@@ -145,11 +153,24 @@ jobs:
           BRANCH_NAME="samples"
           REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
 
+          # Dry run: triggered by a pull_request event, or the dry_run input is set to true
+          DRY_RUN="false"
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN="true"
+          fi
+
           # Choose the appropriate output directory based on whether it is a preview release
           if [ -n "$PREVIEW_SUFFIX" ]; then
             SAMPLES_DIR="output/samples-preview"
           else
             SAMPLES_DIR="output/samples"
+          fi
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run — skipping push. Would publish $SAMPLES_DIR to branch: $BRANCH_NAME"
+            echo "Generated files:"
+            find "$SAMPLES_DIR" -type f | sort
+            exit 0
           fi
 
           echo "Publishing $SAMPLES_DIR to branch: $BRANCH_NAME"
