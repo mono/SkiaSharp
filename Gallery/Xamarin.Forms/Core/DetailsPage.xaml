@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<NavigationPage xmlns="http://xamarin.com/schemas/2014/forms"
+                xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                x:Class="SkiaSharpSample.DetailsPage"
+                BarBackgroundColor="#3498DB" BarTextColor="White">
+  <NavigationPage.ToolbarItems>
+    <ToolbarItem Name="Backend" Clicked="OnConfigureBackend">
+      <ToolbarItem.IconImageSource>
+        <OnPlatform x:TypeArguments="FileImageSource">
+          <On Platform="UWP,WPF" Value="Assets/configure.png" />
+          <On Platform="iOS,Android,Tizen" Value="configure.png" />
+        </OnPlatform>
+      </ToolbarItem.IconImageSource>
+    </ToolbarItem>
+    <ToolbarItem Name="Slideshow" Clicked="OnPlaySamples">
+      <ToolbarItem.IconImageSource>
+        <OnPlatform x:TypeArguments="FileImageSource">
+          <On Platform="UWP,WPF" Value="Assets/slideshow.png" />
+          <On Platform="iOS,Android,Tizen" Value="slideshow.png" />
+        </OnPlatform>
+      </ToolbarItem.IconImageSource>
+    </ToolbarItem>
+  </NavigationPage.ToolbarItems>
+</NavigationPage>

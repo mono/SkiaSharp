@@ -1,0 +1,32 @@
+﻿<Window x:Class="SkiaSharpSample.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
+        xmlns:local="clr-namespace:SkiaSharpSample"
+        mc:Ignorable="d"
+        Title="SkiaSharp for WPF" Height="350" Width="525" Icon="icon.ico">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="E_xit" Click="OnExitClicked" />
+            </MenuItem>
+            <MenuItem x:Name="samplesMenu" Header="_Samples">
+                <MenuItem Header="Toggle Samples Slideshow" Click="OnToggleSlideshow" />
+                <Separator />
+            </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem Header="Configure Backend">
+                    <MenuItem Header="Memory" Click="OnBackendChanged" Tag="Memory" />
+                    <MenuItem Header="OpenGL" Click="OnBackendChanged" Tag="OpenGL" />
+                    <MenuItem Header="Vulkan" Click="OnBackendChanged" Tag="Vulkan" />
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+        <Grid>
+            <views:SKElement x:Name="canvas" PaintSurface="OnPaintCanvas" MouseLeftButtonUp="OnSampleClicked" />
+            <WindowsFormsHost x:Name="glhost" Initialized="OnGLControlHost" Visibility="Collapsed" />
+        </Grid>
+    </DockPanel>
+</Window>

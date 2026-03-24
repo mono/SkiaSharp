@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="11201" systemVersion="15G31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+    </dependencies>
+    <scenes>
+        <!--Application-->
+        <scene sceneID="JPo-4y-FX3">
+            <objects>
+                <application id="hnw-xV-0zn" sceneMemberID="viewController">
+                    <menu key="mainMenu" title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
+                        <items>
+                            <menuItem title="SkiaSharp for MacOS" id="1Xt-HY-uBw">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="SkiaSharp for MacOS" systemMenu="apple" id="uQy-DD-JDr">
+                                    <items>
+                                        <menuItem title="About SkiaSharp for MacOS" id="5kV-Vb-QxS">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="orderFrontStandardAboutPanel:" target="Ady-hI-5gd" id="Exp-CZ-Vem"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="VOq-y0-SEH"/>
+                                        <menuItem title="Configure Backend" id="rbQ-pD-dGv">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <menu key="submenu" title="Configure Backend" id="YMg-n9-a3A">
+                                                <items>
+                                                    <menuItem title="Memory" tag="1" id="BUa-1K-eIo">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="OnBackendChanged:" target="Voe-Tx-rLC" id="doD-1P-5wM"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                    <menuItem title="OpenGL" tag="2" id="Ief-eY-MtZ">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="OnBackendChanged:" target="Voe-Tx-rLC" id="LWv-DI-4Sw"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                    <menuItem title="Vulkan" tag="4" id="Jb6-2h-Xas">
+                                                        <modifierMask key="keyEquivalentModifierMask"/>
+                                                        <connections>
+                                                            <action selector="OnBackendChanged:" target="Voe-Tx-rLC" id="0Lj-Wq-LAi"/>
+                                                        </connections>
+                                                    </menuItem>
+                                                </items>
+                                            </menu>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="kCx-OE-vgT"/>
+                                        <menuItem title="Quit SkiaSharp for MacOS" keyEquivalent="q" id="4sb-4s-VLi">
+                                            <connections>
+                                                <action selector="terminate:" target="Ady-hI-5gd" id="Te7-pn-YzF"/>
+                                            </connections>
+                                        </menuItem>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                            <menuItem title="Samples" id="fd7-2g-9z7">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <menu key="submenu" title="Samples" id="YCg-AC-LaP">
+                                    <items>
+                                        <menuItem title="Toggle Sample Slideshow" id="vY6-Zp-iQd">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="OnPlaySamples:" target="Voe-Tx-rLC" id="loX-7g-UQy"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem isSeparatorItem="YES" id="Qai-dY-Zxv"/>
+                                    </items>
+                                </menu>
+                            </menuItem>
+                        </items>
+                    </menu>
+                    <connections>
+                        <outlet property="delegate" destination="Voe-Tx-rLC" id="PrD-fu-P6m"/>
+                    </connections>
+                </application>
+                <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
+                    <connections>
+                        <outlet property="samplesMenu" destination="fd7-2g-9z7" id="2QI-Dx-7aE"/>
+                    </connections>
+                </customObject>
+                <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-582" y="-230"/>
+        </scene>
+        <!--Window Controller-->
+        <scene sceneID="R2V-B0-nI4">
+            <objects>
+                <windowController id="B8D-0N-5wS" sceneMemberID="viewController">
+                    <window key="window" title="SkiaSharp for MacOS" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="IQv-IB-iLA">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="196" y="240" width="480" height="270"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
+                    </window>
+                    <connections>
+                        <outlet property="window" destination="IQv-IB-iLA" id="Edp-l2-piX"/>
+                        <segue destination="XfG-lQ-9wD" kind="relationship" relationship="window.shadowedContentViewController" id="cq2-FE-JQM"/>
+                    </connections>
+                </windowController>
+                <customObject id="Oky-zY-oP4" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-582" y="4"/>
+        </scene>
+        <!--Main View Controller-->
+        <scene sceneID="hIz-AP-VOD">
+            <objects>
+                <viewController id="XfG-lQ-9wD" customClass="MainViewController" sceneMemberID="viewController">
+                    <view key="view" id="m2S-Jp-Qdl">
+                        <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <customView hidden="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dja-Py-1qV" customClass="SKGLView">
+                                <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            </customView>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="we8-ZJ-fYa" customClass="SKCanvasView">
+                                <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            </customView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="we8-ZJ-fYa" secondAttribute="trailing" id="C6C-zb-E3T"/>
+                            <constraint firstAttribute="bottom" secondItem="dja-Py-1qV" secondAttribute="bottom" id="Ksp-s8-Obk"/>
+                            <constraint firstItem="dja-Py-1qV" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="OW2-U9-5Pu"/>
+                            <constraint firstAttribute="trailing" secondItem="dja-Py-1qV" secondAttribute="trailing" id="Xzf-kX-O4j"/>
+                            <constraint firstItem="we8-ZJ-fYa" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" id="Ysd-UN-fqm"/>
+                            <constraint firstItem="dja-Py-1qV" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" id="jZ7-h4-FXO"/>
+                            <constraint firstAttribute="bottom" secondItem="we8-ZJ-fYa" secondAttribute="bottom" id="oOC-pJ-JMT"/>
+                            <constraint firstItem="we8-ZJ-fYa" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="w6V-zL-Hlc"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="canvas" destination="we8-ZJ-fYa" id="VTf-Hb-A1A"/>
+                        <outlet property="glview" destination="dja-Py-1qV" id="db8-C7-qze"/>
+                    </connections>
+                </viewController>
+                <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-582" y="424"/>
+        </scene>
+    </scenes>
+</document>

@@ -1,0 +1,3 @@
+var UnoAppManifest = {
+    displayName: "SkiaSharpSample"
+}

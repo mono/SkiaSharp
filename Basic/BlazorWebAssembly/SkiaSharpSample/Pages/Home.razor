@@ -1,0 +1,44 @@
+﻿@page "/"
+
+<h1>SkiaSharp</h1>
+
+<p>SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's Skia Graphics Library. It provides a comprehensive 2D API that can be used across mobile, server and desktop models to render images.</p>
+
+<div class="container">
+    <div class="row">
+        <div class="col border rounded p-2 canvas-container">
+
+            <SKCanvasView OnPaintSurface="OnPaintSurface" IgnorePixelScaling="true" />
+
+        </div>
+    </div>
+</div>
+
+@code {
+
+    void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    {
+        // the the canvas and properties
+        var canvas = e.Surface.Canvas;
+
+        // make sure the canvas is blank
+        canvas.Clear(SKColors.White);
+
+        // decide what the text looks like
+        using var paint = new SKPaint
+            {
+                Color = SKColors.Black,
+                IsAntialias = true,
+                Style = SKPaintStyle.Fill
+            };
+        using var font = new SKFont
+            {
+                Size = 24
+            };
+
+        // draw some text
+        var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
+        canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+    }
+
+}

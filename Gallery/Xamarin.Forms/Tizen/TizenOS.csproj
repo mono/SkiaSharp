@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Tizen.NET.Sdk/1.0.9">
+  <PropertyGroup>
+    <TargetFramework>tizen40</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>SkiaSharpSample.Platform</RootNamespace>
+    <AssemblyName>TizenOS</AssemblyName>
+    <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Xamarin.Essentials" Version="1.5.1" />
+    <PackageReference Include="Xamarin.Forms" Version="4.8.0.1821" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="3.119.3-preview.1.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="res\" />
+    <DefaultTpkResFiles Include="..\..\Shared\Media\content-font.ttf">
+      <Link>res\content-font.ttf</Link>
+    </DefaultTpkResFiles>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\PlatformShared\*.cs" Link="PlatformShared\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

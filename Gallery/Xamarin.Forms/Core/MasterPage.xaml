@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:SkiaSharpSample"
+             x:Class="SkiaSharpSample.MasterPage"
+             Title="SkiaSharp" BackgroundColor="#EEEEEE">
+  <ContentPage.Icon>
+    <OnPlatform x:TypeArguments="FileImageSource">
+      <On Platform="iOS" Value="hamburger.png" />
+    </OnPlatform>
+  </ContentPage.Icon>
+  <StackLayout Padding="0" Spacing="0">
+    <ContentView BackgroundColor="#2c3e50" Margin="0">
+      <ContentView.Padding>
+        <OnPlatform x:TypeArguments="Thickness" WinPhone="12,36,12,12" iOS="12,72,12,12" Android="12,72,12,12" />
+      </ContentView.Padding>
+      <Label Text="SkiaSharp" FontSize="Large" TextColor="White" />
+    </ContentView>
+    <BoxView Color="#3498db" HorizontalOptions="Fill" Margin="0" HeightRequest="3" />
+    <SearchBar Placeholder="Search..." TextChanged="OnSearchTextChanged" />
+    <ListView ItemsSource="{Binding Samples}" ItemSelected="OnSampleSelected"
+              CachingStrategy="RecycleElement" IsGroupingEnabled="True"
+              SeparatorVisibility="None">
+      <ListView.GroupHeaderTemplate>
+        <DataTemplate>
+          <ViewCell>
+            <Grid Padding="5,20,5,5" Margin="0">
+              <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="Micro" />
+            </Grid>
+          </ViewCell>
+        </DataTemplate>
+      </ListView.GroupHeaderTemplate>
+      <ListView.ItemTemplate>
+        <DataTemplate>
+          <ViewCell>
+            <Grid Padding="35,5,5,5">
+              <Label Text="{Binding Title}" FontSize="Small" />
+            </Grid>
+          </ViewCell>
+        </DataTemplate>
+      </ListView.ItemTemplate>
+    </ListView>
+  </StackLayout>
+</ContentPage>

@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0-ios;net10.0-maccatalyst;net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationTitle>SkiaSharp Sample</ApplicationTitle>
+    <ApplicationId>com.companyname.SkiaSharpSample</ApplicationId>
+    <ApplicationIdGuid>AC63F9E5-DBE5-4F04-9EBC-2694661FE99B</ApplicationIdGuid>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">12.2</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">15.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiSplashScreen Include="Resources\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="3.119.3-preview.1.1" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.119.3-preview.1.1" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,108 @@
+﻿<Page
+    x:Class="SkiaSharpSample.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:SkiaSharpSample"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:not_win="http://uno.ui/not_win"
+    xmlns:sample="using:SkiaSharpSample"
+    xmlns:views="using:SkiaSharp.Views.Windows"
+    mc:Ignorable="d not_win">
+    <Page.Resources>
+        <Style x:Key="ShellButton" TargetType="ButtonBase">
+            <Setter Property="Background" Value="Transparent" />
+            <!--<Setter Property="BorderBrush" Value="{x:Null}" />-->
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Width" Value="{ThemeResource PaneToggleButtonHeight}" />
+            <Setter Property="Height" Value="{ThemeResource PaneToggleButtonWidth}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <SolidColorBrush x:Key="XamarinLightBlue" Color="#3498DB" />
+    </Page.Resources>
+
+    <Grid>
+        <SplitView
+            Name="splitView"
+            DisplayMode="Inline"
+            IsPaneOpen="True"
+            Margin="0,40,0,0"
+            OpenPaneLength="320">
+            <SplitView.Pane>
+                <!--  the samples menu  -->
+                <ListView x:Name="listView" SelectionChanged="OnSampleSelected">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="sample:SampleBase">
+                            <TextBlock Name="{x:Bind Title}" Text="{x:Bind Title}" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </SplitView.Pane>
+      
+            <SplitView.Content>
+                <!--  the samples canvas  -->
+                <Grid Tapped="OnSampleTapped" Background="White">
+                    <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
+                    <views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" Visibility="Collapsed" />
+                </Grid>
+            </SplitView.Content>
+        </SplitView>
+
+        <CommandBar
+            x:Name="commandBar"
+            Background="{StaticResource XamarinLightBlue}"
+            not_win:Style="{StaticResource XamlDefaultCommandBar}"
+            OverflowButtonVisibility="Collapsed"
+            Foreground="White">
+            <!--  the toolbar items  -->
+            <AppBarButton Icon="Repair" Label="Backend" IsCompact="True" Foreground="White">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Memory" Tag="Memory" Click="OnBackendSelected" />
+                        <MenuFlyoutItem Text="OpenGL" Tag="OpenGL" Click="OnBackendSelected" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </AppBarButton>
+            <AppBarButton
+                Click="OnToggleSlideshow"
+                Foreground="White"
+                Icon="Pictures"
+                IsCompact="True"
+                Label="Slideshow" />
+
+            <CommandBar.Content>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <!--  the hamburger menu  -->
+                    <ToggleButton
+                        ClickMode="Press"
+                        Foreground="White"
+                        IsChecked="True"
+                        Checked="OnToggleSplitView"
+                        Unchecked="OnToggleSplitView"
+                        IsTabStop="False"
+                        IsThreeState="False"
+                        Style="{StaticResource ShellButton}">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE700;" />
+                    </ToggleButton>
+
+                    <!--  the title bar  -->
+                    <TextBlock
+                        x:Name="titleBar"
+                        Grid.Column="1"
+                        Margin="12,0,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Text="SkiaSharp for Uno Platform (WebAssembly)" />
+                </Grid>
+            </CommandBar.Content>
+        </CommandBar>
+    </Grid>
+
+</Page>
