@@ -174,7 +174,7 @@ Rendering bugs rarely throw exceptions. The process succeeds, but the output is 
 
 1. **Create a minimal project from scratch** — don't modify existing test projects:
    ```bash
-   mkdir -p /tmp/skiasharp/repro/{number} && cd /tmp/skiasharp/repro/{number}
+   mkdir -p /tmp/skiasharp/repro/{timestamp}/{number} && cd /tmp/skiasharp/repro/{timestamp}/{number}
    dotnet new console --framework net8.0
    dotnet add package SkiaSharp --version <version-from-issue>
    ```

@@ -20,9 +20,9 @@ Blazor, WASM, WebAssembly, browser, `SKCanvasView` (Blazor context), `SKHtmlCanv
 ## Prerequisites
 
 - .NET SDK matching `{reporter_tfm}` (e.g., SDK 10 for `net10.0`)
-- **⚠️ Run `dotnet --info` in `/tmp/skiasharp/repro/` (NOT the SkiaSharp repo)** to see which SDK and
+- **⚠️ Run `dotnet --info` in `/tmp/skiasharp/repro/{timestamp}/` (NOT the SkiaSharp repo)** to see which SDK and
   wasm-tools version will actually be used. The SkiaSharp repo has `global.json` pinning
-  to SDK 8.0, which won't be used for test projects in `/tmp/skiasharp/repro/`.
+  to SDK 8.0, which won't be used for test projects in `/tmp/skiasharp/repro/{timestamp}/`.
 - `wasm-tools` workload:
   ```bash
   dotnet workload install wasm-tools
@@ -33,7 +33,7 @@ Blazor, WASM, WebAssembly, browser, `SKCanvasView` (Blazor context), `SKHtmlCanv
 ## Create Project
 
 ```bash
-mkdir -p /tmp/skiasharp/repro/{number} && cd /tmp/skiasharp/repro/{number}
+mkdir -p /tmp/skiasharp/repro/{timestamp}/{number} && cd /tmp/skiasharp/repro/{timestamp}/{number}
 dotnet new blazorwasm -n Repro --framework {reporter_tfm}
 cd Repro
 dotnet add package SkiaSharp.Views.Blazor --version {reporter_version}
@@ -89,7 +89,7 @@ Record exit code, warnings, errors. Build failure may itself be the reproduction
 > **⚠️ Clean builds between versions:** When testing multiple SkiaSharp versions (Phase 3B),
 > NEVER just change the package version and rebuild. WASM native compilation caches linked
 > `.wasm` files, `dotnet.native.*.js`, and `_framework/` output from previous versions.
-> Either create a fresh project directory per version (`/tmp/skiasharp/repro/{number}-v{version}/`)
+> Either create a fresh project directory per version (`/tmp/skiasharp/repro/{timestamp}/{number}-v{version}/`)
 > or run `rm -rf bin/ obj/` before building each version.
 
 ## Run & Verify (CRITICAL)
@@ -143,7 +143,7 @@ Kill the background process.
 - **Long build times:** First WASM native build can take 2-5 minutes. This is normal.
 - **Port conflicts:** If 5111 is taken, try 5112, 5113, etc.
 - **`global.json` interference:** If the repo has a `global.json` pinning SDK version,
-  create the repro project OUTSIDE the repo tree (in `/tmp/skiasharp/repro/`).
+  create the repro project OUTSIDE the repo tree (in `/tmp/skiasharp/repro/{timestamp}/`).
 
 ## Main Source Testing (Phase 3C)
 

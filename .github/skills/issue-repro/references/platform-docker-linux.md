@@ -34,7 +34,7 @@ Also use for:
 ```bash
 docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
 apt-get update -qq && apt-get install -y -qq libfontconfig1 2>&1 | tail -1
-mkdir -p /tmp/skiasharp/repro && cd /tmp/skiasharp/repro
+mkdir -p /tmp/skiasharp/repro/{timestamp} && cd /tmp/skiasharp/repro/{timestamp}
 dotnet new console -n Repro --framework {reporter_tfm} --no-restore 2>&1 | tail -1
 cd Repro
 dotnet add package SkiaSharp --version {reporter_version} --no-restore 2>&1 | tail -1
@@ -135,8 +135,8 @@ cd "$(git rev-parse --show-toplevel)"
 dotnet build samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj
 
 # Run in Docker with the source-built binary
-dotnet publish samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj -r linux-x64 --no-self-contained -o /tmp/skiasharp/repro/publish/
-docker run --rm --platform linux/amd64 -v /tmp/skiasharp/repro/publish:/app mcr.microsoft.com/dotnet/runtime:8.0 bash -c '
+dotnet publish samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj -r linux-x64 --no-self-contained -o /tmp/skiasharp/repro/{timestamp}/publish/
+docker run --rm --platform linux/amd64 -v /tmp/skiasharp/repro/{timestamp}/publish:/app mcr.microsoft.com/dotnet/runtime:8.0 bash -c '
 apt-get update -qq && apt-get install -y -qq libfontconfig1 2>&1 | tail -1
 cd /app && dotnet SkiaSharpSample.dll 2>&1
 '
