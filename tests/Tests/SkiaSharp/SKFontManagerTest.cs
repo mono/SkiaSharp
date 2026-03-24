@@ -111,12 +111,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void StreamIsAccessibleFromNativeType()
 		{
+			SkipOnMono();
+
 			var paint = CreateFont(out var typefaceHandle);
 
 			CollectGarbage();
@@ -262,14 +261,11 @@ namespace SkiaSharp.Tests
 			Assert.Same(tf1, tf2);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)]
 		[SkippableFact]
 		public unsafe void GCStillCollectsTypeface()
 		{
+			SkipOnNonWindows("Test uses Windows-specific font path");
+
 			var handle = DoWork();
 
 			CollectGarbage();

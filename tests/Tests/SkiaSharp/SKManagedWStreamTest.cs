@@ -44,12 +44,11 @@ namespace SkiaSharp.Tests
 			Assert.True(SKObject.GetInstance<SKManagedWStream>(handle, out _));
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void StreamIsCollectedEvenWhenNotProperlyDisposed()
 		{
+			SkipOnMono();
+
 			var handle = DoWork();
 
 			CollectGarbage();
@@ -109,12 +108,11 @@ namespace SkiaSharp.Tests
 			Assert.Equal(data, dotnet.ToArray());
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public unsafe void StreamIsReferencedAndNotDisposedPrematurely()
 		{
+			SkipOnMono();
+
 			DoWork(out var docH, out var streamH);
 
 			CollectGarbage();

@@ -33,12 +33,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
 		[SkippableFact]
 		public void CanCreateSnapshot()
 		{
+			SkipOnPlatform(IsMac || IsIOS || IsMacCatalyst, "sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues on Apple platforms");
+
 			using (var drawable = new TestDrawable())
 			{
 				var picture = drawable.Snapshot();
@@ -47,12 +46,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.macOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)] // Something with sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues
 		[SkippableFact]
 		public void CanUseAllMembers()
 		{
+			SkipOnPlatform(IsMac || IsIOS || IsMacCatalyst, "sk_sp<SkPicture> SkDrawable::onMakePictureSnapshot() is causing issues on Apple platforms");
+
 			using (var drawable = new TestDrawable())
 			{
 				Assert.Equal(SKRect.Create(100, 100), drawable.Bounds);
