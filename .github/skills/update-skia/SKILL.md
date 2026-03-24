@@ -157,9 +157,10 @@ The agent performing the breaking change analysis has blind spots — it may fil
 relevant changes or miss moved headers. An independent validation catches these before
 they become runtime crashes.
 
-Launch an **explore agent** using the prompt template from
+Launch an **explore agent** with `model: "claude-opus-4.6"` using the prompt template from
 [references/validation-prompt.md](references/validation-prompt.md) — substitute the
-milestone numbers and paste your breaking change analysis table.
+milestone numbers and paste your breaking change analysis table. The default explore model
+(Haiku) is too weak for accurate header-level validation — use Opus for reliability.
 
 > 🛑 **GATE**: Validation agent has run and confirmed analysis. If it found missed items,
 > update the analysis and re-present to user before proceeding.
