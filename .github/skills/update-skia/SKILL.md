@@ -456,24 +456,6 @@ Before proceeding past each step, verify:
 
 ---
 
-## Multi-Milestone Jumps
-
-When jumping more than one milestone (e.g., m119 → m121):
-
-**Option A: Sequential merges** (RECOMMENDED for first time)
-- Merge m120 first, fix C API, verify build
-- Then merge m121, fix C API, verify build
-- Single PR at the end with all changes
-
-**Option B: Direct jump** (faster, experienced only)
-- Merge directly to target milestone
-- Higher risk of complex merge conflicts
-- Harder to identify which milestone broke what
-
-Always document which milestones were crossed in the PR description.
-
----
-
 ## Files Changed in a Typical Update
 
 | Repository | File | Change |
