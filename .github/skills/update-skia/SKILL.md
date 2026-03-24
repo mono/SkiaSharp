@@ -366,10 +366,9 @@ dotnet cake --target=externals-macos --arch=arm64
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
-**Step 1 — Smoke tests (fast gate, ~2s):**
+**Step 1 — Smoke tests (fast gate, ~100ms):**
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
-  --filter "Category=Smoke"
+dotnet test tests/SkiaSharp.Tests.Console.sln --filter "Category=Smoke"
 ```
 Smoke tests verify basic native interop: version compatibility, object creation, drawing,
 image loading, fonts, codecs, effects, and more. If these fail, something fundamental is
@@ -381,8 +380,11 @@ broken — go back and fix before wasting time on the full suite.
 
 **Step 2 — Full test suite (required before any PR):**
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+dotnet test tests/SkiaSharp.Tests.Console.sln
 ```
+This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
+self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
+
 Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
 before the update can be considered complete. Do not create PRs with only smoke tests passing.
 
@@ -501,9 +503,12 @@ SkiaSharp adds custom methods to upstream headers (e.g., `SkTypeface::RefDefault
 
 If you get `InvalidOperationException: The version of the native libSkiaSharp library (X) is incompatible`, this means the native milestone and C# expected milestone don't match. This is always caused by an incomplete Phase 6 (VERSIONS.txt not fully updated) or a stale build. Go back and fix the root cause — do NOT work around it with `--no-incremental` or by manually copying native libraries.
 
-### 6. Test Runner Filtering for Platform-Specific Tests
+### 6. Test Runner
 
-`SkipOn` traits only work with MAUI device test runners, not the console test runner. For console tests, use `dotnet test --filter "SkipOn!=macOS"` (or the relevant platform) to skip platform-specific tests that would otherwise crash the test host process.
+Tests use runtime `Skip.If()` calls to self-skip on unsupported platforms. Run all tests
+with `dotnet test tests/SkiaSharp.Tests.Console.sln` — this runs core, Vulkan, and Direct3D
+test projects. Backend-specific tests self-skip when hardware isn't available. CI handles
+WASM, Android, and iOS testing separately.
 
 ### 7. HarfBuzz Binding Generation Failures
 

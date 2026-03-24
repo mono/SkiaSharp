@@ -379,7 +379,7 @@ Name: `Issue_NNNN_BriefDescription()`
 ### Run Tests
 
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+dotnet test tests/SkiaSharp.Tests.Console.sln
 ```
 
 Tests MUST pass. Verify fix on original platform.

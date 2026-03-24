@@ -127,10 +127,9 @@ See [documentation/building.md](../../../documentation/building.md#building-nati
 ```bash
 dotnet cake --target=externals-macos --arch=arm64  # Example
 
-dotnet cake --target=tests-netcore --skipExternals=all
+# Run all tests (core + Vulkan + Direct3D — backends self-skip if unavailable)
+dotnet test tests/SkiaSharp.Tests.Console.sln
 ```
-
-> ⚠️ **Never use `dotnet test` directly** — use Cake for proper skip trait handling.
 
 ### Phase 5: Create PRs
 
