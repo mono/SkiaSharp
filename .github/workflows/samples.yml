@@ -166,14 +166,7 @@ jobs:
             SAMPLES_DIR="output/samples"
           fi
 
-          if [ "$DRY_RUN" = "true" ]; then
-            echo "Dry run — skipping push. Would publish $SAMPLES_DIR to branch: $BRANCH_NAME"
-            echo "Generated files:"
-            find "$SAMPLES_DIR" -type f | sort
-            exit 0
-          fi
-
-          echo "Publishing $SAMPLES_DIR to branch: $BRANCH_NAME"
+          echo "Publishing $SAMPLES_DIR to branch: $BRANCH_NAME (dry_run=$DRY_RUN)"
 
           # Work in a temp directory so we can clone the existing branch (if any) and add a new commit
           WORK_DIR=$(mktemp -d)
@@ -196,6 +189,11 @@ jobs:
           git -C "$WORK_DIR" add .
           # --allow-empty handles the case where the generated output is identical to the previous commit
           git -C "$WORK_DIR" commit --allow-empty -m "Samples for SkiaSharp $VERSION"
-          git -C "$WORK_DIR" push "$REMOTE_URL" "HEAD:refs/heads/${BRANCH_NAME}"
 
-          echo "Successfully published samples to branch: $BRANCH_NAME"
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run — skipping push. Would publish $SAMPLES_DIR to branch: $BRANCH_NAME"
+            git -C "$WORK_DIR" show --stat HEAD
+          else
+            git -C "$WORK_DIR" push "$REMOTE_URL" "HEAD:refs/heads/${BRANCH_NAME}"
+            echo "Successfully published samples to branch: $BRANCH_NAME"
+          fi
