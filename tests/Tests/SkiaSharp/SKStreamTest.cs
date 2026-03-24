@@ -7,6 +7,7 @@ namespace SkiaSharp.Tests
 	public class SKStreamTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanWriteTextToStream()
 		{
 			using (var stream = new SKDynamicMemoryWStream())

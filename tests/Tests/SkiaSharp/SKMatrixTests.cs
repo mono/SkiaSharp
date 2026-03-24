@@ -8,6 +8,7 @@ namespace SkiaSharp.Tests
 	public class SKMatrixTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void MatrixCanInvert()
 		{
 			var m = SKMatrix.CreateTranslation(10, 20);

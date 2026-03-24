@@ -359,21 +359,30 @@ dotnet cake --target=externals-macos --arch=arm64
 
 # Build C#
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
+```
 
-# Run smoke tests first — fast verification that native interop works
-# (version compatibility, basic drawing, image loading, fonts, codecs)
+**Step 1 — Smoke tests (fast gate, ~2s):**
+```bash
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
   --filter "Category=Smoke"
-
-# Run full test suite
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
+Smoke tests verify basic native interop: version compatibility, object creation, drawing,
+image loading, fonts, codecs, effects, and more. If these fail, something fundamental is
+broken — go back and fix before wasting time on the full suite.
 
 > ⚠️ If the version compatibility smoke test fails with "incompatible native library",
 > you missed a version update — go back to Phase 6 and verify ALL version lines.
 > Do NOT work around this with `--no-incremental` or by copying native libs manually.
 
-> 🛑 **GATE**: All tests pass. Do NOT skip failing tests. Do NOT proceed with failures.
+**Step 2 — Full test suite (required before any PR):**
+```bash
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+```
+Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
+before the update can be considered complete. Do not create PRs with only smoke tests passing.
+
+> 🛑 **GATE**: ALL tests pass (full suite, not just smoke). Do NOT skip failing tests.
+> Do NOT proceed with failures.
 
 ### Phase 10: Create PRs
 

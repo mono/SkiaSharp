@@ -7,6 +7,7 @@ namespace SkiaSharp.Tests;
 public class SKBlenderTest
 {
 	[SkippableFact]
+	[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 	public void SameBlendModeReturnsSameBlenderInstance()
 	{
 		var blender1 = SKBlender.CreateBlendMode(SKBlendMode.Src);

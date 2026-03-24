@@ -8,6 +8,7 @@ namespace SkiaSharp.Tests
 	public class SKColorSpaceTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateSrgb()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();

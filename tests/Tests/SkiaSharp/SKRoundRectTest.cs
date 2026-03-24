@@ -8,6 +8,7 @@ namespace SkiaSharp.Tests
 	public class SKRoundRectTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanConstructEmpty()
 		{
 			var rrect = new SKRoundRect();
