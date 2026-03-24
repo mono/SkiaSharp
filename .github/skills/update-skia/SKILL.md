@@ -239,7 +239,9 @@ must be updated when the underlying C++ APIs change.
    | New header required | Add `#include` in the relevant `.cpp` |
 
 3. **Update `sk_types.h`** for any new enums or type changes:
-   - `SK_C_INCREMENT` may need bumping if C API signature changes
+   - **Reset `SK_C_INCREMENT` to `0`** in `externals/skia/include/c/sk_types.h` for the new milestone
+   - Only bump it later if you add new C API functions in the same milestone
+   - The build enforces that `SK_C_INCREMENT` matches `libSkiaSharp increment` in `VERSIONS.txt`
 
 4. **Build again** — iterate until clean compilation
 
@@ -290,9 +292,12 @@ In the **SkiaSharp parent repo**:
 # MUST return 0 non-comment lines. If any remain, you missed something.
 grep -n "{CURRENT}" scripts/VERSIONS.txt | grep -v "^#\|HarfBuzz"
 grep -n "m{CURRENT}\|{CURRENT}\." cgmanifest.json
+# Verify SK_C_INCREMENT is 0 in the native header
+grep "SK_C_INCREMENT" externals/skia/include/c/sk_types.h
+# Should show: #define SK_C_INCREMENT 0
 ```
-> 🛑 **GATE**: Both grep commands return zero results (excluding HarfBuzz lines which
-> have their own version scheme). If ANY lines still contain the old milestone, fix them.
+> 🛑 **GATE**: Version greps return zero results (excluding HarfBuzz). `SK_C_INCREMENT` is `0`.
+> If ANY lines still contain the old milestone, fix them.
 
 ### Phase 7: Regenerate Bindings
 
