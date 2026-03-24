@@ -41,7 +41,19 @@ Updating Skia is the **highest-risk operation** in SkiaSharp. It touches:
 
 ## ⚠️ MANDATORY: Follow Every Phase
 
-Complete ALL phases in strict order. Do not skip phases.
+**PHASES MUST BE EXECUTED IN STRICT ORDER. NO SKIPPING. NO REORDERING.**
+
+Every phase ends with a verification step or gate. Do not proceed to the next phase until
+the current phase's gate criteria are met. **Re-read each phase's instructions before
+executing it** — do not rely on memory from an earlier read.
+
+### Why This Matters
+
+In past runs, these specific failures occurred from skipping or partially completing phases:
+- Phase 3 skipped → missed breaking changes that caused build failures
+- Phase 6 partially done → only milestone line updated, 30+ version lines missed
+- Phase 8 skipped → new generated functions left without C# wrappers
+- Phase 9 wrong command → test host crashed from unfiltered platform tests
 
 ### Pre-Flight Checklist
 
@@ -51,6 +63,7 @@ Before starting, confirm:
 - [ ] Build and test locally before any PR
 - [ ] Create PRs (never push directly to `skiasharp` or `main`)
 - [ ] Stop and ask at every 🛑 checkpoint
+- [ ] Re-read each phase before executing it
 
 ## Critical Rules
 
@@ -137,12 +150,29 @@ Before starting, confirm:
 
 ### Phase 3: Validation
 
-Have a **separate agent** validate the breaking change analysis:
-- Cross-check each identified change against the actual upstream diff
-- Verify no HIGH-risk changes were missed
-- Confirm Graphite-only changes were correctly filtered out
+> 🛑 **MANDATORY**: Launch a validation agent. Do NOT proceed to Phase 4 without its output.
+> This phase exists because the agent performing the analysis has blind spots — it may
+> filter out relevant changes or miss moved headers. An independent check catches these.
 
-> 🛑 **GATE**: Validation agent confirms analysis is complete and accurate.
+Launch an **explore agent** with this prompt (substitute actual milestone numbers):
+
+```
+I'm updating SkiaSharp's Skia submodule from m{CURRENT} to m{TARGET}.
+Here is the breaking change analysis I produced: [paste analysis table]
+
+Please validate by (run from externals/skia):
+1. Run: git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --stat -- src/ include/
+   Count the files changed and compare to my analysis — did I miss any?
+2. For each HIGH/MEDIUM item I identified, verify the C API impact by grepping src/c/ include/c/
+3. Check for changes I may have filtered as "Graphite-only" that actually affect Ganesh
+4. Check for removed/moved headers that our C API includes:
+   grep -rh '#include' src/c/*.cpp | sort -u
+   Then verify each included header still exists at upstream/chrome/m{TARGET}
+5. Report: missed items, incorrect classifications, and confirmed items
+```
+
+> 🛑 **GATE**: Validation agent has run and confirmed analysis. If it found missed items,
+> update the analysis and re-present to user before proceeding.
 
 ### Phase 4: Upstream Merge (mono/skia)
 
@@ -176,7 +206,16 @@ Have a **separate agent** validate the breaking change analysis:
    ```
    Cross-reference against `BUILD.gn` — new source files may need to be added.
 
-> 🛑 **GATE**: Merge complete, conflicts resolved. C API files intact. New source files accounted for.
+> 🛑 **GATE**: Merge complete, conflicts resolved. Run ALL of these verification commands
+> (from inside `externals/skia`):
+> ```bash
+> cd externals/skia
+> ls src/c/*.cpp include/c/*.h                    # C API files intact
+> git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=AD --name-only -- src/ include/
+>                                                   # Review added/deleted files
+> git diff --check                                  # Zero conflict markers remain
+> ```
+> All three must produce expected output before proceeding.
 
 ### Phase 5: Fix C API Shim Layer
 
@@ -208,26 +247,52 @@ must be updated when the underlying C++ APIs change.
 
 ### Phase 6: Update SkiaSharp Version Files
 
+> 📋 **RE-READ this phase carefully.** In past runs, only the milestone line was updated
+> and 30+ other version lines were missed. This phase has MANY lines to change.
+
 In the **SkiaSharp parent repo**:
 
-1. **`scripts/VERSIONS.txt`** — Update ALL of these:
+1. **`scripts/VERSIONS.txt`** — Update **ALL** of these (not just milestone):
    ```
-   skia                    release     m{TARGET}
-   libSkiaSharp            milestone   {TARGET}
-   libSkiaSharp            increment   0          # Reset to 0 for new milestone
-   libSkiaSharp            soname      {TARGET}.0.0
-   SkiaSharp               assembly    3.{TARGET}.0.0
-   SkiaSharp               file        3.{TARGET}.0.0
-   # ALL nuget versions → 3.{TARGET}.0
+   skia                    release     m{TARGET}        ← was m{CURRENT}
+   libSkiaSharp            milestone   {TARGET}         ← was {CURRENT}
+   libSkiaSharp            increment   0                ← RESET to 0
+   libSkiaSharp            soname      {TARGET}.0.0     ← was {CURRENT}.x.x
+   SkiaSharp               assembly    3.{TARGET}.0.0   ← was 3.{CURRENT}.x.x
+   SkiaSharp               file        3.{TARGET}.0.0   ← was 3.{CURRENT}.x.x
+   # EVERY nuget line with 3.{CURRENT}.x → 3.{TARGET}.0
+   # (there are ~30 nuget lines — use sed, not manual editing)
    ```
 
-2. **`cgmanifest.json`** — Update Skia entries:
-   - `commitHash`: New submodule commit
+   **Recommended approach — use sed for bulk update (replace {CURRENT}/{TARGET} with actual numbers):**
+   ```bash
+   # Example for m119 → m120 (adjust numbers for your update):
+   # Update all nuget versions (e.g., 3.119.4 → 3.120.0)
+   sed -i '' 's/3\.119\.[0-9]*/3.120.0/g' scripts/VERSIONS.txt
+   # Update soname
+   sed -i '' 's/119\.0\.0/120.0.0/' scripts/VERSIONS.txt
+   # Update assembly/file versions  
+   sed -i '' 's/3\.119\.[0-9]*\.0/3.120.0.0/g' scripts/VERSIONS.txt
+   # Update skia release
+   sed -i '' 's/m119/m120/' scripts/VERSIONS.txt
+   ```
+
+2. **`cgmanifest.json`** — Update **ALL** Skia entries (there are multiple sections):
+   - `commitHash`: New submodule commit (from `cd externals/skia && git rev-parse HEAD`)
    - `version`: `chrome/m{TARGET}`
    - `chrome_milestone`: {TARGET}
    - `upstream_merge_commit`: The upstream chrome/m{TARGET} branch tip
 
-3. **`scripts/azure-pipelines-variables.yml`** — Update milestone references
+3. **`scripts/azure-pipelines-variables.yml`** — Update milestone references (if file exists)
+
+**Verification (MANDATORY — catches the most common mistake):**
+```bash
+# MUST return 0 non-comment lines. If any remain, you missed something.
+grep -n "{CURRENT}" scripts/VERSIONS.txt | grep -v "^#\|HarfBuzz"
+grep -n "m{CURRENT}\|{CURRENT}\." cgmanifest.json
+```
+> 🛑 **GATE**: Both grep commands return zero results (excluding HarfBuzz lines which
+> have their own version scheme). If ANY lines still contain the old milestone, fix them.
 
 ### Phase 7: Regenerate Bindings
 
@@ -237,14 +302,39 @@ pwsh ./utils/generate.ps1
 
 This regenerates `binding/SkiaSharp/SkiaApi.generated.cs` from the C API headers.
 
-**After regeneration, check for C# compilation:**
+**After regeneration, review the diff and check for C# compilation:**
 ```bash
+# Review what changed — look for NEW functions that may need C# wrappers
+git diff --stat binding/
+git diff binding/SkiaSharp/SkiaApi.generated.cs | head -100
+
+# ALWAYS revert HarfBuzz generated bindings — HarfBuzz updates are separate from Skia updates.
+# The generator picks up API changes that need hand-written delegate proxies.
+git checkout HEAD -- binding/HarfBuzzSharp/HarfBuzzApi.generated.cs
+
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
 ### Phase 8: Fix C# Wrappers
 
-Fix files in `binding/SkiaSharp/` based on the breaking change analysis:
+> 📋 **RE-READ**: This phase applies even when the C# build passes with 0 errors.
+> New generated functions may need C# wrappers even though the build succeeds.
+
+**Step 1: Review new generated bindings for unwrapped functions:**
+```bash
+# Show only NEW functions added by the regeneration
+git diff binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
+```
+
+For each new function, check whether a C# wrapper exists:
+```bash
+# Example: if sk_foo_bar was added, check for a wrapper
+grep -rn "sk_foo_bar" binding/SkiaSharp/*.cs | grep -v generated
+```
+New functions from our custom C API additions typically need wrappers.
+New functions from upstream changes are usually additive and can be deferred.
+
+**Step 2:** Fix files in `binding/SkiaSharp/` based on the breaking change analysis:
 
 | File | When to Update |
 |------|---------------|
@@ -267,20 +357,23 @@ Fix files in `binding/SkiaSharp/` based on the breaking change analysis:
 # Build native
 dotnet cake --target=externals-macos --arch=arm64
 
-# Build C# (use --no-incremental after VERSIONS.txt changes)
+# Build C# — MUST use --no-incremental after VERSIONS.txt changes
+# (without this, stale version constants cause "incompatible native library" at runtime)
 dotnet build binding/SkiaSharp/SkiaSharp.csproj --no-incremental
 
-# Run tests (prefer Cake for proper skip trait handling)
-dotnet cake --target=tests-netcore --skipExternals=all
-# OR if using dotnet test directly, MUST filter platform-specific tests:
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "SkipOn!=macOS"
+# Copy native libs to test output (required for local testing)
+cp output/native/osx/libSkiaSharp.dylib tests/SkiaSharp.Tests.Console/bin/Debug/net*/
+cp output/native/osx/libHarfBuzzSharp.dylib tests/SkiaSharp.Tests.Console/bin/Debug/net*/
+
+# Run tests — MUST include platform filter to avoid test host crashes
+# (SkipOn traits only work in MAUI device runners, not console runner)
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj \
+  --filter "SkipOn!=macOS" --no-build
 ```
 
-> ⚠️ **Test runner caveat**: `SkipOn` traits only work with MAUI device test runners.
-> The console test runner does NOT filter by traits automatically. Use `--filter "SkipOn!=macOS"`
-> (or `!=Linux`, etc.) to avoid test host crashes from exceptions thrown through native callbacks.
-
 > 🛑 **GATE**: All tests pass. Do NOT skip failing tests. Do NOT proceed with failures.
+> Pre-existing failures (failing on `main` too) are acceptable — verify by running
+> the same test against `main` branch.
 
 ### Phase 10: Create PRs
 
@@ -305,6 +398,9 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filte
 **Submodule must point to the mono/skia PR branch.**
 
 #### Cross-link both PRs (same as native-dependency-update).
+
+After creating BOTH PRs, update the earlier PR's description to include a link to the later one.
+Both PRs must reference each other.
 
 #### Phase 10 Completion Checklist
 
@@ -420,6 +516,34 @@ HarfBuzz generated bindings may fail due to system header issues (`inttypes.h` n
 ### 8. New C API Functions From Upstream
 
 Upstream may add new C API functions (e.g., `sk_surface_draw_with_sampling`) that weren't in the previous milestone. The regeneration step (`pwsh ./utils/generate.ps1`) picks these up automatically. Always review the diff of `*.generated.cs` files for new functions that may need corresponding C# wrappers in `binding/SkiaSharp/`.
+
+### 9. DEPS: Fork-Customized Dependencies
+
+SkiaSharp's fork often has **newer** dependency versions than upstream Skia (from custom security/bug-fix updates via the `native-dependency-update` skill). When merging upstream and resolving DEPS, do NOT blindly update all hashes to the upstream milestone's versions — you may **downgrade** dependencies and break the build.
+
+**Check the skiasharp branch commit log** for custom dependency updates:
+```bash
+git log --oneline skiasharp | grep -i "update\|bump\|libpng\|zlib\|expat\|brotli\|webp\|harfbuzz\|vulkan"
+```
+
+For each dep with a custom update, **keep the fork's hash**. Only update deps that the fork hasn't customized. Common fork-customized deps: libwebp, brotli, expat, libpng, zlib, vulkanmemoryallocator, **harfbuzz**.
+
+> ⚠️ **HarfBuzz is ALWAYS a fork-customized dep.** HarfBuzz updates require hand-written C# delegate
+> proxies and must be done as a separate task via the `native-dependency-update` skill. During a Skia
+> milestone update, ALWAYS keep the fork's harfbuzz hash in DEPS and ALWAYS revert any changes to
+> `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs`.
+
+**Symptoms of getting this wrong**: Build failures referencing missing source files (e.g., `palette.c` in libwebp), or HarfBuzz generated binding errors from a version mismatch.
+
+### 10. HarfBuzz Generated Bindings — ALWAYS Revert
+
+HarfBuzz updates are **always separate** from Skia milestone updates. When the harfbuzz DEPS version changes (even accidentally during a merge), the code generator picks up new APIs (paint/draw/colorline callbacks) that require hand-written delegate proxy implementations in `binding/HarfBuzzSharp/DelegateProxies.*.cs`. This causes `CS8795` errors for missing partial method implementations.
+
+**During a Skia milestone update, ALWAYS:**
+1. Keep the fork's harfbuzz hash in DEPS (do not accept upstream's version)
+2. Revert any generated HarfBuzz binding changes: `git checkout HEAD -- binding/HarfBuzzSharp/HarfBuzzApi.generated.cs`
+
+HarfBuzz version bumps should be done separately via the `native-dependency-update` skill, which includes writing the required delegate proxies.
 
 ---
 
