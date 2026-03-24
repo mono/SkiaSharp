@@ -8,10 +8,17 @@ on:
       - 'release/**'
     paths:
       - 'samples/**'
+  release:
+    types:
+      - published
   workflow_dispatch:
     inputs:
       version:
         description: 'SkiaSharp NuGet version to use (leave empty for latest from NuGet.org)'
+        required: false
+        default: ''
+      sha:
+        description: 'Git SHA of the commit to build samples from (leave empty to use the default branch HEAD)'
         required: false
         default: ''
 
@@ -25,6 +32,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha || github.sha }}
 
       - name: Get latest SkiaSharp NuGet version
         id: nuget
@@ -133,7 +142,8 @@ jobs:
         run: |
           VERSION="${{ steps.nuget.outputs.version }}"
           PREVIEW_SUFFIX="${{ steps.nuget.outputs.preview_suffix }}"
-          BRANCH_NAME="samples/${VERSION}"
+          BRANCH_NAME="samples"
+          REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
 
           # Choose the appropriate output directory based on whether it is a preview release
           if [ -n "$PREVIEW_SUFFIX" ]; then
@@ -144,17 +154,27 @@ jobs:
 
           echo "Publishing $SAMPLES_DIR to branch: $BRANCH_NAME"
 
-          # Initialize a fresh git repo in the samples output directory and push to the target branch
-          cd "$SAMPLES_DIR"
-          git init
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          # Use --allow-empty in case the generated output is identical to the existing branch
-          git commit --allow-empty -m "Samples for SkiaSharp $VERSION"
-          git push \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" \
-            "HEAD:refs/heads/${BRANCH_NAME}" \
-            --force
+          # Work in a temp directory so we can clone the existing branch (if any) and add a new commit
+          WORK_DIR=$(mktemp -d)
+          trap 'rm -rf "$WORK_DIR"' EXIT
+
+          if git ls-remote --exit-code "$REMOTE_URL" "refs/heads/${BRANCH_NAME}" > /dev/null; then
+            # Branch already exists — clone it so we preserve the history
+            git clone --depth=1 --branch "${BRANCH_NAME}" "$REMOTE_URL" "$WORK_DIR"
+          else
+            # Branch does not exist yet — initialise an empty repo
+            git init "$WORK_DIR"
+            git -C "$WORK_DIR" checkout -b "${BRANCH_NAME}"
+          fi
+
+          # Replace contents with the freshly generated samples (delete files no longer present)
+          rsync -a --delete --exclude='.git' "${SAMPLES_DIR}/" "$WORK_DIR/"
+
+          git -C "$WORK_DIR" config user.name "github-actions[bot]"
+          git -C "$WORK_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$WORK_DIR" add .
+          # --allow-empty handles the case where the generated output is identical to the previous commit
+          git -C "$WORK_DIR" commit --allow-empty -m "Samples for SkiaSharp $VERSION"
+          git -C "$WORK_DIR" push "$REMOTE_URL" "HEAD:refs/heads/${BRANCH_NAME}"
 
           echo "Successfully published samples to branch: $BRANCH_NAME"
