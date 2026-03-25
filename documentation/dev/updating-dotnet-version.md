@@ -109,7 +109,7 @@ Before merging a .NET upgrade PR, verify these items:
 - [ ] **`nuget.config`** — Must NOT contain `nuget.org` source (disallowed in CI)
 - [ ] **`scripts/azure-pipelines-complete.yml`** — `buildExternals` parameter must be reset to `'latest'` (not a specific build ID)
 - [ ] **All CI stages pass** — Tests, samples, API diff, and package stages must be green
-- [ ] **Documentation updated** — `documentation/updating-dotnet-version.md` reflects any new learnings
+- [ ] **Documentation updated** — `documentation/dev/updating-dotnet-version.md` reflects any new learnings
 
 ## Known Issues & Breaking Changes
 

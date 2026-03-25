@@ -5,9 +5,9 @@ Thank you for your interest in contributing to SkiaSharp! This document provides
 ## 📖 Documentation
 
 Before contributing, please review:
-- **[documentation/](documentation/)** - Architecture, memory management, and contributor guides
-- **[documentation/adding-apis.md](documentation/adding-apis.md)** - Complete guide for adding APIs
-- **[documentation/building.md](documentation/building.md)** - Build instructions
+- **[documentation/dev/](documentation/dev/)**  - Architecture, memory management, and contributor guides
+- **[documentation/dev/adding-apis.md](documentation/dev/adding-apis.md)** - Complete guide for adding APIs
+- **[documentation/dev/building.md](documentation/dev/building.md)** - Build instructions
 
 ## 🐛 Reporting Issues
 
@@ -52,12 +52,12 @@ We greatly welcome PRs with fixes and improvements from the community!
 1. **Follow existing patterns** - Study similar APIs before adding new ones
 2. **Add tests** - All new features and bug fixes should include tests
 3. **Update documentation** - If you're changing public APIs
-4. **Memory management** - Ensure proper disposal and pointer type handling (see [documentation/memory-management.md](documentation/memory-management.md))
-5. **Error handling** - Validate parameters and handle errors appropriately (see [documentation/error-handling.md](documentation/error-handling.md))
+4. **Memory management** - Ensure proper disposal and pointer type handling (see [documentation/dev/memory-management.md](documentation/dev/memory-management.md))
+5. **Error handling** - Validate parameters and handle errors appropriately (see [documentation/dev/error-handling.md](documentation/dev/error-handling.md))
 
 ### Adding New APIs
 
-Follow the comprehensive guide in [documentation/adding-apis.md](documentation/adding-apis.md), which covers:
+Follow the comprehensive guide in [documentation/dev/adding-apis.md](documentation/dev/adding-apis.md), which covers:
 - Analyzing C++ APIs and identifying pointer types
 - Creating C API wrappers
 - Writing P/Invoke declarations
@@ -69,8 +69,8 @@ Follow the comprehensive guide in [documentation/adding-apis.md](documentation/a
 - **Dispose pattern:** Always use `using` statements in samples and tests
 - **Parameter validation:** Validate all parameters in C# before P/Invoke
 - **Error checking:** Check return values from C API calls
-- **Memory safety:** Understand pointer types (see [documentation/memory-management.md](documentation/memory-management.md))
-- **Naming conventions:** Follow existing naming patterns (see [documentation/architecture.md](documentation/architecture.md))
+- **Memory safety:** Understand pointer types (see [documentation/dev/memory-management.md](documentation/dev/memory-management.md))
+- **Naming conventions:** Follow existing naming patterns (see [documentation/dev/architecture.md](documentation/dev/architecture.md))
 
 ## 🏗️ Building SkiaSharp
 
@@ -106,24 +106,24 @@ dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
-See [documentation/building.md](documentation/building.md) for complete build instructions.
+See [documentation/dev/building.md](documentation/dev/building.md) for complete build instructions.
 
 ### Full Build (Including Native)
 
 For native code changes, see:
-- [documentation/building.md](documentation/building.md) - Windows & macOS
-- [documentation/building-linux.md](documentation/building-linux.md) - Linux
+- [documentation/dev/building.md](documentation/dev/building.md) - Windows & macOS
+- [documentation/dev/building-linux.md](documentation/dev/building-linux.md) - Linux
 
 ## 📚 Additional Resources
 
-- **[documentation/](documentation/)** - Complete collection of contributor documentation
-- **Maintainer guides** - See [documentation/maintaining.md](documentation/maintaining.md)
-- **Release process** - See [documentation/releasing.md](documentation/releasing.md)
+- **[documentation/dev/](documentation/dev/)**  - Complete collection of contributor documentation
+- **Maintainer guides** - See [documentation/dev/maintaining.md](documentation/dev/maintaining.md)
+- **Release process** - See [documentation/dev/releasing.md](documentation/dev/releasing.md)
 
 ## 💡 Questions?
 
-- **Architecture questions:** Review [documentation/](documentation/)
-- **Build issues:** Check [documentation/building.md](documentation/building.md)
+- **Architecture questions:** Review [documentation/dev/](documentation/dev/)
+- **Build issues:** Check [documentation/dev/building.md](documentation/dev/building.md)
 - **API usage:** Check the [API documentation](https://docs.microsoft.com/dotnet/api/skiasharp)
 - **Still stuck?** Open an issue with your question
 

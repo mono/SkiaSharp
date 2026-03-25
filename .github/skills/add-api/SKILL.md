@@ -77,7 +77,7 @@ Find the C++ API in Skia headers and identify:
 
 3. **Parameters** — primitives, references, pointers, const-ness
 
-👉 See [../../../documentation/memory-management.md#pointer-type-decision-tree](../../../documentation/memory-management.md#pointer-type-decision-tree)
+👉 See [../../../documentation/dev/memory-management.md#pointer-type-decision-tree](../../../documentation/dev/memory-management.md#pointer-type-decision-tree)
 
 ---
 

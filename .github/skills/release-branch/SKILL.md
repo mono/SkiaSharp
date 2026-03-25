@@ -12,7 +12,7 @@ description: >
 
 Create release branches for SkiaSharp versions.
 
-⚠️ **NO UNDO:** This is step 1 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is step 1 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
 
 ## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
 
@@ -113,4 +113,4 @@ This triggers CI build (2-4 hours).
 
 ## Resources
 
-- [releasing.md](../../../documentation/releasing.md) — Version patterns, HarfBuzz versioning, workflow diagrams
+- [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, HarfBuzz versioning, workflow diagrams

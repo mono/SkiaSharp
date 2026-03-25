@@ -13,7 +13,7 @@ description: >
 
 # Bug Fix Skill
 
-**Issue pipeline: Step 3 of 3 (Fix).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
+**Issue pipeline: Step 3 of 3 (Fix).** See [`documentation/dev/issue-pipeline.md`](../../../documentation/dev/issue-pipeline.md).
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
@@ -268,7 +268,7 @@ Document each attempt in PR. After exhausting ALL options: ask user for details,
 > 💡 **Often already done!** If Phase 3 found a diagnosis in related issue comments,
 > this phase is just confirmation. Don't re-investigate what's already known.
 
-For detailed debugging methodology, see [documentation/debugging-methodology.md](../../../documentation/debugging-methodology.md).
+For detailed debugging methodology, see [documentation/dev/debugging-methodology.md](../../../documentation/dev/debugging-methodology.md).
 
 ### 5.1 Start with the Key Question
 
@@ -340,9 +340,9 @@ Stop investigating when you can answer:
 **Principle: Minimal change.** Fix only what's broken.
 
 For guidance on specific types of fixes, see:
-- [Memory management](../../../documentation/memory-management.md) - disposal patterns, ownership
-- [API design](../../../documentation/api-design.md) - same-instance returns, null checks
-- [Debugging methodology](../../../documentation/debugging-methodology.md) - native linking issues
+- [Memory management](../../../documentation/dev/memory-management.md) - disposal patterns, ownership
+- [API design](../../../documentation/dev/api-design.md) - same-instance returns, null checks
+- [Debugging methodology](../../../documentation/dev/debugging-methodology.md) - native linking issues
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Made the fix
@@ -490,7 +490,7 @@ This copies the JSON to `output/ai/` mirroring the data-cache structure.
 | Can't test on required platform | Use Docker or ask user to verify |
 | Proposed fix is a workaround | Stop — find why it works on other platforms |
 | Docker build uses cached layers | Use `docker build --no-cache` to rebuild |
-| Linker silently skips library | See [debugging-methodology.md](../../../documentation/debugging-methodology.md#native-library-debugging-linux) |
+| Linker silently skips library | See [debugging-methodology.md](../../../documentation/dev/debugging-methodology.md#native-library-debugging-linux) |
 
 ---
 

@@ -17,7 +17,7 @@ description: >
 
 Publish packages to NuGet.org and finalize releases.
 
-⚠️ **NO UNDO:** This is step 3 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is step 3 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
 
 ## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
 
@@ -300,5 +300,5 @@ If you've partially completed and need to resume:
 
 ## Resources
 
-- [releasing.md](../../../documentation/releasing.md) — Version patterns, tag formats, workflow diagrams
+- [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
 - [references/release-notes.md](references/release-notes.md) — Emoji annotation details

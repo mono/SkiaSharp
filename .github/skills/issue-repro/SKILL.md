@@ -11,7 +11,7 @@ description: >-
 
 # Issue Reproduction
 
-**Issue pipeline: Step 2 of 3 (Repro).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
+**Issue pipeline: Step 2 of 3 (Repro).** See [`documentation/dev/issue-pipeline.md`](../../../documentation/dev/issue-pipeline.md).
 
 Systematically reproduce a SkiaSharp issue and produce structured, schema-validated reproduction JSON.
 

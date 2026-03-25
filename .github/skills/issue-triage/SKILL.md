@@ -10,7 +10,7 @@ description: >-
 
 # Triage Issue
 
-**Issue pipeline: Step 1 of 3 (Triage).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
+**Issue pipeline: Step 1 of 3 (Triage).** See [`documentation/dev/issue-pipeline.md`](../../../documentation/dev/issue-pipeline.md).
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
@@ -117,7 +117,7 @@ If fetched via API, work directly from the `gh` output (skip the script).
 
 | Signal in issue | Source to consult |
 |----------------|-------------------|
-| NativeAssets, DllNotFoundException, container, WASM | [documentation/packages.md](../../documentation/packages.md) |
+| NativeAssets, DllNotFoundException, container, WASM | [documentation/dev/packages.md](../../documentation/dev/packages.md) |
 | Platform quirks, common traps | [references/skia-patterns.md](references/skia-patterns.md) |
 | Specific SkiaSharp types or methods | `docs/SkiaSharpAPI/*.xml` |
 | How-to about drawing, paths, bitmaps | `.docs/docs/docs/` |

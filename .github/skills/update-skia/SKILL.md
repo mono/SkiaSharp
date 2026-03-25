@@ -28,7 +28,7 @@ Update Google Skia to a new Chrome milestone in SkiaSharp's mono/skia fork.
 - **[references/breaking-changes-checklist.md](references/breaking-changes-checklist.md)** — How to analyze breaking changes between milestones
 - **[references/known-gotchas.md](references/known-gotchas.md)** — 10 hard-won lessons and troubleshooting table
 - **[references/typical-changes.md](references/typical-changes.md)** — Files typically changed during an update
-- **[documentation/dependencies.md](../../../documentation/dependencies.md)** — Dependency tracking and cgmanifest.json format
+- **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency tracking and cgmanifest.json format
 - **[RELEASE_NOTES.md in upstream Skia](https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md)** — Official Skia release notes
 
 ## Scripts

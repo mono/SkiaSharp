@@ -21,7 +21,7 @@ description: >
 
 Verify SkiaSharp packages work correctly before publishing.
 
-⚠️ **NO UNDO:** This is step 2 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is step 2 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
 
 ## CRITICAL: ANY FAIL IS TOTAL FAIL
 

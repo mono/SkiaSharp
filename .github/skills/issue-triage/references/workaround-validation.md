@@ -86,7 +86,7 @@ Return JSON: { "verdict": "pass|fail|warn", "issues": [{ "line_hint", "problem",
 Check this SkiaSharp workaround works on the reporter's platform(s). Key rules:
 Linux=fontconfig vs NoDependencies, Alpine=linux-musl RID, WASM=no P/Invoke,
 Android CI=no GPU, Mac Catalyst≠macOS. Check path separators and font availability.
-Consult: references/skia-patterns.md, documentation/packages.md.
+Consult: references/skia-patterns.md, documentation/dev/packages.md.
 
 Code: {extracted_code}
 Platforms: {platforms_json}
