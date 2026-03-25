@@ -13,7 +13,7 @@ public class CanvasTransformsSample : InteractiveSampleBase
 	private float scaleY = 1f;
 	private bool showGrid = true;
 
-	public override string Title => "Canvas Transforms";
+	public override string Title => "2D Transforms";
 
 	public override string Category => SampleCategories.General;
 
