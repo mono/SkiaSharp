@@ -2,11 +2,22 @@
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:pages="clr-namespace:SkiaSharpSample.Pages"
        x:Class="SkiaSharpSample.AppShell"
-       FlyoutBehavior="Disabled"
+       FlyoutBehavior="Flyout"
+       FlyoutWidth="300"
        Title="SkiaSharp Gallery">
 
-    <ShellContent Title="Samples" Route="SamplesListPage">
-        <pages:SamplesListPage />
-    </ShellContent>
+    <Shell.FlyoutHeader>
+        <Grid BackgroundColor="{StaticResource PrimaryColor}" Padding="16" MinimumHeightRequest="64">
+            <Label Text="SkiaSharp Gallery"
+                   TextColor="White"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center" />
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <Shell.FlyoutHeaderBehavior>Fixed</Shell.FlyoutHeaderBehavior>
+
+    <!-- Populated dynamically in code-behind -->
 
 </Shell>
