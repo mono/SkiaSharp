@@ -2,74 +2,73 @@
 
 using SkiaSharp;
 
-namespace SkiaSharpSample.Samples
+namespace SkiaSharpSample.Samples;
+
+public class CustomFontsSample : SampleBase
 {
-	public class CustomFontsSample : SampleBase
+	public CustomFontsSample()
 	{
-		public CustomFontsSample()
+	}
+
+	public override string Title => "Custom Fonts";
+
+	public override string Category => SampleCategories.Fonts;
+
+	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
+	{
+		var text = "\u03A3 and \u0750";
+
+		canvas.Clear(SKColors.White);
+
+		using (var paint = new SKPaint())
 		{
-		}
+			paint.IsAntialias = true;
 
-		public override string Title => "Custom Fonts";
-
-		public override string Category => SampleCategories.Fonts;
-
-		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
-		{
-			var text = "\u03A3 and \u0750";
-
-			canvas.Clear(SKColors.White);
-
-			using (var paint = new SKPaint())
+			using (var tf = SKTypeface.FromFile(SampleMedia.Fonts.ContentFontPath))
 			{
-				paint.IsAntialias = true;
+				paint.Color = SampleMedia.Colors.XamarinGreen;
+				paint.TextSize = 60;
+				paint.Typeface = tf;
 
-				using (var tf = SKTypeface.FromFile(SampleMedia.Fonts.ContentFontPath))
+				canvas.DrawText(text, 50, 50, paint);
+			}
+
+			using (var fileStream = new SKFileStream(SampleMedia.Fonts.ContentFontPath))
+			using (var tf = SKTypeface.FromStream(fileStream))
+			{
+				paint.Color = SampleMedia.Colors.XamarinDarkBlue;
+				paint.TextSize = 60;
+				paint.Typeface = tf;
+
+				canvas.DrawText(text, 50, 100, paint);
+			}
+
+			using (var resource = SampleMedia.Fonts.EmbeddedFont)
+			using (var memory = new MemoryStream())
+			{
+				resource.CopyTo(memory);
+				var bytes = memory.ToArray();
+
+				using (var stream = new SKMemoryStream(bytes))
+				using (var tf = SKTypeface.FromStream(stream))
 				{
-					paint.Color = SampleMedia.Colors.XamarinGreen;
+					paint.Color = SampleMedia.Colors.XamarinLightBlue;
 					paint.TextSize = 60;
 					paint.Typeface = tf;
 
-					canvas.DrawText(text, 50, 50, paint);
+					canvas.DrawText(text, 50, 150, paint);
 				}
+			}
 
-				using (var fileStream = new SKFileStream(SampleMedia.Fonts.ContentFontPath))
-				using (var tf = SKTypeface.FromStream(fileStream))
-				{
-					paint.Color = SampleMedia.Colors.XamarinDarkBlue;
-					paint.TextSize = 60;
-					paint.Typeface = tf;
+			using (var managedResource = SampleMedia.Fonts.EmbeddedFont)
+			using (var managedStream = new SKManagedStream(managedResource, true))
+			using (var tf = SKTypeface.FromStream(managedStream))
+			{
+				paint.Color = SampleMedia.Colors.XamarinPurple;
+				paint.TextSize = 60;
+				paint.Typeface = tf;
 
-					canvas.DrawText(text, 50, 100, paint);
-				}
-
-				using (var resource = SampleMedia.Fonts.EmbeddedFont)
-				using (var memory = new MemoryStream())
-				{
-					resource.CopyTo(memory);
-					var bytes = memory.ToArray();
-
-					using (var stream = new SKMemoryStream(bytes))
-					using (var tf = SKTypeface.FromStream(stream))
-					{
-						paint.Color = SampleMedia.Colors.XamarinLightBlue;
-						paint.TextSize = 60;
-						paint.Typeface = tf;
-
-						canvas.DrawText(text, 50, 150, paint);
-					}
-				}
-
-				using (var managedResource = SampleMedia.Fonts.EmbeddedFont)
-				using (var managedStream = new SKManagedStream(managedResource, true))
-				using (var tf = SKTypeface.FromStream(managedStream))
-				{
-					paint.Color = SampleMedia.Colors.XamarinPurple;
-					paint.TextSize = 60;
-					paint.Typeface = tf;
-
-					canvas.DrawText(text, 50, 200, paint);
-				}
+				canvas.DrawText(text, 50, 200, paint);
 			}
 		}
 	}

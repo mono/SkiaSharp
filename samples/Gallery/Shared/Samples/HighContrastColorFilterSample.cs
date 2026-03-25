@@ -1,42 +1,41 @@
 ﻿using SkiaSharp;
 
-namespace SkiaSharpSample.Samples
+namespace SkiaSharpSample.Samples;
+
+public class HighContrastColorFilterSample : SampleBase
 {
-	public class HighContrastColorFilterSample : SampleBase
+	private bool grayscale;
+
+	public HighContrastColorFilterSample()
 	{
-		private bool grayscale;
+	}
 
-		public HighContrastColorFilterSample()
+	public override string Title => "High Contrast Color Filter";
+
+	public override string Category => SampleCategories.ColorFilters;
+
+	protected override void OnTapped()
+	{
+		base.OnTapped();
+
+		grayscale = !grayscale;
+
+		Refresh();
+	}
+
+	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
+	{
+		canvas.Clear(SKColors.White);
+
+		// load the image from the embedded resource stream
+		using (var stream = new SKManagedStream(SampleMedia.Images.Baboon))
+		using (var bitmap = SKBitmap.Decode(stream))
+		using (var cf = SKColorFilter.CreateHighContrast(grayscale, SKHighContrastConfigInvertStyle.InvertBrightness, 0.1f))
+		using (var paint = new SKPaint())
 		{
-		}
+			paint.ColorFilter = cf;
 
-		public override string Title => "High Contrast Color Filter";
-
-		public override string Category => SampleCategories.ColorFilters;
-
-		protected override void OnTapped()
-		{
-			base.OnTapped();
-
-			grayscale = !grayscale;
-
-			Refresh();
-		}
-
-		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
-		{
-			canvas.Clear(SKColors.White);
-
-			// load the image from the embedded resource stream
-			using (var stream = new SKManagedStream(SampleMedia.Images.Baboon))
-			using (var bitmap = SKBitmap.Decode(stream))
-			using (var cf = SKColorFilter.CreateHighContrast(grayscale, SKHighContrastConfigInvertStyle.InvertBrightness, 0.1f))
-			using (var paint = new SKPaint())
-			{
-				paint.ColorFilter = cf;
-
-				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
-			}
+			canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
 		}
 	}
 }

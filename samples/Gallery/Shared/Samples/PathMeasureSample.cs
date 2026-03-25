@@ -1,58 +1,57 @@
 ﻿using SkiaSharp;
 
-namespace SkiaSharpSample.Samples
+namespace SkiaSharpSample.Samples;
+
+public class PathMeasureSample : SampleBase
 {
-	public class PathMeasureSample : SampleBase
+	public PathMeasureSample()
 	{
-		public PathMeasureSample()
+	}
+
+	public override string Title => "Path Measure";
+
+	public override string Category => SampleCategories.Paths;
+
+	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
+	{
+		canvas.Clear(SKColors.White);
+
+		using (var paint = new SKPaint())
+		using (var path = new SKPath())
 		{
-		}
+			paint.Style = SKPaintStyle.Stroke;
+			paint.StrokeWidth = 10;
+			paint.IsAntialias = true;
+			paint.StrokeCap = SKStrokeCap.Round;
+			paint.StrokeJoin = SKStrokeJoin.Round;
 
-		public override string Title => "Path Measure";
+			path.MoveTo(20, 20);
+			path.LineTo(400, 50);
+			path.LineTo(80, 100);
+			path.LineTo(300, 150);
 
-		public override string Category => SampleCategories.Paths;
+			paint.Color = SampleMedia.Colors.XamarinDarkBlue;
+			canvas.DrawPath(path, paint);
 
-		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
-		{
-			canvas.Clear(SKColors.White);
-
-			using (var paint = new SKPaint())
-			using (var path = new SKPath())
+			using (var measure = new SKPathMeasure(path, false))
+			using (var dst = new SKPath())
 			{
-				paint.Style = SKPaintStyle.Stroke;
-				paint.StrokeWidth = 10;
-				paint.IsAntialias = true;
-				paint.StrokeCap = SKStrokeCap.Round;
-				paint.StrokeJoin = SKStrokeJoin.Round;
+				var length = measure.Length;
 
-				path.MoveTo(20, 20);
-				path.LineTo(400, 50);
-				path.LineTo(80, 100);
-				path.LineTo(300, 150);
+				dst.Reset();
+				measure.GetSegment(length * 0.05f, length * 0.2f, dst, true);
+				paint.Color = SampleMedia.Colors.XamarinPurple;
+				canvas.DrawPath(dst, paint);
 
-				paint.Color = SampleMedia.Colors.XamarinDarkBlue;
-				canvas.DrawPath(path, paint);
+				dst.Reset();
+				measure.GetSegment(length * 0.2f, length * 0.8f, dst, true);
+				paint.Color = SampleMedia.Colors.XamarinGreen;
+				canvas.DrawPath(dst, paint);
 
-				using (var measure = new SKPathMeasure(path, false))
-				using (var dst = new SKPath())
-				{
-					var length = measure.Length;
-
-					dst.Reset();
-					measure.GetSegment(length * 0.05f, length * 0.2f, dst, true);
-					paint.Color = SampleMedia.Colors.XamarinPurple;
-					canvas.DrawPath(dst, paint);
-
-					dst.Reset();
-					measure.GetSegment(length * 0.2f, length * 0.8f, dst, true);
-					paint.Color = SampleMedia.Colors.XamarinGreen;
-					canvas.DrawPath(dst, paint);
-
-					dst.Reset();
-					measure.GetSegment(length * 0.8f, length * 0.95f, dst, true);
-					paint.Color = SampleMedia.Colors.XamarinLightBlue;
-					canvas.DrawPath(dst, paint);
-				}
+				dst.Reset();
+				measure.GetSegment(length * 0.8f, length * 0.95f, dst, true);
+				paint.Color = SampleMedia.Colors.XamarinLightBlue;
+				canvas.DrawPath(dst, paint);
 			}
 		}
 	}

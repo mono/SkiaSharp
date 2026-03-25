@@ -2,41 +2,40 @@ using System;
 using System.IO;
 using SkiaSharp;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public abstract class DocumentSampleBase : SampleBase
 {
-	public abstract class DocumentSampleBase : SampleBase
+	protected string DocumentPath { get; set; }
+
+	public override string Category => SampleCategories.Documents;
+
+	protected abstract void OnGenerateDocument(string path);
+
+	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
-		protected string DocumentPath { get; set; }
+		canvas.Clear(SKColors.White);
 
-		public override string Category => SampleCategories.Documents;
+		if (!string.IsNullOrEmpty(DocumentPath))
+			OnGenerateDocument(DocumentPath);
 
-		protected abstract void OnGenerateDocument(string path);
-
-		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
+		using var paint = new SKPaint
 		{
-			canvas.Clear(SKColors.White);
+			TextSize = 60.0f,
+			IsAntialias = true,
+			Color = 0xFF9CAFB7,
+			StrokeWidth = 3,
+			TextAlign = SKTextAlign.Center,
+		};
 
-			if (!string.IsNullOrEmpty(DocumentPath))
-				OnGenerateDocument(DocumentPath);
+		canvas.DrawText("Tap to open document", width / 2f, height / 3, paint);
+	}
 
-			using var paint = new SKPaint
-			{
-				TextSize = 60.0f,
-				IsAntialias = true,
-				Color = 0xFF9CAFB7,
-				StrokeWidth = 3,
-				TextAlign = SKTextAlign.Center,
-			};
+	protected override void OnTapped()
+	{
+		base.OnTapped();
 
-			canvas.DrawText("Tap to open document", width / 2f, height / 3, paint);
-		}
-
-		protected override void OnTapped()
-		{
-			base.OnTapped();
-
-			if (!string.IsNullOrEmpty(DocumentPath))
-				SamplesManager.OnOpenFile(DocumentPath);
-		}
+		if (!string.IsNullOrEmpty(DocumentPath))
+			SamplesManager.OnOpenFile(DocumentPath);
 	}
 }

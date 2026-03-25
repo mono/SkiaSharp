@@ -3,147 +3,146 @@ using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public abstract class SampleBase
 {
-	public abstract class SampleBase
+	protected SKMatrix Matrix = SKMatrix.Identity;
+
+	private SKMatrix startPanMatrix = SKMatrix.Identity;
+	private SKMatrix startPinchMatrix = SKMatrix.Identity;
+	private SKPoint startPinchOrigin = SKPoint.Empty;
+	private float totalPinchScale = 1f;
+
+	public abstract string Title { get; }
+
+	public virtual string Description { get; } = string.Empty;
+
+	public virtual string Category { get; } = SampleCategories.General;
+
+	public virtual bool IsSupported => true;
+
+	public bool IsInitialized { get; private set; } = false;
+
+	public void DrawSample(SKCanvas canvas, int width, int height)
 	{
-		protected SKMatrix Matrix = SKMatrix.Identity;
-
-		private SKMatrix startPanMatrix = SKMatrix.Identity;
-		private SKMatrix startPinchMatrix = SKMatrix.Identity;
-		private SKPoint startPinchOrigin = SKPoint.Empty;
-		private float totalPinchScale = 1f;
-
-		public abstract string Title { get; }
-
-		public virtual string Description { get; } = string.Empty;
-
-		public virtual string Category { get; } = SampleCategories.General;
-
-		public virtual bool IsSupported => true;
-
-		public bool IsInitialized { get; private set; } = false;
-
-		public void DrawSample(SKCanvas canvas, int width, int height)
+		if (IsInitialized)
 		{
-			if (IsInitialized)
-			{
-				canvas.SetMatrix(Matrix);
-				OnDrawSample(canvas, width, height);
-			}
+			canvas.SetMatrix(Matrix);
+			OnDrawSample(canvas, width, height);
 		}
+	}
 
-		protected abstract void OnDrawSample(SKCanvas canvas, int width, int height);
+	protected abstract void OnDrawSample(SKCanvas canvas, int width, int height);
 
-		public async void Init()
+	public async void Init()
+	{
+		// reset the matrix for the new sample
+		Matrix = SKMatrix.Identity;
+
+		if (!IsInitialized)
 		{
-			// reset the matrix for the new sample
-			Matrix = SKMatrix.Identity;
+			await OnInit();
 
-			if (!IsInitialized)
-			{
-				await OnInit();
+			IsInitialized = true;
 
-				IsInitialized = true;
-
-				Refresh();
-			}
+			Refresh();
 		}
+	}
 
-		public void Destroy()
+	public void Destroy()
+	{
+		if (IsInitialized)
 		{
-			if (IsInitialized)
-			{
-				OnDestroy();
+			OnDestroy();
 
-				IsInitialized = false;
-			}
+			IsInitialized = false;
 		}
+	}
 
-		protected virtual Task OnInit()
+	protected virtual Task OnInit()
+	{
+		return Task.FromResult(true);
+	}
+
+	protected virtual void OnDestroy()
+	{
+	}
+
+	public void Tap()
+	{
+		if (IsInitialized)
 		{
-			return Task.FromResult(true);
+			OnTapped();
 		}
+	}
 
-		protected virtual void OnDestroy()
+	public void ResetMatrix()
+	{
+		Matrix = SKMatrix.Identity;
+	}
+
+	protected virtual void OnTapped()
+	{
+	}
+
+	public void Pan(GestureState state, SKPoint translation)
+	{
+		switch (state)
 		{
+			case GestureState.Started:
+				startPanMatrix = Matrix;
+				break;
+			case GestureState.Running:
+				var canvasTranslation = SKMatrix.CreateTranslation(translation.X, translation.Y);
+				SKMatrix.Concat(ref Matrix, canvasTranslation, startPanMatrix);
+				break;
+			default:
+				startPanMatrix = SKMatrix.Identity;
+				break;
 		}
+	}
 
-		public void Tap()
+	public void Pinch(GestureState state, float scale, SKPoint origin)
+	{
+		switch (state)
 		{
-			if (IsInitialized)
-			{
-				OnTapped();
-			}
+			case GestureState.Started:
+				startPinchMatrix = Matrix;
+				startPinchOrigin = origin;
+				totalPinchScale = 1f;
+				break;
+			case GestureState.Running:
+				totalPinchScale *= scale;
+				var pinchTranslation = origin - startPinchOrigin;
+				var canvasTranslation = SKMatrix.CreateTranslation(pinchTranslation.X, pinchTranslation.Y);
+				var canvasScaling = SKMatrix.CreateScale(totalPinchScale, totalPinchScale, origin.X, origin.Y);
+				var canvasCombined = SKMatrix.Identity;
+				SKMatrix.Concat(ref canvasCombined, canvasScaling, canvasTranslation);
+				SKMatrix.Concat(ref Matrix, canvasCombined, startPinchMatrix);
+				break;
+			default:
+				startPinchMatrix = SKMatrix.Identity;
+				startPinchOrigin = SKPoint.Empty;
+				totalPinchScale = 1f;
+				break;
 		}
+	}
 
-		public void ResetMatrix()
-		{
-			Matrix = SKMatrix.Identity;
-		}
+	public virtual bool MatchesFilter(string searchText)
+	{
+		if (string.IsNullOrWhiteSpace(searchText))
+			return true;
+		
+		return
+			Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1 ||
+			Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1;
+	}
 
-		protected virtual void OnTapped()
-		{
-		}
+	public event EventHandler RefreshRequested;
 
-		public void Pan(GestureState state, SKPoint translation)
-		{
-			switch (state)
-			{
-				case GestureState.Started:
-					startPanMatrix = Matrix;
-					break;
-				case GestureState.Running:
-					var canvasTranslation = SKMatrix.CreateTranslation(translation.X, translation.Y);
-					SKMatrix.Concat(ref Matrix, canvasTranslation, startPanMatrix);
-					break;
-				default:
-					startPanMatrix = SKMatrix.Identity;
-					break;
-			}
-		}
-
-		public void Pinch(GestureState state, float scale, SKPoint origin)
-		{
-			switch (state)
-			{
-				case GestureState.Started:
-					startPinchMatrix = Matrix;
-					startPinchOrigin = origin;
-					totalPinchScale = 1f;
-					break;
-				case GestureState.Running:
-					totalPinchScale *= scale;
-					var pinchTranslation = origin - startPinchOrigin;
-					var canvasTranslation = SKMatrix.CreateTranslation(pinchTranslation.X, pinchTranslation.Y);
-					var canvasScaling = SKMatrix.CreateScale(totalPinchScale, totalPinchScale, origin.X, origin.Y);
-					var canvasCombined = SKMatrix.Identity;
-					SKMatrix.Concat(ref canvasCombined, canvasScaling, canvasTranslation);
-					SKMatrix.Concat(ref Matrix, canvasCombined, startPinchMatrix);
-					break;
-				default:
-					startPinchMatrix = SKMatrix.Identity;
-					startPinchOrigin = SKPoint.Empty;
-					totalPinchScale = 1f;
-					break;
-			}
-		}
-
-		public virtual bool MatchesFilter(string searchText)
-		{
-			if (string.IsNullOrWhiteSpace(searchText))
-				return true;
-			
-			return
-				Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1 ||
-				Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1;
-		}
-
-		public event EventHandler RefreshRequested;
-
-		protected void Refresh()
-		{
-			RefreshRequested?.Invoke(this, EventArgs.Empty);
-		}
+	protected void Refresh()
+	{
+		RefreshRequested?.Invoke(this, EventArgs.Empty);
 	}
 }

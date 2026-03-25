@@ -1,36 +1,35 @@
 ﻿using SkiaSharp;
 
-namespace SkiaSharpSample.Samples
+namespace SkiaSharpSample.Samples;
+
+public class BitmapShaderSample : SampleBase
 {
-	public class BitmapShaderSample : SampleBase
+	public BitmapShaderSample()
 	{
-		public BitmapShaderSample()
+	}
+
+	public override string Title => "Bitmap Shader";
+
+	public override string Category => SampleCategories.Shaders;
+
+	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
+	{
+		// load the image from the embedded resource stream
+		using (var stream = new SKManagedStream(SampleMedia.Images.ColorWheel))
+		using (var source = SKBitmap.Decode(stream))
 		{
-		}
+			var matrix = SKMatrix.CreateRotation(30.0f);
 
-		public override string Title => "Bitmap Shader";
-
-		public override string Category => SampleCategories.Shaders;
-
-		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
-		{
-			// load the image from the embedded resource stream
-			using (var stream = new SKManagedStream(SampleMedia.Images.ColorWheel))
-			using (var source = SKBitmap.Decode(stream))
+			// create the shader and paint
+			using (var shader = SKShader.CreateBitmap(source, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, matrix))
+			using (var paint = new SKPaint())
 			{
-				var matrix = SKMatrix.CreateRotation(30.0f);
+				paint.IsAntialias = true;
+				paint.Shader = shader;
 
-				// create the shader and paint
-				using (var shader = SKShader.CreateBitmap(source, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, matrix))
-				using (var paint = new SKPaint())
-				{
-					paint.IsAntialias = true;
-					paint.Shader = shader;
-
-					// tile the bitmap
-					canvas.Clear(SKColors.White);
-					canvas.DrawPaint(paint);
-				}
+				// tile the bitmap
+				canvas.Clear(SKColors.White);
+				canvas.DrawPaint(paint);
 			}
 		}
 	}

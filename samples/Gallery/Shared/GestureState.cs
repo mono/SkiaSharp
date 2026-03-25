@@ -1,10 +1,9 @@
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public enum GestureState
 {
-	public enum GestureState
-	{
-		Started,
-		Running,
-		Completed,
-		Canceled
-	}
+	Started,
+	Running,
+	Completed,
+	Canceled
 }
