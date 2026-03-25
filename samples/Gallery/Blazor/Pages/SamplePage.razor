@@ -24,7 +24,7 @@ else
         {
             <SKGLView @ref="glView"
                       OnPaintSurface="OnPaintGL"
-                      EnableRenderLoop="@(sample is AnimatedSampleBase)"
+                      EnableRenderLoop="@(sample is AnimatedSampleBase or AnimatedInteractiveSampleBase)"
                       style="width:100%;height:60vh;min-height:300px;display:block;" />
         }
         else
@@ -38,6 +38,12 @@ else
                           @onclick="OnClick" />
         }
     </div>
+
+    @if (sample is InteractiveSampleBase interactive)
+    {
+        <ControlPanel Controls="@interactive.Controls"
+                      OnChanged="@OnControlChanged" />
+    }
 }
 
 @code {
@@ -153,6 +159,14 @@ else
             sample.RefreshRequested -= OnRefreshRequested;
             sample.Destroy();
             sample = null;
+        }
+    }
+
+    private void OnControlChanged((string id, object value) args)
+    {
+        if (sample is InteractiveSampleBase interactive)
+        {
+            interactive.UpdateControl(args.id, args.value);
         }
     }
 
