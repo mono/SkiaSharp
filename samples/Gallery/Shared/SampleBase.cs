@@ -97,7 +97,7 @@ namespace SkiaSharpSample
 					break;
 				case GestureState.Running:
 					var canvasTranslation = SKMatrix.CreateTranslation(translation.X, translation.Y);
-					SKMatrix.Concat(ref Matrix, ref canvasTranslation, ref startPanMatrix);
+					SKMatrix.Concat(ref Matrix, canvasTranslation, startPanMatrix);
 					break;
 				default:
 					startPanMatrix = SKMatrix.Identity;
@@ -120,8 +120,8 @@ namespace SkiaSharpSample
 					var canvasTranslation = SKMatrix.CreateTranslation(pinchTranslation.X, pinchTranslation.Y);
 					var canvasScaling = SKMatrix.CreateScale(totalPinchScale, totalPinchScale, origin.X, origin.Y);
 					var canvasCombined = SKMatrix.Identity;
-					SKMatrix.Concat(ref canvasCombined, ref canvasScaling, ref canvasTranslation);
-					SKMatrix.Concat(ref Matrix, ref canvasCombined, ref startPinchMatrix);
+					SKMatrix.Concat(ref canvasCombined, canvasScaling, canvasTranslation);
+					SKMatrix.Concat(ref Matrix, canvasCombined, startPinchMatrix);
 					break;
 				default:
 					startPinchMatrix = SKMatrix.Identity;

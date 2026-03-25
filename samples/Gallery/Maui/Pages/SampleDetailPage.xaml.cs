@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;

@@ -6,7 +6,6 @@
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
-    <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
     <RootNamespace>SkiaSharpSample</RootNamespace>
   </PropertyGroup>
 
@@ -36,18 +35,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
-    <ProjectReference Include="..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
     <ProjectReference Include="..\..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Shared\Samples\*.cs" Link="Shared\Samples\%(Filename)%(Extension)" />
-    <Compile Include="..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
-    <EmbeddedResource Include="..\Shared\Media\*" Link="Resources\Media\%(Filename)%(Extension)" />
-    <EmbeddedResource Remove="..\Shared\Media\content-font.ttf" />
+    <ProjectReference Include="..\Shared\SkiaSharpSample.Shared.csproj" />
   </ItemGroup>
 
   <Import Project="..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />

@@ -23,7 +23,7 @@ namespace SkiaSharpSample.Samples
 
 			using (var stream = new SKManagedStream(SampleMedia.Images.Baboon))
 			using (var bitmap = SKBitmap.Decode(stream))
-			using (var filter = SKImageFilter.CreateMagnifier(SKRect.Create(small * 2, small * 2, small * 3, small * 3), small))
+			using (var filter = SKImageFilter.CreateMagnifier(SKRect.Create(small * 2, small * 2, small * 3, small * 3), small, small, SKSamplingOptions.Default))
 			using (var paint = new SKPaint())
 			{
 				paint.ImageFilter = filter;
