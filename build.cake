@@ -540,7 +540,8 @@ Task ("samples")
         : "samples";
     var solutions =
         GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
-        GetFiles ($"./output/{actualSamples}/**/*.slnf"))
+        GetFiles ($"./output/{actualSamples}/**/*.slnf")).Union (
+        GetFiles ($"./output/{actualSamples}/**/*.slnx"))
         .OrderBy (x => x.FullPath)
         .ToArray ();
 
@@ -565,7 +566,8 @@ Task ("samples")
                 // this is the main solution
                 var variants =
                     GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
-                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
+                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf")).Union (
+                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnx"));
                 if (!variants.Any ()) {
                     // there is no platform variant
                     BuildSample (sln, dryrun);
