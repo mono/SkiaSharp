@@ -74,16 +74,26 @@ public class ImageDecoderSample : InteractiveSampleBase
 
 		if (_subset)
 		{
-			var subsetWidth = info.Width / 2;
-			var subsetHeight = info.Height / 2;
+			// Decode full image then extract center 50%
+			using var fullBitmap = SKBitmap.Decode(codec);
+			if (fullBitmap == null)
+			{
+				DrawErrorText(canvas, width, height, "Failed to decode bitmap");
+				return;
+			}
+			var subsetWidth = Math.Max(1, info.Width / 2);
+			var subsetHeight = Math.Max(1, info.Height / 2);
 			var subsetLeft = (info.Width - subsetWidth) / 2;
 			var subsetTop = (info.Height - subsetHeight) / 2;
 			var subsetRect = new SKRectI(subsetLeft, subsetTop, subsetLeft + subsetWidth, subsetTop + subsetHeight);
 
-			var subsetInfo = new SKImageInfo(subsetWidth, subsetHeight, info.ColorType, info.AlphaType);
-			bitmap = new SKBitmap(subsetInfo);
-			var options = new SKCodecOptions(subsetRect);
-			codec.GetPixels(subsetInfo, bitmap.GetPixels(), options);
+			bitmap = new SKBitmap(subsetWidth, subsetHeight);
+			if (!fullBitmap.ExtractSubset(bitmap, subsetRect))
+			{
+				bitmap.Dispose();
+				DrawErrorText(canvas, width, height, "Failed to extract subset");
+				return;
+			}
 		}
 		else
 		{
@@ -99,11 +109,36 @@ public class ImageDecoderSample : InteractiveSampleBase
 		using (bitmap)
 		{
 			var destRect = CalculateDestRect(bitmap.Width, bitmap.Height, width, height);
+
+			// Draw checkered background for transparency
+			DrawCheckerboard(canvas, destRect);
+
 			canvas.DrawBitmap(bitmap, destRect);
 
 			if (_showInfo)
 				DrawMetadata(canvas, width, height, codec, info);
 		}
+	}
+
+	private static void DrawCheckerboard(SKCanvas canvas, SKRect rect)
+	{
+		var checkSize = 8f;
+		using var light = new SKPaint { Color = new SKColor(230, 230, 230) };
+		using var dark = new SKPaint { Color = SKColors.White };
+
+		canvas.Save();
+		canvas.ClipRect(rect);
+		for (var y = rect.Top; y < rect.Bottom; y += checkSize)
+		{
+			for (var x = rect.Left; x < rect.Right; x += checkSize)
+			{
+				var col = (int)((x - rect.Left) / checkSize);
+				var row = (int)((y - rect.Top) / checkSize);
+				var paint = (col + row) % 2 == 0 ? light : dark;
+				canvas.DrawRect(x, y, checkSize, checkSize, paint);
+			}
+		}
+		canvas.Restore();
 	}
 
 	private static SKRect CalculateDestRect(int bmpWidth, int bmpHeight, int canvasWidth, int canvasHeight)

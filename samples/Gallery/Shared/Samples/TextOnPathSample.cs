@@ -1,20 +1,19 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class TextOnPathSample : AnimatedInteractiveSampleBase
+public class TextOnPathSample : InteractiveSampleBase
 {
-	private float animationPhase;
 	private int pathShapeIndex;
 	private float textOffset;
 	private bool warpGlyphs = true;
-	private float textSize = 24f;
+	private float textSize = 36f;
+	private int textIndex;
 
 	private static readonly string[] PathShapes = { "Circle", "Wave", "Heart" };
+	private static readonly string[] TextOptions = { "SkiaSharp", "Hello World!", "Paths are fun!" };
 
 	public override string Title => "Text on Path";
 
@@ -22,8 +21,9 @@ public class TextOnPathSample : AnimatedInteractiveSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
+		new PickerControl("text", "Text", TextOptions, textIndex),
 		new PickerControl("path", "Path Shape", PathShapes, pathShapeIndex),
-		new SliderControl("offset", "Text Offset", 0, 1, textOffset, 0.01f),
+		new SliderControl("offset", "Offset", 0, 100, textOffset),
 		new ToggleControl("warp", "Warp Glyphs", warpGlyphs),
 		new SliderControl("textSize", "Text Size", 12, 60, textSize),
 	];
@@ -32,6 +32,9 @@ public class TextOnPathSample : AnimatedInteractiveSampleBase
 	{
 		switch (id)
 		{
+			case "text":
+				textIndex = (int)value;
+				break;
 			case "path":
 				pathShapeIndex = (int)value;
 				break;
@@ -47,14 +50,6 @@ public class TextOnPathSample : AnimatedInteractiveSampleBase
 		}
 	}
 
-	protected override async Task OnUpdate(CancellationToken token)
-	{
-		await Task.Delay(30, token);
-		animationPhase += 0.005f;
-		if (animationPhase > 1f)
-			animationPhase -= 1f;
-	}
-
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
 		canvas.Clear(SKColors.SkyBlue);
@@ -62,7 +57,7 @@ public class TextOnPathSample : AnimatedInteractiveSampleBase
 		var cx = width / 2f;
 		var cy = height / 2f;
 		var size = Math.Min(width, height) * 0.35f;
-		var text = "The quick brown fox jumps over the lazy dog!";
+		var text = TextOptions[textIndex];
 
 		using var path = pathShapeIndex switch
 		{
@@ -81,9 +76,9 @@ public class TextOnPathSample : AnimatedInteractiveSampleBase
 		};
 		canvas.DrawPath(path, pathPaint);
 
-		// Compute animated + manual offset
+		// Compute offset from slider (0-100 maps to 0-pathLength)
 		using var measure = new SKPathMeasure(path);
-		var totalOffset = (animationPhase + textOffset) * measure.Length;
+		var hOffset = textOffset / 100f * measure.Length;
 
 		// Draw text on the path
 		using var textPaint = new SKPaint
@@ -94,7 +89,7 @@ public class TextOnPathSample : AnimatedInteractiveSampleBase
 		};
 		using var font = new SKFont(SKTypeface.Default, textSize);
 
-		canvas.DrawTextOnPath(text, path, new SKPoint(totalOffset, 0), warpGlyphs, SKTextAlign.Left, font, textPaint);
+		canvas.DrawTextOnPath(text, path, new SKPoint(hOffset, 0), warpGlyphs, SKTextAlign.Left, font, textPaint);
 
 		// Draw labels
 		using var labelPaint = new SKPaint { IsAntialias = true, Color = SKColors.White };

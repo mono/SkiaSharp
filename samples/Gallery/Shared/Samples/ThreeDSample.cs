@@ -9,18 +9,22 @@ namespace SkiaSharpSample.Samples;
 public class ThreeDSample : AnimatedInteractiveSampleBase
 {
 	private SKMatrix44 rotationMatrix;
-	private int axisIndex;
-	private float speed = 5f;
+	private float speedX;
+	private float speedY = 5f;
+	private float speedZ;
+	private int projectionIndex;
 	private bool showShadow = true;
 
-	private static readonly string[] Axes = { "Y", "X", "Z", "XY" };
+	private static readonly string[] Projections = { "Orthographic", "Perspective" };
 
-	public override string Title => "3D Rotation (ortho)";
+	public override string Title => "3D Rotation";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new PickerControl("axis", "Rotation Axis", Axes, axisIndex),
-		new SliderControl("speed", "Speed (°/frame)", 1, 20, speed, 1),
+		new SliderControl("speedX", "X Axis Speed", -15, 15, speedX, 1),
+		new SliderControl("speedY", "Y Axis Speed", -15, 15, speedY, 1),
+		new SliderControl("speedZ", "Z Axis Speed", -15, 15, speedZ, 1),
+		new PickerControl("projection", "Projection", Projections, projectionIndex),
 		new ToggleControl("shadow", "Show Shadow", showShadow),
 	];
 
@@ -28,11 +32,17 @@ public class ThreeDSample : AnimatedInteractiveSampleBase
 	{
 		switch (id)
 		{
-			case "axis":
-				axisIndex = (int)value;
+			case "speedX":
+				speedX = (float)value;
 				break;
-			case "speed":
-				speed = (float)value;
+			case "speedY":
+				speedY = (float)value;
+				break;
+			case "speedZ":
+				speedZ = (float)value;
+				break;
+			case "projection":
+				projectionIndex = (int)value;
 				break;
 			case "shadow":
 				showShadow = (bool)value;
@@ -50,15 +60,12 @@ public class ThreeDSample : AnimatedInteractiveSampleBase
 	{
 		await Task.Delay(25, token);
 
-		var (rx, ry, rz) = axisIndex switch
+		var magnitude = MathF.Sqrt(speedX * speedX + speedY * speedY + speedZ * speedZ);
+		if (magnitude > 0.01f)
 		{
-			1 => (1f, 0f, 0f),
-			2 => (0f, 0f, 1f),
-			3 => (1f, 1f, 0f),
-			_ => (0f, 1f, 0f),
-		};
-		var step = SKMatrix44.CreateRotationDegrees(rx, ry, rz, speed);
-		rotationMatrix.PostConcat(step);
+			var step = SKMatrix44.CreateRotationDegrees(speedX / magnitude, speedY / magnitude, speedZ / magnitude, magnitude);
+			rotationMatrix.PostConcat(step);
+		}
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
@@ -69,6 +76,14 @@ public class ThreeDSample : AnimatedInteractiveSampleBase
 
 		canvas.Clear(SampleMedia.Colors.XamarinLightBlue);
 		canvas.Translate(width / 2, height / 2);
+
+		if (projectionIndex == 1)
+		{
+			// Perspective projection
+			var persp = SKMatrix.Identity;
+			persp.Persp2 = 1f / 800f;
+			canvas.Concat(ref persp);
+		}
 
 		var matrix = rotationMatrix.Matrix;
 		canvas.Concat(ref matrix);

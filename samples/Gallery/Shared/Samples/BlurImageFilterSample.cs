@@ -7,7 +7,6 @@ public class BlurImageFilterSample : InteractiveSampleBase
 {
 	private float sigmaX = 5f;
 	private float sigmaY = 5f;
-	private bool linkXY = true;
 
 	public override string Title => "Blur Image Filter";
 
@@ -17,7 +16,6 @@ public class BlurImageFilterSample : InteractiveSampleBase
 	[
 		new SliderControl("sigmaX", "Sigma X", 0, 50, sigmaX, 0.5f),
 		new SliderControl("sigmaY", "Sigma Y", 0, 50, sigmaY, 0.5f),
-		new ToggleControl("linkXY", "Link X/Y", linkXY),
 	];
 
 	protected override void OnControlChanged(string id, object value)
@@ -26,18 +24,9 @@ public class BlurImageFilterSample : InteractiveSampleBase
 		{
 			case "sigmaX":
 				sigmaX = (float)value;
-				if (linkXY)
-					sigmaY = sigmaX;
 				break;
 			case "sigmaY":
 				sigmaY = (float)value;
-				if (linkXY)
-					sigmaX = sigmaY;
-				break;
-			case "linkXY":
-				linkXY = (bool)value;
-				if (linkXY)
-					sigmaY = sigmaX;
 				break;
 		}
 	}

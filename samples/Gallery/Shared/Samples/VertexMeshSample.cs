@@ -50,47 +50,51 @@ public class VertexMeshSample : InteractiveSampleBase
 		var cellW = (width - margin * 2) / n;
 		var cellH = (height - margin * 2) / n;
 
-		// Generate vertices for each cell, triangulated
-		var vertexCount = n * n * 6; // 2 triangles per cell, 3 vertices each
+		// Build vertex grid: (n+1) x (n+1) shared vertices, indexed triangles
+		var rows = n + 1;
+		var cols = n + 1;
+		var vertexCount = rows * cols;
 		var vertices = new SKPoint[vertexCount];
 		var colors = new SKColor[vertexCount];
 
-		var idx = 0;
+		for (var row = 0; row < rows; row++)
+		{
+			for (var col = 0; col < cols; col++)
+			{
+				var idx = row * cols + col;
+				var px = (float)col / n;
+				var py = (float)row / n;
+				vertices[idx] = new SKPoint(margin + col * cellW, margin + row * cellH);
+				colors[idx] = GetVertexColor(px, py, 0);
+			}
+		}
+
+		// Two triangles per cell
+		var indexCount = n * n * 6;
+		var indices = new ushort[indexCount];
+		var ii = 0;
 		for (var row = 0; row < n; row++)
 		{
 			for (var col = 0; col < n; col++)
 			{
-				var x0 = margin + col * cellW;
-				var y0 = margin + row * cellH;
-				var x1 = x0 + cellW;
-				var y1 = y0 + cellH;
+				var tl = (ushort)(row * cols + col);
+				var tr = (ushort)(tl + 1);
+				var bl = (ushort)((row + 1) * cols + col);
+				var br = (ushort)(bl + 1);
 
-				// Triangle 1: top-left, top-right, bottom-left
-				vertices[idx] = new SKPoint(x0, y0);
-				vertices[idx + 1] = new SKPoint(x1, y0);
-				vertices[idx + 2] = new SKPoint(x0, y1);
+				indices[ii++] = tl;
+				indices[ii++] = tr;
+				indices[ii++] = bl;
 
-				// Triangle 2: top-right, bottom-right, bottom-left
-				vertices[idx + 3] = new SKPoint(x1, y0);
-				vertices[idx + 4] = new SKPoint(x1, y1);
-				vertices[idx + 5] = new SKPoint(x0, y1);
-
-				// Assign colors
-				for (var v = 0; v < 6; v++)
-				{
-					var t = (float)(row * n + col) / (n * n);
-					var vi = idx + v;
-					var px = (vertices[vi].X - margin) / (width - margin * 2);
-					var py = (vertices[vi].Y - margin) / (height - margin * 2);
-					colors[vi] = GetVertexColor(px, py, t);
-				}
-
-				idx += 6;
+				indices[ii++] = tr;
+				indices[ii++] = br;
+				indices[ii++] = bl;
 			}
 		}
 
 		using var paint = new SKPaint { IsAntialias = true };
-		canvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);
+		using var verts = SKVertices.CreateCopy(SKVertexMode.Triangles, vertices, null, colors, indices);
+		canvas.DrawVertices(verts, SKBlendMode.Dst, paint);
 
 		if (wireframe)
 		{
@@ -102,12 +106,12 @@ public class VertexMeshSample : InteractiveSampleBase
 				StrokeWidth = 1,
 			};
 
-			for (var i = 0; i < vertexCount; i += 3)
+			for (var i = 0; i < indices.Length; i += 3)
 			{
 				using var triPath = new SKPath();
-				triPath.MoveTo(vertices[i]);
-				triPath.LineTo(vertices[i + 1]);
-				triPath.LineTo(vertices[i + 2]);
+				triPath.MoveTo(vertices[indices[i]]);
+				triPath.LineTo(vertices[indices[i + 1]]);
+				triPath.LineTo(vertices[indices[i + 2]]);
 				triPath.Close();
 				canvas.DrawPath(triPath, wirePaint);
 			}

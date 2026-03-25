@@ -11,8 +11,10 @@ public class TextLabSample : InteractiveSampleBase
 	private bool showBounds;
 	private bool showMetrics;
 	private bool stroke;
+	private int textIndex;
 
 	private static readonly string[] AlignOptions = { "Left", "Center", "Right" };
+	private static readonly string[] TextOptions = { "SkiaSharp", "Hello World!", "The Quick Brown Fox", "0123456789", "AaBbCcDd" };
 
 	public override string Title => "Text Lab";
 
@@ -23,6 +25,7 @@ public class TextLabSample : InteractiveSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
+		new PickerControl("text", "Text", TextOptions, textIndex),
 		new PickerControl("align", "Alignment", AlignOptions, alignIndex),
 		new SliderControl("textSize", "Text Size", 12, 120, textSize),
 		new ToggleControl("showBounds", "Show Bounds", showBounds),
@@ -34,6 +37,7 @@ public class TextLabSample : InteractiveSampleBase
 	{
 		switch (id)
 		{
+			case "text": textIndex = (int)value; break;
 			case "align": alignIndex = (int)value; break;
 			case "textSize": textSize = (float)value; break;
 			case "showBounds": showBounds = (bool)value; break;
@@ -46,7 +50,7 @@ public class TextLabSample : InteractiveSampleBase
 	{
 		canvas.Clear(SKColors.White);
 
-		const string text = "SkiaSharp";
+		var text = TextOptions[textIndex];
 		var textAlign = alignIndex switch
 		{
 			0 => SKTextAlign.Left,

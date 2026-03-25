@@ -8,7 +8,7 @@
             <div class="mb-2">
                 @if (control is SliderControl slider)
                 {
-                    <label class="form-label mb-0 small">@slider.Label: <strong>@GetSliderValue(slider.Id, slider.Value).ToString("F1")</strong></label>
+                    <label class="form-label mb-0 small">@slider.Label: <strong>@FormatSliderValue(GetSliderValue(slider.Id, slider.Value))</strong></label>
                     <input type="range" class="form-range"
                            min="@slider.Min" max="@slider.Max"
                            step="@(slider.Step > 0 ? slider.Step : (slider.Max - slider.Min) / 100f)"
@@ -46,6 +46,13 @@
     [Parameter] public EventCallback<(string id, object value)> OnChanged { get; set; }
 
     private readonly Dictionary<string, object> values = new();
+
+    private static string FormatSliderValue(float value)
+    {
+        if (MathF.Abs(value) < 1f && value != 0f)
+            return value.ToString("F3");
+        return value.ToString("F1");
+    }
 
     private float GetSliderValue(string id, float defaultValue) =>
         values.TryGetValue(id, out var v) ? (float)v : defaultValue;

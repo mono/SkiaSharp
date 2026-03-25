@@ -12,6 +12,7 @@ public class DrawingCanvasSample : InteractiveSampleBase
 	private bool eraser;
 
 	private SKPoint panStart;
+	private SKPoint lastPoint;
 	private SKPath? currentPath;
 	private readonly List<SKPath> paths = new();
 	private readonly List<SKColor> colors = new();
@@ -50,32 +51,38 @@ public class DrawingCanvasSample : InteractiveSampleBase
 
 	public override void Pan(GestureState state, SKPoint translation)
 	{
-		// Do NOT call base.Pan — this sample manages its own input
+		// Do NOT call base.Pan — this sample manages its own input.
+		// Blazor dispatches: Started = absolute position, Running = cumulative delta from start.
 		switch (state)
 		{
 			case GestureState.Started:
-				// In Blazor, Started receives the absolute pointer position
 				panStart = translation;
+				lastPoint = panStart;
 				currentPath = new SKPath();
 				currentPath.MoveTo(panStart);
 				paths.Add(currentPath);
 				colors.Add(eraser ? SKColors.White : ColorValues[colorIndex]);
 				sizes.Add(brushSize);
+				Refresh();
 				break;
 
 			case GestureState.Running:
 				if (currentPath != null)
 				{
-					// Running receives offset from start, so current = start + offset
 					var point = new SKPoint(panStart.X + translation.X, panStart.Y + translation.Y);
-					currentPath.LineTo(point);
-					Refresh();
+					if (SKPoint.Distance(point, lastPoint) > 0.5f)
+					{
+						currentPath.LineTo(point);
+						lastPoint = point;
+						Refresh();
+					}
 				}
 				break;
 
 			case GestureState.Completed:
 			case GestureState.Canceled:
 				currentPath = null;
+				Refresh();
 				break;
 		}
 	}

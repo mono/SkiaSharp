@@ -72,7 +72,7 @@ public class CanvasTransformsSample : InteractiveSampleBase
 		canvas.Scale(scaleX, scaleY);
 
 		// Draw a colored rounded rectangle centered at origin
-		var rectSize = Math.Min(width, height) * 0.25f;
+		var rectSize = Math.Min(width, height) * 0.3f;
 		var rect = new SKRect(-rectSize, -rectSize, rectSize, rectSize);
 
 		using var fillPaint = new SKPaint
@@ -136,23 +136,53 @@ public class CanvasTransformsSample : InteractiveSampleBase
 
 	private void DrawMatrixInfo(SKCanvas canvas)
 	{
+		// Build the combined transform matrix
+		var rad = rotate * MathF.PI / 180f;
+		var cos = MathF.Cos(rad);
+		var sin = MathF.Sin(rad);
+
+		// The actual matrix: Translate(cx+tx,cy+ty) * Rotate * Scale
+		var m = SKMatrix.Identity;
+		m.ScaleX = scaleX * cos;
+		m.SkewX = -scaleY * sin;
+		m.TransX = translateX + canvas.DeviceClipBounds.Width / 2f;
+		m.SkewY = scaleX * sin;
+		m.ScaleY = scaleY * cos;
+		m.TransY = translateY + canvas.DeviceClipBounds.Height / 2f;
+
+		var boxW = 230f;
+		var boxH = 100f;
+
 		using var bgPaint = new SKPaint
 		{
 			Style = SKPaintStyle.Fill,
-			Color = new SKColor(0, 0, 0, 160),
+			Color = new SKColor(0, 0, 0, 180),
 		};
-		canvas.DrawRect(5, 5, 190, 80, bgPaint);
+		canvas.DrawRoundRect(new SKRoundRect(new SKRect(5, 5, 5 + boxW, 5 + boxH), 6, 6), bgPaint);
 
 		using var textPaint = new SKPaint
 		{
 			IsAntialias = true,
 			Color = SKColors.White,
 		};
-		using var font = new SKFont(SKTypeface.Default, 12);
+		using var font = new SKFont(SKTypeface.Default, 14);
+		using var headerFont = new SKFont(SKTypeface.Default, 13);
 
-		canvas.DrawText($"Translate: ({translateX:F0}, {translateY:F0})", 10, 22, font, textPaint);
-		canvas.DrawText($"Rotate: {rotate:F1}°", 10, 40, font, textPaint);
-		canvas.DrawText($"Scale: ({scaleX:F1}, {scaleY:F1})", 10, 58, font, textPaint);
-		canvas.DrawText($"Matrix: [{scaleX * MathF.Cos(rotate * MathF.PI / 180):F2}, ...]", 10, 76, font, textPaint);
+		canvas.DrawText("Transform Matrix:", 10, 22, headerFont, textPaint);
+
+		var vals = new[]
+		{
+			m.ScaleX, m.SkewX, m.TransX,
+			m.SkewY, m.ScaleY, m.TransY,
+			m.Persp0, m.Persp1, m.Persp2,
+		};
+
+		var startY = 40f;
+		var lineH = 20f;
+		for (var row = 0; row < 3; row++)
+		{
+			var line = $"│ {vals[row * 3]:F2,8}  {vals[row * 3 + 1]:F2,8}  {vals[row * 3 + 2]:F2,8} │";
+			canvas.DrawText(line, 12, startY + row * lineH, font, textPaint);
+		}
 	}
 }

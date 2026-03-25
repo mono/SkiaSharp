@@ -7,13 +7,11 @@ namespace SkiaSharpSample.Samples;
 public class PathBuilderSample : InteractiveSampleBase
 {
 	private int shapeIndex;
-	private float points = 7f;
-	private float innerRadius = 0.4f;
 	private bool showBounds;
 	private bool showTightBounds;
 	private int fillIndex;
 
-	private static readonly string[] ShapeNames = { "Star", "Polygon", "Spiral" };
+	private static readonly string[] ShapeNames = { "Star", "Bezier Curve", "Spiral" };
 	private static readonly string[] FillNames = { "Winding", "EvenOdd" };
 
 	public override string Title => "Path Builder";
@@ -25,8 +23,6 @@ public class PathBuilderSample : InteractiveSampleBase
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("shape", "Shape", ShapeNames, shapeIndex),
-		new SliderControl("points", "Points", 3, 12, points, 1),
-		new SliderControl("innerRadius", "Inner Radius", 0.1f, 0.9f, innerRadius, 0.05f),
 		new ToggleControl("showBounds", "Show Bounds", showBounds),
 		new ToggleControl("showTightBounds", "Show Tight Bounds", showTightBounds),
 		new PickerControl("fill", "Fill Rule", FillNames, fillIndex),
@@ -38,12 +34,6 @@ public class PathBuilderSample : InteractiveSampleBase
 		{
 			case "shape":
 				shapeIndex = (int)value;
-				break;
-			case "points":
-				points = (float)value;
-				break;
-			case "innerRadius":
-				innerRadius = (float)value;
 				break;
 			case "showBounds":
 				showBounds = (bool)value;
@@ -64,13 +54,12 @@ public class PathBuilderSample : InteractiveSampleBase
 		var cx = width / 2f;
 		var cy = height / 2f;
 		var radius = Math.Min(width, height) * 0.35f;
-		var n = (int)points;
 
 		using var path = shapeIndex switch
 		{
-			1 => CreatePolygon(cx, cy, radius, n),
-			2 => CreateSpiral(cx, cy, radius, n),
-			_ => CreateStar(cx, cy, radius, innerRadius, n),
+			1 => CreateBezierCurve(cx, cy, radius),
+			2 => CreateSpiral(cx, cy, radius, 7),
+			_ => CreateStar(cx, cy, radius, 0.4f, 7),
 		};
 
 		path.FillType = fillIndex == 1 ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
@@ -143,21 +132,28 @@ public class PathBuilderSample : InteractiveSampleBase
 		return path;
 	}
 
-	private static SKPath CreatePolygon(float cx, float cy, float radius, int n)
+	private static SKPath CreateBezierCurve(float cx, float cy, float radius)
 	{
+		// A shape where control points extend well beyond the path,
+		// creating a clear difference between bounds and tight bounds.
 		var path = new SKPath();
+		var r = radius * 0.6f;
+		var cpExtend = radius * 1.4f;
 
-		for (var i = 0; i < n; i++)
-		{
-			var angle = (float)(Math.PI * 2 * i / n - Math.PI / 2);
-			var x = cx + radius * MathF.Cos(angle);
-			var y = cy + radius * MathF.Sin(angle);
+		// Start at top
+		path.MoveTo(cx, cy - r);
 
-			if (i == 0)
-				path.MoveTo(x, y);
-			else
-				path.LineTo(x, y);
-		}
+		// Right curve with control points extending far right
+		path.CubicTo(
+			cx + cpExtend, cy - cpExtend,
+			cx + cpExtend, cy + cpExtend,
+			cx, cy + r);
+
+		// Left curve with control points extending far left
+		path.CubicTo(
+			cx - cpExtend, cy + cpExtend,
+			cx - cpExtend, cy - cpExtend,
+			cx, cy - r);
 
 		path.Close();
 		return path;

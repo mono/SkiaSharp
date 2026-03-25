@@ -10,7 +10,7 @@ public class VectorArtSample : InteractiveSampleBase
 	private float _scale = 1f;
 	private int _themeIndex;
 
-	private static readonly string[] Themes = { "Original", "Mono", "Neon", "Dark" };
+	private static readonly string[] Themes = { "Original", "Mono", "Neon", "Midnight" };
 
 	public override string Title => "Vector Art";
 
@@ -46,8 +46,8 @@ public class VectorArtSample : InteractiveSampleBase
 		var (bgColor, outerColor, innerColor) = _themeIndex switch
 		{
 			1 => (SKColors.White, new SKColor(0xFF888888), SKColors.White),
-			2 => (new SKColor(0xFF1A1A2E), new SKColor(0xFF00FF41), new SKColor(0xFF39FF14)),
-			3 => (SKColors.Black, new SKColor(0xFF4B0082), new SKColor(0xFF2E0854)),
+			2 => (new SKColor(0xFF1A1A2E), new SKColor(0xFF00FF41), new SKColor(0xFFFF00FF)),
+			3 => (new SKColor(0xFF0D0D1A), new SKColor(0xFF7B2FBE), new SKColor(0xFFE040FB)),
 			_ => (SKColors.White, SampleMedia.Colors.XamarinDarkBlue, SKColors.White),
 		};
 
