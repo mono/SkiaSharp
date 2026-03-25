@@ -1,4 +1,4 @@
-﻿@page "/sample/{sampleTitle}"
+@page "/sample/{sampleTitle}"
 @implements IDisposable
 
 <PageTitle>@(sample?.Title ?? "Sample") — SkiaSharp Gallery</PageTitle>
@@ -19,12 +19,12 @@ else
         <p class="text-muted">@sample.Description</p>
     }
 
-    <div class="canvas-wrapper border rounded">
-        @if (sample is AnimatedSampleBase)
+    <div class="canvas-wrapper border rounded mb-0">
+        @if (useGpu)
         {
             <SKGLView @ref="glView"
                       OnPaintSurface="OnPaintGL"
-                      EnableRenderLoop="true"
+                      EnableRenderLoop="@(sample is AnimatedSampleBase)"
                       IgnorePixelScaling="true"
                       style="width:100%;height:500px;display:block;" />
         }
@@ -41,15 +41,24 @@ else
         }
     </div>
 
-    <div class="mt-2 d-flex gap-2">
+    <!-- Backend toggle + controls -->
+    <div class="d-flex align-items-center gap-2 backend-bar px-2 py-1 border border-top-0 rounded-bottom mb-3">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Rendering backend">
+            <button type="button"
+                    class="btn @(useGpu ? "btn-outline-primary" : "btn-primary")"
+                    @onclick="() => SetBackend(false)"
+                    disabled="@(!sample.SupportedBackends.HasFlag(SampleBackends.Memory))">
+                CPU (Raster)
+            </button>
+            <button type="button"
+                    class="btn @(useGpu ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => SetBackend(true)"
+                    disabled="@(!sample.SupportedBackends.HasFlag(SampleBackends.OpenGL))">
+                GPU (OpenGL)
+            </button>
+        </div>
         <button class="btn btn-sm btn-outline-secondary" @onclick="OnResetMatrix">Reset View</button>
-        <span class="text-muted small align-self-center">
-            Tip: Click to interact, drag to pan.
-        </span>
-    </div>
-
-    <div class="mt-2 text-muted small">
-        Backend: @(sample is AnimatedSampleBase ? "GPU (WebGL)" : "Raster (CPU)")
+        <span class="text-muted small ms-auto">Click to interact · drag to pan</span>
     </div>
 }
 
@@ -60,13 +69,13 @@ else
     private SampleBase? sample;
     private SKCanvasView? canvasView;
     private SKGLView? glView;
+    private bool useGpu;
 
     private SKPoint? lastPointerDown;
     private SKPoint panStartPoint;
 
     protected override void OnParametersSet()
     {
-        // Clean up old sample
         DisposeSample();
 
         var title = Uri.UnescapeDataString(SampleTitle ?? string.Empty);
@@ -74,15 +83,32 @@ else
 
         if (sample is not null)
         {
+            // Use GPU only if the CPU (Memory) backend is not supported
+            useGpu = !sample.SupportedBackends.HasFlag(SampleBackends.Memory);
+
             sample.RefreshRequested += OnRefreshRequested;
             sample.Init();
         }
     }
 
+    private void SetBackend(bool gpu)
+    {
+        useGpu = gpu;
+        // Re-render, then invalidate whichever view is now mounted
+        InvokeAsync(async () =>
+        {
+            StateHasChanged();
+            await Task.Yield();
+            canvasView?.Invalidate();
+            glView?.Invalidate();
+        });
+    }
+
     private void OnRefreshRequested(object? sender, EventArgs e)
     {
-        canvasView?.Invalidate();
-        // SKGLView with EnableRenderLoop handles its own refresh
+        if (!useGpu)
+            canvasView?.Invalidate();
+        // SKGLView with EnableRenderLoop handles animated refresh automatically
     }
 
     private void OnPaintRaster(SKPaintSurfaceEventArgs e)
@@ -132,6 +158,7 @@ else
     {
         sample?.ResetMatrix();
         canvasView?.Invalidate();
+        glView?.Invalidate();
     }
 
     private void DisposeSample()

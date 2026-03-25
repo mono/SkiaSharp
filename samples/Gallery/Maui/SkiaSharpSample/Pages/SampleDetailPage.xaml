@@ -9,35 +9,76 @@
         <ToolbarItem Text="⟳" Clicked="OnResetMatrixClicked" />
     </ContentPage.ToolbarItems>
 
-    <Grid>
+    <Grid RowDefinitions="*,Auto">
 
-        <skia:SKCanvasView x:Name="skiaView"
-                           PaintSurface="OnPaintSurface"
+        <!-- Canvas area: both views stacked, toggle visibility -->
+        <Grid Grid.Row="0">
+
+            <skia:SKCanvasView x:Name="skiaView"
+                               PaintSurface="OnPaintSurface"
+                               EnableTouchEvents="False"
+                               IgnorePixelScaling="False"
+                               IsVisible="True" />
+
+            <skia:SKGLView x:Name="skiaGLView"
+                           PaintSurface="OnPaintGLSurface"
                            EnableTouchEvents="False"
-                           IgnorePixelScaling="False" />
+                           IgnorePixelScaling="False"
+                           HasRenderLoop="False"
+                           IsVisible="False" />
 
-        <!-- Gesture recognizers layered on top -->
-        <Grid.GestureRecognizers>
-            <TapGestureRecognizer Tapped="OnTapSample" />
-            <PanGestureRecognizer PanUpdated="OnPanSample" />
-            <PinchGestureRecognizer PinchUpdated="OnPinchSample" />
-        </Grid.GestureRecognizers>
+            <!-- Gesture recognizers layered on top -->
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnTapSample" />
+                <PanGestureRecognizer PanUpdated="OnPanSample" />
+                <PinchGestureRecognizer PinchUpdated="OnPinchSample" />
+            </Grid.GestureRecognizers>
 
-        <!-- Overlay info badge -->
-        <Frame x:Name="infoOverlay"
-               HorizontalOptions="Start"
-               VerticalOptions="End"
-               Margin="8"
-               Padding="8,4"
-               BackgroundColor="#88000000"
-               CornerRadius="4"
-               BorderColor="Transparent"
-               IsVisible="False">
-            <Label x:Name="infoLabel"
-                   TextColor="White"
-                   FontSize="10"
-                   LineBreakMode="NoWrap" />
-        </Frame>
+            <!-- Overlay info badge (bottom-left) -->
+            <Frame x:Name="infoOverlay"
+                   HorizontalOptions="Start"
+                   VerticalOptions="End"
+                   Margin="8"
+                   Padding="8,4"
+                   BackgroundColor="#88000000"
+                   CornerRadius="4"
+                   BorderColor="Transparent"
+                   IsVisible="False">
+                <Label x:Name="infoLabel"
+                       TextColor="White"
+                       FontSize="10"
+                       LineBreakMode="NoWrap" />
+            </Frame>
+
+        </Grid>
+
+        <!-- Backend toggle bar -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*"
+              BackgroundColor="{StaticResource PrimaryColor}"
+              HeightRequest="44">
+
+            <Button Grid.Column="0"
+                    x:Name="cpuButton"
+                    Text="CPU (Raster)"
+                    FontSize="13"
+                    Clicked="OnCpuBackendClicked"
+                    BackgroundColor="{StaticResource AccentColor}"
+                    TextColor="White"
+                    CornerRadius="0"
+                    BorderWidth="0" />
+
+            <Button Grid.Column="1"
+                    x:Name="gpuButton"
+                    Text="GPU (OpenGL)"
+                    FontSize="13"
+                    Clicked="OnGpuBackendClicked"
+                    BackgroundColor="Transparent"
+                    TextColor="#aaaaaa"
+                    CornerRadius="0"
+                    BorderWidth="0" />
+
+        </Grid>
 
     </Grid>
 
