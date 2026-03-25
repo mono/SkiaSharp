@@ -130,6 +130,14 @@ Companion PR:       N findings
 Risk:               HIGH/MEDIUM/LOW
 ```
 
+After presenting the summary, ask the user if they'd like to open the HTML report in their browser
+to review the full contents (diffs, recommendations, dependency table, etc.). If yes:
+
+```bash
+open output/ai/repos/mono-skia/ai-review/{pr_number}.html  # macOS
+# or: xdg-open ... (Linux) / start ... (Windows)
+```
+
 ---
 
 ## Rules
