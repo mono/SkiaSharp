@@ -4,7 +4,7 @@ using SkiaSharp;
 
 namespace SkiaSharpSample;
 
-public abstract class DocumentSampleBase : SampleBase
+public abstract class DocumentSampleBase : InteractiveSampleBase
 {
 	protected string DocumentPath { get; set; }
 

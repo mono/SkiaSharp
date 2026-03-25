@@ -86,7 +86,7 @@ public abstract class SampleBase
 	{
 	}
 
-	public void Pan(GestureState state, SKPoint translation)
+	public virtual void Pan(GestureState state, SKPoint translation)
 	{
 		switch (state)
 		{

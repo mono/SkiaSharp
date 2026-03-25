@@ -1,0 +1,170 @@
+using System;
+using System.IO;
+using SkiaSharp;
+using SkiaSharpSample.Controls;
+
+namespace SkiaSharpSample.Samples;
+
+public class ImageDecoderSample : InteractiveSampleBase
+{
+	private int _imageIndex;
+	private bool _showInfo;
+	private bool _subset;
+
+	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "DNG", "WebP" };
+
+	public override string Title => "Image Decoder";
+
+	public override string Description => "Decode images in various formats and inspect codec metadata.";
+
+	public override string Category => SampleCategories.BitmapDecoding;
+
+	public override IReadOnlyList<SampleControl> Controls =>
+	[
+		new PickerControl("image", "Image Source", ImageSources, _imageIndex),
+		new ToggleControl("showInfo", "Show Metadata", _showInfo),
+		new ToggleControl("subset", "Decode Subset", _subset),
+	];
+
+	protected override void OnControlChanged(string id, object value)
+	{
+		switch (id)
+		{
+			case "image":
+				_imageIndex = (int)value;
+				break;
+			case "showInfo":
+				_showInfo = (bool)value;
+				break;
+			case "subset":
+				_subset = (bool)value;
+				break;
+		}
+	}
+
+	private Stream GetImageStream() => _imageIndex switch
+	{
+		1 => SampleMedia.Images.ColorWheel,
+		2 => SampleMedia.Images.AdobeDng,
+		3 => SampleMedia.Images.BabyTux,
+		_ => SampleMedia.Images.Baboon,
+	};
+
+	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
+	{
+		canvas.Clear(SKColors.White);
+
+		using var stream = GetImageStream();
+		if (stream == null)
+		{
+			DrawErrorText(canvas, width, height, "Image not available");
+			return;
+		}
+
+		using var data = SKData.Create(stream);
+		using var codec = SKCodec.Create(data);
+		if (codec == null)
+		{
+			DrawErrorText(canvas, width, height, "Unable to decode image");
+			return;
+		}
+
+		var info = codec.Info;
+		SKBitmap bitmap;
+
+		if (_subset)
+		{
+			var subsetWidth = info.Width / 2;
+			var subsetHeight = info.Height / 2;
+			var subsetLeft = (info.Width - subsetWidth) / 2;
+			var subsetTop = (info.Height - subsetHeight) / 2;
+			var subsetRect = new SKRectI(subsetLeft, subsetTop, subsetLeft + subsetWidth, subsetTop + subsetHeight);
+
+			var subsetInfo = new SKImageInfo(subsetWidth, subsetHeight, info.ColorType, info.AlphaType);
+			bitmap = new SKBitmap(subsetInfo);
+			var options = new SKCodecOptions(subsetRect);
+			codec.GetPixels(subsetInfo, bitmap.GetPixels(), options);
+		}
+		else
+		{
+			bitmap = SKBitmap.Decode(codec);
+		}
+
+		if (bitmap == null)
+		{
+			DrawErrorText(canvas, width, height, "Failed to decode bitmap");
+			return;
+		}
+
+		using (bitmap)
+		{
+			var destRect = CalculateDestRect(bitmap.Width, bitmap.Height, width, height);
+			canvas.DrawBitmap(bitmap, destRect);
+
+			if (_showInfo)
+				DrawMetadata(canvas, width, height, codec, info);
+		}
+	}
+
+	private static SKRect CalculateDestRect(int bmpWidth, int bmpHeight, int canvasWidth, int canvasHeight)
+	{
+		var padding = 10f;
+		var availWidth = canvasWidth - padding * 2;
+		var availHeight = canvasHeight - padding * 2;
+		var scale = Math.Min(availWidth / bmpWidth, availHeight / bmpHeight);
+		var dw = bmpWidth * scale;
+		var dh = bmpHeight * scale;
+		return new SKRect(
+			(canvasWidth - dw) / 2f,
+			(canvasHeight - dh) / 2f,
+			(canvasWidth + dw) / 2f,
+			(canvasHeight + dh) / 2f);
+	}
+
+	private static void DrawMetadata(SKCanvas canvas, int width, int height, SKCodec codec, SKImageInfo info)
+	{
+		var lines = new[]
+		{
+			$"Format: {codec.EncodedFormat}",
+			$"Dimensions: {info.Width} × {info.Height}",
+			$"Color Type: {info.ColorType}",
+			$"Alpha Type: {info.AlphaType}",
+		};
+
+		using var bgPaint = new SKPaint
+		{
+			Color = new SKColor(0, 0, 0, 180),
+			Style = SKPaintStyle.Fill,
+		};
+		using var textPaint = new SKPaint
+		{
+			Color = SKColors.White,
+			TextSize = Math.Max(14f, height / 30f),
+			IsAntialias = true,
+		};
+
+		var lineHeight = textPaint.TextSize * 1.4f;
+		var boxHeight = lineHeight * lines.Length + 20;
+		var boxTop = height - boxHeight;
+		canvas.DrawRect(0, boxTop, width, boxHeight, bgPaint);
+
+		var y = boxTop + lineHeight;
+		foreach (var line in lines)
+		{
+			canvas.DrawText(line, 12, y, textPaint);
+			y += lineHeight;
+		}
+	}
+
+	private static void DrawErrorText(SKCanvas canvas, int width, int height, string message)
+	{
+		using var paint = new SKPaint
+		{
+			Color = SKColors.Red,
+			TextSize = 24,
+			IsAntialias = true,
+			TextAlign = SKTextAlign.Center,
+		};
+		canvas.DrawText(message, width / 2f, height / 2f, paint);
+	}
+}
