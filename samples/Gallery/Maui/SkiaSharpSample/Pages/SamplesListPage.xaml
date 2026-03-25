@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:SkiaSharpSample"
+             x:Class="SkiaSharpSample.Pages.SamplesListPage"
+             Title="SkiaSharp Gallery">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="▶ Play" Clicked="OnCycleSamplesClicked" x:Name="cycleButton" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <SearchBar x:Name="searchBar"
+                   Grid.Row="0"
+                   Placeholder="Search samples..."
+                   TextChanged="OnSearchTextChanged"
+                   BackgroundColor="{StaticResource BackgroundColor}" />
+
+        <CollectionView x:Name="samplesCollectionView"
+                        Grid.Row="1"
+                        ItemsSource="{Binding Groups}"
+                        IsGrouped="True"
+                        SelectionMode="Single"
+                        SelectionChanged="OnSampleSelected"
+                        BackgroundColor="{StaticResource BackgroundColor}">
+
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate>
+                    <Grid Padding="16,12,16,4">
+                        <Label Text="{Binding Name}"
+                               FontAttributes="Bold"
+                               FontSize="12"
+                               TextColor="{StaticResource AccentColor}"
+                               TextTransform="Uppercase"
+                               LetterSpacing="1" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="local:SampleBase">
+                    <Grid Padding="32,10,16,10" ColumnDefinitions="*,Auto"
+                          BackgroundColor="{StaticResource SurfaceColor}">
+                        <Label Grid.Column="0"
+                               Text="{Binding Title}"
+                               FontSize="14"
+                               TextColor="{StaticResource TextColor}"
+                               VerticalOptions="Center" />
+                        <Label Grid.Column="1"
+                               Text="›"
+                               FontSize="18"
+                               TextColor="{StaticResource SecondaryTextColor}"
+                               VerticalOptions="Center" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>

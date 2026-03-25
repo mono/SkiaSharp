@@ -1,0 +1,76 @@
+﻿@using System.Text.RegularExpressions
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">SkiaSharp Gallery</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <input class="form-control form-control-sm mt-2 mb-1" type="search"
+                   placeholder="Search samples…"
+                   @bind="searchText"
+                   @bind:event="oninput" />
+        </div>
+
+        @foreach (var group in GetFilteredGroups())
+        {
+            <div class="nav-category px-3 pt-2">
+                <span class="nav-category-label">@group.Name</span>
+            </div>
+            @foreach (var sample in group.Samples)
+            {
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link nav-sample-link"
+                             href="@($"sample/{Uri.EscapeDataString(sample.Title)}")">
+                        @sample.Title
+                    </NavLink>
+                </div>
+            }
+        }
+
+    </nav>
+</div>
+
+@code {
+    private static readonly Regex EnumSplitRegex = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])");
+
+    private bool collapseNavMenu = true;
+    private string searchText = string.Empty;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private IEnumerable<SampleGroup> GetFilteredGroups()
+    {
+        var samples = SamplesManager.GetSamples(SamplePlatforms.Blazor);
+        var filtered = samples.Where(s => s.MatchesFilter(searchText));
+
+        return Enum.GetValues<SampleCategories>()
+            .Cast<SampleCategories>()
+            .Select(c => new SampleGroup(c, filtered.Where(s => s.Category.HasFlag(c)).OrderBy(s => s.Title)))
+            .Where(g => g.Samples.Any())
+            .OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name);
+    }
+
+    private record SampleGroup(SampleCategories Category, IEnumerable<SampleBase> Samples)
+    {
+        public string Name => Regex.Replace(Category.ToString(), "(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])", " $1");
+    }
+}

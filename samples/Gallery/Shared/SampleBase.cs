@@ -79,6 +79,11 @@ namespace SkiaSharpSample
 			}
 		}
 
+		public void ResetMatrix()
+		{
+			Matrix = SKMatrix.Identity;
+		}
+
 		protected virtual void OnTapped()
 		{
 		}

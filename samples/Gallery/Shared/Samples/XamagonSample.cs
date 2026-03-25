@@ -10,12 +10,15 @@ namespace SkiaSharpSample.Samples
 		{
 		}
 
-		public override string Title => "\"Xamagon\"";
+		public override string Title => "Complex Paths";
+
+		public override string Description => "Demonstrates drawing complex filled paths using cubic Bezier curves, showcasing path construction and rendering.";
 
 		public override SampleCategories Category => SampleCategories.Paths | SampleCategories.Showcases;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{
+			// Original design coordinates:
 			// Width 41.6587026 => 144.34135
 			// Height 56 => 147
 
@@ -43,6 +46,7 @@ namespace SkiaSharpSample.Samples
 
 				canvas.DrawPaint(paint);
 
+				// Outer hexagon shape using cubic Bezier curves
 				using (var path = new SKPath())
 				{
 					path.MoveTo(71.4311121f, 56f);
@@ -64,6 +68,7 @@ namespace SkiaSharpSample.Samples
 					canvas.DrawPath(path, paint);
 				}
 
+				// Inner letter shape (X/V chevron paths)
 				using (var path = new SKPath())
 				{
 					path.MoveTo(71.8225901f, 77.9780432f);

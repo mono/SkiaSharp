@@ -1,0 +1,148 @@
+﻿@page "/sample/{sampleTitle}"
+@implements IDisposable
+
+<PageTitle>@(sample?.Title ?? "Sample") — SkiaSharp Gallery</PageTitle>
+
+@if (sample is null)
+{
+    <div class="alert alert-warning">
+        Sample "<strong>@SampleTitle</strong>" was not found.
+        <a href="">Return to home</a>
+    </div>
+}
+else
+{
+    <h2>@sample.Title</h2>
+
+    @if (!string.IsNullOrWhiteSpace(sample.Description))
+    {
+        <p class="text-muted">@sample.Description</p>
+    }
+
+    <div class="canvas-wrapper border rounded">
+        @if (sample is AnimatedSampleBase)
+        {
+            <SKGLView @ref="glView"
+                      OnPaintSurface="OnPaintGL"
+                      EnableRenderLoop="true"
+                      IgnorePixelScaling="true"
+                      style="width:100%;height:500px;display:block;" />
+        }
+        else
+        {
+            <SKCanvasView @ref="canvasView"
+                          OnPaintSurface="OnPaintRaster"
+                          IgnorePixelScaling="true"
+                          style="width:100%;height:500px;display:block;"
+                          @onpointerdown="OnPointerDown"
+                          @onpointermove="OnPointerMove"
+                          @onpointerup="OnPointerUp"
+                          @onclick="OnClick" />
+        }
+    </div>
+
+    <div class="mt-2 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary" @onclick="OnResetMatrix">Reset View</button>
+        <span class="text-muted small align-self-center">
+            Tip: Click to interact, drag to pan.
+        </span>
+    </div>
+
+    <div class="mt-2 text-muted small">
+        Backend: @(sample is AnimatedSampleBase ? "GPU (WebGL)" : "Raster (CPU)")
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? SampleTitle { get; set; }
+
+    private SampleBase? sample;
+    private SKCanvasView? canvasView;
+    private SKGLView? glView;
+
+    private SKPoint? lastPointerDown;
+    private SKPoint panStartPoint;
+
+    protected override void OnParametersSet()
+    {
+        // Clean up old sample
+        DisposeSample();
+
+        var title = Uri.UnescapeDataString(SampleTitle ?? string.Empty);
+        sample = SamplesManager.GetSample(title);
+
+        if (sample is not null)
+        {
+            sample.RefreshRequested += OnRefreshRequested;
+            sample.Init();
+        }
+    }
+
+    private void OnRefreshRequested(object? sender, EventArgs e)
+    {
+        canvasView?.Invalidate();
+        // SKGLView with EnableRenderLoop handles its own refresh
+    }
+
+    private void OnPaintRaster(SKPaintSurfaceEventArgs e)
+    {
+        e.Surface.Canvas.Clear(SKColors.White);
+        sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+    }
+
+    private void OnPaintGL(SKPaintGLSurfaceEventArgs e)
+    {
+        e.Surface.Canvas.Clear(SKColors.White);
+        sample?.DrawSample(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
+    }
+
+    private void OnPointerDown(PointerEventArgs e)
+    {
+        lastPointerDown = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        panStartPoint = lastPointerDown.Value;
+        sample?.Pan(GestureState.Started, panStartPoint);
+    }
+
+    private void OnPointerMove(PointerEventArgs e)
+    {
+        if (lastPointerDown is null) return;
+        var current = new SKPoint((float)e.OffsetX, (float)e.OffsetY);
+        sample?.Pan(GestureState.Running, current - panStartPoint);
+        canvasView?.Invalidate();
+    }
+
+    private void OnPointerUp(PointerEventArgs e)
+    {
+        if (lastPointerDown is not null)
+        {
+            sample?.Pan(GestureState.Completed, SKPoint.Empty);
+            lastPointerDown = null;
+        }
+        canvasView?.Invalidate();
+    }
+
+    private void OnClick(MouseEventArgs e)
+    {
+        sample?.Tap();
+        canvasView?.Invalidate();
+    }
+
+    private void OnResetMatrix()
+    {
+        sample?.ResetMatrix();
+        canvasView?.Invalidate();
+    }
+
+    private void DisposeSample()
+    {
+        if (sample is not null)
+        {
+            sample.RefreshRequested -= OnRefreshRequested;
+            sample.Destroy();
+            sample = null;
+        }
+    }
+
+    public void Dispose() => DisposeSample();
+}

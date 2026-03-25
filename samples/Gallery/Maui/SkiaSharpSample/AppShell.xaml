@@ -1,0 +1,24 @@
+﻿<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:SkiaSharpSample.Pages"
+       x:Class="SkiaSharpSample.AppShell"
+       FlyoutBehavior="Flyout"
+       Title="SkiaSharp Gallery">
+
+    <Shell.FlyoutHeader>
+        <Grid BackgroundColor="{StaticResource PrimaryColor}" Padding="16" MinimumHeightRequest="80">
+            <Label Text="SkiaSharp"
+                   TextColor="White"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center" />
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <FlyoutItem Title="Gallery" Icon="dotnet_bot.png" FlyoutDisplayOptions="AsMultipleItems">
+        <ShellContent Title="Samples" Route="SamplesListPage">
+            <pages:SamplesListPage />
+        </ShellContent>
+    </FlyoutItem>
+
+</Shell>
