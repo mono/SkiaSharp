@@ -1,4 +1,14 @@
-﻿::deep .sidebar {
+﻿.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+::deep .sidebar {
     background-color: #2c3e50;
 }
 
@@ -13,11 +23,46 @@
 
 ::deep .top-row a {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-left: 1.5rem;
+    text-decoration: none;
     color: #6c757d;
 }
 
 ::deep .top-row a:hover {
     color: #007bff;
+    text-decoration: underline;
+}
+
+@media (max-width: 640.98px) {
+    ::deep .top-row {
+        justify-content: space-between;
+    }
+
+    ::deep .top-row a {
+        margin-left: 0;
+    }
+}
+
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: 280px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    ::deep .top-row {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    ::deep .top-row, ::deep article {
+        padding-left: 2rem !important;
+        padding-right: 1.5rem !important;
+    }
 }
