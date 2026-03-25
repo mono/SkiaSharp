@@ -99,6 +99,15 @@ if (-not $expectedHigh -and $expectedMedium -and $review.riskAssessment -eq 'LOW
     $errors += "riskAssessment should be MEDIUM or HIGH, not LOW"
 }
 
+# If all sections PASS, riskAssessment must be LOW
+$allPass = ($review.generatedFiles.status -eq 'PASS') -and
+           ($review.upstreamIntegrity.status -eq 'PASS') -and
+           ($review.interopIntegrity.status -eq 'PASS') -and
+           ($review.depsAudit.status -eq 'PASS')
+if ($allPass -and $review.riskAssessment -ne 'LOW') {
+    $errors += "riskAssessment should be LOW when all sections are PASS"
+}
+
 # No absolute paths
 $absPathPattern = '(/Users/|/home/|C:\\Users\\)'
 if ($json -match $absPathPattern) {

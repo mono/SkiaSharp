@@ -102,6 +102,14 @@ def main():
     if not expected_high and expected_medium and data.get("riskAssessment") == "LOW":
         errors.append("riskAssessment should be MEDIUM or HIGH, not LOW")
 
+    # If all sections PASS, riskAssessment must be LOW
+    all_pass = (data.get("generatedFiles", {}).get("status") == "PASS" and
+                data.get("upstreamIntegrity", {}).get("status") == "PASS" and
+                data.get("interopIntegrity", {}).get("status") == "PASS" and
+                data.get("depsAudit", {}).get("status") == "PASS")
+    if all_pass and data.get("riskAssessment") != "LOW":
+        errors.append("riskAssessment should be LOW when all sections are PASS")
+
     # SHA format (40-char hex)
     for sha_field in ("prHead", "base", "upstream"):
         sha = data.get("meta", {}).get("shas", {}).get(sha_field, "")

@@ -42,12 +42,28 @@ def run_check(repo_root: str, output_dir: str) -> dict:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
-        with open(generator_log, "w") as log_file:
-            for line in proc.stdout:
-                decoded = line.decode("utf-8", errors="replace")
-                sys.stderr.write(decoded)
-                log_file.write(decoded)
-        proc.wait()
+        try:
+            with open(generator_log, "w") as log_file:
+                for line in proc.stdout:
+                    decoded = line.decode("utf-8", errors="replace")
+                    sys.stderr.write(decoded)
+                    log_file.write(decoded)
+            proc.wait(timeout=600)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+            eprint("❌ Generator timed out after 600 seconds")
+            return {
+                "status": "FAIL",
+                "checked": [],
+                "mismatches": [],
+                "generatorError": "Generator timed out after 600 seconds",
+                "generatorLog": generator_log,
+            }
+        except Exception:
+            proc.kill()
+            proc.wait()
+            raise
         if proc.returncode != 0:
             eprint(f"❌ Generator exited with code {proc.returncode}")
             eprint(f"   See {generator_log} for full output")
@@ -107,11 +123,14 @@ def run_check(repo_root: str, output_dir: str) -> dict:
 
     # Revert generated files to HEAD so the check is non-destructive
     for file in GENERATED_FILES:
-        subprocess.run(
+        revert = subprocess.run(
             ["git", "checkout", "HEAD", "--", file],
             cwd=repo_root,
             capture_output=True,
+            text=True,
         )
+        if revert.returncode != 0:
+            eprint(f"⚠️ Failed to revert {file}: {revert.stderr.strip()}")
 
     status = "PASS" if len(mismatches) == 0 else "FAIL"
 

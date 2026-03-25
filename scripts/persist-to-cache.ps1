@@ -67,11 +67,13 @@ try {
     for ($i = 0; $i -lt 3; $i++) {
         git push 2>&1
         if ($LASTEXITCODE -eq 0) { $pushed = $true; break }
-        Write-Host "⚠️  Push failed (attempt $($i + 1)/3), rebasing..."
-        git pull --rebase
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "❌ git pull --rebase failed (exit code $LASTEXITCODE)"
-            exit 1
+        if ($i -lt 2) {
+            Write-Host "⚠️  Push failed (attempt $($i + 1)/3), rebasing..."
+            git pull --rebase
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "❌ git pull --rebase failed (exit code $LASTEXITCODE)"
+                exit 1
+            }
         }
     }
 

@@ -160,33 +160,48 @@ def main():
     run_git(["fetch", "origin", "skiasharp", f"pull/{skia_pr_number}/head"], cwd=skia_root)
 
     # Verify upstream branches exist
-    old_upstream_sha = subprocess.run(
+    old_result = subprocess.run(
         ["git", "rev-parse", f"upstream/{old_milestone}"],
         cwd=skia_root, capture_output=True, text=True,
-    ).stdout.strip()
+    )
+    if old_result.returncode != 0:
+        raise RuntimeError(f"Old upstream branch upstream/{old_milestone} not found: {old_result.stderr.strip()}")
+    old_upstream_sha = old_result.stdout.strip()
     if not old_upstream_sha or len(old_upstream_sha) < 7:
-        raise RuntimeError(f"Old upstream branch upstream/{old_milestone} not found")
+        raise RuntimeError(f"Old upstream branch upstream/{old_milestone} resolved to invalid SHA: {old_upstream_sha!r}")
 
-    new_upstream_sha = subprocess.run(
+    new_result = subprocess.run(
         ["git", "rev-parse", f"upstream/{new_milestone}"],
         cwd=skia_root, capture_output=True, text=True,
-    ).stdout.strip()
+    )
+    if new_result.returncode != 0:
+        raise RuntimeError(f"New upstream branch upstream/{new_milestone} not found: {new_result.stderr.strip()}")
+    new_upstream_sha = new_result.stdout.strip()
     if not new_upstream_sha or len(new_upstream_sha) < 7:
-        raise RuntimeError(f"New upstream branch upstream/{new_milestone} not found")
+        raise RuntimeError(f"New upstream branch upstream/{new_milestone} resolved to invalid SHA: {new_upstream_sha!r}")
 
     # Use PR metadata for base SHA; fall back to resolving the ref
     base_sha = pr.get("baseRefOid", "").strip()
     if not base_sha or len(base_sha) < 7:
         base_ref_name = pr.get("baseRefName", "skiasharp")
-        base_sha = subprocess.run(
+        result = subprocess.run(
             ["git", "rev-parse", f"origin/{base_ref_name}"],
             cwd=skia_root, capture_output=True, text=True,
-        ).stdout.strip()
+        )
+        if result.returncode == 0:
+            base_sha = result.stdout.strip()
         if not base_sha or len(base_sha) < 7:
-            base_sha = subprocess.run(
+            result = subprocess.run(
                 ["git", "rev-parse", "origin/skiasharp"],
                 cwd=skia_root, capture_output=True, text=True,
-            ).stdout.strip()
+            )
+            if result.returncode == 0:
+                base_sha = result.stdout.strip()
+    if not base_sha or len(base_sha) < 7:
+        raise RuntimeError(
+            f"Could not resolve base SHA from PR metadata or branch refs. "
+            f"baseRefOid={pr.get('baseRefOid', '')!r}, baseRefName={pr.get('baseRefName', '')!r}"
+        )
     pr_head_sha = pr["headRefOid"]
 
     eprint(f"   Base ({pr.get('baseRefName', 'skiasharp')}): {base_sha}")
