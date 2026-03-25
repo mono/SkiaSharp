@@ -44,14 +44,12 @@ else
         <div class="btn-group btn-group-sm" role="group" aria-label="Rendering backend">
             <button type="button"
                     class="btn @(useGpu ? "btn-outline-primary" : "btn-primary")"
-                    @onclick="() => SetBackend(false)"
-                    disabled="@(!sample.SupportedBackends.HasFlag(SampleBackends.Memory))">
+                    @onclick="() => SetBackend(false)">
                 CPU (Raster)
             </button>
             <button type="button"
                     class="btn @(useGpu ? "btn-primary" : "btn-outline-primary")"
-                    @onclick="() => SetBackend(true)"
-                    disabled="@(!sample.SupportedBackends.HasFlag(SampleBackends.OpenGL))">
+                    @onclick="() => SetBackend(true)">
                 GPU (OpenGL)
             </button>
         </div>
@@ -81,8 +79,8 @@ else
 
         if (sample is not null)
         {
-            // Use GPU only if the CPU (Memory) backend is not supported
-            useGpu = !sample.SupportedBackends.HasFlag(SampleBackends.Memory);
+            // Default to CPU
+            useGpu = false;
 
             sample.RefreshRequested += OnRefreshRequested;
             sample.Init();

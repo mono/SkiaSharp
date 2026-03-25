@@ -12,7 +12,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Filled Heptagram";
 
-		public override SampleCategories Category => SampleCategories.Paths;
+		public override string Category => SampleCategories.Paths;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

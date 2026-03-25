@@ -10,7 +10,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Color Table Color Filter";
 
-		public override SampleCategories Category => SampleCategories.ColorFilters;
+		public override string Category => SampleCategories.ColorFilters;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

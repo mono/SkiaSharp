@@ -10,7 +10,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Dilate Image Filter";
 
-		public override SampleCategories Category => SampleCategories.ImageFilters;
+		public override string Category => SampleCategories.ImageFilters;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

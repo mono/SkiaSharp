@@ -13,7 +13,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Blend Mode";
 
-		public override SampleCategories Category => SampleCategories.Shaders;
+		public override string Category => SampleCategories.Shaders;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

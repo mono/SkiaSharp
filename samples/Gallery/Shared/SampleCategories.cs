@@ -1,23 +1,18 @@
-﻿using System;
-
 namespace SkiaSharpSample
 {
-	[Flags]
-	public enum SampleCategories
+	public static class SampleCategories
 	{
-		Showcases = 1 << 0,
-
-		General = 1 << 1,
-		BitmapDecoding = 1 << 2,
-		Text = 1 << 3,
-		Paths = 1 << 4,
-		Shaders = 1 << 5,
-		Fonts = 1 << 6,
-		MaskFilters = 1 << 7,
-		ColorFilters = 1 << 8,
-		ImageFilters = 1 << 9,
-		PathEffects = 1 << 10,
-		SVG = 1 << 11,
-		Documents = 1 << 12,
+		public const string Showcases = "Showcases";
+		public const string General = "General";
+		public const string BitmapDecoding = "Bitmap Decoding";
+		public const string Text = "Text";
+		public const string Paths = "Paths";
+		public const string Shaders = "Shaders";
+		public const string Fonts = "Fonts";
+		public const string MaskFilters = "Mask Filters";
+		public const string ColorFilters = "Color Filters";
+		public const string ImageFilters = "Image Filters";
+		public const string PathEffects = "Path Effects";
+		public const string Documents = "Documents";
 	}
 }

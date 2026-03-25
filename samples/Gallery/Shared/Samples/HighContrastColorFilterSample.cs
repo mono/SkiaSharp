@@ -12,7 +12,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "High Contrast Color Filter";
 
-		public override SampleCategories Category => SampleCategories.ColorFilters;
+		public override string Category => SampleCategories.ColorFilters;
 
 		protected override void OnTapped()
 		{

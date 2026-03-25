@@ -10,7 +10,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Blur Mask Filter";
 
-		public override SampleCategories Category => SampleCategories.MaskFilters;
+		public override string Category => SampleCategories.MaskFilters;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

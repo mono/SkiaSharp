@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
@@ -12,9 +11,6 @@ namespace SkiaSharpSample.Pages
 {
 	public partial class SamplesListPage : ContentPage
 	{
-		private static readonly IEnumerable<SampleCategories> categories =
-			Enum.GetValues(typeof(SampleCategories)).Cast<SampleCategories>();
-
 		private readonly SampleBase[] samples;
 		private CancellationTokenSource? cancellations;
 
@@ -22,7 +18,7 @@ namespace SkiaSharpSample.Pages
 
 		public SamplesListPage()
 		{
-			samples = SamplesManager.GetSamples(SamplePlatforms.MAUI).ToArray();
+			samples = SamplesManager.GetSamples().ToArray();
 			InitializeComponent();
 			BindingContext = this;
 			RefreshGroups(string.Empty);
@@ -38,10 +34,11 @@ namespace SkiaSharpSample.Pages
 		private IEnumerable<GroupedSamples> GetFilteredGroups(string searchText)
 		{
 			var filtered = samples.Where(s => s.MatchesFilter(searchText));
-			return categories
-				.Select(c => new GroupedSamples(c, filtered.Where(s => s.Category.HasFlag(c))))
+			return filtered
+				.GroupBy(s => s.Category)
+				.Select(g => new GroupedSamples(g.Key, g))
 				.Where(g => g.Count > 0)
-				.OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name);
+				.OrderBy(g => g.Name == SampleCategories.Showcases ? string.Empty : g.Name);
 		}
 
 		private void OnSearchTextChanged(object sender, TextChangedEventArgs e) =>
@@ -115,17 +112,13 @@ namespace SkiaSharpSample.Pages
 
 		public class GroupedSamples : ObservableCollection<SampleBase>
 		{
-			private static readonly Regex EnumSplitRegex = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])");
-
-			public GroupedSamples(SampleCategories category, IEnumerable<SampleBase> items)
+			public GroupedSamples(string category, IEnumerable<SampleBase> items)
 			{
-				Category = category;
-				Name = EnumSplitRegex.Replace(category.ToString(), " $1");
+				Name = category;
 				foreach (var item in items.OrderBy(s => s.Title))
 					Add(item);
 			}
 
-			public SampleCategories Category { get; }
 			public string Name { get; }
 		}
 	}

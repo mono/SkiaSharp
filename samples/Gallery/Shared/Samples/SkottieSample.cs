@@ -17,7 +17,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Skottie";
 
-		public override SampleCategories Category => SampleCategories.General;
+		public override string Category => SampleCategories.General;
 
 		protected override async Task OnInit()
 		{

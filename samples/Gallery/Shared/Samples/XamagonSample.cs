@@ -12,7 +12,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Description => "Demonstrates drawing complex filled paths using cubic Bezier curves, showcasing path construction and rendering.";
 
-		public override SampleCategories Category => SampleCategories.Paths | SampleCategories.Showcases;
+		public override string Category => SampleCategories.Showcases;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

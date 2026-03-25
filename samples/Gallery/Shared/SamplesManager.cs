@@ -51,14 +51,14 @@ namespace SkiaSharpSample
 			OpenFile?.Invoke(path);
 		}
 
-		public static IEnumerable<string> GetSampleTitles(SamplePlatforms platform)
+		public static IEnumerable<string> GetSampleTitles()
 		{
-			return sampleList.Where(s => s.SupportedPlatform.HasFlag(platform)).Select(s => s.Title);
+			return sampleList.Where(s => s.IsSupported).Select(s => s.Title);
 		}
 
-		public static IEnumerable<SampleBase> GetSamples(SamplePlatforms platform)
+		public static IEnumerable<SampleBase> GetSamples()
 		{
-			return sampleList.Where(s => s.SupportedPlatform.HasFlag(platform));
+			return sampleList.Where(s => s.IsSupported);
 		}
 
 		public static SampleBase GetSample(string title)

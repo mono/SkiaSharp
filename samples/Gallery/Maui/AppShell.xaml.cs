@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.Maui.Controls;
 using SkiaSharpSample.Pages;
 
@@ -8,8 +7,6 @@ namespace SkiaSharpSample
 {
 	public partial class AppShell : Shell
 	{
-		private static readonly Regex EnumSplitRegex = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])");
-
 		public AppShell()
 		{
 			InitializeComponent();
@@ -21,27 +18,20 @@ namespace SkiaSharpSample
 
 		private void PopulateFlyout()
 		{
-			var samples = SamplesManager.GetSamples(SamplePlatforms.MAUI).ToList();
-			var categories = Enum.GetValues(typeof(SampleCategories))
-				.Cast<SampleCategories>()
-				.Select(c => new
-				{
-					Category = c,
-					Name = EnumSplitRegex.Replace(c.ToString(), " $1"),
-					Samples = samples.Where(s => s.Category.HasFlag(c)).OrderBy(s => s.Title).ToList()
-				})
-				.Where(g => g.Samples.Count > 0)
-				.OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name);
+			var samples = SamplesManager.GetSamples().ToList();
+			var groups = samples
+				.GroupBy(s => s.Category)
+				.OrderBy(g => g.Key == SampleCategories.Showcases ? "" : g.Key);
 
-			foreach (var group in categories)
+			foreach (var group in groups)
 			{
 				var flyoutItem = new FlyoutItem
 				{
-					Title = group.Name,
+					Title = group.Key,
 					FlyoutDisplayOptions = FlyoutDisplayOptions.AsMultipleItems,
 				};
 
-				foreach (var sample in group.Samples)
+				foreach (var sample in group.OrderBy(s => s.Title))
 				{
 					var content = new ShellContent
 					{

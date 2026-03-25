@@ -19,7 +19,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Decode Gif Frames";
 
-		public override SampleCategories Category => SampleCategories.BitmapDecoding;
+		public override string Category => SampleCategories.BitmapDecoding;
 
 		protected override async Task OnInit()
 		{

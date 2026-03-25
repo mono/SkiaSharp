@@ -10,7 +10,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Path Effects";
 
-		public override SampleCategories Category => SampleCategories.PathEffects | SampleCategories.Paths;
+		public override string Category => SampleCategories.PathEffects;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

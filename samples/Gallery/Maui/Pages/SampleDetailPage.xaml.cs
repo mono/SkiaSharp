@@ -11,7 +11,7 @@ namespace SkiaSharpSample.Pages
 public partial class SampleDetailPage : ContentPage
 {
 private SampleBase? sample;
-private SampleBackends currentBackend = SampleBackends.Memory;
+private bool useGpu;
 
 public SampleDetailPage()
 {
@@ -39,14 +39,10 @@ sample.Destroy();
 sample = newSample;
 Title = sample?.Title ?? "Sample";
 
-// Disable GPU button if sample doesn't support OpenGL
-gpuButton.IsEnabled = sample?.SupportedBackends.HasFlag(SampleBackends.OpenGL) ?? false;
+gpuButton.IsEnabled = true;
 
-// Default to CPU; fall back to GPU if CPU not supported
-if (sample is not null && !sample.SupportedBackends.HasFlag(SampleBackends.Memory))
-SwitchToBackend(SampleBackends.OpenGL);
-else
-SwitchToBackend(SampleBackends.Memory);
+// Default to CPU
+SwitchToBackend(false);
 
 if (sample is not null)
 {
@@ -56,10 +52,10 @@ UpdateInfoOverlay();
 }
 }
 
-private void SwitchToBackend(SampleBackends backend)
+private void SwitchToBackend(bool gpu)
 {
-currentBackend = backend;
-var isCpu = backend == SampleBackends.Memory;
+useGpu = gpu;
+var isCpu = !gpu;
 
 skiaView.IsVisible = isCpu;
 skiaGLView.IsVisible = !isCpu;
@@ -79,7 +75,7 @@ InvalidateActiveView();
 
 private void InvalidateActiveView()
 {
-if (currentBackend == SampleBackends.Memory)
+if (!useGpu)
 skiaView.InvalidateSurface();
 else
 skiaGLView.InvalidateSurface();
@@ -110,10 +106,10 @@ sample?.DrawSample(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRende
 }
 
 private void OnCpuBackendClicked(object? sender, EventArgs e) =>
-SwitchToBackend(SampleBackends.Memory);
+SwitchToBackend(false);
 
 private void OnGpuBackendClicked(object? sender, EventArgs e) =>
-SwitchToBackend(SampleBackends.OpenGL);
+SwitchToBackend(true);
 
 private void OnTapSample(object sender, TappedEventArgs e)
 {
@@ -123,9 +119,9 @@ InvalidateActiveView();
 
 private void OnPanSample(object sender, PanUpdatedEventArgs e)
 {
-var activeSize = currentBackend == SampleBackends.Memory
+var activeSize = !useGpu
 ? skiaView.CanvasSize : skiaGLView.CanvasSize;
-var activeWidth = currentBackend == SampleBackends.Memory
+var activeWidth = !useGpu
 ? skiaView.Width : skiaGLView.Width;
 var scale = activeWidth > 0 ? activeSize.Width / (float)activeWidth : 1f;
 
@@ -137,7 +133,7 @@ InvalidateActiveView();
 
 private void OnPinchSample(object sender, PinchGestureUpdatedEventArgs e)
 {
-var size = currentBackend == SampleBackends.Memory
+var size = !useGpu
 ? skiaView.CanvasSize : skiaGLView.CanvasSize;
 
 sample?.Pinch(

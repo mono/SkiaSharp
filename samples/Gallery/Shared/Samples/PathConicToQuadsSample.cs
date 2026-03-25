@@ -10,7 +10,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Path (conic to quads)";
 
-		public override SampleCategories Category => SampleCategories.Paths;
+		public override string Category => SampleCategories.Paths;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

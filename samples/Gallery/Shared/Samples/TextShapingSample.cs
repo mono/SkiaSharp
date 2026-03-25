@@ -11,7 +11,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Text Shaping";
 
-		public override SampleCategories Category => SampleCategories.Text;
+		public override string Category => SampleCategories.Text;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

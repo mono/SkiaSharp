@@ -12,7 +12,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Custom Fonts";
 
-		public override SampleCategories Category => SampleCategories.Fonts | SampleCategories.Text;
+		public override string Category => SampleCategories.Fonts;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

@@ -12,7 +12,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Draw Vertices";
 
-		public override SampleCategories Category => SampleCategories.General;
+		public override string Category => SampleCategories.General;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

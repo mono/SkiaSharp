@@ -10,7 +10,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Bitmap Shader";
 
-		public override SampleCategories Category => SampleCategories.BitmapDecoding | SampleCategories.Shaders;
+		public override string Category => SampleCategories.Shaders;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

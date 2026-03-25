@@ -12,7 +12,7 @@ namespace SkiaSharpSample.Samples
 
 		public override string Title => "Bitmap Annotation";
 
-		public override SampleCategories Category => SampleCategories.BitmapDecoding;
+		public override string Category => SampleCategories.BitmapDecoding;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{
