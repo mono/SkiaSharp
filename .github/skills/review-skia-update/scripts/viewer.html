@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
   <style>
     :root {
       --viewer-bg: #f6f8fa;
@@ -297,7 +298,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui-slim.min.js"></script>
   <!--INJECT_DATA_HERE-->
   <script>
     (() => {
@@ -986,19 +987,38 @@
         }
 
         try {
-          host.innerHTML = Diff2Html.html(diff, {
+          const targetEl = document.createElement('div');
+          host.innerHTML = '';
+          host.appendChild(targetEl);
+          const diff2htmlUi = new Diff2HtmlUI(targetEl, diff, {
             inputFormat: 'diff',
             outputFormat: 'line-by-line',
-            drawFileList: false
+            drawFileList: false,
+            highlight: true,
+            colorScheme: 'light'
           });
+          diff2htmlUi.draw();
+          diff2htmlUi.highlightCode();
           host.dataset.renderedKey = renderKey;
           placeholder.classList.add('d-none');
           host.classList.remove('d-none');
         } catch (error) {
-          placeholder.innerHTML = `<i class="bi bi-exclamation-octagon me-2"></i>Unable to render diff: ${escapeHtml(error.message || String(error))}`;
-          host.classList.add('d-none');
-          host.innerHTML = '';
-          host.dataset.renderedKey = '';
+          // Fallback to basic Diff2Html.html if UI fails
+          try {
+            host.innerHTML = Diff2Html.html(diff, {
+              inputFormat: 'diff',
+              outputFormat: 'line-by-line',
+              drawFileList: false
+            });
+            host.dataset.renderedKey = renderKey;
+            placeholder.classList.add('d-none');
+            host.classList.remove('d-none');
+          } catch (fallbackError) {
+            placeholder.innerHTML = `<i class="bi bi-exclamation-octagon me-2"></i>Unable to render diff: ${escapeHtml(fallbackError.message || String(fallbackError))}`;
+            host.classList.add('d-none');
+            host.innerHTML = '';
+            host.dataset.renderedKey = '';
+          }
         }
       }
 
@@ -1032,82 +1052,55 @@
             <h3 class="h6 mb-0">Dependency Audit</h3>
           </div>
           <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>Change</th>
-                    <th>Name</th>
-                    <th>Summary</th>
-                    <th>Before</th>
-                    <th>After</th>
-                  </tr>
-                </thead>
-                <tbody data-role="deps-body"></tbody>
-              </table>
-            </div>
+            <div data-role="deps-list" class="d-grid gap-2"></div>
           </div>
         `;
 
         const rows = [];
-        asArray(section.added).forEach((item) => rows.push({
-          change: 'Added',
-          badge: 'text-bg-success',
-          name: item.name,
-          summary: item.summary,
-          before: '—',
-          after: formatDepValue(item.url, item.revision)
-        }));
-        asArray(section.removed).forEach((item) => rows.push({
-          change: 'Removed',
-          badge: 'text-bg-danger',
-          name: item.name,
-          summary: item.summary,
-          before: formatDepValue(item.url, item.revision),
-          after: '—'
-        }));
-        asArray(section.changed).forEach((item) => rows.push({
-          change: 'Changed',
-          badge: 'text-bg-warning',
-          name: item.name,
-          summary: item.summary,
-          before: formatDepValue(item.oldUrl, item.oldRevision),
-          after: formatDepValue(item.newUrl, item.newRevision)
-        }));
+        asArray(section.added).forEach((item) => rows.push({ ...item, change: 'Added', badge: 'text-bg-success' }));
+        asArray(section.removed).forEach((item) => rows.push({ ...item, change: 'Removed', badge: 'text-bg-danger' }));
+        asArray(section.changed).forEach((item) => rows.push({ ...item, change: 'Changed', badge: 'text-bg-warning' }));
 
-        const body = card.querySelector('[data-role="deps-body"]');
+        const list = card.querySelector('[data-role="deps-list"]');
         if (!rows.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="5"><div class="empty-state py-4">No dependency changes were detected.</div></td>';
-          body.appendChild(tr);
+          list.innerHTML = '<div class="empty-state py-4">No dependency changes were detected.</div>';
           return card;
         }
 
         rows.forEach((row) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td><span class="badge ${row.badge}">${escapeHtml(row.change)}</span></td>
-            <td class="mono fw-semibold">${escapeHtml(text(row.name, 'unknown'))}</td>
-            <td>${escapeHtml(text(row.summary, 'No summary provided.'))}</td>
-            <td class="mono small">${row.before}</td>
-            <td class="mono small">${row.after}</td>
+          const el = document.createElement('div');
+          el.className = 'border rounded p-3';
+
+          const revLine = formatDepRevisionLine(row);
+          el.innerHTML = `
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="badge ${row.badge}">${escapeHtml(row.change)}</span>
+              <span class="mono fw-semibold">${escapeHtml(text(row.name, 'unknown'))}</span>
+            </div>
+            <div class="text-body-secondary mb-1">${escapeHtml(text(row.summary, 'No summary.'))}</div>
+            ${revLine}
           `;
-          body.appendChild(tr);
+          list.appendChild(el);
         });
         return card;
       }
 
-      function formatDepValue(url, revision) {
-        const safeUrl = text(url, '');
-        const safeRevision = text(revision, '');
-        const bits = [];
-        if (safeUrl) {
-          bits.push(`<div><a href="${escapeAttribute(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(safeUrl)}</a></div>`);
+      function formatDepRevisionLine(item) {
+        const shortRev = (r) => r ? escapeHtml(r.substring(0, 10)) : '';
+
+        if (item.change === 'Changed') {
+          const oldRev = shortRev(item.oldRevision);
+          const newRev = shortRev(item.newRevision);
+          if (oldRev || newRev) {
+            return `<div class="mono small text-body-tertiary"><span>${oldRev}</span> → <span>${newRev}</span></div>`;
+          }
+        } else {
+          const rev = shortRev(item.revision);
+          if (rev) {
+            return `<div class="mono small text-body-tertiary">${rev}</div>`;
+          }
         }
-        if (safeRevision) {
-          bits.push(`<div>${escapeHtml(safeRevision)}</div>`);
-        }
-        return bits.length ? bits.join('') : '—';
+        return '';
       }
 
       function escapeAttribute(value) {
@@ -1120,39 +1113,27 @@
 
       function renderCompanionTab(section) {
         const wrapper = document.createElement('div');
-        wrapper.className = 'row g-4';
+        wrapper.className = 'd-grid gap-4';
 
-        const statsCol = document.createElement('div');
-        statsCol.className = 'col-xl-4';
-        const statsCard = document.createElement('div');
-        statsCard.className = 'card surface-card h-100';
-        statsCard.innerHTML = `
-          <div class="card-header">
-            <h3 class="h6 mb-0">Companion PR Summary</h3>
-          </div>
-          <div class="card-body d-grid gap-3">
-            <div class="stats-grid">
-              ${[
-                ['PR Number', text(section.prNumber, '—')],
-                ['Files Reviewed', text(section.filesReviewed, '0')],
-                ['Files Skipped', text(section.filesSkipped, '0')],
-                ['Findings', asArray(section.findings).length]
-              ].map(([label, value]) => `
-                <div class="stats-tile">
-                  <div class="meta-label mb-2">${escapeHtml(label)}</div>
-                  <div class="stats-value">${escapeHtml(String(value))}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
+        // Compact stats bar
+        const statsBar = document.createElement('div');
+        statsBar.className = 'd-flex flex-wrap gap-3 align-items-center';
+        const prNum = text(section.prNumber, '—');
+        const meta = report.meta || {};
+        const prLink = `https://github.com/mono/SkiaSharp/pull/${prNum}`;
+        statsBar.innerHTML = `
+          <a href="${escapeAttribute(prLink)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-github me-1"></i>PR #${escapeHtml(prNum)}
+          </a>
+          <span class="badge text-bg-light border"><i class="bi bi-file-earmark me-1"></i>${escapeHtml(text(section.filesReviewed, '0'))} reviewed</span>
+          <span class="badge text-bg-light border"><i class="bi bi-skip-forward me-1"></i>${escapeHtml(text(section.filesSkipped, '0'))} skipped</span>
+          <span class="badge text-bg-light border"><i class="bi bi-flag me-1"></i>${asArray(section.findings).length} findings</span>
         `;
-        statsCol.appendChild(statsCard);
-        wrapper.appendChild(statsCol);
+        wrapper.appendChild(statsBar);
 
-        const findingsCol = document.createElement('div');
-        findingsCol.className = 'col-xl-8';
+        // Full-width findings table
         const findingsCard = document.createElement('div');
-        findingsCard.className = 'card surface-card h-100';
+        findingsCard.className = 'card surface-card';
         findingsCard.innerHTML = `
           <div class="card-header d-flex justify-content-between align-items-center gap-2">
             <h3 class="h6 mb-0">Findings</h3>
@@ -1191,8 +1172,7 @@
             body.appendChild(tr);
           });
         }
-        findingsCol.appendChild(findingsCard);
-        wrapper.appendChild(findingsCol);
+        wrapper.appendChild(findingsCard);
         return wrapper;
       }
 
