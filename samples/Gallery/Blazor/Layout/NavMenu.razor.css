@@ -1,16 +1,46 @@
 ﻿.navbar-toggler {
-    appearance: none;
-    cursor: pointer;
-    font-size: 1.1rem;
-    padding: 0.4rem 0.8rem;
-    color: white;
-    background: none;
-    border: 1px solid white;
-    border-radius: 0.25rem;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-.nav-scrollable {
-    overflow-y: auto;
+.top-row {
+    min-height: 3.5rem;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+}
+
+.nav-item {
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+}
+
+    .nav-item:first-of-type {
+        padding-top: 1rem;
+    }
+
+    .nav-item:last-of-type {
+        padding-bottom: 1rem;
+    }
+
+    .nav-item ::deep a {
+        color: #d7d7d7;
+        border-radius: 4px;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        line-height: 3rem;
+    }
+
+.nav-item ::deep a.active {
+    background-color: rgba(255,255,255,0.37);
+    color: white;
+}
+
+.nav-item ::deep a:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
 }
 
 .nav-category-label {
@@ -18,40 +48,19 @@
     font-weight: bold;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #7fb3d3;
+    color: rgba(255,255,255,0.5);
     padding: 0;
+    margin-top: 0.5rem;
 }
 
 .nav-sample-link {
     font-size: 0.85rem;
-    padding: 0.2rem 0.5rem !important;
+    padding: 0.25rem 0.5rem !important;
+    height: auto !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #b8c9d9 !important;
 }
-
-    .nav-sample-link:hover, .nav-sample-link.active {
-        color: white !important;
-        background-color: #3498db;
-        border-radius: 4px;
-    }
-
-.nav-link {
-    color: #d4e8f5;
-}
-
-    .nav-link:hover {
-        color: white;
-        background-color: rgba(255,255,255,0.1);
-        border-radius: 4px;
-    }
-
-    .nav-link.active {
-        background-color: #3498db;
-        color: white;
-        border-radius: 4px;
-    }
 
 @media (min-width: 641px) {
     .navbar-toggler {
@@ -59,10 +68,12 @@
     }
 
     .collapse {
+        /* Never collapse the sidebar for wide screens */
         display: block;
     }
 
     .nav-scrollable {
+        /* Allow sidebar to scroll for tall menus */
         height: calc(100vh - 3.5rem);
         overflow-y: auto;
     }
