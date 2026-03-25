@@ -56,24 +56,6 @@
       border-bottom: 1px solid var(--viewer-card-border);
     }
 
-    .status-strip {
-      display: grid;
-      gap: 0.75rem;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    }
-
-    .status-pill {
-      background: var(--viewer-surface);
-      border: 1px solid var(--viewer-card-border);
-      border-radius: 0.9rem;
-      padding: 0.85rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-
-    .status-pill .small-label,
     .meta-label {
       color: var(--viewer-muted);
       text-transform: uppercase;
@@ -299,14 +281,6 @@
       </div>
     </section>
 
-    <section class="mb-4">
-      <div class="d-flex align-items-center gap-2 mb-3">
-        <i class="bi bi-grid-1x2-fill text-primary"></i>
-        <h2 class="h5 mb-0">Status Overview</h2>
-      </div>
-      <div id="statusStrip" class="status-strip"></div>
-    </section>
-
     <section>
       <ul class="nav nav-tabs" id="reportTabs" role="tablist"></ul>
       <div class="tab-content" id="reportTabContent"></div>
@@ -516,26 +490,6 @@
         }
       }
 
-      function renderStatusStrip() {
-        const strip = document.getElementById('statusStrip');
-        strip.innerHTML = '';
-        tabDefinitions.forEach((tab) => {
-          const section = report[tab.key] || {};
-          const pill = document.createElement('div');
-          pill.className = 'status-pill';
-          pill.style.cursor = 'pointer';
-          pill.innerHTML = `
-            <div class="small-label">${escapeHtml(tab.label)}</div>
-          `;
-          pill.appendChild(createBadge(text(section.status, 'N/A'), statusBadgeClass(section.status)));
-          pill.addEventListener('click', () => {
-            const tabBtn = document.getElementById(`${tab.id}-tab`);
-            if (tabBtn) tabBtn.click();
-          });
-          strip.appendChild(pill);
-        });
-      }
-
       function renderRecommendationAlerts(targetId, recommendations, emptyText) {
         const host = document.getElementById(targetId);
         host.innerHTML = '';
@@ -620,6 +574,8 @@
 
         tabDefinitions.forEach((tab, index) => {
           const count = getSectionCount(tab.key);
+          const section = report[tab.key] || {};
+          const badgeClass = statusBadgeClass(section.status);
           const li = document.createElement('li');
           li.className = 'nav-item';
           li.role = 'presentation';
@@ -634,7 +590,7 @@
               aria-controls="${tab.id}-pane"
               aria-selected="${index === 0 ? 'true' : 'false'}">
               <i class="bi ${tab.icon} me-1"></i>${escapeHtml(tab.label)}
-              <span class="badge text-bg-light border ms-2">${count}</span>
+              <span class="badge ${badgeClass} ms-2">${count}</span>
             </button>
           `;
           tabsHost.appendChild(li);
@@ -1210,7 +1166,6 @@
       document.addEventListener('DOMContentLoaded', () => {
         buildHeader();
         buildSummary();
-        renderStatusStrip();
         renderTabs();
       });
     })();
