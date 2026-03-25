@@ -114,7 +114,19 @@ pwsh .github/skills/review-skia-update/scripts/persist-skia-review.ps1 {output_d
 This copies the JSON to `output/ai/repos/mono-skia/ai-review/` mirroring the data-cache structure.
 To push to the data-cache branch separately: `pwsh scripts/persist-to-cache.ps1`
 
-### 3. Present summary
+### 3. Render HTML report
+
+Generate a self-contained HTML report alongside the persisted JSON:
+
+```bash
+python3 .github/skills/review-skia-update/scripts/render-skia-review.py \
+    output/ai/repos/mono-skia/ai-review/{pr_number}.json
+```
+
+This produces `{pr_number}.html` next to the JSON — a single file with Bootstrap 5 + diff2html
+that can be opened in a browser, uploaded as a gist, or attached to a PR/issue.
+
+### 4. Present summary
 
 ```
 ✅ Review: ai-review/{pr_number}.json
