@@ -7,37 +7,81 @@ namespace SkiaSharpSample.Samples;
 
 public class PhotoLabSample : InteractiveSampleBase
 {
-	private int preset;
-	private float blurSigma;
-	private float morphology;
-	private bool magnifier;
+	// Effect state
+	private bool colorEnabled = true;
+	private int colorPreset;
+	private bool blurEnabled;
+	private float blurSigma = 5f;
+	private bool morphEnabled;
+	private float morphRadius = 3f;
+	private int morphType; // 0=Dilate, 1=Erode
+	private bool magnifierEnabled;
+	private float magnifierZoom = 5f;
+	private bool contrastEnabled;
+	private float contrastAmount = 0.3f;
 
-	private static readonly string[] Presets =
-		{ "Normal", "Grayscale", "Sepia", "Invert", "High Contrast", "Color Dodge" };
+	private static readonly string[] ColorPresets =
+		{ "Grayscale", "Sepia", "Invert", "Warm", "Cool", "Color Dodge" };
+	private static readonly string[] MorphTypes = { "Dilate", "Erode" };
 
 	public override string Title => "Photo Lab";
 
 	public override string Description =>
-		"Apply color filters, blur, morphology, and magnifier effects to an image.";
+		"Composable effect stack — enable, disable, and tune each effect independently.";
 
 	public override string Category => SampleCategories.ImageFilters;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new PickerControl("preset", "Preset", Presets, preset),
-		new SliderControl("blurSigma", "Blur Sigma", 0, 30, blurSigma),
-		new SliderControl("morphology", "Morphology", -10, 10, morphology, 1),
-		new ToggleControl("magnifier", "Show Magnifier", magnifier),
+		new GroupControl("color", "Color Filter", colorEnabled,
+		[
+			new PickerControl("preset", "Preset", ColorPresets, colorPreset),
+		]),
+		new GroupControl("blur", "Gaussian Blur", blurEnabled,
+		[
+			new SliderControl("sigma", "Sigma", 0.5f, 30, blurSigma),
+		]),
+		new GroupControl("morph", "Morphology", morphEnabled,
+		[
+			new PickerControl("type", "Type", MorphTypes, morphType),
+			new SliderControl("radius", "Radius", 1, 10, morphRadius, 1),
+		]),
+		new GroupControl("magnifier", "Magnifier", magnifierEnabled,
+		[
+			new SliderControl("zoom", "Zoom", 1, 15, magnifierZoom),
+		]),
+		new GroupControl("contrast", "High Contrast", contrastEnabled,
+		[
+			new SliderControl("amount", "Amount", 0, 1, contrastAmount, 0.05f),
+		]),
 	];
 
 	protected override void OnControlChanged(string id, object value)
 	{
 		switch (id)
 		{
-			case "preset": preset = (int)value; break;
-			case "blurSigma": blurSigma = (float)value; break;
-			case "morphology": morphology = (float)value; break;
-			case "magnifier": magnifier = (bool)value; break;
+			// Group toggles
+			case "color": colorEnabled = (bool)value; break;
+			case "blur": blurEnabled = (bool)value; break;
+			case "morph": morphEnabled = (bool)value; break;
+			case "magnifier": magnifierEnabled = (bool)value; break;
+			case "contrast": contrastEnabled = (bool)value; break;
+
+			// Color filter children
+			case "color.preset": colorPreset = (int)value; break;
+
+			// Blur children
+			case "blur.sigma": blurSigma = (float)value; break;
+
+			// Morphology children
+			case "morph.type": morphType = (int)value; break;
+			case "morph.radius": morphRadius = (float)value; break;
+
+			// Magnifier children
+			case "magnifier.zoom": magnifierZoom = (float)value; break;
+
+			// Contrast children
+			case "contrast.amount": contrastAmount = (float)value; break;
 		}
 	}
 
@@ -48,42 +92,50 @@ public class PhotoLabSample : InteractiveSampleBase
 		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
 		using var bitmap = SKBitmap.Decode(stream);
 
-		var colorFilter = CreatePresetColorFilter();
+		SKColorFilter? colorFilter = null;
 		var imageFilters = new List<SKImageFilter>();
 
 		try
 		{
-			SKImageFilter lastFilter = null;
+			// Build color filter
+			if (colorEnabled)
+				colorFilter = CreateColorFilter();
 
-			if (blurSigma > 0)
+			// Build image filter chain
+			SKImageFilter? lastFilter = null;
+
+			if (blurEnabled && blurSigma > 0)
 			{
 				var f = SKImageFilter.CreateBlur(blurSigma, blurSigma, lastFilter);
 				imageFilters.Add(f);
 				lastFilter = f;
 			}
 
-			var m = (int)morphology;
-			if (m < 0)
+			if (morphEnabled)
 			{
-				var f = SKImageFilter.CreateErode(-m, -m, lastFilter);
-				imageFilters.Add(f);
-				lastFilter = f;
-			}
-			else if (m > 0)
-			{
-				var f = SKImageFilter.CreateDilate(m, m, lastFilter);
+				var r = (int)morphRadius;
+				var f = morphType == 1
+					? SKImageFilter.CreateErode(r, r, lastFilter)
+					: SKImageFilter.CreateDilate(r, r, lastFilter);
 				imageFilters.Add(f);
 				lastFilter = f;
 			}
 
-			if (magnifier)
+			if (magnifierEnabled)
 			{
 				var size = Math.Min(width, height) / 3f;
 				var f = SKImageFilter.CreateMagnifier(
 					SKRect.Create(width / 2f - size / 2, height / 2f - size / 2, size, size),
-					size / 2, size / 10, SKSamplingOptions.Default, lastFilter);
+					magnifierZoom, size / 10, SKSamplingOptions.Default, lastFilter);
 				imageFilters.Add(f);
 				lastFilter = f;
+			}
+
+			if (contrastEnabled)
+			{
+				colorFilter?.Dispose();
+				colorFilter = SKColorFilter.CreateHighContrast(
+					false, SKHighContrastConfigInvertStyle.NoInvert, contrastAmount);
 			}
 
 			using var paint = new SKPaint
@@ -101,36 +153,45 @@ public class PhotoLabSample : InteractiveSampleBase
 		}
 	}
 
-	private SKColorFilter CreatePresetColorFilter()
+	private SKColorFilter? CreateColorFilter() => colorPreset switch
 	{
-		return preset switch
+		0 => SKColorFilter.CreateColorMatrix(new float[] // Grayscale
 		{
-			1 => SKColorFilter.CreateColorMatrix(new float[]
-			{
-				0.21f, 0.72f, 0.07f, 0, 0,
-				0.21f, 0.72f, 0.07f, 0, 0,
-				0.21f, 0.72f, 0.07f, 0, 0,
-				0,     0,     0,     1, 0,
-			}),
-			2 => SKColorFilter.CreateColorMatrix(new float[]
-			{
-				0.393f, 0.769f, 0.189f, 0, 0,
-				0.349f, 0.686f, 0.168f, 0, 0,
-				0.272f, 0.534f, 0.131f, 0, 0,
-				0,      0,      0,      1, 0,
-			}),
-			3 => SKColorFilter.CreateColorMatrix(new float[]
-			{
-				-1,  0,  0, 0, 1,
-				 0, -1,  0, 0, 1,
-				 0,  0, -1, 0, 1,
-				 0,  0,  0, 1, 0,
-			}),
-			4 => SKColorFilter.CreateHighContrast(
-				false, SKHighContrastConfigInvertStyle.NoInvert, 0.5f),
-			5 => SKColorFilter.CreateBlendMode(
-				new SKColor(255, 200, 100), SKBlendMode.ColorDodge),
-			_ => null,
-		};
-	}
+			0.21f, 0.72f, 0.07f, 0, 0,
+			0.21f, 0.72f, 0.07f, 0, 0,
+			0.21f, 0.72f, 0.07f, 0, 0,
+			0,     0,     0,     1, 0,
+		}),
+		1 => SKColorFilter.CreateColorMatrix(new float[] // Sepia
+		{
+			0.393f, 0.769f, 0.189f, 0, 0,
+			0.349f, 0.686f, 0.168f, 0, 0,
+			0.272f, 0.534f, 0.131f, 0, 0,
+			0,      0,      0,      1, 0,
+		}),
+		2 => SKColorFilter.CreateColorMatrix(new float[] // Invert
+		{
+			-1,  0,  0, 0, 1,
+			 0, -1,  0, 0, 1,
+			 0,  0, -1, 0, 1,
+			 0,  0,  0, 1, 0,
+		}),
+		3 => SKColorFilter.CreateColorMatrix(new float[] // Warm
+		{
+			1.2f, 0,    0,    0, 0,
+			0,    1.0f, 0,    0, 0,
+			0,    0,    0.8f, 0, 0,
+			0,    0,    0,    1, 0,
+		}),
+		4 => SKColorFilter.CreateColorMatrix(new float[] // Cool
+		{
+			0.8f, 0,    0,    0, 0,
+			0,    1.0f, 0,    0, 0,
+			0,    0,    1.2f, 0, 0,
+			0,    0,    0,    1, 0,
+		}),
+		5 => SKColorFilter.CreateBlendMode(
+			new SKColor(255, 200, 100), SKBlendMode.ColorDodge),
+		_ => null,
+	};
 }

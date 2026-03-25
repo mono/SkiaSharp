@@ -5,38 +5,7 @@
     <div class="control-panel p-3 border rounded bg-light mt-2">
         @foreach (var control in Controls)
         {
-            <div class="mb-2">
-                @if (control is SliderControl slider)
-                {
-                    <label class="form-label mb-0 small">@slider.Label: <strong>@FormatSliderValue(GetSliderValue(slider.Id, slider.Value))</strong></label>
-                    <input type="range" class="form-range"
-                           min="@slider.Min" max="@slider.Max"
-                           step="@(slider.Step > 0 ? slider.Step : (slider.Max - slider.Min) / 100f)"
-                           value="@GetSliderValue(slider.Id, slider.Value)"
-                           @oninput="e => OnSliderChanged(slider.Id, e)" />
-                }
-                else if (control is ToggleControl toggle)
-                {
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox"
-                               checked="@GetToggleValue(toggle.Id, toggle.Value)"
-                               @onchange="e => OnToggleChanged(toggle.Id, e)" />
-                        <label class="form-check-label small">@toggle.Label</label>
-                    </div>
-                }
-                else if (control is PickerControl picker)
-                {
-                    <label class="form-label mb-0 small">@picker.Label</label>
-                    <select class="form-select form-select-sm"
-                            value="@GetPickerValue(picker.Id, picker.SelectedIndex)"
-                            @onchange="e => OnPickerChanged(picker.Id, e)">
-                        @for (var i = 0; i < picker.Options.Length; i++)
-                        {
-                            <option value="@i">@picker.Options[i]</option>
-                        }
-                    </select>
-                }
-            </div>
+            @RenderControl(control, "")
         }
     </div>
 }
@@ -46,6 +15,69 @@
     [Parameter] public EventCallback<(string id, object value)> OnChanged { get; set; }
 
     private readonly Dictionary<string, object> values = new();
+
+    private RenderFragment RenderControl(SampleControl control, string prefix) => __builder =>
+    {
+        var fullId = string.IsNullOrEmpty(prefix) ? control.Id : $"{prefix}.{control.Id}";
+
+        if (control is GroupControl group)
+        {
+            <div class="card mb-2">
+                <div class="card-header py-1 px-2 d-flex align-items-center">
+                    <div class="form-check form-switch mb-0 me-2">
+                        <input class="form-check-input" type="checkbox"
+                               checked="@GetToggleValue(fullId, group.Enabled)"
+                               @onchange="e => OnToggleChanged(fullId, e)" />
+                    </div>
+                    <span class="small fw-bold">@group.Label</span>
+                </div>
+                @if (GetToggleValue(fullId, group.Enabled))
+                {
+                    <div class="card-body py-2 px-2">
+                        @foreach (var child in group.Children)
+                        {
+                            @RenderControl(child, fullId)
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="mb-2">
+                @if (control is SliderControl slider)
+                {
+                    <label class="form-label mb-0 small">@slider.Label: <strong>@FormatSliderValue(GetSliderValue(fullId, slider.Value))</strong></label>
+                    <input type="range" class="form-range"
+                           min="@slider.Min" max="@slider.Max"
+                           step="@(slider.Step > 0 ? slider.Step : (slider.Max - slider.Min) / 100f)"
+                           value="@GetSliderValue(fullId, slider.Value)"
+                           @oninput="e => OnSliderChanged(fullId, e)" />
+                }
+                else if (control is ToggleControl toggle)
+                {
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox"
+                               checked="@GetToggleValue(fullId, toggle.Value)"
+                               @onchange="e => OnToggleChanged(fullId, e)" />
+                        <label class="form-check-label small">@toggle.Label</label>
+                    </div>
+                }
+                else if (control is PickerControl picker)
+                {
+                    <label class="form-label mb-0 small">@picker.Label</label>
+                    <select class="form-select form-select-sm"
+                            value="@GetPickerValue(fullId, picker.SelectedIndex)"
+                            @onchange="e => OnPickerChanged(fullId, e)">
+                        @for (var i = 0; i < picker.Options.Length; i++)
+                        {
+                            <option value="@i">@picker.Options[i]</option>
+                        }
+                    </select>
+                }
+            </div>
+        }
+    };
 
     private static string FormatSliderValue(float value)
     {
