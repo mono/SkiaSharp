@@ -6,43 +6,54 @@ namespace SkiaSharpSample;
 
 public abstract class DocumentSampleBase : InteractiveSampleBase
 {
-	protected string DocumentPath { get; set; }
+	protected byte[]? DocumentBytes { get; set; }
+	protected string? DocumentMimeType { get; set; }
+	protected string? DocumentFileName { get; set; }
 
 	public override string Category => SampleCategories.Documents;
 
-	public override bool IsSupported =>
-		!string.IsNullOrEmpty(SamplesManager.TempDataPath);
-
-	protected abstract void OnGenerateDocument(string path);
+	protected abstract void OnGenerateDocument(SKCanvas previewCanvas, int width, int height);
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
 		canvas.Clear(SKColors.White);
+		OnGenerateDocument(canvas, width, height);
+	}
 
-		using var paint = new SKPaint
+	protected SKDocument? CreatePdfToMemory(SKDocumentPdfMetadata metadata, out MemoryStream stream)
+	{
+		stream = new MemoryStream();
+		var doc = SKDocument.CreatePdf(stream, metadata);
+		if (doc == null)
 		{
-			TextSize = 40.0f,
-			IsAntialias = true,
-			Color = 0xFF9CAFB7,
-			StrokeWidth = 3,
-			TextAlign = SKTextAlign.Center,
-		};
-
-		if (string.IsNullOrEmpty(DocumentPath))
-		{
-			canvas.DrawText("Documents not supported on this platform", width / 2f, height / 3, paint);
-			return;
+			stream.Dispose();
+			stream = null!;
 		}
+		return doc;
+	}
 
-		OnGenerateDocument(DocumentPath);
-		canvas.DrawText("Tap to open document", width / 2f, height / 3, paint);
+	protected SKDocument? CreateXpsToMemory(out MemoryStream stream)
+	{
+		stream = new MemoryStream();
+		var doc = SKDocument.CreateXps(stream);
+		if (doc == null)
+		{
+			stream.Dispose();
+			stream = null!;
+		}
+		return doc;
 	}
 
 	protected override void OnTapped()
 	{
 		base.OnTapped();
 
-		if (!string.IsNullOrEmpty(DocumentPath))
-			SamplesManager.OnOpenFile(DocumentPath);
+		if (DocumentBytes is { Length: > 0 } && !string.IsNullOrEmpty(DocumentFileName))
+		{
+			// Write to temp and open
+			var tempPath = Path.Combine(Path.GetTempPath(), DocumentFileName);
+			File.WriteAllBytes(tempPath, DocumentBytes);
+			SamplesManager.OnOpenFile(tempPath);
+		}
 	}
 }
