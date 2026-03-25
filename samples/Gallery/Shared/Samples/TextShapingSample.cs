@@ -3,10 +3,8 @@ using SkiaSharp.HarfBuzz;
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class TextShapingSample : SampleBase
 	{
-		[Preserve]
 		public TextShapingSample()
 		{
 		}

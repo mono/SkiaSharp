@@ -4,10 +4,8 @@ using SkiaSharp;
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class FilledHeptagramSample : SampleBase
 	{
-		[Preserve]
 		public FilledHeptagramSample()
 		{
 		}

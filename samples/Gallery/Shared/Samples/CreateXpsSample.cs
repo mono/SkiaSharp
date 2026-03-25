@@ -6,13 +6,11 @@ using SkiaSharp;
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class CreateXpsSample : SampleBase
 	{
 		private string path;
 		private bool isSupported = true;
 
-		[Preserve]
 		public CreateXpsSample()
 		{
 		}

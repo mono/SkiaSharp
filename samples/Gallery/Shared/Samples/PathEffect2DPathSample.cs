@@ -2,10 +2,8 @@
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class PathEffect2DPathSample : SampleBase
 	{
-		[Preserve]
 		public PathEffect2DPathSample()
 		{
 		}

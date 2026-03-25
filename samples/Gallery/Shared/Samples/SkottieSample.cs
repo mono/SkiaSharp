@@ -6,13 +6,11 @@ using SkiaSharp.Skottie;
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class SkottieSample : AnimatedSampleBase
 	{
 		private Animation _animation;
 		private Stopwatch _watch = new Stopwatch();
 
-		[Preserve]
 		public SkottieSample()
 		{
 		}

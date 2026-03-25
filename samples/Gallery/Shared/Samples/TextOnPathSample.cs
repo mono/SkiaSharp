@@ -4,12 +4,10 @@ using SkiaSharp;
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class TextOnPathSample : AnimatedSampleBase
 	{
 		private int animationIndex = 0;
 
-		[Preserve]
 		public TextOnPathSample()
 		{
 		}

@@ -153,7 +153,6 @@ namespace SkiaSharpSample
 	{
 		private CancellationTokenSource cts;
 
-		[Preserve]
 		public AnimatedSampleBase()
 		{
 		}

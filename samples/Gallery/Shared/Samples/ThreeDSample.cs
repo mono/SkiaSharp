@@ -5,13 +5,11 @@ using SkiaSharp;
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class ThreeDSample : AnimatedSampleBase
 	{
 		private SKMatrix44 rotationMatrix;
 		private SKMatrix44 rotationStep;
 		
-		[Preserve]
 		public ThreeDSample()
 		{
 		}

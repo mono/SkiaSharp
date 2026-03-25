@@ -2,10 +2,8 @@
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class TurbulencePerlinNoiseShaderSample : SampleBase
 	{
-		[Preserve]
 		public TurbulencePerlinNoiseShaderSample()
 		{
 		}

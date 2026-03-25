@@ -5,10 +5,8 @@ using SkiaSharp;
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class XfermodeSample : SampleBase
 	{
-		[Preserve]
 		public XfermodeSample()
 		{
 		}

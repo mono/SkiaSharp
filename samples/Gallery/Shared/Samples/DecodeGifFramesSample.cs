@@ -5,7 +5,6 @@ using SkiaSharp;
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class DecodeGifFramesSample : AnimatedSampleBase
 	{
 		private int currentFrame = 0;
@@ -14,7 +13,6 @@ namespace SkiaSharpSample.Samples
 		private SKBitmap bitmap = null;
 		private SKCodecFrameInfo[] frames;
 
-		[Preserve]
 		public DecodeGifFramesSample()
 		{
 		}

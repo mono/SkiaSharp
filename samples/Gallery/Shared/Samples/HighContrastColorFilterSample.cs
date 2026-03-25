@@ -2,12 +2,10 @@
 
 namespace SkiaSharpSample.Samples
 {
-	[Preserve(AllMembers = true)]
 	public class HighContrastColorFilterSample : SampleBase
 	{
 		private bool grayscale;
 
-		[Preserve]
 		public HighContrastColorFilterSample()
 		{
 		}
