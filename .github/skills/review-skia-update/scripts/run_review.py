@@ -81,6 +81,23 @@ def main():
     skia_root = os.path.join(repo_root, "externals", "skia")
 
     # =========================================================================
+    # Pre-flight — Ensure clean working trees
+    # =========================================================================
+    for label, cwd in [("SkiaSharp", repo_root), ("skia submodule", skia_root)]:
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=cwd, capture_output=True, text=True,
+        )
+        dirty = status.stdout.strip()
+        if dirty:
+            raise RuntimeError(
+                f"{label} working tree is dirty. Stash or clean before running.\n"
+                f"  Directory: {cwd}\n"
+                f"  Dirty files:\n" +
+                "\n".join(f"    {line}" for line in dirty.splitlines()[:10])
+            )
+
+    # =========================================================================
     # Step 1 — Parse & Setup
     # =========================================================================
     eprint("═══ Step 1 — Parse & Setup ═══")
@@ -202,44 +219,51 @@ def main():
     eprint()
 
     # =========================================================================
-    # Step 2 — Generated File Verification
+    # Steps 2–4 — Run checks (with try/finally to save partial results on failure)
     # =========================================================================
-    eprint("═══ Step 2 — Generated Files ═══")
-    gen_result = check_generated_files.run_check(
-        repo_root=repo_root,
-        output_dir=output_dir,
-    )
-    eprint()
+    gen_result = None
+    source_result = None
+    deps_result = None
+    check_error = None
+
+    try:
+        # Step 2 — Generated File Verification
+        eprint("═══ Step 2 — Generated Files ═══")
+        gen_result = check_generated_files.run_check(
+            repo_root=repo_root,
+            output_dir=output_dir,
+        )
+        eprint()
+
+        # Step 3 — Source Integrity
+        eprint("═══ Step 3 — Source Integrity ═══")
+        source_result = check_source.run_check(
+            skia_root=skia_root,
+            old_upstream_branch=f"upstream/{old_milestone}",
+            new_upstream_branch=f"upstream/{new_milestone}",
+            base_sha=base_sha,
+            pr_head=pr_head_sha,
+            output_dir=output_dir,
+        )
+        eprint()
+
+        # Step 4 — DEPS Audit
+        eprint("═══ Step 4 — DEPS Audit ═══")
+        deps_result = check_deps.run_check(
+            skia_root=skia_root,
+            base_sha=base_sha,
+            pr_head=pr_head_sha,
+            upstream_branch=f"upstream/{new_milestone}",
+            output_dir=output_dir,
+        )
+        eprint()
+    except Exception as exc:
+        check_error = str(exc)
+        eprint(f"\n❌ Check phase failed: {exc}")
+        eprint("   Saving partial results...\n")
 
     # =========================================================================
-    # Step 3 — Source Integrity
-    # =========================================================================
-    eprint("═══ Step 3 — Source Integrity ═══")
-    source_result = check_source.run_check(
-        skia_root=skia_root,
-        old_upstream_branch=f"upstream/{old_milestone}",
-        new_upstream_branch=f"upstream/{new_milestone}",
-        base_sha=base_sha,
-        pr_head=pr_head_sha,
-        output_dir=output_dir,
-    )
-    eprint()
-
-    # =========================================================================
-    # Step 4 — DEPS Audit
-    # =========================================================================
-    eprint("═══ Step 4 — DEPS Audit ═══")
-    deps_result = check_deps.run_check(
-        skia_root=skia_root,
-        base_sha=base_sha,
-        pr_head=pr_head_sha,
-        upstream_branch=f"upstream/{new_milestone}",
-        output_dir=output_dir,
-    )
-    eprint()
-
-    # =========================================================================
-    # Assemble raw results
+    # Assemble raw results (includes partial results if a check failed)
     # =========================================================================
     eprint("═══ Assembling raw results ═══")
 
@@ -260,10 +284,10 @@ def main():
             "analyzedAt": datetime.now(timezone.utc).isoformat(),
             "outputDir": output_dir,
         },
-        "generatedFiles": gen_result,
-        "upstreamIntegrity": source_result["upstreamIntegrity"],
-        "interopIntegrity": source_result["interopIntegrity"],
-        "depsAudit": deps_result,
+        "generatedFiles": gen_result or {"status": "ERROR", "error": check_error},
+        "upstreamIntegrity": (source_result or {}).get("upstreamIntegrity", {"status": "ERROR", "error": check_error}),
+        "interopIntegrity": (source_result or {}).get("interopIntegrity", {"status": "ERROR", "error": check_error}),
+        "depsAudit": deps_result or {"status": "ERROR", "error": check_error},
     }
 
     raw_results_path = os.path.join(output_dir, "raw-results.json")
@@ -271,8 +295,13 @@ def main():
         json.dump(raw_results, f, indent=2)
 
     file_size = os.path.getsize(raw_results_path)
-    eprint(f"✅ Raw results saved to: {raw_results_path} ({file_size} bytes)")
+    eprint(f"{'✅' if not check_error else '⚠️'} Raw results saved to: {raw_results_path} ({file_size} bytes)")
     eprint()
+
+    if check_error:
+        eprint(f"❌ Partial results saved — check phase failed: {check_error}")
+        eprint(f"Raw results: {raw_results_path}")
+        raise RuntimeError(f"Check phase failed: {check_error}")
 
     # Print summary
     eprint("═══ Summary ═══")

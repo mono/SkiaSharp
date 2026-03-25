@@ -29,8 +29,9 @@ if ($files.Count -eq 0) {
     exit 0
 }
 
+$resolvedSource = (Resolve-Path $source).Path
 foreach ($file in $files) {
-    $relativePath = [System.IO.Path]::GetRelativePath((Resolve-Path $source).Path, $file.FullName)
+    $relativePath = [System.IO.Path]::GetRelativePath($resolvedSource, $file.FullName)
     $destPath = Join-Path $dest $relativePath
     New-Item -ItemType Directory -Force (Split-Path $destPath) | Out-Null
     Copy-Item $file.FullName $destPath -Force

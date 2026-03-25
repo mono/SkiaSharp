@@ -9,7 +9,6 @@ Both use the same added/removed/changed/unchanged structure with diffs stored pe
 """
 import argparse
 import os
-import re
 import subprocess
 import sys
 import tempfile
@@ -31,8 +30,8 @@ def get_patch_content(diff: str) -> str:
     """Keep only +/- content lines, strip diff headers to avoid false positives from line number shifts."""
     lines = []
     for line in diff.split("\n"):
-        if (line.startswith("+") and not line.startswith("++")) or \
-           (line.startswith("-") and not line.startswith("--")):
+        if (line.startswith("+") and not line.startswith("+++ ")) or \
+           (line.startswith("-") and not line.startswith("--- ")):
             lines.append(line)
     return "\n".join(lines)
 
@@ -154,8 +153,17 @@ def get_diff_of_diffs(
             os.unlink(new_tmp.name)
 
         # Strip temp file header lines and replace with meaningful labels
-        patch_diff = re.sub(r"(?m)^--- .+$", "--- old-patch (skiasharp vs old-upstream)", patch_diff)
-        patch_diff = re.sub(r"(?m)^\+\+\+ .+$", "+++ new-patch (pr-head vs new-upstream)", patch_diff)
+        cleaned_lines = []
+        for line in patch_diff.splitlines():
+            if line.startswith("diff --git ") or line.startswith("index "):
+                continue
+            elif line.startswith("--- "):
+                cleaned_lines.append("--- old-patch (skiasharp vs old-upstream)")
+            elif line.startswith("+++ "):
+                cleaned_lines.append("+++ new-patch (pr-head vs new-upstream)")
+            else:
+                cleaned_lines.append(line)
+        patch_diff = "\n".join(cleaned_lines)
 
         changed.append({
             "path": file,
