@@ -10,11 +10,11 @@
 </div>
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
+    <nav class="nav flex-column">
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
 
@@ -22,18 +22,19 @@
             <input class="form-control form-control-sm mt-2 mb-1" type="search"
                    placeholder="Search samples…"
                    @bind="searchText"
-                   @bind:event="oninput" />
+                   @bind:event="oninput"
+                   @onclick:stopPropagation="true" />
         </div>
 
         @foreach (var group in GetFilteredGroups())
         {
-            <div class="nav-category px-3 pt-2">
-                <span class="nav-category-label">@group.Name</span>
+            <div class="px-3 pt-2">
+                <small class="text-uppercase fw-bold" style="color: rgba(255,255,255,0.5); font-size: 0.65rem; letter-spacing: 0.08em;">@group.Name</small>
             </div>
             @foreach (var sample in group.Samples)
             {
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link nav-sample-link"
+                    <NavLink class="nav-link" style="font-size: 0.85rem; padding-top: 0.25rem; padding-bottom: 0.25rem;"
                              href="@($"sample/{Uri.EscapeDataString(sample.Title)}")">
                         @sample.Title
                     </NavLink>
@@ -45,10 +46,7 @@
 </div>
 
 @code {
-    private static readonly Regex EnumSplitRegex = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])");
-
     private bool collapseNavMenu = true;
-    private string searchText = string.Empty;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
@@ -56,6 +54,10 @@
     {
         collapseNavMenu = !collapseNavMenu;
     }
+
+    private static readonly Regex EnumSplitRegex = new("(?<!^)([A-Z][a-z]|(?<=[a-z])[A-Z])");
+
+    private string searchText = string.Empty;
 
     private IEnumerable<SampleGroup> GetFilteredGroups()
     {
