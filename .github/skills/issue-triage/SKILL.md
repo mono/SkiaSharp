@@ -117,7 +117,7 @@ If fetched via API, work directly from the `gh` output (skip the script).
 
 | Signal in issue | Source to consult |
 |----------------|-------------------|
-| NativeAssets, DllNotFoundException, container, WASM | [documentation/dev/packages.md](../../documentation/dev/packages.md) |
+| NativeAssets, DllNotFoundException, container, WASM | [documentation/dev/packages.md](../../../documentation/dev/packages.md) |
 | Platform quirks, common traps | [references/skia-patterns.md](references/skia-patterns.md) |
 | Specific SkiaSharp types or methods | `docs/SkiaSharpAPI/*.xml` |
 | How-to about drawing, paths, bitmaps | `.docs/docs/docs/` |
