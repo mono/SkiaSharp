@@ -23,7 +23,7 @@ public class TextOnPathSample : InteractiveSampleBase
 	[
 		new PickerControl("text", "Text", TextOptions, textIndex),
 		new PickerControl("path", "Path Shape", PathShapes, pathShapeIndex),
-		new SliderControl("offset", "Offset", 0, 100, textOffset),
+		new SliderControl("offset", "Offset", 0, 100, textOffset, 0.5f),
 		new ToggleControl("warp", "Warp Glyphs", warpGlyphs),
 		new SliderControl("textSize", "Text Size", 12, 60, textSize),
 	];
