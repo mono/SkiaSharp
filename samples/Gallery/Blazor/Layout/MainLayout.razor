@@ -7,11 +7,37 @@
 
     <main>
         <div class="top-row px-4">
+            <div class="btn-group btn-group-sm me-auto" role="group" aria-label="Rendering backend">
+                <button type="button"
+                        class="btn @(UseGpu ? "btn-outline-secondary" : "btn-secondary") btn-sm"
+                        @onclick="() => SetBackend(false)">
+                    CPU
+                </button>
+                <button type="button"
+                        class="btn @(UseGpu ? "btn-secondary" : "btn-outline-secondary") btn-sm"
+                        @onclick="() => SetBackend(true)">
+                    GPU
+                </button>
+            </div>
             <a href="https://github.com/mono/SkiaSharp" target="_blank">GitHub</a>
         </div>
 
         <article class="content px-4">
-            @Body
+            <CascadingValue Value="UseGpu" Name="UseGpu">
+                <CascadingValue Value="BackendChanged" Name="BackendChanged">
+                    @Body
+                </CascadingValue>
+            </CascadingValue>
         </article>
     </main>
 </div>
+
+@code {
+    public bool UseGpu { get; set; } = true;
+    public EventCallback BackendChanged => EventCallback.Factory.Create(this, () => { });
+
+    private void SetBackend(bool gpu)
+    {
+        UseGpu = gpu;
+    }
+}

@@ -24,9 +24,14 @@ public class ColorTableColorFilterSample : SampleBase
 		}
 
 		// load the image from the embedded resource stream
+		// create an identity alpha table (no alpha modification)
+		var tableA = new byte[256];
+		for (var i = 0; i < 256; ++i)
+			tableA[i] = (byte)i;
+
 		using (var stream = new SKManagedStream(SampleMedia.Images.Baboon))
 		using (var bitmap = SKBitmap.Decode(stream))
-		using (var cf = SKColorFilter.CreateTable(null, ct, ct, ct))
+		using (var cf = SKColorFilter.CreateTable(tableA, ct, ct, ct))
 		using (var paint = new SKPaint())
 		{
 			paint.ColorFilter = cf;

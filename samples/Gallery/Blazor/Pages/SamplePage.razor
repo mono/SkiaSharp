@@ -19,8 +19,8 @@ else
         <p class="text-muted">@sample.Description</p>
     }
 
-    <div class="canvas-wrapper border rounded mb-0">
-        @if (useGpu)
+    <div class="canvas-wrapper border rounded mb-3">
+        @if (UseGpu)
         {
             <SKGLView @ref="glView"
                       OnPaintSurface="OnPaintGL"
@@ -38,73 +38,60 @@ else
                           @onclick="OnClick" />
         }
     </div>
-
-    <!-- Backend toggle + controls -->
-    <div class="d-flex align-items-center gap-2 backend-bar px-2 py-1 border border-top-0 rounded-bottom mb-3">
-        <div class="btn-group btn-group-sm" role="group" aria-label="Rendering backend">
-            <button type="button"
-                    class="btn @(useGpu ? "btn-outline-primary" : "btn-primary")"
-                    @onclick="() => SetBackend(false)">
-                CPU (Raster)
-            </button>
-            <button type="button"
-                    class="btn @(useGpu ? "btn-primary" : "btn-outline-primary")"
-                    @onclick="() => SetBackend(true)">
-                GPU (OpenGL)
-            </button>
-        </div>
-        <button class="btn btn-sm btn-outline-secondary" @onclick="OnResetMatrix">Reset View</button>
-        <span class="text-muted small ms-auto">Click to interact · drag to pan</span>
-    </div>
 }
 
 @code {
     [Parameter]
     public string? SampleTitle { get; set; }
 
+    [CascadingParameter(Name = "UseGpu")]
+    public bool UseGpu { get; set; }
+
     private SampleBase? sample;
     private SKCanvasView? canvasView;
     private SKGLView? glView;
-    private bool useGpu;
+    private bool previousUseGpu;
 
     private SKPoint? lastPointerDown;
     private SKPoint panStartPoint;
 
     protected override void OnParametersSet()
     {
-        DisposeSample();
-
-        var title = Uri.UnescapeDataString(SampleTitle ?? string.Empty);
-        sample = SamplesManager.GetSample(title);
-
-        if (sample is not null)
+        // Backend changed — re-render
+        if (sample is not null && previousUseGpu != UseGpu)
         {
-            // Default to CPU
-            useGpu = false;
-
-            sample.RefreshRequested += OnRefreshRequested;
-            sample.Init();
+            previousUseGpu = UseGpu;
+            InvokeAsync(async () =>
+            {
+                StateHasChanged();
+                await Task.Yield();
+                canvasView?.Invalidate();
+                glView?.Invalidate();
+            });
+            return;
         }
-    }
 
-    private void SetBackend(bool gpu)
-    {
-        useGpu = gpu;
-        // Re-render, then invalidate whichever view is now mounted
-        InvokeAsync(async () =>
+        // Sample changed
+        var title = Uri.UnescapeDataString(SampleTitle ?? string.Empty);
+        var newSample = SamplesManager.GetSample(title);
+        if (newSample != sample)
         {
-            StateHasChanged();
-            await Task.Yield();
-            canvasView?.Invalidate();
-            glView?.Invalidate();
-        });
+            DisposeSample();
+            sample = newSample;
+            previousUseGpu = UseGpu;
+
+            if (sample is not null)
+            {
+                sample.RefreshRequested += OnRefreshRequested;
+                sample.Init();
+            }
+        }
     }
 
     private void OnRefreshRequested(object? sender, EventArgs e)
     {
-        if (!useGpu)
+        if (!UseGpu)
             canvasView?.Invalidate();
-        // SKGLView with EnableRenderLoop handles animated refresh automatically
     }
 
     private void OnPaintRaster(SKPaintSurfaceEventArgs e)
@@ -148,13 +135,6 @@ else
     {
         sample?.Tap();
         canvasView?.Invalidate();
-    }
-
-    private void OnResetMatrix()
-    {
-        sample?.ResetMatrix();
-        canvasView?.Invalidate();
-        glView?.Invalidate();
     }
 
     private void DisposeSample()

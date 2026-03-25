@@ -16,8 +16,11 @@ public class CreatePdfSample : DocumentSampleBase
 	protected override async Task OnInit()
 	{
 		await base.OnInit();
-		var root = SamplesManager.EnsureTempDataDirectory("CreatePdfSample");
-		DocumentPath = Path.Combine(root, $"{Guid.NewGuid():N}.pdf");
+		if (!string.IsNullOrEmpty(SamplesManager.TempDataPath))
+		{
+			var root = SamplesManager.EnsureTempDataDirectory("CreatePdfSample");
+			DocumentPath = Path.Combine(root, $"{Guid.NewGuid():N}.pdf");
+		}
 	}
 
 	public override string Title => "Create PDF Document";

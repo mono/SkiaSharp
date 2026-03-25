@@ -10,24 +10,31 @@ public abstract class DocumentSampleBase : SampleBase
 
 	public override string Category => SampleCategories.Documents;
 
+	public override bool IsSupported =>
+		!string.IsNullOrEmpty(SamplesManager.TempDataPath);
+
 	protected abstract void OnGenerateDocument(string path);
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
 		canvas.Clear(SKColors.White);
 
-		if (!string.IsNullOrEmpty(DocumentPath))
-			OnGenerateDocument(DocumentPath);
-
 		using var paint = new SKPaint
 		{
-			TextSize = 60.0f,
+			TextSize = 40.0f,
 			IsAntialias = true,
 			Color = 0xFF9CAFB7,
 			StrokeWidth = 3,
 			TextAlign = SKTextAlign.Center,
 		};
 
+		if (string.IsNullOrEmpty(DocumentPath))
+		{
+			canvas.DrawText("Documents not supported on this platform", width / 2f, height / 3, paint);
+			return;
+		}
+
+		OnGenerateDocument(DocumentPath);
 		canvas.DrawText("Tap to open document", width / 2f, height / 3, paint);
 	}
 
