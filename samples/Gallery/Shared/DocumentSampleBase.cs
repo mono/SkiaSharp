@@ -6,9 +6,9 @@ namespace SkiaSharpSample;
 
 public abstract class DocumentSampleBase : InteractiveSampleBase
 {
-	protected byte[]? DocumentBytes { get; set; }
-	protected string? DocumentMimeType { get; set; }
-	protected string? DocumentFileName { get; set; }
+	public byte[]? DocumentBytes { get; protected set; }
+	public string? DocumentMimeType { get; protected set; }
+	public string? DocumentFileName { get; protected set; }
 
 	public override string Category => SampleCategories.Documents;
 
