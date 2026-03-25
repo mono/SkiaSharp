@@ -57,10 +57,26 @@ else
 
     protected override void OnParametersSet()
     {
-        // Backend changed — re-render
-        if (sample is not null && previousUseGpu != UseGpu)
+        // Sample changed
+        var title = Uri.UnescapeDataString(SampleTitle ?? string.Empty);
+        var newSample = SamplesManager.GetSample(title);
+        if (newSample != sample || previousUseGpu != UseGpu)
         {
+            if (newSample != sample)
+            {
+                DisposeSample();
+                sample = newSample;
+
+                if (sample is not null)
+                {
+                    sample.RefreshRequested += OnRefreshRequested;
+                    sample.Init();
+                }
+            }
+
             previousUseGpu = UseGpu;
+
+            // Force re-render then invalidate the newly mounted view
             InvokeAsync(async () =>
             {
                 StateHasChanged();
@@ -68,23 +84,6 @@ else
                 canvasView?.Invalidate();
                 glView?.Invalidate();
             });
-            return;
-        }
-
-        // Sample changed
-        var title = Uri.UnescapeDataString(SampleTitle ?? string.Empty);
-        var newSample = SamplesManager.GetSample(title);
-        if (newSample != sample)
-        {
-            DisposeSample();
-            sample = newSample;
-            previousUseGpu = UseGpu;
-
-            if (sample is not null)
-            {
-                sample.RefreshRequested += OnRefreshRequested;
-                sample.Init();
-            }
         }
     }
 
@@ -92,6 +91,16 @@ else
     {
         if (!UseGpu)
             canvasView?.Invalidate();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || glView is not null)
+        {
+            await Task.Yield();
+            glView?.Invalidate();
+            canvasView?.Invalidate();
+        }
     }
 
     private void OnPaintRaster(SKPaintSurfaceEventArgs e)
