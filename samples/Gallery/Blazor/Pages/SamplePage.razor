@@ -25,14 +25,12 @@ else
             <SKGLView @ref="glView"
                       OnPaintSurface="OnPaintGL"
                       EnableRenderLoop="@(sample is AnimatedSampleBase)"
-                      IgnorePixelScaling="true"
                       style="width:100%;height:60vh;min-height:300px;display:block;" />
         }
         else
         {
             <SKCanvasView @ref="canvasView"
                           OnPaintSurface="OnPaintRaster"
-                          IgnorePixelScaling="true"
                           style="width:100%;height:60vh;min-height:300px;display:block;"
                           @onpointerdown="OnPointerDown"
                           @onpointermove="OnPointerMove"
