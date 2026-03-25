@@ -165,8 +165,16 @@ def get_diff_of_diffs(
                 cleaned_lines.append(line)
         patch_diff = "\n".join(cleaned_lines)
 
+        # Direct branch-to-branch diff: the actual change between the two fork versions.
+        # This is the simplest view — what actually changed in the file between base and PR.
+        direct_diff = git_run(
+            ["diff", f"{base_sha}..{pr_head}", "--", file],
+            cwd=skia_root,
+        ).strip()
+
         changed.append({
             "path": file,
+            "diff": direct_diff,
             "oldDiff": old_diff,
             "newDiff": new_diff,
             "patchDiff": patch_diff,

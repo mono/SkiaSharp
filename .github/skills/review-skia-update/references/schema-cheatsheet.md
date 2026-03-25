@@ -71,10 +71,12 @@ Each item in added/removed:
 
 Each item in changed:
 ```json
-{ "path": "src/core/SkFont.cpp", "summary": "...", "oldDiff": "...", "newDiff": "...", "patchDiff": "..." }
+{ "path": "src/core/SkFont.cpp", "summary": "...", "diff": "...", "oldDiff": "...", "newDiff": "...", "patchDiff": "..." }
 ```
 
-The `patchDiff` is a `diff -u` of the old patch vs new patch — shows exactly what changed between the two fork versions. This is the most useful field for reviewing changed files.
+- `diff` — Direct branch-to-branch diff (`base→PR head`). The simplest view — what actually changed in the fork. **Default view in the HTML viewer.**
+- `patchDiff` — Diff-of-diffs (`old patch` vs `new patch`). Shows how the fork's *modifications* changed. Useful for understanding *why* something changed relative to upstream.
+- `oldDiff` / `newDiff` — The full fork-vs-upstream patches for old and new branches respectively.
 
 **No per-file status.** AI provides factual summaries only. ALL items need human review.
 
