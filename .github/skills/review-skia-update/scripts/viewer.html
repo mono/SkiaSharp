@@ -676,8 +676,14 @@
       }
 
       function renderCompanionStats(section) {
-        // Return empty — stats are shown in the compact bar inside renderCompanionTab
-        return document.createElement('div');
+        const card = document.createElement('div');
+        card.className = 'stats-grid';
+        [
+          { label: 'Files Reviewed', value: text(section.filesReviewed, '0') },
+          { label: 'Files Skipped', value: text(section.filesSkipped, '0') },
+          { label: 'Findings', value: asArray(section.findings).length }
+        ].forEach((item) => card.appendChild(createStatsTile(item.label, item.value)));
+        return card;
       }
 
       function createStatsTile(label, value) {
@@ -1097,22 +1103,6 @@
       function renderCompanionTab(section) {
         const wrapper = document.createElement('div');
         wrapper.className = 'd-grid gap-4';
-
-        // Compact stats bar
-        const statsBar = document.createElement('div');
-        statsBar.className = 'd-flex flex-wrap gap-3 align-items-center';
-        const prNum = text(section.prNumber, '—');
-        const meta = report.meta || {};
-        const prLink = `https://github.com/mono/SkiaSharp/pull/${prNum}`;
-        statsBar.innerHTML = `
-          <a href="${escapeAttribute(prLink)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-github me-1"></i>PR #${escapeHtml(prNum)}
-          </a>
-          <span class="badge text-bg-light border"><i class="bi bi-file-earmark me-1"></i>${escapeHtml(text(section.filesReviewed, '0'))} reviewed</span>
-          <span class="badge text-bg-light border"><i class="bi bi-skip-forward me-1"></i>${escapeHtml(text(section.filesSkipped, '0'))} skipped</span>
-          <span class="badge text-bg-light border"><i class="bi bi-flag me-1"></i>${asArray(section.findings).length} findings</span>
-        `;
-        wrapper.appendChild(statsBar);
 
         // Full-width findings table
         const findingsCard = document.createElement('div');
