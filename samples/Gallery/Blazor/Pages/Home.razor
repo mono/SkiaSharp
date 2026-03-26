@@ -1,91 +1,81 @@
 ﻿@page "/"
-@inject SkiaSharpSample.Services.ISampleService SampleService
+@using SkiaSharpSample.Services
+@inject ISampleService SampleService
 
 <PageTitle>SkiaSharp Gallery</PageTitle>
 
-<h1>SkiaSharp Gallery</h1>
-
-<p>
-    Welcome to the <strong>SkiaSharp Gallery</strong> — a collection of interactive samples demonstrating
-    the capabilities of <a href="https://github.com/mono/SkiaSharp" target="_blank">SkiaSharp</a>,
-    a cross-platform 2D graphics API for .NET.
-</p>
-
-<p>
-    Browse the samples in the sidebar. Each sample demonstrates a specific SkiaSharp feature,
-    rendered in the browser using WebAssembly.
-</p>
-
-<div class="row mt-4">
-    <div class="col-md-6 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">🌟 Showcases</h5>
-                <p class="card-text">Interactive demos featuring Lottie animation, vector art, 3D rotation, and freehand drawing.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">✨ Shaders &amp; Effects</h5>
-                <p class="card-text">Gradients, blend modes, sweep gradients, noise generation, and shader composition.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">🖼️ Image &amp; Filters</h5>
-                <p class="card-text">Blur image filters and photo manipulation with interactive controls.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">🔤 Text &amp; Typography</h5>
-                <p class="card-text">Text rendering, text on paths, world text, and interactive text lab.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">📐 Paths &amp; Geometry</h5>
-                <p class="card-text">Path construction, path effects, and geometric transformations.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">🖼️ Image Decoding</h5>
-                <p class="card-text">Decode images in various formats including PNG, WebP, DNG, and animated GIFs.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">⚙️ General</h5>
-                <p class="card-text">Canvas transforms, nine-patch scaling, vertex meshes, and more.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">📄 Documents</h5>
-                <p class="card-text">PDF and XPS document generation with configurable page sizes.</p>
-            </div>
-        </div>
-    </div>
+<div class="mb-4">
+    <h1 class="mb-1">SkiaSharp Gallery</h1>
+    <p class="text-muted">Interactive demos showcasing SkiaSharp's 2D graphics capabilities. Built with Blazor WebAssembly.</p>
 </div>
 
-<hr />
+<div class="mb-3">
+    <input class="form-control" type="search" placeholder="Search samples..."
+           @bind="searchText" @bind:event="oninput" />
+</div>
 
+@foreach (var group in GetFilteredGroups())
+{
+    <h5 class="mt-4 mb-3 text-uppercase fw-bold" style="color: #1a237e; letter-spacing: 0.05em; font-size: 0.85rem;">@group.Key</h5>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-3">
+        @foreach (var sample in group.OrderBy(s => s.Title))
+        {
+            <div class="col">
+                <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
+                    <div class="card h-100 sample-card">
+                        <div class="card-body py-3 px-3">
+                            <h6 class="card-title mb-1">@sample.Title</h6>
+                            @if (!string.IsNullOrWhiteSpace(sample.Description))
+                            {
+                                <p class="card-text text-muted small mb-0" style="line-height: 1.3;">
+                                    @TruncateDescription(sample.Description)
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="card-text text-muted small mb-0">
+                                    @GetSampleTypeLabel(sample)
+                                </p>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent border-0 py-1 px-3">
+                            <span class="badge bg-light text-dark small">@GetSampleTypeLabel(sample)</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+}
+
+<hr class="mt-4" />
 <p class="text-muted small">
     SkiaSharp: <strong>@SampleService.SkiaSharpVersion</strong> &nbsp;|&nbsp;
     HarfBuzzSharp: <strong>@SampleService.HarfBuzzSharpVersion</strong>
 </p>
+
+@code {
+    private string searchText = string.Empty;
+
+    private IEnumerable<IGrouping<string, SampleBase>> GetFilteredGroups()
+    {
+        var samples = SampleService.GetSamples();
+        var filtered = samples.Where(s => s.MatchesFilter(searchText));
+        return filtered
+            .GroupBy(s => s.Category)
+            .OrderBy(g => g.Key == SampleCategories.Showcases ? "" : g.Key);
+    }
+
+    private static string TruncateDescription(string desc)
+    {
+        return desc.Length > 80 ? desc[..77] + "..." : desc;
+    }
+
+    private static string GetSampleTypeLabel(SampleBase sample)
+    {
+        if (sample is DocumentSampleBase) return "📄 Document";
+        if (sample.IsAnimated) return "🎬 Animated";
+        if (sample is InteractiveSampleBase) return "🎛️ Interactive";
+        return "🖼️ Static";
+    }
+}
