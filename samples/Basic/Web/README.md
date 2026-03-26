@@ -2,6 +2,8 @@
 
 Demonstrates server-side image rendering with SkiaSharp in an ASP.NET Core Razor Pages application. An API controller generates PNG images on the fly, and the home page displays them in Bootstrap cards.
 
+![Web Sample](screenshot.png)
+
 **Features:**
 
 - **`SKSurface`** — Creates CPU-rendered surfaces server-side for each API request.
