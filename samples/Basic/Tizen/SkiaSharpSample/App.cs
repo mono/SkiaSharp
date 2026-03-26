@@ -124,6 +124,8 @@ public class App : CoreUIApplication
 
 		if (DefaultPage == SamplePage.Gpu)
 			ShowGpuPage();
+		else if (DefaultPage == SamplePage.Drawing)
+			ShowDrawingPage();
 	}
 
 	private void ShowMainMenu()

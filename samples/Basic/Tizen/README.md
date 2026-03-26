@@ -42,7 +42,7 @@ A freehand drawing canvas with a cycling color palette and touch-based input.
 
 ## Requirements
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download) or later
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
 - Tizen workload: `dotnet workload install tizen`
 
 ## Running the Sample
@@ -50,7 +50,7 @@ A freehand drawing canvas with a cycling color palette and touch-based input.
 Build:
 
 ```bash
-dotnet build -f net8.0-tizen
+dotnet build -f net10.0-tizen
 ```
 
 To start on a different page, change `DefaultPage` in `App.cs`:
@@ -59,4 +59,4 @@ To start on a different page, change `DefaultPage` in `App.cs`:
 public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
 ```
 
-Available pages: `Cpu` (default), `Gpu`
+Available pages: `Cpu` (default), `Gpu`, `Drawing`
