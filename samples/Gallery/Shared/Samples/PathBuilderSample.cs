@@ -19,7 +19,7 @@ public class PathBuilderSample : InteractiveSampleBase
 
 	public override string Category => SampleCategories.Paths;
 
-	public override string Description => "Build geometric paths and visualize bounds, fill rules, and control points.";
+	public override string Description => "Build star, Bézier, and spiral paths with bounds visualization and fill rule controls.";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

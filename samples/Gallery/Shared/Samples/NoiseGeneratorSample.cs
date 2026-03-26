@@ -19,7 +19,7 @@ public class NoiseGeneratorSample : InteractiveSampleBase
 	public override string Title => "Noise Generator";
 
 	public override string Description =>
-		"Generate procedural noise textures with adjustable frequency, octaves, seed, and offset.";
+		"Generate procedural Perlin noise textures with adjustable frequency, octaves, seed, and offset.";
 
 	public override string Category => SampleCategories.Shaders;
 

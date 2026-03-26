@@ -17,7 +17,7 @@ public class CanvasTransformsSample : InteractiveSampleBase
 
 	public override string Category => SampleCategories.General;
 
-	public override string Description => "Visualize 2D canvas transformations: translate, rotate, and scale.";
+	public override string Description => "Visualize 2D canvas transformations — translate, rotate, and scale with live matrix display.";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

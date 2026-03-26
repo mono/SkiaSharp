@@ -23,7 +23,7 @@ public class TextLabSample : InteractiveSampleBase
 	public override string Title => "Text Lab";
 
 	public override string Description =>
-		"Explore text rendering with alignment, metrics, and measurement visualization.";
+		"Explore text rendering with font selection, alignment, size, and metric visualization.";
 
 	public override string Category => SampleCategories.Text;
 

@@ -14,7 +14,7 @@ public class VectorArtSample : InteractiveSampleBase
 
 	public override string Title => "Vector Art";
 
-	public override string Description => "Complex Bézier path drawing with rotation, scale, and color theme controls.";
+	public override string Description => "Render complex Bézier path artwork with rotation, scale, and color theme controls.";
 
 	public override string Category => SampleCategories.Paths;
 

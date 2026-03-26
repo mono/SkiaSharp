@@ -128,7 +128,7 @@ half4 main(float2 fragCoord) {
 
 	public override string Title => "Shader Playground";
 
-	public override string Description => "Write and visualize SkSL runtime effect shaders with animated uniforms.";
+	public override string Description => "Write and visualize animated SkSL runtime effect shaders with adjustable parameters.";
 
 	public override string Category => SampleCategories.Shaders;
 

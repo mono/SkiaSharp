@@ -15,7 +15,7 @@ public class BlendModesSample : InteractiveSampleBase
 	public override string Title => "Blend Modes";
 
 	public override string Description =>
-		"Explore all SkiaSharp blend modes with adjustable opacity.";
+		"Explore all SkiaSharp blend modes with adjustable source and destination opacity.";
 
 	public override string Category => SampleCategories.Shaders;
 

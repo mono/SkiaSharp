@@ -31,7 +31,7 @@ public class WorldTextSample : InteractiveSampleBase
 
 	public override string Category => SampleCategories.Text;
 
-	public override string Description => "Compare text rendering with and without HarfBuzz shaping for multiple scripts.";
+	public override string Description => "Compare text rendering across Latin, Arabic, Hebrew, Emoji, and CJK scripts with HarfBuzz shaping.";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

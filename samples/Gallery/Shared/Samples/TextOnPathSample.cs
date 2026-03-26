@@ -19,6 +19,9 @@ public class TextOnPathSample : InteractiveSampleBase
 
 	public override string Category => SampleCategories.Text;
 
+	public override string Description =>
+		"Draw text along circle, wave, and heart-shaped paths with adjustable offset and size.";
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("text", "Text", TextOptions, textIndex),

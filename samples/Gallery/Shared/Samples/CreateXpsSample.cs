@@ -10,6 +10,8 @@ public class CreateXpsSample : DocumentSampleBase
 
 	public override string Title => "Create XPS Document";
 
+	public override string Description => "Generate multi-page XPS documents using SkiaSharp's document API. Windows only.";
+
 	public override bool IsSupported => OperatingSystem.IsWindows();
 
 	protected override void OnGenerateDocument(SKCanvas previewCanvas, int width, int height)

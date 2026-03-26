@@ -16,7 +16,7 @@ public class VertexMeshSample : InteractiveSampleBase
 
 	public override string Category => SampleCategories.General;
 
-	public override string Description => "Render colored triangle meshes with adjustable grid and color modes.";
+	public override string Description => "Render colored triangle meshes with adjustable grid density, color modes, and wireframe overlay.";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

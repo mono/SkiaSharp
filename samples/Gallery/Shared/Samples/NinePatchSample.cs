@@ -12,7 +12,7 @@ public class NinePatchSample : InteractiveSampleBase
 
 	public override string Title => "Nine-Patch Scaler";
 
-	public override string Description => "Stretch a 9-patch bitmap to arbitrary sizes while preserving corners.";
+	public override string Description => "Interactively resize 9-patch bitmaps with adjustable dimensions and lattice grid overlay.";
 
 	public override string Category => SampleCategories.General;
 

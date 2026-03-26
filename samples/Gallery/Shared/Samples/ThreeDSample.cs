@@ -25,7 +25,7 @@ public class ThreeDSample : InteractiveSampleBase
 
 	public override string Category => SampleCategories.General;
 
-	public override string Description => "Visualize 3D transformations with rotation around X, Y, and Z axes.";
+	public override string Description => "Visualize 3D transformations with per-axis rotation, perspective projection, and translate controls.";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

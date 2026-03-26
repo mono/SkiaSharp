@@ -16,7 +16,7 @@ public class PathEffectsLabSample : InteractiveSampleBase
 	public override string Title => "Path Effects Lab";
 
 	public override string Description =>
-		"Apply dash, discrete, corner, and composed path effects to shapes.";
+		"Apply dash, discrete, corner, and composed path effects with live parameter tuning.";
 
 	public override string Category => SampleCategories.PathEffects;
 

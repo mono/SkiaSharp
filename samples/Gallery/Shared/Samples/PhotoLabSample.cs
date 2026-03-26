@@ -27,7 +27,7 @@ public class PhotoLabSample : InteractiveSampleBase
 	public override string Title => "Photo Lab";
 
 	public override string Description =>
-		"Composable effect stack — enable, disable, and tune each effect independently.";
+		"Composable image effect stack — color filters, blur, morphology, magnifier, and high contrast.";
 
 	public override string Category => SampleCategories.ImageFilters;
 

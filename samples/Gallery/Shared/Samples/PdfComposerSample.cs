@@ -22,7 +22,7 @@ public class PdfComposerSample : DocumentSampleBase
 
 	public override string Title => "PDF Composer";
 
-	public override string Description => "Generate rich multi-page PDF documents with annotations, shapes, images, and typography.";
+	public override string Description => "Generate rich multi-page PDFs with shapes, text, images, and clickable annotations.";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[

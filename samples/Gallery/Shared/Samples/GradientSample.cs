@@ -19,6 +19,9 @@ public class GradientSample : InteractiveSampleBase
 
 	public override string Category => SampleCategories.Shaders;
 
+	public override string Description =>
+		"Create linear, radial, sweep, and conical gradients with adjustable angle and tile modes.";
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("gradientType", "Gradient Type", GradientTypes, gradientType),

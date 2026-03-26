@@ -22,7 +22,7 @@ public class GifPlayerSample : InteractiveSampleBase
 
 	public override string Category => SampleCategories.BitmapDecoding;
 
-	public override string Description => "Play animated GIFs with speed control.";
+	public override string Description => "Play animated GIFs frame-by-frame with adjustable playback speed.";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
