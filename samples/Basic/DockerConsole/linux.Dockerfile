@@ -2,7 +2,10 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
 COPY SkiaSharpSample/ .
-RUN dotnet publish -c Release -r linux-x64 -o /app/out
+
+ARG TARGETARCH
+RUN if [ "$TARGETARCH" = "arm64" ]; then RID=linux-arm64; else RID=linux-x64; fi && \
+    dotnet publish -c Release -r $RID -o /app/out
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0
 WORKDIR /app
