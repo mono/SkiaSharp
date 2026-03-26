@@ -181,7 +181,7 @@ public class CanvasTransformsSample : InteractiveSampleBase
 		var lineH = 20f;
 		for (var row = 0; row < 3; row++)
 		{
-			var line = $"│ {vals[row * 3]:F2,8}  {vals[row * 3 + 1]:F2,8}  {vals[row * 3 + 2]:F2,8} │";
+			var line = $"│ {vals[row * 3],8:F2}  {vals[row * 3 + 1],8:F2}  {vals[row * 3 + 2],8:F2} │";
 			canvas.DrawText(line, 12, startY + row * lineH, font, textPaint);
 		}
 	}

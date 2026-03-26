@@ -12,9 +12,13 @@ public class TextLabSample : InteractiveSampleBase
 	private bool showMetrics;
 	private bool stroke;
 	private int textIndex;
+	private int fontIndex; // 0 = Embedded, 1 = Default
+
+	private SKTypeface? embeddedTypeface;
 
 	private static readonly string[] AlignOptions = { "Left", "Center", "Right" };
 	private static readonly string[] TextOptions = { "SkiaSharp", "Hello World!", "The Quick Brown Fox", "0123456789", "AaBbCcDd" };
+	private static readonly string[] FontOptions = { "Embedded", "Default" };
 
 	public override string Title => "Text Lab";
 
@@ -26,6 +30,7 @@ public class TextLabSample : InteractiveSampleBase
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("text", "Text", TextOptions, textIndex),
+		new PickerControl("font", "Font", FontOptions, fontIndex),
 		new PickerControl("align", "Alignment", AlignOptions, alignIndex),
 		new SliderControl("textSize", "Text Size", 12, 120, textSize),
 		new ToggleControl("showBounds", "Show Bounds", showBounds),
@@ -38,12 +43,28 @@ public class TextLabSample : InteractiveSampleBase
 		switch (id)
 		{
 			case "text": textIndex = (int)value; break;
+			case "font": fontIndex = (int)value; break;
 			case "align": alignIndex = (int)value; break;
 			case "textSize": textSize = (float)value; break;
 			case "showBounds": showBounds = (bool)value; break;
 			case "showMetrics": showMetrics = (bool)value; break;
 			case "stroke": stroke = (bool)value; break;
 		}
+	}
+
+	private SKTypeface GetTypeface()
+	{
+		if (fontIndex == 0)
+		{
+			if (embeddedTypeface == null)
+			{
+				using var stream = SampleMedia.Fonts.EmbeddedFont;
+				if (stream != null)
+					embeddedTypeface = SKTypeface.FromStream(stream);
+			}
+			return embeddedTypeface ?? SKTypeface.Default;
+		}
+		return SKTypeface.Default;
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
@@ -66,12 +87,15 @@ public class TextLabSample : InteractiveSampleBase
 			_ => width / 2f,
 		};
 
+		var typeface = GetTypeface();
+
 		using var paint = new SKPaint
 		{
 			TextSize = textSize,
 			IsAntialias = true,
 			Color = new SKColor(0xFF4281A4),
 			TextAlign = textAlign,
+			Typeface = typeface,
 		};
 
 		if (stroke)
@@ -153,5 +177,12 @@ public class TextLabSample : InteractiveSampleBase
 			labelPaint.Color = SKColors.Orange;
 			canvas.DrawText("descent", 4, y + metrics.Descent - 4, labelPaint);
 		}
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		embeddedTypeface?.Dispose();
+		embeddedTypeface = null;
 	}
 }

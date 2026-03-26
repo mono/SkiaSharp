@@ -48,7 +48,7 @@ public class PhotoLabSample : InteractiveSampleBase
 		]),
 		new GroupControl("magnifier", "Magnifier", magnifierEnabled,
 		[
-			new SliderControl("zoom", "Zoom", 1, 15, magnifierZoom),
+			new SliderControl("zoom", "Zoom", 2, 15, magnifierZoom),
 		]),
 		new GroupControl("contrast", "High Contrast", contrastEnabled,
 		[
@@ -123,10 +123,15 @@ public class PhotoLabSample : InteractiveSampleBase
 
 			if (magnifierEnabled)
 			{
-				var size = Math.Min(width, height) / 3f;
+				// Lens covers center 40% of the canvas
+				var lensW = width * 0.4f;
+				var lensH = height * 0.4f;
+				var lensBounds = SKRect.Create(
+					width / 2f - lensW / 2f,
+					height / 2f - lensH / 2f,
+					lensW, lensH);
 				var f = SKImageFilter.CreateMagnifier(
-					SKRect.Create(width / 2f - size / 2, height / 2f - size / 2, size, size),
-					magnifierZoom, size / 10, SKSamplingOptions.Default, lastFilter);
+					lensBounds, magnifierZoom, 10f, SKSamplingOptions.Default, lastFilter);
 				imageFilters.Add(f);
 				lastFilter = f;
 			}

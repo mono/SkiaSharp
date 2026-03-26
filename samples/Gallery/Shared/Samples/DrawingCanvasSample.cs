@@ -51,8 +51,13 @@ public class DrawingCanvasSample : InteractiveSampleBase
 
 	public override void Pan(GestureState state, SKPoint translation)
 	{
-		// Do NOT call base.Pan — this sample manages its own input.
-		// Blazor dispatches: Started = absolute position, Running = cumulative delta from start.
+		// Do NOT call base.Pan — this sample draws in screen coordinates and
+		// must not apply the matrix-based pan that SampleBase provides.
+		// Blazor dispatches: Started = absolute start position,
+		// Running = cumulative delta from start (current - panStartPoint).
+		if (!IsInitialized)
+			return;
+
 		switch (state)
 		{
 			case GestureState.Started:

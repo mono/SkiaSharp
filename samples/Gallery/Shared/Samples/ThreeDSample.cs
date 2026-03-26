@@ -10,6 +10,9 @@ public class ThreeDSample : InteractiveSampleBase
 	private float rotateX;
 	private float rotateY = 30f;
 	private float rotateZ;
+	private float translateX;
+	private float translateY;
+	private float scale = 1f;
 	private int projectionIndex;
 	private float perspDepth = 500f;
 	private bool showAxes = true;
@@ -28,6 +31,9 @@ public class ThreeDSample : InteractiveSampleBase
 		new SliderControl("rotateX", "Rotate X", -180, 180, rotateX),
 		new SliderControl("rotateY", "Rotate Y", -180, 180, rotateY),
 		new SliderControl("rotateZ", "Rotate Z", -180, 180, rotateZ),
+		new SliderControl("translateX", "Translate X", -300, 300, translateX),
+		new SliderControl("translateY", "Translate Y", -300, 300, translateY),
+		new SliderControl("scale", "Scale", 0.2f, 3, scale, 0.1f),
 		new PickerControl("projection", "Projection", Projections, projectionIndex),
 		new SliderControl("perspDepth", "Perspective Depth", 100, 2000, perspDepth, 50),
 		new ToggleControl("showAxes", "Show Axes", showAxes),
@@ -41,6 +47,9 @@ public class ThreeDSample : InteractiveSampleBase
 			case "rotateX": rotateX = (float)value; break;
 			case "rotateY": rotateY = (float)value; break;
 			case "rotateZ": rotateZ = (float)value; break;
+			case "translateX": translateX = (float)value; break;
+			case "translateY": translateY = (float)value; break;
+			case "scale": scale = (float)value; break;
 			case "projection": projectionIndex = (int)value; break;
 			case "perspDepth": perspDepth = (float)value; break;
 			case "showAxes": showAxes = (bool)value; break;
@@ -54,12 +63,12 @@ public class ThreeDSample : InteractiveSampleBase
 
 		var cx = width / 2f;
 		var cy = height / 2f;
-		var size = Math.Min(width, height) * 0.2f;
+		var size = Math.Min(width, height) * 0.2f * scale;
 
 		// Draw grid background
 		DrawGrid(canvas, width, height, cx, cy);
 
-		// Build rotation matrix
+		// Build rotation matrix from current slider values
 		var rx = SKMatrix44.CreateRotationDegrees(1, 0, 0, rotateX);
 		var ry = SKMatrix44.CreateRotationDegrees(0, 1, 0, rotateY);
 		var rz = SKMatrix44.CreateRotationDegrees(0, 0, 1, rotateZ);
@@ -70,7 +79,8 @@ public class ThreeDSample : InteractiveSampleBase
 		rotation.PostConcat(rz);
 
 		canvas.Save();
-		canvas.Translate(cx, cy);
+		// Translate to center, then apply user translation before rotation
+		canvas.Translate(cx + translateX, cy + translateY);
 
 		// Apply perspective if selected
 		if (projectionIndex == 1)
@@ -247,6 +257,6 @@ public class ThreeDSample : InteractiveSampleBase
 
 		textPaint.Color = new SKColor(120, 120, 120);
 		font.Size = 11;
-		canvas.DrawText($"X:{rotateX:F0}°  Y:{rotateY:F0}°  Z:{rotateZ:F0}°  {Projections[projectionIndex]}", 14, startY + 3 * lineH + 4, font, textPaint);
+		canvas.DrawText($"X:{rotateX:F0}°  Y:{rotateY:F0}°  Z:{rotateZ:F0}°  S:{scale:F1}  {Projections[projectionIndex]}", 14, startY + 3 * lineH + 4, font, textPaint);
 	}
 }
