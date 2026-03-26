@@ -31,6 +31,12 @@
                     </div>
                     <span class="small fw-bold">@group.Label</span>
                 </div>
+                @if (!string.IsNullOrEmpty(group.Description))
+                {
+                    <div class="px-2 py-1">
+                        <small class="text-muted">@group.Description</small>
+                    </div>
+                }
                 @if (GetToggleValue(fullId, group.Enabled))
                 {
                     <div class="card-body py-2 px-2">
@@ -74,6 +80,10 @@
                             <option value="@i">@picker.Options[i]</option>
                         }
                     </select>
+                }
+                @if (!string.IsNullOrEmpty(control.Description))
+                {
+                    <small class="text-muted d-block">@control.Description</small>
                 }
             </div>
         }

@@ -7,8 +7,10 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class LottiePlayerSample : AnimatedInteractiveSampleBase
+public class LottiePlayerSample : InteractiveSampleBase
 {
+	public override bool IsAnimated => true;
+
 	private Animation _animation;
 	private Stopwatch _watch = new Stopwatch();
 	private bool _playing = true;

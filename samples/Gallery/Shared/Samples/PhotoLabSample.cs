@@ -36,24 +36,24 @@ public class PhotoLabSample : InteractiveSampleBase
 		new GroupControl("color", "Color Filter", colorEnabled,
 		[
 			new PickerControl("preset", "Preset", ColorPresets, colorPreset),
-		]),
+		], Description: "Apply color transformations like grayscale, sepia, or inversion."),
 		new GroupControl("blur", "Gaussian Blur", blurEnabled,
 		[
 			new SliderControl("sigma", "Sigma", 0.5f, 30, blurSigma),
-		]),
+		], Description: "Apply a Gaussian blur with configurable radius."),
 		new GroupControl("morph", "Morphology", morphEnabled,
 		[
 			new PickerControl("type", "Type", MorphTypes, morphType),
 			new SliderControl("radius", "Radius", 1, 10, morphRadius, 1),
-		]),
+		], Description: "Expand (Dilate) or shrink (Erode) bright regions."),
 		new GroupControl("magnifier", "Magnifier", magnifierEnabled,
 		[
 			new SliderControl("zoom", "Zoom", 2, 15, magnifierZoom),
-		]),
+		], Description: "Lens magnification effect applied to the center of the image."),
 		new GroupControl("contrast", "High Contrast", contrastEnabled,
 		[
 			new SliderControl("amount", "Amount", 0, 1, contrastAmount, 0.05f),
-		]),
+		], Description: "Increase contrast for improved readability."),
 	];
 
 	protected override void OnControlChanged(string id, object value)

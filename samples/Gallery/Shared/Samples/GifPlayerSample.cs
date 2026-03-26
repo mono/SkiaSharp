@@ -6,8 +6,10 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class GifPlayerSample : AnimatedInteractiveSampleBase
+public class GifPlayerSample : InteractiveSampleBase
 {
+	public override bool IsAnimated => true;
+
 	private int currentFrame;
 	private bool playing = true;
 	private float speed = 1f;

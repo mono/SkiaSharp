@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject SkiaSharpSample.Services.ISampleService SampleService
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">SkiaSharp Gallery</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -56,7 +58,7 @@
 
     private IEnumerable<IGrouping<string, SampleBase>> GetFilteredGroups()
     {
-        var samples = SamplesManager.GetSamples();
+        var samples = SampleService.GetSamples();
         var filtered = samples.Where(s => s.MatchesFilter(searchText));
 
         return filtered

@@ -13,12 +13,15 @@ public abstract class SampleBase
 	private SKMatrix startPinchMatrix = SKMatrix.Identity;
 	private SKPoint startPinchOrigin = SKPoint.Empty;
 	private float totalPinchScale = 1f;
+	private CancellationTokenSource cts;
 
 	public abstract string Title { get; }
 
 	public virtual string Description { get; } = string.Empty;
 
 	public virtual string Category { get; } = SampleCategories.General;
+
+	public virtual bool IsAnimated => false;
 
 	public virtual bool IsSupported => true;
 
@@ -62,14 +65,41 @@ public abstract class SampleBase
 
 	protected virtual Task OnInit()
 	{
-		return Task.FromResult(true);
+		if (IsAnimated)
+		{
+			var scheduler = SynchronizationContext.Current != null
+				? TaskScheduler.FromCurrentSynchronizationContext()
+				: TaskScheduler.Default;
+
+			cts = new CancellationTokenSource();
+			_ = Task.Run(async () =>
+			{
+				while (!cts.IsCancellationRequested)
+				{
+					await OnUpdate(cts.Token);
+					new Task(Refresh).Start(scheduler);
+				}
+			}, cts.Token);
+		}
+
+		return Task.CompletedTask;
 	}
 
 	protected virtual void OnDestroy()
 	{
+		cts?.Cancel();
 	}
 
-	public void Tap()
+	/// <summary>
+	/// Called on each animation tick when <see cref="IsAnimated"/> is true.
+	/// Override to update animation state.
+	/// </summary>
+	protected virtual Task OnUpdate(CancellationToken token) => Task.CompletedTask;
+
+	/// <summary>
+	/// Handles tap gestures. Override <see cref="OnTapped"/> to respond to taps.
+	/// </summary>
+	public virtual void Tap()
 	{
 		if (IsInitialized)
 		{
@@ -86,6 +116,10 @@ public abstract class SampleBase
 	{
 	}
 
+	/// <summary>
+	/// Handles pan gestures by applying a translation matrix.
+	/// Override to implement custom pan behavior (e.g., freehand drawing input).
+	/// </summary>
 	public virtual void Pan(GestureState state, SKPoint translation)
 	{
 		switch (state)
@@ -103,7 +137,10 @@ public abstract class SampleBase
 		}
 	}
 
-	public void Pinch(GestureState state, float scale, SKPoint origin)
+	/// <summary>
+	/// Handles pinch-to-zoom gestures. Override to implement custom zoom behavior.
+	/// </summary>
+	public virtual void Pinch(GestureState state, float scale, SKPoint origin)
 	{
 		switch (state)
 		{
