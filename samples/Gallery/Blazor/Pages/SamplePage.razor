@@ -20,7 +20,58 @@ else
         <p class="text-muted">@sample.Description</p>
     }
 
-    @if (sample is not DocumentSampleBase)
+    @if (!IsDocument && HasControls)
+    {
+        <div class="sample-layout">
+            <div class="sample-canvas">
+                <div class="canvas-wrapper border rounded">
+                    @if (UseGpu)
+                    {
+                        <SKGLView @ref="glView"
+                                  OnPaintSurface="OnPaintGL"
+                                  EnableRenderLoop="@(sample is AnimatedSampleBase or AnimatedInteractiveSampleBase)"
+                                  style="width:100%;height:100%;min-height:300px;display:block;" />
+                    }
+                    else
+                    {
+                        <SKCanvasView @ref="canvasView"
+                                      OnPaintSurface="OnPaintRaster"
+                                      style="width:100%;height:100%;min-height:300px;display:block;"
+                                      @onpointerdown="OnPointerDown"
+                                      @onpointermove="OnPointerMove"
+                                      @onpointerup="OnPointerUp"
+                                      @onclick="OnClick" />
+                    }
+                </div>
+            </div>
+            <div class="sample-controls @(isPinned ? "pinned" : "unpinned") @(showControls ? "visible" : "")">
+                <div class="controls-header">
+                    <button class="btn btn-sm @(isPinned ? "btn-secondary" : "btn-outline-secondary")"
+                            @onclick="TogglePin"
+                            title="@(isPinned ? "Unpin controls" : "Pin controls")">
+                        📌
+                    </button>
+                    @if (!isPinned)
+                    {
+                        <button class="btn btn-sm btn-outline-secondary"
+                                @onclick="() => showControls = false"
+                                title="Close controls">
+                            ✕
+                        </button>
+                    }
+                </div>
+                <ControlPanel Controls="@InteractiveSample!.Controls"
+                              OnChanged="@OnControlChanged" />
+            </div>
+            @if (!isPinned)
+            {
+                <button class="controls-toggle" @onclick="ToggleControls" title="Toggle controls">
+                    ⚙️
+                </button>
+            }
+        </div>
+    }
+    else if (!IsDocument)
     {
         <div class="canvas-wrapper border rounded mb-3">
             @if (UseGpu)
@@ -43,13 +94,13 @@ else
         </div>
     }
 
-    @if (sample is InteractiveSampleBase interactive)
+    @if (IsDocument && HasControls)
     {
-        <ControlPanel Controls="@interactive.Controls"
+        <ControlPanel Controls="@InteractiveSample!.Controls"
                       OnChanged="@OnControlChanged" />
     }
 
-    @if (sample is DocumentSampleBase && !string.IsNullOrEmpty(documentBlobUrl))
+    @if (IsDocument && !string.IsNullOrEmpty(documentBlobUrl))
     {
         <div class="border rounded mt-2" style="height:60vh;min-height:400px;">
             <iframe src="@documentBlobUrl" style="width:100%;height:100%;border:none;" />
@@ -72,6 +123,27 @@ else
 
     private SKPoint? lastPointerDown;
     private SKPoint panStartPoint;
+
+    // Computed helpers for template branching
+    private bool IsDocument => sample is DocumentSampleBase;
+    private bool HasControls => sample is InteractiveSampleBase i && i.Controls is { Count: > 0 };
+    private InteractiveSampleBase? InteractiveSample => sample as InteractiveSampleBase;
+
+    // Control panel layout state (static for SPA persistence across navigation)
+    private static bool isPinned = true;
+    private static bool showControls = true;
+
+    private void TogglePin()
+    {
+        isPinned = !isPinned;
+        if (isPinned)
+            showControls = true;
+    }
+
+    private void ToggleControls()
+    {
+        showControls = !showControls;
+    }
 
     protected override void OnParametersSet()
     {
