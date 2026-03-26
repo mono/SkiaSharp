@@ -12,7 +12,7 @@ public class TextLabSample : InteractiveSampleBase
 	private bool showMetrics;
 	private bool stroke;
 	private int textIndex;
-	private int fontIndex = 1; // 0 = Embedded, 1 = Default
+	private int fontIndex; // 0 = Embedded, 1 = Default
 
 	private SKTypeface? embeddedTypeface;
 

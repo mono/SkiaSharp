@@ -2,37 +2,45 @@
 
 <PageTitle>Debug — SkiaSharp Gallery</PageTitle>
 
+<style>
+    @@font-face {
+        font-family: 'EmbeddedFont';
+        src: url('fonts/embedded-font.ttf') format('truetype');
+    }
+</style>
+
 <div style="display:flex;flex-direction:column;height:calc(100vh - 5rem);gap:1rem;">
     <div>
         <a href="" class="text-decoration-none small">&larr; Back to Gallery</a>
-        <h4>Size Comparison: HTML vs SkiaSharp</h4>
+        <h4>Size Comparison: HTML vs SkiaSharp (Lateef font)</h4>
     </div>
 
     <div style="display:flex;gap:1rem;flex:1;min-height:0;">
         <!-- HTML reference column -->
-        <div style="flex:1;border:1px solid #ccc;border-radius:8px;padding:1rem;overflow:auto;">
-            <h6 class="text-muted mb-2">HTML (CSS pixels)</h6>
+        <div style="flex:1;border:1px solid #ccc;border-radius:8px;padding:1rem;overflow:auto;font-family:'EmbeddedFont',serif;">
+            <h6 class="text-muted mb-2" style="font-family:sans-serif;">HTML (Lateef font, CSS pixels)</h6>
 
             <div style="font-size:12px;margin-bottom:4px;">12px: The quick brown fox</div>
             <div style="font-size:24px;margin-bottom:4px;">24px: The quick brown fox</div>
             <div style="font-size:36px;margin-bottom:4px;">36px: Quick brown</div>
             <div style="font-size:48px;margin-bottom:4px;">48px: Quick</div>
+            <div style="font-size:72px;margin-bottom:4px;">72px: Abc</div>
 
             <hr />
 
             <div style="display:flex;gap:8px;align-items:end;margin-top:8px;">
                 <div style="width:50px;height:50px;background:#3b82f6;border-radius:4px;"></div>
-                <span class="small text-muted">50×50px</span>
+                <span class="small text-muted" style="font-family:sans-serif;">50×50px</span>
 
                 <div style="width:100px;height:100px;background:#8b5cf6;border-radius:4px;"></div>
-                <span class="small text-muted">100×100px</span>
+                <span class="small text-muted" style="font-family:sans-serif;">100×100px</span>
 
                 <div style="width:150px;height:50px;background:#ef4444;border-radius:4px;"></div>
-                <span class="small text-muted">150×50px</span>
+                <span class="small text-muted" style="font-family:sans-serif;">150×50px</span>
             </div>
         </div>
 
-        <!-- SkiaSharp canvas column (device pixels — no IgnorePixelScaling) -->
+        <!-- SkiaSharp canvas column -->
         <div style="flex:1;border:1px solid #ccc;border-radius:8px;overflow:hidden;">
             <SKCanvasView OnPaintSurface="OnPaint"
                           IgnorePixelScaling="true"
@@ -63,47 +71,38 @@
         var width = e.Info.Width;
         var height = e.Info.Height;
 
-        // Calculate DPI scale: device pixels / CSS pixels
-        // Without IgnorePixelScaling, e.Info gives device pixels
-        // We need to figure out the CSS size from the canvas element
-        // The ratio between RawInfo and Info tells us if IgnorePixelScaling is active
-        // Without it, RawInfo == Info (both device pixels)
-        // The actual DPI can be inferred: device pixels / CSS pixels
-        // We know CSS width from the layout (flex:1 of ~50% viewport)
-        // For now, just use device pixels and scale fonts by DPI
-        float dpi = (float)rawW / Math.Max(1, infoW);
-        if (dpi < 1.1f) dpi = 2f; // fallback for retina if RawInfo==Info
+        // Load the same embedded font (Lateef) used by the HTML side
+        using var fontStream = SampleMedia.Fonts.EmbeddedFont;
+        var typeface = fontStream != null ? SKTypeface.FromStream(fontStream) : SKTypeface.Default;
 
-        // Scale canvas so 1 unit = 1 CSS pixel  
-        // Actually without IgnorePixelScaling, we're drawing in device pixels.
-        // To match CSS px, multiply all sizes by dpi.
-        // But we DON'T know dpi here reliably without IgnorePixelScaling.
-        // Let's just draw at device pixel sizes and label them.
-
-        // Header
+        // Header (sans-serif)
         using var headerFont = new SKFont { Size = 14 };
         using var headerPaint = new SKPaint { Color = new SKColor(107, 114, 128), IsAntialias = true };
-        canvas.DrawText($"SkiaSharp (CSS pixels: {width}x{height}, device: {rawW}x{rawH})", 16, 24, SKTextAlign.Left, headerFont, headerPaint);
+        canvas.DrawText($"SkiaSharp (Lateef font, {width}×{height} CSS, {rawW}×{rawH} device)", 16, 24, SKTextAlign.Left, headerFont, headerPaint);
 
-        // Text at different sizes — should match the HTML side
+        // Text at different sizes using embedded font — should match HTML
         using var textPaint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
 
         float y = 52;
 
-        using var f12 = new SKFont { Size = 12 };
+        using var f12 = new SKFont(typeface, 12);
         canvas.DrawText("12px: The quick brown fox", 16, y, f12, textPaint);
         y += 28;
 
-        using var f24 = new SKFont { Size = 24 };
+        using var f24 = new SKFont(typeface, 24);
         canvas.DrawText("24px: The quick brown fox", 16, y, f24, textPaint);
         y += 40;
 
-        using var f36 = new SKFont { Size = 36 };
+        using var f36 = new SKFont(typeface, 36);
         canvas.DrawText("36px: Quick brown", 16, y, f36, textPaint);
         y += 52;
 
-        using var f48 = new SKFont { Size = 48 };
+        using var f48 = new SKFont(typeface, 48);
         canvas.DrawText("48px: Quick", 16, y, f48, textPaint);
+        y += 60;
+
+        using var f72 = new SKFont(typeface, 72);
+        canvas.DrawText("72px: Abc", 16, y, f72, textPaint);
         y += 24;
 
         // Separator line
