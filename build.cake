@@ -39,6 +39,7 @@ var THROW_ON_FIRST_TEST_FAILURE = Argument ("throwOnFirstTestFailure", false);
 var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
+var SAMPLE_FILTER = Argument ("sample", "");
 
 var PLATFORM_SUPPORTS_VULKAN_TESTS = (IsRunningOnWindows () || IsRunningOnLinux ()).ToString ();
 var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? PLATFORM_SUPPORTS_VULKAN_TESTS);
@@ -517,23 +518,6 @@ Task ("samples")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // TODO: Docker seems to be having issues on the old DevOps agents
-
-    // // copy all the packages next to the Dockerfile files
-    // var dockerfiles = GetFiles ("./output/samples/**/Dockerfile");
-    // foreach (var dockerfile in dockerfiles) {
-    //     CopyDirectory (OUTPUT_NUGETS_PATH, dockerfile.GetDirectory ().Combine ("packages"));
-    // }
-
-    // // build the run.ps1 (typically for Dockerfiles)
-    // var runs = GetFiles ("./output/samples/**/run.ps1");
-    // foreach (var run in runs) {
-    //     RunProcess ("pwsh", new ProcessSettings {
-    //         Arguments = run.FullPath,
-    //         WorkingDirectory = run.GetDirectory (),
-    //     });
-    // }
-
     // build solutions locally
     var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
         ? "samples-preview"
@@ -544,9 +528,29 @@ Task ("samples")
         .OrderBy (x => x.FullPath)
         .ToArray ();
 
+    // apply --sample filter if specified
+    if (!string.IsNullOrEmpty (SAMPLE_FILTER)) {
+        solutions = solutions
+            .Where (s => s.FullPath.Contains (SAMPLE_FILTER))
+            .ToArray ();
+        Information ($"Filtered to {solutions.Length} solution(s) matching '{SAMPLE_FILTER}'");
+    }
+
     Information ("Solutions found:");
     foreach (var sln in solutions) {
         Information ("    " + sln);
+    }
+
+    // run Docker samples via run.ps1
+    var dockerRuns = GetFiles ($"./output/{actualSamples}/**/run.ps1")
+        .Where (r => string.IsNullOrEmpty (SAMPLE_FILTER) || r.FullPath.Contains (SAMPLE_FILTER))
+        .ToArray ();
+    foreach (var run in dockerRuns) {
+        Information ($"Running Docker sample: {run}");
+        RunProcess ("pwsh", new ProcessSettings {
+            Arguments = run.FullPath,
+            WorkingDirectory = run.GetDirectory (),
+        });
     }
 
     var firstLoop = true;
