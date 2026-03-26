@@ -31,8 +31,10 @@ public abstract class SampleBase
 	{
 		if (IsInitialized)
 		{
-			canvas.SetMatrix(Matrix);
+			canvas.Save();
+			canvas.Concat(Matrix);
 			OnDrawSample(canvas, width, height);
+			canvas.Restore();
 		}
 	}
 
