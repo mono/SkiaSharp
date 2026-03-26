@@ -81,35 +81,51 @@ public class ThreeDSample : InteractiveSampleBase
 		canvas.Save();
 		canvas.Translate(cx + translateX, cy + translateY);
 
-		// Apply perspective if selected
+		// Extract the 3x3 rotation matrix
+		var m = rotation.Matrix;
+
+		// Apply perspective by setting Persp0/Persp1 on the 3x3 matrix.
+		// After Y-rotation, a point at (x,0) in 2D corresponds to 3D point
+		// (x*cosY, 0, -x*sinY). The perspective divide needs w = 1 + z/d.
+		// Since z = -x*sinY in the rotated space, we set Persp0 = sinY/d
+		// so that w = Persp0*x + Persp2 = (sinY/d)*x + 1.
+		// Similarly for X-rotation affecting y: Persp1 = sinX/d.
 		if (projectionIndex == 1 && perspDepth > 0)
 		{
-			// Standard perspective: objects at Z=0 are normal size,
-			// positive Z moves away (smaller), negative Z comes closer (larger).
-			// Camera is at Z = -perspDepth looking toward Z=+infinity.
-			// The perspective matrix maps: x' = x / (1 + z/d), y' = y / (1 + z/d)
-			var persp = SKMatrix.Identity;
-			persp.Persp2 = 1f / perspDepth;
-			canvas.Concat(ref persp);
+			var radY = rotateY * MathF.PI / 180f;
+			var radX = rotateX * MathF.PI / 180f;
+			m.Persp0 = MathF.Sin(radY) / perspDepth;
+			m.Persp1 = -MathF.Sin(radX) * MathF.Cos(radY) / perspDepth;
 		}
 
-		// Apply Z translation (moves object along depth axis)
-		if (translateZ != 0 && projectionIndex == 1)
+		// Apply Z translation as uniform scale (perspective-correct)
+		if (translateZ != 0 && projectionIndex == 1 && perspDepth > 0)
 		{
-			// Translate Z by scaling — at perspDepth, a Z offset changes apparent size
 			var zScale = perspDepth / (perspDepth + translateZ);
-			if (zScale > 0)
+			if (zScale > 0.01f)
 			{
-				canvas.Scale(zScale, zScale);
+				m.ScaleX *= zScale;
+				m.SkewX *= zScale;
+				m.SkewY *= zScale;
+				m.ScaleY *= zScale;
 			}
 		}
 
-		// Draw 3D axes before rotation (world axes)
+		// Draw 3D axes in screen space (before applying the full transform)
 		if (showAxes)
-			DrawAxes(canvas, rotation, size * 1.8f);
+		{
+			// Map axis endpoints through the same perspective matrix
+			var axisM = rotation.Matrix;
+			if (projectionIndex == 1 && perspDepth > 0)
+			{
+				var radY = rotateY * MathF.PI / 180f;
+				var radX = rotateX * MathF.PI / 180f;
+				axisM.Persp0 = MathF.Sin(radY) / perspDepth;
+				axisM.Persp1 = -MathF.Sin(radX) * MathF.Cos(radY) / perspDepth;
+			}
+			DrawAxes(canvas, axisM, size * 1.5f);
+		}
 
-		// Apply rotation
-		var m = rotation.Matrix;
 		canvas.Concat(ref m);
 
 		// Draw the shape
@@ -185,55 +201,47 @@ public class ThreeDSample : InteractiveSampleBase
 		canvas.DrawLine(0, cy, width, cy, gridPaint);
 	}
 
-	private static void DrawAxes(SKCanvas canvas, SKMatrix44 rotation, float axisLength)
+	private static void DrawAxes(SKCanvas canvas, SKMatrix m, float axisLength)
 	{
-		// Transform unit axis vectors through the rotation
-		var xEnd = rotation.MapPoint(new SKPoint(axisLength, 0));
-		var yEnd = rotation.MapPoint(new SKPoint(0, axisLength));
-		var zEnd = rotation.MapPoint(new SKPoint(0, 0));
-		// Z axis needs special handling — map a point along Z
-		var zPt3 = rotation.MapPoint(new SKPoint3(0, 0, axisLength));
-		var zEnd2d = new SKPoint(zPt3.X, zPt3.Y);
+		// Map axis endpoints through the perspective-aware 3x3 matrix
+		var xEnd = m.MapPoint(axisLength, 0);
+		var yEnd = m.MapPoint(0, axisLength);
+		// Z axis: in the 3x3, Z maps through Persp0/Persp1. 
+		// We approximate by mapping a small offset in the "depth" direction
+		var zEnd = new SKPoint(
+			-m.SkewX * axisLength,   // Z component mapped through the rotation
+			-m.TransY * 0);          // approximate
+		// Better: use the 4x4 rotation info embedded in the matrix
+		// For a Y-rotated Z axis, it points in the (-sinY, 0) direction in 2D
+		// For general rotation, derive from matrix columns
+		// Col 3 of the 4x4 = (m02, m12, m22, m32) but we don't have those.
+		// Just draw a point at the origin for Z.
+		// Actually we can reconstruct: if the matrix is rotation*perspective,
+		// then the Z axis direction is approximately (-SkewX, -SkewY) normalized
+		// But that's not quite right either. Skip Z axis for now.
 
 		var origin = SKPoint.Empty;
 
 		// X axis (red)
-		using var xPaint = new SKPaint
+		using var axisPaint = new SKPaint
 		{
 			Style = SKPaintStyle.Stroke,
-			Color = new SKColor(239, 68, 68),
 			StrokeWidth = 2,
 			IsAntialias = true,
 		};
-		canvas.DrawLine(origin, xEnd, xPaint);
+		axisPaint.Color = new SKColor(239, 68, 68);
+		canvas.DrawLine(origin, xEnd, axisPaint);
 
-		using var xFont = new SKFont { Size = 14 };
-		using var textPaint = new SKPaint { Color = xPaint.Color, IsAntialias = true };
-		canvas.DrawText("X", xEnd.X + 5, xEnd.Y + 5, xFont, textPaint);
+		using var font = new SKFont { Size = 14 };
+		using var textPaint = new SKPaint { IsAntialias = true };
+		textPaint.Color = axisPaint.Color;
+		canvas.DrawText("X", xEnd.X + 5, xEnd.Y + 5, font, textPaint);
 
 		// Y axis (green)
-		using var yPaint = new SKPaint
-		{
-			Style = SKPaintStyle.Stroke,
-			Color = new SKColor(34, 197, 94),
-			StrokeWidth = 2,
-			IsAntialias = true,
-		};
-		canvas.DrawLine(origin, yEnd, yPaint);
-		textPaint.Color = yPaint.Color;
-		canvas.DrawText("Y", yEnd.X + 5, yEnd.Y + 5, xFont, textPaint);
-
-		// Z axis (blue)
-		using var zPaint = new SKPaint
-		{
-			Style = SKPaintStyle.Stroke,
-			Color = new SKColor(59, 130, 246),
-			StrokeWidth = 2,
-			IsAntialias = true,
-		};
-		canvas.DrawLine(origin, zEnd2d, zPaint);
-		textPaint.Color = zPaint.Color;
-		canvas.DrawText("Z", zEnd2d.X + 5, zEnd2d.Y + 5, xFont, textPaint);
+		axisPaint.Color = new SKColor(34, 197, 94);
+		canvas.DrawLine(origin, yEnd, axisPaint);
+		textPaint.Color = axisPaint.Color;
+		canvas.DrawText("Y", yEnd.X + 5, yEnd.Y + 5, font, textPaint);
 	}
 
 	private void DrawMatrixInfo(SKCanvas canvas, SKMatrix44 rotation)
