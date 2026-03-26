@@ -70,7 +70,7 @@ grep -rE " </|  </" docs/SkiaSharpAPI/
 
 - [references/patterns.md](references/patterns.md) - XML syntax and examples
 - [references/checklist.md](references/checklist.md) - Review severity criteria
-- [documentation/writing-docs.md](../../../documentation/writing-docs.md) - Full docs generation workflow (automated pipeline, local generation, cake targets)
+- [documentation/dev/writing-docs.md](../../../documentation/dev/writing-docs.md) - Full docs generation workflow (automated pipeline, local generation, cake targets)
 
 ## Regenerating Docs
 
@@ -84,7 +84,7 @@ dotnet cake --target=docs-download-output   # Download latest NuGets
 dotnet cake --target=update-docs            # Regenerate XML docs
 ```
 
-New members will appear with "To be added." placeholders. See [documentation/writing-docs.md](../../../documentation/writing-docs.md) for full details.
+New members will appear with "To be added." placeholders. See [documentation/dev/writing-docs.md](../../../documentation/dev/writing-docs.md) for full details.
 
 **To edit existing docs** (no regeneration needed): just edit the XML files directly and run `dotnet cake --target=docs-format-docs` to format and validate.
 

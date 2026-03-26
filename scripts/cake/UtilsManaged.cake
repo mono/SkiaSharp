@@ -9,12 +9,6 @@ if (IsRunningOnWindows ()) {
     throw new Exception ("This script is not running on a known platform.");
 }
 
-var UNSUPPORTED_TESTS = new Dictionary<string, string>
-{
-    { "FailingOn", skipTestOnPlatform },
-    { "SkipOn", skipTestOnPlatform },
-};
-
 void RunTests(FilePath testAssembly, DirectoryPath output, bool is32)
 {
     var dir = testAssembly.GetDirectory();
@@ -28,9 +22,6 @@ void RunTests(FilePath testAssembly, DirectoryPath output, bool is32)
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append("-verbose"),
     };
-    foreach (var trait in UNSUPPORTED_TESTS) {
-        settings.ExcludeTrait(trait.Key, trait.Value);
-    }
     XUnit2(new [] { testAssembly }, settings);
 }
 
@@ -68,10 +59,6 @@ void RunDotNetTest(
             return args;
         },
     };
-    var filter = string.Join("&", UNSUPPORTED_TESTS.Select(t => $"{t.Key}!={t.Value}"));
-    if (!string.IsNullOrEmpty(filter)) {
-        settings.Filter = filter;
-    }
     DotNetTest(MakeAbsolute(testProject).FullPath, settings);
 }
 

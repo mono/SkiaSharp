@@ -19,6 +19,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ShaderFilterAcceptsNullParams()
 		{
 			var filter = SKImageFilter.CreateShader(null);

@@ -2,7 +2,7 @@
 
 Reference for all NuGet packages produced by SkiaSharp — purpose, contents, and usage guidance.
 
-> **Related:** [Adding Libraries](adding-libraries.md) | [Architecture](architecture.md) | [Linux Assets](linux-assets.md)
+> **Related:** [Adding Libraries](adding-libraries.md) | [Architecture](architecture.md)
 
 ## Contents
 
@@ -220,5 +220,4 @@ System.DllNotFoundException: Unable to load shared library 'libSkiaSharp'
 
 - [Adding Libraries](adding-libraries.md) — Creating new packages
 - [Architecture](architecture.md) — Three-layer design
-- [Linux Assets](linux-assets.md) — Linux package design philosophy
 - [Dependencies](dependencies.md) — Native dependency tracking

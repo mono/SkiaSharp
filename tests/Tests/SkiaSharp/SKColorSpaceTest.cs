@@ -8,6 +8,7 @@ namespace SkiaSharp.Tests
 	public class SKColorSpaceTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateSrgb()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -43,12 +44,11 @@ namespace SkiaSharp.Tests
 			Assert.Same(colorspace, image.PeekPixels().ColorSpace);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void ImageInfoColorSpaceIsReferencedCorrectly()
 		{
+			SkipOnMono();
+
 			var img = DoWork(out var colorspaceHandle);
 
 			CollectGarbage();
@@ -129,12 +129,11 @@ namespace SkiaSharp.Tests
 			GC.KeepAlive(colorspace);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void ColorSpaceIsNotDisposedPrematurely()
 		{
+			SkipOnMono();
+
 			var img = DoWork(out var colorSpaceHandle, out var weakColorspace);
 
 			CheckBeforeCollection(colorSpaceHandle);

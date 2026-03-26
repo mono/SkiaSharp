@@ -25,7 +25,7 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
 
 ## Key References
 
-- **[documentation/dependencies.md](../../../documentation/dependencies.md)** — Which dependencies to audit, cgmanifest format, known false positives, Skia-specific tracking notes
+- **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Which dependencies to audit, cgmanifest format, known false positives, Skia-specific tracking notes
 - **[references/report-template.md](references/report-template.md)** — Report format templates
 
 ## Workflow
@@ -72,7 +72,7 @@ cd externals/skia
 git log --oneline --merges --grep="upstream/chrome" -1
 ```
 
-Only audit **security-relevant** dependencies (see [dependencies.md](../../../documentation/dependencies.md#security-relevant-process-untrusted-input)).
+Only audit **security-relevant** dependencies (see [dependencies.md](../../../documentation/dev/dependencies.md#security-relevant-process-untrusted-input)).
 
 ### Step 3: Query CVE Databases
 
@@ -132,7 +132,7 @@ Before flagging, verify the CVE actually affects SkiaSharp:
 - **Android SkiaRenderEngine** — Not part of SkiaSharp
 - **Chrome-specific rendering paths** (HTML Canvas, SVG in browser) — May not be reachable through SkiaSharp's C API
 
-See [dependencies.md](../../../documentation/dependencies.md#known-false-positives) for details.
+See [dependencies.md](../../../documentation/dev/dependencies.md#known-false-positives) for details.
 
 ### Step 6: Generate Report
 

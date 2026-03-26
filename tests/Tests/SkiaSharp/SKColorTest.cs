@@ -12,6 +12,7 @@ namespace SkiaSharp.Tests
 		private const int Precision = 2;
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ColorWithComponent()
 		{
 			var color = new SKColor();

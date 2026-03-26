@@ -1,0 +1,331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/skia-review-schema.json",
+  "title": "Skia Update PR Review",
+  "description": "Structured review output for a Skia upstream merge PR in mono/skia.",
+  "type": "object",
+  "required": [
+    "meta",
+    "summary",
+    "generatedFiles",
+    "upstreamIntegrity",
+    "interopIntegrity",
+    "depsAudit",
+    "riskAssessment",
+    "recommendations",
+    "companionPr"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "reviewStatus": {
+      "type": "string",
+      "enum": ["PASS", "REVIEW_REQUIRED"],
+      "description": "PASS=no changes found. REVIEW_REQUIRED=changes exist and must be human-reviewed."
+    },
+    "sourceFile": {
+      "type": "object",
+      "required": ["path", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "File path relative to skia repo root."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Factual description of what the patch does. AI provides summaries to assist review — NOT approval/rejection."
+        },
+        "diff": {
+          "type": "string",
+          "description": "The diff content for this file. For added/removed: fork patch vs upstream. For changed: direct branch-to-branch diff (base→PR head) showing the actual change."
+        },
+        "oldDiff": {
+          "type": "string",
+          "description": "The old patch content (for changed files)."
+        },
+        "newDiff": {
+          "type": "string",
+          "description": "The new patch content (for changed files)."
+        },
+        "patchDiff": {
+          "type": "string",
+          "description": "Diff between old and new patches (for changed files). Shows exactly what changed between the two fork versions."
+        }
+      }
+    },
+    "sourceIntegrity": {
+      "type": "object",
+      "description": "Diff-of-diffs result. ALL added/removed/changed files MUST be human-reviewed.",
+      "required": ["status", "unchanged", "summary", "recommendations"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/reviewStatus"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Brief overview of what changed in this layer and why. Helps reviewer understand the scope at a glance."
+        },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Actionable recommendations for the reviewer based on the findings."
+        },
+        "added": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sourceFile" },
+          "description": "Files patched in new fork but NOT in old fork — new modifications."
+        },
+        "removed": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sourceFile" },
+          "description": "Files patched in old fork but NOT in new fork — patches dropped."
+        },
+        "changed": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sourceFile" },
+          "description": "Files patched in both forks but patch content differs."
+        },
+        "unchanged": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of files with identical patches carried forward."
+        }
+      }
+    },
+    "depEntry": {
+      "type": "object",
+      "required": ["name", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Dependency short name (e.g., 'libpng', 'harfbuzz')."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Factual description of the change."
+        },
+        "url": {
+          "type": "string",
+          "description": "URL (for added/removed)."
+        },
+        "revision": {
+          "type": "string",
+          "description": "Revision/commit (for added/removed)."
+        },
+        "oldUrl": {
+          "type": "string",
+          "description": "Old URL (for changed)."
+        },
+        "oldRevision": {
+          "type": "string",
+          "description": "Old revision (for changed)."
+        },
+        "newUrl": {
+          "type": "string",
+          "description": "New URL (for changed)."
+        },
+        "newRevision": {
+          "type": "string",
+          "description": "New revision (for changed)."
+        }
+      }
+    },
+    "generatedFileMismatch": {
+      "type": "object",
+      "required": ["file", "diffSummary"],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Generated file path relative to SkiaSharp repo root."
+        },
+        "diffSummary": {
+          "type": "string",
+          "description": "Summary of differences."
+        }
+      }
+    }
+  },
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["schemaVersion", "skiaPrNumber", "skiasharpPrNumber", "repo", "upstreamBranch", "oldUpstreamBranch", "analyzedAt", "shas"],
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "const": "1.0",
+          "description": "Schema version."
+        },
+        "skiaPrNumber": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "skiasharpPrNumber": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "repo": {
+          "type": "string",
+          "const": "mono/skia"
+        },
+        "upstreamBranch": {
+          "type": "string",
+          "pattern": "^chrome/m[0-9]+$",
+          "description": "New upstream branch (e.g., 'chrome/m122')."
+        },
+        "oldUpstreamBranch": {
+          "type": "string",
+          "pattern": "^chrome/m[0-9]+$",
+          "description": "Old upstream branch the fork was based on (e.g., 'chrome/m119')."
+        },
+        "analyzedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "shas": {
+          "type": "object",
+          "required": ["prHead", "base", "upstream"],
+          "additionalProperties": false,
+          "properties": {
+            "prHead": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            "base": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            "upstream": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 50,
+      "description": "Executive summary of the entire PR review. What is this update (milestone bump), what are the key changes, and what is the overall risk level. Written for a reviewer who needs to understand the scope in 30 seconds."
+    },
+    "recommendations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "Top-level actionable recommendations. What should the reviewer do next? E.g., 'Regenerate P/Invoke bindings', 'Verify SkBitmap.h change is intentional', 'Check that security dependency pins are preserved'."
+    },
+    "generatedFiles": {
+      "type": "object",
+      "required": ["status", "checked", "summary", "recommendations"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["PASS", "FAIL"]
+        },
+        "summary": {
+          "type": "string",
+          "description": "Brief overview of the generated files check result."
+        },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Actionable recommendations based on the findings."
+        },
+        "checked": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "mismatches": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/generatedFileMismatch" }
+        },
+        "generatorError": {
+          "type": "string",
+          "description": "Error message if the generator itself failed (e.g., crash, non-zero exit code)."
+        }
+      }
+    },
+    "upstreamIntegrity": {
+      "$ref": "#/$defs/sourceIntegrity",
+      "description": "Files OUTSIDE interop dirs (include/c, include/xamarin, src/c, src/xamarin). These are upstream Skia files — changes here are red flags and need careful review."
+    },
+    "interopIntegrity": {
+      "$ref": "#/$defs/sourceIntegrity",
+      "description": "Files INSIDE interop dirs. These are the C API shim layer — changes are expected during a Skia update but still need review."
+    },
+    "depsAudit": {
+      "type": "object",
+      "required": ["status", "unchanged", "summary", "recommendations"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/reviewStatus"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Brief overview of dependency changes and their impact."
+        },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Actionable recommendations for the reviewer."
+        },
+        "added": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/depEntry" },
+          "description": "New dependencies added."
+        },
+        "removed": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/depEntry" },
+          "description": "Dependencies removed."
+        },
+        "changed": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/depEntry" },
+          "description": "Dependencies with URL or revision changes."
+        },
+        "unchanged": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "riskAssessment": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "HIGH=generated mismatch or upstream REVIEW_REQUIRED. MEDIUM=deps or interop REVIEW_REQUIRED. LOW=all PASS."
+    },
+    "companionPr": {
+      "type": "object",
+      "required": ["prNumber", "summary", "recommendations"],
+      "additionalProperties": false,
+      "properties": {
+        "prNumber": { "type": "integer", "minimum": 1 },
+        "summary": {
+          "type": "string",
+          "description": "Brief overview of the C# companion PR changes."
+        },
+        "recommendations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Actionable recommendations from the C# review."
+        },
+        "filesReviewed": { "type": "integer", "minimum": 0 },
+        "filesSkipped": { "type": "integer", "minimum": 0 },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file", "type", "summary"],
+            "additionalProperties": false,
+            "properties": {
+              "file": { "type": "string" },
+              "type": {
+                "type": "string",
+                "enum": ["new_api", "changed_api", "disposal_pattern", "abi_concern", "missing_test", "platform_specific", "other"]
+              },
+              "summary": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

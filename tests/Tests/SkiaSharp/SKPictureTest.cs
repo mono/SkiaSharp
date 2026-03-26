@@ -11,6 +11,7 @@ namespace SkiaSharp.Tests
 		};
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanSerializeToData()
 		{
 			using var picture = CreateTestPicture();

@@ -10,7 +10,7 @@ description: >-
 
 # Triage Issue
 
-**Issue pipeline: Step 1 of 3 (Triage).** See [`documentation/issue-pipeline.md`](../../../documentation/issue-pipeline.md).
+**Issue pipeline: Step 1 of 3 (Triage).** See [`documentation/dev/issue-pipeline.md`](../../../documentation/dev/issue-pipeline.md).
 
 Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated triage JSON.
 
@@ -83,7 +83,8 @@ gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,s
 If using cached JSON:
 
 ```bash
-pwsh .github/skills/issue-triage/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/skiasharp/triage/{number}.md
+mkdir -p /tmp/skiasharp/triage/{timestamp}
+pwsh .github/skills/issue-triage/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/skiasharp/triage/{timestamp}/{number}.md
 ```
 
 If fetched via API, work directly from the `gh` output (skip the script).
@@ -116,7 +117,7 @@ If fetched via API, work directly from the `gh` output (skip the script).
 
 | Signal in issue | Source to consult |
 |----------------|-------------------|
-| NativeAssets, DllNotFoundException, container, WASM | [documentation/packages.md](../../documentation/packages.md) |
+| NativeAssets, DllNotFoundException, container, WASM | [documentation/dev/packages.md](../../../documentation/dev/packages.md) |
 | Platform quirks, common traps | [references/skia-patterns.md](references/skia-patterns.md) |
 | Specific SkiaSharp types or methods | `docs/SkiaSharpAPI/*.xml` |
 | How-to about drawing, paths, bitmaps | `.docs/docs/docs/` |
@@ -144,7 +145,7 @@ Read [references/labels.md](references/labels.md) for valid label values and car
 
 ### Classify and generate JSON
 
-Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate the JSON. Write to `/tmp/skiasharp/triage/{number}.json` — use this exact literal path, do NOT substitute `$TMPDIR` or any other variable.
+Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate the JSON. Write to `/tmp/skiasharp/triage/{timestamp}/{number}.json` where `{timestamp}` is the current UTC time in `yyyyMMdd-HHmmss` format. Create the directory first with `mkdir -p`. Use this exact literal path structure, do NOT substitute `$TMPDIR` or any other variable.
 
 > **⚠️ Schema Compliance:**
 >
@@ -207,8 +208,8 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contain
 
 ```bash
 # Try pwsh first, fall back to python3
-pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/triage/{number}.json \
-  || python3 .github/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{number}.json
+pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json \
+  || python3 .github/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to Phase 5
@@ -226,15 +227,13 @@ pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/tria
 
 ### 1. Persist
 
-> **🛑 MANDATORY: Use the persist script. NEVER manually `cp`, `git add`, `git commit`, or `git push`.**
-> The script handles copying, committing, and pushing with retry logic. Manual git commands
-> will leave unpushed commits that are lost when the runner shuts down.
+Copy the validated JSON to `output/ai/` for collection.
 
 ```bash
-pwsh .github/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{number}.json
+pwsh .github/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
-This copies the JSON to data-cache and handles git commit + push automatically (skips in benchmark mode).
+This copies the JSON to `output/ai/` mirroring the data-cache structure.
 
 ### 2. Present summary
 

@@ -82,7 +82,7 @@ RUN . /etc/skia-env \
     && rm -rf *.deb *.tar* debian-binary usr
 
 # Install the .NET SDK
-ARG DOTNET_SDK_VERSION=10.0
+ARG DOTNET_SDK_VERSION=10.0.1xx
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -L -o dotnet-install.sh \
     && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \

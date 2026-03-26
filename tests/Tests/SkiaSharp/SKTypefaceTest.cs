@@ -29,6 +29,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestFamilyName()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
@@ -250,10 +251,11 @@ namespace SkiaSharp.Tests
 			Assert.DoesNotContain((ushort)0, glyphs);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)] // macOS does not release the data when the typeface is disposed
 		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
 		{
+			SkipOnPlatform(IsMac, "macOS does not release the data when the typeface is disposed");
+
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
 			var bytes = File.ReadAllBytes(path);
 
@@ -344,12 +346,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void StreamIsAccessibleFromNativeType()
 		{
+			SkipOnMono();
+
 			var font = CreateFont(out var typefaceHandle);
 
 			CollectGarbage();
@@ -415,12 +416,11 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
+			SkipOnMono();
+
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 
 			DoWork(out var typefaceH, out var streamH);
@@ -526,14 +526,11 @@ namespace SkiaSharp.Tests
 			Assert.False(tf1.IsDisposed);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Linux)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.macOS)]
 		[SkippableFact]
 		public unsafe void GCStillCollectsTypeface()
 		{
+			SkipOnNonWindows("Test uses Windows-specific font path");
+
 			var handle = DoWork();
 
 			CollectGarbage();

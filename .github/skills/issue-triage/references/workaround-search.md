@@ -14,7 +14,7 @@ Search in this order. Stop as soon as you find a viable workaround, but always c
 |----------|--------|-----------|-------------|
 | 1 | Existing triages (`$CACHE/ai-triage/`) | Already analyzed, has `analysis.workarounds` and `analysis.resolution.proposals` | Never — always check |
 | 2 | Closed issues with comments (`$CACHE/github/items/`) | Reporters post "I solved it by..." | Never — always check |
-| 3 | Known patterns (`references/skia-patterns.md`, `documentation/packages.md`) | Curated heuristics for common traps | Never — always check |
+| 3 | Known patterns (`references/skia-patterns.md`, `documentation/dev/packages.md`) | Curated heuristics for common traps | Never — always check |
 | 4 | SkiaSharp source code (`binding/SkiaSharp/*.cs`) | Alternative APIs visible in the class | Skip if issue is deployment/packaging |
 | 5 | API docs (`docs/SkiaSharpAPI/SkiaSharp/*.xml`) | Method docs mention alternatives | Skip if issue is deployment/packaging |
 | 6 | Tutorials (`.docs/docs/docs/`) | Step-by-step examples of correct usage | Skip if not a usage/how-to issue |
@@ -116,7 +116,7 @@ gh issue view {N} --repo mono/SkiaSharp --json comments \
 ## Step 4 — Check Known Patterns
 
 ```bash
-grep -n "DllNotFound\|NoDependencies\|container\|Docker\|Alpine\|ARM64" documentation/packages.md
+grep -n "DllNotFound\|NoDependencies\|container\|Docker\|Alpine\|ARM64" documentation/dev/packages.md
 grep -n "KEYWORD" .github/skills/issue-triage/references/skia-patterns.md
 ```
 
@@ -194,7 +194,7 @@ Trust: GitHub issues (high), MS Learn (high), SO accepted answers (medium-high),
 
 **Wrong output/rendering:** triages for the API → tutorials for correct usage → source for parameter validation → samples for working examples. *Workaround: minimal working example showing correct approach.*
 
-**Deployment/DllNotFoundException:** `documentation/packages.md` FIRST (almost always has the answer) → `skia-patterns.md` native loading → cached issues for same platform combo. *Workaround: package swap, direct PackageReference, or system dependency install.*
+**Deployment/DllNotFoundException:** `documentation/dev/packages.md` FIRST (almost always has the answer) → `skia-patterns.md` native loading → cached issues for same platform combo. *Workaround: package swap, direct PackageReference, or system dependency install.*
 
 **Question (how to do X):** tutorials → API docs → samples → cached closed issues (many questions repeat) → web search MS Learn. *Workaround: assemble code snippet from docs + source.*
 

@@ -9,6 +9,7 @@ namespace SkiaSharp.Tests
 	public class SKImageTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestLazyImage()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -284,6 +285,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestImageFileDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -582,12 +584,11 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, result.GetReferenceCount());
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void DataCreatedByImageExpiresAfterFinalizers()
 		{
+			SkipOnMono();
+
 			var bitmap = CreateTestBitmap();
 			var image = SKImage.FromBitmap(bitmap);
 

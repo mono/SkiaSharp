@@ -168,7 +168,7 @@ public void DrawCircle(float cx, float cy, float radius, SKPaint paint) {
 
 ```bash
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+dotnet test tests/SkiaSharp.Tests.Console.sln
 ```
 
 ## Reference-Counted Return Example
@@ -236,7 +236,7 @@ pwsh ./utils/generate.ps1
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 
 # Step 3: Run tests (MANDATORY - not optional)
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+dotnet test tests/SkiaSharp.Tests.Console.sln
 
 # Alternative: Use Cake for everything
 dotnet cake --target=libs         # Build

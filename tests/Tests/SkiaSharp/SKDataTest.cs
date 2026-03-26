@@ -29,6 +29,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ValidDataProperties()
 		{
 			var data = SKData.CreateCopy(OddData);

@@ -207,6 +207,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateSimpleSurface()
 		{
 			var info = new SKImageInfo(100, 100);

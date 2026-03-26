@@ -7,11 +7,11 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
 		[SkippableFact]
 		public void InterfaceConstructionWithoutContextDoesNotCrash()
 		{
+			SkipOnPlatform(IsIOS || IsMacCatalyst, "GRGlInterface construction without context crashes on iOS/MacCatalyst");
+
 			var glInterface = GRGlInterface.Create();
 
 			Assert.Null(glInterface);

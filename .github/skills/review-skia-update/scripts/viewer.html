@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skia Review Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+  <style>
+    :root {
+      --viewer-bg: #f6f8fa;
+      --viewer-card-border: #d0d7de;
+      --viewer-muted: #57606a;
+      --viewer-surface: #ffffff;
+      --viewer-soft: #f3f4f6;
+    }
+
+    body {
+      background: var(--viewer-bg);
+      color: #1f2328;
+    }
+
+    .page-shell {
+      max-width: 1600px;
+    }
+
+    .sticky-report-header {
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--viewer-card-border);
+    }
+
+    .header-link {
+      text-decoration: none;
+    }
+
+    .header-link:hover {
+      text-decoration: underline;
+    }
+
+    .summary-card,
+    .surface-card,
+    .section-panel {
+      border: 1px solid var(--viewer-card-border);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    }
+
+    .section-panel .card-header,
+    .surface-card .card-header {
+      background: linear-gradient(180deg, #fff, #fafbfc);
+      border-bottom: 1px solid var(--viewer-card-border);
+    }
+
+    .meta-label {
+      color: var(--viewer-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .summary-text {
+      white-space: pre-wrap;
+    }
+
+    .recommendation-list .list-group-item,
+    .mini-list .list-group-item {
+      border-left: 0;
+      border-right: 0;
+    }
+
+    .recommendation-list .list-group-item:first-child,
+    .mini-list .list-group-item:first-child {
+      border-top: 0;
+    }
+
+    .recommendation-list .list-group-item:last-child,
+    .mini-list .list-group-item:last-child {
+      border-bottom: 0;
+    }
+
+    .nav-tabs .nav-link {
+      color: #495057;
+      font-weight: 600;
+      border-top-left-radius: 0.85rem;
+      border-top-right-radius: 0.85rem;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: #0d6efd;
+      background-color: #fff;
+      border-color: var(--viewer-card-border) var(--viewer-card-border) #fff;
+    }
+
+    .tab-content > .tab-pane {
+      background: #fff;
+      border: 1px solid var(--viewer-card-border);
+      border-top: 0;
+      border-bottom-left-radius: 1rem;
+      border-bottom-right-radius: 1rem;
+      padding: 1.25rem;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .diff-host {
+      border: 1px solid var(--viewer-card-border);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .diff-placeholder {
+      color: var(--viewer-muted);
+      background: var(--viewer-soft);
+      border: 1px dashed var(--viewer-card-border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+
+    .accordion-button:not(.collapsed) {
+      background: #f6f8fa;
+      color: inherit;
+      box-shadow: none;
+    }
+
+    .accordion-button:focus {
+      box-shadow: none;
+      border-color: rgba(13, 110, 253, 0.25);
+    }
+
+    .group-empty {
+      color: var(--viewer-muted);
+      font-style: italic;
+      padding: 1rem 0.25rem 0.25rem;
+    }
+
+    .table > :not(caption) > * > * {
+      vertical-align: middle;
+    }
+
+    .badge-soft {
+      background: #eef2ff;
+      color: #334155;
+    }
+
+    .stats-grid {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .stats-tile {
+      background: var(--viewer-surface);
+      border: 1px solid var(--viewer-card-border);
+      border-radius: 0.85rem;
+      padding: 0.85rem 1rem;
+    }
+
+    .stats-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .summary-meta {
+      color: var(--viewer-muted);
+      font-size: 0.9rem;
+    }
+
+    .checked-files {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .file-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #f6f8fa;
+      border: 1px solid var(--viewer-card-border);
+      border-radius: 999px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.85rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--viewer-muted);
+      border: 1px dashed var(--viewer-card-border);
+      border-radius: 0.85rem;
+      background: #fbfcfd;
+      padding: 2rem 1rem;
+    }
+
+    .d2h-file-header {
+      display: none;
+    }
+
+    .d2h-code-side-linenumber,
+    .d2h-code-linenumber {
+      font-size: 0.8rem;
+    }
+
+    .d2h-wrapper {
+      margin: 0;
+    }
+
+    .file-item-header:hover {
+      background-color: #f6f8fa;
+    }
+
+    .diff-chevron {
+      transition: transform 0.15s;
+      width: 1rem;
+      text-align: center;
+    }
+
+    .viewed-check:checked + label,
+    .file-item-header:has(.viewed-check:checked) .mono {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="sticky-report-header">
+    <div class="container-fluid page-shell py-3">
+      <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+        <div class="min-w-0">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="badge text-bg-dark">
+              <i class="bi bi-clipboard-data me-1"></i>
+              Skia Review Report
+            </span>
+            <span id="headerRiskBadge" class="badge"></span>
+            <span id="headerRepoBadge" class="badge text-bg-light border"></span>
+          </div>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <h1 class="h4 mb-0 me-2" id="headerTitle">PR Review</h1>
+            <span class="text-body-secondary fw-semibold" id="milestoneArrow"></span>
+          </div>
+          <div class="small text-body-secondary mt-1" id="headerMetaLine"></div>
+        </div>
+        <div class="d-flex flex-wrap justify-content-lg-end gap-2" id="headerLinks"></div>
+      </div>
+    </div>
+  </div>
+
+  <main class="container-fluid page-shell py-4">
+    <section class="card summary-card mb-4">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi bi-journal-text text-primary"></i>
+              <h2 class="h5 mb-0">Executive Summary</h2>
+            </div>
+            <p id="executiveSummary" class="summary-text mb-0"></p>
+          </div>
+          <div class="summary-meta text-xl-end">
+            <div><span class="meta-label me-1">Analyzed</span><span id="analyzedAt">—</span></div>
+            <div><span class="meta-label me-1">PR Head</span><span id="shaPrHead" class="mono">—</span></div>
+            <div><span class="meta-label me-1">Base</span><span id="shaBase" class="mono">—</span></div>
+            <div><span class="meta-label me-1">Upstream</span><span id="shaUpstream" class="mono">—</span></div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-lightbulb text-warning"></i>
+            <h3 class="h6 mb-0">Recommendations</h3>
+          </div>
+          <div id="topRecommendations"></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <ul class="nav nav-tabs" id="reportTabs" role="tablist"></ul>
+      <div class="tab-content" id="reportTabContent"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui-slim.min.js"></script>
+  <!--INJECT_DATA_HERE-->
+  <script>
+    (() => {
+      const report = typeof DATA !== 'undefined' ? DATA : {};
+      const tabDefinitions = [
+        { id: 'generated-files', key: 'generatedFiles', label: 'Generated Files', icon: 'bi-gear-wide-connected' },
+        { id: 'upstream', key: 'upstreamIntegrity', label: 'Upstream', icon: 'bi-diagram-3' },
+        { id: 'interop', key: 'interopIntegrity', label: 'Interop', icon: 'bi-link-45deg' },
+        { id: 'deps', key: 'depsAudit', label: 'DEPS', icon: 'bi-boxes' },
+        { id: 'companion-pr', key: 'companionPr', label: 'Companion PR', icon: 'bi-git' }
+      ];
+      const diffState = new Map();
+
+      function asArray(value) {
+        return Array.isArray(value) ? value : [];
+      }
+
+      function text(value, fallback = '—') {
+        if (value === null || value === undefined || value === '') {
+          return fallback;
+        }
+        return String(value);
+      }
+
+      function shortSha(value) {
+        const sha = text(value, '');
+        return sha ? sha.slice(0, 12) : '—';
+      }
+
+      function formatDate(value) {
+        if (!value) {
+          return '—';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+        return date.toLocaleString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      function upper(value) {
+        return text(value, '').toUpperCase();
+      }
+
+      function riskBadgeClass(risk) {
+        switch (upper(risk)) {
+          case 'HIGH':
+            return 'text-bg-danger';
+          case 'MEDIUM':
+            return 'text-bg-warning';
+          case 'LOW':
+            return 'text-bg-success';
+          default:
+            return 'text-bg-secondary';
+        }
+      }
+
+      function statusBadgeClass(status) {
+        switch (upper(status)) {
+          case 'PASS':
+            return 'text-bg-success';
+          case 'FAIL':
+            return 'text-bg-danger';
+          case 'REVIEW_REQUIRED':
+            return 'text-bg-warning';
+          default:
+            return 'text-bg-secondary';
+        }
+      }
+
+      function findingBadgeClass(type) {
+        switch (upper(type)) {
+          case 'ABI_CONCERN':
+            return 'text-bg-danger';
+          case 'MISSING_TEST':
+            return 'text-bg-warning';
+          case 'NEW_API':
+            return 'text-bg-success';
+          case 'CHANGED_API':
+            return 'text-bg-info';
+          case 'DISPOSAL_PATTERN':
+            return 'text-bg-warning';
+          case 'PLATFORM_SPECIFIC':
+            return 'text-bg-secondary';
+          default:
+            return 'badge-soft';
+        }
+      }
+
+      function escapeHtml(value) {
+        return text(value, '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function setText(id, value, fallback = '—') {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = text(value, fallback);
+        }
+      }
+
+      function createBadge(label, className) {
+        const span = document.createElement('span');
+        span.className = `badge ${className}`;
+        span.textContent = label;
+        return span;
+      }
+
+      function createLinkButton(href, label, icon, variant = 'outline-primary') {
+        const a = document.createElement('a');
+        a.href = href;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.className = `btn btn-sm btn-${variant}`;
+        a.innerHTML = `<i class="bi ${icon} me-1"></i>${escapeHtml(label)}`;
+        return a;
+      }
+
+      function getOwner(repo) {
+        return text(repo, '').split('/')[0] || '';
+      }
+
+      function buildHeader() {
+        const meta = report.meta || {};
+        const risk = upper(report.riskAssessment);
+        const headerRiskBadge = document.getElementById('headerRiskBadge');
+        headerRiskBadge.className = `badge ${riskBadgeClass(risk)}`;
+        headerRiskBadge.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>${escapeHtml(risk || 'UNKNOWN')}`;
+
+        const repo = text(meta.repo, 'unknown repo');
+        const repoBadge = document.getElementById('headerRepoBadge');
+        repoBadge.textContent = repo;
+
+        const skiaSharpPrNumber = meta.skiasharpPrNumber || meta.skiaSharpPrNumber || null;
+        const skiaPrNumber = meta.skiaPrNumber || null;
+        const titleParts = [];
+        if (skiaSharpPrNumber) {
+          titleParts.push(`#${skiaSharpPrNumber}`);
+        }
+        titleParts.push('Review');
+        document.getElementById('headerTitle').textContent = titleParts.join(' ');
+
+        const oldBranch = text(meta.oldUpstreamBranch, 'unknown');
+        const newBranch = text(meta.upstreamBranch, 'unknown');
+        document.getElementById('milestoneArrow').textContent = `${oldBranch} \u2192 ${newBranch}`;
+
+        const metaBits = [
+          `Schema ${text(meta.schemaVersion, 'n/a')}`,
+          `Analyzed ${formatDate(meta.analyzedAt)}`
+        ];
+        document.getElementById('headerMetaLine').textContent = metaBits.join(' • ');
+
+        const links = document.getElementById('headerLinks');
+        links.innerHTML = '';
+        const owner = getOwner(repo);
+        if (skiaSharpPrNumber && owner) {
+          links.appendChild(createLinkButton(`https://github.com/${repo}/pull/${skiaSharpPrNumber}`, `SkiaSharp PR #${skiaSharpPrNumber}`, 'bi-box-arrow-up-right'));
+        }
+        if (skiaPrNumber && owner) {
+          links.appendChild(createLinkButton(`https://github.com/${owner}/skia/pull/${skiaPrNumber}`, `Skia PR #${skiaPrNumber}`, 'bi-box-arrow-up-right', 'outline-secondary'));
+        }
+      }
+
+      function buildSummary() {
+        const meta = report.meta || {};
+        const shas = meta.shas || {};
+        setText('executiveSummary', report.summary, 'No executive summary provided.');
+        setText('analyzedAt', formatDate(meta.analyzedAt));
+        setText('shaPrHead', shortSha(shas.prHead));
+        setText('shaBase', shortSha(shas.base));
+        setText('shaUpstream', shortSha(shas.upstream));
+        renderRecommendationAlerts('topRecommendations', asArray(report.recommendations), 'No recommendations.');
+      }
+
+      function getSectionCount(sectionKey) {
+        const section = report[sectionKey] || {};
+        switch (sectionKey) {
+          case 'generatedFiles':
+            return asArray(section.mismatches).length;
+          case 'upstreamIntegrity':
+          case 'interopIntegrity':
+            return asArray(section.added).length + asArray(section.removed).length + asArray(section.changed).length;
+          case 'depsAudit':
+            return asArray(section.added).length + asArray(section.removed).length + asArray(section.changed).length;
+          case 'companionPr':
+            return asArray(section.findings).length;
+          default:
+            return 0;
+        }
+      }
+
+      function renderRecommendationAlerts(targetId, recommendations, emptyText) {
+        const host = document.getElementById(targetId);
+        host.innerHTML = '';
+        if (!recommendations.length) {
+          const empty = document.createElement('div');
+          empty.className = 'alert alert-light border mb-0';
+          empty.textContent = emptyText;
+          host.appendChild(empty);
+          return;
+        }
+        recommendations.forEach((item) => {
+          const alert = document.createElement('div');
+          alert.className = 'alert alert-warning-subtle border border-warning-subtle py-2 mb-2';
+          alert.innerHTML = `<i class="bi bi-arrow-right-circle me-2"></i>${escapeHtml(item)}`;
+          host.appendChild(alert);
+        });
+      }
+
+      function renderListGroup(items, emptyText, icon = 'bi-check2-circle') {
+        if (!items.length) {
+          const empty = document.createElement('div');
+          empty.className = 'text-body-secondary small';
+          empty.textContent = emptyText;
+          return empty;
+        }
+        const list = document.createElement('div');
+        list.className = 'list-group list-group-flush recommendation-list';
+        items.forEach((item) => {
+          const row = document.createElement('div');
+          row.className = 'list-group-item px-0';
+          row.innerHTML = `<i class="bi ${icon} me-2 text-primary"></i>${escapeHtml(item)}`;
+          list.appendChild(row);
+        });
+        return list;
+      }
+
+      function createSectionShell(tab, section) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'd-grid gap-4';
+
+        const summaryCard = document.createElement('div');
+        summaryCard.className = 'card section-panel';
+        summaryCard.innerHTML = `
+          <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi ${tab.icon} text-primary"></i>
+                <h2 class="h5 mb-0">${escapeHtml(tab.label)}</h2>
+              </div>
+              <div class="text-body-secondary">${escapeHtml(text(section.summary, 'No summary available.'))}</div>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <span class="badge ${statusBadgeClass(section.status)}">${escapeHtml(text(section.status, 'N/A'))}</span>
+              <span class="badge text-bg-light border">${getSectionCount(tab.key)} item(s)</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="row g-4">
+              <div class="col-xl-7">
+                <h3 class="h6 mb-3">Recommendations</h3>
+                <div data-role="recommendations"></div>
+              </div>
+              <div class="col-xl-5">
+                <div data-role="summaryExtra"></div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        summaryCard.querySelector('[data-role="recommendations"]').appendChild(
+          renderListGroup(asArray(section.recommendations), 'No recommendations for this section.', 'bi-arrow-right-short')
+        );
+        wrapper.appendChild(summaryCard);
+        return { wrapper, summaryCard };
+      }
+
+      function renderTabs() {
+        const tabsHost = document.getElementById('reportTabs');
+        const contentHost = document.getElementById('reportTabContent');
+        tabsHost.innerHTML = '';
+        contentHost.innerHTML = '';
+
+        tabDefinitions.forEach((tab, index) => {
+          const count = getSectionCount(tab.key);
+          const section = report[tab.key] || {};
+          const badgeClass = statusBadgeClass(section.status);
+          const li = document.createElement('li');
+          li.className = 'nav-item';
+          li.role = 'presentation';
+          li.innerHTML = `
+            <button
+              class="nav-link ${index === 0 ? 'active' : ''}"
+              id="${tab.id}-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#${tab.id}-pane"
+              type="button"
+              role="tab"
+              aria-controls="${tab.id}-pane"
+              aria-selected="${index === 0 ? 'true' : 'false'}">
+              <i class="bi ${tab.icon} me-1"></i>${escapeHtml(tab.label)}
+              <span class="badge ${badgeClass} ms-2">${count}</span>
+            </button>
+          `;
+          tabsHost.appendChild(li);
+
+          const pane = document.createElement('div');
+          pane.className = `tab-pane fade ${index === 0 ? 'show active' : ''}`;
+          pane.id = `${tab.id}-pane`;
+          pane.role = 'tabpanel';
+          pane.setAttribute('aria-labelledby', `${tab.id}-tab`);
+          contentHost.appendChild(pane);
+
+          renderTabPane(tab, pane);
+        });
+      }
+
+      function renderTabPane(tab, pane) {
+        const section = report[tab.key] || {};
+        const { wrapper, summaryCard } = createSectionShell(tab, section);
+        const extraHost = summaryCard.querySelector('[data-role="summaryExtra"]');
+
+        switch (tab.key) {
+          case 'generatedFiles':
+            extraHost.appendChild(renderGeneratedStats(section));
+            wrapper.appendChild(renderGeneratedFilesTab(section));
+            break;
+          case 'upstreamIntegrity':
+          case 'interopIntegrity':
+            extraHost.appendChild(renderSourceStats(section));
+            wrapper.appendChild(renderSourceIntegrityTab(tab.key, section, tab.label));
+            break;
+          case 'depsAudit':
+            extraHost.appendChild(renderDepsStats(section));
+            wrapper.appendChild(renderDepsTab(section));
+            break;
+          case 'companionPr':
+            extraHost.appendChild(renderCompanionStats(section));
+            wrapper.appendChild(renderCompanionTab(section));
+            break;
+          default:
+            extraHost.appendChild(renderEmpty('No data available.'));
+        }
+
+        pane.appendChild(wrapper);
+      }
+
+      function renderGeneratedStats(section) {
+        const card = document.createElement('div');
+        card.className = 'stats-grid';
+        const stats = [
+          { label: 'Checked', value: asArray(section.checked).length },
+          { label: 'Mismatches', value: asArray(section.mismatches).length },
+          { label: 'Generator Error', value: section.generatorError ? 'Yes' : 'No' }
+        ];
+        stats.forEach((item) => card.appendChild(createStatsTile(item.label, item.value)));
+        return card;
+      }
+
+      function renderSourceStats(section) {
+        const card = document.createElement('div');
+        card.className = 'stats-grid';
+        [
+          { label: 'Added', value: asArray(section.added).length },
+          { label: 'Removed', value: asArray(section.removed).length },
+          { label: 'Changed', value: asArray(section.changed).length },
+          { label: 'Unchanged', value: text(section.unchanged, '0') }
+        ].forEach((item) => card.appendChild(createStatsTile(item.label, item.value)));
+        return card;
+      }
+
+      function renderDepsStats(section) {
+        const card = document.createElement('div');
+        card.className = 'stats-grid';
+        [
+          { label: 'Added', value: asArray(section.added).length },
+          { label: 'Removed', value: asArray(section.removed).length },
+          { label: 'Changed', value: asArray(section.changed).length },
+          { label: 'Unchanged', value: text(section.unchanged, '0') }
+        ].forEach((item) => card.appendChild(createStatsTile(item.label, item.value)));
+        return card;
+      }
+
+      function renderCompanionStats(section) {
+        const card = document.createElement('div');
+        card.className = 'stats-grid';
+        [
+          { label: 'Files Reviewed', value: text(section.filesReviewed, '0') },
+          { label: 'Files Skipped', value: text(section.filesSkipped, '0') },
+          { label: 'Findings', value: asArray(section.findings).length }
+        ].forEach((item) => card.appendChild(createStatsTile(item.label, item.value)));
+        return card;
+      }
+
+      function createStatsTile(label, value) {
+        const tile = document.createElement('div');
+        tile.className = 'stats-tile';
+        tile.innerHTML = `
+          <div class="meta-label mb-2">${escapeHtml(label)}</div>
+          <div class="stats-value">${escapeHtml(text(value, '0'))}</div>
+        `;
+        return tile;
+      }
+
+      function renderGeneratedFilesTab(section) {
+        const card = document.createElement('div');
+        card.className = 'card surface-card';
+        const checked = asArray(section.checked);
+        const mismatches = asArray(section.mismatches);
+        card.innerHTML = `
+          <div class="card-header">
+            <h3 class="h6 mb-0">Generated File Audit</h3>
+          </div>
+          <div class="card-body d-grid gap-4">
+            <div>
+              <h4 class="h6">Checked Files</h4>
+              <div data-role="checked-files"></div>
+            </div>
+            <div>
+              <h4 class="h6">Mismatches</h4>
+              <div data-role="mismatches"></div>
+            </div>
+            <div data-role="generator-error"></div>
+          </div>
+        `;
+
+        const checkedHost = card.querySelector('[data-role="checked-files"]');
+        if (checked.length) {
+          const wrap = document.createElement('div');
+          wrap.className = 'checked-files';
+          checked.forEach((file) => {
+            const chip = document.createElement('span');
+            chip.className = 'file-chip mono';
+            chip.innerHTML = `<i class="bi bi-file-earmark-check text-success"></i>${escapeHtml(file)}`;
+            wrap.appendChild(chip);
+          });
+          checkedHost.appendChild(wrap);
+        } else {
+          checkedHost.appendChild(renderEmpty('No checked file list was provided.'));
+        }
+
+        const mismatchHost = card.querySelector('[data-role="mismatches"]');
+        if (mismatches.length) {
+          const list = document.createElement('div');
+          list.className = 'list-group';
+          mismatches.forEach((item) => {
+            const row = document.createElement('div');
+            row.className = 'list-group-item';
+            row.innerHTML = `
+              <div class="d-flex flex-column flex-lg-row justify-content-between gap-2">
+                <div>
+                  <div class="fw-semibold mono">${escapeHtml(text(item.file, 'unknown file'))}</div>
+                  <div class="text-body-secondary mt-1">${escapeHtml(text(item.diffSummary, 'Mismatch detected.'))}</div>
+                </div>
+                <span class="badge text-bg-danger align-self-start">Mismatch</span>
+              </div>
+            `;
+            list.appendChild(row);
+          });
+          mismatchHost.appendChild(list);
+        } else {
+          mismatchHost.appendChild(renderEmpty('No generated file mismatches were detected.'));
+        }
+
+        const generatorErrorHost = card.querySelector('[data-role="generator-error"]');
+        if (section.generatorError) {
+          const alert = document.createElement('div');
+          alert.className = 'alert alert-danger mb-0';
+          alert.innerHTML = `<i class="bi bi-bug-fill me-2"></i>${escapeHtml(section.generatorError)}`;
+          generatorErrorHost.appendChild(alert);
+        }
+
+        return card;
+      }
+
+      function renderSourceIntegrityTab(sectionKey, section, label) {
+        const card = document.createElement('div');
+        card.className = 'card surface-card';
+        const controlId = `${sectionKey}-controls`;
+        const listId = `${sectionKey}-file-list`;
+        card.innerHTML = `
+          <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+            <h3 class="h6 mb-0">${escapeHtml(label)} Integrity Review</h3>
+            <div class="d-flex align-items-center gap-3" id="${controlId}">
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="${sectionKey}-show-viewed" checked>
+                <label class="form-check-label small" for="${sectionKey}-show-viewed">Show viewed</label>
+              </div>
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-success btn-sm" data-filter="added" title="Added">
+                  <i class="bi bi-plus-circle me-1"></i>${asArray(section.added).length}
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" data-filter="removed" title="Removed">
+                  <i class="bi bi-dash-circle me-1"></i>${asArray(section.removed).length}
+                </button>
+                <button type="button" class="btn btn-outline-warning btn-sm" data-filter="changed" title="Changed">
+                  <i class="bi bi-pencil-square me-1"></i>${asArray(section.changed).length}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div id="${listId}"></div>
+          </div>
+        `;
+
+        // Build flat file list — no group accordions, all items shown directly
+        const fileList = card.querySelector(`#${listId}`);
+        const allItems = [];
+
+        const addItems = (items, groupType) => {
+          items.forEach((item, itemIndex) => {
+            const el = createSourceFileItem(sectionKey, groupType, item, itemIndex);
+            allItems.push({ el, groupType });
+            fileList.appendChild(el);
+          });
+        };
+
+        addItems(asArray(section.added), 'added');
+        addItems(asArray(section.removed), 'removed');
+        addItems(asArray(section.changed), 'changed');
+
+        if (!allItems.length) {
+          fileList.innerHTML = '<div class="empty-state py-4 m-3">No changes detected.</div>';
+        }
+
+        // Filter buttons (toggle on/off)
+        const filterBtns = card.querySelectorAll('[data-filter]');
+        const activeFilters = new Set(['added', 'removed', 'changed']);
+        filterBtns.forEach((btn) => {
+          btn.classList.add('active');
+          btn.addEventListener('click', () => {
+            const f = btn.dataset.filter;
+            if (activeFilters.has(f)) {
+              activeFilters.delete(f);
+              btn.classList.remove('active');
+            } else {
+              activeFilters.add(f);
+              btn.classList.add('active');
+            }
+            applyFilters();
+          });
+        });
+
+        // Show viewed toggle
+        const showViewedToggle = card.querySelector(`#${sectionKey}-show-viewed`);
+        showViewedToggle.addEventListener('change', () => applyFilters());
+
+        function applyFilters() {
+          const showViewed = showViewedToggle.checked;
+          allItems.forEach(({ el, groupType }) => {
+            const isViewed = el.querySelector('.viewed-check')?.checked || false;
+            const typeVisible = activeFilters.has(groupType);
+            const viewedVisible = showViewed || !isViewed;
+            el.style.display = (typeVisible && viewedVisible) ? '' : 'none';
+          });
+        }
+
+        return card;
+      }
+
+      function createSourceFileItem(sectionKey, groupType, item, itemIndex) {
+        const itemId = `${sectionKey}-${groupType}-${itemIndex}`;
+        const path = text(item.path, 'unknown/path');
+        const summary = text(item.summary, 'No summary provided.');
+
+        const container = document.createElement('div');
+        container.className = 'border-bottom';
+        container.dataset.groupType = groupType;
+
+        const badgeClass = groupType === 'added' ? 'text-bg-success' : groupType === 'removed' ? 'text-bg-danger' : 'text-bg-warning';
+
+        const changedControls = groupType === 'changed'
+          ? `
+            <div class="btn-group btn-group-sm" role="group" data-diff-mode-group="${itemId}">
+              <button type="button" class="btn btn-outline-secondary btn-sm active" data-diff-mode="direct">Direct</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-diff-mode="patch">Patch</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-diff-mode="old">Old</button>
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-diff-mode="new">New</button>
+            </div>
+          `
+          : '';
+
+        container.innerHTML = `
+          <div class="d-flex align-items-center gap-2 px-3 py-2 file-item-header" style="cursor:pointer" data-toggle-diff="${itemId}">
+            <div class="form-check mb-0" onclick="event.stopPropagation()">
+              <input class="form-check-input viewed-check" type="checkbox" id="viewed-${itemId}" title="Mark as viewed">
+            </div>
+            <i class="bi bi-chevron-right diff-chevron small" id="chevron-${itemId}"></i>
+            <span class="badge ${badgeClass}">${escapeHtml(groupType)}</span>
+            <span class="mono fw-semibold text-truncate flex-grow-1">${escapeHtml(path)}</span>
+            <span onclick="event.stopPropagation()">${changedControls}</span>
+          </div>
+          <div class="d-none px-3 pb-3" id="body-${itemId}">
+            <div class="text-body-secondary small mb-2">${escapeHtml(summary)}</div>
+            <div class="diff-placeholder" data-diff-placeholder="${itemId}">
+              <i class="bi bi-hourglass-split me-2"></i>Loading diff...
+            </div>
+            <div class="diff-host d-none" data-diff-host="${itemId}"></div>
+          </div>
+        `;
+
+        // Toggle expand/collapse on header click
+        const header = container.querySelector(`[data-toggle-diff="${itemId}"]`);
+        const body = container.querySelector(`#body-${itemId}`);
+        const chevron = container.querySelector(`#chevron-${itemId}`);
+        let expanded = false;
+        let loaded = false;
+
+        header.addEventListener('click', () => {
+          expanded = !expanded;
+          body.classList.toggle('d-none', !expanded);
+          chevron.classList.toggle('bi-chevron-right', !expanded);
+          chevron.classList.toggle('bi-chevron-down', expanded);
+          if (expanded && !loaded) {
+            renderDiffForItem(sectionKey, groupType, itemIndex);
+            loaded = true;
+          }
+        });
+
+        // Diff mode buttons for changed items
+        if (groupType === 'changed') {
+          const buttons = container.querySelectorAll('[data-diff-mode]');
+          buttons.forEach((button) => {
+            button.addEventListener('click', () => {
+              container.querySelectorAll('[data-diff-mode]').forEach((btn) => btn.classList.remove('active'));
+              button.classList.add('active');
+              diffState.set(itemId, button.dataset.diffMode);
+              renderDiffForItem(sectionKey, groupType, itemIndex, true);
+            });
+          });
+        }
+
+        return container;
+      }
+
+      function toggleAllAccordions(container, expand) {
+        container.querySelectorAll('.accordion-collapse').forEach((element) => {
+          const instance = bootstrap.Collapse.getOrCreateInstance(element, { toggle: false });
+          if (expand) {
+            instance.show();
+          } else {
+            instance.hide();
+          }
+        });
+      }
+
+      function getSourceItem(sectionKey, groupType, itemIndex) {
+        const section = report[sectionKey] || {};
+        const items = asArray(section[groupType]);
+        return items[itemIndex] || null;
+      }
+
+      function renderDiffForItem(sectionKey, groupType, itemIndex, force = false) {
+        const itemId = `${sectionKey}-${groupType}-${itemIndex}`;
+        const item = getSourceItem(sectionKey, groupType, itemIndex);
+        if (!item) {
+          return;
+        }
+
+        const host = document.querySelector(`[data-diff-host="${itemId}"]`);
+        const placeholder = document.querySelector(`[data-diff-placeholder="${itemId}"]`);
+        if (!host || !placeholder) {
+          return;
+        }
+
+        const mode = diffState.get(itemId) || (groupType === 'changed' ? 'direct' : 'single');
+        const diff = pickDiff(item, groupType, mode);
+        const renderKey = `${mode}:${diff || ''}`;
+        if (!force && host.dataset.renderedKey === renderKey) {
+          placeholder.classList.add('d-none');
+          host.classList.remove('d-none');
+          return;
+        }
+
+        if (!diff) {
+          placeholder.innerHTML = '<i class="bi bi-ban me-2"></i>No diff available for this item.';
+          host.classList.add('d-none');
+          host.innerHTML = '';
+          host.dataset.renderedKey = '';
+          return;
+        }
+
+        try {
+          const targetEl = document.createElement('div');
+          host.innerHTML = '';
+          host.appendChild(targetEl);
+          const diff2htmlUi = new Diff2HtmlUI(targetEl, diff, {
+            inputFormat: 'diff',
+            outputFormat: 'line-by-line',
+            drawFileList: false,
+            highlight: true,
+            colorScheme: 'light'
+          });
+          diff2htmlUi.draw();
+          diff2htmlUi.highlightCode();
+          host.dataset.renderedKey = renderKey;
+          placeholder.classList.add('d-none');
+          host.classList.remove('d-none');
+        } catch (error) {
+          // Fallback to basic Diff2Html.html if UI fails
+          try {
+            host.innerHTML = Diff2Html.html(diff, {
+              inputFormat: 'diff',
+              outputFormat: 'line-by-line',
+              drawFileList: false
+            });
+            host.dataset.renderedKey = renderKey;
+            placeholder.classList.add('d-none');
+            host.classList.remove('d-none');
+          } catch (fallbackError) {
+            placeholder.innerHTML = `<i class="bi bi-exclamation-octagon me-2"></i>Unable to render diff: ${escapeHtml(fallbackError.message || String(fallbackError))}`;
+            host.classList.add('d-none');
+            host.innerHTML = '';
+            host.dataset.renderedKey = '';
+          }
+        }
+      }
+
+      function pickDiff(item, groupType, mode) {
+        if (groupType === 'added' || groupType === 'removed') {
+          return text(item.diff, '');
+        }
+        if (groupType === 'changed') {
+          if (mode === 'direct') {
+            return text(item.diff, '') || text(item.patchDiff, '');
+          }
+          if (mode === 'old') {
+            return text(item.oldDiff, '');
+          }
+          if (mode === 'new') {
+            return text(item.newDiff, '');
+          }
+          if (mode === 'patch') {
+            return text(item.patchDiff, '');
+          }
+          return text(item.diff, '') || text(item.patchDiff, '') || text(item.newDiff, '');
+        }
+        return '';
+      }
+
+      function renderDepsTab(section) {
+        const card = document.createElement('div');
+        card.className = 'card surface-card';
+        card.innerHTML = `
+          <div class="card-header">
+            <h3 class="h6 mb-0">Dependency Audit</h3>
+          </div>
+          <div class="card-body">
+            <div data-role="deps-list" class="d-grid gap-2"></div>
+          </div>
+        `;
+
+        const rows = [];
+        asArray(section.added).forEach((item) => rows.push({ ...item, change: 'Added', badge: 'text-bg-success' }));
+        asArray(section.removed).forEach((item) => rows.push({ ...item, change: 'Removed', badge: 'text-bg-danger' }));
+        asArray(section.changed).forEach((item) => rows.push({ ...item, change: 'Changed', badge: 'text-bg-warning' }));
+
+        const list = card.querySelector('[data-role="deps-list"]');
+        if (!rows.length) {
+          list.innerHTML = '<div class="empty-state py-4">No dependency changes were detected.</div>';
+          return card;
+        }
+
+        rows.forEach((row) => {
+          const el = document.createElement('div');
+          el.className = 'border rounded p-3';
+
+          const revLine = formatDepRevisionLine(row);
+          el.innerHTML = `
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="badge ${row.badge}">${escapeHtml(row.change)}</span>
+              <span class="mono fw-semibold">${escapeHtml(text(row.name, 'unknown'))}</span>
+            </div>
+            <div class="text-body-secondary mb-1">${escapeHtml(text(row.summary, 'No summary.'))}</div>
+            ${revLine}
+          `;
+          list.appendChild(el);
+        });
+        return card;
+      }
+
+      function formatDepRevisionLine(item) {
+        const shortRev = (r) => r ? escapeHtml(r.substring(0, 10)) : '';
+
+        if (item.change === 'Changed') {
+          const oldRev = shortRev(item.oldRevision);
+          const newRev = shortRev(item.newRevision);
+          if (oldRev || newRev) {
+            return `<div class="mono small text-body-tertiary"><span>${oldRev}</span> → <span>${newRev}</span></div>`;
+          }
+        } else {
+          const rev = shortRev(item.revision);
+          if (rev) {
+            return `<div class="mono small text-body-tertiary">${rev}</div>`;
+          }
+        }
+        return '';
+      }
+
+      function escapeAttribute(value) {
+        return text(value, '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('"', '&quot;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;');
+      }
+
+      function renderCompanionTab(section) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'd-grid gap-4';
+
+        // Full-width findings table
+        const findingsCard = document.createElement('div');
+        findingsCard.className = 'card surface-card';
+        findingsCard.innerHTML = `
+          <div class="card-header d-flex justify-content-between align-items-center gap-2">
+            <h3 class="h6 mb-0">Findings</h3>
+            <span class="badge text-bg-light border">${asArray(section.findings).length}</span>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>File</th>
+                    <th>Type</th>
+                    <th>Summary</th>
+                  </tr>
+                </thead>
+                <tbody data-role="findings-body"></tbody>
+              </table>
+            </div>
+          </div>
+        `;
+
+        const body = findingsCard.querySelector('[data-role="findings-body"]');
+        const findings = asArray(section.findings);
+        if (!findings.length) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="3"><div class="empty-state py-4">No companion PR findings were recorded.</div></td>';
+          body.appendChild(tr);
+        } else {
+          findings.forEach((finding) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td class="mono">${escapeHtml(text(finding.file, '—'))}</td>
+              <td><span class="badge ${findingBadgeClass(finding.type)}">${escapeHtml(text(finding.type, 'NOTE'))}</span></td>
+              <td>${escapeHtml(text(finding.summary, 'No summary provided.'))}</td>
+            `;
+            body.appendChild(tr);
+          });
+        }
+        wrapper.appendChild(findingsCard);
+        return wrapper;
+      }
+
+      function renderEmpty(message) {
+        const div = document.createElement('div');
+        div.className = 'empty-state';
+        div.textContent = message;
+        return div;
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        buildHeader();
+        buildSummary();
+        renderTabs();
+      });
+    })();
+  </script>
+</body>
+</html>
