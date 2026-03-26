@@ -144,13 +144,12 @@ else
             return; // already created
 
         var mime = doc.DocumentMimeType ?? "application/pdf";
-        var bytes = doc.DocumentBytes;
+        var base64 = Convert.ToBase64String(doc.DocumentBytes);
         InvokeAsync(async () =>
         {
             documentBlobUrl = await JS.InvokeAsync<string>(
                 "eval",
-                "((bytes, mime) => URL.createObjectURL(new Blob([bytes], {type: mime})))"
-                    + $"(new Uint8Array({System.Text.Json.JsonSerializer.Serialize(bytes)}), '{mime}')");
+                $"(() => {{ var b = atob('{base64}'); var a = new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return URL.createObjectURL(new Blob([a], {{type:'{mime}'}})); }})()");
             StateHasChanged();
         });
     }
