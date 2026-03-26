@@ -4,55 +4,56 @@
 
 <PageTitle>SkiaSharp Gallery</PageTitle>
 
-<div class="mb-4">
-    <h1 class="mb-1">SkiaSharp Gallery</h1>
-    <p class="text-muted">Interactive demos showcasing SkiaSharp's 2D graphics capabilities. Built with Blazor WebAssembly.</p>
-</div>
-
-<div class="mb-3">
-    <input class="form-control" type="search" placeholder="Search samples..."
-           @bind="searchText" @bind:event="oninput" />
-</div>
-
-@foreach (var group in GetFilteredGroups())
-{
-    <h5 class="mt-4 mb-3 text-uppercase fw-bold" style="color: #1a237e; letter-spacing: 0.05em; font-size: 0.85rem;">@group.Key</h5>
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-3">
-        @foreach (var sample in group.OrderBy(s => s.Title))
-        {
-            <div class="col">
-                <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
-                    <div class="card h-100 sample-card">
-                        <div class="card-body py-3 px-3">
-                            <h6 class="card-title mb-1">@sample.Title</h6>
-                            @if (!string.IsNullOrWhiteSpace(sample.Description))
-                            {
-                                <p class="card-text text-muted small mb-0" style="line-height: 1.3;">
-                                    @TruncateDescription(sample.Description)
-                                </p>
-                            }
-                            else
-                            {
-                                <p class="card-text text-muted small mb-0">
-                                    @GetSampleTypeLabel(sample)
-                                </p>
-                            }
-                        </div>
-                        <div class="card-footer bg-transparent border-0 py-1 px-3">
-                            <span class="badge bg-light text-dark small">@GetSampleTypeLabel(sample)</span>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        }
+<div class="home-container">
+    <div class="hero-section">
+        <div class="hero-accent"></div>
+        <h1 class="hero-title">SkiaSharp Gallery</h1>
+        <p class="hero-subtitle">Interactive demos showcasing SkiaSharp's 2D graphics capabilities. Built with Blazor WebAssembly.</p>
     </div>
-}
 
-<hr class="mt-4" />
-<p class="text-muted small">
-    SkiaSharp: <strong>@SampleService.SkiaSharpVersion</strong> &nbsp;|&nbsp;
-    HarfBuzzSharp: <strong>@SampleService.HarfBuzzSharpVersion</strong>
-</p>
+    <div class="search-wrapper">
+        <input class="form-control search-input" type="search" placeholder="Search samples..."
+               @bind="searchText" @bind:event="oninput" />
+    </div>
+
+    @foreach (var group in GetFilteredGroups())
+    {
+        var categoryColor = GetCategoryColor(group.Key);
+        <h5 class="category-header">
+            <span class="category-dot" style="background-color: @categoryColor;"></span>
+            @group.Key
+        </h5>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-3">
+            @foreach (var sample in group.OrderBy(s => s.Title))
+            {
+                <div class="col">
+                    <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
+                        <div class="card h-100 sample-card" style="border-left-color: @categoryColor;">
+                            <div class="card-body py-3 px-3">
+                                <h6 class="card-title mb-1">@sample.Title</h6>
+                                @if (!string.IsNullOrWhiteSpace(sample.Description))
+                                {
+                                    <p class="card-text text-muted small mb-2" style="line-height: 1.4;">
+                                        @TruncateDescription(sample.Description)
+                                    </p>
+                                }
+                            </div>
+                            <div class="card-footer bg-transparent border-0 py-2 px-3">
+                                <span class="category-badge" style="background-color: @(categoryColor)1A; color: @categoryColor;">@group.Key</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+
+    <hr class="mt-4" />
+    <p class="text-muted small">
+        SkiaSharp: <strong>@SampleService.SkiaSharpVersion</strong> &nbsp;|&nbsp;
+        HarfBuzzSharp: <strong>@SampleService.HarfBuzzSharpVersion</strong>
+    </p>
+</div>
 
 @code {
     private string searchText = string.Empty;
@@ -71,11 +72,17 @@
         return desc.Length > 80 ? desc[..77] + "..." : desc;
     }
 
-    private static string GetSampleTypeLabel(SampleBase sample)
+    private static string GetCategoryColor(string category) => category switch
     {
-        if (sample is DocumentSampleBase) return "📄 Document";
-        if (sample.IsAnimated) return "🎬 Animated";
-        if (sample is InteractiveSampleBase) return "🎛️ Interactive";
-        return "🖼️ Static";
-    }
+        SampleCategories.Showcases => "#E91E63",
+        SampleCategories.Documents => "#607D8B",
+        SampleCategories.General => "#1A237E",
+        SampleCategories.ImageFilters => "#E65100",
+        SampleCategories.BitmapDecoding => "#00897B",
+        SampleCategories.PathEffects => "#6A1B9A",
+        SampleCategories.Paths => "#2E7D32",
+        SampleCategories.Shaders => "#1565C0",
+        SampleCategories.Text => "#AD1457",
+        _ => "#546E7A",
+    };
 }
