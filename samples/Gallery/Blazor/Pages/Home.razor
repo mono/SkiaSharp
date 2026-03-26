@@ -11,9 +11,40 @@
         <p class="hero-subtitle">Interactive demos showcasing SkiaSharp's 2D graphics capabilities. Built with Blazor WebAssembly.</p>
     </div>
 
-    <div class="search-wrapper">
-        <input class="form-control search-input" type="search" placeholder="Search samples..."
-               @bind="searchText" @bind:event="oninput" />
+    <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
+        <div class="flex-grow-1">
+            <input class="form-control search-input" type="search" placeholder="Search samples..."
+                   @bind="searchText" @bind:event="oninput" />
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                    @onclick="() => showFilterDropdown = !showFilterDropdown"
+                    @onclick:stopPropagation="true">
+                Filter @(selectedCategories.Count < allCategories.Length ? $"({selectedCategories.Count})" : "")
+            </button>
+            @if (showFilterDropdown)
+            {
+                <div class="filter-backdrop" @onclick="() => showFilterDropdown = false"></div>
+                <div class="filter-dropdown" @onclick:stopPropagation="true">
+                    <div class="d-flex justify-content-between align-items-center px-2 pb-1 border-bottom mb-1">
+                        <small class="fw-bold text-muted">Categories</small>
+                        <button class="btn btn-sm btn-link p-0 small" @onclick="ToggleAll">
+                            @(selectedCategories.Count == allCategories.Length ? "None" : "All")
+                        </button>
+                    </div>
+                    @foreach (var cat in allCategories)
+                    {
+                        var color = GetCategoryColor(cat);
+                        <label class="d-flex align-items-center gap-2 px-2 py-1 filter-item">
+                            <input type="checkbox" checked="@selectedCategories.Contains(cat)"
+                                   @onchange="() => ToggleCategory(cat)" />
+                            <span class="category-dot" style="background-color: @color;"></span>
+                            <span class="small">@cat</span>
+                        </label>
+                    }
+                </div>
+            }
+        </div>
     </div>
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 g-3 mb-4">
@@ -22,7 +53,7 @@
             var categoryColor = GetCategoryColor(sample.Category);
             <div class="col">
                 <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
-                    <div class="card h-100 sample-card" style="border-left-color: @categoryColor;">
+                    <div class="card h-100 sample-card" style="border-left-color: @categoryColor; background-color: @(categoryColor)08;">
                         <div class="card-body py-3 px-3">
                             <h6 class="card-title mb-1">@sample.Title</h6>
                             @if (!string.IsNullOrWhiteSpace(sample.Description))
@@ -50,13 +81,40 @@
 
 @code {
     private string searchText = string.Empty;
+    private bool showFilterDropdown;
+    private HashSet<string> selectedCategories = new();
+    private string[] allCategories = Array.Empty<string>();
+
+    protected override void OnInitialized()
+    {
+        allCategories = SampleService.GetSamples()
+            .Select(s => s.Category)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToArray();
+        selectedCategories = new HashSet<string>(allCategories);
+    }
 
     private IEnumerable<SampleBase> GetFilteredSamples()
     {
-        var samples = SampleService.GetSamples();
-        return samples
+        return SampleService.GetSamples()
             .Where(s => s.MatchesFilter(searchText))
+            .Where(s => selectedCategories.Contains(s.Category))
             .OrderBy(s => s.Title);
+    }
+
+    private void ToggleCategory(string category)
+    {
+        if (!selectedCategories.Remove(category))
+            selectedCategories.Add(category);
+    }
+
+    private void ToggleAll()
+    {
+        if (selectedCategories.Count == allCategories.Length)
+            selectedCategories.Clear();
+        else
+            selectedCategories = new HashSet<string>(allCategories);
     }
 
     private static string TruncateDescription(string desc)
