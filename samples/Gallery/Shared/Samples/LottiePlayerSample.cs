@@ -46,6 +46,8 @@ public class LottiePlayerSample : AnimatedInteractiveSampleBase
 	protected override async Task OnInit()
 	{
 		_animation = Animation.Create(SampleMedia.Images.LottieLogo);
+		if (_animation == null) return;
+
 		_animation.Seek(0, null);
 
 		_watch.Start();
@@ -78,5 +80,12 @@ public class LottiePlayerSample : AnimatedInteractiveSampleBase
 		canvas.Clear(SKColors.White);
 
 		_animation.Render(canvas, new SKRect(0, 0, width, height));
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		_animation?.Dispose();
+		_animation = null;
 	}
 }

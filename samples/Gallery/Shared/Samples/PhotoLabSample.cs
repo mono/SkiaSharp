@@ -91,6 +91,7 @@ public class PhotoLabSample : InteractiveSampleBase
 
 		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
 		using var bitmap = SKBitmap.Decode(stream);
+		if (bitmap == null) return;
 
 		SKColorFilter? colorFilter = null;
 		var imageFilters = new List<SKImageFilter>();

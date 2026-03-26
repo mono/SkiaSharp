@@ -74,13 +74,12 @@ public class BlendModesSample : InteractiveSampleBase
 		canvas.Restore();
 
 		// Draw blend mode name
+		using var textFont = new SKFont { Size = Math.Min(width, height) * 0.06f };
 		using var textPaint = new SKPaint
 		{
 			Color = SKColors.Black,
-			TextSize = Math.Min(width, height) * 0.06f,
 			IsAntialias = true,
-			TextAlign = SKTextAlign.Center,
 		};
-		canvas.DrawText(mode.ToString(), cx, cy + radius + textPaint.TextSize * 2, textPaint);
+		canvas.DrawText(mode.ToString(), cx, cy + radius + textFont.Size * 2, SKTextAlign.Center, textFont, textPaint);
 	}
 }

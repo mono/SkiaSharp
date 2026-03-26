@@ -171,14 +171,15 @@ public class ImageDecoderSample : InteractiveSampleBase
 			Color = new SKColor(0, 0, 0, 180),
 			Style = SKPaintStyle.Fill,
 		};
+		var fontSize = Math.Max(14f, height / 30f);
+		using var font = new SKFont { Size = fontSize };
 		using var textPaint = new SKPaint
 		{
 			Color = SKColors.White,
-			TextSize = Math.Max(14f, height / 30f),
 			IsAntialias = true,
 		};
 
-		var lineHeight = textPaint.TextSize * 1.4f;
+		var lineHeight = fontSize * 1.4f;
 		var boxHeight = lineHeight * lines.Length + 20;
 		var boxTop = height - boxHeight;
 		canvas.DrawRect(0, boxTop, width, boxHeight, bgPaint);
@@ -186,20 +187,19 @@ public class ImageDecoderSample : InteractiveSampleBase
 		var y = boxTop + lineHeight;
 		foreach (var line in lines)
 		{
-			canvas.DrawText(line, 12, y, textPaint);
+			canvas.DrawText(line, 12, y, font, textPaint);
 			y += lineHeight;
 		}
 	}
 
 	private static void DrawErrorText(SKCanvas canvas, int width, int height, string message)
 	{
+		using var font = new SKFont { Size = 24 };
 		using var paint = new SKPaint
 		{
 			Color = SKColors.Red,
-			TextSize = 24,
 			IsAntialias = true,
-			TextAlign = SKTextAlign.Center,
 		};
-		canvas.DrawText(message, width / 2f, height / 2f, paint);
+		canvas.DrawText(message, width / 2f, height / 2f, SKTextAlign.Center, font, paint);
 	}
 }

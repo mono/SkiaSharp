@@ -45,6 +45,8 @@ public class GifPlayerSample : AnimatedInteractiveSampleBase
 	{
 		var stream = new SKManagedStream(SampleMedia.Images.AnimatedHeartGif, true);
 		codec = SKCodec.Create(stream);
+		if (codec == null) return;
+
 		frames = codec.FrameInfo;
 
 		info = codec.Info;

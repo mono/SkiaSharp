@@ -35,7 +35,7 @@ public class ThreeDSample : InteractiveSampleBase
 		new SliderControl("translateY", "Translate Y", -300, 300, translateY),
 		new SliderControl("scale", "Scale", 0.2f, 3, scale, 0.1f),
 		new PickerControl("projection", "Projection", Projections, projectionIndex),
-		new SliderControl("perspDepth", "Perspective Depth", 100, 2000, perspDepth, 50),
+		new SliderControl("perspDepth", "Perspective Depth", -2000, 2000, perspDepth, 50),
 		new ToggleControl("showAxes", "Show Axes", showAxes),
 		new ToggleControl("shadow", "Show Shadow", showShadow),
 	];
@@ -73,10 +73,7 @@ public class ThreeDSample : InteractiveSampleBase
 		var ry = SKMatrix44.CreateRotationDegrees(0, 1, 0, rotateY);
 		var rz = SKMatrix44.CreateRotationDegrees(0, 0, 1, rotateZ);
 
-		var rotation = SKMatrix44.CreateIdentity();
-		rotation.PostConcat(rx);
-		rotation.PostConcat(ry);
-		rotation.PostConcat(rz);
+		var rotation = SKMatrix44.Concat(SKMatrix44.Concat(rx, ry), rz);
 
 		canvas.Save();
 		// Translate to center, then apply user translation before rotation
@@ -194,8 +191,8 @@ public class ThreeDSample : InteractiveSampleBase
 		canvas.DrawLine(origin, xEnd, xPaint);
 
 		using var xFont = new SKFont { Size = 14 };
-		using var xTextPaint = new SKPaint { Color = xPaint.Color, IsAntialias = true };
-		canvas.DrawText("X", xEnd.X + 5, xEnd.Y + 5, xFont, xTextPaint);
+		using var textPaint = new SKPaint { Color = xPaint.Color, IsAntialias = true };
+		canvas.DrawText("X", xEnd.X + 5, xEnd.Y + 5, xFont, textPaint);
 
 		// Y axis (green)
 		using var yPaint = new SKPaint
@@ -206,7 +203,8 @@ public class ThreeDSample : InteractiveSampleBase
 			IsAntialias = true,
 		};
 		canvas.DrawLine(origin, yEnd, yPaint);
-		canvas.DrawText("Y", yEnd.X + 5, yEnd.Y + 5, xFont, new SKPaint { Color = yPaint.Color, IsAntialias = true });
+		textPaint.Color = yPaint.Color;
+		canvas.DrawText("Y", yEnd.X + 5, yEnd.Y + 5, xFont, textPaint);
 
 		// Z axis (blue)
 		using var zPaint = new SKPaint
@@ -217,7 +215,8 @@ public class ThreeDSample : InteractiveSampleBase
 			IsAntialias = true,
 		};
 		canvas.DrawLine(origin, zEnd2d, zPaint);
-		canvas.DrawText("Z", zEnd2d.X + 5, zEnd2d.Y + 5, xFont, new SKPaint { Color = zPaint.Color, IsAntialias = true });
+		textPaint.Color = zPaint.Color;
+		canvas.DrawText("Z", zEnd2d.X + 5, zEnd2d.Y + 5, xFont, textPaint);
 	}
 
 	private void DrawMatrixInfo(SKCanvas canvas, SKMatrix44 rotation)

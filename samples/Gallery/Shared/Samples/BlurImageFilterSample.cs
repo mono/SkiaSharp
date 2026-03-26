@@ -37,6 +37,8 @@ public class BlurImageFilterSample : InteractiveSampleBase
 
 		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
 		using var bitmap = SKBitmap.Decode(stream);
+		if (bitmap == null) return;
+
 		using var filter = SKImageFilter.CreateBlur(sigmaX, sigmaY);
 		using var paint = new SKPaint();
 		paint.ImageFilter = filter;

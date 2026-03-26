@@ -89,13 +89,11 @@ public class TextLabSample : InteractiveSampleBase
 
 		var typeface = GetTypeface();
 
+		using var font = new SKFont(typeface, textSize);
 		using var paint = new SKPaint
 		{
-			TextSize = textSize,
 			IsAntialias = true,
 			Color = new SKColor(0xFF4281A4),
-			TextAlign = textAlign,
-			Typeface = typeface,
 		};
 
 		if (stroke)
@@ -105,15 +103,14 @@ public class TextLabSample : InteractiveSampleBase
 		}
 
 		// Center text vertically
-		var metrics = paint.FontMetrics;
+		var metrics = font.Metrics;
 		var y = height / 2f - (metrics.Ascent + metrics.Descent) / 2f;
 
-		canvas.DrawText(text, x, y, paint);
+		canvas.DrawText(text, x, y, textAlign, font, paint);
 
 		if (showBounds)
 		{
-			var bounds = new SKRect();
-			var textWidth = paint.MeasureText(text, ref bounds);
+			var textWidth = font.MeasureText(text, out var bounds);
 
 			// Position bounds at the actual draw location
 			var offsetX = alignIndex switch
@@ -165,17 +162,17 @@ public class TextLabSample : InteractiveSampleBase
 			}
 
 			// Labels
+			using var labelFont = new SKFont { Size = 12 };
 			using var labelPaint = new SKPaint
 			{
-				TextSize = 12,
 				IsAntialias = true,
 			};
 			labelPaint.Color = SKColors.Blue;
-			canvas.DrawText("baseline", 4, y - 4, labelPaint);
+			canvas.DrawText("baseline", 4, y - 4, labelFont, labelPaint);
 			labelPaint.Color = SKColors.Green;
-			canvas.DrawText("ascent", 4, y + metrics.Ascent - 4, labelPaint);
+			canvas.DrawText("ascent", 4, y + metrics.Ascent - 4, labelFont, labelPaint);
 			labelPaint.Color = SKColors.Orange;
-			canvas.DrawText("descent", 4, y + metrics.Descent - 4, labelPaint);
+			canvas.DrawText("descent", 4, y + metrics.Descent - 4, labelFont, labelPaint);
 		}
 	}
 

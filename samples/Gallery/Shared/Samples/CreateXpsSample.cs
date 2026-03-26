@@ -26,13 +26,12 @@ public class CreateXpsSample : DocumentSampleBase
 			{
 				using var paint = new SKPaint
 				{
-					TextSize = 64.0f,
 					IsAntialias = true,
 					Color = 0xFF9CAFB7,
 					IsStroke = true,
 					StrokeWidth = 3,
-					TextAlign = SKTextAlign.Center,
 				};
+				using var docFont = new SKFont { Size = 64.0f };
 
 				var pageWidth = 840;
 				var pageHeight = 1188;
@@ -40,7 +39,7 @@ public class CreateXpsSample : DocumentSampleBase
 				for (var i = 1; i <= 2; i++)
 				{
 					using var xpsCanvas = document.BeginPage(pageWidth, pageHeight);
-					xpsCanvas.DrawText($"...XPS {i}/2...", pageWidth / 2, pageHeight / 4, paint);
+					xpsCanvas.DrawText($"...XPS {i}/2...", pageWidth / 2, pageHeight / 4, SKTextAlign.Center, docFont, paint);
 					document.EndPage();
 				}
 

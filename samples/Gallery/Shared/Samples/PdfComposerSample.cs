@@ -68,27 +68,25 @@ public class PdfComposerSample : DocumentSampleBase
 			{
 				using var docPaint = new SKPaint
 				{
-					TextSize = 64.0f,
 					IsAntialias = true,
 					Color = 0xFF9CAFB7,
 					IsStroke = true,
 					StrokeWidth = 3,
-					TextAlign = SKTextAlign.Center,
 				};
+				using var docFont = new SKFont { Size = 64.0f };
 
 				for (var i = 1; i <= pageCount; i++)
 				{
 					using var pdfCanvas = document.BeginPage(pageWidth, pageHeight);
-					pdfCanvas.DrawText($"...PDF {i}/{pageCount}...", pageWidth / 2, pageHeight / 4, docPaint);
+					pdfCanvas.DrawText($"...PDF {i}/{pageCount}...", pageWidth / 2, pageHeight / 4, SKTextAlign.Center, docFont, docPaint);
 
 					using var smallPaint = new SKPaint
 					{
-						TextSize = 32.0f,
 						IsAntialias = true,
 						Color = 0xFFB0BEC5,
-						TextAlign = SKTextAlign.Center,
 					};
-					pdfCanvas.DrawText($"{sizeName} ({pageWidth}\u00d7{pageHeight})", pageWidth / 2, pageHeight / 4 + 60, smallPaint);
+					using var smallFont = new SKFont { Size = 32.0f };
+					pdfCanvas.DrawText($"{sizeName} ({pageWidth}\u00d7{pageHeight})", pageWidth / 2, pageHeight / 4 + 60, SKTextAlign.Center, smallFont, smallPaint);
 					document.EndPage();
 				}
 

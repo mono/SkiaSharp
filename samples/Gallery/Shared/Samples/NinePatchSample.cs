@@ -45,6 +45,7 @@ public class NinePatchSample : InteractiveSampleBase
 
 		using var stream = new SKManagedStream(SampleMedia.Images.NinePatch);
 		using var bitmap = SKBitmap.Decode(stream);
+		if (bitmap == null) return;
 
 		var patchCenter = new SKRectI(33, 33, 256 - 33, 256 - 33);
 
