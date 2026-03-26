@@ -1,41 +1,17 @@
 # SkiaSharp Browser WebAssembly Sample
 
-Demonstrates SkiaSharp rendering in the browser via raw .NET WebAssembly (no Blazor). Uses Bootstrap 5 for the UI and vanilla JavaScript for interop.
+Demonstrates SkiaSharp rendering in the browser via raw .NET WebAssembly (no Blazor). C# renders a scene to a PNG using `[JSExport]`, and JavaScript displays it in an `<img>` element with a Bootstrap layout.
 
-## Sample Pages
-
-### CPU
-
-A static scene rendered on the CPU — a radial gradient background overlaid with semi-transparent colored circles and centered "SkiaSharp" text.
+![Browser WebAssembly Sample](screenshot.png)
 
 **Features:**
 
-- **`SKBitmap`** — CPU-rendered bitmap transferred to an HTML `<canvas>` via `[JSExport]` / `[JSImport]` interop.
+- **`SKSurface`** — Creates a CPU-rendered surface entirely in C# running as WebAssembly.
 - **`SKShader`** — Radial gradient background created with `SKShader.CreateRadialGradient`.
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
-
-### GPU
-
-A real-time animated shader running at full frame rate, with touch/click interaction.
-
-**Features:**
-
-- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime and rendered via `SKRuntimeEffectBuilder`.
-- **`requestAnimationFrame`** — Continuous animation loop driven from JavaScript, calling C# each frame.
-- **Touch interaction** — Pointer position is passed as a shader uniform; clicking/touching adds an extra metaball.
-- **FPS counter** — Measured in JavaScript and displayed as a Bootstrap badge.
-
-### Drawing
-
-A freehand drawing canvas with a color palette, adjustable brush size, and clear button.
-
-**Features:**
-
-- **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from pointer events.
-- **Pointer events** — JavaScript captures pointer input and calls `[JSExport]` methods on C#.
-- **Color palette** — Six selectable colors via clickable swatches.
-- **Brush size slider** — Adjustable stroke width via an HTML range input.
+- **`[JSExport]`** — C# method exported to JavaScript; returns the rendered image as a base64-encoded PNG.
+- **Bootstrap 5** — Minimal page styling via CDN.
 
 ## Requirements
 
