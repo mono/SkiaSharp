@@ -249,14 +249,14 @@ else
 
     private void OnPaintGL(SKPaintGLSurfaceEventArgs e)
     {
-        canvasInfoWidth = e.BackendRenderTarget.Width;
-        canvasInfoHeight = e.BackendRenderTarget.Height;
-        canvasRawWidth = canvasInfoWidth;
-        canvasRawHeight = canvasInfoHeight;
-        canvasDpi = "GPU";
+        canvasInfoWidth = e.Info.Width;
+        canvasInfoHeight = e.Info.Height;
+        canvasRawWidth = e.RawInfo.Width;
+        canvasRawHeight = e.RawInfo.Height;
+        canvasDpi = canvasInfoWidth > 0 ? $"{(float)canvasRawWidth / canvasInfoWidth:F2}x" : "GPU";
 
         e.Surface.Canvas.Clear(SKColors.White);
-        sample?.DrawSample(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
+        sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
         UpdateDocumentPreview();
     }
 
