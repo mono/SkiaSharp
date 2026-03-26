@@ -20,25 +20,28 @@ else
         <p class="text-muted">@sample.Description</p>
     }
 
-    <div class="canvas-wrapper border rounded mb-3">
-        @if (UseGpu)
-        {
-            <SKGLView @ref="glView"
-                      OnPaintSurface="OnPaintGL"
-                      EnableRenderLoop="@(sample is AnimatedSampleBase or AnimatedInteractiveSampleBase)"
-                      style="width:100%;height:60vh;min-height:300px;display:block;" />
-        }
-        else
-        {
-            <SKCanvasView @ref="canvasView"
-                          OnPaintSurface="OnPaintRaster"
-                          style="width:100%;height:60vh;min-height:300px;display:block;"
-                          @onpointerdown="OnPointerDown"
-                          @onpointermove="OnPointerMove"
-                          @onpointerup="OnPointerUp"
-                          @onclick="OnClick" />
-        }
-    </div>
+    @if (sample is not DocumentSampleBase)
+    {
+        <div class="canvas-wrapper border rounded mb-3">
+            @if (UseGpu)
+            {
+                <SKGLView @ref="glView"
+                          OnPaintSurface="OnPaintGL"
+                          EnableRenderLoop="@(sample is AnimatedSampleBase or AnimatedInteractiveSampleBase)"
+                          style="width:100%;height:60vh;min-height:300px;display:block;" />
+            }
+            else
+            {
+                <SKCanvasView @ref="canvasView"
+                              OnPaintSurface="OnPaintRaster"
+                              style="width:100%;height:60vh;min-height:300px;display:block;"
+                              @onpointerdown="OnPointerDown"
+                              @onpointermove="OnPointerMove"
+                              @onpointerup="OnPointerUp"
+                              @onclick="OnClick" />
+            }
+        </div>
+    }
 
     @if (sample is InteractiveSampleBase interactive)
     {
@@ -86,6 +89,7 @@ else
                 {
                     sample.RefreshRequested += OnRefreshRequested;
                     sample.Init();
+                    GenerateDocumentIfNeeded();
                 }
             }
 
@@ -134,24 +138,21 @@ else
 
     private void UpdateDocumentPreview()
     {
-        if (sample is DocumentSampleBase doc && doc.DocumentBytes is { Length: > 0 })
-        {
-            var mime = doc.DocumentMimeType ?? "application/pdf";
-            var bytes = doc.DocumentBytes;
-            InvokeAsync(async () =>
-            {
-                // Revoke old blob URL
-                if (!string.IsNullOrEmpty(documentBlobUrl))
-                    await JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{documentBlobUrl}')");
+        if (sample is not DocumentSampleBase doc || doc.DocumentBytes is not { Length: > 0 })
+            return;
+        if (!string.IsNullOrEmpty(documentBlobUrl))
+            return; // already created
 
-                // Create blob URL from byte array
-                documentBlobUrl = await JS.InvokeAsync<string>(
-                    "eval",
-                    "((bytes, mime) => URL.createObjectURL(new Blob([bytes], {type: mime})))"
-                        + $"(new Uint8Array({System.Text.Json.JsonSerializer.Serialize(bytes)}), '{mime}')");
-                StateHasChanged();
-            });
-        }
+        var mime = doc.DocumentMimeType ?? "application/pdf";
+        var bytes = doc.DocumentBytes;
+        InvokeAsync(async () =>
+        {
+            documentBlobUrl = await JS.InvokeAsync<string>(
+                "eval",
+                "((bytes, mime) => URL.createObjectURL(new Blob([bytes], {type: mime})))"
+                    + $"(new Uint8Array({System.Text.Json.JsonSerializer.Serialize(bytes)}), '{mime}')");
+            StateHasChanged();
+        });
     }
 
     private void OnPointerDown(PointerEventArgs e)
@@ -206,6 +207,27 @@ else
         if (sample is InteractiveSampleBase interactive)
         {
             interactive.UpdateControl(args.id, args.value);
+            GenerateDocumentIfNeeded();
+        }
+    }
+
+    private void GenerateDocumentIfNeeded()
+    {
+        if (sample is DocumentSampleBase doc)
+        {
+            // Clear old blob
+            if (!string.IsNullOrEmpty(documentBlobUrl))
+            {
+                _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{documentBlobUrl}')");
+                documentBlobUrl = null;
+            }
+
+            // Generate the document (calls OnGenerateDocument which populates DocumentBytes)
+            using var tempSurface = SKSurface.Create(new SKImageInfo(1, 1));
+            doc.DrawSample(tempSurface.Canvas, 1, 1);
+
+            // Create blob URL for the viewer
+            UpdateDocumentPreview();
         }
     }
 

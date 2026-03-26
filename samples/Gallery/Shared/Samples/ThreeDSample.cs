@@ -71,11 +71,11 @@ public class ThreeDSample : InteractiveSampleBase
 		// Draw grid background
 		DrawGrid(canvas, width, height, cx, cy);
 
-		// Build 4x4 rotation
+		// Build 4x4 rotation (object-relative: apply X, then Y, then Z)
 		var rx = SKMatrix44.CreateRotationDegrees(1, 0, 0, rotateX);
 		var ry = SKMatrix44.CreateRotationDegrees(0, 1, 0, rotateY);
 		var rz = SKMatrix44.CreateRotationDegrees(0, 0, 1, rotateZ);
-		var rotation = rx * ry * rz;
+		var rotation = rz * ry * rx;
 
 		canvas.Save();
 
@@ -206,9 +206,8 @@ public class ThreeDSample : InteractiveSampleBase
 
 	private void DrawMatrixInfo(SKCanvas canvas, SKMatrix44 rotation)
 	{
-		var m = rotation.Matrix;
-		var boxW = 280f;
-		var boxH = 120f;
+		var boxW = 320f;
+		var boxH = 130f;
 
 		using var bgPaint = new SKPaint
 		{
@@ -218,29 +217,25 @@ public class ThreeDSample : InteractiveSampleBase
 		canvas.DrawRoundRect(new SKRoundRect(new SKRect(8, 8, 8 + boxW, 8 + boxH), 8, 8), bgPaint);
 
 		using var textPaint = new SKPaint { IsAntialias = true, Color = SKColors.White };
-		using var font = new SKFont(SKTypeface.Default, 13);
-		using var headerFont = new SKFont(SKTypeface.Default, 12);
+		using var font = new SKFont(SKTypeface.Default, 11);
+		using var headerFont = new SKFont(SKTypeface.Default, 11);
 
-		canvas.DrawText("3D Rotation Matrix:", 14, 24, headerFont, textPaint);
-
-		var vals = new float[]
-		{
-			m.ScaleX, m.SkewX, m.Persp0,
-			m.SkewY, m.ScaleY, m.Persp1,
-			m.TransX, m.TransY, m.Persp2,
-		};
+		canvas.DrawText("4×4 Transform Matrix:", 14, 22, headerFont, textPaint);
 
 		textPaint.Color = new SKColor(180, 180, 180);
-		var startY = 44f;
-		var lineH = 18f;
-		for (var row = 0; row < 3; row++)
+		var startY = 38f;
+		var lineH = 16f;
+		for (var row = 0; row < 4; row++)
 		{
-			var line = $"│ {vals[row * 3],7:F3}  {vals[row * 3 + 1],7:F3}  {vals[row * 3 + 2],7:F3} │";
+			var line = $"│ {rotation[row, 0],7:F3} {rotation[row, 1],7:F3} {rotation[row, 2],7:F3} {rotation[row, 3],7:F3} │";
 			canvas.DrawText(line, 14, startY + row * lineH, font, textPaint);
 		}
 
 		textPaint.Color = new SKColor(120, 120, 120);
-		font.Size = 11;
-		canvas.DrawText($"X:{rotateX:F0}°  Y:{rotateY:F0}°  Z:{rotateZ:F0}°  S:{scale:F1}  {Projections[projectionIndex]}", 14, startY + 3 * lineH + 4, font, textPaint);
+		font.Size = 10;
+		var info = $"X:{rotateX:F1}°  Y:{rotateY:F1}°  Z:{rotateZ:F1}°  S:{scale:F1}  Z:{translateZ:F0}  {Projections[projectionIndex]}";
+		if (projectionIndex == 1)
+			info += $"  d:{perspDepth:F0}";
+		canvas.DrawText(info, 14, startY + 4 * lineH + 4, font, textPaint);
 	}
 }
