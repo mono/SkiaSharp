@@ -1,0 +1,118 @@
+@page "/debug"
+
+<PageTitle>Debug — SkiaSharp Gallery</PageTitle>
+
+<div style="display:flex;flex-direction:column;height:calc(100vh - 5rem);gap:1rem;">
+    <div>
+        <a href="" class="text-decoration-none small">&larr; Back to Gallery</a>
+        <h4>Size Comparison: HTML vs SkiaSharp</h4>
+    </div>
+
+    <div style="display:flex;gap:1rem;flex:1;min-height:0;">
+        <!-- HTML reference column -->
+        <div style="flex:1;border:1px solid #ccc;border-radius:8px;padding:1rem;overflow:auto;">
+            <h6 class="text-muted mb-2">HTML (CSS pixels)</h6>
+
+            <div style="font-size:12px;margin-bottom:4px;">12px: The quick brown fox</div>
+            <div style="font-size:24px;margin-bottom:4px;">24px: The quick brown fox</div>
+            <div style="font-size:36px;margin-bottom:4px;">36px: Quick brown</div>
+            <div style="font-size:48px;margin-bottom:4px;">48px: Quick</div>
+
+            <hr />
+
+            <div style="display:flex;gap:8px;align-items:end;margin-top:8px;">
+                <div style="width:50px;height:50px;background:#3b82f6;border-radius:4px;"></div>
+                <span class="small text-muted">50×50px</span>
+
+                <div style="width:100px;height:100px;background:#8b5cf6;border-radius:4px;"></div>
+                <span class="small text-muted">100×100px</span>
+
+                <div style="width:150px;height:50px;background:#ef4444;border-radius:4px;"></div>
+                <span class="small text-muted">150×50px</span>
+            </div>
+        </div>
+
+        <!-- SkiaSharp canvas column -->
+        <div style="flex:1;border:1px solid #ccc;border-radius:8px;overflow:hidden;">
+            <SKCanvasView OnPaintSurface="OnPaint"
+                          IgnorePixelScaling="true"
+                          style="width:100%;height:100%;display:block;" />
+        </div>
+    </div>
+
+    <div class="small text-muted" style="font-size:0.7rem;">
+        Canvas: @infoW×@infoH CSS px | @rawW×@rawH device px | DPI ratio: @dpiRatio
+    </div>
+</div>
+
+@code {
+    private int infoW, infoH, rawW, rawH;
+    private string dpiRatio = "?";
+
+    private void OnPaint(SKPaintSurfaceEventArgs e)
+    {
+        infoW = e.Info.Width;
+        infoH = e.Info.Height;
+        rawW = e.RawInfo.Width;
+        rawH = e.RawInfo.Height;
+        dpiRatio = infoW > 0 ? $"{(float)rawW / infoW:F2}x" : "?";
+
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.White);
+
+        var width = e.Info.Width;
+        var height = e.Info.Height;
+
+        // Header
+        using var headerFont = new SKFont { Size = 14 };
+        using var headerPaint = new SKPaint { Color = new SKColor(107, 114, 128), IsAntialias = true };
+        canvas.DrawText("SkiaSharp (same CSS pixel sizes)", 16, 24, SKTextAlign.Left, headerFont, headerPaint);
+
+        // Text at different sizes — should match the HTML side
+        using var textPaint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
+
+        float y = 52;
+
+        using var f12 = new SKFont { Size = 12 };
+        canvas.DrawText("12px: The quick brown fox", 16, y, f12, textPaint);
+        y += 28;
+
+        using var f24 = new SKFont { Size = 24 };
+        canvas.DrawText("24px: The quick brown fox", 16, y, f24, textPaint);
+        y += 40;
+
+        using var f36 = new SKFont { Size = 36 };
+        canvas.DrawText("36px: Quick brown", 16, y, f36, textPaint);
+        y += 52;
+
+        using var f48 = new SKFont { Size = 48 };
+        canvas.DrawText("48px: Quick", 16, y, f48, textPaint);
+        y += 24;
+
+        // Separator line
+        using var linePaint = new SKPaint { Color = new SKColor(200, 200, 200), StrokeWidth = 1, IsAntialias = true };
+        canvas.DrawLine(16, y, width - 16, y, linePaint);
+        y += 16;
+
+        // Rectangles at specific pixel sizes — should match HTML boxes
+        using var blue = new SKPaint { Color = new SKColor(59, 130, 246), IsAntialias = true };
+        canvas.DrawRoundRect(16, y, 50, 50, 4, 4, blue);
+        using var sizeFont = new SKFont { Size = 11 };
+        using var sizePaint = new SKPaint { Color = new SKColor(107, 114, 128), IsAntialias = true };
+        canvas.DrawText("50×50", 16, y + 50 + 14, sizeFont, sizePaint);
+
+        using var purple = new SKPaint { Color = new SKColor(139, 92, 246), IsAntialias = true };
+        canvas.DrawRoundRect(80, y, 100, 100, 4, 4, purple);
+        canvas.DrawText("100×100", 80, y + 100 + 14, sizeFont, sizePaint);
+
+        using var red = new SKPaint { Color = new SKColor(239, 68, 68), IsAntialias = true };
+        canvas.DrawRoundRect(196, y, 150, 50, 4, 4, red);
+        canvas.DrawText("150×50", 196, y + 50 + 14, sizeFont, sizePaint);
+
+        // DPI info
+        y += 130;
+        using var infoFont = new SKFont { Size = 11 };
+        using var infoPaint = new SKPaint { Color = new SKColor(150, 150, 150), IsAntialias = true };
+        canvas.DrawText($"Canvas: {width}×{height} CSS px | {rawW}×{rawH} device px", 16, y, infoFont, infoPaint);
+    }
+}

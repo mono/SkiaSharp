@@ -138,6 +138,9 @@ else
             }
         </div>
     </div>
+    <div class="sample-debug small text-muted px-2" style="flex-shrink:0;font-size:0.7rem;opacity:0.6;">
+        Canvas: @canvasInfoWidth×@canvasInfoHeight CSS px | @canvasRawWidth×@canvasRawHeight device px | DPI: @canvasDpi
+    </div>
 }
 
 @code {
@@ -152,6 +155,10 @@ else
     private SKGLView? glView;
     private bool previousUseGpu;
     private string? documentBlobUrl;
+
+    private int canvasInfoWidth, canvasInfoHeight;
+    private int canvasRawWidth, canvasRawHeight;
+    private string canvasDpi = "?";
 
     private SKPoint? lastPointerDown;
     private SKPoint panStartPoint;
@@ -229,6 +236,12 @@ else
 
     private void OnPaintRaster(SKPaintSurfaceEventArgs e)
     {
+        canvasInfoWidth = e.Info.Width;
+        canvasInfoHeight = e.Info.Height;
+        canvasRawWidth = e.RawInfo.Width;
+        canvasRawHeight = e.RawInfo.Height;
+        canvasDpi = canvasInfoWidth > 0 ? $"{(float)canvasRawWidth / canvasInfoWidth:F2}x" : "?";
+
         e.Surface.Canvas.Clear(SKColors.White);
         sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
         UpdateDocumentPreview();
@@ -236,6 +249,12 @@ else
 
     private void OnPaintGL(SKPaintGLSurfaceEventArgs e)
     {
+        canvasInfoWidth = e.BackendRenderTarget.Width;
+        canvasInfoHeight = e.BackendRenderTarget.Height;
+        canvasRawWidth = canvasInfoWidth;
+        canvasRawHeight = canvasInfoHeight;
+        canvasDpi = "GPU";
+
         e.Surface.Canvas.Clear(SKColors.White);
         sample?.DrawSample(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
         UpdateDocumentPreview();
