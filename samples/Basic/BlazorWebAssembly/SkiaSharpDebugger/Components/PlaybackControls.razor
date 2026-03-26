@@ -1,0 +1,74 @@
+@inject DebuggerState State
+@implements IDisposable
+
+<div class="playback-controls">
+    <button @onclick="State.JumpToStart" title="Jump to start" class="btn-icon">⏮</button>
+    <button @onclick="State.StepBackward" title="Step back (,)" class="btn-icon">⏪</button>
+    <button @onclick="TogglePlay" title="Play/Pause (P)" class="btn-icon">@(_playing ? "⏸" : "▶")</button>
+    <button @onclick="State.StepForward" title="Step forward (.)" class="btn-icon">⏩</button>
+    <button @onclick="State.JumpToEnd" title="Jump to end" class="btn-icon">⏭</button>
+    <span class="playback-position">
+        @(State.SelectedUnfilteredIndex + 1) / @State.TotalCommandCount
+        @if (State.FilteredCommandCount != State.TotalCommandCount)
+        {
+            <text> (@State.FilteredCommandCount visible)</text>
+        }
+    </span>
+</div>
+
+@code {
+    private bool _playing;
+    private System.Threading.Timer? _timer;
+    private int _playGeneration;
+
+    protected override void OnInitialized() => State.StateChanged += OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private void TogglePlay()
+    {
+        _playing = !_playing;
+        if (_playing)
+        {
+            StopTimer();
+            var gen = ++_playGeneration;
+            _timer = new System.Threading.Timer(async _ =>
+            {
+                await InvokeAsync(() =>
+                {
+                    // Ignore callback if a newer generation started or playback stopped
+                    if (gen != _playGeneration || !_playing) return;
+
+                    if (State.SelectedCommandIndex >= State.FilteredCommandCount - 1)
+                    {
+                        _playing = false;
+                        StopTimer();
+                    }
+                    else
+                    {
+                        State.StepForward();
+                    }
+                    StateHasChanged();
+                });
+            }, null, 0, 50);
+        }
+        else
+        {
+            StopTimer();
+        }
+    }
+
+    private void StopTimer()
+    {
+        _playGeneration++;
+        var timer = _timer;
+        _timer = null;
+        timer?.Dispose();
+    }
+
+    public void Dispose()
+    {
+        State.StateChanged -= OnStateChanged;
+        _playing = false;
+        StopTimer();
+    }
+}

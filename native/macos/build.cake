@@ -26,6 +26,9 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
+        var enableDebugger = HasArgument("debugger") || 
+                             EnvironmentVariable("SKIA_DEBUGGER") == "true";
+
         GnNinja($"macos/{arch}", "skia modules/skottie",
             $"target_os='mac' " +
             $"target_cpu='{skiaArch}' " +
@@ -44,9 +47,11 @@ Task("libSkiaSharp")
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-stdlib=libc++' ]");
 
-        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch, properties: new Dictionary<string, string> {
+        var xcodeBuildProps = new Dictionary<string, string> {
             { "MACOSX_DEPLOYMENT_TARGET", GetDeploymentTarget(arch) },
-        });
+        };
+
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch, properties: xcodeBuildProps);
 
         SafeCopy(
             $"libSkiaSharp/bin/{CONFIGURATION}/macosx/{arch}.xcarchive",

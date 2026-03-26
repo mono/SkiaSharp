@@ -1,0 +1,80 @@
+@inject DebuggerState State
+@implements IDisposable
+
+<div class="zoom-view">
+    <h4>Zoom (16×)</h4>
+    <div class="zoom-canvas-container">
+        <SKCanvasView @ref="_canvasRef" OnPaintSurface="OnPaintZoom" IgnorePixelScaling="true"
+                      style="width:192px;height:192px;" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public SKImage? SourceImage { get; set; }
+
+    private SKCanvasView _canvasRef = null!;
+
+    protected override void OnInitialized() => State.StateChanged += OnStateChanged;
+
+    private void OnStateChanged() => InvokeAsync(() =>
+    {
+        _canvasRef?.Invalidate();
+        StateHasChanged();
+    });
+
+    private void OnPaintZoom(SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(new SKColor(0x33, 0x33, 0x33));
+
+        if (SourceImage == null || !State.CrosshairActive) return;
+
+        var cx = State.CursorPosition[0];
+        var cy = State.CursorPosition[1];
+        const int zoom = 16;
+        const int viewSize = 192;
+        float srcHalf = viewSize / (float)zoom / 2f; // 6 pixels
+
+        var srcRect = new SKRect(cx - srcHalf, cy - srcHalf, cx + srcHalf, cy + srcHalf);
+        var dstRect = new SKRect(0, 0, viewSize, viewSize);
+
+        // Nearest-neighbor zoom for sharp pixels
+        using var paint = new SKPaint();
+        canvas.Save();
+        canvas.ClipRect(dstRect);
+        var scaleX = viewSize / (srcHalf * 2);
+        var scaleY = viewSize / (srcHalf * 2);
+        canvas.Translate(-cx * scaleX + viewSize / 2f, -cy * scaleY + viewSize / 2f);
+        canvas.Scale(scaleX, scaleY);
+        canvas.DrawImage(SourceImage, 0, 0, paint);
+        canvas.Restore();
+
+        // Grid lines
+        float cellSize = viewSize / (float)zoom;
+        using var gridPaint = new SKPaint
+        {
+            Color = SKColors.Gray.WithAlpha(60),
+            StrokeWidth = 0.5f,
+            IsStroke = true
+        };
+        for (int i = 0; i <= zoom; i++)
+        {
+            float pos = i * cellSize;
+            canvas.DrawLine(pos, 0, pos, viewSize, gridPaint);
+            canvas.DrawLine(0, pos, viewSize, pos, gridPaint);
+        }
+
+        // Center pixel highlight
+        float mid = viewSize / 2f;
+        using var crossPaint = new SKPaint
+        {
+            Color = SKColors.Red.WithAlpha(200),
+            StrokeWidth = 2,
+            IsStroke = true,
+            IsAntialias = true
+        };
+        canvas.DrawRect(mid - cellSize / 2, mid - cellSize / 2, cellSize, cellSize, crossPaint);
+    }
+
+    public void Dispose() => State.StateChanged -= OnStateChanged;
+}

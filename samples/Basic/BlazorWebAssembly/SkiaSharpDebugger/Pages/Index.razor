@@ -1,0 +1,268 @@
+@page "/"
+@inject DebuggerState State
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<PageTitle>SkiaSharp Debugger</PageTitle>
+
+<div class="debugger-header">
+    <h2>SkiaSharp WASM Debugger</h2>
+    <div class="header-controls">
+        <label class="file-input-label">
+            Load SKP:
+            <InputFile OnChange="OnFileSelected" accept=".skp,.mskp" />
+        </label>
+        @if (_fileLoaded)
+        {
+            <span class="file-info">@_commandCount commands</span>
+        }
+        <select @onchange="OnDemoSelected" class="demo-select">
+            <option value="">-- Sample SKPs --</option>
+            <option value="shapes">Shapes</option>
+            <option value="transforms">Transforms</option>
+            <option value="clipping">Clipping</option>
+            <option value="text_paths">Text &amp; Paths</option>
+        </select>
+        @if (_errorMessage != null)
+        {
+            <span class="error-info">@_errorMessage</span>
+        }
+    </div>
+</div>
+
+<div class="debugger-main">
+    @* Left panel - Command List *@
+    <div class="panel command-panel">
+        <div class="panel-header">
+            <div class="filter-row">
+                <label>Filter</label>
+                <input type="text" @bind="_filterText" @bind:event="oninput" @onkeyup="OnFilterKeyUp"
+                       placeholder="!Save Restore Concat44" class="filter-input" />
+                <button @onclick="ClearFilter" class="btn-small">Clear</button>
+            </div>
+            <PlaybackControls />
+        </div>
+        <CommandList />
+    </div>
+
+    @* Center panel - Canvas *@
+    <div class="panel canvas-panel">
+        <div class="canvas-toolbar">
+            <span class="canvas-size-info">@(_canvasWidth)×@(_canvasHeight)</span>
+        </div>
+        <div class="canvas-container @(State.DarkBackground ? "dark-checkerboard" : "light-checkerboard")">
+            <SKCanvasView @ref="_canvasView"
+                          OnPaintSurface="OnPaintSurface"
+                          IgnorePixelScaling="true"
+                          style="@CanvasStyle"
+                          @onpointerdown="OnPointerDown"
+                          @onpointermove="OnPointerMove" />
+        </div>
+    </div>
+
+    @* Right panel - Inspector *@
+    <div class="panel inspector-panel">
+        <SettingsPanel />
+        <MatrixClipDisplay />
+        <PixelInspector SourceImage="@_lastRenderedImage" />
+        <ZoomView SourceImage="@_lastRenderedImage" />
+        <HistogramPanel />
+    </div>
+</div>
+
+@code {
+    private SKCanvasView _canvasView = null!;
+    private string _filterText = "";
+    private bool _fileLoaded;
+    private int _commandCount;
+    private int _canvasWidth = 600;
+    private int _canvasHeight = 600;
+    private string? _errorMessage;
+
+    // Native debug canvas — used for ALL SKP introspection
+    private SKDebugCanvas? _debugCanvas;
+    private SKImage? _lastRenderedImage;
+
+    private string CanvasStyle => $"width:{_canvasWidth}px;height:{_canvasHeight}px;display:block;";
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.StateChanged += OnStateChanged;
+        await LoadSkpFromUrlAsync("shapes");
+    }
+
+    private void OnStateChanged()
+    {
+        InvokeAsync(() =>
+        {
+            _canvasView?.Invalidate();
+            StateHasChanged();
+        });
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _errorMessage = null;
+        var file = e.File;
+        using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        LoadSkpBytes(ms.ToArray());
+    }
+
+    private void OnDemoSelected(ChangeEventArgs e)
+    {
+        var name = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(name))
+            _ = LoadSkpFromUrlAsync(name);
+    }
+
+    private async Task LoadSkpFromUrlAsync(string name)
+    {
+        _errorMessage = null;
+        try
+        {
+            var http = new HttpClient { BaseAddress = new Uri(NavigationManager.BaseUri) };
+            var skpBytes = await http.GetByteArrayAsync($"skp/{name}.skp");
+            LoadSkpBytes(skpBytes);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to fetch {name}.skp: {ex.Message}";
+        }
+        StateHasChanged();
+    }
+
+    private void LoadSkpBytes(byte[] data)
+    {
+        _errorMessage = null;
+        try
+        {
+            // Deserialize to get picture bounds
+            using var skData = SKData.CreateCopy(data);
+            var picture = SKPicture.Deserialize(skData);
+            if (picture == null)
+            {
+                _errorMessage = "Invalid SKP file";
+                return;
+            }
+
+            var bounds = picture.CullRect;
+            _canvasWidth = Math.Max(200, (int)bounds.Width);
+            _canvasHeight = Math.Max(200, (int)bounds.Height);
+            picture.Dispose();
+
+            // Create/reset native DebugCanvas and load the SKP
+            _debugCanvas?.Dispose();
+            _debugCanvas = new SKDebugCanvas(_canvasWidth, _canvasHeight);
+            var count = _debugCanvas.LoadSkp(data);
+            if (count < 0)
+            {
+                _errorMessage = "DebugCanvas failed to parse SKP";
+                _debugCanvas.Dispose();
+                _debugCanvas = null;
+                return;
+            }
+
+            _commandCount = count;
+            _fileLoaded = true;
+
+            // Get JSON command list from native DebugCanvas
+            using var tempSurface = SKSurface.Create(new SKImageInfo(_canvasWidth, _canvasHeight));
+            var json = _debugCanvas.GetCommandListJson(tempSurface.Canvas);
+            State.LoadCommandListJson(json);
+
+            // Sync settings to native canvas
+            SyncSettingsToDebugCanvas();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error: {ex.Message}";
+            Console.WriteLine($"LoadSkpBytes failed: {ex}");
+        }
+    }
+
+    private void SyncSettingsToDebugCanvas()
+    {
+        if (_debugCanvas == null) return;
+        _debugCanvas.SetOverdrawVis(State.OverdrawViz);
+        _debugCanvas.SetClipVizColor(State.ShowClip
+            ? new SKColor(255, 0, 0, 80)
+            : SKColors.Transparent);
+        _debugCanvas.SetOriginVisible(State.ShowOrigin);
+    }
+
+    private void OnPaintSurface(SKPaintSurfaceEventArgs e)
+    {
+        var canvas = e.Surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+
+        if (_debugCanvas == null || State.CommandList == null) return;
+
+        // Sync visualization settings
+        SyncSettingsToDebugCanvas();
+
+        // Draw up to the selected command index using native DebugCanvas
+        var targetIndex = State.SelectedUnfilteredIndex;
+        if (targetIndex >= 0)
+        {
+            _debugCanvas.DrawTo(canvas, targetIndex);
+
+            // Update matrix/clip info
+            var infoJson = _debugCanvas.GetCommandInfoJson();
+            State.UpdateMatrixClipInfo(infoJson);
+        }
+
+        // Capture snapshot for zoom/pixel inspector
+        _lastRenderedImage?.Dispose();
+        _lastRenderedImage = e.Surface.Snapshot();
+
+        // Read pixel at cursor
+        if (State.CrosshairActive)
+        {
+            var cx = State.CursorPosition[0];
+            var cy = State.CursorPosition[1];
+            if (cx >= 0 && cy >= 0 && cx < e.Info.Width && cy < e.Info.Height)
+            {
+                using var pixmap = e.Surface.PeekPixels();
+                if (pixmap != null)
+                {
+                    var color = pixmap.GetPixelColor(cx, cy);
+                    State.CursorPixelRGBA = new[] { (int)color.Red, (int)color.Green, (int)color.Blue, (int)color.Alpha };
+                }
+            }
+        }
+    }
+
+    private void OnPointerDown(PointerEventArgs e)
+    {
+        State.CrosshairActive = true;
+        State.CursorPosition = new[] { (int)e.OffsetX, (int)e.OffsetY };
+    }
+
+    private void OnPointerMove(PointerEventArgs e)
+    {
+        if (State.CrosshairActive)
+            State.CursorPosition = new[] { (int)e.OffsetX, (int)e.OffsetY };
+    }
+
+    private void OnFilterKeyUp(KeyboardEventArgs e)
+    {
+        State.SetFilter(_filterText);
+    }
+
+    private void ClearFilter()
+    {
+        _filterText = "";
+        State.SetFilter("");
+    }
+
+    public void Dispose()
+    {
+        State.StateChanged -= OnStateChanged;
+        _debugCanvas?.Dispose();
+        _debugCanvas = null;
+        _lastRenderedImage?.Dispose();
+        _lastRenderedImage = null;
+    }
+}
