@@ -71,15 +71,13 @@ public class ThreeDSample : InteractiveSampleBase
 		// Draw grid background
 		DrawGrid(canvas, width, height, cx, cy);
 
-		// Build 4x4 rotation
-		// In Skia: X=right, Y=down, Z=into screen
-		// Rotate X = tilt forward/backward (around horizontal axis)
-		// Rotate Y = spin left/right (around vertical axis)
-		// Rotate Z = roll (around depth axis)
-		var ry = SKMatrix44.CreateRotationDegrees(0, 1, 0, rotateY);
+		// Build 4x4 rotation — intrinsic (object-local) axes
+		// Each slider rotates around the object's own axis, not world space.
+		// Intrinsic X-Y-Z = extrinsic Z-Y-X = multiply as rx * ry * rz
 		var rx = SKMatrix44.CreateRotationDegrees(1, 0, 0, rotateX);
+		var ry = SKMatrix44.CreateRotationDegrees(0, 1, 0, rotateY);
 		var rz = SKMatrix44.CreateRotationDegrees(0, 0, 1, rotateZ);
-		var rotation = ry * rx * rz;
+		var rotation = rx * ry * rz;
 
 		canvas.Save();
 
