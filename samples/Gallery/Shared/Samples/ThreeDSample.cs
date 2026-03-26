@@ -12,9 +12,10 @@ public class ThreeDSample : InteractiveSampleBase
 	private float rotateZ;
 	private float translateX;
 	private float translateY;
+	private float translateZ;
 	private float scale = 1f;
 	private int projectionIndex;
-	private float perspDepth = 500f;
+	private float perspDepth = 800f;
 	private bool showAxes = true;
 	private bool showShadow = true;
 
@@ -33,9 +34,10 @@ public class ThreeDSample : InteractiveSampleBase
 		new SliderControl("rotateZ", "Rotate Z", -180, 180, rotateZ),
 		new SliderControl("translateX", "Translate X", -300, 300, translateX),
 		new SliderControl("translateY", "Translate Y", -300, 300, translateY),
+		new SliderControl("translateZ", "Translate Z", -500, 500, translateZ),
 		new SliderControl("scale", "Scale", 0.2f, 3, scale, 0.1f),
 		new PickerControl("projection", "Projection", Projections, projectionIndex),
-		new SliderControl("perspDepth", "Perspective Depth", -2000, 2000, perspDepth, 50),
+		new SliderControl("perspDepth", "Camera Distance", 200, 2000, perspDepth),
 		new ToggleControl("showAxes", "Show Axes", showAxes),
 		new ToggleControl("shadow", "Show Shadow", showShadow),
 	];
@@ -49,6 +51,7 @@ public class ThreeDSample : InteractiveSampleBase
 			case "rotateZ": rotateZ = (float)value; break;
 			case "translateX": translateX = (float)value; break;
 			case "translateY": translateY = (float)value; break;
+			case "translateZ": translateZ = (float)value; break;
 			case "scale": scale = (float)value; break;
 			case "projection": projectionIndex = (int)value; break;
 			case "perspDepth": perspDepth = (float)value; break;
@@ -76,15 +79,29 @@ public class ThreeDSample : InteractiveSampleBase
 		var rotation = SKMatrix44.Concat(SKMatrix44.Concat(rx, ry), rz);
 
 		canvas.Save();
-		// Translate to center, then apply user translation before rotation
 		canvas.Translate(cx + translateX, cy + translateY);
 
 		// Apply perspective if selected
-		if (projectionIndex == 1)
+		if (projectionIndex == 1 && perspDepth > 0)
 		{
+			// Standard perspective: objects at Z=0 are normal size,
+			// positive Z moves away (smaller), negative Z comes closer (larger).
+			// Camera is at Z = -perspDepth looking toward Z=+infinity.
+			// The perspective matrix maps: x' = x / (1 + z/d), y' = y / (1 + z/d)
 			var persp = SKMatrix.Identity;
 			persp.Persp2 = 1f / perspDepth;
 			canvas.Concat(ref persp);
+		}
+
+		// Apply Z translation (moves object along depth axis)
+		if (translateZ != 0 && projectionIndex == 1)
+		{
+			// Translate Z by scaling — at perspDepth, a Z offset changes apparent size
+			var zScale = perspDepth / (perspDepth + translateZ);
+			if (zScale > 0)
+			{
+				canvas.Scale(zScale, zScale);
+			}
 		}
 
 		// Draw 3D axes before rotation (world axes)
