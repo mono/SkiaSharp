@@ -35,6 +35,7 @@
         <!-- SkiaSharp canvas column (device pixels — no IgnorePixelScaling) -->
         <div style="flex:1;border:1px solid #ccc;border-radius:8px;overflow:hidden;">
             <SKCanvasView OnPaintSurface="OnPaint"
+                          IgnorePixelScaling="true"
                           style="width:100%;height:100%;display:block;" />
         </div>
     </div>
@@ -82,7 +83,7 @@
         // Header
         using var headerFont = new SKFont { Size = 14 };
         using var headerPaint = new SKPaint { Color = new SKColor(107, 114, 128), IsAntialias = true };
-        canvas.DrawText($"SkiaSharp (device pixels: {width}x{height})", 16, 24, SKTextAlign.Left, headerFont, headerPaint);
+        canvas.DrawText($"SkiaSharp (CSS pixels: {width}x{height}, device: {rawW}x{rawH})", 16, 24, SKTextAlign.Left, headerFont, headerPaint);
 
         // Text at different sizes — should match the HTML side
         using var textPaint = new SKPaint { Color = SKColors.Black, IsAntialias = true };

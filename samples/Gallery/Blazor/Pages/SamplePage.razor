@@ -90,12 +90,14 @@ else
                         <SKGLView @ref="glView"
                                   OnPaintSurface="OnPaintGL"
                                   EnableRenderLoop="@(sample?.IsAnimated == true)"
+                                  IgnorePixelScaling="true"
                                   style="width:100%;height:100%;display:block;" />
                     }
                     else
                     {
                         <SKCanvasView @ref="canvasView"
                                       OnPaintSurface="OnPaintRaster"
+                                      IgnorePixelScaling="true"
                                       style="width:100%;height:100%;display:block;"
                                       @onpointerdown="OnPointerDown"
                                       @onpointermove="OnPointerMove"
