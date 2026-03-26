@@ -71,11 +71,15 @@ public class ThreeDSample : InteractiveSampleBase
 		// Draw grid background
 		DrawGrid(canvas, width, height, cx, cy);
 
-		// Build 4x4 rotation (object-relative: apply X, then Y, then Z)
-		var rx = SKMatrix44.CreateRotationDegrees(1, 0, 0, rotateX);
+		// Build 4x4 rotation
+		// In Skia: X=right, Y=down, Z=into screen
+		// Rotate X = tilt forward/backward (around horizontal axis)
+		// Rotate Y = spin left/right (around vertical axis)
+		// Rotate Z = roll (around depth axis)
 		var ry = SKMatrix44.CreateRotationDegrees(0, 1, 0, rotateY);
+		var rx = SKMatrix44.CreateRotationDegrees(1, 0, 0, rotateX);
 		var rz = SKMatrix44.CreateRotationDegrees(0, 0, 1, rotateZ);
-		var rotation = rz * ry * rx;
+		var rotation = ry * rx * rz;
 
 		canvas.Save();
 
