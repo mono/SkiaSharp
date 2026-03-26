@@ -23,16 +23,49 @@ else if (IsDocument)
                 <p class="text-muted mb-1">@sample.Description</p>
             }
         </div>
-        <div class="sample-body" style="flex-direction:column;">
+        <div class="sample-body">
+            <div class="sample-canvas">
+                @if (!string.IsNullOrEmpty(documentBlobUrl))
+                {
+                    <div class="border rounded" style="width:100%;height:100%;">
+                        <iframe src="@documentBlobUrl" style="width:100%;height:100%;border:none;" />
+                    </div>
+                }
+                else
+                {
+                    <div class="border rounded d-flex align-items-center justify-content-center" style="width:100%;height:100%;background:#f8f8f8;">
+                        <span class="text-muted">Generating document...</span>
+                    </div>
+                }
+            </div>
+
             @if (HasControls)
             {
-                <ControlPanel Controls="@InteractiveSample!.Controls"
-                              OnChanged="@OnControlChanged" />
-            }
-            @if (!string.IsNullOrEmpty(documentBlobUrl))
-            {
-                <div class="border rounded mt-2" style="flex:1;min-height:200px;">
-                    <iframe src="@documentBlobUrl" style="width:100%;height:100%;border:none;" />
+                @if (!isPinned && showControls)
+                {
+                    <div class="sidebar-backdrop" @onclick="() => showControls = false"></div>
+                }
+
+                <div class="sample-sidebar @(!isPinned && !showControls ? "collapsed" : "")"
+                     @onclick="OnSidebarClick"
+                     @onclick:stopPropagation="true">
+                    @if (!isPinned && !showControls)
+                    {
+                        <span class="sidebar-label">Controls</span>
+                    }
+                    else
+                    {
+                        <div class="sidebar-content" @onclick:stopPropagation="true">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="fw-bold text-uppercase" style="letter-spacing:0.05em;color:#666;">Controls</small>
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="TogglePin" @onclick:stopPropagation="true">
+                                    @(isPinned ? "◀" : "▶")
+                                </button>
+                            </div>
+                            <ControlPanel Controls="@InteractiveSample!.Controls"
+                                          OnChanged="@OnControlChanged" />
+                        </div>
+                    }
                 </div>
             }
         </div>
