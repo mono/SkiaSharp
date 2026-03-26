@@ -51,17 +51,23 @@
         @foreach (var sample in GetFilteredSamples())
         {
             var categoryColor = GetCategoryColor(sample.Category);
+            var icon = GetSampleIcon(sample.Title);
             <div class="col">
                 <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
                     <div class="card h-100 sample-card" style="border-left-color: @categoryColor; background-color: @(categoryColor)08;">
                         <div class="card-body py-3 px-3">
-                            <h6 class="card-title mb-1">@sample.Title</h6>
-                            @if (!string.IsNullOrWhiteSpace(sample.Description))
-                            {
-                                <p class="card-text text-muted small mb-2" style="line-height: 1.4;">
-                                    @TruncateDescription(sample.Description)
-                                </p>
-                            }
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi @icon" style="font-size:1.4rem;color:@categoryColor;flex-shrink:0;margin-top:1px;"></i>
+                                <div>
+                                    <h6 class="card-title mb-1">@sample.Title</h6>
+                                    @if (!string.IsNullOrWhiteSpace(sample.Description))
+                                    {
+                                        <p class="card-text text-muted small mb-0" style="line-height: 1.4;">
+                                            @TruncateDescription(sample.Description)
+                                        </p>
+                                    }
+                                </div>
+                            </div>
                         </div>
                         <div class="card-footer bg-transparent border-0 py-2 px-3">
                             <span class="category-badge" style="background-color: @(categoryColor)1A; color: @categoryColor;">@sample.Category</span>
@@ -133,5 +139,31 @@
         SampleCategories.Shaders => "#1565C0",
         SampleCategories.Text => "#AD1457",
         _ => "#546E7A",
+    };
+
+    private static string GetSampleIcon(string title) => title switch
+    {
+        "Blend Modes" => "bi-layers-half",
+        "Blur Image Filter" => "bi-droplet-half",
+        "2D Transforms" => "bi-arrows-move",
+        "3D Transforms" => "bi-box",
+        "Create XPS Document" => "bi-file-earmark-richtext",
+        "GIF Player" => "bi-film",
+        "Gradient" => "bi-rainbow",
+        "Image Decoder" => "bi-file-image",
+        "Lottie Player" => "bi-play-circle",
+        "Nine-Patch Scaler" => "bi-grid-3x3",
+        "Noise Generator" => "bi-soundwave",
+        "Path Builder" => "bi-pentagon",
+        "Path Effects Lab" => "bi-bezier2",
+        "PDF Composer" => "bi-file-pdf",
+        "Photo Lab" => "bi-camera",
+        "Shader Playground" => "bi-lightning",
+        "Text Lab" => "bi-fonts",
+        "Text on Path" => "bi-type",
+        "Vector Art" => "bi-vector-pen",
+        "Vertex Mesh" => "bi-diagram-3",
+        "World Text" => "bi-globe2",
+        _ => "bi-brush",
     };
 }
