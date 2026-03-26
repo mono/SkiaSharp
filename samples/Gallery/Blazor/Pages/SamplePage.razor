@@ -84,10 +84,7 @@ else
         </div>
         <div class="sample-body">
             <div class="sample-canvas">
-                <div class="canvas-wrapper border rounded"
-                     @onpointerdown="OnPointerDown"
-                     @onpointermove="OnPointerMove"
-                     @onpointerup="OnPointerUp">
+                <div class="canvas-wrapper border rounded">
                     @if (UseGpu)
                     {
                         <SKGLView @ref="glView"
@@ -158,8 +155,6 @@ else
     private int canvasInfoWidth, canvasInfoHeight;
     private int canvasRawWidth, canvasRawHeight;
     private string canvasDpi = "?";
-
-    private bool isDrawing;
 
     // Computed helpers for template branching
     private bool IsDocument => sample is DocumentSampleBase;
@@ -274,32 +269,6 @@ else
                 $"(() => {{ var b = atob('{base64}'); var a = new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return URL.createObjectURL(new Blob([a], {{type:'{mime}'}})); }})()");
             StateHasChanged();
         });
-    }
-
-    private void OnPointerDown(PointerEventArgs e)
-    {
-        if (sample is DrawingCanvasSample drawing)
-        {
-            isDrawing = true;
-            drawing.BeginStroke(new SKPoint((float)e.OffsetX, (float)e.OffsetY));
-        }
-    }
-
-    private void OnPointerMove(PointerEventArgs e)
-    {
-        if (isDrawing && sample is DrawingCanvasSample drawing)
-        {
-            drawing.AddStrokePoint(new SKPoint((float)e.OffsetX, (float)e.OffsetY));
-        }
-    }
-
-    private void OnPointerUp(PointerEventArgs e)
-    {
-        if (isDrawing && sample is DrawingCanvasSample drawing)
-        {
-            drawing.EndStroke();
-            isDrawing = false;
-        }
     }
 
     private void DisposeSample()
