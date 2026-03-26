@@ -80,14 +80,15 @@ else
                 }
 
                 <div class="sample-sidebar @(!isPinned && !showControls ? "collapsed" : "")"
-                     @onclick="OnSidebarClick">
+                     @onclick="OnSidebarClick"
+                     @onclick:stopPropagation="true">
                     @if (!isPinned && !showControls)
                     {
                         <span class="sidebar-label">Controls</span>
                     }
                     else
                     {
-                        <div class="sidebar-content">
+                        <div class="sidebar-content" @onclick:stopPropagation="true">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <small class="fw-bold text-uppercase" style="letter-spacing:0.05em;color:#666;">Controls</small>
                                 <button class="btn btn-sm btn-outline-secondary" @onclick="TogglePin" @onclick:stopPropagation="true">
