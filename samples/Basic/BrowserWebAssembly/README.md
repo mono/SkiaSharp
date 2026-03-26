@@ -2,7 +2,7 @@
 
 Demonstrates SkiaSharp rendering in the browser via raw .NET WebAssembly (no Blazor). C# renders a scene to a PNG using `[JSExport]`, and JavaScript displays it in an `<img>` element with a Bootstrap layout.
 
-![Browser WebAssembly Sample](screenshot.png)
+![Browser WebAssembly Sample](screenshots/screenshot.png)
 
 **Features:**
 

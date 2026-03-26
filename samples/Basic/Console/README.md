@@ -2,7 +2,7 @@
 
 Renders a SkiaSharp scene to a PNG file from the command line. Draws a radial gradient background with semi-transparent circles and centered text — the same visual as the other SkiaSharp samples.
 
-![Console Sample Output](screenshot.png)
+![Console Sample Output](screenshots/screenshot.png)
 
 **Features:**
 
