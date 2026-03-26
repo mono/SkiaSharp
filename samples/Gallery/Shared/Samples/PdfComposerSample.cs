@@ -10,7 +10,6 @@ public class PdfComposerSample : DocumentSampleBase
 {
 	private bool isSupported = true;
 	private int pageSizeIndex;
-	private float pages = 3f;
 
 	private static readonly string[] PageSizes = { "A4", "Letter", "A3" };
 
@@ -23,12 +22,11 @@ public class PdfComposerSample : DocumentSampleBase
 
 	public override string Title => "PDF Composer";
 
-	public override string Description => "Generate rich multi-page PDF documents with annotations, shapes, and typography.";
+	public override string Description => "Generate rich multi-page PDF documents with annotations, shapes, images, and typography.";
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("pageSize", "Page Size", PageSizes, pageSizeIndex),
-		new SliderControl("pages", "Pages", 3, 6, pages, 1),
 	];
 
 	protected override void OnControlChanged(string id, object value)
@@ -36,7 +34,6 @@ public class PdfComposerSample : DocumentSampleBase
 		switch (id)
 		{
 			case "pageSize": pageSizeIndex = (int)value; break;
-			case "pages": pages = (float)value; break;
 		}
 		DocumentBytes = null;
 	}
@@ -50,9 +47,8 @@ public class PdfComposerSample : DocumentSampleBase
 
 	protected override void OnGenerateDocument(SKCanvas previewCanvas, int width, int height)
 	{
-		var pageCount = Math.Max(3, (int)pages);
+		const int pageCount = 5;
 		var (pageWidth, pageHeight) = GetPageDimensions();
-		var sizeName = PageSizes[pageSizeIndex];
 
 		if (DocumentBytes == null && isSupported)
 		{
@@ -72,26 +68,30 @@ public class PdfComposerSample : DocumentSampleBase
 			}
 			else
 			{
-				for (var i = 1; i <= pageCount; i++)
-				{
-					using var pdfCanvas = document.BeginPage(pageWidth, pageHeight);
-					switch (i)
-					{
-						case 1:
-							DrawCoverPage(pdfCanvas, pageWidth, pageHeight, pageCount);
-							break;
-						case 2:
-							DrawShapesPage(pdfCanvas, pageWidth, pageHeight);
-							break;
-						case 3:
-							DrawTextPage(pdfCanvas, pageWidth, pageHeight);
-							break;
-						default:
-							DrawImagesPage(pdfCanvas, pageWidth, pageHeight, i, pageCount);
-							break;
-					}
-					document.EndPage();
-				}
+				// Page 1: Cover / TOC
+				using (var c = document.BeginPage(pageWidth, pageHeight))
+					DrawCoverPage(c, pageWidth, pageHeight, pageCount);
+				document.EndPage();
+
+				// Page 2: Shapes & Paths
+				using (var c = document.BeginPage(pageWidth, pageHeight))
+					DrawShapesPage(c, pageWidth, pageHeight);
+				document.EndPage();
+
+				// Page 3: Text & Typography
+				using (var c = document.BeginPage(pageWidth, pageHeight))
+					DrawTextPage(c, pageWidth, pageHeight);
+				document.EndPage();
+
+				// Page 4: Images
+				using (var c = document.BeginPage(pageWidth, pageHeight))
+					DrawImagesPage(c, pageWidth, pageHeight);
+				document.EndPage();
+
+				// Page 5: Effects & Patterns
+				using (var c = document.BeginPage(pageWidth, pageHeight))
+					DrawEffectsPage(c, pageWidth, pageHeight, 5, pageCount);
+				document.EndPage();
 
 				document.Close();
 				DocumentBytes = stream.ToArray();
@@ -114,7 +114,7 @@ public class PdfComposerSample : DocumentSampleBase
 
 		font.Size = 20;
 		paint.Color = 0xFFB0BEC5;
-		previewCanvas.DrawText($"{pageCount} pages \u2022 {sizeName} ({pageWidth}\u00d7{pageHeight})", width / 2f, height / 3 + 50, SKTextAlign.Center, font, paint);
+		previewCanvas.DrawText($"5 pages \u2022 {PageSizes[pageSizeIndex]}", width / 2f, height / 3 + 50, SKTextAlign.Center, font, paint);
 
 		if (DocumentBytes != null)
 		{
@@ -181,9 +181,9 @@ public class PdfComposerSample : DocumentSampleBase
 		{
 			("1. Shapes & Paths", "page-shapes"),
 			("2. Text & Typography", "page-text"),
+			("3. Images", "page-images"),
+			("4. Effects & Patterns", "page-effects"),
 		};
-		if (pageCount >= 4)
-			entries.Add(("3. Images & Effects", "page-images"));
 
 		var y = 270f;
 		var x = 100f;
@@ -345,9 +345,97 @@ public class PdfComposerSample : DocumentSampleBase
 		DrawBackToTocLink(canvas, pageWidth, pageHeight);
 	}
 
-	private static void DrawImagesPage(SKCanvas canvas, float pageWidth, float pageHeight, int pageNum, int totalPages)
+	private static void DrawImagesPage(SKCanvas canvas, float pageWidth, float pageHeight)
 	{
 		canvas.DrawNamedDestinationAnnotation(new SKPoint(0, 0), "page-images")?.Dispose();
+
+		canvas.DrawRect(0, 0, pageWidth, pageHeight, new SKPaint { Color = SKColors.White });
+		DrawPageTitle(canvas, pageWidth, "Images");
+
+		var margin = 60f;
+		var y = 100f;
+
+		// Description
+		using var descFont = new SKFont { Size = 13 };
+		using var descPaint = new SKPaint { IsAntialias = true, Color = BodyColor };
+		canvas.DrawText("SkiaSharp can decode and embed bitmap images in PDF documents.", margin, y, descFont, descPaint);
+		y += 30;
+
+		// Load and draw baboon image
+		using var baboonStream = SampleMedia.Images.Baboon;
+		if (baboonStream != null)
+		{
+			using var baboonBitmap = SKBitmap.Decode(baboonStream);
+			if (baboonBitmap != null)
+			{
+				var imgSize = Math.Min(pageWidth - margin * 2, 300);
+				var imgRect = SKRect.Create(margin, y, imgSize, imgSize);
+				canvas.DrawBitmap(baboonBitmap, imgRect);
+
+				// Label
+				using var labelFont = new SKFont { Size = 11 };
+				using var labelPaint = new SKPaint { IsAntialias = true, Color = SubtitleColor };
+				canvas.DrawText($"baboon.png ({baboonBitmap.Width}×{baboonBitmap.Height})", margin, y + imgSize + 16, labelFont, labelPaint);
+
+				// Draw the same image with effects on the right side
+				var rightX = margin + imgSize + 30;
+				var smallSize = imgSize * 0.45f;
+
+				// Grayscale version
+				using var grayFilter = SKColorFilter.CreateColorMatrix(new float[]
+				{
+					0.21f, 0.72f, 0.07f, 0, 0,
+					0.21f, 0.72f, 0.07f, 0, 0,
+					0.21f, 0.72f, 0.07f, 0, 0,
+					0,     0,     0,     1, 0,
+				});
+				using var grayPaint = new SKPaint { ColorFilter = grayFilter };
+				canvas.DrawBitmap(baboonBitmap, SKRect.Create(rightX, y, smallSize, smallSize), grayPaint);
+				canvas.DrawText("Grayscale filter", rightX, y + smallSize + 16, labelFont, labelPaint);
+
+				// Sepia version
+				using var sepiaFilter = SKColorFilter.CreateColorMatrix(new float[]
+				{
+					0.393f, 0.769f, 0.189f, 0, 0,
+					0.349f, 0.686f, 0.168f, 0, 0,
+					0.272f, 0.534f, 0.131f, 0, 0,
+					0,      0,      0,      1, 0,
+				});
+				using var sepiaPaint = new SKPaint { ColorFilter = sepiaFilter };
+				canvas.DrawBitmap(baboonBitmap, SKRect.Create(rightX, y + smallSize + 30, smallSize, smallSize), sepiaPaint);
+				canvas.DrawText("Sepia filter", rightX, y + smallSize * 2 + 46, labelFont, labelPaint);
+
+				y += imgSize + 40;
+			}
+		}
+
+		// Draw color wheel
+		using var cwStream = SampleMedia.Images.ColorWheel;
+		if (cwStream != null)
+		{
+			using var cwBitmap = SKBitmap.Decode(cwStream);
+			if (cwBitmap != null)
+			{
+				var cwSize = 150f;
+				canvas.DrawBitmap(cwBitmap, SKRect.Create(margin, y, cwSize, cwSize));
+
+				using var cwLabel = new SKFont { Size = 11 };
+				using var cwPaint = new SKPaint { IsAntialias = true, Color = SubtitleColor };
+				canvas.DrawText($"color-wheel.png ({cwBitmap.Width}×{cwBitmap.Height})", margin, y + cwSize + 16, cwLabel, cwPaint);
+			}
+		}
+
+		// Page number
+		using var pageFont = new SKFont { Size = 11 };
+		using var pagePaint = new SKPaint { IsAntialias = true, Color = BodyColor };
+		canvas.DrawText("Page 4 of 5", pageWidth / 2, pageHeight - 60, SKTextAlign.Center, pageFont, pagePaint);
+
+		DrawBackToTocLink(canvas, pageWidth, pageHeight);
+	}
+
+	private static void DrawEffectsPage(SKCanvas canvas, float pageWidth, float pageHeight, int pageNum, int totalPages)
+	{
+		canvas.DrawNamedDestinationAnnotation(new SKPoint(0, 0), "page-effects")?.Dispose();
 
 		// Gradient background
 		using var bgShader = SKShader.CreateLinearGradient(
@@ -357,7 +445,7 @@ public class PdfComposerSample : DocumentSampleBase
 		using var bgPaint = new SKPaint { Shader = bgShader };
 		canvas.DrawRect(0, 0, pageWidth, pageHeight, bgPaint);
 
-		DrawPageTitle(canvas, pageWidth, "Images & Effects");
+		DrawPageTitle(canvas, pageWidth, "Effects & Patterns");
 
 		// Concentric rings
 		var cx = pageWidth / 2;
