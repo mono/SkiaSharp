@@ -23,10 +23,23 @@ const config = getConfig();
 const exports = await getAssemblyExports(config.mainAssemblyName);
 const api = exports.SampleRenderer;
 
-await dotnet.run();
+// Start the .NET runtime — Main loops forever to keep it alive for JSExport calls.
+// Don't await — we need to proceed to set up the JS UI immediately.
+dotnet.run().catch(() => {});
 
 // ── Hide loading spinner ─────────────────────────────────────────────
 document.getElementById('loading')?.remove();
+
+// Small delay to let the runtime fully initialize
+await new Promise(r => setTimeout(r, 500));
+
+// Render the initial CPU page now that runtime is ready
+try {
+    const [w, h] = canvasSize();
+    api.RenderCpu(w, h);
+} catch (e) {
+    console.error('Initial CPU render failed:', e);
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────
 function getActiveCanvas() {

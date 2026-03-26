@@ -2,10 +2,10 @@ using System.Runtime.InteropServices.JavaScript;
 using SkiaSharp;
 
 Console.WriteLine("SkiaSharp Browser WebAssembly Sample");
-Console.WriteLine("Platform color type: " + SKImageInfo.PlatformColorType);
 
-// Render the initial CPU page so something is visible immediately
-SampleRenderer.RenderCpu(800, 600);
+// Keep the runtime alive so JS can call [JSExport] methods after Main completes.
+// Without this, dotnet.run() exits the runtime and JSExport calls fail.
+await Task.Delay(-1);
 
 /// <summary>
 /// Static render methods exported to JavaScript via [JSExport].
@@ -20,11 +20,13 @@ public static partial class SampleRenderer
 	// Drawing state
 	static readonly List<DrawingStroke> strokes = new();
 	static DrawingStroke? currentStroke;
-	static SKColor currentColor = StrokeColors[0].Color;
+	static SKColor currentColor;
 	static float brushSize = 4;
 	static SKPoint lastPoint;
+	static bool drawingInitialized;
 
-	static readonly (float X, float Y, float R, SKColor Color)[] Circles =
+	static (float X, float Y, float R, SKColor Color)[]? _circles;
+	static (float X, float Y, float R, SKColor Color)[] Circles => _circles ??= new[]
 	{
 		(0.20f, 0.30f, 0.10f, new SKColor(0xFF, 0x4D, 0x66, 0xCC)),
 		(0.75f, 0.25f, 0.08f, new SKColor(0x4D, 0xB3, 0xFF, 0xCC)),
@@ -34,7 +36,8 @@ public static partial class SampleRenderer
 		(0.40f, 0.80f, 0.09f, new SKColor(0xFF, 0xE6, 0x33, 0xCC)),
 	};
 
-	static readonly SKColor[] GradientColors =
+	static SKColor[]? _gradientColors;
+	static SKColor[] GradientColors => _gradientColors ??= new[]
 	{
 		new SKColor(0x44, 0x88, 0xFF),
 		new SKColor(0x88, 0x33, 0xCC),
@@ -50,7 +53,8 @@ public static partial class SampleRenderer
 		1.0f, 0.9f, 0.2f,
 	};
 
-	public static readonly (string Name, SKColor Color)[] StrokeColors =
+	static (string Name, SKColor Color)[]? _strokeColors;
+	public static (string Name, SKColor Color)[] StrokeColors => _strokeColors ??= new[]
 	{
 		("#000000", new SKColor(0x00, 0x00, 0x00)),
 		("#E53935", new SKColor(0xE5, 0x39, 0x35)),
@@ -119,7 +123,8 @@ public static partial class SampleRenderer
 	static readonly Lazy<SKRuntimeShaderBuilder> shaderBuilder = new(() =>
 		SKRuntimeEffect.BuildShader(GpuShader));
 
-	static readonly SKPaint shaderPaint = new();
+	static SKPaint? _shaderPaint;
+	static SKPaint ShaderPaint => _shaderPaint ??= new SKPaint();
 
 	static void EnsureBitmap(int width, int height)
 	{
@@ -177,8 +182,8 @@ public static partial class SampleRenderer
 		builder.Uniforms["iColors"] = BlobColors;
 
 		using var sh = builder.Build();
-		shaderPaint.Shader = sh;
-		c.DrawRect(0, 0, width, height, shaderPaint);
+		ShaderPaint.Shader = sh;
+		c.DrawRect(0, 0, width, height, ShaderPaint);
 
 		c.Flush();
 		Interop.Render(width, height, bitmap.GetPixelSpan());
