@@ -16,37 +16,30 @@
                @bind="searchText" @bind:event="oninput" />
     </div>
 
-    @foreach (var group in GetFilteredGroups())
-    {
-        var categoryColor = GetCategoryColor(group.Key);
-        <h5 class="category-header">
-            <span class="category-dot" style="background-color: @categoryColor;"></span>
-            @group.Key
-        </h5>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-3">
-            @foreach (var sample in group.OrderBy(s => s.Title))
-            {
-                <div class="col">
-                    <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
-                        <div class="card h-100 sample-card" style="border-left-color: @categoryColor;">
-                            <div class="card-body py-3 px-3">
-                                <h6 class="card-title mb-1">@sample.Title</h6>
-                                @if (!string.IsNullOrWhiteSpace(sample.Description))
-                                {
-                                    <p class="card-text text-muted small mb-2" style="line-height: 1.4;">
-                                        @TruncateDescription(sample.Description)
-                                    </p>
-                                }
-                            </div>
-                            <div class="card-footer bg-transparent border-0 py-2 px-3">
-                                <span class="category-badge" style="background-color: @(categoryColor)1A; color: @categoryColor;">@group.Key</span>
-                            </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-4">
+        @foreach (var sample in GetFilteredSamples())
+        {
+            var categoryColor = GetCategoryColor(sample.Category);
+            <div class="col">
+                <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
+                    <div class="card h-100 sample-card" style="border-left-color: @categoryColor;">
+                        <div class="card-body py-3 px-3">
+                            <h6 class="card-title mb-1">@sample.Title</h6>
+                            @if (!string.IsNullOrWhiteSpace(sample.Description))
+                            {
+                                <p class="card-text text-muted small mb-2" style="line-height: 1.4;">
+                                    @TruncateDescription(sample.Description)
+                                </p>
+                            }
                         </div>
-                    </a>
-                </div>
-            }
-        </div>
-    }
+                        <div class="card-footer bg-transparent border-0 py-2 px-3">
+                            <span class="category-badge" style="background-color: @(categoryColor)1A; color: @categoryColor;">@sample.Category</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
 
     <hr class="mt-4" />
     <p class="text-muted small">
@@ -58,13 +51,12 @@
 @code {
     private string searchText = string.Empty;
 
-    private IEnumerable<IGrouping<string, SampleBase>> GetFilteredGroups()
+    private IEnumerable<SampleBase> GetFilteredSamples()
     {
         var samples = SampleService.GetSamples();
-        var filtered = samples.Where(s => s.MatchesFilter(searchText));
-        return filtered
-            .GroupBy(s => s.Category)
-            .OrderBy(g => g.Key == SampleCategories.Showcases ? "" : g.Key);
+        return samples
+            .Where(s => s.MatchesFilter(searchText))
+            .OrderBy(s => s.Title);
     }
 
     private static string TruncateDescription(string desc)
@@ -74,7 +66,6 @@
 
     private static string GetCategoryColor(string category) => category switch
     {
-        SampleCategories.Showcases => "#E91E63",
         SampleCategories.Documents => "#607D8B",
         SampleCategories.General => "#1A237E",
         SampleCategories.ImageFilters => "#E65100",

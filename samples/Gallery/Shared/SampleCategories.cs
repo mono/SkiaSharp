@@ -2,7 +2,6 @@ namespace SkiaSharpSample;
 
 public static class SampleCategories
 {
-	public const string Showcases = "Showcases";
 	public const string ImageFilters = "Image & Filters";
 	public const string Shaders = "Shaders & Effects";
 	public const string Text = "Text & Typography";

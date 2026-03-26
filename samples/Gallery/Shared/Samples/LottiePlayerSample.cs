@@ -20,7 +20,7 @@ public class LottiePlayerSample : InteractiveSampleBase
 
 	public override string Description => "Play and control Lottie/Skottie animations with speed and playback controls.";
 
-	public override string Category => SampleCategories.Showcases;
+	public override string Category => SampleCategories.General;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
