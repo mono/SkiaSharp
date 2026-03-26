@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-nanoserver-ltsc2025 AS build
 WORKDIR /app
 
 COPY SkiaSharpSample/ .
-RUN dotnet publish -c Release -o /app/out
+RUN dotnet publish -c Release -r win-x64 -o /app/out
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0-nanoserver-ltsc2025
 WORKDIR /app
