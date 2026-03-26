@@ -7,12 +7,6 @@ namespace SkiaSharpSample;
 
 public abstract class SampleBase
 {
-	protected SKMatrix Matrix = SKMatrix.Identity;
-
-	private SKMatrix startPanMatrix = SKMatrix.Identity;
-	private SKMatrix startPinchMatrix = SKMatrix.Identity;
-	private SKPoint startPinchOrigin = SKPoint.Empty;
-	private float totalPinchScale = 1f;
 	private CancellationTokenSource cts;
 
 	public abstract string Title { get; }
@@ -31,10 +25,7 @@ public abstract class SampleBase
 	{
 		if (IsInitialized)
 		{
-			canvas.Save();
-			canvas.Concat(Matrix);
 			OnDrawSample(canvas, width, height);
-			canvas.Restore();
 		}
 	}
 
@@ -42,9 +33,6 @@ public abstract class SampleBase
 
 	public async void Init()
 	{
-		// reset the matrix for the new sample
-		Matrix = SKMatrix.Identity;
-
 		if (!IsInitialized)
 		{
 			await OnInit();
@@ -92,81 +80,7 @@ public abstract class SampleBase
 		cts?.Cancel();
 	}
 
-	/// <summary>
-	/// Called on each animation tick when <see cref="IsAnimated"/> is true.
-	/// Override to update animation state.
-	/// </summary>
 	protected virtual Task OnUpdate(CancellationToken token) => Task.CompletedTask;
-
-	/// <summary>
-	/// Handles tap gestures. Override <see cref="OnTapped"/> to respond to taps.
-	/// </summary>
-	public virtual void Tap()
-	{
-		if (IsInitialized)
-		{
-			OnTapped();
-		}
-	}
-
-	public void ResetMatrix()
-	{
-		Matrix = SKMatrix.Identity;
-	}
-
-	protected virtual void OnTapped()
-	{
-	}
-
-	/// <summary>
-	/// Handles pan gestures by applying a translation matrix.
-	/// Override to implement custom pan behavior (e.g., freehand drawing input).
-	/// </summary>
-	public virtual void Pan(GestureState state, SKPoint translation)
-	{
-		switch (state)
-		{
-			case GestureState.Started:
-				startPanMatrix = Matrix;
-				break;
-			case GestureState.Running:
-				var canvasTranslation = SKMatrix.CreateTranslation(translation.X, translation.Y);
-				SKMatrix.Concat(ref Matrix, canvasTranslation, startPanMatrix);
-				break;
-			default:
-				startPanMatrix = SKMatrix.Identity;
-				break;
-		}
-	}
-
-	/// <summary>
-	/// Handles pinch-to-zoom gestures. Override to implement custom zoom behavior.
-	/// </summary>
-	public virtual void Pinch(GestureState state, float scale, SKPoint origin)
-	{
-		switch (state)
-		{
-			case GestureState.Started:
-				startPinchMatrix = Matrix;
-				startPinchOrigin = origin;
-				totalPinchScale = 1f;
-				break;
-			case GestureState.Running:
-				totalPinchScale *= scale;
-				var pinchTranslation = origin - startPinchOrigin;
-				var canvasTranslation = SKMatrix.CreateTranslation(pinchTranslation.X, pinchTranslation.Y);
-				var canvasScaling = SKMatrix.CreateScale(totalPinchScale, totalPinchScale, origin.X, origin.Y);
-				var canvasCombined = SKMatrix.Identity;
-				SKMatrix.Concat(ref canvasCombined, canvasScaling, canvasTranslation);
-				SKMatrix.Concat(ref Matrix, canvasCombined, startPinchMatrix);
-				break;
-			default:
-				startPinchMatrix = SKMatrix.Identity;
-				startPinchOrigin = SKPoint.Empty;
-				totalPinchScale = 1f;
-				break;
-		}
-	}
 
 	public virtual bool MatchesFilter(string searchText)
 	{

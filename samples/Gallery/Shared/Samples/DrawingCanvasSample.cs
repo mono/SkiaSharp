@@ -11,7 +11,6 @@ public class DrawingCanvasSample : InteractiveSampleBase
 	private int colorIndex;
 	private bool eraser;
 
-	private SKPoint panStart;
 	private SKPoint lastPoint;
 	private SKPath? currentPath;
 	private readonly List<SKPath> paths = new();
@@ -49,53 +48,35 @@ public class DrawingCanvasSample : InteractiveSampleBase
 		}
 	}
 
-	public override void Pan(GestureState state, SKPoint translation)
+	public void BeginStroke(SKPoint point)
 	{
-		// Do NOT call base.Pan — this sample draws in screen coordinates and
-		// must not apply the matrix-based pan that SampleBase provides.
-		// Blazor dispatches: Started = absolute start position,
-		// Running = cumulative delta from start (current - panStartPoint).
-		if (!IsInitialized)
-			return;
+		currentPath = new SKPath();
+		currentPath.MoveTo(point);
+		paths.Add(currentPath);
+		colors.Add(eraser ? SKColors.White : ColorValues[colorIndex]);
+		sizes.Add(brushSize);
+		lastPoint = point;
+		Refresh();
+	}
 
-		switch (state)
+	public void AddStrokePoint(SKPoint point)
+	{
+		if (currentPath != null && SKPoint.Distance(point, lastPoint) > 0.5f)
 		{
-			case GestureState.Started:
-				panStart = translation;
-				lastPoint = panStart;
-				currentPath = new SKPath();
-				currentPath.MoveTo(panStart);
-				paths.Add(currentPath);
-				colors.Add(eraser ? SKColors.White : ColorValues[colorIndex]);
-				sizes.Add(brushSize);
-				Refresh();
-				break;
-
-			case GestureState.Running:
-				if (currentPath != null)
-				{
-					var point = new SKPoint(panStart.X + translation.X, panStart.Y + translation.Y);
-					if (SKPoint.Distance(point, lastPoint) > 0.5f)
-					{
-						currentPath.LineTo(point);
-						lastPoint = point;
-						Refresh();
-					}
-				}
-				break;
-
-			case GestureState.Completed:
-			case GestureState.Canceled:
-				currentPath = null;
-				Refresh();
-				break;
+			currentPath.LineTo(point);
+			lastPoint = point;
+			Refresh();
 		}
+	}
+
+	public void EndStroke()
+	{
+		currentPath = null;
+		Refresh();
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
-		// Reset matrix so strokes draw in screen coordinates
-		canvas.ResetMatrix();
 		canvas.Clear(SKColors.White);
 
 		for (int i = 0; i < paths.Count; i++)

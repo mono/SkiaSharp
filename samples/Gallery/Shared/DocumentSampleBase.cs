@@ -43,17 +43,4 @@ public abstract class DocumentSampleBase : InteractiveSampleBase
 		}
 		return doc;
 	}
-
-	protected override void OnTapped()
-	{
-		base.OnTapped();
-
-		if (DocumentBytes is { Length: > 0 } && !string.IsNullOrEmpty(DocumentFileName))
-		{
-			// Write to temp and open
-			var tempPath = Path.Combine(Path.GetTempPath(), DocumentFileName);
-			File.WriteAllBytes(tempPath, DocumentBytes);
-			SamplesManager.OnOpenFile(tempPath);
-		}
-	}
 }
