@@ -13,7 +13,6 @@ for (int i = 0; i < args.Length; i++)
 }
 
 Console.WriteLine($"Rendering \"{text}\" to {output}");
-Console.WriteLine("Platform Color Type: " + SKImageInfo.PlatformColorType);
 
 // Create the image
 var info = new SKImageInfo(800, 600);
