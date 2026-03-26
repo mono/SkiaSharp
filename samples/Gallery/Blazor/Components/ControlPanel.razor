@@ -50,7 +50,7 @@
                     <label class="form-label mb-0 small">@slider.Label: <strong>@FormatSliderValue(GetSliderValue(fullId, slider.Value))</strong></label>
                     <input type="range" class="form-range"
                            min="@slider.Min" max="@slider.Max"
-                           step="@(slider.Step > 0 ? slider.Step : (slider.Max - slider.Min) / 100f)"
+                           step="@(slider.Step > 0 ? slider.Step : (slider.Max - slider.Min) / 1000f)"
                            value="@GetSliderValue(fullId, slider.Value)"
                            @oninput="e => OnSliderChanged(fullId, e)" />
                 }
@@ -83,6 +83,8 @@
     {
         if (MathF.Abs(value) < 1f && value != 0f)
             return value.ToString("F3");
+        if (MathF.Abs(value) < 100f)
+            return value.ToString("F2");
         return value.ToString("F1");
     }
 

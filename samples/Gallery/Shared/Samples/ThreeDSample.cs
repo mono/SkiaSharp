@@ -66,7 +66,7 @@ public class ThreeDSample : InteractiveSampleBase
 
 		var cx = width / 2f;
 		var cy = height / 2f;
-		var size = Math.Min(width, height) * 0.3f * scale;
+		var size = Math.Min(width, height) * 0.35f * scale;
 
 		// Draw grid background
 		DrawGrid(canvas, width, height, cx, cy);
