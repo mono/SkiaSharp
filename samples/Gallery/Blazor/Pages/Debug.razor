@@ -32,10 +32,9 @@
             </div>
         </div>
 
-        <!-- SkiaSharp canvas column -->
+        <!-- SkiaSharp canvas column (device pixels — no IgnorePixelScaling) -->
         <div style="flex:1;border:1px solid #ccc;border-radius:8px;overflow:hidden;">
             <SKCanvasView OnPaintSurface="OnPaint"
-                          IgnorePixelScaling="true"
                           style="width:100%;height:100%;display:block;" />
         </div>
     </div>
@@ -63,10 +62,27 @@
         var width = e.Info.Width;
         var height = e.Info.Height;
 
+        // Calculate DPI scale: device pixels / CSS pixels
+        // Without IgnorePixelScaling, e.Info gives device pixels
+        // We need to figure out the CSS size from the canvas element
+        // The ratio between RawInfo and Info tells us if IgnorePixelScaling is active
+        // Without it, RawInfo == Info (both device pixels)
+        // The actual DPI can be inferred: device pixels / CSS pixels
+        // We know CSS width from the layout (flex:1 of ~50% viewport)
+        // For now, just use device pixels and scale fonts by DPI
+        float dpi = (float)rawW / Math.Max(1, infoW);
+        if (dpi < 1.1f) dpi = 2f; // fallback for retina if RawInfo==Info
+
+        // Scale canvas so 1 unit = 1 CSS pixel  
+        // Actually without IgnorePixelScaling, we're drawing in device pixels.
+        // To match CSS px, multiply all sizes by dpi.
+        // But we DON'T know dpi here reliably without IgnorePixelScaling.
+        // Let's just draw at device pixel sizes and label them.
+
         // Header
         using var headerFont = new SKFont { Size = 14 };
         using var headerPaint = new SKPaint { Color = new SKColor(107, 114, 128), IsAntialias = true };
-        canvas.DrawText("SkiaSharp (same CSS pixel sizes)", 16, 24, SKTextAlign.Left, headerFont, headerPaint);
+        canvas.DrawText($"SkiaSharp (device pixels: {width}x{height})", 16, 24, SKTextAlign.Left, headerFont, headerPaint);
 
         // Text at different sizes — should match the HTML side
         using var textPaint = new SKPaint { Color = SKColors.Black, IsAntialias = true };
