@@ -8,14 +8,14 @@ namespace SkiaSharpSample.Samples;
 public class ThreeDSample : InteractiveSampleBase
 {
 	private float rotateX;
-	private float rotateY = 30f;
+	private float rotateY = 45f;
 	private float rotateZ;
 	private float translateX;
 	private float translateY;
 	private float translateZ;
 	private float scale = 1f;
 	private int projectionIndex;
-	private float perspDepth = 800f;
+	private float perspDepth = 400f;
 	private bool showAxes = true;
 	private bool showShadow = true;
 
@@ -37,7 +37,7 @@ public class ThreeDSample : InteractiveSampleBase
 		new SliderControl("translateZ", "Translate Z", -500, 500, translateZ),
 		new SliderControl("scale", "Scale", 0.2f, 3, scale, 0.1f),
 		new PickerControl("projection", "Projection", Projections, projectionIndex),
-		new SliderControl("perspDepth", "Camera Distance", 200, 2000, perspDepth),
+		new SliderControl("perspDepth", "Camera Distance", 100, 2000, perspDepth),
 		new ToggleControl("showAxes", "Show Axes", showAxes),
 		new ToggleControl("shadow", "Show Shadow", showShadow),
 	];
@@ -66,7 +66,7 @@ public class ThreeDSample : InteractiveSampleBase
 
 		var cx = width / 2f;
 		var cy = height / 2f;
-		var size = Math.Min(width, height) * 0.2f * scale;
+		var size = Math.Min(width, height) * 0.3f * scale;
 
 		// Draw grid background
 		DrawGrid(canvas, width, height, cx, cy);
