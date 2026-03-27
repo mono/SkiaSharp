@@ -43,6 +43,42 @@ Note what the dependency is and what changed:
 
 Example: `"libpng bumped from 1.6.40 to 1.6.43 — includes fixes for CVE-2024-31497"`
 
+### ⚠️ Verifying Removed Patches (MANDATORY)
+
+For every **removed** item in `upstreamIntegrity`, you MUST verify WHY the patch was
+dropped. The orchestrator leaves the working tree checked out with upstream refs fetched,
+so you can inspect upstream directly.
+
+**For each removed patch:**
+
+1. Read the old fork diff (in raw-results.json) to understand what the patch did
+2. Identify the key change (function added, constant changed, ifdef added, etc.)
+3. Check the new upstream version of the file:
+   ```bash
+   git show upstream/{new_upstream_branch}:{file_path}   # in externals/skia
+   ```
+   Pipe through `grep` or `head` for large files — search for the specific
+   function, constant, or pattern from the old patch.
+4. State what you found as evidence in the summary
+
+**Resolution categories:**
+
+| Resolution | Evidence needed |
+|-----------|----------------|
+| Upstream resolved | Show the specific upstream line/value that addresses the fork's concern |
+| Replaced by interop | Point to the new interop file that handles this |
+| API removed upstream | Show that the patched API no longer exists in upstream |
+| Unverified | Could not determine — flag for human reviewer |
+
+**Examples:**
+
+- ✅ `"Fork patch increased buffer limit from 16 to 128. Patch correctly dropped — new upstream sets limit to 65536 (verified at line N), which exceeds the fork's requirement."`
+- ✅ `"Fork patch added FooClass::BarMethod(). Dropped — upstream removed FooClass entirely; functionality moved to C API shim layer (see src/c/sk_foo.cpp)."`
+- ❌ `"This is handled differently in the new upstream or was deemed unnecessary."` — NEVER write this. Verify or say "unverified".
+
+**The same principle applies to changed patches:** if a patch changed, check upstream to
+understand whether the change was forced by an upstream API change vs. a deliberate fork modification.
+
 ## Step 2 — Build the JSON Report
 
 Build JSON conforming to `skia-review-schema.json` v1.0. Use `schema-cheatsheet.md` for quick reference.
