@@ -688,9 +688,17 @@ Task ("nuget-special")
         }
     }
     if (GetFiles ("./output/nugets/*.nupkg").Count > 0) {
+        specials[$"_NuGets.Managed"] = $"nugets";
+        specials[$"_NuGets.NativeAssets"] = $"nugets";
         specials[$"_NuGets"] = $"nugets";
+        specials[$"_NuGetsPreview.Managed"] = $"nugets";
+        specials[$"_NuGetsPreview.NativeAssets"] = $"nugets";
         specials[$"_NuGetsPreview"] = $"nugets";
+        specials[$"_Symbols.Managed"] = $"nugets-symbols";
+        specials[$"_Symbols.NativeAssets"] = $"nugets-symbols";
         specials[$"_Symbols"] = $"nugets-symbols";
+        specials[$"_SymbolsPreview.Managed"] = $"nugets-symbols";
+        specials[$"_SymbolsPreview.NativeAssets"] = $"nugets-symbols";
         specials[$"_SymbolsPreview"] = $"nugets-symbols";
     }
     Information ("Detected {0} special artifacts to process:", specials.Count);
@@ -703,6 +711,11 @@ Task ("nuget-special")
         Information ("  - {0}" + " ".PadRight(max - special.Key.Length) + "=> {1}", special.Key, special.Value);
     }
 
+    // meta-package parent IDs that need dependencies added
+    var metaPackageParents = new HashSet<string> {
+        "_NuGets", "_NuGetsPreview", "_Symbols", "_SymbolsPreview"
+    };
+
     foreach (var pair in specials) {
         var id = pair.Key;
         var path = pair.Value;
@@ -713,6 +726,9 @@ Task ("nuget-special")
         foreach (var version in versions) {
             // update the version
             var packageVersion = version.Value;
+
+            // resolve the nuspec template: _NativeAssets.{platform} -> _NativeAssets
+            // and _NuGets.Managed / _NuGets.NativeAssets use their own templates
             var fn = id.StartsWith ("_NativeAssets.") ? "_NativeAssets" : id;
             var xdoc = XDocument.Load ($"./scripts/nuget/{fn}.nuspec");
             var metadata = xdoc.Root.Element ("metadata");
@@ -720,7 +736,7 @@ Task ("nuget-special")
             metadata.Element ("id").Value = id;
 
             if (id == "_NativeAssets") {
-                // handle the root package
+                // handle the root native assets package
                 var dependencies = metadata.Element ("dependencies");
                 foreach (var platform in nativePlatforms) {
                     dependencies.Add (new XElement ("dependency",
@@ -728,12 +744,21 @@ Task ("nuget-special")
                         new XAttribute ("version", packageVersion)));
                 }
             } else if (id.StartsWith ("_NativeAssets.")) {
-                // handle the dependencies
+                // handle per-platform native assets
                 var platform = id.Substring (id.IndexOf (".") + 1);
                 var files = xdoc.Root.Element ("files");
                 files.Add (new XElement ("file",
                     new XAttribute ("src", $"**"),
                     new XAttribute ("target", $"tools/{platform}")));
+            } else if (metaPackageParents.Contains (id)) {
+                // handle meta-package parents: add dependencies on .Managed and .NativeAssets
+                var dependencies = metadata.Element ("dependencies");
+                dependencies.Add (new XElement ("dependency",
+                    new XAttribute ("id", $"{id}.Managed"),
+                    new XAttribute ("version", packageVersion)));
+                dependencies.Add (new XElement ("dependency",
+                    new XAttribute ("id", $"{id}.NativeAssets"),
+                    new XAttribute ("version", packageVersion)));
             }
             // add the readme
             {
