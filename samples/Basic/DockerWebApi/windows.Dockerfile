@@ -1,9 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-nanoserver-ltsc2025 AS build
 WORKDIR /app
 
-COPY nuget.config .
-COPY packages/ packages/
-COPY SkiaSharpSample/ SkiaSharpSample/
+RUN mkdir packages
+COPY . .
 RUN dotnet publish SkiaSharpSample/ -c Release -r win-x64 -o /app/out
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-nanoserver-ltsc2025

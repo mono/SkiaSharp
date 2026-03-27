@@ -493,125 +493,99 @@ Task ("samples")
     .IsDependentOn ("samples-generate")
     .Does(() =>
 {
-    var isLinux = IsRunningOnLinux ();
-    var isMac = IsRunningOnMacOs ();
-    var isWin = IsRunningOnWindows ();
-
-    void BuildSample (FilePath sln, bool dryrun)
-    {
-        var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
-        var name = sln.GetFilenameWithoutExtension ();
-        var slnPlatform = name.GetExtension ();
-        if (!string.IsNullOrEmpty (slnPlatform)) {
-            slnPlatform = slnPlatform.ToLower ();
-        }
-
-        if (dryrun) {
-            Information ($"    BUILD       {sln}");
-        } else {
-            Information ($"Building sample {sln} ({platform})...");
-            RunDotNetBuild (sln);
-        }
-    }
-
     // build the newly migrated samples
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // build solutions locally
     var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
         ? "samples-preview"
         : "samples";
-    var solutions =
-        GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
-        GetFiles ($"./output/{actualSamples}/**/*.slnf"))
-        .OrderBy (x => x.FullPath)
-        .ToArray ();
-
-    // apply --sample filter if specified
-    if (!string.IsNullOrEmpty (SAMPLE_FILTER)) {
-        solutions = solutions
-            .Where (s => s.FullPath.Contains (SAMPLE_FILTER))
-            .ToArray ();
-        Information ($"Filtered to {solutions.Length} solution(s) matching '{SAMPLE_FILTER}'");
-    }
-
-    Information ("Solutions found:");
-    foreach (var sln in solutions) {
-        Information ("    " + sln);
-    }
 
     // copy NuGet packages next to Dockerfile files for Docker builds
     var dockerfiles = GetFiles ($"./output/{actualSamples}/**/*Dockerfile");
-    if (!string.IsNullOrEmpty (SAMPLE_FILTER)) {
-        dockerfiles = new FilePathCollection (
-            dockerfiles.Where (d => d.FullPath.Contains (SAMPLE_FILTER)));
-    }
     foreach (var dockerfile in dockerfiles) {
         var packagesDir = dockerfile.GetDirectory ().Combine ("packages");
         EnsureDirectoryExists (packagesDir);
         CopyFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg", packagesDir);
     }
 
-    // run Docker samples via run.ps1
-    var dockerRuns = GetFiles ($"./output/{actualSamples}/**/run.ps1")
-        .Where (r => string.IsNullOrEmpty (SAMPLE_FILTER) || r.FullPath.Contains (SAMPLE_FILTER))
+    // discover all samples: solutions for dotnet build, run.ps1 for Docker
+    var solutions =
+        GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
+        GetFiles ($"./output/{actualSamples}/**/*.slnf"))
+        .OrderBy (x => x.FullPath)
         .ToArray ();
+    var dockerRuns = GetFiles ($"./output/{actualSamples}/**/run.ps1")
+        .OrderBy (x => x.FullPath)
+        .ToArray ();
+
+    // apply --sample filter if specified
+    if (!string.IsNullOrEmpty (SAMPLE_FILTER)) {
+        solutions = solutions.Where (s => s.FullPath.Contains (SAMPLE_FILTER)).ToArray ();
+        dockerRuns = dockerRuns.Where (r => r.FullPath.Contains (SAMPLE_FILTER)).ToArray ();
+        Information ($"Filtered to {solutions.Length} solution(s) and {dockerRuns.Length} Docker sample(s) matching '{SAMPLE_FILTER}'");
+    }
+
+    // classify each solution: build, skip (has platform variant), or skip (wrong platform)
+    var samplesToBuild = new List<FilePath> ();
+    var samplesToSkip = new List<(FilePath sln, string reason)> ();
+
+    foreach (var sln in solutions) {
+        var name = sln.GetFilenameWithoutExtension ();
+        var slnPlatform = (name.GetExtension () ?? "").ToLower ();
+
+        // check if this sample has a Docker run.ps1 (Docker samples are built via run.ps1, not dotnet build)
+        if (dockerRuns.Any (r => r.GetDirectory ().FullPath == sln.GetDirectory ().FullPath)) {
+            samplesToSkip.Add ((sln, "Docker (built via run.ps1)"));
+            continue;
+        }
+
+        if (string.IsNullOrEmpty (slnPlatform)) {
+            // main solution — check for platform-specific variants
+            var variants =
+                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
+                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
+            if (variants.Any ()) {
+                samplesToSkip.Add ((sln, "has platform-specific variant"));
+            } else {
+                samplesToBuild.Add (sln);
+            }
+        } else if (slnPlatform == $".{CURRENT_PLATFORM.ToLower ()}") {
+            samplesToBuild.Add (sln);
+        } else {
+            samplesToSkip.Add ((sln, $"wrong platform (need {slnPlatform})"));
+        }
+    }
+
+    // log the plan
+    Information ("Sample plan:");
+    foreach (var sln in samplesToBuild) {
+        Information ($"    BUILD       {sln}");
+    }
+    foreach (var (sln, reason) in samplesToSkip) {
+        Information ($"    SKIP        {sln} ({reason})");
+    }
+    foreach (var run in dockerRuns) {
+        Information ($"    DOCKER      {run}");
+    }
+
+    // build dotnet samples
+    foreach (var sln in samplesToBuild) {
+        if (!FileExists (sln))
+            continue;
+        var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
+        Information ($"Building sample {sln} ({platform})...");
+        RunDotNetBuild (sln);
+        CleanDir (sln.GetDirectory ().FullPath);
+    }
+
+    // build and run Docker samples
     foreach (var run in dockerRuns) {
         Information ($"Running Docker sample: {run}");
         RunProcess ("pwsh", new ProcessSettings {
             Arguments = run.FullPath,
             WorkingDirectory = run.GetDirectory (),
         });
-    }
-
-    var firstLoop = true;
-    foreach (var dryrun in new [] { true, true, false }) {
-        if (dryrun)
-            Information ("Sample builds:");
-
-        foreach (var sln in solutions) {
-            // might have been deleted due to a platform build and cleanup
-            if (!FileExists (sln))
-                continue;
-
-            var name = sln.GetFilenameWithoutExtension ();
-            var slnPlatform = name.GetExtension ();
-            if (string.IsNullOrEmpty (slnPlatform)) {
-                // this is the main solution
-                var variants =
-                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
-                    GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
-                if (!variants.Any ()) {
-                    // there is no platform variant
-                    BuildSample (sln, dryrun);
-                    // delete the built sample
-                    if (!dryrun)
-                        CleanDir (sln.GetDirectory ().FullPath);
-                } else {
-                    // skip as there is a platform variant
-                    if (dryrun && firstLoop)
-                        Information ($"    SKIP   (PS) {sln} (has platform specific)");
-                }
-            } else {
-                // this is a platform variant
-                slnPlatform = slnPlatform.ToLower ();
-                if (slnPlatform == ($".{CURRENT_PLATFORM.ToLower ()}")) {
-                    // this is the correct platform variant
-                    BuildSample (sln, dryrun);
-                    // delete the built sample
-                    if (!dryrun) {
-                        CleanDir (sln.GetDirectory ().FullPath);
-                    }
-                } else {
-                    // skip this as this is not the correct platform
-                    if (dryrun && firstLoop)
-                        Information ($"    SKIP   (AP) {sln} (has alternate platform)");
-                }
-            }
-        }
-
-        firstLoop = false;
     }
 
     CleanDir ("./output/samples/");

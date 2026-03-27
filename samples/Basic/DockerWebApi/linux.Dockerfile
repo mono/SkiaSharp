@@ -1,9 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
-COPY nuget.config .
-COPY packages/ packages/
-COPY SkiaSharpSample/ SkiaSharpSample/
+RUN mkdir packages
+COPY . .
 
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "arm64" ]; then RID=linux-arm64; else RID=linux-x64; fi && \
