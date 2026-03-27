@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class PathBuilderSample : InteractiveSampleBase
+public class PathBuilderSample : CanvasSampleBase
 {
 	private int shapeIndex;
 	private bool showBounds;

@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class BlendModesSample : InteractiveSampleBase
+public class BlendModesSample : CanvasSampleBase
 {
 	private int modeIndex;
 	private float srcOpacity = 1f;

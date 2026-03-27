@@ -7,7 +7,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class LottiePlayerSample : InteractiveSampleBase
+public class LottiePlayerSample : CanvasSampleBase
 {
 	public override bool IsAnimated => true;
 

@@ -3,7 +3,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class NoiseGeneratorSample : InteractiveSampleBase
+public class NoiseGeneratorSample : CanvasSampleBase
 {
 	private int noiseType;
 	private float freqX = 0.02f;

@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
-using SkiaSharp;
+using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample;
 
 public abstract class SampleBase
 {
-	private CancellationTokenSource cts;
-
 	public abstract string Title { get; }
 
 	public virtual string Description { get; } = string.Empty;
@@ -21,15 +18,14 @@ public abstract class SampleBase
 
 	public bool IsInitialized { get; private set; } = false;
 
-	public void DrawSample(SKCanvas canvas, int width, int height)
+	public virtual IReadOnlyList<SampleControl> Controls => [];
+
+	public virtual void UpdateControl(string id, object value)
 	{
-		if (IsInitialized)
-		{
-			OnDrawSample(canvas, width, height);
-		}
+		OnControlChanged(id, value);
 	}
 
-	protected abstract void OnDrawSample(SKCanvas canvas, int width, int height);
+	protected virtual void OnControlChanged(string id, object value) { }
 
 	public async void Init()
 	{
@@ -38,8 +34,6 @@ public abstract class SampleBase
 			await OnInit();
 
 			IsInitialized = true;
-
-			Refresh();
 		}
 	}
 
@@ -53,34 +47,9 @@ public abstract class SampleBase
 		}
 	}
 
-	protected virtual Task OnInit()
-	{
-		if (IsAnimated)
-		{
-			var scheduler = SynchronizationContext.Current != null
-				? TaskScheduler.FromCurrentSynchronizationContext()
-				: TaskScheduler.Default;
+	protected virtual Task OnInit() => Task.CompletedTask;
 
-			cts = new CancellationTokenSource();
-			_ = Task.Run(async () =>
-			{
-				while (!cts.IsCancellationRequested)
-				{
-					await OnUpdate(cts.Token);
-					new Task(Refresh).Start(scheduler);
-				}
-			}, cts.Token);
-		}
-
-		return Task.CompletedTask;
-	}
-
-	protected virtual void OnDestroy()
-	{
-		cts?.Cancel();
-	}
-
-	protected virtual Task OnUpdate(CancellationToken token) => Task.CompletedTask;
+	protected virtual void OnDestroy() { }
 
 	public virtual bool MatchesFilter(string searchText)
 	{
@@ -90,12 +59,5 @@ public abstract class SampleBase
 		return
 			Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1 ||
 			Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1;
-	}
-
-	public event EventHandler RefreshRequested;
-
-	protected void Refresh()
-	{
-		RefreshRequested?.Invoke(this, EventArgs.Empty);
 	}
 }

@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class VertexMeshSample : InteractiveSampleBase
+public class VertexMeshSample : CanvasSampleBase
 {
 	private float gridSize = 3f;
 	private int colorModeIndex;

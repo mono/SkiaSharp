@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class NinePatchSample : InteractiveSampleBase
+public class NinePatchSample : CanvasSampleBase
 {
 	private float _width = 400f;
 	private float _height = 300f;

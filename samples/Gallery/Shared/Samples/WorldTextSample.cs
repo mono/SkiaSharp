@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class WorldTextSample : InteractiveSampleBase
+public class WorldTextSample : CanvasSampleBase
 {
 	private int scriptIndex;
 	private float textSize = 36f;

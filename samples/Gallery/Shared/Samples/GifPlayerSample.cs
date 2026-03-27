@@ -6,7 +6,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class GifPlayerSample : InteractiveSampleBase
+public class GifPlayerSample : CanvasSampleBase
 {
 	public override bool IsAnimated => true;
 

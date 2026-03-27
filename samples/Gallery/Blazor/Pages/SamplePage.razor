@@ -62,71 +62,7 @@ else if (IsDocument)
                                     @(isPinned ? "◀" : "▶")
                                 </button>
                             </div>
-                            <ControlPanel Controls="@InteractiveSample!.Controls"
-                                          OnChanged="@OnControlChanged" />
-                        </div>
-                    }
-                </div>
-            }
-        </div>
-    </div>
-}
-else
-{
-    <div class="sample-page">
-        <div class="sample-header">
-            <a href="" class="text-decoration-none small d-inline-block">&larr; Back to Gallery</a>
-            <h2>@sample.Title</h2>
-            @if (!string.IsNullOrWhiteSpace(sample.Description))
-            {
-                <p class="text-muted mb-1">@sample.Description</p>
-            }
-        </div>
-        <div class="sample-body">
-            <div class="sample-canvas">
-                <div class="canvas-wrapper border rounded">
-                    @if (UseGpu)
-                    {
-                        <SKGLView @ref="glView"
-                                  OnPaintSurface="OnPaintGL"
-                                  EnableRenderLoop="@(sample?.IsAnimated == true)"
-                                  IgnorePixelScaling="true"
-                                  style="width:100%;height:100%;display:block;" />
-                    }
-                    else
-                    {
-                        <SKCanvasView @ref="canvasView"
-                                      OnPaintSurface="OnPaintRaster"
-                                      IgnorePixelScaling="true"
-                                      style="width:100%;height:100%;display:block;" />
-                    }
-                </div>
-            </div>
-
-            @if (HasControls)
-            {
-                @if (!isPinned && showControls)
-                {
-                    <div class="sidebar-backdrop" @onclick="() => showControls = false"></div>
-                }
-
-                <div class="sample-sidebar @(!isPinned && !showControls ? "collapsed" : "")"
-                     @onclick="OnSidebarClick"
-                     @onclick:stopPropagation="true">
-                    @if (!isPinned && !showControls)
-                    {
-                        <span class="sidebar-label">Controls</span>
-                    }
-                    else
-                    {
-                        <div class="sidebar-content" @onclick:stopPropagation="true">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <small class="fw-bold text-uppercase" style="letter-spacing:0.05em;color:#666;">Controls</small>
-                                <button class="btn btn-sm btn-outline-secondary" @onclick="TogglePin" @onclick:stopPropagation="true">
-                                    @(isPinned ? "◀" : "▶")
-                                </button>
-                            </div>
-                            <ControlPanel Controls="@InteractiveSample!.Controls"
+                            <ControlPanel Controls="@sample!.Controls"
                                           OnChanged="@OnControlChanged" />
                         </div>
                     }
@@ -158,8 +94,7 @@ else
 
     // Computed helpers for template branching
     private bool IsDocument => sample is DocumentSampleBase;
-    private bool HasControls => sample is InteractiveSampleBase i && i.Controls is { Count: > 0 };
-    private InteractiveSampleBase? InteractiveSample => sample as InteractiveSampleBase;
+    private bool HasControls => sample is { Controls.Count: > 0 };
 
     // Control panel layout state (static for SPA persistence across navigation)
     private static bool isPinned = true;
@@ -192,7 +127,8 @@ else
 
                 if (sample is not null)
                 {
-                    sample.RefreshRequested += OnRefreshRequested;
+                    if (sample is CanvasSampleBase canvasSample)
+                        canvasSample.RefreshRequested += OnRefreshRequested;
                     sample.Init();
                     GenerateDocumentIfNeeded();
                 }
@@ -236,7 +172,10 @@ else
         canvasDpi = canvasInfoWidth > 0 ? $"{(float)canvasRawWidth / canvasInfoWidth:F2}x" : "?";
 
         e.Surface.Canvas.Clear(SKColors.White);
-        sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+        if (sample is CanvasSampleBase canvasSample)
+            canvasSample.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+        else if (sample is DocumentSampleBase docSample)
+            docSample.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
         UpdateDocumentPreview();
     }
 
@@ -249,7 +188,10 @@ else
         canvasDpi = canvasInfoWidth > 0 ? $"{(float)canvasRawWidth / canvasInfoWidth:F2}x" : "GPU";
 
         e.Surface.Canvas.Clear(SKColors.White);
-        sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+        if (sample is CanvasSampleBase canvasSample)
+            canvasSample.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+        else if (sample is DocumentSampleBase docSample)
+            docSample.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
         UpdateDocumentPreview();
     }
 
@@ -275,7 +217,8 @@ else
     {
         if (sample is not null)
         {
-            sample.RefreshRequested -= OnRefreshRequested;
+            if (sample is CanvasSampleBase canvasSample)
+                canvasSample.RefreshRequested -= OnRefreshRequested;
             sample.Destroy();
             sample = null;
         }
@@ -289,11 +232,8 @@ else
 
     private void OnControlChanged((string id, object value) args)
     {
-        if (sample is InteractiveSampleBase interactive)
-        {
-            interactive.UpdateControl(args.id, args.value);
-            GenerateDocumentIfNeeded();
-        }
+        sample?.UpdateControl(args.id, args.value);
+        GenerateDocumentIfNeeded();
     }
 
     private void GenerateDocumentIfNeeded()

@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class CanvasTransformsSample : InteractiveSampleBase
+public class CanvasTransformsSample : CanvasSampleBase
 {
 	private float translateX;
 	private float translateY;

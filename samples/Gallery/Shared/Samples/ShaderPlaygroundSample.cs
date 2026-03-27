@@ -6,7 +6,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class ShaderPlaygroundSample : InteractiveSampleBase
+public class ShaderPlaygroundSample : CanvasSampleBase
 {
 	public override bool IsAnimated => true;
 

@@ -5,7 +5,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class ThreeDSample : InteractiveSampleBase
+public class ThreeDSample : CanvasSampleBase
 {
 	private float rotateX;
 	private float rotateY = 45f;

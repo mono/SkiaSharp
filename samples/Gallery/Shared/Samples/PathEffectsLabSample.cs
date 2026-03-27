@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class PathEffectsLabSample : InteractiveSampleBase
+public class PathEffectsLabSample : CanvasSampleBase
 {
 	private int effectType;
 	private float interval = 15f;

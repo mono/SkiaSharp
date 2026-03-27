@@ -4,7 +4,7 @@ using SkiaSharp;
 
 namespace SkiaSharpSample;
 
-public abstract class DocumentSampleBase : InteractiveSampleBase
+public abstract class DocumentSampleBase : SampleBase
 {
 	public byte[]? DocumentBytes { get; protected set; }
 	public string? DocumentMimeType { get; protected set; }
@@ -14,9 +14,18 @@ public abstract class DocumentSampleBase : InteractiveSampleBase
 
 	protected abstract void OnGenerateDocument(SKCanvas previewCanvas, int width, int height);
 
-	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
+	public void DrawSample(SKCanvas canvas, int width, int height)
 	{
-		canvas.Clear(SKColors.White);
-		OnGenerateDocument(canvas, width, height);
+		if (IsInitialized)
+		{
+			canvas.Clear(SKColors.White);
+			OnGenerateDocument(canvas, width, height);
+		}
+	}
+
+	public override void UpdateControl(string id, object value)
+	{
+		OnControlChanged(id, value);
+		DocumentBytes = null;
 	}
 }

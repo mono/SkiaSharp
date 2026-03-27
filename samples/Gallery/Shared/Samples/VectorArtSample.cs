@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class VectorArtSample : InteractiveSampleBase
+public class VectorArtSample : CanvasSampleBase
 {
 	private float _rotation;
 	private float _scale = 1f;

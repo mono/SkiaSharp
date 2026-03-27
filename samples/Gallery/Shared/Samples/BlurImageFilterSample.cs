@@ -3,7 +3,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class BlurImageFilterSample : InteractiveSampleBase
+public class BlurImageFilterSample : CanvasSampleBase
 {
 	private float sigmaX = 5f;
 	private float sigmaY = 5f;

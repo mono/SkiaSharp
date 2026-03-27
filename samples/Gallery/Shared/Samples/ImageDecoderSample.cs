@@ -5,7 +5,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class ImageDecoderSample : InteractiveSampleBase
+public class ImageDecoderSample : CanvasSampleBase
 {
 	private int _imageIndex;
 	private bool _showInfo;

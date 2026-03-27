@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class GradientSample : InteractiveSampleBase
+public class GradientSample : CanvasSampleBase
 {
 	private int gradientType;
 	private float angle = 45f;

@@ -5,7 +5,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class PhotoLabSample : InteractiveSampleBase
+public class PhotoLabSample : CanvasSampleBase
 {
 	// Effect state
 	private bool colorEnabled = true;

@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class TextLabSample : InteractiveSampleBase
+public class TextLabSample : CanvasSampleBase
 {
 	private int alignIndex = 1;
 	private float textSize = 48f;

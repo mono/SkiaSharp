@@ -4,7 +4,7 @@ using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
 
-public class TextOnPathSample : InteractiveSampleBase
+public class TextOnPathSample : CanvasSampleBase
 {
 	private int pathShapeIndex;
 	private float textOffset;
