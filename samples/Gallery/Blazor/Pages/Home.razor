@@ -5,15 +5,10 @@
 <PageTitle>SkiaSharp Gallery</PageTitle>
 
 <div class="home-container">
-    <div class="hero-section" style="position:relative;overflow:hidden;">
-        <SKCanvasView OnPaintSurface="OnHeroPaint"
-                      EnableRenderLoop="true"
-                      IgnorePixelScaling="true"
-                      style="position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0.15;" />
-        <div style="position:relative;z-index:1;">
-            <h1 class="hero-title">SkiaSharp Gallery</h1>
-            <p class="hero-subtitle">Interactive demos showcasing SkiaSharp's 2D graphics capabilities. Built with Blazor WebAssembly.</p>
-        </div>
+    <div class="hero-section">
+        <div class="hero-accent"></div>
+        <h1 class="hero-title">SkiaSharp Gallery</h1>
+        <p class="hero-subtitle">Interactive demos showcasing SkiaSharp's 2D graphics capabilities. Built with Blazor WebAssembly.</p>
     </div>
 
     <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
@@ -49,14 +44,6 @@
             <div class="col">
                 <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
                     <div class="card h-100 sample-card" style="border-left-color: @categoryColor; background-color: @(categoryColor)08; animation-delay: @(i * 40)ms;">
-                        @if (thumbnails.TryGetValue(sample.Title, out var thumb))
-                        {
-                            <img src="@thumb" alt="@sample.Title preview" class="card-thumbnail" />
-                        }
-                        else
-                        {
-                            <div class="card-preview" style="background: linear-gradient(135deg, @(categoryColor)20, @(categoryColor)40);"></div>
-                        }
                         <div class="card-body py-3 px-3">
                             <div class="d-flex align-items-start gap-2">
                                 <i class="bi @icon" style="font-size:1.4rem;color:@categoryColor;flex-shrink:0;margin-top:1px;"></i>
@@ -91,9 +78,6 @@
     private string searchText = string.Empty;
     private HashSet<string> selectedCategories = new();
     private string[] allCategories = Array.Empty<string>();
-    private Dictionary<string, string> thumbnails = new();
-    private float heroTime;
-    private DateTime lastHeroFrame = DateTime.UtcNow;
 
     protected override void OnInitialized()
     {
@@ -103,73 +87,6 @@
             .OrderBy(c => c)
             .ToArray();
         selectedCategories = new HashSet<string>(allCategories);
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            foreach (var sample in SampleService.GetSamples())
-            {
-                try
-                {
-                    var tempSample = (SampleBase)Activator.CreateInstance(sample.GetType())!;
-                    tempSample.Init();
-
-                    // Poll for init completion (Init is async void)
-                    for (int i = 0; i < 50 && !tempSample.IsInitialized; i++)
-                        await Task.Delay(50);
-
-                    if (!tempSample.IsInitialized) continue;
-
-                    using var surface = SKSurface.Create(new SKImageInfo(320, 180));
-                    if (surface == null) continue;
-
-                    tempSample.DrawSample(surface.Canvas, 320, 180);
-                    using var image = surface.Snapshot();
-                    using var data = image.Encode(SKEncodedImageFormat.Png, 60);
-                    var base64 = Convert.ToBase64String(data.ToArray());
-                    thumbnails[sample.Title] = $"data:image/png;base64,{base64}";
-                    tempSample.Destroy();
-                }
-                catch { }
-            }
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private void OnHeroPaint(SKPaintSurfaceEventArgs e)
-    {
-        var now = DateTime.UtcNow;
-        heroTime += (float)(now - lastHeroFrame).TotalSeconds;
-        lastHeroFrame = now;
-
-        var canvas = e.Surface.Canvas;
-        var width = e.Info.Width;
-        var height = e.Info.Height;
-        canvas.Clear(SKColors.Transparent);
-
-        // Draw 4 soft gradient circles that drift slowly
-        var blobs = new[] {
-            (cx: 0.3f, cy: 0.4f, r: 0.35f, speed: 0.3f, color: new SKColor(0x1A, 0x23, 0x7E)),
-            (cx: 0.7f, cy: 0.3f, r: 0.3f, speed: 0.4f, color: new SKColor(0x15, 0x65, 0xC0)),
-            (cx: 0.5f, cy: 0.7f, r: 0.25f, speed: 0.5f, color: new SKColor(0x6A, 0x1B, 0x9A)),
-            (cx: 0.2f, cy: 0.6f, r: 0.2f, speed: 0.35f, color: new SKColor(0x00, 0x89, 0x7B)),
-        };
-
-        foreach (var blob in blobs)
-        {
-            var x = (blob.cx + MathF.Sin(heroTime * blob.speed) * 0.1f) * width;
-            var y = (blob.cy + MathF.Cos(heroTime * blob.speed * 0.7f) * 0.08f) * height;
-            var r = blob.r * Math.Min(width, height);
-
-            using var shader = SKShader.CreateRadialGradient(
-                new SKPoint(x, y), r,
-                new[] { blob.color.WithAlpha(80), blob.color.WithAlpha(0) },
-                null, SKShaderTileMode.Clamp);
-            using var paint = new SKPaint { Shader = shader, IsAntialias = true };
-            canvas.DrawCircle(x, y, r, paint);
-        }
     }
 
     private IEnumerable<SampleBase> GetFilteredSamples()
