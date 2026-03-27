@@ -62,9 +62,12 @@ Read [references/writing-summaries.md](references/writing-summaries.md) for deta
 
 1. Load `raw-results.json` from the output directory printed by the orchestrator
 2. For every item in added/removed/changed: read the diff and write a factual summary
-3. Assemble the final JSON report conforming to `skia-review-schema.json`
-4. Include actual diff content in the JSON (not file path references)
-5. **Save the report to `{output_dir}/{pr_number}.json`** — the same directory as `raw-results.json`
+3. **Verify removed patches** — For each removed upstream patch, check the new upstream
+   code to determine WHY it was dropped. See writing-summaries.md "Verifying Removed Patches"
+   for the required process. Never speculate about patch removal reasons.
+4. Assemble the final JSON report conforming to `skia-review-schema.json`
+5. Include actual diff content in the JSON (not file path references)
+6. **Save the report to `{output_dir}/{pr_number}.json`** — the same directory as `raw-results.json`
 
 ---
 
