@@ -93,7 +93,7 @@ if (IsRunningOnWindows ()) {
     throw new Exception ("This script is not running on a known platform.");
 }
 
-var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json");
+var CI_ARTIFACTS_FEED_URL = Argument ("artifactsFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json");
 var CI_NUGETS_FEED_URL = Argument ("nugetsFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json");
 
 var SUPPORTED_NUGETS = new Dictionary<string, Version> {

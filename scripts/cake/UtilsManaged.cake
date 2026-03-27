@@ -159,9 +159,8 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     }
 }
 
-async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory, string feedUrl = null)
+async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory, string feedUrl)
 {
-    feedUrl = feedUrl ?? CI_ARTIFACTS_FEED_URL;
 
     var version = "0.0.0-";
     if (!string.IsNullOrEmpty(PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith("pr."))

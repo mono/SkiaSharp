@@ -37,7 +37,7 @@ Task("externals-download")
     EnsureDirectoryExists ("./output");
     CleanDirectories ("./output");
 
-    await DownloadPackageAsync("_nativeassets", "./output/native");
+    await DownloadPackageAsync("_nativeassets", "./output/native", CI_ARTIFACTS_FEED_URL);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
