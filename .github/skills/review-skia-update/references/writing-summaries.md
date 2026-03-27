@@ -71,6 +71,28 @@ Top level needs:
 
 Highest wins (e.g., if upstream is REVIEW_REQUIRED and deps is REVIEW_REQUIRED → HIGH).
 
+### Cross-link related files
+
+For each source file item, add `relatedFiles` when the change has connections to other files:
+
+```json
+{
+  "path": "include/core/SkFontMgr.h",
+  "summary": "Fork patch added MakeDefault(). Patch dropped — C API now uses sk_create_default_fontmgr().",
+  "relatedFiles": [
+    { "path": "src/c/sk_default_fontmgr.cpp", "relationship": "replaced by" },
+    { "path": "src/c/sk_default_fontmgr.h", "relationship": "replaced by" }
+  ]
+}
+```
+
+Common patterns:
+- **Removed upstream patch → new interop file**: Use `"replaced by"` on the removed item, `"replaces"` on the added item
+- **Header + implementation pair**: Use `"header"` / `"implementation"`
+- **Interop file → companion PR C# wrapper**: Link to the binding file path
+
+This enables one-click navigation in the HTML viewer between related changes.
+
 ### Critical: Include actual diffs
 
 The `diff`, `oldDiff`, `newDiff`, and `patchDiff` fields MUST contain actual diff text,

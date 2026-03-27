@@ -230,6 +230,51 @@
       opacity: 0.5;
     }
 
+    .related-files {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.4rem;
+    }
+
+    .related-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.78rem;
+      color: #3730a3;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .related-link:hover {
+      background: #c7d2fe;
+      border-color: #818cf8;
+      color: #312e81;
+    }
+
+    .related-link .rel-type {
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #6366f1;
+    }
+
+    @keyframes highlight-pulse {
+      0% { background-color: #fef08a; }
+      100% { background-color: transparent; }
+    }
+
+    .highlight-target {
+      animation: highlight-pulse 1.5s ease-out;
+    }
+
   </style>
 </head>
 <body>
@@ -304,6 +349,68 @@
         { id: 'companion-pr', key: 'companionPr', label: 'Companion PR', icon: 'bi-git' }
       ];
       const diffState = new Map();
+
+      // Navigate to a file by path: find its row across all sections, switch tabs, expand, scroll, highlight
+      function navigateToFile(targetPath) {
+        if (!targetPath) return;
+
+        // Search all source integrity sections for a matching file row
+        const sectionKeys = ['upstreamIntegrity', 'interopIntegrity'];
+        const tabMap = { upstreamIntegrity: 'upstream', interopIntegrity: 'interop' };
+
+        for (const sectionKey of sectionKeys) {
+          const section = report[sectionKey] || {};
+          for (const groupType of ['added', 'removed', 'changed']) {
+            const items = asArray(section[groupType]);
+            for (let i = 0; i < items.length; i++) {
+              if (items[i].path === targetPath) {
+                const itemId = `${sectionKey}-${groupType}-${i}`;
+                const container = document.querySelector(`[data-toggle-diff="${itemId}"]`)?.closest('.border-bottom');
+                if (!container) continue;
+
+                // Switch to the correct tab
+                const tabId = tabMap[sectionKey];
+                const tabBtn = document.querySelector(`#${tabId}-tab`);
+                if (tabBtn) {
+                  const bsTab = new bootstrap.Tab(tabBtn);
+                  bsTab.show();
+                }
+
+                // Ensure the item is visible (enable its type filter if needed)
+                container.style.display = '';
+
+                // Expand the diff body if collapsed
+                const body = container.querySelector(`#body-${itemId}`);
+                const chevron = container.querySelector(`#chevron-${itemId}`);
+                if (body && body.classList.contains('d-none')) {
+                  body.classList.remove('d-none');
+                  if (chevron) {
+                    chevron.classList.remove('bi-chevron-right');
+                    chevron.classList.add('bi-chevron-down');
+                  }
+                  renderDiffForItem(sectionKey, groupType, i);
+                }
+
+                // Scroll into view and highlight
+                requestAnimationFrame(() => {
+                  container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  container.classList.remove('highlight-target');
+                  void container.offsetWidth; // force reflow
+                  container.classList.add('highlight-target');
+                });
+                return;
+              }
+            }
+          }
+        }
+
+        // Fallback: not found in report, try opening on GitHub
+        const meta = report.meta || {};
+        const prHead = (meta.shas || {}).prHead || 'HEAD';
+        const repo = text(meta.repo, 'mono/skia');
+        const url = `https://github.com/${repo}/blob/${prHead}/${targetPath}`;
+        window.open(url, '_blank', 'noopener');
+      }
 
       function asArray(value) {
         return Array.isArray(value) ? value : [];
@@ -840,6 +947,14 @@
         const showViewedToggle = card.querySelector(`#${sectionKey}-show-viewed`);
         showViewedToggle.addEventListener('change', () => applyFilters());
 
+        // Viewed checkbox triggers re-filter so items hide immediately
+        allItems.forEach(({ el }) => {
+          const viewedCheck = el.querySelector('.viewed-check');
+          if (viewedCheck) {
+            viewedCheck.addEventListener('change', () => applyFilters());
+          }
+        });
+
         function applyFilters() {
           const showViewed = showViewedToggle.checked;
           allItems.forEach(({ el, groupType }) => {
@@ -887,12 +1002,36 @@
           </div>
           <div class="d-none px-3 pb-3" id="body-${itemId}">
             <div class="text-body-secondary small mb-2">${escapeHtml(summary)}</div>
+            <div data-role="related-files"></div>
             <div class="diff-placeholder" data-diff-placeholder="${itemId}">
               <i class="bi bi-hourglass-split me-2"></i>Loading diff...
             </div>
             <div class="diff-host d-none" data-diff-host="${itemId}"></div>
           </div>
         `;
+
+        // Render related files as clickable cross-links
+        const relatedFiles = asArray(item.relatedFiles);
+        if (relatedFiles.length) {
+          const relatedHost = container.querySelector('[data-role="related-files"]');
+          const relatedDiv = document.createElement('div');
+          relatedDiv.className = 'related-files mb-2';
+          relatedFiles.forEach((rf) => {
+            const link = document.createElement('a');
+            link.className = 'related-link mono';
+            link.dataset.relatedPath = rf.path || '';
+            const rel = rf.relationship ? `<span class="rel-type">${escapeHtml(rf.relationship)}</span>` : '';
+            link.innerHTML = `<i class="bi bi-link-45deg"></i>${rel}<span>${escapeHtml(rf.path || 'unknown')}</span>`;
+            link.title = rf.relationship ? `${rf.relationship}: ${rf.path}` : rf.path;
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigateToFile(rf.path);
+            });
+            relatedDiv.appendChild(link);
+          });
+          relatedHost.appendChild(relatedDiv);
+        }
 
         // Toggle expand/collapse on header click
         const header = container.querySelector(`[data-toggle-diff="${itemId}"]`);
