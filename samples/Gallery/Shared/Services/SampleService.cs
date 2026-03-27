@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace SkiaSharpSample.Services;
 
-public class SampleService : ISampleService
+public class SampleService 
 {
 	private readonly SampleBase[] samples;
 
