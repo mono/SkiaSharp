@@ -488,12 +488,11 @@ Task ("samples-generate")
     Zip ("./output/samples-preview/", "./output/samples-preview.zip");
 });
 
-Task ("samples")
-    .Description ("Build all samples.")
-    .IsDependentOn ("samples-generate")
-    .Does(() =>
+Task ("samples-prepare")
+    .Description ("Prepare the generated samples for building (copy NuGet packages, etc.).")
+    .Does (() =>
 {
-    // build the newly migrated samples
+    // clear cached SkiaSharp/HarfBuzzSharp packages so fresh ones are restored
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
@@ -508,6 +507,17 @@ Task ("samples")
         EnsureDirectoryExists (packagesDir);
         CopyFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg", packagesDir);
     }
+
+    Information ("Samples prepared.");
+});
+
+Task ("samples-run")
+    .Description ("Build and run the generated samples from the output directory.")
+    .Does(() =>
+{
+    var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
+        ? "samples-preview"
+        : "samples";
 
     // discover all samples: solutions for dotnet build, run.ps1 for Docker
     var solutions =
@@ -593,6 +603,12 @@ Task ("samples")
     CleanDir ("./output/samples-preview/");
     DeleteDir ("./output/samples-preview/");
 });
+
+Task ("samples")
+    .Description ("Generate, prepare, and run all samples.")
+    .IsDependentOn ("samples-generate")
+    .IsDependentOn ("samples-prepare")
+    .IsDependentOn ("samples-run");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - building the package for NuGet.org
