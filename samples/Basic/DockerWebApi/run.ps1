@@ -10,7 +10,7 @@ if (-not $Platform) {
 $dockerfile = "$Platform.Dockerfile"
 $tag = "skiasharpsample/webapi"
 $port = 8080
-$outputFile = Join-Path $PSScriptRoot "output.png"
+$outputFile = Join-Path $pwd "output.png"
 
 Write-Host "Building $tag from $dockerfile..."
 docker build --tag $tag --file $dockerfile .
