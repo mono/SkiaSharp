@@ -4,6 +4,15 @@ An interactive sample gallery showcasing SkiaSharp's 2D graphics capabilities, b
 
 ![Home Page](screenshots/home.png)
 
+## Running
+
+```bash
+cd samples/Gallery/Blazor
+dotnet run
+```
+
+Then open http://localhost:5002.
+
 ## Features
 
 - **21 interactive demos** covering gradients, transforms, shaders, text, paths, image filters, and more
@@ -25,22 +34,9 @@ An interactive sample gallery showcasing SkiaSharp's 2D graphics capabilities, b
 |---|---|
 | ![Shader Playground](screenshots/shader-playground.png) | ![PDF Composer](screenshots/pdf-composer.png) |
 
-## Running
+## Samples
 
-```bash
-# 1. Bootstrap native binaries (one-time)
-dotnet cake --target=externals-download
-
-# 2. Run the Blazor WASM app
-cd samples/Gallery/Blazor
-dotnet run
-```
-
-Then open http://localhost:5002 in your browser.
-
-## Sample List
-
-### Canvas Samples (19)
+### Canvas (19)
 
 | Sample | Category | Description |
 |--------|----------|-------------|
@@ -64,44 +60,9 @@ Then open http://localhost:5002 in your browser.
 | Vertex Mesh | General | Triangle meshes with wireframe overlay |
 | World Text | Text & Typography | Multi-script rendering with HarfBuzz shaping |
 
-### Document Samples (2)
+### Document (2)
 
 | Sample | Description |
 |--------|-------------|
 | PDF Composer | Multi-page PDF with shapes, text, images, and clickable annotations |
 | Create XPS | XPS document generation (Windows only) |
-
-## Architecture
-
-```
-samples/Gallery/
-├── Shared/                          # Platform-agnostic .NET class library
-│   ├── SampleBase.cs                # Root: title, description, controls, lifecycle
-│   ├── CanvasSampleBase.cs          # Drawing, animation, refresh
-│   ├── DocumentSampleBase.cs        # Document generation (PDF/XPS)
-│   ├── Controls/SampleControl.cs    # Slider, Toggle, Picker, Group records
-│   ├── Services/SampleService.cs    # DI sample discovery
-│   └── Samples/                     # All 21 sample implementations
-├── Blazor/                          # Blazor WebAssembly host
-│   ├── Pages/Home.razor             # Card grid with search & filter chips
-│   ├── Pages/SamplePage.razor       # Canvas + sidebar controls + PDF viewer
-│   ├── Components/                  # ControlPanel, SampleCard
-│   └── Layout/MainLayout.razor      # Header bar, GPU toggle, dark mode
-└── screenshots/                     # README screenshots
-```
-
-### Base Class Hierarchy
-
-```
-SampleBase                   ← metadata, controls, lifecycle
-├── CanvasSampleBase         ← drawing (OnDrawSample), animation, refresh
-└── DocumentSampleBase       ← document generation (OnGenerateDocument)
-```
-
-## Adding a New Sample
-
-1. Create a class in `Shared/Samples/` extending `CanvasSampleBase` or `DocumentSampleBase`
-2. Override `Title`, `Description`, `Category`
-3. Define `Controls` and `OnControlChanged` for interactivity
-4. Implement `OnDrawSample` (canvas) or `OnGenerateDocument` (document)
-5. The sample auto-discovers via reflection — no registration needed
