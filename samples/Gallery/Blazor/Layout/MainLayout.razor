@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject IJSRuntime JS
 
 <div class="page">
     <main>
@@ -9,6 +10,9 @@
                     <button type="button" class="btn @(UseGpu ? "btn-outline-secondary" : "btn-secondary") btn-sm" @onclick="() => SetBackend(false)">CPU</button>
                     <button type="button" class="btn @(UseGpu ? "btn-secondary" : "btn-outline-secondary") btn-sm" @onclick="() => SetBackend(true)">GPU</button>
                 </div>
+                <button class="btn btn-sm btn-outline-light" @onclick="ToggleDarkMode" title="Toggle dark mode">
+                    @(darkMode ? "☀️" : "🌙")
+                </button>
                 <a href="https://github.com/mono/SkiaSharp" target="_blank">GitHub</a>
             </div>
         </div>
@@ -25,9 +29,18 @@
 @code {
     public bool UseGpu { get; set; } = true;
     public EventCallback BackendChanged => EventCallback.Factory.Create(this, () => { });
+    private static bool darkMode = false;
 
     private void SetBackend(bool gpu)
     {
         UseGpu = gpu;
+    }
+
+    private async Task ToggleDarkMode()
+    {
+        darkMode = !darkMode;
+        await JS.InvokeVoidAsync("eval",
+            darkMode ? "document.documentElement.setAttribute('data-theme','dark')"
+                     : "document.documentElement.removeAttribute('data-theme')");
     }
 }
