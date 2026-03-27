@@ -22,11 +22,9 @@ $maxRetries = 30
 for ($i = 0; $i -lt $maxRetries; $i++) {
     Start-Sleep -Seconds 1
     try {
-        $response = Invoke-WebRequest -Uri "http://localhost:$port/api/images" -Method Head -ErrorAction Stop
-        if ($response.StatusCode -eq 200) {
-            Write-Host "Server is ready!"
-            break
-        }
+        Invoke-WebRequest -Uri "http://localhost:$port/health" -ErrorAction Stop | Out-Null
+        Write-Host "Server is ready!"
+        break
     } catch {
         Write-Host "Waiting for server... ($($i + 1)/$maxRetries)"
     }
