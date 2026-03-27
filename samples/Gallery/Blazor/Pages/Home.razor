@@ -41,28 +41,20 @@
             var i = index++;
             var categoryColor = GetCategoryColor(sample.Category);
             var icon = GetSampleIcon(sample.Title);
+            var supported = sample.IsSupported;
+            var isDoc = sample is DocumentSampleBase;
+            var isAnimated = sample is CanvasSampleBase cs && cs.IsAnimated;
             <div class="col">
-                <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
-                    <div class="card h-100 sample-card" style="border-left-color: @categoryColor; background-color: @(categoryColor)08; animation-delay: @(i * 40)ms;">
-                        <div class="card-body py-3 px-3">
-                            <div class="d-flex align-items-start gap-2">
-                                <i class="bi @icon" style="font-size:1.4rem;color:@categoryColor;flex-shrink:0;margin-top:1px;"></i>
-                                <div>
-                                    <h6 class="card-title mb-1">@sample.Title</h6>
-                                    @if (!string.IsNullOrWhiteSpace(sample.Description))
-                                    {
-                                        <p class="card-text text-muted small mb-0" style="line-height: 1.4;">
-                                            @TruncateDescription(sample.Description)
-                                        </p>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent border-0 py-2 px-3">
-                            <span class="category-badge" style="background-color: @(categoryColor)1A; color: @categoryColor;">@sample.Category</span>
-                        </div>
-                    </div>
-                </a>
+                @if (supported)
+                {
+                    <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
+                        @RenderCard(sample, categoryColor, icon, i, isDoc, isAnimated, true)
+                    </a>
+                }
+                else
+                {
+                    @RenderCard(sample, categoryColor, icon, i, isDoc, isAnimated, false)
+                }
             </div>
         }
     </div>
@@ -91,11 +83,51 @@
 
     private IEnumerable<SampleBase> GetFilteredSamples()
     {
-        return SampleService.GetSamples()
+        return SampleService.GetAllSamples()
             .Where(s => s.MatchesFilter(searchText))
             .Where(s => selectedCategories.Contains(s.Category))
-            .OrderBy(s => s.Title);
+            .OrderBy(s => s.IsSupported ? 0 : 1)
+            .ThenBy(s => s.Title);
     }
+
+    private RenderFragment RenderCard(SampleBase sample, string categoryColor, string icon, int i, bool isDoc, bool isAnimated, bool supported) => __builder =>
+    {
+        <div class="card h-100 sample-card @(!supported ? "sample-card-disabled" : "")" style="border-left-color: @categoryColor; background-color: @(categoryColor)08; animation-delay: @(i * 40)ms;">
+            <div class="card-body py-3 px-3">
+                <div class="d-flex align-items-start gap-2">
+                    <i class="bi @icon" style="font-size:1.4rem;color:@(supported ? categoryColor : "#bbb");flex-shrink:0;margin-top:1px;"></i>
+                    <div>
+                        <h6 class="card-title mb-1">@sample.Title</h6>
+                        @if (!string.IsNullOrWhiteSpace(sample.Description))
+                        {
+                            <p class="card-text text-muted small mb-0" style="line-height: 1.4;">
+                                @TruncateDescription(sample.Description)
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 py-2 px-3 d-flex gap-1 flex-wrap align-items-center">
+                <span class="category-badge" style="background-color: @(categoryColor)1A; color: @categoryColor;">@sample.Category</span>
+                @if (isDoc)
+                {
+                    <span class="type-badge type-doc">📄 Document</span>
+                }
+                else if (isAnimated)
+                {
+                    <span class="type-badge type-animated">🎬 Animated</span>
+                }
+                else
+                {
+                    <span class="type-badge type-canvas">🖼️ Canvas</span>
+                }
+                @if (!supported)
+                {
+                    <span class="type-badge type-unsupported">🚫 Unavailable</span>
+                }
+            </div>
+        </div>
+    };
 
     private void ToggleCategory(string category)
     {

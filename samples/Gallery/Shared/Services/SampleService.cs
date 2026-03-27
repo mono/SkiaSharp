@@ -5,17 +5,19 @@ namespace SkiaSharpSample.Services;
 public class SampleService 
 {
 	private readonly SampleBase[] samples;
+	private readonly SampleBase[] allSamples;
 
 	public SampleService()
 	{
 		var samplesBase = typeof(SampleBase).GetTypeInfo();
 		var assembly = samplesBase.Assembly;
 
-		samples = assembly.DefinedTypes
+		allSamples = assembly.DefinedTypes
 			.Where(t => samplesBase.IsAssignableFrom(t) && !t.IsAbstract)
 			.Select(t => (SampleBase)Activator.CreateInstance(t.AsType())!)
-			.Where(s => s.IsSupported)
 			.ToArray();
+
+		samples = allSamples.Where(s => s.IsSupported).ToArray();
 
 		SkiaSharpVersion = GetAssemblyVersion<SkiaSharp.SKSurface>();
 		HarfBuzzSharpVersion = GetAssemblyVersion<HarfBuzzSharp.Blob>();
@@ -26,6 +28,8 @@ public class SampleService
 	public string HarfBuzzSharpVersion { get; }
 
 	public IEnumerable<SampleBase> GetSamples() => samples;
+
+	public IEnumerable<SampleBase> GetAllSamples() => allSamples;
 
 	public SampleBase? GetSample(string title) =>
 		samples.FirstOrDefault(s => s.Title == title);
