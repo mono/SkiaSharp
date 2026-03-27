@@ -591,12 +591,19 @@ Task ("samples-run")
     }
 
     // build dotnet samples
+    var failedSamples = new List<(string name, string error)> ();
+
     foreach (var sln in samplesToBuild) {
         if (!FileExists (sln))
             continue;
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         Information ($"Building sample {sln} ({platform})...");
-        RunDotNetBuild (sln);
+        try {
+            RunDotNetBuild (sln);
+        } catch (Exception ex) {
+            Error ($"FAILED: {sln}");
+            failedSamples.Add ((sln.FullPath, ex.Message));
+        }
         CleanDir (sln.GetDirectory ().FullPath);
     }
 
@@ -608,10 +615,27 @@ Task ("samples-run")
         if (!dockerAvailable)
             continue;
         Information ($"Running Docker sample: {run}");
-        RunProcess ("pwsh", new ProcessSettings {
-            Arguments = run.FullPath,
-            WorkingDirectory = run.GetDirectory (),
-        });
+        try {
+            RunProcess ("pwsh", new ProcessSettings {
+                Arguments = run.FullPath,
+                WorkingDirectory = run.GetDirectory (),
+            });
+        } catch (Exception ex) {
+            Error ($"FAILED: {run}");
+            failedSamples.Add ((run.FullPath, ex.Message));
+        }
+    }
+
+    // report results
+    if (failedSamples.Count > 0) {
+        Information ("");
+        Error ($"{failedSamples.Count} sample(s) failed:");
+        foreach (var (name, error) in failedSamples) {
+            Error ($"    ✗ {name}");
+        }
+        throw new Exception ($"{failedSamples.Count} sample(s) failed to build.");
+    } else {
+        Information ("All samples built successfully.");
     }
 
     CleanDir ("./output/samples/");
