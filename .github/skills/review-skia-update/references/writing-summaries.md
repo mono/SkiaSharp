@@ -43,7 +43,7 @@ Note what the dependency is and what changed:
 
 Example: `"libpng bumped from 1.6.40 to 1.6.43 — includes fixes for CVE-2024-31497"`
 
-### ⚠️ Verifying Removed Patches (MANDATORY)
+### Verifying Removed Patches
 
 For every **removed** item in `upstreamIntegrity`, you MUST verify WHY the patch was
 dropped. The orchestrator leaves the working tree checked out with upstream refs fetched,
