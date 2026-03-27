@@ -42,9 +42,4 @@ Write-Host "Saved to $outputFile"
 Write-Host "Stopping container..."
 docker stop $containerId | Out-Null
 
-# Open the image
-if ($IsMacOS) { open $outputFile }
-elseif ($IsLinux) { xdg-open $outputFile 2>$null }
-else { Start-Process $outputFile }
-
 Write-Host "Done."

@@ -19,9 +19,6 @@ docker run --rm -v "${pwd}:/tmp/output" $tag $Text --output /tmp/output/output.p
 $outputFile = Join-Path $pwd "output.png"
 if (Test-Path $outputFile) {
     Write-Host "Saved to $outputFile"
-    if ($IsMacOS) { open $outputFile }
-    elseif ($IsLinux) { xdg-open $outputFile 2>$null }
-    else { Start-Process $outputFile }
 } else {
     Write-Error "Failed to generate image."
 }
