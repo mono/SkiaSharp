@@ -50,6 +50,25 @@
         "patchDiff": {
           "type": "string",
           "description": "Diff between old and new patches (for changed files). Shows exactly what changed between the two fork versions."
+        },
+        "relatedFiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path"],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Path of the related file (relative to skia repo root, or SkiaSharp repo root for companion PR files)."
+              },
+              "relationship": {
+                "type": "string",
+                "description": "Short description of the relationship (e.g., 'replaced by', 'moved to', 'depends on', 'C# wrapper')."
+              }
+            }
+          },
+          "description": "Other files related to this change. Enables cross-linking in the viewer so reviewers can navigate between related upstream, interop, and companion PR files."
         }
       }
     },
