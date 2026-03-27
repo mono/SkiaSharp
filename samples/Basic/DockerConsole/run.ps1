@@ -14,7 +14,7 @@ Write-Host "Building $tag from $dockerfile..."
 docker build --tag $tag --file $dockerfile .
 
 Write-Host "Running $tag..."
-docker run --rm -v "${pwd}:/app/output" $tag $Text --output /app/output/output.png
+docker run --rm -v "${pwd}:/tmp/output" $tag $Text --output /tmp/output/output.png
 
 $outputFile = Join-Path $pwd "output.png"
 if (Test-Path $outputFile) {
