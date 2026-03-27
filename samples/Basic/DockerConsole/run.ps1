@@ -9,16 +9,17 @@ if (-not $Platform) {
 
 $dockerfile = "$Platform.Dockerfile"
 $tag = "skiasharpsample/console"
-$outputDir = Join-Path $PSScriptRoot "output"
-$outputFile = Join-Path $outputDir "output.png"
-
-New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
+$outputFile = Join-Path $PSScriptRoot "output.png"
 
 Write-Host "Building $tag from $dockerfile..."
 docker build --tag $tag --file $dockerfile .
 
 Write-Host "Running $tag..."
-docker run --rm -v "${outputDir}:/output" $tag $Text --output /output/output.png
+if ($Platform -eq "windows") {
+    docker run --rm -v "${PSScriptRoot}:C:\work" $tag $Text --output C:\work\output.png
+} else {
+    docker run --rm -v "${PSScriptRoot}:/work" $tag $Text --output /work/output.png
+}
 
 if (Test-Path $outputFile) {
     Write-Host "Saved to $outputFile"
