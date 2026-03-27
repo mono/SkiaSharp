@@ -26,13 +26,13 @@ public class NoiseGeneratorSample : InteractiveSampleBase
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("type", "Noise Type", NoiseTypes, noiseType),
+		new ToggleControl("tiled", "Tile Mode", tiled),
 		new SliderControl("freqX", "Frequency X", 0.001f, 0.100f, freqX, 0.001f),
 		new SliderControl("freqY", "Frequency Y", 0.001f, 0.100f, freqY, 0.001f),
 		new SliderControl("octaves", "Octaves", 1, 8, octaves, 1),
 		new SliderControl("seed", "Seed", 0, 100, seed, 1),
 		new SliderControl("offsetX", "Offset X", -500, 500, offsetX, 10),
 		new SliderControl("offsetY", "Offset Y", -500, 500, offsetY, 10),
-		new ToggleControl("tiled", "Tile Mode", tiled),
 	];
 
 	protected override void OnControlChanged(string id, object value)

@@ -25,8 +25,8 @@ public class GradientSample : InteractiveSampleBase
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("gradientType", "Gradient Type", GradientTypes, gradientType),
-		new SliderControl("angle", "Angle", 0, 360, angle, 1),
 		new PickerControl("tileMode", "Tile Mode", TileModes, tileMode),
+		new SliderControl("angle", "Angle", 0, 360, angle, 1),
 	];
 
 	protected override void OnControlChanged(string id, object value)

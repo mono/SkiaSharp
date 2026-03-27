@@ -29,15 +29,15 @@ public class ThreeDSample : InteractiveSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
+		new PickerControl("projection", "Projection", Projections, projectionIndex),
+		new SliderControl("perspDepth", "Camera Distance", 100, 2000, perspDepth, Description: "Distance from virtual camera. Lower values create stronger perspective."),
 		new SliderControl("rotateX", "Rotate X", -180, 180, rotateX),
 		new SliderControl("rotateY", "Rotate Y", -180, 180, rotateY),
 		new SliderControl("rotateZ", "Rotate Z", -180, 180, rotateZ),
+		new SliderControl("scale", "Scale", 0.2f, 3, scale, 0.1f),
 		new SliderControl("translateX", "Translate X", -300, 300, translateX),
 		new SliderControl("translateY", "Translate Y", -300, 300, translateY),
 		new SliderControl("translateZ", "Translate Z", -500, 500, translateZ, Description: "Moves the object toward or away from the camera."),
-		new SliderControl("scale", "Scale", 0.2f, 3, scale, 0.1f),
-		new PickerControl("projection", "Projection", Projections, projectionIndex),
-		new SliderControl("perspDepth", "Camera Distance", 100, 2000, perspDepth, Description: "Distance from virtual camera. Lower values create stronger perspective."),
 		new ToggleControl("showAxes", "Show Axes", showAxes),
 		new ToggleControl("shadow", "Show Shadow", showShadow),
 	];

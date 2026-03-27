@@ -20,9 +20,9 @@ public class VectorArtSample : InteractiveSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new SliderControl("rotation", "Rotation", 0, 360, _rotation),
-		new SliderControl("scale", "Scale", 0.5f, 2f, _scale, 0.1f),
 		new PickerControl("theme", "Theme", Themes, _themeIndex),
+		new SliderControl("scale", "Scale", 0.5f, 2f, _scale, 0.1f),
+		new SliderControl("rotation", "Rotation", 0, 360, _rotation),
 	];
 
 	protected override void OnControlChanged(string id, object value)

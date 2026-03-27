@@ -21,11 +21,11 @@ public class CanvasTransformsSample : InteractiveSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new SliderControl("translateX", "Translate X", -200, 200, translateX),
-		new SliderControl("translateY", "Translate Y", -200, 200, translateY),
 		new SliderControl("rotate", "Rotate", -180, 180, rotate),
 		new SliderControl("scaleX", "Scale X", 0.1f, 3, scaleX, 0.1f),
 		new SliderControl("scaleY", "Scale Y", 0.1f, 3, scaleY, 0.1f),
+		new SliderControl("translateX", "Translate X", -200, 200, translateX),
+		new SliderControl("translateY", "Translate Y", -200, 200, translateY),
 		new ToggleControl("showGrid", "Show Grid", showGrid),
 	];
 

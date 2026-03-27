@@ -31,11 +31,11 @@ public class TextLabSample : InteractiveSampleBase
 	[
 		new PickerControl("text", "Text", TextOptions, textIndex),
 		new PickerControl("font", "Font", FontOptions, fontIndex),
-		new PickerControl("align", "Alignment", AlignOptions, alignIndex),
 		new SliderControl("textSize", "Text Size", 12, 120, textSize),
+		new PickerControl("align", "Alignment", AlignOptions, alignIndex),
+		new ToggleControl("stroke", "Stroke Only", stroke),
 		new ToggleControl("showBounds", "Show Bounds", showBounds),
 		new ToggleControl("showMetrics", "Show Metrics", showMetrics),
-		new ToggleControl("stroke", "Stroke Only", stroke),
 	];
 
 	protected override void OnControlChanged(string id, object value)

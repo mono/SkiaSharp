@@ -23,9 +23,9 @@ public class PathEffectsLabSample : InteractiveSampleBase
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("effect", "Effect Type", EffectTypes, effectType),
+		new SliderControl("strokeWidth", "Stroke Width", 1, 20, strokeWidth),
 		new SliderControl("interval", "Interval/Length", 1, 50, interval, 1),
 		new SliderControl("phase", "Phase/Deviation", 0, 30, phase, 0.5f),
-		new SliderControl("strokeWidth", "Stroke Width", 1, 20, strokeWidth),
 	];
 
 	protected override void OnControlChanged(string id, object value)

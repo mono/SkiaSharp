@@ -22,8 +22,8 @@ public class ImageDecoderSample : InteractiveSampleBase
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("image", "Image Source", ImageSources, _imageIndex),
-		new ToggleControl("showInfo", "Show Metadata", _showInfo),
 		new ToggleControl("subset", "Decode Subset", _subset),
+		new ToggleControl("showInfo", "Show Metadata", _showInfo),
 	];
 
 	protected override void OnControlChanged(string id, object value)

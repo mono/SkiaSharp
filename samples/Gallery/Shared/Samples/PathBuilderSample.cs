@@ -24,10 +24,10 @@ public class PathBuilderSample : InteractiveSampleBase
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("shape", "Shape", ShapeNames, shapeIndex),
+		new PickerControl("fill", "Fill Rule", FillNames, fillIndex),
 		new ToggleControl("showBounds", "Show Bounds", showBounds),
 		new ToggleControl("showTightBounds", "Show Tight Bounds", showTightBounds),
 		new ToggleControl("showControlPoints", "Show Control Points", showControlPoints),
-		new PickerControl("fill", "Fill Rule", FillNames, fillIndex),
 	];
 
 	protected override void OnControlChanged(string id, object value)

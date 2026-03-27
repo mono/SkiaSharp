@@ -20,8 +20,8 @@ public class VertexMeshSample : InteractiveSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new SliderControl("gridSize", "Grid Size", 2, 8, gridSize, 1),
 		new PickerControl("colorMode", "Color Mode", ColorModes, colorModeIndex),
+		new SliderControl("gridSize", "Grid Size", 2, 8, gridSize, 1),
 		new ToggleControl("wireframe", "Show Wireframe", wireframe),
 	];
 

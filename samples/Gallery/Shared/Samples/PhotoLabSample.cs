@@ -37,6 +37,10 @@ public class PhotoLabSample : InteractiveSampleBase
 		[
 			new PickerControl("preset", "Preset", ColorPresets, colorPreset),
 		], Description: "Apply color transformations like grayscale, sepia, or inversion."),
+		new GroupControl("contrast", "High Contrast", contrastEnabled,
+		[
+			new SliderControl("amount", "Amount", 0, 1, contrastAmount, 0.05f),
+		], Description: "Increase contrast for improved readability."),
 		new GroupControl("blur", "Gaussian Blur", blurEnabled,
 		[
 			new SliderControl("sigma", "Sigma", 0.5f, 30, blurSigma),
@@ -50,10 +54,6 @@ public class PhotoLabSample : InteractiveSampleBase
 		[
 			new SliderControl("zoom", "Zoom", 2, 15, magnifierZoom),
 		], Description: "Lens magnification effect applied to the center of the image."),
-		new GroupControl("contrast", "High Contrast", contrastEnabled,
-		[
-			new SliderControl("amount", "Amount", 0, 1, contrastAmount, 0.05f),
-		], Description: "Increase contrast for improved readability."),
 	];
 
 	protected override void OnControlChanged(string id, object value)

@@ -24,8 +24,8 @@ public class LottiePlayerSample : InteractiveSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new ToggleControl("playing", "Playing", _playing),
 		new SliderControl("speed", "Speed", 0.25f, 4f, _speed, 0.25f),
+		new ToggleControl("playing", "Playing", _playing),
 	];
 
 	protected override void OnControlChanged(string id, object value)

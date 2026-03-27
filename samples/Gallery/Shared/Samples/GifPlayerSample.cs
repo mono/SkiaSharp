@@ -26,8 +26,8 @@ public class GifPlayerSample : InteractiveSampleBase
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
-		new ToggleControl("playing", "Playing", playing),
 		new SliderControl("speed", "Speed", 0.25f, 4, speed, 0.25f),
+		new ToggleControl("playing", "Playing", playing),
 	];
 
 	protected override void OnControlChanged(string id, object value)

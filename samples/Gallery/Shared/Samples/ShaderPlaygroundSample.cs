@@ -135,9 +135,9 @@ half4 main(float2 fragCoord) {
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("shader", "Shader Preset", ShaderNames, shaderIndex),
-		new SliderControl("speed", "Animation Speed", 0, 3, speed, 0.1f),
 		new SliderControl("param1", "Parameter 1", 0, 20, param1, Description: "Primary shader parameter — controls frequency or scale."),
 		new SliderControl("param2", "Parameter 2", 0, 20, param2, Description: "Secondary shader parameter — controls intensity or speed."),
+		new SliderControl("speed", "Animation Speed", 0, 3, speed, 0.1f),
 	];
 
 	protected override void OnControlChanged(string id, object value)
