@@ -541,6 +541,18 @@ Task ("samples")
         Information ("    " + sln);
     }
 
+    // copy NuGet packages next to Dockerfile files for Docker builds
+    var dockerfiles = GetFiles ($"./output/{actualSamples}/**/*Dockerfile");
+    if (!string.IsNullOrEmpty (SAMPLE_FILTER)) {
+        dockerfiles = new FilePathCollection (
+            dockerfiles.Where (d => d.FullPath.Contains (SAMPLE_FILTER)));
+    }
+    foreach (var dockerfile in dockerfiles) {
+        var packagesDir = dockerfile.GetDirectory ().Combine ("packages");
+        EnsureDirectoryExists (packagesDir);
+        CopyFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg", packagesDir);
+    }
+
     // run Docker samples via run.ps1
     var dockerRuns = GetFiles ($"./output/{actualSamples}/**/run.ps1")
         .Where (r => string.IsNullOrEmpty (SAMPLE_FILTER) || r.FullPath.Contains (SAMPLE_FILTER))

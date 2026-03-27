@@ -1,11 +1,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
-COPY SkiaSharpSample/ .
+COPY nuget.config .
+COPY packages/ packages/
+COPY SkiaSharpSample/ SkiaSharpSample/
 
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "arm64" ]; then RID=linux-arm64; else RID=linux-x64; fi && \
-    dotnet publish -c Release -r $RID -o /app/out
+    dotnet publish SkiaSharpSample/ -c Release -r $RID -o /app/out
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0
 WORKDIR /app
