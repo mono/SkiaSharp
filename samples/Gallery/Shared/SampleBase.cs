@@ -12,7 +12,6 @@ public abstract class SampleBase
 
 	public virtual string Category { get; } = SampleCategories.General;
 
-	public virtual bool IsAnimated => false;
 
 	public virtual bool IsSupported => true;
 

@@ -9,6 +9,8 @@ public abstract class CanvasSampleBase : SampleBase
 {
 	private CancellationTokenSource? cts;
 
+	public virtual bool IsAnimated => false;
+
 	public event EventHandler? RefreshRequested;
 
 	protected void Refresh()
