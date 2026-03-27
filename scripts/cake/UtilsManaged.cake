@@ -159,8 +159,10 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     }
 }
 
-async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
+async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory, string feedUrl = null)
 {
+    feedUrl = feedUrl ?? CI_ARTIFACTS_FEED_URL;
+
     var version = "0.0.0-";
     if (!string.IsNullOrEmpty(PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith("pr."))
         version += PREVIEW_LABEL.ToLower();
@@ -174,13 +176,13 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = true,
-        SourceUrl = CI_ARTIFACTS_FEED_URL,
+        SourceUrl = feedUrl,
         VersionRange = VersionRange.Parse(version),
     };
 
     var latestVersion = await NuGetVersions.GetLatestAsync(id, filter);
 
-    var comparer = new NuGetDiff(CI_ARTIFACTS_FEED_URL);
+    var comparer = new NuGetDiff(feedUrl);
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
     // Track progress dynamically - queue grows as dependencies are discovered
