@@ -565,6 +565,20 @@ Task ("samples-run")
     }
 
     // log the plan
+    // check if Docker is available
+    var dockerAvailable = false;
+    try {
+        RunProcess ("docker", new ProcessSettings {
+            Arguments = "info",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            Silent = true,
+        });
+        dockerAvailable = true;
+    } catch {
+        Warning ("Docker is not available. Docker samples will be skipped.");
+    }
+
     Information ("Sample plan:");
     foreach (var sln in samplesToBuild) {
         Information ($"    BUILD       {sln}");
@@ -573,7 +587,7 @@ Task ("samples-run")
         Information ($"    SKIP        {sln} ({reason})");
     }
     foreach (var run in dockerRuns) {
-        Information ($"    DOCKER      {run}");
+        Information ($"    {(dockerAvailable ? "DOCKER" : "SKIP  ")}      {run}{(dockerAvailable ? "" : " (Docker not available)")}");
     }
 
     // build dotnet samples
@@ -587,7 +601,12 @@ Task ("samples-run")
     }
 
     // build and run Docker samples
+    if (!dockerAvailable) {
+        Information ("Skipping Docker samples (Docker not available).");
+    }
     foreach (var run in dockerRuns) {
+        if (!dockerAvailable)
+            continue;
         Information ($"Running Docker sample: {run}");
         RunProcess ("pwsh", new ProcessSettings {
             Arguments = run.FullPath,
