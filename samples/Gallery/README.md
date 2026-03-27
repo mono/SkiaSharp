@@ -21,9 +21,9 @@ An interactive sample gallery showcasing SkiaSharp's 2D graphics capabilities, b
 |---|---|
 | ![Gradient](screenshots/gradient-sample.png) | ![3D Transforms](screenshots/3d-transforms.png) |
 
-| Dark Mode |
-|---|
-| ![Dark Mode](screenshots/home-dark.png) |
+| Shader Playground | PDF Composer |
+|---|---|
+| ![Shader Playground](screenshots/shader-playground.png) | ![PDF Composer](screenshots/pdf-composer.png) |
 
 ## Running
 
