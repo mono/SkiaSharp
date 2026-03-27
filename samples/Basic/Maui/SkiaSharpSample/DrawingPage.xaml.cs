@@ -40,7 +40,7 @@ public partial class DrawingPage : ContentPage
 			selectedSwatch = firstBtn;
 	}
 
-	void OnThemeChanged(object sender, AppThemeChangedEventArgs e)
+	void OnThemeChanged(object? sender, AppThemeChangedEventArgs e)
 	{
 		// Swap black/white when theme changes
 		if (currentColor == SKColors.Black && IsDarkMode)
