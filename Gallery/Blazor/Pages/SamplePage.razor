@@ -1,0 +1,327 @@
+@page "/sample/{sampleTitle}"
+@implements IDisposable
+@inject IJSRuntime JS
+@inject SkiaSharpSample.Services.SampleService SampleService
+
+<PageTitle>@(sample?.Title ?? "Sample") — SkiaSharp Gallery</PageTitle>
+
+@if (sample is null)
+{
+    <div class="alert alert-warning">
+        Sample "<strong>@SampleTitle</strong>" was not found.
+        <a href="">Return to home</a>
+    </div>
+}
+else if (IsDocument)
+{
+    <div class="sample-page">
+        <div class="sample-header">
+            <a href="" class="text-decoration-none small d-inline-block">&larr; Back to Gallery</a>
+            <h2>@sample.Title</h2>
+            @if (!string.IsNullOrWhiteSpace(sample.Description))
+            {
+                <p class="text-muted mb-1">@sample.Description</p>
+            }
+        </div>
+        <div class="sample-body">
+            <div class="sample-canvas">
+                @if (!string.IsNullOrEmpty(documentBlobUrl))
+                {
+                    <div class="border rounded" style="width:100%;height:100%;">
+                        <iframe src="@documentBlobUrl" style="width:100%;height:100%;border:none;" />
+                    </div>
+                }
+                else
+                {
+                    <div class="border rounded d-flex align-items-center justify-content-center" style="width:100%;height:100%;background:#f8f8f8;">
+                        <span class="text-muted">Generating document...</span>
+                    </div>
+                }
+            </div>
+
+            @if (HasControls)
+            {
+                @if (!isPinned && showControls)
+                {
+                    <div class="sidebar-backdrop" @onclick="() => showControls = false"></div>
+                }
+
+                <div class="sample-sidebar @(!isPinned && !showControls ? "collapsed" : "")"
+                     @onclick="OnSidebarClick"
+                     @onclick:stopPropagation="true">
+                    @if (!isPinned && !showControls)
+                    {
+                        <span class="sidebar-label">Controls</span>
+                    }
+                    else
+                    {
+                        <div class="sidebar-content" @onclick:stopPropagation="true">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="fw-bold text-uppercase" style="letter-spacing:0.05em;color:#666;">Controls</small>
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="TogglePin" @onclick:stopPropagation="true">
+                                    @(isPinned ? "◀" : "▶")
+                                </button>
+                            </div>
+                            <ControlPanel Controls="@sample!.Controls"
+                                          OnChanged="@OnControlChanged" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="sample-debug small text-muted px-2" style="flex-shrink:0;font-size:0.7rem;opacity:0.6;">
+        Canvas: @canvasInfoWidth×@canvasInfoHeight CSS px | @canvasRawWidth×@canvasRawHeight device px | DPI: @canvasDpi
+    </div>
+}
+else
+{
+    <div class="sample-page">
+        <div class="sample-header">
+            <a href="" class="text-decoration-none small d-inline-block">&larr; Back to Gallery</a>
+            <h2>@sample.Title</h2>
+            @if (!string.IsNullOrWhiteSpace(sample.Description))
+            {
+                <p class="text-muted mb-1">@sample.Description</p>
+            }
+        </div>
+        <div class="sample-body">
+            <div class="sample-canvas">
+                <div class="canvas-wrapper border rounded">
+                    @if (UseGpu)
+                    {
+                        <SKGLView @ref="glView"
+                                  OnPaintSurface="OnPaintGL"
+                                  EnableRenderLoop="@(sample is CanvasSampleBase cs && cs.IsAnimated)"
+                                  IgnorePixelScaling="true"
+                                  style="width:100%;height:100%;display:block;" />
+                    }
+                    else
+                    {
+                        <SKCanvasView @ref="canvasView"
+                                      OnPaintSurface="OnPaintRaster"
+                                      IgnorePixelScaling="true"
+                                      style="width:100%;height:100%;display:block;" />
+                    }
+                </div>
+            </div>
+
+            @if (HasControls)
+            {
+                @if (!isPinned && showControls)
+                {
+                    <div class="sidebar-backdrop" @onclick="() => showControls = false"></div>
+                }
+
+                <div class="sample-sidebar @(!isPinned && !showControls ? "collapsed" : "")"
+                     @onclick="OnSidebarClick"
+                     @onclick:stopPropagation="true">
+                    @if (!isPinned && !showControls)
+                    {
+                        <span class="sidebar-label">Controls</span>
+                    }
+                    else
+                    {
+                        <div class="sidebar-content" @onclick:stopPropagation="true">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="fw-bold text-uppercase" style="letter-spacing:0.05em;color:#666;">Controls</small>
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="TogglePin" @onclick:stopPropagation="true">
+                                    @(isPinned ? "◀" : "▶")
+                                </button>
+                            </div>
+                            <ControlPanel Controls="@sample.Controls"
+                                          OnChanged="@OnControlChanged" />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="sample-debug small text-muted px-2" style="flex-shrink:0;font-size:0.7rem;opacity:0.6;">
+        Canvas: @canvasInfoWidth×@canvasInfoHeight CSS px | @canvasRawWidth×@canvasRawHeight device px | DPI: @canvasDpi
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? SampleTitle { get; set; }
+
+    [CascadingParameter(Name = "UseGpu")]
+    public bool UseGpu { get; set; }
+
+    private SampleBase? sample;
+    private SKCanvasView? canvasView;
+    private SKGLView? glView;
+    private bool previousUseGpu;
+    private string? documentBlobUrl;
+
+    private int canvasInfoWidth, canvasInfoHeight;
+    private int canvasRawWidth, canvasRawHeight;
+    private string canvasDpi = "?";
+
+    // Computed helpers for template branching
+    private bool IsDocument => sample is DocumentSampleBase;
+    private bool HasControls => sample is { Controls.Count: > 0 };
+
+    // Control panel layout state
+    private bool isPinned = true;
+    private bool showControls = true;
+
+    private void TogglePin()
+    {
+        isPinned = !isPinned;
+        if (isPinned)
+            showControls = true;
+    }
+
+    private void OnSidebarClick()
+    {
+        if (!isPinned && !showControls)
+            showControls = true;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Sample changed
+        var title = Uri.UnescapeDataString(SampleTitle ?? string.Empty);
+        var newSample = SampleService.GetSample(title);
+        if (newSample != sample || previousUseGpu != UseGpu)
+        {
+            if (newSample != sample)
+            {
+                DisposeSample();
+                sample = newSample;
+
+                if (sample is not null)
+                {
+                    if (sample is CanvasSampleBase canvasSample)
+                        canvasSample.RefreshRequested += OnRefreshRequested;
+                    await sample.InitAsync();
+                    GenerateDocumentIfNeeded();
+                }
+            }
+
+            previousUseGpu = UseGpu;
+
+            // Force re-render then invalidate the newly mounted view
+            await InvokeAsync(async () =>
+            {
+                StateHasChanged();
+                await Task.Yield();
+                canvasView?.Invalidate();
+                glView?.Invalidate();
+            });
+        }
+    }
+
+    private void OnRefreshRequested(object? sender, EventArgs e)
+    {
+        canvasView?.Invalidate();
+        glView?.Invalidate();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || glView is not null)
+        {
+            await Task.Yield();
+            glView?.Invalidate();
+            canvasView?.Invalidate();
+        }
+    }
+
+    private void OnPaintRaster(SKPaintSurfaceEventArgs e)
+    {
+        canvasInfoWidth = e.Info.Width;
+        canvasInfoHeight = e.Info.Height;
+        canvasRawWidth = e.RawInfo.Width;
+        canvasRawHeight = e.RawInfo.Height;
+        canvasDpi = canvasInfoWidth > 0 ? $"{(float)canvasRawWidth / canvasInfoWidth:F2}x" : "?";
+
+        e.Surface.Canvas.Clear(SKColors.White);
+        if (sample is CanvasSampleBase canvasSample)
+            canvasSample.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+        else if (sample is DocumentSampleBase docSample)
+            docSample.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+        UpdateDocumentPreview();
+    }
+
+    private void OnPaintGL(SKPaintGLSurfaceEventArgs e)
+    {
+        canvasInfoWidth = e.Info.Width;
+        canvasInfoHeight = e.Info.Height;
+        canvasRawWidth = e.RawInfo.Width;
+        canvasRawHeight = e.RawInfo.Height;
+        canvasDpi = canvasInfoWidth > 0 ? $"{(float)canvasRawWidth / canvasInfoWidth:F2}x" : "GPU";
+
+        e.Surface.Canvas.Clear(SKColors.White);
+        if (sample is CanvasSampleBase canvasSample)
+            canvasSample.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+        else if (sample is DocumentSampleBase docSample)
+            docSample.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+        UpdateDocumentPreview();
+    }
+
+    private void UpdateDocumentPreview()
+    {
+        if (sample is not DocumentSampleBase doc || doc.DocumentBytes is not { Length: > 0 })
+            return;
+        if (!string.IsNullOrEmpty(documentBlobUrl))
+            return; // already created
+
+        var mime = doc.DocumentMimeType ?? "application/pdf";
+        var base64 = Convert.ToBase64String(doc.DocumentBytes);
+        InvokeAsync(async () =>
+        {
+            documentBlobUrl = await JS.InvokeAsync<string>(
+                "eval",
+                $"(() => {{ var b = atob('{base64}'); var a = new Uint8Array(b.length); for(var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return URL.createObjectURL(new Blob([a], {{type:'{mime}'}})); }})()");
+            StateHasChanged();
+        });
+    }
+
+    private void DisposeSample()
+    {
+        if (sample is not null)
+        {
+            if (sample is CanvasSampleBase canvasSample)
+                canvasSample.RefreshRequested -= OnRefreshRequested;
+            sample.Destroy();
+            sample = null;
+        }
+
+        if (!string.IsNullOrEmpty(documentBlobUrl))
+        {
+            _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{documentBlobUrl}')");
+            documentBlobUrl = null;
+        }
+    }
+
+    private void OnControlChanged((string id, object value) args)
+    {
+        sample?.UpdateControl(args.id, args.value);
+        GenerateDocumentIfNeeded();
+    }
+
+    private void GenerateDocumentIfNeeded()
+    {
+        if (sample is DocumentSampleBase doc)
+        {
+            // Clear old blob
+            if (!string.IsNullOrEmpty(documentBlobUrl))
+            {
+                _ = JS.InvokeVoidAsync("eval", $"URL.revokeObjectURL('{documentBlobUrl}')");
+                documentBlobUrl = null;
+            }
+
+            // Generate the document (calls OnGenerateDocument which populates DocumentBytes)
+            using var tempSurface = SKSurface.Create(new SKImageInfo(1, 1));
+            doc.DrawSample(tempSurface.Canvas, 1, 1);
+
+            // Create blob URL for the viewer
+            UpdateDocumentPreview();
+        }
+    }
+
+    public void Dispose() => DisposeSample();
+}
