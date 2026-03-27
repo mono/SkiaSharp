@@ -1,5 +1,6 @@
 param (
-    [string] $Platform = ""
+    [string] $Platform = "",
+    [string] $Text = "SkiaSharp"
 )
 
 if (-not $Platform) {
@@ -9,6 +10,10 @@ if (-not $Platform) {
 $dockerfile = "$Platform.Dockerfile"
 $tag = "skiasharpsample/webapi"
 $port = 8080
+$outputDir = Join-Path $PSScriptRoot "output"
+$outputFile = Join-Path $outputDir "output.png"
+
+New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
 
 Write-Host "Building $tag from $dockerfile..."
 docker build --tag $tag --file $dockerfile .
@@ -31,11 +36,18 @@ for ($i = 0; $i -lt $maxRetries; $i++) {
 }
 
 # Fetch and save the image
-Write-Host "Fetching image from http://localhost:$port/api/images ..."
-Invoke-WebRequest -Uri "http://localhost:$port/api/images" -OutFile "output.png"
-Write-Host "Saved to output.png"
+$uri = "http://localhost:$port/api/images/$([uri]::EscapeDataString($Text))"
+Write-Host "Fetching image from $uri ..."
+Invoke-WebRequest -Uri $uri -OutFile $outputFile
+Write-Host "Saved to $outputFile"
 
 # Stop the container
 Write-Host "Stopping container..."
 docker stop $containerId | Out-Null
+
+# Open the image
+if ($IsMacOS) { open $outputFile }
+elseif ($IsLinux) { xdg-open $outputFile 2>$null }
+else { Start-Process $outputFile }
+
 Write-Host "Done."
