@@ -92,6 +92,35 @@ void CreateSamplesDirectory(DirectoryPath samplesDirPath, DirectoryPath outputDi
             // save the solution
             EnsureDirectoryExists(dest.GetDirectory());
             FileWriteLines(dest, lines.ToArray());
+        } else if (ext.Equals(".slnx", StringComparison.OrdinalIgnoreCase)) {
+            var xdoc = XDocument.Load(file.FullPath);
+
+            // remove projects that aren't in the samples directory
+            var projectElements = xdoc.Descendants()
+                .Where(e => e.Name.LocalName == "Project" && e.Attribute("Path") != null)
+                .ToArray();
+            foreach (var projElement in projectElements) {
+                var relProjectPath = (FilePath) projElement.Attribute("Path").Value;
+                var absProjectPath = GetFullPath(file, relProjectPath);
+                var relSamplesPath = samplesDirPath.GetRelativePath(absProjectPath);
+                if (!relSamplesPath.FullPath.StartsWith(".."))
+                    continue;
+
+                Debug($"Removing the project '{relProjectPath}' for solution '{rel}'.");
+                projElement.Remove();
+            }
+
+            // remove empty folders
+            var emptyFolders = xdoc.Descendants()
+                .Where(e => e.Name.LocalName == "Folder" && !e.HasElements)
+                .ToArray();
+            foreach (var folder in emptyFolders) {
+                folder.Remove();
+            }
+
+            // save the solution
+            EnsureDirectoryExists(dest.GetDirectory());
+            xdoc.Save(dest.FullPath);
         } else if (ext.Equals(".csproj", StringComparison.OrdinalIgnoreCase)) {
             var xdoc = XDocument.Load(file.FullPath);
 

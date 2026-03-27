@@ -1,0 +1,147 @@
+﻿@page "/"
+@using SkiaSharpSample.Services
+@inject SampleService SampleService
+
+<PageTitle>SkiaSharp Gallery</PageTitle>
+
+<div class="home-container">
+    <div class="hero-section">
+        <div class="hero-accent"></div>
+        <h1 class="hero-title">SkiaSharp Gallery</h1>
+        <p class="hero-subtitle">Interactive demos showcasing SkiaSharp's 2D graphics capabilities. Built with Blazor WebAssembly.</p>
+    </div>
+
+    <div class="d-flex gap-2 mb-3 align-items-center flex-wrap">
+        <div class="flex-grow-1">
+            <input class="form-control search-input" type="search" placeholder="Search samples..."
+                   @bind="searchText" @bind:event="oninput" />
+        </div>
+        <div class="d-flex flex-wrap gap-1 align-items-center">
+            @foreach (var cat in allCategories)
+            {
+                var color = GetCategoryColor(cat);
+                var active = selectedCategories.Contains(cat);
+                <button class="btn btn-sm filter-chip @(active ? "active" : "")"
+                        style="--chip-color: @color;"
+                        @onclick="() => ToggleCategory(cat)">
+                    <span class="chip-dot" style="background-color: @color;"></span>
+                    @cat
+                </button>
+            }
+            <button class="btn btn-sm btn-link text-muted p-0 ms-1" @onclick="ToggleAll" style="font-size:0.75rem;">
+                @(selectedCategories.Count == allCategories.Length ? "Clear" : "All")
+            </button>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 g-3 mb-4">
+        @{ var index = 0; }
+        @foreach (var sample in GetFilteredSamples())
+        {
+            var i = index++;
+            var categoryColor = GetCategoryColor(sample.Category);
+            var icon = GetSampleIcon(sample.Title);
+            var supported = sample.IsSupported;
+            <div class="col">
+                @if (supported)
+                {
+                    <a href="sample/@Uri.EscapeDataString(sample.Title)" class="text-decoration-none">
+                        <SampleCard Sample="sample" CategoryColor="@categoryColor" Icon="@icon" Index="i" Supported="true" />
+                    </a>
+                }
+                else
+                {
+                    <SampleCard Sample="sample" CategoryColor="@categoryColor" Icon="@icon" Index="i" Supported="false" />
+                }
+            </div>
+        }
+    </div>
+
+    <hr class="mt-4" />
+    <p class="text-muted small">
+        SkiaSharp: <strong>@SampleService.SkiaSharpVersion</strong> &nbsp;|&nbsp;
+        HarfBuzzSharp: <strong>@SampleService.HarfBuzzSharpVersion</strong>
+        @if (SampleService.BuildTimestamp is { } ts)
+        {
+            <text>&nbsp;|&nbsp; Built: <strong><time datetime="@ts.UtcDateTime.ToString("o")">@ts.LocalDateTime.ToString("g")</time></strong></text>
+        }
+    </p>
+</div>
+
+@code {
+    private string searchText = string.Empty;
+    private HashSet<string> selectedCategories = new();
+    private string[] allCategories = Array.Empty<string>();
+
+    protected override void OnInitialized()
+    {
+        allCategories = SampleService.GetSamples()
+            .Select(s => s.Category)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToArray();
+        selectedCategories = new HashSet<string>(allCategories);
+    }
+
+    private IEnumerable<SampleBase> GetFilteredSamples()
+    {
+        return SampleService.GetAllSamples()
+            .Where(s => s.MatchesFilter(searchText))
+            .Where(s => selectedCategories.Contains(s.Category))
+            .OrderBy(s => s.IsSupported ? 0 : 1)
+            .ThenBy(s => s.Title);
+    }
+
+    private void ToggleCategory(string category)
+    {
+        if (!selectedCategories.Remove(category))
+            selectedCategories.Add(category);
+    }
+
+    private void ToggleAll()
+    {
+        if (selectedCategories.Count == allCategories.Length)
+            selectedCategories.Clear();
+        else
+            selectedCategories = new HashSet<string>(allCategories);
+    }
+
+    private static string GetCategoryColor(string category) => category switch
+    {
+        SampleCategories.Documents => "#607D8B",
+        SampleCategories.General => "#1A237E",
+        SampleCategories.ImageFilters => "#E65100",
+        SampleCategories.BitmapDecoding => "#00897B",
+        SampleCategories.PathEffects => "#6A1B9A",
+        SampleCategories.Paths => "#2E7D32",
+        SampleCategories.Shaders => "#1565C0",
+        SampleCategories.Text => "#AD1457",
+        _ => "#546E7A",
+    };
+
+    private static string GetSampleIcon(string title) => title switch
+    {
+        "Blend Modes" => "bi-layers-half",
+        "Blur Image Filter" => "bi-droplet-half",
+        "2D Transforms" => "bi-arrows-move",
+        "3D Transforms" => "bi-box",
+        "Create XPS Document" => "bi-file-earmark-richtext",
+        "GIF Player" => "bi-film",
+        "Gradient" => "bi-rainbow",
+        "Image Decoder" => "bi-file-image",
+        "Lottie Player" => "bi-play-circle",
+        "Nine-Patch Scaler" => "bi-grid-3x3",
+        "Noise Generator" => "bi-soundwave",
+        "Path Builder" => "bi-pentagon",
+        "Path Effects Lab" => "bi-bezier2",
+        "PDF Composer" => "bi-file-pdf",
+        "Photo Lab" => "bi-camera",
+        "Shader Playground" => "bi-lightning",
+        "Text Lab" => "bi-fonts",
+        "Text on Path" => "bi-type",
+        "Vector Art" => "bi-vector-pen",
+        "Vertex Mesh" => "bi-diagram-3",
+        "World Text" => "bi-globe2",
+        _ => "bi-brush",
+    };
+}

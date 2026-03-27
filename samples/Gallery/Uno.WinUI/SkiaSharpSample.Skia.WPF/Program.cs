@@ -1,3 +1,0 @@
-namespace SkiaSharpSample.Skia.Gtk
-{
-}

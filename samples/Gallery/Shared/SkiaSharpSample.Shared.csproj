@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Media\*" Link="Resources\Media\%(Filename)%(Extension)" />
+    <EmbeddedResource Remove="Media\content-font.ttf" />
+  </ItemGroup>
+
+  <!-- Stamp the build time as UTC into an assembly metadata attribute -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildTimestampUtc</_Parameter1>
+      <_Parameter2>$([System.DateTime]::UtcNow.ToString("o"))</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>

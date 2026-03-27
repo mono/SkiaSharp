@@ -1,0 +1,99 @@
+.sample-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.sample-header {
+    flex-shrink: 0;
+    padding-bottom: 0.5rem;
+}
+
+.sample-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    gap: 0;
+}
+
+.sample-canvas {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+}
+
+.sample-canvas .canvas-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+/* --- Sidebar --- */
+
+.sample-sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    border-left: 1px solid #e0e0e0;
+    padding: 0.75rem;
+    background: #fafafa;
+    transition: width 0.2s ease;
+    position: relative;
+    z-index: 99;
+}
+
+.sample-sidebar.collapsed {
+    width: 36px;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sample-sidebar.collapsed .sidebar-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 0.75rem;
+    color: #666;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.sample-sidebar.collapsed .sidebar-content {
+    display: none;
+}
+
+/* Backdrop for dismiss-on-click-outside */
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 98;
+    background: transparent;
+}
+
+@media (max-width: 767.98px) {
+    .sample-body {
+        flex-direction: column;
+    }
+
+    .sample-sidebar {
+        width: 100%;
+        max-height: 40vh;
+        border-left: none;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .sample-sidebar.collapsed {
+        width: 100%;
+        height: 36px;
+    }
+
+    .sample-sidebar.collapsed .sidebar-label {
+        writing-mode: horizontal-tb;
+        transform: none;
+    }
+}

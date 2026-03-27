@@ -66,12 +66,12 @@ Both use the same structure (diff-of-diffs):
 
 Each item in added/removed:
 ```json
-{ "path": "include/core/SkBitmap.h", "summary": "...", "diff": "..." }
+{ "path": "include/core/SkBitmap.h", "summary": "...", "diff": "...", "relatedFiles": [...] }
 ```
 
 Each item in changed:
 ```json
-{ "path": "src/core/SkFont.cpp", "summary": "...", "diff": "...", "oldDiff": "...", "newDiff": "...", "patchDiff": "..." }
+{ "path": "src/core/SkFont.cpp", "summary": "...", "diff": "...", "oldDiff": "...", "newDiff": "...", "patchDiff": "...", "relatedFiles": [...] }
 ```
 
 - `diff` — Direct branch-to-branch diff (`base→PR head`). The simplest view — what actually changed in the fork. **Default view in the HTML viewer.**
@@ -79,6 +79,33 @@ Each item in changed:
 - `oldDiff` / `newDiff` — The full fork-vs-upstream patches for old and new branches respectively.
 
 **No per-file status.** AI provides factual summaries only. ALL items need human review.
+
+## Related Files (Cross-Links)
+
+Each source file item can include an optional `relatedFiles` array to link to other files in the report:
+
+```json
+{
+  "path": "include/core/SkFontMgr.h",
+  "summary": "Fork patch added MakeDefault()...",
+  "relatedFiles": [
+    { "path": "src/c/sk_default_fontmgr.cpp", "relationship": "replaced by" },
+    { "path": "src/c/sk_typeface.cpp", "relationship": "consumer" }
+  ]
+}
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `path` | Yes | File path (relative to skia or SkiaSharp repo root) |
+| `relationship` | No | Short label: `replaced by`, `moved to`, `moved from`, `depends on`, `consumer`, `header`, `implementation`, `C# wrapper` |
+
+The HTML viewer renders these as clickable pills. Clicking navigates to the matching file in the report (scrolling + highlighting), or opens on GitHub if not found in the report.
+
+**When to add `relatedFiles`:**
+- A removed patch has a replacement in a different section (e.g., upstream removed → interop added)
+- A header and implementation file are both changed
+- An interop file has a corresponding C# wrapper in the companion PR
 
 ## DEPS Audit
 
