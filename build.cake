@@ -489,6 +489,7 @@ Task ("samples-generate")
 });
 
 Task ("samples-prepare")
+    .IsDependentOn ("samples-generate")
     .Description ("Prepare the generated samples for building (copy NuGet packages, etc.).")
     .Does (() =>
 {
@@ -496,19 +497,13 @@ Task ("samples-prepare")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    var actualSamples = PREVIEW_ONLY_NUGETS.Count > 0
-        ? "samples-preview"
-        : "samples";
-
     // copy NuGet packages next to Dockerfile files for Docker builds
-    var dockerfiles = GetFiles ($"./output/{actualSamples}/**/*Dockerfile");
+    var dockerfiles = GetFiles ($"./output/samples*/**/*Dockerfile");
     foreach (var dockerfile in dockerfiles) {
         var packagesDir = dockerfile.GetDirectory ().Combine ("packages");
         EnsureDirectoryExists (packagesDir);
         CopyFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg", packagesDir);
     }
-
-    Information ("Samples prepared.");
 });
 
 Task ("samples-run")
@@ -522,7 +517,8 @@ Task ("samples-run")
     // discover all samples: solutions for dotnet build, run.ps1 for Docker
     var solutions =
         GetFiles ($"./output/{actualSamples}/**/*.sln").Union (
-        GetFiles ($"./output/{actualSamples}/**/*.slnf"))
+        GetFiles ($"./output/{actualSamples}/**/*.slnf")).Union (
+        GetFiles ($"./output/{actualSamples}/**/*.slnx"))
         .OrderBy (x => x.FullPath)
         .ToArray ();
     var dockerRuns = GetFiles ($"./output/{actualSamples}/**/run.ps1")
@@ -554,7 +550,8 @@ Task ("samples-run")
             // main solution — check for platform-specific variants
             var variants =
                 GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln").Union (
-                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf"));
+                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnf")).Union (
+                GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.slnx"));
             if (variants.Any ()) {
                 samplesToSkip.Add ((sln, "has platform-specific variant"));
             } else {
