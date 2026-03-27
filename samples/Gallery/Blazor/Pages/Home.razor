@@ -61,6 +61,10 @@
     <p class="text-muted small">
         SkiaSharp: <strong>@SampleService.SkiaSharpVersion</strong> &nbsp;|&nbsp;
         HarfBuzzSharp: <strong>@SampleService.HarfBuzzSharpVersion</strong>
+        @if (SampleService.BuildTimestamp is { } ts)
+        {
+            <text>&nbsp;|&nbsp; Built: <strong><time datetime="@ts.UtcDateTime.ToString("o")">@ts.LocalDateTime.ToString("g")</time></strong></text>
+        }
     </p>
 </div>
 
