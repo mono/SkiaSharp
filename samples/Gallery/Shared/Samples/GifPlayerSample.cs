@@ -13,10 +13,10 @@ public class GifPlayerSample : CanvasSampleBase
 	private int currentFrame;
 	private bool playing = true;
 	private float speed = 1f;
-	private SKCodec codec;
+	private SKCodec? codec;
 	private SKImageInfo info;
-	private SKBitmap bitmap;
-	private SKCodecFrameInfo[] frames;
+	private SKBitmap? bitmap;
+	private SKCodecFrameInfo[]? frames;
 
 	public override string Title => "GIF Player";
 
@@ -91,13 +91,14 @@ public class GifPlayerSample : CanvasSampleBase
 		codec = null;
 		bitmap?.Dispose();
 		bitmap = null;
+		frames = null;
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
 		canvas.Clear(SKColors.Black);
 
-		if (codec == null || bitmap == null)
+		if (codec == null || bitmap == null || frames == null)
 			return;
 
 		var opts = new SKCodecOptions(currentFrame);

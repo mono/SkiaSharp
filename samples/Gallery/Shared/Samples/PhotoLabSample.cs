@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
 
@@ -19,6 +20,7 @@ public class PhotoLabSample : CanvasSampleBase
 	private float magnifierZoom = 5f;
 	private bool contrastEnabled;
 	private float contrastAmount = 0.3f;
+	private SKBitmap? cachedBitmap;
 
 	private static readonly string[] ColorPresets =
 		{ "Grayscale", "Sepia", "Invert", "Warm", "Cool", "Color Dodge" };
@@ -30,6 +32,20 @@ public class PhotoLabSample : CanvasSampleBase
 		"Composable image effect stack — color filters, blur, morphology, magnifier, and high contrast.";
 
 	public override string Category => SampleCategories.ImageFilters;
+
+	protected override Task OnInit()
+	{
+		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
+		cachedBitmap = SKBitmap.Decode(stream);
+		return base.OnInit();
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		cachedBitmap?.Dispose();
+		cachedBitmap = null;
+	}
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -89,9 +105,7 @@ public class PhotoLabSample : CanvasSampleBase
 	{
 		canvas.Clear(SKColors.White);
 
-		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
-		using var bitmap = SKBitmap.Decode(stream);
-		if (bitmap == null) return;
+		if (cachedBitmap == null) return;
 
 		SKColorFilter? colorFilter = null;
 		var imageFilters = new List<SKImageFilter>();
@@ -139,9 +153,19 @@ public class PhotoLabSample : CanvasSampleBase
 
 			if (contrastEnabled)
 			{
-				colorFilter?.Dispose();
-				colorFilter = SKColorFilter.CreateHighContrast(
+				var hcFilter = SKColorFilter.CreateHighContrast(
 					false, SKHighContrastConfigInvertStyle.NoInvert, contrastAmount);
+				if (colorFilter != null)
+				{
+					var composed = SKColorFilter.CreateCompose(hcFilter, colorFilter);
+					colorFilter.Dispose();
+					hcFilter.Dispose();
+					colorFilter = composed;
+				}
+				else
+				{
+					colorFilter = hcFilter;
+				}
 			}
 
 			using var paint = new SKPaint
@@ -149,7 +173,7 @@ public class PhotoLabSample : CanvasSampleBase
 				ColorFilter = colorFilter,
 				ImageFilter = lastFilter,
 			};
-			canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), paint);
 		}
 		finally
 		{

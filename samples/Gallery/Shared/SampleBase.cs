@@ -26,7 +26,7 @@ public abstract class SampleBase
 
 	protected virtual void OnControlChanged(string id, object value) { }
 
-	public async void Init()
+	public async Task InitAsync()
 	{
 		if (!IsInitialized)
 		{

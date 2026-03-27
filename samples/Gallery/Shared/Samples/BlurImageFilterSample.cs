@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using System.Threading.Tasks;
+using SkiaSharp;
 using SkiaSharpSample.Controls;
 
 namespace SkiaSharpSample.Samples;
@@ -7,6 +8,7 @@ public class BlurImageFilterSample : CanvasSampleBase
 {
 	private float sigmaX = 5f;
 	private float sigmaY = 5f;
+	private SKBitmap? cachedBitmap;
 
 	public override string Title => "Blur Image Filter";
 
@@ -34,18 +36,30 @@ public class BlurImageFilterSample : CanvasSampleBase
 		}
 	}
 
+	protected override Task OnInit()
+	{
+		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
+		cachedBitmap = SKBitmap.Decode(stream);
+		return base.OnInit();
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		cachedBitmap?.Dispose();
+		cachedBitmap = null;
+	}
+
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
 		canvas.Clear(SKColors.White);
 
-		using var stream = new SKManagedStream(SampleMedia.Images.Baboon);
-		using var bitmap = SKBitmap.Decode(stream);
-		if (bitmap == null) return;
+		if (cachedBitmap == null) return;
 
 		using var filter = SKImageFilter.CreateBlur(sigmaX, sigmaY);
 		using var paint = new SKPaint();
 		paint.ImageFilter = filter;
 
-		canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+		canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), paint);
 	}
 }

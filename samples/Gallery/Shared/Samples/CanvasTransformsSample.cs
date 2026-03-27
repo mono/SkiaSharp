@@ -129,7 +129,8 @@ public class CanvasTransformsSample : CanvasSampleBase
 		// Draw center crosshair
 		gridPaint.Color = new SKColor(150, 150, 150);
 		gridPaint.StrokeWidth = 1;
-		gridPaint.PathEffect = SKPathEffect.CreateDash(new float[] { 4, 4 }, 0);
+		using var dashEffect = SKPathEffect.CreateDash(new float[] { 4, 4 }, 0);
+		gridPaint.PathEffect = dashEffect;
 		canvas.DrawLine(width / 2f, 0, width / 2f, height, gridPaint);
 		canvas.DrawLine(0, height / 2f, width, height / 2f, gridPaint);
 	}

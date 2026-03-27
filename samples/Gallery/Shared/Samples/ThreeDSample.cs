@@ -174,7 +174,8 @@ public class ThreeDSample : CanvasSampleBase
 
 		// Center crosshair
 		gridPaint.Color = new SKColor(255, 255, 255, 40);
-		gridPaint.PathEffect = SKPathEffect.CreateDash(new float[] { 6, 4 }, 0);
+		using var dashEffect = SKPathEffect.CreateDash(new float[] { 6, 4 }, 0);
+		gridPaint.PathEffect = dashEffect;
 		canvas.DrawLine(cx, 0, cx, height, gridPaint);
 		canvas.DrawLine(0, cy, width, cy, gridPaint);
 	}

@@ -94,13 +94,14 @@ public class PathBuilderSample : CanvasSampleBase
 
 		if (showBounds && path.GetBounds(out var bounds))
 		{
+			using var dashEffect = SKPathEffect.CreateDash(new float[] { 6, 4 }, 0);
 			using var boundsPaint = new SKPaint
 			{
 				IsAntialias = true,
 				Style = SKPaintStyle.Stroke,
 				Color = SKColors.Green,
 				StrokeWidth = 1,
-				PathEffect = SKPathEffect.CreateDash(new float[] { 6, 4 }, 0),
+				PathEffect = dashEffect,
 			};
 			canvas.DrawRect(bounds, boundsPaint);
 		}
@@ -108,13 +109,14 @@ public class PathBuilderSample : CanvasSampleBase
 
 		if (showTightBounds && path.GetTightBounds(out var tight))
 		{
+			using var tightDash = SKPathEffect.CreateDash(new float[] { 6, 4 }, 0);
 			using var tightPaint = new SKPaint
 			{
 				IsAntialias = true,
 				Style = SKPaintStyle.Stroke,
 				Color = SKColors.Red,
 				StrokeWidth = 1,
-				PathEffect = SKPathEffect.CreateDash(new float[] { 6, 4 }, 0),
+				PathEffect = tightDash,
 			};
 			canvas.DrawRect(tight, tightPaint);
 		}
@@ -138,13 +140,14 @@ public class PathBuilderSample : CanvasSampleBase
 		var cp4 = new SKPoint(cx - cpExtend, cy - cpExtend);
 
 		// Draw connector lines (control point handles)
+		using var dashEffect = SKPathEffect.CreateDash(new float[] { 4, 3 }, 0);
 		using var linePaint = new SKPaint
 		{
 			IsAntialias = true,
 			Style = SKPaintStyle.Stroke,
 			Color = new SKColor(255, 100, 100, 150),
 			StrokeWidth = 1,
-			PathEffect = SKPathEffect.CreateDash(new float[] { 4, 3 }, 0),
+			PathEffect = dashEffect,
 		};
 		// Right curve handles
 		canvas.DrawLine(p0, cp1, linePaint);

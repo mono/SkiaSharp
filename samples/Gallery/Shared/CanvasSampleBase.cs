@@ -41,10 +41,17 @@ public abstract class CanvasSampleBase : SampleBase
 			cts = new CancellationTokenSource();
 			_ = Task.Run(async () =>
 			{
-				while (!cts.IsCancellationRequested)
+				try
 				{
-					await OnUpdate(cts.Token);
-					new Task(Refresh).Start(scheduler);
+					while (!cts.IsCancellationRequested)
+					{
+						await OnUpdate(cts.Token);
+						new Task(Refresh).Start(scheduler);
+					}
+				}
+				catch (OperationCanceledException)
+				{
+					// Expected when CTS is cancelled during shutdown
 				}
 			}, cts.Token);
 		}
@@ -55,6 +62,8 @@ public abstract class CanvasSampleBase : SampleBase
 	protected override void OnDestroy()
 	{
 		cts?.Cancel();
+		cts?.Dispose();
+		cts = null;
 	}
 
 	public override void UpdateControl(string id, object value)

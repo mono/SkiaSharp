@@ -49,15 +49,14 @@ public static class SampleMedia
 
 		public static Stream Load(string name)
 		{
-			name = $".Media.{name}";
-			name = resources.FirstOrDefault(n => n.EndsWith(name));
+			var suffix = $".Media.{name}";
+			var resourceName = resources.FirstOrDefault(n => n.EndsWith(suffix));
 
-			Stream stream = null;
-			if (name != null)
-			{
-				stream = assembly.GetManifestResourceStream(name);
-			}
-			return stream;
+			if (resourceName == null)
+				throw new FileNotFoundException($"Embedded resource '{name}' not found.");
+
+			return assembly.GetManifestResourceStream(resourceName)
+				?? throw new FileNotFoundException($"Embedded resource stream '{name}' could not be opened.");
 		}
 	}
 }

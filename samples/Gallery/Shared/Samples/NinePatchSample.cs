@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using SkiaSharp;
 using SkiaSharpSample.Controls;
 
@@ -9,6 +10,7 @@ public class NinePatchSample : CanvasSampleBase
 	private float _width = 400f;
 	private float _height = 300f;
 	private bool _showGrid = true;
+	private SKBitmap? cachedBitmap;
 
 	public override string Title => "Nine-Patch Scaler";
 
@@ -39,13 +41,25 @@ public class NinePatchSample : CanvasSampleBase
 		}
 	}
 
+	protected override Task OnInit()
+	{
+		using var stream = new SKManagedStream(SampleMedia.Images.NinePatch);
+		cachedBitmap = SKBitmap.Decode(stream);
+		return base.OnInit();
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+		cachedBitmap?.Dispose();
+		cachedBitmap = null;
+	}
+
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
 		canvas.Clear(SKColors.White);
 
-		using var stream = new SKManagedStream(SampleMedia.Images.NinePatch);
-		using var bitmap = SKBitmap.Decode(stream);
-		if (bitmap == null) return;
+		if (cachedBitmap == null) return;
 
 		var patchCenter = new SKRectI(33, 33, 256 - 33, 256 - 33);
 
@@ -56,21 +70,22 @@ public class NinePatchSample : CanvasSampleBase
 		var destY = (height - destH) / 2f;
 		var destRect = new SKRect(destX, destY, destX + destW, destY + destH);
 
-		canvas.DrawBitmapNinePatch(bitmap, patchCenter, destRect);
+		canvas.DrawBitmapNinePatch(cachedBitmap, patchCenter, destRect);
 
 		if (_showGrid)
-			DrawGridLines(canvas, bitmap, patchCenter, destRect);
+			DrawGridLines(canvas, cachedBitmap, patchCenter, destRect);
 	}
 
 	private static void DrawGridLines(SKCanvas canvas, SKBitmap bitmap, SKRectI patchCenter, SKRect dest)
 	{
+		using var dashEffect = SKPathEffect.CreateDash(new float[] { 6, 4 }, 0);
 		using var paint = new SKPaint
 		{
 			Color = new SKColor(255, 0, 0, 128),
 			Style = SKPaintStyle.Stroke,
 			StrokeWidth = 1,
 			IsAntialias = true,
-			PathEffect = SKPathEffect.CreateDash(new float[] { 6, 4 }, 0),
+			PathEffect = dashEffect,
 		};
 
 		// Map patch boundaries to dest rect

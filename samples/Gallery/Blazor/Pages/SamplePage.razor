@@ -163,9 +163,9 @@ else
     private bool IsDocument => sample is DocumentSampleBase;
     private bool HasControls => sample is { Controls.Count: > 0 };
 
-    // Control panel layout state (static for SPA persistence across navigation)
-    private static bool isPinned = true;
-    private static bool showControls = true;
+    // Control panel layout state
+    private bool isPinned = true;
+    private bool showControls = true;
 
     private void TogglePin()
     {
@@ -180,7 +180,7 @@ else
             showControls = true;
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         // Sample changed
         var title = Uri.UnescapeDataString(SampleTitle ?? string.Empty);
@@ -196,7 +196,7 @@ else
                 {
                     if (sample is CanvasSampleBase canvasSample)
                         canvasSample.RefreshRequested += OnRefreshRequested;
-                    sample.Init();
+                    await sample.InitAsync();
                     GenerateDocumentIfNeeded();
                 }
             }
@@ -204,7 +204,7 @@ else
             previousUseGpu = UseGpu;
 
             // Force re-render then invalidate the newly mounted view
-            InvokeAsync(async () =>
+            await InvokeAsync(async () =>
             {
                 StateHasChanged();
                 await Task.Yield();

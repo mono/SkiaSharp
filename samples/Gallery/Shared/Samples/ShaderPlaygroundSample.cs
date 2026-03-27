@@ -18,6 +18,7 @@ public class ShaderPlaygroundSample : CanvasSampleBase
 
 	private SKRuntimeEffect? effect;
 	private string? compileError;
+	private readonly float[] resolutionBuffer = new float[2];
 
 	private static readonly string[] ShaderNames = { "Ripple", "Plasma", "Spiral", "Warp Grid", "Color Wheel" };
 
@@ -203,7 +204,9 @@ half4 main(float2 fragCoord) {
 
 		using var uniforms = new SKRuntimeEffectUniforms(effect);
 		uniforms["iTime"] = time;
-		uniforms["iResolution"] = new float[] { width, height };
+		resolutionBuffer[0] = width;
+		resolutionBuffer[1] = height;
+		uniforms["iResolution"] = resolutionBuffer;
 		uniforms["param1"] = param1;
 		uniforms["param2"] = param2;
 

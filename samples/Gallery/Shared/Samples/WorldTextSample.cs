@@ -83,8 +83,9 @@ public class WorldTextSample : CanvasSampleBase
 		else
 		{
 			var firstChar = text.Length > 0 ? char.ConvertToUtf32(text, 0) : 'A';
-			typeface = SKFontManager.Default.MatchCharacter(firstChar) ?? SKTypeface.Default;
-			ownsTypeface = true;
+			var matched = SKFontManager.Default.MatchCharacter(firstChar);
+			typeface = matched ?? SKTypeface.Default;
+			ownsTypeface = matched != null;
 		}
 
 		try

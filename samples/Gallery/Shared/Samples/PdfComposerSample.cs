@@ -349,7 +349,8 @@ public class PdfComposerSample : DocumentSampleBase
 	{
 		canvas.DrawNamedDestinationAnnotation(new SKPoint(0, 0), "page-images")?.Dispose();
 
-		canvas.DrawRect(0, 0, pageWidth, pageHeight, new SKPaint { Color = SKColors.White });
+		using var whiteBg = new SKPaint { Color = SKColors.White };
+		canvas.DrawRect(0, 0, pageWidth, pageHeight, whiteBg);
 		DrawPageTitle(canvas, pageWidth, "Images");
 
 		var margin = 60f;

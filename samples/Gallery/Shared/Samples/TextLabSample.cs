@@ -133,12 +133,13 @@ public class TextLabSample : CanvasSampleBase
 
 		if (showMetrics)
 		{
+			using var dashEffect = SKPathEffect.CreateDash(new[] { 6f, 4f }, 0);
 			using var linePaint = new SKPaint
 			{
 				IsStroke = true,
 				StrokeWidth = 1,
 				IsAntialias = true,
-				PathEffect = SKPathEffect.CreateDash(new[] { 6f, 4f }, 0),
+				PathEffect = dashEffect,
 			};
 
 			// Baseline (blue)

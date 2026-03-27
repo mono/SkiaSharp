@@ -11,8 +11,8 @@ public class LottiePlayerSample : CanvasSampleBase
 {
 	public override bool IsAnimated => true;
 
-	private Animation _animation;
-	private Stopwatch _watch = new Stopwatch();
+	private Animation? _animation;
+	private readonly Stopwatch _watch = new Stopwatch();
 	private bool _playing = true;
 	private float _speed = 1f;
 

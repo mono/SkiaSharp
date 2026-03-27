@@ -62,7 +62,7 @@ public class PathEffectsLabSample : CanvasSampleBase
 		canvas.DrawPath(path, paint);
 	}
 
-	private SKPathEffect CreatePathEffect()
+	private SKPathEffect? CreatePathEffect()
 	{
 		return effectType switch
 		{
