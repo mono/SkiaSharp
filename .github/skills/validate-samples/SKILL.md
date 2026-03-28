@@ -137,7 +137,7 @@ PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
 
 The final NuGet version: `{base_version}-{PREVIEW_NUGET_SUFFIX}`
 - Base version comes from `scripts/VERSIONS.txt` (e.g. `3.119.4`)
-- The `.0` in `preview.0.76` is the **increment** value from `VERSIONS.txt` (`libSkiaSharp increment 0`)
+- The `.0` in `preview.0.76` is the **preview number** (first preview = 0, second = 1, etc.)
 
 ### CI feed version patterns
 

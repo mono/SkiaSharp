@@ -43,12 +43,12 @@ When CI packs NuGet packages, it constructs preview versions like this:
 ```
 
 - **base_version**: From `scripts/VERSIONS.txt` (e.g. `3.119.4`)
-- **PREVIEW_LABEL**: Set by CI, typically `preview.{increment}` where increment comes from `VERSIONS.txt`
+- **PREVIEW_LABEL**: Set by CI, typically `preview.{N}` where `N` is the preview number (e.g. `preview.0` for the first preview, `preview.1` for the second, etc.)
 - **BUILD_NUMBER**: The CI build counter
 
 **Example:** `3.119.4-preview.0.76`
 - Base: `3.119.4`
-- Preview label: `preview.0` (where `0` = the `libSkiaSharp increment` value from `VERSIONS.txt`)
+- Preview label: `preview.0` (where `0` is the preview number — first preview of the release)
 - Build number: `76`
 
 ## Cake Targets
