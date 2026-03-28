@@ -42,13 +42,35 @@ stages:
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-android
           additionalArgs: --buildarch=arm64
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native iOS (macOS)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native iOS|x64 (macOS)
+        parameters:
+          name: native_ios_x64_macos
+          displayName: iOS x64
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-ios
+          additionalArgs: --buildarch=x64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native iOS|arm64 (macOS)
+        parameters:
+          name: native_ios_arm64_macos
+          displayName: iOS arm64
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-ios
+          additionalArgs: --buildarch=arm64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Combine Native iOS (macOS)
         parameters:
           name: native_ios_macos
           displayName: iOS
           buildAgent: ${{ parameters.buildAgentMacNative }}
           buildExternals: ${{ parameters.buildExternals }}
-          target: externals-ios
+          target: externals-ios-combine
+          dependsOn:
+            - native_ios_x64_macos
+            - native_ios_arm64_macos
+          requiredArtifacts:
+            - name: native_ios_x64_macos
+            - name: native_ios_arm64_macos
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Mac Catalyst (macOS)
         parameters:
           name: native_maccatalyst_macos
@@ -63,13 +85,35 @@ stages:
           buildAgent: ${{ parameters.buildAgentMacNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-macos
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native tvOS (macOS)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native tvOS|x64 (macOS)
+        parameters:
+          name: native_tvos_x64_macos
+          displayName: tvOS x64
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-tvos
+          additionalArgs: --buildarch=x64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native tvOS|arm64 (macOS)
+        parameters:
+          name: native_tvos_arm64_macos
+          displayName: tvOS arm64
+          buildAgent: ${{ parameters.buildAgentMacNative }}
+          buildExternals: ${{ parameters.buildExternals }}
+          target: externals-tvos
+          additionalArgs: --buildarch=arm64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Combine Native tvOS (macOS)
         parameters:
           name: native_tvos_macos
           displayName: tvOS
           buildAgent: ${{ parameters.buildAgentMacNative }}
           buildExternals: ${{ parameters.buildExternals }}
-          target: externals-tvos
+          target: externals-tvos-combine
+          dependsOn:
+            - native_tvos_x64_macos
+            - native_tvos_arm64_macos
+          requiredArtifacts:
+            - name: native_tvos_x64_macos
+            - name: native_tvos_arm64_macos
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen (macOS)
         parameters:
           name: native_tizen_macos

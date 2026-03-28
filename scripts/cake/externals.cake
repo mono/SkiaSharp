@@ -27,6 +27,16 @@ Task("externals-nano")
 Task("externals-catalyst")
     .IsDependentOn("externals-maccatalyst");
 
+Task("externals-ios-combine")
+    .WithCriteria(ShouldBuildExternal("ios"))
+    .WithCriteria(!SKIP_BUILD)
+    .Does(() => RunCake("native/ios/build.cake", "Combine"));
+
+Task("externals-tvos-combine")
+    .WithCriteria(ShouldBuildExternal("tvos"))
+    .WithCriteria(!SKIP_BUILD)
+    .Does(() => RunCake("native/tvos/build.cake", "Combine"));
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS DOWNLOAD - download any externals that are needed
 ////////////////////////////////////////////////////////////////////////////////////////////////////

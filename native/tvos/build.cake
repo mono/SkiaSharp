@@ -18,12 +18,14 @@ Task("libSkiaSharp")
     Build("appletvsimulator", "arm64", "arm64");
     Build("appletvos", "arm64", "arm64");
 
-    SafeCopy(
-        $"libSkiaSharp/bin/{CONFIGURATION}/appletvsimulator/x86_64.xcarchive",
-        OUTPUT_PATH.Combine($"tvos/libSkiaSharp/x86_64.xcarchive"));
+    if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all")) {
+        SafeCopy(
+            $"libSkiaSharp/bin/{CONFIGURATION}/appletvsimulator/x86_64.xcarchive",
+            OUTPUT_PATH.Combine($"tvos/libSkiaSharp/x86_64.xcarchive"));
 
-    CreateFatFramework(OUTPUT_PATH.Combine("tvos/libSkiaSharp"));
-    CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libSkiaSharp"));
+        CreateFatFramework(OUTPUT_PATH.Combine("tvos/libSkiaSharp"));
+        CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libSkiaSharp"));
+    }
 
     void Build(string sdk, string arch, string skiaArch)
     {
@@ -69,12 +71,14 @@ Task("libHarfBuzzSharp")
     Build("appletvsimulator", "arm64");
     Build("appletvos", "arm64");
 
-    SafeCopy(
-        $"libHarfBuzzSharp/bin/{CONFIGURATION}/appletvsimulator/x86_64.xcarchive",
-        OUTPUT_PATH.Combine($"tvos/libHarfBuzzSharp/x86_64.xcarchive"));
+    if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all")) {
+        SafeCopy(
+            $"libHarfBuzzSharp/bin/{CONFIGURATION}/appletvsimulator/x86_64.xcarchive",
+            OUTPUT_PATH.Combine($"tvos/libHarfBuzzSharp/x86_64.xcarchive"));
 
-    CreateFatFramework(OUTPUT_PATH.Combine("tvos/libHarfBuzzSharp"));
-    CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libHarfBuzzSharp"));
+        CreateFatFramework(OUTPUT_PATH.Combine("tvos/libHarfBuzzSharp"));
+        CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libHarfBuzzSharp"));
+    }
 
     void Build(string sdk, string arch)
     {
@@ -91,6 +95,23 @@ Task("libHarfBuzzSharp")
             $"libHarfBuzzSharp/bin/{CONFIGURATION}/{sdk}/{arch}.xcarchive",
             OUTPUT_PATH.Combine($"{platform}/libHarfBuzzSharp/{arch}.xcarchive"));
     }
+});
+
+Task("Combine")
+    .WithCriteria(IsRunningOnMacOs())
+    .Does(() =>
+{
+    SafeCopy(
+        OUTPUT_PATH.Combine("tvossimulator/libSkiaSharp/x86_64.xcarchive"),
+        OUTPUT_PATH.Combine("tvos/libSkiaSharp/x86_64.xcarchive"));
+    CreateFatFramework(OUTPUT_PATH.Combine("tvos/libSkiaSharp"));
+    CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libSkiaSharp"));
+
+    SafeCopy(
+        OUTPUT_PATH.Combine("tvossimulator/libHarfBuzzSharp/x86_64.xcarchive"),
+        OUTPUT_PATH.Combine("tvos/libHarfBuzzSharp/x86_64.xcarchive"));
+    CreateFatFramework(OUTPUT_PATH.Combine("tvos/libHarfBuzzSharp"));
+    CreateFatFramework(OUTPUT_PATH.Combine("tvossimulator/libHarfBuzzSharp"));
 });
 
 Task("Default")

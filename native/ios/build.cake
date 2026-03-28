@@ -25,17 +25,21 @@ Task("libSkiaSharp")
         Build("iphoneos", "arm64", "arm64");
         // Build("iphoneos", "arm64", "arm64", "arm64e");
 
-        SafeCopy(
-            $"libSkiaSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
-            OUTPUT_PATH.Combine($"ios/libSkiaSharp/x86_64.xcarchive"));
+        if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all")) {
+            SafeCopy(
+                $"libSkiaSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
+                OUTPUT_PATH.Combine($"ios/libSkiaSharp/x86_64.xcarchive"));
 
-        CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
-        CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libSkiaSharp"));
+            CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
+            CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libSkiaSharp"));
+        }
     } else if (VARIANT == "maccatalyst") {
         Build("macosx", "x86_64", "x64");
         Build("macosx", "arm64", "arm64");
 
-        CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libSkiaSharp"));
+        if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all")) {
+            CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libSkiaSharp"));
+        }
     }
 
     void Build(string sdk, string arch, string skiaArch, string xcodeArch = null)
@@ -88,17 +92,21 @@ Task("libHarfBuzzSharp")
         Build("iphoneos", "arm64");
         // Build("iphoneos", "arm64e");
 
-        SafeCopy(
-            $"libHarfBuzzSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
-            OUTPUT_PATH.Combine($"ios/libHarfBuzzSharp/x86_64.xcarchive"));
+        if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all")) {
+            SafeCopy(
+                $"libHarfBuzzSharp/bin/{CONFIGURATION}/iphonesimulator/x86_64.xcarchive",
+                OUTPUT_PATH.Combine($"ios/libHarfBuzzSharp/x86_64.xcarchive"));
 
-        CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
-        CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp"));
+            CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
+            CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp"));
+        }
     } else if (VARIANT == "maccatalyst") {
         Build("macosx", "x86_64");
         Build("macosx", "arm64");
 
-        CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libHarfBuzzSharp"));
+        if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains("all")) {
+            CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libHarfBuzzSharp"));
+        }
     }
 
     void Build(string sdk, string arch, string xcodeArch = null)
@@ -118,6 +126,28 @@ Task("libHarfBuzzSharp")
         SafeCopy(
             $"libHarfBuzzSharp/bin/{CONFIGURATION}/{sdk}/{xcodeArch}.xcarchive",
             OUTPUT_PATH.Combine($"{platform}/libHarfBuzzSharp/{xcodeArch}.xcarchive"));
+    }
+});
+
+Task("Combine")
+    .WithCriteria(IsRunningOnMacOs())
+    .Does(() =>
+{
+    if (VARIANT == "ios") {
+        SafeCopy(
+            OUTPUT_PATH.Combine("iossimulator/libSkiaSharp/x86_64.xcarchive"),
+            OUTPUT_PATH.Combine("ios/libSkiaSharp/x86_64.xcarchive"));
+        CreateFatFramework(OUTPUT_PATH.Combine("ios/libSkiaSharp"));
+        CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libSkiaSharp"));
+
+        SafeCopy(
+            OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp/x86_64.xcarchive"),
+            OUTPUT_PATH.Combine("ios/libHarfBuzzSharp/x86_64.xcarchive"));
+        CreateFatFramework(OUTPUT_PATH.Combine("ios/libHarfBuzzSharp"));
+        CreateFatFramework(OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp"));
+    } else if (VARIANT == "maccatalyst") {
+        CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libSkiaSharp"));
+        CreateFatVersionedFramework(OUTPUT_PATH.Combine("maccatalyst/libHarfBuzzSharp"));
     }
 });
 
