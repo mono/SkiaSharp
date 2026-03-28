@@ -25,9 +25,12 @@ Packages on the CI feed use `0.0.0` as the base version with a prerelease label 
 | Source | Version format | Example |
 |--------|---------------|---------|
 | **main branch (nightly)** | `0.0.0-branch.main.{build}` | `0.0.0-branch.main.3` |
-| **Feature branch** | `0.0.0-branch.{name}.{build}` | `0.0.0-branch.develop.35` |
-| **PR build** | `0.0.0-pr.{number}.{build}` | `0.0.0-pr.3553.99` |
-| **Release branch** | `0.0.0-branch.release.{ver}.{build}` | `0.0.0-branch.release.3.119.4.76` |
+| **develop branch** | `0.0.0-branch.develop.{build}` | `0.0.0-branch.develop.35` |
+| **Custom branch** | `0.0.0-branch.{name}.{build}` | `0.0.0-branch.v2.80.4.9` |
+| **PR build** | `0.0.0-pr.{number}.{build}` | `0.0.0-pr.1696.10` |
+| **Commit** | `0.0.0-commit.{sha}.{build}` | `0.0.0-commit.013a831...2464` |
+| **Release (stable)** | `0.0.0-branch.release.{ver}.{build}` | `0.0.0-branch.release.3.119.4.76` |
+| **Release (preview)** | `0.0.0-branch.release.{ver}-preview.{n}.{build}` | `0.0.0-branch.release.2.88.9-preview.2.1646` |
 
 The `{build}` number is the Azure DevOps build counter.
 
