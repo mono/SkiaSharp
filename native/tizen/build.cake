@@ -10,15 +10,18 @@ DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable("TIZEN_STUDIO_HOME") ?? PR
 var bat = IsRunningOnWindows() ? ".bat" : "";
 var tizen = TIZEN_STUDIO_HOME.CombineWithFilePath($"tools/ide/bin/tizen{bat}").FullPath;
 var tizenVersion = "6.0";
+var tizenVersion64 = "8.0";
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    Build("armel", "arm", $"mobile-{tizenVersion}-device.core");
-    Build("i586", "x86", $"mobile-{tizenVersion}-emulator.core");
+    Build("armel", "arm", "arm", $"mobile-{tizenVersion}-device.core");
+    Build("i586", "x86", "x86", $"mobile-{tizenVersion}-emulator.core");
+    Build("x86_64", "x64", "x86_64", $"tizen-{tizenVersion64}-emulator64.core");
+    Build("aarch64", "arm64", "aarch64", $"tizen-{tizenVersion64}-device64.core");
 
-    void Build(string arch, string skiaArch, string rootstrap)
+    void Build(string arch, string skiaArch, string tizenArch, string rootstrap)
     {
         if (Skip(arch)) return;
 
@@ -39,10 +42,11 @@ Task("libSkiaSharp")
            $"skia_enable_skottie=true " +
            $"extra_cflags=[ '-DSKIA_C_DLL', '-DXML_DEV_URANDOM' ] " +
            $"ncli='{TIZEN_STUDIO_HOME}' " +
-           $"ncli_version='{tizenVersion}'");
+           $"ncli_version='{tizenVersion}' " +
+           $"ncli_version_64='{tizenVersion64}'");
 
         RunProcess(tizen, new ProcessSettings {
-           Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
+           Arguments = $"build-native -a {tizenArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
            WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
         });
 
@@ -55,15 +59,17 @@ Task("libSkiaSharp")
 Task("libHarfBuzzSharp")
     .Does(() =>
 {
-    Build("armel", "arm", $"mobile-{tizenVersion}-device.core");
-    Build("i586", "x86", $"mobile-{tizenVersion}-emulator.core");
+    Build("armel", "arm", "arm", $"mobile-{tizenVersion}-device.core");
+    Build("i586", "x86", "x86", $"mobile-{tizenVersion}-emulator.core");
+    Build("x86_64", "x64", "x86_64", $"tizen-{tizenVersion64}-emulator64.core");
+    Build("aarch64", "arm64", "aarch64", $"tizen-{tizenVersion64}-device64.core");
 
-    void Build(string arch, string cliArch, string rootstrap)
+    void Build(string arch, string cliArch, string tizenArch, string rootstrap)
     {
         if (Skip(arch)) return;
 
         RunProcess(tizen, new ProcessSettings {
-            Arguments = $"build-native -a {cliArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
+            Arguments = $"build-native -a {tizenArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
             WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
         });
 

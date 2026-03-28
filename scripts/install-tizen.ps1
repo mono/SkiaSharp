@@ -3,7 +3,7 @@
 #  - https://developercommunity.visualstudio.com/content/problem/661596/the-updated-path-doesnt-kick-in.html
 
 Param(
-    [string] $Version = "5.6",
+    [string] $Version = "6.1",
     [string] $InstallDestination = $null,
     [boolean] $UpgradeLLVM = $true
 )
@@ -33,7 +33,7 @@ Write-Host "Install destination is '$ts'..."
 
 $tsTemp = Join-Path "$HOME_DIR" "tizen-temp"
 $install = Join-Path "$tsTemp" "tizen-install.$ext"
-$packages = "MOBILE-6.0-NativeAppDevelopment"
+$packages = "MOBILE-6.0-NativeAppDevelopment,TIZEN-8.0-NativeAppDevelopment"
 
 # download
 Write-Host "Downloading SDK to '$install'..."
