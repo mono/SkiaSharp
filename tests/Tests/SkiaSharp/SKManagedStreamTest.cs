@@ -408,7 +408,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void StreamCanBeDuplicatedButTheOriginalCannotBeRead()
+		public void StreamCanBeDuplicatedAndBothRemainReadable()
 		{
 			SkipOnNonWindows();
 
@@ -420,15 +420,20 @@ namespace SkiaSharp.Tests
 
 			var dupe = stream.Duplicate();
 			Assert.NotSame(stream, dupe);
-			Assert.IsType<SKManagedStream>(dupe);
+			// duplicate starts at position 0
 			Assert.Equal(1, dupe.ReadByte());
 			Assert.Equal(2, dupe.ReadByte());
 			Assert.Equal(3, dupe.ReadByte());
-			Assert.Throws<InvalidOperationException>(() => stream.ReadByte());
+			// original remains readable at its previous position
+			Assert.Equal(4, stream.ReadByte());
+			Assert.Equal(5, stream.ReadByte());
+
+			dupe.Dispose();
+			stream.Dispose();
 		}
 
 		[SkippableFact]
-		public void StreamCanBeForkedButTheOriginalCannotBeRead()
+		public void StreamCanBeForkedAndBothRemainReadable()
 		{
 			SkipOnNonWindows();
 
@@ -439,14 +444,19 @@ namespace SkiaSharp.Tests
 
 			var dupe = stream.Fork();
 			Assert.NotSame(stream, dupe);
-			Assert.IsType<SKManagedStream>(dupe);
+			// fork starts at the same position as the original
 			Assert.Equal(3, dupe.ReadByte());
 			Assert.Equal(4, dupe.ReadByte());
-			Assert.Throws<InvalidOperationException>(() => stream.ReadByte());
+			// original remains readable at its previous position
+			Assert.Equal(3, stream.ReadByte());
+			Assert.Equal(4, stream.ReadByte());
+
+			dupe.Dispose();
+			stream.Dispose();
 		}
 
 		[SkippableFact]
-		public void StreamCannotBeDuplicatedMultipleTimes()
+		public void StreamCanBeDuplicatedMultipleTimes()
 		{
 			SkipOnNonWindows();
 
@@ -455,14 +465,21 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, stream.ReadByte());
 			Assert.Equal(2, stream.ReadByte());
 
-			var dupe = stream.Duplicate();
-			Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
+			var dupe1 = stream.Duplicate();
+			var dupe2 = stream.Duplicate();
 
-			Assert.Equal(1, dupe.ReadByte());
+			Assert.Equal(1, dupe1.ReadByte());
+			Assert.Equal(1, dupe2.ReadByte());
+			// original still works
+			Assert.Equal(3, stream.ReadByte());
+
+			dupe1.Dispose();
+			dupe2.Dispose();
+			stream.Dispose();
 		}
 
 		[SkippableFact]
-		public void StreamCanBeDuplicatedMultipleTimesIfTheChildIsDestroyed()
+		public void StreamCanBeDuplicatedMultipleTimesWithChildDisposed()
 		{
 			SkipOnNonWindows();
 
@@ -477,15 +494,22 @@ namespace SkiaSharp.Tests
 
 			dupe1.Dispose();
 
+			// can still duplicate after child is disposed
 			var dupe2 = stream.Duplicate();
 			Assert.Equal(1, dupe2.ReadByte());
 			Assert.Equal(2, dupe2.ReadByte());
 
-			Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
+			// can duplicate again — no limit
+			var dupe3 = stream.Duplicate();
+			Assert.Equal(1, dupe3.ReadByte());
+
+			dupe2.Dispose();
+			dupe3.Dispose();
+			stream.Dispose();
 		}
 
 		[SkippableFact]
-		public void FullOwnershipIsTransferredToTheChildIfTheParentIsDisposed()
+		public void DuplicatesAreIndependentAfterParentDisposed()
 		{
 			SkipOnNonWindows();
 
@@ -498,58 +522,51 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, dupe1.ReadByte());
 			Assert.Equal(2, dupe1.ReadByte());
 
-			Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
-
+			// disposing parent does not affect the independent duplicate
 			stream.Dispose();
+
+			Assert.Equal(3, dupe1.ReadByte());
 
 			var dupe2 = dupe1.Duplicate();
 			Assert.Equal(1, dupe2.ReadByte());
 			Assert.Equal(2, dupe2.ReadByte());
 
-			Assert.Throws<InvalidOperationException>(() => dupe1.Duplicate());
-
 			dupe1.Dispose();
 			dupe2.Dispose();
 
+			// the original .NET stream should be disposed since disposeManagedStream was true
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 		}
 
 		[SkippableFact]
-		public void DuplicateStreamIsCollected()
+		public void DuplicateStreamIsDisposed()
 		{
-			SkipOnNonWindows();
+			var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+			var stream = new SKManagedStream(dotnet, true);
+			Assert.Equal(1, stream.ReadByte());
+			Assert.Equal(2, stream.ReadByte());
 
-			var handle = DoWork();
+			var dupe1 = stream.Duplicate();
+			Assert.Equal(1, dupe1.ReadByte());
+			Assert.Equal(2, dupe1.ReadByte());
 
-			CollectGarbage();
+			stream.Dispose();
 
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			var dupe2 = dupe1.Duplicate();
+			var handle = dupe2.Handle;
+			Assert.Equal(1, dupe2.ReadByte());
+			Assert.Equal(2, dupe2.ReadByte());
 
-			IntPtr DoWork()
-			{
-				var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-				var stream = new SKManagedStream(dotnet, true);
-				Assert.Equal(1, stream.ReadByte());
-				Assert.Equal(2, stream.ReadByte());
+			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
 
-				var dupe1 = stream.Duplicate();
-				Assert.Equal(1, dupe1.ReadByte());
-				Assert.Equal(2, dupe1.ReadByte());
+			dupe2.Dispose();
+			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 
-				Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
-
-				stream.Dispose();
-
-				var dupe2 = dupe1.Duplicate();
-				Assert.Equal(1, dupe2.ReadByte());
-				Assert.Equal(2, dupe2.ReadByte());
-
-				return dupe2.Handle;
-			}
+			dupe1.Dispose();
 		}
 
 		[SkippableFact]
-		public void MiddleDuplicateCanBeRemoved()
+		public void MultipleDuplicatesAreIndependent()
 		{
 			SkipOnNonWindows();
 
@@ -561,22 +578,26 @@ namespace SkiaSharp.Tests
 			var dupe1 = stream.Duplicate();
 			Assert.Equal(1, dupe1.ReadByte());
 			Assert.Equal(2, dupe1.ReadByte());
-			Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
 
-			var dupe2 = dupe1.Duplicate();
+			// can still duplicate the original
+			var dupe2 = stream.Duplicate();
 			Assert.Equal(1, dupe2.ReadByte());
 			Assert.Equal(2, dupe2.ReadByte());
-			Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
-			Assert.Throws<InvalidOperationException>(() => dupe1.Duplicate());
 
-			dupe1.Dispose();
-			Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
-
-			dupe2.Dispose();
-			var dupe3 = stream.Duplicate();
+			// can also duplicate the duplicate
+			var dupe3 = dupe1.Duplicate();
 			Assert.Equal(1, dupe3.ReadByte());
 			Assert.Equal(2, dupe3.ReadByte());
-			Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
+
+			// disposing any one does not affect the others
+			dupe1.Dispose();
+			Assert.Equal(3, stream.ReadByte());
+			Assert.Equal(3, dupe2.ReadByte());
+			Assert.Equal(3, dupe3.ReadByte());
+
+			dupe2.Dispose();
+			dupe3.Dispose();
+			stream.Dispose();
 		}
 
 		[SkippableFact]
