@@ -193,9 +193,12 @@ namespace SkiaSharp
 				return null;
 
 			var pos = stream.Position;
-			stream.Position = 0;
-			snapshotData = SKData.Create (stream, stream.Length);
-			stream.Position = pos;
+			try {
+				stream.Position = 0;
+				snapshotData = SKData.Create (stream, stream.Length);
+			} finally {
+				stream.Position = pos;
+			}
 
 			return snapshotData;
 		}
