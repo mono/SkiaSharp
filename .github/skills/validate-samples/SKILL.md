@@ -123,6 +123,16 @@ dotnet cake --target=samples --previewLabel=$PREVIEW_LABEL --buildNumber=$BUILD_
 
 ## Version Construction Deep Dive
 
+### Two-step version system
+
+The CI feed and the NuGet packages use **different versioning**:
+
+1. **CI feed wrapper version** (e.g. `0.0.0-branch.main.2580`) — identifies the source build
+2. **Real NuGet version** (e.g. `3.119.4-preview.0.76`) — the user-facing package version inside
+
+When downloading, cake uses `--gitBranch`/`--gitSha`/`--previewLabel` to resolve the CI wrapper version.
+After extraction, the real nupkg versions are in `output/nugets/`.
+
 ### How preview versions are built
 
 The cake build constructs the NuGet preview suffix from two arguments:
@@ -139,21 +149,17 @@ The final NuGet version: `{base_version}-{PREVIEW_NUGET_SUFFIX}`
 - Base version comes from `scripts/VERSIONS.txt` (e.g. `3.119.4`)
 - The `.0` in `preview.0.76` is the **preview number** (first preview = 0, second = 1, etc.)
 
-### CI feed version patterns
+### How download resolution works
 
-The CI feed uses `0.0.0` as base version with a label encoding the source:
+The `DownloadPackageAsync` function resolves the CI artifact version (checked in priority order):
 
-| Source | Format | Example |
-|--------|--------|---------|
-| main (nightly) | `0.0.0-branch.main.{build}` | `0.0.0-branch.main.3` |
-| develop branch | `0.0.0-branch.develop.{build}` | `0.0.0-branch.develop.35` |
-| Custom branch | `0.0.0-branch.{name}.{build}` | `0.0.0-branch.v2.80.4.9` |
-| PR build | `0.0.0-pr.{number}.{build}` | `0.0.0-pr.1696.10` |
-| Commit | `0.0.0-commit.{sha}.{build}` | `0.0.0-commit.013a831...2464` |
-| Release (stable) | `0.0.0-branch.release.{ver}.{build}` | `0.0.0-branch.release.3.119.4.76` |
-| Release (preview) | `0.0.0-branch.release.{ver}-preview.{n}.{build}` | `0.0.0-branch.release.2.88.9-preview.2.1646` |
-
-### How samples-generate rewrites references
+```csharp
+// scripts/cake/UtilsManaged.cake:165-174
+if (PREVIEW_LABEL.StartsWith("pr."))     → "0.0.0-pr.{number}.*"
+else if (!string.IsNullOrEmpty(GIT_SHA)) → "0.0.0-commit.{sha}.*"
+else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME)) → "0.0.0-branch.{name}.*"
+else                                     → "0.0.0-branch.main.*"
+```
 
 The `CreateSamplesDirectory()` function in `scripts/cake/samples.cake`:
 
