@@ -29,13 +29,6 @@ namespace SkiaSharp
 			disposeStream = disposeManagedStream;
 		}
 
-		private SKManagedStream (Stream managedStream, bool disposeManagedStream, bool weak)
-			: base (true, weak)
-		{
-			stream = managedStream ?? throw new ArgumentNullException (nameof (managedStream));
-			disposeStream = disposeManagedStream;
-		}
-
 		public int CopyTo (SKWStream destination)
 		{
 			if (destination == null)
