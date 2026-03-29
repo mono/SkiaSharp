@@ -1,4 +1,4 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -15,13 +15,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthorization();
 
-app.MapRazorPages();
+app.MapStaticAssets();
+app.MapRazorPages()
+   .WithStaticAssets();
 app.MapControllers();
 
 app.Run();
