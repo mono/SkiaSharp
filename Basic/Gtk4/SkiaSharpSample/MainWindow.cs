@@ -1,40 +1,47 @@
-using System;
-using System.IO;
 using Gtk;
+using SkiaSharp;
+using SkiaSharp.Views.Desktop;
+using SkiaSharp.Views.Gtk;
 
-namespace SkiaSharpSample;
-
-public class MainWindow : ApplicationWindow
+namespace SkiaSharpSample
 {
-	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
-
-	public MainWindow(Application app)
-		: base(new GObject.ConstructArgument[] { })
+	public class MainWindow : ApplicationWindow
 	{
-		Application = app;
-		Title = "SkiaSharp on Gtk4";
-		SetDefaultSize(1024, 768);
+		private readonly SKDrawingArea skiaView;
 
-		var builder = LoadBuilder("MainWindow.ui");
-		var rootBox = (Box)builder.GetObject("rootBox");
-		Child = rootBox;
+		public MainWindow(Application app)
+			: base(new GObject.ConstructArgument[] { })
+		{
+			Application = app;
+			Title = "SkiaSharp";
+			SetDefaultSize(400, 300);
 
-		var contentStack = (Stack)builder.GetObject("contentStack");
+			skiaView = new SKDrawingArea();
+			skiaView.PaintSurface += OnPaintSurface;
+			Child = skiaView;
+		}
 
-		// Add pages
-		var cpuPage = new CpuPage();
-		contentStack.AddTitled(cpuPage, "cpu", "CPU Canvas");
+		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		{
+			// get the canvas and properties
+			var canvas = e.Surface.Canvas;
 
-		var drawingPage = new DrawingPage();
-		contentStack.AddTitled(drawingPage, "drawing", "Drawing");
+			// make sure the canvas is blank
+			canvas.Clear(SKColors.White);
 
-		if (DefaultPage == SamplePage.Drawing)
-			contentStack.SetVisibleChildName("drawing");
-	}
-
-	public static Builder LoadBuilder(string filename)
-	{
-		var path = Path.Combine(AppContext.BaseDirectory, filename);
-		return Builder.NewFromFile(path);
+			// draw some text
+			using var paint = new SKPaint
+			{
+				Color = SKColors.Black,
+				IsAntialias = true,
+				Style = SKPaintStyle.Fill
+			};
+			using var font = new SKFont
+			{
+				Size = 24
+			};
+			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
+			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+		}
 	}
 }

@@ -1,45 +1,58 @@
-using System.IO;
-using System.Reflection;
+using System;
 using Gtk;
+using SkiaSharp;
+using SkiaSharp.Views.Desktop;
+using SkiaSharp.Views.Gtk;
 
-namespace SkiaSharpSample;
-
-public class MainWindow : Gtk.Window
+namespace SkiaSharpSample
 {
-	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
-
-	public MainWindow()
-		: base("SkiaSharp on Gtk3")
+	public class MainWindow : Window
 	{
-		SetDefaultSize(1024, 768);
-		DeleteEvent += (s, e) => Application.Quit();
+		private SKDrawingArea skiaView;
 
-		// Load shell layout from Glade
-		var builder = LoadBuilder("SkiaSharpSample.MainWindow.glade");
-		var rootBox = (Box)builder.GetObject("rootBox");
-		var stack = (Stack)builder.GetObject("contentStack");
+		public MainWindow()
+			: this(new Builder("MainWindow.glade"))
+		{
+		}
 
-		// Add pages — each loads its own Glade layout
-		var cpuPage = new CpuPage();
-		stack.AddTitled(cpuPage, "cpu", "CPU Canvas");
+		private MainWindow(Builder builder)
+			: base(builder.GetObject("MainWindow").Handle)
+		{
+			builder.Autoconnect(this);
+			DeleteEvent += OnWindowDeleteEvent;
 
-		var drawingPage = new DrawingPage();
-		stack.AddTitled(drawingPage, "drawing", "Drawing");
+			skiaView = new SKDrawingArea();
+			skiaView.PaintSurface += OnPaintSurface;
+			skiaView.Show();
+			Child = skiaView;
+		}
 
-		Add(rootBox);
-		ShowAll();
+		private void OnWindowDeleteEvent(object sender, DeleteEventArgs a)
+		{
+			Application.Quit();
+		}
 
-		if (DefaultPage == SamplePage.Drawing)
-			stack.VisibleChildName = "drawing";
-	}
+		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		{
+			// the the canvas and properties
+			var canvas = e.Surface.Canvas;
 
-	internal static Builder LoadBuilder(string resourceName)
-	{
-		var builder = new Builder();
-		var assembly = Assembly.GetExecutingAssembly();
-		using var stream = assembly.GetManifestResourceStream(resourceName);
-		using var reader = new StreamReader(stream);
-		builder.AddFromString(reader.ReadToEnd());
-		return builder;
+			// make sure the canvas is blank
+			canvas.Clear(SKColors.White);
+
+			// draw some text
+			using var paint = new SKPaint
+			{
+				Color = SKColors.Black,
+				IsAntialias = true,
+				Style = SKPaintStyle.Fill
+			};
+			using var font = new SKFont
+			{
+				Size = 24
+			};
+			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
+			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
+		}
 	}
 }

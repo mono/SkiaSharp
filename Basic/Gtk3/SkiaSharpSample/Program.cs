@@ -1,21 +1,23 @@
 ﻿using System;
 using Gtk;
 
-namespace SkiaSharpSample;
-
-class Program
+namespace SkiaSharpSample
 {
-	[STAThread]
-	public static void Main(string[] args)
+	class Program
 	{
-		Application.Init();
+		[STAThread]
+		public static void Main(string[] args)
+		{
+			Application.Init();
 
-		var app = new Application("com.companyname.skiasharpsample", GLib.ApplicationFlags.None);
-		app.Register(GLib.Cancellable.Current);
+			var app = new Application("com.companyname.skiasharpsample", GLib.ApplicationFlags.None);
+			app.Register(GLib.Cancellable.Current);
 
-		var win = new MainWindow();
-		app.AddWindow(win);
+			var win = new MainWindow();
+			app.AddWindow(win);
 
-		Application.Run();
+			win.Show();
+			Application.Run();
+		}
 	}
 }

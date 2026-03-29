@@ -1,19 +1,20 @@
 using Gtk;
 
-namespace SkiaSharpSample;
-
-class Program
+namespace SkiaSharpSample
 {
-	public static int Main(string[] args)
+	class Program
 	{
-		var app = Application.New("com.companyname.skiasharpsample", Gio.ApplicationFlags.FlagsNone);
-
-		app.OnActivate += (sender, e) =>
+		public static int Main(string[] args)
 		{
-			var win = new MainWindow((Application)sender);
-			win.Show();
-		};
+			var app = Application.New("com.companyname.skiasharpsample", Gio.ApplicationFlags.FlagsNone);
 
-		return app.RunWithSynchronizationContext(null);
+			app.OnActivate += (sender, e) =>
+			{
+				var win = new MainWindow((Application)sender);
+				win.Show();
+			};
+
+			return app.RunWithSynchronizationContext(null);
+		}
 	}
 }
