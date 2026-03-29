@@ -25,6 +25,13 @@ Task("libSkiaSharp")
     {
         if (Skip(arch)) return;
 
+        // Set the correct profile in project_def.prop for the target architecture
+        var profile = (skiaArch == "x64" || skiaArch == "arm64") ? $"tizen-{tizenVersion64}" : $"mobile-4.0";
+        var propFile = MakeAbsolute((FilePath)"libSkiaSharp/project_def.prop").FullPath;
+        var propContent = System.IO.File.ReadAllText(propFile);
+        propContent = System.Text.RegularExpressions.Regex.Replace(propContent, @"^profile = .+$", $"profile = {profile}", System.Text.RegularExpressions.RegexOptions.Multiline);
+        System.IO.File.WriteAllText(propFile, propContent);
+
         GnNinja($"tizen/{arch}", "skia modules/skottie",
            $"target_os='tizen' " +
            $"target_cpu='{skiaArch}' " +
@@ -44,6 +51,11 @@ Task("libSkiaSharp")
            $"ncli='{TIZEN_STUDIO_HOME}' " +
            $"ncli_version='{tizenVersion}' " +
            $"ncli_version_64='{tizenVersion64}'");
+
+        // Clean previous build output to avoid stale artifacts
+        var buildDir = MakeAbsolute((DirectoryPath)$"libSkiaSharp/{CONFIGURATION}");
+        if (DirectoryExists(buildDir))
+            DeleteDirectory(buildDir, new DeleteDirectorySettings { Recursive = true, Force = true });
 
         RunProcess(tizen, new ProcessSettings {
            Arguments = $"build-native -a {tizenArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
@@ -67,6 +79,18 @@ Task("libHarfBuzzSharp")
     void Build(string arch, string cliArch, string tizenArch, string rootstrap)
     {
         if (Skip(arch)) return;
+
+        // Set the correct profile in project_def.prop for the target architecture
+        var profile = (cliArch == "x64" || cliArch == "arm64") ? $"tizen-{tizenVersion64}" : $"mobile-4.0";
+        var propFile = MakeAbsolute((FilePath)"libHarfBuzzSharp/project_def.prop").FullPath;
+        var propContent = System.IO.File.ReadAllText(propFile);
+        propContent = System.Text.RegularExpressions.Regex.Replace(propContent, @"^profile = .+$", $"profile = {profile}", System.Text.RegularExpressions.RegexOptions.Multiline);
+        System.IO.File.WriteAllText(propFile, propContent);
+
+        // Clean previous build output
+        var buildDir = MakeAbsolute((DirectoryPath)$"libHarfBuzzSharp/{CONFIGURATION}");
+        if (DirectoryExists(buildDir))
+            DeleteDirectory(buildDir, new DeleteDirectorySettings { Recursive = true, Force = true });
 
         RunProcess(tizen, new ProcessSettings {
             Arguments = $"build-native -a {tizenArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
