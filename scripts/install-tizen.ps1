@@ -46,6 +46,18 @@ Write-Host "JAVA_HOME is: $env:JAVA_HOME"
 Write-Host "PATH contains JAVA_HOME: $($env:PATH.Contains("$env:JAVA_HOME"))"
 & "java" -version
 
+# clean up any previous install (the 6.1 installer fails if the directory already exists)
+if (Test-Path "$ts") {
+    Write-Host "Removing previous installation at '$ts'..."
+    Remove-Item -Path "$ts" -Recurse -Force
+}
+
+# install Python 3.8 on Linux (required by Tizen Studio package manager on Ubuntu 22.04+)
+if ($IsLinux) {
+    Write-Host "Installing Python 3.8 from deadsnakes PPA (required by Tizen Studio)..."
+    & "bash" -c "sudo add-apt-repository -y ppa:deadsnakes/ppa && sudo apt-get update && sudo apt-get install -y python3.8 libpython3.8"
+}
+
 # install
 Write-Host "Installing SDK to '$ts'..."
 if ($IsMacOS -or $IsLinux) {
