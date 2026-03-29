@@ -1,10 +1,10 @@
 # SkiaSharp Tizen Sample
 
-Demonstrates SkiaSharp views in a Tizen app with Naviframe navigation, ElmSharp UI controls, and system theme detection.
+Demonstrates SkiaSharp views in a Tizen NUI app with a `TabView` for navigating between CPU rendering, GPU shader animation, and interactive drawing.
 
 ## Sample Pages
 
-This sample shows how to integrate SkiaSharp views into a Tizen app using ElmSharp widgets. The `SKCanvasView` and `SKGLSurfaceView` are created programmatically and added to ElmSharp container widgets, with navigation handled by the Tizen `Naviframe` pattern.
+This sample uses `Tizen.NUI.Components.TabView` with three tabs, each demonstrating a different SkiaSharp rendering approach.
 
 ### CPU
 
@@ -12,33 +12,32 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 
 **Features:**
 
-- **`SKCanvasView`** — Software-rendered canvas backed by a Tizen `EvasObject`, integrated into the ElmSharp widget tree.
+- **`SKCanvasView`** — Software-rendered canvas integrated into the NUI view tree.
 - **`SKShader`** — Radial gradient background created with `SKShader.CreateRadialGradient`.
 - **`SKCanvas.DrawCircle`** — Semi-transparent colored circles composited over the gradient.
 - **`SKCanvas.DrawText`** — Centered "SkiaSharp" text rendered with measured alignment.
-- **`SKTypeface`** — Custom font loaded via `SKTypeface.FromStream`.
 
 ### GPU
 
-A real-time animated shader running at full frame rate on the GPU via OpenGL ES (EFL), with touch interaction.
+A real-time animated shader running at full frame rate via the NUI GPU surface, with touch interaction.
 
 **Features:**
 
-- **`SKGLSurfaceView`** — Hardware-accelerated canvas backed by OpenGL ES through the Tizen EFL graphics stack.
-- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.CreateShader` and rendered via `ToShader`.
-- **Render loop** — Continuous animation with an FPS counter overlay.
-- **Touch interaction** — Touch position is passed as a shader uniform via Tizen `GestureLayer`.
+- **`SKGLSurfaceView`** — GPU-composited canvas using `NativeImageQueue` double-buffering through the NUI rendering pipeline.
+- **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
+- **Render loop** — Continuous animation driven by a `Timer` at ~60 fps with an FPS counter overlay.
+- **Touch interaction** — Touch position is passed as a shader uniform (`iTouchPos`) to create an interactive white blob.
 
 ### Drawing
 
-A freehand drawing canvas with a cycling color palette and touch-based input.
+A freehand drawing canvas with a color palette toolbar and touch-based input.
 
 **Features:**
 
 - **`SKCanvasView`** — Software-rendered canvas invalidated on demand after each stroke or clear.
-- **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from touch events.
-- **`GestureLayer`** — Tizen gesture API for tracking press, move, and release.
-- **Color palette** — Six selectable colors cycled via a button.
+- **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from NUI touch events.
+- **Color palette** — Six selectable color swatches with visual selection indicator.
+- **Clear button** — Removes all strokes and resets the canvas.
 
 ## Requirements
 
@@ -52,11 +51,3 @@ Build:
 ```bash
 dotnet build -f net10.0-tizen
 ```
-
-To start on a different page, change `DefaultPage` in `App.cs`:
-
-```csharp
-public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
-```
-
-Available pages: `Cpu` (default), `Gpu`, `Drawing`
