@@ -1,21 +1,12 @@
-﻿using AppKit;
+using AppKit;
 using Foundation;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+[Register(nameof(AppDelegate))]
+public class AppDelegate : NSApplicationDelegate
 {
-	[Register(nameof(AppDelegate))]
-	public class AppDelegate : NSApplicationDelegate
-	{
-		public override void DidFinishLaunching(NSNotification notification)
-		{
-			// Insert code here to initialize your application
-		}
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
 
-		public override void WillTerminate(NSNotification notification)
-		{
-			// Insert code here to tear down your application
-		}
-
-		public override bool ApplicationShouldTerminateAfterLastWindowClosed(NSApplication sender) => true;
-	}
+	public override bool ApplicationShouldTerminateAfterLastWindowClosed(NSApplication sender) => true;
 }
