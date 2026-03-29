@@ -5,11 +5,12 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="**\*.glade" />
-    <EmbeddedResource Include="**\*.glade" LogicalName="%(Filename)%(Extension)" />
+    <PackageReference Include="GtkSharp" Version="3.24.24.95" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="GtkSharp" Version="3.24.24.95" />
+    <EmbeddedResource Include="MainWindow.glade" />
+    <EmbeddedResource Include="CpuPage.glade" />
+    <EmbeddedResource Include="DrawingPage.glade" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="3.119.3-preview.1.1" />
