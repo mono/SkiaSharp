@@ -51,11 +51,23 @@ ls output/nugets/SkiaSharp.3*-*.nupkg
 
 ## NuGet Package Version Construction
 
-Preview package versions follow this pattern:
+The cake build constructs the NuGet preview suffix in `build.cake` (lines 56-72):
 
+```csharp
+var PREVIEW_LABEL = Argument("previewLabel", EnvironmentVariable("PREVIEW_LABEL") ?? "preview");
+var FEATURE_NAME = EnvironmentVariable("FEATURE_NAME") ?? "";
+var BUILD_NUMBER = Argument("buildNumber", EnvironmentVariable("BUILD_NUMBER") ?? "0");
+
+var PREVIEW_NUGET_SUFFIX = "";
+if (!string.IsNullOrEmpty(FEATURE_NAME))
+    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
+else
+    PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
+if (!string.IsNullOrEmpty(BUILD_NUMBER))
+    PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
 ```
-{base_version}-{PREVIEW_LABEL}.{BUILD_NUMBER}
-```
+
+The final NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`:
 
 - **base_version**: From `scripts/VERSIONS.txt` (e.g. `3.119.4`)
 - **PREVIEW_LABEL**: The preview label (e.g. `preview.0` — first preview, `preview.1` — second, etc.)
