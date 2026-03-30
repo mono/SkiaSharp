@@ -313,10 +313,13 @@
     },
     "companionPr": {
       "type": "object",
-      "required": ["prNumber", "summary", "recommendations"],
+      "required": ["prNumber", "status", "summary", "recommendations", "unchanged"],
       "additionalProperties": false,
       "properties": {
         "prNumber": { "type": "integer", "minimum": 1 },
+        "status": {
+          "$ref": "#/$defs/reviewStatus"
+        },
         "summary": {
           "type": "string",
           "description": "Brief overview of the C# companion PR changes."
@@ -326,23 +329,20 @@
           "items": { "type": "string" },
           "description": "Actionable recommendations from the C# review."
         },
-        "filesReviewed": { "type": "integer", "minimum": 0 },
-        "filesSkipped": { "type": "integer", "minimum": 0 },
-        "findings": {
+        "added": {
           "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["file", "type", "summary"],
-            "additionalProperties": false,
-            "properties": {
-              "file": { "type": "string" },
-              "type": {
-                "type": "string",
-                "enum": ["new_api", "changed_api", "disposal_pattern", "abi_concern", "missing_test", "platform_specific", "other"]
-              },
-              "summary": { "type": "string" }
-            }
-          }
+          "items": { "$ref": "#/$defs/sourceFile" },
+          "description": "New files in the companion PR (new C# wrappers, new tests)."
+        },
+        "changed": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sourceFile" },
+          "description": "Modified files in the companion PR (updated wrappers, new overloads)."
+        },
+        "unchanged": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of reviewed files with no changes requiring attention (e.g., skipped generated files)."
         }
       }
     }

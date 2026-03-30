@@ -56,26 +56,45 @@ Check `tests/Tests/` for:
 
 ## Output Format
 
-Add a `companionPr` section to the JSON report:
+Add a `companionPr` section to the JSON report using the same `sourceFile` structure
+as upstream/interop integrity sections:
 
 ```json
 {
   "companionPr": {
     "prNumber": 3560,
+    "status": "REVIEW_REQUIRED",
     "summary": "Brief overview of C# changes...",
     "recommendations": ["Action item 1", "..."],
-    "filesReviewed": 12,
-    "filesSkipped": 4,
-    "findings": [
+    "added": [
       {
-        "file": "binding/SkiaSharp/SKSurface.cs",
-        "type": "new_api",
-        "summary": "New DrawSurface overload with SKSamplingOptions parameter"
+        "path": "binding/SkiaSharp/SKFoo.cs",
+        "summary": "New wrapper for sk_foo_bar API — creates SKFoo with factory method",
+        "diff": "--- a/dev/null\n+++ b/binding/SkiaSharp/SKFoo.cs\n...",
+        "relatedFiles": [
+          { "path": "src/c/sk_foo.cpp", "relationship": "C API implementation" }
+        ]
       }
-    ]
+    ],
+    "changed": [
+      {
+        "path": "binding/SkiaSharp/SKSurface.cs",
+        "summary": "New DrawSurface overload with SKSamplingOptions parameter",
+        "diff": "...",
+        "oldDiff": "...",
+        "newDiff": "...",
+        "patchDiff": "..."
+      }
+    ],
+    "unchanged": 4
   }
 }
 ```
 
-Finding types: `new_api`, `changed_api`, `disposal_pattern`, `abi_concern`,
-`missing_test`, `platform_specific`, `other`.
+Categories:
+- `added` — new C# files (new wrappers, new test files)
+- `changed` — modified C# files (updated wrappers, new overloads, signature changes)
+- `unchanged` — count of reviewed files with no changes requiring attention (skipped generated files)
+
+Use `relatedFiles` to cross-link companion PR files to their interop counterparts
+(e.g., a C# wrapper → its C API implementation in the interop section).

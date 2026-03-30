@@ -79,6 +79,22 @@ so you can inspect upstream directly.
 **The same principle applies to changed patches:** if a patch changed, check upstream to
 understand whether the change was forced by an upstream API change vs. a deliberate fork modification.
 
+### Companion PR Summaries
+
+For each file in the companion PR's `added` and `changed` arrays, describe what the C# code does:
+- New wrapper (what API it exposes, what Skia function it wraps)
+- Changed wrapper (what was modified and why — e.g., new overload, updated disposal pattern)
+- Test file (what API/behavior is being tested)
+- Build/config change (what target/platform is affected)
+
+Use `relatedFiles` to cross-link to the corresponding interop files. This enables
+one-click navigation between a C# wrapper and its C API implementation.
+
+Example: `"New SKFoo wrapper — factory method FromData() wrapping sk_foo_new_from_data(). Validates data parameter, returns null on native failure."`
+
+Include diff content for all companion PR files — the viewer renders diffs the same
+way as upstream/interop sections (Direct/Patch/Old/New for changed files).
+
 ## Step 2 — Build the JSON Report
 
 Build JSON conforming to `skia-review-schema.json` v1.0. Use `schema-cheatsheet.md` for quick reference.

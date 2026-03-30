@@ -78,7 +78,10 @@ Read [references/csharp-review.md](references/csharp-review.md) for detailed gui
 1. Ignore all `*Api.generated.cs` files (validated by the orchestrator)
 2. Review hand-written C# wrappers: null handling, disposal, ABI compatibility
 3. Check test coverage for new/changed APIs
-4. Add `companionPr` section to the report
+4. Add `companionPr` section to the report with `added`/`changed` file arrays
+   - Each file uses the same `sourceFile` structure as upstream/interop (path, summary, diff, relatedFiles)
+   - Include actual diff content for all files
+   - Cross-link to interop files using `relatedFiles`
 
 The working tree is checked out to the companion PR, so you can read files directly.
 
