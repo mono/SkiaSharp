@@ -65,7 +65,7 @@ Preview package versions follow this pattern:
 
 ## Cake Arguments
 
-### For downloading (`docs-download-output`, `externals-download`)
+### For downloading (`docs-download-output`)
 
 These arguments control **which CI build** to fetch from the feed:
 
@@ -74,7 +74,7 @@ These arguments control **which CI build** to fetch from the feed:
 | `--previewLabel` | `PREVIEW_LABEL` | `preview` | When starts with `pr.`, fetches PR build |
 | `--gitSha` | `GIT_SHA` | `""` | Fetch by commit SHA |
 | `--gitBranch` | `GIT_BRANCH_NAME` | `""` | Fetch by branch name |
-| `--artifactsFeed` | — | SkiaSharp-CI URL | Override the NuGet feed |
+| `--previewFeed` | — | SkiaSharp-CI URL | Override the NuGet feed |
 
 ### For building samples (`samples`)
 
@@ -92,7 +92,6 @@ These arguments control the **NuGet version suffix** used when rewriting package
 
 | Target | What it does | Output directory |
 |--------|-------------|-----------------|
-| `externals-download` | Downloads native binaries from CI feed | `output/native/{platform}/` |
 | `docs-download-output` | Downloads stable + preview NuGet packages from CI feed | `output/nugets/` |
 | `samples-generate` | Copies samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-preview/` |
 | `samples-prepare` | Clears cached SkiaSharp/HarfBuzz packages, copies nupkgs for Docker | — |
@@ -167,16 +166,6 @@ The `CreateSamplesDirectory()` function in `scripts/cake/samples.cake`:
 2. **Existing `<PackageReference>`** → version updated from `VERSIONS.txt`
 3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
 4. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)
-
-## Building with Native Binaries (for local development)
-
-If you need native binaries (e.g. for running samples directly with project references):
-
-```bash
-dotnet cake --target=externals-download
-```
-
-> **Note:** `externals-download` clears `./output/` first. If you need both native binaries and NuGet packages, run `externals-download` first, then `docs-download-output`.
 
 ## Troubleshooting
 

@@ -21,9 +21,6 @@ target, so they need downloadable NuGet packages.
 
 ```bash
 # Full workflow — clear cache, download, detect version, build all samples
-dotnet cake --target=validate-samples-full
-
-# Or step by step:
 rm -rf externals/package_cache/skiasharp* externals/package_cache/harfbuzzsharp*
 dotnet cake --target=docs-download-output
 # Detect version from downloaded nupkgs, then:
@@ -71,8 +68,7 @@ Two package sets are fetched:
 
 Output goes to `output/nugets/`.
 
-> **Note:** This target clears `./output/` first. If you also need native binaries
-> in `output/native/`, run `externals-download` first, then `docs-download-output`.
+> **Note:** This target clears `./output/` first.
 
 ### Step 3: Detect the Preview Version
 
@@ -138,10 +134,18 @@ After extraction, the real nupkg versions are in `output/nugets/`.
 The cake build constructs the NuGet preview suffix from two arguments:
 
 ```csharp
-// build.cake:57-72
+// build.cake:56-72
 var PREVIEW_LABEL = Argument("previewLabel", EnvironmentVariable("PREVIEW_LABEL") ?? "preview");
+var FEATURE_NAME = EnvironmentVariable("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = Argument("buildNumber", EnvironmentVariable("BUILD_NUMBER") ?? "0");
-PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+
+var PREVIEW_NUGET_SUFFIX = "";
+if (!string.IsNullOrEmpty(FEATURE_NAME))
+    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
+else
+    PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
+if (!string.IsNullOrEmpty(BUILD_NUMBER))
+    PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
 // Result: "preview.0.76" when PREVIEW_LABEL="preview.0" and BUILD_NUMBER="76"
 ```
 
@@ -154,8 +158,8 @@ The final NuGet version: `{base_version}-{PREVIEW_NUGET_SUFFIX}`
 The `DownloadPackageAsync` function resolves the CI artifact version (checked in priority order):
 
 ```csharp
-// scripts/cake/UtilsManaged.cake:165-174
-if (PREVIEW_LABEL.StartsWith("pr."))     → "0.0.0-pr.{number}.*"
+// scripts/cake/UtilsManaged.cake:162-173
+if (PREVIEW_LABEL.StartsWith("pr."))     → "0.0.0-{PREVIEW_LABEL}.*"   (e.g. "0.0.0-pr.3553.*")
 else if (!string.IsNullOrEmpty(GIT_SHA)) → "0.0.0-commit.{sha}.*"
 else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME)) → "0.0.0-branch.{name}.*"
 else                                     → "0.0.0-branch.main.*"
@@ -179,7 +183,7 @@ Two output trees are created:
 | `--previewLabel` | `PREVIEW_LABEL` | `preview` | Preview suffix label |
 | `--buildNumber` | `BUILD_NUMBER` | `0` | Build number for suffix |
 | `--buildCounter` | `BUILD_COUNTER` | Same as buildNumber | Build counter for CI version |
-| `--artifactsFeed` | — | SkiaSharp-CI URL | Override the NuGet feed |
+| `--previewFeed` | — | SkiaSharp-CI URL | Override the NuGet feed |
 | `--gitBranch` | `GIT_BRANCH_NAME` | `""` | Branch name for CI version |
 | `--sample` | — | `""` | Filter to specific sample |
 
@@ -213,7 +217,6 @@ dotnet nuget locals all --clear
 ## Further Reading
 
 - [Building Samples](../../documentation/dev/building-samples.md) — Full developer documentation
-- `build.cake` lines 57-83 — Version construction
-- `build.cake` lines 473-651 — Sample targets
-- `scripts/cake/samples.cake` — ProjectRef→PackageRef conversion logic
+- `build.cake` lines 56-83 — Version construction
+- `scripts/cake/samples.cake` — Sample targets and ProjectRef→PackageRef conversion logic
 - `scripts/VERSIONS.txt` — Package version source of truth
