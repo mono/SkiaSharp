@@ -5,8 +5,8 @@ Your job is to add human-readable summaries and assemble the final report.
 
 ## Step 1 — Write Summaries
 
-For **every** item in `added`, `removed`, and `changed` across all three sections
-(`upstreamIntegrity`, `interopIntegrity`, `depsAudit`), add a `summary` field.
+For **every** item in `added`, `removed`, and `changed` across all four sections
+(`upstreamIntegrity`, `interopIntegrity`, `depsAudit`, `companionPr`), add a `summary` field.
 
 ### Rules
 

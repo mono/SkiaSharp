@@ -1,12 +1,14 @@
 # C# Companion PR Review
 
-When a SkiaSharp companion PR is provided, review the non-generated C# changes.
-This is **required** — the companion PR contains the hand-written wrappers that expose
-the Skia update to .NET consumers.
+The orchestrator mechanically generates the `companionPr` section in `raw-results.json`
+with file lists, diffs, and categories (added/changed). Your job is to:
+1. Add a `summary` to each file item (same as upstream/interop summaries)
+2. Review the diffs for correctness (see checklist below)
+3. Add `relatedFiles` cross-links to interop files where applicable
 
 ## What to Ignore
 
-- **All `*Api.generated.cs` files** — already validated by the orchestrator
+- **All `*Api.generated.cs` files** — already filtered out by `check_companion.py`
 - **Whitespace-only changes** — not worth reviewing
 - **Comment-only changes** — unless they document a behavioral change
 

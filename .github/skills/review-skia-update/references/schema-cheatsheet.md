@@ -29,7 +29,8 @@ Every section has `summary` (brief overview) and `recommendations` (actionable i
 | `check_generated_files.py` | Regenerate P/Invokes independently | `generatedFiles` |
 | `check_source.py` | Diff-of-diffs for upstream + interop | `upstreamIntegrity` + `interopIntegrity` |
 | `check_deps.py` | DEPS dependency changes | `depsAudit` |
-| `run_review.py` | Orchestrator — runs all three above | `raw-results.json` |
+| `check_companion.py` | Companion PR file diffs (filtered) | `companionPr` |
+| `run_review.py` | Orchestrator — runs all four above | `raw-results.json` |
 
 ## Status Values
 
