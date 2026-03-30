@@ -72,25 +72,23 @@ Output goes to `output/nugets/`.
 
 ### Step 3: Detect the Preview Version
 
-The preview label and build number must be passed to the samples target. Extract them
-from the downloaded nupkg filenames:
+The preview label and build number must be passed to the samples target. Run the
+detection script to extract them from the downloaded nupkg filenames:
 
 ```bash
-# Find a preview SkiaSharp package
-PREVIEW_PKG=$(ls output/nugets/SkiaSharp.[0-9]*-*.nupkg 2>/dev/null | grep -v NativeAssets | head -1)
-echo "Preview package: $PREVIEW_PKG"
-
-# Extract the suffix (everything after base version, before .nupkg)
-# Example: SkiaSharp.3.119.4-preview.0.76.nupkg → preview.0.76
-SUFFIX=$(basename "$PREVIEW_PKG" | sed 's/^SkiaSharp\.[0-9]*\.[0-9]*\.[0-9]*-//' | sed 's/\.nupkg$//')
-echo "Full suffix: $SUFFIX"
-
-# Split: preview label = everything before last dot, build number = last component
-PREVIEW_LABEL=$(echo "$SUFFIX" | sed 's/\.[0-9]*$//')
-BUILD_NUMBER=$(echo "$SUFFIX" | grep -o '[0-9]*$')
-echo "Preview label: $PREVIEW_LABEL"
-echo "Build number: $BUILD_NUMBER"
+bash .github/skills/validate-samples/scripts/detect-preview-version.sh
 ```
+
+The script prints the values to stdout:
+```
+Found: SkiaSharp.3.119.4-preview.0.76.nupkg
+Preview label: preview.0
+Build number:  76
+Full suffix:   preview.0.76
+```
+
+Parse the `Preview label` and `Build number` values from the output and use them
+in the next step.
 
 ### Step 4: Build Samples
 

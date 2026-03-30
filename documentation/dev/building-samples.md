@@ -128,21 +128,17 @@ This populates `output/nugets/` with the real `.nupkg` files extracted from the 
 ### 3. Detect the preview version
 
 ```bash
-# Use the helper script
-source .github/skills/validate-samples/scripts/detect-preview-version.sh
-# Sets: PREVIEW_LABEL, BUILD_NUMBER
+# Use the helper script (prints Preview label and Build number to stdout)
+bash .github/skills/validate-samples/scripts/detect-preview-version.sh
 
-# Or manually:
-PREVIEW_PKG=$(ls output/nugets/SkiaSharp.[0-9]*-*.nupkg 2>/dev/null | grep -v NativeAssets | head -1)
-SUFFIX=$(basename "$PREVIEW_PKG" | sed 's/^SkiaSharp\.[0-9]*\.[0-9]*\.[0-9]*-//' | sed 's/\.nupkg$//')
-PREVIEW_LABEL=$(echo "$SUFFIX" | sed 's/\.[0-9]*$//')
-BUILD_NUMBER=$(echo "$SUFFIX" | grep -o '[0-9]*$')
+# Or source it to set PREVIEW_LABEL and BUILD_NUMBER as env vars:
+source .github/skills/validate-samples/scripts/detect-preview-version.sh
 ```
 
 ### 4. Build samples
 
 ```bash
-# Build all samples
+# Build all samples (use values from step 3)
 dotnet cake --target=samples --previewLabel=$PREVIEW_LABEL --buildNumber=$BUILD_NUMBER
 
 # Build a single sample
