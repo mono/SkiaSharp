@@ -19,9 +19,9 @@ target, so they need downloadable NuGet packages.
 
 ## Quick Reference
 
-```bash
+```powershell
 # Full workflow — clear cache, download, detect version, build all samples
-rm -rf externals/package_cache/skiasharp* externals/package_cache/harfbuzzsharp*
+rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
 dotnet cake --target=docs-download-output
 # Detect version from downloaded nupkgs, then:
 dotnet cake --target=samples --previewLabel=preview.0 --buildNumber=76
@@ -38,14 +38,13 @@ dotnet cake --target=samples --previewLabel=preview.0 --buildNumber=76
 
 ### Step 1: Clear cached packages
 
-```bash
-rm -rf externals/package_cache/skiasharp*
-rm -rf externals/package_cache/harfbuzzsharp*
+```powershell
+rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
 ```
 
 If you suspect deeper caching issues, also clear the global NuGet cache:
 
-```bash
+```powershell
 dotnet nuget locals all --clear
 ```
 
@@ -54,13 +53,13 @@ dotnet nuget locals all --clear
 Downloads the latest NuGet packages from the CI feed into `output/nugets/`.
 This target clears `./output/` first.
 
-```bash
+```powershell
 dotnet cake --target=docs-download-output
 ```
 
 To download from a specific source instead of the latest main build:
 
-```bash
+```powershell
 # From a PR
 dotnet cake --target=docs-download-output --previewLabel=pr.3553
 
@@ -76,8 +75,8 @@ dotnet cake --target=docs-download-output --gitSha=abc123def456
 Run the detection script — it prints the preview label and build number
 extracted from the downloaded nupkg filenames:
 
-```bash
-bash .github/skills/validate-samples/scripts/detect-preview-version.sh
+```powershell
+pwsh .github/skills/validate-samples/scripts/detect-preview-version.ps1
 ```
 
 Output:
@@ -92,27 +91,28 @@ Parse `Preview label` and `Build number` from the output for the next step.
 
 ### Step 4: Build samples
 
-```bash
+```powershell
 dotnet cake --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER>
 ```
 
 To build a single sample, add `--sample=<name>`:
 
-```bash
+```powershell
 dotnet cake --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER> --sample=Blazor
 ```
 
 ## Troubleshooting
 
 ### Stale packages after repeated runs
-```bash
-rm -rf externals/package_cache/skiasharp* externals/package_cache/harfbuzzsharp*
+```powershell
+rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
 dotnet nuget locals all --clear
 ```
 
 ### Platform-specific samples not building
 Some platforms are disabled by default:
-```bash
+```powershell
+# Pass these MSBuild properties to enable optional platforms
 -p:IsNetTVOSSupported=true
 -p:IsNetTizenSupported=true
 -p:IsNetMacOSSupported=true

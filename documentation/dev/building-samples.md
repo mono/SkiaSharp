@@ -42,7 +42,7 @@ The `.*` wildcard selects the **latest** matching build from the feed.
 
 After downloading, the extracted nupkgs in `output/nugets/` have real version numbers. The `samples` target needs `--previewLabel` and `--buildNumber` matching these real versions:
 
-```bash
+```powershell
 # Detect from downloaded packages
 ls output/nugets/SkiaSharp.3*-*.nupkg
 # → SkiaSharp.3.119.4-preview.0.76.nupkg
@@ -140,14 +140,15 @@ The `CreateSamplesDirectory()` function in `scripts/cake/samples.cake`:
 ## Troubleshooting
 
 ### Stale cached packages
-```bash
-rm -rf externals/package_cache/skiasharp* externals/package_cache/harfbuzzsharp*
+```powershell
+rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
 dotnet nuget locals all --clear
 ```
 
 ### tvOS/macOS/Tizen not building
 Some platforms are disabled by default:
-```bash
+```powershell
+# Pass these MSBuild properties to enable optional platforms
 -p:IsNetTVOSSupported=true
 -p:IsNetTizenSupported=true
 -p:IsNetMacOSSupported=true
