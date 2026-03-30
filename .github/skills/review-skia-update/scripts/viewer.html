@@ -355,8 +355,8 @@
         if (!targetPath) return;
 
         // Search all source integrity sections for a matching file row
-        const sectionKeys = ['upstreamIntegrity', 'interopIntegrity'];
-        const tabMap = { upstreamIntegrity: 'upstream', interopIntegrity: 'interop' };
+        const sectionKeys = ['upstreamIntegrity', 'interopIntegrity', 'companionPr'];
+        const tabMap = { upstreamIntegrity: 'upstream', interopIntegrity: 'interop', companionPr: 'companion-pr' };
 
         for (const sectionKey of sectionKeys) {
           const section = report[sectionKey] || {};
@@ -475,25 +475,6 @@
         }
       }
 
-      function findingBadgeClass(type) {
-        switch (upper(type)) {
-          case 'ABI_CONCERN':
-            return 'text-bg-danger';
-          case 'MISSING_TEST':
-            return 'text-bg-warning';
-          case 'NEW_API':
-            return 'text-bg-success';
-          case 'CHANGED_API':
-            return 'text-bg-info';
-          case 'DISPOSAL_PATTERN':
-            return 'text-bg-warning';
-          case 'PLATFORM_SPECIFIC':
-            return 'text-bg-secondary';
-          default:
-            return 'badge-soft';
-        }
-      }
-
       function escapeHtml(value) {
         return text(value, '')
           .replaceAll('&', '&amp;')
@@ -564,8 +545,8 @@
         const links = document.getElementById('headerLinks');
         links.innerHTML = '';
         const owner = getOwner(repo);
-        if (skiaSharpPrNumber && owner) {
-          links.appendChild(createLinkButton(`https://github.com/${repo}/pull/${skiaSharpPrNumber}`, `SkiaSharp PR #${skiaSharpPrNumber}`, 'bi-box-arrow-up-right'));
+        if (skiaSharpPrNumber) {
+          links.appendChild(createLinkButton(`https://github.com/mono/SkiaSharp/pull/${skiaSharpPrNumber}`, `SkiaSharp PR #${skiaSharpPrNumber}`, 'bi-box-arrow-up-right'));
         }
         if (skiaPrNumber && owner) {
           links.appendChild(createLinkButton(`https://github.com/${owner}/skia/pull/${skiaPrNumber}`, `Skia PR #${skiaPrNumber}`, 'bi-box-arrow-up-right', 'outline-secondary'));
@@ -594,7 +575,7 @@
           case 'depsAudit':
             return asArray(section.added).length + asArray(section.removed).length + asArray(section.changed).length;
           case 'companionPr':
-            return asArray(section.findings).length;
+            return asArray(section.added).length + asArray(section.changed).length;
           default:
             return 0;
         }
@@ -736,8 +717,8 @@
             wrapper.appendChild(renderDepsTab(section));
             break;
           case 'companionPr':
-            extraHost.appendChild(renderCompanionStats(section));
-            wrapper.appendChild(renderCompanionTab(section));
+            extraHost.appendChild(renderSourceStats(section));
+            wrapper.appendChild(renderSourceIntegrityTab(tab.key, section, tab.label));
             break;
           default:
             extraHost.appendChild(renderEmpty('No data available.'));
@@ -778,17 +759,6 @@
           { label: 'Removed', value: asArray(section.removed).length },
           { label: 'Changed', value: asArray(section.changed).length },
           { label: 'Unchanged', value: text(section.unchanged, '0') }
-        ].forEach((item) => card.appendChild(createStatsTile(item.label, item.value)));
-        return card;
-      }
-
-      function renderCompanionStats(section) {
-        const card = document.createElement('div');
-        card.className = 'stats-grid';
-        [
-          { label: 'Files Reviewed', value: text(section.filesReviewed, '0') },
-          { label: 'Files Skipped', value: text(section.filesSkipped, '0') },
-          { label: 'Findings', value: asArray(section.findings).length }
         ].forEach((item) => card.appendChild(createStatsTile(item.label, item.value)));
         return card;
       }
@@ -883,6 +853,14 @@
           <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
             <h3 class="h6 mb-0">${escapeHtml(label)} Integrity Review</h3>
             <div class="d-flex align-items-center gap-3" id="${controlId}">
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-primary btn-sm" data-expand-all title="Expand All">
+                  <i class="bi bi-arrows-expand me-1"></i>Expand
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-collapse-all title="Collapse All">
+                  <i class="bi bi-arrows-collapse me-1"></i>Collapse
+                </button>
+              </div>
               <div class="form-check form-switch mb-0">
                 <input class="form-check-input" type="checkbox" id="${sectionKey}-show-viewed" checked>
                 <label class="form-check-label small" for="${sectionKey}-show-viewed">Show viewed</label>
@@ -912,7 +890,7 @@
         const addItems = (items, groupType) => {
           items.forEach((item, itemIndex) => {
             const el = createSourceFileItem(sectionKey, groupType, item, itemIndex);
-            allItems.push({ el, groupType });
+            allItems.push({ el, groupType, itemIndex });
             fileList.appendChild(el);
           });
         };
@@ -953,6 +931,41 @@
           if (viewedCheck) {
             viewedCheck.addEventListener('change', () => applyFilters());
           }
+        });
+
+        // Expand All / Collapse All buttons
+        const expandAllBtn = card.querySelector('[data-expand-all]');
+        const collapseAllBtn = card.querySelector('[data-collapse-all]');
+
+        expandAllBtn.addEventListener('click', () => {
+          allItems.forEach(({ el, groupType, itemIndex }) => {
+            const itemId = `${sectionKey}-${groupType}-${itemIndex}`;
+            const body = el.querySelector(`#body-${itemId}`);
+            const chevron = el.querySelector(`#chevron-${itemId}`);
+            if (body && body.classList.contains('d-none')) {
+              body.classList.remove('d-none');
+              if (chevron) {
+                chevron.classList.remove('bi-chevron-right');
+                chevron.classList.add('bi-chevron-down');
+              }
+              renderDiffForItem(sectionKey, groupType, itemIndex);
+            }
+          });
+        });
+
+        collapseAllBtn.addEventListener('click', () => {
+          allItems.forEach(({ el, groupType, itemIndex }) => {
+            const itemId = `${sectionKey}-${groupType}-${itemIndex}`;
+            const body = el.querySelector(`#body-${itemId}`);
+            const chevron = el.querySelector(`#chevron-${itemId}`);
+            if (body && !body.classList.contains('d-none')) {
+              body.classList.add('d-none');
+              if (chevron) {
+                chevron.classList.remove('bi-chevron-down');
+                chevron.classList.add('bi-chevron-right');
+              }
+            }
+          });
         });
 
         function applyFilters() {
@@ -1065,17 +1078,6 @@
         }
 
         return container;
-      }
-
-      function toggleAllAccordions(container, expand) {
-        container.querySelectorAll('.accordion-collapse').forEach((element) => {
-          const instance = bootstrap.Collapse.getOrCreateInstance(element, { toggle: false });
-          if (expand) {
-            instance.show();
-          } else {
-            instance.hide();
-          }
-        });
       }
 
       function getSourceItem(sectionKey, groupType, itemIndex) {
@@ -1237,55 +1239,6 @@
           .replaceAll('"', '&quot;')
           .replaceAll('<', '&lt;')
           .replaceAll('>', '&gt;');
-      }
-
-      function renderCompanionTab(section) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'd-grid gap-4';
-
-        // Full-width findings table
-        const findingsCard = document.createElement('div');
-        findingsCard.className = 'card surface-card';
-        findingsCard.innerHTML = `
-          <div class="card-header d-flex justify-content-between align-items-center gap-2">
-            <h3 class="h6 mb-0">Findings</h3>
-            <span class="badge text-bg-light border">${asArray(section.findings).length}</span>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>File</th>
-                    <th>Type</th>
-                    <th>Summary</th>
-                  </tr>
-                </thead>
-                <tbody data-role="findings-body"></tbody>
-              </table>
-            </div>
-          </div>
-        `;
-
-        const body = findingsCard.querySelector('[data-role="findings-body"]');
-        const findings = asArray(section.findings);
-        if (!findings.length) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="3"><div class="empty-state py-4">No companion PR findings were recorded.</div></td>';
-          body.appendChild(tr);
-        } else {
-          findings.forEach((finding) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td class="mono">${escapeHtml(text(finding.file, '—'))}</td>
-              <td><span class="badge ${findingBadgeClass(finding.type)}">${escapeHtml(text(finding.type, 'NOTE'))}</span></td>
-              <td>${escapeHtml(text(finding.summary, 'No summary provided.'))}</td>
-            `;
-            body.appendChild(tr);
-          });
-        }
-        wrapper.appendChild(findingsCard);
-        return wrapper;
       }
 
       function renderEmpty(message) {

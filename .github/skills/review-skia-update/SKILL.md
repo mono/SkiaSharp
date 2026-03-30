@@ -34,7 +34,7 @@ Phase 3: Review C# PR      →  Phase 4: Validate & persist
 ## Phase 1 — Run the Orchestrator
 
 A single script handles all mechanical work: fetching PR metadata, checking out both PRs,
-running the generator, checking source integrity, and auditing DEPS.
+running the generator, checking source integrity, auditing DEPS, and analyzing companion PR files.
 
 ```bash
 python3 .github/skills/review-skia-update/scripts/run_review.py \
@@ -44,7 +44,9 @@ python3 .github/skills/review-skia-update/scripts/run_review.py \
 
 Both parameters are required. A Skia update always has a companion SkiaSharp PR.
 
-**Output:** `raw-results.json` in the output directory with all check results.
+**Output:** `raw-results.json` in the output directory with all check results, including
+mechanically generated file lists and diffs for upstream integrity, interop integrity, DEPS,
+and companion PR files.
 
 After this runs, the working tree is checked out to the PR state — you can browse files locally.
 
@@ -61,10 +63,14 @@ After this runs, the working tree is checked out to the PR state — you can bro
 Read [references/writing-summaries.md](references/writing-summaries.md) for detailed guidance.
 
 1. Load `raw-results.json` from the output directory printed by the orchestrator
-2. For every item in added/removed/changed: read the diff and write a factual summary
-3. Assemble the final JSON report conforming to `skia-review-schema.json`
-4. Include actual diff content in the JSON (not file path references)
-5. **Save the report to `{output_dir}/{pr_number}.json`** — the same directory as `raw-results.json`
+2. For every item in added/removed/changed across ALL sections (upstream, interop, companion PR):
+   read the diff and write a factual summary
+3. **Verify removed patches** — For each removed upstream patch, check the new upstream
+   code to determine WHY it was dropped. See writing-summaries.md "Verifying Removed Patches"
+   for the required process. Never speculate about patch removal reasons.
+4. Assemble the final JSON report conforming to `skia-review-schema.json`
+5. Include actual diff content in the JSON (not file path references)
+6. **Save the report to `{output_dir}/{pr_number}.json`** — the same directory as `raw-results.json`
 
 ---
 
@@ -72,10 +78,13 @@ Read [references/writing-summaries.md](references/writing-summaries.md) for deta
 
 Read [references/csharp-review.md](references/csharp-review.md) for detailed guidance.
 
-1. Ignore all `*Api.generated.cs` files (validated by the orchestrator)
-2. Review hand-written C# wrappers: null handling, disposal, ABI compatibility
+The orchestrator already produced the `companionPr` section with file lists and diffs in
+`raw-results.json`. This phase adds human-oriented review context:
+
+1. Ignore all `*Api.generated.cs` files (already filtered by the orchestrator)
+2. For each companion PR file, review the diff for: null handling, disposal patterns, ABI compatibility
 3. Check test coverage for new/changed APIs
-4. Add `companionPr` section to the report
+4. Add `relatedFiles` cross-links to interop files where applicable
 
 The working tree is checked out to the companion PR, so you can read files directly.
 
@@ -126,7 +135,7 @@ Generated Files:    PASS/FAIL
 Upstream Integrity: PASS/REVIEW_REQUIRED (Na/Nr/Nc)
 Interop Integrity:  PASS/REVIEW_REQUIRED (Na/Nc)
 DEPS Audit:         PASS/REVIEW_REQUIRED (Na/Nc)
-Companion PR:       N findings
+Companion PR:       PASS/REVIEW_REQUIRED (Na/Nc)
 Risk:               HIGH/MEDIUM/LOW
 ```
 

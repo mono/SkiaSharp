@@ -52,7 +52,7 @@ def main():
         errors.append("Top-level recommendations array is empty")
 
     # Per-section summary and recommendations
-    for section in ("generatedFiles", "upstreamIntegrity", "interopIntegrity", "depsAudit"):
+    for section in ("generatedFiles", "upstreamIntegrity", "interopIntegrity", "depsAudit", "companionPr"):
         if not data.get(section, {}).get("summary"):
             errors.append(f"{section}.summary is missing or empty")
         recs = data.get(section, {}).get("recommendations")
@@ -68,6 +68,12 @@ def main():
             if not has:
                 errors.append(f"{section}.status is REVIEW_REQUIRED but added/removed/changed all empty")
 
+    # companionPr REVIEW_REQUIRED must have items (no removed category)
+    if data.get("companionPr", {}).get("status") == "REVIEW_REQUIRED":
+        has = bool(data["companionPr"].get("added")) or bool(data["companionPr"].get("changed"))
+        if not has:
+            errors.append("companionPr.status is REVIEW_REQUIRED but added/changed both empty")
+
     # Source items must have path + summary; diff fields must be actual content
     for section in ("upstreamIntegrity", "interopIntegrity"):
         for cat in ("added", "removed", "changed"):
@@ -80,6 +86,18 @@ def main():
                     val = item.get(diff_field, "")
                     if val and val.startswith("see "):
                         errors.append(f"{section}.{cat} '{item.get('path','')}' {diff_field} contains file reference instead of actual diff content")
+
+    # Companion PR file items must have path + summary
+    for cat in ("added", "changed"):
+        for item in data.get("companionPr", {}).get(cat, []):
+            if not item.get("path"):
+                errors.append(f"companionPr.{cat} item missing 'path'")
+            if not item.get("summary"):
+                errors.append(f"companionPr.{cat} item '{item.get('path','')}' missing 'summary'")
+            for diff_field in ("diff", "oldDiff", "newDiff", "patchDiff"):
+                val = item.get(diff_field, "")
+                if val and val.startswith("see "):
+                    errors.append(f"companionPr.{cat} '{item.get('path','')}' {diff_field} contains file reference instead of actual diff content")
 
     # Dep items must have name + summary
     for cat in ("added", "removed", "changed"):

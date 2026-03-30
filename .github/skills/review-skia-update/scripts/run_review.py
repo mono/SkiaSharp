@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check_generated_files  # noqa: E402
 import check_source  # noqa: E402
 import check_deps  # noqa: E402
+import check_companion  # noqa: E402
 
 
 def eprint(*args, **kwargs):
@@ -239,6 +240,7 @@ def main():
     gen_result = None
     source_result = None
     deps_result = None
+    companion_result = None
     check_error = None
 
     try:
@@ -269,6 +271,18 @@ def main():
             base_sha=base_sha,
             pr_head=pr_head_sha,
             upstream_branch=f"upstream/{new_milestone}",
+            output_dir=output_dir,
+        )
+        eprint()
+
+        # Step 5 — Companion PR Files
+        eprint("═══ Step 5 — Companion PR ═══")
+        # Fetch the main branch for comparison
+        run_git(["fetch", "origin", "main"], cwd=repo_root)
+        companion_result = check_companion.run_check(
+            repo_root=repo_root,
+            base_ref="origin/main",
+            pr_ref="HEAD",
             output_dir=output_dir,
         )
         eprint()
@@ -303,6 +317,10 @@ def main():
         "upstreamIntegrity": (source_result or {}).get("upstreamIntegrity", {"status": "ERROR", "error": check_error}),
         "interopIntegrity": (source_result or {}).get("interopIntegrity", {"status": "ERROR", "error": check_error}),
         "depsAudit": deps_result or {"status": "ERROR", "error": check_error},
+        "companionPr": {
+            "prNumber": skiasharp_pr_number,
+            **(companion_result or {"status": "ERROR", "error": check_error}),
+        },
     }
 
     raw_results_path = os.path.join(output_dir, "raw-results.json")
@@ -324,6 +342,7 @@ def main():
     eprint(f"  Upstream Integrity: {source_result['upstreamIntegrity']['status']}")
     eprint(f"  Interop Integrity:  {source_result['interopIntegrity']['status']}")
     eprint(f"  DEPS Audit:         {deps_result['status']}")
+    eprint(f"  Companion PR:       {companion_result['status']}")
     eprint()
     eprint(f"Raw results: {raw_results_path}")
     eprint(f"Generator log: {os.path.join(output_dir, 'generator-output.log')}")

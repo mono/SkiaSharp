@@ -14,7 +14,7 @@ Quick reference for `skia-review-schema.json` v1.0.
   "interopIntegrity": { "status": "...", "summary": "...", "recommendations": [...], ... },
   "depsAudit": { "status": "...", "summary": "...", "recommendations": [...], ... },
   "riskAssessment": "HIGH",
-  "companionPr": { "prNumber": N, "summary": "...", "recommendations": [...], "findings": [...] }
+  "companionPr": { "prNumber": N, "status": "...", "summary": "...", "recommendations": [...], "added": [...], "changed": [...], "unchanged": N }
 }
 ```
 
@@ -29,7 +29,8 @@ Every section has `summary` (brief overview) and `recommendations` (actionable i
 | `check_generated_files.py` | Regenerate P/Invokes independently | `generatedFiles` |
 | `check_source.py` | Diff-of-diffs for upstream + interop | `upstreamIntegrity` + `interopIntegrity` |
 | `check_deps.py` | DEPS dependency changes | `depsAudit` |
-| `run_review.py` | Orchestrator — runs all three above | `raw-results.json` |
+| `check_companion.py` | Companion PR file diffs (filtered) | `companionPr` |
+| `run_review.py` | Orchestrator — runs all four above | `raw-results.json` |
 
 ## Status Values
 
@@ -121,7 +122,35 @@ Each changed item:
 { "name": "libpng", "summary": "...", "oldUrl": "...", "oldRevision": "...", "newUrl": "...", "newRevision": "..." }
 ```
 
-## Interop Directories
+## Companion PR (C# changes)
+
+Uses the same `sourceFile` structure as upstream/interop for full file-level review with diffs:
+
+```json
+{
+  "companionPr": {
+    "prNumber": 3560,
+    "status": "REVIEW_REQUIRED",
+    "summary": "Brief overview of C# changes...",
+    "recommendations": ["Action item 1", "..."],
+    "added": [
+      { "path": "binding/SkiaSharp/SKFoo.cs", "summary": "New wrapper for sk_foo API", "diff": "..." }
+    ],
+    "changed": [
+      { "path": "binding/SkiaSharp/SKBar.cs", "summary": "Updated overload for new parameter", "diff": "...", "oldDiff": "...", "newDiff": "...", "patchDiff": "..." }
+    ],
+    "unchanged": 5
+  }
+}
+```
+
+| Category | Meaning |
+|----------|---------|
+| `added` | New files in the companion PR (new C# wrappers, new tests) |
+| `changed` | Modified files (updated wrappers, new overloads, signature changes) |
+| `unchanged` | Count of reviewed files with no changes requiring attention |
+
+Each item uses the same `sourceFile` shape as upstream/interop — full diff support with Direct/Patch/Old/New views, related files cross-links, etc.
 
 Files in these dirs go to `interopIntegrity`; everything else to `upstreamIntegrity`:
 - `include/c/`
@@ -136,9 +165,8 @@ Files in these dirs go to `interopIntegrity`; everything else to `upstreamIntegr
 - Each dep item must have `name` + `summary`
 - `meta.skiasharpPrNumber` is required (integer, not null)
 - `meta.shas.upstream` is the NEW upstream SHA (the milestone being merged in)
-- `companionPr` must have `prNumber`, `summary`, `recommendations`
-- Each companion PR finding must have `file`, `type`, `summary`
-- Finding `type` must be one of: `new_api`, `changed_api`, `disposal_pattern`, `abi_concern`, `missing_test`, `platform_specific`, `other`
+- `companionPr` must have `prNumber`, `status`, `summary`, `recommendations`, `unchanged`
+- Each companion PR file item must have `path` + `summary` (same as source integrity items)
 - `generatedFiles` can include `generatorError` (string) when the generator itself crashes
 - No absolute paths (redact `/Users/...` → relative)
 - Schema version must be `"1.0"`

@@ -1,12 +1,14 @@
 # C# Companion PR Review
 
-When a SkiaSharp companion PR is provided, review the non-generated C# changes.
-This is **required** — the companion PR contains the hand-written wrappers that expose
-the Skia update to .NET consumers.
+The orchestrator mechanically generates the `companionPr` section in `raw-results.json`
+with file lists, diffs, and categories (added/changed). Your job is to:
+1. Add a `summary` to each file item (same as upstream/interop summaries)
+2. Review the diffs for correctness (see checklist below)
+3. Add `relatedFiles` cross-links to interop files where applicable
 
 ## What to Ignore
 
-- **All `*Api.generated.cs` files** — already validated by the orchestrator
+- **All `*Api.generated.cs` files** — already filtered out by `check_companion.py`
 - **Whitespace-only changes** — not worth reviewing
 - **Comment-only changes** — unless they document a behavioral change
 
@@ -56,26 +58,45 @@ Check `tests/Tests/` for:
 
 ## Output Format
 
-Add a `companionPr` section to the JSON report:
+Add a `companionPr` section to the JSON report using the same `sourceFile` structure
+as upstream/interop integrity sections:
 
 ```json
 {
   "companionPr": {
     "prNumber": 3560,
+    "status": "REVIEW_REQUIRED",
     "summary": "Brief overview of C# changes...",
     "recommendations": ["Action item 1", "..."],
-    "filesReviewed": 12,
-    "filesSkipped": 4,
-    "findings": [
+    "added": [
       {
-        "file": "binding/SkiaSharp/SKSurface.cs",
-        "type": "new_api",
-        "summary": "New DrawSurface overload with SKSamplingOptions parameter"
+        "path": "binding/SkiaSharp/SKFoo.cs",
+        "summary": "New wrapper for sk_foo_bar API — creates SKFoo with factory method",
+        "diff": "--- a/dev/null\n+++ b/binding/SkiaSharp/SKFoo.cs\n...",
+        "relatedFiles": [
+          { "path": "src/c/sk_foo.cpp", "relationship": "C API implementation" }
+        ]
       }
-    ]
+    ],
+    "changed": [
+      {
+        "path": "binding/SkiaSharp/SKSurface.cs",
+        "summary": "New DrawSurface overload with SKSamplingOptions parameter",
+        "diff": "...",
+        "oldDiff": "...",
+        "newDiff": "...",
+        "patchDiff": "..."
+      }
+    ],
+    "unchanged": 4
   }
 }
 ```
 
-Finding types: `new_api`, `changed_api`, `disposal_pattern`, `abi_concern`,
-`missing_test`, `platform_specific`, `other`.
+Categories:
+- `added` — new C# files (new wrappers, new test files)
+- `changed` — modified C# files (updated wrappers, new overloads, signature changes)
+- `unchanged` — count of reviewed files with no changes requiring attention (skipped generated files)
+
+Use `relatedFiles` to cross-link companion PR files to their interop counterparts
+(e.g., a C# wrapper → its C API implementation in the interop section).
