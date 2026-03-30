@@ -110,61 +110,23 @@ These arguments control the **NuGet version suffix** used when rewriting package
 | `samples-run` | Builds all generated samples from `output/` | — |
 | `samples` | Runs generate → prepare → run in sequence | — |
 
-## Step-by-Step: Building Samples Locally
+## Building Samples
 
-### 1. Clear cached packages
+The easiest way to build and validate samples is with the **`validate-samples`** Copilot skill.
+Ask Copilot to run it — it handles downloading packages, detecting versions, and building automatically.
 
-```bash
-rm -rf externals/package_cache/skiasharp*
-rm -rf externals/package_cache/harfbuzzsharp*
-```
+Example prompts:
+- "validate samples"
+- "build the samples against the latest CI packages"
+- "check if the Blazor sample builds"
+- "validate samples from PR 3553"
+- "do the samples build after my changes?"
 
-### 2. Download CI packages
+The skill follows the workflow described in the reference sections above: clear cache → download
+CI packages → detect preview version → build with `dotnet cake --target=samples`.
 
-```bash
-# Latest from main (default)
-dotnet cake --target=docs-download-output
-
-# From a specific branch
-dotnet cake --target=docs-download-output --gitBranch=release/3.119.4
-
-# From a PR
-dotnet cake --target=docs-download-output --previewLabel=pr.3553
-
-# From a specific commit
-dotnet cake --target=docs-download-output --gitSha=abc123def456
-```
-
-This populates `output/nugets/` with the real `.nupkg` files extracted from the CI wrapper.
-
-### 3. Detect the preview version
-
-```bash
-# Use the helper script (prints Preview label and Build number to stdout)
-bash .github/skills/validate-samples/scripts/detect-preview-version.sh
-
-# Or source it to set PREVIEW_LABEL and BUILD_NUMBER as env vars:
-source .github/skills/validate-samples/scripts/detect-preview-version.sh
-```
-
-### 4. Build samples
-
-```bash
-# Build all samples (use values from step 3)
-dotnet cake --target=samples --previewLabel=$PREVIEW_LABEL --buildNumber=$BUILD_NUMBER
-
-# Build a single sample
-dotnet cake --target=samples --previewLabel=$PREVIEW_LABEL --buildNumber=$BUILD_NUMBER --sample=tvOS
-```
-
-### Complete one-liner
-
-```bash
-rm -rf externals/package_cache/skiasharp* externals/package_cache/harfbuzzsharp* && \
-dotnet cake --target=docs-download-output && \
-source .github/skills/validate-samples/scripts/detect-preview-version.sh && \
-dotnet cake --target=samples --previewLabel=$PREVIEW_LABEL --buildNumber=$BUILD_NUMBER
-```
+See [`.github/skills/validate-samples/SKILL.md`](../../.github/skills/validate-samples/SKILL.md)
+for the full step-by-step workflow if you need to run it manually.
 
 ## How `samples-generate` Works
 
