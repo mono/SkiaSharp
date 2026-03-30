@@ -24,19 +24,21 @@ There are several simple samples, each of which demonstrate the simplest way to 
 
 Currently there are samples for all the supported platforms, and variations of frameworks on them:
 
- - .NET Core
  - Android
- - Docker
- - GTK (v2 and v3)
+ - Blazor WebAssembly
+ - Browser WebAssembly
+ - .NET Core (Console / Docker)
+ - GTK (v3 and v4)
  - iOS
+ - Mac Catalyst
  - macOS
- - Tizen (Xamarin.Forms and ElmSharp)
+ - .NET MAUI (Android, iOS, Mac Catalyst, Windows)
+ - Tizen
  - tvOS
- - UWP
- - watchOS
+ - Uno Platform
  - Windows.Forms
+ - WinUI 3 (Windows App SDK)
  - WPF
- - Xamarin.Forms (Android, macOS, Tizen, UWP, iOS, WPF)
 
 ## Gallery Samples
 
@@ -44,10 +46,8 @@ For more complex samples that demonstrates specific features, there is a nice ga
 
  - macOS
  - tvOS
- - UWP
  - Windows.Forms
  - WPF
- - Xamarin.Forms (Android, macOS, Tizen, UWP, iOS, WPF)
 
 [samples]: https://github.com/mono/SkiaSharp/releases
 [skip]: https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp#preparation-1
