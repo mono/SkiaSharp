@@ -17,16 +17,6 @@ Automates the workflow for building SkiaSharp samples against CI-produced NuGet 
 The samples use package references (not project references) when built through the cake
 target, so they need downloadable NuGet packages.
 
-## Quick Reference
-
-```powershell
-# Full workflow — clear cache, download, detect version, build all samples
-rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
-dotnet cake --target=docs-download-output
-# Detect version from downloaded nupkgs, then:
-dotnet cake --target=samples --previewLabel=preview.0 --buildNumber=76
-```
-
 ## When to Use
 
 - After making changes to samples and wanting to verify they build
