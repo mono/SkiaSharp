@@ -10,27 +10,17 @@ DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable("TIZEN_STUDIO_HOME") ?? PR
 var bat = IsRunningOnWindows() ? ".bat" : "";
 var tizen = TIZEN_STUDIO_HOME.CombineWithFilePath($"tools/ide/bin/tizen{bat}").FullPath;
 var tizenVersion = "6.0";
-var tizenVersion64 = "8.0";
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    Build("armel", "arm", "arm", $"mobile-{tizenVersion}-device.core");
-    Build("i586", "x86", "x86", $"mobile-{tizenVersion}-emulator.core");
-    Build("x86_64", "x64", "x86_64", $"tizen-{tizenVersion64}-emulator64.core");
-    Build("aarch64", "arm64", "aarch64", $"tizen-{tizenVersion64}-device64.core");
+    Build("armel", "arm", $"mobile-{tizenVersion}-device.core");
+    Build("i586", "x86", $"mobile-{tizenVersion}-emulator.core");
 
-    void Build(string arch, string skiaArch, string tizenArch, string rootstrap)
+    void Build(string arch, string skiaArch, string rootstrap)
     {
         if (Skip(arch)) return;
-
-        // Set the correct profile in project_def.prop for the target architecture
-        var profile = (skiaArch == "x64" || skiaArch == "arm64") ? $"tizen-{tizenVersion64}" : $"mobile-4.0";
-        var propFile = MakeAbsolute((FilePath)"libSkiaSharp/project_def.prop").FullPath;
-        var propContent = System.IO.File.ReadAllText(propFile);
-        propContent = System.Text.RegularExpressions.Regex.Replace(propContent, @"^profile = .+$", $"profile = {profile}", System.Text.RegularExpressions.RegexOptions.Multiline);
-        System.IO.File.WriteAllText(propFile, propContent);
 
         GnNinja($"tizen/{arch}", "skia modules/skottie",
            $"target_os='tizen' " +
@@ -49,16 +39,10 @@ Task("libSkiaSharp")
            $"skia_enable_skottie=true " +
            $"extra_cflags=[ '-DSKIA_C_DLL', '-DXML_DEV_URANDOM' ] " +
            $"ncli='{TIZEN_STUDIO_HOME}' " +
-           $"ncli_version='{tizenVersion}' " +
-           $"ncli_version_64='{tizenVersion64}'");
-
-        // Clean previous build output to avoid stale artifacts
-        var buildDir = MakeAbsolute((DirectoryPath)$"libSkiaSharp/{CONFIGURATION}");
-        if (DirectoryExists(buildDir))
-            DeleteDirectory(buildDir, new DeleteDirectorySettings { Recursive = true, Force = true });
+           $"ncli_version='{tizenVersion}'");
 
         RunProcess(tizen, new ProcessSettings {
-           Arguments = $"build-native -a {tizenArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
+           Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
            WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
         });
 
@@ -71,29 +55,15 @@ Task("libSkiaSharp")
 Task("libHarfBuzzSharp")
     .Does(() =>
 {
-    Build("armel", "arm", "arm", $"mobile-{tizenVersion}-device.core");
-    Build("i586", "x86", "x86", $"mobile-{tizenVersion}-emulator.core");
-    Build("x86_64", "x64", "x86_64", $"tizen-{tizenVersion64}-emulator64.core");
-    Build("aarch64", "arm64", "aarch64", $"tizen-{tizenVersion64}-device64.core");
+    Build("armel", "arm", $"mobile-{tizenVersion}-device.core");
+    Build("i586", "x86", $"mobile-{tizenVersion}-emulator.core");
 
-    void Build(string arch, string cliArch, string tizenArch, string rootstrap)
+    void Build(string arch, string cliArch, string rootstrap)
     {
         if (Skip(arch)) return;
 
-        // Set the correct profile in project_def.prop for the target architecture
-        var profile = (cliArch == "x64" || cliArch == "arm64") ? $"tizen-{tizenVersion64}" : $"mobile-4.0";
-        var propFile = MakeAbsolute((FilePath)"libHarfBuzzSharp/project_def.prop").FullPath;
-        var propContent = System.IO.File.ReadAllText(propFile);
-        propContent = System.Text.RegularExpressions.Regex.Replace(propContent, @"^profile = .+$", $"profile = {profile}", System.Text.RegularExpressions.RegexOptions.Multiline);
-        System.IO.File.WriteAllText(propFile, propContent);
-
-        // Clean previous build output
-        var buildDir = MakeAbsolute((DirectoryPath)$"libHarfBuzzSharp/{CONFIGURATION}");
-        if (DirectoryExists(buildDir))
-            DeleteDirectory(buildDir, new DeleteDirectorySettings { Recursive = true, Force = true });
-
         RunProcess(tizen, new ProcessSettings {
-            Arguments = $"build-native -a {tizenArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
+            Arguments = $"build-native -a {cliArch} -c llvm -C {CONFIGURATION} -r {rootstrap}" ,
             WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
         });
 
