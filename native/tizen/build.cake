@@ -14,10 +14,12 @@ void SetProjectProfile(string projectDir, string profile)
 {
     var propFile = MakeAbsolute((FilePath)$"{projectDir}/project_def.prop").FullPath;
     var propContent = System.IO.File.ReadAllText(propFile);
-    propContent = System.Text.RegularExpressions.Regex.Replace(
+    var newContent = System.Text.RegularExpressions.Regex.Replace(
         propContent, @"^profile = .+$", $"profile = {profile}",
         System.Text.RegularExpressions.RegexOptions.Multiline);
-    System.IO.File.WriteAllText(propFile, propContent);
+    if (newContent == propContent)
+        throw new Exception($"Failed to set profile in '{propFile}': no 'profile = ...' line found.");
+    System.IO.File.WriteAllText(propFile, newContent);
 }
 
 Task("libSkiaSharp")

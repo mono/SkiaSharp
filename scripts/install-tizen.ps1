@@ -46,10 +46,9 @@ Write-Host "JAVA_HOME is: $env:JAVA_HOME"
 Write-Host "PATH contains JAVA_HOME: $($env:PATH.Contains("$env:JAVA_HOME"))"
 & "java" -version
 
-# clean up any previous install (the 6.1 installer fails if the directory already exists)
+# warn if there is an existing install (the 6.1 installer may fail if the directory already exists)
 if (Test-Path "$ts") {
-    Write-Host "Removing previous installation at '$ts'..."
-    Remove-Item -Path "$ts" -Recurse -Force
+    Write-Host "##[warning]Existing Tizen Studio installation found at '$ts'. The installer may fail if this directory already exists."
 }
 
 # install
