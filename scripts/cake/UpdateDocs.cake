@@ -147,8 +147,8 @@ Task ("docs-download-output")
 {
     CleanDir ("./output");
 
-    await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH, CI_ARTIFACTS_FEED_URL);
-    await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH, CI_ARTIFACTS_FEED_URL);
+    await DownloadPackageAsync ("_nugets", OUTPUT_NUGETS_PATH);
+    await DownloadPackageAsync ("_nugetspreview", OUTPUT_NUGETS_PATH);
 });
 
 Task ("docs-api-diff")
