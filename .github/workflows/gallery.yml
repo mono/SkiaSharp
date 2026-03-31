@@ -1,0 +1,274 @@
+name: Deploy Gallery
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'samples/Gallery/**'
+      - '.github/workflows/gallery.yml'
+  pull_request:
+    paths:
+      - 'samples/Gallery/**'
+      - '.github/workflows/gallery.yml'
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SkiaSharp NuGet version to use (leave empty for latest nightly from CI feed)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run — build the gallery but do not deploy'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Build and Deploy Gallery
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get latest SkiaSharp version from CI feed
+        id: nuget
+        shell: pwsh
+        run: |
+          $inputVersion = '${{ inputs.version }}'
+          $ciFeedUrl = 'https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json'
+
+          if ($inputVersion) {
+            $version = $inputVersion
+          } else {
+            # Query the Azure DevOps CI feed for the latest SkiaSharp version
+            # First, get the service index to find the flat container base URL
+            try {
+              $serviceIndex = Invoke-RestMethod $ciFeedUrl
+            } catch {
+              throw "Failed to query CI feed service index: $_"
+            }
+            $flatContainer = ($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress*' } | Select-Object -First 1).'@id'
+            if (-not $flatContainer) {
+              throw "Could not find PackageBaseAddress resource in CI feed"
+            }
+
+            # Get all versions of SkiaSharp from the CI feed
+            try {
+              $response = Invoke-RestMethod "${flatContainer}skiasharp/index.json"
+            } catch {
+              throw "Failed to query CI feed for SkiaSharp versions: $_"
+            }
+            if (-not $response.versions -or $response.versions.Count -eq 0) {
+              throw "CI feed returned no versions for SkiaSharp"
+            }
+            # Use the latest version (versions are sorted ascending)
+            $version = $response.versions | Select-Object -Last 1
+          }
+
+          Write-Host "Using SkiaSharp version: $version"
+
+          # Parse base version and optional pre-release suffix
+          if ($version -match '^(\d+\.\d+\.\d+)(?:-(.+))?$') {
+            $baseVersion = $Matches[1]
+            $previewSuffix = if ($Matches[2]) { $Matches[2] } else { '' }
+          } else {
+            throw "Unexpected version format: $version"
+          }
+
+          Write-Host "Base version: $baseVersion"
+          Write-Host "Preview suffix: $previewSuffix"
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "base_version=$baseVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "preview_suffix=$previewSuffix" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Get latest HarfBuzzSharp version from CI feed
+        id: hb-nuget
+        shell: pwsh
+        run: |
+          $ciFeedUrl = 'https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json'
+
+          # Get the flat container base URL
+          try {
+            $serviceIndex = Invoke-RestMethod $ciFeedUrl
+          } catch {
+            throw "Failed to query CI feed service index: $_"
+          }
+          $flatContainer = ($serviceIndex.resources | Where-Object { $_.'@type' -like 'PackageBaseAddress*' } | Select-Object -First 1).'@id'
+
+          # Get all versions of HarfBuzzSharp from the CI feed
+          try {
+            $response = Invoke-RestMethod "${flatContainer}harfbuzzsharp/index.json"
+          } catch {
+            throw "Failed to query CI feed for HarfBuzzSharp versions: $_"
+          }
+          if (-not $response.versions -or $response.versions.Count -eq 0) {
+            throw "CI feed returned no versions for HarfBuzzSharp"
+          }
+
+          $version = $response.versions | Select-Object -Last 1
+          Write-Host "Latest HarfBuzzSharp version from CI: $version"
+
+          # Parse base version
+          if ($version -match '^(\d+\.\d+\.\d+)') {
+            $baseVersion = $Matches[1]
+          } else {
+            throw "Unexpected version format: $version"
+          }
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "base_version=$baseVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Update NuGet versions in VERSIONS.txt
+        shell: pwsh
+        run: |
+          $skiaVersion = '${{ steps.nuget.outputs.base_version }}'
+          $hbVersion = '${{ steps.hb-nuget.outputs.base_version }}'
+          $versionsFile = 'scripts/VERSIONS.txt'
+
+          $content = Get-Content $versionsFile -Raw
+
+          # Update all SkiaSharp package nuget version entries
+          $content = [Regex]::Replace(
+            $content,
+            '(?m)^(SkiaSharp\S*\s+nuget\s+)[\d.]+',
+            "`${1}$skiaVersion")
+
+          # Update all HarfBuzzSharp package nuget version entries
+          if ($hbVersion) {
+            $content = [Regex]::Replace(
+              $content,
+              '(?m)^(HarfBuzzSharp\S*\s+nuget\s+)[\d.]+',
+              "`${1}$hbVersion")
+          }
+
+          Set-Content $versionsFile $content -NoNewline
+          Write-Host "Updated $versionsFile with SkiaSharp=$skiaVersion, HarfBuzzSharp=$hbVersion"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Generate samples (convert ProjectReference to PackageReference)
+        env:
+          PREVIEW_LABEL: ${{ steps.nuget.outputs.preview_suffix }}
+          BUILD_NUMBER: ''
+        run: dotnet cake --target=samples-generate
+
+      - name: Add CI feed as NuGet source
+        run: |
+          dotnet nuget add source \
+            "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json" \
+            --name SkiaSharp-CI
+
+      - name: Publish Gallery Blazor WASM app
+        run: |
+          PREVIEW_SUFFIX="${{ steps.nuget.outputs.preview_suffix }}"
+
+          # Choose the appropriate generated samples directory
+          if [ -n "$PREVIEW_SUFFIX" ]; then
+            GALLERY_DIR="output/samples-preview/Gallery/Blazor"
+          else
+            GALLERY_DIR="output/samples/Gallery/Blazor"
+          fi
+
+          echo "Building gallery from: $GALLERY_DIR"
+
+          dotnet publish "$GALLERY_DIR/SkiaSharpSample.Blazor.csproj" \
+            -c Release \
+            -o output/gallery-publish
+
+      - name: Post-process for GitHub Pages
+        shell: bash
+        run: |
+          PUBLISH_DIR="output/gallery-publish/wwwroot"
+
+          # Rewrite <base href> for the /SkiaSharp/gallery/ subpath
+          sed -i 's|<base href="/" />|<base href="/SkiaSharp/gallery/" />|g' "$PUBLISH_DIR/index.html"
+
+          # Add .nojekyll to prevent Jekyll processing
+          touch "$PUBLISH_DIR/.nojekyll"
+
+          # Create a 404.html that redirects to index.html for SPA routing
+          printf '%s\n' \
+            '<!DOCTYPE html>' \
+            '<html>' \
+            '<head>' \
+            '  <meta charset="utf-8" />' \
+            '  <script>' \
+            '    var pathSegmentsToKeep = 2;' \
+            '    var l = window.location;' \
+            '    l.replace(' \
+            '      l.protocol + "//" + l.hostname + (l.port ? ":" + l.port : "") +' \
+            '      l.pathname.split("/").slice(0, 1 + pathSegmentsToKeep).join("/") + "/?/" +' \
+            '      l.pathname.slice(1).split("/").slice(pathSegmentsToKeep).join("/").replace(/&/g, "~and~") +' \
+            '      (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +' \
+            '      l.hash' \
+            '    );' \
+            '  </script>' \
+            '</head>' \
+            '<body></body>' \
+            '</html>' \
+            > "$PUBLISH_DIR/404.html"
+
+          echo "Post-processing complete. Contents of publish directory:"
+          ls -la "$PUBLISH_DIR"
+
+      - name: Deploy to docs-live branch
+        if: github.event_name != 'pull_request' && inputs.dry_run != 'true'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PUBLISH_DIR="output/gallery-publish/wwwroot"
+          BRANCH_NAME="docs-live"
+          REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          SKIASHARP_VERSION="${{ steps.nuget.outputs.version }}"
+
+          # Clone the existing docs-live branch
+          WORK_DIR=$(mktemp -d)
+          trap 'rm -rf "$WORK_DIR"' EXIT
+
+          if git ls-remote --exit-code "$REMOTE_URL" "refs/heads/${BRANCH_NAME}" > /dev/null; then
+            git clone --depth=1 --branch "${BRANCH_NAME}" "$REMOTE_URL" "$WORK_DIR"
+          else
+            echo "ERROR: docs-live branch does not exist. It must be created first."
+            exit 1
+          fi
+
+          # Replace only the gallery/ subdirectory (preserve everything else)
+          rm -rf "$WORK_DIR/gallery"
+          cp -r "$PUBLISH_DIR" "$WORK_DIR/gallery"
+
+          git -C "$WORK_DIR" config user.name "github-actions[bot]"
+          git -C "$WORK_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$WORK_DIR" add .
+          git -C "$WORK_DIR" commit --allow-empty -m "Deploy gallery - SkiaSharp $SKIASHARP_VERSION"
+          git -C "$WORK_DIR" push "$REMOTE_URL" "HEAD:refs/heads/${BRANCH_NAME}"
+
+          echo "Successfully deployed gallery to https://mono.github.io/SkiaSharp/gallery/"
+
+      - name: Dry run summary
+        if: github.event_name == 'pull_request' || inputs.dry_run == 'true'
+        shell: bash
+        run: |
+          echo "Dry run — gallery was built but not deployed."
+          echo "SkiaSharp version: ${{ steps.nuget.outputs.version }}"
+          echo "HarfBuzzSharp version: ${{ steps.hb-nuget.outputs.version }}"
+          echo ""
+          echo "Published output contents:"
+          ls -la output/gallery-publish/wwwroot/
+          echo ""
+          echo "Checking index.html base href:"
+          grep 'base href' output/gallery-publish/wwwroot/index.html
