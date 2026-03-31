@@ -9,7 +9,7 @@ The published site is assembled from three independently-built components:
 | URL Path | Source | Build Tool |
 |----------|--------|------------|
 | `/` | `documentation/site/` | Static HTML/CSS (no build) |
-| `/docs/` | `documentation/conceptual/` | [DocFX](https://dotnet.github.io/docfx/) |
+| `/docs/` | `documentation/docfx/` | [DocFX](https://dotnet.github.io/docfx/) |
 | `/gallery/` | `samples/Gallery/Blazor/` | Blazor WASM (`dotnet publish`) |
 
 The CI workflow (`build-site.yml`) builds all three in parallel, then assembles and deploys them.
@@ -39,20 +39,20 @@ To preview in a browser, open `documentation/site/index.html` directly. Note tha
 Build the DocFX site locally to iterate on content, styling, templates, or configuration:
 
 ```bash
-dotnet docfx documentation/conceptual/docfx.json
+dotnet docfx documentation/docfx/docfx.json
 ```
 
 This outputs to `output/site/docs/`. To preview with live rebuild on changes:
 
 ```bash
-dotnet docfx documentation/conceptual/docfx.json --serve
+dotnet docfx documentation/docfx/docfx.json --serve
 ```
 
 This starts a local server (typically at `http://localhost:8080`) and watches for file changes. This is the fastest way to iterate on:
 
-- Markdown content (`documentation/conceptual/basics/`, `paths/`, etc.)
-- Table of contents (`documentation/conceptual/TOC.yml`)
-- DocFX configuration (`documentation/conceptual/docfx.json`)
+- Markdown content (`documentation/docfx/basics/`, `paths/`, etc.)
+- Table of contents (`documentation/docfx/TOC.yml`)
+- DocFX configuration (`documentation/docfx/docfx.json`)
 - Templates and styling (see [Customizing DocFX](#customizing-docfx) below)
 
 ### Gallery (Blazor WASM)
@@ -128,7 +128,7 @@ The `build-site.yml` workflow handles everything:
 
 ## Customizing DocFX
 
-DocFX configuration lives in `documentation/conceptual/docfx.json`. Key settings:
+DocFX configuration lives in `documentation/docfx/docfx.json`. Key settings:
 
 | Setting | Purpose |
 |---------|---------|
@@ -143,12 +143,12 @@ DocFX configuration lives in `documentation/conceptual/docfx.json`. Key settings
 To customize the look of the DocFX site beyond what configuration offers, you can add a [custom template](https://dotnet.github.io/docfx/docs/template.html):
 
 1. Export the default template: `dotnet docfx template export modern`
-2. Copy the files you want to override into a folder (e.g., `documentation/conceptual/template/`)
+2. Copy the files you want to override into a folder (e.g., `documentation/docfx/template/`)
 3. Add your template folder to `docfx.json`:
    ```json
    "template": ["default", "modern", "template"]
    ```
-4. Rebuild: `dotnet docfx documentation/conceptual/docfx.json --serve`
+4. Rebuild: `dotnet docfx documentation/docfx/docfx.json --serve`
 
 Common customizations:
 - **Styles:** Override CSS in `template/public/main.css`
@@ -159,17 +159,19 @@ Common customizations:
 
 ```
 documentation/
-  conceptual/               # DocFX source (→ /docs/)
+  docfx/                    # DocFX project root (→ /docs/)
     docfx.json              # DocFX configuration
     index.md                # Docs landing page
-    TOC.yml                 # Navigation tree
-    basics/                 # Tutorial sections...
-    paths/
-    transforms/
-    curves/
-    bitmaps/
-    effects/
-    images/                 # Shared images
+    TOC.yml                 # Top nav bar (Conceptual, API Reference)
+    conceptual/             # Tutorial content (→ /docs/conceptual/)
+      TOC.yml               # Sidebar navigation tree
+      basics/               # Tutorial sections...
+      paths/
+      transforms/
+      curves/
+      bitmaps/
+      effects/
+      images/               # Shared images
     xrefmaps/               # API cross-reference data
   site/                     # Landing page source (→ /)
     index.html
@@ -183,3 +185,4 @@ scripts/
 .github/workflows/
   build-site.yml            # Unified build + deploy workflow
 ```
+
