@@ -5,6 +5,9 @@
 #   pwsh scripts/serve-site.ps1 docs-live            # serve from docs-live branch
 #
 # Requirements: python3
+#
+# The script caches the clone in a fixed location and reuses it on
+# subsequent runs, pulling the latest changes each time.
 
 param(
     [Parameter(Position = 0)]
@@ -14,32 +17,44 @@ param(
 )
 
 $RepoUrl = "https://github.com/mono/SkiaSharp.git"
-$TempDir = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-preview-$([System.Guid]::NewGuid().ToString('N').Substring(0,8))"
-New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
+$CacheRoot = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-site-preview"
+$RepoDir = Join-Path $CacheRoot "repo"
+$ServeDir = Join-Path $CacheRoot "serve"
 
-Write-Host "Cloning $Branch branch..." -ForegroundColor Cyan
-git clone --depth=1 --branch $Branch $RepoUrl (Join-Path $TempDir "repo") 2>&1
+New-Item -ItemType Directory -Path $CacheRoot -Force | Out-Null
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Branch '$Branch' does not exist. Try: docs-staging, docs-live"
-    Remove-Item $TempDir -Recurse -Force -ErrorAction SilentlyContinue
-    exit 1
+if (Test-Path (Join-Path $RepoDir ".git")) {
+    # Reuse existing clone — fetch and reset to latest
+    Write-Host "Updating cached clone..." -ForegroundColor Cyan
+    git -C $RepoDir fetch origin $Branch --depth=1 2>&1
+    git -C $RepoDir checkout -B $Branch "origin/$Branch" 2>&1
+    git -C $RepoDir reset --hard "origin/$Branch" 2>&1
+    git -C $RepoDir clean -fdx 2>&1
+} else {
+    # Fresh clone
+    if (Test-Path $RepoDir) { Remove-Item $RepoDir -Recurse -Force }
+    Write-Host "Cloning $Branch branch..." -ForegroundColor Cyan
+    git clone --depth=1 --branch $Branch $RepoUrl $RepoDir 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Branch '$Branch' does not exist. Try: docs-staging, docs-live"
+        exit 1
+    }
 }
+
+$sha = (git -C $RepoDir rev-parse --short HEAD).Trim()
+Write-Host "Serving $Branch @ $sha" -ForegroundColor Cyan
 
 # Create SkiaSharp/ junction to match GitHub Pages path
-$ServeDir = Join-Path $TempDir "serve"
 New-Item -ItemType Directory -Path $ServeDir -Force | Out-Null
-New-Item -ItemType Junction -Path (Join-Path $ServeDir "SkiaSharp") -Target (Join-Path $TempDir "repo") -Force | Out-Null
+$junction = Join-Path $ServeDir "SkiaSharp"
+if (-not (Test-Path $junction)) {
+    New-Item -ItemType Junction -Path $junction -Target $RepoDir -Force | Out-Null
+}
 
-Write-Host "Serving $Branch branch" -ForegroundColor Cyan
 Write-Host "Open: http://localhost:$Port/SkiaSharp/" -ForegroundColor Green
+Write-Host "Cache: $CacheRoot" -ForegroundColor DarkGray
 Write-Host ""
 
-try {
-    Push-Location $ServeDir
-    python3 -m http.server $Port
-}
-finally {
-    Pop-Location
-    Remove-Item $TempDir -Recurse -Force -ErrorAction SilentlyContinue
-}
+Push-Location $ServeDir
+try { python3 -m http.server $Port }
+finally { Pop-Location }
