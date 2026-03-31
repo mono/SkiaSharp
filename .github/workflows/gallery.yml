@@ -139,7 +139,6 @@ jobs:
           ls -la "$PUBLISH_DIR"
 
       - name: Deploy to docs-live branch
-        if: github.event_name != 'pull_request' && inputs.dry_run != 'true'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -149,6 +148,14 @@ jobs:
           REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           SKIASHARP_VERSION="${{ steps.version.outputs.full_version }}"
 
+          # Dry run: triggered by a pull_request event, or the dry_run input is set to true
+          DRY_RUN="false"
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN="true"
+          fi
+
+          echo "Deploying gallery for SkiaSharp $SKIASHARP_VERSION (dry_run=$DRY_RUN)"
+
           # Clone the existing docs-live branch
           WORK_DIR=$(mktemp -d)
           trap 'rm -rf "$WORK_DIR"' EXIT
@@ -156,8 +163,8 @@ jobs:
           if git ls-remote --exit-code "$REMOTE_URL" "refs/heads/${BRANCH_NAME}" > /dev/null; then
             git clone --depth=1 --branch "${BRANCH_NAME}" "$REMOTE_URL" "$WORK_DIR"
           else
-            echo "ERROR: docs-live branch does not exist. It must be created first."
-            exit 1
+            git init "$WORK_DIR"
+            git -C "$WORK_DIR" checkout -b "${BRANCH_NAME}"
           fi
 
           # Replace only the gallery/ subdirectory (preserve everything else)
@@ -168,19 +175,11 @@ jobs:
           git -C "$WORK_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -C "$WORK_DIR" add .
           git -C "$WORK_DIR" commit --allow-empty -m "Deploy gallery - SkiaSharp $SKIASHARP_VERSION"
-          git -C "$WORK_DIR" push "$REMOTE_URL" "HEAD:refs/heads/${BRANCH_NAME}"
 
-          echo "Successfully deployed gallery to https://mono.github.io/SkiaSharp/gallery/"
-
-      - name: Dry run summary
-        if: github.event_name == 'pull_request' || inputs.dry_run == 'true'
-        shell: bash
-        run: |
-          echo "Dry run — gallery was built but not deployed."
-          echo "SkiaSharp version: ${{ steps.version.outputs.full_version }}"
-          echo ""
-          echo "Published output contents:"
-          ls -la output/gallery-publish/wwwroot/
-          echo ""
-          echo "Checking index.html base href:"
-          grep 'base href' output/gallery-publish/wwwroot/index.html
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run — skipping push. Would deploy gallery to branch: $BRANCH_NAME"
+            git -C "$WORK_DIR" show --stat HEAD
+          else
+            git -C "$WORK_DIR" push "$REMOTE_URL" "HEAD:refs/heads/${BRANCH_NAME}"
+            echo "Successfully deployed gallery to https://mono.github.io/SkiaSharp/gallery/"
+          fi
