@@ -30,14 +30,6 @@ Task ("samples-prepare")
     // clear cached SkiaSharp/HarfBuzzSharp packages so fresh ones are restored
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
-
-    // copy NuGet packages next to Dockerfile files for Docker builds
-    var dockerfiles = GetFiles ($"./output/samples*/**/*Dockerfile");
-    foreach (var dockerfile in dockerfiles) {
-        var packagesDir = dockerfile.GetDirectory ().Combine ("packages");
-        EnsureDirectoryExists (packagesDir);
-        CopyFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg", packagesDir);
-    }
 });
 
 Task ("samples-run")
@@ -142,21 +134,47 @@ Task ("samples-run")
     }
 
     // build and run Docker samples
+    // To conserve disk space, nupkg files are copied per-sample and cleaned up
+    // after each build instead of bulk-copying all packages upfront.
     if (!dockerAvailable) {
         Information ("Skipping Docker samples (Docker not available).");
     }
     foreach (var run in dockerRuns) {
         if (!dockerAvailable)
             continue;
+
+        var sampleDir = run.GetDirectory ();
+
+        // stage nupkg files for this Docker sample
+        var packagesDir = sampleDir.Combine ("packages");
+        EnsureDirectoryExists (packagesDir);
+        CopyFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg", packagesDir);
+
         Information ($"Running Docker sample: {run}");
         try {
             RunProcess ("pwsh", new ProcessSettings {
                 Arguments = run.FullPath,
-                WorkingDirectory = run.GetDirectory (),
+                WorkingDirectory = sampleDir,
             });
         } catch (Exception ex) {
             Error ($"FAILED: {run}");
             failedSamples.Add ((run.FullPath, ex.Message));
+        }
+
+        // clean up to reclaim disk space before the next sample
+        CleanDir (packagesDir);
+        DeleteDir (packagesDir);
+
+        // prune all unused Docker images and layers to reclaim disk space
+        try {
+            RunProcess ("docker", new ProcessSettings {
+                Arguments = "system prune --all --force",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                Silent = true,
+            });
+        } catch {
+            // non-fatal: best-effort cleanup
         }
     }
 
