@@ -6,9 +6,11 @@ SkiaSharp provides two types of documentation: concept docs and API docs.
 
 ## Concept Docs
 
-The concept docs are on the `docs` branch of this repository and published to:
+The conceptual docs live on the `main` branch under `documentation/conceptual/` and are published to:
 
-- https://mono.github.io/SkiaSharp/
+- https://mono.github.io/SkiaSharp/docs/
+
+See [site.md](site.md) for how to build, preview, and customize the docs site.
 
 ## API Docs
 
