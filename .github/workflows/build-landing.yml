@@ -5,11 +5,11 @@ on:
     branches:
       - main
     paths:
-      - 'site/**'
+      - 'documentation/site/**'
       - '.github/workflows/build-landing.yml'
   pull_request:
     paths:
-      - 'site/**'
+      - 'documentation/site/**'
       - '.github/workflows/build-landing.yml'
   workflow_dispatch:
 
@@ -51,9 +51,9 @@ jobs:
           rm -rf "$WORK_DIR/images"
 
           # Copy landing page files to root
-          cp site/index.html "$WORK_DIR/"
-          cp site/style.css "$WORK_DIR/"
-          cp site/404.html "$WORK_DIR/"
+          cp documentation/site/index.html "$WORK_DIR/"
+          cp documentation/site/style.css "$WORK_DIR/"
+          cp documentation/site/404.html "$WORK_DIR/"
 
           # Ensure .nojekyll exists
           touch "$WORK_DIR/.nojekyll"
