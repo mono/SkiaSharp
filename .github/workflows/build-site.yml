@@ -15,6 +15,14 @@ on:
       - '.github/workflows/build-site.yml'
   workflow_dispatch:
     inputs:
+      deploy_target:
+        description: 'Deploy target branch'
+        required: false
+        default: 'docs-live'
+        type: choice
+        options:
+          - docs-live
+          - docs-staging
       git_branch:
         description: 'Git branch to fetch CI packages from for gallery (e.g. main, release/3.119.4)'
         required: false
@@ -177,6 +185,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "branch=docs-staging" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "branch=${{ inputs.deploy_target }}" >> $GITHUB_OUTPUT
           else
             echo "branch=docs-live" >> $GITHUB_OUTPUT
           fi
