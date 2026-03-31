@@ -1,72 +1,45 @@
-﻿using System;
-using ElmSharp;
-using Tizen.Applications;
+using Tizen.NUI;
+using Tizen.NUI.BaseComponents;
+using Tizen.NUI.Components;
 
-using SkiaSharp;
-using SkiaSharp.Views.Tizen;
+namespace SkiaSharpSample;
 
-namespace SkiaSharpSample
+public class App : NUIApplication
 {
-	public class App : CoreUIApplication
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
+	private GpuPage? gpuPage;
+
+	public static void Main(string[] args) => new App().Run(args);
+
+	protected override void OnCreate()
 	{
-		public static void Main(string[] args)
+		base.OnCreate();
+
+		GetDefaultWindow().KeyEvent += OnKeyEvent;
+
+		var tabView = new TabView
 		{
-			Elementary.Initialize();
-			Elementary.ThemeOverlay();
+			WidthSpecification = LayoutParamPolicies.MatchParent,
+			HeightSpecification = LayoutParamPolicies.MatchParent,
+		};
 
-			var app = new App();
-			app.Run(args);
-		}
+		tabView.AddTab(new TabButton { Text = "CPU" }, new CpuPage());
 
-		protected override void OnCreate()
+		gpuPage = new GpuPage();
+		tabView.AddTab(new TabButton { Text = "GPU" }, gpuPage);
+
+		tabView.AddTab(new TabButton { Text = "Drawing" }, new DrawingPage());
+
+		GetDefaultWindow().Add(tabView);
+	}
+
+	void OnKeyEvent(object? sender, Window.KeyEventArgs e)
+	{
+		if (e.Key.State == Key.StateType.Down &&
+			(e.Key.KeyPressedName == "XF86Back" || e.Key.KeyPressedName == "Escape"))
 		{
-			base.OnCreate();
-
-			Initialize();
-		}
-
-		private void Initialize()
-		{
-			var window = new Window("SkiaSharp");
-			window.BackButtonPressed += OnBackButtonPressed;
-			window.AvailableRotations = DisplayRotation.Degree_0 | DisplayRotation.Degree_180 | DisplayRotation.Degree_270 | DisplayRotation.Degree_90;
-			window.Show();
-
-			var skiaView = new SKCanvasView(window);
-			skiaView.IgnorePixelScaling = true;
-			skiaView.PaintSurface += OnPaintSurface;
-			skiaView.Show();
-
-			var conformant = new Conformant(window);
-			conformant.Show();
-			conformant.SetContent(skiaView);
-		}
-
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
-		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
-
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
-
-			// draw some text
-			using var paint = new SKPaint
-			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill
-			};
-			using var font = new SKFont
-			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
-		}
-
-		private void OnBackButtonPressed(object sender, EventArgs e)
-		{
+			gpuPage?.StopAnimation();
 			Exit();
 		}
 	}
