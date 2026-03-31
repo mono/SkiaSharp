@@ -55,7 +55,8 @@ jobs:
         shell: pwsh
         run: |
           # Find a SkiaSharp preview nupkg to extract the version
-          $previewPkg = Get-ChildItem 'output/nugets/SkiaSharp.3*-*.nupkg' | Select-Object -First 1
+          # Match SkiaSharp.{version}-{prerelease}.nupkg but not sub-packages like SkiaSharp.NativeAssets.*
+          $previewPkg = Get-ChildItem 'output/nugets/SkiaSharp.[0-9]*-*.nupkg' | Select-Object -First 1
           if (-not $previewPkg) {
             throw "No preview SkiaSharp package found in output/nugets/"
           }
