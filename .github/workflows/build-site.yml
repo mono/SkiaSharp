@@ -76,6 +76,9 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
       - name: Restore tools
         run: dotnet tool restore
 
