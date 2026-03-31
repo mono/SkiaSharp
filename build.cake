@@ -175,9 +175,10 @@ Information($"    {"GIT_URL".PadRight(30)} {{0}}", GIT_URL);
 
 #load "./scripts/cake/msbuild.cake"
 #load "./scripts/cake/UtilsManaged.cake"
+#load "./scripts/cake/samples.cake"
 #load "./scripts/cake/externals.cake"
 #load "./scripts/cake/UpdateDocs.cake"
-#load "./scripts/cake/samples.cake"
+
 
 Task ("__________________________________")
     .Description ("__________________________________________________");
@@ -464,10 +465,6 @@ Task ("tests-wasm")
         serverProc?.Kill ();
     }
 });
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// SAMPLES - the demo apps showing off the work (tasks defined in scripts/cake/samples.cake)
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - building the package for NuGet.org
