@@ -1,6 +1,6 @@
 Param(
-    [string] $Version = "3.1.34",
-    [string] $Features = "" # any combination of: _wasmeh,simd,st,mt
+    [string] $Version = "3.1.56",
+    [string] $Features = "_wasmeh,st" # any combination of: _wasmeh,simd,st,mt
 )
 
 $ErrorActionPreference = 'Stop'

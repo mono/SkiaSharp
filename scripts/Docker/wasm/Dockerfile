@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/mirror/docker/library/debian:12
 #   EMSCRIPTEN_VERSION   - the version of the emscripten SDK                [ 3.1.34 | * ]
 
 # default value, but should be provided depending on app
-ARG EMSCRIPTEN_VERSION=3.1.34
+ARG EMSCRIPTEN_VERSION=3.1.56
 
 RUN apt-get update \
     && apt-get install -y apt-transport-https curl wget python3 git make xz-utils ninja-build lbzip2 \

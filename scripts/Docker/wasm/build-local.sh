@@ -3,8 +3,8 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-EMSCRIPTEN_VERSION="${1:-3.1.34}"
-FEATURES="${2:-}"
+EMSCRIPTEN_VERSION="${1:-3.1.56}"
+FEATURES="${2:-_wasmeh,st}"
 
 # Use linux/amd64 platform for Docker — older emscripten versions don't publish arm64 binaries
 PLATFORM_ARGS=""
