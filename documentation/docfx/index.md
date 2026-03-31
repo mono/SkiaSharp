@@ -28,27 +28,27 @@ In any C# page that uses SkiaSharp you'll want to include a `using` directive fo
 > [!IMPORTANT]
 > The `SkiaSharp.Views.Maui.Controls` namespace also contains an `SKGLView` class that derives from `View` but uses OpenGL for rendering graphics. For purposes of simplicity, this guide restricts itself to `SKCanvasView`, but using `SKGLView` instead is quite similar.
 
-## [SkiaSharp Drawing Basics](conceptual/basics/index.md)
+## [SkiaSharp Drawing Basics](guides/basics/index.md)
 
 Some of the simplest graphics figures you can draw with SkiaSharp are circles, ovals, and rectangles. In displaying these figures, you will learn about SkiaSharp coordinates, sizes, and colors. The display of text and bitmaps is more complex, but these articles also introduce those techniques.
 
-## [SkiaSharp Lines and Paths](conceptual/paths/index.md)
+## [SkiaSharp Lines and Paths](guides/paths/index.md)
 
 A graphics path is a series of connected straight lines and curves. Paths can be stroked, filled, or both. This article encompasses many aspects of line drawing, including stroke ends and joins, and dashed and dotted lines, but stops short of curve geometries.
 
-## [SkiaSharp Transforms](conceptual/transforms/index.md)
+## [SkiaSharp Transforms](guides/transforms/index.md)
 
 Transforms allow graphics objects to be uniformly translated, scaled, rotated, or skewed. This article also shows how you can use a standard 3-by-3 transform matrix for creating non-affine transforms and applying transforms to paths.
 
-## [SkiaSharp Curves and Paths](conceptual/curves/index.md)
+## [SkiaSharp Curves and Paths](guides/curves/index.md)
 
 The exploration of paths continues with adding curves to a path objects, and exploiting other powerful path features. You'll see how you can specify an entire path in a concise text string, how to use path effects, and how to dig into path internals.
 
-## [SkiaSharp Bitmaps](conceptual/bitmaps/index.md)
+## [SkiaSharp Bitmaps](guides/bitmaps/index.md)
 
 Bitmaps are rectangular arrays of bits corresponding to the pixels of a display device. This series of articles shows how to load, save, display, create, draw on, animate, and access the bits of SkiaSharp bitmaps.
 
-## [SkiaSharp Effects](conceptual/effects/index.md)
+## [SkiaSharp Effects](guides/effects/index.md)
 
 Effects are properties that alter the normal display of graphics, including linear and circular gradients, bitmap tiling, blend modes, blur, and others.
 

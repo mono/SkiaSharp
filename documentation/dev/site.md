@@ -163,7 +163,7 @@ documentation/
     docfx.json              # DocFX configuration
     index.md                # Docs landing page
     TOC.yml                 # Top nav bar (Conceptual, API Reference)
-    conceptual/             # Tutorial content (→ /docs/conceptual/)
+    guides/             # Tutorial content (→ /docs/guides/)
       TOC.yml               # Sidebar navigation tree
       basics/               # Tutorial sections...
       paths/
@@ -185,4 +185,5 @@ scripts/
 .github/workflows/
   build-site.yml            # Unified build + deploy workflow
 ```
+
 
