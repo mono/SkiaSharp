@@ -32,7 +32,7 @@ Verify SkiaSharp works in Docker before doing anything complex:
 # Linux x64 (Debian) — works for ALL SkiaSharp versions
 docker run --rm --platform linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
 apt-get update -qq && apt-get install -y -qq libfontconfig1 2>&1 | tail -1
-mkdir -p /tmp/skiasharp/test && cd /tmp/skiasharp/test
+TS=$(date -u +%Y%m%d-%H%M%S) && mkdir -p /tmp/skiasharp/test/$TS && cd /tmp/skiasharp/test/$TS
 dotnet new console -n Test --framework net8.0 --no-restore 2>&1 | tail -1
 cd Test
 dotnet add package SkiaSharp --version VERSION --no-restore 2>&1 | tail -1

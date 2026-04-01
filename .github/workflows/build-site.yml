@@ -1,0 +1,250 @@
+name: Build Site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'documentation/**'
+      - 'samples/Gallery/**'
+      - '.github/workflows/build-site.yml'
+  pull_request:
+    paths:
+      - 'documentation/**'
+      - 'samples/Gallery/**'
+      - '.github/workflows/build-site.yml'
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'Deploy target branch'
+        required: false
+        default: 'docs-live'
+        type: choice
+        options:
+          - docs-live
+          - docs-staging
+      git_branch:
+        description: 'Git branch to fetch CI packages from for gallery (e.g. main, release/3.119.4)'
+        required: false
+        default: 'main'
+      dry_run:
+        description: 'Dry run — build everything but do not deploy'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  # ── Build DocFX documentation ───────────────────────────────
+  build-docs:
+    name: Build Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install DocFX
+        run: dotnet tool restore
+
+      - name: Build DocFX
+        run: dotnet docfx documentation/docfx/docfx.json
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-docs
+          path: output/site/docs/
+          retention-days: 7
+
+  # ── Build Gallery Blazor WASM app ───────────────────────────
+  build-gallery:
+    name: Build Gallery
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Download NuGet packages from CI feed
+        run: |
+          dotnet cake --target=docs-download-output \
+            --gitBranch="${{ inputs.git_branch || 'main' }}"
+
+      - name: Detect preview version
+        id: version
+        shell: pwsh
+        run: |
+          $previewPkg = Get-ChildItem 'output/nugets/SkiaSharp.[0-9]*-*.nupkg' | Select-Object -First 1
+          if (-not $previewPkg) {
+            throw "No preview SkiaSharp package found in output/nugets/"
+          }
+
+          $fileName = $previewPkg.Name
+          Write-Host "Found package: $fileName"
+
+          if ($fileName -match '^SkiaSharp\.(\d+\.\d+\.\d+)-(.+)\.(\d+)\.nupkg$') {
+            $baseVersion = $Matches[1]
+            $previewLabel = $Matches[2]
+            $buildNumber = $Matches[3]
+          } else {
+            throw "Could not parse version from package filename: $fileName"
+          }
+
+          $fullVersion = "$baseVersion-$previewLabel.$buildNumber"
+          Write-Host "Full version: $fullVersion"
+
+          "preview_label=$previewLabel" >> $env:GITHUB_OUTPUT
+          "build_number=$buildNumber" >> $env:GITHUB_OUTPUT
+          "full_version=$fullVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Generate samples
+        run: |
+          dotnet cake --target=samples-generate \
+            --previewLabel="${{ steps.version.outputs.preview_label }}" \
+            --buildNumber="${{ steps.version.outputs.build_number }}"
+
+      - name: Add local NuGet source
+        run: dotnet nuget add source "$(pwd)/output/nugets" --name local-ci-packages
+
+      - name: Publish Gallery Blazor WASM
+        run: |
+          dotnet publish "output/samples-preview/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
+            -c Release \
+            -o output/gallery-publish
+
+      - name: Post-process for GitHub Pages
+        shell: bash
+        run: |
+          PUBLISH_DIR="output/gallery-publish/wwwroot"
+          sed -i 's|<base href="/" />|<base href="/SkiaSharp/gallery/" />|g' "$PUBLISH_DIR/index.html"
+
+          # SPA routing 404
+          cat > "$PUBLISH_DIR/404.html" << 'EOF'
+          <!DOCTYPE html>
+          <html><head><meta charset="utf-8" /><script>
+          var l = window.location;
+          l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            l.pathname.split('/').slice(0, 3).join('/') + '/?/' +
+            l.pathname.slice(1).split('/').slice(2).join('/').replace(/&/g, '~and~') +
+            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') + l.hash);
+          </script></head><body></body></html>
+          EOF
+
+      - name: Upload gallery artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-gallery
+          path: output/gallery-publish/wwwroot/
+          retention-days: 7
+
+  # ── Prepare landing page ────────────────────────────────────
+  build-landing:
+    name: Build Landing Page
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare landing page
+        run: |
+          mkdir -p output/site/landing
+          cp documentation/site/index.html output/site/landing/
+          cp documentation/site/style.css output/site/landing/
+          cp documentation/site/404.html output/site/landing/
+
+      - name: Upload landing artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-landing
+          path: output/site/landing/
+          retention-days: 7
+
+  # ── Assemble & deploy final site ────────────────────────────
+  deploy:
+    name: Deploy Site
+    needs: [build-docs, build-gallery, build-landing]
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
+    steps:
+      - name: Determine deploy target
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "branch=docs-staging" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "branch=${{ inputs.deploy_target }}" >> $GITHUB_OUTPUT
+          else
+            echo "branch=docs-live" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Assemble site
+        run: |
+          mkdir -p site
+
+          # Landing page → root
+          cp artifacts/site-landing/index.html site/
+          cp artifacts/site-landing/style.css site/
+          cp artifacts/site-landing/404.html site/
+          touch site/.nojekyll
+
+          # Docs → /docs/
+          cp -r artifacts/site-docs site/docs
+
+          # Gallery → /gallery/
+          cp -r artifacts/site-gallery site/gallery
+
+          echo "=== Site layout ==="
+          find site -maxdepth 2 -type f | head -30
+          echo "..."
+          echo "Total files: $(find site -type f | wc -l)"
+
+      - name: Deploy to GitHub Pages
+        if: ${{ !inputs.dry_run }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ steps.target.outputs.branch }}"
+          REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+
+          echo "Deploying to branch: $BRANCH"
+
+          WORK_DIR=$(mktemp -d)
+          trap 'rm -rf "$WORK_DIR"' EXIT
+
+          # Start fresh — we have the complete site
+          git init "$WORK_DIR"
+          git -C "$WORK_DIR" checkout -b "$BRANCH"
+
+          cp -r site/* "$WORK_DIR/"
+          cp site/.nojekyll "$WORK_DIR/"
+
+          git -C "$WORK_DIR" config user.name "github-actions[bot]"
+          git -C "$WORK_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$WORK_DIR" add -A
+          git -C "$WORK_DIR" commit -m "Deploy site - ${{ github.sha }}"
+          git -C "$WORK_DIR" push --force "$REMOTE_URL" "HEAD:refs/heads/$BRANCH"
+
+          echo "Deployed to https://mono.github.io/SkiaSharp/ (branch: $BRANCH)"

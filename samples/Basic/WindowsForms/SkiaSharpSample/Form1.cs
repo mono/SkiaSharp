@@ -1,38 +1,41 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 
-using SkiaSharp;
-using SkiaSharp.Views.Desktop;
+namespace SkiaSharpSample;
 
-namespace SkiaSharpSample
+public partial class Form1 : Form
 {
-	public partial class Form1 : Form
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
+	public Form1()
 	{
-		public Form1()
+		InitializeComponent();
+		Shown += (_, _) =>
 		{
-			InitializeComponent();
-		}
+			tabControl.SelectedIndex = (int)DefaultPage;
+			// Force content creation even if index was already 0
+			OnTabSelectionChanged(tabControl, EventArgs.Empty);
+		};
+	}
 
-		private void skiaView_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
+	void OnTabSelectionChanged(object sender, EventArgs e)
+	{
+		if (tabControl.SelectedTab is not TabPage tab)
+			return;
+
+		if (tab.Controls.Count > 0)
+			return;
+
+		UserControl page = tab.Tag?.ToString() switch
 		{
-			// the the canvas and properties
-			var canvas = e.Surface.Canvas;
+			"cpu" => new CpuPage(),
+			"gpu" => new GpuPage(),
+			"drawing" => new DrawingPage(),
+			_ => new CpuPage(),
+		};
 
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
-
-			// draw some text
-			using var paint = new SKPaint
-			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill
-			};
-			using var font = new SKFont
-			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
-		}
+		page.Dock = DockStyle.Fill;
+		tab.Controls.Add(page);
+		page.Invalidate();
 	}
 }

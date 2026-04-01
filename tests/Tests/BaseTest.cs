@@ -41,5 +41,41 @@ namespace SkiaSharp.Tests
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 		}
+
+		protected static bool IsAndroid =>
+#if NET5_0_OR_GREATER
+			OperatingSystem.IsAndroid();
+#else
+			false;
+#endif
+
+		protected static bool IsIOS =>
+#if NET5_0_OR_GREATER
+			OperatingSystem.IsIOS();
+#else
+			false;
+#endif
+
+		protected static bool IsMacCatalyst =>
+#if NET5_0_OR_GREATER
+			OperatingSystem.IsMacCatalyst();
+#else
+			false;
+#endif
+
+		protected static void SkipOnMono(string reason = "Mono does not guarantee finalizers are invoked immediately")
+		{
+			Skip.If(IsAndroid || IsIOS || IsMacCatalyst, reason);
+		}
+
+		protected static void SkipOnNonWindows(string reason = "Exceptions cannot be thrown in native delegates on non-Windows platforms")
+		{
+			Skip.If(!IsWindows, reason);
+		}
+
+		protected static void SkipOnPlatform(bool condition, string reason)
+		{
+			Skip.If(condition, reason);
+		}
 	}
 }

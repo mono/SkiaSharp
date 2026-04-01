@@ -9,10 +9,11 @@ description: >
   - Update/bump Skia to a new milestone (m120, m121, etc.)
   - Merge upstream Skia changes
   - Update the Skia submodule to a newer version
-  - Check what Skia milestone is current
+  - Check what Skia milestone is current or what version of Skia is used
 
   Triggers: "update skia", "bump skia", "skia milestone", "update to m121",
-  "merge upstream skia", "skia update", "new skia version".
+  "merge upstream skia", "skia update", "new skia version", "what milestone",
+  "what version of skia", "current skia version", "check skia version".
 
   For updating individual dependencies (libpng, zlib, etc.), use `native-dependency-update` instead.
   For security audits, use `security-audit` instead.
@@ -25,8 +26,15 @@ Update Google Skia to a new Chrome milestone in SkiaSharp's mono/skia fork.
 ## Key References
 
 - **[references/breaking-changes-checklist.md](references/breaking-changes-checklist.md)** — How to analyze breaking changes between milestones
-- **[documentation/dependencies.md](../../../documentation/dependencies.md)** — Dependency tracking and cgmanifest.json format
+- **[references/known-gotchas.md](references/known-gotchas.md)** — 10 hard-won lessons and troubleshooting table
+- **[references/typical-changes.md](references/typical-changes.md)** — Files typically changed during an update
+- **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency tracking and cgmanifest.json format
 - **[RELEASE_NOTES.md in upstream Skia](https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md)** — Official Skia release notes
+
+## Scripts
+
+- **`scripts/update-versions.ps1`** — Phase 6: Updates all version files and runs verification (replaces manual sed/grep)
+- **`scripts/regenerate-bindings.ps1`** — Phase 7: Regenerates bindings, reverts HarfBuzz, reports new functions
 
 ## Overview
 
@@ -39,18 +47,26 @@ Updating Skia is the **highest-risk operation** in SkiaSharp. It touches:
 
 **Go slow. Research first. Build and test before any PR.**
 
-## ⚠️ MANDATORY: Follow Every Phase
+## ⚠️ Follow Every Phase In Order
 
-Complete ALL phases in strict order. Do not skip phases.
+This is a 10-phase workflow where each phase builds on the previous one. The phases exist
+because Skia updates touch four layers (C++ → C API → generated bindings → C# wrappers)
+and two repositories (mono/skia + mono/SkiaSharp). Skipping a phase doesn't just risk a
+build failure — it risks shipping broken binaries to customers who won't see the problem
+until runtime.
 
-### Pre-Flight Checklist
+Each phase ends with a gate — a verification step that confirms the phase completed
+correctly. Re-read each phase's instructions before executing it, because the details
+are project-specific and easy to get wrong from memory.
 
-Before starting, confirm:
-- [ ] Complete Phases 1–10 in order
-- [ ] Research ALL breaking changes before writing any code
-- [ ] Build and test locally before any PR
-- [ ] Create PRs (never push directly to `skiasharp` or `main`)
-- [ ] Stop and ask at every 🛑 checkpoint
+### What You're About to Do
+
+The workflow follows this shape:
+1. **Research** (Phases 1–3): Understand what changed in Skia, validate the analysis
+2. **Merge & Fix** (Phases 4–5): Merge upstream, fix C API compilation errors
+3. **Update & Regenerate** (Phases 6–7): Version files and bindings (both handled by scripts)
+4. **Verify** (Phases 8–9): Review new functions, build, test
+5. **Ship** (Phase 10): Create cross-linked PRs in both repos
 
 ## Critical Rules
 
@@ -137,12 +153,17 @@ Before starting, confirm:
 
 ### Phase 3: Validation
 
-Have a **separate agent** validate the breaking change analysis:
-- Cross-check each identified change against the actual upstream diff
-- Verify no HIGH-risk changes were missed
-- Confirm Graphite-only changes were correctly filtered out
+The agent performing the breaking change analysis has blind spots — it may filter out
+relevant changes or miss moved headers. An independent validation catches these before
+they become runtime crashes.
 
-> 🛑 **GATE**: Validation agent confirms analysis is complete and accurate.
+Launch an **explore agent** with `model: "claude-opus-4.6"` using the prompt template from
+[references/validation-prompt.md](references/validation-prompt.md) — substitute the
+milestone numbers and paste your breaking change analysis table. The default explore model
+(Haiku) is too weak for accurate header-level validation — use Opus for reliability.
+
+> 🛑 **GATE**: Validation agent has run and confirmed analysis. If it found missed items,
+> update the analysis and re-present to user before proceeding.
 
 ### Phase 4: Upstream Merge (mono/skia)
 
@@ -176,7 +197,16 @@ Have a **separate agent** validate the breaking change analysis:
    ```
    Cross-reference against `BUILD.gn` — new source files may need to be added.
 
-> 🛑 **GATE**: Merge complete, conflicts resolved. C API files intact. New source files accounted for.
+> 🛑 **GATE**: Merge complete, conflicts resolved. Run ALL of these verification commands
+> (from inside `externals/skia`):
+> ```bash
+> cd externals/skia
+> ls src/c/*.cpp include/c/*.h                    # C API files intact
+> git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=AD --name-only -- src/ include/
+>                                                   # Review added/deleted files
+> git diff --check                                  # Zero conflict markers remain
+> ```
+> All three must produce expected output before proceeding.
 
 ### Phase 5: Fix C API Shim Layer
 
@@ -185,7 +215,6 @@ must be updated when the underlying C++ APIs change.
 
 1. **Attempt to build** to identify all compilation errors:
    ```bash
-   cd /path/to/SkiaSharp
    dotnet cake --target=externals-macos --arch=arm64
    ```
 
@@ -200,7 +229,9 @@ must be updated when the underlying C++ APIs change.
    | New header required | Add `#include` in the relevant `.cpp` |
 
 3. **Update `sk_types.h`** for any new enums or type changes:
-   - `SK_C_INCREMENT` may need bumping if C API signature changes
+   - **Reset `SK_C_INCREMENT` to `0`** in `externals/skia/include/c/sk_types.h` for the new milestone
+   - Only bump it later if you add new C API functions in the same milestone
+   - The build enforces that `SK_C_INCREMENT` matches `libSkiaSharp increment` in `VERSIONS.txt`
 
 4. **Build again** — iterate until clean compilation
 
@@ -208,43 +239,68 @@ must be updated when the underlying C++ APIs change.
 
 ### Phase 6: Update SkiaSharp Version Files
 
-In the **SkiaSharp parent repo**:
+> 📋 **This phase is handled by a script.** The script updates VERSIONS.txt, cgmanifest.json,
+> azure-pipelines-variables.yml, and verifies SK_C_INCREMENT — then runs the mandatory
+> verification greps. It exits non-zero if any stale references remain.
 
-1. **`scripts/VERSIONS.txt`** — Update ALL of these:
-   ```
-   skia                    release     m{TARGET}
-   libSkiaSharp            milestone   {TARGET}
-   libSkiaSharp            increment   0          # Reset to 0 for new milestone
-   libSkiaSharp            soname      {TARGET}.0.0
-   SkiaSharp               assembly    3.{TARGET}.0.0
-   SkiaSharp               file        3.{TARGET}.0.0
-   # ALL nuget versions → 3.{TARGET}.0
-   ```
+In the **SkiaSharp parent repo**, run:
+```bash
+pwsh .github/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
+```
 
-2. **`cgmanifest.json`** — Update Skia entries:
-   - `commitHash`: New submodule commit
-   - `version`: `chrome/m{TARGET}`
-   - `chrome_milestone`: {TARGET}
-   - `upstream_merge_commit`: The upstream chrome/m{TARGET} branch tip
+The script handles all of these (so you don't have to do them manually):
+- `scripts/VERSIONS.txt`: milestone, increment→0, soname, assembly, file, ALL ~30 nuget lines
+- `cgmanifest.json`: commitHash, version, chrome_milestone, upstream_merge_commit
+- `scripts/azure-pipelines-variables.yml` (if it exists)
+- Verifies `SK_C_INCREMENT` is 0 in `externals/skia/include/c/sk_types.h`
+- Runs mandatory `grep` verification — fails if any stale references remain
 
-3. **`scripts/azure-pipelines-variables.yml`** — Update milestone references
+> 🛑 **GATE**: Script exits with ✅. If it exits with ❌, fix the reported stale references
+> and re-run until it passes.
 
 ### Phase 7: Regenerate Bindings
 
+> 📋 **This phase is handled by a script.** The script runs the generator, IMMEDIATELY
+> reverts HarfBuzz bindings (HarfBuzz updates are always separate), reports what changed,
+> and lists any new functions that may need C# wrappers.
+
 ```bash
-pwsh ./utils/generate.ps1
+pwsh .github/skills/update-skia/scripts/regenerate-bindings.ps1
 ```
 
-This regenerates `binding/SkiaSharp/SkiaApi.generated.cs` from the C API headers.
+The script handles all of these (so you don't forget any):
+- Runs `pwsh ./utils/generate.ps1`
+- Reverts `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` (proactively, not reactively)
+- Reports the binding diff summary
+- Lists NEW generated functions that may need C# wrappers in Phase 8
 
-**After regeneration, check for C# compilation:**
+After the script completes, build C# to verify compilation:
 ```bash
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
 ### Phase 8: Fix C# Wrappers
 
-Fix files in `binding/SkiaSharp/` based on the breaking change analysis:
+The C# build can pass with 0 errors while new C API functions remain invisible to users.
+New functions compile fine as unused `internal static` methods in the generated file, but
+without C# wrappers they're not part of the public API. This phase applies even when
+the build succeeds.
+
+**Step 1: Review new generated bindings for unwrapped functions:**
+```bash
+# Show only NEW functions added by the regeneration
+git diff binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
+```
+
+For each new function, check whether a C# wrapper exists:
+```bash
+# Example: if sk_foo_bar was added, check for a wrapper
+grep -rn "sk_foo_bar" binding/SkiaSharp/*.cs | grep -v generated
+```
+New functions from our custom C API additions typically need wrappers.
+New functions from upstream changes are usually additive and can be deferred.
+
+**Step 2:** Fix files in `binding/SkiaSharp/` based on the breaking change analysis:
 
 | File | When to Update |
 |------|---------------|
@@ -264,23 +320,37 @@ Fix files in `binding/SkiaSharp/` based on the breaking change analysis:
 ### Phase 9: Build & Test
 
 ```bash
-# Build native
+# Build native (this also runs git-sync-deps)
 dotnet cake --target=externals-macos --arch=arm64
 
-# Build C# (use --no-incremental after VERSIONS.txt changes)
-dotnet build binding/SkiaSharp/SkiaSharp.csproj --no-incremental
-
-# Run tests (prefer Cake for proper skip trait handling)
-dotnet cake --target=tests-netcore --skipExternals=all
-# OR if using dotnet test directly, MUST filter platform-specific tests:
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "SkipOn!=macOS"
+# Build C#
+dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
-> ⚠️ **Test runner caveat**: `SkipOn` traits only work with MAUI device test runners.
-> The console test runner does NOT filter by traits automatically. Use `--filter "SkipOn!=macOS"`
-> (or `!=Linux`, etc.) to avoid test host crashes from exceptions thrown through native callbacks.
+**Step 1 — Smoke tests (fast gate, ~100ms):**
+```bash
+dotnet test tests/SkiaSharp.Tests.Console.sln --filter "Category=Smoke"
+```
+Smoke tests verify basic native interop: version compatibility, object creation, drawing,
+image loading, fonts, codecs, effects, and more. If these fail, something fundamental is
+broken — go back and fix before wasting time on the full suite.
 
-> 🛑 **GATE**: All tests pass. Do NOT skip failing tests. Do NOT proceed with failures.
+> ⚠️ If the version compatibility smoke test fails with "incompatible native library",
+> you missed a version update — go back to Phase 6 and verify ALL version lines.
+> Do NOT work around this with `--no-incremental` or by copying native libs manually.
+
+**Step 2 — Full test suite (required before any PR):**
+```bash
+dotnet test tests/SkiaSharp.Tests.Console.sln
+```
+This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
+self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
+
+Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
+before the update can be considered complete. Do not create PRs with only smoke tests passing.
+
+> 🛑 **GATE**: ALL tests pass (full suite, not just smoke). Do NOT skip failing tests.
+> Do NOT proceed with failures.
 
 ### Phase 10: Create PRs
 
@@ -305,6 +375,9 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filte
 **Submodule must point to the mono/skia PR branch.**
 
 #### Cross-link both PRs (same as native-dependency-update).
+
+After creating BOTH PRs, update the earlier PR's description to include a link to the later one.
+Both PRs must reference each other.
 
 #### Phase 10 Completion Checklist
 
@@ -346,89 +419,11 @@ Before proceeding past each step, verify:
 
 ---
 
-## Multi-Milestone Jumps
+## Reference Material
 
-When jumping more than one milestone (e.g., m119 → m121):
+These files contain lookup information — consult them when you hit a problem or need context,
+not necessarily upfront:
 
-**Option A: Sequential merges** (RECOMMENDED for first time)
-- Merge m120 first, fix C API, verify build
-- Then merge m121, fix C API, verify build
-- Single PR at the end with all changes
-
-**Option B: Direct jump** (faster, experienced only)
-- Merge directly to target milestone
-- Higher risk of complex merge conflicts
-- Harder to identify which milestone broke what
-
-Always document which milestones were crossed in the PR description.
-
----
-
-## Files Changed in a Typical Update
-
-| Repository | File | Change |
-|-----------|------|--------|
-| mono/skia | `DEPS` | Merge conflict resolution |
-| mono/skia | `include/core/SkMilestone.h` | New milestone number (from upstream) |
-| mono/skia | `include/c/sk_types.h` | Enum/type updates |
-| mono/skia | `src/c/*.cpp` | C API fixes for new C++ APIs |
-| mono/skia | `src/c/sk_enums.cpp` | Enum mapping updates |
-| mono/SkiaSharp | `externals/skia` | Submodule pointer |
-| mono/SkiaSharp | `scripts/VERSIONS.txt` | All version numbers |
-| mono/SkiaSharp | `cgmanifest.json` | Security tracking |
-| mono/SkiaSharp | `scripts/azure-pipelines-variables.yml` | CI config |
-| mono/SkiaSharp | `binding/SkiaSharp/SkiaApi.generated.cs` | Regenerated |
-| mono/SkiaSharp | `binding/SkiaSharp/Definitions.cs` | Type definitions |
-| mono/SkiaSharp | `binding/SkiaSharp/EnumMappings.cs` | Enum mappings |
-| mono/SkiaSharp | `binding/libSkiaSharp.json` | Type config |
-| mono/SkiaSharp | `tests/Tests/SkiaSharp/*.cs` | Test updates |
-
----
-
-## Lessons Learned / Known Gotchas
-
-Hard-won findings from past Skia milestone updates. Check these proactively — they will save hours of debugging.
-
-### 1. `DEF_STRUCT_MAP` vs Type Aliases
-
-When upstream changes a C++ type from a `struct` to a `using` alias (e.g., `GrVkYcbcrConversionInfo` → `using VulkanYcbcrConversionInfo`), the `DEF_STRUCT_MAP` macro in `sk_types_priv.h` forward-declares `struct X`, which conflicts with the alias. Fix by switching to `DEF_MAP_WITH_NS(namespace, ActualType, CType)` and wrapping in the appropriate platform guard (e.g., `#if SK_VULKAN`).
-
-### 2. `git-sync-deps` emsdk Failure
-
-Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since SkiaSharp comments out emsdk in DEPS, this call fails. Set the environment variable `GIT_SYNC_DEPS_SKIP_EMSDK=1` in `scripts/cake/native-shared.cake` to prevent build failures during dependency sync.
-
-### 3. `BUILD.gn` Legacy Flags
-
-Upstream may introduce defines like `SK_DEFAULT_TYPEFACE_IS_EMPTY` and `SK_DISABLE_LEGACY_DEFAULT_TYPEFACE` that break SkiaSharp's C API, which still relies on legacy typeface/fontmgr APIs. Comment these defines out in `BUILD.gn` when they cause compilation errors in the C API shim layer.
-
-### 4. Custom Patches May Partially Survive Merges
-
-SkiaSharp adds custom methods to upstream headers (e.g., `SkTypeface::RefDefault()`, `SkTypeface::UniqueID()`, `SkFontMgr::MakeDefault()`). After an upstream merge, implementations in `.cpp` files may survive but header declarations can be silently removed by upstream changes. Always verify that header declarations in `include/` still match the implementations in `src/`.
-
-### 5. Version Compatibility After `VERSIONS.txt` Update
-
-The C# `SkiaSharpVersion` class auto-generates version constants from build targets. After updating `VERSIONS.txt`, you must rebuild with `--no-incremental` to pick up new version numbers. Without this, you'll get `InvalidOperationException: The version of the native libSkiaSharp library (X) is incompatible` at runtime.
-
-### 6. Test Runner Filtering for Platform-Specific Tests
-
-`SkipOn` traits only work with MAUI device test runners, not the console test runner. For console tests, use `dotnet test --filter "SkipOn!=macOS"` (or the relevant platform) to skip platform-specific tests that would otherwise crash the test host process.
-
-### 7. HarfBuzz Binding Generation Failures
-
-HarfBuzz generated bindings may fail due to system header issues (`inttypes.h` not found). This is independent of SkiaSharp bindings — if it happens, restore the file from git with `git checkout -- binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` and continue. SkiaSharp bindings generate independently.
-
-### 8. New C API Functions From Upstream
-
-Upstream may add new C API functions (e.g., `sk_surface_draw_with_sampling`) that weren't in the previous milestone. The regeneration step (`pwsh ./utils/generate.ps1`) picks these up automatically. Always review the diff of `*.generated.cs` files for new functions that may need corresponding C# wrappers in `binding/SkiaSharp/`.
-
----
-
-## Troubleshooting
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet cake --target=externals-{platform}` |
-| `error CS0246` missing type | Binding not regenerated | `pwsh ./utils/generate.ps1` |
-| Merge conflict in DEPS | Both forks updated deps independently | Keep our DEPS pins, accept upstream structure |
-| `LNK2001 unresolved external` | C function name mismatch | Verify C API function names match exactly |
-| Build fails after merge | Missing `#include` for moved headers | Check upstream header relocation notes |
+- **[references/known-gotchas.md](references/known-gotchas.md)** — 10 hard-won lessons from past updates (DEF_STRUCT_MAP, emsdk, BUILD.gn flags, HarfBuzz, DEPS forks, etc.) and a troubleshooting table
+- **[references/typical-changes.md](references/typical-changes.md)** — Files typically changed in each repository during an update
+- **[references/breaking-changes-checklist.md](references/breaking-changes-checklist.md)** — How to analyze breaking changes between milestones

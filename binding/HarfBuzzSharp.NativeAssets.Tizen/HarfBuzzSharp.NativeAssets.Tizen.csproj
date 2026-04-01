@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(TFMPrevious)-tizen$(TPVTizenPrevious);$(TFMCurrent)-tizen$(TPVTizenCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(TFMPrevious)-tizen$(TPVTizenPrevious);$(TFMCurrent)-tizen$(TPVTizenCurrent);$(TFMMinimum)-tizen$(TPVTizenMinimum)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Tizen</Title>
   </PropertyGroup>
   <ItemGroup>
     <PackageFile Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.*" PackagePath="runtimes\tizen-armel\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\tizen\i586\libHarfBuzzSharp.*" PackagePath="runtimes\tizen-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\tizen\i586\libHarfBuzzSharp.*" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

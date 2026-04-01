@@ -26,12 +26,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal(preamble, Utils.GetPreambleSize(data));
 		}
 
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
 		[SkippableTheory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_TryParse(string filename)
 		{
+			SkipOnPlatform(IsIOS || IsMacCatalyst, "Lottie parsing fails on iOS/MacCatalyst");
+
 			var path = Path.Combine(PathToImages, filename);
 			var result = Animation.TryParse(File.ReadAllText(path), out var animation);
 
@@ -40,12 +40,12 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.iOS)]
-		[Trait(Traits.FailingOn.Key, Traits.FailingOn.Values.MacCatalyst)]
 		[SkippableTheory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_Parse(string filename)
 		{
+			SkipOnPlatform(IsIOS || IsMacCatalyst, "Lottie parsing fails on iOS/MacCatalyst");
+
 			var path = Path.Combine(PathToImages, filename);
 			var animation = Animation.Parse(File.ReadAllText(path));
 

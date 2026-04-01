@@ -1,0 +1,52 @@
+@{
+    var isDoc = Sample is DocumentSampleBase;
+    var isAnimated = Sample is CanvasSampleBase cs && cs.IsAnimated;
+}
+
+<div class="card h-100 sample-card @(!Supported ? "sample-card-disabled" : "")"
+     style="border-left-color: @CategoryColor; background-color: @(CategoryColor)08; animation-delay: @(Index * 40)ms;">
+    <div class="card-body py-3 px-3">
+        <div class="d-flex align-items-start gap-2">
+            <i class="bi @Icon" style="font-size:1.4rem;color:@(Supported ? CategoryColor : "#bbb");flex-shrink:0;margin-top:1px;"></i>
+            <div>
+                <h6 class="card-title mb-1">@Sample.Title</h6>
+                @if (!string.IsNullOrWhiteSpace(Sample.Description))
+                {
+                    <p class="card-text text-muted small mb-0" style="line-height: 1.4;">
+                        @TruncateDescription(Sample.Description)
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="card-footer bg-transparent border-0 py-2 px-3 d-flex gap-1 flex-wrap align-items-center">
+        <span class="category-badge" style="background-color: @(CategoryColor)1A; color: @CategoryColor;">@Sample.Category</span>
+        @if (isDoc)
+        {
+            <span class="type-badge type-doc">📄 Document</span>
+        }
+        else if (isAnimated)
+        {
+            <span class="type-badge type-animated">🎬 Animated</span>
+        }
+        else
+        {
+            <span class="type-badge type-canvas">🖼️ Canvas</span>
+        }
+        @if (!Supported)
+        {
+            <span class="type-badge type-unsupported">🚫 Unavailable</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public SampleBase Sample { get; set; } = default!;
+    [Parameter, EditorRequired] public string CategoryColor { get; set; } = "";
+    [Parameter, EditorRequired] public string Icon { get; set; } = "";
+    [Parameter] public int Index { get; set; }
+    [Parameter] public bool Supported { get; set; } = true;
+
+    private static string TruncateDescription(string desc) =>
+        desc.Length > 120 ? desc[..117] + "..." : desc;
+}

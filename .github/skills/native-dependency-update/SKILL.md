@@ -23,7 +23,7 @@ Update native dependencies in SkiaSharp's Skia fork (mono/skia).
 
 ## Key References
 
-- **[documentation/dependencies.md](../../../documentation/dependencies.md)** — Complete dependency list, cgmanifest.json format, CVE database names
+- **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Complete dependency list, cgmanifest.json format, CVE database names
 - **[references/breaking-changes.md](references/breaking-changes.md)** — Breaking change analysis guidance
 
 ## ⚠️ MANDATORY: Follow Every Phase
@@ -116,21 +116,20 @@ Cross-reference against `externals/skia/third_party/{dep}/BUILD.gn` — new sour
 3. **Update `cgmanifest.json`** with new version (required for CVE detection)
 4. Checkout new version in dependency directory
 
-👉 See [documentation/dependencies.md](../../../documentation/dependencies.md#cgmanifestjson) for the cgmanifest format.
+👉 See [documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md#cgmanifestjson) for the cgmanifest format.
 
 ### Phase 4: Build & Test
 
 > 🛑 **MANDATORY: Build locally before creating PRs.**
 
-See [documentation/building.md](../../../documentation/building.md#building-native-libraries) for platform-specific build commands.
+See [documentation/dev/building.md](../../../documentation/dev/building.md#building-native-libraries) for platform-specific build commands.
 
 ```bash
 dotnet cake --target=externals-macos --arch=arm64  # Example
 
-dotnet cake --target=tests-netcore --skipExternals=all
+# Run all tests (core + Vulkan + Direct3D — backends self-skip if unavailable)
+dotnet test tests/SkiaSharp.Tests.Console.sln
 ```
-
-> ⚠️ **Never use `dotnet test` directly** — use Cake for proper skip trait handling.
 
 ### Phase 5: Create PRs
 
@@ -240,4 +239,4 @@ Before proceeding past each step, verify:
 | freetype | `third_party/externals/freetype` |
 | libjpeg-turbo | `third_party/externals/libjpeg-turbo` |
 
-For cgmanifest names and upstream URLs, see [documentation/dependencies.md](../../../documentation/dependencies.md#name-mapping).
+For cgmanifest names and upstream URLs, see [documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md#name-mapping).

@@ -19,12 +19,12 @@ Always do these regardless of type:
 
 **Where to search:**
 - Stack traces → map to SkiaSharp source (`binding/SkiaSharp/`, `externals/skia/src/c/`)
-- [documentation/packages.md](../../documentation/packages.md) → deployment/loading issues (DllNotFoundException, container, publishing)
+- [documentation/dev/packages.md](../../../../documentation/dev/packages.md) → deployment/loading issues (DllNotFoundException, container, publishing)
 - [references/skia-patterns.md](skia-patterns.md) → known platform quirks, common traps, diagnostic heuristics
 - `.docs/docs/docs/` → if bug involves API misuse vs actual defect
 - Similar closed issues → check if there's an existing fix or documented workaround
 
-**Workaround search:** Follow [workaround-search.md](workaround-search.md) → "Search Patterns by Issue Type" → match the bug subcategory (crash, wrong output, or deployment). For crashes, prioritize checking `skia-patterns.md` common traps. For deployment issues, read `documentation/packages.md` first — it almost always has the answer.
+**Workaround search:** Follow [workaround-search.md](workaround-search.md) → "Search Patterns by Issue Type" → match the bug subcategory (crash, wrong output, or deployment). For crashes, prioritize checking `skia-patterns.md` common traps. For deployment issues, read `documentation/dev/packages.md` first — it almost always has the answer.
 
 **Proposal archetypes:**
 1. Workaround the user can apply now
@@ -40,7 +40,7 @@ Always do these regardless of type:
 **Where to search:**
 - `docs/SkiaSharpAPI/*.xml` → API reference for the types/methods involved
 - `.docs/docs/docs/` → tutorials, guides, samples that answer the question
-- [documentation/packages.md](../../documentation/packages.md) → if about packages, deployment, or platform selection
+- [documentation/dev/packages.md](../../../../documentation/dev/packages.md) → if about packages, deployment, or platform selection
 - `mslearn`/`microsoft_docs_search` → if about non-SkiaSharp tech (MAUI, Blazor, WPF, ASP.NET)
 - Existing closed issues → often the same question was answered before
 
@@ -60,7 +60,7 @@ Always do these regardless of type:
 **Where to search:**
 - SkiaSharp API surface → does a partial solution already exist?
 - Upstream Skia → does the C++ API support this? (`externals/skia/include/`)
-- [documentation/architecture.md](../../documentation/architecture.md) → understand which layer would need changes
+- [documentation/dev/architecture.md](../../../../documentation/dev/architecture.md) → understand which layer would need changes
 - Similar issues/PRs → has this been requested or attempted before?
 
 **Workaround search:** Follow [workaround-search.md](workaround-search.md) → "Search Patterns by Issue Type" → "Feature request: API doesn't exist". Search source for partial solutions and upstream Skia C++ headers.
@@ -79,7 +79,7 @@ Always do these regardless of type:
 **Where to search:**
 - `docs/SkiaSharpAPI/*.xml` → current API docs (may have "To be added" placeholders)
 - `.docs/docs/docs/` → existing tutorials and guides
-- `documentation/` → project-level docs
+- `documentation/dev/` → project-level docs
 - Source code → if docs are missing, read the implementation to draft accurate docs
 
 **Proposal archetypes:**

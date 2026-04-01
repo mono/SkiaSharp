@@ -77,7 +77,7 @@ Find the C++ API in Skia headers and identify:
 
 3. **Parameters** — primitives, references, pointers, const-ness
 
-👉 See [../../../documentation/memory-management.md#pointer-type-decision-tree](../../../documentation/memory-management.md#pointer-type-decision-tree)
+👉 See [../../../documentation/dev/memory-management.md#pointer-type-decision-tree](../../../documentation/dev/memory-management.md#pointer-type-decision-tree)
 
 ---
 
@@ -207,7 +207,7 @@ public void DrawCircleWorks()
 
 ```bash
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+dotnet test tests/SkiaSharp.Tests.Console.sln
 ```
 
 > **🛑 Tests MUST PASS.** Do not skip tests. Do not claim completion if tests fail.

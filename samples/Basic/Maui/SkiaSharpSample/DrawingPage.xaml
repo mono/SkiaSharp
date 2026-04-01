@@ -1,0 +1,113 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="SkiaSharpSample.DrawingPage"
+             Title="Drawing">
+
+    <Grid>
+        <skia:SKCanvasView x:Name="skiaView"
+                           PaintSurface="OnPaintSurface"
+                           EnableTouchEvents="True"
+                           Touch="OnTouch" />
+
+        <!-- Floating Clear button — top-right -->
+        <Button Text="Clear"
+                Clicked="OnClearClicked"
+                HorizontalOptions="End"
+                VerticalOptions="Start"
+                Margin="0,12,12,0"
+                BackgroundColor="#CC1E1E1E"
+                TextColor="White"
+                CornerRadius="16"
+                HeightRequest="34"
+                Padding="16,0"
+                FontSize="13" />
+
+        <!-- Floating toolbox — bottom-center overlay -->
+        <Border x:Name="toolboxBorder"
+                HorizontalOptions="Center"
+                VerticalOptions="End"
+                Margin="0,0,0,16"
+                StrokeShape="RoundRectangle 24"
+                Stroke="#44FFFFFF"
+                StrokeThickness="1"
+                BackgroundColor="#CC1E1E1E"
+                Padding="16,12"
+                InputTransparent="False">
+            <Grid x:Name="toolboxGrid" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="8">
+
+                <!-- Color swatches -->
+                <Grid x:Name="swatchGrid" ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8"
+                      Grid.Row="0" Grid.Column="0">
+                    <Button BackgroundColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="DodgerBlue" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="0" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#E53935, Dark=#EF5350}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="1" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#1E88E5, Dark=#42A5F5}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="2" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#43A047, Dark=#66BB6A}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="3" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#FB8C00, Dark=#FFA726}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="4" />
+                    <Button BackgroundColor="{AppThemeBinding Light=#8E24AA, Dark=#AB47BC}"
+                            WidthRequest="36" HeightRequest="36" CornerRadius="18"
+                            BorderColor="Transparent" BorderWidth="3"
+                            Clicked="OnColorClicked" Padding="0" Grid.Column="5" />
+                </Grid>
+
+                <!-- Brush size slider + label -->
+                <Grid x:Name="sliderGrid" ColumnDefinitions="*,Auto" ColumnSpacing="8"
+                      VerticalOptions="Center" Grid.Row="0" Grid.Column="1">
+                    <Slider x:Name="brushSlider"
+                            Minimum="1" Maximum="50" Value="4"
+                            WidthRequest="140"
+                            MinimumTrackColor="White"
+                            MaximumTrackColor="#66FFFFFF"
+                            ThumbColor="White"
+                            VerticalOptions="Center"
+                            ValueChanged="OnSliderValueChanged" />
+                    <Label x:Name="brushLabel" Text="4"
+                           TextColor="White" FontSize="13"
+                           VerticalOptions="Center"
+                           Grid.Column="1" WidthRequest="24" />
+                </Grid>
+
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="AdaptiveStates">
+                        <VisualState x:Name="Narrow">
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="0" />
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter TargetName="sliderGrid" Property="Grid.Row" Value="1" />
+                                <Setter TargetName="sliderGrid" Property="Grid.Column" Value="0" />
+                                <Setter TargetName="sliderGrid" Property="HorizontalOptions" Value="Center" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Wide">
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="600" />
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter TargetName="sliderGrid" Property="Grid.Row" Value="0" />
+                                <Setter TargetName="sliderGrid" Property="Grid.Column" Value="1" />
+                                <Setter TargetName="sliderGrid" Property="HorizontalOptions" Value="Fill" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+            </Grid>
+        </Border>
+    </Grid>
+
+</ContentPage>

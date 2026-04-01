@@ -17,8 +17,6 @@ namespace SkiaSharp.Views.Desktop
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
 
-		private bool designMode;
-
 		private GRContext grContext;
 		private GRGlFramebufferInfo glInfo;
 		private GRBackendRenderTarget renderTarget;
@@ -61,8 +59,6 @@ namespace SkiaSharp.Views.Desktop
 
 		private void Initialize()
 		{
-			designMode = DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
-
 			ResizeRedraw = true;
 		}
 
@@ -75,7 +71,7 @@ namespace SkiaSharp.Views.Desktop
 
 		protected override void OnPaint(PaintEventArgs e)
 		{
-			if (designMode)
+			if (DesignMode)
 			{
 				e.Graphics.Clear(BackColor);
 				return;

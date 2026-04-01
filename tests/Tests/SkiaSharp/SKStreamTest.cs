@@ -7,6 +7,7 @@ namespace SkiaSharp.Tests
 	public class SKStreamTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanWriteTextToStream()
 		{
 			using (var stream = new SKDynamicMemoryWStream())
@@ -92,12 +93,11 @@ namespace SkiaSharp.Tests
 			Assert.False(stream.IsValid);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
 		[SkippableFact]
 		public void GarbageCollectionCollectsStreams()
 		{
+			SkipOnMono();
+
 			var path = Path.Combine(PathToImages, "baboon.jpg");
 
 			var weak = DoWork();

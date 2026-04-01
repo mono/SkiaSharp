@@ -5,6 +5,7 @@ namespace SkiaSharp.Tests
 	public class SKRegionTest : SKTest
 	{
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void EmptyRegionIsEmpty()
 		{
 			using var region = new SKRegion();

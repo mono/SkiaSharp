@@ -1,0 +1,30 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="SkiaSharpSample.GpuPage"
+             Title="GPU">
+
+    <Grid>
+        <skia:SKGLView x:Name="skiaView"
+                       PaintSurface="OnPaintSurface"
+                       HasRenderLoop="False"
+                       EnableTouchEvents="True"
+                       Touch="OnTouch" />
+
+        <!-- FPS pill overlay — centered top -->
+        <Border HorizontalOptions="Center"
+                VerticalOptions="Start"
+                Margin="0,8,0,0"
+                StrokeShape="RoundRectangle 12"
+                Stroke="#44FFFFFF"
+                StrokeThickness="1"
+                BackgroundColor="#AA000000"
+                Padding="12,6">
+            <Label x:Name="fpsLabel"
+                   Text="FPS: --"
+                   TextColor="White"
+                   FontSize="14" />
+        </Border>
+    </Grid>
+
+</ContentPage>

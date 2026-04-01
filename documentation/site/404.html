@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Page Not Found — SkiaSharp</title>
+  <script>
+    // SPA routing for Blazor WASM apps on GitHub Pages
+    (function () {
+      var path = window.location.pathname;
+
+      // Handle /SkiaSharp/gallery/ SPA routes
+      if (path.startsWith('/SkiaSharp/gallery/') && path !== '/SkiaSharp/gallery/' && path !== '/SkiaSharp/gallery/index.html') {
+        var segmentCount = 2; // preserve /SkiaSharp/gallery
+        var l = window.location;
+        l.replace(
+          l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
+          l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+          (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+        );
+      }
+    })();
+  </script>
+  <style>
+    :root { --text: #1f2328; --text-2: #656d76; --bg: #fff; --accent: #2563eb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --text: #e6edf3; --text-2: #8b949e; --bg: #0d1117; --accent: #58a6ff; }
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; margin: 0; text-align: center; padding: 24px;
+    }
+    h1 { font-size: 72px; font-weight: 800; margin: 0 0 8px; opacity: 0.15; }
+    h2 { font-size: 20px; font-weight: 600; margin: 0 0 12px; }
+    p { color: var(--text-2); margin: 0 0 24px; font-size: 15px; }
+    a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; }
+    .links { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>404</h1>
+    <h2>Page not found</h2>
+    <p>The page you're looking for doesn't exist or has been moved.</p>
+    <div class="links">
+      <a href="/SkiaSharp/">Home</a>
+      <a href="/SkiaSharp/docs/">Documentation</a>
+      <a href="/SkiaSharp/gallery/">Gallery</a>
+      <a href="https://learn.microsoft.com/dotnet/api/skiasharp">API Reference</a>
+    </div>
+  </div>
+</body>
+</html>

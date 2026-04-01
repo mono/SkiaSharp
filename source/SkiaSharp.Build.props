@@ -64,6 +64,8 @@
     <TFMPrevious>net9.0</TFMPrevious>
     <!-- The current version of .NET that we are shipping for (all the TFMs) -->
     <TFMCurrent>net10.0</TFMCurrent>
+    <!-- The minimum version of .NET for platforms where device runtime lags behind SDK (e.g. Tizen ships .NET 6 on device) -->
+    <TFMMinimum>net6.0</TFMMinimum>
   </PropertyGroup>
 
   <!-- Target Platform Versions -->
@@ -84,6 +86,8 @@
     <TPVmacOSCurrent>26.2</TPVmacOSCurrent>
     <TPVTizenCurrent>10.0</TPVTizenCurrent>
     <TPVWindowsCurrent>10.0.19041.0</TPVWindowsCurrent>
+    <!-- Minimum (net6.0) — for platforms where device runtime lags behind SDK -->
+    <TPVTizenMinimum>8.0</TPVTizenMinimum>
   </PropertyGroup>
 
   <!-- MAUI Package Versions (must match installed workload versions per TFM) -->
@@ -115,9 +119,13 @@
   <PropertyGroup Condition="'$(TFMBase)' != ''">
     <BasicTargetFrameworksBase>$(TFMBase)</BasicTargetFrameworksBase>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TFMMinimum)' != '' and '$(TFMMinimum)' != '$(TFMPrevious)' and '$(TFMMinimum)' != '$(TFMCurrent)'">
+    <BasicTargetFrameworksMinimum Condition="'$(TFMMinimum)' != '$(TFMBase)'">$(TFMMinimum)</BasicTargetFrameworksMinimum>
+    <PlatformTargetFrameworksMinimum Condition="!$(IsLinux) and $(IsNetTizenSupported)">$(TFMMinimum)-tizen$(TPVTizenMinimum)</PlatformTargetFrameworksMinimum>
+  </PropertyGroup>
   <PropertyGroup>
-    <BasicTargetFrameworks>$(BasicTargetFrameworksCurrent);$(BasicTargetFrameworksPrevious);$(BasicTargetFrameworksBase)</BasicTargetFrameworks>
-    <PlatformTargetFrameworks>$(PlatformTargetFrameworksCurrent);$(PlatformTargetFrameworksPrevious)</PlatformTargetFrameworks>
+    <BasicTargetFrameworks>$(BasicTargetFrameworksCurrent);$(BasicTargetFrameworksPrevious);$(BasicTargetFrameworksBase);$(BasicTargetFrameworksMinimum)</BasicTargetFrameworks>
+    <PlatformTargetFrameworks>$(PlatformTargetFrameworksCurrent);$(PlatformTargetFrameworksPrevious);$(PlatformTargetFrameworksMinimum)</PlatformTargetFrameworks>
     <AllTargetFrameworks>$(BasicTargetFrameworks);$(PlatformTargetFrameworks)</AllTargetFrameworks>
   </PropertyGroup>
 

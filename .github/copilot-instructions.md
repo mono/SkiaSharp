@@ -142,7 +142,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | `externals/skia/**` (other) | ❌ No | Upstream Skia — never modify |
 | `*.generated.cs` | ❌ No | Run `pwsh ./utils/generate.ps1` |
 | `docs/` | ❌ No | Auto-generated |
-| `documentation/` | ✅ Yes | Architecture guides |
+| `documentation/dev/` | ✅ Yes | Architecture guides |
 
 ---
 
@@ -324,7 +324,7 @@ public void FeatureWorks()
 | Random crashes | Threading violation | Check Canvas/Paint thread scope |
 | **`EntryPointNotFoundException`** | **Native library not rebuilt after C API change** | **Run `dotnet cake --target=externals-{platform}`** |
 
-See [documentation/debugging-methodology.md](../documentation/debugging-methodology.md).
+See [documentation/dev/debugging-methodology.md](../documentation/dev/debugging-methodology.md).
 
 ---
 
@@ -375,13 +375,13 @@ The first three skills form a pipeline. Each can run standalone, but they work b
 | 2 | `issue-repro` | `ai-repro/{n}.json` | Repro |
 | 3 | `issue-fix` | `ai-fix/{n}.json` + PR | Fix |
 
-See [documentation/issue-pipeline.md](documentation/issue-pipeline.md) for handoff contracts and feedback loop.
+See [documentation/dev/issue-pipeline.md](../documentation/dev/issue-pipeline.md) for handoff contracts and feedback loop.
 
 ### When NOT to Use Skills
 
 Work directly for:
 - Trivial fixes (typos, whitespace, obvious one-liners)
-- Changes only to `documentation/` (non-generated docs)
+- Changes only to `documentation/dev/` (non-generated docs)
 - Build/test-only tasks (no reported bug)
 - Questions about code or architecture
 - Refactoring without a reported problem
@@ -413,10 +413,10 @@ Work directly for:
 
 | Topic | Document |
 |-------|----------|
-| Architecture | `documentation/architecture.md` |
-| Memory Management | `documentation/memory-management.md` |
-| Adding APIs | `documentation/adding-apis.md` |
-| API Design | `documentation/api-design.md` |
-| Error Handling | `documentation/error-handling.md` |
-| Debugging | `documentation/debugging-methodology.md` |
-| NuGet Packages | `documentation/packages.md` |
+| Architecture | `documentation/dev/architecture.md` |
+| Memory Management | `documentation/dev/memory-management.md` |
+| Adding APIs | `documentation/dev/adding-apis.md` |
+| API Design | `documentation/dev/api-design.md` |
+| Error Handling | `documentation/dev/error-handling.md` |
+| Debugging | `documentation/dev/debugging-methodology.md` |
+| NuGet Packages | `documentation/dev/packages.md` |

@@ -1,12 +1,11 @@
 ﻿using UIKit;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public class Program
 {
-	public class Program
+	static void Main(string[] args)
 	{
-		static void Main(string[] args)
-		{
-			UIApplication.Main(args, null, typeof(AppDelegate));
-		}
+		UIApplication.Main(args, null, typeof(AppDelegate));
 	}
 }

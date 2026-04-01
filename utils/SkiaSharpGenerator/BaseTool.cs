@@ -63,7 +63,7 @@ namespace SkiaSharpGenerator
 					if (version is not null)
 					{
 						Log?.LogVerbose($"Found Clang include folder: {version}");
-						options.IncludeFolders.Add(Path.Combine(root, version, "include"));
+						options.SystemIncludeFolders.Add(Path.Combine(root, version, "include"));
 					}
 					else
 					{
@@ -73,6 +73,45 @@ namespace SkiaSharpGenerator
 				else
 				{
 					Log?.LogWarning("Clang include folder not found, parsing may fail.");
+				}
+
+				// Add macOS SDK system include path (needed for #include_next in clang headers)
+				var sdkPaths = new[]
+				{
+					"/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+				};
+				var process = new System.Diagnostics.Process
+				{
+					StartInfo = new System.Diagnostics.ProcessStartInfo
+					{
+						FileName = "xcrun",
+						Arguments = "--show-sdk-path",
+						RedirectStandardOutput = true,
+						UseShellExecute = false,
+						CreateNoWindow = true,
+					}
+				};
+				try
+				{
+					process.Start();
+					var xcrunSdkPath = process.StandardOutput.ReadToEnd().Trim();
+					process.WaitForExit();
+					if (!string.IsNullOrEmpty(xcrunSdkPath))
+						sdkPaths = new[] { Path.Combine(xcrunSdkPath, "usr/include") };
+				}
+				catch
+				{
+					// fall back to default paths
+				}
+
+				foreach (var sdkPath in sdkPaths)
+				{
+					if (Directory.Exists(sdkPath))
+					{
+						Log?.LogVerbose($"Found macOS SDK include folder: {sdkPath}");
+						options.SystemIncludeFolders.Add(sdkPath);
+						break;
+					}
 				}
 			}
 

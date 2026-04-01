@@ -14,6 +14,7 @@ namespace SkiaSharp.Tests
 				public const string Api = "API";
 				public const string Gpu = "GPU";
 				public const string MatchCharacter = "MatchCharacter";
+			public const string Smoke = "Smoke";
 			}
 		}
 

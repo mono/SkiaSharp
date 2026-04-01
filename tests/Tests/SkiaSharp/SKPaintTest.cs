@@ -14,6 +14,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void StrokePropertyValuesAreCorrect()
 		{
 			var paint = new SKPaint();
@@ -76,9 +77,10 @@ namespace SkiaSharp.Tests
 
 		// Test for issue #276
 		[SkippableFact]
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // TODO: figure out why the font has changed
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
+			SkipOnPlatform(IsAndroid, "TODO: figure out why the font has changed");
+
 			using (var bitmapAA = new SKBitmap(new SKImageInfo(200, 200)))
 			using (var bitmapNoAA = new SKBitmap(new SKImageInfo(200, 200)))
 			{

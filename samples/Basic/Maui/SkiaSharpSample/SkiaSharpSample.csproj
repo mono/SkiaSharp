@@ -6,6 +6,7 @@
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
+    <Nullable>enable</Nullable>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
   </PropertyGroup>
 
@@ -25,8 +26,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" ForegroundScale="0.90" />
     <MauiSplashScreen Include="Resources\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
+    <MauiImage Include="Resources\Images\*" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) Or $(TargetFramework.Contains('-maccatalyst'))">
+    <MauiIcon Remove="Resources\appicon.png" />
+    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" ForegroundScale="1.30" />
   </ItemGroup>
 
   <ItemGroup>
