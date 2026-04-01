@@ -5,92 +5,91 @@
     xmlns:skia="using:SkiaSharp.Views.Windows">
 
     <Grid>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState x:Name="Narrow">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="ToolboxPanel.Orientation" Value="Vertical" />
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState x:Name="Wide">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="600" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="ToolboxPanel.Orientation" Value="Horizontal" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
-
+        <!-- Canvas fills everything -->
         <skia:SKXamlCanvas x:Name="skiaView" PaintSurface="OnPaintSurface"
-                           Background="Transparent"
-                           ManipulationMode="All"
                            PointerPressed="OnPointerPressed"
                            PointerMoved="OnPointerMoved"
                            PointerReleased="OnPointerReleased"
                            PointerWheelChanged="OnPointerWheelChanged"
                            PointerExited="OnPointerExited" />
 
-        <!-- Floating Clear button — top-right -->
-        <Button Content="Clear"
-                Click="OnClearClicked"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Margin="0,12,12,0"
-                Foreground="White"
-                FontSize="13"
-                Padding="16,6"
-                CornerRadius="16">
-            <Button.Background>
-                <SolidColorBrush Color="#1E1E1E" Opacity="0.8" />
-            </Button.Background>
-        </Button>
+        <!-- Clear button top-right -->
+        <Button Content="Clear" Click="OnClearClicked"
+                HorizontalAlignment="Right" VerticalAlignment="Top"
+                Margin="0,12,12,0" Padding="16,6"
+                Foreground="White" FontWeight="SemiBold"
+                Background="#CC1E1E1E" CornerRadius="16"
+                BorderThickness="0" />
 
-        <!-- Floating toolbox — bottom-center overlay -->
-        <Border x:Name="ToolboxBorder"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                Margin="0,0,0,16"
-                CornerRadius="24"
-                Padding="20,14">
-            <Border.Background>
-                <SolidColorBrush Color="#1E1E1E" Opacity="0.8" />
-            </Border.Background>
-            <StackPanel x:Name="ToolboxPanel" Orientation="Horizontal" Spacing="14">
+        <!-- Floating toolbox bottom-center -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                Margin="0,0,0,16" CornerRadius="24"
+                BorderBrush="#44FFFFFF" BorderThickness="1"
+                Padding="16,12"
+                Background="#CC1E1E1E">
+            <Grid x:Name="toolboxGrid" ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="8">
+
                 <!-- Color swatches -->
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                    <Border Tapped="OnColorTapped" Tag="Black" Width="36" Height="36"
-                            CornerRadius="18" Background="Black" />
-                    <Border Tapped="OnColorTapped" Tag="Red" Width="36" Height="36"
-                            CornerRadius="18" Background="#E53935" />
-                    <Border Tapped="OnColorTapped" Tag="Blue" Width="36" Height="36"
-                            CornerRadius="18" Background="#1E88E5" />
-                    <Border Tapped="OnColorTapped" Tag="Green" Width="36" Height="36"
-                            CornerRadius="18" Background="#43A047" />
-                    <Border Tapped="OnColorTapped" Tag="Orange" Width="36" Height="36"
-                            CornerRadius="18" Background="#FB8C00" />
-                    <Border Tapped="OnColorTapped" Tag="Purple" Width="36" Height="36"
-                            CornerRadius="18" Background="#8E24AA" />
+                <StackPanel x:Name="swatchPanel" Orientation="Horizontal" Spacing="8"
+                            Grid.Row="0" Grid.Column="0">
+                    <Border x:Name="ColorBlack" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="DodgerBlue" BorderThickness="3"
+                            Tapped="OnColorTapped" Tag="Black" />
+                    <Border x:Name="ColorRed" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Tapped="OnColorTapped" Tag="Red" />
+                    <Border x:Name="ColorBlue" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Tapped="OnColorTapped" Tag="Blue" />
+                    <Border x:Name="ColorGreen" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Tapped="OnColorTapped" Tag="Green" />
+                    <Border x:Name="ColorOrange" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Tapped="OnColorTapped" Tag="Orange" />
+                    <Border x:Name="ColorPurple" Width="36" Height="36" CornerRadius="18"
+                            BorderBrush="Transparent" BorderThickness="3"
+                            Tapped="OnColorTapped" Tag="Purple" />
                 </StackPanel>
 
                 <!-- Brush size slider + label -->
-                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
-                            HorizontalAlignment="Center">
-                    <Slider x:Name="brushSlider"
-                            Minimum="1" Maximum="50" Value="4"
-                            Width="160"
+                <StackPanel x:Name="sliderPanel" Orientation="Horizontal" Spacing="8"
                             VerticalAlignment="Center"
-                            ValueChanged="OnSliderValueChanged" />
+                            Grid.Row="0" Grid.Column="1">
+                    <Slider x:Name="brushSlider" Minimum="1" Maximum="50" Value="4"
+                            Width="140" VerticalAlignment="Center"
+                            ValueChanged="OnBrushSizeChanged" />
                     <TextBlock x:Name="brushText" Text="4"
                                Foreground="White" FontSize="13"
                                VerticalAlignment="Center"
                                Width="24" />
                 </StackPanel>
-            </StackPanel>
+
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="AdaptiveStates">
+                        <VisualState x:Name="Narrow">
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="0" />
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter Target="sliderPanel.(Grid.Row)" Value="1" />
+                                <Setter Target="sliderPanel.(Grid.Column)" Value="0" />
+                                <Setter Target="sliderPanel.HorizontalAlignment" Value="Center" />
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Wide">
+                            <VisualState.StateTriggers>
+                                <AdaptiveTrigger MinWindowWidth="600" />
+                            </VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter Target="sliderPanel.(Grid.Row)" Value="0" />
+                                <Setter Target="sliderPanel.(Grid.Column)" Value="1" />
+                                <Setter Target="sliderPanel.HorizontalAlignment" Value="Stretch" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+            </Grid>
         </Border>
     </Grid>
 

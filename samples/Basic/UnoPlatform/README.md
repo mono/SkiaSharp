@@ -4,7 +4,7 @@ Demonstrates SkiaSharp views in an Uno Platform app with `NavigationView` top ta
 
 ## Sample Pages
 
-This sample shows how to integrate SkiaSharp views into an Uno Platform app using XAML. The `SKXamlCanvas` and `SKSwapChainPanel` controls are placed declaratively in `.xaml` files alongside standard Uno controls, targeting multiple platforms (Windows, WebAssembly, iOS, Android, macOS, Linux) from a single codebase.
+This sample shows how to integrate SkiaSharp views into an Uno Platform app using XAML. The `SKXamlCanvas` and `SKSwapChainPanel` controls are placed declaratively in `.xaml` files alongside standard Uno controls, targeting multiple platforms (Windows, WebAssembly, iOS, Android, Desktop) from a single codebase.
 
 Navigation uses a `NavigationView` with `PaneDisplayMode="Top"` for a clean tab bar that works well on both mobile and desktop.
 
@@ -25,12 +25,10 @@ A real-time animated shader running at full frame rate on the GPU, with pointer 
 
 **Features:**
 
-- **`SKSwapChainPanel`** — Hardware-accelerated canvas using ANGLE on Windows/Android, WebGL on WebAssembly.
+- **`SKSwapChainPanel`** — Hardware-accelerated canvas using the platform GPU backend.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
 - **Render loop** — Continuous animation with `EnableRenderLoop="True"` and an FPS counter overlay.
 - **Pointer interaction** — Pointer position is passed as a shader uniform.
-
-> **Note:** The GPU page is hidden at runtime on Mac Catalyst where `SKSwapChainPanel` is not supported.
 
 ### Drawing
 
@@ -42,7 +40,7 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **`SKPath`** — Freehand strokes captured as paths with `MoveTo` and `LineTo` from pointer events.
 - **Pointer events** — `PointerPressed`, `PointerMoved`, `PointerReleased` for cross-device input.
 - **`PointerWheelChanged`** — Scroll wheel to adjust brush size (desktop).
-- **Color palette** — Six selectable colors with dark/light mode variants.
+- **Color palette** — Six selectable colors with dark/light mode variants and selection highlight.
 - **Responsive layout** — Toolbox adapts between vertical and horizontal orientation based on window width.
 
 ## Screenshots
@@ -55,7 +53,7 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
 - Uno Platform workload: `dotnet workload install uno-platform`
-- Platform-specific workloads for target platforms (e.g., `android`, `ios`, `maccatalyst`, `wasm-tools`)
+- Platform-specific workloads for target platforms (e.g., `android`, `ios`, `wasm-tools`)
 
 ## Running the Sample
 
@@ -71,5 +69,4 @@ Or target a specific platform:
 dotnet build -f net10.0-browserwasm     # WebAssembly
 dotnet build -f net10.0-android         # Android
 dotnet build -f net10.0-ios             # iOS
-dotnet build -f net10.0-maccatalyst     # Mac Catalyst
 ```
