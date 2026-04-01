@@ -1,0 +1,28 @@
+@inject DebuggerState State
+@implements IDisposable
+
+<div class="settings-panel">
+    <h4>Settings</h4>
+    <label class="setting-row">
+        <input type="checkbox" @bind="State.DarkBackground" />
+        Light/Dark
+    </label>
+    <label class="setting-row">
+        <input type="checkbox" @bind="State.ShowClip" />
+        Show Clip
+    </label>
+    <label class="setting-row">
+        <input type="checkbox" @bind="State.OverdrawViz" />
+        Overdraw Viz
+    </label>
+    <label class="setting-row">
+        <input type="checkbox" @bind="State.ShowOrigin" />
+        Show Origin
+    </label>
+</div>
+
+@code {
+    protected override void OnInitialized() => State.StateChanged += OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => State.StateChanged -= OnStateChanged;
+}

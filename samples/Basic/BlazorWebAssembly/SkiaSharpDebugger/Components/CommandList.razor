@@ -1,0 +1,66 @@
+@inject DebuggerState State
+@implements IDisposable
+
+<div class="command-list" @onkeydown="OnKeyDown" tabindex="0">
+    @if (State.CommandList != null)
+    {
+        <div class="command-list-scroll">
+            @foreach (var filteredIdx in State.FilteredIndices)
+            {
+                var cmd = State.GetCommand(filteredIdx);
+                if (cmd == null) continue;
+
+                var isSelected = filteredIdx == State.SelectedUnfilteredIndex;
+                <div class="command-item @(isSelected ? "selected" : "")"
+                     @onclick="() => OnCommandClick(filteredIdx)">
+                    <span class="command-index">@filteredIdx</span>
+                    <span class="command-name @GetCommandClass(cmd.Command)">@cmd.Command</span>
+                    @if (!string.IsNullOrEmpty(cmd.ShortDesc))
+                    {
+                        <span class="command-desc">@cmd.ShortDesc</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <p>Load an SKP file or select a demo scene to begin.</p>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => State.StateChanged += OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => State.StateChanged -= OnStateChanged;
+
+    private void OnCommandClick(int unfilteredIndex)
+    {
+        State.JumpToUnfilteredIndex(unfilteredIndex);
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case ".":
+                State.StepForward();
+                break;
+            case ",":
+                State.StepBackward();
+                break;
+        }
+    }
+
+    private string GetCommandClass(string command) => command switch
+    {
+        "Save" or "SaveLayer" => "cmd-save",
+        "Restore" => "cmd-restore",
+        "ClipRect" or "ClipPath" or "ClipRRect" or "ClipRegion" => "cmd-clip",
+        "Concat" or "Concat44" or "SetMatrix" or "SetM44" => "cmd-matrix",
+        _ when command.StartsWith("Draw") => "cmd-draw",
+        _ => ""
+    };
+}

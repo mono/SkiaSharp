@@ -1,0 +1,27 @@
+@inject DebuggerState State
+@implements IDisposable
+
+<div class="pixel-inspector">
+    <h4>Pixel Inspector</h4>
+    <div class="pixel-info">
+        <div>Position: (@State.CursorPosition[0], @State.CursorPosition[1])</div>
+        @if (State.CursorPixelRGBA != null)
+        {
+            var c = State.CursorPixelRGBA;
+            <div class="pixel-color-row">
+                <span class="pixel-swatch"
+                      style="background: rgba(@c[0],@c[1],@c[2],@(c[3] / 255.0))"></span>
+                <span>R:@c[0] G:@c[1] B:@c[2] A:@c[3]</span>
+            </div>
+            <div class="pixel-hex">#@c[0].ToString("X2")@c[1].ToString("X2")@c[2].ToString("X2")@c[3].ToString("X2")</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public SKImage? SourceImage { get; set; }
+
+    protected override void OnInitialized() => State.StateChanged += OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => State.StateChanged -= OnStateChanged;
+}

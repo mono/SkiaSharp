@@ -175,8 +175,12 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
         skiaArgs += $" win_vc='{win_vc}' ";
     }
 
+    var enableDebugger = HasArgument("debugger") || 
+                         EnvironmentVariable("SKIA_DEBUGGER") == "true";
+
     skiaArgs += 
         $" skia_enable_tools=false " +
+        $" skia_build_for_debugger={enableDebugger.ToString().ToLower()} " +
         $" is_official_build={CONFIGURATION.ToLower() == "release"} ".ToLower();
 
     // generate native skia build files

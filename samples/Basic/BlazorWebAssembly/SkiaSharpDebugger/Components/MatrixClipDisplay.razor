@@ -1,0 +1,35 @@
+@inject DebuggerState State
+@implements IDisposable
+
+<div class="matrix-clip-display">
+    @if (State.MatrixClipInfo != null)
+    {
+        <div class="info-section">
+            <h4>Clip</h4>
+            <table class="info-table">
+                <tr><td>@State.MatrixClipInfo.ClipRect[0]</td><td>@State.MatrixClipInfo.ClipRect[1]</td></tr>
+                <tr><td>@State.MatrixClipInfo.ClipRect[2]</td><td>@State.MatrixClipInfo.ClipRect[3]</td></tr>
+            </table>
+        </div>
+        <div class="info-section">
+            <h4>Matrix</h4>
+            <table class="info-table">
+                @foreach (var row in State.MatrixClipInfo.ViewMatrix)
+                {
+                    <tr>
+                        @foreach (var v in row)
+                        {
+                            <td>@v.ToString("F2")</td>
+                        }
+                    </tr>
+                }
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => State.StateChanged += OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => State.StateChanged -= OnStateChanged;
+}

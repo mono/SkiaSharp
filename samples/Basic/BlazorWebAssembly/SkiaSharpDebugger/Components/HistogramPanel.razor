@@ -1,0 +1,36 @@
+@inject DebuggerState State
+@implements IDisposable
+
+<div class="histogram-panel">
+    <h4>Command Histogram</h4>
+    @if (State.CommandList != null)
+    {
+        var histogram = State.GetHistogram();
+        <div class="histogram-list">
+            @foreach (var (name, count) in histogram)
+            {
+                <div class="histogram-item" @onclick="() => State.ToggleCommandName(name)">
+                    <span class="histogram-name @GetCommandClass(name)">@name</span>
+                    <span class="histogram-count">@count</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => State.StateChanged += OnStateChanged;
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    public void Dispose() => State.StateChanged -= OnStateChanged;
+
+    private string GetCommandClass(string command) => command switch
+    {
+        "Save" or "SaveLayer" => "cmd-save",
+        "Restore" => "cmd-restore",
+        "BeginDrawPicture" or "EndDrawPicture" => "cmd-save",
+        _ when command.StartsWith("Clip") => "cmd-clip",
+        _ when command.StartsWith("Draw") => "cmd-draw",
+        _ when command.StartsWith("Concat") || command.StartsWith("SetM") => "cmd-matrix",
+        _ => "cmd-matrix"
+    };
+}
