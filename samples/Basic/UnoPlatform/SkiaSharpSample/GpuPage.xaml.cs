@@ -1,6 +1,11 @@
-﻿using Microsoft.UI.Xaml.Input;
+﻿using Windows.Foundation;
+using Microsoft.UI.Xaml.Input;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
+
+#if HAS_UNO
+using Uno.WinUI.Graphics2DSK;
+#endif
 
 namespace SkiaSharpSample;
 
@@ -76,6 +81,9 @@ half4 main(float2 fragCoord) {
 	public GpuPage()
 	{
 		InitializeComponent();
+#if HAS_UNO
+		skiaView.Owner = this;
+#endif
 		shaderBuilder = new Lazy<SKRuntimeShaderBuilder>(() => SKRuntimeEffect.BuildShader(SkslSource));
 		fpsCounter.Start();
 		Unloaded += OnUnloaded;
@@ -90,11 +98,10 @@ half4 main(float2 fragCoord) {
 	}
 
 	private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
-	{
-		var canvas = e.Surface.Canvas;
-		var width = e.BackendRenderTarget.Width;
-		var height = e.BackendRenderTarget.Height;
+		=> OnPaintSurface(e.Surface.Canvas, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);
 
+	internal void OnPaintSurface(SKCanvas canvas, double width, double height)
+	{
 		var builder = shaderBuilder?.Value;
 		if (builder is null)
 			return;
@@ -107,10 +114,19 @@ half4 main(float2 fragCoord) {
 
 		using var shader = builder.Build();
 		shaderPaint.Shader = shader;
-		canvas.DrawRect(0, 0, width, height, shaderPaint);
+		canvas.DrawRect(0, 0, (float)width, (float)height, shaderPaint);
 
 		if (fpsCounter.Tick() is double fps)
-			DispatcherQueue.TryEnqueue(() => fpsText.Text = $"FPS: {fps:F0}");
+		{
+			if (DispatcherQueue.HasThreadAccess)
+			{
+				fpsText.Text = $"FPS: {fps:F0}";
+			}
+			else
+			{
+				DispatcherQueue.TryEnqueue(() => fpsText.Text = $"FPS: {fps:F0}");
+			}
+		}
 	}
 
 	private void OnPointerPressed(object? sender, PointerRoutedEventArgs e)
@@ -141,3 +157,31 @@ half4 main(float2 fragCoord) {
 			touchPos = new SKPoint((float)(point.Position.X / w), (float)(point.Position.Y / h));
 	}
 }
+
+#if HAS_UNO
+public partial class SKCanvasElementImpl() : SKCanvasElement
+{
+	public static DependencyProperty EnableRenderLoopProperty { get; } = DependencyProperty.Register(
+		nameof(EnableRenderLoop),
+		typeof(int),
+		typeof(SKCanvasElementImpl),
+		new PropertyMetadata(0, (o, args) => ((SKCanvasElementImpl)o).Invalidate()));
+
+	public bool EnableRenderLoop
+	{
+		get => (bool)GetValue(EnableRenderLoopProperty);
+		set => SetValue(EnableRenderLoopProperty, value);
+	}
+
+	public GpuPage? Owner { get; set; }
+
+	protected override void RenderOverride(SKCanvas canvas, Size area)
+	{
+		Owner?.OnPaintSurface(canvas, area.Width, (int)area.Height);
+		if (EnableRenderLoop)
+		{
+			Invalidate();
+		}
+	}
+}
+#endif

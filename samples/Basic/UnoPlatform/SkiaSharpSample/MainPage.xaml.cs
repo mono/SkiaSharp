@@ -11,11 +11,6 @@ public sealed partial class MainPage : Page
 
 	private void OnNavViewLoaded(object sender, RoutedEventArgs e)
 	{
-		// Hide GPU tab on platforms where SKSwapChainPanel is unsupported
-		if (!IsGpuSupported())
-		{
-			NavView.MenuItems.RemoveAt(1);
-		}
 		NavView.SelectedItem = NavView.MenuItems[0];
 	}
 
@@ -32,23 +27,5 @@ public sealed partial class MainPage : Page
 			};
 			ContentFrame.Navigate(pageType);
 		}
-	}
-
-	private static bool IsGpuSupported()
-	{
-#if __MACCATALYST__
-		return false;
-#else
-		try
-		{
-			return !SkiaSharp.Views.Windows.SKSwapChainPanel.RaiseOnUnsupported ||
-			       OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() ||
-			       OperatingSystem.IsWindows();
-		}
-		catch
-		{
-			return false;
-		}
-#endif
 	}
 }

@@ -1,4 +1,6 @@
-﻿using Uno.Resizetizer;
+﻿using System;
+using Microsoft.Extensions.Logging;
+using Uno.Resizetizer;
 
 namespace SkiaSharpSample;
 
@@ -10,7 +12,7 @@ public partial class App : Application
 	/// </summary>
 	public App()
 	{
-		InitializeComponent();
+		this.InitializeComponent();
 	}
 
 	protected Window? MainWindow { get; private set; }
@@ -19,7 +21,7 @@ public partial class App : Application
 	{
 		MainWindow = new Window();
 #if DEBUG
-		MainWindow.EnableHotReload();
+		MainWindow.UseStudio();
 #endif
 
 		// Do not repeat app initialization when the Window already has content,
@@ -44,7 +46,6 @@ public partial class App : Application
 		}
 
 		MainWindow.SetWindowIcon();
-
 		// Ensure the current window is active
 		MainWindow.Activate();
 	}
@@ -76,8 +77,11 @@ public partial class App : Application
 		{
 #if __WASM__
 			builder.AddProvider(new global::Uno.Extensions.Logging.WebAssembly.WebAssemblyConsoleLoggerProvider());
-#elif __IOS__ || __MACCATALYST__
+#elif __IOS__
 			builder.AddProvider(new global::Uno.Extensions.Logging.OSLogLoggerProvider());
+
+			// Log to the Visual Studio Debug console
+			builder.AddConsole();
 #else
 			builder.AddConsole();
 #endif
