@@ -119,16 +119,11 @@ jobs:
           sudo chown -R $(id -u):$(id -g) output
 
       - name: Publish Gallery Blazor WASM
-        env:
-          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
         run: |
-          COMMIT_SHORT="${GITHUB_SHA:0:7}"
-          BUILD_INFO="${SOURCE_LABEL} · ${COMMIT_SHORT}"
           dotnet publish "samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
             -c Release \
             -o output/gallery-publish \
-            -p:PlatformTargetFrameworks="" \
-            -p:BuildInfo="$BUILD_INFO"
+            -p:PlatformTargetFrameworks=""
 
       # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
