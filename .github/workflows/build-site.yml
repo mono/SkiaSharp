@@ -1,73 +1,93 @@
-name: Build Site
+name: "Docs - Deploy"
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
       - 'documentation/**'
       - 'samples/Gallery/**'
       - '.github/workflows/build-site.yml'
   pull_request:
+    branches: [ main ]
     paths:
       - 'documentation/**'
       - 'samples/Gallery/**'
       - '.github/workflows/build-site.yml'
+    types: [ opened, synchronize, reopened ]
   workflow_dispatch:
     inputs:
-      deploy_target:
-        description: 'Deploy target branch'
+      pr_number:
+        description: 'PR number to deploy as staging (leave blank to deploy to root)'
         required: false
-        default: 'docs-live'
-        type: choice
-        options:
-          - docs-live
-          - docs-staging
+        default: ''
+        type: string
       dry_run:
         description: 'Dry run — build everything but do not deploy'
         required: false
         default: false
         type: boolean
 
-permissions:
-  contents: write
+# Default to no permissions — each job declares only what it needs.
+permissions: {}
+
+# Ensure documentation workflows run sequentially
+concurrency:
+  group: "docs-deployment"
+  cancel-in-progress: false
 
 jobs:
-  # ── Build DocFX documentation ───────────────────────────────
-  build-docs:
-    name: Build Docs
+  # ── Build the complete site ──────────────────────────────────
+  build:
+    name: Build Site
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Install DocFX
-        run: dotnet tool restore
-
-      - name: Build DocFX
-        run: dotnet docfx documentation/docfx/docfx.json
-
-      - name: Upload docs artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-docs
-          path: output/site/docs/
-          retention-days: 7
-
-  # ── Build Gallery Blazor WASM app ───────────────────────────
-  build-gallery:
-    name: Build Gallery
-    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      artifact_name: ${{ steps.vars.outputs.artifact_name }}
+      is_staging: ${{ steps.vars.outputs.is_staging }}
+      pr_number: ${{ steps.vars.outputs.pr_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Setup build variables
+        id: vars
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER_EVENT: ${{ github.event.number }}
+          PR_NUMBER_INPUT: ${{ inputs.pr_number }}
+        shell: bash
+        run: |
+          if [ "$EVENT_NAME" == "pull_request" ]; then
+            PR_NUMBER="$PR_NUMBER_EVENT"
+          elif [ "$EVENT_NAME" == "workflow_dispatch" ] && [ -n "$PR_NUMBER_INPUT" ]; then
+            PR_NUMBER="$PR_NUMBER_INPUT"
+          else
+            PR_NUMBER=""
+          fi
+
+          if [ -n "$PR_NUMBER" ]; then
+            # Validate PR_NUMBER is a positive integer
+            if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+              echo "Invalid PR number: $PR_NUMBER"
+              exit 1
+            fi
+            echo "artifact_name=staging-site-${PR_NUMBER}" >> $GITHUB_OUTPUT
+            echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
+            echo "gallery_segment_count=4" >> $GITHUB_OUTPUT
+            echo "is_staging=true" >> $GITHUB_OUTPUT
+            echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+            echo "source_label=PR #${PR_NUMBER}" >> $GITHUB_OUTPUT
+          else
+            echo "artifact_name=main-site" >> $GITHUB_OUTPUT
+            echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
+            echo "gallery_segment_count=2" >> $GITHUB_OUTPUT
+            echo "is_staging=false" >> $GITHUB_OUTPUT
+            echo "pr_number=" >> $GITHUB_OUTPUT
+            echo "source_label=main" >> $GITHUB_OUTPUT
+          fi
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -77,137 +97,224 @@ jobs:
       - name: Install wasm-tools workload
         run: dotnet workload install wasm-tools
 
-      - name: Restore tools
+      - name: Restore .NET tools
         run: dotnet tool restore
 
+      # ── Build DocFX documentation ──────────────────────────────
+      - name: Build DocFX
+        env:
+          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
+        run: |
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          APP_FOOTER="source: ${SOURCE_LABEL} · ${COMMIT_SHORT}"
+          jq --arg footer "$APP_FOOTER" \
+            '.build.globalMetadata._appFooter = $footer' \
+            documentation/docfx/docfx.json > documentation/docfx/docfx-build.json
+          dotnet docfx documentation/docfx/docfx-build.json
+
+      # ── Build Gallery Blazor WASM app ──────────────────────────
       - name: Build WASM native libraries
         run: |
           bash scripts/Docker/wasm/build-local.sh 3.1.56 "_wasmeh,st"
           sudo chown -R $(id -u):$(id -g) output
 
       - name: Publish Gallery Blazor WASM
+        env:
+          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
         run: |
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          BUILD_INFO="${SOURCE_LABEL} · ${COMMIT_SHORT}"
           dotnet publish "samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
             -c Release \
             -o output/gallery-publish \
-            -p:PlatformTargetFrameworks=""
+            -p:PlatformTargetFrameworks="" \
+            -p:BuildInfo="$BUILD_INFO"
 
-      - name: Post-process for GitHub Pages
-        shell: bash
-        run: |
-          PUBLISH_DIR="output/gallery-publish/wwwroot"
-          sed -i 's|<base href="/" />|<base href="/SkiaSharp/gallery/" />|g' "$PUBLISH_DIR/index.html"
-
-          # SPA routing 404
-          cat > "$PUBLISH_DIR/404.html" << 'EOF'
-          <!DOCTYPE html>
-          <html><head><meta charset="utf-8" /><script>
-          var l = window.location;
-          l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-            l.pathname.split('/').slice(0, 3).join('/') + '/?/' +
-            l.pathname.slice(1).split('/').slice(2).join('/').replace(/&/g, '~and~') +
-            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') + l.hash);
-          </script></head><body></body></html>
-          EOF
-
-      - name: Upload gallery artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-gallery
-          path: output/gallery-publish/wwwroot/
-          retention-days: 7
-
-  # ── Prepare landing page ────────────────────────────────────
-  build-landing:
-    name: Build Landing Page
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Prepare landing page
-        run: |
-          mkdir -p output/site/landing
-          cp documentation/site/index.html output/site/landing/
-          cp documentation/site/style.css output/site/landing/
-          cp documentation/site/404.html output/site/landing/
-
-      - name: Upload landing artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-landing
-          path: output/site/landing/
-          retention-days: 7
-
-  # ── Assemble & deploy final site ────────────────────────────
-  deploy:
-    name: Deploy Site
-    needs: [build-docs, build-gallery, build-landing]
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
-    steps:
-      - name: Determine deploy target
-        id: target
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "branch=docs-staging" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "branch=${{ inputs.deploy_target }}" >> $GITHUB_OUTPUT
-          else
-            echo "branch=docs-live" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-
+      # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
+        env:
+          GALLERY_BASE_HREF: ${{ steps.vars.outputs.gallery_base_href }}
+          GALLERY_SEGMENT_COUNT: ${{ steps.vars.outputs.gallery_segment_count }}
+        shell: bash
         run: |
           mkdir -p site
 
           # Landing page → root
-          cp artifacts/site-landing/index.html site/
-          cp artifacts/site-landing/style.css site/
-          cp artifacts/site-landing/404.html site/
+          cp documentation/site/index.html site/
+          cp documentation/site/style.css site/
+          cp documentation/site/404.html site/
           touch site/.nojekyll
 
           # Docs → /docs/
-          cp -r artifacts/site-docs site/docs
+          cp -r output/site/docs site/docs
 
           # Gallery → /gallery/
-          cp -r artifacts/site-gallery site/gallery
+          cp -r output/gallery-publish/wwwroot site/gallery
+
+          # Rewrite gallery base href for deployment path
+          sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
+
+          # Generate gallery 404.html for SPA routing
+          cat > site/gallery/404.html << SPAEOF
+          <!DOCTYPE html>
+          <html><head><meta charset="utf-8" /><script>
+          var segmentCount = $GALLERY_SEGMENT_COUNT;
+          var l = window.location;
+          l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?/' +
+            l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') + l.hash);
+          </script></head><body></body></html>
+          SPAEOF
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
           echo "..."
           echo "Total files: $(find site -type f | wc -l)"
 
-      - name: Deploy to GitHub Pages
-        if: ${{ !inputs.dry_run }}
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.vars.outputs.artifact_name }}
+          path: site
+          retention-days: 1
+
+  # ── Deploy to gh-pages ───────────────────────────────────────
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    if: |
+      !inputs.dry_run &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Download site artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact_name }}
+          path: /tmp/site-temp
+
+      - name: Deploy main site content
+        if: needs.build.outputs.is_staging == 'false'
         run: |
-          BRANCH="${{ steps.target.outputs.branch }}"
-          REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          # Remove everything except staging/ and .git/
+          find . -maxdepth 1 \
+              -not -name 'staging' \
+              -not -name '.git' \
+              -not -name '.' \
+              -not -name '..' \
+            -exec rm -rf {} \;
+          cp -r /tmp/site-temp/. .
+          rm -rf /tmp/site-temp
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "Deploy main documentation from commit ${{ github.sha }}"
+            git push origin gh-pages
+          else
+            echo "No changes to commit"
+          fi
 
-          echo "Deploying to branch: $BRANCH"
+      - name: Deploy staging site content
+        if: needs.build.outputs.is_staging == 'true'
+        env:
+          PR_NUMBER: ${{ needs.build.outputs.pr_number }}
+        run: |
+          # Validate PR_NUMBER is a positive integer before using in paths
+          if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Invalid PR number: $PR_NUMBER"
+            exit 1
+          fi
+          mkdir -p staging/$PR_NUMBER
+          rm -rf staging/$PR_NUMBER/*
+          cp -r /tmp/site-temp/. staging/$PR_NUMBER/
 
-          WORK_DIR=$(mktemp -d)
-          trap 'rm -rf "$WORK_DIR"' EXIT
+          # Copy 404.html to the gh-pages root so SPA redirects work for staging
+          # paths (GitHub Pages only serves the root-level 404.html for missing paths)
+          cp /tmp/site-temp/404.html 404.html
 
-          # Start fresh — we have the complete site
-          git init "$WORK_DIR"
-          git -C "$WORK_DIR" checkout -b "$BRANCH"
+          rm -rf /tmp/site-temp
 
-          cp -r site/* "$WORK_DIR/"
-          cp site/.nojekyll "$WORK_DIR/"
+          # Ensure .nojekyll exists at root so _framework is served
+          touch .nojekyll
 
-          git -C "$WORK_DIR" config user.name "github-actions[bot]"
-          git -C "$WORK_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C "$WORK_DIR" add -A
-          git -C "$WORK_DIR" commit -m "Deploy site - ${{ github.sha }}"
-          git -C "$WORK_DIR" push --force "$REMOTE_URL" "HEAD:refs/heads/$BRANCH"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .nojekyll 404.html staging/$PR_NUMBER
+          if ! git diff --cached --quiet; then
+            git commit -m "Deploy staging docs for PR #$PR_NUMBER"
+            git push origin gh-pages
+          else
+            echo "No changes to commit"
+          fi
 
-          echo "Deployed to https://mono.github.io/SkiaSharp/ (branch: $BRANCH)"
+  # ── Comment on PR with preview URL ──────────────────────────
+  comment:
+    name: Comment on PR
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    if: |
+      needs.build.outputs.is_staging == 'true' &&
+      (github.event_name == 'pull_request' &&
+       (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'))
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = ${{ needs.build.outputs.pr_number }};
+            const stagingUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/`;
+            const docsUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/docs/`;
+            const galleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery/`;
+
+            const commentBody = [
+              '📖 **Documentation Preview**',
+              '',
+              'The documentation for this PR has been deployed and is available at:',
+              '',
+              `🔗 **[View Staging Site](${stagingUrl})**`,
+              `🔗 **[View Staging Docs](${docsUrl})**`,
+              `🔗 **[View Staging Gallery](${galleryUrl})**`,
+              '',
+              'This preview will be updated automatically when you push new commits to this PR.',
+              '',
+              '---',
+              '*This comment is automatically updated by the documentation staging workflow.*'
+            ].join('\n');
+
+            // Update existing bot comment if present, otherwise create a new one
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+            const botComment = comments.data.find(c =>
+              c.user.type === 'Bot' &&
+              c.body.includes('Documentation Preview')
+            );
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: commentBody
+              });
+            }

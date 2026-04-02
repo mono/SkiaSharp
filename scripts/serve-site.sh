@@ -2,8 +2,8 @@
 # Serve the SkiaSharp docs site locally for preview.
 #
 # Usage:
-#   ./scripts/serve-site.sh                    # serve from docs-staging branch
-#   ./scripts/serve-site.sh docs-live           # serve from docs-live branch
+#   ./scripts/serve-site.sh                    # serve from gh-pages branch
+#   ./scripts/serve-site.sh gh-pages            # serve from gh-pages branch (explicit)
 #
 # Requirements: python3
 #
@@ -13,7 +13,7 @@
 set -euo pipefail
 
 PORT="${PORT:-8080}"
-BRANCH="${1:-docs-staging}"
+BRANCH="${1:-gh-pages}"
 REPO_URL="https://github.com/mono/SkiaSharp.git"
 
 CACHE_ROOT="${TMPDIR:-/tmp}/skiasharp-site-preview"
@@ -35,7 +35,7 @@ else
     echo "Cloning $BRANCH branch..."
     git clone --depth=1 --branch "$BRANCH" "$REPO_URL" "$REPO_DIR" 2>/dev/null || {
         echo "Error: Branch '$BRANCH' does not exist."
-        echo "Available branches: docs-staging, docs-live"
+        echo "Available branches: gh-pages"
         exit 1
     }
 fi

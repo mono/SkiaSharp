@@ -1,0 +1,47 @@
+name: "Docs - Go Live!"
+
+on:
+  workflow_run:
+    workflows:
+      - "Docs - Deploy"
+      - "Docs - PR Staging - Cleanup"
+    types:
+      - completed
+  workflow_dispatch:
+
+# Default to no permissions — each job declares only what it needs.
+permissions: {}
+
+# Ensure go-live runs one at a time (latest wins)
+concurrency:
+  group: "docs-go-live"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

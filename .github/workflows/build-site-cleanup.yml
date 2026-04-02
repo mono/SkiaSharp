@@ -1,0 +1,61 @@
+name: "Docs - PR Staging - Cleanup"
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
+
+# Default to no permissions — each job declares only what it needs.
+permissions: {}
+
+# Ensure documentation workflows run sequentially
+concurrency:
+  group: "docs-deployment"
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # push to gh-pages
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Remove staging directory from gh-pages
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          # Validate PR_NUMBER is a positive integer before using in paths
+          if ! [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Invalid PR number: $PR_NUMBER"
+            exit 1
+          fi
+
+          # Switch to gh-pages branch; exit cleanly if it doesn't exist yet
+          if ! git fetch origin gh-pages:gh-pages 2>/dev/null; then
+            echo "gh-pages branch does not exist, nothing to clean up"
+            exit 0
+          fi
+          if ! git checkout gh-pages 2>/dev/null; then
+            echo "Failed to checkout gh-pages, nothing to clean up"
+            exit 0
+          fi
+
+          if [ -d "staging/$PR_NUMBER" ]; then
+            rm -rf staging/$PR_NUMBER
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add -A
+            if ! git diff --cached --quiet; then
+              git commit -m "Remove staging docs for PR #$PR_NUMBER"
+              git push origin gh-pages
+              echo "Removed staging directory for PR #$PR_NUMBER"
+            else
+              echo "No changes to commit for PR #$PR_NUMBER"
+            fi
+          else
+            echo "No staging directory found for PR #$PR_NUMBER"
+          fi
