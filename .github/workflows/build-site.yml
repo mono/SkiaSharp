@@ -179,7 +179,7 @@ jobs:
           path: site
           retention-days: 1
 
-  # ── Deploy to gh-pages ───────────────────────────────────────
+  # ── Deploy to docs-live ───────────────────────────────────────
   deploy:
     name: Deploy
     needs: build
@@ -190,10 +190,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout gh-pages branch
+      - name: Checkout docs-live branch
         uses: actions/checkout@v4
         with:
-          ref: gh-pages
+          ref: docs-live
           fetch-depth: 0
 
       - name: Download site artifact
@@ -219,7 +219,7 @@ jobs:
           git add .
           if ! git diff --cached --quiet; then
             git commit -m "Deploy main documentation from commit ${{ github.sha }}"
-            git push origin gh-pages
+            git push origin docs-live
           else
             echo "No changes to commit"
           fi
@@ -238,7 +238,7 @@ jobs:
           rm -rf staging/$PR_NUMBER/*
           cp -r /tmp/site-temp/. staging/$PR_NUMBER/
 
-          # Copy 404.html to the gh-pages root so SPA redirects work for staging
+          # Copy 404.html to the docs-live root so SPA redirects work for staging
           # paths (GitHub Pages only serves the root-level 404.html for missing paths)
           cp /tmp/site-temp/404.html 404.html
 
@@ -252,7 +252,7 @@ jobs:
           git add .nojekyll 404.html staging/$PR_NUMBER
           if ! git diff --cached --quiet; then
             git commit -m "Deploy staging docs for PR #$PR_NUMBER"
-            git push origin gh-pages
+            git push origin docs-live
           else
             echo "No changes to commit"
           fi

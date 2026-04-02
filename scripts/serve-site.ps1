@@ -1,8 +1,8 @@
 # Serve the SkiaSharp docs site locally for preview.
 #
 # Usage:
-#   pwsh scripts/serve-site.ps1                     # serve from gh-pages branch
-#   pwsh scripts/serve-site.ps1 gh-pages             # serve from gh-pages branch (explicit)
+#   pwsh scripts/serve-site.ps1                     # serve from docs-live branch
+#   pwsh scripts/serve-site.ps1 docs-live            # serve from docs-live branch (explicit)
 #
 # Requirements: python3
 #
@@ -11,7 +11,7 @@
 
 param(
     [Parameter(Position = 0)]
-    [string]$Branch = "gh-pages",
+    [string]$Branch = "docs-live",
 
     [int]$Port = 8080
 )
@@ -36,7 +36,7 @@ if (Test-Path (Join-Path $RepoDir ".git")) {
     Write-Host "Cloning $Branch branch..." -ForegroundColor Cyan
     git clone --depth=1 --branch $Branch $RepoUrl $RepoDir 2>&1
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Branch '$Branch' does not exist. Try: gh-pages"
+        Write-Error "Branch '$Branch' does not exist. Try: docs-live"
         exit 1
     }
 }

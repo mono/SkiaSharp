@@ -17,14 +17,14 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # push to gh-pages
+      contents: write   # push to docs-live
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Remove staging directory from gh-pages
+      - name: Remove staging directory from docs-live
         env:
           PR_NUMBER: ${{ github.event.number }}
         run: |
@@ -34,13 +34,13 @@ jobs:
             exit 1
           fi
 
-          # Switch to gh-pages branch; exit cleanly if it doesn't exist yet
-          if ! git fetch origin gh-pages:gh-pages 2>/dev/null; then
-            echo "gh-pages branch does not exist, nothing to clean up"
+          # Switch to docs-live branch; exit cleanly if it doesn't exist yet
+          if ! git fetch origin docs-live:docs-live 2>/dev/null; then
+            echo "docs-live branch does not exist, nothing to clean up"
             exit 0
           fi
-          if ! git checkout gh-pages 2>/dev/null; then
-            echo "Failed to checkout gh-pages, nothing to clean up"
+          if ! git checkout docs-live 2>/dev/null; then
+            echo "Failed to checkout docs-live, nothing to clean up"
             exit 0
           fi
 
@@ -51,7 +51,7 @@ jobs:
             git add -A
             if ! git diff --cached --quiet; then
               git commit -m "Remove staging docs for PR #$PR_NUMBER"
-              git push origin gh-pages
+              git push origin docs-live
               echo "Removed staging directory for PR #$PR_NUMBER"
             else
               echo "No changes to commit for PR #$PR_NUMBER"
