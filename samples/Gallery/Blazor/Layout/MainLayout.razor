@@ -24,7 +24,7 @@
             </CascadingValue>
         </article>
         <footer class="text-center text-muted py-2" style="font-size: 0.75rem; opacity: 0.6;">
-            @BuildInfo
+            <span id="build-footer"></span>
         </footer>
     </main>
 </div>
@@ -33,18 +33,6 @@
     public bool UseGpu { get; set; } = true;
     public EventCallback BackendChanged => EventCallback.Factory.Create(this, () => { });
     private static bool darkMode = false;
-
-    private static string BuildInfo
-    {
-        get
-        {
-            var attr = typeof(SkiaSharpSample.SampleBase).Assembly
-                .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), false)
-                .Cast<System.Reflection.AssemblyMetadataAttribute>()
-                .FirstOrDefault(a => a.Key == "BuildFooter");
-            return attr?.Value ?? "";
-        }
-    }
 
     private void SetBackend(bool gpu)
     {
