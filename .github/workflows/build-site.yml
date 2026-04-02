@@ -30,12 +30,6 @@ on:
 # Default to no permissions — each job declares only what it needs.
 permissions: {}
 
-# Serialize deployments per target: main deploys serialize together,
-# each PR gets its own group so concurrent PRs don't cancel each other.
-concurrency:
-  group: "docs-deploy-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}"
-  cancel-in-progress: false
-
 jobs:
   # ── Build the complete site ──────────────────────────────────
   build:
@@ -164,6 +158,11 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
+    # Serialize deploys: main deploys serialize together, each PR gets its
+    # own group. cancel-in-progress ensures newer commits win over older ones.
+    concurrency:
+      group: "docs-deploy-${{ needs.build.outputs.is_staging == 'true' && format('pr-{0}', needs.build.outputs.pr_number) || 'main' }}"
+      cancel-in-progress: true
     if: |
       !inputs.dry_run &&
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
@@ -248,7 +247,7 @@ jobs:
       (github.event_name == 'pull_request' &&
        (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'))
     permissions:
-      issues: write
+      pull-requests: write
     steps:
       - name: Comment on PR
         uses: actions/github-script@v7
