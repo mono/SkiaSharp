@@ -54,7 +54,7 @@ To download from a specific source instead of the latest main build:
 dotnet cake --target=docs-download-output --previewLabel=pr.3553
 
 # From a specific branch
-dotnet cake --target=docs-download-output --gitBranch=release/3.119.4
+dotnet cake --target=docs-download-output --gitBranch=release/4.119.4
 
 # From a specific commit
 dotnet cake --target=docs-download-output --gitSha=abc123def456
@@ -71,7 +71,7 @@ pwsh .github/skills/validate-samples/scripts/detect-preview-version.ps1
 
 Output:
 ```
-Found: SkiaSharp.3.119.4-preview.0.76.nupkg
+Found: SkiaSharp.4.119.4-preview.0.76.nupkg
 Preview label: preview.0
 Build number:  76
 Full suffix:   preview.0.76
