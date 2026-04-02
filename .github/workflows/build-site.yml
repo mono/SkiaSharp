@@ -81,7 +81,9 @@ jobs:
         run: dotnet tool restore
 
       - name: Build WASM native libraries
-        run: bash scripts/Docker/wasm/build-local.sh 3.1.56 "_wasmeh,st"
+        run: |
+          bash scripts/Docker/wasm/build-local.sh 3.1.56 "_wasmeh,st"
+          sudo chown -R $(id -u):$(id -g) output
 
       - name: Publish Gallery Blazor WASM
         run: |
