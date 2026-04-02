@@ -23,10 +23,6 @@ on:
         options:
           - docs-live
           - docs-staging
-      git_branch:
-        description: 'Git branch to fetch CI packages from for gallery (e.g. main, release/3.119.4)'
-        required: false
-        default: 'main'
       dry_run:
         description: 'Dry run — build everything but do not deploy'
         required: false
@@ -70,6 +66,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -82,50 +80,12 @@ jobs:
       - name: Restore tools
         run: dotnet tool restore
 
-      - name: Download NuGet packages from CI feed
-        run: |
-          dotnet cake --target=docs-download-output \
-            --gitBranch="${{ inputs.git_branch || 'main' }}"
-
-      - name: Detect preview version
-        id: version
-        shell: pwsh
-        run: |
-          $previewPkg = Get-ChildItem 'output/nugets/SkiaSharp.[0-9]*-*.nupkg' | Select-Object -First 1
-          if (-not $previewPkg) {
-            throw "No preview SkiaSharp package found in output/nugets/"
-          }
-
-          $fileName = $previewPkg.Name
-          Write-Host "Found package: $fileName"
-
-          if ($fileName -match '^SkiaSharp\.(\d+\.\d+\.\d+)-(.+)\.(\d+)\.nupkg$') {
-            $baseVersion = $Matches[1]
-            $previewLabel = $Matches[2]
-            $buildNumber = $Matches[3]
-          } else {
-            throw "Could not parse version from package filename: $fileName"
-          }
-
-          $fullVersion = "$baseVersion-$previewLabel.$buildNumber"
-          Write-Host "Full version: $fullVersion"
-
-          "preview_label=$previewLabel" >> $env:GITHUB_OUTPUT
-          "build_number=$buildNumber" >> $env:GITHUB_OUTPUT
-          "full_version=$fullVersion" >> $env:GITHUB_OUTPUT
-
-      - name: Generate samples
-        run: |
-          dotnet cake --target=samples-generate \
-            --previewLabel="${{ steps.version.outputs.preview_label }}" \
-            --buildNumber="${{ steps.version.outputs.build_number }}"
-
-      - name: Add local NuGet source
-        run: dotnet nuget add source "$(pwd)/output/nugets" --name local-ci-packages
+      - name: Build WASM native libraries
+        run: scripts/Docker/wasm/build-local.sh 3.1.56 "_wasmeh,st"
 
       - name: Publish Gallery Blazor WASM
         run: |
-          dotnet publish "output/samples-preview/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
+          dotnet publish "samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
             -c Release \
             -o output/gallery-publish
 
