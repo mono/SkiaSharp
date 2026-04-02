@@ -1,32 +1,24 @@
 <Project>
 
-  <!-- Read SkiaSharp version from VERSIONS.txt so we don't hardcode it -->
-  <PropertyGroup>
-    <_VersionsTxtPath>$(MSBuildThisFileDirectory)..\scripts\VERSIONS.txt</_VersionsTxtPath>
-    <_VersionsTxtContent>$([System.IO.File]::ReadAllText($(_VersionsTxtPath)))</_VersionsTxtContent>
-    <_SkiaSharpNuGetVersion>$([System.Text.RegularExpressions.Regex]::Match($(_VersionsTxtContent), '^SkiaSharp\s+nuget\s+(.*)$$', System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_SkiaSharpNuGetVersion>
-    <_HarfBuzzSharpNuGetVersion>$([System.Text.RegularExpressions.Regex]::Match($(_VersionsTxtContent), '^HarfBuzzSharp\s+nuget\s+(.*)$$', System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_HarfBuzzSharpNuGetVersion>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Remove="@(ProjectReference)" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="$(_SkiaSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.WinUI" Version="$(_SkiaSharpNuGetVersion)" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="$(_SkiaSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="$(_SkiaSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.Desktop.Common" Version="$(_SkiaSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.Views.WPF" Version="$(_SkiaSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="$(_SkiaSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="HarfBuzzSharp" Version="$(_HarfBuzzSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Android" Version="$(_HarfBuzzSharpNuGetVersion)" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-android'))" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.iOS" Version="$(_HarfBuzzSharpNuGetVersion)" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-ios'))" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.MacCatalyst" Version="$(_HarfBuzzSharpNuGetVersion)" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="$(_HarfBuzzSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.macOS" Version="$(_HarfBuzzSharpNuGetVersion)" ExcludeAssets="all" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Win32" Version="$(_HarfBuzzSharpNuGetVersion)" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp" Version="3.119.0" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="3.119.0" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-windows'))" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.0" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="3.119.0" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.Desktop.Common" Version="3.119.0" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="3.119.0" ExcludeAssets="all" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="3.119.0" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp" Version="8.3.1.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Android" Version="8.3.1.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-android'))" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.iOS" Version="8.3.1.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-ios'))" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.MacCatalyst" Version="8.3.1.1" ExcludeAssets="all" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.1.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.macOS" Version="8.3.1.1" ExcludeAssets="all" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Win32" Version="8.3.1.1" ExcludeAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
