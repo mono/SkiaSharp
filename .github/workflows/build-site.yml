@@ -115,11 +115,17 @@ jobs:
           sudo chown -R $(id -u):$(id -g) output
 
       - name: Publish Gallery Blazor WASM
+        env:
+          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
+          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
         run: |
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
           dotnet publish "samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
             -c Release \
             -o output/gallery-publish \
-            -p:PlatformTargetFrameworks=""
+            -p:PlatformTargetFrameworks="" \
+            -p:BuildFooter="$BUILD_FOOTER"
 
       # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
@@ -151,9 +157,6 @@ jobs:
 
           # Rewrite gallery base href for deployment path
           sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
-
-          # Inject build footer into gallery (before closing body, after Blazor script)
-          sed -i "s|</body>|<footer class=\"text-center text-muted py-2\" style=\"font-size:0.75rem;opacity:0.6\">${BUILD_FOOTER}</footer></body>|" site/gallery/index.html
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
