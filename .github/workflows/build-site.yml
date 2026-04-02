@@ -218,10 +218,6 @@ jobs:
           mkdir -p "staging/$PR_NUMBER"
           cp -r /tmp/site-temp/. "staging/$PR_NUMBER/"
 
-          # Copy 404.html to the docs-live root so SPA redirects work for staging
-          # paths (GitHub Pages only serves the root-level 404.html for missing paths)
-          cp /tmp/site-temp/404.html 404.html
-
           rm -rf /tmp/site-temp
 
           # Ensure .nojekyll exists at root so _framework is served
@@ -229,7 +225,7 @@ jobs:
 
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add .nojekyll 404.html staging/$PR_NUMBER
+          git add .nojekyll staging/$PR_NUMBER
           if ! git diff --cached --quiet; then
             git commit -m "Deploy staging docs for PR #$PR_NUMBER"
             git push origin docs-live
