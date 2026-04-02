@@ -193,6 +193,10 @@ jobs:
             -exec rm -rf {} \;
           cp -r /tmp/site-temp/. .
           rm -rf /tmp/site-temp
+
+          # Ensure .nojekyll exists so _framework/ directories are served
+          touch .nojekyll
+
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
