@@ -87,7 +87,8 @@ jobs:
         run: |
           dotnet publish "samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
             -c Release \
-            -o output/gallery-publish
+            -o output/gallery-publish \
+            -p:PlatformTargetFrameworks=""
 
       - name: Post-process for GitHub Pages
         shell: bash
