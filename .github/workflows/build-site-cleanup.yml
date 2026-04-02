@@ -8,9 +8,9 @@ on:
 # Default to no permissions — each job declares only what it needs.
 permissions: {}
 
-# Ensure documentation workflows run sequentially
+# Each PR cleanup gets its own group, matching the deploy group for the same PR.
 concurrency:
-  group: "docs-deployment"
+  group: "docs-deploy-pr-${{ github.event.number }}"
   cancel-in-progress: false
 
 jobs:

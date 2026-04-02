@@ -30,9 +30,10 @@ on:
 # Default to no permissions — each job declares only what it needs.
 permissions: {}
 
-# Ensure documentation workflows run sequentially
+# Serialize deployments per target: main deploys serialize together,
+# each PR gets its own group so concurrent PRs don't cancel each other.
 concurrency:
-  group: "docs-deployment"
+  group: "docs-deploy-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}"
   cancel-in-progress: false
 
 jobs:
@@ -76,14 +77,12 @@ jobs:
             fi
             echo "artifact_name=staging-site-${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
-            echo "gallery_segment_count=4" >> $GITHUB_OUTPUT
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "source_label=PR #${PR_NUMBER}" >> $GITHUB_OUTPUT
           else
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
-            echo "gallery_segment_count=2" >> $GITHUB_OUTPUT
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
             echo "source_label=main" >> $GITHUB_OUTPUT
@@ -129,7 +128,6 @@ jobs:
       - name: Assemble site
         env:
           GALLERY_BASE_HREF: ${{ steps.vars.outputs.gallery_base_href }}
-          GALLERY_SEGMENT_COUNT: ${{ steps.vars.outputs.gallery_segment_count }}
         shell: bash
         run: |
           mkdir -p site
@@ -148,19 +146,6 @@ jobs:
 
           # Rewrite gallery base href for deployment path
           sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
-
-          # Generate gallery 404.html for SPA routing
-          cat > site/gallery/404.html << SPAEOF
-          <!DOCTYPE html>
-          <html><head><meta charset="utf-8" /><script>
-          var segmentCount = $GALLERY_SEGMENT_COUNT;
-          var l = window.location;
-          l.replace(l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-            l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?/' +
-            l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
-            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') + l.hash);
-          </script></head><body></body></html>
-          SPAEOF
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
