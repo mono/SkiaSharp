@@ -44,8 +44,8 @@ Set the `<PackagingGroup>` property in your .csproj - this is the NuGet package 
 Then add a corresponding entry in `scripts/VERSIONS.txt`:
 
 ```
-# In scripts/VERSIONS.txt (under # nuget versions section, use the current SkiaSharp version)
-SkiaSharp.MyLibrary                             nuget       X.Y.Z
+# In scripts/VERSIONS.txt (under # nuget versions section)
+SkiaSharp.MyLibrary                             nuget       3.119.2
 ```
 
 The format is: `PackageId  nuget  version` (whitespace separated).

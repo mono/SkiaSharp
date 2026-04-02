@@ -187,7 +187,7 @@ gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md
 
 **Original (auto-generated backport):**
 ```
-* [release/4.119.2-preview.2] Add Spectre mitigation flag for libSkiaSharp.dll. by @github-actions in https://github.com/mono/SkiaSharp/pull/3497
+* [release/3.119.2-preview.2] Add Spectre mitigation flag for libSkiaSharp.dll. by @github-actions in https://github.com/mono/SkiaSharp/pull/3497
 ```
 
 **After tracing and annotation:**
@@ -196,7 +196,7 @@ gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md
 ```
 
 Key changes:
-1. Removed `[release/4.119.2-preview.2]` prefix
+1. Removed `[release/3.119.2-preview.2]` prefix
 2. Added `(originally by @sshumakov in #3496)` attribution
 3. Added 🪟 (Windows) based on original PR content
 4. Added ❤️ because @sshumakov is a community contributor

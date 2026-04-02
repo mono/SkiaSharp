@@ -46,7 +46,7 @@ Use the provided version directly.
 ## Step 2: Determine Release Type
 
 ⚠️ **Semver ordering:** A bare version `X.Y.Z` is ALWAYS newer than `X.Y.Z-preview.N`. When listing
-branches to find the latest, remember that `release/4.119.2` > `release/4.119.2-preview.3`.
+branches to find the latest, remember that `release/3.119.2` > `release/3.119.2-preview.3`.
 Do NOT use alphabetical sorting — it gives wrong results for semver.
 
 | Version Format | Type | Base | PREVIEW_LABEL |
@@ -59,8 +59,8 @@ Do NOT use alphabetical sorting — it gives wrong results for semver.
 For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-preview" | sort -V | tail -1`
 
 **NuGet version format by release type:**
-- **Preview:** `{base}-{PREVIEW_LABEL}.{build}` (e.g., `4.119.2-preview.2.3`) — build number is part of the prerelease tag
-- **Stable:** `{base}` only (e.g., `4.119.2`) — the build number is NEVER appended to stable versions. On the internal feed, stable builds appear as `{base}-stable.{build}` but the published version is just `{base}`.
+- **Preview:** `{base}-{PREVIEW_LABEL}.{build}` (e.g., `3.119.2-preview.2.3`) — build number is part of the prerelease tag
+- **Stable:** `{base}` only (e.g., `3.119.2`) — the build number is NEVER appended to stable versions. On the internal feed, stable builds appear as `{base}-stable.{build}` but the published version is just `{base}`.
 
 ---
 

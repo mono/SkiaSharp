@@ -14,7 +14,7 @@ description: >
   - Test version X
   
   Triggers: "test the release", "verify packages", "run tests on iPad", "check ios tests",
-  "test mac catalyst", "run android tests", "continue", "test 4.119.2-preview.2".
+  "test mac catalyst", "run android tests", "continue", "test 3.119.2-preview.2".
 ---
 
 # Release Testing Skill
@@ -40,16 +40,16 @@ When identifying which release branch to test, you **MUST** use semver ordering,
 **In semver, a bare version is ALWAYS newer than its prerelease variants:**
 
 ```
-4.119.2-preview.1 < 4.119.2-preview.2 < 4.119.2-preview.3 < 4.119.2 (FINAL)
+3.119.2-preview.1 < 3.119.2-preview.2 < 3.119.2-preview.3 < 3.119.2 (FINAL)
 ```
 
-`release/4.119.2` is the **stable release** and is NEWER than `release/4.119.2-preview.3`.
+`release/3.119.2` is the **stable release** and is NEWER than `release/3.119.2-preview.3`.
 
 **To find the latest release branch:**
 
 1. List all release branches: `git branch -r | grep "release/"`
-2. Identify the highest base version (e.g., `4.119.2`)
-3. Check if a **bare version branch** exists (e.g., `release/4.119.2`) — if so, that is the latest
+2. Identify the highest base version (e.g., `3.119.2`)
+3. Check if a **bare version branch** exists (e.g., `release/3.119.2`) — if so, that is the latest
 4. If only preview branches exist, the highest preview number is the latest
 
 **⚠️ Getting this wrong means testing the wrong version — wasting the entire process or shipping untested packages.**
@@ -82,15 +82,15 @@ The API returns ALL statuses chronologically. A pipeline may have multiple entri
 
 The build description contains the internal version in format: `#{base}-{label}.{build}+{branch}`
 
-**Preview example:** `#4.119.2-preview.2.3+4.119.2-preview.2 succeeded`
-- Internal version: `4.119.2-preview.2.3`
-- NuGet version: `4.119.2-preview.2.3` (same — build number is part of the prerelease tag)
+**Preview example:** `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
+- Internal version: `3.119.2-preview.2.3`
+- NuGet version: `3.119.2-preview.2.3` (same — build number is part of the prerelease tag)
 
-**Stable example:** `#4.119.2-stable.3+4.119.2 succeeded`
-- Internal version: `4.119.2-stable.3`
-- NuGet version: `4.119.2` (base only — build number is NEVER appended to stable versions)
+**Stable example:** `#3.119.2-stable.3+3.119.2 succeeded`
+- Internal version: `3.119.2-stable.3`
+- NuGet version: `3.119.2` (base only — build number is NEVER appended to stable versions)
 
-⚠️ **Stable versions never include a build number.** Each CI build of a stable release produces a different internal package (`4.119.2-stable.1`, `4.119.2-stable.2`, etc.) but the published NuGet version is always just `4.119.2`.
+⚠️ **Stable versions never include a build number.** Each CI build of a stable release produces a different internal package (`3.119.2-stable.1`, `3.119.2-stable.2`, etc.) but the published NuGet version is always just `3.119.2`.
 
 ---
 
@@ -107,7 +107,7 @@ The build description contains the internal version in format: `#{base}-{label}.
    # Read preview label (remove surrounding quotes)
    grep "PREVIEW_LABEL:" scripts/azure-templates-variables.yml | awk '{print $2}' | tr -d "'"
    ```
-   - `SkiaSharp ... nuget` line → base version (e.g., `4.119.2`)
+   - `SkiaSharp ... nuget` line → base version (e.g., `3.119.2`)
    - `HarfBuzzSharp ... nuget` line → base version (e.g., `8.3.1.3`)
    - `PREVIEW_LABEL` → label (e.g., `preview.2` or `stable`)
 
@@ -123,11 +123,11 @@ The build description contains the internal version in format: `#{base}-{label}.
      | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
      | grep "^{base}-{label}\."
    
-   # Example: Find 4.119.2-preview.3.* versions
-   ... | grep "^4.119.2-preview.3\."
+   # Example: Find 3.119.2-preview.3.* versions
+   ... | grep "^3.119.2-preview.3\."
    ```
 
-   Pick the highest build number (e.g., `4.119.2-preview.3.1`). This IS the NuGet version.
+   Pick the highest build number (e.g., `3.119.2-preview.3.1`). This IS the NuGet version.
 
    **For stable releases** (`PREVIEW_LABEL` is `stable`):
 
@@ -139,26 +139,26 @@ The build description contains the internal version in format: `#{base}-{label}.
      | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
      | grep "^{base}-stable\."
    
-   # Example: Find 4.119.2-stable.* internal packages
-   ... | grep "^4.119.2-stable\."
+   # Example: Find 3.119.2-stable.* internal packages
+   ... | grep "^3.119.2-stable\."
    ```
 
-   The internal feed has `{base}-stable.{build}` packages (e.g., `4.119.2-stable.3`), but the **NuGet version is just `{base}`** (e.g., `4.119.2`). The build number is never appended to stable versions.
+   The internal feed has `{base}-stable.{build}` packages (e.g., `3.119.2-stable.3`), but the **NuGet version is just `{base}`** (e.g., `3.119.2`). The build number is never appended to stable versions.
 
    ⚠️ **CRITICAL:** Use `.version` to get ALL versions, NOT `.latestVersion` which only returns the newest.
-   The feed contains multiple version streams (e.g., 4.119.2 AND 4.119.3), so you MUST filter
+   The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so you MUST filter
    by the base version and preview label from the release branch.
 
 3. Pick the NuGet version:
-   - **Preview:** Highest build number from matching versions (e.g., `4.119.2-preview.3.1`)
-   - **Stable:** Just the base version (e.g., `4.119.2`) — no build number appended
+   - **Preview:** Highest build number from matching versions (e.g., `3.119.2-preview.3.1`)
+   - **Stable:** Just the base version (e.g., `3.119.2`) — no build number appended
 
 4. Report to user:
 
    **Preview:**
    ```
    Resolved versions:
-     SkiaSharp:     4.119.2-preview.3.1
+     SkiaSharp:     3.119.2-preview.3.1
      HarfBuzzSharp: 8.3.1.3-preview.3.1
      Build number:  1
    ```
@@ -166,9 +166,9 @@ The build description contains the internal version in format: `#{base}-{label}.
    **Stable:**
    ```
    Resolved versions:
-     SkiaSharp:     4.119.2
+     SkiaSharp:     3.119.2
      HarfBuzzSharp: 8.3.1.3
-     Internal build: 4.119.2-stable.3 (on feed)
+     Internal build: 3.119.2-stable.3 (on feed)
    ```
 
 **No packages found?** CI build hasn't completed. See [troubleshooting.md](references/troubleshooting.md#package-resolution-errors).

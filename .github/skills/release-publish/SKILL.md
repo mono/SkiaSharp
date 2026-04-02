@@ -10,7 +10,7 @@ description: >
   
   Triggers: "publish the release", "push to nuget", "create github release",
   "tag the release", "close the milestone", "annotate release notes",
-  "testing passed what's next", "finalize 4.119.2", "release is ready".
+  "testing passed what's next", "finalize 3.119.2", "release is ready".
 ---
 
 # Release Publish Skill
@@ -62,17 +62,17 @@ Publish packages to NuGet.org and finalize releases.
 ### ⚠️ Semver Version Ordering
 
 When identifying which version to publish, use **semver ordering**, not alphabetical:
-- `4.119.2` (bare) is NEWER than `4.119.2-preview.3` — it's the stable/final release
+- `3.119.2` (bare) is NEWER than `3.119.2-preview.3` — it's the stable/final release
 - Always verify you are publishing from the correct branch
-- If both `release/4.119.2` and `release/4.119.2-preview.3` exist, the bare version is the latest
+- If both `release/3.119.2` and `release/3.119.2-preview.3` exist, the bare version is the latest
 
 **Prerequisite:** release-testing must have passed. Versions should be known from testing.
 
 The user should provide:
-- **Preview:** SkiaSharp version with build number (e.g., `4.119.2-preview.2.3`)
-- **Stable:** SkiaSharp base version only (e.g., `4.119.2`) — no build number
+- **Preview:** SkiaSharp version with build number (e.g., `3.119.2-preview.2.3`)
+- **Stable:** SkiaSharp base version only (e.g., `3.119.2`) — no build number
 
-⚠️ **Stable versions never include a build number.** The build number only appears in the prerelease component (e.g., `4.119.2-preview.2.3`) or in the internal stable tag (e.g., `4.119.2-stable.3`). It is never appended to the base version directly.
+⚠️ **Stable versions never include a build number.** The build number only appears in the prerelease component (e.g., `3.119.2-preview.2.3`) or in the internal stable tag (e.g., `3.119.2-stable.3`). It is never appended to the base version directly.
 
 If not provided, ask for them using `ask_user`.
 
@@ -81,7 +81,7 @@ If not provided, ask for them using `ask_user`.
 # Preview: search for the exact NuGet version
 dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-version}"
 
-# Stable: search for internal stable builds (NuGet version is just the base, e.g., 4.119.2)
+# Stable: search for internal stable builds (NuGet version is just the base, e.g., 3.119.2)
 dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "^{base}-stable\."
 ```
 
@@ -158,8 +158,8 @@ Or manually check: `https://www.nuget.org/packages/SkiaSharp/{version}`
 ## Step 4: Tag Release
 
 Tag formats:
-- **Preview:** `vX.Y.Z-preview.N.{build}` (e.g., `v4.119.2-preview.2.5`)
-- **Stable:** `vX.Y.Z` (e.g., `v4.119.2`)
+- **Preview:** `vX.Y.Z-preview.N.{build}` (e.g., `v3.119.2-preview.2.5`)
+- **Stable:** `vX.Y.Z` (e.g., `v3.119.2`)
 
 ```bash
 git fetch origin
@@ -181,10 +181,10 @@ git push origin {tag}
 
 | Release Type | Title Format | Example |
 |--------------|--------------|---------|
-| Preview | `Version X.Y.Z (Preview N)` | `Version 4.119.2 (Preview 2)` |
-| Stable | `Version X.Y.Z` | `Version 4.119.2` |
-| Hotfix Preview | `Version X.Y.Z.F (Preview N)` | `Version 4.119.2.1 (Preview 1)` |
-| Hotfix Stable | `Version X.Y.Z.F` | `Version 4.119.2.1` |
+| Preview | `Version X.Y.Z (Preview N)` | `Version 3.119.2 (Preview 2)` |
+| Stable | `Version X.Y.Z` | `Version 3.119.2` |
+| Hotfix Preview | `Version X.Y.Z.F (Preview N)` | `Version 3.119.2.1 (Preview 1)` |
+| Hotfix Stable | `Version X.Y.Z.F` | `Version 3.119.2.1` |
 
 ### Finding the Previous Release Tag
 
@@ -192,20 +192,20 @@ git push origin {tag}
 
 ```bash
 # List recent tags to find the previous release
-git tag -l "v4.119*" --sort=-v:refname | head -10
+git tag -l "v3.119*" --sort=-v:refname | head -10
 ```
 
 | Current Release | Previous Tag (--notes-start-tag) |
 |-----------------|----------------------------------|
-| `v4.119.2-preview.2.3` | `v4.119.2-preview.1.2` (previous preview) |
-| `v4.119.2-preview.1.1` | `v4.119.1` (last stable) |
-| `v4.119.2` (stable) | `v4.119.2-preview.N.X` (last preview of this version) |
-| `v4.119.2.1-preview.1.1` (hotfix) | `v4.119.2` (stable being hotfixed) |
+| `v3.119.2-preview.2.3` | `v3.119.2-preview.1.2` (previous preview) |
+| `v3.119.2-preview.1.1` | `v3.119.1` (last stable) |
+| `v3.119.2` (stable) | `v3.119.2-preview.N.X` (last preview of this version) |
+| `v3.119.2.1-preview.1.1` (hotfix) | `v3.119.2` (stable being hotfixed) |
 
 ### Commands
 
 ```bash
-# Preview (e.g., v4.119.2-preview.2.3)
+# Preview (e.g., v3.119.2-preview.2.3)
 gh release create {tag} \
   --title "Version {X.Y.Z} (Preview {N})" \
   --generate-notes \
@@ -213,7 +213,7 @@ gh release create {tag} \
   --prerelease \
   --verify-tag
 
-# Stable (e.g., v4.119.2)
+# Stable (e.g., v3.119.2)
 gh release create {tag} \
   --title "Version {X.Y.Z}" \
   --generate-notes \

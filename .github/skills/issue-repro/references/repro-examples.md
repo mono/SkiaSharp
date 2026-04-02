@@ -145,7 +145,7 @@ Based on [#2997](https://github.com/mono/SkiaSharp/issues/2997).
 
 ## Example 2: WASM/Blazor Bug — `reproduced` with cross-platform verification
 
-**Scenario:** SkiaSharp 4.119.2-preview.1 crashes at runtime in Blazor WASM with
+**Scenario:** SkiaSharp 3.119.2-preview.1 crashes at runtime in Blazor WASM with
 `TypeInitializationException` on .NET 10. Build succeeds — the bug only manifests in
 the browser. Cross-platform verification shows it's WASM-specific (console works fine).
 
@@ -164,12 +164,12 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
   },
   "conclusion": "reproduced",
   "scope": "platform-specific/wasm",
-  "notes": "TypeInitializationException in browser console when using SkiaSharp 4.119.2-preview.1 on .NET 10 Blazor WASM. Build succeeds but runtime crashes. 3.116.1 (stable) works perfectly — this is a regression in 4.118+ preview WASM native binaries. Cross-platform verification: console app works fine, confirming WASM-specific issue.",
+  "notes": "TypeInitializationException in browser console when using SkiaSharp 3.119.2-preview.1 on .NET 10 Blazor WASM. Build succeeds but runtime crashes. 3.116.1 (stable) works perfectly — this is a regression in 3.118+ preview WASM native binaries. Cross-platform verification: console app works fine, confirming WASM-specific issue.",
   "assessment": "likely-bug",
   "reproductionTime": "~12 minutes",
   "versionResults": [
     {
-      "version": "4.119.2-preview.1",
+      "version": "3.119.2-preview.1",
       "source": "nuget",
       "result": "reproduced",
       "platform": "wasm-blazor",
@@ -183,7 +183,7 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
       "notes": "Canvas renders correctly, SUCCESS in console"
     },
     {
-      "version": "4.119.2-preview.1",
+      "version": "3.119.2-preview.1",
       "source": "nuget",
       "result": "not-reproduced",
       "platform": "host-macos-arm64",
@@ -193,14 +193,14 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
   "reproProject": {
     "type": "blazor-wasm",
     "tfm": "net10.0",
-    "packages": [{ "name": "SkiaSharp.Views.Blazor", "version": "4.119.2-preview.1" }]
+    "packages": [{ "name": "SkiaSharp.Views.Blazor", "version": "3.119.2-preview.1" }]
   },
   "reproductionSteps": [
     {
       "stepNumber": 1,
       "description": "Create Blazor WASM project with SkiaSharp.Views.Blazor",
       "layer": "setup",
-      "command": "dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 4.119.2-preview.1",
+      "command": "dotnet new blazorwasm -n Repro --framework net10.0 && cd Repro && dotnet add package SkiaSharp.Views.Blazor --version 3.119.2-preview.1",
       "exitCode": 0,
       "result": "success"
     },
@@ -231,14 +231,14 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
     "arch": "arm64",
     "dotnetVersion": "10.0.2",
     "dotnetSdkVersion": "10.0.100",
-    "skiaSharpVersion": "4.119.2-preview.1",
+    "skiaSharpVersion": "3.119.2-preview.1",
     "dockerUsed": false
   },
   "output": {
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.85,
-      "reason": "Reproduced in Blazor WASM runtime (browser console) on 4.119.2-preview.1, while 3.116.1 is not reproduced; likely WASM-specific regression."
+      "reason": "Reproduced in Blazor WASM runtime (browser console) on 3.119.2-preview.1, while 3.116.1 is not reproduced; likely WASM-specific regression."
     },
     "actions": [
       {
@@ -246,13 +246,13 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
         "description": "Post reproduction findings and version/platform matrix",
         "risk": "high",
         "confidence": 0.85,
-        "comment": "Reproduced on Blazor WASM with 4.119.2-preview.1: runtime TypeInitializationException appears in the browser console (build succeeds). 3.116.1 stable does not reproduce. A console app on macOS with 4.119.2-preview.1 also does not reproduce, suggesting a WASM-specific regression."
+        "comment": "Reproduced on Blazor WASM with 3.119.2-preview.1: runtime TypeInitializationException appears in the browser console (build succeeds). 3.116.1 stable does not reproduce. A console app on macOS with 3.119.2-preview.1 also does not reproduce, suggesting a WASM-specific regression."
       }
     ],
     "proposedResponse": {
       "status": "ready",
-      "summary": "Reproduced WASM-only runtime crash on 4.119.2-preview.1; 3.116.1 is OK.",
-      "body": "I was able to reproduce this in a Blazor WASM app on 4.119.2-preview.1: the project builds, but at runtime the browser console shows a `TypeInitializationException` (`TypeInitialization_Type, SKObject`).\n\nVersion/platform matrix:\n- 4.119.2-preview.1 (wasm-blazor): reproduced\n- 3.116.1 (wasm-blazor): not reproduced\n- 4.119.2-preview.1 (host macOS console): not reproduced\n\nThis looks like a WASM-specific regression introduced in the preview builds (4.118+)."
+      "summary": "Reproduced WASM-only runtime crash on 3.119.2-preview.1; 3.116.1 is OK.",
+      "body": "I was able to reproduce this in a Blazor WASM app on 3.119.2-preview.1: the project builds, but at runtime the browser console shows a `TypeInitializationException` (`TypeInitialization_Type, SKObject`).\n\nVersion/platform matrix:\n- 3.119.2-preview.1 (wasm-blazor): reproduced\n- 3.116.1 (wasm-blazor): not reproduced\n- 3.119.2-preview.1 (host macOS console): not reproduced\n\nThis looks like a WASM-specific regression introduced in the preview builds (3.118+)."
     }
   },
   "feedback": {
@@ -261,7 +261,7 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
         "source": "triage",
         "topic": "root-cause",
         "upstream": "Triage concluded: SkiaSharp doesn't officially support .NET 10",
-        "corrected": "net8.0 libraries are forward-compatible with net10.0 via TFM fallback. 3.116.1 works on net10.0. The real bug is a regression in 4.118+ preview WASM native binaries."
+        "corrected": "net8.0 libraries are forward-compatible with net10.0 via TFM fallback. 3.116.1 works on net10.0. The real bug is a regression in 3.118+ preview WASM native binaries."
       }
     ]
   }
@@ -272,7 +272,7 @@ Based on [#3422](https://github.com/mono/SkiaSharp/issues/3422).
 
 - **Did not stop at build success** — build passed but the bug is runtime-only in browser.
 - **Used Playwright** to navigate, read browser console errors, and verify.
-- **Tested multiple versions** — found 3.116.1 works, proving it's a 4.118+ regression.
+- **Tested multiple versions** — found 3.116.1 works, proving it's a 3.118+ regression.
 - **Cross-platform verification** — console app works fine → `scope: "platform-specific/wasm"`.
 - **Corrected triage** — triage wrongly blamed missing net10.0 TFM; repro proved forward-compat works.
 - **`scope` field** gives the fix skill an immediate signal: look at WASM native binaries, not TFM support.
@@ -353,7 +353,7 @@ Issue: "Add wheel/scroll event support to GTK3 SKDrawingArea"
       "platform": "host-linux-x64"
     },
     {
-      "version": "4.119.0-preview.1.2",
+      "version": "3.119.0-preview.1.2",
       "source": "nuget",
       "result": "confirmed",
       "notes": "Latest stable. Same gap — no wheel event handling in GTK3 view.",

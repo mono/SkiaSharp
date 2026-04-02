@@ -21,7 +21,7 @@ if (-not $pkg) {
 
 Write-Host "Found: $($pkg.Name)"
 
-# Extract suffix: SkiaSharp.X.Y.Z-preview.0.76.nupkg → preview.0.76
+# Extract suffix: SkiaSharp.3.119.4-preview.0.76.nupkg → preview.0.76
 $suffix = $pkg.Name -replace '^SkiaSharp\.\d+\.\d+\.\d+-', '' -replace '\.nupkg$', ''
 
 # Split on last dot: preview.0 + 76
