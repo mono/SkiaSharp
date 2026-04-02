@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml;
+﻿using System;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using SkiaSharp;
@@ -107,7 +108,7 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 		fpsCounter.Stop();
 	}
 
-	private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
+	private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)
 	{
 		var canvas = e.Surface.Canvas;
 		var width = (float)e.BackendRenderTarget.Width;
@@ -129,20 +130,20 @@ return half4(clamp(result, 0.0, 1.0), 1.0);
 			DispatcherQueue.TryEnqueue(() => fpsText.Text = $"FPS: {fps:F0}");
 	}
 
-	private void OnPointerPressed(object? sender, PointerRoutedEventArgs e)
+	private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
 	{
 		touchActive = true;
 		UpdateTouchPosition(e);
 		skiaView.CapturePointer(e.Pointer);
 	}
 
-	private void OnPointerMoved(object? sender, PointerRoutedEventArgs e)
+	private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
 	{
 		if (touchActive)
 			UpdateTouchPosition(e);
 	}
 
-	private void OnPointerReleased(object? sender, PointerRoutedEventArgs e)
+	private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
 	{
 		touchActive = false;
 		skiaView.ReleasePointerCapture(e.Pointer);
