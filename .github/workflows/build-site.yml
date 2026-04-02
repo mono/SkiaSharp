@@ -234,9 +234,10 @@ jobs:
             echo "Invalid PR number: $PR_NUMBER"
             exit 1
           fi
-          mkdir -p staging/$PR_NUMBER
-          rm -rf staging/$PR_NUMBER/*
-          cp -r /tmp/site-temp/. staging/$PR_NUMBER/
+          # Recreate the staging directory to ensure no stale files (including dotfiles)
+          rm -rf "staging/$PR_NUMBER"
+          mkdir -p "staging/$PR_NUMBER"
+          cp -r /tmp/site-temp/. "staging/$PR_NUMBER/"
 
           # Copy 404.html to the docs-live root so SPA redirects work for staging
           # paths (GitHub Pages only serves the root-level 404.html for missing paths)
@@ -267,7 +268,7 @@ jobs:
       (github.event_name == 'pull_request' &&
        (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'))
     permissions:
-      pull-requests: write
+      issues: write
     steps:
       - name: Comment on PR
         uses: actions/github-script@v7
