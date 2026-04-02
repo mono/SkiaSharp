@@ -274,7 +274,11 @@ jobs:
             const docsUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/docs/`;
             const galleryUrl = `https://mono.github.io/SkiaSharp/staging/${prNumber}/gallery/`;
 
+            // Hidden marker to uniquely identify this workflow's comment
+            const marker = '<!-- skiasharp-docs-staging-preview -->';
+
             const commentBody = [
+              marker,
               '📖 **Documentation Preview**',
               '',
               'The documentation for this PR has been deployed and is available at:',
@@ -289,15 +293,16 @@ jobs:
               '*This comment is automatically updated by the documentation staging workflow.*'
             ].join('\n');
 
-            // Update existing bot comment if present, otherwise create a new one
-            const comments = await github.rest.issues.listComments({
+            // Paginate to find existing bot comment with our marker
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prNumber
+              issue_number: prNumber,
+              per_page: 100
             });
-            const botComment = comments.data.find(c =>
-              c.user.type === 'Bot' &&
-              c.body.includes('Documentation Preview')
+            const botComment = comments.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes(marker)
             );
             if (botComment) {
               await github.rest.issues.updateComment({

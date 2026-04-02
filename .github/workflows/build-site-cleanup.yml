@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   cleanup:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write   # push to docs-live
