@@ -74,12 +74,14 @@ jobs:
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
             echo "source_label=PR #${PR_NUMBER}" >> $GITHUB_OUTPUT
+            echo "branch_name=${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}" >> $GITHUB_OUTPUT
           else
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
             echo "source_label=main" >> $GITHUB_OUTPUT
+            echo "branch_name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
           fi
 
       - name: Setup .NET
@@ -97,9 +99,10 @@ jobs:
       - name: Build DocFX
         env:
           SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
+          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
         run: |
           COMMIT_SHORT="${GITHUB_SHA:0:7}"
-          APP_FOOTER="source: ${SOURCE_LABEL} · ${COMMIT_SHORT}"
+          APP_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
           jq --arg footer "$APP_FOOTER" \
             '.build.globalMetadata._appFooter = $footer' \
             documentation/docfx/docfx.json > documentation/docfx/docfx-build.json
@@ -112,18 +115,29 @@ jobs:
           sudo chown -R $(id -u):$(id -g) output
 
       - name: Publish Gallery Blazor WASM
+        env:
+          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
+          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
         run: |
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
           dotnet publish "samples/Gallery/Blazor/SkiaSharpSample.Blazor.csproj" \
             -c Release \
             -o output/gallery-publish \
-            -p:PlatformTargetFrameworks=""
+            -p:PlatformTargetFrameworks="" \
+            -p:BuildFooter="$BUILD_FOOTER"
 
       # ── Assemble complete site ─────────────────────────────────
       - name: Assemble site
         env:
           GALLERY_BASE_HREF: ${{ steps.vars.outputs.gallery_base_href }}
+          SOURCE_LABEL: ${{ steps.vars.outputs.source_label }}
+          BRANCH_NAME: ${{ steps.vars.outputs.branch_name }}
         shell: bash
         run: |
+          COMMIT_SHORT="${GITHUB_SHA:0:7}"
+          BUILD_FOOTER="${SOURCE_LABEL} · ${BRANCH_NAME} · ${COMMIT_SHORT}"
+
           mkdir -p site
 
           # Landing page → root
@@ -131,6 +145,9 @@ jobs:
           cp documentation/site/style.css site/
           cp documentation/site/404.html site/
           touch site/.nojekyll
+
+          # Inject build info into landing page footer
+          sed -i "s|Built with ❤️ by the .NET community.|Built with ❤️ by the .NET community.<br><small>${BUILD_FOOTER}</small>|" site/index.html
 
           # Docs → /docs/
           cp -r output/site/docs site/docs
