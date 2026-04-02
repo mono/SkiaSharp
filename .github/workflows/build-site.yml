@@ -152,8 +152,8 @@ jobs:
           # Rewrite gallery base href for deployment path
           sed -i "s|<base href=\"/\" />|<base href=\"$GALLERY_BASE_HREF\" />|g" site/gallery/index.html
 
-          # Inject build footer into gallery
-          sed -i "s|</body>|<script>document.getElementById('build-footer')?.append('${BUILD_FOOTER}')</script></body>|" site/gallery/index.html
+          # Inject build footer into gallery (before closing body, after Blazor script)
+          sed -i "s|</body>|<footer class=\"text-center text-muted py-2\" style=\"font-size:0.75rem;opacity:0.6\">${BUILD_FOOTER}</footer></body>|" site/gallery/index.html
 
           echo "=== Site layout ==="
           find site -maxdepth 2 -type f | head -30
