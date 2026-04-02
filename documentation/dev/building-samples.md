@@ -15,8 +15,8 @@ These wrapper packages bundle the real NuGet packages inside their `tools/` dire
 | Wrapper package | Contains |
 |-----------------|----------|
 | `_nativeassets` | Native binaries (per-platform frameworks/dylibs) |
-| `_nugets` | Stable NuGet packages (e.g. `SkiaSharp.4.119.4.nupkg`) |
-| `_nugetspreview` | Preview NuGet packages (e.g. `SkiaSharp.4.119.4-preview.0.76.nupkg`) |
+| `_nugets` | Stable NuGet packages (e.g. `SkiaSharp.X.Y.Z.nupkg`) |
+| `_nugetspreview` | Preview NuGet packages (e.g. `SkiaSharp.X.Y.Z-preview.0.76.nupkg`) |
 
 The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their CI source. The actual NuGet packages inside have their real, user-facing version numbers.
 
@@ -32,7 +32,7 @@ The `docs-download-output` target resolves the CI wrapper package version using 
 |----------|------------|----------|
 | `--previewLabel=pr.3553` | `0.0.0-pr.3553.*` | PR build |
 | `--gitSha=abc123` | `0.0.0-commit.abc123.*` | Specific commit |
-| `--gitBranch=release/4.119.4` | `0.0.0-branch.release.4.119.4.*` | Release branch |
+| `--gitBranch=release/X.Y.Z` | `0.0.0-branch.release.X.Y.Z.*` | Release branch |
 | `--gitBranch=main` | `0.0.0-branch.main.*` | Main branch (nightly) |
 | *(no args)* | `0.0.0-branch.main.*` | Default: latest from main |
 
@@ -45,7 +45,7 @@ After downloading, the extracted nupkgs in `output/nugets/` have real version nu
 ```powershell
 # Detect from downloaded packages
 ls output/nugets/SkiaSharp.[0-9]*-*.nupkg
-# → SkiaSharp.4.119.4-preview.0.76.nupkg
+# → SkiaSharp.X.Y.Z-preview.0.76.nupkg
 # So: --previewLabel=preview.0 --buildNumber=76
 ```
 
@@ -69,11 +69,11 @@ if (!string.IsNullOrEmpty(BUILD_NUMBER))
 
 The final NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`:
 
-- **base_version**: From `scripts/VERSIONS.txt` (e.g. `4.119.4`)
+- **base_version**: From `scripts/VERSIONS.txt` (e.g. the SkiaSharp nuget version)
 - **PREVIEW_LABEL**: The preview label (e.g. `preview.0` — first preview, `preview.1` — second, etc.)
 - **BUILD_NUMBER**: The CI build counter
 
-**Example:** `4.119.4-preview.0.76` → `previewLabel=preview.0`, `buildNumber=76`
+**Example:** `X.Y.Z-preview.0.76` → `previewLabel=preview.0`, `buildNumber=76`
 
 ## Cake Arguments
 
