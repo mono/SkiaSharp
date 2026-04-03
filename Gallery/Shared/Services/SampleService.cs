@@ -22,6 +22,7 @@ public class SampleService
 		SkiaSharpVersion = GetAssemblyVersion<SkiaSharp.SKSurface>();
 		HarfBuzzSharpVersion = GetAssemblyVersion<HarfBuzzSharp.Blob>();
 		BuildTimestamp = GetBuildTimestamp();
+		BuildFooter = GetAssemblyMetadata("BuildFooter");
 	}
 
 	public string SkiaSharpVersion { get; }
@@ -29,6 +30,8 @@ public class SampleService
 	public string HarfBuzzSharpVersion { get; }
 
 	public DateTimeOffset? BuildTimestamp { get; }
+
+	public string? BuildFooter { get; }
 
 	public IEnumerable<SampleBase> GetSamples() => samples;
 
@@ -53,5 +56,12 @@ public class SampleService
 		if (attr?.Value is { } value && DateTimeOffset.TryParse(value, out var ts))
 			return ts;
 		return null;
+	}
+
+	private static string? GetAssemblyMetadata(string key)
+	{
+		var attr = typeof(SampleBase).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
+			.FirstOrDefault(a => a.Key == key);
+		return string.IsNullOrEmpty(attr?.Value) ? null : attr.Value;
 	}
 }
