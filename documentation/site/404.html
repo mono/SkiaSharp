@@ -8,15 +8,19 @@
     (function () {
       var path = window.location.pathname;
 
-      // Handle /SkiaSharp/gallery/ SPA routes
-      if (path.startsWith('/SkiaSharp/gallery/') && path !== '/SkiaSharp/gallery/' && path !== '/SkiaSharp/gallery/index.html') {
-        var segmentCount = 2; // preserve /SkiaSharp/gallery
+      // Match gallery SPA routes at both root and staging paths:
+      //   /SkiaSharp/gallery/...
+      //   /SkiaSharp/staging/{pr}/gallery/...
+      var match = path.match(/^(\/SkiaSharp\/(?:staging\/\d+\/)?gallery)\//);
+      if (match && path !== match[1] + '/' && path !== match[1] + '/index.html') {
+        var basePath = match[1]; // e.g. /SkiaSharp/gallery or /SkiaSharp/staging/42/gallery
+        var segmentCount = basePath.split('/').length - 1; // segments to preserve
         var l = window.location;
         l.replace(
           l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-          l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
+          l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?/' +
           l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
-          (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
           l.hash
         );
       }
