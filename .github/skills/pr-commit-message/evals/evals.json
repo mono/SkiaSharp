@@ -1,0 +1,47 @@
+{
+  "skill_name": "pr-commit-message",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a commit message for this PR. It fixes a crash in SKImage.Encode when the underlying stream has already been disposed. The PR links issue #4210, adds an ArgumentNullException guard, and updates a regression test.",
+      "expected_output": "The message should include a strong subject, reference the issue, explain the failure mode, and describe why the guard plus regression test solve the problem.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Write the merge commit message for this PR. It bumps externals/skia to a newer commit to pull in a libpng security fix and one build-system change. The PR references CVE-2026-12345 and links to the upstream compare view.",
+      "expected_output": "The message should not just say 'bump skia'; it should include the compare link, the security motivation, and the notable upstream changes relevant to the repo.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Create a squash commit message for this PR. It adds a new SKSurface overload, updates bindings, and touches docs. The important context is that the API was missing parity with upstream Skia and users had been working around it in issue #4302.",
+      "expected_output": "The message should explain the missing API parity, mention the user-facing impact, and summarize the binding and documentation work clearly.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Create the merge commit message for PR #3633 in mono/SkiaSharp. It fixes #3267 and duplicate #3365: libSkiaSharp.dll hard-links d3d12.dll, dxgi.dll, and D3DCOMPILER_47.dll, causing startup crashes on Windows systems without DX12. The PR adds /DELAYLOAD linker flags in native/windows/build.cake, updates the Cake dependency checker to distinguish regular vs delay-loaded imports, and verifies the result with dumpbin output.",
+      "expected_output": "The message should describe the Windows startup crash risk, explain why delay-loading is the correct fix because SkiaSharp defaults to raster rendering, and summarize both the linker and verification changes.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Write the merge commit message for PR #3629 in mono/SkiaSharp. It centralizes -Wl,--no-undefined in Skia's GN build config for Linux and Android so undefined native symbols fail at link time instead of crashing at runtime. The change also pulls in mono/skia#176 to fix a latent libpng LoongArch LSX source omission exposed by the stricter linker behavior.",
+      "expected_output": "The message should preserve the build-time vs runtime rationale, mention the companion mono/skia change, and explain that the stricter linker surfaced and fixed an existing libpng issue.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Create a commit message for PR #3619 in mono/SkiaSharp. It combines Tizen infrastructure updates and sample modernization extracted from #3607 and #3592: upgrade Tizen Studio to 6.1, add TFM and TPV minimums, refactor the native Tizen build pipeline, guard LibraryImport for net6, and replace the basic sample with a 3-tab NUI sample for CPU, GPU, and freehand drawing.",
+      "expected_output": "The message should present the PR as a multi-part Tizen update, mention that it was split from larger work to avoid submodule conflicts, and clearly separate build infrastructure changes from the sample refresh.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Write a concise but informative merge commit message for PR #3614 in mono/SkiaSharp. It removes a cached designMode field and LicenseManager check from SKControl and SKGLControl because the built-in DesignMode property already handles Windows Forms design-time detection correctly. The change was extracted from #3553.",
+      "expected_output": "The message should stay compact, explain that the custom design-time detection was redundant, and optionally preserve the provenance that this was extracted from a broader PR.",
+      "files": []
+    }
+  ]
+}
