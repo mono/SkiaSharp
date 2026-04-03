@@ -187,10 +187,27 @@ jobs:
       contents: write
     steps:
       - name: Checkout docs-live branch
-        uses: actions/checkout@v4
-        with:
-          ref: docs-live
-          fetch-depth: 0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REMOTE_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git init .
+          git remote add origin "$REMOTE_URL"
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
+          # Fetch docs-live if it exists; otherwise create an orphan branch
+          if git fetch origin docs-live 2>/dev/null; then
+            git checkout -b docs-live origin/docs-live
+          else
+            echo "docs-live branch does not exist, creating orphan branch"
+            git checkout --orphan docs-live
+            git rm -rf . 2>/dev/null || true
+            touch .nojekyll
+            git add .nojekyll
+            git commit -m "Initialize docs-live branch"
+            git push origin docs-live
+          fi
 
       - name: Download site artifact
         uses: actions/download-artifact@v4
