@@ -21,9 +21,10 @@ be used across mobile, server and desktop models to render images.
 
 SkiaSharp provides cross-platform bindings for:
 
- - .NET Standard 1.3
+ - .NET Standard 2.0
+ - .NET Framework 4.6.2+ (Recommend .NET Framework 4.8)
  - .NET Core
- - .NET 6
+ - .NET 6+
  - Tizen
  - Android
  - iOS
