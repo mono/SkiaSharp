@@ -244,6 +244,7 @@ string ReduceArch(string arch)
             return "arm64";
         case "riscv64":
             return "riscv64";
+        case "loong64":
         case "loongarch64":
             return "loongarch64";
     }
