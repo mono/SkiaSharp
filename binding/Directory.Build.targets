@@ -2,8 +2,7 @@
 
   <ItemGroup Condition=" ($(TargetFramework.StartsWith('net4')) or '$(TargetFramework)' == 'netstandard2.0') and (!$(MSBuildProjectName.Contains('.NativeAssets.'))) ">
     <PackageReference Include="System.Memory" Version="4.6.3" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.5" />
-    <!-- Use PolySharp to support C# 13 language feature with System.Memory and Microsoft.Bcl.AsyncInterfaces -->
+    <!-- Use PolySharp to support C# 13 language features on older TFMs -->
     <PackageReference Include="PolySharp" Version="1.15.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
