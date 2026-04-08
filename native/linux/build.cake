@@ -21,6 +21,14 @@ string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("cxx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
 
+string GetSkiaArch(string arch) =>
+    arch switch {
+        // Skia's GN files use "loong64", while the rest of our build and packaging
+        // pipeline uses the more explicit "loongarch64".
+        "loongarch64" => "loong64",
+        _ => arch,
+    };
+
 string VARIANT = string.IsNullOrEmpty(BUILD_VARIANT) ? "linux" : BUILD_VARIANT?.Trim();
 
 if (BUILD_ARCH.Length == 0)
@@ -62,6 +70,8 @@ Task("libSkiaSharp")
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
+        var skiaArch = GetSkiaArch(arch);
+
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
 
@@ -82,7 +92,7 @@ Task("libSkiaSharp")
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
-            $"target_cpu='{arch}' " +
+            $"target_cpu='{skiaArch}' " +
             $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
@@ -121,12 +131,14 @@ Task("libHarfBuzzSharp")
     foreach (var arch in BUILD_ARCH) {
         if (Skip(arch)) return;
 
+        var skiaArch = GetSkiaArch(arch);
+
         var soname = GetVersion("HarfBuzz", "soname");
         var map = MakeAbsolute((FilePath)"libHarfBuzzSharp/libHarfBuzzSharp.map");
 
         GnNinja($"{VARIANT}/{arch}", "HarfBuzzSharp",
             $"target_os='linux' " +
-            $"target_cpu='{arch}' " +
+            $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[] " +
