@@ -42,11 +42,6 @@ jobs:
       is_staging: ${{ steps.vars.outputs.is_staging }}
       pr_number: ${{ steps.vars.outputs.pr_number }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
       - name: Setup build variables
         id: vars
         env:
@@ -57,10 +52,16 @@ jobs:
         run: |
           if [ "$EVENT_NAME" == "pull_request" ]; then
             PR_NUMBER="$PR_NUMBER_EVENT"
+            CHECKOUT_REF="$GITHUB_REF"
+            BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
           elif [ "$EVENT_NAME" == "workflow_dispatch" ] && [ -n "$PR_NUMBER_INPUT" ]; then
             PR_NUMBER="$PR_NUMBER_INPUT"
+            CHECKOUT_REF="refs/pull/${PR_NUMBER}/merge"
+            BRANCH_NAME="pr/${PR_NUMBER}"
           else
             PR_NUMBER=""
+            CHECKOUT_REF="$GITHUB_REF"
+            BRANCH_NAME="${GITHUB_REF_NAME}"
           fi
 
           if [ -n "$PR_NUMBER" ]; then
@@ -73,16 +74,24 @@ jobs:
             echo "gallery_base_href=/SkiaSharp/staging/${PR_NUMBER}/gallery/" >> $GITHUB_OUTPUT
             echo "is_staging=true" >> $GITHUB_OUTPUT
             echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+            echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
             echo "source_label=PR #${PR_NUMBER}" >> $GITHUB_OUTPUT
-            echo "branch_name=${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}" >> $GITHUB_OUTPUT
+            echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
           else
             echo "artifact_name=main-site" >> $GITHUB_OUTPUT
             echo "gallery_base_href=/SkiaSharp/gallery/" >> $GITHUB_OUTPUT
             echo "is_staging=false" >> $GITHUB_OUTPUT
             echo "pr_number=" >> $GITHUB_OUTPUT
+            echo "checkout_ref=${CHECKOUT_REF}" >> $GITHUB_OUTPUT
             echo "source_label=main" >> $GITHUB_OUTPUT
-            echo "branch_name=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+            echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
           fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.vars.outputs.checkout_ref }}
+          submodules: recursive
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
