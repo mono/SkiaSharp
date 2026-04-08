@@ -1,6 +1,11 @@
 name: Update API Docs
 
 on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+    paths:
+      - '.github/workflows/update-api-docs.yml'
   workflow_dispatch:
 
 permissions: {}

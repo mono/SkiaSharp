@@ -1,6 +1,11 @@
 name: Deploy Gallery
 
 on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+    paths:
+      - '.github/workflows/deploy-gallery.yml'
   workflow_dispatch:
 
 permissions: {}
