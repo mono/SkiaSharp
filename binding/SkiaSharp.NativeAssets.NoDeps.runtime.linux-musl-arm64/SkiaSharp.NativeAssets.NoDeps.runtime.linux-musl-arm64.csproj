@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for linux-musl-arm64 (No Dependencies)</Title>
+    <PackageNotes>This is the NoDependencies variant for linux-musl-arm64. The native binary has no third-party library dependencies (no Fontconfig). Only requires libc/libm/libpthread/libdl.</PackageNotes>
+  </PropertyGroup>
+  <ItemGroup>
+    <PerRidNativeFile Include="..\..\output\native\alpinenodeps\arm64\libSkiaSharp*.so" RuntimeIdentifier="linux-musl-arm64" />
+  </ItemGroup>
+</Project>

@@ -4,9 +4,13 @@
     <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMPrevious)-macos$(TPVmacOSPrevious);$(TFMCurrent)-macos$(TPVmacOSCurrent)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for macOS</Title>
+    <PackageNotes>Compatibility package. References all macOS per-RID native asset packages.
+For new projects, SkiaSharp's runtime.json handles per-RID resolution automatically.</PackageNotes>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageFile Include="..\..\output\native\osx\libSkiaSharp*" PackagePath="runtimes\osx\native\%(Filename)%(Extension)" />
+  <!-- Plain dependencies on per-RID packages -->
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.osx-x64\SkiaSharp.NativeAssets.runtime.osx-x64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.osx-arm64\SkiaSharp.NativeAssets.runtime.osx-arm64.csproj" />
     <PackageSymbolFile Include="..\..\output\native\osx\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.dylib.dSYM\**" PackagePath="runtimes\osx\native\symbols\arm64\libSkiaSharp.dylib.dSYM" />
     <PackageSymbolFile Include="..\..\output\native\osx\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.dylib.dSYM\**" PackagePath="runtimes\osx\native\symbols\x86_64\libSkiaSharp.dylib.dSYM" />
   </ItemGroup>

@@ -21,7 +21,9 @@ It provides a comprehensive 2D API that can be used across mobile, server and de
 - [Package selection and deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md)</PackageReadmeResourceLinks>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)NativeAssets.Build.targets" Condition="$(MSBuildProjectName.Contains('.NativeAssets.'))" />
+  <Import Project="$(MSBuildThisFileDirectory)NativeAssets.Build.targets" Condition="$(MSBuildProjectName.Contains('.NativeAssets.')) and !$(MSBuildProjectName.Contains('.runtime.'))" />
+
+  <Import Project="$(MSBuildThisFileDirectory)NativeAssets.PerRid.Build.targets" Condition="$(MSBuildProjectName.Contains('.NativeAssets.runtime.'))" />
 
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 

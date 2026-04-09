@@ -1,0 +1,34 @@
+<Project>
+
+  <!--
+    SkiaSharp Per-RID Native Asset Resolution Targets
+    
+    Shipped inside the SkiaSharp NuGet package. Ensures that consumer projects
+    get a RuntimeIdentifier set during dev builds so that runtime.json can
+    resolve per-RID native packages (SkiaSharp.NativeAssets.runtime.{rid}).
+    
+    Without this, `dotnet build` (no RID) would not resolve any per-RID
+    package and the native binary would be missing → DllNotFoundException.
+  -->
+
+  <!-- 
+    Auto-set UseCurrentRuntimeIdentifier for executable projects that don't
+    already have a RID. This makes F5/debug/test work with per-RID packages.
+    Only applies to .NET Core+ (not .NET Framework).
+    Only applies to executables (not libraries).
+  -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''
+                            and '$(RuntimeIdentifiers)' == ''
+                            and '$(UseCurrentRuntimeIdentifier)' == ''
+                            and ('$(OutputType)' == 'Exe' or '$(OutputType)' == 'WinExe')
+                            and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
+    <UseCurrentRuntimeIdentifier>true</UseCurrentRuntimeIdentifier>
+  </PropertyGroup>
+
+  <!-- Prevent the RID from changing the output path during dev builds -->
+  <PropertyGroup Condition="'$(UseCurrentRuntimeIdentifier)' == 'true'
+                            and '$(AppendRuntimeIdentifierToOutputPath)' == ''">
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+
+</Project>

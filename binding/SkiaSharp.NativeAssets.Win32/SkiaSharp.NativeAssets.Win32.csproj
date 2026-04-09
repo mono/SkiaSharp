@@ -3,12 +3,14 @@
     <TargetFrameworks>$(BasicTargetFrameworks);$(WindowsTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Win32</Title>
-    <IsNativeAssetsProject>true</IsNativeAssetsProject>
+    <PackageNotes>Compatibility package. References all Windows per-RID native asset packages.
+For new projects, SkiaSharp's runtime.json handles per-RID resolution automatically.</PackageNotes>
   </PropertyGroup>
-  <ItemGroup>
-    <NativeAssetPackageFile Include="..\..\output\native\windows\x64\libSkiaSharp*" RuntimeIdentifier="win-x64" />
-    <NativeAssetPackageFile Include="..\..\output\native\windows\x86\libSkiaSharp*" RuntimeIdentifier="win-x86" />
-    <NativeAssetPackageFile Include="..\..\output\native\windows\arm64\libSkiaSharp*" RuntimeIdentifier="win-arm64" />
+  <!-- Plain dependencies on per-RID packages — downloads all Windows RIDs -->
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.win-x64\SkiaSharp.NativeAssets.runtime.win-x64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.win-x86\SkiaSharp.NativeAssets.runtime.win-x86.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.runtime.win-arm64\SkiaSharp.NativeAssets.runtime.win-arm64.csproj" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">

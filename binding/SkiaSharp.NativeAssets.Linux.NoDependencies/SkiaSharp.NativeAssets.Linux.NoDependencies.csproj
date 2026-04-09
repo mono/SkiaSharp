@@ -13,23 +13,27 @@ The complete dependency list is:
  - ld-linux-x86-64.so.2
 
 The excluded dependencies are:
- - Fontconfig</PackageNotes>
+ - Fontconfig
+
+Compatibility package. References all Linux NoDeps per-RID native asset packages.
+For new projects, add this package alongside SkiaSharp to override the default Linux native assets.</PackageNotes>
   </PropertyGroup>
-  <ItemGroup>
+  <!-- Plain dependencies on all Linux NoDeps per-RID packages -->
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
     <!-- glibc -->
-    <PackageFile Include="..\..\output\native\linuxnodeps\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\x86\libSkiaSharp*.so" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-riscv64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\linuxnodeps\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-loongarch64\native\%(Filename)%(Extension)" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-x64\SkiaSharp.NativeAssets.NoDeps.runtime.linux-x64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-x86\SkiaSharp.NativeAssets.NoDeps.runtime.linux-x86.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-arm64\SkiaSharp.NativeAssets.NoDeps.runtime.linux-arm64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-arm\SkiaSharp.NativeAssets.NoDeps.runtime.linux-arm.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-riscv64\SkiaSharp.NativeAssets.NoDeps.runtime.linux-riscv64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-loongarch64\SkiaSharp.NativeAssets.NoDeps.runtime.linux-loongarch64.csproj" />
     <!-- Musl -->
-    <PackageFile Include="..\..\output\native\alpinenodeps\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\x86\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-riscv64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\alpinenodeps\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-loongarch64\native\%(Filename)%(Extension)" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-x64\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-x64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-x86\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-x86.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-arm64\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-arm64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-arm\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-arm.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-riscv64\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-riscv64.csproj" />
+    <ProjectReference Include="..\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-loongarch64\SkiaSharp.NativeAssets.NoDeps.runtime.linux-musl-loongarch64.csproj" />
     <!-- Bionic -->
     <PackageFile Include="..\..\output\native\bionic\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-x64\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\bionic\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-bionic-arm64\native\%(Filename)%(Extension)" />

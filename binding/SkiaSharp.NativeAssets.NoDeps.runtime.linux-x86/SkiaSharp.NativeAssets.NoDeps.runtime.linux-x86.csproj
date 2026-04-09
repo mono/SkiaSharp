@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <Title>$(PackagingGroup) - Native Assets for linux-x86 (No Dependencies)</Title>
+    <PackageNotes>This is the NoDependencies variant for linux-x86. The native binary has no third-party library dependencies (no Fontconfig). Only requires libc/libm/libpthread/libdl.</PackageNotes>
+  </PropertyGroup>
+  <ItemGroup>
+    <PerRidNativeFile Include="..\..\output\native\linuxnodeps\x86\libSkiaSharp*.so" RuntimeIdentifier="linux-x86" />
+  </ItemGroup>
+</Project>
