@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>net10.0-desktop;net10.0-browserwasm</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net10.0-windows10.0.19041.0;$(TargetFrameworks)</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) or $([MSBuild]::IsOSPlatform('OSX'))">net10.0-android;net10.0-ios;$(TargetFrameworks)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -36,6 +35,5 @@
   <Import Project="..\..\..\..\samples\_UnoPlatformSamples.targets" />
   <Import Project="..\..\..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
   <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
-  <Import Project="..\..\..\..\binding\IncludeNativeAssets.SkiaSharp.WinUI.targets" Condition="$(TargetFramework.Contains('-windows'))" />
 
 </Project>

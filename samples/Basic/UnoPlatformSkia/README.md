@@ -13,6 +13,15 @@ Uno Platform 6.x uses Skia as its primary renderer on all platforms — Desktop,
 | `SKXamlCanvas` | Software (CPU) | Static or on-demand content — works everywhere |
 | `SKCanvasElement` | Skia composition (GPU) | Continuous animation — optimal for Skia-rendered targets |
 
+### Supported Platforms
+
+`SKCanvasElement` works on all Skia-rendered targets:
+- **Desktop** (Linux, macOS, Windows via Skia) — Skia composition pipeline
+- **WebAssembly** — Skia rendering via canvas
+- **iOS / Android** — Skia rendering (default in Uno 6.x)
+
+> **Note:** `SKCanvasElement` is **not available** on native WinUI (`net10.0-windows`). Use the [UnoPlatform](../UnoPlatform/) sample with `SKSwapChainPanel` for Windows native rendering.
+
 ## Sample Pages
 
 ### CPU

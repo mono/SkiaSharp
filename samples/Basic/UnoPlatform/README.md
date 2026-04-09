@@ -9,7 +9,16 @@ Demonstrates SkiaSharp views in an Uno Platform app using the **native rendering
 | Control | Rendering | Use Case |
 |---------|-----------|----------|
 | `SKXamlCanvas` | Software (CPU) | Static or on-demand content — works everywhere |
-| `SKSwapChainPanel` | DirectX/OpenGL (GPU) | Continuous animation — hardware-accelerated on WinUI + native mobile |
+| `SKSwapChainPanel` | DirectX/OpenGL/WebGL (GPU) | Continuous animation — hardware-accelerated on WinUI, native mobile, and WASM |
+
+### Supported Platforms
+
+`SKSwapChainPanel` works on platforms with native GPU access:
+- **Windows** (WinUI) — DirectX swap chain
+- **iOS / Android** — Native OpenGL ES / Metal
+- **WebAssembly** — WebGL canvas
+
+> **Note:** `SKSwapChainPanel` is **not supported** on Skia desktop targets (`net10.0-desktop`) — it throws `NotSupportedException`. Use the [UnoPlatformSkia](../UnoPlatformSkia/) sample with `SKCanvasElement` instead.
 
 ## Sample Pages
 
@@ -66,10 +75,10 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 
 ## Running the Sample
 
-Build and run the desktop target:
+Build and run the Windows target:
 
 ```bash
-dotnet run -f net10.0-desktop
+dotnet run -f net10.0-windows10.0.19041.0
 ```
 
 Or target a specific platform:
