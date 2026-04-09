@@ -255,9 +255,13 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			var tf1 = fonts.MatchFamily("Times New Roman");
-			var tf2 = SKTypeface.FromFamilyName("Times New Roman");
+			// Use a font family known to exist on the current platform
+			var familyName = DefaultFontFamily;
 
+			var tf1 = fonts.MatchFamily(familyName);
+			var tf2 = SKTypeface.FromFamilyName(familyName);
+
+			Assert.NotNull(tf1);
 			Assert.Same(tf1, tf2);
 		}
 

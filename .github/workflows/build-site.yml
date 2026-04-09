@@ -3,16 +3,8 @@ name: "Docs - Deploy"
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'documentation/**'
-      - 'samples/Gallery/**'
-      - '.github/workflows/build-site.yml'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'documentation/**'
-      - 'samples/Gallery/**'
-      - '.github/workflows/build-site.yml'
     types: [ opened, synchronize, reopened ]
   workflow_dispatch:
     inputs:
@@ -27,7 +19,11 @@ on:
         default: false
         type: boolean
 
-# Default to no permissions — each job declares only what it needs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Default to no permissions— each job declares only what it needs.
 permissions: {}
 
 jobs:

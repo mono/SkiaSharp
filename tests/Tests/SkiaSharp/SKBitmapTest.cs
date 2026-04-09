@@ -35,8 +35,8 @@ namespace SkiaSharp.Tests
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyToSucceeds(SKColorType colorType)
 		{
-			if (colorType == SKColorType.Bgr101010xXR)
-				throw new SkipException("The Bgr101010xXR does not support getting pixel colors.");
+			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
+				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
 
 			var alphaType = colorType.GetAlphaType();
 
@@ -69,8 +69,8 @@ namespace SkiaSharp.Tests
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyWithAlphaToSucceeds(SKColorType colorType)
 		{
-			if (colorType == SKColorType.Bgr101010xXR)
-				throw new SkipException("The Bgr101010xXR does not support getting pixel colors.");
+			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
+				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
 
 			var alphaType = colorType.GetAlphaType();
 

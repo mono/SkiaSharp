@@ -38,7 +38,8 @@ Task("git-sync-deps")
     if (actualIncrement != expectedIncrement)
         throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
 
-    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"));
+    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"),
+        envVars: new Dictionary<string, string> { ["GIT_SYNC_DEPS_SKIP_EMSDK"] = "1" });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,11 +171,12 @@ void CheckLinuxDependencies(FilePath so, string[] excluded = null, string[] incl
 // HELPERS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void RunPython(DirectoryPath working, FilePath script, string args = "")
+void RunPython(DirectoryPath working, FilePath script, string args = "", IDictionary<string, string> envVars = null)
 {
     RunProcess(PYTHON_EXE, new ProcessSettings {
         Arguments = $"{script.FullPath} {args}",
         WorkingDirectory = working.FullPath,
+        EnvironmentVariables = envVars,
     });
 }
 

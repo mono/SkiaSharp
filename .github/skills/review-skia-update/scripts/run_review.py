@@ -47,6 +47,26 @@ def run_git(args: list, cwd: str, check: bool = True) -> subprocess.CompletedPro
     return result
 
 
+def ensure_remote(cwd: str, name: str, url: str):
+    """Ensure a git remote exists and points at the expected URL."""
+    result = subprocess.run(
+        ["git", "remote", "get-url", name],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode == 0:
+        current = result.stdout.strip()
+        if current != url:
+            eprint(f"▸ Updating remote '{name}' → {url}")
+            run_git(["remote", "set-url", name, url], cwd=cwd)
+        return
+
+    eprint(f"▸ Adding remote '{name}' → {url}")
+    run_git(["remote", "add", name, url], cwd=cwd)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run all mechanical checks for a Skia update review."
@@ -154,6 +174,7 @@ def main():
 
     # 1c. Fetch git refs
     eprint("▸ Fetching git refs...")
+    ensure_remote(skia_root, "upstream", "https://github.com/google/skia.git")
     run_git(["fetch", "upstream", old_milestone, new_milestone], cwd=skia_root)
     # Fetch the base branch and the PR head via GitHub's PR ref. This works for
     # both same-repo and fork PRs — the branch name only exists on the fork's
