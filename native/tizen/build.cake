@@ -14,11 +14,11 @@ void SetProjectProfile(string projectDir, string profile)
 {
     var propFile = MakeAbsolute((FilePath)$"{projectDir}/project_def.prop").FullPath;
     var propContent = System.IO.File.ReadAllText(propFile);
-    var newContent = System.Text.RegularExpressions.Regex.Replace(
-        propContent, @"^profile = .+$", $"profile = {profile}",
-        System.Text.RegularExpressions.RegexOptions.Multiline);
-    if (newContent == propContent)
+    var regex = new System.Text.RegularExpressions.Regex(
+        @"^profile = .+$", System.Text.RegularExpressions.RegexOptions.Multiline);
+    if (!regex.IsMatch(propContent))
         throw new Exception($"Failed to set profile in '{propFile}': no 'profile = ...' line found.");
+    var newContent = regex.Replace(propContent, $"profile = {profile}");
     System.IO.File.WriteAllText(propFile, newContent);
 }
 
