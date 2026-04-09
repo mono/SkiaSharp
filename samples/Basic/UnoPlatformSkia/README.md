@@ -1,21 +1,19 @@
-# SkiaSharp Uno Platform Sample (Native Renderer)
+# SkiaSharp Uno Platform Sample (Skia Renderer)
 
-Demonstrates SkiaSharp views in an Uno Platform app using the **native rendering** path. This sample uses `SKXamlCanvas` for CPU-rendered content and `SKSwapChainPanel` for hardware-accelerated GPU rendering via the platform's native graphics backend.
+Demonstrates SkiaSharp views in an Uno Platform app using the **Skia rendering** path. This sample uses `SKXamlCanvas` for CPU-rendered content and Uno's `SKCanvasElement` for GPU-accelerated rendering via the Skia composition pipeline.
 
-> **See also:** The [UnoPlatformSkia](../UnoPlatformSkia/) sample demonstrates the **Skia rendering** path using `SKCanvasElement` for GPU rendering, which is the primary rendering path in Uno 6.x.
+> **See also:** The [UnoPlatform](../UnoPlatform/) sample demonstrates the **native rendering** path using `SKSwapChainPanel` for GPU rendering.
 
 ## Rendering Approach
+
+Uno Platform 6.x uses Skia as its primary renderer on all platforms — Desktop, WebAssembly, iOS, Android, and more. The `SKCanvasElement` control (from `Uno.UI.Composition`) integrates directly into Uno's Skia composition pipeline, providing the best performance on Skia-rendered targets.
 
 | Control | Rendering | Use Case |
 |---------|-----------|----------|
 | `SKXamlCanvas` | Software (CPU) | Static or on-demand content — works everywhere |
-| `SKSwapChainPanel` | DirectX/OpenGL (GPU) | Continuous animation — hardware-accelerated on WinUI + native mobile |
+| `SKCanvasElement` | Skia composition (GPU) | Continuous animation — optimal for Skia-rendered targets |
 
 ## Sample Pages
-
-This sample shows how to integrate SkiaSharp views into an Uno Platform app using XAML. The `SKXamlCanvas` and `SKSwapChainPanel` controls are placed declaratively in `.xaml` files alongside standard Uno controls, targeting multiple platforms (Windows, WebAssembly, iOS, Android, Desktop) from a single codebase.
-
-Navigation uses a `NavigationView` with `PaneDisplayMode="Top"` for a clean tab bar that works well on both mobile and desktop.
 
 ### CPU
 
@@ -30,13 +28,13 @@ A static scene rendered on the CPU — a radial gradient background overlaid wit
 
 ### GPU
 
-A real-time animated shader running at full frame rate on the GPU, with pointer interaction that adds a white-hot blob to the metaball field.
+A real-time animated shader running via Uno's Skia composition pipeline, with pointer interaction.
 
 **Features:**
 
-- **`SKSwapChainPanel`** — Hardware-accelerated canvas using the platform GPU backend.
+- **`SKCanvasElement`** — Custom `SkiaGpuView` control extending `Uno.UI.Composition.SKCanvasElement` for Skia composition rendering.
 - **`SKRuntimeEffect`** — SkSL metaball "lava lamp" shader compiled at runtime with `SKRuntimeEffect.BuildShader`.
-- **Render loop** — Continuous animation with `EnableRenderLoop="True"` and an FPS counter overlay.
+- **Animation** — Continuous animation driven by `DispatcherTimer` with `Invalidate()` calls and an FPS counter overlay.
 - **Pointer interaction** — Pointer position is passed as a shader uniform.
 
 ### Drawing
@@ -51,12 +49,6 @@ A freehand drawing canvas with a color palette, brush size slider, and clear but
 - **`PointerWheelChanged`** — Scroll wheel to adjust brush size (desktop).
 - **Color palette** — Six selectable colors with dark/light mode variants and selection highlight.
 - **Responsive layout** — Toolbox adapts between vertical and horizontal orientation based on window width.
-
-## Screenshots
-
-| CPU | GPU | Drawing |
-|---|---|---|
-| <img src="screenshots/cpu.png" width="250" alt="CPU"> | <img src="screenshots/gpu.png" width="250" alt="GPU"> | <img src="screenshots/drawing.png" width="250" alt="Drawing"> |
 
 ## Requirements
 
