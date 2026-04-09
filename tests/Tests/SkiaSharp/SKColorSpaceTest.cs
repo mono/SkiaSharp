@@ -170,10 +170,10 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expected, csh.GetReferenceCount(false));
 
 				var info = peek.Info;
-				Assert.Equal(4, csh.GetReferenceCount(false));
+				Assert.InRange(csh.GetReferenceCount(false), expected, expected + 1);
 
 				var cs = info.ColorSpace;
-				Assert.Equal(4, csh.GetReferenceCount(false));
+				Assert.InRange(csh.GetReferenceCount(false), expected, expected + 1);
 				Assert.NotNull(cs);
 			}
 

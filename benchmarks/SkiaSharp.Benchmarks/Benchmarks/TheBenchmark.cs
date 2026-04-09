@@ -10,7 +10,7 @@ namespace SkiaSharp.Benchmarks;
 // [EtwProfiler]
 // [NativeMemoryProfiler]
 [MemoryDiagnoser]
-[SimpleJob(RuntimeMoniker.Net472)]
+[SimpleJob(RuntimeMoniker.Net48)]
 [SimpleJob(RuntimeMoniker.Net70)]
 [SimpleJob(RuntimeMoniker.Net80)]
 public class TheBenchmark

@@ -98,7 +98,7 @@
 
   <!-- .NET Standard, .NET Framework and .NET -->
   <PropertyGroup>
-    <FullFrameworkTargetFrameworks>net462</FullFrameworkTargetFrameworks>
+    <FullFrameworkTargetFrameworks>net462;net48</FullFrameworkTargetFrameworks>
     <BasicTargetFrameworksCurrent>netstandard2.0;netstandard2.1;$(FullFrameworkTargetFrameworks);$(TFMCurrent)</BasicTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</PlatformTargetFrameworksCurrent>
     <PlatformTargetFrameworksCurrent Condition="$(IsLinux)">$(TFMCurrent)-android$(TPVAndroidCurrent)</PlatformTargetFrameworksCurrent>

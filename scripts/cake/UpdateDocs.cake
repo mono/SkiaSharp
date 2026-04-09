@@ -13,6 +13,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
+    await AddDep("System.Runtime.CompilerServices.Unsafe", "netstandard2.1");
     await AddDep("Microsoft.WindowsAppSDK", "net6.0-windows10.0.18362.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
     await AddDep("Microsoft.Windows.SDK.NET.Ref", "");

@@ -12,6 +12,7 @@ string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable (
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
 var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
+var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
 
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/msbuild.cake"
@@ -65,7 +66,6 @@ Task("libSkiaSharp")
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_piex=true " +
-            $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_libjpeg_turbo=false " +
             $"skia_use_system_libpng=false " +
@@ -77,14 +77,14 @@ Task("libSkiaSharp")
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.dll"), outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.pdb"), outDir);
-        CheckWindowsDependencies($"{outDir}/libSkiaSharp.dll", excluded: VERIFY_EXCLUDED);
+        CheckWindowsDependencies($"{outDir}/libSkiaSharp.dll", excluded: VERIFY_EXCLUDED, delayLoaded: VERIFY_DELAY_LOADED);
     }
 });
 

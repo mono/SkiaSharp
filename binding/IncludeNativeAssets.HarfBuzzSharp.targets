@@ -56,9 +56,19 @@
       <TizenTpkSubDir>bin\runtimes\tizen-armel\native\</TizenTpkSubDir>
       <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
     </TizenTpkFiles>
+    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\x86_64\libHarfBuzzSharp.so">
+      <Visible>false</Visible>
+      <TizenTpkSubDir>bin\runtimes\tizen-x64\native\</TizenTpkSubDir>
+      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+    </TizenTpkFiles>
+    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\output\native\tizen\aarch64\libHarfBuzzSharp.so">
+      <Visible>false</Visible>
+      <TizenTpkSubDir>bin\runtimes\tizen-arm64\native\</TizenTpkSubDir>
+      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+    </TizenTpkFiles>
   </ItemGroup>
 
-  <ItemGroup Condition="$(TargetFramework.Contains('-tvos'))and '$(RuntimeIdentifier)' != ''">
+  <ItemGroup Condition="$(TargetFramework.Contains('-tvos')) and '$(RuntimeIdentifier)' != ''">
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvossimulator\libHarfBuzzSharp.framework" Kind="Framework" Condition="$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
     <NativeReference Include="$(MSBuildThisFileDirectory)..\output\native\tvos\libHarfBuzzSharp.framework" Kind="Framework" Condition="!$(RuntimeIdentifier.StartsWith('tvossimulator'))" />
   </ItemGroup>
