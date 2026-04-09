@@ -18,7 +18,7 @@ Demonstrates SkiaSharp views in an Uno Platform app using the **native rendering
 - **iOS / Android** — Native OpenGL ES / Metal
 - **WebAssembly** — WebGL canvas
 
-> **Note:** `SKSwapChainPanel` is **not supported** on Skia desktop targets (`net10.0-desktop`) — it throws `NotSupportedException`. Use the [UnoPlatformSkia](../UnoPlatformSkia/) sample with `SKCanvasElement` instead.
+> **Note:** `SKSwapChainPanel` is **not supported** on Skia desktop targets or Mac Catalyst — it throws `NotSupportedException`. The CPU page (`SKXamlCanvas`) still works on Mac Catalyst. For GPU rendering on those targets, use the [UnoPlatformSkia](../UnoPlatformSkia/) sample with `SKCanvasElement` instead.
 
 ## Sample Pages
 
@@ -87,4 +87,5 @@ Or target a specific platform:
 dotnet build -f net10.0-browserwasm     # WebAssembly
 dotnet build -f net10.0-android         # Android
 dotnet build -f net10.0-ios             # iOS
+dotnet build -f net10.0-maccatalyst     # Mac Catalyst
 ```
