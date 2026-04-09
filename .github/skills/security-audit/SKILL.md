@@ -32,7 +32,10 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
 
 ```
 1. Search issues/PRs (all deps including Skia)
-2. Get versions from cgmanifest.json / DEPS
+2. Get and VERIFY versions from submodule/DEPS (not just cgmanifest.json)
+   ├─ 2a. Verify Skia milestone from SkMilestone.h + find upstream google/skia commit
+   ├─ 2b. Verify dep versions from DEPS commit hashes + header files
+   └─ 2c. Report any cgmanifest.json mismatches as findings
 3. Query CVE databases for ALL dependencies
    ├─ Third-party deps: web search "{dep} CVE {year}"
    └─ Skia core: NVD API keywordSearch=Skia
@@ -52,27 +55,77 @@ Search mono/SkiaSharp open issues for:
 
 Search PRs in both mono/SkiaSharp and mono/skia for dependency updates.
 
-### Step 2: Get Dependency Versions
+### Step 2: Get and Verify Dependency Versions
 
-For third-party dependencies:
+> ⚠️ **CRITICAL: Never trust cgmanifest.json blindly.** Always verify versions against the actual submodule and DEPS file. cgmanifest.json is manually maintained and can drift.
 
-```bash
-cd externals/skia/third_party/externals/{dep}
-git describe --tags --always
-```
+#### 2a. Verify Skia milestone and upstream commit
 
-For Skia core, read `cgmanifest.json` and find the entry with `"name": "skia"`. Extract:
-- `chrome_milestone` — the integer milestone number (e.g., `119`)
-- `upstream_merge_commit` — the SHA of the upstream merge point
-
-If these fields are missing, determine the milestone from the Skia submodule:
+The mono/skia fork contains both upstream google/skia code AND custom SkiaSharp C API commits. Track both:
 
 ```bash
+# 1. Get the actual submodule commit
+git submodule status externals/skia
+# Output: 8c99e432... externals/skia (the mono/skia fork commit)
+
+# 2. Read the REAL milestone from the source
+cat externals/skia/include/core/SkMilestone.h
+# Look for: #define SK_MILESTONE NNN
+
+# 3. Find the upstream google/skia merge point
 cd externals/skia
-git log --oneline --merges --grep="upstream/chrome" -1
+git log --oneline --merges --grep="chrome/m" -5 HEAD
+# Find the merge commit that brought in chrome/mNNN
+
+# 4. Add the upstream remote and verify
+git remote add upstream https://github.com/google/skia.git 2>/dev/null
+git fetch upstream chrome/mNNN --depth=1
+git log --format="%H %s" -1 FETCH_HEAD
+# This gives the upstream_merge_commit
+
+# 5. Confirm upstream is ancestor of our fork
+git merge-base --is-ancestor FETCH_HEAD <merge-parent> && echo "VERIFIED"
 ```
 
-Only audit **security-relevant** dependencies (see [dependencies.md](../../../documentation/dev/dependencies.md#security-relevant-process-untrusted-input)).
+**Compare against cgmanifest.json and report mismatches:**
+
+| Field | Source of truth | cgmanifest.json field |
+|-------|----------------|----------------------|
+| Milestone | `SkMilestone.h` in submodule | `chrome_milestone` |
+| Fork commit | `git submodule status` | git entry `commitHash` |
+| Upstream commit | `git fetch upstream chrome/mNNN` tip | `upstream_merge_commit` |
+
+#### 2b. Verify third-party dependency versions
+
+Read the DEPS file from the actual submodule commit (NOT from cgmanifest.json):
+
+```bash
+cat externals/skia/DEPS
+# Extract commit hashes for each dependency
+```
+
+Then verify actual versions from the Chromium mirror header files. For each dependency, fetch the version header at the pinned commit:
+
+| Dependency | Version file | Version pattern |
+|------------|-------------|-----------------|
+| libpng | `png.h` line 1-3 | `libpng version X.Y.Z` |
+| freetype | `include/freetype/freetype.h` | `FREETYPE_MAJOR`, `FREETYPE_MINOR`, `FREETYPE_PATCH` |
+| harfbuzz | `src/hb-version.h` | `HB_VERSION_STRING "X.Y.Z"` |
+| libexpat | `expat/lib/expat.h` | `XML_MAJOR_VERSION`, `XML_MINOR_VERSION`, `XML_MICRO_VERSION` |
+| brotli | `c/common/version.h` | `BROTLI_VERSION_MAJOR`, `_MINOR`, `_PATCH` |
+| zlib | `zlib.h` | `ZLIB_VERSION "X.Y.Z"` |
+| libjpeg-turbo | `README.chromium` | `Version: X.Y.Z` |
+| libwebp | `NEWS` line 1 | `version X.Y.Z` |
+
+**Googlesource mirror URL pattern:**
+```
+https://{host}/{path}/+/{commit_sha}/{file}?format=TEXT
+```
+Response is base64-encoded. Decode with `[System.Convert]::FromBase64String()`.
+
+If submodule externals are initialized, read directly from `externals/skia/third_party/externals/{dep}/` instead.
+
+**Report any mismatches** between cgmanifest.json and actual versions as findings in the audit report.
 
 ### Step 3: Query CVE Databases
 
@@ -101,7 +154,7 @@ For each Skia CVE returned, extract:
 3. **Chrome fix version** from `configurations[].nodes[].cpeMatch[]` where `criteria` contains `chrome` and `versionEndExcluding` exists
 4. **Chrome fix milestone** = major version number from `versionEndExcluding` (e.g., `132.0.6834.83` → `132`)
 
-Then classify:
+Then classify using the **verified milestone from SkMilestone.h** (not cgmanifest.json):
 
 | Condition | Classification |
 |-----------|---------------|
