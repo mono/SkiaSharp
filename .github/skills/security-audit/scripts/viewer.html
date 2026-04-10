@@ -35,6 +35,11 @@
     .ns-medium { border-color: #f59e0b; }
     .ns-low { border-color: #6b7280; }
     .meta-table td, .meta-table th { font-size: 0.85rem; padding: 4px 8px; }
+    .overview-row { cursor: pointer; transition: background 0.15s; }
+    .overview-row:hover { background: #e8f0fe !important; }
+    .overview-mismatch { background: #fef2f2 !important; }
+    .overview-mismatch:hover { background: #fee2e2 !important; }
+    .overview-mismatch td { color: #991b1b; }
     code { font-size: 0.8rem; }
   </style>
 </head>
@@ -66,8 +71,7 @@
       <table class="table table-sm table-hover mb-0 meta-table" id="overview-table">
         <thead><tr>
           <th>Dependency</th><th>Source</th><th>Current Version</th>
-          <th>DEPS Commit</th><th>cgmanifest</th><th>Match</th>
-          <th>Security</th><th>CVEs</th><th>Action</th>
+          <th>Latest</th><th>Security</th><th>CVEs</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -126,38 +130,39 @@ function renderSummary(s) {
 
 function renderOverview(vers, findings) {
   const tbody = document.querySelector('#overview-table tbody');
-  // Build a map of findings by dependency name
   const findingMap = {};
-  (findings || []).forEach(f => { findingMap[f.dependency] = f; });
+  (findings || []).forEach((f, i) => { findingMap[f.dependency] = { ...f, idx: i }; });
 
   let mismatches = 0;
   const rows = (vers || []).map(v => {
     if (!v.match) mismatches++;
-    const matchCls = v.match ? 'version-match' : 'version-mismatch';
-    const matchIcon = v.match ? '✅' : '❌';
     const f = findingMap[v.name];
+    const rowCls = v.match ? 'overview-row' : 'overview-row overview-mismatch';
+    const findingIdx = f ? f.idx : -1;
+    const onclick = findingIdx >= 0 ? `onclick="document.getElementById('finding-${findingIdx}').scrollIntoView({behavior:'smooth',block:'start'}); var el=document.getElementById('finding-${findingIdx}'); if(!el.classList.contains('show')){el.previousElementSibling.click();}"` : '';
 
     let secBadge = '<span class="status-pill st-clean">✅ Clean</span>';
     let cveCount = '';
-    let action = '';
+    let latest = v.latestVersion || '';
     if (f) {
       const [label, cls] = STATUS_LABELS[f.status] || ['?', ''];
       secBadge = `<span class="status-pill ${cls}">${label}</span>`;
       const total = (f.cves||[]).length + (f.nonChromeCves||[]).length;
       if (total > 0) cveCount = `<span class="badge bg-danger">${total}</span>`;
-      action = f.action ? `<span class="small">${esc(f.action)}</span>` : '';
+      if (f.latestVersion) latest = f.latestVersion;
     }
 
-    return `<tr>
+    const versionDisplay = !v.match
+      ? `${esc(v.verifiedVersion)} <span class="text-danger small">(cgmanifest: ${esc(v.cgmanifestVersion||'missing')})</span>`
+      : esc(v.verifiedVersion);
+
+    return `<tr class="${rowCls}" ${onclick}>
       <td><strong>${esc(v.name)}</strong></td>
       <td class="text-muted small">${esc(v.source || 'Skia DEPS')}</td>
-      <td>${esc(v.verifiedVersion)}</td>
-      <td><code class="small">${esc((v.depsCommit||'').substring(0,10))}</code></td>
-      <td>${v.cgmanifestVersion ? esc(v.cgmanifestVersion) : '<span class="version-mismatch">missing</span>'}</td>
-      <td class="${matchCls}">${matchIcon}</td>
+      <td>${versionDisplay}</td>
+      <td>${latest ? esc(latest) : '<span class="text-muted">—</span>'}</td>
       <td>${secBadge}</td>
       <td>${cveCount}</td>
-      <td>${action}</td>
     </tr>`;
   }).join('');
 
@@ -166,7 +171,9 @@ function renderOverview(vers, findings) {
   const cgMissing = (vers||[]).filter(v => !v.cgmanifestVersion).length;
   let statusText = mismatches === 0 && cgMissing === 0
     ? `✅ All ${total} dependencies verified`
-    : `${total} deps · ${mismatches > 0 ? `❌ ${mismatches} mismatch` : '✅ versions match'}${cgMissing > 0 ? ` · ⚠️ ${cgMissing} missing from cgmanifest` : ''}`;
+    : `${total} deps`;
+  if (mismatches > 0) statusText += ` · ❌ ${mismatches} version mismatch${mismatches > 1 ? 'es' : ''}`;
+  if (cgMissing > 0) statusText += ` · ⚠️ ${cgMissing} missing from cgmanifest`;
   document.getElementById('overview-status').textContent = statusText;
 }
 
