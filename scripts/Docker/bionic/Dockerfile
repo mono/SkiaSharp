@@ -2,7 +2,12 @@
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 10.0 | * ]
 #   BUILD_ARCH           - the target architecture to build for             [ x64 | arm64 ]
 
-FROM debian:trixie
+# NOTE: Using devcontainers base image because mcr.microsoft.com/mirror/docker/library/debian:13
+# is not yet available. This is a Debian 13 (Trixie) image hosted on MCR.
+# For local builds without MCR access, replace with: debian:trixie
+FROM mcr.microsoft.com/devcontainers/base:debian13
+
+USER root
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=x64
@@ -15,6 +20,7 @@ RUN case ${BUILD_ARCH} in \
     && echo "export ANDROID_SYSROOT_LIB=${ANDROID_SYSROOT_LIB}" >> /etc/skia-env
 
 # Install the required packages
+# binutils provides readelf for post-build dependency verification
 RUN apt-get update \
     && apt-get install -y \
         curl python3 git ninja-build unzip binutils \
@@ -32,10 +38,11 @@ ENV PATH=$PATH:$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin
 RUN . /etc/skia-env \
     && llvm-ar rcs $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$ANDROID_SYSROOT_LIB/libpthread.a
 
-# Set cross-compiler to NDK clang
+# Set cross-compiler and archiver to NDK toolchain
 RUN . /etc/skia-env \
     && echo "export CC=${ANDROID_TRIPLE}-clang" >> /etc/skia-env \
-    && echo "export CXX=${ANDROID_TRIPLE}-clang++" >> /etc/skia-env
+    && echo "export CXX=${ANDROID_TRIPLE}-clang++" >> /etc/skia-env \
+    && echo "export AR=llvm-ar" >> /etc/skia-env
 
 # Install the .NET SDK
 ARG DOTNET_SDK_VERSION=10.0
