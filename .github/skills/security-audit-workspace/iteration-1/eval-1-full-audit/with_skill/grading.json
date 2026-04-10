@@ -1,0 +1,132 @@
+{
+  "expectations": [
+    {
+      "text": "Reads actual submodule commit via git submodule status or equivalent",
+      "passed": true,
+      "evidence": "Transcript Step 2a: 'powershell — git submodule status externals/skia → Got commit 8c99e432ff06e61c42cf99aa8f2cbe248d301b9a'"
+    },
+    {
+      "text": "Reads SkMilestone.h from actual submodule to get real Skia milestone",
+      "passed": true,
+      "evidence": "Transcript Step 2a: 'github-mcp-server-get_file_contents — Read include/core/SkMilestone.h at submodule commit from mono/skia repo' → Found '#define SK_MILESTONE 132'"
+    },
+    {
+      "text": "Identifies upstream google/skia merge commit by examining git history or fetching upstream",
+      "passed": false,
+      "evidence": "Transcript Step 2a: 'The upstream_merge_commit verification would require adding the google/skia remote and fetching chrome/m132, which was not performed in this read-only audit to avoid modifying the repo state.' Agent used cgmanifest.json value instead of independently verifying. This is the MOST CRITICAL assertion for security — trusting cgmanifest.json for the upstream commit defeats the purpose of verification."
+    },
+    {
+      "text": "Reads DEPS file from actual submodule commit",
+      "passed": true,
+      "evidence": "Transcript Step 2b: 'github-mcp-server-get_file_contents — Read DEPS file at submodule commit 8c99e432ff... from mono/skia'"
+    },
+    {
+      "text": "Verifies at least 3 third-party dependency versions from headers/mirrors",
+      "passed": true,
+      "evidence": "Transcript Step 2b: 8 web_fetch calls to googlesource.com mirrors at specific DEPS commit hashes. Verified all 8 security-relevant deps: libpng (png.h), zlib (zlib.h), freetype (freetype.h), harfbuzz (hb-version.h), expat (expat.h), brotli (version.h), libjpeg-turbo (README.chromium), libwebp (NEWS)"
+    },
+    {
+      "text": "Reports any cgmanifest.json mismatches",
+      "passed": true,
+      "evidence": "Report Version Verification table shows all 10 fields compared. States 'All dependency versions verified from DEPS commit hashes and upstream header files match cgmanifest.json. No mismatches detected.' This is correct since cgmanifest.json was already fixed in a prior commit."
+    },
+    {
+      "text": "Queries NVD API with keywordSearch=Skia",
+      "passed": true,
+      "evidence": "Transcript Step 3: 'powershell Invoke-RestMethod to NVD API - URL: https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=Skia&resultsPerPage=200 - Total results: 115'"
+    },
+    {
+      "text": "Classifies Skia CVEs using verified milestone from SkMilestone.h",
+      "passed": true,
+      "evidence": "Transcript Step 3: 'Classification using verified milestone m132: Potentially affected (fix > m132): 5 CVEs, Already fixed (fix ≤ m132): 11 CVEs'. Report title also states 'Skia milestone: m132 (verified from SkMilestone.h)'"
+    },
+    {
+      "text": "Searches CVEs for all security-relevant dependencies",
+      "passed": true,
+      "evidence": "Transcript Step 3 Third-Party: web_search for libpng, zlib, freetype, harfbuzz, libjpeg-turbo, libwebp, brotli, libexpat (6 explicit web searches covering 8 deps)"
+    },
+    {
+      "text": "Checks MiniZip/zlib false positive",
+      "passed": true,
+      "evidence": "Report section 10: 'CVE-2023-45853 affects MiniZip only (contrib/minizip/). Skia BUILD.gn excludes MiniZip sources. No MiniZip includes exist in the Skia source tree.' Correctly marked as false positive."
+    },
+    {
+      "text": "Checks SkiaRenderEngine false positive",
+      "passed": true,
+      "evidence": "Report section 11: 'CVE-2025-48630 affects SkiaRenderEngine.cpp in Android graphics framework. This is Android-specific rendering infrastructure, not part of Skia core or SkiaSharp API surface.' Marked as not applicable."
+    },
+    {
+      "text": "Searches mono/SkiaSharp issues for security reports",
+      "passed": true,
+      "evidence": "Transcript Step 1: mihubot-search_dotnet_repos for CVE/security keywords, GitHub API search for open issues. Found Discussion #3432, Issue #2716, PR #3166, PR #3656, mono/skia PR #157"
+    },
+    {
+      "text": "Report includes Summary table with status counts",
+      "passed": true,
+      "evidence": "Report has 'Summary' table with 4 rows: 🔴 Needs attention: 5, 🆕 Undiscovered: 6, ⚪ False positive: 3, ✅ Already fixed/clean: 5"
+    },
+    {
+      "text": "Report sorted by priority",
+      "passed": true,
+      "evidence": "Report sections ordered: 1-5 are 🔴 Needs attention, 6-7 are 🆕 Undiscovered, 8-9 are ✅ Clean (already fixed), 10-12 are ⚪ False positive, 13-15 are ✅ Clean. Within 🔴, Skia (CRITICAL) comes first, then libpng (HIGH), etc."
+    },
+    {
+      "text": "Report includes Next Steps section",
+      "passed": true,
+      "evidence": "Report ends with 'Next Steps' containing 9 numbered actionable recommendations covering all findings with specific version targets and command suggestions."
+    },
+    {
+      "text": "Report uses separate tables per dependency",
+      "passed": true,
+      "evidence": "Each of the 15 findings uses its own separate Field/Value table and CVE detail table, separated by horizontal rules. No merged multi-dependency tables."
+    },
+    {
+      "text": "Skia CVEs table shows Fix milestone and Severity",
+      "passed": true,
+      "evidence": "Report section 1 'Chrome-versioned CVEs' table has columns: CVE | Fixed In | Severity | Description. Shows milestones m133-m146 and severity scores."
+    },
+    {
+      "text": "Correctly classifies affected vs fixed Skia CVEs",
+      "passed": true,
+      "evidence": "Report correctly identifies 5 CVEs with fix milestone > m132 as 'potentially affected' and notes '11 already fixed' in NVD query summary. Uses m132 (verified) not m119 (old cgmanifest value)."
+    }
+  ],
+  "summary": {
+    "passed": 17,
+    "failed": 1,
+    "total": 18,
+    "pass_rate": 0.944
+  },
+  "claims": [
+    {
+      "claim": "All cgmanifest.json versions match actual DEPS-verified versions",
+      "type": "factual",
+      "verified": true,
+      "evidence": "cgmanifest.json was already corrected in a prior commit. The agent verified all 8 deps from DEPS commit hashes and found matches."
+    },
+    {
+      "claim": "5 Skia CVEs are potentially affected (fix > m132)",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Cross-referenced against our own NVD query in the parent session. With m132, affected CVEs are: CVE-2025-0444 (m133), CVE-2026-3538 (m145), CVE-2026-3931 (m146), CVE-2026-3909 (m146), CVE-2026-4460 (m146)."
+    },
+    {
+      "claim": "CVE-2025-27363 (FreeType) is already fixed in 2.13.3",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Fix was in FreeType 2.13.1 (commit ef636696...). Our version 2.13.3 includes this fix. Confirmed by upstream Debian security tracker."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Identifies upstream google/skia merge commit by examining git history or fetching upstream",
+        "reason": "This is the most important assertion for a security audit. The agent declined to verify because it would 'modify repo state' (adding a remote). The skill should explicitly state that adding a remote and fetching is acceptable and expected — it's read-only at the file level. A security audit that trusts cgmanifest.json for the upstream commit is circular."
+      },
+      {
+        "reason": "No assertion checks whether the agent verifies DEPS commit hashes have not been tampered with (e.g., comparing DEPS in the fork vs DEPS in upstream). A supply-chain attack could modify DEPS to point to malicious mirrors."
+      }
+    ],
+    "overall": "Strong eval coverage — 17/18 pass rate. The one failure (upstream commit verification) is the most security-critical check. The skill should make it clearer that fetching upstream is mandatory, not optional."
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "expectations": [
+    {
+      "text": "Reads actual submodule commit via git submodule status or equivalent",
+      "passed": true,
+      "evidence": "Transcript Step 2a: 'git submodule status externals/skia → 8c99e432ff06e61c42cf99aa8f2cbe248d301b9a externals/skia (v2.88.4-preview.95-17103-g8c99e432ff)'"
+    },
+    {
+      "text": "Reads SkMilestone.h from actual submodule to get real Skia milestone",
+      "passed": true,
+      "evidence": "Transcript Step 2a SkMilestone.h section: '#define SK_MILESTONE 132'"
+    },
+    {
+      "text": "Identifies upstream google/skia merge commit by examining git history or fetching upstream",
+      "passed": true,
+      "evidence": "Transcript Step 2a MANDATORY sections show: (1) git log --merges --grep='chrome/m' found '03228c57a8 Merge skiasharp into chrome/m132', (2) git remote add upstream + git fetch upstream chrome/m132 --depth=1, (3) git log FETCH_HEAD → '9ab7c2064b2b1ab22f856a7f0a8c3b3ae4cb89c7 Remove CQ for unsupported branch chrome/m132', (4) Verified merge parent 1 matches FETCH_HEAD, (5) git merge-base --is-ancestor FETCH_HEAD 03228c57a8 → VERIFIED. All 5 mandatory sub-steps completed."
+    },
+    {
+      "text": "Reads DEPS file from actual submodule commit",
+      "passed": true,
+      "evidence": "Transcript Step 2b: 'DEPS Commit Hashes Extracted' table shows 8 dependency commit hashes read from DEPS at the submodule commit."
+    },
+    {
+      "text": "Verifies at least 3 third-party dependency versions from headers/mirrors",
+      "passed": true,
+      "evidence": "Transcript Step 2b: 'Fetched base64-encoded headers from {host}/{path}/+/{commit}/{file}?format=TEXT and decoded.' Table shows all 8 deps verified: libpng (png.h), zlib (zlib.h), freetype (freetype.h), harfbuzz (hb-version.h), expat (expat.h), brotli (version.h), libjpeg-turbo (README.chromium), libwebp (NEWS)."
+    },
+    {
+      "text": "Reports any cgmanifest.json mismatches",
+      "passed": true,
+      "evidence": "Transcript Step 2b: 'Result: Zero mismatches found between verified versions and cgmanifest.json.' Report also includes full comparison table with Match column showing ✅ for all entries."
+    },
+    {
+      "text": "Queries NVD API with keywordSearch=Skia",
+      "passed": true,
+      "evidence": "Transcript Step 3: 'GET https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=Skia&resultsPerPage=200 — Total results: 115, Recent (2023+): 21'"
+    },
+    {
+      "text": "Classifies Skia CVEs using verified milestone from SkMilestone.h",
+      "passed": true,
+      "evidence": "Transcript Step 3: 'Classification using verified milestone m132: Potentially affected (fix > m132): 5 CVEs, Already fixed (fix ≤ m132): 11 CVEs'. Report header: 'Skia milestone: m132 (verified from SkMilestone.h)'."
+    },
+    {
+      "text": "Searches CVEs for all security-relevant dependencies",
+      "passed": true,
+      "evidence": "Transcript Step 3 Third-Party: Web search results documented for libpng, freetype, zlib, libexpat, libwebp, libjpeg-turbo, harfbuzz, brotli — all 8 security-relevant deps covered."
+    },
+    {
+      "text": "Checks MiniZip/zlib false positive",
+      "passed": true,
+      "evidence": "Transcript Step 5: 'CVE-2023-45853 (zlib MiniZip) — MiniZip is in zlib/contrib/minizip/ but Skia BUILD.gn excludes it. No MiniZip includes found in Skia source. Status: FALSE POSITIVE ⚪'"
+    },
+    {
+      "text": "Checks SkiaRenderEngine false positive",
+      "passed": true,
+      "evidence": "Transcript Step 5: 'CVE-2025-48630 (SkiaRenderEngine) — Affects Android SkiaRenderEngine.cpp. Not part of Skia graphics library or SkiaSharp. Status: FALSE POSITIVE ⚪'"
+    },
+    {
+      "text": "Searches mono/SkiaSharp issues for security reports",
+      "passed": true,
+      "evidence": "Transcript Step 1: Found Discussion #3432 (zlib CVE question), Issue #2716 (CVE-2023-6345), Issue #2336 (Blackduck scan), PR #3166 (CVE-2024-30105)."
+    },
+    {
+      "text": "Report includes Summary table with status counts",
+      "passed": true,
+      "evidence": "Report has Summary table with: 🔴 Needs attention: 3, 🆕 Undiscovered: 2, ⚪ False positive: 4, ✅ Clean/Already fixed: 5+"
+    },
+    {
+      "text": "Report sorted by priority",
+      "passed": true,
+      "evidence": "Report sections follow priority order: 🔴 Needs attention (skia, libpng, freetype) → 🆕 Undiscovered (libexpat, zlib) → ⚪ False positive (MiniZip, untgz, SkiaRenderEngine, cupoch) → ✅ Clean (libwebp, brotli, libjpeg-turbo, harfbuzz, wuffs, dng_sdk)."
+    },
+    {
+      "text": "Report includes Next Steps section",
+      "passed": true,
+      "evidence": "Report ends with 'Next Steps' section containing numbered actionable recommendations for each finding."
+    },
+    {
+      "text": "Report uses separate tables per dependency",
+      "passed": true,
+      "evidence": "Each finding uses its own Field/Value table and CVE detail table, separated by horizontal rules (---). No merged multi-dependency tables."
+    },
+    {
+      "text": "Skia CVEs table shows Fix milestone and Severity",
+      "passed": true,
+      "evidence": "Report Skia section includes 'Chrome-versioned CVEs (fix milestone > m132)' table with columns: CVE | Fixed In | Severity | Description."
+    },
+    {
+      "text": "Correctly classifies affected vs fixed Skia CVEs",
+      "passed": true,
+      "evidence": "Report shows 5 CVEs as potentially affected (fix milestones m133-m146, all > m132) and states '11 already fixed' in summary. Uses verified m132 milestone."
+    }
+  ],
+  "summary": {
+    "passed": 18,
+    "failed": 0,
+    "total": 18,
+    "pass_rate": 1.0
+  },
+  "claims": [
+    {
+      "claim": "Upstream google/skia chrome/m132 tip is 9ab7c2064b and is ancestor of the fork merge commit",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Transcript shows git fetch + merge-base --is-ancestor both confirmed. Matches independently verified value from parent session."
+    },
+    {
+      "claim": "All 8 cgmanifest.json dependency versions match DEPS-verified values",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Full comparison table in transcript and report. All 8 Match columns show ✅."
+    },
+    {
+      "claim": "5 Skia CVEs are potentially affected (fix > m132)",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Matches parent session NVD analysis: CVE-2025-0444 (m133), CVE-2026-3538 (m145), CVE-2026-3931 (m146), CVE-2026-3909 (m146), CVE-2026-4460 (m146)."
+    },
+    {
+      "claim": "CVE-2025-27363 (FreeType) is already fixed in our 2.13.3",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Fix was in 2.13.1. Confirmed by Debian security tracker and upstream commit history."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All 18 assertions pass. The MANDATORY markers added to the skill successfully caused the agent to perform full upstream verification this time. No eval gaps identified."
+  }
+}
