@@ -183,12 +183,17 @@ milestone numbers and paste your breaking change analysis table. The default exp
 3. **Resolve conflicts** — each conflict must be resolved individually.
    Never use `git merge -s ours` or `git read-tree --reset` — this destroys `git blame` attribution.
 
+   **⚠️ MANDATORY: Before resolving ANY conflict, check file history for fork-specific patches.**
+   Run `git log --oneline skiasharp -- <conflicted-file>` — if the log shows intentional
+   fork patches, keep our version. See [gotcha #15](references/known-gotchas.md) for details.
+
    | File Category | Strategy |
    |--------------|----------|
    | `BUILD.gn` | **Combine both** — keep upstream structure AND SkiaSharp's platform flags + `skiasharp_build` target |
    | `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
    | `RELEASE_NOTES.md`, `infra/bots/` | **Take upstream** |
    | C API (`include/c/`, `src/c/`) | **Keep SkiaSharp** — adapt includes/API calls in post-merge commits |
+   | Other upstream source (`src/`, `include/`) | **Check history first** — see [gotcha #15](references/known-gotchas.md) |
 
 4. **Commit the merge**:
    ```bash
