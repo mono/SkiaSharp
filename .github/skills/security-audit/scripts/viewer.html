@@ -133,23 +133,32 @@ function renderOverview(vers, findings) {
   const findingMap = {};
   (findings || []).forEach((f, i) => { findingMap[f.dependency] = { ...f, idx: i }; });
 
-  let mismatches = 0;
-  const rows = (vers || []).map(v => {
-    if (!v.match) mismatches++;
+  // Enrich each entry with CVE count and finding index
+  const enriched = (vers || []).map(v => {
     const f = findingMap[v.name];
+    const cveTotal = f ? (f.cves||[]).length + (f.nonChromeCves||[]).length : 0;
+    return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1 };
+  });
+
+  // Split into groups: has CVEs vs no CVEs, each sorted by name
+  const withCves = enriched.filter(e => e.cveTotal > 0).sort((a,b) => a.name.localeCompare(b.name));
+  const noCves = enriched.filter(e => e.cveTotal === 0).sort((a,b) => a.name.localeCompare(b.name));
+
+  let mismatches = 0;
+
+  function buildRow(v) {
+    if (!v.match) mismatches++;
     const rowCls = v.match ? 'overview-row' : 'overview-row overview-mismatch';
-    const findingIdx = f ? f.idx : -1;
-    const onclick = findingIdx >= 0 ? `onclick="document.getElementById('finding-${findingIdx}').scrollIntoView({behavior:'smooth',block:'start'}); var el=document.getElementById('finding-${findingIdx}'); if(!el.classList.contains('show')){el.previousElementSibling.click();}"` : '';
+    const onclick = v.findingIdx >= 0 ? `onclick="document.getElementById('finding-${v.findingIdx}').scrollIntoView({behavior:'smooth',block:'start'}); var col=document.getElementById('finding-${v.findingIdx}'); if(!col.classList.contains('show')){col.previousElementSibling.click();}"` : '';
 
     let secBadge = '<span class="status-pill st-clean">✅ Clean</span>';
     let cveCount = '';
     let latest = v.latestVersion || '';
-    if (f) {
-      const [label, cls] = STATUS_LABELS[f.status] || ['?', ''];
+    if (v.f) {
+      const [label, cls] = STATUS_LABELS[v.f.status] || ['?', ''];
       secBadge = `<span class="status-pill ${cls}">${label}</span>`;
-      const total = (f.cves||[]).length + (f.nonChromeCves||[]).length;
-      if (total > 0) cveCount = `<span class="badge bg-danger">${total}</span>`;
-      if (f.latestVersion) latest = f.latestVersion;
+      if (v.cveTotal > 0) cveCount = `<span class="badge bg-danger">${v.cveTotal}</span>`;
+      if (v.f.latestVersion) latest = v.f.latestVersion;
     }
 
     const versionDisplay = !v.match
@@ -164,11 +173,21 @@ function renderOverview(vers, findings) {
       <td>${secBadge}</td>
       <td>${cveCount}</td>
     </tr>`;
-  }).join('');
+  }
 
-  tbody.innerHTML = rows;
-  const total = (vers||[]).length;
-  const cgMissing = (vers||[]).filter(v => !v.cgmanifestVersion).length;
+  function groupHeader(label, count) {
+    return `<tr class="table-light"><td colspan="6" class="fw-bold small text-muted py-1 px-2"><i class="bi bi-${count > 0 ? 'exclamation-triangle text-danger' : 'check-circle text-success'} me-1"></i>${label} (${count})</td></tr>`;
+  }
+
+  let html = '';
+  html += groupHeader('Dependencies with CVEs', withCves.length);
+  html += withCves.map(buildRow).join('');
+  html += groupHeader('Clean dependencies', noCves.length);
+  html += noCves.map(buildRow).join('');
+
+  tbody.innerHTML = html;
+  const total = enriched.length;
+  const cgMissing = enriched.filter(v => !v.cgmanifestVersion).length;
   let statusText = mismatches === 0 && cgMissing === 0
     ? `✅ All ${total} dependencies verified`
     : `${total} deps`;
