@@ -2,7 +2,7 @@
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 10.0 | * ]
 #   BUILD_ARCH           - the target architecture to build for             [ x64 | arm64 ]
 
-FROM debian:bookworm
+FROM debian:trixie
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=x64
@@ -17,7 +17,7 @@ RUN case ${BUILD_ARCH} in \
 # Install the required packages
 RUN apt-get update \
     && apt-get install -y \
-        curl python3 git ninja-build unzip \
+        curl python3 git ninja-build unzip binutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Configure Android NDK r26b
