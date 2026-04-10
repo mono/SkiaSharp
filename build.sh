@@ -2,4 +2,4 @@
 set -e
 
 dotnet tool restore
-dotnet cake $@
+dotnet run --file build.cs -- $@

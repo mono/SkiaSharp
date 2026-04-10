@@ -1,4 +1,4 @@
 dotnet tool restore
-dotnet cake $args
+dotnet run --file build.cs -- $args
 
 exit $LASTEXITCODE
