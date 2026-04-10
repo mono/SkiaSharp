@@ -147,6 +147,11 @@ The workflow follows this shape:
    git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} -- include/core/ include/gpu/ganesh/
    ```
 
+5. **Three mandatory verification checks** (see [breaking-changes-checklist.md](references/breaking-changes-checklist.md) Steps 4a–4c):
+   - **Struct size audit**: Check every `static_assert(sizeof(...))` in `sk_structs.cpp` against the target milestone's C++ struct definitions. Struct field additions cause build failures or silent memory corruption.
+   - **Deleted file audit**: For every deleted file, search the target branch for where it moved. Skia relocates files, it rarely removes them. Never recommend removing code that references a deleted file without finding the replacement.
+   - **Removal verification**: For any symbol you believe was "removed", confirm by grepping the target branch — diff hunks can show `-` lines for symbols that were merely reordered within the file.
+
 👉 See [references/breaking-changes-checklist.md](references/breaking-changes-checklist.md) for detailed analysis template.
 
 > 🛑 **GATE**: Present full breaking change analysis to user. Get approval before proceeding.

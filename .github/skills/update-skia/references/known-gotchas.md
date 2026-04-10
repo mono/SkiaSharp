@@ -65,6 +65,51 @@ HarfBuzz updates are **always separate** from Skia milestone updates. When the h
 
 HarfBuzz version bumps should be done separately via the `native-dependency-update` skill, which includes writing the required delegate proxies.
 
+## 11. Struct Size static_assert Failures
+
+`sk_structs.cpp` contains `static_assert(sizeof(our_c_type) == sizeof(CppType))` for every
+C API struct that is mapped via `reinterpret_cast`. When upstream adds fields to a C++ struct
+(e.g., `SkPngEncoder::Options` gaining `fGainmap` and `fGainmapInfo` in m133), the assert
+fires at compile time — but only if you actually build. During the analysis phase, you must
+**proactively check** every asserted struct against the target milestone's definition.
+
+```bash
+# List all asserted structs
+grep "static_assert.*sizeof" src/c/sk_structs.cpp
+# For each, compare C API struct in sk_types.h vs C++ struct at target milestone
+```
+
+**Fix:** Add corresponding fields to the C API struct in `include/c/sk_types.h`. For pointer
+fields that the C API doesn't need to expose, use `void*` defaulting to `nullptr`.
+
+## 12. Deleted Files ≠ Deleted Functionality
+
+Skia almost never removes functionality outright — **it relocates it**. When a file is deleted
+between milestones (e.g., `src/utils/SkJSON.h` → `modules/jsonreader/SkJSONReader.h` in m133),
+always search the target branch for where it moved:
+
+```bash
+git ls-tree -r upstream/chrome/m{TARGET} --name-only | grep -i "FILENAME_STEM"
+```
+
+**Never recommend "remove references"** to a deleted file without first finding the replacement.
+Code in our C API (especially `sk_linker.cpp` keep-alives) exists for a reason — update the
+`#include` path to the new location instead.
+
+## 13. Reordered Fields ≠ Removed Fields
+
+When reading diffs, a symbol appearing on a `-` line may have been **moved within the same
+file**, not removed. Always confirm removals by checking the symbol on the target branch:
+
+```bash
+# WRONG: "fSuppressPrints is on a minus line, it was removed"
+# RIGHT: Check the target branch directly
+git show upstream/chrome/m{TARGET}:include/gpu/ganesh/GrContextOptions.h | grep "fSuppressPrints"
+```
+
+This is especially common during struct reorganizations where fields are reordered into
+logical groups without any actual additions or removals.
+
 ---
 
 ## Troubleshooting
@@ -76,3 +121,5 @@ HarfBuzz version bumps should be done separately via the `native-dependency-upda
 | Merge conflict in DEPS | Both forks updated deps independently | Keep our DEPS pins, accept upstream structure |
 | `LNK2001 unresolved external` | C function name mismatch | Verify C API function names match exactly |
 | Build fails after merge | Missing `#include` for moved headers | Check upstream header relocation notes |
+| `static_assert` sizeof failure | Upstream struct gained/lost fields | Update C API struct in `sk_types.h` to match |
+| `#include` file not found | Upstream moved file to new module/path | Search target branch for new location, update path |
