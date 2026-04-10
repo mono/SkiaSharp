@@ -26,7 +26,10 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
 ## Key References
 
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Which dependencies to audit, cgmanifest format, known false positives, Skia-specific tracking notes
-- **[references/report-template.md](references/report-template.md)** — Report format templates
+- **[references/report-template.md](references/report-template.md)** — Report format templates (markdown)
+- **[references/report-schema.md](references/report-schema.md)** — JSON schema for structured output
+- **[scripts/render-security-audit.py](scripts/render-security-audit.py)** — Renders JSON → standalone HTML
+- **[scripts/viewer.html](scripts/viewer.html)** — HTML template (Bootstrap 5)
 
 ## Workflow
 
@@ -43,7 +46,9 @@ Investigate security status of SkiaSharp's native dependencies. Skia core is a d
    ├─ Fixed? → Mark clean
    └─ Not fixed? → Flag for action
 5. Check false positives
-6. Generate unified report (all deps together, sorted by priority/severity)
+6. Assemble structured JSON report (per report-schema.md)
+7. Render HTML from JSON (render-security-audit.py)
+8. Present markdown summary to user
 ```
 
 ### Step 1: Search Issues & PRs
@@ -236,11 +241,46 @@ Before flagging, verify the CVE actually affects SkiaSharp:
 
 See [dependencies.md](../../../documentation/dev/dependencies.md#known-false-positives) for details.
 
-### Step 6: Generate Report
+### Step 6: Assemble Structured JSON Report
 
-Use [references/report-template.md](references/report-template.md).
+> 🛑 **MANDATORY:** The audit MUST produce a JSON file conforming to [references/report-schema.md](references/report-schema.md). This is the machine-readable output used by dashboards and CI.
 
-The report is a **single unified list** of all dependencies sorted by priority and severity. Skia core appears alongside libpng, freetype, etc. — not in a separate section.
+Build the JSON object with these top-level keys:
+
+1. **`meta`** — Date, schema version, Skia commit hashes, milestone, upstream verification status
+2. **`summary`** — Counts by status category, total CVEs, highest severity
+3. **`versionVerification`** — One entry per dependency with DEPS commit, verified version, cgmanifest version, match boolean
+4. **`findings`** — Array of finding objects sorted by priority then severity. Each has `dependency`, `status`, `cves[]`, `nonChromeCves[]`, `action`, `notes`
+5. **`nextSteps`** — Prioritized action items with severity, command, and reason
+
+Save as `output/ai/security-audit-{date}.json` in the repo (same pattern as other AI outputs).
+
+### Step 7: Render HTML Report
+
+> 🛑 **MANDATORY:** Always generate the HTML report. The human needs a readable dashboard.
+
+```bash
+python3 .github/skills/security-audit/scripts/render-security-audit.py \
+  output/ai/security-audit-{date}.json
+```
+
+This produces a self-contained HTML file (Bootstrap 5, no external dependencies except CDN CSS) alongside the JSON. The HTML renders:
+- Summary cards with status counts
+- Collapsible findings with CVE tables, severity badges, and NVD links
+- Version verification table with match/mismatch indicators
+- Skia upstream verification details with commit links
+- Prioritized next steps with severity-coded borders
+
+Present the output path to the user:
+```
+✅ security-audit-2026-04-10.html (45 KB)
+   m132 • 2026-04-10 • 12 CVEs • Highest: HIGH
+   🔴 3 attention · 🆕 2 undiscovered · ⚪ 4 FP · ✅ 5 clean
+```
+
+### Step 8: Present Markdown Summary
+
+After generating JSON and HTML, present a concise markdown summary to the user in the conversation (using the report-template.md format). This is in ADDITION to the JSON+HTML files, not instead of them.
 
 **Priority order (applies equally to Skia core and third-party deps):**
 1. 🔴 User-reported + no PR

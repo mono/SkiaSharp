@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "run a security audit",
-      "expected_output": "A complete security audit report covering all native dependencies with verified versions, CVE queries, false positive checks, and prioritized next steps. The Skia milestone must be verified from SkMilestone.h, not cgmanifest.json. The report must use the report-template.md format.",
+      "expected_output": "A complete security audit report with JSON + HTML outputs, covering all native dependencies with verified versions, CVE queries, false positive checks, and prioritized next steps. The Skia milestone must be verified from SkMilestone.h, not cgmanifest.json.",
       "files": [],
       "expectations": [
         "The audit reads the actual submodule commit via 'git submodule status externals/skia' or equivalent, not just cgmanifest.json",
@@ -19,10 +19,14 @@
         "The audit checks known false positives: MiniZip in zlib is NOT compiled and CVE-2023-45853 should be marked as false positive",
         "The audit checks whether Android SkiaRenderEngine CVEs are marked as not applicable to SkiaSharp",
         "The audit searches mono/SkiaSharp GitHub issues for existing security-related reports (CVE numbers, 'security', 'vulnerability')",
-        "The final report includes a Summary table with status counts (Ready to merge, In progress, Needs attention, Undiscovered, False positive)",
-        "The final report lists findings sorted by priority: user-reported+no-PR first, then undiscovered CVEs, then false positives",
-        "The final report includes a Next Steps section with specific actionable recommendations",
-        "The final report uses separate tables per dependency finding (not one giant merged table) to avoid terminal wrapping",
+        "The audit produces a JSON file conforming to references/report-schema.md with meta, summary, versionVerification, findings, and nextSteps keys",
+        "The JSON file contains a meta object with skiaMilestone, skiaSubmoduleCommit, skiaUpstreamCommit, and upstreamVerified fields",
+        "The JSON findings array contains CVE objects with id, severity, cvss, fixedIn, description, source, and assessment fields",
+        "The audit runs render-security-audit.py to produce a self-contained HTML report from the JSON",
+        "The HTML file exists and is a valid HTML document (contains DOCTYPE, bootstrap, and the injected DATA)",
+        "The final markdown summary includes a Summary table with status counts",
+        "The final markdown lists findings sorted by priority: user-reported+no-PR first, then undiscovered CVEs, then false positives",
+        "The final markdown includes a Next Steps section with specific actionable recommendations",
         "For Skia CVEs, the report includes a Chrome-versioned CVEs table showing CVE ID, Fixed-In milestone, Severity, and Description",
         "The report correctly identifies which Skia CVEs are 'potentially affected' (fix milestone > our verified milestone) vs 'already fixed' (fix milestone <= our verified milestone)"
       ]
