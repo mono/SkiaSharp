@@ -120,6 +120,10 @@ namespace NativeLibraryMiniTest {
             public int fFilterFlags;
             public int fZLibLevel;
             public void* fComments;
+            public void* fICCProfile;
+            public byte* fICCProfileDescription;
+            public void* fGainmap;
+            public void* fGainmapInfo;
         }
     }
 }

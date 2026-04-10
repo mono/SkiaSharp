@@ -362,7 +362,7 @@ namespace SkiaSharp.Tests
 
 			Assert.False(stream.OwnsHandle);
 			Assert.True(stream.IgnorePublicDispose);
-			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+			Assert.Equal(IntPtr.Zero, stream.Handle);
 		}
 
 		[SkippableFact]

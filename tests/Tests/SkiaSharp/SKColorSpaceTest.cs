@@ -292,6 +292,18 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CicpSrgbColorSpaceIsCorrect()
+		{
+			using var colorspace = SKColorSpace.CreateCicp(
+				SKColorSpacePrimariesCicp.Rec709,
+				SKColorSpaceTransferFnCicp.Srgb);
+
+			Assert.NotNull(colorspace);
+			Assert.True(colorspace.IsSrgb);
+			Assert.True(SKColorSpace.Equal(SKColorSpace.CreateSrgb(), colorspace));
+		}
+
+		[SkippableFact]
 		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
 		{
 			// the instance is static, so all instances in .NET are the same instance
