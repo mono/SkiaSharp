@@ -4447,6 +4447,25 @@ namespace SkiaSharp
 			(sk_colorspace_make_srgb_gamma_delegate ??= GetSymbol<Delegates.sk_colorspace_make_srgb_gamma> ("sk_colorspace_make_srgb_gamma")).Invoke (colorspace);
 		#endif
 
+		// sk_colorspace_t* sk_colorspace_new_cicp(sk_colorspace_primaries_cicp_t colorPrimaries, sk_colorspace_transfer_fn_cicp_t transferCharacteristics)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+		}
+		private static Delegates.sk_colorspace_new_cicp sk_colorspace_new_cicp_delegate;
+		internal static sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics) =>
+			(sk_colorspace_new_cicp_delegate ??= GetSymbol<Delegates.sk_colorspace_new_cicp> ("sk_colorspace_new_cicp")).Invoke (colorPrimaries, transferCharacteristics);
+		#endif
+
 		// sk_colorspace_t* sk_colorspace_new_icc(const sk_colorspace_icc_profile_t* profile)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -19894,9 +19913,15 @@ namespace SkiaSharp {
 		// public const char* fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
 
+		// public const void* fGainmap
+		private readonly void* fGainmap;
+
+		// public const void* fGainmapInfo
+		private readonly void* fGainmapInfo;
+
 		public readonly bool Equals (SKPngEncoderOptions obj) =>
 #pragma warning disable CS8909
-			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
+			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription && fGainmap == obj.fGainmap && fGainmapInfo == obj.fGainmapInfo;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -19916,6 +19941,8 @@ namespace SkiaSharp {
 			hash.Add (fComments);
 			hash.Add (fICCProfile);
 			hash.Add (fICCProfileDescription);
+			hash.Add (fGainmap);
+			hash.Add (fGainmapInfo);
 			return hash.ToHashCode ();
 		}
 
@@ -20600,6 +20627,66 @@ namespace SkiaSharp {
 		B = 2,
 		// A_SK_COLOR_CHANNEL = 3
 		A = 3,
+	}
+
+	// sk_colorspace_primaries_cicp_t
+	public enum SKColorspacePrimariesCicp {
+		// UNKNOWN_SK_COLORSPACE_PRIMARIES_CICP = 0
+		Unknown = 0,
+		// REC709_SK_COLORSPACE_PRIMARIES_CICP = 1
+		Rec709 = 1,
+		// REC470_SYSTEM_M_SK_COLORSPACE_PRIMARIES_CICP = 4
+		Rec470SystemM = 4,
+		// REC470_SYSTEM_BG_SK_COLORSPACE_PRIMARIES_CICP = 5
+		Rec470SystemBg = 5,
+		// REC601_SK_COLORSPACE_PRIMARIES_CICP = 6
+		Rec601 = 6,
+		// SMPTE_ST240_SK_COLORSPACE_PRIMARIES_CICP = 7
+		SmpteSt240 = 7,
+		// GENERIC_FILM_SK_COLORSPACE_PRIMARIES_CICP = 8
+		GenericFilm = 8,
+		// REC2020_SK_COLORSPACE_PRIMARIES_CICP = 9
+		Rec2020 = 9,
+		// SMPTE_ST428_1_SK_COLORSPACE_PRIMARIES_CICP = 10
+		SmpteSt4281 = 10,
+		// SMPTE_RP431_2_SK_COLORSPACE_PRIMARIES_CICP = 11
+		SmpteRp4312 = 11,
+		// SMPTE_EG432_1_SK_COLORSPACE_PRIMARIES_CICP = 12
+		SmpteEg4321 = 12,
+		// ITU_T_H273_VALUE22_SK_COLORSPACE_PRIMARIES_CICP = 22
+		ItuTH273Value22 = 22,
+	}
+
+	// sk_colorspace_transfer_fn_cicp_t
+	public enum SKColorspaceTransferFnCicp {
+		// UNKNOWN_SK_COLORSPACE_TRANSFER_FN_CICP = 0
+		Unknown = 0,
+		// REC709_SK_COLORSPACE_TRANSFER_FN_CICP = 1
+		Rec709 = 1,
+		// REC470_SYSTEM_M_SK_COLORSPACE_TRANSFER_FN_CICP = 4
+		Rec470SystemM = 4,
+		// REC470_SYSTEM_BG_SK_COLORSPACE_TRANSFER_FN_CICP = 5
+		Rec470SystemBg = 5,
+		// REC601_SK_COLORSPACE_TRANSFER_FN_CICP = 6
+		Rec601 = 6,
+		// SMPTE_ST240_SK_COLORSPACE_TRANSFER_FN_CICP = 7
+		SmpteSt240 = 7,
+		// LINEAR_SK_COLORSPACE_TRANSFER_FN_CICP = 8
+		Linear = 8,
+		// IEC61966_2_4_SK_COLORSPACE_TRANSFER_FN_CICP = 11
+		Iec6196624 = 11,
+		// IEC61966_2_1_SK_COLORSPACE_TRANSFER_FN_CICP = 13
+		Iec6196621 = 13,
+		// REC2020_10BIT_SK_COLORSPACE_TRANSFER_FN_CICP = 14
+		Rec202010bit = 14,
+		// REC2020_12BIT_SK_COLORSPACE_TRANSFER_FN_CICP = 15
+		Rec202012bit = 15,
+		// PQ_SK_COLORSPACE_TRANSFER_FN_CICP = 16
+		Pq = 16,
+		// SMPTE_ST428_1_SK_COLORSPACE_TRANSFER_FN_CICP = 17
+		SmpteSt4281 = 17,
+		// HLG_SK_COLORSPACE_TRANSFER_FN_CICP = 18
+		Hlg = 18,
 	}
 
 	// sk_colortype_t
