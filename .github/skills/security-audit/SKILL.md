@@ -61,6 +61,11 @@ Search PRs in both mono/SkiaSharp and mono/skia for dependency updates.
 
 #### 2a. Verify Skia milestone and upstream commit
 
+> 🛑 **MANDATORY:** Steps 3–5 below (fetching the upstream google/skia branch) are **required**, not optional.
+> Adding a git remote and fetching is a read-only operation — it does not modify any tracked files.
+> Without independent verification of the upstream merge point, the audit would be trusting
+> cgmanifest.json circularly, which defeats the purpose of verification.
+
 The mono/skia fork contains both upstream google/skia code AND custom SkiaSharp C API commits. Track both:
 
 ```bash
@@ -72,18 +77,18 @@ git submodule status externals/skia
 cat externals/skia/include/core/SkMilestone.h
 # Look for: #define SK_MILESTONE NNN
 
-# 3. Find the upstream google/skia merge point
+# 3. Find the upstream google/skia merge point (MANDATORY)
 cd externals/skia
 git log --oneline --merges --grep="chrome/m" -5 HEAD
 # Find the merge commit that brought in chrome/mNNN
 
-# 4. Add the upstream remote and verify
+# 4. Add the upstream remote and fetch (MANDATORY — this is read-only)
 git remote add upstream https://github.com/google/skia.git 2>/dev/null
 git fetch upstream chrome/mNNN --depth=1
 git log --format="%H %s" -1 FETCH_HEAD
-# This gives the upstream_merge_commit
+# This gives the independently-verified upstream_merge_commit
 
-# 5. Confirm upstream is ancestor of our fork
+# 5. Confirm upstream is ancestor of our fork (MANDATORY)
 git merge-base --is-ancestor FETCH_HEAD <merge-parent> && echo "VERIFIED"
 ```
 
