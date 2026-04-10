@@ -43,9 +43,9 @@ Platform-specific UI controls for rendering SkiaSharp content. These provide rea
 | Package | Description |
 |---------|-------------|
 | **SkiaSharp.Views** | Platform views for iOS, tvOS, macOS, Mac Catalyst, Android, and Tizen. Provides `SKCanvasView` and `SKGLView`. |
-| **SkiaSharp.Views.Desktop.Common** | Common base classes for desktop views (netstandard2.0+, net48+). |
-| **SkiaSharp.Views.WindowsForms** | Windows Forms controls: `SKControl`, `SKGLControl`. net48+ and net6.0-windows+. Depends on OpenTK. |
-| **SkiaSharp.Views.WPF** | WPF control: `SKElement`. net48+ and net6.0-windows+. Depends on OpenTK. |
+| **SkiaSharp.Views.Desktop.Common** | Common base classes for desktop views (netstandard2.0+, net462+). |
+| **SkiaSharp.Views.WindowsForms** | Windows Forms controls: `SKControl`, `SKGLControl`. net462+ and net6.0-windows+. Depends on OpenTK. |
+| **SkiaSharp.Views.WPF** | WPF control: `SKElement`. net462+ and net6.0-windows+. Depends on OpenTK. |
 | **SkiaSharp.Views.WinUI** | WinUI 3 controls: `SKXamlCanvas`, `SKSwapChainPanel`. net6.0-windows+. Depends on Microsoft.WindowsAppSDK. Auto-includes SkiaSharp.NativeAssets.WinUI. |
 | **SkiaSharp.Views.Gtk3** | GTK# 3 control: `SKDrawingArea`. netstandard2.0+. For Linux desktop apps. Depends on GtkSharp. |
 | **SkiaSharp.Views.Blazor** | Blazor WebAssembly controls: `SKCanvasView`, `SKGLView`. net6.0+. Auto-includes SkiaSharp.NativeAssets.WebAssembly. |
@@ -61,7 +61,7 @@ Optional packages for hardware-accelerated rendering via specific GPU APIs.
 
 | Package | Description |
 |---------|-------------|
-| **SkiaSharp.Vulkan.SharpVk** | Vulkan GPU backend. netstandard2.0+, net48+, net6.0+. Depends on [SharpVk](https://github.com/FacticiusVir/SharpVk) 0.4.2. |
+| **SkiaSharp.Vulkan.SharpVk** | Vulkan GPU backend. netstandard2.0+, net462+, net6.0+. Depends on [SharpVk](https://github.com/FacticiusVir/SharpVk) 0.4.2. |
 | **SkiaSharp.Direct3D.Vortice** | Direct3D 12 GPU backend. net8.0 only. Windows-only due to [Vortice.Direct3D12](https://github.com/amerkoleci/Vortice.Windows) 3.5.0 dependency. |
 
 ---
@@ -104,8 +104,8 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 
 | Packages | Auto-included when targeting |
 |----------|------------------------------|
-| SkiaSharp.NativeAssets.Win32<br/>HarfBuzzSharp.NativeAssets.Win32 | Windows TFM (`net8.0-windows`) or non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net48`) |
-| SkiaSharp.NativeAssets.macOS<br/>HarfBuzzSharp.NativeAssets.macOS | macOS TFM (`net8.0-macos`) or non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net48`) |
+| SkiaSharp.NativeAssets.Win32<br/>HarfBuzzSharp.NativeAssets.Win32 | Windows TFM (`net8.0-windows`) or non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`) |
+| SkiaSharp.NativeAssets.macOS<br/>HarfBuzzSharp.NativeAssets.macOS | macOS TFM (`net8.0-macos`) or non-platform TFM (`net6.0`, `net8.0`, `netstandard2.0`, `netstandard2.1`, `net462`) |
 | SkiaSharp.NativeAssets.Android<br/>HarfBuzzSharp.NativeAssets.Android | Android TFM (`net8.0-android`) |
 | SkiaSharp.NativeAssets.iOS<br/>HarfBuzzSharp.NativeAssets.iOS | iOS TFM (`net8.0-ios`) |
 | SkiaSharp.NativeAssets.MacCatalyst<br/>HarfBuzzSharp.NativeAssets.MacCatalyst | Mac Catalyst TFM (`net8.0-maccatalyst`) |
