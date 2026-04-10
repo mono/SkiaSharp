@@ -19894,9 +19894,15 @@ namespace SkiaSharp {
 		// public const char* fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
 
+		// public const void* fGainmap
+		private readonly void* fGainmap;
+
+		// public const void* fGainmapInfo
+		private readonly void* fGainmapInfo;
+
 		public readonly bool Equals (SKPngEncoderOptions obj) =>
 #pragma warning disable CS8909
-			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
+			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription && fGainmap == obj.fGainmap && fGainmapInfo == obj.fGainmapInfo;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -19916,6 +19922,8 @@ namespace SkiaSharp {
 			hash.Add (fComments);
 			hash.Add (fICCProfile);
 			hash.Add (fICCProfileDescription);
+			hash.Add (fGainmap);
+			hash.Add (fGainmapInfo);
 			return hash.ToHashCode ();
 		}
 
