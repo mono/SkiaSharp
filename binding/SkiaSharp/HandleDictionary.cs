@@ -45,7 +45,7 @@ namespace SkiaSharp
 
 			instancesLock.EnterReadLock ();
 			try {
-				return GetInstanceNoLocks (handle, out instance, throwOnTypeMismatch: false);
+				return GetInstanceNoLocks (handle, out instance);
 			} finally {
 				instancesLock.ExitReadLock ();
 			}
@@ -73,7 +73,7 @@ namespace SkiaSharp
 
 			instancesLock.EnterUpgradeableReadLock ();
 			try {
-				if (GetInstanceNoLocks<TSkiaObject> (handle, out var instance, throwOnTypeMismatch: true)) {
+				if (GetInstanceNoLocks<TSkiaObject> (handle, out var instance)) {
 					// some object get automatically referenced on the native side,
 					// but managed code just has the same reference
 					if (unrefExisting && instance is ISKReferenceCounted refcnt) {
@@ -101,7 +101,7 @@ namespace SkiaSharp
 		/// Retrieve the living instance if there is one, or null if not. This does not use locks.
 		/// </summary>
 		/// <returns>The instance if it is alive, or null if there is none.</returns>
-		private static bool GetInstanceNoLocks<TSkiaObject> (IntPtr handle, out TSkiaObject instance, bool throwOnTypeMismatch)
+		private static bool GetInstanceNoLocks<TSkiaObject> (IntPtr handle, out TSkiaObject instance)
 			where TSkiaObject : SKObject
 		{
 			if (instances.TryGetValue (handle, out var weak) && weak.IsAlive) {
@@ -111,7 +111,7 @@ namespace SkiaSharp
 						return true;
 					}
 #if THROW_OBJECT_EXCEPTIONS
-				} else if (throwOnTypeMismatch && weak.Target is SKObject obj) {
+				} else if (weak.Target is SKObject obj) {
 					if (!obj.IsDisposed && obj.OwnsHandle) {
 						throw new InvalidOperationException (
 							$"A managed object exists for the handle, but is not the expected type. " +
