@@ -110,6 +110,11 @@ namespace SkiaSharp
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn transferFn, SKColorSpaceXyz toXyzD50) =>
 			GetObject (SkiaApi.sk_colorspace_new_rgb (&transferFn, &toXyzD50));
 
+		// CreateCicp
+
+		public static SKColorSpace CreateCicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics) =>
+			GetObject (SkiaApi.sk_colorspace_new_cicp (colorPrimaries, transferCharacteristics));
+
 		// GetNumericalTransferFunction
 
 		public SKColorSpaceTransferFn GetNumericalTransferFunction () =>
