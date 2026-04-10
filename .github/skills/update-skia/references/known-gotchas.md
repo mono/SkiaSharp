@@ -107,11 +107,6 @@ Never use a tree-override merge (`git merge -s ours`, `git read-tree --reset`). 
 **Failure mode**: A merge conflict in an upstream file (outside `src/c/` / `include/c/`) is resolved
 with `git checkout --theirs`, silently overwriting an intentional SkiaSharp fork patch.
 
-**Real example (m133)**: `src/gpu/ganesh/gl/iOS/GrGLMakeNativeInterface_iOS.cpp` was deliberately
-patched in the fork (commit `ef484fb377`) to use `dlsym(RTLD_DEFAULT)` instead of upstream's
-`dlopen("/System/Library/Frameworks/OpenGL.framework/...")` — a macOS path that doesn't exist on iOS.
-Taking `--theirs` reintroduced the broken macOS-only path.
-
 **Mandatory process for EVERY conflicted file:**
 
 ```bash
