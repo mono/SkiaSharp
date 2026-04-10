@@ -116,6 +116,8 @@ cat externals/skia/DEPS
 
 Then verify actual versions from the Chromium mirror header files. For each dependency, fetch the version header at the pinned commit:
 
+**Skia DEPS dependencies:**
+
 | Dependency | Version file | Version pattern |
 |------------|-------------|-----------------|
 | libpng | `png.h` line 1-3 | `libpng version X.Y.Z` |
@@ -132,6 +134,38 @@ Then verify actual versions from the Chromium mirror header files. For each depe
 https://{host}/{path}/+/{commit_sha}/{file}?format=TEXT
 ```
 Response is base64-encoded. Decode with `[System.Convert]::FromBase64String()`.
+
+#### 2c. Verify ANGLE dependencies
+
+ANGLE is a **separate** native component (Windows-only, for WinUI). It is NOT part of the Skia submodule — it's cloned separately from `https://github.com/google/angle.git`.
+
+Get the ANGLE version from `scripts/VERSIONS.txt`:
+```bash
+grep ANGLE scripts/VERSIONS.txt
+# Output: ANGLE    release    chromium/NNNN
+```
+
+ANGLE has its own submodules that must also be tracked:
+- `third_party/zlib` (separate from Skia's zlib)
+- `third_party/jsoncpp`
+- `third_party/vulkan-deps`
+- `third_party/astc-encoder/src`
+
+Check if these are in cgmanifest.json. If missing, flag as a coverage gap.
+
+#### 2d. Build the Dependency Overview
+
+The `versionVerification` array in the JSON must include **ALL** dependencies from ALL sources:
+
+| Source | What to include |
+|--------|----------------|
+| `"Skia DEPS"` | All deps from `externals/skia/DEPS` + Skia itself |
+| `"ANGLE"` | ANGLE itself (version from VERSIONS.txt) |
+| `"ANGLE submodule"` | ANGLE's submodules (zlib, jsoncpp, vulkan-deps, astc-encoder) |
+| `"GPU/Graphics"` | VulkanMemoryAllocator, SPIRV-Cross, D3D12Allocator from DEPS |
+| `"Supporting"` | piex, wuffs, dng_sdk, buildtools from DEPS |
+
+Each entry must have a `source` field and a `cgmanifestVersion` field (null if missing from cgmanifest.json).
 
 If submodule externals are initialized, read directly from `externals/skia/third_party/externals/{dep}/` instead.
 

@@ -56,15 +56,19 @@
   <!-- Summary Cards -->
   <div class="row g-3 mb-4" id="summary-cards"></div>
 
-  <!-- Version Verification -->
+  <!-- Dependency Overview (combined version + security status) -->
   <div class="card mb-4">
     <div class="card-header bg-white d-flex align-items-center">
-      <i class="bi bi-check2-circle me-2"></i><strong>Version Verification</strong>
-      <span class="ms-auto text-muted" id="version-status"></span>
+      <i class="bi bi-table me-2"></i><strong>Dependency Overview</strong>
+      <span class="ms-auto text-muted" id="overview-status"></span>
     </div>
     <div class="card-body p-0">
-      <table class="table table-sm mb-0 meta-table" id="version-table">
-        <thead><tr><th>Dependency</th><th>DEPS Commit</th><th>Verified</th><th>cgmanifest</th><th>Match</th></tr></thead>
+      <table class="table table-sm table-hover mb-0 meta-table" id="overview-table">
+        <thead><tr>
+          <th>Dependency</th><th>Source</th><th>Current Version</th>
+          <th>DEPS Commit</th><th>cgmanifest</th><th>Match</th>
+          <th>Security</th><th>CVEs</th><th>Action</th>
+        </tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -120,23 +124,50 @@ function renderSummary(s) {
     </div>`).join('');
 }
 
-function renderVersions(vers) {
-  const tbody = document.querySelector('#version-table tbody');
+function renderOverview(vers, findings) {
+  const tbody = document.querySelector('#overview-table tbody');
+  // Build a map of findings by dependency name
+  const findingMap = {};
+  (findings || []).forEach(f => { findingMap[f.dependency] = f; });
+
   let mismatches = 0;
-  tbody.innerHTML = vers.map(v => {
+  const rows = (vers || []).map(v => {
     if (!v.match) mismatches++;
-    const cls = v.match ? 'version-match' : 'version-mismatch';
-    const icon = v.match ? '✅' : '❌';
+    const matchCls = v.match ? 'version-match' : 'version-mismatch';
+    const matchIcon = v.match ? '✅' : '❌';
+    const f = findingMap[v.name];
+
+    let secBadge = '<span class="status-pill st-clean">✅ Clean</span>';
+    let cveCount = '';
+    let action = '';
+    if (f) {
+      const [label, cls] = STATUS_LABELS[f.status] || ['?', ''];
+      secBadge = `<span class="status-pill ${cls}">${label}</span>`;
+      const total = (f.cves||[]).length + (f.nonChromeCves||[]).length;
+      if (total > 0) cveCount = `<span class="badge bg-danger">${total}</span>`;
+      action = f.action ? `<span class="small">${esc(f.action)}</span>` : '';
+    }
+
     return `<tr>
       <td><strong>${esc(v.name)}</strong></td>
-      <td><code>${esc((v.depsCommit||'').substring(0,12))}</code></td>
+      <td class="text-muted small">${esc(v.source || 'Skia DEPS')}</td>
       <td>${esc(v.verifiedVersion)}</td>
-      <td>${esc(v.cgmanifestVersion)}</td>
-      <td class="${cls}">${icon}</td>
+      <td><code class="small">${esc((v.depsCommit||'').substring(0,10))}</code></td>
+      <td>${v.cgmanifestVersion ? esc(v.cgmanifestVersion) : '<span class="version-mismatch">missing</span>'}</td>
+      <td class="${matchCls}">${matchIcon}</td>
+      <td>${secBadge}</td>
+      <td>${cveCount}</td>
+      <td>${action}</td>
     </tr>`;
   }).join('');
-  document.getElementById('version-status').textContent =
-    mismatches === 0 ? '✅ All versions match' : `❌ ${mismatches} mismatch(es)`;
+
+  tbody.innerHTML = rows;
+  const total = (vers||[]).length;
+  const cgMissing = (vers||[]).filter(v => !v.cgmanifestVersion).length;
+  let statusText = mismatches === 0 && cgMissing === 0
+    ? `✅ All ${total} dependencies verified`
+    : `${total} deps · ${mismatches > 0 ? `❌ ${mismatches} mismatch` : '✅ versions match'}${cgMissing > 0 ? ` · ⚠️ ${cgMissing} missing from cgmanifest` : ''}`;
+  document.getElementById('overview-status').textContent = statusText;
 }
 
 function renderCveTable(cves, columns) {
@@ -253,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('header-badges').innerHTML =
     `<span class="badge bg-${d.summary.highestSeverity === 'CRITICAL' ? 'danger' : d.summary.highestSeverity === 'HIGH' ? 'warning' : 'info'}">${d.summary.highestSeverity}</span>`;
   renderSummary(d.summary);
-  renderVersions(d.versionVerification);
+  renderOverview(d.versionVerification, d.findings);
   const container = document.getElementById('findings-container');
   container.innerHTML = d.findings.map((f, i) => renderFinding(f, i)).join('');
   renderNextSteps(d.nextSteps);

@@ -57,10 +57,11 @@ Array of objects, one per dependency:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `name` | string | Yes | Dependency name |
-| `depsCommit` | string | Yes | Commit SHA from DEPS file |
+| `source` | string | Yes | Where this dep comes from: `"Skia DEPS"`, `"ANGLE"`, `"ANGLE submodule"` |
+| `depsCommit` | string | Yes | Commit SHA from DEPS file (or ANGLE branch tag) |
 | `verifiedVersion` | string | Yes | Version found in header file |
-| `cgmanifestVersion` | string | Yes | Version in cgmanifest.json |
-| `match` | boolean | Yes | Whether they agree |
+| `cgmanifestVersion` | string | No | Version in cgmanifest.json (null/empty if missing) |
+| `match` | boolean | Yes | Whether they agree (false if cgmanifest entry is missing) |
 | `verificationMethod` | string | Yes | How the version was verified |
 
 ## `findings` — Individual Dependency Findings
