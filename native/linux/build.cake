@@ -90,6 +90,13 @@ Task("libSkiaSharp")
             _ => ""  // RISC-V, LoongArch - no standard flags yet
         };
 
+        // Bionic (Android NDK) builds need SK_BUILD_FOR_UNIX to prevent the
+        // NDK's __ANDROID__ define from suppressing SkDebugf (stdio port).
+        // Fontconfig is not available on Bionic.
+        var isBionic = VARIANT.ToLower().StartsWith("bionic");
+        var bionicDefine = isBionic ? ", '-DSK_BUILD_FOR_UNIX'" : "";
+        var bionicArgs = isBionic ? "skia_use_fontconfig=false " : "";
+
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
             $"target_cpu='{skiaArch}' " +
@@ -105,8 +112,9 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
+            bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
@@ -140,7 +148,7 @@ Task("libHarfBuzzSharp")
             $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[] " +
+            $"extra_cflags=[ {(VARIANT.ToLower().StartsWith("bionic") ? "'-DSK_BUILD_FOR_UNIX'" : "")} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
