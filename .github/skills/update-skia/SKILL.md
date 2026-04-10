@@ -147,12 +147,13 @@ The workflow follows this shape:
    git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} -- include/core/ include/gpu/ganesh/
    ```
 
-5. **Three mandatory verification checks** (see [breaking-changes-checklist.md](references/breaking-changes-checklist.md) Steps 4a–4c):
-   - **Struct size audit**: Check every `static_assert(sizeof(...))` in `sk_structs.cpp` against the target milestone's C++ struct definitions. Struct field additions cause build failures or silent memory corruption.
-   - **Deleted file audit**: For every deleted file, search the target branch for where it moved. Skia relocates files, it rarely removes them. Never recommend removing code that references a deleted file without finding the replacement.
-   - **Removal verification**: For any symbol you believe was "removed", confirm by grepping the target branch — diff hunks can show `-` lines for symbols that were merely reordered within the file.
+5. **Run structural diff on include/ directory**:
+   ```bash
+   git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --stat -- include/
+   git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} -- include/core/ include/gpu/ganesh/
+   ```
 
-👉 See [references/breaking-changes-checklist.md](references/breaking-changes-checklist.md) for detailed analysis template.
+👉 See [references/breaking-changes-checklist.md](references/breaking-changes-checklist.md) for the full analysis template, including verification steps for struct sizes, moved files, and diff-reading traps.
 
 > 🛑 **GATE**: Present full breaking change analysis to user. Get approval before proceeding.
 
@@ -180,38 +181,43 @@ milestone numbers and paste your breaking change analysis table. The default exp
    git checkout -b dev/update-skia-{TARGET}
    ```
 
-2. **Merge upstream**:
+2. **Merge upstream** — use `--no-commit` for manual conflict resolution:
    ```bash
-   git merge upstream/chrome/m{TARGET}
+   git merge --no-commit upstream/chrome/m{TARGET}
    ```
 
-3. **Resolve conflicts** — Common conflicts:
-   - `DEPS` — Keep our dependency pins, accept upstream structure changes
-   - `RELEASE_NOTES.md` — Accept upstream
-   - `infra/bots/jobs.json` — Accept upstream
-   - Source files in `src/` — Carefully resolve (don't lose our C API)
+3. **Resolve conflicts** — each conflict must be resolved individually.
+   Never use `git merge -s ours` or `git read-tree --reset` — this destroys `git blame` attribution.
 
-4. **Verify our C API files survived the merge**:
+   | File Category | Strategy |
+   |--------------|----------|
+   | `BUILD.gn` | **Combine both** — keep upstream structure AND SkiaSharp's platform flags + `skiasharp_build` target |
+   | `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
+   | `RELEASE_NOTES.md`, `infra/bots/` | **Take upstream** |
+   | C API (`include/c/`, `src/c/`) | **Keep SkiaSharp** — adapt includes/API calls in post-merge commits |
+
+4. **Commit the merge**:
+   ```bash
+   git commit  # Creates proper two-parent merge
+   ```
+
+5. **Verify our C API files survived the merge**:
    ```bash
    ls src/c/*.cpp include/c/*.h  # All files should still exist
    ```
 
-5. **Source file verification** — Check for added/deleted upstream files:
+6. **Source file verification** — Check for added/deleted upstream files:
    ```bash
    git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=AD --name-only -- src/ include/
    ```
    Cross-reference against `BUILD.gn` — new source files may need to be added.
 
-> 🛑 **GATE**: Merge complete, conflicts resolved. Run ALL of these verification commands
-> (from inside `externals/skia`):
+> 🛑 **GATE**: Merge complete, conflicts resolved. Verify:
 > ```bash
-> cd externals/skia
 > ls src/c/*.cpp include/c/*.h                    # C API files intact
-> git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=AD --name-only -- src/ include/
->                                                   # Review added/deleted files
-> git diff --check                                  # Zero conflict markers remain
+> git diff --check                                  # Zero conflict markers
+> git blame src/c/sk_canvas.cpp | head -20         # Attribution shows original commits, not just merge
 > ```
-> All three must produce expected output before proceeding.
 
 ### Phase 5: Fix C API Shim Layer
 
