@@ -14,7 +14,12 @@ When upstream changes a C++ type from a `struct` to a `using` alias (e.g., `GrVk
 
 ### 3. Custom Patches May Partially Survive Merges
 
-SkiaSharp adds custom methods to upstream headers (e.g., `SkTypeface::RefDefault()`). After merge, implementations in `.cpp` files may survive but header declarations can be silently removed by upstream changes. Always verify header declarations match implementations.
+SkiaSharp adds custom methods to upstream headers (e.g., `SkTypeface::RefDefault()`). After merge, implementations in `.cpp` files may survive but header declarations can be silently removed by upstream changes.
+
+When header declarations are lost:
+1. **Check if upstream provides a replacement API** — if so, update the C API to use it
+2. **If no replacement exists**, re-add the declaration. But consider moving custom methods out of upstream headers and into our C API layer (`src/c/`) to avoid this recurring conflict
+3. **Never leave a mismatched header/implementation** — it compiles but crashes at runtime on some platforms
 
 ### 4. Fontconfig `#ifdef` Guards
 
@@ -28,7 +33,13 @@ Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since Sk
 
 ### 6. `BUILD.gn` Legacy Flags
 
-Upstream may introduce defines like `SK_DEFAULT_TYPEFACE_IS_EMPTY` and `SK_DISABLE_LEGACY_DEFAULT_TYPEFACE` that break SkiaSharp's C API. Comment these out when they cause compilation errors. Also watch for renamed/removed GN flags between milestones — obsolete flags cause `Unknown GN flag` errors. Always diff the target `BUILD.gn` against the current one.
+Upstream progressively deprecates legacy APIs behind flags (e.g., `SK_DEFAULT_TYPEFACE_IS_EMPTY`, `SK_DISABLE_LEGACY_DEFAULT_TYPEFACE`). When these flags break SkiaSharp's C API:
+
+1. **Check what the flag removes** — read the upstream commit that added it
+2. **If the C API uses the removed behavior**, update the C API to use the replacement API. This is the real fix — upstream is signaling that the old API will be removed entirely in a future milestone.
+3. **Only as a short-term bridge** (with a TODO comment and tracking issue), you may comment out the flag to unblock the build while you work on the proper fix. Never leave a commented-out flag without a plan to address it.
+
+Also watch for renamed/removed GN flags between milestones — obsolete flags cause `Unknown GN flag` errors. Always diff the target `BUILD.gn` against the current one.
 
 ### 7. `.gitmodules` Branch Name
 

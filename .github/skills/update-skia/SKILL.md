@@ -147,12 +147,6 @@ The workflow follows this shape:
    git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} -- include/core/ include/gpu/ganesh/
    ```
 
-5. **Run structural diff on include/ directory**:
-   ```bash
-   git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --stat -- include/
-   git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} -- include/core/ include/gpu/ganesh/
-   ```
-
 👉 See [references/breaking-changes-checklist.md](references/breaking-changes-checklist.md) for the full analysis template, including verification steps for struct sizes, moved files, and diff-reading traps.
 
 > 🛑 **GATE**: Present full breaking change analysis to user. Get approval before proceeding.
@@ -235,9 +229,10 @@ must be updated when the underlying C++ APIs change.
    |-----------|-------------|
    | Missing type | Add/update typedef in `sk_types.h` |
    | Renamed function | Update call in `*.cpp` |
-   | Removed enum value | Remove from `sk_enums.cpp`, update `sk_types.h` |
+   | Removed enum value | Remove from `sk_enums.cpp` + `sk_types.h`. Flag as a C# breaking change — Phase 8 must add `[Obsolete]` or document removal |
    | Changed signature | Update C wrapper function signature |
    | New header required | Add `#include` in the relevant `.cpp` |
+   | Legacy flag breaks C API | Update C API to use replacement API (see gotcha #6). Do not just comment out the flag without a plan |
 
 3. **Update `sk_types.h`** for any new enums or type changes:
    - **Reset `SK_C_INCREMENT` to `0`** in `externals/skia/include/c/sk_types.h` for the new milestone
