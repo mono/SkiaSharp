@@ -164,14 +164,48 @@ Then classify using the **verified milestone from SkMilestone.h** (not cgmanifes
 | Condition | Classification |
 |-----------|---------------|
 | Fix milestone > our milestone | 🔴 **Potentially affected** — CVE was fixed after our fork point |
-| Fix milestone < our milestone | ✅ **Already fixed** — fix is included in our fork's upstream base |
-| Fix milestone == our milestone | ⚠️ **Manual review needed** — fix may have been backported to the milestone branch AFTER our merge point. Verify with commit-level check against `upstream_merge_commit` |
-| No Chrome version (Android-specific, mentions `SkiaRenderEngine`) | ⚪ **Not applicable** — Android render engine, not in SkiaSharp |
-| No Chrome version (other Skia code) | ⚠️ **Manual review needed** — check if affected code path exists in fork |
+| Fix milestone ≤ our milestone | ✅ **Already fixed** — fix is included in our fork's upstream base |
+| No Chrome version (mentions `SkiaRenderEngine`) | ⚪ **Not applicable** — Android render engine infrastructure, not part of Skia library |
+| No Chrome version (reported via Android/Huawei/other vendor bulletin) | ⚠️ **Code-path verification needed** — see below |
+| No Chrome version (other) | ⚠️ **Manual review needed** — check if affected code path exists in fork |
+| CVSS score not yet published | Use Chromium severity rating (High → treat as HIGH 8.8) |
+
+> ⚠️ **Newly published CVEs may lack a CVSS score.** If NVD hasn't assigned one yet, check
+> the Chromium severity rating from the Chrome release notes or cvedetails.com. Treat
+> Chromium "High" as HIGH (~8.8) for prioritization purposes.
+
+#### Non-Chrome Skia CVEs (Android/Huawei/vendor bulletins)
+
+CVEs reported through Android Security Bulletins or vendor bulletins (Huawei HarmonyOS, etc.)
+reference Skia code that **may also exist in upstream google/skia and therefore in our fork**.
+These forks all diverged from the same upstream, so shared code paths are common.
+
+**Do NOT dismiss a CVE just because it was reported through a vendor bulletin.**
+
+Instead, verify whether the vulnerable code exists in our fork:
+
+```bash
+cd externals/skia
+
+# 1. Check if the vulnerable file exists
+find . -name "SkDeflate.cpp" -o -name "TheVulnerableFile.cpp"
+
+# 2. Check if the vulnerable function exists
+git grep "vulnerable_function_name"
+
+# 3. If a fix commit is referenced (e.g., from AOSP), check if the
+#    vulnerable code pre-fix exists in our fork
+```
+
+| If... | Then... |
+|-------|---------|
+| Vulnerable file/function does NOT exist in our fork | ⚪ False positive — vendor-specific code |
+| Vulnerable file/function EXISTS in our fork + fix commit is ancestor of HEAD | ✅ Already fixed |
+| Vulnerable file/function EXISTS in our fork + NOT fixed | 🔴 Needs attention |
 
 ### Step 4: Verify Fix Commits (CRITICAL)
 
-> ⚠️ **CVE databases often have WRONG version ranges.** Always verify.
+> ⚠️ **CVE databases often have WRONG version ranges.** Always verify with the actual commit.
 
 ```bash
 cd externals/skia/third_party/externals/{dependency}
@@ -180,15 +214,25 @@ cd externals/skia/third_party/externals/{dependency}
 git merge-base --is-ancestor {fix_commit} HEAD && echo "FIXED" || echo "VULNERABLE"
 ```
 
-**Example:** CVE-2025-27363 claimed FreeType ≤2.13.3 was affected, fix in 2.13.4. Verification showed the fix commit was in 2.13.1 — SkiaSharp's 2.13.3 was already patched.
+**Example:** CVE-2025-27363 claimed FreeType ≤2.13.3 was affected, fix in 2.13.4. Verification
+showed the fix commit (`ef636696...`) was actually in 2.13.1 — SkiaSharp's 2.13.3 was already
+patched. The NVD version range was wrong.
+
+When a CVE's version range says our version is affected but the fix commit is already in our tree,
+classify it as **⚪ False positive (NVD version range incorrect)** — not as a finding. Place it
+in the false positive section with an explanation of why the NVD range is wrong and cite the
+actual fix commit as evidence.
 
 ### Step 5: Check False Positives
 
 Before flagging, verify the CVE actually affects SkiaSharp:
-- **MiniZip** (in zlib) — Not compiled, not vulnerable
-- **FreeType's bundled zlib** — Separate from Skia's zlib
-- **Android SkiaRenderEngine** — Not part of SkiaSharp
+
+- **MiniZip** (in zlib) — Not compiled by Skia, not linked
+- **FreeType's bundled zlib** — Separate from Skia's zlib copy
+- **Android SkiaRenderEngine** (`SkiaRenderEngine.cpp`) — Android OS rendering infrastructure, not part of the Skia library itself. Always a false positive.
+- **Android/vendor Skia forks** — CVEs from Android Security Bulletins or Huawei/Samsung bulletins may reference code in `platform/external/skia` (AOSP's fork) that doesn't exist in upstream `google/skia`. **Verify by checking if the affected file/function exists in our fork** (see Step 3 above). Don't dismiss based solely on which vendor reported it — the code could be shared.
 - **Chrome-specific rendering paths** (HTML Canvas, SVG in browser) — May not be reachable through SkiaSharp's C API
+- **NVD version range errors** — When a CVE claims version X is affected but the fix commit is already in version X's tree, classify as false positive and cite the fix commit (see Step 4)
 
 See [dependencies.md](../../../documentation/dev/dependencies.md#known-false-positives) for details.
 
@@ -202,10 +246,22 @@ The report is a **single unified list** of all dependencies sorted by priority a
 1. 🔴 User-reported + no PR
 2. ✅ User-reported + PR ready  
 3. 🟡 User-reported + PR needs work
-4. 🆕 Undiscovered CVEs
+4. 🆕 Undiscovered CVEs (proactively found, no user-filed issue)
 5. ⚪ False positives
 
 Within each priority level, sort by severity (CRITICAL > HIGH > MEDIUM > LOW).
+
+#### Report quality rules
+
+1. **Skia bump recommendations must target the highest-severity CVE**, not the lowest. If there are HIGH CVEs at m146 and a MEDIUM at m133, recommend m146 as the target, not m133.
+
+2. **Don't include already-closed GitHub issues** in the report unless they are directly relevant to an open vulnerability. If a CVE is fixed and the tracking issue is closed, omit it.
+
+3. **CVEs with NVD version range errors** go in the ⚪ false positive section with the fix commit as evidence — not in the findings section with a "but it's actually fixed" note.
+
+4. **CVEs without a CVSS score** should use the vendor severity rating (e.g., Chromium "High" → HIGH ~8.8) and note that the official CVSS is pending.
+
+5. **"Undiscovered"** means a CVE found proactively by the audit (via NVD/web search) that has no corresponding user-filed GitHub issue. It does NOT mean the CVE is unknown to the world.
 
 ## Handoff
 
