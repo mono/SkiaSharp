@@ -1,0 +1,118 @@
+#:sdk Cake.Sdk
+#:property IncludeAdditionalFiles=../../scripts/cake/shared.cs;../../scripts/cake/native-shared.cs;../../scripts/cake/msbuild.cs
+#:property PublishAot=false
+
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
+DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
+
+var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
+DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
+string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
+
+string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
+bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+
+string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
+bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
+
+var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
+var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
+
+string GetSpectreLibPath(string arch)
+{
+    // Normalize architecture names to match spectre lib directory structure
+    var spectreArch = arch.ToLower() switch {
+        "win32" => "x86",
+        _ => arch.ToLower()
+    };
+
+    var spectrePaths = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/lib/spectre/{spectreArch}");
+    if (spectrePaths.Count == 0) {
+        throw new Exception($"Could not find spectre library path for {spectreArch}, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+    }
+    return spectrePaths.First().FullPath;
+}
+
+string VARIANT = BUILD_VARIANT ?? "windows";
+
+Information("Native Arguments:");
+Information($"    {"LLVM_HOME".PadRight(30)} {{0}}", string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "(Using MSVC)" : LLVM_HOME);
+Information($"    {"SUPPORT_VULKAN".PadRight(30)} {{0}}", SUPPORT_VULKAN);
+Information($"    {"VARIANT".PadRight(30)} {{0}}", VARIANT);
+Information($"    {"CONFIGURATION".PadRight(30)} {{0}}", CONFIGURATION);
+
+Task("libSkiaSharp")
+    .IsDependentOn("git-sync-deps")
+    .WithCriteria(IsRunningOnWindows())
+    .Does(() =>
+{
+    Build("Win32", "x86", "x86");
+    Build("x64", "x64", "x64");
+    Build("ARM64", "arm64", "ARM64");
+
+    void Build(string arch, string skiaArch, string dir)
+    {
+        if (Skip(arch)) return;
+
+        var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
+        var win_vcvars_version = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"win_vcvars_version='{VC_TOOLSET_VERSION}' ";
+        var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
+        var spectreLibPath = GetSpectreLibPath(arch);
+
+        GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
+            $"target_os='win'" +
+            $"target_cpu='{skiaArch}' " +
+            $"skia_enable_fontmgr_win_gdi=false " +
+            $"skia_use_dng_sdk=true " +
+            $"skia_use_harfbuzz=false " +
+            $"skia_use_icu=false " +
+            $"skia_use_piex=true " +
+            $"skia_use_system_expat=false " +
+            $"skia_use_system_libjpeg_turbo=false " +
+            $"skia_use_system_libpng=false " +
+            $"skia_use_system_libwebp=false " +
+            $"skia_use_system_zlib=false " +
+            $"skia_enable_skottie=true " +
+            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
+            $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
+            clang +
+            win_vcvars_version +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
+            ADDITIONAL_GN_ARGS);
+
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
+        EnsureDirectoryExists(outDir);
+        CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.dll"), outDir);
+        CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.pdb"), outDir);
+        CheckWindowsDependencies($"{outDir}/libSkiaSharp.dll", excluded: VERIFY_EXCLUDED, delayLoaded: VERIFY_DELAY_LOADED);
+    }
+});
+
+Task("libHarfBuzzSharp")
+    .WithCriteria(IsRunningOnWindows())
+    .Does(() =>
+{
+    Build("Win32", "x86");
+    Build("x64", "x64");
+    Build("ARM64", "arm64");
+
+    void Build(string arch, string dir)
+    {
+        if (Skip(arch)) return;
+
+        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.sln", platformTarget: arch);
+
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
+        EnsureDirectoryExists(outDir);
+        CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.dll", outDir);
+        CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.pdb", outDir);
+        CheckWindowsDependencies($"{outDir}/libHarfBuzzSharp.dll", excluded: VERIFY_EXCLUDED);
+    }
+});
+
+Task("Default")
+    .IsDependentOn("libSkiaSharp")
+    .IsDependentOn("libHarfBuzzSharp");
+
+RunTarget(TARGET);
