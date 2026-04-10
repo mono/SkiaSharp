@@ -2,68 +2,118 @@
 
 Hard-won findings from past Skia milestone updates. Check these proactively — they will save hours of debugging.
 
-## 1. `DEF_STRUCT_MAP` vs Type Aliases
+## C++ ↔ C API Layer
+
+### 1. `DEF_STRUCT_MAP` vs Type Aliases
 
 When upstream changes a C++ type from a `struct` to a `using` alias (e.g., `GrVkYcbcrConversionInfo` → `using VulkanYcbcrConversionInfo`), the `DEF_STRUCT_MAP` macro in `sk_types_priv.h` forward-declares `struct X`, which conflicts with the alias. Fix by switching to `DEF_MAP_WITH_NS(namespace, ActualType, CType)` and wrapping in the appropriate platform guard (e.g., `#if SK_VULKAN`).
 
-## 2. `git-sync-deps` emsdk Failure
+### 2. Struct Size `static_assert` Failures
 
-Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since SkiaSharp comments out emsdk in DEPS, this call fails. Set the environment variable `GIT_SYNC_DEPS_SKIP_EMSDK=1` in `scripts/cake/native-shared.cake` to prevent build failures during dependency sync.
+`sk_structs.cpp` asserts `sizeof(our_c_type) == sizeof(CppType)` for every struct mapped via `reinterpret_cast`. When upstream adds fields (e.g., `SkPngEncoder::Options` gaining gainmap pointers in m133), the assert fires. During analysis, proactively check every asserted struct against the target milestone — don't wait for the build to catch it.
 
-## 3. `BUILD.gn` Legacy Flags
+### 3. Custom Patches May Partially Survive Merges
 
-Upstream may introduce defines like `SK_DEFAULT_TYPEFACE_IS_EMPTY` and `SK_DISABLE_LEGACY_DEFAULT_TYPEFACE` that break SkiaSharp's C API, which still relies on legacy typeface/fontmgr APIs. Comment these defines out in `BUILD.gn` when they cause compilation errors in the C API shim layer.
+SkiaSharp adds custom methods to upstream headers (e.g., `SkTypeface::RefDefault()`). After merge, implementations in `.cpp` files may survive but header declarations can be silently removed by upstream changes.
 
-## 4. Custom Patches May Partially Survive Merges
+When header declarations are lost:
+1. **Check if upstream provides a replacement API** — if so, update the C API to use it
+2. **If no replacement exists**, re-add the declaration. But consider moving custom methods out of upstream headers and into our C API layer (`src/c/`) to avoid this recurring conflict
+3. **Never leave a mismatched header/implementation** — it compiles but crashes at runtime on some platforms
 
-SkiaSharp adds custom methods to upstream headers (e.g., `SkTypeface::RefDefault()`, `SkTypeface::UniqueID()`, `SkFontMgr::MakeDefault()`). After an upstream merge, implementations in `.cpp` files may survive but header declarations can be silently removed by upstream changes. Always verify that header declarations in `include/` still match the implementations in `src/`.
+### 4. Fontconfig `#ifdef` Guards
 
-## 5. Version Compatibility Errors Mean You Missed a Step
+Platform font manager calls (e.g., `SkFontMgr_New_FontConfig`) must be guarded by feature-availability macros (`SK_FONTMGR_FONTCONFIG_AVAILABLE`), not platform macros (`SK_BUILD_FOR_UNIX`). When `skia_use_fontconfig=false`, platform macros leave the symbol unresolved. The `-Wl,--no-undefined` linker flag catches this at link time.
 
-If you get `InvalidOperationException: The version of the native libSkiaSharp library (X) is incompatible`, this means the native milestone and C# expected milestone don't match. This is always caused by an incomplete Phase 6 (VERSIONS.txt not fully updated) or a stale build. Go back and fix the root cause — do NOT work around it with `--no-incremental` or by manually copying native libraries.
+## Build System
 
-## 6. Test Runner
+### 5. `git-sync-deps` emsdk Failure
 
-Tests use runtime `Skip.If()` calls to self-skip on unsupported platforms. Run all tests
-with `dotnet test tests/SkiaSharp.Tests.Console.sln` — this runs core, Vulkan, and Direct3D
-test projects. Backend-specific tests self-skip when hardware isn't available. CI handles
-WASM, Android, and iOS testing separately.
+Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since SkiaSharp comments out emsdk in DEPS, this call fails. Set `GIT_SYNC_DEPS_SKIP_EMSDK=1` in `scripts/cake/native-shared.cake`.
 
-## 7. HarfBuzz Binding Generation Failures
+### 6. `BUILD.gn` Legacy Flags
 
-HarfBuzz generated bindings may fail due to system header issues (`inttypes.h` not found). This is independent of SkiaSharp bindings — if it happens, restore the file from git with `git checkout -- binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` and continue. SkiaSharp bindings generate independently.
+Upstream progressively deprecates legacy APIs behind flags (e.g., `SK_DEFAULT_TYPEFACE_IS_EMPTY`, `SK_DISABLE_LEGACY_DEFAULT_TYPEFACE`). When these flags break SkiaSharp's C API:
 
-## 8. New C API Functions From Upstream
+1. **Check what the flag removes** — read the upstream commit that added it
+2. **If the C API uses the removed behavior**, update the C API to use the replacement API. This is the real fix — upstream is signaling that the old API will be removed entirely in a future milestone.
+3. **Only as a short-term bridge** (with a TODO comment and tracking issue), you may comment out the flag to unblock the build while you work on the proper fix. Never leave a commented-out flag without a plan to address it.
 
-Upstream may add new C API functions (e.g., `sk_surface_draw_with_sampling`) that weren't in the previous milestone. The regeneration step (`pwsh ./utils/generate.ps1`) picks these up automatically. Always review the diff of `*.generated.cs` files for new functions that may need corresponding C# wrappers in `binding/SkiaSharp/`.
+Also watch for renamed/removed GN flags between milestones — obsolete flags cause `Unknown GN flag` errors. Always diff the target `BUILD.gn` against the current one.
 
-## 9. DEPS: Fork-Customized Dependencies
+### 7. `.gitmodules` Branch Name
 
-SkiaSharp's fork often has **newer** dependency versions than upstream Skia (from custom security/bug-fix updates via the `native-dependency-update` skill). When merging upstream and resolving DEPS, do NOT blindly update all hashes to the upstream milestone's versions — you may **downgrade** dependencies and break the build.
+When the mono/skia target branch name changes, `.gitmodules` must be updated to track the new branch. Easy to forget; causes silent submodule tracking failures.
 
-**Check the skiasharp branch commit log** for custom dependency updates:
+## Dependencies & Bindings
+
+### 8. DEPS: Fork-Customized Dependencies
+
+SkiaSharp's fork often has **newer** dependency versions than upstream. When resolving DEPS conflicts, do NOT blindly take upstream's hashes — you may downgrade and break the build.
+
 ```bash
 git log --oneline skiasharp | grep -i "update\|bump\|libpng\|zlib\|expat\|brotli\|webp\|harfbuzz\|vulkan"
 ```
 
-For each dep with a custom update, **keep the fork's hash**. Only update deps that the fork hasn't customized. Common fork-customized deps: libwebp, brotli, expat, libpng, zlib, vulkanmemoryallocator, **harfbuzz**.
+Keep fork's hash for customized deps. Common ones: libwebp, brotli, expat, libpng, zlib, vulkanmemoryallocator, **harfbuzz**.
 
-> ⚠️ **HarfBuzz is ALWAYS a fork-customized dep.** HarfBuzz updates require hand-written C# delegate
-> proxies and must be done as a separate task via the `native-dependency-update` skill. During a Skia
-> milestone update, ALWAYS keep the fork's harfbuzz hash in DEPS and ALWAYS revert any changes to
-> `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs`.
+### 9. HarfBuzz — ALWAYS Separate
 
-**Symptoms of getting this wrong**: Build failures referencing missing source files (e.g., `palette.c` in libwebp), or HarfBuzz generated binding errors from a version mismatch.
-
-## 10. HarfBuzz Generated Bindings — ALWAYS Revert
-
-HarfBuzz updates are **always separate** from Skia milestone updates. When the harfbuzz DEPS version changes (even accidentally during a merge), the code generator picks up new APIs (paint/draw/colorline callbacks) that require hand-written delegate proxy implementations in `binding/HarfBuzzSharp/DelegateProxies.*.cs`. This causes `CS8795` errors for missing partial method implementations.
-
-**During a Skia milestone update, ALWAYS:**
-1. Keep the fork's harfbuzz hash in DEPS (do not accept upstream's version)
+HarfBuzz updates require hand-written C# delegate proxies and must be done via the `native-dependency-update` skill. During a milestone update, ALWAYS:
+1. Keep the fork's harfbuzz hash in DEPS
 2. Revert any generated HarfBuzz binding changes: `git checkout HEAD -- binding/HarfBuzzSharp/HarfBuzzApi.generated.cs`
 
-HarfBuzz version bumps should be done separately via the `native-dependency-update` skill, which includes writing the required delegate proxies.
+### 10. Enum Value Renumbering
+
+When upstream inserts new enum values mid-sequence, ALL subsequent values shift. This affects `sk_enums.cpp`, `Definitions.cs`, `EnumMappings.cs`, and any test hardcoding enum integers. Always regenerate bindings — never hand-edit enum values.
+
+## Diff Reading Traps
+
+### 11. Deleted Files ≠ Deleted Functionality
+
+Skia relocates files, it rarely removes them. Example: `src/utils/SkJSON.h` → `modules/jsonreader/SkJSONReader.h` in m133. Always search the target branch for where content moved before removing references:
+
+```bash
+git ls-tree -r upstream/chrome/m{TARGET} --name-only | grep -i "FILENAME_STEM"
+```
+
+### 12. Reordered Fields ≠ Removed Fields
+
+A symbol on a diff `-` line may have been moved within the same file, not removed. Always confirm on the target branch:
+
+```bash
+git show upstream/chrome/m{TARGET}:FILEPATH | grep "SYMBOL"
+```
+
+## Merge Strategy
+
+### 13. Genuine Merge Required
+
+Never use a tree-override merge (`git merge -s ours`, `git read-tree --reset`). This destroys `git blame` attribution for all C API files. Always resolve each conflict individually. Use `git merge --no-commit` for manual control.
+
+### 14. Conflict Resolution by File Category
+
+| File Category | Strategy |
+|--------------|----------|
+| `BUILD.gn` | **Combine both** — most complex; keep upstream structure AND SkiaSharp's platform flags/targets |
+| `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
+| `RELEASE_NOTES.md`, `infra/bots/` | **Take upstream** |
+| C API headers (`include/c/`) | **Keep SkiaSharp** — these don't exist upstream |
+| C API source (`src/c/`) | **Keep SkiaSharp + adapt** — fix includes and API calls in post-merge commits |
+
+## Testing
+
+### 15. Version Compatibility Errors
+
+`InvalidOperationException: The version of the native libSkiaSharp library (X) is incompatible` means VERSIONS.txt wasn't fully updated. Fix the root cause — do NOT work around it.
+
+### 16. Pixel Value Precision
+
+Upstream periodically improves color conversion precision, shifting expected pixel values by ±1. When pixel-exact test assertions break, check if upstream changed the conversion and update expected values.
+
+### 17. Test Runner
+
+Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaSharp.Tests.Console.sln` for the full suite. Backend-specific tests self-skip when hardware isn't available.
 
 ---
 
@@ -73,6 +123,11 @@ HarfBuzz version bumps should be done separately via the `native-dependency-upda
 |-------|-------|-----|
 | `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet cake --target=externals-{platform}` |
 | `error CS0246` missing type | Binding not regenerated | `pwsh ./utils/generate.ps1` |
-| Merge conflict in DEPS | Both forks updated deps independently | Keep our DEPS pins, accept upstream structure |
-| `LNK2001 unresolved external` | C function name mismatch | Verify C API function names match exactly |
-| Build fails after merge | Missing `#include` for moved headers | Check upstream header relocation notes |
+| `static_assert` sizeof failure | Upstream struct gained/lost fields | Update C API struct in `sk_types.h` |
+| `#include` file not found | Upstream moved file to new path | Search target branch, update path |
+| `LNK2001 unresolved external` | C function name mismatch or missing lib | Verify names; check system library linkage |
+| `Unknown GN flag` error | Obsolete build flag | Remove flag; diff target BUILD.gn |
+| `git blame` all from merge commit | Tree-override merge was used | Redo as genuine conflict-resolved merge |
+| Merge conflict in DEPS | Both forks updated deps | Keep our pins, accept upstream structure |
+| Enum values don't match | Mid-sequence insertion | Regenerate bindings — never hand-edit |
+| Pixel mismatch by ±1 | Upstream precision change | Update expected test values |
