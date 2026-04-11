@@ -67,6 +67,38 @@ def ensure_remote(cwd: str, name: str, url: str):
     run_git(["remote", "add", name, url], cwd=cwd)
 
 
+def load_json_at_git_ref(cwd: str, git_ref: str, path: str) -> dict:
+    """Load a JSON file from a specific git ref."""
+    result = subprocess.run(
+        ["git", "show", f"{git_ref}:{path}"],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Failed to read {path} at {git_ref}: {result.stderr.strip()}"
+        )
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as ex:
+        raise RuntimeError(
+            f"Failed to parse {path} at {git_ref} as JSON: {ex}"
+        ) from ex
+
+
+def extract_skia_milestone_from_cgmanifest(cgmanifest: dict):
+    """Extract the chrome/mNNN milestone from cgmanifest.json."""
+    for reg in cgmanifest.get("registrations", []):
+        comp = reg.get("component", {}).get("other", {})
+        if comp.get("name") == "skia":
+            version = comp.get("version", "")
+            match = re.search(r"chrome/(m\d+)", version)
+            if match:
+                return f"chrome/{match.group(1)}"
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run all mechanical checks for a Skia update review."
@@ -141,7 +173,58 @@ def main():
     eprint(f"   Head:  {pr['headRefOid']} ({pr['headRefName']})")
     eprint(f"   Base:  {pr['baseRefOid']} ({pr['baseRefName']})")
 
-    # 1b. Extract upstream branches from PR title
+    # 1b. Fetch companion SkiaSharp PR metadata
+    eprint(f"▸ Fetching companion SkiaSharp PR #{skiasharp_pr_number}...")
+    companion_pr_result = subprocess.run(
+        [
+            "gh", "pr", "view", str(skiasharp_pr_number),
+            "--repo", "mono/SkiaSharp",
+            "--json", "title,headRefName,headRefOid,baseRefName,baseRefOid,body,state,author",
+        ],
+        capture_output=True, text=True,
+    )
+    if companion_pr_result.returncode != 0:
+        raise RuntimeError(
+            f"Failed to fetch SkiaSharp PR #{skiasharp_pr_number}: "
+            f"{companion_pr_result.stderr.strip()}"
+        )
+    companion_pr = json.loads(companion_pr_result.stdout)
+
+    eprint(f"   Title: {companion_pr['title']}")
+    eprint(f"   Head:  {companion_pr['headRefOid']} ({companion_pr['headRefName']})")
+    eprint(f"   Base:  {companion_pr['baseRefOid']} ({companion_pr['baseRefName']})")
+
+    # 1c. Determine old/new upstream milestones
+    # Read cgmanifest.json from the companion PR base and head commits, not from the
+    # current working tree. This keeps the review correct even when the local repo is
+    # already checked out to the bumped milestone branch.
+    eprint("▸ Fetching SkiaSharp refs for companion PR base/head...")
+    companion_base_ref = companion_pr.get("baseRefName", "main")
+    run_git(["fetch", "origin", companion_base_ref, f"pull/{skiasharp_pr_number}/head"], cwd=repo_root)
+
+    companion_base_sha = companion_pr.get("baseRefOid", "").strip()
+    if not companion_base_sha or len(companion_base_sha) < 7:
+        result = subprocess.run(
+            ["git", "rev-parse", f"origin/{companion_base_ref}"],
+            cwd=repo_root, capture_output=True, text=True,
+        )
+        if result.returncode == 0:
+            companion_base_sha = result.stdout.strip()
+    if not companion_base_sha or len(companion_base_sha) < 7:
+        raise RuntimeError(
+            f"Could not resolve companion PR base SHA. "
+            f"baseRefOid={companion_pr.get('baseRefOid', '')!r}, "
+            f"baseRefName={companion_pr.get('baseRefName', '')!r}"
+        )
+
+    old_cgmanifest = load_json_at_git_ref(repo_root, companion_base_sha, "cgmanifest.json")
+    old_milestone = extract_skia_milestone_from_cgmanifest(old_cgmanifest)
+    if not old_milestone:
+        raise RuntimeError(
+            f"Could not determine old upstream milestone from companion PR base "
+            f"{companion_base_sha[:12]}:cgmanifest.json"
+        )
+
     # Match both "m122" and "milestone 122" patterns
     matches = re.findall(r"m(\d{3,})", pr["title"])
     if not matches:
@@ -150,36 +233,34 @@ def main():
         raise RuntimeError(
             f"Could not extract milestone from PR title: {pr['title']}. Expected 'mNNN' or 'milestone NNN' pattern."
         )
-    new_milestone = f"chrome/m{matches[-1]}"
+    title_milestone = f"chrome/m{matches[-1]}"
+
+    companion_head_sha = companion_pr.get("headRefOid", "").strip()
+    new_milestone = title_milestone
+    if companion_head_sha and len(companion_head_sha) >= 7:
+        new_cgmanifest = load_json_at_git_ref(repo_root, companion_head_sha, "cgmanifest.json")
+        new_milestone_from_cgmanifest = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
+        if new_milestone_from_cgmanifest:
+            if new_milestone_from_cgmanifest != title_milestone:
+                raise RuntimeError(
+                    f"Skia PR title implies {title_milestone}, but companion PR "
+                    f"#{skiasharp_pr_number} cgmanifest.json at {companion_head_sha[:12]} "
+                    f"records {new_milestone_from_cgmanifest}."
+                )
+            new_milestone = new_milestone_from_cgmanifest
+
     eprint(f"   New upstream: {new_milestone}")
-
-    # Determine old upstream from cgmanifest.json
-    cgmanifest_path = os.path.join(repo_root, "cgmanifest.json")
-    with open(cgmanifest_path) as f:
-        cgmanifest = json.load(f)
-
-    old_milestone = None
-    for reg in cgmanifest.get("registrations", []):
-        comp = reg.get("component", {}).get("other", {})
-        if comp.get("name") == "skia":
-            version = comp.get("version", "")
-            m = re.search(r"chrome/(m\d+)", version)
-            if m:
-                old_milestone = f"chrome/{m.group(1)}"
-                break
-
-    if not old_milestone:
-        raise RuntimeError("Could not determine old upstream milestone from cgmanifest.json")
     eprint(f"   Old upstream: {old_milestone}")
 
-    # 1c. Fetch git refs
+    # 1d. Fetch git refs
     eprint("▸ Fetching git refs...")
     ensure_remote(skia_root, "upstream", "https://github.com/google/skia.git")
     run_git(["fetch", "upstream", old_milestone, new_milestone], cwd=skia_root)
     # Fetch the base branch and the PR head via GitHub's PR ref. This works for
     # both same-repo and fork PRs — the branch name only exists on the fork's
     # remote, but refs/pull/{N}/head is always available on origin.
-    run_git(["fetch", "origin", "skiasharp", f"pull/{skia_pr_number}/head"], cwd=skia_root)
+    skia_base_ref = pr.get("baseRefName", "skiasharp")
+    run_git(["fetch", "origin", skia_base_ref, f"pull/{skia_pr_number}/head"], cwd=skia_root)
 
     # Verify upstream branches exist
     old_result = subprocess.run(
@@ -231,12 +312,11 @@ def main():
     eprint(f"   Old upstream: {old_upstream_sha}")
     eprint(f"   New upstream: {new_upstream_sha}")
 
-    # 1d. Check out SkiaSharp companion PR
+    # 1e. Check out SkiaSharp companion PR
     eprint(f"▸ Checking out SkiaSharp companion PR #{skiasharp_pr_number}...")
-    run_git(["fetch", "origin", f"pull/{skiasharp_pr_number}/head"], cwd=repo_root)
-    run_git(["checkout", "--detach", "FETCH_HEAD"], cwd=repo_root)
+    run_git(["checkout", "--detach", companion_head_sha], cwd=repo_root)
 
-    # 1e. Check out skia submodule at PR head
+    # 1f. Check out skia submodule at PR head
     eprint(f"▸ Checking out skia submodule at PR head: {pr_head_sha}")
     run_git(["checkout", pr_head_sha], cwd=skia_root)
     actual_sha = subprocess.run(
@@ -247,7 +327,7 @@ def main():
         raise RuntimeError(f"Submodule checkout mismatch: expected {pr_head_sha}, got {actual_sha}")
     eprint(f"   ✅ Submodule at {actual_sha}")
 
-    # 1f. Create output directory
+    # 1g. Create output directory
     if not output_dir:
         ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         output_dir = f"/tmp/skiasharp/skia-review/{ts}"
