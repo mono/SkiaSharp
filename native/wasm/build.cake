@@ -47,7 +47,6 @@ Task("libSkiaSharp")
         $"skia_use_harfbuzz=false " +
         $"skia_use_icu=false " +
         $"skia_use_piex=false " +
-        $"skia_use_sfntly=false " +
         $"skia_use_expat=true " +
         $"skia_use_libwebp_encode=true " +
         $"skia_use_system_expat=false " +

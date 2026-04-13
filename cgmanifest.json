@@ -8,7 +8,7 @@
         "type": "other",
         "other": {
           "name": "libpng",
-          "version": "1.6.44",
+          "version": "1.6.54",
           "downloadUrl": "https://github.com/glennrp/libpng"
         }
       }
@@ -135,12 +135,95 @@
       }
     },
     {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "vulkan-headers",
+          "version": "1.3.301",
+          "downloadUrl": "https://github.com/KhronosGroup/Vulkan-Headers"
+        }
+      }
+    },
+    {
+      "comment": "Supporting dependencies",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "piex",
+          "version": "0.0.0",
+          "downloadUrl": "https://android.googlesource.com/platform/external/piex"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE (Windows-only, WinUI). Cloned separately from Skia — version from scripts/VERSIONS.txt",
+      "component": {
+        "type": "git",
+        "git": {
+          "repositoryUrl": "https://github.com/google/angle.git",
+          "commitHash": "chromium/6275"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "angle",
+          "version": "chromium/6275",
+          "downloadUrl": "https://github.com/ArtifexSoftware/angle"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE submodule dependencies — versions from ANGLE DEPS at chromium/6275",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "angle-zlib",
+          "version": "1.3.0.1",
+          "downloadUrl": "https://chromium.googlesource.com/chromium/src/third_party/zlib"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "jsoncpp",
+          "version": "1.9.4",
+          "downloadUrl": "https://github.com/nicknaso/jsoncpp"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "astc-encoder",
+          "version": "573c475389bf",
+          "downloadUrl": "https://github.com/ARM-software/astc-encoder"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE vulkan-deps is a meta-repo pinning vulkan-headers, spirv-tools, spirv-cross, etc.",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "angle-vulkan-deps",
+          "version": "3834da2004ec",
+          "downloadUrl": "https://chromium.googlesource.com/vulkan-deps"
+        }
+      }
+    },
+    {
       "comment": "Main Skia repository reference",
       "component": {
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/mono/skia.git",
-          "commitHash": "491bcfca02505489dd744353cb495c4887356c59"
+          "commitHash": "8c99e432ff06e61c42cf99aa8f2cbe248d301b9a"
         }
       }
     },
@@ -150,12 +233,12 @@
         "type": "other",
         "other": {
           "name": "skia",
-          "version": "chrome/m119",
+          "version": "chrome/m132",
           "downloadUrl": "https://github.com/google/skia"
         }
       },
-      "chrome_milestone": 119,
-      "upstream_merge_commit": "fcb55886b914028a99f35fb0ba28e66ff82027e3"
+      "chrome_milestone": 132,
+      "upstream_merge_commit": "9ab7c2064b2b1ab22f856a7f0a8c3b3ae4cb89c7"
     }
   ]
 }

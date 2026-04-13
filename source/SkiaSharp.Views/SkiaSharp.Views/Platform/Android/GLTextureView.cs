@@ -106,7 +106,7 @@ namespace SkiaSharp.Views.Android
 				eglWindowSurfaceFactory = new DefaultWindowSurfaceFactory();
 			}
 			this.renderer = renderer;
-			glThread = new GLThread(thisWeakRef);
+			glThread = new GLThread(thisWeakRef, Width, Height);
 			glThread.Start();
 		}
 
@@ -211,7 +211,7 @@ namespace SkiaSharp.Views.Android
 				{
 					renderMode = glThread.GetRenderMode();
 				}
-				glThread = new GLThread(thisWeakRef);
+				glThread = new GLThread(thisWeakRef, Width, Height);
 				if (renderMode != Rendermode.Continuously)
 				{
 					glThread.SetRenderMode(renderMode);
@@ -713,12 +713,12 @@ namespace SkiaSharp.Views.Android
 			private bool surfaceSizeChanged = true;
 			// End of member variables protected by the sGLThreadManager monitor.
 
-			public GLThread(WeakReference<GLTextureView> glTextureViewWeakRef)
+			public GLThread(WeakReference<GLTextureView> glTextureViewWeakRef, int initialWidth, int initialHeight)
 			{
 				threadManager = new GLThreadManager();
 
-				width = 0;
-				height = 0;
+				width = initialWidth;
+				height = initialHeight;
 				requestRender = true;
 				renderMode = Rendermode.Continuously;
 				textureViewWeakRef = glTextureViewWeakRef;

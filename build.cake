@@ -231,7 +231,7 @@ Task ("tests-netfx")
     foreach ( var arch in new [] { "x86", "x64" }) {
         if (Skip(arch)) continue;
 
-        var tfm = "net472";
+        var tfm = "net48";
         var testAssemblies = new List<string> { "SkiaSharp.Tests.Console" };
         if (SUPPORT_VULKAN)
             testAssemblies.Add ("SkiaSharp.Vulkan.Tests.Console");

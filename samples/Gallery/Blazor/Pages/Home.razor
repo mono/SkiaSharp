@@ -65,6 +65,10 @@
         {
             <text>&nbsp;|&nbsp; Built: <strong><time datetime="@ts.UtcDateTime.ToString("o")">@ts.LocalDateTime.ToString("g")</time></strong></text>
         }
+        @if (SampleService.BuildFooter is { } footer)
+        {
+            <text>&nbsp;|&nbsp; @footer</text>
+        }
     </p>
 </div>
 

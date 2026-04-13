@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security Audit Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --bg: #f6f8fa; --border: #d0d7de; --muted: #57606a; --surface: #fff; }
+    body { background: var(--bg); color: #1f2328; }
+    .page-shell { max-width: 1200px; }
+    .sticky-header { position: sticky; top: 0; z-index: 1030; backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.94); border-bottom: 1px solid var(--border); }
+    .card { border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .status-pill { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 12px; }
+    .st-attention { background: #fee2e2; color: #991b1b; }
+    .st-undiscovered { background: #dbeafe; color: #1e40af; }
+    .st-false-positive { background: #f3f4f6; color: #6b7280; }
+    .st-clean { background: #dcfce7; color: #166534; }
+    .st-in-progress { background: #fef3c7; color: #92400e; }
+    .st-ready { background: #dcfce7; color: #166534; }
+    .sev-critical { color: #7f1d1d; font-weight: 700; }
+    .sev-high { color: #991b1b; font-weight: 600; }
+    .sev-medium { color: #92400e; }
+    .sev-low { color: #6b7280; }
+    .version-match { color: #166534; }
+    .version-mismatch { color: #991b1b; font-weight: 700; }
+    .finding-header { cursor: pointer; }
+    .finding-header:hover { background: #f3f4f6; }
+    .cve-table th { white-space: nowrap; font-size: 0.85rem; }
+    .cve-table td { font-size: 0.85rem; }
+    .next-step { border-left: 3px solid; padding-left: 12px; margin-bottom: 12px; }
+    .ns-high { border-color: #dc2626; }
+    .ns-medium { border-color: #f59e0b; }
+    .ns-low { border-color: #6b7280; }
+    .meta-table td, .meta-table th { font-size: 0.85rem; padding: 4px 8px; }
+    .overview-row { cursor: pointer; transition: background 0.15s; }
+    .overview-row:hover { background: #e8f0fe !important; }
+    .overview-mismatch { background: #fef2f2 !important; }
+    .overview-mismatch:hover { background: #fee2e2 !important; }
+    .overview-mismatch td { color: #991b1b; }
+    code { font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+<!--INJECT_DATA_HERE-->
+<div class="page-shell mx-auto px-3 py-4">
+
+  <!-- Header -->
+  <div class="sticky-header py-2 px-3 mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="mb-0"><i class="bi bi-shield-check me-2"></i>Security Audit Report</h4>
+        <small class="text-muted" id="header-subtitle"></small>
+      </div>
+      <div id="header-badges"></div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4" id="summary-cards"></div>
+
+  <!-- Dependency Overview (combined version + security status) -->
+  <div class="card mb-4">
+    <div class="card-header bg-white d-flex align-items-center">
+      <i class="bi bi-table me-2"></i><strong>Dependency Overview</strong>
+      <span class="ms-auto text-muted" id="overview-status"></span>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-sm table-hover mb-0 meta-table" id="overview-table">
+        <thead><tr>
+          <th>Dependency</th><th>Source</th><th>Current Version</th>
+          <th>Latest</th><th>Security</th><th>CVEs</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Findings -->
+  <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Findings</h5>
+  <div id="findings-container"></div>
+
+  <!-- Next Steps -->
+  <div class="card mb-4">
+    <div class="card-header bg-white"><i class="bi bi-list-check me-2"></i><strong>Next Steps</strong></div>
+    <div class="card-body" id="next-steps"></div>
+  </div>
+
+  <!-- Skia Upstream Info -->
+  <div class="card mb-4">
+    <div class="card-header bg-white"><i class="bi bi-git me-2"></i><strong>Skia Upstream Verification</strong></div>
+    <div class="card-body" id="upstream-info"></div>
+  </div>
+</div>
+
+<script>
+const STATUS_LABELS = {
+  needs_attention: ['🔴 Needs Attention', 'st-attention'],
+  undiscovered: ['🆕 Undiscovered', 'st-undiscovered'],
+  false_positive: ['⚪ False Positive', 'st-false-positive'],
+  clean: ['✅ Clean', 'st-clean'],
+  in_progress: ['🟡 In Progress', 'st-in-progress'],
+  ready_to_merge: ['✅ Ready', 'st-ready'],
+};
+
+const SEV_CLASS = { CRITICAL: 'sev-critical', HIGH: 'sev-high', MEDIUM: 'sev-medium', LOW: 'sev-low' };
+
+function sevClass(s) { return SEV_CLASS[(s||'').toUpperCase()] || 'sev-low'; }
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+
+function renderSummary(s) {
+  const cards = [
+    ['Needs Attention', s.needsAttention, 'danger', 'exclamation-triangle'],
+    ['Undiscovered', s.undiscovered, 'primary', 'search'],
+    ['False Positive', s.falsePositive, 'secondary', 'x-circle'],
+    ['Clean', s.clean, 'success', 'check-circle'],
+  ];
+  const el = document.getElementById('summary-cards');
+  el.innerHTML = cards.map(([label, count, color, icon]) => `
+    <div class="col-6 col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-2 text-${color}"><i class="bi bi-${icon}"></i></div>
+        <div class="fs-1 fw-bold">${count}</div>
+        <div class="text-muted small">${label}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderOverview(vers, findings) {
+  const tbody = document.querySelector('#overview-table tbody');
+  const findingMap = {};
+  (findings || []).forEach((f, i) => { findingMap[f.dependency] = { ...f, idx: i }; });
+
+  // Enrich each entry with CVE count and finding index
+  const enriched = (vers || []).map(v => {
+    const f = findingMap[v.name];
+    const cveTotal = f ? (f.cves||[]).length + (f.nonChromeCves||[]).length : 0;
+    return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1 };
+  });
+
+  // Split into groups: has CVEs vs no CVEs, each sorted by name
+  const withCves = enriched.filter(e => e.cveTotal > 0).sort((a,b) => a.name.localeCompare(b.name));
+  const noCves = enriched.filter(e => e.cveTotal === 0).sort((a,b) => a.name.localeCompare(b.name));
+
+  let mismatches = 0;
+
+  function buildRow(v) {
+    if (!v.match) mismatches++;
+    const rowCls = v.match ? 'overview-row' : 'overview-row overview-mismatch';
+    const onclick = v.findingIdx >= 0 ? `onclick="document.getElementById('finding-${v.findingIdx}').scrollIntoView({behavior:'smooth',block:'start'}); var col=document.getElementById('finding-${v.findingIdx}'); if(!col.classList.contains('show')){col.previousElementSibling.click();}"` : '';
+
+    let secBadge = '<span class="status-pill st-clean">✅ Clean</span>';
+    let cveCount = '';
+    let latest = v.latestVersion || '';
+    if (v.f) {
+      const [label, cls] = STATUS_LABELS[v.f.status] || ['?', ''];
+      secBadge = `<span class="status-pill ${cls}">${label}</span>`;
+      if (v.cveTotal > 0) cveCount = `<span class="badge bg-danger">${v.cveTotal}</span>`;
+      if (v.f.latestVersion) latest = v.f.latestVersion;
+    }
+
+    const versionDisplay = !v.match
+      ? `${esc(v.verifiedVersion)} <span class="text-danger small">(cgmanifest: ${esc(v.cgmanifestVersion||'missing')})</span>`
+      : esc(v.verifiedVersion);
+
+    return `<tr class="${rowCls}" ${onclick}>
+      <td><strong>${esc(v.name)}</strong></td>
+      <td class="text-muted small">${esc(v.source || 'Skia DEPS')}</td>
+      <td>${versionDisplay}</td>
+      <td>${latest ? esc(latest) : '<span class="text-muted">—</span>'}</td>
+      <td>${secBadge}</td>
+      <td>${cveCount}</td>
+    </tr>`;
+  }
+
+  function groupHeader(label, count) {
+    return `<tr class="table-light"><td colspan="6" class="fw-bold small text-muted py-1 px-2"><i class="bi bi-${count > 0 ? 'exclamation-triangle text-danger' : 'check-circle text-success'} me-1"></i>${label} (${count})</td></tr>`;
+  }
+
+  let html = '';
+  html += groupHeader('Dependencies with CVEs', withCves.length);
+  html += withCves.map(buildRow).join('');
+  html += groupHeader('Clean dependencies', noCves.length);
+  html += noCves.map(buildRow).join('');
+
+  tbody.innerHTML = html;
+  const total = enriched.length;
+  const cgMissing = enriched.filter(v => !v.cgmanifestVersion).length;
+  let statusText = mismatches === 0 && cgMissing === 0
+    ? `✅ All ${total} dependencies verified`
+    : `${total} deps`;
+  if (mismatches > 0) statusText += ` · ❌ ${mismatches} version mismatch${mismatches > 1 ? 'es' : ''}`;
+  if (cgMissing > 0) statusText += ` · ⚠️ ${cgMissing} missing from cgmanifest`;
+  document.getElementById('overview-status').textContent = statusText;
+}
+
+function renderCveTable(cves, columns) {
+  if (!cves || cves.length === 0) return '';
+  const hdrs = columns.map(c => `<th>${c.label}</th>`).join('');
+  const rows = cves.map(cve => {
+    const cells = columns.map(c => {
+      const val = cve[c.key] || '';
+      if (c.key === 'severity' || c.key === 'cvss') {
+        return `<td class="${sevClass(cve.severity)}">${esc(String(val))}</td>`;
+      }
+      if (c.key === 'id') {
+        return `<td><a href="https://nvd.nist.gov/vuln/detail/${esc(val)}" target="_blank">${esc(val)}</a></td>`;
+      }
+      return `<td>${esc(String(val))}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+  return `<table class="table table-sm cve-table mb-2"><thead><tr>${hdrs}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderFinding(f, idx) {
+  const [statusLabel, statusCls] = STATUS_LABELS[f.status] || ['?', ''];
+  const hasCves = (f.cves && f.cves.length > 0) || (f.nonChromeCves && f.nonChromeCves.length > 0);
+  const collapseId = `finding-${idx}`;
+
+  let body = '';
+
+  // Info table
+  body += `<table class="table table-sm meta-table mb-3"><tbody>`;
+  if (f.currentVersion) body += `<tr><th>Current</th><td>${esc(f.currentVersion)}</td></tr>`;
+  if (f.fixVersion) body += `<tr><th>Min Fix</th><td>${esc(f.fixVersion)}</td></tr>`;
+  if (f.latestVersion) body += `<tr><th>Latest</th><td>${esc(f.latestVersion)}</td></tr>`;
+  if (f.issues && f.issues.length) body += `<tr><th>Issues</th><td>${f.issues.map(i => `<a href="https://github.com/mono/SkiaSharp/issues/${i}" target="_blank">#${i}</a>`).join(', ')}</td></tr>`;
+  if (f.prs && f.prs.length) body += `<tr><th>PRs</th><td>${f.prs.map(p => `<a href="https://github.com/mono/SkiaSharp/pull/${p}" target="_blank">#${p}</a>`).join(', ')}</td></tr>`;
+  body += `</tbody></table>`;
+
+  // Chrome CVEs
+  if (f.cves && f.cves.length > 0) {
+    body += `<h6>CVEs</h6>`;
+    body += renderCveTable(f.cves, [
+      {key:'id', label:'CVE'}, {key:'fixedIn', label:'Fixed In'},
+      {key:'severity', label:'Severity'}, {key:'cvss', label:'CVSS'},
+      {key:'description', label:'Description'}, {key:'assessment', label:'Status'}
+    ]);
+  }
+
+  // Non-Chrome CVEs
+  if (f.nonChromeCves && f.nonChromeCves.length > 0) {
+    body += `<h6 class="mt-3">Non-Chrome CVEs (Manual Review)</h6>`;
+    body += renderCveTable(f.nonChromeCves, [
+      {key:'id', label:'CVE'}, {key:'severity', label:'Severity'},
+      {key:'description', label:'Description'}, {key:'source', label:'Source'},
+      {key:'assessment', label:'Status'}
+    ]);
+  }
+
+  // Action + Notes
+  if (f.action) body += `<div class="alert alert-info mt-3 py-2 small"><strong>Action:</strong> ${esc(f.action)}</div>`;
+  if (f.notes) body += `<div class="text-muted small">${esc(f.notes)}</div>`;
+  // False positive reason
+  if (f.status === 'false_positive' && f.falsePositiveReason) {
+    body += `<div class="alert alert-secondary mt-2 py-2 small"><strong>Reason:</strong> ${esc(f.falsePositiveReason)}</div>`;
+  }
+
+  return `
+    <div class="card mb-3">
+      <div class="card-header bg-white finding-header d-flex align-items-center" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+        <span class="me-2 fw-bold">${idx + 1}.</span>
+        <span class="status-pill ${statusCls} me-2">${statusLabel}</span>
+        <strong class="me-auto">${esc(f.dependency)}</strong>
+        ${hasCves ? `<span class="badge bg-danger">${(f.cves||[]).length + (f.nonChromeCves||[]).length} CVEs</span>` : ''}
+        <i class="bi bi-chevron-down ms-2"></i>
+      </div>
+      <div class="collapse ${f.status === 'clean' || f.status === 'false_positive' ? '' : 'show'}" id="${collapseId}">
+        <div class="card-body">${body}</div>
+      </div>
+    </div>`;
+}
+
+function renderNextSteps(steps) {
+  const el = document.getElementById('next-steps');
+  el.innerHTML = steps.map(s => {
+    const cls = (s.severity||'').toUpperCase() === 'HIGH' || (s.severity||'').toUpperCase() === 'CRITICAL'
+      ? 'ns-high' : (s.severity||'').toUpperCase() === 'MEDIUM' ? 'ns-medium' : 'ns-low';
+    return `<div class="next-step ${cls}">
+      <div class="d-flex align-items-center">
+        <span class="badge bg-secondary me-2">${s.priority}</span>
+        <strong>${esc(s.action)}</strong>
+        <span class="ms-2 ${sevClass(s.severity)} small">${esc(s.severity||'')}</span>
+      </div>
+      <div class="text-muted small">${esc(s.reason)}</div>
+      ${s.command ? `<code class="small">${esc(s.command)}</code>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderUpstream(meta) {
+  const el = document.getElementById('upstream-info');
+  el.innerHTML = `<table class="table table-sm meta-table mb-0"><tbody>
+    <tr><th>Milestone</th><td>m${meta.skiaMilestone} (verified from SkMilestone.h)</td></tr>
+    <tr><th>Fork Commit</th><td><code><a href="https://github.com/mono/skia/commit/${meta.skiaSubmoduleCommit}" target="_blank">${meta.skiaSubmoduleCommit}</a></code></td></tr>
+    <tr><th>Upstream Commit</th><td><code><a href="https://github.com/google/skia/commit/${meta.skiaUpstreamCommit}" target="_blank">${meta.skiaUpstreamCommit}</a></code></td></tr>
+    <tr><th>Ancestry Verified</th><td>${meta.upstreamVerified ? '✅ Yes' : '❌ No'}</td></tr>
+  </tbody></table>`;
+}
+
+// Boot
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof DATA === 'undefined') { document.body.innerHTML = '<p class="p-4 text-danger">No DATA found. JSON not injected.</p>'; return; }
+  const d = DATA;
+  document.getElementById('header-subtitle').textContent =
+    `${d.meta.date} · Skia m${d.meta.skiaMilestone} · ${d.summary.totalCves} CVEs analyzed`;
+  document.getElementById('header-badges').innerHTML =
+    `<span class="badge bg-${d.summary.highestSeverity === 'CRITICAL' ? 'danger' : d.summary.highestSeverity === 'HIGH' ? 'warning' : 'info'}">${d.summary.highestSeverity}</span>`;
+  renderSummary(d.summary);
+  renderOverview(d.versionVerification, d.findings);
+  const container = document.getElementById('findings-container');
+  container.innerHTML = d.findings.map((f, i) => renderFinding(f, i)).join('');
+  renderNextSteps(d.nextSteps);
+  renderUpstream(d.meta);
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

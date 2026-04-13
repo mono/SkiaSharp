@@ -1,0 +1,69 @@
+{
+  "skill_name": "security-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "run a security audit",
+      "expected_output": "A complete security audit report with JSON + HTML outputs, covering all native dependencies with verified versions, CVE queries, false positive checks, and prioritized next steps. The Skia milestone must be verified from SkMilestone.h, not cgmanifest.json.",
+      "files": [],
+      "expectations": [
+        "The audit reads the actual submodule commit via 'git submodule status externals/skia' or equivalent, not just cgmanifest.json",
+        "The audit reads SkMilestone.h from the actual submodule (either via file read or GitHub API at the submodule commit SHA) to determine the real Skia milestone number",
+        "The audit identifies the upstream google/skia merge commit by examining git merge history or fetching the upstream chrome/mNNN branch, rather than only using cgmanifest.json upstream_merge_commit",
+        "The audit reads the DEPS file from the actual submodule commit to get dependency commit hashes",
+        "The audit verifies at least 3 third-party dependency versions by reading version headers from Chromium mirrors or local files (not just trusting cgmanifest.json)",
+        "The audit reports any mismatches found between cgmanifest.json claimed versions and actual verified versions",
+        "The audit queries the NVD API with keywordSearch=Skia to find Skia-specific CVEs",
+        "The audit classifies Skia CVEs using the verified milestone (from SkMilestone.h), not the cgmanifest.json chrome_milestone value",
+        "The audit searches for CVEs affecting each security-relevant third-party dependency (at minimum: libpng, zlib, freetype, libexpat, libwebp, harfbuzz, libjpeg-turbo, brotli)",
+        "The audit checks known false positives: MiniZip in zlib is NOT compiled and CVE-2023-45853 should be marked as false positive",
+        "The audit checks whether Android SkiaRenderEngine CVEs are marked as not applicable to SkiaSharp",
+        "The audit searches mono/SkiaSharp GitHub issues for existing security-related reports (CVE numbers, 'security', 'vulnerability')",
+        "The audit produces a JSON file conforming to references/report-schema.md with meta, summary, versionVerification, findings, and nextSteps keys",
+        "The JSON file contains a meta object with skiaMilestone, skiaSubmoduleCommit, skiaUpstreamCommit, and upstreamVerified fields",
+        "The JSON findings array contains CVE objects with id, severity, cvss, fixedIn, description, source, and assessment fields",
+        "The audit runs render-security-audit.py to produce a self-contained HTML report from the JSON",
+        "The HTML file exists and is a valid HTML document (contains DOCTYPE, bootstrap, and the injected DATA)",
+        "The final markdown summary includes a Summary table with status counts",
+        "The final markdown lists findings sorted by priority: user-reported+no-PR first, then undiscovered CVEs, then false positives",
+        "The final markdown includes a Next Steps section with specific actionable recommendations",
+        "For Skia CVEs, the report includes a Chrome-versioned CVEs table showing CVE ID, Fixed-In milestone, Severity, and Description",
+        "The report correctly identifies which Skia CVEs are 'potentially affected' (fix milestone > our verified milestone) vs 'already fixed' (fix milestone <= our verified milestone)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "what CVEs need fixing in our native dependencies",
+      "expected_output": "A focused CVE analysis for all native dependencies showing which CVEs affect SkiaSharp and which are false positives, with version verification against the actual submodule state.",
+      "files": [],
+      "expectations": [
+        "The response verifies the actual Skia milestone from SkMilestone.h rather than just reading cgmanifest.json",
+        "The response queries the NVD API for Skia CVEs and extracts Chrome fix milestones from the CPE configuration data",
+        "The response searches for CVEs in at least 6 different third-party dependencies via web search",
+        "The response distinguishes between CVEs that are actually exploitable through SkiaSharp vs those that only affect Chrome/Android paths",
+        "The response identifies the zlib/MiniZip CVE-2023-45853 as a false positive since Skia does not compile MiniZip",
+        "The response includes CVSS severity scores for identified CVEs",
+        "The response identifies the minimum upstream Skia milestone needed to fix the most critical CVE",
+        "The response verifies at least one third-party dependency version from actual DEPS/header data rather than only trusting cgmanifest.json"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "check our security vulnerability status - make sure you verify the actual versions we're using, don't just trust what cgmanifest.json says",
+      "expected_output": "A security status report that explicitly verifies dependency versions against the real submodule state, highlights any cgmanifest.json drift, and provides CVE exposure analysis.",
+      "files": [],
+      "expectations": [
+        "The audit explicitly reads 'git submodule status externals/skia' or uses the GitHub API to get the real submodule commit hash",
+        "The audit reads SkMilestone.h and reports the actual milestone number found there",
+        "The audit compares the SkMilestone.h value against cgmanifest.json and explicitly notes whether they match or differ",
+        "The audit reads the DEPS file at the actual submodule commit and extracts at least 5 dependency commit hashes",
+        "The audit fetches version headers from at least 3 dependencies via Chromium mirror URLs or local file reads to verify actual versions",
+        "If any cgmanifest.json version doesn't match the actual version, the report explicitly flags this as a finding with both the claimed and actual values",
+        "The audit queries both the NVD API (for Skia) and web searches (for third-party deps) for CVE information",
+        "The report includes the actual mono/skia fork commit AND the upstream google/skia commit (not just one of them)",
+        "The report uses the verified milestone (not cgmanifest.json) when classifying which Skia CVEs are potentially affected vs already fixed",
+        "The report ends with prioritized, actionable next steps"
+      ]
+    }
+  ]
+}

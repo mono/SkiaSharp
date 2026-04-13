@@ -494,7 +494,17 @@ namespace SkiaSharp.Tests
 			using var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, fontfile));
 			font.Typeface = typeface;
 
-			Assert.Same(typeface, font.Typeface);
+			// In Skia m132, attempting to load woff2 files will still create a non-null typeface
+			// with an empty family name
+			if (typeface == null || string.IsNullOrEmpty(typeface?.FamilyName))
+			{
+				var result = font.Typeface;
+				Assert.True(result == null || ReferenceEquals(result, typeface) || string.IsNullOrEmpty(result?.FamilyName));
+			}
+			else
+			{
+				Assert.Same(typeface, font.Typeface);
+			}
 		}
 	}
 }
