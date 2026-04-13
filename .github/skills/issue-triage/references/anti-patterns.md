@@ -9,7 +9,7 @@
 **If you edit a source file during triage, you have FAILED.**
 
 Do NOT create, edit, or run any of these: `.cs`, `.csproj`, `.cpp`, `.h`, `.json` (source),
-`.sln`, `.targets`, `.props`. Do NOT run `dotnet build`, `dotnet test`, `dotnet cake`, or
+`.sln`, `.targets`, `.props`. Do NOT run `dotnet build`, `dotnet test`, `dotnet run --file build.cs`, or
 execute any reporter code.
 
 If reproduction is needed, set `suggestedAction: "needs-investigation"` and stop — that is

@@ -71,7 +71,7 @@ HarfBuzz version bumps should be done separately via the `native-dependency-upda
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet cake --target=externals-{platform}` |
+| `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet run --file build.cs -- --target=externals-{platform}` |
 | `error CS0246` missing type | Binding not regenerated | `pwsh ./utils/generate.ps1` |
 | Merge conflict in DEPS | Both forks updated deps independently | Keep our DEPS pins, accept upstream structure |
 | `LNK2001 unresolved external` | C function name mismatch | Verify C API function names match exactly |

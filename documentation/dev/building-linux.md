@@ -27,10 +27,10 @@ The easiest way to build is using the Cake build script:
 
 ```bash
 # Download dependencies and build native library
-dotnet cake --target=externals-linux
+dotnet run --file build.cs -- --target=externals-linux
 
 # Or build everything including managed code
-dotnet cake --target=everything
+dotnet run --file build.cs -- --target=everything
 ```
 
 ### Manual Building

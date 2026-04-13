@@ -355,14 +355,14 @@ For guidance on specific types of fixes, see:
 ### If Modified Native Code
 
 ```bash
-dotnet cake --target=externals-macos --arch=arm64   # macOS ARM64
-dotnet cake --target=externals-linux --arch=arm64   # Linux ARM64 (in Docker)
+dotnet run --file build.cs -- --target=externals-macos --arch=arm64   # macOS ARM64
+dotnet run --file build.cs -- --target=externals-linux --arch=arm64   # Linux ARM64 (in Docker)
 ```
 
 ### If Modified C# Only
 
 ```bash
-dotnet cake --target=externals-download  # If output/native/ empty
+dotnet run --file build.cs -- --target=externals-download  # If output/native/ empty
 ```
 
 ### Write Regression Test

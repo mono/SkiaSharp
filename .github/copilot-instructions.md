@@ -28,7 +28,7 @@ Before any other command works, ensure native binaries exist:
 
 ```bash
 # Run if output/native/ is empty
-dotnet cake --target=externals-download
+dotnet run --file build.cs -- --target=externals-download
 ```
 
 ### 2. Never Edit Generated Files
@@ -90,12 +90,12 @@ Single source of truth for all commands:
 
 | Task | Command |
 |------|---------|
-| **Bootstrap (C#-only work)** | `dotnet cake --target=externals-download` |
-| **Build Native (macOS ARM64)** | `dotnet cake --target=externals-macos --arch=arm64` |
-| **Build Native (macOS Intel)** | `dotnet cake --target=externals-macos --arch=x64` |
-| **Build Native (Windows x64)** | `dotnet cake --target=externals-windows --arch=x64` |
-| **Build Native (Linux x64)** | `dotnet cake --target=externals-linux --arch=x64` |
-| **Build Native (Linux ARM64)** | `dotnet cake --target=externals-linux --arch=arm64` |
+| **Bootstrap (C#-only work)** | `dotnet run --file build.cs -- --target=externals-download` |
+| **Build Native (macOS ARM64)** | `dotnet run --file build.cs -- --target=externals-macos --arch=arm64` |
+| **Build Native (macOS Intel)** | `dotnet run --file build.cs -- --target=externals-macos --arch=x64` |
+| **Build Native (Windows x64)** | `dotnet run --file build.cs -- --target=externals-windows --arch=x64` |
+| **Build Native (Linux x64)** | `dotnet run --file build.cs -- --target=externals-linux --arch=x64` |
+| **Build Native (Linux ARM64)** | `dotnet run --file build.cs -- --target=externals-linux --arch=arm64` |
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
@@ -109,7 +109,7 @@ Single source of truth for all commands:
 | Dependencies (`externals/skia/DEPS`) | **`externals-{platform}` (MUST rebuild natives)** |
 
 > **🛑 CRITICAL:** If you modify ANY native code (C API headers/implementations), you MUST rebuild 
-> the native library with `dotnet cake --target=externals-{platform}`. Using `externals-download`
+> the native library with `dotnet run --file build.cs -- --target=externals-{platform}`. Using `externals-download`
 > after native changes will cause `EntryPointNotFoundException` at runtime because the downloaded
 > binaries don't contain your new functions.
 
@@ -119,7 +119,7 @@ Single source of truth for all commands:
 
 | Problem | Command |
 |---------|---------|
-| Clean rebuild | `dotnet cake --target=clean && dotnet cake --target=externals-download` |
+| Clean rebuild | `dotnet run --file build.cs -- --target=clean && dotnet run --file build.cs -- --target=externals-download` |
 | Reset submodule | `git submodule update --init --recursive` |
 
 ---
@@ -322,7 +322,7 @@ public void FeatureWorks()
 | `AccessViolationException` | Memory management bug | Check disposal patterns |
 | `NullReferenceException` | Factory returned null | Check C API return value |
 | Random crashes | Threading violation | Check Canvas/Paint thread scope |
-| **`EntryPointNotFoundException`** | **Native library not rebuilt after C API change** | **Run `dotnet cake --target=externals-{platform}`** |
+| **`EntryPointNotFoundException`** | **Native library not rebuilt after C API change** | **Run `dotnet run --file build.cs -- --target=externals-{platform}`** |
 
 See [documentation/dev/debugging-methodology.md](../documentation/dev/debugging-methodology.md).
 

@@ -70,19 +70,19 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 The latest master build bits can be downloaded by running the `externals-download` target:
 
 ```
-> dotnet cake --target=externals-download
+> dotnet run --file build.cs -- --target=externals-download
 ```
 
 If you need a specific build, you can specify the commit SHA from the git history:
 
 ```
-> dotnet cake --target=externals-download --gitSha=<git-sha>
+> dotnet run --file build.cs -- --target=externals-download --gitSha=<git-sha>
 ```
 
 If you want the latest from a specific branch, you can also pass the branch name:
 
 ```
-> dotnet cake --target=externals-download --gitBranch=<git-branch>
+> dotnet run --file build.cs -- --target=externals-download --gitBranch=<git-branch>
 ```
 
 
@@ -97,7 +97,7 @@ The **`SkiaSharpSource.sln`** solution is primarily for working with platform-sp
 Once you are finished making changes, you can run the `tests` target and make sure that the tests will pass on CI. There is also the `samples` and `nuget` targets. By adding the `--skipExternals=all` argument, you can let the bootstrapper know that it should _not_ build any native bits, but rather use the bits that were downloaded.
 
 ```
-> dotnet cake --target=everything --skipExternals=all
+> dotnet run --file build.cs -- --target=everything --skipExternals=all
 ```
 
 ## Native Building
@@ -140,28 +140,28 @@ Build native libraries for specific platforms using Cake targets:
 
 ```bash
 # macOS (Apple Silicon)
-dotnet cake --target=externals-macos --arch=arm64
+dotnet run --file build.cs -- --target=externals-macos --arch=arm64
 
 # macOS (Intel)
-dotnet cake --target=externals-macos --arch=x64
+dotnet run --file build.cs -- --target=externals-macos --arch=x64
 
 # iOS (device)
-dotnet cake --target=externals-ios
+dotnet run --file build.cs -- --target=externals-ios
 
 # iOS Simulator
-dotnet cake --target=externals-ios-simulator --arch=arm64
+dotnet run --file build.cs -- --target=externals-ios-simulator --arch=arm64
 
 # Android (ARM64)
-dotnet cake --target=externals-android --arch=arm64
+dotnet run --file build.cs -- --target=externals-android --arch=arm64
 
 # Android (x86_64 for emulator)
-dotnet cake --target=externals-android --arch=x64
+dotnet run --file build.cs -- --target=externals-android --arch=x64
 
 # Windows (x64)
-dotnet cake --target=externals-windows --arch=x64
+dotnet run --file build.cs -- --target=externals-windows --arch=x64
 
 # Linux (requires Docker)
-dotnet cake --target=externals-linux --arch=x64
+dotnet run --file build.cs -- --target=externals-linux --arch=x64
 ```
 
 > **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
@@ -169,6 +169,6 @@ dotnet cake --target=externals-linux --arch=x64
 ## Generating Documentation
 
 ```
-dotnet cake --target=docs-download-output [--gitSha=<git-sha> | --gitBranch=<git-branch>]
-dotnet cake --target=update-docs
+dotnet run --file build.cs -- --target=docs-download-output [--gitSha=<git-sha> | --gitBranch=<git-branch>]
+dotnet run --file build.cs -- --target=update-docs
 ```

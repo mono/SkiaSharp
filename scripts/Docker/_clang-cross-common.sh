@@ -6,7 +6,7 @@ set -ex
 # $2 - The target architecture to build for     [ arm | arm64 | riscv64 | x86 | x64 | loongarch64 ]
 # $3 - The ABI                                  [ gnu | musl ]
 # $4 - The variant                              [ "" | alpine ]
-# $5 - Extra arguments to pass to dotnet cake
+# $5 - Extra arguments to pass to dotnet run --file build.cs
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -50,4 +50,4 @@ esac
 (cd $DIR/../.. && 
     docker run --rm --name skiasharp-linux-$ABI-cross-$ARCH --volume $(pwd):/work skiasharp-linux-$ABI-cross-$ARCH /bin/bash -c " \
         dotnet tool restore ; \
-        dotnet cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH $VARIANT $ADDITIONAL_ARGS $EXTRA_ARGS ")
+        dotnet run --file build.cs -- --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH $VARIANT $ADDITIONAL_ARGS $EXTRA_ARGS ")

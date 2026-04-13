@@ -73,7 +73,7 @@ For Windows desktop bugs, Phase 3C uses the repo's WPF or WinUI sample:
 ```bash
 # Return to the SkiaSharp repo root
 cd "$(git rev-parse --show-toplevel)"
-[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet run --file build.cs -- --target=externals-download
 
 # WPF sample (project references local SkiaSharp + Views.WPF source)
 dotnet build samples/Basic/WPF/SkiaSharpSample/SkiaSharpSample.csproj

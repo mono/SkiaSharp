@@ -95,7 +95,7 @@ When Phase 3C requires testing against the main branch source:
 ```bash
 # Return to the SkiaSharp repo root
 cd "$(git rev-parse --show-toplevel)"
-[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet run --file build.cs -- --target=externals-download
 
 # Build and run the console sample (uses project references to local source)
 dotnet build samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj

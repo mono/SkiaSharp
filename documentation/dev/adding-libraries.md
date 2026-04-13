@@ -127,7 +127,7 @@ NuGet packages are built using **SDK-style `dotnet pack`** directly from the .cs
 To pack all NuGets:
 
 ```bash
-dotnet cake --target=nuget
+dotnet run --file build.cs -- --target=nuget
 ```
 
 The output is placed in `output/nugets/`.

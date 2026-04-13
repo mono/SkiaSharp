@@ -61,13 +61,13 @@ The gallery requires SkiaSharp NuGet packages from CI. Building locally:
 
 ```bash
 # 1. Download CI packages
-dotnet cake --target=docs-download-output
+dotnet run --file build.cs -- --target=docs-download-output
 
 # 2. Detect the version
 #    Look at output/nugets/ for the SkiaSharp package version
 
 # 3. Generate samples (converts ProjectReference → PackageReference)
-dotnet cake --target=samples-generate \
+dotnet run --file build.cs -- --target=samples-generate \
   --previewLabel="preview.0" \
   --buildNumber="76"
 

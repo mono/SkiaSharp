@@ -22,7 +22,7 @@
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": {
 		"packages": ".devcontainer/packages.sh",
-		"native": "dotnet tool restore && dotnet cake --target externals-download",
+		"native": "dotnet tool restore && dotnet run --file build.cs -- --target externals-download",
 		"tests": "dotnet build tests/SkiaSharp.Tests.Console.sln",
 	},
 
