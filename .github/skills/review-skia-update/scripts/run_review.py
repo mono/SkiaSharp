@@ -134,6 +134,21 @@ def main():
     skia_root = os.path.join(repo_root, "externals", "skia")
 
     # =========================================================================
+    # Pre-flight — Ensure submodule is initialised
+    # =========================================================================
+    # In worktree environments the skia submodule may not be initialised yet
+    # (no .git file / dir inside externals/skia). Run submodule update so the
+    # dirty-tree check below can inspect the submodule properly.
+    skia_git_indicator = os.path.join(skia_root, ".git")
+    if not os.path.exists(skia_git_indicator):
+        eprint("▸ Initialising skia submodule (not yet present)...")
+        run_git(["submodule", "update", "--init", "externals/skia"], cwd=repo_root)
+
+    # Verify submodule origin points at mono/skia (worktrees sometimes inherit
+    # the parent repo's remote instead).
+    ensure_remote(skia_root, "origin", "https://github.com/mono/skia.git")
+
+    # =========================================================================
     # Pre-flight — Ensure clean working trees
     # =========================================================================
     for label, cwd in [("SkiaSharp", repo_root), ("skia submodule", skia_root)]:
@@ -327,7 +342,38 @@ def main():
         raise RuntimeError(f"Submodule checkout mismatch: expected {pr_head_sha}, got {actual_sha}")
     eprint(f"   ✅ Submodule at {actual_sha}")
 
-    # 1g. Create output directory
+    # 1g. Sync third-party dependencies (harfbuzz, freetype, etc.)
+    # These live under externals/skia/third_party/externals/ and are fetched
+    # by Skia's DEPS mechanism, not git submodules. The cake task validates
+    # milestone/increment versions and sets GIT_SYNC_DEPS_SKIP_EMSDK=1.
+    eprint("▸ Syncing third-party dependencies (dotnet cake git-sync-deps)...")
+    sync_result = subprocess.run(
+        ["dotnet", "cake", "--target=git-sync-deps"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    for line in sync_result.stdout.strip().split("\n"):
+        if line and ("@" in line or "Task" in line or "Total:" in line or "error" in line.lower()):
+            eprint(f"   {line.strip()}")
+    if sync_result.returncode != 0:
+        eprint(f"   ❌ dotnet cake git-sync-deps failed (exit {sync_result.returncode})")
+        for line in sync_result.stderr.strip().split("\n"):
+            if line:
+                eprint(f"   {line.strip()}")
+        raise RuntimeError(
+            f"Failed to sync third-party dependencies (dotnet cake exit {sync_result.returncode}). "
+            f"Check that the skia submodule milestone matches VERSIONS.txt."
+        )
+    harfbuzz_path = os.path.join(skia_root, "third_party", "externals", "harfbuzz")
+    if not os.path.isdir(harfbuzz_path):
+        raise RuntimeError(
+            f"third_party/externals/harfbuzz not found after sync. "
+            f"Expected at: {harfbuzz_path}"
+        )
+    eprint("   ✅ Third-party dependencies synced")
+
+    # 1h. Create output directory
     if not output_dir:
         ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         output_dir = f"/tmp/skiasharp/skia-review/{ts}"
