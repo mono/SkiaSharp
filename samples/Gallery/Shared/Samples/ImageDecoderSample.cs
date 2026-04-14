@@ -193,8 +193,8 @@ public class ImageDecoderSample : CanvasSampleBase
 
 		var boxWidth = Math.Min(width * 0.5f, maxTextWidth + padding * 2f);
 		var boxHeight = lineHeight * lines.Count + padding * 2f;
-		var boxLeft = 12f;
-		var boxTop = 12f;
+		var boxLeft = width - boxWidth - 12f;
+		var boxTop = height - boxHeight - 12f;
 		var boxRect = new SKRoundRect(new SKRect(boxLeft, boxTop, boxLeft + boxWidth, boxTop + boxHeight), cornerRadius, cornerRadius);
 
 		canvas.DrawRoundRect(boxRect, bgPaint);
@@ -215,7 +215,8 @@ public class ImageDecoderSample : CanvasSampleBase
 			$"Format: {codec.EncodedFormat}",
 			$"Size: {info.Width} x {info.Height}",
 			$"Pixels: {info.ColorType} / {info.AlphaType}",
-			$"Origin / Frames: {codec.EncodedOrigin} / {codec.FrameCount}",
+			$"Origin: {codec.EncodedOrigin}",
+			$"Frames: {GetFrameDescription(codec)}",
 		};
 
 		AddColorSpaceLines(lines, info.ColorSpace);
@@ -288,6 +289,9 @@ public class ImageDecoderSample : CanvasSampleBase
 		var values = xyz.Values;
 		return $"{values[0]:0.###}, {values[1]:0.###}, {values[2]:0.###}";
 	}
+
+	private static string GetFrameDescription(SKCodec codec) =>
+		codec.FrameCount > 0 ? codec.FrameCount.ToString() : "Static image";
 
 	private static string FormatByteCount(long size) =>
 		size >= 1024 ? $"{size / 1024d:0.#} KB" : $"{size} B";
