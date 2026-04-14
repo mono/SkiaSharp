@@ -82,19 +82,7 @@
               </button>
             </div>
             <div class="code-sample-shell is-collapsed" id="hello-svg-sample-wrap">
-              <pre class="code-preview"><code class="language-csharp"><span class="token-comment">// Setup omitted for brevity</span>
-
-<span class="token-comment">// Draw the background</span>
-<span class="token-keyword">using</span> <span class="token-keyword">var</span> bg = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
-{
-    IsAntialias = <span class="token-keyword">true</span>,
-    Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
-        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">0</span>, <span class="token-number">0</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">320</span>, <span class="token-number">190</span>),
-        [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F0F4FF"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F5F0FF"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp)
-};
-canvas.DrawRoundRect(bounds, <span class="token-number">16</span>, <span class="token-number">16</span>, bg);
-
-<span class="token-comment">// Draw the orb</span>
+              <pre class="code-preview"><code class="language-csharp"><span class="token-comment">// Draw the orb</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> orb = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
 {
     IsAntialias = <span class="token-keyword">true</span>,
@@ -121,7 +109,7 @@ canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-numb
 
 <span class="token-keyword">using</span> SkiaSharp;
 
-<span class="token-keyword">var</span> bounds = <span class="token-keyword">new</span> <span class="token-type">SKRect</span>(<span class="token-number">0</span>, <span class="token-number">0</span>, <span class="token-number">320</span>, <span class="token-number">190</span>);
+<span class="token-keyword">var</span> bounds = <span class="token-keyword">new</span> <span class="token-type">SKRect</span>(<span class="token-number">0</span>, <span class="token-number">0</span>, <span class="token-number">400</span>, <span class="token-number">300</span>);
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> stream = File.Create(<span class="token-string">"hello-skiasharp.svg"</span>);
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> canvas = <span class="token-type">SKSvgCanvas</span>.Create(bounds, stream);
 
@@ -130,20 +118,20 @@ canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-numb
 {
     IsAntialias = <span class="token-keyword">true</span>,
     Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
-        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">0</span>, <span class="token-number">0</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">320</span>, <span class="token-number">190</span>),
+        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">0</span>, <span class="token-number">0</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">400</span>, <span class="token-number">300</span>),
         [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F0F4FF"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F5F0FF"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp)
 };
-canvas.DrawRoundRect(bounds, <span class="token-number">16</span>, <span class="token-number">16</span>, bg);
+canvas.DrawRoundRect(bounds, <span class="token-number">18</span>, <span class="token-number">18</span>, bg);
 
 <span class="token-comment">// Draw the orb</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> orb = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
 {
     IsAntialias = <span class="token-keyword">true</span>,
     Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
-        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">96</span>, <span class="token-number">32</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">224</span>, <span class="token-number">158</span>),
+        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">118</span>, <span class="token-number">54</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">282</span>, <span class="token-number">246</span>),
         [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#60A5FA"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#8B5CF6"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp)
 };
-canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-number">95</span>, <span class="token-number">64</span>, orb);
+canvas.DrawCircle(<span class="token-number">200</span>, <span class="token-number">150</span>, <span class="token-number">82</span>, orb);
 
 <span class="token-comment">// Draw the accent curve</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> line = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
@@ -156,14 +144,14 @@ canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-numb
 };
 
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> path = <span class="token-keyword">new</span> <span class="token-type">SKPath</span>();
-path.MoveTo(<span class="token-number">72</span>, <span class="token-number">136</span>);
-path.CubicTo(<span class="token-number">102</span>, <span class="token-number">104</span>, <span class="token-number">130</span>, <span class="token-number">88</span>, <span class="token-number">160</span>, <span class="token-number">88</span>);
-path.CubicTo(<span class="token-number">190</span>, <span class="token-number">88</span>, <span class="token-number">218</span>, <span class="token-number">104</span>, <span class="token-number">248</span>, <span class="token-number">136</span>);
+path.MoveTo(<span class="token-number">90</span>, <span class="token-number">214</span>);
+path.CubicTo(<span class="token-number">128</span>, <span class="token-number">174</span>, <span class="token-number">164</span>, <span class="token-number">154</span>, <span class="token-number">200</span>, <span class="token-number">154</span>);
+path.CubicTo(<span class="token-number">236</span>, <span class="token-number">154</span>, <span class="token-number">272</span>, <span class="token-number">174</span>, <span class="token-number">310</span>, <span class="token-number">214</span>);
 canvas.DrawPath(path, line);
 
 <span class="token-comment">// Draw the accent dot</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> dot = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F97316"</span>), IsAntialias = <span class="token-keyword">true</span> };
-canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-number">62</span>, <span class="token-number">12</span>, dot);</code></pre>
+canvas.DrawCircle(<span class="token-number">282</span>, <span class="token-number">100</span>, <span class="token-number">12</span>, dot);</code></pre>
               <div class="code-sample-fade" aria-hidden="true"></div>
               <button class="expand-code-btn" type="button" data-expand-target="hello-svg-sample-wrap" aria-expanded="false">See full code</button>
             </div>
@@ -173,7 +161,7 @@ canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-numb
 
 using SkiaSharp;
 
-var bounds = new SKRect(0, 0, 320, 190);
+var bounds = new SKRect(0, 0, 400, 300);
 using var stream = File.Create("hello-skiasharp.svg");
 using var canvas = SKSvgCanvas.Create(bounds, stream);
 
@@ -182,20 +170,20 @@ using var bg = new SKPaint
 {
     IsAntialias = true,
     Shader = SKShader.CreateLinearGradient(
-        new SKPoint(0, 0), new SKPoint(320, 190),
+        new SKPoint(0, 0), new SKPoint(400, 300),
         [SKColor.Parse("#F0F4FF"), SKColor.Parse("#F5F0FF")], null, SKShaderTileMode.Clamp)
 };
-canvas.DrawRoundRect(bounds, 16, 16, bg);
+canvas.DrawRoundRect(bounds, 18, 18, bg);
 
 // Draw the orb
 using var orb = new SKPaint
 {
     IsAntialias = true,
     Shader = SKShader.CreateLinearGradient(
-        new SKPoint(96, 32), new SKPoint(224, 158),
+        new SKPoint(118, 54), new SKPoint(282, 246),
         [SKColor.Parse("#60A5FA"), SKColor.Parse("#8B5CF6")], null, SKShaderTileMode.Clamp)
 };
-canvas.DrawCircle(160, 95, 64, orb);
+canvas.DrawCircle(200, 150, 82, orb);
 
 // Draw the accent curve
 using var line = new SKPaint
@@ -209,14 +197,14 @@ using var line = new SKPaint
 using var dot = new SKPaint { Color = SKColor.Parse("#F97316"), IsAntialias = true };
 
 using var path = new SKPath();
-path.MoveTo(72, 136);
-path.CubicTo(102, 104, 130, 88, 160, 88);
-path.CubicTo(190, 88, 218, 104, 248, 136);
+path.MoveTo(90, 214);
+path.CubicTo(128, 174, 164, 154, 200, 154);
+path.CubicTo(236, 154, 272, 174, 310, 214);
 
 canvas.DrawPath(path, line);
 
 // Draw the accent dot
-canvas.DrawCircle(222, 62, 12, dot);</script>
+canvas.DrawCircle(282, 100, 12, dot);</script>
           </div>
 
           <div class="render-preview">
