@@ -166,12 +166,23 @@ public class ImageDecoderSample : CanvasSampleBase
 			$"Alpha Type: {info.AlphaType}",
 		};
 
+		var fontSize = Math.Max(7f, height / 60f);
+		var padding = Math.Max(8f, fontSize * 0.85f);
+		var cornerRadius = Math.Max(8f, fontSize);
+
 		using var bgPaint = new SKPaint
 		{
-			Color = new SKColor(0, 0, 0, 180),
+			Color = new SKColor(20, 24, 33, 210),
 			Style = SKPaintStyle.Fill,
+			IsAntialias = true,
 		};
-		var fontSize = Math.Max(14f, height / 30f);
+		using var borderPaint = new SKPaint
+		{
+			Color = new SKColor(255, 255, 255, 45),
+			Style = SKPaintStyle.Stroke,
+			StrokeWidth = 1,
+			IsAntialias = true,
+		};
 		using var font = new SKFont { Size = fontSize };
 		using var textPaint = new SKPaint
 		{
@@ -179,15 +190,24 @@ public class ImageDecoderSample : CanvasSampleBase
 			IsAntialias = true,
 		};
 
-		var lineHeight = fontSize * 1.4f;
-		var boxHeight = lineHeight * lines.Length + 20;
-		var boxTop = height - boxHeight;
-		canvas.DrawRect(0, boxTop, width, boxHeight, bgPaint);
+		var lineHeight = fontSize * 1.2f;
+		var maxTextWidth = 0f;
+		foreach (var line in lines)
+			maxTextWidth = Math.Max(maxTextWidth, font.MeasureText(line, textPaint));
 
-		var y = boxTop + lineHeight;
+		var boxWidth = Math.Min(width * 0.5f, maxTextWidth + padding * 2f);
+		var boxHeight = lineHeight * lines.Length + padding * 2f;
+		var boxLeft = 12f;
+		var boxTop = 12f;
+		var boxRect = new SKRoundRect(new SKRect(boxLeft, boxTop, boxLeft + boxWidth, boxTop + boxHeight), cornerRadius, cornerRadius);
+
+		canvas.DrawRoundRect(boxRect, bgPaint);
+		canvas.DrawRoundRect(boxRect, borderPaint);
+
+		var y = boxTop + padding + fontSize;
 		foreach (var line in lines)
 		{
-			canvas.DrawText(line, 12, y, font, textPaint);
+			canvas.DrawText(line, boxLeft + padding, y, font, textPaint);
 			y += lineHeight;
 		}
 	}
