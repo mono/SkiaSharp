@@ -11,11 +11,11 @@ public class ImageDecoderSample : CanvasSampleBase
 	private bool _showInfo;
 	private bool _subset;
 
-	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "DNG", "WebP" };
+	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "DNG", "WebP", "CICP PQ PNG" };
 
 	public override string Title => "Image Decoder";
 
-	public override string Description => "Decode images in various formats (PNG, WebP, DNG) with metadata inspection and subset decoding.";
+	public override string Description => "Decode images in various formats, including a PNG with embedded CICP HDR metadata, and inspect the decoded color-space details.";
 
 	public override string Category => SampleCategories.BitmapDecoding;
 
@@ -47,6 +47,7 @@ public class ImageDecoderSample : CanvasSampleBase
 		1 => SampleMedia.Images.ColorWheel,
 		2 => SampleMedia.Images.AdobeDng,
 		3 => SampleMedia.Images.BabyTux,
+		4 => SampleMedia.Images.CicpPq,
 		_ => SampleMedia.Images.Baboon,
 	};
 
@@ -158,13 +159,35 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	private static void DrawMetadata(SKCanvas canvas, int width, int height, SKCodec codec, SKImageInfo info)
 	{
-		var lines = new[]
+		var colorSpace = info.ColorSpace;
+		var lines = new List<string>
 		{
 			$"Format: {codec.EncodedFormat}",
 			$"Dimensions: {info.Width} × {info.Height}",
 			$"Color Type: {info.ColorType}",
 			$"Alpha Type: {info.AlphaType}",
+			$"Origin: {codec.EncodedOrigin}",
+			$"Frames: {codec.FrameCount}",
 		};
+
+		if (colorSpace is null)
+		{
+			lines.Add("Color Space: Unspecified");
+		}
+		else
+		{
+			var gamut = colorSpace.ToColorSpaceXyz().Equals(SKColorSpaceXyz.Srgb)
+				? "sRGB / Rec709"
+				: "Wide gamut / custom";
+			var transfer = colorSpace.GammaIsLinear
+				? "Linear"
+				: colorSpace.GammaIsCloseToSrgb
+					? "sRGB-like"
+					: "HDR / custom";
+
+			lines.Add($"Color Space: {(colorSpace.IsSrgb ? "sRGB" : gamut)}");
+			lines.Add($"Transfer: {transfer}");
+		}
 
 		using var bgPaint = new SKPaint
 		{
@@ -180,7 +203,7 @@ public class ImageDecoderSample : CanvasSampleBase
 		};
 
 		var lineHeight = fontSize * 1.4f;
-		var boxHeight = lineHeight * lines.Length + 20;
+		var boxHeight = lineHeight * lines.Count + 20;
 		var boxTop = height - boxHeight;
 		canvas.DrawRect(0, boxTop, width, boxHeight, bgPaint);
 
