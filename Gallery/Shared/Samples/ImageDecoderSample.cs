@@ -11,7 +11,7 @@ public class ImageDecoderSample : CanvasSampleBase
 	private bool _showInfo;
 	private bool _subset;
 
-	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "DNG", "WebP" };
+	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "HDR PNG (CICP)", "DNG", "WebP", "GIF" };
 
 	public override string Title => "Image Decoder";
 
@@ -45,8 +45,10 @@ public class ImageDecoderSample : CanvasSampleBase
 	private Stream GetImageStream() => _imageIndex switch
 	{
 		1 => SampleMedia.Images.ColorWheel,
-		2 => SampleMedia.Images.AdobeDng,
-		3 => SampleMedia.Images.BabyTux,
+		2 => SampleMedia.Images.CicpPq,
+		3 => SampleMedia.Images.AdobeDng,
+		4 => SampleMedia.Images.BabyTux,
+		5 => SampleMedia.Images.AnimatedHeartGif,
 		_ => SampleMedia.Images.Baboon,
 	};
 
@@ -158,20 +160,25 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	private static void DrawMetadata(SKCanvas canvas, int width, int height, SKCodec codec, SKImageInfo info)
 	{
-		var lines = new[]
-		{
-			$"Format: {codec.EncodedFormat}",
-			$"Dimensions: {info.Width} × {info.Height}",
-			$"Color Type: {info.ColorType}",
-			$"Alpha Type: {info.AlphaType}",
-		};
+		var lines = BuildMetadataLines(codec, info);
+
+		var fontSize = Math.Max(7f, height / 60f);
+		var padding = Math.Max(8f, fontSize * 0.85f);
+		var cornerRadius = Math.Max(8f, fontSize);
 
 		using var bgPaint = new SKPaint
 		{
-			Color = new SKColor(0, 0, 0, 180),
+			Color = new SKColor(20, 24, 33, 210),
 			Style = SKPaintStyle.Fill,
+			IsAntialias = true,
 		};
-		var fontSize = Math.Max(14f, height / 30f);
+		using var borderPaint = new SKPaint
+		{
+			Color = new SKColor(255, 255, 255, 45),
+			Style = SKPaintStyle.Stroke,
+			StrokeWidth = 1,
+			IsAntialias = true,
+		};
 		using var font = new SKFont { Size = fontSize };
 		using var textPaint = new SKPaint
 		{
@@ -179,18 +186,115 @@ public class ImageDecoderSample : CanvasSampleBase
 			IsAntialias = true,
 		};
 
-		var lineHeight = fontSize * 1.4f;
-		var boxHeight = lineHeight * lines.Length + 20;
-		var boxTop = height - boxHeight;
-		canvas.DrawRect(0, boxTop, width, boxHeight, bgPaint);
+		var lineHeight = fontSize * 1.2f;
+		var maxTextWidth = 0f;
+		foreach (var line in lines)
+			maxTextWidth = Math.Max(maxTextWidth, font.MeasureText(line, textPaint));
 
-		var y = boxTop + lineHeight;
+		var boxWidth = Math.Min(width * 0.5f, maxTextWidth + padding * 2f);
+		var boxHeight = lineHeight * lines.Count + padding * 2f;
+		var boxLeft = width - boxWidth - 12f;
+		var boxTop = height - boxHeight - 12f;
+		var boxRect = new SKRoundRect(new SKRect(boxLeft, boxTop, boxLeft + boxWidth, boxTop + boxHeight), cornerRadius, cornerRadius);
+
+		canvas.DrawRoundRect(boxRect, bgPaint);
+		canvas.DrawRoundRect(boxRect, borderPaint);
+
+		var y = boxTop + padding + fontSize;
 		foreach (var line in lines)
 		{
-			canvas.DrawText(line, 12, y, font, textPaint);
+			canvas.DrawText(line, boxLeft + padding, y, font, textPaint);
 			y += lineHeight;
 		}
 	}
+
+	private static IReadOnlyList<string> BuildMetadataLines(SKCodec codec, SKImageInfo info)
+	{
+		var lines = new List<string>
+		{
+			$"Format: {codec.EncodedFormat}",
+			$"Size: {info.Width} x {info.Height}",
+			$"Pixels: {info.ColorType} / {info.AlphaType}",
+			$"Origin: {codec.EncodedOrigin}",
+			$"Frames: {GetFrameDescription(codec)}",
+		};
+
+		AddColorSpaceLines(lines, info.ColorSpace);
+		return lines;
+	}
+
+	private static void AddColorSpaceLines(List<string> lines, SKColorSpace? colorSpace)
+	{
+		if (colorSpace is null)
+		{
+			lines.Add("Color: Unspecified");
+			return;
+		}
+
+		var xyz = colorSpace.ToColorSpaceXyz();
+		lines.Add($"Color: {GetColorSpaceName(colorSpace, xyz)}");
+		lines.Add($"Transfer: {GetTransferName(colorSpace)}");
+
+		using var profile = colorSpace.ToProfile();
+		if (profile.Size > 0)
+			lines.Add($"ICC: {FormatByteCount(profile.Size)}");
+
+		if (!xyz.Equals(SKColorSpaceXyz.Empty))
+			lines.Add($"XYZ D50[0]: {FormatMatrixRow(xyz)}");
+	}
+
+	private static string GetColorSpaceName(SKColorSpace colorSpace, SKColorSpaceXyz xyz)
+	{
+		if (colorSpace.IsSrgb || xyz.Equals(SKColorSpaceXyz.Srgb))
+			return "sRGB / Rec709";
+		if (xyz.Equals(SKColorSpaceXyz.DisplayP3))
+			return "Display P3";
+		if (xyz.Equals(SKColorSpaceXyz.Rec2020))
+			return "Rec2020";
+		if (xyz.Equals(SKColorSpaceXyz.AdobeRgb))
+			return "Adobe RGB";
+		if (xyz.Equals(SKColorSpaceXyz.Xyz))
+			return "XYZ";
+
+		return "Custom / wide gamut";
+	}
+
+	private static string GetTransferName(SKColorSpace colorSpace)
+	{
+		if (colorSpace.GammaIsLinear)
+			return "Linear";
+
+		if (colorSpace.GetNumericalTransferFunction(out var fn))
+		{
+			if (fn.Equals(SKColorSpaceTransferFn.Srgb))
+				return "sRGB";
+			if (fn.Equals(SKColorSpaceTransferFn.TwoDotTwo))
+				return "Gamma 2.2";
+			if (fn.Equals(SKColorSpaceTransferFn.Rec2020))
+				return "Rec2020";
+			if (fn.Equals(SKColorSpaceTransferFn.Pq))
+				return "PQ (ST 2084)";
+			if (fn.Equals(SKColorSpaceTransferFn.Hlg))
+				return "HLG";
+
+			var values = fn.Values;
+			return $"Custom (G={values[0]:0.###})";
+		}
+
+		return colorSpace.GammaIsCloseToSrgb ? "sRGB-like" : "Unknown";
+	}
+
+	private static string FormatMatrixRow(SKColorSpaceXyz xyz)
+	{
+		var values = xyz.Values;
+		return $"{values[0]:0.###}, {values[1]:0.###}, {values[2]:0.###}";
+	}
+
+	private static string GetFrameDescription(SKCodec codec) =>
+		codec.FrameCount > 0 ? codec.FrameCount.ToString() : "Static image";
+
+	private static string FormatByteCount(long size) =>
+		size >= 1024 ? $"{size / 1024d:0.#} KB" : $"{size} B";
 
 	private static void DrawErrorText(SKCanvas canvas, int width, int height, string message)
 	{
