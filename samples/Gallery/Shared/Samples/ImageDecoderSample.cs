@@ -11,7 +11,7 @@ public class ImageDecoderSample : CanvasSampleBase
 	private bool _showInfo;
 	private bool _subset;
 
-	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "DNG", "WebP" };
+	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "DNG", "WebP", "GIF" };
 
 	public override string Title => "Image Decoder";
 
@@ -47,6 +47,7 @@ public class ImageDecoderSample : CanvasSampleBase
 		1 => SampleMedia.Images.ColorWheel,
 		2 => SampleMedia.Images.AdobeDng,
 		3 => SampleMedia.Images.BabyTux,
+		4 => SampleMedia.Images.AnimatedHeartGif,
 		_ => SampleMedia.Images.Baboon,
 	};
 
@@ -158,13 +159,34 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	private static void DrawMetadata(SKCanvas canvas, int width, int height, SKCodec codec, SKImageInfo info)
 	{
-		var lines = new[]
+		var colorSpace = info.ColorSpace;
+		var lines = new List<string>
 		{
 			$"Format: {codec.EncodedFormat}",
-			$"Dimensions: {info.Width} × {info.Height}",
-			$"Color Type: {info.ColorType}",
-			$"Alpha Type: {info.AlphaType}",
+			$"Size: {info.Width} x {info.Height}",
+			$"Pixels: {info.ColorType} / {info.AlphaType}",
+			$"Origin: {codec.EncodedOrigin}",
+			$"Frames: {codec.FrameCount}",
 		};
+
+		if (colorSpace is null)
+		{
+			lines.Add("Color Space: Unspecified");
+		}
+		else
+		{
+			var gamut = colorSpace.ToColorSpaceXyz().Equals(SKColorSpaceXyz.Srgb)
+				? "sRGB / Rec709"
+				: "Wide gamut / custom";
+			var transfer = colorSpace.GammaIsLinear
+				? "Linear"
+				: colorSpace.GammaIsCloseToSrgb
+					? "sRGB-like"
+					: "HDR / custom";
+
+			lines.Add($"Color Space: {(colorSpace.IsSrgb ? "sRGB" : gamut)}");
+			lines.Add($"Transfer: {transfer}");
+		}
 
 		var fontSize = Math.Max(7f, height / 60f);
 		var padding = Math.Max(8f, fontSize * 0.85f);
@@ -196,7 +218,7 @@ public class ImageDecoderSample : CanvasSampleBase
 			maxTextWidth = Math.Max(maxTextWidth, font.MeasureText(line, textPaint));
 
 		var boxWidth = Math.Min(width * 0.5f, maxTextWidth + padding * 2f);
-		var boxHeight = lineHeight * lines.Length + padding * 2f;
+		var boxHeight = lineHeight * lines.Count + padding * 2f;
 		var boxLeft = 12f;
 		var boxTop = 12f;
 		var boxRect = new SKRoundRect(new SKRect(boxLeft, boxTop, boxLeft + boxWidth, boxTop + boxHeight), cornerRadius, cornerRadius);
