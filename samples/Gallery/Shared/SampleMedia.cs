@@ -20,7 +20,6 @@ public static class SampleMedia
 	{
 		public static Stream AdobeDng => Embedded.Load("adobe-dng.dng");
 		public static Stream Baboon => Embedded.Load("baboon.png");
-		public static Stream CicpPq => Embedded.Load("cicp_pq.png");
 		public static Stream ColorWheel => Embedded.Load("color-wheel.png");
 		public static Stream NinePatch => Embedded.Load("nine-patch.png");
 		public static Stream BabyTux => Embedded.Load("baby_tux.webp");
