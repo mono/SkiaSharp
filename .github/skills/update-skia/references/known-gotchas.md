@@ -100,18 +100,39 @@ Never use a tree-override merge (`git merge -s ours`, `git read-tree --reset`). 
 | `RELEASE_NOTES.md`, `infra/bots/` | **Take upstream** |
 | C API headers (`include/c/`) | **Keep SkiaSharp** — these don't exist upstream |
 | C API source (`src/c/`) | **Keep SkiaSharp + adapt** — fix includes and API calls in post-merge commits |
+| Other upstream source (`src/`, `include/`) | **Check history first** — see gotcha #15 |
+
+### 15. Never `--theirs` Without Checking File History
+
+**Failure mode**: A merge conflict in an upstream file (outside `src/c/` / `include/c/`) is resolved
+with `git checkout --theirs`, silently overwriting an intentional SkiaSharp fork patch.
+
+**Mandatory process for EVERY conflicted file:**
+
+```bash
+# BEFORE resolving, check if the fork has intentional patches
+git log --oneline skiasharp -- <conflicted-file>
+```
+
+- If the log shows fork-specific commits (look for "Restore", "patch", "fix", or any non-merge
+  commit), **keep our version** and only absorb upstream's harmless additive changes (new includes).
+- If the log shows only merge commits from prior upstream merges, taking `--theirs` is likely safe.
+- **Never use `git checkout --theirs` as a shortcut** for files you haven't investigated.
+
+**Key signal words** in commit messages that indicate intentional fork patches:
+`Restore`, `patch`, `fix for`, `platform`, `workaround`, `SkiaSharp`, `iOS`, `Tizen`
 
 ## Testing
 
-### 15. Version Compatibility Errors
+### 16. Version Compatibility Errors
 
 `InvalidOperationException: The version of the native libSkiaSharp library (X) is incompatible` means VERSIONS.txt wasn't fully updated. Fix the root cause — do NOT work around it.
 
-### 16. Pixel Value Precision
+### 17. Pixel Value Precision
 
 Upstream periodically improves color conversion precision, shifting expected pixel values by ±1. When pixel-exact test assertions break, check if upstream changed the conversion and update expected values.
 
-### 17. Test Runner
+### 18. Test Runner
 
 Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaSharp.Tests.Console.sln` for the full suite. Backend-specific tests self-skip when hardware isn't available.
 
