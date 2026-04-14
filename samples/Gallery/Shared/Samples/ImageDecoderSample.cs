@@ -15,7 +15,7 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	public override string Title => "Image Decoder";
 
-	public override string Description => "Decode images in various formats, including a PNG with embedded CICP HDR metadata, and inspect the decoded color-space details.";
+	public override string Description => "Decode images in various formats (PNG, WebP, DNG) with metadata inspection and subset decoding.";
 
 	public override string Category => SampleCategories.BitmapDecoding;
 
