@@ -56,6 +56,83 @@
       </div>
     </section>
 
+    <section class="showcase-section">
+      <div class="container">
+        <div class="showcase-grid">
+          <div class="showcase-copy">
+            <p class="section-kicker">Start fast</p>
+            <h2 class="section-title section-title-left">Hello Canvas in a few lines</h2>
+            <p class="section-intro section-intro-left">
+              The API feels like idiomatic C#: create a bitmap, get a canvas, choose a paint, and start drawing.
+            </p>
+            <div class="showcase-tags">
+              <span class="showcase-tag">Draw shapes</span>
+              <span class="showcase-tag">Render text</span>
+              <span class="showcase-tag">Process images</span>
+            </div>
+          </div>
+
+          <div class="showcase-demo">
+            <div class="code-window">
+              <div class="code-window-bar">
+                <span class="code-window-dot"></span>
+                <span class="code-window-dot"></span>
+                <span class="code-window-dot"></span>
+                <span class="code-window-title">Program.cs</span>
+              </div>
+              <pre><code>using var bitmap = new SKBitmap(256, 256);
+using var canvas = new SKCanvas(bitmap);
+canvas.Clear(SKColors.WhiteSmoke);
+
+using var paint = new SKPaint
+{
+    IsAntialias = true,
+    Color = SKColor.Parse("#3B82F6")
+};
+
+canvas.DrawCircle(128, 128, 72, paint);</code></pre>
+            </div>
+
+            <div class="render-preview">
+              <svg viewBox="0 0 320 190" aria-hidden="true" focusable="false">
+                <defs>
+                  <linearGradient id="orb" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#60a5fa" />
+                    <stop offset="100%" stop-color="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="320" height="190" rx="16" fill="transparent" />
+                <circle cx="160" cy="95" r="64" fill="url(#orb)" opacity="0.95" />
+                <circle cx="160" cy="95" r="88" fill="none" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="2" />
+                <path d="M72 136c30-32 58-48 88-48s58 16 88 48" fill="none" stroke="#1d4ed8" stroke-width="8" stroke-linecap="round" opacity="0.7" />
+                <circle cx="222" cy="62" r="12" fill="#f97316" />
+              </svg>
+              <p class="render-caption">A simple static preview showing the kind of output a few lines can create.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="proof-grid">
+          <div class="proof-item">
+            <strong>20+</strong>
+            <span>interactive samples</span>
+          </div>
+          <div class="proof-item">
+            <strong>Blazor WASM</strong>
+            <span>live gallery today</span>
+          </div>
+          <div class="proof-item">
+            <strong>Microsoft Learn</strong>
+            <span>full API reference</span>
+          </div>
+          <div class="proof-item">
+            <strong>MIT</strong>
+            <span>open-source license</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="features-section">
       <div class="container">
         <p class="section-kicker">Why teams choose it</p>
@@ -91,6 +168,24 @@
         <p class="section-intro">
           Today, SkiaSharp includes a Blazor WebAssembly gallery in the browser, with more gallery experiences to come.
         </p>
+        <div class="gallery-preview-strip">
+          <a href="gallery/" class="gallery-shot">
+            <img src="images/gallery/gradient-sample.png" alt="Gradient sample from the SkiaSharp gallery">
+            <span>Gradients</span>
+          </a>
+          <a href="gallery/" class="gallery-shot">
+            <img src="images/gallery/shader-playground.png" alt="Shader playground sample from the SkiaSharp gallery">
+            <span>Shaders</span>
+          </a>
+          <a href="gallery/" class="gallery-shot">
+            <img src="images/gallery/3d-transforms.png" alt="3D transforms sample from the SkiaSharp gallery">
+            <span>Transforms</span>
+          </a>
+          <a href="gallery/" class="gallery-shot">
+            <img src="images/gallery/pdf-composer.png" alt="PDF composer sample from the SkiaSharp gallery">
+            <span>Documents</span>
+          </a>
+        </div>
         <div class="gallery-grid">
           <a href="gallery/" class="card gallery-card gallery-card-featured">
             <div class="card-icon">
@@ -110,6 +205,46 @@
             <h2 class="card-title">More galleries coming soon</h2>
             <p class="card-desc">This section is ready to grow as we add more interactive gallery experiences over time.</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="platforms-section">
+      <div class="container">
+        <p class="section-kicker">Build anywhere</p>
+        <h2 class="section-title">One graphics API across the .NET stack</h2>
+        <p class="section-intro">
+          Start in the browser, then carry the same drawing model into apps, tools, and export workflows.
+        </p>
+
+        <div class="platform-pill-row" aria-label="Supported platforms and app types">
+          <span class="platform-pill">.NET MAUI</span>
+          <span class="platform-pill">Blazor</span>
+          <span class="platform-pill">Android</span>
+          <span class="platform-pill">iOS</span>
+          <span class="platform-pill">macOS</span>
+          <span class="platform-pill">Windows</span>
+          <span class="platform-pill">Linux</span>
+          <span class="platform-pill">Console</span>
+        </div>
+
+        <div class="use-case-grid">
+          <a href="gallery/" class="use-case-card">
+            <h3>Image Processing</h3>
+            <p>Decode, filter, blur, and transform images with composable drawing primitives.</p>
+          </a>
+          <a href="gallery/" class="use-case-card">
+            <h3>Text &amp; Typography</h3>
+            <p>Render crisp text, shape multiple scripts, and lay out labels with precision.</p>
+          </a>
+          <a href="gallery/" class="use-case-card">
+            <h3>Shaders &amp; Effects</h3>
+            <p>Build gradients, blend modes, filters, and runtime effects for richer visuals.</p>
+          </a>
+          <a href="gallery/" class="use-case-card">
+            <h3>PDF &amp; Export</h3>
+            <p>Generate documents, export graphics, and render visuals outside of a traditional UI.</p>
+          </a>
         </div>
       </div>
     </section>
