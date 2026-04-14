@@ -145,10 +145,15 @@ jobs:
 
           mkdir -p site
 
-          # Landing page → root
+          # Landing page → root (copy all site assets)
           cp documentation/site/index.html site/
           cp documentation/site/style.css site/
+          cp documentation/site/site.js site/
+          cp documentation/site/theme-init.js site/
           cp documentation/site/404.html site/
+          if [ -d documentation/site/images ]; then
+            cp -r documentation/site/images site/images
+          fi
           touch site/.nojekyll
 
           # Inject build info into landing page footer
