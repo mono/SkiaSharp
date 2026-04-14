@@ -277,25 +277,6 @@ a:hover {
   align-items: stretch;
 }
 
-.showcase-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-}
-
-.showcase-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 600;
-}
-
 .code-window,
 .render-preview {
   border: 1px solid var(--border);
@@ -331,6 +312,41 @@ a:hover {
   font-weight: 600;
 }
 
+.copy-code-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  background: rgba(37, 99, 235, 0.16);
+  color: #dbeafe;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.copy-code-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.copy-code-btn:hover {
+  background: rgba(37, 99, 235, 0.28);
+  border-color: rgba(147, 197, 253, 0.65);
+  transform: translateY(-1px);
+}
+
+.copy-code-btn:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
 .code-window pre {
   margin: 0;
   padding: 16px 18px;
@@ -348,6 +364,10 @@ a:hover {
   color: #c084fc;
 }
 
+.token-comment {
+  color: #94a3b8;
+}
+
 .token-type {
   color: #7dd3fc;
 }
@@ -361,9 +381,7 @@ a:hover {
 }
 
 .render-preview {
-  background:
-    radial-gradient(circle at top left, var(--accent-subtle), transparent 55%),
-    var(--bg-card);
+  background: var(--bg-card);
   padding: 16px;
   display: flex;
   flex-direction: column;

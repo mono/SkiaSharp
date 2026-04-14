@@ -64,11 +64,6 @@
           <p class="section-intro">
             The API feels like idiomatic C#: create a bitmap, get a canvas, choose a paint, and start drawing.
           </p>
-          <div class="showcase-tags">
-            <span class="showcase-tag">Draw shapes</span>
-            <span class="showcase-tag">Render text</span>
-            <span class="showcase-tag">Process images</span>
-          </div>
         </div>
 
         <div class="showcase-grid">
@@ -78,25 +73,90 @@
               <span class="code-window-dot"></span>
               <span class="code-window-dot"></span>
               <span class="code-window-title">HelloSvg.cs</span>
+              <button class="copy-code-btn" type="button" data-copy-target="hello-svg-copy" aria-label="Copy runnable sample code">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                  <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                </svg>
+                <span>Copy</span>
+              </button>
             </div>
-            <pre><code class="language-csharp"><span class="token-keyword">using</span> <span class="token-keyword">var</span> stream = <span class="token-type">File</span>.Create(<span class="token-string">"hello-skiasharp.svg"</span>);
-<span class="token-keyword">var</span> bounds = <span class="token-type">SKRect</span>.Create(<span class="token-number">320</span>, <span class="token-number">190</span>);
+            <pre><code id="hello-svg-sample" class="language-csharp"><span class="token-comment">#!/usr/bin/env dotnet</span>
+<span class="token-comment">#:property PublishAot=false</span>
+<span class="token-comment">#:package SkiaSharp@*</span>
+
+<span class="token-keyword">using</span> SkiaSharp;
+
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> stream = File.Create(<span class="token-string">"hello-skiasharp.svg"</span>);
+<span class="token-keyword">var</span> bounds = <span class="token-keyword">new</span> <span class="token-type">SKRect</span>(<span class="token-number">0</span>, <span class="token-number">0</span>, <span class="token-number">320</span>, <span class="token-number">190</span>);
 
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> canvas = <span class="token-type">SKSvgCanvas</span>.Create(bounds, stream);
-canvas.Clear(<span class="token-type">SKColors</span>.Transparent);
-
-<span class="token-keyword">using</span> <span class="token-keyword">var</span> orb = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> bg = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
 {
-    IsAntialias = <span class="token-keyword">true</span>,
     Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
-        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">96</span>, <span class="token-number">32</span>),
-        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">224</span>, <span class="token-number">158</span>),
-        <span class="token-keyword">new</span>[] { <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#60A5FA"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#8B5CF6"</span>) },
-        <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp)
+        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">0</span>, <span class="token-number">0</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">320</span>, <span class="token-number">190</span>),
+        [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F0F4FF"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F5F0FF"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp),
+    IsAntialias = <span class="token-keyword">true</span>
 };
+canvas.DrawRoundRect(bounds, <span class="token-number">16</span>, <span class="token-number">16</span>, bg);
+
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> orb = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { IsAntialias = <span class="token-keyword">true</span>, Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
+    <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">96</span>, <span class="token-number">32</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">224</span>, <span class="token-number">158</span>),
+    [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#60A5FA"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#8B5CF6"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp) };
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> line = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { IsAntialias = <span class="token-keyword">true</span>, Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#1D4ED8"</span>), StrokeWidth = <span class="token-number">8</span>, Style = <span class="token-type">SKPaintStyle</span>.Stroke, StrokeCap = <span class="token-type">SKStrokeCap</span>.Round };
+
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> path = <span class="token-keyword">new</span> <span class="token-type">SKPath</span>();
+path.MoveTo(<span class="token-number">72</span>, <span class="token-number">136</span>);
+path.CubicTo(<span class="token-number">102</span>, <span class="token-number">104</span>, <span class="token-number">130</span>, <span class="token-number">88</span>, <span class="token-number">160</span>, <span class="token-number">88</span>);
+path.CubicTo(<span class="token-number">190</span>, <span class="token-number">88</span>, <span class="token-number">218</span>, <span class="token-number">104</span>, <span class="token-number">248</span>, <span class="token-number">136</span>);
 
 canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-number">95</span>, <span class="token-number">64</span>, orb);
-canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-number">62</span>, <span class="token-number">12</span>, <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F97316"</span>) });</code></pre>
+canvas.DrawPath(path, line);
+canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-number">62</span>, <span class="token-number">12</span>, <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F97316"</span>), IsAntialias = <span class="token-keyword">true</span> });</code></pre>
+            <script id="hello-svg-copy" type="text/plain">#!/usr/bin/env dotnet
+#:property PublishAot=false
+#:package SkiaSharp@*
+
+using SkiaSharp;
+
+using var stream = File.Create("hello-skiasharp.svg");
+var bounds = new SKRect(0, 0, 320, 190);
+
+using var canvas = SKSvgCanvas.Create(bounds, stream);
+using var bg = new SKPaint
+{
+    Shader = SKShader.CreateLinearGradient(
+        new SKPoint(0, 0), new SKPoint(320, 190),
+        [SKColor.Parse("#F0F4FF"), SKColor.Parse("#F5F0FF")], null, SKShaderTileMode.Clamp),
+    IsAntialias = true
+};
+canvas.DrawRoundRect(bounds, 16, 16, bg);
+
+using var orb = new SKPaint
+{
+    IsAntialias = true,
+    Shader = SKShader.CreateLinearGradient(
+        new SKPoint(96, 32), new SKPoint(224, 158),
+        [SKColor.Parse("#60A5FA"), SKColor.Parse("#8B5CF6")], null, SKShaderTileMode.Clamp)
+};
+using var line = new SKPaint
+{
+    IsAntialias = true,
+    Color = SKColor.Parse("#1D4ED8"),
+    StrokeWidth = 8,
+    Style = SKPaintStyle.Stroke,
+    StrokeCap = SKStrokeCap.Round
+};
+using var dot = new SKPaint { Color = SKColor.Parse("#F97316"), IsAntialias = true };
+
+using var path = new SKPath();
+path.MoveTo(72, 136);
+path.CubicTo(102, 104, 130, 88, 160, 88);
+path.CubicTo(190, 88, 218, 104, 248, 136);
+
+canvas.DrawCircle(160, 95, 64, orb);
+canvas.DrawPath(path, line);
+canvas.DrawCircle(222, 62, 12, dot);</script>
           </div>
 
           <div class="render-preview">
@@ -106,14 +166,18 @@ canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-numb
                   <stop offset="0%" stop-color="#60a5fa" />
                   <stop offset="100%" stop-color="#8b5cf6" />
                 </linearGradient>
+                <linearGradient id="hello-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f0f4ff" />
+                  <stop offset="100%" stop-color="#f5f0ff" />
+                </linearGradient>
               </defs>
-              <rect x="0" y="0" width="320" height="190" rx="16" fill="transparent" />
+              <rect x="0" y="0" width="320" height="190" rx="16" fill="url(#hello-bg)" />
               <circle cx="160" cy="95" r="64" fill="url(#hello-orb)" opacity="0.95" />
               <circle cx="160" cy="95" r="88" fill="none" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="2" />
               <path d="M72 136c30-32 58-48 88-48s58 16 88 48" fill="none" stroke="#1d4ed8" stroke-width="8" stroke-linecap="round" opacity="0.7" />
               <circle cx="222" cy="62" r="12" fill="#f97316" />
             </svg>
-            <p class="render-caption">The preview on the right is the kind of SVG output you can generate with SkiaSharp.</p>
+            <p class="render-caption">Copy, save as <code>HelloSvg.cs</code>, then run <code>dotnet HelloSvg.cs</code> to generate the SVG.</p>
           </div>
         </div>
       </div>
@@ -277,6 +341,28 @@ canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-numb
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('theme', next);
+    });
+
+    document.querySelectorAll('.copy-code-btn').forEach(button => {
+      button.addEventListener('click', async () => {
+        const source = document.getElementById(button.dataset.copyTarget);
+        if (!source)
+          return;
+
+        const label = button.querySelector('span');
+        const original = label?.textContent || 'Copy';
+
+        try {
+          await navigator.clipboard.writeText(source.textContent);
+          if (label) label.textContent = 'Copied!';
+        } catch {
+          if (label) label.textContent = 'Copy failed';
+        }
+
+        setTimeout(() => {
+          if (label) label.textContent = original;
+        }, 1500);
+      });
     });
   </script>
 </body>
