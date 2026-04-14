@@ -274,7 +274,7 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .code-window,
@@ -366,9 +366,26 @@ a:hover {
   color: #e2e8f0;
 }
 
+.code-preview,
+.code-full {
+  margin: 0;
+}
+
+.code-full {
+  display: none;
+}
+
+.code-sample-shell.is-expanded .code-preview {
+  display: none;
+}
+
+.code-sample-shell.is-expanded .code-full {
+  display: block;
+}
+
 .code-sample-shell.is-collapsed pre {
-  max-height: 250px;
-  padding-bottom: 56px;
+  max-height: 252px;
+  padding-bottom: 52px;
 }
 
 .code-sample-shell.is-collapsed::before {
@@ -391,7 +408,7 @@ a:hover {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 82px;
+  height: 74px;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.95) 60%, rgba(15, 23, 42, 1));
   pointer-events: none;
   z-index: 1;
@@ -400,7 +417,7 @@ a:hover {
 .expand-code-btn {
   position: absolute;
   left: 50%;
-  bottom: 14px;
+  bottom: 10px;
   transform: translateX(-50%);
   z-index: 2;
   border: 1px solid rgba(148, 163, 184, 0.3);
@@ -437,7 +454,7 @@ a:hover {
   position: static;
   display: block;
   width: fit-content;
-  margin: 12px auto 14px;
+  margin: 8px auto 14px;
   transform: none;
 }
 
@@ -463,10 +480,19 @@ a:hover {
 
 .render-preview {
   background: var(--bg-card);
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 12px;
+}
+
+.render-art {
+  padding: 6px;
+  border-radius: calc(var(--radius) - 6px);
+  background:
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 38%),
+    radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.12), transparent 42%),
+    var(--bg);
 }
 
 .render-preview svg,
@@ -477,9 +503,13 @@ a:hover {
 }
 
 .render-caption {
-  margin-top: 12px;
+  margin: 0;
+  padding: 12px 14px;
   color: var(--text-secondary);
   font-size: 13px;
+  background: var(--bg-subtle);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
 }
 
 /* ── Cards ────────────────────────────────────────────────── */
