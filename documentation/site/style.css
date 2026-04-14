@@ -274,7 +274,7 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .code-window,
@@ -287,10 +287,15 @@ a:hover {
 
 .code-window {
   background: #0f172a;
+  display: flex;
+  flex-direction: column;
 }
 
 .code-sample-shell {
   position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 
 .code-window-bar {
@@ -357,6 +362,7 @@ a:hover {
   max-height: 330px;
   overflow: auto;
   scrollbar-width: thin;
+  flex: 1;
 }
 
 .code-window code {
@@ -384,7 +390,8 @@ a:hover {
 }
 
 .code-sample-shell.is-collapsed pre {
-  max-height: 252px;
+  min-height: 320px;
+  max-height: 320px;
   padding-bottom: 52px;
 }
 
@@ -503,14 +510,16 @@ a:hover {
 }
 
 .showcase-callout {
-  max-width: 920px;
-  margin: 0;
+  width: 100%;
+  max-width: none;
+  margin: 16px 0 0;
   padding: 12px 14px;
   color: var(--text-secondary);
   font-size: 13px;
   background: var(--bg-subtle);
   border-left: 3px solid var(--accent);
   border-radius: 12px;
+  box-sizing: border-box;
 }
 
 .showcase-callout code {
