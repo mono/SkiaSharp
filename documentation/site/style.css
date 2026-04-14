@@ -251,9 +251,47 @@ a:hover {
   padding: 64px 0;
 }
 
+.galleries-section {
+  padding: 64px 0;
+}
+
+.section-alt {
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.section-kicker {
+  text-align: center;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.section-intro {
+  max-width: 680px;
+  margin: -24px auto 36px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.cards-grid-resources {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
 
@@ -279,6 +317,30 @@ a:hover {
 .card-icon {
   color: var(--accent);
   margin-bottom: 16px;
+}
+
+.gallery-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.gallery-card-featured {
+  background:
+    linear-gradient(135deg, var(--accent-subtle) 0%, transparent 65%),
+    var(--bg-card);
+}
+
+.gallery-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .card-title {
@@ -308,8 +370,7 @@ a:hover {
 /* ── Features ─────────────────────────────────────────────── */
 
 .features-section {
-  padding: 48px 0 80px;
-  border-top: 1px solid var(--border);
+  padding: 56px 0;
 }
 
 .section-title {
@@ -323,7 +384,15 @@ a:hover {
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 32px;
+  gap: 20px;
+}
+
+.feature {
+  padding: 24px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
 }
 
 .feature h3 {
@@ -399,5 +468,11 @@ a:hover {
 
   .cards-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 900px) {
+  .gallery-card-featured {
+    grid-column: span 2;
   }
 }
