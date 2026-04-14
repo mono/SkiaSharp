@@ -40,6 +40,20 @@ stages:
                 docker: scripts/Docker/alpine
                 target: externals-linux-clang-cross
 
+      - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Bionic)
+        parameters:
+          buildExternals: ${{ parameters.buildExternals }}
+          buildAgent: ${{ parameters.buildAgentLinuxNative }}
+          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+          builds:
+            - name: ''
+              additionalArgs: --verifyExcluded=fontconfig
+          matrix:
+            - ${{ each arch in split('arm64,x64', ',') }}:
+              - arch: ${{ arch }}
+                variant: bionic
+                docker: scripts/Docker/bionic
+
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen (Linux)
         parameters:
           name: native_tizen_linux
