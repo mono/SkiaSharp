@@ -7,16 +7,7 @@
   <meta name="description" content="SkiaSharp is a cross-platform 2D graphics API for .NET powered by Google's Skia engine. Draw vector graphics, render text, process images, and more.">
   <link rel="icon" href="docs/images/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
-  <script>
-    const storedTheme = localStorage.getItem('theme');
-    const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const activeTheme = storedTheme || preferredTheme;
-    document.documentElement.setAttribute('data-theme', activeTheme);
-    document.addEventListener('DOMContentLoaded', () => {
-      const btn = document.getElementById('theme-toggle');
-      if (btn) btn.setAttribute('aria-pressed', activeTheme === 'dark' ? 'true' : 'false');
-    });
-  </script>
+  <script src="theme-init.js"></script>
 </head>
 <body>
   <header class="site-header">
@@ -230,28 +221,31 @@ canvas.DrawPath(path, new SKPaint {
         </div>
 
         <div class="gallery-grid gallery-grid-small">
-          <div class="card gallery-card gallery-card-placeholder gallery-card-mini">
+          <div class="card gallery-card gallery-card-placeholder">
             <div class="card-icon">
-              <img src="images/dotnet-maui.png" alt=".NET MAUI logo" width="24" height="24" class="gallery-logo">
+              <img src="images/dotnet-maui.png" alt=".NET MAUI logo" width="32" height="32" class="gallery-logo">
               <span class="gallery-badge gallery-badge-muted">Coming later</span>
             </div>
             <h3 class="card-title">.NET MAUI Native Gallery</h3>
+            <p class="card-desc">Run samples natively on iOS, Android, Mac Catalyst, and Windows through .NET MAUI.</p>
           </div>
 
-          <div class="card gallery-card gallery-card-placeholder gallery-card-mini">
+          <div class="card gallery-card gallery-card-placeholder">
             <div class="card-icon">
-              <img src="images/uno-platform.png" alt="Uno Platform logo" width="24" height="24" class="gallery-logo">
+              <img src="images/uno-platform.png" alt="Uno Platform logo" width="32" height="32" class="gallery-logo">
               <span class="gallery-badge gallery-badge-muted">Coming later</span>
             </div>
             <h3 class="card-title">Uno Platform Native Gallery</h3>
+            <p class="card-desc">The same samples running natively on desktop and mobile via Uno Platform's cross-platform runtime.</p>
           </div>
 
-          <div class="card gallery-card gallery-card-placeholder gallery-card-mini">
+          <div class="card gallery-card gallery-card-placeholder">
             <div class="card-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
               <span class="gallery-badge gallery-badge-muted">Coming later</span>
             </div>
             <h3 class="card-title">More coming soon</h3>
+            <p class="card-desc">This section will grow as we add more interactive gallery experiences over time.</p>
           </div>
         </div>
       </div>
@@ -375,50 +369,6 @@ canvas.DrawPath(path, new SKPaint {
     </div>
   </footer>
 
-  <script>
-    const toggle = document.getElementById('theme-toggle');
-    toggle.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-      toggle.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
-    });
-
-    document.querySelectorAll('.copy-code-btn').forEach(button => {
-      button.addEventListener('click', async () => {
-        const source = document.getElementById(button.dataset.copyTarget);
-        if (!source)
-          return;
-
-        const label = button.querySelector('span');
-        const original = label?.textContent || 'Copy';
-
-        try {
-          await navigator.clipboard.writeText(source.textContent);
-          if (label) label.textContent = 'Copied!';
-        } catch {
-          if (label) label.textContent = 'Copy failed';
-        }
-
-        setTimeout(() => {
-          if (label) label.textContent = original;
-        }, 1500);
-      });
-    });
-
-    document.querySelectorAll('.expand-code-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        const target = document.getElementById(button.dataset.expandTarget);
-        if (!target)
-          return;
-
-        const expanded = target.classList.toggle('is-expanded');
-        target.classList.toggle('is-collapsed', !expanded);
-        button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        button.textContent = expanded ? 'Show less' : 'See full code';
-      });
-    });
-  </script>
+  <script src="site.js"></script>
 </body>
 </html>
