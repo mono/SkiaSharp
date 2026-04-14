@@ -11,7 +11,7 @@ public class ImageDecoderSample : CanvasSampleBase
 	private bool _showInfo;
 	private bool _subset;
 
-	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "DNG", "WebP", "GIF" };
+	private static readonly string[] ImageSources = { "Baboon", "Color Wheel", "HDR PNG (CICP)", "DNG", "WebP", "GIF" };
 
 	public override string Title => "Image Decoder";
 
@@ -45,9 +45,10 @@ public class ImageDecoderSample : CanvasSampleBase
 	private Stream GetImageStream() => _imageIndex switch
 	{
 		1 => SampleMedia.Images.ColorWheel,
-		2 => SampleMedia.Images.AdobeDng,
-		3 => SampleMedia.Images.BabyTux,
-		4 => SampleMedia.Images.AnimatedHeartGif,
+		2 => SampleMedia.Images.CicpPq,
+		3 => SampleMedia.Images.AdobeDng,
+		4 => SampleMedia.Images.BabyTux,
+		5 => SampleMedia.Images.AnimatedHeartGif,
 		_ => SampleMedia.Images.Baboon,
 	};
 
@@ -159,34 +160,7 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	private static void DrawMetadata(SKCanvas canvas, int width, int height, SKCodec codec, SKImageInfo info)
 	{
-		var colorSpace = info.ColorSpace;
-		var lines = new List<string>
-		{
-			$"Format: {codec.EncodedFormat}",
-			$"Size: {info.Width} x {info.Height}",
-			$"Pixels: {info.ColorType} / {info.AlphaType}",
-			$"Origin: {codec.EncodedOrigin}",
-			$"Frames: {codec.FrameCount}",
-		};
-
-		if (colorSpace is null)
-		{
-			lines.Add("Color Space: Unspecified");
-		}
-		else
-		{
-			var gamut = colorSpace.ToColorSpaceXyz().Equals(SKColorSpaceXyz.Srgb)
-				? "sRGB / Rec709"
-				: "Wide gamut / custom";
-			var transfer = colorSpace.GammaIsLinear
-				? "Linear"
-				: colorSpace.GammaIsCloseToSrgb
-					? "sRGB-like"
-					: "HDR / custom";
-
-			lines.Add($"Color Space: {(colorSpace.IsSrgb ? "sRGB" : gamut)}");
-			lines.Add($"Transfer: {transfer}");
-		}
+		var lines = BuildMetadataLines(codec, info);
 
 		var fontSize = Math.Max(7f, height / 60f);
 		var padding = Math.Max(8f, fontSize * 0.85f);
@@ -233,6 +207,90 @@ public class ImageDecoderSample : CanvasSampleBase
 			y += lineHeight;
 		}
 	}
+
+	private static IReadOnlyList<string> BuildMetadataLines(SKCodec codec, SKImageInfo info)
+	{
+		var lines = new List<string>
+		{
+			$"Format: {codec.EncodedFormat}",
+			$"Size: {info.Width} x {info.Height}",
+			$"Pixels: {info.ColorType} / {info.AlphaType}",
+			$"Origin / Frames: {codec.EncodedOrigin} / {codec.FrameCount}",
+		};
+
+		AddColorSpaceLines(lines, info.ColorSpace);
+		return lines;
+	}
+
+	private static void AddColorSpaceLines(List<string> lines, SKColorSpace? colorSpace)
+	{
+		if (colorSpace is null)
+		{
+			lines.Add("Color: Unspecified");
+			return;
+		}
+
+		var xyz = colorSpace.ToColorSpaceXyz();
+		lines.Add($"Color: {GetColorSpaceName(colorSpace, xyz)}");
+		lines.Add($"Transfer: {GetTransferName(colorSpace)}");
+
+		using var profile = colorSpace.ToProfile();
+		if (profile.Size > 0)
+			lines.Add($"ICC: {FormatByteCount(profile.Size)}");
+
+		if (!xyz.Equals(SKColorSpaceXyz.Empty))
+			lines.Add($"XYZ D50[0]: {FormatMatrixRow(xyz)}");
+	}
+
+	private static string GetColorSpaceName(SKColorSpace colorSpace, SKColorSpaceXyz xyz)
+	{
+		if (colorSpace.IsSrgb || xyz.Equals(SKColorSpaceXyz.Srgb))
+			return "sRGB / Rec709";
+		if (xyz.Equals(SKColorSpaceXyz.DisplayP3))
+			return "Display P3";
+		if (xyz.Equals(SKColorSpaceXyz.Rec2020))
+			return "Rec2020";
+		if (xyz.Equals(SKColorSpaceXyz.AdobeRgb))
+			return "Adobe RGB";
+		if (xyz.Equals(SKColorSpaceXyz.Xyz))
+			return "XYZ";
+
+		return "Custom / wide gamut";
+	}
+
+	private static string GetTransferName(SKColorSpace colorSpace)
+	{
+		if (colorSpace.GammaIsLinear)
+			return "Linear";
+
+		if (colorSpace.GetNumericalTransferFunction(out var fn))
+		{
+			if (fn.Equals(SKColorSpaceTransferFn.Srgb))
+				return "sRGB";
+			if (fn.Equals(SKColorSpaceTransferFn.TwoDotTwo))
+				return "Gamma 2.2";
+			if (fn.Equals(SKColorSpaceTransferFn.Rec2020))
+				return "Rec2020";
+			if (fn.Equals(SKColorSpaceTransferFn.Pq))
+				return "PQ (ST 2084)";
+			if (fn.Equals(SKColorSpaceTransferFn.Hlg))
+				return "HLG";
+
+			var values = fn.Values;
+			return $"Custom (G={values[0]:0.###})";
+		}
+
+		return colorSpace.GammaIsCloseToSrgb ? "sRGB-like" : "Unknown";
+	}
+
+	private static string FormatMatrixRow(SKColorSpaceXyz xyz)
+	{
+		var values = xyz.Values;
+		return $"{values[0]:0.###}, {values[1]:0.###}, {values[2]:0.###}";
+	}
+
+	private static string FormatByteCount(long size) =>
+		size >= 1024 ? $"{size / 1024d:0.#} KB" : $"{size} B";
 
 	private static void DrawErrorText(SKCanvas canvas, int width, int height, string message)
 	{
