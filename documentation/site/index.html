@@ -87,51 +87,60 @@
 
 <span class="token-keyword">using</span> SkiaSharp;
 
-<span class="token-keyword">using</span> <span class="token-keyword">var</span> stream = File.Create(<span class="token-string">"hello-skiasharp.svg"</span>);
 <span class="token-keyword">var</span> bounds = <span class="token-keyword">new</span> <span class="token-type">SKRect</span>(<span class="token-number">0</span>, <span class="token-number">0</span>, <span class="token-number">320</span>, <span class="token-number">190</span>);
-
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> stream = File.Create(<span class="token-string">"hello-skiasharp.svg"</span>);
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> canvas = <span class="token-type">SKSvgCanvas</span>.Create(bounds, stream);
+
+<span class="token-comment">// Draw the background</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> bg = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
 {
+    IsAntialias = <span class="token-keyword">true</span>,
     Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
         <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">0</span>, <span class="token-number">0</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">320</span>, <span class="token-number">190</span>),
-        [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F0F4FF"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F5F0FF"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp),
-    IsAntialias = <span class="token-keyword">true</span>
+        [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F0F4FF"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F5F0FF"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp)
 };
 canvas.DrawRoundRect(bounds, <span class="token-number">16</span>, <span class="token-number">16</span>, bg);
 
-<span class="token-keyword">using</span> <span class="token-keyword">var</span> orb = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { IsAntialias = <span class="token-keyword">true</span>, Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
-    <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">96</span>, <span class="token-number">32</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">224</span>, <span class="token-number">158</span>),
-    [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#60A5FA"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#8B5CF6"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp) };
-<span class="token-keyword">using</span> <span class="token-keyword">var</span> line = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { IsAntialias = <span class="token-keyword">true</span>, Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#1D4ED8"</span>), StrokeWidth = <span class="token-number">8</span>, Style = <span class="token-type">SKPaintStyle</span>.Stroke, StrokeCap = <span class="token-type">SKStrokeCap</span>.Round };
+<span class="token-comment">// Draw the orb</span>
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> orb = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
+{
+    IsAntialias = <span class="token-keyword">true</span>,
+    Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
+        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">96</span>, <span class="token-number">32</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">224</span>, <span class="token-number">158</span>),
+        [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#60A5FA"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#8B5CF6"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp)
+};
+canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-number">95</span>, <span class="token-number">64</span>, orb);
 
+<span class="token-comment">// Add the accent line and dot</span>
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> line = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { IsAntialias = <span class="token-keyword">true</span>, Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#1D4ED8"</span>), StrokeWidth = <span class="token-number">8</span>, Style = <span class="token-type">SKPaintStyle</span>.Stroke, StrokeCap = <span class="token-type">SKStrokeCap</span>.Round };
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> dot = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F97316"</span>), IsAntialias = <span class="token-keyword">true</span> };
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> path = <span class="token-keyword">new</span> <span class="token-type">SKPath</span>();
 path.MoveTo(<span class="token-number">72</span>, <span class="token-number">136</span>);
 path.CubicTo(<span class="token-number">102</span>, <span class="token-number">104</span>, <span class="token-number">130</span>, <span class="token-number">88</span>, <span class="token-number">160</span>, <span class="token-number">88</span>);
 path.CubicTo(<span class="token-number">190</span>, <span class="token-number">88</span>, <span class="token-number">218</span>, <span class="token-number">104</span>, <span class="token-number">248</span>, <span class="token-number">136</span>);
-
-canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-number">95</span>, <span class="token-number">64</span>, orb);
 canvas.DrawPath(path, line);
-canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-number">62</span>, <span class="token-number">12</span>, <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F97316"</span>), IsAntialias = <span class="token-keyword">true</span> });</code></pre>
+canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-number">62</span>, <span class="token-number">12</span>, dot);</code></pre>
             <script id="hello-svg-copy" type="text/plain">#!/usr/bin/env dotnet
 #:property PublishAot=false
 #:package SkiaSharp@*
 
 using SkiaSharp;
 
-using var stream = File.Create("hello-skiasharp.svg");
 var bounds = new SKRect(0, 0, 320, 190);
-
+using var stream = File.Create("hello-skiasharp.svg");
 using var canvas = SKSvgCanvas.Create(bounds, stream);
+
+// Draw the background
 using var bg = new SKPaint
 {
+    IsAntialias = true,
     Shader = SKShader.CreateLinearGradient(
         new SKPoint(0, 0), new SKPoint(320, 190),
-        [SKColor.Parse("#F0F4FF"), SKColor.Parse("#F5F0FF")], null, SKShaderTileMode.Clamp),
-    IsAntialias = true
+        [SKColor.Parse("#F0F4FF"), SKColor.Parse("#F5F0FF")], null, SKShaderTileMode.Clamp)
 };
 canvas.DrawRoundRect(bounds, 16, 16, bg);
 
+// Draw the orb
 using var orb = new SKPaint
 {
     IsAntialias = true,
@@ -139,6 +148,9 @@ using var orb = new SKPaint
         new SKPoint(96, 32), new SKPoint(224, 158),
         [SKColor.Parse("#60A5FA"), SKColor.Parse("#8B5CF6")], null, SKShaderTileMode.Clamp)
 };
+canvas.DrawCircle(160, 95, 64, orb);
+
+// Add the accent line and dot
 using var line = new SKPaint
 {
     IsAntialias = true,
@@ -154,7 +166,6 @@ path.MoveTo(72, 136);
 path.CubicTo(102, 104, 130, 88, 160, 88);
 path.CubicTo(190, 88, 218, 104, 248, 136);
 
-canvas.DrawCircle(160, 95, 64, orb);
 canvas.DrawPath(path, line);
 canvas.DrawCircle(222, 62, 12, dot);</script>
           </div>
