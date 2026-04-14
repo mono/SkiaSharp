@@ -12,10 +12,13 @@ on:
 # Default to no permissions — each job declares only what it needs.
 permissions: {}
 
-# Ensure go-live runs one at a time (latest wins)
+# Serialize go-live deployments: each must complete before the next starts.
+# cancel-in-progress must be false — cancelling a running deploy-pages action
+# orphans the in-progress GitHub Pages deployment, which then blocks all
+# subsequent deployments with "due to in progress deployment" errors.
 concurrency:
   group: "docs-go-live"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
