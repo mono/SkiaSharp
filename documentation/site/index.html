@@ -92,6 +92,10 @@
 };
 canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-number">95</span>, <span class="token-number">64</span>, orb);
 
+<span class="token-comment">// Draw the outer ring</span>
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> ring = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { IsAntialias = <span class="token-keyword">true</span>, Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#94A3B8"</span>).WithAlpha(<span class="token-number">64</span>), Style = <span class="token-type">SKPaintStyle</span>.Stroke, StrokeWidth = <span class="token-number">2</span> };
+canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-number">95</span>, <span class="token-number">88</span>, ring);
+
 <span class="token-comment">// Draw the accent curve</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> line = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { IsAntialias = <span class="token-keyword">true</span>, Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#1D4ED8"</span>), StrokeWidth = <span class="token-number">8</span>, Style = <span class="token-type">SKPaintStyle</span>.Stroke, StrokeCap = <span class="token-type">SKStrokeCap</span>.Round };
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> path = <span class="token-keyword">new</span> <span class="token-type">SKPath</span>();
@@ -132,6 +136,16 @@ canvas.DrawRoundRect(bounds, <span class="token-number">18</span>, <span class="
         [<span class="token-type">SKColor</span>.Parse(<span class="token-string">"#60A5FA"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#8B5CF6"</span>)], <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp)
 };
 canvas.DrawCircle(<span class="token-number">200</span>, <span class="token-number">150</span>, <span class="token-number">82</span>, orb);
+
+<span class="token-comment">// Draw the outer ring</span>
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> ring = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
+{
+    IsAntialias = <span class="token-keyword">true</span>,
+    Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#94A3B8"</span>).WithAlpha(<span class="token-number">64</span>),
+    Style = <span class="token-type">SKPaintStyle</span>.Stroke,
+    StrokeWidth = <span class="token-number">2</span>
+};
+canvas.DrawCircle(<span class="token-number">200</span>, <span class="token-number">150</span>, <span class="token-number">112</span>, ring);
 
 <span class="token-comment">// Draw the accent curve</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> line = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
@@ -184,6 +198,16 @@ using var orb = new SKPaint
         [SKColor.Parse("#60A5FA"), SKColor.Parse("#8B5CF6")], null, SKShaderTileMode.Clamp)
 };
 canvas.DrawCircle(200, 150, 82, orb);
+
+// Draw the outer ring
+using var ring = new SKPaint
+{
+    IsAntialias = true,
+    Color = SKColor.Parse("#94A3B8").WithAlpha(64),
+    Style = SKPaintStyle.Stroke,
+    StrokeWidth = 2
+};
+canvas.DrawCircle(200, 150, 112, ring);
 
 // Draw the accent curve
 using var line = new SKPaint
