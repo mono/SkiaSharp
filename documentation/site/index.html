@@ -81,15 +81,8 @@
                 <span>Copy</span>
               </button>
             </div>
-            <pre><code id="hello-svg-sample" class="language-csharp"><span class="token-comment">#!/usr/bin/env dotnet</span>
-<span class="token-comment">#:property PublishAot=false</span>
-<span class="token-comment">#:package SkiaSharp@*</span>
-
-<span class="token-keyword">using</span> SkiaSharp;
-
-<span class="token-keyword">var</span> bounds = <span class="token-keyword">new</span> <span class="token-type">SKRect</span>(<span class="token-number">0</span>, <span class="token-number">0</span>, <span class="token-number">320</span>, <span class="token-number">190</span>);
-<span class="token-keyword">using</span> <span class="token-keyword">var</span> stream = File.Create(<span class="token-string">"hello-skiasharp.svg"</span>);
-<span class="token-keyword">using</span> <span class="token-keyword">var</span> canvas = <span class="token-type">SKSvgCanvas</span>.Create(bounds, stream);
+            <div class="code-sample-shell is-collapsed" id="hello-svg-sample-wrap">
+              <pre><code id="hello-svg-sample" class="language-csharp"><span class="token-comment">// Setup omitted for brevity</span>
 
 <span class="token-comment">// Draw the background</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> bg = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
@@ -111,15 +104,20 @@ canvas.DrawRoundRect(bounds, <span class="token-number">16</span>, <span class="
 };
 canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-number">95</span>, <span class="token-number">64</span>, orb);
 
-<span class="token-comment">// Add the accent line and dot</span>
+<span class="token-comment">// Draw the accent curve</span>
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> line = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { IsAntialias = <span class="token-keyword">true</span>, Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#1D4ED8"</span>), StrokeWidth = <span class="token-number">8</span>, Style = <span class="token-type">SKPaintStyle</span>.Stroke, StrokeCap = <span class="token-type">SKStrokeCap</span>.Round };
-<span class="token-keyword">using</span> <span class="token-keyword">var</span> dot = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F97316"</span>), IsAntialias = <span class="token-keyword">true</span> };
 <span class="token-keyword">using</span> <span class="token-keyword">var</span> path = <span class="token-keyword">new</span> <span class="token-type">SKPath</span>();
 path.MoveTo(<span class="token-number">72</span>, <span class="token-number">136</span>);
 path.CubicTo(<span class="token-number">102</span>, <span class="token-number">104</span>, <span class="token-number">130</span>, <span class="token-number">88</span>, <span class="token-number">160</span>, <span class="token-number">88</span>);
 path.CubicTo(<span class="token-number">190</span>, <span class="token-number">88</span>, <span class="token-number">218</span>, <span class="token-number">104</span>, <span class="token-number">248</span>, <span class="token-number">136</span>);
 canvas.DrawPath(path, line);
+
+<span class="token-comment">// Draw the accent dot</span>
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> dot = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F97316"</span>), IsAntialias = <span class="token-keyword">true</span> };
 canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-number">62</span>, <span class="token-number">12</span>, dot);</code></pre>
+              <div class="code-sample-fade" aria-hidden="true"></div>
+              <button class="expand-code-btn" type="button" data-expand-target="hello-svg-sample-wrap" aria-expanded="false">See full code</button>
+            </div>
             <script id="hello-svg-copy" type="text/plain">#!/usr/bin/env dotnet
 #:property PublishAot=false
 #:package SkiaSharp@*
@@ -150,7 +148,7 @@ using var orb = new SKPaint
 };
 canvas.DrawCircle(160, 95, 64, orb);
 
-// Add the accent line and dot
+// Draw the accent curve
 using var line = new SKPaint
 {
     IsAntialias = true,
@@ -167,6 +165,8 @@ path.CubicTo(102, 104, 130, 88, 160, 88);
 path.CubicTo(190, 88, 218, 104, 248, 136);
 
 canvas.DrawPath(path, line);
+
+// Draw the accent dot
 canvas.DrawCircle(222, 62, 12, dot);</script>
           </div>
 
@@ -373,6 +373,19 @@ canvas.DrawCircle(222, 62, 12, dot);</script>
         setTimeout(() => {
           if (label) label.textContent = original;
         }, 1500);
+      });
+    });
+
+    document.querySelectorAll('.expand-code-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const target = document.getElementById(button.dataset.expandTarget);
+        if (!target)
+          return;
+
+        const expanded = target.classList.toggle('is-expanded');
+        target.classList.toggle('is-collapsed', !expanded);
+        button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        button.textContent = expanded ? 'Show less' : 'See full code';
       });
     });
   </script>
