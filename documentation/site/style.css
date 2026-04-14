@@ -251,31 +251,23 @@ a:hover {
   padding: 56px 0 40px;
 }
 
+.showcase-header {
+  max-width: 760px;
+  margin: 0 auto 28px;
+}
+
 .showcase-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px;
-  align-items: center;
-}
-
-.section-title-left {
-  text-align: left;
-  margin-bottom: 12px;
-}
-
-.section-intro-left {
-  margin: 0 0 20px;
-  text-align: left;
-}
-
-.showcase-copy {
-  max-width: 460px;
+  align-items: stretch;
 }
 
 .showcase-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  justify-content: center;
 }
 
 .showcase-tag {
@@ -290,11 +282,6 @@ a:hover {
   font-weight: 600;
 }
 
-.showcase-demo {
-  display: grid;
-  gap: 16px;
-}
-
 .code-window,
 .render-preview {
   border: 1px solid var(--border);
@@ -304,7 +291,7 @@ a:hover {
 }
 
 .code-window {
-  background: var(--bg-card);
+  background: #0f172a;
 }
 
 .code-window-bar {
@@ -312,20 +299,20 @@ a:hover {
   align-items: center;
   gap: 6px;
   padding: 10px 14px;
-  background: var(--bg-subtle);
-  border-bottom: 1px solid var(--border);
+  background: rgba(148, 163, 184, 0.12);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
 }
 
 .code-window-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--border);
+  background: #64748b;
 }
 
 .code-window-title {
   margin-left: 6px;
-  color: var(--text-secondary);
+  color: #cbd5e1;
   font-size: 13px;
   font-weight: 600;
 }
@@ -340,7 +327,23 @@ a:hover {
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.65;
-  color: var(--text);
+  color: #e2e8f0;
+}
+
+.token-keyword {
+  color: #c084fc;
+}
+
+.token-type {
+  color: #7dd3fc;
+}
+
+.token-string {
+  color: #86efac;
+}
+
+.token-number {
+  color: #fda4af;
 }
 
 .render-preview {
@@ -348,9 +351,13 @@ a:hover {
     radial-gradient(circle at top left, var(--accent-subtle), transparent 55%),
     var(--bg-card);
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.render-preview svg {
+.render-preview svg,
+.render-preview img {
   width: 100%;
   height: auto;
   display: block;

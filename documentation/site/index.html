@@ -58,57 +58,50 @@
 
     <section class="showcase-section">
       <div class="container">
-        <div class="showcase-grid">
-          <div class="showcase-copy">
-            <p class="section-kicker">Start fast</p>
-            <h2 class="section-title section-title-left">Hello Canvas in a few lines</h2>
-            <p class="section-intro section-intro-left">
-              The API feels like idiomatic C#: create a bitmap, get a canvas, choose a paint, and start drawing.
-            </p>
-            <div class="showcase-tags">
-              <span class="showcase-tag">Draw shapes</span>
-              <span class="showcase-tag">Render text</span>
-              <span class="showcase-tag">Process images</span>
-            </div>
+        <div class="showcase-header">
+          <p class="section-kicker">Start fast</p>
+          <h2 class="section-title">Hello Canvas in a few lines</h2>
+          <p class="section-intro">
+            The API feels like idiomatic C#: create a bitmap, get a canvas, choose a paint, and start drawing.
+          </p>
+          <div class="showcase-tags">
+            <span class="showcase-tag">Draw shapes</span>
+            <span class="showcase-tag">Render text</span>
+            <span class="showcase-tag">Process images</span>
           </div>
+        </div>
 
-          <div class="showcase-demo">
-            <div class="code-window">
-              <div class="code-window-bar">
-                <span class="code-window-dot"></span>
-                <span class="code-window-dot"></span>
-                <span class="code-window-dot"></span>
-                <span class="code-window-title">Program.cs</span>
-              </div>
-              <pre><code>using var bitmap = new SKBitmap(256, 256);
-using var canvas = new SKCanvas(bitmap);
-canvas.Clear(SKColors.WhiteSmoke);
+        <div class="showcase-grid">
+          <div class="code-window">
+            <div class="code-window-bar">
+              <span class="code-window-dot"></span>
+              <span class="code-window-dot"></span>
+              <span class="code-window-dot"></span>
+              <span class="code-window-title">HelloSvg.cs</span>
+            </div>
+            <pre><code class="language-csharp"><span class="token-keyword">using</span> <span class="token-keyword">var</span> stream = <span class="token-type">File</span>.Create(<span class="token-string">"hello-skiasharp.svg"</span>);
+<span class="token-keyword">var</span> bounds = <span class="token-type">SKRect</span>.Create(<span class="token-number">320</span>, <span class="token-number">190</span>);
 
-using var paint = new SKPaint
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> canvas = <span class="token-type">SKSvgCanvas</span>.Create(bounds, stream);
+canvas.Clear(<span class="token-type">SKColors</span>.Transparent);
+
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> orb = <span class="token-keyword">new</span> <span class="token-type">SKPaint</span>
 {
-    IsAntialias = true,
-    Color = SKColor.Parse("#3B82F6")
+    IsAntialias = <span class="token-keyword">true</span>,
+    Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
+        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">96</span>, <span class="token-number">32</span>),
+        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">224</span>, <span class="token-number">158</span>),
+        <span class="token-keyword">new</span>[] { <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#60A5FA"</span>), <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#8B5CF6"</span>) },
+        <span class="token-keyword">null</span>, <span class="token-type">SKShaderTileMode</span>.Clamp)
 };
 
-canvas.DrawCircle(128, 128, 72, paint);</code></pre>
-            </div>
+canvas.DrawCircle(<span class="token-number">160</span>, <span class="token-number">95</span>, <span class="token-number">64</span>, orb);
+canvas.DrawCircle(<span class="token-number">222</span>, <span class="token-number">62</span>, <span class="token-number">12</span>, <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> { Color = <span class="token-type">SKColor</span>.Parse(<span class="token-string">"#F97316"</span>) });</code></pre>
+          </div>
 
-            <div class="render-preview">
-              <svg viewBox="0 0 320 190" aria-hidden="true" focusable="false">
-                <defs>
-                  <linearGradient id="orb" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#60a5fa" />
-                    <stop offset="100%" stop-color="#8b5cf6" />
-                  </linearGradient>
-                </defs>
-                <rect x="0" y="0" width="320" height="190" rx="16" fill="transparent" />
-                <circle cx="160" cy="95" r="64" fill="url(#orb)" opacity="0.95" />
-                <circle cx="160" cy="95" r="88" fill="none" stroke="#94a3b8" stroke-opacity="0.25" stroke-width="2" />
-                <path d="M72 136c30-32 58-48 88-48s58 16 88 48" fill="none" stroke="#1d4ed8" stroke-width="8" stroke-linecap="round" opacity="0.7" />
-                <circle cx="222" cy="62" r="12" fill="#f97316" />
-              </svg>
-              <p class="render-caption">A simple static preview showing the kind of output a few lines can create.</p>
-            </div>
+          <div class="render-preview">
+            <img src="images/gallery/hello-canvas.svg" alt="Colorful SVG preview generated by the Hello Canvas example">
+            <p class="render-caption">The preview on the right is the kind of SVG output you can generate with SkiaSharp.</p>
           </div>
         </div>
 
