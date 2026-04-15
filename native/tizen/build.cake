@@ -33,7 +33,7 @@ Task("libSkiaSharp")
 
     void Build(string outputDir, string skiaArch, string tizenArch, string rootstrap, string profile, string ncliVersion)
     {
-        if (Skip(outputDir)) return;
+        if (Skip(skiaArch)) return;
 
         GnNinja($"tizen/{outputDir}", "skia modules/skottie",
            $"target_os='tizen' " +
@@ -73,14 +73,14 @@ Task("libSkiaSharp")
 Task("libHarfBuzzSharp")
     .Does(() =>
 {
-    Build("armel", "arm",     "mobile-6.0-device.core",     "mobile-6.0");
-    Build("i586",  "x86",     "mobile-6.0-emulator.core",   "mobile-6.0");
-    Build("x86_64","x86_64",  "tizen-8.0-emulator64.core",  "tizen-8.0");
-    Build("aarch64","aarch64","tizen-8.0-device64.core",     "tizen-8.0");
+    Build("armel", "arm",   "arm",     "mobile-6.0-device.core",     "mobile-6.0");
+    Build("i586",  "x86",  "x86",     "mobile-6.0-emulator.core",   "mobile-6.0");
+    Build("x86_64","x64",  "x86_64",  "tizen-8.0-emulator64.core",  "tizen-8.0");
+    Build("aarch64","arm64","aarch64", "tizen-8.0-device64.core",     "tizen-8.0");
 
-    void Build(string outputDir, string tizenArch, string rootstrap, string profile)
+    void Build(string outputDir, string skiaArch, string tizenArch, string rootstrap, string profile)
     {
-        if (Skip(outputDir)) return;
+        if (Skip(skiaArch)) return;
 
         SetProjectProfile("libHarfBuzzSharp", profile);
 
