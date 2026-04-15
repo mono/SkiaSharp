@@ -16,11 +16,15 @@ description: >
   Triggers: "release notes audit", "what APIs are missing", "check release notes",
   "binding coverage", "what's new in skia", "skia API changes", "milestone audit",
   "what did we miss", "audit API gaps", "check deprecations", "plan milestone bump",
-  "review skia changes since m119", "new features from skia".
+  "review skia changes since m119", "new features from skia",
+  "generate a report", "report of the release notes", "release notes between",
+  "release notes report", "between milestones", "milestone report",
+  "report between m88 and m119", "changes between milestones".
 
-  Always use this skill when the user mentions reviewing, auditing, or comparing
-  Skia release notes against SkiaSharp, even if they don't use the word "audit".
-  Also trigger when they ask about API gaps between Skia versions.
+  Always use this skill when the user mentions reviewing, auditing, generating a
+  report of, or comparing Skia release notes — even if they don't use the word
+  "audit". Also trigger when they ask about API gaps between Skia versions, or
+  ask to generate/create any kind of report involving release notes or milestones.
 ---
 
 # Release Notes Audit Skill
