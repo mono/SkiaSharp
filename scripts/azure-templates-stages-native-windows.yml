@@ -43,36 +43,36 @@ stages:
           additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|arm (Win)
         parameters:
-          name: native_tizen_armel_windows
+          name: native_tizen_arm_windows
           displayName: Tizen arm
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
-          additionalArgs: --buildarch=armel
+          additionalArgs: --buildarch=arm
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|x86 (Win)
         parameters:
-          name: native_tizen_i586_windows
+          name: native_tizen_x86_windows
           displayName: Tizen x86
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
-          additionalArgs: --buildarch=i586
+          additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|x64 (Win)
         parameters:
-          name: native_tizen_x86_64_windows
+          name: native_tizen_x64_windows
           displayName: Tizen x64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
-          additionalArgs: --buildarch=x86_64
+          additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Tizen|arm64 (Win)
         parameters:
-          name: native_tizen_aarch64_windows
+          name: native_tizen_arm64_windows
           displayName: Tizen arm64
           buildAgent: ${{ parameters.buildAgentWindowsNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
-          additionalArgs: --buildarch=aarch64
+          additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Win32|x86 (Win)
         parameters:
           name: native_win32_x86_windows

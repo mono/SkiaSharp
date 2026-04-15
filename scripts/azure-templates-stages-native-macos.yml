@@ -72,33 +72,33 @@ stages:
           target: externals-tvos
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|arm (macOS)
         parameters:
-          name: native_tizen_armel_macos
+          name: native_tizen_arm_macos
           displayName: Tizen arm
           buildAgent: ${{ parameters.buildAgentMacNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
-          additionalArgs: --buildarch=armel
+          additionalArgs: --buildarch=arm
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|x86 (macOS)
         parameters:
-          name: native_tizen_i586_macos
+          name: native_tizen_x86_macos
           displayName: Tizen x86
           buildAgent: ${{ parameters.buildAgentMacNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
-          additionalArgs: --buildarch=i586
+          additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|x64 (macOS)
         parameters:
-          name: native_tizen_x86_64_macos
+          name: native_tizen_x64_macos
           displayName: Tizen x64
           buildAgent: ${{ parameters.buildAgentMacNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
-          additionalArgs: --buildarch=x86_64
+          additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|arm64 (macOS)
         parameters:
-          name: native_tizen_aarch64_macos
+          name: native_tizen_arm64_macos
           displayName: Tizen arm64
           buildAgent: ${{ parameters.buildAgentMacNative }}
           buildExternals: ${{ parameters.buildExternals }}
           target: externals-tizen
-          additionalArgs: --buildarch=aarch64
+          additionalArgs: --buildarch=arm64
