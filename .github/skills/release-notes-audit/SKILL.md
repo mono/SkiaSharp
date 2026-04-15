@@ -1,30 +1,16 @@
 ---
 name: release-notes-audit
 description: >
-  Audit Skia release notes against SkiaSharp bindings to find new APIs to add,
-  deprecated APIs to mark, and missing bindings. Produces structured JSON and
-  a standalone HTML report with binding coverage.
-
-  Use when user asks to:
-  - Review Skia release notes for binding gaps
-  - Check what APIs were added/removed since a milestone
-  - Find missing SkiaSharp bindings for new Skia features
-  - Audit API coverage between Skia and SkiaSharp
-  - Check deprecation alignment between Skia and SkiaSharp
-  - Plan work for a Skia milestone bump
-
-  Triggers: "release notes audit", "what APIs are missing", "check release notes",
-  "binding coverage", "what's new in skia", "skia API changes", "milestone audit",
-  "what did we miss", "audit API gaps", "check deprecations", "plan milestone bump",
-  "review skia changes since m119", "new features from skia",
-  "generate a report", "report of the release notes", "release notes between",
-  "release notes report", "between milestones", "milestone report",
-  "report between m88 and m119", "changes between milestones".
-
-  Always use this skill when the user mentions reviewing, auditing, generating a
-  report of, or comparing Skia release notes — even if they don't use the word
-  "audit". Also trigger when they ask about API gaps between Skia versions, or
-  ask to generate/create any kind of report involving release notes or milestones.
+  Compare Skia upstream release notes against SkiaSharp C# bindings to produce a
+  structured report (JSON + HTML) of new, missing, deprecated, and removed APIs
+  across milestone ranges. Use this skill whenever the user mentions Skia release
+  notes, milestone changes, API gaps, binding coverage, or wants a report of what
+  changed between Skia milestones. Trigger on: "release notes", "what changed
+  between milestones", "what's new in skia", "generate a report", "missing APIs",
+  "deprecated APIs", "milestone bump", "binding audit", "API coverage", "what
+  should we add", "what should we deprecate". DO NOT use for: fixing bugs, adding
+  a single specific API binding, updating the skia submodule, security audits, or
+  writing documentation.
 ---
 
 # Release Notes Audit Skill
