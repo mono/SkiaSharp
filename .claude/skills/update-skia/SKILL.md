@@ -256,7 +256,7 @@ must be updated when the underlying C++ APIs change.
 
 In the **SkiaSharp parent repo**, run:
 ```bash
-pwsh .github/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
+pwsh .claude/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
 ```
 
 The script handles all of these (so you don't have to do them manually):
@@ -276,7 +276,7 @@ The script handles all of these (so you don't have to do them manually):
 > and lists any new functions that may need C# wrappers.
 
 ```bash
-pwsh .github/skills/update-skia/scripts/regenerate-bindings.ps1
+pwsh .claude/skills/update-skia/scripts/regenerate-bindings.ps1
 ```
 
 The script handles all of these (so you don't forget any):

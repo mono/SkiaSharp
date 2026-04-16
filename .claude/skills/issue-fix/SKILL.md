@@ -462,8 +462,8 @@ If the fix discovered that triage or repro got something wrong, record it:
 
 ```bash
 # Try pwsh first, fall back to python3
-pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/skiasharp/fix/{timestamp}/{number}.json \
-  || python3 .github/skills/issue-fix/scripts/validate-fix.py /tmp/skiasharp/fix/{timestamp}/{number}.json
+pwsh .claude/skills/issue-fix/scripts/validate-fix.ps1 /tmp/skiasharp/fix/{timestamp}/{number}.json \
+  || python3 .claude/skills/issue-fix/scripts/validate-fix.py /tmp/skiasharp/fix/{timestamp}/{number}.json
 ```
 
 > **⚠️ NEVER use hand-rolled validation.** Always use the scripts above.
@@ -473,7 +473,7 @@ pwsh .github/skills/issue-fix/scripts/validate-fix.ps1 /tmp/skiasharp/fix/{times
 Copy the validated JSON to `output/ai/` for collection.
 
 ```bash
-pwsh .github/skills/issue-fix/scripts/persist-fix.ps1 /tmp/skiasharp/fix/{timestamp}/{number}.json
+pwsh .claude/skills/issue-fix/scripts/persist-fix.ps1 /tmp/skiasharp/fix/{timestamp}/{number}.json
 ```
 
 This copies the JSON to `output/ai/` mirroring the data-cache structure.

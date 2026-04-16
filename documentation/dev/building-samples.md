@@ -125,7 +125,7 @@ Example prompts:
 The skill follows the workflow described in the reference sections above: clear cache → download
 CI packages → detect preview version → build with `dotnet cake --target=samples`.
 
-See [`.github/skills/validate-samples/SKILL.md`](../../.github/skills/validate-samples/SKILL.md)
+See [`.claude/skills/validate-samples/SKILL.md`](../../.claude/skills/validate-samples/SKILL.md)
 for the full step-by-step workflow if you need to run it manually.
 
 ## How `samples-generate` Works

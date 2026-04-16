@@ -37,7 +37,7 @@ A single script handles all mechanical work: fetching PR metadata, checking out 
 running the generator, checking source integrity, auditing DEPS, and analyzing companion PR files.
 
 ```bash
-python3 .github/skills/review-skia-update/scripts/run_review.py \
+python3 .claude/skills/review-skia-update/scripts/run_review.py \
     --skia-pr {skia_pr_number} \
     --skiasharp-pr {skiasharp_pr_number}
 ```
@@ -99,8 +99,8 @@ The working tree is checked out to the companion PR, so you can read files direc
 
 ```bash
 # Try pwsh first, fall back to python3
-pwsh .github/skills/review-skia-update/scripts/validate-skia-review.ps1 {output_dir}/{pr_number}.json \
-  || python3 .github/skills/review-skia-update/scripts/validate-skia-review.py {output_dir}/{pr_number}.json
+pwsh .claude/skills/review-skia-update/scripts/validate-skia-review.ps1 {output_dir}/{pr_number}.json \
+  || python3 .claude/skills/review-skia-update/scripts/validate-skia-review.py {output_dir}/{pr_number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to persist
@@ -117,7 +117,7 @@ pwsh .github/skills/review-skia-update/scripts/validate-skia-review.ps1 {output_
 Copy the validated JSON to `output/ai/` for collection.
 
 ```bash
-pwsh .github/skills/review-skia-update/scripts/persist-skia-review.ps1 {output_dir}/{pr_number}.json
+pwsh .claude/skills/review-skia-update/scripts/persist-skia-review.ps1 {output_dir}/{pr_number}.json
 ```
 
 This copies the JSON to `output/ai/repos/mono-skia/ai-review/` and generates an HTML report

@@ -51,8 +51,8 @@ export SKIASHARP_BENCHMARK=1
 REPO_ROOT=$(git rev-parse --show-toplevel)
 REPO_SHA=$(git rev-parse HEAD)
 DATA_CACHE_SHA=$(git -C .data-cache rev-parse HEAD)
-TRIAGE_VALIDATOR="$REPO_ROOT/.github/skills/issue-triage/scripts/validate-triage.ps1"
-REPRO_VALIDATOR="$REPO_ROOT/.github/skills/issue-repro/scripts/validate-repro.ps1"
+TRIAGE_VALIDATOR="$REPO_ROOT/.claude/skills/issue-triage/scripts/validate-triage.ps1"
+REPRO_VALIDATOR="$REPO_ROOT/.claude/skills/issue-repro/scripts/validate-repro.ps1"
 
 if [[ -n "$RESUME" ]]; then
     OUTDIR="$(cd "$RESUME" 2>/dev/null && pwd || echo "$REPO_ROOT/$RESUME")"

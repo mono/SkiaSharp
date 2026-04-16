@@ -11,7 +11,7 @@
     4. Lists any NEW functions that may need C# wrappers
 
 .EXAMPLE
-    pwsh .github/skills/update-skia/scripts/regenerate-bindings.ps1
+    pwsh .claude/skills/update-skia/scripts/regenerate-bindings.ps1
 #>
 
 $ErrorActionPreference = 'Stop'

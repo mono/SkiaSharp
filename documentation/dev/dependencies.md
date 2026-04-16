@@ -180,5 +180,5 @@ FreeType has its own zlib copy at `freetype/src/gzip/`. When checking zlib CVEs:
 
 ## Related Skills
 
-- **[security-audit](../../.github/skills/security-audit/SKILL.md)** — Find CVEs, verify fixes, generate reports
-- **[native-dependency-update](../../.github/skills/native-dependency-update/SKILL.md)** — Update dependencies, create PRs
+- **[security-audit](../../.claude/skills/security-audit/SKILL.md)** — Find CVEs, verify fixes, generate reports
+- **[native-dependency-update](../../.claude/skills/native-dependency-update/SKILL.md)** — Update dependencies, create PRs

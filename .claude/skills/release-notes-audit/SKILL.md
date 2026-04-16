@@ -142,7 +142,7 @@ Save as `output/ai/release-notes-audit-{date}.json` in the repo.
 > 🛑 **MANDATORY:** Always generate the HTML report.
 
 ```bash
-python3 .github/skills/release-notes-audit/scripts/render-release-notes-audit.py \
+python3 .claude/skills/release-notes-audit/scripts/render-release-notes-audit.py \
   output/ai/release-notes-audit-{date}.json
 ```
 

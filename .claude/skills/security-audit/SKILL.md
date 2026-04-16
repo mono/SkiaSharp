@@ -294,7 +294,7 @@ Save as `output/ai/security-audit-{date}.json` in the repo (same pattern as othe
 > 🛑 **MANDATORY:** Always generate the HTML report. The human needs a readable dashboard.
 
 ```bash
-python3 .github/skills/security-audit/scripts/render-security-audit.py \
+python3 .claude/skills/security-audit/scripts/render-security-audit.py \
   output/ai/security-audit-{date}.json
 ```
 

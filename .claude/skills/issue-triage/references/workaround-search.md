@@ -117,7 +117,7 @@ gh issue view {N} --repo mono/SkiaSharp --json comments \
 
 ```bash
 grep -n "DllNotFound\|NoDependencies\|container\|Docker\|Alpine\|ARM64" documentation/dev/packages.md
-grep -n "KEYWORD" .github/skills/issue-triage/references/skia-patterns.md
+grep -n "KEYWORD" .claude/skills/issue-triage/references/skia-patterns.md
 ```
 
 **Common instant workarounds:**

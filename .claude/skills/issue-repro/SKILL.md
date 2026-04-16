@@ -297,8 +297,8 @@ Use the same action types as triage. Common repro actions:
 
 ```bash
 # Try pwsh first, fall back to python3
-pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/{timestamp}/{number}.json \
-  || python3 .github/skills/issue-repro/scripts/validate-repro.py /tmp/skiasharp/repro/{timestamp}/{number}.json
+pwsh .claude/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/{timestamp}/{number}.json \
+  || python3 .claude/skills/issue-repro/scripts/validate-repro.py /tmp/skiasharp/repro/{timestamp}/{number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to Phase 6
@@ -317,7 +317,7 @@ pwsh .github/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/
 Copy the validated JSON to `output/ai/` for collection.
 
 ```bash
-pwsh .github/skills/issue-repro/scripts/persist-repro.ps1 /tmp/skiasharp/repro/{timestamp}/{number}.json
+pwsh .claude/skills/issue-repro/scripts/persist-repro.ps1 /tmp/skiasharp/repro/{timestamp}/{number}.json
 ```
 
 This copies the JSON to `output/ai/` mirroring the data-cache structure.

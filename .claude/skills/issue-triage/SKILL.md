@@ -84,7 +84,7 @@ If using cached JSON:
 
 ```bash
 mkdir -p /tmp/skiasharp/triage/{timestamp}
-pwsh .github/skills/issue-triage/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/skiasharp/triage/{timestamp}/{number}.md
+pwsh .claude/skills/issue-triage/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/skiasharp/triage/{timestamp}/{number}.md
 ```
 
 If fetched via API, work directly from the `gh` output (skip the script).
@@ -208,8 +208,8 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contain
 
 ```bash
 # Try pwsh first, fall back to python3
-pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json \
-  || python3 .github/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
+pwsh .claude/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json \
+  || python3 .claude/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to Phase 5
@@ -230,7 +230,7 @@ pwsh .github/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/tria
 Copy the validated JSON to `output/ai/` for collection.
 
 ```bash
-pwsh .github/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json
+pwsh .claude/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
 This copies the JSON to `output/ai/` mirroring the data-cache structure.

@@ -1,6 +1,6 @@
 # detect-preview-version.ps1
 # Detects the preview label and build number from downloaded nupkg files in output/nugets/
-# Usage: pwsh .github/skills/validate-samples/scripts/detect-preview-version.ps1
+# Usage: pwsh .claude/skills/validate-samples/scripts/detect-preview-version.ps1
 #   Prints: Preview label, Build number, Full suffix
 
 param(
