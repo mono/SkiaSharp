@@ -2,10 +2,10 @@
 name: issue-triage
 description: >-
   Triage a SkiaSharp GitHub issue or PR into structured JSON with classification
-  (type, area, platform, severity), suggested response, and automatable actions.
-  Triggers: "triage #123", "triage issue", "classify issue", "analyze issue",
-  "what's this issue about". Also triggered when an issue number is given after
-  the issue-triage skill is already mentioned.
+  (type, area, platform, severity), suggested response, automatable actions, and
+  companion Markdown/HTML reports. Triggers: "triage #123", "triage issue",
+  "classify issue", "analyze issue", "what's this issue about". Also triggered
+  when an issue number is given after the issue-triage skill is already mentioned.
 ---
 
 # Triage Issue
@@ -23,23 +23,20 @@ Analyze a SkiaSharp GitHub issue and produce a structured, schema-validated tria
 These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded.
 
 > **Quick flow:**
-> 1. Setup cache worktree
-> 2. Load issue data (cache first, GitHub API fallback)
-> 3. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [labels](references/labels.md), [triage-examples](references/triage-examples.md), [anti-patterns](references/anti-patterns.md)
+> 1. Load issue data from GitHub (prefer `gh`, or GitHub MCP when available)
+> 2. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [labels](references/labels.md), [triage-examples](references/triage-examples.md), [anti-patterns](references/anti-patterns.md)
 > 4. Create brief plan (5-10 lines)
 > 5. Investigate code — **READ-ONLY, never edit source files**
 > 6. Generate JSON
 > 7. Validate with script
-> 8. Persist to data-cache
+> 8. Persist JSON + Markdown + HTML reports
 
 ### Data sources
 
-**Local cache first.** Issue data is pre-cached on the `docs-data-cache` branch (synced hourly). The cache contains full issue JSON with comments, labels, and timeline — use it as the primary source. You can `grep` across all cached items for duplicate detection and cross-referencing.
-
-**GitHub CLI fallback.** If the issue is not in the cache (too new, or cache stale), use `gh` CLI or the GitHub MCP tools (`issue_read`, `get_file_contents`) to fetch it directly. Local cache is faster and searchable; API is the fallback, not forbidden.
+**Primary source: GitHub itself.** Prefer `gh` CLI for repeatable issue/PR fetches and searches. If the environment exposes GitHub MCP issue/PR lookup tools, those are also valid. Do not set up or depend on a cache worktree or cache branch for this skill.
 
 ```
-Phase 1 (Setup) → Phase 2 (Preprocess + Investigate) → Phase 3 (Analyze) → Phase 3.5 (Workaround Search) → Phase 3.7 (Validate Code) → Phase 4 (Validate) → Phase 5 (Persist)
+Phase 1 (Setup) → Phase 2 (Preprocess + Investigate) → Phase 3 (Analyze) → Phase 3.5 (Workaround Search) → Phase 3.7 (Validate Code) → Phase 4 (Validate) → Phase 5 (Persist & Render)
 ```
 
 ---
@@ -50,17 +47,11 @@ Run once per session:
 
 ```bash
 pwsh --version    # Requires 7.5+
-
-# Cache worktree
-[ -d ".data-cache" ] || git worktree add .data-cache docs-data-cache
-git -C .data-cache pull --rebase origin docs-data-cache
-CACHE=".data-cache/repos/mono-SkiaSharp"
-
-# Docs worktree (optional — for question/docs research)
-if git show-ref --verify --quiet refs/heads/docs 2>/dev/null; then
-    [ -d ".docs" ] || git worktree add .docs docs
-fi
+gh --version
+gh auth status
 ```
+
+If `gh` is unavailable or unauthenticated, use the GitHub MCP issue/PR retrieval and search tools available in the environment.
 
 ---
 
@@ -69,25 +60,21 @@ fi
 ### 1. Read the issue
 
 ```bash
-cat $CACHE/github/items/{number}.json
+mkdir -p /tmp/skiasharp/triage/{timestamp}
+gh issue view {number} --repo mono/SkiaSharp \
+  --json number,title,body,labels,comments,state,createdAt,updatedAt,closedAt,author,milestone \
+  > /tmp/skiasharp/triage/{timestamp}/{number}.issue.json
 ```
 
-If not in cache, fetch via GitHub CLI or MCP tools:
-
-```bash
-gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author
-```
+GitHub MCP issue/PR retrieval tools are equally valid if the environment exposes them.
 
 ### 2. Convert to annotated markdown
 
-If using cached JSON:
-
 ```bash
-mkdir -p /tmp/skiasharp/triage/{timestamp}
-pwsh .claude/skills/issue-triage/scripts/issue-to-markdown.ps1 $CACHE/github/items/{number}.json > /tmp/skiasharp/triage/{timestamp}/{number}.md
+pwsh .agents/skills/issue-triage/scripts/issue-to-markdown.ps1 \
+  /tmp/skiasharp/triage/{timestamp}/{number}.issue.json \
+  > /tmp/skiasharp/triage/{timestamp}/{number}.md
 ```
-
-If fetched via API, work directly from the `gh` output (skip the script).
 
 ### 3. Code Investigation (MANDATORY)
 
@@ -104,11 +91,10 @@ If fetched via API, work directly from the `gh` output (skip the script).
 4. For bugs: trace the code path — does the issue still exist?
 5. For feature requests: has it been implemented since filing?
 6. For questions: does the source confirm or contradict the assumption?
-7. **Search for related PRs** — check data-cache first, then fall back to CLI:
+7. **Search for related PRs and duplicates** — use `gh` CLI or GitHub MCP directly:
    ```bash
-   # Data-cache lookup (fast, offline)
-   ls $CACHE/github/items/ | head -5  # check cache structure
-   # Fall back to GitHub CLI
+   gh search issues "{keywords from issue}" --repo mono/SkiaSharp --limit 10 \
+     --json number,title,state,url
    gh pr list --search '{keywords from issue}' --state all --repo mono/SkiaSharp --limit 10 --json number,title,state,mergedAt
    ```
    Include ALL related PRs in `evidence.reproEvidence.repoLinks` — especially closed/unmerged PRs, as they reveal prior attempts and maintainer decisions.
@@ -127,8 +113,7 @@ If fetched via API, work directly from the `gh` output (skip the script).
 
 > **Pre-flight — confirm before analyzing:**
 >
-> - [ ] Cache worktree is set up and pulled
-> - [ ] Issue data loaded (cache JSON or GitHub API)
+> - [ ] Issue data loaded from `gh` CLI or GitHub MCP
 > - [ ] Read [references/schema-cheatsheet.md](references/schema-cheatsheet.md) for required fields and enums
 > - [ ] Read [references/labels.md](references/labels.md) for valid label values
 > - [ ] Read [references/triage-examples.md](references/triage-examples.md) for calibration
@@ -176,7 +161,7 @@ Refer to the cheatsheet for the exact field structure and enum values.
 
 ## Phase 3.5 — Workaround Search
 
-For bugs, questions, and feature requests: **actively search for workarounds** the reporter can use now. Follow [references/workaround-search.md](references/workaround-search.md) — 9 sources in priority order (cached triages → closed issues → known patterns → source code → docs → web).
+For bugs, questions, and feature requests: **actively search for workarounds** the reporter can use now. Follow [references/workaround-search.md](references/workaround-search.md) — 9 sources in priority order (existing triages → closed issues → known patterns → source code → docs → web).
 
 - Set proposal `category` to `"workaround"` / `"fix"` / `"alternative"` / `"investigation"`
 - Include `codeSnippet` on any proposal with copy-paste-ready code
@@ -208,8 +193,8 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contain
 
 ```bash
 # Try pwsh first, fall back to python3
-pwsh .claude/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json \
-  || python3 .claude/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
+pwsh .agents/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json \
+  || python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to Phase 5
@@ -227,18 +212,24 @@ pwsh .claude/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/tria
 
 ### 1. Persist
 
-Copy the validated JSON to `output/ai/` for collection.
+Copy the validated JSON to `output/ai/` for collection, then render companion Markdown and HTML reports that wrap the same JSON data.
 
 ```bash
-pwsh .claude/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json
+pwsh .agents/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
-This copies the JSON to `output/ai/` mirroring the data-cache structure.
+This produces:
+
+- `output/ai/repos/mono-SkiaSharp/ai-triage/{number}.json`
+- `output/ai/repos/mono-SkiaSharp/ai-triage/{number}.md`
+- `output/ai/repos/mono-SkiaSharp/ai-triage/{number}.html`
 
 ### 2. Present summary
 
 ```
 ✅ Triage: ai-triage/{number}.json
+✅ Report: ai-triage/{number}.md
+✅ Viewer: ai-triage/{number}.html
 
 Type:     type/bug (0.98)     Area: area/SkiaSharp
 Severity: critical            Action: needs-investigation
@@ -277,5 +268,6 @@ See [references/anti-patterns.md](references/anti-patterns.md) — **read this f
 
 ## Scripts
 
-- **`scripts/issue-to-markdown.ps1 <file.json>`** — Preprocess cached issue → annotated markdown
+- **`scripts/issue-to-markdown.ps1 <file.json>`** — Preprocess GitHub issue JSON → annotated markdown
 - **`scripts/validate-triage.ps1 <triage.json>`** — Validate against schema + rationale coverage + action integrity
+- **`scripts/render-triage-report.py <triage.json>`** — Render validated triage JSON → `.md` + `.html`

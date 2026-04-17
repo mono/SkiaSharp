@@ -12,14 +12,14 @@ Search in this order. Stop as soon as you find a viable workaround, but always c
 
 | Priority | Source | Why first | When to skip |
 |----------|--------|-----------|-------------|
-| 1 | Existing triages (`$CACHE/ai-triage/`) | Already analyzed, has `analysis.workarounds` and `analysis.resolution.proposals` | Never — always check |
-| 2 | Closed issues with comments (`$CACHE/github/items/`) | Reporters post "I solved it by..." | Never — always check |
+| 1 | Existing triages (`output/ai/repos/mono-SkiaSharp/ai-triage/`) | Already analyzed, has `analysis.workarounds` and `analysis.resolution.proposals` | On a clean checkout this directory won't exist — the grep commands below use `2>/dev/null` so they'll return empty results gracefully. Always run the check. |
+| 2 | Closed issues with comments (GitHub via `gh` or MCP) | Reporters post "I solved it by..." | Never — always check |
 | 3 | Known patterns (`references/skia-patterns.md`, `documentation/dev/packages.md`) | Curated heuristics for common traps | Never — always check |
 | 4 | SkiaSharp source code (`binding/SkiaSharp/*.cs`) | Alternative APIs visible in the class | Skip if issue is deployment/packaging |
 | 5 | API docs (`docs/SkiaSharpAPI/SkiaSharp/*.xml`) | Method docs mention alternatives | Skip if issue is deployment/packaging |
 | 6 | Tutorials (`.docs/docs/docs/`) | Step-by-step examples of correct usage | Skip if not a usage/how-to issue |
 | 7 | Samples (`samples/`) | Working code for specific platforms | Skip if not a platform integration issue |
-| 8 | GitHub closed issues (API fallback) | Broader search than local cache | Only if cache search found nothing |
+| 8 | GitHub closed issues (broader search) | Broader search when earlier targeted checks found nothing | Only if targeted search found nothing |
 | 9 | Web search (Stack Overflow, MS Learn) | Community solutions, framework-side fixes | Only if all local sources exhausted |
 
 ---
@@ -40,15 +40,15 @@ Use both C# names (`SKImage`) and C API names (`sk_image`) since issues may refe
 
 ```bash
 # Find triages with workarounds
-grep -rl '"workarounds"' $CACHE/ai-triage/
+grep -rl '"workarounds"' output/ai/repos/mono-SkiaSharp/ai-triage/ 2>/dev/null
 
 # Keyword search across triage files
-grep -li "SKImage\|FromEncoded\|DllNotFound" $CACHE/ai-triage/*.json
+grep -li "SKImage\|FromEncoded\|DllNotFound" output/ai/repos/mono-SkiaSharp/ai-triage/*.json 2>/dev/null
 
 # Extract workaround details from matching triages
 python3 -c "
 import json, glob
-for f in glob.glob('$CACHE/ai-triage/*.json'):
+for f in glob.glob('output/ai/repos/mono-SkiaSharp/ai-triage/*.json'):
     with open(f) as fh:
         d = json.load(fh)
     blob = json.dumps(d).lower()
@@ -72,38 +72,44 @@ for f in glob.glob('$CACHE/ai-triage/*.json'):
 
 ## Step 3 — Search Closed Issues
 
-Cached issue JSON has comments at `engagement.comments[]` (each with `author`, `body`, `createdAt`).
+GitHub issue comments are available directly from `gh issue view --json comments` or GitHub MCP issue/PR tools.
 
 ```bash
-# Fast keyword scan
-grep -rli "workaround\|solved\|fixed it\|resolved.*by" $CACHE/github/items/ | head -20
+gh search issues "repo:mono/SkiaSharp state:closed KEYWORD1 KEYWORD2" --limit 20 \
+  --json number,title,url
 ```
 
 ```python
-import json, glob
+import json, subprocess
 
 KEYWORDS = ['KEYWORD1', 'KEYWORD2']
 SIGNALS = ['workaround', 'solved', 'fixed it', 'i resolved', 'as a workaround',
            'the fix is', 'what worked', 'try using', 'instead of', 'turned out']
 
-for f in sorted(glob.glob('$CACHE/github/items/*.json')):
-    with open(f) as fh:
-        d = json.load(fh)
-    if d.get('state') != 'closed':
-        continue
-    blob = (d.get('title','') + ' ' + (d.get('body') or '')).lower()
-    if not any(kw.lower() in blob for kw in KEYWORDS):
-        continue
-    for c in d.get('engagement',{}).get('comments', []):
+search = subprocess.check_output([
+    'gh', 'search', 'issues',
+    f"repo:mono/SkiaSharp state:closed {' '.join(KEYWORDS)}",
+    '--limit', '20', '--json', 'number,title'
+], text=True)
+
+for d in json.loads(search):
+    detail = subprocess.check_output([
+        'gh', 'issue', 'view', str(d['number']),
+        '--repo', 'mono/SkiaSharp',
+        '--json', 'comments'
+    ], text=True)
+    comments = json.loads(detail).get('comments', [])
+    for c in comments:
         body = (c.get('body') or '').lower()
         if any(sig in body for sig in SIGNALS):
             print(f"#{d['number']}: {d['title'][:60]}")
-            print(f"  By: {c.get('author','?')}  {c.get('body','')[:300]}\n")
+            author = (c.get('author') or {}).get('login', '?')
+            print(f"  By: {author}  {c.get('body','')[:300]}\n")
 ```
 
 **What to look for:** OP says "I solved it by..." (high-value), maintainer suggests alternative (high-value), "closing because fixed in vX.Y.Z" (upgrade workaround), "this is by design" (no workaround — clarify usage).
 
-**GitHub API fallback** (when cache misses):
+**Direct GitHub search**:
 
 ```bash
 gh search issues "SKImage FromEncoded crash" --repo mono/SkiaSharp --state closed --limit 10
@@ -117,7 +123,7 @@ gh issue view {N} --repo mono/SkiaSharp --json comments \
 
 ```bash
 grep -n "DllNotFound\|NoDependencies\|container\|Docker\|Alpine\|ARM64" documentation/dev/packages.md
-grep -n "KEYWORD" .claude/skills/issue-triage/references/skia-patterns.md
+grep -n "KEYWORD" .agents/skills/issue-triage/references/skia-patterns.md
 ```
 
 **Common instant workarounds:**

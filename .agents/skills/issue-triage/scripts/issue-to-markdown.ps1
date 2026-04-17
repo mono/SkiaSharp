@@ -1,8 +1,9 @@
 <#
 .SYNOPSIS
-    Convert a cached issue JSON file into annotated markdown for AI analysis.
+    Convert a GitHub issue JSON payload into annotated markdown for AI analysis.
 .EXAMPLE
-    pwsh scripts/issue-to-markdown.ps1 .data-cache/github/items/2794.json
+    pwsh scripts/issue-to-markdown.ps1 /tmp/skiasharp/triage/2794.issue.json
+    gh issue view 2794 --repo mono/SkiaSharp --json number,title,body,labels,comments,state,createdAt,closedAt,author | pwsh scripts/issue-to-markdown.ps1
     Get-Content issue.json -Raw | pwsh scripts/issue-to-markdown.ps1
 .NOTES
     Annotations: [OP]/[MEMBER]/[CONTRIBUTOR]/[BOT] tags, time-deltas,
@@ -40,7 +41,7 @@ elseif ($Path) {
     $data = Get-Content $Path -Raw | ConvertFrom-Json
 }
 elseif (-not [Console]::IsInputRedirected) {
-    Write-Error "Usage: pwsh issue-to-markdown.ps1 <file.json>  or  cat file.json | pwsh issue-to-markdown.ps1"
+    Write-Error "Usage: pwsh issue-to-markdown.ps1 <file.json>  or  gh issue view ... | pwsh issue-to-markdown.ps1"
     exit 2
 }
 else {
@@ -168,7 +169,15 @@ $updated = Parse-DateSafe ($data.updated_at ?? $data.updatedAt)
 $closed  = Parse-DateSafe ($data.closed_at ?? $data.closedAt)
 
 $labelNames = @($data.labels | ForEach-Object { $_.name ?? $_ })
-$comments   = @($data.engagement?.comments | Where-Object { $_ })
+$comments = if ($data.engagement?.comments) {
+    @($data.engagement.comments | Where-Object { $_ })
+}
+elseif ($data.comments -is [array]) {
+    @($data.comments | Where-Object { $_ })
+}
+else {
+    @()
+}
 
 # ── Count author roles ────────────────────────────────────────────
 
@@ -180,7 +189,18 @@ foreach ($c in $comments) {
     $roleCounts[$role]++
 }
 
-$totalComments = $data.comments ?? $data.commentCount ?? $comments.Count
+$totalComments = if ($data.comments -is [array]) {
+    $data.comments.Count
+}
+elseif ($data.comments -is [int] -or $data.comments -is [long]) {
+    $data.comments
+}
+elseif ($data.commentCount) {
+    $data.commentCount
+}
+else {
+    $comments.Count
+}
 $distParts = @(
     if ($roleCounts['[OP]'])          { "$($roleCounts['[OP]']) OP" }
     if ($roleCounts['[MEMBER]'])      { "$($roleCounts['[MEMBER]']) member" }
