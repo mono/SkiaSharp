@@ -16,7 +16,23 @@
 
 {{ summary }}
 
-## Classification
+## Technical Summary
+
+{{ analysis.summary | d('—') }}
+
+## Recommended Disposition
+
+| Field | Value |
+|-------|-------|
+| Suggested action | {{ actionability.suggestedAction | d('—') }} |
+| Confidence | {{ actionability.confidence | fmt_confidence }} |
+| Reason | {{ actionability.reason | d('—') }} |
+| Suggested repro platform | {{ actionability.suggestedReproPlatform | d('—') }} |
+
+---
+
+<details>
+<summary><strong>Classification</strong></summary>
 
 | Field | Value |
 |-------|-------|
@@ -27,7 +43,10 @@
 | Tenets | {{ classification.tenets | fmt_list }} |
 | Partner | {{ classification.partner | d('—') }} |
 
-## Evidence
+</details>
+
+<details>
+<summary><strong>Evidence</strong></summary>
 {% if repro %}
 
 ### Reproduction
@@ -136,7 +155,10 @@
 | Fixed in version | {{ fix.fixedInVersion | d('—') }} |
 {% endif %}
 
-## Analysis
+</details>
+
+<details>
+<summary><strong>Analysis</strong></summary>
 
 ### Technical Summary
 
@@ -214,7 +236,10 @@
   {% endif %}
 {% endif %}
 
-## Output
+</details>
+
+<details>
+<summary><strong>Actions</strong></summary>
 
 ### Actionability
 
@@ -248,6 +273,8 @@
 {{ action.comment }}
 ```
 {% endfor %}
+
+</details>
 
 <details>
 <summary>Raw JSON</summary>
