@@ -163,7 +163,8 @@ Question with resolution proposals, no bugSignals, close-with-docs action:
         "type": "close-issue",
         "description": "Close as answered",
         "risk": "medium",
-        "confidence": 0.80
+        "confidence": 0.80,
+        "stateReason": "completed"
       }
     ]
   }
@@ -227,7 +228,8 @@ Duplicate with link-duplicate action and linkedIssue:
         "type": "close-issue",
         "description": "Close as duplicate",
         "risk": "medium",
-        "confidence": 0.95
+        "confidence": 0.95,
+        "stateReason": "not_planned"
       }
     ]
   }

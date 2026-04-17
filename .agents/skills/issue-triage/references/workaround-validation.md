@@ -146,20 +146,6 @@ elif warnings:
 - **Non-SkiaSharp code** (MAUI, ASP.NET): Out of scope — warn if obviously wrong, don't fail
 - **Retry budget:** Max 1 retry per failing agent, only if it provided a `fix`; second failure → strip code
 
-## Integration Point in SKILL.md
-
-Insert as **Phase 3.7** between Workaround Search and Validate:
-
-```markdown
-### Phase 3.7 — Workaround Validation (conditional)
-
-If triage JSON contains code in proposals or `comment`:
-1. Extract code blocks (fenced or inline SK* calls)
-2. Launch 3 parallel validation agents per references/workaround-validation.md
-3. Synthesize results — apply fixes, caveats, or downgrades
-If no code → proceed to Phase 4.
-```
-
 ## Example
 
 **Issue:** "SKBitmap.Decode crashes with large images" — proposed fenced code block scales image before decode.
