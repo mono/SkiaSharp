@@ -196,13 +196,13 @@ Trust: GitHub issues (high), MS Learn (high), SO accepted answers (medium-high),
 
 ## Search Patterns by Issue Type
 
-**Crash/exception:** triages for same exception → cached issues for error message → `skia-patterns.md` common traps → source code for the method in stack trace. *Workaround: null check, try-catch, or alternative API.*
+**Crash/exception:** triages for same exception → closed GitHub issues for error message → `skia-patterns.md` common traps → source code for the method in stack trace. *Workaround: null check, try-catch, or alternative API.*
 
 **Wrong output/rendering:** triages for the API → tutorials for correct usage → source for parameter validation → samples for working examples. *Workaround: minimal working example showing correct approach.*
 
-**Deployment/DllNotFoundException:** `documentation/dev/packages.md` FIRST (almost always has the answer) → `skia-patterns.md` native loading → cached issues for same platform combo. *Workaround: package swap, direct PackageReference, or system dependency install.*
+**Deployment/DllNotFoundException:** `documentation/dev/packages.md` FIRST (almost always has the answer) → `skia-patterns.md` native loading → closed GitHub issues for same platform combo. *Workaround: package swap, direct PackageReference, or system dependency install.*
 
-**Question (how to do X):** tutorials → API docs → samples → cached closed issues (many questions repeat) → web search MS Learn. *Workaround: assemble code snippet from docs + source.*
+**Question (how to do X):** tutorials → API docs → samples → closed GitHub issues (many questions repeat) → web search MS Learn. *Workaround: assemble code snippet from docs + source.*
 
 **Feature request (API doesn't exist):** source code for partial solutions → Skia C++ headers for upstream capability → triages for similar requests. *Workaround: show existing APIs that achieve the result, even if verbose.*
 

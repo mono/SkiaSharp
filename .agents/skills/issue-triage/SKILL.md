@@ -25,11 +25,11 @@ These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded
 > **Quick flow:**
 > 1. Load issue data from GitHub (prefer `gh`, or GitHub MCP when available)
 > 2. Read references: [schema-cheatsheet](references/schema-cheatsheet.md), [labels](references/labels.md), [triage-examples](references/triage-examples.md), [anti-patterns](references/anti-patterns.md)
-> 4. Create brief plan (5-10 lines)
-> 5. Investigate code — **READ-ONLY, never edit source files**
-> 6. Generate JSON
-> 7. Validate with script
-> 8. Persist JSON + Markdown + HTML reports
+> 3. Create brief plan (5-10 lines)
+> 4. Investigate code — **READ-ONLY, never edit source files**
+> 5. Generate JSON
+> 6. Validate with script
+> 7. Persist JSON + Markdown + HTML reports
 
 ### Data sources
 
