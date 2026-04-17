@@ -46,7 +46,7 @@ Phase 1 (Setup) → Phase 2 (Preprocess + Investigate) → Phase 3 (Analyze) →
 Run once per session:
 
 ```bash
-pwsh --version    # Requires 7.5+
+python3 --version  # Requires 3.9+
 gh --version
 gh auth status
 ```
@@ -68,15 +68,7 @@ gh issue view {number} --repo mono/SkiaSharp \
 
 GitHub MCP issue/PR retrieval tools are equally valid if the environment exposes them.
 
-### 2. Convert to annotated markdown
-
-```bash
-pwsh .agents/skills/issue-triage/scripts/issue-to-markdown.ps1 \
-  /tmp/skiasharp/triage/{timestamp}/{number}.issue.json \
-  > /tmp/skiasharp/triage/{timestamp}/{number}.md
-```
-
-### 3. Code Investigation (MANDATORY)
+### 2. Code Investigation (MANDATORY)
 
 > **Scope: READ code, don't WRITE code.** Grep, read files, trace call chains. Never create files, compile, or execute.
 
@@ -99,7 +91,7 @@ pwsh .agents/skills/issue-triage/scripts/issue-to-markdown.ps1 \
    ```
    Include ALL related PRs in `evidence.reproEvidence.repoLinks` — especially closed/unmerged PRs, as they reveal prior attempts and maintainer decisions.
 
-### 4. Additional Research
+### 3. Additional Research
 
 | Signal in issue | Source to consult |
 |----------------|-------------------|
@@ -213,7 +205,7 @@ python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/tr
 Copy the validated JSON to `output/ai/` for collection, then render companion Markdown and HTML reports that wrap the same JSON data.
 
 ```bash
-pwsh .agents/skills/issue-triage/scripts/persist-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json
+python3 .agents/skills/issue-triage/scripts/persist-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
 This produces:
@@ -266,6 +258,6 @@ See [references/anti-patterns.md](references/anti-patterns.md) — **read this f
 
 ## Scripts
 
-- **`scripts/issue-to-markdown.ps1 <file.json>`** — Preprocess GitHub issue JSON → annotated markdown
 - **`scripts/validate-triage.py <triage.json>`** — Validate against schema + rationale coverage + action integrity
+- **`scripts/persist-triage.py <triage.json>`** — Copy validated JSON to `output/ai/` and invoke renderer
 - **`scripts/render-triage-report.py <triage.json>`** — Render validated triage JSON → `.md` + `.html`
