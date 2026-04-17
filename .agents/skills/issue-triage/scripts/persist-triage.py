@@ -31,6 +31,17 @@ def main() -> None:
         print("   Expected format: {number}.json or triage-{number}.json")
         sys.exit(2)
 
+    # Run validation before persisting — fail fast if the JSON is invalid
+    validate_script = Path(__file__).parent / "validate-triage.py"
+    if not validate_script.exists():
+        print(f"❌ Validation script not found: {validate_script}")
+        sys.exit(2)
+
+    result = subprocess.run([sys.executable, str(validate_script), str(src)])
+    if result.returncode != 0:
+        print("❌ Validation failed — refusing to persist invalid triage JSON")
+        sys.exit(result.returncode)
+
     dest_dir = Path("output/ai/repos/mono-SkiaSharp/ai-triage")
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / f"{number}.json"
