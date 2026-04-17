@@ -47,6 +47,7 @@ Run once per session:
 
 ```bash
 python3 --version  # Requires 3.9+
+python3 -c "import jinja2; print('jinja2', jinja2.__version__)"  # pip3 install jinja2
 gh --version
 gh auth status
 ```
@@ -260,4 +261,6 @@ See [references/anti-patterns.md](references/anti-patterns.md) — **read this f
 
 - **`scripts/validate-triage.py <triage.json>`** — Validate against schema + rationale coverage + action integrity
 - **`scripts/persist-triage.py <triage.json>`** — Copy validated JSON to `output/ai/` and invoke renderer
-- **`scripts/render-triage-report.py <triage.json>`** — Render validated triage JSON → `.md` + `.html`
+- **`scripts/render-triage-report.py <triage.json>`** — Render validated triage JSON → `.md` + `.html` (uses Jinja2 template for markdown)
+- **`scripts/triage-report.md.jinja2`** — Jinja2 template for the Markdown report
+- **`scripts/viewer.html`** — Bootstrap 5 HTML template for the interactive viewer
