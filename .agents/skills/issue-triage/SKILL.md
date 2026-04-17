@@ -46,6 +46,7 @@ Phase 1 (Setup) → Phase 2 (Preprocess + Investigate) → Phase 3 (Analyze) →
 Run once per session:
 
 ```bash
+pip3 install -r .agents/skills/issue-triage/scripts/requirements.txt --quiet
 python3 --version  # Requires 3.9+
 python3 -c "import jinja2; print('jinja2', jinja2.__version__)"  # pip3 install jinja2
 gh --version
