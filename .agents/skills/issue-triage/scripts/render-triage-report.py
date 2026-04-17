@@ -289,6 +289,7 @@ def render_markdown(data: dict[str, Any]) -> str:
     lines.append("")
     lines.append("| Type | Risk | Confidence | Description | Details |")
     lines.append("|------|------|------------|-------------|---------|")
+    comment_drafts: list[tuple[str, str]] = []
     for action in output.get("actions", []):
         details: list[str] = []
         if action.get("labels"):
@@ -305,15 +306,21 @@ def render_markdown(data: dict[str, Any]) -> str:
             f"| {action.get('type', '—')} | {action.get('risk', '—')} | {fmt_confidence(action.get('confidence'))} | {action.get('description', '—')} | {'; '.join(details) or '—'} |"
         )
         if action.get("comment"):
-            lines.append("")
-            lines.append(f"**Comment draft for `{action.get('type')}`:**")
-            lines.append("")
-            lines.append(md_code_block(action["comment"], "markdown").rstrip())
-            lines.append("")
+            comment_drafts.append((action.get("type", "action"), action["comment"]))
+    lines.append("")
 
-    lines.append("## Raw JSON")
+    for action_type, comment in comment_drafts:
+        lines.append(f"**Comment draft for `{action_type}`:**")
+        lines.append("")
+        lines.append(md_code_block(comment, "markdown").rstrip())
+        lines.append("")
+
+    lines.append("<details>")
+    lines.append("<summary>Raw JSON</summary>")
     lines.append("")
     lines.append(md_code_block(json.dumps(data, indent=2, ensure_ascii=False), "json").rstrip())
+    lines.append("")
+    lines.append("</details>")
     lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"

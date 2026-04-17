@@ -192,9 +192,7 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contain
 > **Skipping validation = INVALID triage. The task is incomplete.**
 
 ```bash
-# Try pwsh first, fall back to python3
-pwsh .agents/skills/issue-triage/scripts/validate-triage.ps1 /tmp/skiasharp/triage/{timestamp}/{number}.json \
-  || python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
+python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to Phase 5
@@ -262,12 +260,12 @@ See [references/anti-patterns.md](references/anti-patterns.md) — **read this f
 
 **#1 (CRITICAL):** NEVER use `store_memory` during triage. Triage produces JSON artifacts, not memories. Storing unverified facts pollutes all future sessions.
 
-**#2 (CRITICAL):** NEVER skip the validation script. You MUST run `validate-triage.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the triage is invalid.
+**#2 (CRITICAL):** NEVER skip the validation script. You MUST run `validate-triage.py` and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the triage is invalid.
 
 ---
 
 ## Scripts
 
 - **`scripts/issue-to-markdown.ps1 <file.json>`** — Preprocess GitHub issue JSON → annotated markdown
-- **`scripts/validate-triage.ps1 <triage.json>`** — Validate against schema + rationale coverage + action integrity
+- **`scripts/validate-triage.py <triage.json>`** — Validate against schema + rationale coverage + action integrity
 - **`scripts/render-triage-report.py <triage.json>`** — Render validated triage JSON → `.md` + `.html`

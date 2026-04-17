@@ -63,6 +63,6 @@ file, or fabricate file paths / line numbers. If you cannot find the code, say s
 
 ### 9. Skipping validation
 
-NEVER skip the validation script (`validate-triage.ps1` / `validate-triage.py`). NEVER assume
+NEVER skip the validation script (`validate-triage.py`). NEVER assume
 the JSON is valid without running it. NEVER persist to the output directory without seeing ✅ from the
 validator. Mentally reviewing the JSON is not a substitute for the script.
