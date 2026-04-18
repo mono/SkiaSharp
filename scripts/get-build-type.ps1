@@ -9,10 +9,11 @@ Sets the Azure DevOps DOWNLOAD_EXTERNALS variable used by downstream bootstrappe
  - <number> => explicit build ID to download
 
 Supported values for -ExternalsBuildId:
- - ''       => default/auto behavior (PR: latest reuse only when native-impacting files did not change; non-PR: full build)
+ - ''       => default/auto behavior (PR: reuse latest PR build only when native-impacting files did not change; non-PR: full build)
  - auto     => same as ''
+ - prlatest => explicit override to unconditionally attempt latest artifact download from the PR branch
  - <int>    => always use that specific build ID
- - latest   => unconditionally attempt latest branch artifact download
+ - latest   => unconditionally attempt latest artifact download from the target branch (PRs) or source branch (non-PRs)
  - always   => always attempt artifact reuse from latest build on branch
 #>
 [CmdletBinding()]
@@ -91,7 +92,14 @@ if (($reuseMode -eq 'always') -or ($reuseMode -eq 'latest')) {
     exit 0
 }
 
-# For PRs, attempt reuse only when native-impacting files did not change.
+# Explicit PR-latest mode always reuses latest artifacts from the PR branch.
+if ($reuseMode -eq 'prlatest') {
+    Write-Host "Forced PR artifact reuse enabled: always downloading latest artifacts from PR branch."
+    Set-DownloadExternalsVariable -Value 'prlatest'
+    exit 0
+}
+
+# For PRs in auto mode, attempt reuse only when native-impacting files did not change.
 if ($reuseMode -eq 'pr-latest') {
     try {
         Write-Host "All changes:"
@@ -114,7 +122,7 @@ if ($reuseMode -eq 'pr-latest') {
 
         if ($matchingChanges.Count -eq 0) {
             Write-Host "Download-only build."
-            Set-DownloadExternalsVariable -Value 'latest'
+            Set-DownloadExternalsVariable -Value 'prlatest'
             exit 0
         }
     } catch {
