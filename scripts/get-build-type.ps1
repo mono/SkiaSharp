@@ -4,14 +4,15 @@ Determines whether a pipeline job should build externals or download previous ar
 
 .DESCRIPTION
 Sets the Azure DevOps DOWNLOAD_EXTERNALS variable used by downstream bootstrapper logic:
- - empty    => full external build
+ - empty    => default/auto mode
  - latest   => latest successful build from the relevant branch
  - <number> => explicit build ID to download
 
 Supported values for -ExternalsBuildId:
- - ''       => default behavior (full build unless latest optimization applies)
+ - ''       => default/auto behavior (PR: latest reuse only when native-impacting files did not change; non-PR: full build)
+ - auto     => same as ''
  - <int>    => always use that specific build ID
- - latest   => on pull requests, attempt artifact reuse only when native-impacting files did not change
+ - latest   => unconditionally attempt latest branch artifact download
  - always   => always attempt artifact reuse from latest build on branch
 #>
 [CmdletBinding()]
@@ -77,17 +78,21 @@ if ($explicitBuildId -gt 0) {
 }
 
 $reuseMode = $requestedBuild.ToLowerInvariant()
-# Empty value intentionally falls through to the full build behavior below.
+
+# Default/auto behavior: on PRs, attempt reuse only when native-impacting files did not change.
+if (($reuseMode -eq '') -or ($reuseMode -eq 'auto')) {
+    $reuseMode = if ($env:BUILD_REASON -eq 'PullRequest') { 'pr-latest' } else { 'full' }
+}
 
 # Always attempt to download the previous branch artifacts.
-if ($reuseMode -eq 'always') {
+if (($reuseMode -eq 'always') -or ($reuseMode -eq 'latest')) {
     Write-Host "Forced artifact reuse enabled: always downloading latest artifacts from branch."
     Set-DownloadExternalsVariable -Value 'latest'
     exit 0
 }
 
 # For PRs, attempt reuse only when native-impacting files did not change.
-if (($reuseMode -eq 'latest') -and ($env:BUILD_REASON -eq 'PullRequest')) {
+if ($reuseMode -eq 'pr-latest') {
     try {
         Write-Host "All changes:"
         $allChanges = @(Get-ChangedFiles)
