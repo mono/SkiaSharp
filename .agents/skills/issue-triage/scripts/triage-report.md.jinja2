@@ -7,10 +7,6 @@
 | Type | {{ classification.type.value | d('—') }} ({{ classification.type.confidence | fmt_confidence }}) |
 | Area | {{ classification.area.value | d('—') }} ({{ classification.area.confidence | fmt_confidence }}) |
 | Suggested action | {{ actionability.suggestedAction | d('—') }} ({{ actionability.confidence | fmt_confidence }}) |
-{% if meta.currentLabels %}
-
-**Current labels:** {{ meta.currentLabels | join(', ') }}
-{% endif %}
 
 **Issue Summary:** {{ summary }}
 
@@ -30,6 +26,9 @@
 | Backends | {{ classification.backends | fmt_list }} |
 | Tenets | {{ classification.tenets | fmt_list }} |
 | Partner | {{ classification.partner | d('—') }} |
+{% if meta.currentLabels %}
+| Current labels | {{ meta.currentLabels | join(', ') }} |
+{% endif %}
 
 ## Evidence
 {% if repro %}
