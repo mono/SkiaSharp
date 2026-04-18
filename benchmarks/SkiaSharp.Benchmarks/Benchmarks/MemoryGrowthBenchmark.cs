@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
+#if WINDOWS
+using BenchmarkDotNet.Diagnostics.Windows.Configs;
+#endif
 
 namespace SkiaSharp.Benchmarks;
 
@@ -20,7 +22,9 @@ namespace SkiaSharp.Benchmarks;
 [HtmlExporter]
 [MarkdownExporterAttribute.GitHub]
 [JsonExporterAttribute.Full]
-[SimpleJob(RuntimeMoniker.HostProcess, iterationCount: 1, warmupCount: 0, invocationCount: 1)]
+#if WINDOWS
+[NativeMemoryProfiler]
+#endif
 public class MemoryGrowthBenchmark
 {
 	private string imagePath = null!;
