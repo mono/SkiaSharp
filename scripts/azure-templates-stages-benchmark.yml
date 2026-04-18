@@ -1,0 +1,89 @@
+parameters:
+  - name: buildAgentWindows
+    type: object
+  - name: buildAgentMac
+    type: object
+  - name: buildAgentLinux
+    type: object
+
+stages:
+
+  - stage: benchmarks
+    displayName: Benchmarks
+    dependsOn: native
+    jobs:
+
+      # Windows x64 (.NET 10)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: benchmarks_windows_x64
+          displayName: Benchmarks (Windows x64)
+          buildAgent: ${{ parameters.buildAgentWindows }}
+          target: benchmarks
+          additionalArgs: --skipExternals="all"
+          requiredArtifacts:
+            - name: native
+          publishArtifacts:
+            - name: benchmarks_windows_x64
+              always: true
+              path: '$(Build.SourcesDirectory)/output/benchmarks'
+
+      # Windows x64 (.NET Framework)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: benchmarks_windows_x64_netfx
+          displayName: Benchmarks (Windows x64 net48)
+          buildAgent: ${{ parameters.buildAgentWindows }}
+          target: benchmarks
+          additionalArgs: --skipExternals="all" --tfm=net48
+          requiredArtifacts:
+            - name: native
+          publishArtifacts:
+            - name: benchmarks_windows_x64_netfx
+              always: true
+              path: '$(Build.SourcesDirectory)/output/benchmarks'
+
+      # Windows x86 (.NET Framework)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: benchmarks_windows_x86_netfx
+          displayName: Benchmarks (Windows x86 net48)
+          buildAgent: ${{ parameters.buildAgentWindows }}
+          target: benchmarks
+          additionalArgs: --skipExternals="all" --tfm=net48 --arch=x86
+          requiredArtifacts:
+            - name: native
+          publishArtifacts:
+            - name: benchmarks_windows_x86_netfx
+              always: true
+              path: '$(Build.SourcesDirectory)/output/benchmarks'
+
+      # Linux x64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: benchmarks_linux_x64
+          displayName: Benchmarks (Linux x64)
+          buildAgent: ${{ parameters.buildAgentLinux }}
+          target: benchmarks
+          additionalArgs: --skipExternals="all"
+          requiredArtifacts:
+            - name: native
+          publishArtifacts:
+            - name: benchmarks_linux_x64
+              always: true
+              path: '$(Build.SourcesDirectory)/output/benchmarks'
+
+      # macOS (arm64)
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
+        parameters:
+          name: benchmarks_macos
+          displayName: Benchmarks (macOS)
+          buildAgent: ${{ parameters.buildAgentMac }}
+          target: benchmarks
+          additionalArgs: --skipExternals="all"
+          requiredArtifacts:
+            - name: native
+          publishArtifacts:
+            - name: benchmarks_macos
+              always: true
+              path: '$(Build.SourcesDirectory)/output/benchmarks'

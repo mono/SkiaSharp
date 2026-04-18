@@ -2,17 +2,14 @@
 using System.Buffers;
 using System.IO;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using BenchmarkDotNet.Jobs;
 
 namespace SkiaSharp.Benchmarks;
 
-// [EtwProfiler]
-// [NativeMemoryProfiler]
+// [EtwProfiler]        // Windows-only, requires BenchmarkDotNet.Diagnostics.Windows
+// [NativeMemoryProfiler] // Windows-only, requires BenchmarkDotNet.Diagnostics.Windows
 [MemoryDiagnoser]
-[SimpleJob(RuntimeMoniker.Net48)]
-[SimpleJob(RuntimeMoniker.Net70)]
-[SimpleJob(RuntimeMoniker.Net80)]
+[SimpleJob(RuntimeMoniker.HostProcess)]
 public class TheBenchmark
 {
 	[GlobalSetup]
