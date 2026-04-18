@@ -34,7 +34,7 @@ Phase 3 (Analyze) → resolution + comment
   Synthesize → pass / fix / reject
          │
          ▼
-  Phase 4 (Schema Validate) continues
+  Phase 5 (Schema Validate) continues
 ```
 
 Uses `explore` agents (read-only, Haiku, has grep/glob/view). All 3 are independent — launch in parallel.
@@ -106,9 +106,9 @@ Before spawning agents, extract from the triage JSON: (1) all fenced code blocks
 After Phase 3 generates the triage JSON:
 
 1. Extract code blocks from proposals + `comment`
-2. No code → skip to Phase 4
+2. No code → skip to Phase 5
 3. Code found → launch 3 parallel `task(agent_type="explore")` calls
-4. Collect 3 JSON results → synthesize → apply fixes → continue to Phase 4
+4. Collect 3 JSON results → synthesize → apply fixes → continue to Phase 5
 
 ## Decision Matrix
 

@@ -36,7 +36,7 @@ These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded
 **Primary source: GitHub itself.** Prefer `gh` CLI for repeatable issue/PR fetches and searches. If the environment exposes GitHub MCP issue/PR lookup tools, those are also valid. Do not set up or depend on a cache worktree or cache branch for this skill.
 
 ```
-Phase 1 (Setup) → Phase 2 (Preprocess + Investigate) → Phase 3 (Analyze) → Phase 3.5 (Workaround Search) → Phase 3.7 (Validate Code) → Phase 4 (Validate) → Phase 5 (Persist & Render)
+Phase 1 (Setup) → Phase 2 (Investigate) → Phase 3 (Analyze) → Phase 4 (Workarounds) → Phase 5 (Validate) → Phase 6 (Persist & Render)
 ```
 
 ---
@@ -57,7 +57,7 @@ If `gh` is unavailable or unauthenticated, use the GitHub MCP issue/PR retrieval
 
 ---
 
-## Phase 2 — Preprocess
+## Phase 2 — Investigate
 
 ### 1. Read the issue
 
@@ -153,23 +153,18 @@ Refer to the cheatsheet for the exact field structure and enum values.
 
 ---
 
-## Phase 3.5 — Workaround Search
+## Phase 4 — Workarounds
 
 For bugs, questions, and feature requests: **actively search for workarounds** the reporter can use now. Follow [references/workaround-search.md](references/workaround-search.md) — 9 sources in priority order (existing triages → closed issues → known patterns → source code → docs → web).
 
 - Set proposal `category` to `"workaround"` / `"fix"` / `"alternative"` / `"investigation"`
 - Include `codeSnippet` on any proposal with copy-paste-ready code
-- Set `validated` to `"untested"` initially (upgraded in Phase 3.7)
 
 Skip this phase for duplicates and abandoned issues (omit `analysis.resolution`).
 
----
+### Validate Code in Proposals
 
-## Phase 3.7 — Workaround Validation (conditional)
-
-If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contains fenced code blocks or `SK*` API calls: validate with 3 parallel agents per [references/workaround-validation.md](references/workaround-validation.md).
-
-**Gate:** No code blocks → skip (set `validated: "untested"`). ~60% of triages skip this step.
+If any proposal includes a `codeSnippet` or the `add-comment` `comment` contains code: **you must validate it** with 3 parallel agents per [references/workaround-validation.md](references/workaround-validation.md). Do not suggest code that has not been checked.
 
 **Agents** (parallel `explore` type, Haiku model):
 1. **API correctness** — do the SK* types/methods exist with correct signatures?
@@ -178,18 +173,20 @@ If any proposal `description`, `codeSnippet`, or `add-comment` `comment` contain
 
 **Synthesis:** All pass → `validated: "yes"`. Any warn → add caveats to `comment`, reduce confidence. Any fail → fix or strip code, set `validated: "no"`.
 
+If no proposals contain code, set `validated: "untested"`.
+
 ---
 
-## Phase 4 — Validate
+## Phase 5 — Validate
 
-> **🛑 PHASE GATE: You CANNOT proceed to Phase 5 without passing validation.**
+> **🛑 PHASE GATE: You CANNOT proceed to Phase 6 without passing validation.**
 > **Skipping validation = INVALID triage. The task is incomplete.**
 
 ```bash
 python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
 ```
 
-- **Exit 0** = ✅ valid → proceed to Phase 5
+- **Exit 0** = ✅ valid → proceed to Phase 6
 - **Exit 1** = ❌ fix the errors listed in the output, then re-run. Repeat up to 3 times.
 - **Exit 2** = fatal error, stop and report
 
@@ -197,9 +194,9 @@ python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/tr
 
 ---
 
-## Phase 5 — Persist & Present
+## Phase 6 — Persist & Present
 
-> **🛑 PHASE GATE: Phase 4 validator MUST have printed ✅ before you reach this step.**
+> **🛑 PHASE GATE: Phase 5 validator MUST have printed ✅ before you reach this step.**
 > **If you have not run the validation script, GO BACK and run it now.**
 
 ### 1. Persist
