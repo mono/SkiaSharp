@@ -12,9 +12,11 @@
 **Current labels:** {{ meta.currentLabels | join(', ') }}
 {% endif %}
 
-| Issue Summary | Analysis | Recommendations |
-|---------------|----------|-----------------|
-| {{ summary }} | {{ analysis.summary | d('—') }} | **{{ actionability.suggestedAction | d('—') }}** — {{ actionability.reason | d('—') }} |
+**Issue Summary:** {{ summary }}
+
+**Analysis:** {{ analysis.summary | d('—') }}
+
+**Recommendations:** **{{ actionability.suggestedAction | d('—') }}** — {{ actionability.reason | d('—') }}
 
 ---
 
