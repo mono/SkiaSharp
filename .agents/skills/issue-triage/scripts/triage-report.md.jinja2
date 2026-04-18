@@ -12,27 +12,13 @@
 **Current labels:** {{ meta.currentLabels | join(', ') }}
 {% endif %}
 
-## Reporter Summary
-
-{{ summary }}
-
-## Technical Summary
-
-{{ analysis.summary | d('—') }}
-
-## Recommended Disposition
-
-| Field | Value |
-|-------|-------|
-| Suggested action | {{ actionability.suggestedAction | d('—') }} |
-| Confidence | {{ actionability.confidence | fmt_confidence }} |
-| Reason | {{ actionability.reason | d('—') }} |
-| Suggested repro platform | {{ actionability.suggestedReproPlatform | d('—') }} |
+| Issue Summary | Analysis | Recommendations |
+|---------------|----------|-----------------|
+| {{ summary }} | {{ analysis.summary | d('—') }} | **{{ actionability.suggestedAction | d('—') }}** — {{ actionability.reason | d('—') }} |
 
 ---
 
-<details>
-<summary><strong>Classification</strong></summary>
+## Classification
 
 | Field | Value |
 |-------|-------|
@@ -43,10 +29,7 @@
 | Tenets | {{ classification.tenets | fmt_list }} |
 | Partner | {{ classification.partner | d('—') }} |
 
-</details>
-
-<details>
-<summary><strong>Evidence</strong></summary>
+## Evidence
 {% if repro %}
 
 ### Reproduction
@@ -155,10 +138,7 @@
 | Fixed in version | {{ fix.fixedInVersion | d('—') }} |
 {% endif %}
 
-</details>
-
-<details>
-<summary><strong>Analysis</strong></summary>
+## Analysis
 
 ### Technical Summary
 
@@ -236,10 +216,7 @@
   {% endif %}
 {% endif %}
 
-</details>
-
-<details>
-<summary><strong>Actions</strong></summary>
+## Recommendations
 
 ### Actionability
 
@@ -273,8 +250,6 @@
 {{ action.comment }}
 ```
 {% endfor %}
-
-</details>
 
 <details>
 <summary>Raw JSON</summary>

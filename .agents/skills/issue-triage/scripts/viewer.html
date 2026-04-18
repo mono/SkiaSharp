@@ -62,7 +62,7 @@
         <div class="card-body">
           <div class="d-flex align-items-center gap-2 mb-2">
             <i class="bi bi-person-circle text-primary fs-5"></i>
-            <h6 class="card-title mb-0">User's Story</h6>
+            <h6 class="card-title mb-0">Issue Summary</h6>
           </div>
           <p class="mb-0 text-wrap-pre" id="hero-story"></p>
         </div>
@@ -73,7 +73,7 @@
         <div class="card-body">
           <div class="d-flex align-items-center gap-2 mb-2">
             <i class="bi bi-search text-info fs-5"></i>
-            <h6 class="card-title mb-0">What We Think</h6>
+            <h6 class="card-title mb-0">Analysis</h6>
           </div>
           <p class="mb-0 text-wrap-pre" id="hero-analysis"></p>
         </div>
@@ -84,7 +84,7 @@
         <div class="card-body">
           <div class="d-flex align-items-center gap-2 mb-2">
             <i class="bi bi-signpost-split text-warning fs-5"></i>
-            <h6 class="card-title mb-0">What We Want To Do</h6>
+            <h6 class="card-title mb-0">Recommendations</h6>
           </div>
           <div class="mb-1"><strong id="hero-action-label"></strong></div>
           <p class="mb-0 text-wrap-pre" id="hero-action-reason"></p>
@@ -97,7 +97,7 @@
     <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">Overview</button></li>
     <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#evidence" type="button">Evidence</button></li>
     <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analysis" type="button">Analysis</button></li>
-    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Actions</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#actions" type="button">Recommendations</button></li>
     <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#raw" type="button">Raw JSON</button></li>
   </ul>
   <div class="tab-content mb-4">
@@ -358,7 +358,7 @@ function renderActions(data) {
   const output = data.output || {};
   const actions = output.actions || [];
 
-  let html = section('Recommended Disposition', table([
+  let html = section('Actionability', table([
     ['Suggested action', esc(output.actionability?.suggestedAction || '—')],
     ['Confidence', fmtConfidence(output.actionability?.confidence)],
     ['Reason', `<div class="text-wrap-pre">${esc(output.actionability?.reason || '—')}</div>`],
