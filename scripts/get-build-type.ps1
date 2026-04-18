@@ -37,6 +37,14 @@ function Get-ChangedFiles {
         [string[]] $Pathspec = @()
     )
 
+    $commitCount = & git rev-list --count HEAD
+    if ($LASTEXITCODE -ne 0) {
+        throw "git rev-list --count HEAD failed with exit code $LASTEXITCODE."
+    }
+    if (([int]$commitCount) -lt 2) {
+        throw "Repository has fewer than 2 commits; cannot diff HEAD~ to HEAD."
+    }
+
     $arguments = @('diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD~', 'HEAD')
     if ($Pathspec.Count -gt 0) {
         $arguments += '--'
@@ -45,10 +53,10 @@ function Get-ChangedFiles {
 
     $changes = & git @arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "git $($arguments -join ' ') failed with exit code $LASTEXITCODE."
+        throw "git diff-tree command failed (`"git $($arguments -join ' ')`") with exit code $LASTEXITCODE."
     }
 
-    return @($changes | Where-Object { $_ -and $_.Trim() })
+    return @($changes | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 }
 
 $requestedBuild = "$ExternalsBuildId".Trim()
@@ -69,6 +77,7 @@ if ($explicitBuildId -gt 0) {
 }
 
 $reuseMode = $requestedBuild.ToLowerInvariant()
+# Empty value intentionally falls through to the full build behavior below.
 
 # Always attempt to download the previous branch artifacts.
 if ($reuseMode -eq 'always') {
@@ -104,7 +113,7 @@ if (($reuseMode -eq 'latest') -and ($env:BUILD_REASON -eq 'PullRequest')) {
             exit 0
         }
     } catch {
-        Write-Warning "Unable to evaluate changed files. Falling back to full build. $($_.Exception.Message)"
+        Write-Warning "Unable to evaluate changed files using git diff-tree. Falling back to full build. $($_.Exception.Message)"
     }
 }
 
