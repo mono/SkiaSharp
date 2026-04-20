@@ -292,6 +292,104 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CicpSrgbColorSpaceIsCorrect()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Rec709,
+				SKColorspaceTransferFnCicp.Iec6196621);
+
+			Assert.NotNull(colorspace);
+			Assert.True(colorspace.IsSrgb);
+			Assert.True(colorspace.GammaIsCloseToSrgb);
+			Assert.False(colorspace.GammaIsLinear);
+			Assert.Equal(SKColorSpaceTransferFn.Srgb, colorspace.GetNumericalTransferFunction());
+			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
+		}
+
+		[SkippableFact]
+		public void CicpPqRec2020CreatesHdrColorSpace()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Rec2020,
+				SKColorspaceTransferFnCicp.Pq);
+
+			Assert.NotNull(colorspace);
+			Assert.False(colorspace.IsSrgb);
+			Assert.False(colorspace.GammaIsCloseToSrgb);
+			Assert.False(colorspace.GammaIsLinear);
+
+			// PQ (Perceptual Quantizer) is not sRGB
+			var trfn = colorspace.GetNumericalTransferFunction();
+			Assert.NotEqual(SKColorSpaceTransferFn.Srgb, trfn);
+
+			// Rec2020 primaries differ from sRGB
+			Assert.NotEqual(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
+		}
+
+		[SkippableFact]
+		public void CicpHlgDisplayP3CreatesHdrColorSpace()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.SmpteEg4321,
+				SKColorspaceTransferFnCicp.Hlg);
+
+			Assert.NotNull(colorspace);
+			Assert.False(colorspace.IsSrgb);
+			Assert.False(colorspace.GammaIsCloseToSrgb);
+			Assert.False(colorspace.GammaIsLinear);
+		}
+
+		[SkippableFact]
+		public void CicpRec2020LinearCreatesWideGamutLinearColorSpace()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Rec2020,
+				SKColorspaceTransferFnCicp.Linear);
+
+			Assert.NotNull(colorspace);
+			Assert.False(colorspace.IsSrgb);
+			Assert.True(colorspace.GammaIsLinear);
+
+			// Rec2020 primaries differ from sRGB
+			Assert.NotEqual(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
+		}
+
+		[SkippableFact]
+		public void CicpUnknownPrimariesReturnsNull()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Unknown,
+				SKColorspaceTransferFnCicp.Iec6196621);
+
+			Assert.Null(colorspace);
+		}
+
+		[SkippableFact]
+		public void CicpUnknownTransferFnReturnsNull()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Rec709,
+				SKColorspaceTransferFnCicp.Unknown);
+
+			Assert.Null(colorspace);
+		}
+
+		[SkippableFact]
+		public void CicpPqPngImageHasPqTransferFunction()
+		{
+			var path = Path.Combine(PathToImages, "cicp_pq.png");
+
+			using var codec = SKCodec.Create(path);
+			Assert.NotNull(codec);
+
+			var info = codec.Info;
+			Assert.NotNull(info.ColorSpace);
+
+			// The image has a CICP chunk with PQ transfer function — it should not be plain sRGB
+			Assert.False(info.ColorSpace.IsSrgb);
+		}
+
+		[SkippableFact]
 		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
 		{
 			// the instance is static, so all instances in .NET are the same instance

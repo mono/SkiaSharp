@@ -107,8 +107,8 @@ Once you are happy with your changes, push them to your fork of [`mono/SkiaSharp
 
 For detailed XML documentation patterns and review criteria, see:
 
-- [`.github/skills/api-docs/references/patterns.md`](../../.github/skills/api-docs/references/patterns.md) — XML syntax and examples
-- [`.github/skills/api-docs/references/checklist.md`](../../.github/skills/api-docs/references/checklist.md) — Review severity criteria
+- [`.claude/skills/api-docs/references/patterns.md`](../../.claude/skills/api-docs/references/patterns.md) — XML syntax and examples
+- [`.claude/skills/api-docs/references/checklist.md`](../../.claude/skills/api-docs/references/checklist.md) — Review severity criteria
 
 ## Cake Targets Reference
 

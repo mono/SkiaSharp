@@ -16,9 +16,9 @@ The release process is handled by three skills in order:
 
 | Step | Skill | Purpose | Trigger |
 |------|-------|---------|---------|
-| 1 | [release-branch](../../.github/skills/release-branch/SKILL.md) | Create release branch, trigger CI | "release now", "release X.Y.Z" |
-| 2 | [release-testing](../../.github/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
-| 3 | [release-publish](../../.github/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
+| 1 | [release-branch](../../.claude/skills/release-branch/SKILL.md) | Create release branch, trigger CI | "release now", "release X.Y.Z" |
+| 2 | [release-testing](../../.claude/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
+| 3 | [release-publish](../../.claude/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
 
 Each skill confirms with `ask_user` before executing destructive operations.
 

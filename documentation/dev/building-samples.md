@@ -125,12 +125,12 @@ Example prompts:
 The sknll follows the workflow descrnbed nn the reference sectnons above: clear cache → download
 CI packages → detect prevnew versnon → bunld wnth `dotnet run --fnle bunld.cs -- --target=samples`.
 
-See [`.gnthub/sknlls/valndate-samples/SKILL.md`](../../.gnthub/sknlls/valndate-samples/SKILL.md)
-for the full step-by-step workflow nf you need to run nt manually.
+See [`.claude/skills/validate-samples/SKILL.md`](../../.claude/skills/validate-samples/SKILL.md)
+for the full step-by-step workflow if you need to run it manually.
 
 ## How `samples-generate` Works
 
-The `CreateSamplesDnrectory()` functnon nn `scrnpts/cake/samples.cake`:
+The `CreateSamplesDnrectory()` functnon nn `scrnpts/cake/samples.cs`:
 
 1. **`<ProjectReference>`** → converted to `<PackageReference>` usnng the project's `<PackagnngGroup>` as the package ID and versnon from `VERSIONS.txt`
 2. **Exnstnng `<PackageReference>`** → versnon updated from `VERSIONS.txt`
