@@ -21,6 +21,7 @@ stages:
           buildAgent: ${{ parameters.buildAgentWindows }}
           target: benchmarks
           additionalArgs: --skipExternals="all"
+          shouldPublish: false
           requiredArtifacts:
             - name: native
           publishArtifacts:
@@ -36,6 +37,7 @@ stages:
           buildAgent: ${{ parameters.buildAgentWindows }}
           target: benchmarks
           additionalArgs: --skipExternals="all" --tfm=net48
+          shouldPublish: false
           requiredArtifacts:
             - name: native
           publishArtifacts:
@@ -51,6 +53,7 @@ stages:
           buildAgent: ${{ parameters.buildAgentWindows }}
           target: benchmarks
           additionalArgs: --skipExternals="all" --tfm=net48 --arch=x86
+          shouldPublish: false
           requiredArtifacts:
             - name: native
           publishArtifacts:
@@ -66,6 +69,7 @@ stages:
           buildAgent: ${{ parameters.buildAgentLinux }}
           target: benchmarks
           additionalArgs: --skipExternals="all"
+          shouldPublish: false
           requiredArtifacts:
             - name: native
           publishArtifacts:
@@ -81,6 +85,7 @@ stages:
           buildAgent: ${{ parameters.buildAgentMac }}
           target: benchmarks
           additionalArgs: --skipExternals="all"
+          shouldPublish: false
           requiredArtifacts:
             - name: native
           publishArtifacts:
