@@ -171,7 +171,7 @@ Task ("clean-externals")
 {
     CleanDirectories("externals/skia/out");
     CleanDirectories("externals/skia/xcodebuild");
-    CleanDirectories("externals/angle");
+    CleanDirectories("externals/skia/third_party/externals/angle2/out");
     CleanDirectories("output/native");
     CleanDirectories("native/*/*/bin");
     CleanDirectories("native/*/*/obj");

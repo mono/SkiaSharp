@@ -1,23 +1,19 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
-DirectoryPath ANGLE_PATH = ROOT_PATH.Combine("externals/angle");
+DirectoryPath ANGLE_PATH = ROOT_PATH.Combine("externals/skia/third_party/externals/angle2");
 DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
-string ANGLE_VERSION = GetVersion("ANGLE", "release");
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
 #load "../../scripts/infra/native/windows/windows-shared.cake"
 
-Task("sync-ANGLE")
+GIT_SYNC_DEPS_OS = "win";
+
+Task("prepare-ANGLE")
+    .IsDependentOn("git-sync-deps")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    // sync ANGLE
-    if (!DirectoryExists(ANGLE_PATH)) {
-        RunProcess("git", $"clone https://github.com/google/angle.git --branch {ANGLE_VERSION} --depth 1 --single-branch --shallow-submodules {ANGLE_PATH}");
-    }
-
-    // sync submodules
     var submodules = new[] {
         "build",
         "testing",
@@ -27,16 +23,11 @@ Task("sync-ANGLE")
         "third_party/astc-encoder/src",
         "tools/clang",
     };
-    foreach (var submodule in submodules) {
-        var sub = ANGLE_PATH.Combine(submodule);
-        if (FileExists(sub.CombineWithFilePath("BUILD.gn")) || FileExists(sub.CombineWithFilePath(".gitignore")))
-            continue;
 
-        RunProcess("git", new ProcessSettings {
-            Arguments = $"submodule update --init --recursive --depth 1 --single-branch {submodule}",
-            WorkingDirectory = ANGLE_PATH.FullPath,
-        });
-    }
+    RunProcess("git", new ProcessSettings {
+        Arguments = $"-c core.longpaths=true submodule update --init --recursive --depth 1 --single-branch -- {string.Join(" ", submodules)}",
+        WorkingDirectory = ANGLE_PATH.FullPath,
+    });
 
     // patch the output filenames
     {
@@ -106,8 +97,7 @@ Task("sync-ANGLE")
 });
 
 Task("ANGLE")
-    .IsDependentOn("sync-ANGLE")
-    .IsDependentOn("git-sync-deps")
+    .IsDependentOn("prepare-ANGLE")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
@@ -159,7 +149,6 @@ Task("ANGLE")
 });
 
 Task("Default")
-    .IsDependentOn("sync-ANGLE")
     .IsDependentOn("ANGLE");
 
 RunTarget(TARGET);
