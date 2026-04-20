@@ -1,6 +1,6 @@
 public static partial class Program
 {
-    internal static string PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python3");
+    internal static string PYTHON_EXE;
 
     internal static DirectoryPath DEPOT_PATH;
     internal static DirectoryPath SKIA_PATH;
@@ -11,6 +11,8 @@ public static partial class Program
 
     private static void Main_NativeShared()
     {
+        PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python3");
+
         if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
             var dir = MakeAbsolute((FilePath)PYTHON_EXE).GetDirectory();
             var oldPath = EnvironmentVariable("PATH");

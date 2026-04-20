@@ -3,10 +3,12 @@ using System.Xml.Linq;
 
 public static partial class Program
 {
-    internal static string SAMPLE_FILTER = Argument ("sample", "");
+    internal static string SAMPLE_FILTER;
 
     private static void Main_Samples()
     {
+        SAMPLE_FILTER = Argument ("sample", "");
+
         Task ("samples-generate")
             .Description ("Generate and zip the samples directory structure.")
             .Does (() =>

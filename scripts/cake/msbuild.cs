@@ -2,15 +2,26 @@ using System.Xml.Linq;
 
 public static partial class Program
 {
-    internal static FilePath NUGET_CONFIG_PATH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("nuget.config"));
-    internal static DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
-    internal static DirectoryPath OUTPUT_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
-    internal static DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-special"));
-    internal static DirectoryPath OUTPUT_SYMBOLS_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-symbols"));
+    internal static FilePath NUGET_CONFIG_PATH;
+    internal static DirectoryPath PACKAGE_CACHE_PATH;
+    internal static DirectoryPath OUTPUT_NUGETS_PATH;
+    internal static DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH;
+    internal static DirectoryPath OUTPUT_SYMBOLS_NUGETS_PATH;
 
-    internal static string[] NUGETS_SOURCES = new [] {
-        OUTPUT_NUGETS_PATH.FullPath,
-    };
+    internal static string[] NUGETS_SOURCES;
+
+    private static void Main_Msbuild()
+    {
+        NUGET_CONFIG_PATH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("nuget.config"));
+        PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
+        OUTPUT_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
+        OUTPUT_SPECIAL_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-special"));
+        OUTPUT_SYMBOLS_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-symbols"));
+
+        NUGETS_SOURCES = new [] {
+            OUTPUT_NUGETS_PATH.FullPath,
+        };
+    }
 
     internal static string[] GetNuGetSources()
     {

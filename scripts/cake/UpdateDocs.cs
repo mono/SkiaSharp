@@ -1,6 +1,7 @@
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Mono.ApiTools;
 using NuGet.Packaging;
 using NuGet.Versioning;
 

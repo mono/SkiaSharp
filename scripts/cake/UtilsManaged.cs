@@ -1,3 +1,9 @@
+using SharpCompress.Common;
+using SharpCompress.Readers;
+using Mono.ApiTools;
+using NuGet.Versioning;
+using System.Xml.Linq;
+
 public static partial class Program
 {
     internal static string skipTestOnPlatform = "";

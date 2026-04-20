@@ -3,23 +3,40 @@ using System.Text.RegularExpressions;
 
 public static partial class Program
 {
-    internal static string TARGET = Argument("t", Argument("target", "Default"));
-    internal static Verbosity VERBOSITY = Context.Log.Verbosity;
-    internal static string CONFIGURATION = Argument("c", Argument("configuration", "Release"));
+    internal static string TARGET;
+    internal static Verbosity VERBOSITY;
+    internal static string CONFIGURATION;
 
-    internal static string VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
-    internal static string MSBUILD_EXE = Argument("msbuild", EnvironmentVariable("MSBUILD_EXE"));
+    internal static string VS_INSTALL;
+    internal static string MSBUILD_EXE;
 
-    internal static string[] BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
-        .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+    internal static string[] BUILD_ARCH;
 
-    internal static string BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
-    internal static string ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariable("ADDITIONAL_GN_ARGS")));
+    internal static string BUILD_VARIANT;
+    internal static string ADDITIONAL_GN_ARGS;
 
-    internal static DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
+    internal static DirectoryPath PROFILE_PATH;
 
     private static void Main_Shared()
     {
+        // Initialize ROOT_PATH first so it is available in subsequent Main_*() methods
+        ROOT_PATH = MakeAbsolute(Directory("."));
+
+        TARGET = Argument("t", Argument("target", "Default"));
+        VERBOSITY = Context.Log.Verbosity;
+        CONFIGURATION = Argument("c", Argument("configuration", "Release"));
+
+        VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
+        MSBUILD_EXE = Argument("msbuild", EnvironmentVariable("MSBUILD_EXE"));
+
+        BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
+            .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+        BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
+        ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariable("ADDITIONAL_GN_ARGS")));
+
+        PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
+
         Information("Arguments:");
         foreach (var arg in Arguments()) {
             foreach (var val in arg.Value) {
