@@ -1,6 +1,11 @@
 public static partial class Program
 {
-    internal static DirectoryPath ANDROID_NDK_HOME = Argument("ndk", EnvironmentVariable("ANDROID_NDK_HOME") ?? EnvironmentVariable("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine("android-ndk").FullPath);
+    internal static DirectoryPath ANDROID_NDK_HOME;
+
+    private static void Main_Ndk()
+    {
+        ANDROID_NDK_HOME = Argument("ndk", EnvironmentVariable("ANDROID_NDK_HOME") ?? EnvironmentVariable("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine("android-ndk").FullPath);
+    }
 
 
     internal static void CheckAlignment(FilePath so)
