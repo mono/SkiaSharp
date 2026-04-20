@@ -15,6 +15,9 @@ var EXE_EXTENSION = IsRunningOnWindows() ? ".exe" : "";
 var GN_EXE = Argument("gn", EnvironmentVariable("GN_EXE") ?? SKIA_PATH.CombineWithFilePath($"bin/gn{EXE_EXTENSION}").FullPath);
 var NINJA_EXE = Argument("ninja", EnvironmentVariable("NINJA_EXE") ?? "ninja");
 
+// Platform-specific build scripts can opt into a matching deps_os section.
+var GIT_SYNC_DEPS_OS = "";
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TASKS
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,7 +41,7 @@ Task("git-sync-deps")
     if (actualIncrement != expectedIncrement)
         throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
 
-    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"));
+    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"), GIT_SYNC_DEPS_OS);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
