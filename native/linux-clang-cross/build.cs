@@ -44,7 +44,7 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     foreach (var arch in BUILD_ARCH) {
-        RunCake("../linux/build.cs", "libSkiaSharp", new Dictionary<string, string> {
+        RunCake(ROOT_PATH.CombineWithFilePath("native/linux/build.cs"), "libSkiaSharp", new Dictionary<string, string> {
             { "arch", arch },
             { "gnArgs", GetGnArgs(arch) },
         });
@@ -56,7 +56,7 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     foreach (var arch in BUILD_ARCH) {
-        RunCake("../linux/build.cs", "libHarfBuzzSharp", new Dictionary<string, string> {
+        RunCake(ROOT_PATH.CombineWithFilePath("native/linux/build.cs"), "libHarfBuzzSharp", new Dictionary<string, string> {
             { "arch", arch },
             { "gnArgs", GetGnArgs(arch) },
         });

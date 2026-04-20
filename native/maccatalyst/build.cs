@@ -9,7 +9,7 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
-    RunCake("../ios/build.cs", "libSkiaSharp", new Dictionary<string, string> {
+    RunCake(ROOT_PATH.CombineWithFilePath("native/ios/build.cs"), "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "maccatalyst" },
     });
 });
@@ -18,7 +18,7 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnMacOs())
     .Does(() =>
 {
-    RunCake("../ios/build.cs", "libHarfBuzzSharp", new Dictionary<string, string> {
+    RunCake(ROOT_PATH.CombineWithFilePath("native/ios/build.cs"), "libHarfBuzzSharp", new Dictionary<string, string> {
         { "variant", "maccatalyst" },
     });
 });

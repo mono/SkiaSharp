@@ -9,7 +9,7 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    RunCake("../windows/build.cs", "libSkiaSharp", new Dictionary<string, string> {
+    RunCake(ROOT_PATH.CombineWithFilePath("native/windows/build.cs"), "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "nanoserver" },
         { "gnArgs", "extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ]" },
         { "arch", "x64" },
@@ -23,7 +23,7 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    RunCake("../windows/build.cs", "libHarfBuzzSharp", new Dictionary<string, string> {
+    RunCake(ROOT_PATH.CombineWithFilePath("native/windows/build.cs"), "libHarfBuzzSharp", new Dictionary<string, string> {
         { "arch", "x64" },
     });
 
