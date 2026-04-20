@@ -3,6 +3,14 @@ using System.Text.RegularExpressions;
 
 public static partial class Program
 {
+    // These use BCL-only APIs so they're safe as field initializers (no Cake context needed).
+    // All Main_* methods can rely on these being initialized.
+    internal static DirectoryPath ROOT_PATH = (DirectoryPath)System.IO.Directory.GetCurrentDirectory();
+    internal static DirectoryPath PROFILE_PATH =
+        (DirectoryPath)(Environment.GetEnvironmentVariable("USERPROFILE")
+                      ?? Environment.GetEnvironmentVariable("HOME")
+                      ?? "");
+
     internal static string TARGET;
     internal static Verbosity VERBOSITY;
     internal static string CONFIGURATION;
@@ -15,13 +23,8 @@ public static partial class Program
     internal static string BUILD_VARIANT;
     internal static string ADDITIONAL_GN_ARGS;
 
-    internal static DirectoryPath PROFILE_PATH;
-
     private static void Main_Shared()
     {
-        // Initialize ROOT_PATH first so it is available in subsequent Main_*() methods
-        ROOT_PATH = MakeAbsolute(Directory("."));
-
         TARGET = Argument("t", Argument("target", "Default"));
         VERBOSITY = Context.Log.Verbosity;
         CONFIGURATION = Argument("c", Argument("configuration", "Release"));
@@ -35,8 +38,6 @@ public static partial class Program
         BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
         ADDITIONAL_GN_ARGS = Argument("gnArgs", Argument("gnargs", EnvironmentVariable("ADDITIONAL_GN_ARGS")));
 
-        PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME");
-
         Information("Arguments:");
         foreach (var arg in Arguments()) {
             foreach (var val in arg.Value) {
@@ -49,24 +50,22 @@ public static partial class Program
     {
         var args = Arguments().ToDictionary(a => a.Key, a => a.Value.LastOrDefault());
 
-        args["target"] = target;
+        args["target"] = target ?? "Default";
         args["verbosity"] = VERBOSITY.ToString();
 
-        if (arguments != null) {
-            foreach (var arg in arguments) {
-                args[arg.Key] = arg.Value;
+        if (arguments is not null) {
+            foreach (var (k, v) in arguments) {
+                args[k] = v;
             }
         }
 
         cake = MakeAbsolute(cake);
-        var cmd = "";
-
-        foreach (var arg in args) {
-            cmd += $@" --{arg.Key}=""{arg.Value}""";
-        }
+        var cmd = string.Join(" ",
+            args.Where(a => !string.IsNullOrEmpty(a.Value))
+                .Select(a => $@"--{a.Key}=""{a.Value}"""));
 
         RunProcess("dotnet", new ProcessSettings {
-            Arguments = $"run --file \"{cake}\" --{cmd}",
+            Arguments = $@"run --file ""{cake}"" -- {cmd}",
         });
     }
 

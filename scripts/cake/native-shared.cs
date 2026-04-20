@@ -60,9 +60,9 @@ public static partial class Program
 
     internal static void CheckWindowsDependencies(FilePath dll, string[] excluded = null, string[] included = null, string[] delayLoaded = null)
     {
-        excluded = excluded ?? new string[0];
-        included = included ?? new string[0];
-        delayLoaded = delayLoaded ?? new string[0];
+        excluded ??= [];
+        included ??= [];
+        delayLoaded ??= [];
 
         if (excluded.Length > 0)
             Information($"Making sure that there are no dependencies on: {string.Join(", ", excluded)}");
@@ -128,8 +128,8 @@ public static partial class Program
 
     internal static void CheckLinuxDependencies(FilePath so, string[] excluded = null, string[] included = null, string maxGlibc = null)
     {
-        excluded = excluded ?? new string[0];
-        included = included ?? new string[0];
+        excluded ??= [];
+        included ??= [];
 
         if (excluded.Length > 0)
             Information($"Making sure that there are no dependencies on: {string.Join(", ", excluded)}");
@@ -228,39 +228,17 @@ public static partial class Program
         RunNinja(SKIA_PATH, $"out/{outDir}", target);
     }
 
-    internal static string ReduceArch(string arch)
-    {
-        arch = arch?.ToLower() ?? "";
-
-        switch (arch) {
-            case "win32":
-            case "i386":
-            case "i586":
-            case "x86":
-                return "x86";
-            case "x86_64":
-            case "x64":
-                return "x64";
-            case "armeabi-v7a":
-            case "armel":
-            case "armv7":
-            case "armv7k":
-            case "arm":
-                return "arm";
-            case "arm64_32":
-            case "arm64-v8a":
-            case "aarch64":
-            case "arm64":
-                return "arm64";
-            case "riscv64":
-                return "riscv64";
-            case "loong64":
-            case "loongarch64":
-                return "loongarch64";
-        }
-
-        throw new Exception($"Unknown architecture: {arch}");
-    }
+    internal static string ReduceArch(string arch) =>
+        (arch?.ToLowerInvariant() ?? "") switch
+        {
+            "win32" or "i386" or "i586" or "x86" => "x86",
+            "x86_64" or "x64" => "x64",
+            "armeabi-v7a" or "armel" or "armv7" or "armv7k" or "arm" => "arm",
+            "arm64_32" or "arm64-v8a" or "aarch64" or "arm64" => "arm64",
+            "riscv64" => "riscv64",
+            "loong64" or "loongarch64" => "loongarch64",
+            var x => throw new Exception($"Unknown architecture: {x}")
+        };
 
     internal static bool Skip(string arch)
     {
