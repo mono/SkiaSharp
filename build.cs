@@ -684,7 +684,8 @@ public static partial class Program
 {
     // Shared build state — initialized in Main_BuildInit() because Cake APIs
     // aren't available during static field initialization
-    internal static DirectoryPath ROOT_PATH;
+    // Note: ROOT_PATH and PROFILE_PATH are defined in shared.cs as BCL field
+    // initializers (no Cake context needed) to ensure correct Main_* ordering.
     internal static string[] SKIP_EXTERNALS;
     internal static bool SKIP_BUILD;
     internal static bool PRINT_ALL_ENV_VARS;
