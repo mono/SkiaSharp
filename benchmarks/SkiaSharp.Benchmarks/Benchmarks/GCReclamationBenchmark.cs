@@ -5,6 +5,9 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
+#if WINDOWS
+using BenchmarkDotNet.Diagnostics.Windows.Configs;
+#endif
 
 namespace SkiaSharp.Benchmarks;
 
@@ -18,6 +21,9 @@ namespace SkiaSharp.Benchmarks;
 [MarkdownExporterAttribute.GitHub]
 [JsonExporterAttribute.Full]
 [ShortRunJob]
+#if WINDOWS
+[NativeMemoryProfiler]
+#endif
 public class GCReclamationBenchmark
 {
 	private string imagePath = null!;
