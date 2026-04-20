@@ -85,13 +85,15 @@ GitHub MCP issue/PR retrieval tools are equally valid if the environment exposes
 4. For bugs: trace the code path — does the issue still exist?
 5. For feature requests: has it been implemented since filing?
 6. For questions: does the source confirm or contradict the assumption?
-7. **Search for related PRs and duplicates** — use `gh` CLI or GitHub MCP directly:
+7. **Search for related issues AND PRs** — use `gh` CLI or GitHub MCP directly:
    ```bash
+   # Search issues (finds duplicates, prior reports, related discussions)
    gh search issues "{keywords from issue}" --repo mono/SkiaSharp --limit 10 \
      --json number,title,state,url
+   # Search PRs (finds fixes, prior attempts, reverted changes)
    gh pr list --search '{keywords from issue}' --state all --repo mono/SkiaSharp --limit 10 --json number,title,state,mergedAt
    ```
-   Include ALL related PRs in `evidence.reproEvidence.repoLinks` — especially closed/unmerged PRs, as they reveal prior attempts and maintainer decisions.
+   Include ALL related issues and PRs in `evidence.reproEvidence.repoLinks` — both duplicate/related issues AND closed/unmerged PRs, as they reveal prior reports and maintainer decisions. Duplicate issues are especially important for `close-as-duplicate` classification.
 
 ### 3. Additional Research
 
