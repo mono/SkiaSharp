@@ -38,9 +38,101 @@ Task("git-sync-deps")
     if (actualIncrement != expectedIncrement)
         throw new Exception($"The libSkiaSharp C API version did not match the expected '{expectedIncrement}', instead was '{actualIncrement}'.");
 
-    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"),
+    // pass the current OS so that deps_os entries (e.g. ANGLE on Windows) are synced
+    var osArg = IsRunningOnWindows() ? "win" : (IsRunningOnMacOs() ? "mac" : "unix");
+    RunPython(SKIA_PATH, SKIA_PATH.CombineWithFilePath("tools/git-sync-deps"), osArg,
         envVars: new Dictionary<string, string> { ["GIT_SYNC_DEPS_SKIP_EMSDK"] = "1" });
+
+    // sync ANGLE submodules and run post-checkout setup (Windows only via deps_os)
+    var anglePath = SKIA_PATH.Combine("third_party/externals/angle2");
+    if (DirectoryExists(anglePath)) {
+        SyncAngle(anglePath);
+    }
 });
+
+void SyncAngle(DirectoryPath anglePath)
+{
+    // init only the submodules required for building ANGLE
+    var submodules = new[] {
+        "build",
+        "testing",
+        "third_party/zlib",
+        "third_party/jsoncpp",
+        "third_party/astc-encoder/src",
+        "tools/clang",
+    };
+    foreach (var submodule in submodules) {
+        var sub = anglePath.Combine(submodule);
+        if (FileExists(sub.CombineWithFilePath("BUILD.gn")) || FileExists(sub.CombineWithFilePath(".gitignore")))
+            continue;
+
+        RunProcess("git", new ProcessSettings {
+            Arguments = $"submodule update --init --recursive --depth 1 --single-branch {submodule}",
+            WorkingDirectory = anglePath.FullPath,
+        });
+    }
+
+    // vulkan-deps needs special handling: init non-recursively first, then set
+    // core.longpaths and recursively init its children (some have very long filenames)
+    var vulkanDeps = anglePath.Combine("third_party/vulkan-deps");
+    if (!FileExists(vulkanDeps.CombineWithFilePath("README.chromium"))) {
+        RunProcess("git", new ProcessSettings {
+            Arguments = "submodule update --init --depth 1 --single-branch third_party/vulkan-deps",
+            WorkingDirectory = anglePath.FullPath,
+        });
+        RunProcess("git", new ProcessSettings {
+            Arguments = "config core.longpaths true",
+            WorkingDirectory = vulkanDeps.FullPath,
+        });
+        RunProcess("git", new ProcessSettings {
+            Arguments = "submodule update --init --recursive --depth 1 --single-branch",
+            WorkingDirectory = vulkanDeps.FullPath,
+        });
+    }
+
+    // patch the output filenames
+    {
+        var toolchain = anglePath.CombineWithFilePath("build/toolchain/win/toolchain.gni");
+        var contents = System.IO.File.ReadAllText(toolchain.FullPath);
+        var newContents = contents
+            .Replace("\"${dllname}.lib\"", "\"{{output_dir}}/{{target_output_name}}.lib\"")
+            .Replace("\"${dllname}.pdb\"", "\"{{output_dir}}/{{target_output_name}}.pdb\"");
+        if (contents != newContents)
+            System.IO.File.WriteAllText(toolchain.FullPath, newContents);
+    }
+
+    // set build args
+    if (!FileExists(anglePath.CombineWithFilePath("build/config/gclient_args.gni"))) {
+        var lines = new[] {
+            "checkout_angle_internal = false",
+            "checkout_angle_mesa = false",
+            "checkout_angle_restricted_traces = false",
+            "generate_location_tags = false"
+        };
+        System.IO.File.WriteAllLines(anglePath.CombineWithFilePath("build/config/gclient_args.gni").FullPath, lines);
+    }
+
+    // set version numbers
+    if (!FileExists(anglePath.CombineWithFilePath("build/util/LASTCHANGE"))) {
+        var lastchange = anglePath.CombineWithFilePath("build/util/LASTCHANGE");
+        RunPython(anglePath, anglePath.CombineWithFilePath("build/util/lastchange.py"), $"-o {lastchange}");
+    }
+
+    // download rc.exe
+    var rc_exe = "build/toolchain/win/rc/win/rc.exe";
+    var rcPath = anglePath.CombineWithFilePath(rc_exe);
+    if (!FileExists(rcPath)) {
+        var shaPath = anglePath.CombineWithFilePath($"{rc_exe}.sha1");
+        var sha = System.IO.File.ReadAllText(shaPath.FullPath);
+        var url = $"https://storage.googleapis.com/download/storage/v1/b/chromium-browser-clang/o/rc%2F{sha}?alt=media";
+        DownloadFile(url, rcPath);
+    }
+
+    // download llvm
+    if (!FileExists(anglePath.CombineWithFilePath("third_party/llvm-build/Release+Asserts/cr_build_revision"))) {
+        RunPython(anglePath, anglePath.CombineWithFilePath("tools/clang/scripts/update.py"));
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // HELPERS

@@ -79,7 +79,7 @@ Task("clean-externals")
     CleanDirectories("externals/skia/xcodebuild");
 
     // angle
-    CleanDirectories("externals/angle");
+    CleanDirectories("externals/skia/third_party/externals/angle2/out");
 
     // all
     CleanDirectories("output/native");
