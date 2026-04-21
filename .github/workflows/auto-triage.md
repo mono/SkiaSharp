@@ -39,6 +39,13 @@ jobs:
     outputs:
       issue_number: ${{ steps.find-issue.outputs.issue_number }}
 if: needs.pre_activation.outputs.find-issue_result == 'success'
+steps:
+  - name: Redirect step summary into agent-writable directory
+    run: |
+      mkdir -p /tmp/gh-aw/agent
+      touch /tmp/gh-aw/agent/step-summary.md
+      rm -f /tmp/gh-aw/agent-step-summary.md
+      ln -s /tmp/gh-aw/agent/step-summary.md /tmp/gh-aw/agent-step-summary.md
 tools:
   github:
     toolsets: [issues]
@@ -116,9 +123,9 @@ Copy the three triage output files into `/tmp/gh-aw/agent/` so they are included
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.json /tmp/gh-aw/agent/
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md /tmp/gh-aw/agent/
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.html /tmp/gh-aw/agent/
-cat output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md >> /tmp/gh-aw/agent-step-summary.md
+cat output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md >> /tmp/gh-aw/agent/step-summary.md
 ```
 
-**IMPORTANT:** Write to the literal path `/tmp/gh-aw/agent-step-summary.md` — do NOT use `$GITHUB_STEP_SUMMARY` as it resolves to an inaccessible runner path. The literal `/tmp/gh-aw/agent-step-summary.md` is the correct path that gh-aw reads after the agent finishes.
+**IMPORTANT:** Write to the literal path `/tmp/gh-aw/agent/step-summary.md` — this file is symlinked to the step summary. Do NOT use `$GITHUB_STEP_SUMMARY` as it resolves to an inaccessible path.
 
-All three files MUST be copied and the markdown MUST be appended to `/tmp/gh-aw/agent-step-summary.md`. Verify they exist before finishing.
+All three files MUST be copied and the markdown MUST be appended to `/tmp/gh-aw/agent/step-summary.md`. Verify they exist before finishing.
