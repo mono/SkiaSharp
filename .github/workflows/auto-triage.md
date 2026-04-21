@@ -1,11 +1,13 @@
 ---
 description: "Triage a SkiaSharp issue: classify, label, and update the backlog project board."
 on:
+  schedule:
+    - cron: "0 * * * *"
   workflow_dispatch:
     inputs:
       issue_number:
-        description: "Issue number to triage"
-        required: true
+        description: "Issue number to triage (leave blank for auto-select)"
+        required: false
         type: string
   skip-bots: [github-actions, copilot, dependabot]
   roles: all
@@ -43,15 +45,41 @@ safe-outputs:
 
 # Auto-Triage SkiaSharp Issue
 
-Triage issue **#${{ github.event.inputs.issue_number }}** using the issue-triage skill, then apply labels and update the SkiaSharp Backlog project board.
+Triage a single SkiaSharp issue, apply labels, and update the backlog project board.
+
+## Step 0 — Select which issue to triage
+
+If `${{ github.event.inputs.issue_number }}` is provided and non-empty, use that issue number.
+
+Otherwise (scheduled run), find the **newest** open issue that:
+1. Does **not** have the `triage/triaged` label
+2. Was created **more than 1 hour ago** (so reporters have time to edit)
+
+Run this command to find it:
+
+```bash
+gh issue list --repo mono/SkiaSharp \
+  --state open \
+  --label "" \
+  --search "NOT label:triage/triaged" \
+  --sort created --order desc \
+  --json number,createdAt \
+  --limit 50 \
+  | jq --arg cutoff "$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-1H +%Y-%m-%dT%H:%M:%SZ)" \
+    '[.[] | select(.createdAt < $cutoff)] | first | .number'
+```
+
+If the result is `null` or empty, there are no untriaged issues older than 1 hour — exit successfully with a message "No untriaged issues found" and skip all remaining steps.
+
+Store the selected issue number for the rest of the workflow.
 
 ## Step 1 — Run the issue-triage skill
 
-Read and follow the instructions in `.agents/skills/issue-triage/SKILL.md` to triage issue #${{ github.event.inputs.issue_number }}.
+Read and follow the instructions in `.agents/skills/issue-triage/SKILL.md` to triage the selected issue.
 
 Complete all phases (Setup → Investigate → Analyze → Workarounds → Validate → Persist).
 
-After Phase 6 completes, the triage JSON will be at `issue-triage-workspace/${{ github.event.inputs.issue_number }}.json`.
+After Phase 6 completes, the triage JSON will be at `issue-triage-workspace/<issue_number>.json`.
 
 ## Step 2 — Apply labels from classification
 
@@ -83,6 +111,6 @@ Read the triage JSON and update the issue in the **SkiaSharp Backlog** project (
 
 The `update-project` safe output auto-creates missing SINGLE_SELECT options — no need to pre-create values.
 
-Use `content_type: "issue"` and `content_number: ${{ github.event.inputs.issue_number }}` to identify the item.
+Use `content_type: "issue"` and the selected issue number to identify the item.
 
 Only include fields that have non-null values in the triage JSON. Omit any field where the source value is null or absent.
