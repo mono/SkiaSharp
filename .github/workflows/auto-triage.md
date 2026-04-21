@@ -1,8 +1,7 @@
 ---
 description: "Triage a SkiaSharp issue: classify, label, and update the backlog project board."
 on:
-  schedule:
-    - cron: "0 * * * *"
+  schedule: hourly
   workflow_dispatch:
     inputs:
       issue_number:
