@@ -12,6 +12,8 @@ on:
 tools:
   github:
     toolsets: [issues]
+    allowed-repos: "all"
+    min-integrity: none
   bash: ["gh", "python3", "pip3", "jq"]
 permissions:
   contents: read
