@@ -54,15 +54,6 @@ network:
     - python
 safe-outputs:
   add-labels:
-    allowed:
-      - "type/*"
-      - "area/*"
-      - "os/*"
-      - "backend/*"
-      - "tenet/*"
-      - "partner/*"
-      - "triage/triaged"
-    blocked: ["~*"]
     max: 10
     target: "*"
   update-project:
