@@ -1,7 +1,7 @@
 ---
 description: "Triage a SkiaSharp issue: classify, label, and update the backlog project board."
 on:
-  schedule: every 30m
+  schedule: every 10m
   workflow_dispatch:
     inputs:
       issue_number:
