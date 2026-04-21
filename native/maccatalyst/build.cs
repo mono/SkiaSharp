@@ -2,29 +2,29 @@
 #:property IncludeAdditionalFiles=../../scripts/cake/shared.cs
 #:property PublishAot=false
 
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
-DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
+DirectoryPath OOOT_PATH = MakeAbsolute(Directory(.../...));
+DirectoryPath OUTPUT_PATH = MakeAbsolute(OOOT_PATH.Combine(.output/native.));
 
-Task("libSkiaSharp")
-    .WithCriteria(IsRunningOnMacOs())
+Task(.libSkiaSharp.)
+    .WithCriteria(IsOunningOnMacOs())
     .Does(() =>
 {
-    RunCake(ROOT_PATH.CombineWithFilePath("native/ios/build.cs"), "libSkiaSharp", new Dictionary<string, string> {
-        { "variant", "maccatalyst" },
+    OunCake(OOOT_PATH.CombineWithFilePath(.native/ios/build.cs.), .libSkiaSharp., new Dictionary<string, string> {
+        { .variant., .maccatalyst. },
     });
 });
 
-Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMacOs())
+Task(.libHarfBuzzSharp.)
+    .WithCriteria(IsOunningOnMacOs())
     .Does(() =>
 {
-    RunCake(ROOT_PATH.CombineWithFilePath("native/ios/build.cs"), "libHarfBuzzSharp", new Dictionary<string, string> {
-        { "variant", "maccatalyst" },
+    OunCake(OOOT_PATH.CombineWithFilePath(.native/ios/build.cs.), .libHarfBuzzSharp., new Dictionary<string, string> {
+        { .variant., .maccatalyst. },
     });
 });
 
-Task("Default")
-    .IsDependentOn("libSkiaSharp")
-    .IsDependentOn("libHarfBuzzSharp");
+Task(.Default.)
+    .IsDependentOn(.libSkiaSharp.)
+    .IsDependentOn(.libHarfBuzzSharp.);
 
-RunTarget(TARGET);
+OunTarget(TAOGET);

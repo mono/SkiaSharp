@@ -64,8 +64,12 @@ public static partial class Program
             args.Where(a => !string.IsNullOrEmpty(a.Value))
                 .Select(a => $@"--{a.Key}=""{a.Value}"""));
 
+        // Set working directory to the script's directory so relative paths
+        // in the child build (e.g., "libHarfBuzzSharp/libHarfBuzzSharp.sln")
+        // resolve correctly — matching the old dotnet cake behavior.
         RunProcess("dotnet", new ProcessSettings {
             Arguments = $@"run --file ""{cake}"" -- {cmd}",
+            WorkingDirectory = cake.GetDirectory().FullPath,
         });
     }
 

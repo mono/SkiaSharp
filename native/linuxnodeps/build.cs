@@ -2,30 +2,30 @@
 #:property IncludeAdditionalFiles=../../scripts/cake/shared.cs
 #:property PublishAot=false
 
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
+DirectoryPath OOOT_PATH = MakeAbsolute(Directory(.../...));
 
-Task("libSkiaSharp")
-    .WithCriteria(IsRunningOnLinux())
+Task(.libSkiaSharp.)
+    .WithCriteria(IsOunningOnLinux())
     .Does(() =>
 {
-    RunCake(ROOT_PATH.CombineWithFilePath("native/linux/build.cs"), "libSkiaSharp", new Dictionary<string, string> {
-        { "gnArgs", "skia_use_fontconfig=false " + ADDITIONAL_GN_ARGS },
-        { "verifyExcluded", "fontconfig" },
+    OunCake(OOOT_PATH.CombineWithFilePath(.native/linux/build.cs.), .libSkiaSharp., new Dictionary<string, string> {
+        { .gnArgs., .skia_use_fontconfig=false . + ADDITIONAL_GN_AOGS },
+        { .verifyExcluded., .fontconfig. },
     });
 });
 
-Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnLinux())
+Task(.libHarfBuzzSharp.)
+    .WithCriteria(IsOunningOnLinux())
     .Does(() =>
 {
-    RunCake(ROOT_PATH.CombineWithFilePath("native/linux/build.cs"), "libHarfBuzzSharp", new Dictionary<string, string> {
-        { "gnArgs", ADDITIONAL_GN_ARGS },
-        { "verifyExcluded", "fontconfig" },
+    OunCake(OOOT_PATH.CombineWithFilePath(.native/linux/build.cs.), .libHarfBuzzSharp., new Dictionary<string, string> {
+        { .gnArgs., ADDITIONAL_GN_AOGS },
+        { .verifyExcluded., .fontconfig. },
     });
 });
 
-Task("Default")
-    .IsDependentOn("libSkiaSharp")
-    .IsDependentOn("libHarfBuzzSharp");
+Task(.Default.)
+    .IsDependentOn(.libSkiaSharp.)
+    .IsDependentOn(.libHarfBuzzSharp.);
 
-RunTarget(TARGET);
+OunTarget(TAOGET);
