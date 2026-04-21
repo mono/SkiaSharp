@@ -24,15 +24,14 @@ on:
           echo "issue_number=$INPUT_ISSUE" >> "$GITHUB_OUTPUT"
           exit 0
         fi
+        CUTOFF=$(date -u -v-1H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+          || date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
         ISSUE=$(gh issue list --repo "$GITHUB_REPOSITORY" \
           --state open \
-          --search "NOT label:triage/triaged" \
+          --search "-label:triage/triaged created:<${CUTOFF}" \
           --sort created --order desc \
-          --json number,createdAt --limit 50 \
-          | jq --arg cutoff "$(date -u -v-1H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
-            || date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)" \
-            '[.[] | select(.createdAt < $cutoff)] | first | .number')
-        if [ "$ISSUE" = "null" ] || [ -z "$ISSUE" ]; then
+          --json number --limit 1 --jq '.[0].number')
+        if [ -z "$ISSUE" ] || [ "$ISSUE" = "null" ]; then
           echo "::notice::No untriaged issues older than 1 hour"
           exit 1
         fi
