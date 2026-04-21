@@ -2,7 +2,7 @@
 #:property IncludeAdditionalFiles=../../scripts/cake/shared.cs
 #:property PublishAot=false
 
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 string TOOLCHAIN_ARCH = Argument("toolchainArch", EnvironmentVariable("TOOLCHAIN_ARCH"));
 string TOOLCHAIN_ARCH_SHORT = Argument("toolchainArchShort", EnvironmentVariable("TOOLCHAIN_ARCH_SHORT"));

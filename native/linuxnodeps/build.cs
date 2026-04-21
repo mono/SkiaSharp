@@ -2,7 +2,7 @@
 #:property IncludeAdditionalFiles=../../scripts/cake/shared.cs
 #:property PublishAot=false
 
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
 Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())

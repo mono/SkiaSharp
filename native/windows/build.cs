@@ -2,7 +2,7 @@
 #:property IncludeAdditionalFiles=../../scripts/cake/shared.cs;../../scripts/cake/native-shared.cs;../../scripts/cake/msbuild.cs
 #:property PublishAot=false
 
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
