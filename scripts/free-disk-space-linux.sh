@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
-# Free disk space on Linux CI agents by removing pre-installed Android SDK
-# components that are not needed by CI builds.
+# Free disk space on Linux CI agents by removing tools and SDK components
+# that are not needed by SkiaSharp CI builds.
 #
-# Components we KEEP:
+# The hosted agents ship with many pre-installed toolchains (Swift, Haskell,
+# Julia, Miniconda, AWS CLI, etc.) that SkiaSharp never uses. Removing them
+# before the build starts prevents the agent from running out of disk space.
+#
+# Android SDK — components we KEEP:
 #   cmdline-tools    - sdkmanager, used by install-android-package.ps1
 #   platform-tools   - adb, used to communicate with the emulator
 #   build-tools/NN.* - latest version only (used by .NET Android builds)
 #   platforms/android-{21,35,36} - ANDROID_PLATFORM_VERSIONS from variables
 #
-# Components we REMOVE (large, never used or explicitly reinstalled):
-#   ndk             - native builds use Docker or install-android-ndk.ps1
-#   cmake           - native builds use Docker
-#   system-images   - emulator tests reinstall the exact image they need
-#   sources         - source code jars, never needed in CI
-#   extras          - support libraries, not needed
-#   emulator        - emulator tests reinstall this explicitly
-#   old build-tools - only latest version needed
-#   old platforms   - only 21, 35, 36 needed (ANDROID_PLATFORM_VERSIONS)
+# Android SDK — components we REMOVE:
+#   ndk, cmake, system-images, sources, extras, emulator, old build-tools,
+#   and platforms not in ANDROID_PLATFORM_VERSIONS.
 
 set -euo pipefail
 
@@ -27,6 +25,20 @@ KEEP_PLATFORMS="21 35 36"
 
 free_before=$(df --output=avail / | tail -1)
 
+# -----------------------------------------------------------------------
+# Remove pre-installed toolchains that SkiaSharp never uses
+# -----------------------------------------------------------------------
+echo "Removing unused toolchains..."
+sudo rm -rf /usr/share/swift              # ~3.3 GB - Swift toolchain
+sudo rm -rf /usr/local/.ghcup             # ~3.7 GB - Haskell toolchain
+sudo rm -rf /usr/local/julia*             # ~1.0 GB - Julia
+sudo rm -rf /usr/share/miniconda          # ~858 MB - Conda
+sudo rm -rf /usr/local/aws-cli            # ~255 MB - AWS CLI
+sudo rm -rf /usr/local/aws-sam-cli        # ~260 MB - AWS SAM CLI
+
+# -----------------------------------------------------------------------
+# Clean up Android SDK
+# -----------------------------------------------------------------------
 if [ -d "$ANDROID_SDK" ]; then
     echo "Removing unused Android SDK components from $ANDROID_SDK..."
     sudo rm -rf "$ANDROID_SDK/ndk"
