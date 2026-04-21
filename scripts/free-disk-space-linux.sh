@@ -29,16 +29,20 @@ free_before=$(df --output=avail / | tail -1)
 # Remove pre-installed toolchains that SkiaSharp never uses
 # -----------------------------------------------------------------------
 echo "Removing unused toolchains..."
-sudo rm -rf /usr/share/swift              # ~3.3 GB - Swift toolchain
-sudo rm -rf /usr/local/.ghcup             # ~3.7 GB - Haskell toolchain
-sudo rm -rf /usr/local/julia*             # ~1.0 GB - Julia
-sudo rm -rf /usr/share/miniconda          # ~858 MB - Conda
-sudo rm -rf /usr/local/aws-cli            # ~255 MB - AWS CLI
-sudo rm -rf /usr/local/aws-sam-cli        # ~260 MB - AWS SAM CLI
-sudo rm -rf /opt/hostedtoolcache/go       # ~1.1 GB - Go
-sudo rm -rf /opt/hostedtoolcache/CodeQL   # ~1.7 GB - CodeQL
-sudo rm -rf /opt/hostedtoolcache/PyPy     # ~524 MB - PyPy
-sudo rm -rf /opt/hostedtoolcache/Ruby     # ~312 MB - Ruby
+sudo rm -rf /usr/share/dotnet              # ~4.6 GB - pre-installed .NET (we install our own via UseDotNet@2)
+sudo rm -rf /usr/share/swift               # ~3.3 GB - Swift toolchain
+sudo rm -rf /usr/local/.ghcup              # ~3.7 GB - Haskell toolchain
+sudo rm -rf /usr/local/julia*              # ~1.0 GB - Julia
+sudo rm -rf /usr/share/miniconda           # ~858 MB - Conda
+sudo rm -rf /usr/local/share/powershell    # ~178 MB - PowerShell modules (binary is at /opt/microsoft/powershell)
+sudo rm -rf /usr/local/share/chromium      #          - Chromium browser
+sudo rm -rf /usr/local/aws-cli             # ~255 MB - AWS CLI
+sudo rm -rf /usr/local/aws-sam-cli         # ~260 MB - AWS SAM CLI
+sudo rm -rf /opt/hostedtoolcache/go        # ~1.1 GB - Go
+sudo rm -rf /opt/hostedtoolcache/CodeQL    # ~1.7 GB - CodeQL
+sudo rm -rf /opt/hostedtoolcache/Python    # ~1.7 GB - Python (native builds use Docker)
+sudo rm -rf /opt/hostedtoolcache/PyPy      # ~524 MB - PyPy
+sudo rm -rf /opt/hostedtoolcache/Ruby      # ~312 MB - Ruby
 
 # -----------------------------------------------------------------------
 # Clean up Android SDK
