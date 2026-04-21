@@ -1,4 +1,4 @@
-#:sdk Cake.Sdk
+#:sdk Cake.Sdk@6.1.1
 #:package Cake.FileHelpers@3.2.1
 #:property IncludeAdditionalFiles=../../scripts/cake/shared.cs;../../scripts/cake/native-shared.cs
 #:property PublishAot=false

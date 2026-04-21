@@ -1,4 +1,4 @@
-#:sdk Cake.Sdk
+#:sdk Cake.Sdk@6.1.1
 #:property IncludeAdditionalFiles=shared.cs
 #:property PublishAot=false
 

@@ -1,4 +1,4 @@
-#:sdk Cake.Sdk
+#:sdk Cake.Sdk@6.1.1
 #:property IncludeAdditionalFiles=../../scripts/cake/shared.cs;../../scripts/cake/native-shared.cs;../../scripts/cake/msbuild.cs
 #:property PublishAot=false
 
