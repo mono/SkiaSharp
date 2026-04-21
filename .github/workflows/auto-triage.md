@@ -40,8 +40,6 @@ jobs:
     outputs:
       issue_number: ${{ steps.find-issue.outputs.issue_number }}
 if: needs.pre_activation.outputs.find-issue_result == 'success'
-env:
-  ISSUE_NUMBER: ${{ needs.pre_activation.outputs.issue_number }}
 tools:
   github:
     toolsets: [issues]
@@ -76,15 +74,15 @@ safe-outputs:
 
 # Auto-Triage SkiaSharp Issue
 
-Triage issue **#${{ env.ISSUE_NUMBER }}**, apply labels, and update the backlog project board.
+Triage issue **#${{ needs.pre_activation.outputs.issue_number }}** using the issue-triage skill, then apply labels and update the SkiaSharp Backlog project board.
 
 ## Step 1 — Run the issue-triage skill
 
-Read and follow the instructions in `.agents/skills/issue-triage/SKILL.md` to triage the selected issue.
+Read and follow the instructions in `.agents/skills/issue-triage/SKILL.md` to triage issue #${{ needs.pre_activation.outputs.issue_number }}.
 
 Complete all phases (Setup → Investigate → Analyze → Workarounds → Validate → Persist).
 
-After Phase 6 completes, the triage JSON will be at `issue-triage-workspace/<issue_number>.json`.
+After Phase 6 completes, the triage JSON will be at `issue-triage-workspace/${{ needs.pre_activation.outputs.issue_number }}.json`.
 
 ## Step 2 — Apply labels from classification
 
@@ -116,6 +114,6 @@ Read the triage JSON and update the issue in the **SkiaSharp Backlog** project (
 
 The `update-project` safe output auto-creates missing SINGLE_SELECT options — no need to pre-create values.
 
-Use `content_type: "issue"` and the selected issue number to identify the item.
+Use `content_type: "issue"` and issue number `${{ needs.pre_activation.outputs.issue_number }}` to identify the item.
 
 Only include fields that have non-null values in the triage JSON. Omit any field where the source value is null or absent.
