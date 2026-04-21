@@ -107,3 +107,15 @@ The `update-project` safe output auto-creates missing SINGLE_SELECT options — 
 Use `content_type: "issue"` and issue number `${{ needs.pre_activation.outputs.issue_number }}` to identify the item.
 
 Only include fields that have non-null values in the triage JSON. Omit any field where the source value is null or absent.
+
+## Step 4 — Upload triage reports to artifacts
+
+Copy the three triage output files into `/tmp/gh-aw/agent/` so they are included in the workflow's `agent` artifact:
+
+```bash
+cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.json /tmp/gh-aw/agent/
+cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md /tmp/gh-aw/agent/
+cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.html /tmp/gh-aw/agent/
+```
+
+All three files MUST be copied. Verify they exist before finishing.
