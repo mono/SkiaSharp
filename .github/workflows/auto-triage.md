@@ -27,7 +27,7 @@ on:
         CUTOFF=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
         ISSUE=$(gh issue list --repo "$GITHUB_REPOSITORY" \
           --state open \
-          --search "-label:triage/triaged created:<${CUTOFF} sort:comments-desc" \
+          --search "-label:triage/triaged created:<${CUTOFF} sort:reactions-desc" \
           --json number --limit 1 --jq '.[0].number')
         if [ -z "$ISSUE" ] || [ "$ISSUE" = "null" ]; then
           echo "::notice::No untriaged issues older than 1 hour"
