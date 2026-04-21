@@ -43,4 +43,4 @@ Pick the most specific match. SKCanvasView in MAUI → `area/SkiaSharp.Views.Mau
   - **`type/feature-request`**: Adding completely new functionality — e.g., "add PDF export", "support new image format"
   - **Platform parity gap**: API exists cross-platform but a specific platform handler is missing → `type/bug` (the API contract is broken). Only use `type/enhancement` if no platform implements it yet.
 - `question` asks "how?"; `documentation` says "we need docs for X"
-- When behavior is correct but easy to misuse (disposal ordering, threading, etc.), keep `type/bug` and suggest `close-as-by-design` with a workaround. The `status/by-design` label communicates that the behavior is intentional.
+- When behavior is correct but easy to misuse (disposal ordering, threading, etc.), keep `type/bug` and suggest `close-as-not-a-bug` with a workaround. The `status/by-design` label communicates that the behavior is intentional.

@@ -71,8 +71,8 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
     "resolution": {
       "hypothesis": "Android detaches views on a different thread than iOS, causing use-after-free of the native surface.",
       "proposals": [
-        { "title": "Add disposal guard", "description": "Add null/disposed check before accessing native surface in OnDetachedFromWindow.", "codeSnippet": "if (IsDisposed || _surface == null) return;", "confidence": 0.75, "effort": "small" },
-        { "title": "Synchronize with UI thread", "description": "Synchronize disposal with UI thread to ensure surface validity.", "confidence": 0.70, "effort": "medium" }
+        { "title": "Add disposal guard", "description": "Add null/disposed check before accessing native surface in OnDetachedFromWindow.", "codeSnippet": "if (IsDisposed || _surface == null) return;", "confidence": 0.75, "effort": "cost/s" },
+        { "title": "Synchronize with UI thread", "description": "Synchronize disposal with UI thread to ensure surface validity.", "confidence": 0.70, "effort": "cost/m" }
       ],
       "recommendedProposal": "Add disposal guard",
       "recommendedReason": "Simpler fix with high confidence. Matches the pattern already used on iOS."
@@ -82,7 +82,8 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
     "actionability": {
       "suggestedAction": "needs-investigation",
       "confidence": 0.80,
-      "reason": "Real bug with stack trace, needs deeper investigation into Android lifecycle threading"
+      "reason": "Real bug with stack trace, needs deeper investigation into Android lifecycle threading",
+      "suggestedReproPlatform": "linux"
     },
     "actions": [
       {
@@ -106,7 +107,7 @@ Bug with bugSignals, codeInvestigation, resolution proposals, and simplified act
 
 ## Question Example
 
-Question with resolution proposals, no bugSignals, close-with-docs action:
+Question with resolution proposals, no bugSignals, close-as-not-a-bug action:
 
 ```json
 {
@@ -133,14 +134,14 @@ Question with resolution proposals, no bugSignals, close-with-docs action:
     "resolution": {
       "hypothesis": "User wants to render text with a custom .ttf font on Linux.",
       "proposals": [
-        { "title": "Load font from file", "description": "Use SKTypeface.FromFile() to load font from path. Simplest approach.", "category": "fix", "confidence": 0.90, "effort": "trivial" },
-        { "title": "Embed font as resource", "description": "Embed font as resource and use SKTypeface.FromData() for portability.", "category": "alternative", "confidence": 0.90, "effort": "small" }
+        { "title": "Load font from file", "description": "Use SKTypeface.FromFile() to load font from path. Simplest approach.", "category": "fix", "confidence": 0.90, "effort": "cost/xs" },
+        { "title": "Embed font as resource", "description": "Embed font as resource and use SKTypeface.FromData() for portability.", "category": "alternative", "confidence": 0.90, "effort": "cost/s" }
       ]
     }
   },
   "output": {
     "actionability": {
-      "suggestedAction": "close-with-docs",
+      "suggestedAction": "close-as-not-a-bug",
       "confidence": 0.85,
       "reason": "Answered by existing API documentation"
     },

@@ -49,12 +49,12 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 
 | Enum | Values |
 |------|--------|
-| **classifiedType** | `type/bug`, `type/feature-request`, `type/question`, `type/enhancement`, `type/documentation` |
-| **classifiedArea** | `area/Build`, `area/Docs`, `area/HarfBuzzSharp`, `area/libHarfBuzzSharp.native`, `area/libSkiaSharp.native`, `area/SkiaSharp`, `area/SkiaSharp.HarfBuzz`, `area/SkiaSharp.Views`, `area/SkiaSharp.Views.Blazor`, `area/SkiaSharp.Views.Forms`, `area/SkiaSharp.Views.Maui`, `area/SkiaSharp.Views.Uno`, `area/SkiaSharp.Workbooks` |
-| **classifiedPlatform** | `os/Android`, `os/iOS`, `os/macOS`, `os/Linux`, `os/Windows-Classic`, `os/Windows-WinUI`, `os/Windows-Universal-UWP`, `os/Windows-Nano-Server`, `os/WASM`, `os/Tizen`, `os/tvOS`, `os/watchOS` |
-| **classifiedBackend** | `backend/OpenGL`, `backend/Metal`, `backend/Vulkan`, `backend/Raster`, `backend/Direct3D`, `backend/PDF`, `backend/SVG`, `backend/XPS` |
-| **suggestedAction** | `needs-investigation`, `close-as-fixed`, `close-as-by-design`, `close-with-docs`, `close-as-duplicate`, `convert-to-discussion`, `request-info`, `keep-open` |
-| **errorType** | `crash`, `exception`, `wrong-output`, `missing-output`, `performance`, `build-error`, `memory-leak`, `platform-specific`, `other` |
+| **classifiedType** | `type/bug`, `type/documentation`, `type/enhancement`, `type/feature-request`, `type/question` |
+| **classifiedArea** | `area/Build`, `area/Docs`, `area/HarfBuzzSharp`, `area/SkiaSharp`, `area/SkiaSharp.HarfBuzz`, `area/SkiaSharp.Views`, `area/SkiaSharp.Views.Blazor`, `area/SkiaSharp.Views.Forms`, `area/SkiaSharp.Views.Maui`, `area/SkiaSharp.Views.Uno`, `area/SkiaSharp.Workbooks`, `area/libHarfBuzzSharp.native`, `area/libSkiaSharp.native` |
+| **classifiedPlatform** | `os/Android`, `os/Linux`, `os/Tizen`, `os/WASM`, `os/Windows-Classic`, `os/Windows-Nano-Server`, `os/Windows-Universal-UWP`, `os/Windows-WinUI`, `os/iOS`, `os/macOS`, `os/tvOS`, `os/watchOS` |
+| **classifiedBackend** | `backend/Direct3D`, `backend/Metal`, `backend/OpenGL`, `backend/PDF`, `backend/Raster`, `backend/SVG`, `backend/Vulkan`, `backend/XPS` |
+| **suggestedAction** | `needs-info`, `needs-reproduction`, `needs-investigation`, `ready-to-fix`, `keep-open`, `close-as-fixed`, `close-as-duplicate`, `close-as-not-a-bug`, `close-as-external` |
+| **errorType** | `crash`, `exception`, `memory-leak`, `build-error`, `wrong-output`, `missing-output`, `missing-api`, `performance`, `platform-specific`, `other` |
 | **severity** | `critical`, `high`, `medium`, `low` |
 
 ### Severity rubric (bugs only)
@@ -69,31 +69,37 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | **reproQuality** | `complete`, `partial`, `none` |
 | **currentRelevance** | `likely`, `unlikely`, `unknown` |
 | **relevance** (codeInvestigation) | `direct`, `related`, `context` |
-| **category** (proposals) | `workaround`, `fix`, `alternative`, `investigation` |
+| **category** (proposals) | `fix`, `workaround`, `alternative`, `investigation` |
 | **validated** (proposals) | `untested`, `yes`, `no` |
+| **effort** (proposals) | `cost/xs`, `cost/s`, `cost/m`, `cost/l`, `cost/xl` |
 | **suggestedReproPlatform** | `linux`, `macos`, `windows` |
-| **actionType** | `update-labels`, `add-comment`, `close-issue`, `convert-to-discussion`, `link-related`, `link-duplicate`, `set-milestone` |
+| **actionType** | `add-comment`, `close-issue`, `convert-to-discussion`, `link-duplicate`, `link-related`, `set-milestone`, `update-labels` |
+| **actionRisk** | `low`, `medium`, `high` |
+| **stateReason** | `completed`, `not_planned` |
 
 ### Choosing `suggestedAction` by issue type
 
 | Type | Common suggestedAction | When |
 |------|----------------------|------|
 | `type/bug` | `needs-investigation` | Repro code provided, bug seems real |
-| `type/bug` | `request-info` | Missing repro, vague description |
-| `type/bug` | `close-as-by-design` | Behavior is correct but confusing |
+| `type/bug` | `needs-info` | Missing repro, vague description |
+| `type/bug` | `needs-reproduction` | Some info but no reliable minimal repro |
+| `type/bug` | `close-as-not-a-bug` | Behavior is correct but confusing |
+| `type/bug` | `close-as-external` | Root cause is in upstream Skia or another dependency |
+| `type/bug` | `ready-to-fix` | Root cause is clear, fix path is known |
 | `type/enhancement` | `needs-investigation` | Well-specified, has clear scope |
 | `type/enhancement` | `keep-open` | Valid but low priority / needs design |
 | `type/feature-request` | `needs-investigation` | Clear request with implementation path |
 | `type/feature-request` | `keep-open` | Valid but requires design discussion |
-| `type/question` | `close-with-docs` | Answer exists in docs |
-| `type/question` | `convert-to-discussion` | Better suited for community Q&A |
+| `type/question` | `close-as-not-a-bug` | Answer exists in docs or is by-design |
+| `type/question` | `needs-info` | Need more context to answer |
 | `type/documentation` | `needs-investigation` | Docs are missing or wrong |
 
-**Distinguishing `request-info` vs `convert-to-discussion`:**
-- Use `request-info` when there IS a signal worth following up (regression claim, partial repro, plausible bug) — give the reporter a chance to provide details.
-- Use `convert-to-discussion` when there is NO actionable signal (empty template, "how do I?" question, vague feature wish).
+**Distinguishing `needs-info` vs `needs-reproduction`:**
+- Use `needs-info` when critical information is missing from the reporter (version, platform, repro steps, etc.).
+- Use `needs-reproduction` when the issue description has enough context but no reliable minimal reproduction case.
 
-**Empty-template heuristic:** If the code/repro sections contain only template placeholders or are completely empty, use `request-info` regardless of type classification. A regression claim in the version fields upgrades priority even with sparse content.
+**Empty-template heuristic:** If the code/repro sections contain only template placeholders or are completely empty, use `needs-info` regardless of type classification. A regression claim in the version fields upgrades priority even with sparse content.
 
 ## Output (required)
 
@@ -112,7 +118,7 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 }
 ```
 
-`missingInfo` is optional — include when reporter needs to provide more details (pair with `request-info` action).
+`missingInfo` is optional — include when reporter needs to provide more details (pair with `needs-info` action).
 
 ### Action Types & Required Fields
 

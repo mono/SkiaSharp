@@ -24,10 +24,10 @@
       "type": "string",
       "enum": [
         "type/bug",
-        "type/feature-request",
-        "type/question",
+        "type/documentation",
         "type/enhancement",
-        "type/documentation"
+        "type/feature-request",
+        "type/question"
       ],
       "description": "Issue type. Pick ONE best fit \u2014 trust issue content over title prefix."
     },
@@ -37,8 +37,6 @@
         "area/Build",
         "area/Docs",
         "area/HarfBuzzSharp",
-        "area/libHarfBuzzSharp.native",
-        "area/libSkiaSharp.native",
         "area/SkiaSharp",
         "area/SkiaSharp.HarfBuzz",
         "area/SkiaSharp.Views",
@@ -46,7 +44,9 @@
         "area/SkiaSharp.Views.Forms",
         "area/SkiaSharp.Views.Maui",
         "area/SkiaSharp.Views.Uno",
-        "area/SkiaSharp.Workbooks"
+        "area/SkiaSharp.Workbooks",
+        "area/libHarfBuzzSharp.native",
+        "area/libSkiaSharp.native"
       ],
       "description": "Component area. Pick MOST SPECIFIC match. Values are actual GitHub labels."
     },
@@ -54,15 +54,15 @@
       "type": "string",
       "enum": [
         "os/Android",
+        "os/Linux",
+        "os/Tizen",
+        "os/WASM",
+        "os/Windows-Classic",
+        "os/Windows-Nano-Server",
+        "os/Windows-Universal-UWP",
+        "os/Windows-WinUI",
         "os/iOS",
         "os/macOS",
-        "os/Linux",
-        "os/Windows-Classic",
-        "os/Windows-WinUI",
-        "os/Windows-Universal-UWP",
-        "os/Windows-Nano-Server",
-        "os/WASM",
-        "os/Tizen",
         "os/tvOS",
         "os/watchOS"
       ],
@@ -74,10 +74,10 @@
         "backend/Direct3D",
         "backend/Metal",
         "backend/OpenGL",
-        "backend/Raster",
-        "backend/Vulkan",
         "backend/PDF",
+        "backend/Raster",
         "backend/SVG",
+        "backend/Vulkan",
         "backend/XPS"
       ],
       "description": "Rendering backend label. Omit backends array entirely if not backend-specific."
@@ -103,27 +103,28 @@
     "suggestedAction": {
       "type": "string",
       "enum": [
+        "needs-info",
+        "needs-reproduction",
         "needs-investigation",
+        "ready-to-fix",
+        "keep-open",
         "close-as-fixed",
-        "close-as-by-design",
-        "close-with-docs",
         "close-as-duplicate",
-        "convert-to-discussion",
-        "request-info",
-        "keep-open"
+        "close-as-not-a-bug",
+        "close-as-external"
       ],
-      "description": "Recommended next action for the maintainer. close-as-by-design=behavior is intentional but may warrant docs/workaround."
+      "description": "Recommended next action for the maintainer. needs-info=missing critical info from reporter. needs-reproduction=need a reliable minimal repro. needs-investigation=requires deeper code/runtime investigation. ready-to-fix=root cause understood, ready to implement. keep-open=valid issue, no immediate action. close-as-fixed=already resolved. close-as-duplicate=duplicate of another issue. close-as-not-a-bug=behavior is intentional/by-design. close-as-external=root cause is upstream Skia or another dependency."
     },
     "actionType": {
       "type": "string",
       "enum": [
-        "update-labels",
         "add-comment",
         "close-issue",
         "convert-to-discussion",
-        "link-related",
         "link-duplicate",
-        "set-milestone"
+        "link-related",
+        "set-milestone",
+        "update-labels"
       ],
       "description": "Type of automatable operation."
     },
@@ -134,7 +135,7 @@
         "medium",
         "high"
       ],
-      "description": "low=reversible/cosmetic. medium=state change. high=irreversible or reputation-sensitive. For add-comment, risk is dynamic based on content type and confidence — see schema-cheatsheet.md."
+      "description": "low=reversible/cosmetic. medium=state change. high=irreversible or reputation-sensitive. For add-comment, risk is dynamic based on content type and confidence \u2014 see schema-cheatsheet.md."
     }
   },
   "properties": {
@@ -399,15 +400,16 @@
               "enum": [
                 "crash",
                 "exception",
+                "memory-leak",
+                "build-error",
                 "wrong-output",
                 "missing-output",
+                "missing-api",
                 "performance",
-                "build-error",
-                "memory-leak",
                 "platform-specific",
                 "other"
               ],
-              "description": "Category of error behavior. crash=segfault/SIGABRT/hard crash. exception=managed .NET exception thrown. wrong-output=produces incorrect results. missing-output=produces no output or empty. performance=works but too slow. build-error=compile/link/restore failure. memory-leak=growing memory or handles. platform-specific=works on some platforms but not others. other=none of the above."
+              "description": "Category of error behavior. crash=segfault/SIGABRT/hard crash. exception=managed .NET exception thrown. memory-leak=growing memory or handles. build-error=compile/link/restore failure. wrong-output=produces incorrect results. missing-output=produces no output or empty. missing-api=requested API not yet exposed in SkiaSharp. performance=works but too slow. platform-specific=works on some platforms but not others. other=none of the above."
             },
             "errorMessage": {
               "type": "string",
@@ -617,7 +619,7 @@
                   "related",
                   "context"
                 ],
-                "description": "How relevant this is to the issue."
+                "description": "How relevant this is to the issue. direct=primary code involved. related=secondary/supporting code. context=background information only."
               }
             },
             "description": "A code investigation finding with file and line reference."
@@ -673,12 +675,12 @@
                   "category": {
                     "type": "string",
                     "enum": [
-                      "workaround",
                       "fix",
+                      "workaround",
                       "alternative",
                       "investigation"
                     ],
-                    "description": "What kind of proposal. workaround=temporary mitigation. fix=root cause fix. alternative=different approach. investigation=needs more research."
+                    "description": "What kind of proposal. fix=root cause fix. workaround=temporary mitigation. alternative=different approach. investigation=needs more research."
                   },
                   "codeSnippet": {
                     "type": "string",
@@ -700,12 +702,13 @@
                   "effort": {
                     "type": "string",
                     "enum": [
-                      "trivial",
-                      "small",
-                      "medium",
-                      "large"
+                      "cost/xs",
+                      "cost/s",
+                      "cost/m",
+                      "cost/l",
+                      "cost/xl"
                     ],
-                    "description": "Estimated effort to implement."
+                    "description": "Estimated effort to implement. cost/xs=~1 day, isolated, well-understood, minimal context needed. cost/s=~2-3 days, self-contained fix, some familiarity required. cost/m=~1 week, small feature or non-trivial fix, some design thinking. cost/l=~2 weeks, cross-cutting change, real design work, multiple components. cost/xl=over a month, architectural, research-heavy, or high coordination cost."
                   }
                 },
                 "description": "A single fix or resolution proposal."
@@ -756,7 +759,11 @@
             },
             "suggestedReproPlatform": {
               "type": "string",
-              "enum": ["linux", "macos", "windows"],
+              "enum": [
+                "linux",
+                "macos",
+                "windows"
+              ],
               "description": "Platform runner for reproduction. Choose based on classification.platforms: macOS for iOS/macOS/tvOS/watchOS bugs, Windows for WPF/WinUI/UWP bugs, Linux for everything else (including WASM, Android, generic). Used by CI to select the correct runner."
             }
           },
@@ -815,7 +822,10 @@
               },
               "stateReason": {
                 "type": "string",
-                "enum": ["completed", "not_planned"],
+                "enum": [
+                  "completed",
+                  "not_planned"
+                ],
                 "description": "Required for close-issue. Maps to GitHub API state_reason."
               },
               "category": {
