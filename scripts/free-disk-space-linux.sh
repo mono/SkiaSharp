@@ -6,8 +6,7 @@ set -euo pipefail
 
 ANDROID_SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
 
-echo "Disk space before cleanup:"
-df -h /
+free_before=$(df --output=avail / | tail -1)
 
 if [ -d "$ANDROID_SDK" ]; then
     echo "Removing pre-installed Android SDK components from $ANDROID_SDK..."
@@ -23,6 +22,8 @@ else
     echo "Android SDK not found at $ANDROID_SDK, skipping."
 fi
 
-echo ""
-echo "Disk space after cleanup:"
+free_after=$(df --output=avail / | tail -1)
+freed_kb=$((free_after - free_before))
+freed_mb=$((freed_kb / 1024))
+echo "Freed ${freed_mb} MB of disk space"
 df -h /
