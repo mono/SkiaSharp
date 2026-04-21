@@ -24,8 +24,7 @@ on:
           echo "issue_number=$INPUT_ISSUE" >> "$GITHUB_OUTPUT"
           exit 0
         fi
-        CUTOFF=$(date -u -v-1H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
-          || date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
+        CUTOFF=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
         ISSUE=$(gh issue list --repo "$GITHUB_REPOSITORY" \
           --state open \
           --search "-label:triage/triaged created:<${CUTOFF}" \
