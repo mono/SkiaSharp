@@ -35,6 +35,10 @@ sudo rm -rf /usr/local/julia*             # ~1.0 GB - Julia
 sudo rm -rf /usr/share/miniconda          # ~858 MB - Conda
 sudo rm -rf /usr/local/aws-cli            # ~255 MB - AWS CLI
 sudo rm -rf /usr/local/aws-sam-cli        # ~260 MB - AWS SAM CLI
+sudo rm -rf /opt/hostedtoolcache/go       # ~1.1 GB - Go
+sudo rm -rf /opt/hostedtoolcache/CodeQL   # ~1.7 GB - CodeQL
+sudo rm -rf /opt/hostedtoolcache/PyPy     # ~524 MB - PyPy
+sudo rm -rf /opt/hostedtoolcache/Ruby     # ~312 MB - Ruby
 
 # -----------------------------------------------------------------------
 # Clean up Android SDK
