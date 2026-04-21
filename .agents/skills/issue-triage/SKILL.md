@@ -62,10 +62,9 @@ If `gh` is unavailable or unauthenticated, use the GitHub MCP issue/PR retrieval
 ### 1. Read the issue
 
 ```bash
-mkdir -p /tmp/skiasharp/triage/{timestamp}
 gh issue view {number} --repo mono/SkiaSharp \
   --json number,title,body,labels,comments,state,createdAt,updatedAt,closedAt,author,milestone \
-  > /tmp/skiasharp/triage/{timestamp}/{number}.issue.json
+  > /tmp/{number}.issue.json
 ```
 
 GitHub MCP issue/PR retrieval tools are equally valid if the environment exposes them.
@@ -126,7 +125,7 @@ Read [references/labels.md](references/labels.md) for valid label values and car
 
 ### Classify and generate JSON
 
-Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate the JSON. Write to `/tmp/skiasharp/triage/{timestamp}/{number}.json` where `{timestamp}` is the current UTC time in `yyyyMMdd-HHmmss` format. Create the directory first with `mkdir -p`. Use this exact literal path structure, do NOT substitute `$TMPDIR` or any other variable.
+Write brief internal analysis (3–5 sentences), classify the type, then read [references/research-by-type.md](references/research-by-type.md) for type-specific research. Conduct the research, then generate the JSON. Write to `/tmp/{number}.json`. Use this exact literal path structure, do NOT substitute `$TMPDIR` or any other variable. Do NOT use `mkdir` — write directly to `/tmp/`.
 
 > **⚠️ Schema Compliance:**
 >
@@ -185,7 +184,7 @@ If no proposals contain code, set `validated: "untested"`.
 > **Skipping validation = INVALID triage. The task is incomplete.**
 
 ```bash
-python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
+python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/{number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to Phase 6
@@ -206,7 +205,7 @@ python3 .agents/skills/issue-triage/scripts/validate-triage.py /tmp/skiasharp/tr
 Copy the validated JSON to `output/ai/` for collection, then render companion Markdown and HTML reports that wrap the same JSON data.
 
 ```bash
-python3 .agents/skills/issue-triage/scripts/persist-triage.py /tmp/skiasharp/triage/{timestamp}/{number}.json
+python3 .agents/skills/issue-triage/scripts/persist-triage.py /tmp/{number}.json
 ```
 
 This produces:
