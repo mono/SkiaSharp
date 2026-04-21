@@ -12,7 +12,7 @@ on:
 tools:
   github:
     toolsets: [issues]
-    allowed-repos: ["mono/skiasharp", "mono/skia"]
+    allowed-repos: ["mono/skiasharp", "mono/skia", "google/skia"]
     min-integrity: none
   bash: ["gh", "python3", "pip3", "jq"]
 permissions:
