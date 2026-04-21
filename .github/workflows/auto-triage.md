@@ -108,14 +108,15 @@ Use `content_type: "issue"` and issue number `${{ needs.pre_activation.outputs.i
 
 Only include fields that have non-null values in the triage JSON. Omit any field where the source value is null or absent.
 
-## Step 4 — Upload triage reports to artifacts
+## Step 4 — Upload triage reports and write step summary
 
-Copy the three triage output files into `/tmp/gh-aw/agent/` so they are included in the workflow's `agent` artifact:
+Copy the three triage output files into `/tmp/gh-aw/agent/` so they are included in the workflow's `agent` artifact, then write the Markdown report to the step summary so it's visible on the Actions run page without downloading artifacts.
 
 ```bash
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.json /tmp/gh-aw/agent/
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md /tmp/gh-aw/agent/
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.html /tmp/gh-aw/agent/
+cat output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md >> "$GITHUB_STEP_SUMMARY"
 ```
 
-All three files MUST be copied. Verify they exist before finishing.
+All three files MUST be copied and the markdown MUST be appended to `$GITHUB_STEP_SUMMARY`. Verify they exist before finishing.
