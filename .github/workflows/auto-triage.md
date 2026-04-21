@@ -9,6 +9,7 @@ on:
         description: "Issue number to triage (leave blank for auto-select)"
         required: false
         type: string
+  skip-if-no-match: "is:issue is:open -label:triage/triaged"
   skip-bots: [github-actions, copilot, dependabot]
   roles: all
 tools:
