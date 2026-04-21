@@ -11,6 +11,39 @@ on:
   skip-if-no-match: "is:issue is:open -label:triage/triaged"
   skip-bots: [github-actions, copilot, dependabot]
   roles: all
+  permissions:
+    issues: read
+  steps:
+    - name: Select issue to triage
+      id: find-issue
+      env:
+        INPUT_ISSUE: ${{ github.event.inputs.issue_number }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ -n "$INPUT_ISSUE" ]; then
+          echo "issue_number=$INPUT_ISSUE" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        ISSUE=$(gh issue list --repo "$GITHUB_REPOSITORY" \
+          --state open \
+          --search "NOT label:triage/triaged" \
+          --sort created --order desc \
+          --json number,createdAt --limit 50 \
+          | jq --arg cutoff "$(date -u -v-1H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+            || date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)" \
+            '[.[] | select(.createdAt < $cutoff)] | first | .number')
+        if [ "$ISSUE" = "null" ] || [ -z "$ISSUE" ]; then
+          echo "::notice::No untriaged issues older than 1 hour"
+          exit 1
+        fi
+        echo "issue_number=$ISSUE" >> "$GITHUB_OUTPUT"
+jobs:
+  pre-activation:
+    outputs:
+      issue_number: ${{ steps.find-issue.outputs.issue_number }}
+if: needs.pre_activation.outputs.find-issue_result == 'success'
+env:
+  ISSUE_NUMBER: ${{ needs.pre_activation.outputs.issue_number }}
 tools:
   github:
     toolsets: [issues]
@@ -45,33 +78,7 @@ safe-outputs:
 
 # Auto-Triage SkiaSharp Issue
 
-Triage a single SkiaSharp issue, apply labels, and update the backlog project board.
-
-## Step 0 — Select which issue to triage
-
-If `${{ github.event.inputs.issue_number }}` is provided and non-empty, use that issue number.
-
-Otherwise (scheduled run), find the **newest** open issue that:
-1. Does **not** have the `triage/triaged` label
-2. Was created **more than 1 hour ago** (so reporters have time to edit)
-
-Run this command to find it:
-
-```bash
-gh issue list --repo mono/SkiaSharp \
-  --state open \
-  --label "" \
-  --search "NOT label:triage/triaged" \
-  --sort created --order desc \
-  --json number,createdAt \
-  --limit 50 \
-  | jq --arg cutoff "$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-1H +%Y-%m-%dT%H:%M:%SZ)" \
-    '[.[] | select(.createdAt < $cutoff)] | first | .number'
-```
-
-If the result is `null` or empty, there are no untriaged issues older than 1 hour — exit successfully with a message "No untriaged issues found" and skip all remaining steps.
-
-Store the selected issue number for the rest of the workflow.
+Triage issue **#${{ env.ISSUE_NUMBER }}**, apply labels, and update the backlog project board.
 
 ## Step 1 — Run the issue-triage skill
 
