@@ -116,7 +116,9 @@ Copy the three triage output files into `/tmp/gh-aw/agent/` so they are included
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.json /tmp/gh-aw/agent/
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md /tmp/gh-aw/agent/
 cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.html /tmp/gh-aw/agent/
-cat output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md >> "$GITHUB_STEP_SUMMARY"
+cat output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md >> /tmp/gh-aw/agent-step-summary.md
 ```
 
-All three files MUST be copied and the markdown MUST be appended to `$GITHUB_STEP_SUMMARY`. Verify they exist before finishing.
+**IMPORTANT:** Write to the literal path `/tmp/gh-aw/agent-step-summary.md` — do NOT use `$GITHUB_STEP_SUMMARY` as it resolves to an inaccessible runner path. The literal `/tmp/gh-aw/agent-step-summary.md` is the correct path that gh-aw reads after the agent finishes.
+
+All three files MUST be copied and the markdown MUST be appended to `/tmp/gh-aw/agent-step-summary.md`. Verify they exist before finishing.
