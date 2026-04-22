@@ -5,7 +5,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Exporters;
 using BenchmarkDotNet.Jobs;
-#if WINDOWS
+#if NATIVE_MEMORY_PROFILER
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
 #endif
 
@@ -21,7 +21,7 @@ namespace SkiaSharp.Benchmarks;
 [MarkdownExporterAttribute.GitHub]
 [JsonExporterAttribute.Full]
 [ShortRunJob]
-#if WINDOWS
+#if NATIVE_MEMORY_PROFILER
 [NativeMemoryProfiler]
 #endif
 public class GCReclamationBenchmark
