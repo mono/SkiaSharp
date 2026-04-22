@@ -46,12 +46,13 @@ public abstract class PlatformTestBase : IDisposable
             </configuration>
             """);
         
-        // Write global.json to allow latest SDK (prevents inheriting repo's .NET 8 restriction)
+        // Write global.json to pin to .NET 10 SDK (where MAUI workloads are installed)
         File.WriteAllText(Path.Combine(TestDir, "global.json"), """
             {
               "sdk": {
-                "version": "8.0.0",
-                "rollForward": "latestMajor"
+                "version": "10.0.100",
+                "allowPrerelease": false,
+                "rollForward": "latestFeature"
               }
             }
             """);
