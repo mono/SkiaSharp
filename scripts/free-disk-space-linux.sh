@@ -20,8 +20,8 @@ set -euo pipefail
 
 ANDROID_SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
 
-# Platforms to keep (must match ANDROID_PLATFORM_VERSIONS in variables.yml)
-KEEP_PLATFORMS="21 35 36"
+# Platforms to keep (from ANDROID_PLATFORM_VERSIONS pipeline variable, comma-separated)
+KEEP_PLATFORMS="${ANDROID_PLATFORM_VERSIONS:-21,35,36}"
 
 free_before=$(df --output=avail / | tail -1)
 
@@ -72,11 +72,12 @@ if [ -d "$ANDROID_SDK" ]; then
     # Keep only the platforms we need
     if [ -d "$ANDROID_SDK/platforms" ]; then
         echo "Keeping platforms: $KEEP_PLATFORMS, removing others..."
+        IFS=',' read -ra keep_array <<< "$KEEP_PLATFORMS"
         for plat in "$ANDROID_SDK/platforms"/*/; do
             plat_name=$(basename "$plat")
             api_level="${plat_name#android-}"
             keep=false
-            for k in $KEEP_PLATFORMS; do
+            for k in "${keep_array[@]}"; do
                 if [ "$api_level" = "$k" ]; then
                     keep=true
                     break
