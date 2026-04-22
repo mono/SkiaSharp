@@ -96,7 +96,7 @@ jobs:
 
       # free disk space on hosted linux agents by removing pre-installed tools
       - ${{ if and(eq(parameters.buildAgent.pool.os, 'linux'), eq(parameters.buildAgent.pool.name, 'Azure Pipelines')) }}:
-        - bash: ./scripts/free-disk-space-linux.sh
+        - bash: bash ./scripts/free-disk-space-linux.sh
           displayName: Free disk space on Linux
 
       # # checkout required skia PR
