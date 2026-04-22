@@ -261,7 +261,7 @@ bool Skip(string arch)
 
     arch = ReduceArch(arch);
 
-    if (BUILD_ARCH.Contains(arch))
+    if (BUILD_ARCH.Select(ReduceArch).Contains(arch))
         return false;
 
     Warning($"Skipping architecture: {arch}");

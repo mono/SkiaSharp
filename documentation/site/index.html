@@ -1,29 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkiaSharp — Cross-Platform 2D Graphics for .NET</title>
   <meta name="description" content="SkiaSharp is a cross-platform 2D graphics API for .NET powered by Google's Skia engine. Draw vector graphics, render text, process images, and more.">
-  <link rel="icon" href="docs/images/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="style.css">
-  <script>
-    const theme = localStorage.getItem('theme') ||
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', theme);
-  </script>
+  <script src="theme-init.js"></script>
 </head>
 <body>
   <header class="site-header">
     <div class="container header-inner">
       <a href="./" class="logo-link">
-        <img src="docs/images/logo.png" alt="SkiaSharp" class="logo-img" width="32" height="32">
-        <span class="logo-text">SkiaSharp</span>
+        <img src="images/logo.png" alt="SkiaSharp" class="logo-img" width="32" height="32">
+        <span>SkiaSharp</span>
       </a>
       <nav class="header-nav">
         <a href="https://www.nuget.org/packages/SkiaSharp" class="nav-link" target="_blank" rel="noopener">NuGet</a>
         <a href="https://github.com/mono/SkiaSharp" class="nav-link" target="_blank" rel="noopener">GitHub</a>
-        <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
+        <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme" aria-pressed="false">
           <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
           <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
         </button>
@@ -56,14 +52,283 @@
       </div>
     </section>
 
+    <section class="showcase-section">
+      <div class="container">
+        <div class="showcase-header">
+          <p class="section-kicker">Start fast</p>
+          <h2 class="section-title">Hello Canvas in a few lines</h2>
+          <p class="section-intro">
+            The API feels like idiomatic C#: create a bitmap, get a canvas, choose a paint, and start drawing.
+          </p>
+        </div>
+
+        <div class="showcase-grid">
+          <div class="code-window">
+            <div class="code-window-bar">
+              <span class="code-window-dot"></span>
+              <span class="code-window-dot"></span>
+              <span class="code-window-dot"></span>
+              <span class="code-window-title">HelloSvg.cs</span>
+              <button class="copy-code-btn" type="button" data-copy-target="hello-svg-copy" aria-label="Copy runnable sample code">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                  <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+                </svg>
+                <span>Copy</span>
+              </button>
+            </div>
+            <div class="code-sample-shell is-collapsed" id="hello-svg-sample-wrap">
+              <pre class="code-preview"><code class="language-csharp">canvas.DrawCircle(<span class="token-number">200</span>, <span class="token-number">150</span>, <span class="token-number">70</span>, <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> {
+    Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
+        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">140</span>, <span class="token-number">80</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">260</span>, <span class="token-number">220</span>),
+        [<span class="token-number">0xFF60A5FA</span>, <span class="token-number">0xFF8B5CF6</span>], <span class="token-type">SKShaderTileMode</span>.Clamp),
+    IsAntialias = <span class="token-keyword">true</span>
+});
+
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> path = <span class="token-keyword">new</span> <span class="token-type">SKPath</span>();
+path.MoveTo(<span class="token-number">110</span>, <span class="token-number">190</span>);
+path.CubicTo(<span class="token-number">150</span>, <span class="token-number">140</span>, <span class="token-number">200</span>, <span class="token-number">210</span>, <span class="token-number">290</span>, <span class="token-number">170</span>);
+canvas.DrawPath(path, <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> {
+    Color = <span class="token-number">0xFF1D4ED8</span>,
+    StrokeWidth = <span class="token-number">6</span>,
+    Style = <span class="token-type">SKPaintStyle</span>.Stroke,
+    StrokeCap = <span class="token-type">SKStrokeCap</span>.Round,
+    IsAntialias = <span class="token-keyword">true</span>
+});</code></pre>
+              <pre class="code-full"><code class="language-csharp"><span class="token-comment">#!/usr/bin/env dotnet</span>
+<span class="token-comment">#:property PublishAot=false</span>
+<span class="token-comment">#:package SkiaSharp@*</span>
+
+<span class="token-keyword">using</span> SkiaSharp;
+
+<span class="token-comment">// Create an SVG canvas and save to a file</span>
+<span class="token-keyword">var</span> bounds = <span class="token-keyword">new</span> <span class="token-type">SKRect</span>(<span class="token-number">0</span>, <span class="token-number">0</span>, <span class="token-number">400</span>, <span class="token-number">300</span>);
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> stream = File.Create(<span class="token-string">"hello-skiasharp.svg"</span>);
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> canvas = <span class="token-type">SKSvgCanvas</span>.Create(bounds, stream);
+
+<span class="token-comment">// Orb</span>
+canvas.DrawCircle(<span class="token-number">200</span>, <span class="token-number">150</span>, <span class="token-number">70</span>, <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> {
+    Shader = <span class="token-type">SKShader</span>.CreateLinearGradient(
+        <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">140</span>, <span class="token-number">80</span>), <span class="token-keyword">new</span> <span class="token-type">SKPoint</span>(<span class="token-number">260</span>, <span class="token-number">220</span>),
+        [<span class="token-number">0xFF60A5FA</span>, <span class="token-number">0xFF8B5CF6</span>], <span class="token-type">SKShaderTileMode</span>.Clamp),
+    IsAntialias = <span class="token-keyword">true</span>
+});
+
+<span class="token-comment">// Curve</span>
+<span class="token-keyword">using</span> <span class="token-keyword">var</span> path = <span class="token-keyword">new</span> <span class="token-type">SKPath</span>();
+path.MoveTo(<span class="token-number">110</span>, <span class="token-number">190</span>);
+path.CubicTo(<span class="token-number">150</span>, <span class="token-number">140</span>, <span class="token-number">200</span>, <span class="token-number">210</span>, <span class="token-number">290</span>, <span class="token-number">170</span>);
+canvas.DrawPath(path, <span class="token-keyword">new</span> <span class="token-type">SKPaint</span> {
+    Color = <span class="token-number">0xFF1D4ED8</span>,
+    StrokeWidth = <span class="token-number">6</span>,
+    Style = <span class="token-type">SKPaintStyle</span>.Stroke,
+    StrokeCap = <span class="token-type">SKStrokeCap</span>.Round,
+    IsAntialias = <span class="token-keyword">true</span>
+});</code></pre>
+              <div class="code-sample-fade" aria-hidden="true"></div>
+              <button class="expand-code-btn" type="button" data-expand-target="hello-svg-sample-wrap" aria-expanded="false">See full code</button>
+            </div>
+            <script id="hello-svg-copy" type="text/plain">#!/usr/bin/env dotnet
+#:property PublishAot=false
+#:package SkiaSharp@*
+
+using SkiaSharp;
+
+// Create an SVG canvas and save to a file
+var bounds = new SKRect(0, 0, 400, 300);
+using var stream = File.Create("hello-skiasharp.svg");
+using var canvas = SKSvgCanvas.Create(bounds, stream);
+
+// Orb
+canvas.DrawCircle(200, 150, 70, new SKPaint {
+    Shader = SKShader.CreateLinearGradient(
+        new SKPoint(140, 80), new SKPoint(260, 220),
+        [0xFF60A5FA, 0xFF8B5CF6], SKShaderTileMode.Clamp),
+    IsAntialias = true
+});
+
+// Curve
+using var path = new SKPath();
+path.MoveTo(110, 190);
+path.CubicTo(150, 140, 200, 210, 290, 170);
+canvas.DrawPath(path, new SKPaint {
+    Color = 0xFF1D4ED8,
+    StrokeWidth = 6,
+    Style = SKPaintStyle.Stroke,
+    StrokeCap = SKStrokeCap.Round,
+    IsAntialias = true
+});</script>
+          </div>
+
+          <div class="render-preview">
+            <div class="render-art">
+              <div class="render-art-inner">
+                <svg viewBox="0 0 400 300" aria-hidden="true" focusable="false">
+                  <defs>
+                    <linearGradient id="gradient_0" gradientUnits="userSpaceOnUse" x1="140" y1="80" x2="260" y2="220">
+                      <stop offset="0" stop-color="#60A5FA" />
+                      <stop offset="1" stop-color="#8B5CF6" />
+                    </linearGradient>
+                  </defs>
+                  <ellipse fill="url(#gradient_0)" cx="200" cy="150" rx="70" ry="70" />
+                  <path fill="none" stroke="#1D4ED8" stroke-width="6" stroke-linecap="round" stroke-miterlimit="4" d="M110 190C150 140 200 210 290 170" />
+                </svg>
+              </div>
+            </div>
+            <div class="showcase-callout">Copy &amp; save as <code>HelloSvg.cs</code>, then run <code>dotnet HelloSvg.cs</code></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="galleries-section">
+      <div class="container">
+        <p class="section-kicker">Explore visually</p>
+        <h2 class="section-title">Interactive Gallery</h2>
+        <p class="section-intro">
+          Rich, interactive sample galleries that let you explore SkiaSharp's capabilities directly — with more experiences on the way.
+        </p>
+        <ul class="explore-pill-row" aria-label="Things you can explore">
+          <li class="explore-pill">Image Processing</li>
+          <li class="explore-pill">Text &amp; Typography</li>
+          <li class="explore-pill">Shaders &amp; Effects</li>
+          <li class="explore-pill">PDF &amp; Export</li>
+          <li class="explore-pill">Paths &amp; Curves</li>
+          <li class="explore-pill">Transforms &amp; Animation</li>
+          <li class="explore-pill">Clipping &amp; Masking</li>
+          <li class="explore-pill">Geometry &amp; Mesh</li>
+        </ul>
+
+        <div class="gallery-grid">
+          <a href="gallery/" class="card gallery-card gallery-card-featured">
+            <div class="card-icon">
+              <img src="images/blazor.svg" alt="Blazor logo" width="32" height="32" class="gallery-logo">
+              <span class="gallery-badge">Available now</span>
+            </div>
+            <h3 class="card-title">Blazor WebAssembly Gallery</h3>
+            <p class="card-desc">Browse the live sample gallery and try SkiaSharp directly in your browser with no install required.</p>
+            <span class="card-link">Open gallery →</span>
+          </a>
+
+          <div class="card gallery-card gallery-card-placeholder">
+            <div class="card-icon">
+              <img src="images/uno-platform.svg" alt="Uno Platform logo" width="32" height="32" class="gallery-logo">
+              <span class="gallery-badge gallery-badge-muted">Coming later</span>
+            </div>
+            <h3 class="card-title">Uno Platform WebAssembly Gallery</h3>
+            <p class="card-desc">The same samples running on Uno Platform for WebAssembly — a cross-platform alternative in the browser.</p>
+          </div>
+        </div>
+
+        <div class="gallery-grid gallery-grid-small">
+          <div class="card gallery-card gallery-card-placeholder">
+            <div class="card-icon">
+              <img src="images/dotnet-maui.png" alt=".NET MAUI logo" width="32" height="32" class="gallery-logo">
+              <span class="gallery-badge gallery-badge-muted">Coming later</span>
+            </div>
+            <h3 class="card-title">.NET MAUI Native Gallery</h3>
+            <p class="card-desc">Run samples natively on iOS, Android, Mac Catalyst, and Windows through .NET MAUI.</p>
+          </div>
+
+          <div class="card gallery-card gallery-card-placeholder">
+            <div class="card-icon">
+              <img src="images/uno-platform.svg" alt="Uno Platform logo" width="32" height="32" class="gallery-logo">
+              <span class="gallery-badge gallery-badge-muted">Coming later</span>
+            </div>
+            <h3 class="card-title">Uno Platform Native Gallery</h3>
+            <p class="card-desc">The same samples running natively on desktop and mobile via Uno Platform's cross-platform runtime.</p>
+          </div>
+
+          <div class="card gallery-card gallery-card-placeholder">
+            <div class="card-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+              <span class="gallery-badge gallery-badge-muted">Coming later</span>
+            </div>
+            <h3 class="card-title">More coming soon</h3>
+            <p class="card-desc">This section will grow as we add more interactive gallery experiences over time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features-section section-alt">
+      <div class="container">
+        <p class="section-kicker">Why teams choose it</p>
+        <h2 class="section-title">Why SkiaSharp?</h2>
+        <p class="section-intro">
+          A fast, familiar graphics stack for .NET apps on desktop, mobile, server, and web.
+        </p>
+
+        <ul class="platform-pill-row" aria-label="Supported operating systems">
+          <li class="platform-pill">Android</li>
+          <li class="platform-pill">iOS</li>
+          <li class="platform-pill">Linux</li>
+          <li class="platform-pill">Mac Catalyst</li>
+          <li class="platform-pill">macOS</li>
+          <li class="platform-pill">Tizen</li>
+          <li class="platform-pill">tvOS</li>
+          <li class="platform-pill">WebAssembly</li>
+          <li class="platform-pill">Windows</li>
+        </ul>
+
+        <ul class="platform-pill-row" aria-label="Supported frameworks and app types">
+          <li class="platform-pill">.NET MAUI</li>
+          <li class="platform-pill">Blazor</li>
+          <li class="platform-pill">Console</li>
+          <li class="platform-pill">Uno Platform</li>
+          <li class="platform-pill">WinUI 3</li>
+        </ul>
+
+        <div class="features-grid">
+          <div class="feature">
+            <h3>Cross-Platform</h3>
+            <p>Windows, macOS, Linux, iOS, Android, WebAssembly — one API, every platform.</p>
+          </div>
+          <div class="feature">
+            <h3>Hardware Accelerated</h3>
+            <p>Powered by Google's Skia engine, the same graphics library behind Chrome and Android.</p>
+          </div>
+          <div class="feature">
+            <h3>.NET Native</h3>
+            <p>First-class C# API with idiomatic patterns. Works with .NET MAUI, Blazor, Console apps, and more.</p>
+          </div>
+          <div class="feature">
+            <h3>Rich Feature Set</h3>
+            <p>Vector drawing, text rendering, image processing, shaders, blend modes, SVG path data, and beyond.</p>
+          </div>
+          <div class="feature">
+            <h3>Open Source</h3>
+            <p>MIT licensed and community-driven. Contribute, fork, or build on top of a proven foundation.</p>
+          </div>
+          <div class="feature">
+            <h3>GPU &amp; CPU Rendering</h3>
+            <p>Choose software rasterization or GPU backends like OpenGL, Metal, and Vulkan per target.</p>
+          </div>
+          <div class="feature">
+            <h3>Pixel-Perfect Output</h3>
+            <p>Consistent rendering across every platform — what you draw on one device looks the same on all.</p>
+          </div>
+          <div class="feature">
+            <h3>NuGet-First</h3>
+            <p>Drop in via NuGet with native binaries auto-resolved per platform. No manual setup required.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="cards-section">
       <div class="container">
-        <div class="cards-grid">
+        <p class="section-kicker">Learn and build</p>
+        <h2 class="section-title">Documentation, APIs, and source</h2>
+        <p class="section-intro">
+          When you are ready to go deeper, the guides, reference docs, and repo are one click away.
+        </p>
+        <div class="cards-grid cards-grid-resources">
           <a href="docs/" class="card">
             <div class="card-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M8 7h8M8 11h6"/></svg>
             </div>
-            <h2 class="card-title">Documentation</h2>
+            <h3 class="card-title">Documentation</h3>
             <p class="card-desc">Learn SkiaSharp with step-by-step tutorials covering drawing, paths, transforms, bitmaps, effects, and more.</p>
             <span class="card-link">Browse guides →</span>
           </a>
@@ -72,52 +337,48 @@
             <div class="card-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </div>
-            <h2 class="card-title">API Reference</h2>
+            <h3 class="card-title">API Reference</h3>
             <p class="card-desc">Browse the complete SkiaSharp API reference on Microsoft Learn. Every class, method, and property documented.</p>
             <span class="card-link">View on Microsoft Learn ↗</span>
-          </a>
-
-          <a href="gallery/" class="card">
-            <div class="card-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            </div>
-            <h2 class="card-title">Gallery</h2>
-            <p class="card-desc">Interactive sample gallery running in your browser via Blazor WebAssembly. Explore, experiment, and play.</p>
-            <span class="card-link">Open gallery →</span>
           </a>
 
           <a href="https://github.com/mono/SkiaSharp" class="card" target="_blank" rel="noopener">
             <div class="card-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
             </div>
-            <h2 class="card-title">Source Code</h2>
+            <h3 class="card-title">Source Code</h3>
             <p class="card-desc">Contribute, report issues, or explore the source. SkiaSharp is open-source under the MIT license.</p>
             <span class="card-link">View on GitHub ↗</span>
           </a>
         </div>
-      </div>
-    </section>
 
-    <section class="features-section">
-      <div class="container">
-        <h2 class="section-title">Why SkiaSharp?</h2>
-        <div class="features-grid">
-          <div class="feature">
-            <h3>🎯 Cross-Platform</h3>
-            <p>Windows, macOS, Linux, iOS, Android, WebAssembly — one API, every platform.</p>
-          </div>
-          <div class="feature">
-            <h3>⚡ Hardware Accelerated</h3>
-            <p>Powered by Google's Skia engine, the same graphics library behind Chrome and Android.</p>
-          </div>
-          <div class="feature">
-            <h3>🧩 .NET Native</h3>
-            <p>First-class C# API with idiomatic patterns. Works with .NET MAUI, Blazor, Console apps, and more.</p>
-          </div>
-          <div class="feature">
-            <h3>🖼️ Rich Feature Set</h3>
-            <p>Vector drawing, text rendering, image processing, shaders, blend modes, SVG path data, and beyond.</p>
-          </div>
+        <div class="cards-grid cards-grid-resources">
+          <a href="https://learn.microsoft.com/dotnet/api/skiasharp.views.blazor" class="card" target="_blank" rel="noopener">
+            <div class="card-icon">
+              <img src="images/blazor.svg" alt="Blazor logo" width="32" height="32" class="gallery-logo">
+            </div>
+            <h3 class="card-title">SkiaSharp for Blazor</h3>
+            <p class="card-desc">Use SkiaSharp in Blazor WebAssembly and Server apps with the SkiaSharp.Views.Blazor package.</p>
+            <span class="card-link">View on Microsoft Learn ↗</span>
+          </a>
+
+          <a href="https://learn.microsoft.com/dotnet/api/skiasharp.views.maui.controls" class="card" target="_blank" rel="noopener">
+            <div class="card-icon">
+              <img src="images/dotnet-maui.png" alt=".NET MAUI logo" width="32" height="32" class="gallery-logo">
+            </div>
+            <h3 class="card-title">SkiaSharp for .NET MAUI</h3>
+            <p class="card-desc">Build cross-platform native apps with SkiaSharp views and controls for .NET MAUI on iOS, Android, Mac, and Windows.</p>
+            <span class="card-link">View on Microsoft Learn ↗</span>
+          </a>
+
+          <a href="https://platform.uno/docs/articles/controls/SKCanvasElement.html" class="card" target="_blank" rel="noopener">
+            <div class="card-icon">
+              <img src="images/uno-platform.svg" alt="Uno Platform logo" width="32" height="32" class="gallery-logo">
+            </div>
+            <h3 class="card-title">SkiaSharp for Uno Platform</h3>
+            <p class="card-desc">Integrate SkiaSharp into Uno Platform apps targeting WebAssembly, desktop, iOS, Android, and more.</p>
+            <span class="card-link">View on Uno Platform ↗</span>
+          </a>
         </div>
       </div>
     </section>
@@ -137,14 +398,6 @@
     </div>
   </footer>
 
-  <script>
-    const toggle = document.getElementById('theme-toggle');
-    toggle.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-    });
-  </script>
+  <script src="site.js"></script>
 </body>
 </html>

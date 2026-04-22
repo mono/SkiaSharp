@@ -1,0 +1,93 @@
+{
+  "skill_name": "issue-triage",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "triage #3420",
+      "expected_output": "Open bug triage for Android 16KB page size. Should classify as type/bug, area/libSkiaSharp.native, os/Android. Should suggest needs-investigation with suggestedReproPlatform linux (Android issues use linux). Should find related PR or duplicate #3419.",
+      "files": [],
+      "expectations": [
+        "Produces a valid JSON file at output/ai/repos/mono-SkiaSharp/ai-triage/3420.json",
+        "Produces a Markdown report at output/ai/repos/mono-SkiaSharp/ai-triage/3420.md",
+        "Produces an HTML viewer at output/ai/repos/mono-SkiaSharp/ai-triage/3420.html",
+        "JSON passes the validate-triage.py script (exit 0)",
+        "classification.type.value is 'type/bug'",
+        "classification.area.value is 'area/libSkiaSharp.native'",
+        "classification.platforms includes 'os/Android'",
+        "analysis.codeInvestigation has at least one entry",
+        "output.actionability.suggestedAction is one of the valid enum values",
+        "output.actions array is non-empty and contains an update-labels action",
+        "evidence.reproEvidence.repoLinks mentions #3419 (the duplicate)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "triage #3385",
+      "expected_output": "Feature request triage for Gray16 support. Should classify as type/feature-request, area/SkiaSharp. Should note this depends on upstream Skia adding Gray16 to SkColorType. suggestedAction should be keep-open or needs-investigation.",
+      "files": [],
+      "expectations": [
+        "Produces a valid JSON file at output/ai/repos/mono-SkiaSharp/ai-triage/3385.json",
+        "Produces a Markdown report at output/ai/repos/mono-SkiaSharp/ai-triage/3385.md",
+        "Produces an HTML viewer at output/ai/repos/mono-SkiaSharp/ai-triage/3385.html",
+        "JSON passes the validate-triage.py script (exit 0)",
+        "classification.type.value is 'type/feature-request'",
+        "analysis.codeInvestigation has at least one entry examining SKColorType or color type enums",
+        "analysis.summary or analysis.rationale mentions upstream Skia dependency",
+        "output.actionability.suggestedAction is 'keep-open' or 'needs-investigation'",
+        "output.actions array contains an update-labels action"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "triage #3400",
+      "expected_output": "Bug triage for XPS vs PDF image scaling discrepancy. Should classify as type/bug, area/SkiaSharp, with backends including backend/XPS and/or backend/PDF. Should find the DPI/scaling code path in SKDocument. suggestedReproPlatform should be windows (XPS is Windows-only).",
+      "files": [],
+      "expectations": [
+        "Produces a valid JSON file at output/ai/repos/mono-SkiaSharp/ai-triage/3400.json",
+        "Produces a Markdown report at output/ai/repos/mono-SkiaSharp/ai-triage/3400.md",
+        "Produces an HTML viewer at output/ai/repos/mono-SkiaSharp/ai-triage/3400.html",
+        "JSON passes the validate-triage.py script (exit 0)",
+        "classification.type.value is 'type/bug'",
+        "classification.area.value is 'area/SkiaSharp'",
+        "classification.backends includes 'backend/XPS' or 'backend/PDF'",
+        "classification.platforms includes 'os/Windows-Classic'",
+        "analysis.codeInvestigation has at least one entry examining SKDocument or XPS code",
+        "output.actionability.suggestedReproPlatform is 'windows'",
+        "output.actionability.suggestedAction is 'needs-investigation'"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "triage #3419",
+      "expected_output": "Duplicate detection. Issue #3419 is a duplicate of #3420 (same Android 16KB page size bug). Should classify as type/bug and suggestedAction should be close-duplicate referencing #3420.",
+      "files": [],
+      "expectations": [
+        "Produces a valid JSON file at output/ai/repos/mono-SkiaSharp/ai-triage/3419.json",
+        "Produces a Markdown report at output/ai/repos/mono-SkiaSharp/ai-triage/3419.md",
+        "Produces an HTML viewer at output/ai/repos/mono-SkiaSharp/ai-triage/3419.html",
+        "JSON passes the validate-triage.py script (exit 0)",
+        "classification.type.value is 'type/bug'",
+        "output.actionability.suggestedAction is 'close-duplicate'",
+        "analysis.summary or analysis.rationale references #3420 as the original issue",
+        "output.actions array contains an action referencing issue #3420"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "triage #3391",
+      "expected_output": "Already-fixed bug triage. Issue #3391 (Blazor font typefaces) is closed/completed. Should classify as type/bug, area/SkiaSharp.Views.Blazor, os/WASM. suggestedAction should reflect the issue is already resolved (close-fixed or close-answered).",
+      "files": [],
+      "expectations": [
+        "Produces a valid JSON file at output/ai/repos/mono-SkiaSharp/ai-triage/3391.json",
+        "Produces a Markdown report at output/ai/repos/mono-SkiaSharp/ai-triage/3391.md",
+        "Produces an HTML viewer at output/ai/repos/mono-SkiaSharp/ai-triage/3391.html",
+        "JSON passes the validate-triage.py script (exit 0)",
+        "classification.type.value is 'type/bug'",
+        "classification.platforms includes 'os/WASM'",
+        "output.actionability.suggestedAction reflects the issue is already resolved",
+        "analysis.codeInvestigation has at least one entry",
+        "evidence.fixStatus is present since the issue is already fixed/closed"
+      ]
+    }
+  ]
+}
