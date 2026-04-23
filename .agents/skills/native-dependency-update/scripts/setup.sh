@@ -139,9 +139,7 @@ fi
 
 echo "=== Setup Complete ==="
 echo ""
-echo "Next steps:"
-echo "  1. Use rename_branch tool to set SkiaSharp branch to: dev/update-$DEP"
-echo "  2. Proceed to Phase 1: Discovery"
+echo "Proceed to Phase 1: Discovery"
 echo ""
 echo "Environment reminders (do not persist across bash calls):"
 echo "  - Prefix dotnet commands with: export PATH=\"/usr/local/share/dotnet:/opt/homebrew/bin:\$PATH\" &&"

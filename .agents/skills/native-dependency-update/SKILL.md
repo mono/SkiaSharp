@@ -33,11 +33,10 @@ You MUST complete ALL phases in order. Do not skip phases to save time.
 ### Pre-Flight Checklist
 
 Before starting, confirm you will:
-- [ ] Complete Phase 1-8 in order
+- [ ] Complete Phase 0-8 in order
 - [ ] Update DEPS, `externals/skia` submodule, AND `cgmanifest.json`
 - [ ] Build and test locally before any PR
-- [ ] Create PRs (never push directly to `skiasharp` or `main`)
-- [ ] Use "Fixes #NNNNN" in PR body (never close issues manually)
+- [ ] Create PRs (never push directly to protected branches)
 - [ ] Stop and ask at every 🛑 checkpoint
 
 ## Critical Rules
@@ -281,7 +280,7 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 
 > **🚨 CRITICAL: SQUASH MERGE CREATES NEW COMMITS**
 >
-> When you squash-merge mono/skia PR, GitHub creates a **NEW commit SHA** on the `skiasharp` branch.
+> When you squash-merge mono/skia PR, GitHub creates a **NEW commit SHA** on the target branch.
 > The original commits on `dev/update-{dep}` become **orphaned** when the branch is deleted.
 > 
 > **If SkiaSharp's submodule still points to the old (orphaned) commit, it will BREAK:**
@@ -293,8 +292,8 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 
 #### Merge Sequence (MANDATORY)
 
-1. **Merge mono/skia PR first** — This creates a new squashed commit on the `skiasharp` branch
-2. **Fetch the updated skiasharp branch** and note the new commit SHA
+1. **Merge mono/skia PR first** — This creates a new squashed commit on `{skia_target_branch}`
+2. **Fetch the updated `{skia_target_branch}`** and note the new commit SHA
 3. **Update the SkiaSharp submodule** to point to the new squashed commit (not the old branch commit)
 4. **Push the updated submodule reference** to the SkiaSharp PR branch
 5. **Only then merge the SkiaSharp PR**
@@ -304,7 +303,7 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 Before proceeding past each step, verify:
 
 - [ ] mono/skia PR merged
-- [ ] Fetched `skiasharp` branch to get new SHA
+- [ ] Fetched `{skia_target_branch}` to get new SHA
 - [ ] Updated SkiaSharp submodule to new SHA (`cd externals/skia && git checkout {new-sha}`)
 - [ ] Pushed submodule update to SkiaSharp PR branch
 - [ ] SkiaSharp PR merged
@@ -326,8 +325,8 @@ If you must amend a commit in `externals/skia`:
 
 - Related issues auto-closed
 - Both PRs merged
-- No failures on main
-- **Submodule points to a commit on `skiasharp` branch** — fetch main, check that `externals/skia` commit exists on `origin/skiasharp` (not orphaned)
+- No failures on `{skiasharp_target_branch}`
+- **Submodule points to a commit on `{skia_target_branch}`** — fetch the target branch, check that `externals/skia` commit exists on it (not orphaned)
 
 ---
 
