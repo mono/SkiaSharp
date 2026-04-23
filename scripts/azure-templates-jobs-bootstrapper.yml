@@ -94,10 +94,10 @@ jobs:
         displayName: Get the volume information after the checkout
         condition: always()
 
-      # free disk space on hosted linux agents by removing pre-installed tools
-      - ${{ if and(eq(parameters.buildAgent.pool.os, 'linux'), eq(parameters.buildAgent.pool.name, 'Azure Pipelines')) }}:
-        - bash: bash ./scripts/free-disk-space-linux.sh
-          displayName: Free disk space on Linux
+      # free disk space on hosted agents by removing pre-installed tools
+      - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:
+        - pwsh: ./scripts/free-disk-space.ps1
+          displayName: Free disk space
 
       # # checkout required skia PR
       # - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GitHub.Token.PublicAccess)
@@ -193,10 +193,6 @@ jobs:
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
         # install the bits needed for .NET
         - ${{ if eq(parameters.installDotNet, 'true') }}:
-          - ${{ if eq(parameters.buildAgent.pool.os, 'macos') }}:
-            - pwsh: Remove-Item "$env:AGENT_TOOLSDIRECTORY/dotnet" -Recurse -Force -ErrorAction SilentlyContinue
-              displayName: Cleanup existing versions of .NET
-              condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
           - task: UseDotNet@2
             condition: and(succeeded(), eq(variables['DOWNLOAD_EXTERNALS'], ''))
             inputs:
