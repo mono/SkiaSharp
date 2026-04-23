@@ -52,11 +52,32 @@ else
     echo "    Re-run this script after the first build to unshallow it."
 fi
 
-# --- Step 4: Create skia feature branch ---
-echo "--- Creating skia feature branch: dev/update-$DEP from origin/$SKIA_TARGET ---"
+# --- Step 4: Determine skia base and create feature branch ---
+echo "--- Setting up skia feature branch ---"
 pushd externals/skia > /dev/null
-git fetch origin "$SKIA_TARGET"
-git checkout -b "dev/update-$DEP" "origin/$SKIA_TARGET"
+
+# The submodule is checked out at a specific commit after submodule update.
+# This commit IS the correct base — it's what SkiaSharp's target branch uses.
+SUBMODULE_COMMIT=$(git rev-parse HEAD)
+echo "    Submodule commit: $SUBMODULE_COMMIT"
+
+# Try to fetch the requested skia target branch
+if git fetch origin "$SKIA_TARGET" 2>/dev/null; then
+    # Verify the submodule commit is actually on this branch
+    if git merge-base --is-ancestor "$SUBMODULE_COMMIT" "origin/$SKIA_TARGET" 2>/dev/null; then
+        echo "    Confirmed: submodule commit is on origin/$SKIA_TARGET"
+        git checkout -b "dev/update-$DEP" "origin/$SKIA_TARGET"
+    else
+        echo "    WARNING: submodule commit is NOT on origin/$SKIA_TARGET"
+        echo "    Branching from the submodule commit instead (safest option)"
+        git checkout -b "dev/update-$DEP" "$SUBMODULE_COMMIT"
+    fi
+else
+    echo "    Branch origin/$SKIA_TARGET not found in mono/skia"
+    echo "    Branching from the submodule commit instead"
+    git checkout -b "dev/update-$DEP" "$SUBMODULE_COMMIT"
+fi
+
 popd > /dev/null
 echo "    Skia branch created."
 

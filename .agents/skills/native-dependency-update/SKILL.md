@@ -120,8 +120,28 @@ bash .agents/skills/native-dependency-update/scripts/setup.sh {dep} {skia_target
 | Arg | Default | Examples |
 |-----|---------|----------|
 | `dep` | (required) | `libpng`, `expat`, `zlib`, `libwebp`, `freetype` |
-| `skia_target_branch` | `skiasharp` | `skiasharp` |
+| `skia_target_branch` | `skiasharp` | `skiasharp`, `release/3.119.x` |
 | `skiasharp_target_branch` | `main` | `main`, `release/3.119.x` |
+
+### Determining the skia target branch
+
+⚠️ **NEVER assume the skia target branch.** It depends on what the user is asking:
+
+| User request | `skiasharp_target_branch` | `skia_target_branch` |
+|-------------|--------------------------|---------------------|
+| Update on main | `main` | `skiasharp` |
+| Backport to release branch | `release/3.119.x` | Check — see below |
+
+For release branch backports, the matching skia branch may or may not exist. The setup script handles this safely:
+1. It reads the submodule commit from the SkiaSharp target branch (this is always correct)
+2. It tries to fetch `origin/{skia_target_branch}`
+3. If the branch exists AND contains the submodule commit, it branches from there
+4. Otherwise, it branches from the submodule commit directly
+
+If the script falls back to the submodule commit, you'll need to determine the correct PR base branch for the mono/skia PR in Phase 5. Check what branch the submodule commit lives on:
+```bash
+cd externals/skia && git branch -r --contains $(git rev-parse HEAD)
+```
 
 **After the script completes:**
 1. Use the `rename_branch` tool to set the SkiaSharp branch to `dev/update-{dep}`
