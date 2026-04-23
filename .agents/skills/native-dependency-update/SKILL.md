@@ -52,83 +52,80 @@ Before starting, confirm you will:
 
 | Repository | Protected Branches | Action Required |
 |------------|-------------------|-----------------|
-| **mono/SkiaSharp** (parent repo) | `main` | Create feature branch first |
+| **mono/SkiaSharp** (parent repo) | `main`, `release/*` | Create feature branch first |
 | **mono/skia** (`externals/skia` submodule) | `main`, `skiasharp` | Create feature branch first |
 
 **Before ANY commit in either repository:**
 
-1. **Create a feature branch** — Use naming convention: `dev/issue-NNNN-description` or `dev/update-{dep}`
-2. **Never commit directly** to `main` or `skiasharp` — All changes require a PR
+1. **Create a feature branch** — Use naming convention: `dev/update-{dep}`
+2. **Never commit directly** to protected branches — All changes require a PR
 3. **This is a compliance requirement** — Direct commits bypass review, CI, and audit trails
 
-```bash
-# ✅ CORRECT — Always create feature branch first
-cd externals/skia
-git checkout skiasharp
-git checkout -b dev/update-libpng
-# Now make commits...
+### 🔒 Security Rules (ALWAYS — not just for CVE bumps)
 
-# ❌ WRONG — Never do this
-cd externals/skia
-git checkout skiasharp
-git commit -m "Update libpng"  # POLICY VIOLATION
-```
+All dependency updates are assumed security-sensitive. These rules apply to EVERY bump:
+
+**Commit message:** `Update {dep} to {version}` — NOTHING else (plus Co-authored-by trailer)
+**PR title:** `Update {dep} to {version}`
+**PR body:** Version numbers, file changes, build verification results ONLY
+**Branch name:** `dev/update-{dep}` — NEVER include CVE IDs
+
+**Prohibited in ALL public artifacts (PRs, commits, branches, PR comments):**
+- ❌ CVE IDs (e.g., CVE-2026-XXXXX)
+- ❌ Severity ratings or CVSS scores
+- ❌ Words: "security", "vulnerability", "exploit", "fix CVE", "security bump"
+- ❌ Version ranges like "from X to Y" in commit messages
+- ❌ Branch context like "(release/3.119.x)" in commit messages
+
+**Security analysis goes in the session conversation ONLY** — report to the user:
+1. Which CVEs are fixed, severity, CVSS scores
+2. Which CVEs affect SkiaSharp's code paths and which don't (with reasoning)
+3. Behavior changes that may need test coverage
+4. Upstream issues that remain unfixed
 
 ### ❌ NEVER Do These
 
 | Shortcut | Why It's Wrong |
 |----------|----------------|
-| Push directly to `skiasharp` or `main` | Bypasses PR review and CI |
+| Push directly to protected branches | Bypasses PR review and CI |
 | Skip native build phase | CI is too slow; must verify locally first |
 | Manually close issues | Breaks audit trail; PR merge auto-closes |
 | Skip `cgmanifest.json` update | Security compliance requires it |
 | Skip `externals/skia` submodule update | SkiaSharp won't use the new dependency version |
 | Revert/undo pushed commits | Fix forward with new commit instead |
 | **Merge both PRs without updating submodule in between** | **Squash-merge creates new SHA; submodule points to orphaned commit; BREAKS USERS** |
+| Include security details in public artifacts | Leaks vulnerability info before users can update |
+
+### Environment Reminders
+
+These do NOT persist across bash tool calls. Prefix every relevant command:
+
+| Command | Prefix |
+|---------|--------|
+| `dotnet` | `export PATH="/usr/local/share/dotnet:/opt/homebrew/bin:$PATH" &&` |
+| `gh pr create`, `gh pr edit`, etc. | `unset GH_TOKEN &&` |
+| `grep` (pattern matching) | Use `grep -E` not `grep -P` (BSD grep on macOS) |
 
 ---
 
 ## Phase 0: Environment Setup (MANDATORY FIRST STEP)
 
-Before ANY other action in a new worktree session:
+Run the setup script before any other work. It initializes submodules, unshallows the dependency, creates the skia feature branch, and verifies the environment:
 
-### Step 1: Initialize all submodules
 ```bash
-git submodule update --init
-```
-⚠️ `externals/skia` is ~900MB and takes ~8 minutes to clone. Wait for completion.
-Do NOT attempt to read DEPS, edit files, or build until this finishes.
-
-### Step 2: Set up PATH and tools
-```bash
-export PATH="/usr/local/share/dotnet:/opt/homebrew/bin:$PATH"
-```
-⚠️ PATH does not persist between bash tool calls. Prefix EVERY `dotnet` command with this export.
-⚠️ Environment variables do not persist across bash tool calls. Every `gh` write command (pr create, pr edit, etc.) must be prefixed with `unset GH_TOKEN &&` to clear the read-only default token.
-⚠️ `grep -P` (Perl regex) is NOT available on macOS (BSD grep). Use `grep -E` or `sed` instead.
-
-### Step 3: Unshallow the target dependency
-`git-sync-deps` clones dependencies as shallow repos. `git log` and `git diff` across version ranges will show incorrect results in shallow repos. Always unshallow the dependency you're updating:
-```bash
-cd externals/skia/third_party/externals/{dep}
-git fetch --unshallow origin
-cd -
+bash .agents/skills/native-dependency-update/scripts/setup.sh {dep} {skia_target_branch} {skiasharp_target_branch}
 ```
 
-### Step 4: Set target branch (for release branch work)
-If you're targeting a non-default branch (e.g., `release/3.119.x`):
-```bash
-git fetch origin {target_branch}
-git reset --hard origin/{target_branch}
-# Re-run submodule update to get the correct submodule commit:
-git submodule update
-```
+**Arguments:**
+| Arg | Default | Examples |
+|-----|---------|----------|
+| `dep` | (required) | `libpng`, `expat`, `zlib`, `libwebp`, `freetype` |
+| `skia_target_branch` | `skiasharp` | `skiasharp` |
+| `skiasharp_target_branch` | `main` | `main`, `release/3.119.x` |
 
-### Step 5: Verify environment
-```bash
-dotnet --version && ls externals/skia/DEPS && ls externals/depot_tools/ninja.py
-```
-Do NOT proceed to Phase 1 until all three checks pass.
+**After the script completes:**
+1. Use the `rename_branch` tool to set the SkiaSharp branch to `dev/update-{dep}`
+2. Proceed to Phase 1
 
 ---
 
@@ -211,31 +208,23 @@ Do NOT assume all entries use the same schema. Check `component.type` first.
 
 **Both PRs must be created together** — CI requires both.
 
-#### Branch Naming Convention
-
-| Repository | Branch Name | Target Branch |
-|------------|-------------|---------------|
-| mono/skia | `dev/update-{dep}` | `skiasharp` |
-| mono/SkiaSharp | `dev/update-{dep}` | `main` |
-
-Example: For libfoo, use `dev/update-libwebp` in both repos.
+Both repos use branch name `dev/update-{dep}`. The skia branch was already created by the setup script. The SkiaSharp branch was set via `rename_branch`.
 
 #### Step 1: Create mono/skia PR
 
-In the `externals/skia` directory:
+The branch `dev/update-{dep}` already exists in `externals/skia` (created by setup script).
 
-1. **Create the branch with its final name** — do NOT create-then-rename:
-   ```bash
-   git checkout -b dev/update-{dep} origin/skiasharp
-   ```
-2. **Stage ALL changes before committing** (DEPS, BUILD.gn if changed)
-3. **Commit ONCE** with this exact format:
+1. **Stage ALL changes before committing** (DEPS, BUILD.gn if changed)
+2. **Commit ONCE** with this exact format:
    ```
    Update {dep} to {version}
 
    Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
    ```
-4. **Push ONCE** and create a PR targeting the `skiasharp` branch
+3. **Push ONCE** and create a PR targeting `{skia_target_branch}`:
+   ```bash
+   unset GH_TOKEN && gh pr create --repo mono/skia --base {skia_target_branch} --title "Update {dep} to {version}" --body "..."
+   ```
 
 Do NOT commit-then-amend. Every amend requires a force-push which re-triggers CI (wasting 2+ hours of compute).
 
@@ -243,32 +232,22 @@ Do NOT commit-then-amend. Every amend requires a force-push which re-triggers CI
 
 > **⚠️ CRITICAL: You MUST update the submodule reference, not just cgmanifest.json**
 
-In the SkiaSharp root, create a branch named `dev/update-{dep}`. Then:
-
 1. **Update the submodule** — In `externals/skia`, fetch and checkout the branch you just pushed in Step 1
 2. **Stage both changes** — `git add externals/skia cgmanifest.json` (the submodule AND the manifest)
-3. Commit, push, and create a PR targeting `main`
+3. **Commit ONCE** with the same format as Step 1
+4. **Push and create PR** targeting `{skiasharp_target_branch}`:
+   - If targeting `main`: use the `create_pull_request` tool
+   - If targeting a release branch: use the `create_pull_request` tool, then immediately fix the base:
+     ```bash
+     unset GH_TOKEN && gh pr edit {number} --repo mono/SkiaSharp --base {skiasharp_target_branch}
+     ```
 
 #### Step 3: Cross-link the PRs
 
 Edit **both** PRs to reference each other:
-- mono/skia PR → Add: `Required SkiaSharp PR: https://github.com/mono/SkiaSharp/pull/{number}`
-- mono/SkiaSharp PR → Add: `Required skia PR: https://github.com/mono/skia/pull/{number}`
-
-### GitHub CLI for mono org repos
-
-The default `GH_TOKEN` is read-only and causes `gh pr create`, `gh pr edit`, and `gh run rerun` to fail. Prefix every `gh` write command with `unset GH_TOKEN &&`:
 ```bash
-unset GH_TOKEN && gh pr create ...
-unset GH_TOKEN && gh pr edit ...
-```
-
-### Release Branch PRs
-
-The `create_pull_request` built-in tool always targets the repo's default branch (`main`). For release branch PRs, immediately fix after creation:
-```bash
-gh api repos/mono/SkiaSharp/pulls/{number} --method PATCH \
-  -f base="{target_branch}"
+unset GH_TOKEN && gh pr edit {skia_pr_number} --repo mono/skia --body "...Required SkiaSharp PR: https://github.com/mono/SkiaSharp/pull/{number}..."
+unset GH_TOKEN && gh pr edit {skiasharp_pr_number} --repo mono/SkiaSharp --body "...Required skia PR: https://github.com/mono/skia/pull/{number}..."
 ```
 
 #### Phase 5 Completion Checklist
@@ -276,11 +255,12 @@ gh api repos/mono/SkiaSharp/pulls/{number} --method PATCH \
 Before proceeding, verify ALL of these:
 
 - [ ] Branch names follow `dev/update-{dep}` convention
-- [ ] mono/skia PR targets `skiasharp` branch
-- [ ] mono/SkiaSharp PR targets `main` branch
+- [ ] mono/skia PR targets `{skia_target_branch}` branch
+- [ ] mono/SkiaSharp PR targets `{skiasharp_target_branch}` branch
 - [ ] **SkiaSharp's `externals/skia` submodule points to the mono/skia PR branch** (check with `git submodule status`)
 - [ ] `cgmanifest.json` updated with new version
 - [ ] Both PRs cross-reference each other
+- [ ] **No security details in any public artifact** (see Security Rules above)
 
 ### Phase 6: Monitor CI
 
@@ -355,34 +335,3 @@ If you must amend a commit in `externals/skia`:
 | libjpeg-turbo | `third_party/externals/libjpeg-turbo` |
 
 For cgmanifest names and upstream URLs, see [documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md#name-mapping).
-
----
-
-## Security Bump Protocol
-
-When the dependency update is security-related (CVE fix):
-
-### What to Report to the User (in session conversation ONLY)
-1. Full CVE analysis — which CVEs are fixed, severity, CVSS scores
-2. Which CVEs affect SkiaSharp's code paths and which don't (with reasoning)
-3. Behavior changes that may need test coverage
-4. Upstream issues that remain unfixed
-
-### What Goes in Public Artifacts (PRs, commits, branches)
-- **Commit message:** `Update {dep} to {version}` — NOTHING else
-- **PR title:** `Update {dep} to {version}` (optionally add target branch like `(release/3.119.x)`)
-- **PR body:** Version numbers, file changes, build verification results ONLY
-- **Branch name:** `dev/update-{dep}` — NEVER include CVE IDs
-
-### Prohibited in Public Artifacts
-- ❌ CVE IDs (e.g., CVE-2026-XXXXX)
-- ❌ Severity ratings or CVSS scores
-- ❌ Words: "security", "vulnerability", "exploit", "fix CVE", "security bump"
-- ❌ Version ranges like "from X to Y" in commit messages
-- ❌ Branch context like "(release/3.119.x)" in commit messages
-
-### After-Bump Checklist (report to user in session)
-Before marking the task complete, tell the user:
-- "Here's my security analysis for your records: ..."
-- "These CVEs affect our code paths: ... / do NOT affect us because: ..."
-- "New tests recommended: yes/no, because: ..."
