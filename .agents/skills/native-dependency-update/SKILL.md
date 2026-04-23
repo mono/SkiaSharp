@@ -102,10 +102,9 @@ Do NOT attempt to read DEPS, edit files, or build until this finishes.
 ### Step 2: Set up PATH and tools
 ```bash
 export PATH="/usr/local/share/dotnet:/opt/homebrew/bin:$PATH"
-unset GH_TOKEN
 ```
 ⚠️ PATH does not persist between bash tool calls. Prefix EVERY `dotnet` command with this export.
-⚠️ `GH_TOKEN` must be unset so `gh` commands (pr create, pr edit, etc.) use your interactive auth instead of the read-only default token.
+⚠️ Environment variables do not persist across bash tool calls. Every `gh` write command (pr create, pr edit, etc.) must be prefixed with `unset GH_TOKEN &&` to clear the read-only default token.
 ⚠️ `grep -P` (Perl regex) is NOT available on macOS (BSD grep). Use `grep -E` or `sed` instead.
 
 ### Step 3: Unshallow the target dependency
@@ -258,9 +257,10 @@ Edit **both** PRs to reference each other:
 
 ### GitHub CLI for mono org repos
 
-The default `GH_TOKEN` is read-only and causes `gh pr create`, `gh pr edit`, and `gh run rerun` to fail with OAuth App access restrictions. This is already handled in Phase 0 Step 2 (`unset GH_TOKEN`), but if you see auth errors, verify it is unset:
+The default `GH_TOKEN` is read-only and causes `gh pr create`, `gh pr edit`, and `gh run rerun` to fail. Prefix every `gh` write command with `unset GH_TOKEN &&`:
 ```bash
-unset GH_TOKEN
+unset GH_TOKEN && gh pr create ...
+unset GH_TOKEN && gh pr edit ...
 ```
 
 ### Release Branch PRs
