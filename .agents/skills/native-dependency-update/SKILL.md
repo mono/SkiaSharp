@@ -88,78 +88,44 @@ git commit -m "Update libpng"  # POLICY VIOLATION
 
 ---
 
-## Git Discipline
-
-### Commit Message Format
-Always use EXACTLY this format:
-```
-Update {dep} to {version}
-
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
-```
-
-### Commit Once, Push Once
-1. Decide the exact commit message BEFORE executing `git commit`
-2. Stage ALL changes BEFORE committing
-3. Commit ONCE
-4. Push ONCE
-
-Do NOT commit-then-amend. Every amend requires a force-push, which:
-- Re-triggers CI (wasting 2+ hours of compute)
-- May invalidate a near-complete CI run
-
-### Submodule Amend Rules (if you MUST amend)
-If you must amend a commit in `externals/skia`:
-1. Amend the skia commit
-2. Force-push the skia branch
-3. In SkiaSharp root: `git add externals/skia` (picks up new SHA)
-4. `git commit --amend --no-edit`
-5. Force-push the SkiaSharp branch
-
-⚠️ NEVER amend the skia commit without also updating the parent submodule reference. The old SHA becomes orphaned after force-push.
-
-### Branch Creation
-Create the feature branch with its FINAL name immediately:
-```bash
-# In externals/skia (use origin/ prefix for fresh clones):
-git checkout -b dev/update-{dep} origin/{target_branch}
-
-# In SkiaSharp root (rename_branch tool handles prefix):
-# Use the rename_branch tool or git checkout -b
-```
-Do NOT create-then-rename branches.
-
----
-
 ## Phase 0: Environment Setup (MANDATORY FIRST STEP)
 
 Before ANY other action in a new worktree session:
 
 ### Step 1: Initialize all submodules
 ```bash
-git submodule update --init externals/skia externals/depot_tools
+git submodule update --init
 ```
 ⚠️ `externals/skia` is ~900MB and takes ~8 minutes to clone. Wait for completion.
 Do NOT attempt to read DEPS, edit files, or build until this finishes.
 
-### Step 2: Set up PATH
+### Step 2: Set up PATH and tools
 ```bash
 export PATH="/usr/local/share/dotnet:/opt/homebrew/bin:$PATH"
+unset GH_TOKEN
 ```
 ⚠️ PATH does not persist between bash tool calls. Prefix EVERY `dotnet` command with this export.
-
+⚠️ `GH_TOKEN` must be unset so `gh` commands (pr create, pr edit, etc.) use your interactive auth instead of the read-only default token.
 ⚠️ `grep -P` (Perl regex) is NOT available on macOS (BSD grep). Use `grep -E` or `sed` instead.
 
-### Step 3: Set target branch (for release branch work)
+### Step 3: Unshallow the target dependency
+`git-sync-deps` clones dependencies as shallow repos. `git log` and `git diff` across version ranges will show incorrect results in shallow repos. Always unshallow the dependency you're updating:
+```bash
+cd externals/skia/third_party/externals/{dep}
+git fetch --unshallow origin
+cd -
+```
+
+### Step 4: Set target branch (for release branch work)
 If you're targeting a non-default branch (e.g., `release/3.119.x`):
 ```bash
 git fetch origin {target_branch}
 git reset --hard origin/{target_branch}
 # Re-run submodule update to get the correct submodule commit:
-git submodule update externals/skia
+git submodule update
 ```
 
-### Step 4: Verify environment
+### Step 5: Verify environment
 ```bash
 dotnet --version && ls externals/skia/DEPS && ls externals/depot_tools/ninja.py
 ```
@@ -221,10 +187,11 @@ Exception: Thread failure detected
 ```
 
 **Strategy:**
-1. Retry the build command (rate limits are usually transient)
-2. If it fails 3 times, check which deps are missing with `ls externals/skia/third_party/externals/`
-3. Manually clone the specific missing dependency from its upstream repo
-4. Retry the build
+1. Wait a short while (rate limits are transient)
+2. Retry the build command
+3. If it still fails after 3 retries, stop and ask for help
+
+Do NOT attempt to manually clone dependencies from other repos — you may pick wrong versions or SHAs.
 
 **Other common build issues:**
 - `fetch-gn` network abort → retry (transient)
@@ -238,10 +205,6 @@ The cgmanifest.json uses different structures per component type:
 - Type `"git"`: `component.git.repositoryUrl`, `component.git.commitHash`
 
 Do NOT assume all entries use the same schema. Check `component.type` first.
-
-### Shallow Clone Gotcha
-
-`git-sync-deps` clones dependencies as shallow repos. `git log old..new` may show incorrect results. Use `git fetch --unshallow origin` before running git log diffs.
 
 ### Phase 5: Create PRs
 
@@ -260,7 +223,22 @@ Example: For libfoo, use `dev/update-libwebp` in both repos.
 
 #### Step 1: Create mono/skia PR
 
-In the `externals/skia` directory, create a branch named `dev/update-{dep}`, commit the DEPS and BUILD.gn changes, push, and create a PR targeting the `skiasharp` branch.
+In the `externals/skia` directory:
+
+1. **Create the branch with its final name** — do NOT create-then-rename:
+   ```bash
+   git checkout -b dev/update-{dep} origin/skiasharp
+   ```
+2. **Stage ALL changes before committing** (DEPS, BUILD.gn if changed)
+3. **Commit ONCE** with this exact format:
+   ```
+   Update {dep} to {version}
+
+   Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+   ```
+4. **Push ONCE** and create a PR targeting the `skiasharp` branch
+
+Do NOT commit-then-amend. Every amend requires a force-push which re-triggers CI (wasting 2+ hours of compute).
 
 #### Step 2: Create SkiaSharp PR
 
@@ -278,26 +256,12 @@ Edit **both** PRs to reference each other:
 - mono/skia PR → Add: `Required SkiaSharp PR: https://github.com/mono/SkiaSharp/pull/{number}`
 - mono/SkiaSharp PR → Add: `Required skia PR: https://github.com/mono/skia/pull/{number}`
 
-### GitHub API for mono org repos
+### GitHub CLI for mono org repos
 
-The `gh pr create` and `gh pr edit` commands FAIL for mono org repos due to OAuth App access restrictions. **Always use the REST API:**
-
-**Create PR:**
+The default `GH_TOKEN` is read-only and causes `gh pr create`, `gh pr edit`, and `gh run rerun` to fail with OAuth App access restrictions. This is already handled in Phase 0 Step 2 (`unset GH_TOKEN`), but if you see auth errors, verify it is unset:
 ```bash
-gh api repos/mono/skia/pulls --method POST \
-  -f title="Update {dep} to {version}" \
-  -f head="{branch}" \
-  -f base="{target_branch}" \
-  -f body="..."
+unset GH_TOKEN
 ```
-
-**Edit PR:**
-```bash
-gh api repos/mono/SkiaSharp/pulls/{number} --method PATCH \
-  -f title="..." -f body="..."
-```
-
-**Do NOT use:** `gh pr create`, `gh pr edit`, `gh run rerun` — all fail with OAuth restrictions.
 
 ### Release Branch PRs
 
@@ -358,6 +322,16 @@ Before proceeding past each step, verify:
 
 > ❌ **NEVER** merge both PRs in quick succession without updating the submodule in between.
 > ❌ **NEVER** assume the submodule reference is correct after squash-merging mono/skia.
+
+#### If You Must Amend a Pushed Commit
+If you must amend a commit in `externals/skia`:
+1. Amend the skia commit
+2. Force-push the skia branch
+3. In SkiaSharp root: `git add externals/skia` (picks up new SHA)
+4. `git commit --amend --no-edit`
+5. Force-push the SkiaSharp branch
+
+⚠️ NEVER amend the skia commit without also updating the parent submodule reference. The old SHA becomes orphaned after force-push.
 
 ### Phase 8: Verify
 
