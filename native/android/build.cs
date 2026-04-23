@@ -1,8 +1,9 @@
+#:sdk Cake.Sdk@6.1.1
+#:property IncludeAdditionalFiles=../../scripts/cake/shared.cs;../../scripts/cake/native-shared.cs;../../scripts/cake/ndk.cs
+#:property PublishAot=false
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/android"));
-
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/ndk.cake"
 
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
 bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";

@@ -44,20 +44,20 @@ Downloads the latest NuGet packages from the CI feed into `output/nugets/`.
 This target clears `./output/` first.
 
 ```powershell
-dotnet cake --target=docs-download-output
+dotnet run --file build.cs -- --target=docs-download-output
 ```
 
 To download from a specific source instead of the latest main build:
 
 ```powershell
 # From a PR
-dotnet cake --target=docs-download-output --previewLabel=pr.3553
+dotnet run --file build.cs -- --target=docs-download-output --previewLabel=pr.3553
 
 # From a specific branch
-dotnet cake --target=docs-download-output --gitBranch=release/3.119.4
+dotnet run --file build.cs -- --target=docs-download-output --gitBranch=release/3.119.4
 
 # From a specific commit
-dotnet cake --target=docs-download-output --gitSha=abc123def456
+dotnet run --file build.cs -- --target=docs-download-output --gitSha=abc123def456
 ```
 
 ### Step 3: Detect the preview version
@@ -82,13 +82,13 @@ Parse `Preview label` and `Build number` from the output for the next step.
 ### Step 4: Build samples
 
 ```powershell
-dotnet cake --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER>
+dotnet run --file build.cs -- --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER>
 ```
 
 To build a single sample, add `--sample=<name>`:
 
 ```powershell
-dotnet cake --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER> --sample=Blazor
+dotnet run --file build.cs -- --target=samples --previewLabel=<PREVIEW_LABEL> --buildNumber=<BUILD_NUMBER> --sample=Blazor
 ```
 
 ## Troubleshooting

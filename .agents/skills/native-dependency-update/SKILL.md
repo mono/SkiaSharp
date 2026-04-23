@@ -125,7 +125,7 @@ Cross-reference against `externals/skia/third_party/{dep}/BUILD.gn` — new sour
 See [documentation/dev/building.md](../../../documentation/dev/building.md#building-native-libraries) for platform-specific build commands.
 
 ```bash
-dotnet cake --target=externals-macos --arch=arm64  # Example
+dotnet run --file build.cs -- --target=externals-macos --arch=arm64  # Example
 
 # Run all tests (core + Vulkan + Direct3D — backends self-skip if unavailable)
 dotnet test tests/SkiaSharp.Tests.Console.sln

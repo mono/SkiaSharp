@@ -1,6 +1,8 @@
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
+#:sdk Cake.Sdk@6.1.1
+#:property IncludeAdditionalFiles=../../scripts/cake/shared.cs
+#:property PublishAot=false
 
-#load "../../scripts/cake/shared.cake"
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 
 string TOOLCHAIN_ARCH = Argument("toolchainArch", EnvironmentVariable("TOOLCHAIN_ARCH"));
 string TOOLCHAIN_ARCH_SHORT = Argument("toolchainArchShort", EnvironmentVariable("TOOLCHAIN_ARCH_SHORT"));
@@ -42,7 +44,7 @@ Task("libSkiaSharp")
     .Does(() =>
 {
     foreach (var arch in BUILD_ARCH) {
-        RunCake("../linux/build.cake", "libSkiaSharp", new Dictionary<string, string> {
+        RunCake("../linux/build.cs", "libSkiaSharp", new Dictionary<string, string> {
             { "arch", arch },
             { "gnArgs", GetGnArgs(arch) },
         });
@@ -54,7 +56,7 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     foreach (var arch in BUILD_ARCH) {
-        RunCake("../linux/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {
+        RunCake("../linux/build.cs", "libHarfBuzzSharp", new Dictionary<string, string> {
             { "arch", arch },
             { "gnArgs", GetGnArgs(arch) },
         });

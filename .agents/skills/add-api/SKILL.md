@@ -55,7 +55,7 @@ cd ../..
 3. Commit Submodule →  Commit IN submodule, then stage in parent
 4. Generate         →  Run pwsh ./utils/generate.ps1 (MANDATORY)
 5. Add C# Wrapper   →  Validate params, call P/Invoke
-6. Build Native     →  dotnet cake --target=externals-{platform} (MANDATORY)
+6. Build Native     →  dotnet run --file build.cs -- --target=externals-{platform} (MANDATORY)
 7. Test             →  Run tests — must PASS (MANDATORY)
 ```
 
@@ -172,16 +172,16 @@ Since you added/modified C API functions in Phase 2, you **MUST** rebuild the na
 
 ```bash
 # macOS (Apple Silicon)
-dotnet cake --target=externals-macos --arch=arm64
+dotnet run --file build.cs -- --target=externals-macos --arch=arm64
 
 # macOS (Intel)
-dotnet cake --target=externals-macos --arch=x64
+dotnet run --file build.cs -- --target=externals-macos --arch=x64
 
 # Windows (x64)
-dotnet cake --target=externals-windows --arch=x64
+dotnet run --file build.cs -- --target=externals-windows --arch=x64
 
 # Linux (requires Docker)
-dotnet cake --target=externals-linux --arch=x64
+dotnet run --file build.cs -- --target=externals-linux --arch=x64
 ```
 
 > ⚠️ **Native builds take 10-30 minutes.** Only build for platforms you can test on.

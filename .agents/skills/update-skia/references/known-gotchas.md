@@ -29,7 +29,7 @@ Platform font manager calls (e.g., `SkFontMgr_New_FontConfig`) must be guarded b
 
 ### 5. `git-sync-deps` emsdk Failure
 
-Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since SkiaSharp comments out emsdk in DEPS, this call fails. Set `GIT_SYNC_DEPS_SKIP_EMSDK=1` in `scripts/cake/native-shared.cake`.
+Upstream m121+ added an `activate-emsdk` call in `tools/git-sync-deps`. Since SkiaSharp comments out emsdk in DEPS, this call fails. Set `GIT_SYNC_DEPS_SKIP_EMSDK=1` in `scripts/cake/native-shared.cs`.
 
 ### 6. `BUILD.gn` Legacy Flags
 
@@ -142,7 +142,7 @@ Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaShar
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet cake --target=externals-{platform}` |
+| `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet run --file build.cs -- --target=externals-{platform}` |
 | `error CS0246` missing type | Binding not regenerated | `pwsh ./utils/generate.ps1` |
 | `static_assert` sizeof failure | Upstream struct gained/lost fields | Update C API struct in `sk_types.h` |
 | `#include` file not found | Upstream moved file to new path | Search target branch, update path |

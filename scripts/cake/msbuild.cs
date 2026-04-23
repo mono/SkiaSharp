@@ -1,0 +1,256 @@
+using System.Xml.Linq;
+
+public static partial class Program
+{
+    internal static FilePath NUGET_CONFIG_PATH;
+    internal static DirectoryPath PACKAGE_CACHE_PATH;
+    internal static DirectoryPath OUTPUT_NUGETS_PATH;
+    internal static DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH;
+    internal static DirectoryPath OUTPUT_SYMBOLS_NUGETS_PATH;
+
+    internal static string[] NUGETS_SOURCES;
+
+    private static void Main_Msbuild()
+    {
+        NUGET_CONFIG_PATH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("nuget.config"));
+        PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
+        OUTPUT_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
+        OUTPUT_SPECIAL_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-special"));
+        OUTPUT_SYMBOLS_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-symbols"));
+
+        NUGETS_SOURCES = new [] {
+            OUTPUT_NUGETS_PATH.FullPath,
+        };
+    }
+
+    internal static string[] GetNuGetSources()
+    {
+        // load all the sources from nuget.config
+        var xdoc = XDocument.Load(NUGET_CONFIG_PATH.FullPath);
+        var xmlns = xdoc.Root.Name.Namespace;
+        var adds = xdoc.Elements(xmlns + "configuration")
+            .Elements(xmlns + "packageSources")
+            .Elements(xmlns + "add")
+            .Select(x => x.Attribute("value").Value)
+            .ToList();
+
+        // add the NUGETS_SOURCES because it may contain local folders
+        adds.AddRange(NUGETS_SOURCES);
+
+        // return all
+        return adds.ToArray();
+    }
+
+    internal static ProcessArgumentBuilder AppendForwardingLogger(ProcessArgumentBuilder args)
+    {
+    	if (BuildSystem.IsLocalBuild)
+    	    return args;
+
+    	// URL copied from https://github.com/microsoft/azure-pipelines-tasks/blob/7faf3e8146d43753b9f360edfae3d2e75ad78c76/Tasks/DotNetCoreCLIV2/make.json
+    	var loggerUrl = "https://vstsagenttools.blob.core.windows.net/tools/msbuildlogger/3/msbuildlogger.zip";
+
+    	var AGENT_TEMPDIRECTORY = (DirectoryPath)EnvironmentVariable("AGENT_TEMPDIRECTORY");
+    	var loggerDir = AGENT_TEMPDIRECTORY.Combine("msbuildlogger");
+    	EnsureDirectoryExists(loggerDir);
+
+    	var loggerZip = loggerDir.CombineWithFilePath("msbuildlogger.zip");
+    	if (!FileExists(loggerZip))
+    		DownloadFile(loggerUrl, loggerZip);
+
+    	var loggerDll = loggerDir.CombineWithFilePath("Microsoft.TeamFoundation.DistributedTask.MSBuild.Logger.dll");
+    	if (!FileExists(loggerDll))
+    		Unzip(loggerZip, loggerDir);
+
+    	return args.Append($"-dl:CentralLogger,\"{loggerDll}\"*ForwardingLogger,\"{loggerDll}\"");
+    }
+
+    internal static void RunNuGetRestorePackagesConfig(FilePath sln)
+    {
+        var dir = sln.GetDirectory();
+
+        EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+        var settings = new NuGetRestoreSettings {
+            Source = GetNuGetSources(),
+            NoCache = true,
+            PackagesDirectory = dir.Combine("packages"),
+        };
+
+        foreach (var config in GetFiles(dir + "/**/packages.config"))
+            NuGetRestore(config, settings);
+    }
+
+    internal static void RunMSBuild(
+        FilePath solution,
+        string platform = "Any CPU",
+        string platformTarget = null,
+        bool restore = true,
+        string[] targets = null,
+        string configuration = null,
+        Dictionary<string, string> properties = null)
+    {
+        EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+        MSBuild(solution, c => {
+            c.Configuration = configuration ?? CONFIGURATION;
+            c.Verbosity = VERBOSITY;
+
+            if (IsRunningOnWindows())
+                c.MaxCpuCount = 0;
+            else
+                c.MaxCpuCount = 1;
+
+            var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
+            var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".binlog");
+            c.BinaryLogger = new MSBuildBinaryLogSettings {
+                Enabled = true,
+                FileName = blPath.FullPath,
+            };
+
+            if (!string.IsNullOrEmpty(MSBUILD_EXE)) {
+                c.ToolPath = MSBUILD_EXE;
+            } else if (IsRunningOnWindows() && !string.IsNullOrEmpty(VS_INSTALL)) {
+                c.ToolPath = ((DirectoryPath)VS_INSTALL).CombineWithFilePath("MSBuild/Current/Bin/MSBuild.exe");
+            }
+
+            c.NoLogo = VERBOSITY == Verbosity.Minimal;
+            c.Restore = restore;
+
+            if (targets?.Length > 0) {
+                c.Targets.Clear();
+                foreach (var target in targets) {
+                    c.Targets.Add(target);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(platformTarget)) {
+                platform = null;
+                c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
+            } else {
+                c.PlatformTarget = PlatformTarget.MSIL;
+                c.MSBuildPlatform = MSBuildPlatform.x86;
+            }
+
+            if (!string.IsNullOrEmpty(platform)) {
+                c.Properties ["Platform"] = new [] { $"\"{platform}\"" };
+            }
+
+            c.Properties ["RestoreNoCache"] = new [] { "true" };
+            c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
+
+            if (properties != null) {
+                foreach (var prop in properties) {
+                    if (!string.IsNullOrEmpty(prop.Value)) {
+                        c.Properties [prop.Key] = new [] { prop.Value };
+                    }
+                }
+            }
+            // c.Properties ["RestoreSources"] = GetNuGetSources();
+            var sep = IsRunningOnWindows() ? ";" : "%3B";
+            c.ArgumentCustomization = args => args.Append($"/p:RestoreSources=\"{string.Join(sep, GetNuGetSources())}\"");
+        });
+    }
+
+    internal static void RunDotNetBuild(
+        FilePath solution,
+        string[] targets = null,
+        string configuration = null,
+        string platform = null,
+        Dictionary<string, string> properties = null)
+    {
+        EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+        var c = new DotNetBuildSettings();
+        var msb = new DotNetMSBuildSettings();
+        c.MSBuildSettings = msb;
+
+        c.Configuration = configuration ?? CONFIGURATION;
+        c.Verbosity = DotNetVerbosity.Minimal;
+
+        var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
+        var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + ".binlog");
+        msb.BinaryLogger = new MSBuildBinaryLoggerSettings {
+            Enabled = true,
+            FileName = blPath.FullPath,
+        };
+
+        if (targets?.Length > 0) {
+            msb.Targets.Clear();
+            foreach (var target in targets) {
+                msb.Targets.Add(target);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(platform)) {
+            msb.Properties ["Platform"] = new [] { $"\"{platform}\"" };
+        }
+
+        msb.Properties ["RestoreNoCache"] = new [] { "true" };
+        msb.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
+
+        if (properties != null) {
+            foreach (var prop in properties) {
+                if (!string.IsNullOrEmpty(prop.Value)) {
+                    msb.Properties [prop.Key] = new [] { prop.Value };
+                }
+            }
+        }
+
+        Information("=== RunDotNetBuild ===");
+        Information("  Solution:      {0}", solution);
+        Information("  Configuration: {0}", c.Configuration);
+        foreach (var p in msb.Properties) {
+            Information("  Property:      {0} = {1}", p.Key, string.Join(", ", p.Value));
+        }
+        Information("======================");
+
+        c.Sources = GetNuGetSources();
+
+        c.ArgumentCustomization = AppendForwardingLogger;
+        
+        DotNetBuild(solution.FullPath, c);
+    }
+
+    internal static void RunDotNetPack(
+        FilePath solution,
+        DirectoryPath outputPath = null,
+        string bl = ".pack",
+        string configuration = null,
+        string additionalArgs = null,
+        Dictionary<string, string> properties = null)
+    {
+        EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+        var c = new DotNetPackSettings();
+        var msb = new DotNetMSBuildSettings();
+        c.MSBuildSettings = msb;
+
+        c.Configuration = configuration ?? CONFIGURATION;
+        c.Verbosity = DotNetVerbosity.Minimal;
+
+        var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
+        var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + bl + ".binlog");
+        msb.BinaryLogger = new MSBuildBinaryLoggerSettings {
+            Enabled = true,
+            FileName = blPath.FullPath,
+        };
+
+        c.NoBuild = true;
+
+        c.OutputDirectory = outputPath ?? OUTPUT_NUGETS_PATH;
+
+        msb.Properties ["NoDefaultExcludes"] = new [] { "true" };
+
+        if (properties != null) {
+            foreach (var prop in properties) {
+                if (!string.IsNullOrEmpty(prop.Value)) {
+                    msb.Properties [prop.Key] = new [] { prop.Value };
+                }
+            }
+        }
+
+        c.ArgumentCustomization = args => AppendForwardingLogger(args).Append(additionalArgs);
+
+        DotNetPack(solution.FullPath, c);
+    }
+}

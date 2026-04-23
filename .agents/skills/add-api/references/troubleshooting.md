@@ -33,13 +33,13 @@ git add externals/skia  # NOW stage in parent
 
 ```bash
 # macOS (Apple Silicon)
-dotnet cake --target=externals-macos --arch=arm64
+dotnet run --file build.cs -- --target=externals-macos --arch=arm64
 
 # macOS (Intel)
-dotnet cake --target=externals-macos --arch=x64
+dotnet run --file build.cs -- --target=externals-macos --arch=x64
 
 # Windows (x64)
-dotnet cake --target=externals-windows --arch=x64
+dotnet run --file build.cs -- --target=externals-windows --arch=x64
 ```
 
 **Do NOT:**
@@ -78,10 +78,10 @@ dotnet cake --target=externals-windows --arch=x64
 
 ```bash
 # If you ONLY changed C# code:
-dotnet cake --target=externals-download
+dotnet run --file build.cs -- --target=externals-download
 
 # If you changed C API (added/modified functions):
-dotnet cake --target=externals-{platform} --arch={arch}
+dotnet run --file build.cs -- --target=externals-{platform} --arch={arch}
 ```
 
 **Verify:**

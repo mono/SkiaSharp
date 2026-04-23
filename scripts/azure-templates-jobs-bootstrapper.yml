@@ -313,7 +313,7 @@ jobs:
             - pwsh: |
                 Get-Content $PSCommandPath
                 ${{ parameters.initScript }}
-                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet run --file build.cs -- --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
                 JavaSdkDirectory: $(JAVA_HOME)
@@ -327,7 +327,7 @@ jobs:
             - bash: |
                 cat ${BASH_SOURCE[0]}
                 ${{ parameters.initScript }}
-                dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+                dotnet run --file build.cs -- --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
                 JavaSdkDirectory: $(JAVA_HOME)
@@ -361,7 +361,7 @@ jobs:
                 arguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
           - bash: |
               echo dotnet tool restore > cmd.sh
-              echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+              echo dotnet run --file build.cs -- --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
               sed -i 's/--gnArgs=\" \"//' cmd.sh
               cat cmd.sh
             displayName: Generate the script for the Docker image

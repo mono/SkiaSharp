@@ -86,7 +86,7 @@ For mobile bugs, Phase 3C uses the repo's platform-specific sample:
 ```bash
 # Return to the SkiaSharp repo root
 cd "$(git rev-parse --show-toplevel)"
-[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet run --file build.cs -- --target=externals-download
 
 # iOS sample (macOS host required)
 dotnet build samples/Basic/iOS/SkiaSharpSample/SkiaSharpSample.csproj

@@ -173,7 +173,7 @@ public abstract class PlatformTestBase : IDisposable
         var dir = AppContext.BaseDirectory;
         while (dir != null)
         {
-            if (File.Exists(Path.Combine(dir, "build.cake")))
+            if (File.Exists(Path.Combine(dir, "build.cs")) || File.Exists(Path.Combine(dir, "build.cake")))
                 return dir;
             dir = Path.GetDirectoryName(dir);
         }

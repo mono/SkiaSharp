@@ -141,7 +141,7 @@ jobs:
         env:
           PREVIEW_LABEL: ${{ steps.nuget.outputs.preview_suffix }}
           BUILD_NUMBER: ''
-        run: dotnet cake --target=samples-generate
+        run: dotnet run --file build.cs -- --target=samples-generate
 
       - name: Publish samples to branch
         shell: bash

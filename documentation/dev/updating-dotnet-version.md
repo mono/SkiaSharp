@@ -67,10 +67,10 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 
 ### 6. Cake Build Scripts
 
-- [ ] `build.cake` — 4 hardcoded TFMs in test tasks (~lines 285, 333, 365, 397)
+- [ ] `build.cs` — 4 hardcoded TFMs in test tasks (~lines 285, 333, 365, 397)
 - [ ] `scripts/cake/UtilsManaged.cake` — Framework check list (add new `netX.0`)
 - [ ] `scripts/cake/UpdateDocs.cake` — Apple/Android ref package names include TFM+TPV (e.g., `Microsoft.iOS.Ref.net10.0_18.0`)
-- [ ] `native/winui/build.cake` — WinUI Projection output path uses `$(WindowsTargetFrameworksPrevious)` 
+- [ ] `native/winui/build.cs` — WinUI Projection output path uses `$(WindowsTargetFrameworksPrevious)` 
 
 ### 7. Utility Projects
 

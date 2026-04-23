@@ -153,7 +153,7 @@ in the repo — it has project references to the local SkiaSharp + Views.Blazor 
 ```bash
 # Return to the SkiaSharp repo root
 cd "$(git rev-parse --show-toplevel)"
-[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet run --file build.cs -- --target=externals-download
 
 # Build the Blazor WASM sample (uses project references to local source)
 dotnet build samples/Basic/BlazorWebAssembly/SkiaSharpSample/SkiaSharpSample.csproj

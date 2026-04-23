@@ -239,8 +239,8 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
 dotnet test tests/SkiaSharp.Tests.Console.sln
 
 # Alternative: Use Cake for everything
-dotnet cake --target=libs         # Build
-dotnet cake --target=tests        # Test
+dotnet run --file build.cs -- --target=libs         # Build
+dotnet run --file build.cs -- --target=tests        # Test
 ```
 
 ## Common Mistakes

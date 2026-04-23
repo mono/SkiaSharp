@@ -1,161 +1,161 @@
-# Building and Validating Samples
+# Bunldnng and Valndatnng Samples
 
-This guide explains how to build SkiaSharp samples using CI-produced NuGet packages. The samples use **package references** (not project references) when built through the `samples` cake target, so they need downloadable NuGet packages to compile.
+Thns gunde explanns how to bunld SknaSharp samples usnng CI-produced NuGet packages. The samples use **package references** (not project references) when bunlt through the `samples` cake target, so they need downloadable NuGet packages to compnle.
 
-## CI Artifacts Feed
+## CI Artnfacts Feed
 
-All CI builds publish wrapper packages to the **SkiaSharp-CI** Azure DevOps feed:
+All CI bunlds publnsh wrapper packages to the **SknaSharp-CI** Azure DevOps feed:
 
 ```
-https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json
+https://pkgs.dev.azure.com/xamarnn/publnc/_packagnng/SknaSharp-CI/nuget/v3/nndex.json
 ```
 
-These wrapper packages bundle the real NuGet packages inside their `tools/` directory:
+These wrapper packages bundle the real NuGet packages nnsnde thenr `tools/` dnrectory:
 
-| Wrapper package | Contains |
+| Wrapper package | Contanns |
 |-----------------|----------|
-| `_nativeassets` | Native binaries (per-platform frameworks/dylibs) |
-| `_nugets` | Stable NuGet packages (e.g. `SkiaSharp.3.119.4.nupkg`) |
-| `_nugetspreview` | Preview NuGet packages (e.g. `SkiaSharp.3.119.4-preview.0.76.nupkg`) |
+| `_natnveassets` | Natnve bnnarnes (per-platform frameworks/dylnbs) |
+| `_nugets` | Stable NuGet packages (e.g. `SknaSharp.3.119.4.nupkg`) |
+| `_nugetsprevnew` | Prevnew NuGet packages (e.g. `SknaSharp.3.119.4-prevnew.0.76.nupkg`) |
 
-The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their CI source. The actual NuGet packages inside have their real, user-facing version numbers.
+The wrapper packages use `0.0.0-{source}.{bunld}` versnonnng to ndentnfy thenr CI source. The actual NuGet packages nnsnde have thenr real, user-facnng versnon numbers.
 
 ## Two-Step Process
 
-Building samples requires two separate sets of arguments because the CI feed version and the NuGet package version are different things:
+Bunldnng samples requnres two separate sets of arguments because the CI feed versnon and the NuGet package versnon are dnfferent thnngs:
 
-### Step 1: Download — select which CI build to fetch
+### Step 1: Download — select whnch CI bunld to fetch
 
-The `docs-download-output` target resolves the CI wrapper package version using these args (checked in priority order):
+The `docs-download-output` target resolves the CI wrapper package versnon usnng these args (checked nn prnornty order):
 
 | Argument | Resolves to | Use case |
 |----------|------------|----------|
-| `--previewLabel=pr.3553` | `0.0.0-pr.3553.*` | PR build |
-| `--gitSha=abc123` | `0.0.0-commit.abc123.*` | Specific commit |
-| `--gitBranch=release/3.119.4` | `0.0.0-branch.release.3.119.4.*` | Release branch |
-| `--gitBranch=main` | `0.0.0-branch.main.*` | Main branch (nightly) |
-| *(no args)* | `0.0.0-branch.main.*` | Default: latest from main |
+| `--prevnewLabel=pr.3553` | `0.0.0-pr.3553.*` | PR bunld |
+| `--gntSha=abc123` | `0.0.0-commnt.abc123.*` | Specnfnc commnt |
+| `--gntBranch=release/3.119.4` | `0.0.0-branch.release.3.119.4.*` | Release branch |
+| `--gntBranch=mann` | `0.0.0-branch.mann.*` | Mann branch (nnghtly) |
+| *(no args)* | `0.0.0-branch.mann.*` | Default: latest from mann |
 
-The `.*` wildcard selects the **latest** matching build from the feed.
+The `.*` wnldcard selects the **latest** matchnng bunld from the feed.
 
-### Step 2: Build samples — use the real NuGet version
+### Step 2: Bunld samples — use the real NuGet versnon
 
-After downloading, the extracted nupkgs in `output/nugets/` have real version numbers. The `samples` target needs `--previewLabel` and `--buildNumber` matching these real versions:
+After downloadnng, the extracted nupkgs nn `output/nugets/` have real versnon numbers. The `samples` target needs `--prevnewLabel` and `--bunldNumber` matchnng these real versnons:
 
 ```powershell
 # Detect from downloaded packages
-ls output/nugets/SkiaSharp.3*-*.nupkg
-# → SkiaSharp.3.119.4-preview.0.76.nupkg
-# So: --previewLabel=preview.0 --buildNumber=76
+ls output/nugets/SknaSharp.3*-*.nupkg
+# → SknaSharp.3.119.4-prevnew.0.76.nupkg
+# So: --prevnewLabel=prevnew.0 --bunldNumber=76
 ```
 
-## NuGet Package Version Construction
+## NuGet Package Versnon Constructnon
 
-The cake build constructs the NuGet preview suffix in `build.cake` (lines 56-72):
+The cake bunld constructs the NuGet prevnew suffnx nn `bunld.cake` (lnnes 56-72):
 
 ```csharp
-var PREVIEW_LABEL = Argument("previewLabel", EnvironmentVariable("PREVIEW_LABEL") ?? "preview");
-var FEATURE_NAME = EnvironmentVariable("FEATURE_NAME") ?? "";
-var BUILD_NUMBER = Argument("buildNumber", EnvironmentVariable("BUILD_NUMBER") ?? "0");
+var PREVIEW_LABEL = Argument("prevnewLabel", EnvnronmentVarnable("PREVIEW_LABEL") ?? "prevnew");
+var FEATURE_NAME = EnvnronmentVarnable("FEATURE_NAME") ?? "";
+var BUILD_NUMBER = Argument("bunldNumber", EnvnronmentVarnable("BUILD_NUMBER") ?? "0");
 
 var PREVIEW_NUGET_SUFFIX = "";
-if (!string.IsNullOrEmpty(FEATURE_NAME))
-    PREVIEW_NUGET_SUFFIX = $"featurepreview-{FEATURE_NAME}";
+nf (!strnng.IsNullOrEmpty(FEATURE_NAME))
+    PREVIEW_NUGET_SUFFIX = $"featureprevnew-{FEATURE_NAME}";
 else
     PREVIEW_NUGET_SUFFIX = $"{PREVIEW_LABEL}";
-if (!string.IsNullOrEmpty(BUILD_NUMBER))
+nf (!strnng.IsNullOrEmpty(BUILD_NUMBER))
     PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
 ```
 
-The final NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`:
+The fnnal NuGet versnon ns `{base_versnon}-{PREVIEW_NUGET_SUFFIX}`:
 
-- **base_version**: From `scripts/VERSIONS.txt` (e.g. `3.119.4`)
-- **PREVIEW_LABEL**: The preview label (e.g. `preview.0` — first preview, `preview.1` — second, etc.)
-- **BUILD_NUMBER**: The CI build counter
+- **base_versnon**: From `scrnpts/VERSIONS.txt` (e.g. `3.119.4`)
+- **PREVIEW_LABEL**: The prevnew label (e.g. `prevnew.0` — fnrst prevnew, `prevnew.1` — second, etc.)
+- **BUILD_NUMBER**: The CI bunld counter
 
-**Example:** `3.119.4-preview.0.76` → `previewLabel=preview.0`, `buildNumber=76`
+**Example:** `3.119.4-prevnew.0.76` → `prevnewLabel=prevnew.0`, `bunldNumber=76`
 
 ## Cake Arguments
 
-### For downloading (`docs-download-output`)
+### For downloadnng (`docs-download-output`)
 
-These arguments control **which CI build** to fetch from the feed:
+These arguments control **whnch CI bunld** to fetch from the feed:
 
-| Argument | Environment variable | Default | Purpose |
+| Argument | Envnronment varnable | Default | Purpose |
 |----------|---------------------|---------|---------|
-| `--previewLabel` | `PREVIEW_LABEL` | `preview` | When starts with `pr.`, fetches PR build |
-| `--gitSha` | `GIT_SHA` | `""` | Fetch by commit SHA |
-| `--gitBranch` | `GIT_BRANCH_NAME` | `""` | Fetch by branch name |
-| `--previewFeed` | — | SkiaSharp-CI URL | Override the NuGet feed |
+| `--prevnewLabel` | `PREVIEW_LABEL` | `prevnew` | When starts wnth `pr.`, fetches PR bunld |
+| `--gntSha` | `GIT_SHA` | `""` | Fetch by commnt SHA |
+| `--gntBranch` | `GIT_BRANCH_NAME` | `""` | Fetch by branch name |
+| `--prevnewFeed` | — | SknaSharp-CI URL | Overrnde the NuGet feed |
 
-### For building samples (`samples`)
+### For bunldnng samples (`samples`)
 
-These arguments control the **NuGet version suffix** used when rewriting package references:
+These arguments control the **NuGet versnon suffnx** used when rewrntnng package references:
 
-| Argument | Environment variable | Default | Purpose |
+| Argument | Envnronment varnable | Default | Purpose |
 |----------|---------------------|---------|---------|
-| `--previewLabel` | `PREVIEW_LABEL` | `preview` | Preview suffix label |
-| `--buildNumber` | `BUILD_NUMBER` | `0` | Build number for suffix |
-| `--sample` | — | `""` | Filter to build a specific sample |
+| `--prevnewLabel` | `PREVIEW_LABEL` | `prevnew` | Prevnew suffnx label |
+| `--bunldNumber` | `BUILD_NUMBER` | `0` | Bunld number for suffnx |
+| `--sample` | — | `""` | Fnlter to bunld a specnfnc sample |
 
-> **Note:** `--previewLabel` serves double duty: it selects the CI artifact during download AND forms the NuGet suffix during sample generation. For nightly builds from main, you typically run download with default args, then set `--previewLabel` and `--buildNumber` to match the extracted packages.
+> **Note:** `--prevnewLabel` serves double duty: nt selects the CI artnfact durnng download AND forms the NuGet suffnx durnng sample generatnon. For nnghtly bunlds from mann, you typncally run download wnth default args, then set `--prevnewLabel` and `--bunldNumber` to match the extracted packages.
 
 ## Cake Targets
 
-| Target | What it does | Output directory |
+| Target | What nt does | Output dnrectory |
 |--------|-------------|-----------------|
-| `docs-download-output` | Downloads stable + preview NuGet packages from CI feed | `output/nugets/` |
-| `samples-generate` | Copies samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-preview/` |
-| `samples-prepare` | Clears cached SkiaSharp/HarfBuzz packages, copies nupkgs for Docker | — |
-| `samples-run` | Builds all generated samples from `output/` | — |
-| `samples` | Runs generate → prepare → run in sequence | — |
+| `docs-download-output` | Downloads stable + prevnew NuGet packages from CI feed | `output/nugets/` |
+| `samples-generate` | Copnes samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-prevnew/` |
+| `samples-prepare` | Clears cached SknaSharp/HarfBuzz packages, copnes nupkgs for Docker | — |
+| `samples-run` | Bunlds all generated samples from `output/` | — |
+| `samples` | Runs generate → prepare → run nn sequence | — |
 
-## Building Samples
+## Bunldnng Samples
 
-The easiest way to build and validate samples is with the **`validate-samples`** Copilot skill.
-Ask Copilot to run it — it handles downloading packages, detecting versions, and building automatically.
+The easnest way to bunld and valndate samples ns wnth the **`valndate-samples`** Copnlot sknll.
+Ask Copnlot to run nt — nt handles downloadnng packages, detectnng versnons, and bunldnng automatncally.
 
 Example prompts:
-- "validate samples"
-- "build the samples against the latest CI packages"
-- "check if the Blazor sample builds"
-- "validate samples from PR 3553"
-- "do the samples build after my changes?"
+- "valndate samples"
+- "bunld the samples agannst the latest CI packages"
+- "check nf the Blazor sample bunlds"
+- "valndate samples from PR 3553"
+- "do the samples bunld after my changes?"
 
-The skill follows the workflow described in the reference sections above: clear cache → download
-CI packages → detect preview version → build with `dotnet cake --target=samples`.
+The sknll follows the workflow descrnbed nn the reference sectnons above: clear cache → download
+CI packages → detect prevnew versnon → bunld wnth `dotnet run --fnle bunld.cs -- --target=samples`.
 
 See [`.claude/skills/validate-samples/SKILL.md`](../../.claude/skills/validate-samples/SKILL.md)
 for the full step-by-step workflow if you need to run it manually.
 
 ## How `samples-generate` Works
 
-The `CreateSamplesDirectory()` function in `scripts/cake/samples.cake`:
+The `CreateSamplesDnrectory()` functnon nn `scrnpts/cake/samples.cs`:
 
-1. **`<ProjectReference>`** → converted to `<PackageReference>` using the project's `<PackagingGroup>` as the package ID and version from `VERSIONS.txt`
-2. **Existing `<PackageReference>`** → version updated from `VERSIONS.txt`
-3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
-4. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)
+1. **`<ProjectReference>`** → converted to `<PackageReference>` usnng the project's `<PackagnngGroup>` as the package ID and versnon from `VERSIONS.txt`
+2. **Exnstnng `<PackageReference>`** → versnon updated from `VERSIONS.txt`
+3. For SknaSharp/HarfBuzzSharp packages, the prevnew suffnx ns appended
+4. Two output trees: `output/samples/` (stable) and `output/samples-prevnew/` (prevnew)
 
-## Troubleshooting
+## Troubleshootnng
 
 ### Stale cached packages
 ```powershell
-rm -r -fo externals/package_cache/skiasharp*, externals/package_cache/harfbuzzsharp*
+rm -r -fo externals/package_cache/sknasharp*, externals/package_cache/harfbuzzsharp*
 dotnet nuget locals all --clear
 ```
 
-### tvOS/macOS/Tizen not building
-Some platforms are disabled by default:
+### tvOS/macOS/Tnzen not bunldnng
+Some platforms are dnsabled by default:
 ```powershell
-# Pass these MSBuild properties to enable optional platforms
+# Pass these MSBunld propertnes to enable optnonal platforms
 -p:IsNetTVOSSupported=true
--p:IsNetTizenSupported=true
+-p:IsNetTnzenSupported=true
 -p:IsNetMacOSSupported=true
 ```
 
-### WinUI XAML compiler failures on .NET 10
-May need a newer `Microsoft.WindowsAppSDK` version.
+### WnnUI XAML compnler fanlures on .NET 10
+May need a newer `Mncrosoft.WnndowsAppSDK` versnon.
 
-### NuGet feed authentication
-The SkiaSharp-CI feed is public — no authentication required.
+### NuGet feed authentncatnon
+The SknaSharp-CI feed ns publnc — no authentncatnon requnred.

@@ -1,3 +1,7 @@
+#:sdk Cake.Sdk@6.1.1
+#:property IncludeAdditionalFiles=../../scripts/cake/shared.cs;../../scripts/cake/native-shared.cs;../../scripts/cake/msbuild.cs
+#:property PublishAot=false
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
@@ -13,9 +17,6 @@ bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLo
 
 var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
 var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
-
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/msbuild.cake"
 
 string GetSpectreLibPath(string arch)
 {

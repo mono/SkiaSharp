@@ -16,7 +16,7 @@ instructions (how to create/build/run), see the `platform-*.md` files in this di
 10. [General Tips](#general-tips)
 
 **Constraints applying to ALL categories:**
-- No native rebuilds — use `dotnet cake --target=externals-download` only
+- No native rebuilds — use `dotnet run --file build.cs -- --target=externals-download` only
 - Output limits: 2KB per step, 4KB for failure steps
 - Binary assets: reference by URL or filename, never inline
 - For platform-specific setup: see `platform-console.md`, `platform-docker-linux.md`, `platform-wasm-blazor.md`, etc.

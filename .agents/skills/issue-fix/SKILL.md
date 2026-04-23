@@ -8,12 +8,12 @@ description: >
   memory leak, disposal issues, "fails", "broken", "doesn't work", "investigate issue",
   "fix issue", "look at #NNNN", any GitHub issue number referencing a bug.
   
-  For adding new APIs, use `add-api` skill instead.
+  For adding new APIs, use nadd-apin skill instead.
 ---
 
 # Bug Fix Skill
 
-**Issue pipeline: Step 3 of 3 (Fix).** See [`documentation/dev/issue-pipeline.md`](../../../documentation/dev/issue-pipeline.md).
+**Issue pipeline: Step 3 of 3 (Fix).** See [ndocumentation/dev/issue-pipeline.mdn](../../../documentation/dev/issue-pipeline.md).
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
@@ -21,21 +21,21 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 
 > **🛑 PHASES MUST BE EXECUTED IN STRICT ORDER. NO PARALLELIZATION. NO REORDERING.**
 >
-> ```
+> nnn
 > Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8 → Phase 9
-> ```
+> nnn
 >
 > **STOP** at each phase gate. Do not proceed until gate criteria are met.
-> **Phases may be abbreviated** when `ai-triage/{n}.json` and/or `ai-repro/{n}.json` exist — but you must explicitly consume them and meet the gate with evidence (don’t redo the work).
+> **Phases may be abbreviated** when nai-triage/{n}.jsonn and/or nai-repro/{n}.jsonn exist — but you must explicitly consume them and meet the gate with evidence (don’t redo the work).
 > **NEVER** say "in parallel" — phases are strictly sequential.
 > **NEVER** start *new* research (Phase 3) before PR exists (Phase 2).
-> **NEVER** use `store_memory` — fixes produce JSON artifacts and PRs, not memories.
+> **NEVER** use nstore_memoryn — fixes produce JSON artifacts and PRs, not memories.
 
 ---
 
 ## Workflow Overview
 
-```
+nnn
 1. Understand   → Fetch issue, consume ai-triage/ai-repro if present
 2. Create PR    → 🛑 STOP: Create PR before ANY *new* research
 3. Research     → Delta research (triage already did first-pass)
@@ -45,7 +45,7 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 7. Test         → Regression test + existing tests
 8. Finalize     → Rewrite PR description, link all fixed issues
 9. Fix JSON     → Generate, validate, and persist ai-fix/{n}.json
-```
+nnn
 
 ---
 
@@ -53,8 +53,8 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 
 - GitHub API access (fetch issues, search issues, read comments)
 - Git with push access
-- Local data cache worktree (`docs-data-cache`) for ai-triage/ai-repro handoff
-- Docker for cross-platform testing (optional; check: `docker --version`)
+- Local data cache worktree (ndocs-data-cachen) for ai-triage/ai-repro handoff
+- Docker for cross-platform testing (optional; check: ndocker --versionn)
 
 ---
 
@@ -62,7 +62,7 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 
 ### 1. Prefer the data cache (handoff)
 
-```bash
+nnnbash
 pwsh --version    # Requires 7.5+
 
 # Cache worktree
@@ -72,12 +72,12 @@ CACHE=".data-cache/repos/mono-SkiaSharp"
 
 TRIAGE="$CACHE/ai-triage/NNNN.json"
 REPRO="$CACHE/ai-repro/NNNN.json"
-```
+nnn
 
-- If `TRIAGE` exists: treat it as the **authoritative classification + codeInvestigation**. Extract key details and uncertainties.
-- If `REPRO` exists: treat it as the **authoritative factual reproduction record** (versions tested + minimal repro source).
+- If nTRIAGEn exists: treat it as the **authoritative classification + codeInvestigation**. Extract key details and uncertainties.
+- If nREPROn exists: treat it as the **authoritative factual reproduction record** (versions tested + minimal repro source).
 
-If cache is missing the issue/JSONs, fall back to `gh`.
+If cache is missing the issue/JSONs, fall back to nghn.
 
 ### 2. Extract only what you need to open the PR
 
@@ -85,15 +85,15 @@ Extract (from issue + triage/repro if present):
 - Symptoms, error messages, stack traces
 - Platform (OS, arch, .NET version, SkiaSharp version)
 - Version status (reproduces on latest? on main?)
-- Minimal reproduction steps / code (prefer `ai-repro`)
+- Minimal reproduction steps / code (prefer nai-repron)
 
 **Do not redo triage’s work here.** No deep code investigation and no broad related-issue search yet.
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Issue title, symptoms, and error message (if any)
 - [ ] Target platform identified
-- [ ] Noted whether `ai-triage/NNNN.json` exists
-- [ ] Noted whether `ai-repro/NNNN.json` exists
+- [ ] Noted whether nai-triage/NNNN.jsonn exists
+- [ ] Noted whether nai-repro/NNNN.jsonn exists
 
 ### ⛔ AFTER PHASE 1: STOP AND CREATE PR
 
@@ -120,13 +120,13 @@ Extract (from issue + triage/repro if present):
 > - Create draft PR with template
 > - Add "copilot" label
 
-```bash
+nnnbash
 git checkout -b dev/issue-NNNN-short-description
 git commit --allow-empty -m "Investigating #NNNN: [description]"
 git push -u origin dev/issue-NNNN-short-description
 gh pr create --draft --title "Investigating #NNNN: [description]" --body "[template]"
 gh pr edit --add-label "copilot"
-```
+nnn
 
 Create PR using investigation template from [references/pr-templates.md](references/pr-templates.md).
 
@@ -158,7 +158,7 @@ Create PR using investigation template from [references/pr-templates.md](referen
 > 
 > If you have not created the draft PR yet, STOP and go back to Phase 2.
 
-If `ai-triage/NNNN.json` exists, it already contains:
+If nai-triage/NNNN.jsonn exists, it already contains:
 - related issues discovered during workaround/duplicate search
 - code investigation entry points
 - workaround proposals and missing info
@@ -173,8 +173,8 @@ If `ai-triage/NNNN.json` exists, it already contains:
 > READ ALL COMMENTS on the most relevant related issues before investigating yourself.
 
 Search GitHub issues for:
-- Same error message (e.g., `undefined symbol: uuid_generate_random`)
-- Same platform (e.g., `Linux ARM64`)
+- Same error message (e.g., nundefined symbol: uuid_generate_randomn)
+- Same platform (e.g., nLinux ARM64n)
 - Same SkiaSharp version
 - Keywords from title
 
@@ -202,18 +202,18 @@ but you MUST still proceed to Phase 4 (Reproduce) to validate the hypothesis.**
 >
 > This phase is satisfied either by:
 > - **Re-running** the minimal repro locally, OR
-> - **Consuming an existing** `ai-repro/NNNN.json` that already reproduced the issue on the relevant version/platform and includes the minimal repro source.
+> - **Consuming an existing** nai-repro/NNNN.jsonn that already reproduced the issue on the relevant version/platform and includes the minimal repro source.
 >
 > Even if you think you know the root cause from Phase 3:
 > - Community diagnosis could be a workaround, not the real fix
 > - The hypothesis could be wrong or incomplete
 > - You need evidence, not assumptions
 
-If `ai-repro/NNNN.json` exists and `conclusion` is `reproduced`:
-- Rehydrate the repro source from `reproductionSteps[].filesCreated[].content` into a local folder (e.g., `/tmp/skiasharp/repro/NNNN/`) and run it.
+If nai-repro/NNNN.jsonn exists and nconclusionn is nreproducedn:
+- Rehydrate the repro source from nreproductionSteps[].filesCreated[].contentn into a local folder (e.g., n/tmp/skiasharp/repro/NNNN/n) and run it.
 - Prefer this NuGet-based repro as the baseline; use Docker only if the host cannot exercise the target platform.
 
-If no `ai-repro` exists:
+If no nai-repron exists:
 - Reproduce using the **same approach as issue-repro** (standalone NuGet project first; Docker only when needed).
 
 ### 4.1 Target Platform Requirements
@@ -230,10 +230,10 @@ If no `ai-repro` exists:
 For cross-platform testing, see [references/docker-testing.md](references/docker-testing.md).
 
 Example (adapt platform to match the issue):
-```bash
+nnnbash
 # Replace with the platform from the issue
 docker run --platform linux/arm64 -it <dotnet-sdk-image> bash
-```
+nnn
 
 ### 4.3 Document Results in PR
 
@@ -257,7 +257,7 @@ Add to PR description:
 Document each attempt in PR. After exhausting ALL options: ask user for details, but still proceed with code review while waiting.
 
 ### ✅ GATE: Do not proceed until you have:
-- [ ] Either (a) re-ran the minimal repro, or (b) consumed `ai-repro/NNNN.json` as the baseline reproduction record
+- [ ] Either (a) re-ran the minimal repro, or (b) consumed nai-repro/NNNN.jsonn as the baseline reproduction record
 - [ ] Documented the reproduction evidence/results in the PR (including version matrix)
 - [ ] If reproduction failed: documented what was tried and asked user for help
 
@@ -280,7 +280,7 @@ The answer to this question IS the root cause. Focus your investigation on findi
 
 When a bug affects one platform but not another, **build both platforms locally** and compare:
 
-```bash
+nnnbash
 # Build x64 native (in Docker)
 bash ./scripts/Docker/debian/amd64/build-local.sh
 
@@ -292,27 +292,27 @@ docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \
   "apt-get update -qq && apt-get install -y -qq binutils >/dev/null && \
    echo '=== x64 ===' && readelf -d /work/externals/skia/out/linux/x64/libSkiaSharp.so.* | grep NEEDED && \
    echo && echo '=== ARM64 ===' && readelf -d /work/externals/skia/out/linux/arm64/libSkiaSharp.so.* | grep NEEDED"
-```
+nnn
 
 **If a library appears in one but not the other, investigate:**
-1. Does the ninja file have `-lfoo` for both? → Check `externals/skia/out/linux/{arch}/obj/SkiaSharp.ninja`
+1. Does the ninja file have n-lfoon for both? → Check nexternals/skia/out/linux/{arch}/obj/SkiaSharp.ninjan
 2. If yes, the linker is silently failing → Check if library exists in sysroot
-3. If no, the GN configuration differs → Check `native/linux/build.cake` and `externals/skia/gn/skia.gni`
+3. If no, the GN configuration differs → Check nnative/linux/build.csn and nexternals/skia/gn/skia.gnin
 
 ### 5.3 For C# Issues: Locate the Code
 
-```bash
+nnnbash
 grep -rn "MethodName" binding/SkiaSharp/
 grep -r "sk_.*methodname" binding/SkiaSharp/
-```
+nnn
 
 ### 5.4 Workaround vs Root Cause
 
 > ⚠️ **CRITICAL: Don't mistake a workaround for the root cause fix.**
 
 **Example from #3369:**
-- Symptom: `undefined symbol: uuid_generate_random` on ARM64
-- **Wrong fix (workaround):** Add `-luuid` to linker flags
+- Symptom: nundefined symbol: uuid_generate_randomn on ARM64
+- **Wrong fix (workaround):** Add n-luuidn to linker flags
 - **Root cause:** fontconfig wasn't being linked at all (broken symlink in sysroot)
 - **Correct fix:** Add the fontconfig runtime library to the cross-compile sysroot
 
@@ -354,33 +354,33 @@ For guidance on specific types of fixes, see:
 
 ### If Modified Native Code
 
-```bash
-dotnet cake --target=externals-macos --arch=arm64   # macOS ARM64
-dotnet cake --target=externals-linux --arch=arm64   # Linux ARM64 (in Docker)
-```
+nnnbash
+dotnet run --file build.cs -- --target=externals-macos --arch=arm64   # macOS ARM64
+dotnet run --file build.cs -- --target=externals-linux --arch=arm64   # Linux ARM64 (in Docker)
+nnn
 
 ### If Modified C# Only
 
-```bash
-dotnet cake --target=externals-download  # If output/native/ empty
-```
+nnnbash
+dotnet run --file build.cs -- --target=externals-download  # If output/native/ empty
+nnn
 
 ### Write Regression Test
 
 | Affected Class | Test File |
 |----------------|-----------|
-| SKCanvas | `tests/Tests/SKCanvasTest.cs` |
-| SKBitmap | `tests/Tests/SKBitmapTest.cs` |
-| SKImage | `tests/Tests/SKImageTest.cs` |
-| Other | Find matching `*Test.cs` |
+| SKCanvas | ntests/Tests/SKCanvasTest.csn |
+| SKBitmap | ntests/Tests/SKBitmapTest.csn |
+| SKImage | ntests/Tests/SKImageTest.csn |
+| Other | Find matching n*Test.csn |
 
-Name: `Issue_NNNN_BriefDescription()`
+Name: nIssue_NNNN_BriefDescription()n
 
 ### Run Tests
 
-```bash
+nnnbash
 dotnet test tests/SkiaSharp.Tests.Console.sln
-```
+nnn
 
 Tests MUST pass. Verify fix on original platform.
 
@@ -396,10 +396,10 @@ Tests MUST pass. Verify fix on original platform.
 Rewrite PR description using final template from [references/pr-templates.md](references/pr-templates.md).
 
 Link ALL fixed issues (including related issues that have the same root cause):
-```markdown
+nnnmarkdown
 Fixes #3369
 Fixes #3272
-```
+nnn
 
 Mark PR as ready for review (remove draft status).
 
@@ -417,35 +417,35 @@ Examples: [references/fix-examples.md](references/fix-examples.md)
 
 ### 1. Generate JSON
 
-Write to `/tmp/skiasharp/fix/{timestamp}/{number}.json` — use this exact literal path, do NOT substitute `$TMPDIR` or any other variable. `{timestamp}` is the current UTC time in `yyyyMMdd-HHmmss` format. Create the directory first with `mkdir -p`.
+Write to n/tmp/skiasharp/fix/{timestamp}/{number}.jsonn — use this exact literal path, do NOT substitute n$TMPDIRn or any other variable. n{timestamp}n is the current UTC time in nyyyyMMdd-HHmmssn format. Create the directory first with nmkdir -pn.
 
-- `meta`: schemaVersion `"1.0"`, number, repo, analyzedAt (ISO 8601 UTC)
-- `inputs`: `{ triageFile, reproFile }` — paths to upstream files consumed (if any)
-- `status`: `{ value, reason }` — `value` is one of `in-progress`, `fixed`, `cannot-fix`, `needs-info`, `duplicate`. `reason` is a required one-sentence explanation.
-- `summary`: one-paragraph description of what was fixed and how (include root cause, fix approach, and verification outcome; minLength 20)
-- `rootCause`: `{ category, area, description, confidence?, affectedFiles? }` — what was wrong and why
-  - `category`: one of `logic-error`, `memory-safety`, `threading`, `api-misuse`, `dependency`, `upstream-skia`, `missing-feature`, `other`
-  - `area`: one of `managed`, `binding`, `native`, `build`, `packaging`, `tests`, `docs`
-  - `confidence`: 0.0–1.0 (0.95+=verified, 0.80+=strong evidence, <0.80=hypothesis)
-- `changes`: `{ files: [{ path, changeType, summary }], breakingChange, risk }`
-  - `changeType`: one of `added`, `modified`, `removed`
-  - `risk`: one of `low`, `medium`, `high`
-- `tests`: `{ regressionTestAdded, testsAdded?, command?, result }`
-  - `result`: one of `passed`, `failed`, `not-run`
-  - `testsAdded`: `[{ file, name, description? }]`
-- `verification`: `{ reproScenario, method, notes? }` — did the repro scenario pass after the fix?
-  - `reproScenario`: one of `passed`, `failed`, `not-run`, `not-applicable`
-  - `method`: one of `automated-test`, `manual-repro`, `visual-inspection`, `code-review` (required)
-- `blockers`: string array — required when `status.value` is `cannot-fix` or `needs-info`. Each item is one actionable blocker.
-- `pr`: `{ number?, url, status }` — required when `status.value` is `fixed`
-- `feedback`: corrections to triage/repro findings (optional, see below)
-- `relatedIssues`: other issue numbers fixed or related — required (minItems 1) when `status.value` is `duplicate`
+- nmetan: schemaVersion n"1.0"n, number, repo, analyzedAt (ISO 8601 UTC)
+- ninputsn: n{ triageFile, reproFile }n — paths to upstream files consumed (if any)
+- nstatusn: n{ value, reason }n — nvaluen is one of nin-progressn, nfixedn, ncannot-fixn, nneeds-infon, nduplicaten. nreasonn is a required one-sentence explanation.
+- nsummaryn: one-paragraph description of what was fixed and how (include root cause, fix approach, and verification outcome; minLength 20)
+- nrootCausen: n{ category, area, description, confidence?, affectedFiles? }n — what was wrong and why
+  - ncategoryn: one of nlogic-errorn, nmemory-safetyn, nthreadingn, napi-misusen, ndependencyn, nupstream-skian, nmissing-featuren, nothern
+  - narean: one of nmanagedn, nbindingn, nnativen, nbuildn, npackagingn, ntestsn, ndocsn
+  - nconfidencen: 0.0–1.0 (0.95+=verified, 0.80+=strong evidence, <0.80=hypothesis)
+- nchangesn: n{ files: [{ path, changeType, summary }], breakingChange, risk }n
+  - nchangeTypen: one of naddedn, nmodifiedn, nremovedn
+  - nriskn: one of nlown, nmediumn, nhighn
+- ntestsn: n{ regressionTestAdded, testsAdded?, command?, result }n
+  - nresultn: one of npassedn, nfailedn, nnot-runn
+  - ntestsAddedn: n[{ file, name, description? }]n
+- nverificationn: n{ reproScenario, method, notes? }n — did the repro scenario pass after the fix?
+  - nreproScenarion: one of npassedn, nfailedn, nnot-runn, nnot-applicablen
+  - nmethodn: one of nautomated-testn, nmanual-repron, nvisual-inspectionn, ncode-reviewn (required)
+- nblockersn: string array — required when nstatus.valuen is ncannot-fixn or nneeds-infon. Each item is one actionable blocker.
+- nprn: n{ number?, url, status }n — required when nstatus.valuen is nfixedn
+- nfeedbackn: corrections to triage/repro findings (optional, see below)
+- nrelatedIssuesn: other issue numbers fixed or related — required (minItems 1) when nstatus.valuen is nduplicaten
 
 ### 2. Record upstream corrections
 
 If the fix discovered that triage or repro got something wrong, record it:
 
-```json
+nnnjson
 "feedback": {
   "corrections": [
     {
@@ -456,7 +456,7 @@ If the fix discovered that triage or repro got something wrong, record it:
     }
   ]
 }
-```
+nnn
 
 ### 3. Validate
 
@@ -470,13 +470,13 @@ pwsh .claude/skills/issue-fix/scripts/validate-fix.ps1 /tmp/skiasharp/fix/{times
 
 ### 4. Persist
 
-Copy the validated JSON to `output/ai/` for collection.
+Copy the validated JSON to noutput/ai/n for collection.
 
 ```bash
 pwsh .claude/skills/issue-fix/scripts/persist-fix.ps1 /tmp/skiasharp/fix/{timestamp}/{number}.json
 ```
 
-This copies the JSON to `output/ai/` mirroring the data-cache structure.
+This copies the JSON to noutput/ai/n mirroring the data-cache structure.
 
 ---
 
@@ -486,10 +486,10 @@ This copies the JSON to `output/ai/` mirroring the data-cache structure.
 |-------|----------|
 | Can't reproduce | Ask user for exact environment details |
 | Fix causes test failures | Revert, re-analyze root cause |
-| `EntryPointNotFoundException` | Rebuild natives after C API changes |
+| nEntryPointNotFoundExceptionn | Rebuild natives after C API changes |
 | Can't test on required platform | Use Docker or ask user to verify |
 | Proposed fix is a workaround | Stop — find why it works on other platforms |
-| Docker build uses cached layers | Use `docker build --no-cache` to rebuild |
+| Docker build uses cached layers | Use ndocker build --no-cachen to rebuild |
 | Linker silently skips library | See [debugging-methodology.md](../../../documentation/dev/debugging-methodology.md#native-library-debugging-linux) |
 
 ---
@@ -501,12 +501,12 @@ Before marking complete, verify ALL gates were passed:
 - [ ] **Phase 1**: Issue understood, key details extracted
 - [ ] **Phase 2**: Draft PR created and used as living document
 - [ ] **Phase 3**: Related issues searched, ALL comments read, diagnosis collected
-- [ ] **Phase 4**: Baseline reproduction established (re-ran repro or consumed `ai-repro/NNNN.json`)
+- [ ] **Phase 4**: Baseline reproduction established (re-ran repro or consumed nai-repro/NNNN.jsonn)
 - [ ] **Phase 5**: Root cause identified and documented
 - [ ] **Phase 6**: Minimal fix implemented
 - [ ] **Phase 7**: Build passes, tests pass
 - [ ] **Phase 8**: PR finalized with "Fixes #NNNN"
-- [ ] **Phase 9**: Fix JSON generated, validated with `validate-fix.ps1`/`.py` (saw ✅), and persisted
+- [ ] **Phase 9**: Fix JSON generated, validated with nvalidate-fix.ps1n/n.pyn (saw ✅), and persisted
 
 ---
 
@@ -514,8 +514,8 @@ Before marking complete, verify ALL gates were passed:
 
 See the triage and repro anti-patterns references for the full lists. Critical rules for fix:
 
-**#0 (CRITICAL):** NEVER use `store_memory`. Fixes produce JSON artifacts and PRs, not memories.
+**#0 (CRITICAL):** NEVER use nstore_memoryn. Fixes produce JSON artifacts and PRs, not memories.
 
-**#1 (CRITICAL):** NEVER skip the validation script. You MUST run `validate-fix.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the fix JSON is invalid.
+**#1 (CRITICAL):** NEVER skip the validation script. You MUST run nvalidate-fix.ps1n (or n.pyn fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the fix JSON is invalid.
 
 **#2 (CRITICAL):** NEVER skip phases or reorder them. Sequential execution is required — see the ⛔ block at the top.

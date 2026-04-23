@@ -88,13 +88,13 @@ If you're only making changes to managed code:
 
 ```bash
 # Download pre-built native libraries
-dotnet cake --target=externals-download
+dotnet run --file build.cs -- --target=externals-download
 
 # Build managed libraries
-dotnet cake --target=libs
+dotnet run --file build.cs -- --target=libs
 
 # Run tests
-dotnet cake --target=tests
+dotnet run --file build.cs -- --target=tests
 ```
 
 ### Quick Validation (Console Tests)

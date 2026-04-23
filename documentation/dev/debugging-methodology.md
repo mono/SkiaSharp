@@ -49,7 +49,7 @@ For cross-platform issues, understand exactly which code paths are active on eac
 3. **Don't proceed** until you can explain what code path each platform takes
 
 **Example of tracing preprocessor logic**:
-```c
+nnnc
 // cpu.h - trace this for each platform:
 #if defined(_MSC_VER) && _MSC_VER >= 1700    // Windows MSVC/clang-cl: YES
 #define WEBP_MSC_AVX2                         // macOS clang: NO
@@ -58,22 +58,22 @@ For cross-platform issues, understand exactly which code paths are active on eac
 #if defined(__AVX2__) || defined(WEBP_MSC_AVX2)  // Evaluate for each platform
 #define WEBP_USE_AVX2
 #endif
-```
+nnn
 
 ### Verify Compiler Behavior
 
 Different compilers define different macros:
-- **clang** (macOS/Linux): Does NOT define `_MSC_VER` or `__AVX2__` by default
-- **clang-cl** (Windows): Defines `_MSC_VER` for MSVC compatibility
-- **MSVC**: Defines `_MSC_VER`, may define `__AVX2__` with `/arch:AVX2`
+- **clang** (macOS/Linux): Does NOT define n_MSC_VERn or n__AVX2__n by default
+- **clang-cl** (Windows): Defines n_MSC_VERn for MSVC compatibility
+- **MSVC**: Defines n_MSC_VERn, may define n__AVX2__n with n/arch:AVX2n
 
 **Don't assume** - verify with a minimal test or documentation if uncertain.
 
 ## Common Pitfalls
 
-### Pitfall 1: `#if defined(X)` vs `#if X`
+### Pitfall 1: n#if defined(X)n vs n#if Xn
 
-```c
+nnnc
 #define FEATURE 0
 
 #if defined(FEATURE)   // TRUE - macro EXISTS
@@ -83,9 +83,9 @@ Different compilers define different macros:
 #if FEATURE            // FALSE - value is 0
   // This code is NOT compiled
 #endif
-```
+nnn
 
-Setting `FEATURE=0` does NOT disable code guarded by `defined(FEATURE)`.
+Setting nFEATURE=0n does NOT disable code guarded by ndefined(FEATURE)n.
 
 ### Pitfall 2: Defensive Broad Fixes
 
@@ -139,9 +139,9 @@ State hypotheses explicitly and test them:
 4. **Conclusion**: Confirm or revise hypothesis
 
 **Example**:
-- **Hypothesis**: "Windows fails because clang-cl defines `_MSC_VER`, triggering AVX2 code paths"
-- **Test**: "Check if `_MSC_VER` is defined by examining the preprocessor output"
-- **Result**: Confirmed - clang-cl defines `_MSC_VER=1900`
+- **Hypothesis**: "Windows fails because clang-cl defines n_MSC_VERn, triggering AVX2 code paths"
+- **Test**: "Check if n_MSC_VERn is defined by examining the preprocessor output"
+- **Result**: Confirmed - clang-cl defines n_MSC_VER=1900n
 - **Conclusion**: Hypothesis confirmed, fix should target the AVX2 code path on Windows
 
 ## When Things Go Wrong
@@ -162,63 +162,63 @@ State hypotheses explicitly and test them:
 
 ## Native Library Debugging (Linux)
 
-### Investigating `undefined symbol` Errors
+### Investigating nundefined symboln Errors
 
-When you see `undefined symbol: xxx` errors, the symbol is missing from the linked libraries.
+When you see nundefined symbol: xxxn errors, the symbol is missing from the linked libraries.
 
 #### Step 1: Compare DT_NEEDED between working and broken builds
 
-```bash
+nnnbash
 # Compare linked libraries between platforms
 docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \
   "apt-get update -qq && apt-get install -y -qq binutils >/dev/null && \
    echo '=== x64 ===' && readelf -d /work/output/native/linux/x64/libSkiaSharp.so | grep NEEDED && \
    echo && echo '=== ARM64 ===' && readelf -d /work/output/native/linux/arm64/libSkiaSharp.so | grep NEEDED"
-```
+nnn
 
 **If a library appears in one but not the other, that's your root cause.**
 
 #### Step 2: Check if the linker is silently failing
 
-The ninja file may have `-lfoo` but the linker silently skips it if it can't find the library:
+The ninja file may have n-lfoon but the linker silently skips it if it can't find the library:
 
-```bash
+nnnbash
 # Check ninja file for expected libraries
 grep "libs = " externals/skia/out/linux/arm64/obj/SkiaSharp.ninja
 
 # Check if library exists in cross-compile sysroot
 docker run --rm skiasharp-linux-gnu-cross-arm64 bash -c \
   "ls -la /usr/aarch64-linux-gnu/lib/libfontconfig*"
-```
+nnn
 
-**Common issue:** The `-dev` package provides a broken symlink (`libfoo.so -> libfoo.so.1.2.3`)
-but the actual `.so.1.2.3` file is in the runtime package (`libfoo1`), not the dev package.
+**Common issue:** The n-devn package provides a broken symlink (nlibfoo.so -> libfoo.so.1.2.3n)
+but the actual n.so.1.2.3n file is in the runtime package (nlibfoo1n), not the dev package.
 
 #### Step 3: Fix location depends on root cause
 
 | Root Cause | Fix Location |
 |------------|--------------|
-| Library missing from linker flags | `native/linux/build.cake` or `externals/skia/third_party/BUILD.gn` |
-| Library missing from cross-compile sysroot | `scripts/Docker/debian/clang-cross/*/Dockerfile` |
+| Library missing from linker flags | nnative/linux/build.caken or nexternals/skia/third_party/BUILD.gnn |
+| Library missing from cross-compile sysroot | nscripts/Docker/debian/clang-cross/*/Dockerfilen |
 | Indirect dependency (A→B→C missing) | Fix B's linkage or add C explicitly |
 
 ### Real Example: ARM64 fontconfig issue (#3369)
 
-**Symptom:** `undefined symbol: uuid_generate_random` on ARM64 only
+**Symptom:** nundefined symbol: uuid_generate_randomn on ARM64 only
 
 **Investigation:**
-- x64 had `libfontconfig.so.1` in DT_NEEDED
-- ARM64 was missing `libfontconfig.so.1` in DT_NEEDED  
-- But ninja file had `-lfontconfig` for BOTH builds
+- x64 had nlibfontconfig.so.1n in DT_NEEDED
+- ARM64 was missing nlibfontconfig.so.1n in DT_NEEDED  
+- But ninja file had n-lfontconfign for BOTH builds
 
-**Root cause:** Cross-compile Docker only had `libfontconfig1-dev` which provides a broken symlink.
-The actual shared library is in `libfontconfig1` (runtime package).
+**Root cause:** Cross-compile Docker only had nlibfontconfig1-devn which provides a broken symlink.
+The actual shared library is in nlibfontconfig1n (runtime package).
 
-**Fix:** Download both `-dev` (headers) AND runtime (actual .so) packages in the Dockerfile.
+**Fix:** Download both n-devn (headers) AND runtime (actual .so) packages in the Dockerfile.
 
 ### WASM Stale Artifact Trap
 
-When testing different SkiaSharp NuGet versions on WASM, native `.wasm` binaries are cached in `bin/obj/_framework` and are version-specific (tied to Emscripten version). Changing the NuGet version reference (e.g., via `sed`) without cleaning these directories leaves stale native files, producing false positive/negative results. **Always use fresh project directories per version** or clean `bin/`, `obj/`, and `_framework` before rebuilding.
+When testing different SkiaSharp NuGet versions on WASM, native n.wasmn binaries are cached in nbin/obj/_frameworkn and are version-specific (tied to Emscripten version). Changing the NuGet version reference (e.g., via nsedn) without cleaning these directories leaves stale native files, producing false positive/negative results. **Always use fresh project directories per version** or clean nbin/n, nobj/n, and n_frameworkn before rebuilding.
 
 ---
 

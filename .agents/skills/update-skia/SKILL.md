@@ -225,7 +225,7 @@ must be updated when the underlying C++ APIs change.
 
 1. **Attempt to build** to identify all compilation errors:
    ```bash
-   dotnet cake --target=externals-macos --arch=arm64
+   dotnet run --file build.cs -- --target=externals-macos --arch=arm64
    ```
 
 2. **Fix each error** following these patterns:
@@ -332,7 +332,7 @@ New functions from upstream changes are usually additive and can be deferred.
 
 ```bash
 # Build native (this also runs git-sync-deps)
-dotnet cake --target=externals-macos --arch=arm64
+dotnet run --file build.cs -- --target=externals-macos --arch=arm64
 
 # Build C#
 dotnet build binding/SkiaSharp/SkiaSharp.csproj

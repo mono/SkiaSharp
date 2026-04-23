@@ -1,13 +1,15 @@
+#:sdk Cake.Sdk@6.1.1
+#:property IncludeAdditionalFiles=../../scripts/cake/shared.cs
+#:property PublishAot=false
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
-
-#load "../../scripts/cake/shared.cake"
 
 Task("libSkiaSharp")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    RunCake("../windows/build.cake", "libSkiaSharp", new Dictionary<string, string> {
+    RunCake("../windows/build.cs", "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "nanoserver" },
         { "gnArgs", "extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ]" },
         { "arch", "x64" },
@@ -21,7 +23,7 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    RunCake("../windows/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {
+    RunCake("../windows/build.cs", "libHarfBuzzSharp", new Dictionary<string, string> {
         { "arch", "x64" },
     });
 

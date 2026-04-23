@@ -129,7 +129,7 @@ For Docker/Linux bugs, Phase 3C tests the main branch console sample inside Dock
 ```bash
 # Return to the SkiaSharp repo root — ensure native binaries exist
 cd "$(git rev-parse --show-toplevel)"
-[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download
+[ -d "output/native" ] && ls output/native/ | head -5 || dotnet run --file build.cs -- --target=externals-download
 
 # Build the console sample from source
 dotnet build samples/Basic/Console/SkiaSharpSample/SkiaSharpSample.csproj

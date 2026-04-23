@@ -163,7 +163,7 @@ Use the same platform strategy from 3A with the latest stable SkiaSharp. Record 
 
 > **🛑 Do NOT skip when reproduced on latest.** If the bug reproduces on the latest stable release, testing main is MANDATORY — it tells us whether a fix exists but hasn't been released.
 
-1. Bootstrap: `[ -d "output/native" ] && ls output/native/ | head -5 || dotnet cake --target=externals-download`
+1. Bootstrap: `[ -d "output/native" ] && ls output/native/ | head -5 || dotnet run --file build.cs -- --target=externals-download`
 2. **Build & run the platform-appropriate sample** under `samples/Basic/<platform>/`. Each platform file has a "Main Source Testing (Phase 3C)" section — follow it.
 3. Record result. If fixed on main but not released, note the version gap.
 

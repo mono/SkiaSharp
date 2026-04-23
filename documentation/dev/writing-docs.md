@@ -34,7 +34,7 @@ A GitHub Actions workflow in [`mono/SkiaSharp-API-docs`](https://github.com/mono
 ### What the pipeline does
 
 1. Downloads the latest NuGet packages from the [SkiaSharp-CI](https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json) Azure Artifacts feed (public, no authentication required)
-2. Runs `dotnet cake --target=update-docs` which:
+2. Runs `dotnet run --file build.cs -- --target=update-docs` which:
    - Generates API diffs and changelogs (`docs-api-diff`)
    - Extracts assemblies from NuGets, builds framework monikers, and runs `mdoc update` to regenerate XML docs (`docs-update-frameworks`)
    - Cleans up, formats, and validates the generated XML (`docs-format-docs`)
@@ -72,19 +72,19 @@ cd ..
 ### Step 2: Download the latest NuGet packages
 
 ```bash
-dotnet cake --target=docs-download-output
+dotnet run --file build.cs -- --target=docs-download-output
 ```
 
 This downloads NuGet packages from the SkiaSharp-CI feed. By default it fetches from the `main` branch. To use a different branch:
 
 ```bash
-dotnet cake --target=docs-download-output --gitBranch=my-feature-branch
+dotnet run --file build.cs -- --target=docs-download-output --gitBranch=my-feature-branch
 ```
 
 ### Step 3: Regenerate the docs
 
 ```bash
-dotnet cake --target=update-docs
+dotnet run --file build.cs -- --target=update-docs
 ```
 
 This generates both the changelogs and the XML API docs in the `docs/` directory.
@@ -98,7 +98,7 @@ You can also use the `api-docs` Copilot skill to write and review XML documentat
 As you edit, you can apply formatting and see what docs are still missing by running:
 
 ```bash
-dotnet cake --target=docs-format-docs
+dotnet run --file build.cs -- --target=docs-format-docs
 ```
 
 This will report a summary of documentation coverage (types and members with missing docs).

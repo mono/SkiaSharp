@@ -38,14 +38,14 @@ docs/SkiaSharpAPI/
 2. Edit `<summary>`, `<param>`, `<returns>`, `<value>` tags within `<Docs>` sections
 3. Follow patterns in [references/patterns.md](references/patterns.md)
 4. **After editing a file, validate XML syntax** (see [XML Validation](#xml-validation) below)
-5. Run `dotnet cake --target=docs-format-docs` to validate and format
+5. Run `dotnet run --file build.cs -- --target=docs-format-docs` to validate and format
 
 ## Reviewing Documentation
 
 1. Search for issues using grep patterns below
 2. Classify by severity using [references/checklist.md](references/checklist.md)
 3. Fix issues following [references/patterns.md](references/patterns.md)
-4. Run `dotnet cake --target=docs-format-docs` to validate
+4. Run `dotnet run --file build.cs -- --target=docs-format-docs` to validate
 
 ### Quick Issue Search
 
@@ -80,13 +80,13 @@ When new APIs have been added (new classes, methods, properties), the XML doc fi
 
 ```bash
 dotnet tool restore
-dotnet cake --target=docs-download-output   # Download latest NuGets
-dotnet cake --target=update-docs            # Regenerate XML docs
+dotnet run --file build.cs -- --target=docs-download-output   # Download latest NuGets
+dotnet run --file build.cs -- --target=update-docs            # Regenerate XML docs
 ```
 
 New members will appear with "To be added." placeholders. See [documentation/dev/writing-docs.md](../../../documentation/dev/writing-docs.md) for full details.
 
-**To edit existing docs** (no regeneration needed): just edit the XML files directly and run `dotnet cake --target=docs-format-docs` to format and validate.
+**To edit existing docs** (no regeneration needed): just edit the XML files directly and run `dotnet run --file build.cs -- --target=docs-format-docs` to format and validate.
 
 ## XML Validation
 
