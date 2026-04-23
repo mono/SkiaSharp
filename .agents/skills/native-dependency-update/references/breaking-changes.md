@@ -154,7 +154,7 @@ BUILD.gn changes are usually NOT needed for:
 
 The BUILD.gn lives at `externals/skia/third_party/{dep}/BUILD.gn`. Look at existing patterns—sources are listed explicitly, platform-specific code uses `if (current_cpu == "...")` conditionals.
 
-### macOS-Specific Notes
+### Common Gotchas
 - `grep -P` (Perl regex) is NOT available on macOS (BSD grep). Use `grep -E` or `sed` instead.
 - The `freetype` BUILD.gn directory is `third_party/freetype2/` (not `third_party/freetype/`)
 
