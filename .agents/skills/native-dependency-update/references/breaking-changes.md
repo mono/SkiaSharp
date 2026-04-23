@@ -2,8 +2,6 @@
 
 Guidance for analyzing breaking changes when updating native dependencies.
 
-> **Tooling note:** `grep -P` (Perl regex) is NOT available on macOS (BSD grep). Use `grep -E` or `sed` instead throughout all analysis steps.
-
 ## Contents
 
 - [Risk Levels](#risk-levels)

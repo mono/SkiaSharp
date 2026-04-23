@@ -148,6 +148,8 @@ export PATH="/usr/local/share/dotnet:/opt/homebrew/bin:$PATH"
 ```
 ⚠️ PATH does not persist between bash tool calls. Prefix EVERY `dotnet` command with this export.
 
+⚠️ `grep -P` (Perl regex) is NOT available on macOS (BSD grep). Use `grep -E` or `sed` instead.
+
 ### Step 3: Set target branch (for release branch work)
 If you're targeting a non-default branch (e.g., `release/3.119.x`):
 ```bash
