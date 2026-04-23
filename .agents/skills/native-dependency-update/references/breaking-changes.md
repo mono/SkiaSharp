@@ -2,6 +2,8 @@
 
 Guidance for analyzing breaking changes when updating native dependencies.
 
+> **Tooling note:** `grep -P` (Perl regex) is NOT available on macOS (BSD grep). Use `grep -E` or `sed` instead throughout all analysis steps.
+
 ## Contents
 
 - [Risk Levels](#risk-levels)
@@ -154,9 +156,7 @@ BUILD.gn changes are usually NOT needed for:
 
 The BUILD.gn lives at `externals/skia/third_party/{dep}/BUILD.gn`. Look at existing patterns—sources are listed explicitly, platform-specific code uses `if (current_cpu == "...")` conditionals.
 
-### Common Gotchas
-- `grep -P` (Perl regex) is NOT available on macOS (BSD grep). Use `grep -E` or `sed` instead.
-- The `freetype` BUILD.gn directory is `third_party/freetype2/` (not `third_party/freetype/`)
+> **Note:** The `freetype` BUILD.gn is at `third_party/freetype2/` (not `third_party/freetype/`).
 
 ## Analysis Summary Template
 
