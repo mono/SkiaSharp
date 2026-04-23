@@ -130,18 +130,9 @@ bash .agents/skills/native-dependency-update/scripts/setup.sh {dep} {skia_target
 | User request | `skiasharp_target_branch` | `skia_target_branch` |
 |-------------|--------------------------|---------------------|
 | Update on main | `main` | `skiasharp` |
-| Backport to release branch | `release/3.119.x` | Check — see below |
+| Backport to release branch | `release/3.119.x` | Ask the user |
 
-For release branch backports, the matching skia branch may or may not exist. The setup script handles this safely:
-1. It reads the submodule commit from the SkiaSharp target branch (this is always correct)
-2. It tries to fetch `origin/{skia_target_branch}`
-3. If the branch exists AND contains the submodule commit, it branches from there
-4. Otherwise, it branches from the submodule commit directly
-
-If the script falls back to the submodule commit, you'll need to determine the correct PR base branch for the mono/skia PR in Phase 5. Check what branch the submodule commit lives on:
-```bash
-cd externals/skia && git branch -r --contains $(git rev-parse HEAD)
-```
+If you're unsure which skia branch to target, **ask the user**. Do not guess.
 
 **After the script completes**, proceed to Phase 1.
 

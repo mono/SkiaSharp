@@ -57,26 +57,29 @@ echo "--- Setting up skia feature branch ---"
 pushd externals/skia > /dev/null
 
 # The submodule is checked out at a specific commit after submodule update.
-# This commit IS the correct base — it's what SkiaSharp's target branch uses.
 SUBMODULE_COMMIT=$(git rev-parse HEAD)
 echo "    Submodule commit: $SUBMODULE_COMMIT"
 
-# Try to fetch the requested skia target branch
-if git fetch origin "$SKIA_TARGET" 2>/dev/null; then
-    # Verify the submodule commit is actually on this branch
-    if git merge-base --is-ancestor "$SUBMODULE_COMMIT" "origin/$SKIA_TARGET" 2>/dev/null; then
-        echo "    Confirmed: submodule commit is on origin/$SKIA_TARGET"
-        git checkout -b "dev/update-$DEP" "origin/$SKIA_TARGET"
-    else
-        echo "    WARNING: submodule commit is NOT on origin/$SKIA_TARGET"
-        echo "    Branching from the submodule commit instead (safest option)"
-        git checkout -b "dev/update-$DEP" "$SUBMODULE_COMMIT"
-    fi
-else
-    echo "    Branch origin/$SKIA_TARGET not found in mono/skia"
-    echo "    Branching from the submodule commit instead"
-    git checkout -b "dev/update-$DEP" "$SUBMODULE_COMMIT"
+# Fetch and verify the requested skia target branch
+if ! git fetch origin "$SKIA_TARGET" 2>/dev/null; then
+    echo ""
+    echo "=== ERROR: Branch 'origin/$SKIA_TARGET' does not exist in mono/skia ==="
+    echo "Ask the user which skia branch to target for this update."
+    popd > /dev/null
+    exit 1
 fi
+
+if ! git merge-base --is-ancestor "$SUBMODULE_COMMIT" "origin/$SKIA_TARGET" 2>/dev/null; then
+    echo ""
+    echo "=== ERROR: Submodule commit $SUBMODULE_COMMIT is NOT on origin/$SKIA_TARGET ==="
+    echo "The SkiaSharp target branch uses a skia commit that isn't on '$SKIA_TARGET'."
+    echo "Ask the user which skia branch to target for this update."
+    popd > /dev/null
+    exit 1
+fi
+
+echo "    Confirmed: submodule commit is on origin/$SKIA_TARGET"
+git checkout -b "dev/update-$DEP" "origin/$SKIA_TARGET"
 
 popd > /dev/null
 echo "    Skia branch created."
