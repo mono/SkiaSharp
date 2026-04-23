@@ -143,9 +143,7 @@ If the script falls back to the submodule commit, you'll need to determine the c
 cd externals/skia && git branch -r --contains $(git rev-parse HEAD)
 ```
 
-**After the script completes:**
-1. Use the `rename_branch` tool to set the SkiaSharp branch to `dev/update-{dep}`
-2. Proceed to Phase 1
+**After the script completes**, proceed to Phase 1.
 
 ---
 
@@ -228,7 +226,7 @@ Do NOT assume all entries use the same schema. Check `component.type` first.
 
 **Both PRs must be created together** — CI requires both.
 
-Both repos use branch name `dev/update-{dep}`. The skia branch was already created by the setup script. The SkiaSharp branch was set via `rename_branch`.
+Both repos use branch name `dev/update-{dep}`. The skia branch was already created by the setup script.
 
 #### Step 1: Create mono/skia PR
 
