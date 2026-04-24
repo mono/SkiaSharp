@@ -16906,25 +16906,6 @@ namespace SkiaSharp
 			(sk_compatpaint_make_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_make_font> ("sk_compatpaint_make_font")).Invoke (paint);
 		#endif
 
-		// sk_compatpaint_t* sk_compatpaint_new()
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_compatpaint_t sk_compatpaint_new ();
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_compatpaint_t sk_compatpaint_new ();
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_compatpaint_t sk_compatpaint_new ();
-		}
-		private static Delegates.sk_compatpaint_new sk_compatpaint_new_delegate;
-		internal static sk_compatpaint_t sk_compatpaint_new () =>
-			(sk_compatpaint_new_delegate ??= GetSymbol<Delegates.sk_compatpaint_new> ("sk_compatpaint_new")).Invoke ();
-		#endif
-
 		// sk_compatpaint_t* sk_compatpaint_new_with_font(const sk_font_t* font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -16944,23 +16925,23 @@ namespace SkiaSharp
 			(sk_compatpaint_new_with_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_new_with_font> ("sk_compatpaint_new_with_font")).Invoke (font);
 		#endif
 
-		// void sk_compatpaint_reset(sk_compatpaint_t* paint)
+		// void sk_compatpaint_reset(sk_compatpaint_t* paint, const sk_font_t* font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_reset (sk_compatpaint_t paint);
+		internal static partial void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_reset (sk_compatpaint_t paint);
+		internal static extern void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_reset (sk_compatpaint_t paint);
+			internal delegate void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		}
 		private static Delegates.sk_compatpaint_reset sk_compatpaint_reset_delegate;
-		internal static void sk_compatpaint_reset (sk_compatpaint_t paint) =>
-			(sk_compatpaint_reset_delegate ??= GetSymbol<Delegates.sk_compatpaint_reset> ("sk_compatpaint_reset")).Invoke (paint);
+		internal static void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font) =>
+			(sk_compatpaint_reset_delegate ??= GetSymbol<Delegates.sk_compatpaint_reset> ("sk_compatpaint_reset")).Invoke (paint, font);
 		#endif
 
 		// void sk_compatpaint_set_filter_quality(sk_compatpaint_t* paint, int quality)

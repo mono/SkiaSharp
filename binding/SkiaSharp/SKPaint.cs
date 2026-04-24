@@ -40,18 +40,33 @@ namespace SkiaSharp
 		[Obsolete]
 		private SKFont font;
 
+		// Shared template that backs SKPaint()'s default font and SKPaint.Reset()'s
+		// reset-to-default font. sk_compatpaint_new_with_font / sk_compatpaint_reset
+		// both *copy* the font state into SkCompatPaint::fFont, so this singleton is
+		// never mutated by callers.
+		private static readonly SKFont defaultFont;
+
+		static SKPaint ()
+		{
+			defaultFont = new SKFontStatic (
+				SkiaApi.sk_font_new_with_values (
+					SKTypeface.Default.Handle,
+					SKFont.DefaultSize,
+					SKFont.DefaultScaleX,
+					SKFont.DefaultSkewX));
+		}
+
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
 		public SKPaint ()
-			: this (SkiaApi.sk_compatpaint_new (), true)
+			: this (SkiaApi.sk_compatpaint_new_with_font (defaultFont.Handle), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
 			}
-			RestoreDefaultTypeface ();
 		}
 
 		[Obsolete ($"Use {nameof (SKFont)} instead.")]
@@ -75,22 +90,14 @@ namespace SkiaSharp
 
 		// Reset
 
-		public void Reset ()
-		{
-			SkiaApi.sk_compatpaint_reset (Handle);
-			RestoreDefaultTypeface ();
-		}
+		public void Reset () =>
+			SkiaApi.sk_compatpaint_reset (Handle, defaultFont.Handle);
 
-		// SkCompatPaint's default constructor (called both directly by sk_compatpaint_new
-		// and transitively by sk_compatpaint_reset) constructs its internal SkFont with
-		// SkTypeface::MakeEmpty, which has zero glyphs and renders nothing. Pre-SKFont
-		// SKPaint text-rendering callers expect a platform default font instead; restore
-		// it here so new SKPaint().MeasureText(...) continues to work.
-		private void RestoreDefaultTypeface ()
+		private sealed class SKFontStatic : SKFont
 		{
-			SkiaApi.sk_font_set_typeface (
-				SkiaApi.sk_compatpaint_get_font (Handle),
-				SKTypeface.Default.Handle);
+			internal SKFontStatic (IntPtr handle) : base (handle, false) { }
+
+			protected override void Dispose (bool disposing) { }
 		}
 
 		// properties
