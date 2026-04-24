@@ -740,5 +740,37 @@ namespace SkiaSharp.Tests
 			using var clonedPaint = paint.Clone();
 			using var clonedPaint2 = paint.Clone();
 		}
+
+		// Default typeface behavior
+
+		[Obsolete]
+		[SkippableFact]
+		public void DefaultPaintCanMeasureText()
+		{
+			var paint = new SKPaint();
+			var width = paint.MeasureText("Hello World!");
+			Assert.True(width > 0);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void DefaultPaintTypefaceIsDefault()
+		{
+			var paint = new SKPaint();
+			Assert.NotNull(paint.Typeface);
+			Assert.False(paint.Typeface.IsEmpty);
+			Assert.Equal(SKTypeface.Default.FamilyName, paint.Typeface.FamilyName);
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void PaintResetPreservesDefaultTypeface()
+		{
+			var paint = new SKPaint();
+			paint.Typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			paint.Reset();
+			Assert.NotNull(paint.Typeface);
+			Assert.False(paint.Typeface.IsEmpty);
+		}
 	}
 }

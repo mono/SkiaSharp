@@ -506,5 +506,62 @@ namespace SkiaSharp.Tests
 				Assert.Same(typeface, font.Typeface);
 			}
 		}
+
+		// m132 empty typeface behavior
+
+		[SkippableFact]
+		public void DefaultFontTypefaceIsEmpty()
+		{
+			using var font = new SKFont();
+			Assert.NotNull(font.Typeface);
+			Assert.True(font.Typeface.IsEmpty);
+		}
+
+		[SkippableFact]
+		public void FontWithNullTypefaceIsEmpty()
+		{
+			using var font = new SKFont(null);
+			Assert.NotNull(font.Typeface);
+			Assert.True(font.Typeface.IsEmpty);
+		}
+
+		[SkippableFact]
+		public void FontTypefaceSetNullReturnsEmpty()
+		{
+			using var font = new SKFont(SKTypeface.Default);
+			font.Typeface = null;
+			Assert.NotNull(font.Typeface);
+			Assert.True(font.Typeface.IsEmpty);
+		}
+
+		[SkippableFact]
+		public void FontTypefaceSetNullStillMeasures()
+		{
+			using var font = new SKFont(SKTypeface.Default);
+			font.Typeface = null;
+			Assert.NotEqual(IntPtr.Zero, font.Handle);
+			var width = font.MeasureText("Hello");
+			Assert.True(width >= 0);
+		}
+
+		[SkippableFact]
+		public void FontWithDefaultCanMeasure()
+		{
+			using var font = new SKFont(SKTypeface.Default);
+			var width = font.MeasureText("Hello World!");
+			Assert.True(width > 0);
+		}
+
+		[SkippableFact]
+		public void ZeroGlyphFontMeasuresZero()
+		{
+			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "ZeroGlyphs.ttf"));
+			if (tf == null)
+				return;
+
+			using var font = new SKFont(tf);
+			var width = font.MeasureText("Hello");
+			Assert.Equal(0, width);
+		}
 	}
 }
